@@ -1,20 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { zStack } from "@/lib/z-stack";
+import { useCallback, useEffect, useState } from "react";
 
 /**
- * Manage a child overlay that stacks on top of a parent overlay.
+ * @deprecated Z-index layering is now handled automatically by the Base UI
+ * nested dialog system. This hook no longer manages `zLayer` — use it only
+ * for parent/child open state coordination.
  *
- * Handles z-index layering, auto-close when parent closes, and cleanup.
+ * Manage a child overlay that stacks on top of a parent overlay.
+ * Handles auto-close when parent closes and child open/close state.
  *
  * @param parentOpen - Whether the parent overlay is currently open
- * @returns { childOpen, openChild, closeChild, zLayer }
+ * @returns { childOpen, openChild, closeChild }
  *
  * @example
  * ```tsx
  * function MyDetailSheet({ open, onOpenChange }) {
- *   const { childOpen, openChild, closeChild, zLayer } = useNestedSheet(open);
+ *   const { childOpen, openChild, closeChild } = useNestedSheet(open);
  *
  *   return (
  *     <DetailSheet open={open} onOpenChange={onOpenChange}>
@@ -25,7 +27,7 @@ import { zStack } from "@/lib/z-stack";
  *           open={childOpen}
  *           onOpenChange={(v) => (v ? openChild() : closeChild())}
  *         >
- *           <SheetContent side="right" zLayer={zLayer}>
+ *           <SheetContent side="right">
  *             <SubForm onSuccess={closeChild} />
  *           </SheetContent>
  *         </Sheet>
@@ -37,26 +39,6 @@ import { zStack } from "@/lib/z-stack";
  */
 export function useNestedSheet(parentOpen: boolean) {
   const [childOpen, setChildOpen] = useState(false);
-  const [zLayer, setZLayer] = useState(0);
-  const wasOpenRef = useRef(false);
-
-  // Push/pop z-layer when child opens/closes
-  useEffect(() => {
-    if (childOpen && !wasOpenRef.current) {
-      wasOpenRef.current = true;
-      setZLayer(zStack.push());
-    } else if (!childOpen && wasOpenRef.current) {
-      wasOpenRef.current = false;
-      zStack.pop();
-    }
-
-    return () => {
-      if (wasOpenRef.current) {
-        wasOpenRef.current = false;
-        zStack.pop();
-      }
-    };
-  }, [childOpen]);
 
   // When parent closes, also close child
   useEffect(() => {
@@ -68,5 +50,5 @@ export function useNestedSheet(parentOpen: boolean) {
   const openChild = useCallback(() => setChildOpen(true), []);
   const closeChild = useCallback(() => setChildOpen(false), []);
 
-  return { childOpen, openChild, closeChild, zLayer };
+  return { childOpen, openChild, closeChild };
 }

@@ -10,15 +10,14 @@ import { toast } from "sonner";
 import { applyBrandThemePreview } from "@/components/brand-theme-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from "@/components/ui/item";
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+} from "@/components/ui/empty";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { orgKeys } from "@/lib/queries/keys";
@@ -38,6 +37,7 @@ import { DataExportSection } from "./_data-export-section";
 import { DataSharingForm } from "./_data-sharing-form";
 import { DiagnosisLabelsSection } from "./_diagnosis-labels-section";
 import { OrganizationCard } from "./_organization-card";
+import { PaymentSettingsSection } from "./_payment-settings-section";
 import { PricingRulesSection } from "./_pricing-rules-section";
 import {
   getSettingsSections,
@@ -57,55 +57,36 @@ function SectionHeading({
   readonly title: string;
 }) {
   return (
-    <Item variant="default" className="gap-3 border-0 p-0">
-      <ItemMedia
-        variant="icon"
-        className="size-10 rounded-lg bg-muted [&_svg]:size-5 [&_svg]:text-muted-foreground"
-      >
-        <Icon />
-      </ItemMedia>
-      <ItemContent>
-        <ItemTitle className="text-base tracking-tight">{title}</ItemTitle>
-        <ItemDescription>{description}</ItemDescription>
-      </ItemContent>
-    </Item>
+    <div className="flex items-start gap-2.5">
+      <div className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+        <Icon className="size-3.5" />
+      </div>
+      <div className="min-w-0 flex flex-col gap-0.5">
+        <Typography.Text className="text-sm font-semibold tracking-tight">
+          {title}
+        </Typography.Text>
+        <Typography.Muted className="text-xs text-muted-foreground">
+          {description}
+        </Typography.Muted>
+      </div>
+    </div>
   );
 }
 
 function LoadingSkeleton() {
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-4">
-        <Skeleton className="h-6 w-24" />
-        <Skeleton className="h-4 w-72" />
-        <div className="grid gap-6 lg:grid-cols-3">
-          <Card>
-            <CardContent className="pt-6">
-              <Skeleton className="h-5 w-28" />
-              <Skeleton className="mt-3 h-4 w-32" />
-              <Skeleton className="mt-6 size-16 rounded-lg" />
-              <Skeleton className="mt-4 h-5 w-20" />
-              <Skeleton className="mt-1 h-5 w-32" />
-            </CardContent>
-          </Card>
-          <Card className="lg:col-span-2">
-            <CardContent className="pt-6">
-              <Skeleton className="h-5 w-40" />
-              <Skeleton className="mt-2 h-3 w-56" />
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                {Array.from({ length: 6 }).map((_, index) => (
-                  <Skeleton key={`skeleton-${index}`} className="h-10 w-full" />
-                ))}
-              </div>
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <Skeleton className="h-20 w-full rounded-lg" />
-                <Skeleton className="h-20 w-full rounded-lg" />
-              </div>
-              <div className="mt-6 flex justify-end">
-                <Skeleton className="h-10 w-24" />
-              </div>
-            </CardContent>
-          </Card>
+    <div className="flex flex-col gap-4">
+      <Skeleton className="h-8 w-full max-w-md" />
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="size-14 rounded-md" />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+        </div>
+        <div className="flex flex-col gap-2 lg:col-span-2">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <Skeleton key={`skeleton-${index}`} className="h-8 w-full" />
+          ))}
         </div>
       </div>
     </div>
@@ -122,26 +103,22 @@ function ErrorState({
   const t = useTranslations();
 
   return (
-    <Card className="border-destructive/20">
-      <CardContent className="flex flex-col items-start gap-4 py-6">
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-lg bg-destructive/10">
-            <Settings2 className="size-5 text-destructive" />
-          </div>
-          <div>
-            <Typography.Text className="text-sm font-semibold">
-              {t("settings.failedToLoad")}
-            </Typography.Text>
-            <Typography.Muted className="text-sm text-muted-foreground">
-              {message}
-            </Typography.Muted>
-          </div>
+    <div className="flex flex-col items-start gap-3 rounded-lg border border-destructive/20 px-4 py-3">
+      <div className="flex items-center gap-2.5">
+        <Settings2 className="size-4 text-destructive" />
+        <div>
+          <Typography.Text className="text-sm font-semibold">
+            {t("settings.failedToLoad")}
+          </Typography.Text>
+          <Typography.Muted className="text-xs text-muted-foreground">
+            {message}
+          </Typography.Muted>
         </div>
-        <Button onClick={onRetry} variant="outline">
-          {t("common.retry")}
-        </Button>
-      </CardContent>
-    </Card>
+      </div>
+      <Button onClick={onRetry} variant="outline" size="sm">
+        {t("common.retry")}
+      </Button>
+    </div>
   );
 }
 
@@ -165,7 +142,7 @@ function renderSectionContent(
 ) {
   if (section.value === "general") {
     return (
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
         <OrganizationCard
           orgId={options.orgId}
           organization={options.organization}
@@ -210,6 +187,10 @@ function renderSectionContent(
 
   if (section.value === "pricing") {
     return <PricingRulesSection orgId={options.orgId} />;
+  }
+
+  if (section.value === "payments") {
+    return <PaymentSettingsSection orgId={options.orgId} />;
   }
 
   if (section.value === "diagnosis") {
@@ -471,74 +452,64 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <Card className="overflow-hidden border-border/70 bg-card/95 shadow-sm">
-        <CardContent className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:gap-3">
-          <div className="flex min-w-0 flex-1 items-center gap-3">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15">
-              <Settings2 className="size-4" />
-            </div>
-            <div className="flex min-w-0 items-center gap-2">
-              <Typography.Text className="text-sm font-semibold tracking-tight">
-                {t("title")}
-              </Typography.Text>
-              <Badge variant="secondary" className="shrink-0 text-[10px]">
-                {selectedSection.title}
-              </Badge>
-            </div>
-          </div>
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2 border-b border-border pb-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-2">
+          <Typography.Text className="text-sm font-semibold tracking-tight">
+            {t("title")}
+          </Typography.Text>
+          <Badge variant="secondary" className="shrink-0 text-[10px]">
+            {selectedSection.title}
+          </Badge>
+        </div>
 
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1 sm:w-48">
-              <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder={t("searchPlaceholder")}
-                className="h-7 pl-8 text-xs"
-              />
-            </div>
-            {searchQuery ? (
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                onClick={() => setSearchQuery("")}
-              >
-                <span className="sr-only">{t("clear")}</span>
-                <span aria-hidden="true">&times;</span>
-              </Button>
-            ) : null}
-            <Badge
-              variant="outline"
-              className="hidden shrink-0 text-[10px] sm:inline-flex"
-            >
-              {t("visibleSections", { count: filteredSections.length })}
-            </Badge>
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 sm:w-44">
+            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder={t("searchPlaceholder")}
+              className="h-7 pl-8 text-xs"
+            />
           </div>
-        </CardContent>
-      </Card>
-
-      {filteredSections.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 py-12">
-            <Search className="size-10 text-muted-foreground/40" />
-            <Typography.Text className="text-center text-sm text-muted-foreground">
-              {t("noMatchSearch")}
-            </Typography.Text>
-            <Typography.Muted className="text-xs text-muted-foreground/70">
-              {t("tryDifferentKeyword")}
-            </Typography.Muted>
+          {searchQuery ? (
             <Button
-              variant="outline"
-              size="sm"
+              variant="ghost"
+              size="icon-xs"
               onClick={() => setSearchQuery("")}
             >
-              {t("clearSearch")}
+              <span className="sr-only">{t("clear")}</span>
+              <span aria-hidden="true">&times;</span>
             </Button>
-          </CardContent>
-        </Card>
+          ) : null}
+          <Badge
+            variant="outline"
+            className="hidden shrink-0 text-[10px] sm:inline-flex"
+          >
+            {t("visibleSections", { count: filteredSections.length })}
+          </Badge>
+        </div>
+      </div>
+
+      {filteredSections.length === 0 ? (
+        <Empty className="border border-dashed py-8">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Search />
+            </EmptyMedia>
+            <EmptyDescription>{t("noMatchSearch")}</EmptyDescription>
+          </EmptyHeader>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSearchQuery("")}
+          >
+            {t("clearSearch")}
+          </Button>
+        </Empty>
       ) : (
-        <div className="flex gap-6">
+        <div className="flex gap-4">
           <SettingsSubSidebar
             activeSection={selectedSection.value}
             currency={form.defaultCurrency || DEFAULT_FORM.defaultCurrency}
@@ -549,12 +520,12 @@ export default function SettingsPage() {
             timezone={form.timezone || DEFAULT_FORM.timezone}
           />
 
-          <div className="flex min-w-0 flex-1 flex-col gap-6">
-            {filteredSections.map((section) => (
+          <div className="flex min-w-0 flex-1 flex-col">
+            {filteredSections.map((section, index) => (
               <section
                 key={section.value}
                 id={`settings-section-${section.value}`}
-                className="scroll-mt-28 flex flex-col gap-4"
+                className="scroll-mt-24 flex flex-col gap-3 py-4 first:pt-0"
               >
                 <SectionHeading
                   icon={section.value === "general" ? Building2 : section.icon}
@@ -576,6 +547,9 @@ export default function SettingsPage() {
                   theme,
                   error,
                 })}
+                {index < filteredSections.length - 1 ? (
+                  <Separator className="mt-4" />
+                ) : null}
               </section>
             ))}
           </div>

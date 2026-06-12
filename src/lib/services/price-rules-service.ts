@@ -1,10 +1,11 @@
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
-import type { Tables } from "@/lib/database.types";
+import { createAuditLog } from "@/lib/audit";
 import { NotFoundError, ValidationError } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { PriceRule } from "@/lib/types";
 
-export type PriceRule = Tables<"price_rules">;
+export type { PriceRule } from "@/lib/types";
 
 export interface PriceRuleCondition {
   /** Vehicle makes to match, e.g. ["Lexus", "Toyota"] */
@@ -83,8 +84,11 @@ export interface PriceResolutionResult {
 
 // ── CRUD ────────────────────────────────────────────────────────
 
-export async function getPriceRules(orgId: string): Promise<PriceRule[]> {
-  const supabase = await createClient();
+export async function getPriceRules(
+  db: SupabaseClient,
+  orgId: string,
+): Promise<PriceRule[]> {
+  const supabase = db;
 
   const { data, error } = await supabase
     .from("price_rules")
@@ -97,8 +101,11 @@ export async function getPriceRules(orgId: string): Promise<PriceRule[]> {
   return (data ?? []) as PriceRule[];
 }
 
-export async function getActivePriceRules(orgId: string): Promise<PriceRule[]> {
-  const supabase = await createClient();
+export async function getActivePriceRules(
+  db: SupabaseClient,
+  orgId: string,
+): Promise<PriceRule[]> {
+  const supabase = db;
 
   const { data, error } = await supabase
     .from("price_rules")
@@ -113,8 +120,11 @@ export async function getActivePriceRules(orgId: string): Promise<PriceRule[]> {
   return (data ?? []) as PriceRule[];
 }
 
-export async function getPriceRule(id: string): Promise<PriceRule> {
-  const supabase = await createClient();
+export async function getPriceRule(
+  db: SupabaseClient,
+  id: string,
+): Promise<PriceRule> {
+  const supabase = db;
 
   const { data, error } = await supabase
     .from("price_rules")
@@ -127,6 +137,7 @@ export async function getPriceRule(id: string): Promise<PriceRule> {
 }
 
 export async function createPriceRule(
+  db: SupabaseClient,
   orgId: string,
   params: CreatePriceRuleParams,
   userId?: string | null,
@@ -135,7 +146,7 @@ export async function createPriceRule(
   if (!params.operator) throw new ValidationError("Operator is required");
   if (params.value == null) throw new ValidationError("Value is required");
 
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data, error } = await supabase
     .from("price_rules")
@@ -162,18 +173,29 @@ export async function createPriceRule(
   if (error || !data)
     throw new Error(error?.message ?? "Failed to create price rule");
 
+  await createAuditLog({
+    supabase,
+    action: "create",
+    table_name: "price_rules",
+    record_id: data.id,
+    user_id: userId ?? undefined,
+    organization_id: orgId,
+    new_data: data as unknown as Record<string, unknown>,
+  });
+
   revalidateTag(cacheTags.priceRules(orgId), "max");
 
   return data as PriceRule;
 }
 
 export async function updatePriceRule(
+  db: SupabaseClient,
   id: string,
   orgId: string,
   params: Partial<CreatePriceRuleParams> & { is_active?: boolean },
   userId?: string | null,
 ): Promise<PriceRule> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const updates: Record<string, unknown> = { updated_by: userId ?? null };
   if (params.name !== undefined) updates.name = params.name.trim();
@@ -199,7 +221,8 @@ export async function updatePriceRule(
 
   const { data, error } = await supabase
     .from("price_rules")
-    .update(updates)
+    // biome-ignore lint/suspicious/noExplicitAny: dynamic update object
+    .update(updates as any)
     .eq("id", id)
     .eq("organization_id", orgId)
     .select("*")
@@ -207,16 +230,31 @@ export async function updatePriceRule(
 
   if (error || !data) throw new NotFoundError("Price rule not found");
 
+  await createAuditLog({
+    supabase,
+    action: "update",
+    table_name: "price_rules",
+    record_id: data.id,
+    user_id: userId ?? undefined,
+    organization_id: orgId,
+    new_data: data as unknown as Record<string, unknown>,
+  });
+
   revalidateTag(cacheTags.priceRules(orgId), "max");
 
   return data as PriceRule;
 }
 
 export async function deletePriceRule(
+  db: SupabaseClient,
   id: string,
   orgId: string,
 ): Promise<void> {
-  const supabase = await createClient();
+  const supabase = db;
+
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser();
 
   const { error } = await supabase
     .from("price_rules")
@@ -225,6 +263,15 @@ export async function deletePriceRule(
     .eq("organization_id", orgId);
 
   if (error) throw new Error(error.message ?? "Failed to delete price rule");
+
+  await createAuditLog({
+    supabase,
+    action: "soft_delete",
+    table_name: "price_rules",
+    record_id: id,
+    user_id: currentUser?.id,
+    organization_id: orgId,
+  });
 
   revalidateTag(cacheTags.priceRules(orgId), "max");
 }
@@ -338,10 +385,11 @@ function applyRule(basePrice: number, rule: PriceRule): number {
  *   4. parts_catalog.default_price / service_catalog.default_price
  */
 export async function resolvePrice(
+  db: SupabaseClient,
   orgId: string,
   input: PriceResolutionInput,
 ): Promise<PriceResolutionResult> {
-  const supabase = await createClient();
+  const supabase = db;
 
   // ═══ Step 1: specific_price (parts only) ═══
   if (input.type === "part" && input.part?.name) {
@@ -389,7 +437,7 @@ export async function resolvePrice(
   }
 
   // ═══ Step 2: Price Rules ═══
-  const rules = await getActivePriceRules(orgId);
+  const rules = await getActivePriceRules(db, orgId);
   const matchingRules = rules.filter((rule) => {
     // Check apply_to
     if (rule.apply_to !== "both" && rule.apply_to !== input.type) return false;

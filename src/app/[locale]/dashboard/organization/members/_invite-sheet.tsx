@@ -2,7 +2,6 @@
 
 import { Loader2, MailPlus } from "lucide-react";
 import type { useTranslations } from "next-intl";
-import { useLocale } from "next-intl";
 import React from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -36,7 +35,7 @@ interface Role {
 }
 
 const inviteFormSchema = z.object({
-  identifier: z.string().min(1, "Identifier is required"),
+  email: z.string().email("Valid email is required"),
   roleId: z.string().min(1, "Please select a role"),
 });
 
@@ -49,18 +48,8 @@ interface InviteSheetProps {
   onSubmit: (data: { email: string; roleId: string }) => void;
   roles: Role[];
   defaultRoleId: string;
-  t: ReturnType<typeof useTranslations<"organization.members">>;
+  t: ReturnType<typeof useTranslations<"organization.memberManagement">>;
 }
-
-const identifierLabels: Record<string, string> = {
-  en: "Email, Phone, or Username",
-  mn: "И-мэйл, Утас, эсвэл Хэрэглэгчийн нэр",
-};
-
-const identifierPlaceholders: Record<string, string> = {
-  en: "Enter email, phone, or username",
-  mn: "И-мэйл, утас, эсвэл хэрэглэгчийн нэрээ оруулна уу",
-};
 
 export function InviteSheet({
   open,
@@ -74,7 +63,7 @@ export function InviteSheet({
   const form = useForm<InviteFormValues>({
     resolver: zodResolver(inviteFormSchema),
     defaultValues: {
-      identifier: "",
+      email: "",
       roleId: defaultRoleId,
     },
   });
@@ -85,7 +74,7 @@ export function InviteSheet({
   React.useEffect(() => {
     if (open && !prevOpen.current) {
       reset({
-        identifier: "",
+        email: "",
         roleId: defaultRoleId,
       });
     }
@@ -94,45 +83,35 @@ export function InviteSheet({
 
   function handleSubmit(data: InviteFormValues) {
     onSubmit({
-      email: data.identifier.trim(),
+      email: data.email.trim(),
       roleId: data.roleId,
     });
   }
-
-  const locale = useLocale();
-  const identifierLabel = identifierLabels[locale] ?? identifierLabels.en;
-  const identifierPlaceholder =
-    identifierPlaceholders[locale] ?? identifierPlaceholders.en;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-md">
         <SheetHeader>
           <SheetTitle>{t("inviteNew")}</SheetTitle>
-          <SheetDescription>{t("emailPlaceholder")}</SheetDescription>
+          <SheetDescription>{t("inviteDescription")}</SheetDescription>
         </SheetHeader>
 
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
           className="flex flex-col gap-5 py-6"
         >
-          {/* ── Identifier (Email / Phone / Username) ────── */}
-          <Field data-invalid={!!form.formState.errors.identifier}>
-            <FieldLabel htmlFor="invite-identifier">
-              {identifierLabel}
-            </FieldLabel>
+          <Field data-invalid={!!form.formState.errors.email}>
+            <FieldLabel htmlFor="invite-email">{t("emailLabel")}</FieldLabel>
             <FieldContent>
               <Input
-                id="invite-identifier"
-                type="text"
-                placeholder={identifierPlaceholder}
-                aria-invalid={!!form.formState.errors.identifier}
-                {...form.register("identifier")}
+                id="invite-email"
+                type="email"
+                placeholder={t("emailPlaceholder")}
+                aria-invalid={!!form.formState.errors.email}
+                {...form.register("email")}
               />
-              {form.formState.errors.identifier && (
-                <FieldError>
-                  {form.formState.errors.identifier.message}
-                </FieldError>
+              {form.formState.errors.email && (
+                <FieldError>{form.formState.errors.email.message}</FieldError>
               )}
             </FieldContent>
           </Field>

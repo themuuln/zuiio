@@ -7,14 +7,14 @@ import {
 } from "@/lib/services/customer-note-service";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
-export const GET = createRouteHandler(async ({ orgId, params }) => {
+export const GET = createRouteHandler(async ({ orgId, params, supabase }) => {
   const { customerId } = params;
-  const notes = await getCustomerNotes(orgId, customerId);
+  const notes = await getCustomerNotes(supabase, orgId, customerId);
   return NextResponse.json({ data: notes });
 });
 
 export const POST = createRouteHandler(
-  async ({ request, orgId, params, user }) => {
+  async ({ request, orgId, params, user, supabase }) => {
     await requireActiveSubscription(orgId);
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
     const rateCheck = mutationRateLimiter.check(ip);
@@ -33,7 +33,13 @@ export const POST = createRouteHandler(
     }
     const { customerId } = params;
     const body = await request.json();
-    const note = await createCustomerNote(orgId, customerId, body, user.id);
+    const note = await createCustomerNote(
+      supabase,
+      orgId,
+      customerId,
+      body,
+      user.id,
+    );
     return NextResponse.json({ data: note }, { status: 201 });
   },
 );

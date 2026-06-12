@@ -7,14 +7,18 @@ import {
 } from "@/lib/services/communication-service";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
-export const GET = createRouteHandler(async ({ orgId, params }) => {
+export const GET = createRouteHandler(async ({ orgId, params, supabase }) => {
   const { customerId } = params;
-  const communications = await getCustomerCommunications(orgId, customerId);
+  const communications = await getCustomerCommunications(
+    supabase,
+    orgId,
+    customerId,
+  );
   return NextResponse.json({ data: communications });
 });
 
 export const POST = createRouteHandler(
-  async ({ request, orgId, params, user }) => {
+  async ({ request, orgId, params, user, supabase }) => {
     await requireActiveSubscription(orgId);
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
     const rateCheck = mutationRateLimiter.check(ip);
@@ -34,6 +38,7 @@ export const POST = createRouteHandler(
     const { customerId } = params;
     const body = await request.json();
     const communication = await createCustomerCommunication(
+      supabase,
       orgId,
       customerId,
       body,

@@ -269,7 +269,10 @@ async function fetchBayViewData(
   const woWithDetails = workOrders.map((wo) => ({
     ...wo,
     mechanic: wo.mechanic_id ? (mechanicMap.get(wo.mechanic_id) ?? null) : null,
-    helpers: helpersByWo.get(wo.id) ?? [],
+    // Filter out the main mechanic from helpers to avoid duplication
+    helpers: (helpersByWo.get(wo.id) ?? []).filter(
+      (h) => h.id !== wo.mechanic_id,
+    ),
     customer_name: wo.customer?.company_name ?? wo.customer?.full_name ?? null,
   }));
 

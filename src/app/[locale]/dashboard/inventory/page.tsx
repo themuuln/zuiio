@@ -9,7 +9,7 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,12 +26,7 @@ import {
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId } from "@/lib/stores";
-import type { Tab } from "./_components/constants";
-import { getTabs } from "./_components/constants";
-import { MovementsTab } from "./_components/movements-tab";
 import { PartsTab } from "./_components/parts-tab";
-import { PurchaseOrdersTab } from "./_components/purchase-orders-tab";
-import { SuppliersTab } from "./_components/suppliers-tab";
 import { TableSkeleton } from "./_components/table-skeleton";
 
 export default function InventoryPage() {
@@ -41,9 +36,11 @@ export default function InventoryPage() {
   const selectedBranchId = useSelectedBranchId();
   const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
   const { registerTab } = useRightSidebar();
-  const [tab, setTab] = useState<Tab>("parts");
+
+  // Tab navigation removed - sidebar handles navigation
+  // This stub is kept for PartsTab's onNavigate prop compatibility
+  const handleTabChange = (_newTab: string) => {};
   const [search, setSearch] = useState("");
-  const [movementFilter, setMovementFilter] = useState("all");
 
   // Data for sidebar + cross-tab coordination
   const { data: parts = [], error: partsError } = usePartsCatalog(
@@ -67,11 +64,6 @@ export default function InventoryPage() {
     orgId ?? undefined,
     branchFilter,
   );
-
-  const handleTabChange = useCallback((newTab: string) => {
-    setTab(newTab as Tab);
-    setSearch("");
-  }, []);
 
   // ── Sidebar: Stock Summary + Quick Actions ──────────
   const balanceMap = useMemo(() => {
@@ -158,8 +150,6 @@ export default function InventoryPage() {
 
   if (!orgId) return null;
 
-  const tabs = getTabs(t);
-
   return (
     <div className="tablet-touch flex flex-col gap-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -241,59 +231,14 @@ export default function InventoryPage() {
         </Card>
       </div>
 
-      {/* Tab navigation */}
-      <div className="flex gap-2 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:flex-wrap sm:px-0">
-        {tabs.map((tabItem) => {
-          const Icon = tabItem.icon;
-          return (
-            <Button
-              key={tabItem.key}
-              variant={tab === tabItem.key ? "default" : "ghost"}
-              onClick={() => handleTabChange(tabItem.key)}
-              className="gap-2"
-            >
-              <Icon className="size-4" />
-              {tabItem.label}
-            </Button>
-          );
-        })}
-      </div>
-
-      {/* Tab content */}
-      {tab === "parts" && (
-        <PartsTab
-          orgId={orgId}
-          branchFilter={branchFilter}
-          search={search}
-          onSearchChange={setSearch}
-          onNavigate={handleTabChange}
-        />
-      )}
-      {tab === "movements" && (
-        <MovementsTab
-          orgId={orgId}
-          branchFilter={branchFilter}
-          search={search}
-          onSearchChange={setSearch}
-          movementFilter={movementFilter}
-          onMovementFilterChange={setMovementFilter}
-        />
-      )}
-      {tab === "suppliers" && (
-        <SuppliersTab
-          orgId={orgId}
-          search={search}
-          onSearchChange={setSearch}
-        />
-      )}
-      {tab === "purchase-orders" && (
-        <PurchaseOrdersTab
-          orgId={orgId}
-          branchFilter={branchFilter}
-          search={search}
-          onSearchChange={setSearch}
-        />
-      )}
+      {/* Parts inventory - main view */}
+      <PartsTab
+        orgId={orgId}
+        branchFilter={branchFilter}
+        search={search}
+        onSearchChange={setSearch}
+        onNavigate={handleTabChange}
+      />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { NotFoundError } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   SubscriptionPlan,
   SubscriptionPlanInfo,
@@ -28,9 +28,10 @@ function mapSubscription(plan: SubscriptionPlan): SubscriptionPlanInfo {
 }
 
 export async function getOrganizationSubscription(
+  db: SupabaseClient,
   orgId: string,
 ): Promise<SubscriptionPlanInfo | null> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data, error } = await supabase
     .from("subscription_plans")
@@ -50,9 +51,10 @@ export async function getOrganizationSubscription(
 }
 
 export async function checkSubscriptionStatus(
+  db: SupabaseClient,
   orgId: string,
 ): Promise<SubscriptionStatus> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data, error } = await supabase.rpc("check_org_subscription_status", {
     target_org_id: orgId,
@@ -66,9 +68,10 @@ export async function checkSubscriptionStatus(
 }
 
 export async function createSubscription(
+  db: SupabaseClient,
   orgId: string,
 ): Promise<SubscriptionPlanInfo> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { error } = await supabase.rpc("create_default_subscription", {
     target_org_id: orgId,
@@ -78,7 +81,7 @@ export async function createSubscription(
     throw new Error(error.message ?? "Failed to create subscription");
   }
 
-  const subscription = await getOrganizationSubscription(orgId);
+  const subscription = await getOrganizationSubscription(db, orgId);
   if (!subscription) {
     throw new Error("Subscription was created but could not be retrieved");
   }
@@ -87,12 +90,13 @@ export async function createSubscription(
 }
 
 export async function updateSubscription(
+  db: SupabaseClient,
   orgId: string,
   params: UpdateSubscriptionParams,
 ): Promise<SubscriptionPlanInfo> {
-  const supabase = await createClient();
+  const supabase = db;
 
-  const currentPlan = await getOrganizationSubscription(orgId);
+  const currentPlan = await getOrganizationSubscription(db, orgId);
   if (!currentPlan) {
     throw new NotFoundError("No subscription found for this organization");
   }
@@ -119,9 +123,10 @@ export async function updateSubscription(
 }
 
 export async function renewSubscription(
+  db: SupabaseClient,
   orgId: string,
 ): Promise<SubscriptionPlanInfo> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data, error } = await supabase.rpc(
     "renew_organization_subscription",

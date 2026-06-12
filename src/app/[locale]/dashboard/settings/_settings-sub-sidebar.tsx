@@ -41,7 +41,7 @@ export function SettingsSubSidebar({
 
   return (
     <nav
-      className="sticky top-20 hidden w-12 shrink-0 flex-col items-center gap-1 self-start rounded-xl border border-border/60 bg-background py-3 shadow-sm sm:flex"
+      className="sticky top-20 hidden w-10 shrink-0 flex-col items-center gap-0.5 self-start rounded-lg border border-border py-2 sm:flex"
       aria-label={t("navTitle")}
     >
       {sections.map((section) => {

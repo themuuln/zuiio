@@ -1,6 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
@@ -55,13 +56,19 @@ export function TransactionsTab({
   filteredWorkOrders,
   data,
 }: TransactionsTabProps) {
+  const t = useTranslations();
+  const financeT = useTranslations("finance");
   const now = useClientNow();
 
   const exportColumns: ExportColumn<WorkOrderRow>[] = [
-    { key: "id", label: "WO #", value: (wo) => wo.id.slice(0, 8) },
+    {
+      key: "id",
+      label: financeT("workOrderNumberShort"),
+      value: (wo) => wo.id.slice(0, 8),
+    },
     {
       key: "customer",
-      label: "Customer",
+      label: financeT("customerColumn"),
       value: (wo) => {
         const c = wo.customer;
         return c ? `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim() : "—";
@@ -69,25 +76,25 @@ export function TransactionsTab({
     },
     {
       key: "vehicle",
-      label: "Vehicle",
+      label: financeT("vehicleColumn"),
       value: (wo) => wo.vehicle?.plate_number ?? "—",
     },
-    { key: "status", label: "Status" },
+    { key: "status", label: financeT("statusColumn") },
     {
       key: "services",
-      label: "Services",
+      label: financeT("servicesColumn"),
       format: "currency",
       value: (wo) => wo.services.reduce((s, x) => s + Number(x.final_price), 0),
     },
     {
       key: "parts",
-      label: "Parts",
+      label: financeT("partsColumn"),
       format: "currency",
       value: (wo) => wo.parts.reduce((s, x) => s + Number(x.final_price), 0),
     },
     {
       key: "grand_total",
-      label: "Total",
+      label: financeT("totalColumn"),
       format: "currency",
       value: (wo) => {
         return (
@@ -96,7 +103,7 @@ export function TransactionsTab({
         );
       },
     },
-    { key: "created_at", label: "Date", format: "date" },
+    { key: "created_at", label: financeT("dateColumn"), format: "date" },
   ];
 
   const columns: ColumnDef<WorkOrderRow>[] = useMemo(
@@ -122,7 +129,10 @@ export function TransactionsTab({
           return c ? `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim() : "";
         },
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Customer" />
+          <DataTableColumnHeader
+            column={column}
+            title={financeT("customerColumn")}
+          />
         ),
         cell: ({ row }) => {
           const c = row.original.customer;
@@ -136,7 +146,10 @@ export function TransactionsTab({
         id: "vehicle",
         accessorFn: (row) => row.vehicle?.plate_number ?? "",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Vehicle" />
+          <DataTableColumnHeader
+            column={column}
+            title={financeT("vehicleColumn")}
+          />
         ),
         cell: ({ row }) =>
           row.original.vehicle?.plate_number ? (
@@ -153,7 +166,10 @@ export function TransactionsTab({
       {
         accessorKey: "status",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Status" />
+          <DataTableColumnHeader
+            column={column}
+            title={financeT("statusColumn")}
+          />
         ),
         cell: ({ row }) => (
           <Badge variant="outline">{row.original.status}</Badge>
@@ -164,7 +180,10 @@ export function TransactionsTab({
         accessorFn: (row) =>
           row.services.reduce((s, x) => s + Number(x.final_price), 0),
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Services" />
+          <DataTableColumnHeader
+            column={column}
+            title={financeT("servicesColumn")}
+          />
         ),
         cell: ({ row }) => {
           const { svcTotal } = getGrandTotal(row.original);
@@ -178,7 +197,10 @@ export function TransactionsTab({
         accessorFn: (row) =>
           row.parts.reduce((s, x) => s + Number(x.final_price), 0),
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Parts" />
+          <DataTableColumnHeader
+            column={column}
+            title={financeT("partsColumn")}
+          />
         ),
         cell: ({ row }) => {
           const { prtTotal } = getGrandTotal(row.original);
@@ -198,7 +220,10 @@ export function TransactionsTab({
           return svc + prt;
         },
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Total" />
+          <DataTableColumnHeader
+            column={column}
+            title={financeT("totalColumn")}
+          />
         ),
         cell: ({ row }) => {
           const { grandTotal } = getGrandTotal(row.original);
@@ -212,7 +237,10 @@ export function TransactionsTab({
       {
         accessorKey: "created_at",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Date" />
+          <DataTableColumnHeader
+            column={column}
+            title={financeT("dateColumn")}
+          />
         ),
         cell: ({ row }) => (
           <span className="text-muted-foreground">
@@ -221,7 +249,7 @@ export function TransactionsTab({
         ),
       },
     ],
-    [search],
+    [search, financeT],
   );
 
   if (!hasAnyData) {
@@ -230,27 +258,28 @@ export function TransactionsTab({
 
   const emptyMessage =
     filteredWorkOrders.length === 0 && search
-      ? "No work orders match your search"
+      ? financeT("noWorkOrdersMatch")
       : !data?.recentWorkOrders || data.recentWorkOrders.length === 0
-        ? "No work orders in this period"
+        ? financeT("noWorkOrdersInPeriod")
         : null;
 
   return (
     <>
       <ListToolbar
         search={{
-          placeholder: "Search by customer, plate, or ID...",
+          placeholder: financeT("searchTransactions"),
           value: search,
           onChange: onSearchChange,
           resultLabel: filteredWorkOrders.length
-            ? `${filteredWorkOrders.length} result${filteredWorkOrders.length === 1 ? "" : "s"}`
+            ? financeT("resultsCount", { count: filteredWorkOrders.length })
             : undefined,
-          emptyLabel: search ? `No matches for "${search}"` : undefined,
+          emptyLabel: search
+            ? financeT("noMatches", { query: search })
+            : undefined,
         }}
         stats={
           <span>
-            {filteredWorkOrders.length} work order
-            {filteredWorkOrders.length !== 1 ? "s" : ""}
+            {financeT("workOrdersCount", { count: filteredWorkOrders.length })}
           </span>
         }
         actions={
@@ -258,14 +287,14 @@ export function TransactionsTab({
             data={filteredWorkOrders}
             columns={exportColumns}
             filename={`transactions-${now.toISOString().split("T")[0]}.xlsx`}
-            sheetName="Transactions"
+            sheetName={financeT("transactionsSheet")}
           />
         }
       />
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold">
-            Recent Work Orders
+            {t("dashboard.recentWorkOrders")}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">

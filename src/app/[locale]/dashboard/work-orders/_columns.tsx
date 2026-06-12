@@ -3,7 +3,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MechanicAvatar } from "@/components/mechanic-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Typography } from "@/components/ui/typography";
 import type { WorkOrderListItem } from "@/lib/queries/use-work-orders";
-import { getMechanicInitials } from "@/lib/mechanic-colors";
+
 import { formatMNT } from "@/lib/utils";
 
 // ── Status helpers ────────────────────────────────────────────
@@ -144,15 +144,9 @@ export function createColumns(
         const mechanic = row.original.mechanic;
         if (!mechanic)
           return <span className="text-sm text-muted-foreground">—</span>;
-        const initials = getMechanicInitials(mechanic.full_name);
         return (
           <div className="flex items-center gap-2">
-            <Avatar size="sm">
-              {mechanic.avatar_url && (
-                <AvatarImage src={mechanic.avatar_url} alt="" />
-              )}
-              <AvatarFallback>{initials}</AvatarFallback>
-            </Avatar>
+            <MechanicAvatar mechanic={mechanic} size="sm" />
             <span className="text-sm text-muted-foreground">
               {mechanic.full_name}
             </span>

@@ -152,7 +152,11 @@ export async function savePostServiceData(
     throw new Error(`Failed to save recommendations: ${recError.message}`);
 
   // 3. Update work_order.odometer_at_service + notes
-  const updateData: Record<string, unknown> = {
+  const updateData: {
+    odometer_at_service: number | null;
+    updated_by: string;
+    notes?: string | null;
+  } = {
     odometer_at_service: odometerReading ?? null,
     updated_by: user.id,
   };
@@ -318,7 +322,7 @@ export async function saveCompletionData(
     odometer_reading: odometerReading ?? null,
     customer_satisfaction: customerSatisfaction ?? null,
     customer_feedback: customerFeedback?.trim() ?? null,
-    customer_preferences: {},
+    customer_preferences: {} as Record<string, never>,
     next_appointment_date: nextAppointmentDate ?? null,
     created_by: user.id,
   };
@@ -417,6 +421,7 @@ export async function getWorkOrderServicesWithIntervals(
   workOrderId: string,
 ): Promise<EnrichedServiceItem[]> {
   const supabase = await createClient();
+  const orgId = await getOrgId();
 
   const { data, error } = await supabase
     .from("work_order_services")
@@ -430,6 +435,7 @@ export async function getWorkOrderServicesWithIntervals(
       )
     `)
     .eq("work_order_id", workOrderId)
+    .eq("organization_id", orgId)
     .order("created_at");
 
   if (error) throw new Error(`Failed to fetch services: ${error.message}`);

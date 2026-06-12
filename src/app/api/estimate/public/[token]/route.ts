@@ -23,7 +23,7 @@ export async function GET(
       discount_total, tax_total, grand_total,
       customer:customers(first_name, last_name, phone, email),
       vehicle:vehicles(plate_number, make, model, year),
-      items:estimate_items(description, item_type, quantity, unit_price, discount_amount, discount_percentage, line_total),
+      items:estimate_items(description, item_type, quantity, unit_price, discount_amount, discount_percentage, line_total, sort_order),
       organization:organizations(name, phone, email, address)
     `,
     )
@@ -38,10 +38,10 @@ export async function GET(
     );
   }
 
-  // Sort items by line_total descending as a proxy for sort_order
+  // Preserve the original estimate line order for customer-facing output.
   const sortedItems = (estimate.items ?? []).sort(
-    (a: { line_total: number }, b: { line_total: number }) =>
-      Number(b.line_total) - Number(a.line_total),
+    (a: { sort_order?: number | null }, b: { sort_order?: number | null }) =>
+      Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0),
   );
 
   return NextResponse.json({

@@ -2,9 +2,8 @@
 
 import { Car, CornerDownRight, Loader2, Plus } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { zStack } from "@/lib/z-stack";
 import { NewCustomerSheet } from "@/components/customers/new-customer-sheet";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { MechanicAvatar } from "@/components/mechanic-avatar";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -67,25 +66,6 @@ export function AssignDialog({
   const [creatingWorkOrder, setCreatingWorkOrder] = useState(false);
   const [showNewVehicle, setShowNewVehicle] = useState(false);
   const [showNewCustomer, setShowNewCustomer] = useState(false);
-  const [childZLayer, setChildZLayer] = useState(0);
-  // Push z-layer when a child sheet opens so it stacks above the Dialog
-  const childZRef = useRef(false);
-  useEffect(() => {
-    const childOpen = showNewVehicle || showNewCustomer;
-    if (childOpen && !childZRef.current) {
-      childZRef.current = true;
-      setChildZLayer(zStack.push());
-    } else if (!childOpen && childZRef.current) {
-      childZRef.current = false;
-      zStack.pop();
-    }
-    return () => {
-      if (childZRef.current) {
-        childZRef.current = false;
-        zStack.pop();
-      }
-    };
-  }, [showNewVehicle, showNewCustomer]);
 
   const searchRef = useRef<HTMLInputElement>(null);
   const blurTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -174,7 +154,7 @@ export function AssignDialog({
           });
           setSelectedWoId(result.workOrderId);
         } catch (err) {
-          reportError("Failed to create work order:", err);
+          reportError(err, "Failed to create work order");
           setSelectedVehicle(null);
         } finally {
           setCreatingWorkOrder(false);
@@ -191,7 +171,7 @@ export function AssignDialog({
       await onAssign(selectedWoId, selectedMechId ?? undefined);
       onOpenChange(false);
     } catch (err) {
-      reportError("Assign failed:", err);
+      reportError(err, "Assign failed");
     } finally {
       setSaving(false);
     }
@@ -348,18 +328,86 @@ export function AssignDialog({
                 </div>
               )}
 
-              {/* Empty state - show queue count */}
+              {/* Queue list — shown by default when search is empty */}
               {!search && !selectedVehicle && (
-                <div className="flex flex-col items-center justify-center py-4 text-center">
-                  <Car className="size-5 text-muted-foreground/30 mb-1" />
-                  <Typography.Muted className="text-xs text-muted-foreground/60">
-                    {queue.length} vehicle{queue.length !== 1 ? "s" : ""} in
-                    queue
-                  </Typography.Muted>
-                  <Typography.Muted className="text-xs text-muted-foreground/40 mt-1">
-                    Search above or create a new record
-                  </Typography.Muted>
-                  <div className="flex items-center gap-2 mt-3">
+                <div className="flex flex-col gap-2 mt-1">
+                  {queue.length > 0 ? (
+                    <div className="max-h-[180px] overflow-y-auto">
+                      <div className="flex flex-col gap-1">
+                        {queue.map((wo) => {
+                          const v = wo.vehicle;
+                          return (
+                            <Button
+                              key={wo.id}
+                              variant="ghost"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                if (v) {
+                                  handleSelectVehicle({
+                                    id: v.id,
+                                    plate_number: v.plate_number,
+                                    make: v.make ?? "",
+                                    model: v.model ?? "",
+                                    year: v.year,
+                                    color: v.color,
+                                    customer: null,
+                                  });
+                                }
+                              }}
+                              onTouchStart={(e) => {
+                                e.preventDefault();
+                                if (v) {
+                                  handleSelectVehicle({
+                                    id: v.id,
+                                    plate_number: v.plate_number,
+                                    make: v.make ?? "",
+                                    model: v.model ?? "",
+                                    year: v.year,
+                                    color: v.color,
+                                    customer: null,
+                                  });
+                                }
+                              }}
+                              className="w-full justify-start gap-2 px-3 py-2 h-auto text-left"
+                            >
+                              <div className="flex size-8 items-center justify-center bg-amber-500/10 text-amber-500 shrink-0">
+                                <Car className="size-4" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <Typography.Text className="text-xs font-medium truncate">
+                                    {formatPlateNumber(v?.plate_number ?? "")}
+                                  </Typography.Text>
+                                  {v?.year && (
+                                    <span className="text-xs text-muted-foreground">
+                                      {v.year}
+                                    </span>
+                                  )}
+                                  <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                                    In queue
+                                  </span>
+                                </div>
+                                <Typography.Muted className="text-xs text-muted-foreground truncate">
+                                  {v?.make} {v?.model}
+                                </Typography.Muted>
+                              </div>
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-4 text-center">
+                      <Car className="size-5 text-muted-foreground/30 mb-1" />
+                      <Typography.Muted className="text-xs text-muted-foreground/60">
+                        No vehicles in queue
+                      </Typography.Muted>
+                      <Typography.Muted className="text-xs text-muted-foreground/40 mt-1">
+                        Search above or create a new record
+                      </Typography.Muted>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -399,12 +447,6 @@ export function AssignDialog({
                   <div className="flex flex-col gap-1 pr-3">
                     {mechanics.map((m) => {
                       const isSelected = selectedMechId === m.id;
-                      const initials = (m.full_name ?? "M")
-                        .split(" ")
-                        .map((w) => w[0])
-                        .join("")
-                        .slice(0, 2)
-                        .toUpperCase();
                       return (
                         <Button
                           variant="ghost"
@@ -424,11 +466,7 @@ export function AssignDialog({
                               : "border-border",
                           )}
                         >
-                          <Avatar className="size-8">
-                            <AvatarFallback className="text-xs">
-                              {initials}
-                            </AvatarFallback>
-                          </Avatar>
+                          <MechanicAvatar mechanic={m} className="size-8" />
                           <Typography.Text className="text-xs font-medium truncate">
                             {m.full_name}
                           </Typography.Text>
@@ -484,7 +522,6 @@ export function AssignDialog({
         open={showNewVehicle}
         onOpenChange={setShowNewVehicle}
         initialPlateNumber={search.trim() || undefined}
-        zLayer={childZLayer}
         onSuccess={() => {
           setShowNewVehicle(false);
           setSearch("");
@@ -494,7 +531,6 @@ export function AssignDialog({
       <NewCustomerSheet
         open={showNewCustomer}
         onOpenChange={setShowNewCustomer}
-        zLayer={childZLayer}
         onSuccess={() => {
           setShowNewCustomer(false);
         }}

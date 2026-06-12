@@ -1,19 +1,12 @@
 "use client";
 
-import { AlertTriangle, Loader2, Plus } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import PartPhotoUpload from "./part-photo-upload";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-} from "@/components/ui/combobox";
+import { CreatableCombobox } from "@/components/ui/combobox";
 import {
   Field,
   FieldContent,
@@ -55,6 +48,7 @@ export type PartFormProps = {
   mode?: "quick" | "full";
   initialData?: Partial<CreatePartParams>;
   partId?: string; // when present, switches to update mode
+  readOnly?: boolean; // display-only mode, no submit button
   onSuccess?: (part: PartsCatalogItem) => void;
   onCancel?: () => void;
 };
@@ -63,6 +57,7 @@ export function PartForm({
   mode = "full",
   initialData,
   partId,
+  readOnly = false,
   onSuccess,
   onCancel,
 }: PartFormProps) {
@@ -73,7 +68,6 @@ export function PartForm({
 
   const [currentMode, setCurrentMode] = useState<"quick" | "full">(mode);
   const [error, setError] = useState<string | null>(null);
-  const [categoryInput, setCategoryInput] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(
     initialData?.image_url ?? null,
   );
@@ -84,7 +78,6 @@ export function PartForm({
   const createCategory = useCreatePartCategory(orgId);
   const isUpdate = !!partId;
   const mutation = isUpdate ? updatePartMutation : createPartMutation;
-  const categoryCreatRef = useRef(false);
 
   const form = useForm<PartFormValues>({
     resolver: zodResolver(partSchema),
@@ -111,21 +104,11 @@ export function PartForm({
   const selectedCategory =
     allCategories.find((c) => c.name === form.watch("category")) ?? null;
 
-  // Check if the typed input matches an existing category name
-  const inputMatchesCategory = categoryInput
-    ? allCategories.some(
-        (c) => c.name.toLowerCase() === categoryInput.toLowerCase(),
-      )
-    : false;
-
-  const handleCreateCategory = async () => {
-    const rawName = categoryInput.trim();
-    if (!rawName || inputMatchesCategory) return;
-    categoryCreatRef.current = true;
+  const handleCreateCategory = async (name: string) => {
+    if (!name) return;
     try {
-      const created = await createCategory.mutateAsync(rawName);
+      const created = await createCategory.mutateAsync(name);
       form.setValue("category", created.name);
-      setCategoryInput("");
     } catch {
       // toast is handled by mutation
     }
@@ -187,27 +170,29 @@ export function PartForm({
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
-      {/* ── Mode Toggle Tabs ── */}
-      <Tabs
-        value={currentMode}
-        onValueChange={(val) => setCurrentMode(val as "quick" | "full")}
-        className="w-full shrink-0"
-      >
-        <TabsList className="flex w-full h-9 p-0.5 rounded-lg bg-muted border border-border">
-          <TabsTrigger
-            value="quick"
-            className="flex-1 w-full rounded-md py-1 text-xs justify-center cursor-pointer"
-          >
-            Quick Add
-          </TabsTrigger>
-          <TabsTrigger
-            value="full"
-            className="flex-1 w-full rounded-md py-1 text-xs justify-center cursor-pointer"
-          >
-            Full Details
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      {/* ── Mode Toggle Tabs (hidden in readOnly) ── */}
+      {!readOnly && (
+        <Tabs
+          value={currentMode}
+          onValueChange={(val) => setCurrentMode(val as "quick" | "full")}
+          className="w-full shrink-0"
+        >
+          <TabsList className="flex w-full h-9 p-0.5 rounded-lg bg-muted border border-border">
+            <TabsTrigger
+              value="quick"
+              className="flex-1 w-full rounded-md py-1 text-xs justify-center cursor-pointer"
+            >
+              Quick Add
+            </TabsTrigger>
+            <TabsTrigger
+              value="full"
+              className="flex-1 w-full rounded-md py-1 text-xs justify-center cursor-pointer"
+            >
+              Full Details
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
 
       {error && (
         <div className="flex items-start gap-2 rounded-lg border border-destructive/50 bg-destructive/5 p-3 text-sm text-destructive">
@@ -232,6 +217,7 @@ export function PartForm({
                 partId={partId}
                 imageUrl={imageUrl}
                 onImageChange={setImageUrl}
+                readOnly={readOnly}
               />
             </FieldContent>
           </Field>
@@ -246,7 +232,8 @@ export function PartForm({
             <FieldContent>
               <Input
                 placeholder="Тосны шүүлтүүр"
-                autoFocus
+                autoFocus={!readOnly}
+                disabled={readOnly}
                 aria-invalid={!!form.formState.errors.name_mn}
                 {...form.register("name_mn")}
               />
@@ -262,7 +249,11 @@ export function PartForm({
               <span className="text-xs text-muted-foreground">(optional)</span>
             </FieldLabel>
             <FieldContent>
-              <Input placeholder="e.g. Oil Filter" {...form.register("name")} />
+              <Input
+                placeholder="e.g. Oil Filter"
+                disabled={readOnly}
+                {...form.register("name")}
+              />
             </FieldContent>
           </Field>
         </div>
@@ -283,7 +274,7 @@ export function PartForm({
             <Field>
               <FieldLabel>Category</FieldLabel>
               <FieldContent>
-                <Combobox
+                <CreatableCombobox
                   items={allCategories}
                   value={selectedCategory}
                   onValueChange={(cat) => {
@@ -293,48 +284,17 @@ export function PartForm({
                       form.setValue("category", "");
                     }
                   }}
-                  onInputValueChange={(val) => setCategoryInput(val)}
-                  isItemEqualToValue={(a, b) => a.id === b.id}
-                  itemToStringLabel={(cat) => cat?.name ?? ""}
-                >
-                  <ComboboxInput
-                    placeholder="e.g. Filters, Suspension"
-                    showTrigger
-                    showClear={!!form.watch("category")}
-                    className="h-11"
-                  />
-                  <ComboboxContent>
-                    <ComboboxList>
-                      {(cat: { id: string; name: string }) => (
-                        <ComboboxItem key={cat.id} value={cat}>
-                          <span>{cat.name}</span>
-                        </ComboboxItem>
-                      )}
-                    </ComboboxList>
-                    {categoryInput.trim() && !inputMatchesCategory && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleCreateCategory();
-                        }}
-                        disabled={createCategory.isPending}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-left hover:bg-accent cursor-pointer border-t border-border"
-                      >
-                        <Plus className="size-4 shrink-0 text-muted-foreground" />
-                        <span>
-                          {t("inventory.createCategory", {
-                            name: categoryInput.trim(),
-                          })}
-                        </span>
-                        {createCategory.isPending && (
-                          <Loader2 className="size-3 animate-spin ml-auto" />
-                        )}
-                      </button>
-                    )}
-                    <ComboboxEmpty />
-                  </ComboboxContent>
-                </Combobox>
+                  onCreateItem={handleCreateCategory}
+                  isCreating={createCategory.isPending}
+                  createLabel={(name) =>
+                    t("inventory.createCategory", { name })
+                  }
+                  isItemEqualToValue={(a: any, b: any) => a.id === b.id}
+                  placeholder="e.g. Filters, Suspension"
+                  showTrigger
+                  disabled={readOnly}
+                  className="h-11"
+                />
               </FieldContent>
             </Field>
           </div>
@@ -345,6 +305,7 @@ export function PartForm({
               <FieldContent>
                 <Input
                   placeholder="e.g. OF-101"
+                  disabled={readOnly}
                   {...form.register("part_number")}
                 />
               </FieldContent>
@@ -357,6 +318,7 @@ export function PartForm({
                   type="number"
                   min="0"
                   placeholder="15000"
+                  disabled={readOnly}
                   aria-invalid={!!form.formState.errors.default_price}
                   {...form.register("default_price")}
                 />
@@ -415,6 +377,7 @@ export function PartForm({
                 <FieldContent>
                   <Input
                     placeholder="e.g. piece, liter"
+                    disabled={readOnly}
                     {...form.register("unit")}
                   />
                 </FieldContent>
@@ -425,6 +388,7 @@ export function PartForm({
                 <FieldContent>
                   <Input
                     placeholder="Optional description"
+                    disabled={readOnly}
                     {...form.register("description")}
                   />
                 </FieldContent>
@@ -435,6 +399,7 @@ export function PartForm({
                 <FieldContent>
                   <Input
                     placeholder="e.g. A-3-12"
+                    disabled={readOnly}
                     {...form.register("location")}
                   />
                 </FieldContent>
@@ -444,34 +409,37 @@ export function PartForm({
         )}
       </FieldGroup>
 
-      <div className="flex flex-col-reverse gap-2 mt-4 sm:flex-row sm:justify-end">
-        {onCancel && (
-          <Button
-            variant="outline"
-            type="button"
-            onClick={onCancel}
-            className="h-11 px-6"
-          >
-            {commonT("cancel")}
-          </Button>
-        )}
-        <Button
-          type="submit"
-          disabled={mutation.isPending}
-          className="h-11 px-6 min-w-[140px]"
-        >
-          {mutation.isPending ? (
-            <span className="flex items-center gap-2 justify-center">
-              <Loader2 className="size-4 animate-spin" />
-              Saving...
-            </span>
-          ) : isUpdate ? (
-            "Update Part"
-          ) : (
-            "Create Part"
+      {/* Action buttons (hidden in readOnly mode) */}
+      {!readOnly && (
+        <div className="flex flex-col-reverse gap-2 mt-4 sm:flex-row sm:justify-end">
+          {onCancel && (
+            <Button
+              variant="outline"
+              type="button"
+              onClick={onCancel}
+              className="h-11 px-6"
+            >
+              {commonT("cancel")}
+            </Button>
           )}
-        </Button>
-      </div>
+          <Button
+            type="submit"
+            disabled={mutation.isPending}
+            className="h-11 px-6 min-w-[140px]"
+          >
+            {mutation.isPending ? (
+              <span className="flex items-center gap-2 justify-center">
+                <Loader2 className="size-4 animate-spin" />
+                Saving...
+              </span>
+            ) : isUpdate ? (
+              "Update Part"
+            ) : (
+              "Create Part"
+            )}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

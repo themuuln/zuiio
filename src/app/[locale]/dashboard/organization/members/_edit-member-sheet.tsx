@@ -71,7 +71,7 @@ interface EditMemberSheetProps {
   branches: Branch[];
   onSave: (memberId: string, data: EditMemberValues) => Promise<void>;
   saving: boolean;
-  t: ReturnType<typeof useTranslations<"organization.members">>;
+  t: ReturnType<typeof useTranslations<"organization.memberManagement">>;
 }
 
 export function EditMemberSheet({
@@ -85,8 +85,7 @@ export function EditMemberSheet({
   t,
 }: EditMemberSheetProps) {
   const form = useForm<EditMemberValues>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(editMemberSchema) as any,
+    resolver: zodResolver(editMemberSchema),
     defaultValues: {
       fullName: member.fullName ?? "",
       phone: member.phone ?? "",
@@ -202,13 +201,14 @@ export function EditMemberSheet({
               <Select
                 value={form.watch("branchId")}
                 onValueChange={(val) => {
-                  if (val) form.setValue("branchId", val);
+                  form.setValue("branchId", val === "__none__" ? "" : val);
                 }}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={t("noBranch")} />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="__none__">{t("noBranch")}</SelectItem>
                   {branches.map((branch) => (
                     <SelectItem key={branch.id} value={branch.id}>
                       {branch.name}

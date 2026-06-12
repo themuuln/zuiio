@@ -1,16 +1,18 @@
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
+import { createAuditLog } from "@/lib/audit";
 import { NotFoundError, ValidationError } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { VehicleModel } from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
 import { trimField } from "./trim-field";
 
 export async function getVehicleModels(
+  db: SupabaseClient,
   orgId: string,
   make?: string,
 ): Promise<VehicleModel[]> {
-  const supabase = await createClient();
+  const supabase = db;
 
   let query = supabase
     .from("vehicle_models")
@@ -31,8 +33,11 @@ export async function getVehicleModels(
   return (data ?? []) as unknown as VehicleModel[];
 }
 
-export async function getVehicleModel(id: string): Promise<VehicleModel> {
-  const supabase = await createClient();
+export async function getVehicleModel(
+  db: SupabaseClient,
+  id: string,
+): Promise<VehicleModel> {
+  const supabase = db;
 
   const { data, error } = await supabase
     .from("vehicle_models")
@@ -47,8 +52,11 @@ export async function getVehicleModel(id: string): Promise<VehicleModel> {
   return data;
 }
 
-export async function getDistinctMakes(orgId: string): Promise<string[]> {
-  const supabase = await createClient();
+export async function getDistinctMakes(
+  db: SupabaseClient,
+  orgId: string,
+): Promise<string[]> {
+  const supabase = db;
 
   const { data, error } = await supabase
     .from("vehicle_models")
@@ -64,6 +72,7 @@ export async function getDistinctMakes(orgId: string): Promise<string[]> {
 }
 
 export async function createVehicleModel(
+  db: SupabaseClient,
   orgId: string,
   params: {
     make: string;
@@ -78,8 +87,17 @@ export async function createVehicleModel(
 ): Promise<VehicleModel> {
   if (!params.make?.trim()) throw new ValidationError("Make is required");
   if (!params.model?.trim()) throw new ValidationError("Model is required");
+  if (
+    params.year_start != null &&
+    params.year_end != null &&
+    params.year_start > params.year_end
+  ) {
+    throw new ValidationError(
+      "Year start must be less than or equal to year end",
+    );
+  }
 
-  const supabase = await createClient();
+  const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
   const { data, error } = await supabase
@@ -106,12 +124,23 @@ export async function createVehicleModel(
   if (error || !data)
     throw new Error(error?.message ?? "Failed to create vehicle model");
 
+  await createAuditLog({
+    supabase,
+    action: "create",
+    table_name: "vehicle_models",
+    record_id: data.id,
+    user_id: userId,
+    organization_id: orgId,
+    new_data: data as unknown as Record<string, unknown>,
+  });
+
   revalidateTag(cacheTags.vehicleModels(orgId), "max");
 
   return data as unknown as VehicleModel;
 }
 
 export async function updateVehicleModel(
+  db: SupabaseClient,
   id: string,
   orgId: string,
   params: {
@@ -126,8 +155,18 @@ export async function updateVehicleModel(
     is_active?: boolean;
   },
 ): Promise<VehicleModel> {
-  const supabase = await createClient();
+  const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  if (
+    params.year_start != null &&
+    params.year_end != null &&
+    params.year_start > params.year_end
+  ) {
+    throw new ValidationError(
+      "Year start must be less than or equal to year end",
+    );
+  }
 
   const fieldMap: FieldMap<typeof params> = {
     columns: {
@@ -151,13 +190,15 @@ export async function updateVehicleModel(
     },
   };
 
-  const updates = buildUpdates(params, fieldMap);
+  const updates = buildUpdates(params, fieldMap) as Partial<VehicleModel>;
   updates.updated_by = userId;
 
   const { data, error } = await supabase
     .from("vehicle_models")
     .update(updates)
     .eq("id", id)
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
     .select(
       "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, class, is_active, created_by, updated_by, created_at, updated_at",
     )
@@ -165,16 +206,31 @@ export async function updateVehicleModel(
 
   if (error || !data) throw new NotFoundError("Vehicle model not found");
 
+  await createAuditLog({
+    supabase,
+    action: "update",
+    table_name: "vehicle_models",
+    record_id: data.id,
+    user_id: userId,
+    organization_id: orgId,
+    new_data: data as unknown as Record<string, unknown>,
+  });
+
   revalidateTag(cacheTags.vehicleModels(orgId), "max");
 
   return data as unknown as VehicleModel;
 }
 
 export async function deleteVehicleModel(
+  db: SupabaseClient,
   id: string,
   orgId: string,
 ): Promise<void> {
-  const supabase = await createClient();
+  const supabase = db;
+
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser();
 
   const { error } = await supabase
     .from("vehicle_models")
@@ -186,6 +242,15 @@ export async function deleteVehicleModel(
   if (error)
     throw new NotFoundError("Vehicle model not found or already deleted");
 
+  await createAuditLog({
+    supabase,
+    action: "soft_delete",
+    table_name: "vehicle_models",
+    record_id: id,
+    user_id: currentUser?.id,
+    organization_id: orgId,
+  });
+
   revalidateTag(cacheTags.vehicleModels(orgId), "max");
 }
 
@@ -194,6 +259,7 @@ export async function deleteVehicleModel(
  * Creates it if missing. Safe to call on every vehicle creation.
  */
 export async function ensureVehicleModel(
+  db: SupabaseClient,
   orgId: string,
   make: string,
   model: string,
@@ -202,7 +268,7 @@ export async function ensureVehicleModel(
   const normalizedModel = model.trim();
   if (!normalizedMake || !normalizedModel) return;
 
-  const supabase = await createClient();
+  const supabase = db;
 
   const { count, error } = await supabase
     .from("vehicle_models")

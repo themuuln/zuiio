@@ -74,7 +74,6 @@ function setupFromMock(
   builders: ReturnType<typeof createQueryBuilder>[],
 ) {
   let i = 0;
-  const _origFrom = mockClient.from;
   Object.assign(mockClient, {
     from: vi
       .fn()
@@ -108,7 +107,7 @@ describe("getMechanicsList", () => {
       ]),
     ]);
 
-    const result = await getMechanicsList("org-1");
+    const result = await getMechanicsList(mockClient as any, "org-1");
 
     expect(result).toEqual([
       { id: "u1", full_name: "John Doe" },
@@ -125,7 +124,7 @@ describe("getMechanicsList", () => {
       ]),
     ]);
 
-    const result = await getMechanicsList("org-1");
+    const result = await getMechanicsList(mockClient as any, "org-1");
 
     expect(result).toHaveLength(2);
     expect(result[0].full_name).toBe("John");
@@ -135,7 +134,7 @@ describe("getMechanicsList", () => {
   it("returns empty array when no mechanics", async () => {
     setupFromMock(mockClient, [b([])]);
 
-    const result = await getMechanicsList("org-1");
+    const result = await getMechanicsList(mockClient as any, "org-1");
 
     expect(result).toEqual([]);
   });
@@ -143,7 +142,7 @@ describe("getMechanicsList", () => {
   it("handles when profiles have no matching users", async () => {
     setupFromMock(mockClient, [b([{ user_id: "u1" }]), b([])]);
 
-    const result = await getMechanicsList("org-1");
+    const result = await getMechanicsList(mockClient as any, "org-1");
 
     expect(result).toEqual([]);
   });
@@ -199,7 +198,12 @@ describe("getDailyReport", () => {
       b([{ id: "m-1", full_name: "Mech One" }]),
     ]);
 
-    const result = await getDailyReport("org-1", null, "2025-01-15");
+    const result = await getDailyReport(
+      mockClient as any,
+      "org-1",
+      null,
+      "2025-01-15",
+    );
 
     expect(result.date).toBe("2025-01-15");
     expect(result.mechanic_name).toBe("All Mechanics");
@@ -212,56 +216,56 @@ describe("getDailyReport", () => {
   });
 
   it("supports mechanicId filter and includes mechanic name", async () => {
-    let callIdx = 0;
     const profileBuilder = createQueryBuilder<{ full_name: string }>();
     profileBuilder.single.mockResolvedValueOnce({
       data: { full_name: "Mech One" },
       error: null,
     });
-    const mc = createMockSupabaseClient();
-    mc.from = vi.fn().mockImplementation(() => {
-      const idx = callIdx++;
-      const builders = [
-        profileBuilder,
-        b([{ id: "wo-1" }]),
-        b([
-          {
-            final_price: 100,
-            discount_amount: 0,
-            name: "Oil Change",
-            work_order_id: "wo-1",
-          },
-        ]),
-        b([
-          {
-            final_price: 50,
-            discount_amount: 0,
-            part_name: "Filter",
-            work_order_id: "wo-1",
-          },
-        ]),
-        b([
-          {
-            id: "wo-1",
-            customer_id: "c-1",
-            vehicle_id: "v-1",
-            mechanic_id: "m-1",
-          },
-        ]),
-        b([]),
-        b([]),
-        b([]),
-        b([{ id: "c-1" }]),
-        b([{ id: "v-1" }]),
-        b([]),
-      ];
-      return builders[idx] ?? createQueryBuilder();
-    });
-    vi.mocked(createClient).mockResolvedValue(
-      mc as unknown as Awaited<ReturnType<typeof createClient>>,
-    );
+    const builders = [
+      profileBuilder,
+      b([{ id: "wo-1" }]),
+      b([
+        {
+          final_price: 100,
+          discount_amount: 0,
+          name: "Oil Change",
+          work_order_id: "wo-1",
+        },
+      ]),
+      b([
+        {
+          final_price: 50,
+          discount_amount: 0,
+          part_name: "Filter",
+          work_order_id: "wo-1",
+        },
+      ]),
+      b([
+        {
+          id: "wo-1",
+          customer_id: "c-1",
+          vehicle_id: "v-1",
+          mechanic_id: "m-1",
+        },
+      ]),
+      b([]),
+      b([]),
+      b([]),
+      b([{ id: "c-1" }]),
+      b([{ id: "v-1" }]),
+      b([]),
+    ];
+    let idx = 0;
+    mockClient.from = vi
+      .fn()
+      .mockImplementation(() => builders[idx++] ?? createQueryBuilder());
 
-    const result = await getDailyReport("org-1", "m-1", "2025-01-15");
+    const result = await getDailyReport(
+      mockClient as any,
+      "org-1",
+      "m-1",
+      "2025-01-15",
+    );
 
     expect(result.mechanic_id).toBe("m-1");
     expect(result.mechanic_name).toBe("Mech One");
@@ -271,7 +275,12 @@ describe("getDailyReport", () => {
   it("returns zero counts when no work orders", async () => {
     setupFromMock(mockClient, [b([])]);
 
-    const result = await getDailyReport("org-1", null, "2025-01-15");
+    const result = await getDailyReport(
+      mockClient as any,
+      "org-1",
+      null,
+      "2025-01-15",
+    );
 
     expect(result.date).toBe("2025-01-15");
     expect(result.work_orders_completed).toBe(0);
@@ -296,7 +305,7 @@ describe("getDailyReport", () => {
       b([]),
     ]);
 
-    await getDailyReport("org-1", null, "2025-01-15");
+    await getDailyReport(mockClient as any, "org-1", null, "2025-01-15");
 
     const fromCalls = vi
       .mocked(mockClient.from)
@@ -312,7 +321,12 @@ describe("getWeeklyReport", () => {
   it("returns 7-day daily breakdown with aggregated totals", async () => {
     setupFromMock(mockClient, [...Array.from({ length: 7 }, () => b([]))]);
 
-    const result = await getWeeklyReport("org-1", null, "2025-01-06");
+    const result = await getWeeklyReport(
+      mockClient as any,
+      "org-1",
+      null,
+      "2025-01-06",
+    );
 
     expect(result.week_start).toBe("2025-01-06");
     expect(result.work_orders_completed).toBe(0);
@@ -342,7 +356,12 @@ describe("getWeeklyReport", () => {
       mc as unknown as Awaited<ReturnType<typeof createClient>>,
     );
 
-    const result = await getWeeklyReport("org-1", null, "2025-01-06");
+    const result = await getWeeklyReport(
+      mockClient as any,
+      "org-1",
+      null,
+      "2025-01-06",
+    );
 
     expect(result.week_start).toBe("2025-01-06");
     expect(result.daily_breakdown).toHaveLength(7);
@@ -356,7 +375,12 @@ describe("getWeeklyReport", () => {
       mc as unknown as Awaited<ReturnType<typeof createClient>>,
     );
 
-    const result = await getWeeklyReport("org-1", "m-1", "2025-01-06");
+    const result = await getWeeklyReport(
+      mockClient as any,
+      "org-1",
+      "m-1",
+      "2025-01-06",
+    );
 
     expect(result.mechanic_id).toBe("m-1");
     expect(result.daily_breakdown).toHaveLength(7);
@@ -377,7 +401,13 @@ describe("getMonthlyReport", () => {
       b([{ final_price: 50, discount_amount: 5, work_order_id: "wo-1" }]),
     ]);
 
-    const result = await getMonthlyReport("org-1", null, 2025, 1);
+    const result = await getMonthlyReport(
+      mockClient as any,
+      "org-1",
+      null,
+      2025,
+      1,
+    );
 
     expect(result.year).toBe(2025);
     expect(result.month).toBe(1);
@@ -392,7 +422,13 @@ describe("getMonthlyReport", () => {
   it("filters by date range for the given month", async () => {
     setupFromMock(mockClient, [b([]), b([]), b([])]);
 
-    const result = await getMonthlyReport("org-1", null, 2025, 6);
+    const result = await getMonthlyReport(
+      mockClient as any,
+      "org-1",
+      null,
+      2025,
+      6,
+    );
 
     expect(result.year).toBe(2025);
     expect(result.month).toBe(6);
@@ -408,7 +444,13 @@ describe("getMonthlyReport", () => {
 
     setupFromMock(mockClient, [profileBuilder, b([]), b([]), b([])]);
 
-    const result = await getMonthlyReport("org-1", "m-1", 2025, 1);
+    const result = await getMonthlyReport(
+      mockClient as any,
+      "org-1",
+      "m-1",
+      2025,
+      1,
+    );
 
     expect(result.mechanic_id).toBe("m-1");
     expect(result.mechanic_name).toBe("Mech One");
@@ -418,7 +460,13 @@ describe("getMonthlyReport", () => {
   it("returns zero totals when no completed work orders", async () => {
     setupFromMock(mockClient, [b([]), b([]), b([])]);
 
-    const result = await getMonthlyReport("org-1", null, 2025, 1);
+    const result = await getMonthlyReport(
+      mockClient as any,
+      "org-1",
+      null,
+      2025,
+      1,
+    );
 
     expect(result.work_orders_completed).toBe(0);
     expect(result.total_revenue).toBe(0);
@@ -428,7 +476,13 @@ describe("getMonthlyReport", () => {
   it("computes the correct number of days in the month", async () => {
     setupFromMock(mockClient, [b([]), b([]), b([])]);
 
-    const result = await getMonthlyReport("org-1", null, 2025, 2);
+    const result = await getMonthlyReport(
+      mockClient as any,
+      "org-1",
+      null,
+      2025,
+      2,
+    );
 
     expect(result.month).toBe(2);
     expect(result.year).toBe(2025);
@@ -463,7 +517,11 @@ describe("getEndOfDaySummary", () => {
       ]),
     ]);
 
-    const result = await getEndOfDaySummary("org-1", "2025-01-15");
+    const result = await getEndOfDaySummary(
+      mockClient as any,
+      "org-1",
+      "2025-01-15",
+    );
 
     expect(result.date).toBe("2025-01-15");
     expect(result.total_work_orders).toBe(3);
@@ -490,7 +548,11 @@ describe("getEndOfDaySummary", () => {
   it("returns empty summary when no work orders", async () => {
     setupFromMock(mockClient, [b([])]);
 
-    const result = await getEndOfDaySummary("org-1", "2025-01-15");
+    const result = await getEndOfDaySummary(
+      mockClient as any,
+      "org-1",
+      "2025-01-15",
+    );
 
     expect(result.date).toBe("2025-01-15");
     expect(result.total_work_orders).toBe(0);
@@ -509,7 +571,11 @@ describe("getEndOfDaySummary", () => {
       b([]),
     ]);
 
-    const result = await getEndOfDaySummary("org-1", "2025-01-15");
+    const result = await getEndOfDaySummary(
+      mockClient as any,
+      "org-1",
+      "2025-01-15",
+    );
 
     expect(result.total_work_orders).toBe(0);
     expect(result.mechanics).toEqual([]);
@@ -526,7 +592,11 @@ describe("getEndOfDaySummary", () => {
       b([]),
     ]);
 
-    const result = await getEndOfDaySummary("org-1", "2025-01-15");
+    const result = await getEndOfDaySummary(
+      mockClient as any,
+      "org-1",
+      "2025-01-15",
+    );
 
     expect(result.mechanics).toHaveLength(1);
     expect(result.mechanics[0].mechanic_name).toBe("Mech One");
@@ -655,19 +725,15 @@ describe("getDashboardData", () => {
     period: "today" | "week" | "month" | "all" = "month",
     withPrev = true,
   ) {
-    const mc = createMockSupabaseClient();
     const builders = dashboardBuilders({
       withPrevPeriod: withPrev,
       emptyStatus: false,
     });
     let i = 0;
-    mc.from = vi
+    mockClient.from = vi
       .fn()
       .mockImplementation(() => builders[i++] ?? createQueryBuilder());
-    vi.mocked(createClient).mockResolvedValue(
-      mc as unknown as Awaited<ReturnType<typeof createClient>>,
-    );
-    return getDashboardData("org-1", period);
+    return getDashboardData(mockClient as any, "org-1", period);
   }
 
   it("returns DashboardData with all expected properties", async () => {
@@ -720,7 +786,7 @@ describe("getDashboardData", () => {
       mc as unknown as Awaited<ReturnType<typeof createClient>>,
     );
 
-    const result = await getDashboardData("org-1", "all");
+    const result = await getDashboardData(mockClient as any, "org-1", "all");
 
     expect(result.summary.totalRevenue).toBe(0);
     expect(result.summary.activeWorkOrders).toBe(0);
@@ -747,7 +813,7 @@ describe("getDashboardData", () => {
         mc as unknown as Awaited<ReturnType<typeof createClient>>,
       );
 
-      const result = await getDashboardData("org-1", period);
+      const result = await getDashboardData(mockClient as any, "org-1", period);
 
       expect(result.summary).toBeDefined();
       expect(result.workOrderStatusDistribution).toBeDefined();
@@ -757,19 +823,15 @@ describe("getDashboardData", () => {
 
   it("uses batched queries for performance", async () => {
     vi.clearAllMocks();
-    const mc = createMockSupabaseClient();
     const builders = dashboardBuilders({ withPrevPeriod: true });
     let i = 0;
-    mc.from = vi
+    mockClient.from = vi
       .fn()
       .mockImplementation(() => builders[i++] ?? createQueryBuilder());
-    vi.mocked(createClient).mockResolvedValue(
-      mc as unknown as Awaited<ReturnType<typeof createClient>>,
-    );
 
-    await getDashboardData("org-1", "month");
+    await getDashboardData(mockClient as any, "org-1", "month");
 
-    const fromCalls = mc.from.mock.calls.map((c: string[]) => c[0]);
+    const fromCalls = mockClient.from.mock.calls.map((c: string[]) => c[0]);
     const woCalls = fromCalls.filter((t: string) => t === "work_orders");
     expect(woCalls.length).toBeGreaterThanOrEqual(4);
   });
@@ -826,7 +888,7 @@ describe("getDailyTimeline", () => {
       ]),
     ]);
 
-    const result = await getDailyTimeline("org-1");
+    const result = await getDailyTimeline(mockClient as any, "org-1");
 
     expect(result).toHaveLength(2);
 
@@ -850,7 +912,7 @@ describe("getDailyTimeline", () => {
   it("returns empty when no work orders for today", async () => {
     setupFromMock(mockClient, [b([])]);
 
-    const result = await getDailyTimeline("org-1");
+    const result = await getDailyTimeline(mockClient as any, "org-1");
 
     expect(result).toEqual([]);
   });
@@ -861,7 +923,7 @@ describe("getDailyTimeline", () => {
       b([]),
     ]);
 
-    const result = await getDailyTimeline("org-1");
+    const result = await getDailyTimeline(mockClient as any, "org-1");
 
     expect(result).toEqual([]);
   });
@@ -890,7 +952,7 @@ describe("getDailyTimeline", () => {
       b([{ id: "u-1", full_name: null }]),
     ]);
 
-    const result = await getDailyTimeline("org-1");
+    const result = await getDailyTimeline(mockClient as any, "org-1");
 
     expect(result).toHaveLength(1);
     expect(result[0].customerName).toBeNull();
@@ -923,7 +985,7 @@ describe("getDailyTimeline", () => {
       b([{ id: "u-1", full_name: "Mech" }]),
     ]);
 
-    const result = await getDailyTimeline("org-1");
+    const result = await getDailyTimeline(mockClient as any, "org-1");
 
     expect(result[0].customerName).toBe("John");
     expect(result[0].vehiclePlate).toBeNull();
@@ -955,7 +1017,7 @@ describe("getDailyTimeline", () => {
       b([{ id: "u-1", full_name: "Mech One" }]),
     ]);
 
-    const result = await getDailyTimeline("org-1");
+    const result = await getDailyTimeline(mockClient as any, "org-1");
 
     expect(result).toHaveLength(2);
     expect(result[0].mechanicName).toBe("Mech One");

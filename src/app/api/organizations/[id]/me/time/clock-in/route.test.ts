@@ -66,7 +66,7 @@ describe("POST /api/organizations/[id]/me/time/clock-in", () => {
   });
 
   it("returns 201 with time log on successful clock-in", async () => {
-    setupAuth();
+    const client = setupAuth();
     const mockLog = {
       id: "log-1",
       organization_id: ORG_ID,
@@ -83,11 +83,11 @@ describe("POST /api/organizations/[id]/me/time/clock-in", () => {
 
     expect(response.status).toBe(201);
     expect(body.data).toEqual(mockLog);
-    expect(clockIn).toHaveBeenCalledWith(ORG_ID, USER_ID);
+    expect(clockIn).toHaveBeenCalledWith(client, ORG_ID, USER_ID);
   });
 
   it("returns 429 when rate limited", async () => {
-    setupAuth();
+    const client = setupAuth();
     vi.mocked(mutationRateLimiter.check).mockReturnValue({
       allowed: false,
       remaining: 0,
@@ -99,7 +99,7 @@ describe("POST /api/organizations/[id]/me/time/clock-in", () => {
 
     expect(response.status).toBe(429);
     expect(body.error.code).toBe("RATE_LIMITED");
-    expect(clockIn).not.toHaveBeenCalled();
+    expect(clockIn).not.toHaveBeenCalledWith(client, ORG_ID, USER_ID);
   });
 
   it("returns 401 when not authenticated", async () => {

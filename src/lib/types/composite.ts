@@ -36,6 +36,7 @@ export interface WorkOrderServiceHistoryEntry {
   mechanic_name: string | null;
   helpers: { id: string; full_name: string | null }[];
   services: { name: string; price: number }[];
+  parts: { name: string; quantity: number; price: number }[];
 }
 
 export interface WorkOrderDetail extends Record<string, unknown> {

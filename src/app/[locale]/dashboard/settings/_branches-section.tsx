@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { QuickCreateBranchSheet } from "@/components/branches/quick-create-branch-sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Empty,
   EmptyDescription,
@@ -27,6 +26,13 @@ import {
 } from "@/components/ui/table";
 import { Typography } from "@/components/ui/typography";
 import { useBranches } from "@/lib/queries/use-branches";
+import {
+  SettingsBlock,
+  SettingsError,
+  SettingsGroup,
+  SettingsRow,
+  SettingsTableFrame,
+} from "./_settings-layout";
 import { useCreateBranch } from "@/lib/queries/use-create-branch";
 import {
   useOrgSettings,
@@ -69,55 +75,34 @@ export function BranchesSection({ orgId }: BranchesSectionProps) {
   };
 
   if (isLoading || settingsLoading) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <Skeleton className="h-8 w-full" />
-        </CardContent>
-      </Card>
-    );
+    return <Skeleton className="h-8 w-full" />;
   }
 
   if (error) {
-    return (
-      <Card className="border-destructive/20">
-        <CardContent className="py-6">
-          <Typography.Muted className="text-destructive">
-            {error.message}
-          </Typography.Muted>
-        </CardContent>
-      </Card>
-    );
+    return <SettingsError message={error.message} />;
   }
 
   const safeBranches = branches ?? [];
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Finance Separation Toggle */}
-      <Card>
-        <CardContent className="flex items-center justify-between p-5">
-          <div className="flex flex-col gap-1">
-            <Typography.Text className="text-sm font-medium">
-              {t("financeSeparatePerBranch")}
-            </Typography.Text>
-            <Typography.Muted className="text-xs text-muted-foreground">
-              {t("financeSeparatePerBranchDesc")}
-            </Typography.Muted>
-          </div>
+    <SettingsBlock>
+      <SettingsGroup>
+        <SettingsRow
+          label={t("financeSeparatePerBranch")}
+          description={t("financeSeparatePerBranchDesc")}
+        >
           <Switch
             checked={financeSeparate}
             onCheckedChange={handleToggleFinanceSeparation}
             disabled={updateOrgSettings.isPending}
           />
-        </CardContent>
-      </Card>
+        </SettingsRow>
+      </SettingsGroup>
 
-      {/* Branch List + Add Button */}
       <div className="flex items-center justify-between">
-        <Typography.H3 className="text-sm font-semibold">
+        <Typography.Text className="text-sm font-medium">
           {t("branchList")}
-        </Typography.H3>
+        </Typography.Text>
         <Button
           variant="outline"
           size="sm"
@@ -134,67 +119,62 @@ export function BranchesSection({ orgId }: BranchesSectionProps) {
       </div>
 
       {safeBranches.length === 0 ? (
-        <Card>
-          <CardContent className="py-8">
-            <Empty>
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <GitBranch />
-                </EmptyMedia>
-                <EmptyTitle>{t("noBranches")}</EmptyTitle>
-              </EmptyHeader>
-              <EmptyDescription>{t("noBranchesDesc")}</EmptyDescription>
-            </Empty>
-          </CardContent>
-        </Card>
+        <Empty className="border border-dashed py-6">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <GitBranch />
+            </EmptyMedia>
+            <EmptyTitle>{t("noBranches")}</EmptyTitle>
+          </EmptyHeader>
+          <EmptyDescription>{t("noBranchesDesc")}</EmptyDescription>
+        </Empty>
       ) : (
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                    {t("branchName")}
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                    {t("branchAddress")}
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-left font-medium text-muted-foreground">
-                    {t("branchPhone")}
-                  </TableHead>
-                  <TableHead className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                    {t("branchStatus")}
-                  </TableHead>
+        <SettingsTableFrame>
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
+                  {t("branchName")}
+                </TableHead>
+                <TableHead className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
+                  {t("branchAddress")}
+                </TableHead>
+                <TableHead className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
+                  {t("branchPhone")}
+                </TableHead>
+                <TableHead className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">
+                  {t("branchStatus")}
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {safeBranches.map((branch) => (
+                <TableRow
+                  key={branch.id}
+                  className="border-b border-border transition-colors hover:bg-muted/30"
+                >
+                  <TableCell className="px-3 py-2 text-sm font-medium">
+                    {branch.name}
+                  </TableCell>
+                  <TableCell className="px-3 py-2 text-sm text-muted-foreground">
+                    {branch.address ?? "—"}
+                  </TableCell>
+                  <TableCell className="px-3 py-2 text-sm text-muted-foreground">
+                    {branch.phone ?? "—"}
+                  </TableCell>
+                  <TableCell className="px-3 py-2 text-right">
+                    <Badge
+                      variant={branch.is_active ? "default" : "secondary"}
+                      className="text-[10px]"
+                    >
+                      {branch.is_active ? t("active") : t("inactive")}
+                    </Badge>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {safeBranches.map((branch) => (
-                  <TableRow
-                    key={branch.id}
-                    className="border-b border-border transition-colors hover:bg-muted/30"
-                  >
-                    <TableCell className="px-5 py-3.5 font-medium">
-                      {branch.name}
-                    </TableCell>
-                    <TableCell className="px-5 py-3.5 text-muted-foreground">
-                      {branch.address ?? "—"}
-                    </TableCell>
-                    <TableCell className="px-5 py-3.5 text-muted-foreground">
-                      {branch.phone ?? "—"}
-                    </TableCell>
-                    <TableCell className="px-5 py-3.5 text-right">
-                      <Badge
-                        variant={branch.is_active ? "default" : "secondary"}
-                      >
-                        {branch.is_active ? t("active") : t("inactive")}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+              ))}
+            </TableBody>
+          </Table>
+        </SettingsTableFrame>
       )}
 
       {/* Add Branch Dialog */}
@@ -203,6 +183,6 @@ export function BranchesSection({ orgId }: BranchesSectionProps) {
         onOpenChange={setAddBranchOpen}
         orgId={orgId}
       />
-    </div>
+    </SettingsBlock>
   );
 }

@@ -8,7 +8,6 @@ import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +29,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
+import { SettingsBlock, SettingsListItem } from "./_settings-layout";
 
 interface PriceRule {
   id: string;
@@ -402,33 +402,27 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
       </div>
 
       {(!rules || rules.length === 0) && (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 py-10">
-            <Tags className="size-10 text-muted-foreground/40" />
-            <div className="text-center">
-              <Typography.Text className="text-sm font-medium">
-                {t("noPricingRulesYet")}
-              </Typography.Text>
-              <Typography.Muted className="text-xs text-muted-foreground">
-                {t("noPricingRulesDesc")}
-              </Typography.Muted>
-            </div>
-            <Button onClick={openNew} variant="outline" size="sm">
-              <Plus className="mr-1 size-4" />
-              {t("createFirstRule")}
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed py-8">
+          <Tags className="size-8 text-muted-foreground/40" />
+          <div className="text-center">
+            <Typography.Text className="text-sm font-medium">
+              {t("noPricingRulesYet")}
+            </Typography.Text>
+            <Typography.Muted className="text-xs text-muted-foreground">
+              {t("noPricingRulesDesc")}
+            </Typography.Muted>
+          </div>
+          <Button onClick={openNew} variant="outline" size="sm">
+            <Plus className="mr-1 size-4" />
+            {t("createFirstRule")}
+          </Button>
+        </div>
       )}
 
       {sortedRules.length > 0 && (
-        <div className="flex flex-col gap-2">
+        <SettingsBlock className="gap-2">
           {sortedRules.map((rule) => (
-            <Card
-              key={rule.id}
-              className={`border-border/60 ${!rule.is_active ? "opacity-50" : ""}`}
-            >
-              <CardContent className="flex items-start gap-4 p-4">
+            <SettingsListItem key={rule.id} inactive={!rule.is_active}>
                 <div className="flex flex-1 flex-col gap-1.5 min-w-0">
                   <div className="flex items-center gap-2">
                     <Typography.Text className="text-sm font-medium">
@@ -494,10 +488,9 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                     <Trash2 className="size-3.5" />
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+            </SettingsListItem>
           ))}
-        </div>
+        </SettingsBlock>
       )}
 
       {/* Edit/Create Dialog */}

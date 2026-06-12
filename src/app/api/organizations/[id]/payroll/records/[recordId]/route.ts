@@ -3,7 +3,7 @@ import { createRouteHandler } from "@/lib/api-handler";
 import { updatePayrollRecordStatus } from "@/lib/services/payroll-service";
 
 export const PATCH = createRouteHandler(
-  async ({ request, orgId, params }) => {
+  async ({ request, orgId, params, supabase }) => {
     const body = await request.json();
     const { action } = body;
     const recordId = params.recordId;
@@ -16,7 +16,12 @@ export const PATCH = createRouteHandler(
     }
 
     const status = action === "pay" ? "paid" : "approved";
-    const record = await updatePayrollRecordStatus(orgId, recordId, status);
+    const record = await updatePayrollRecordStatus(
+      supabase,
+      orgId,
+      recordId,
+      status,
+    );
     return NextResponse.json({ data: record });
   },
   { requiredPermission: { resource: "payroll", action: "write" } },

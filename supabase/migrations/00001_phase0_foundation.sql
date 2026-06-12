@@ -133,7 +133,7 @@ create table audit_logs (
 create table subscription_plans (
   id uuid primary key default uuid_generate_v4(),
   organization_id uuid not null references organizations(id),
-  plan_type plan_type not null default 'starter',
+  plan_type plan_type not null default 'enterprise',
   status text not null default 'active',
   started_at timestamp with time zone not null default now(),
   expires_at timestamp with time zone,

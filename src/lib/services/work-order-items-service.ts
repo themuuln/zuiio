@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
+import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError } from "@/lib/errors";
 import type {
@@ -33,6 +34,20 @@ export async function addServiceToWorkOrder(
   }
   if (finalPrice < 0) finalPrice = 0;
 
+  // Look up last sold price from price history for this service
+  let lastSoldPrice: number | null = null;
+  if (serviceData.service_catalog_id) {
+    const { data: lastEntry } = await supabase
+      .from("service_price_history")
+      .select("unit_price")
+      .eq("organization_id", orgId)
+      .eq("service_catalog_id", serviceData.service_catalog_id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    lastSoldPrice = lastEntry?.unit_price ?? null;
+  }
+
   const { data, error } = await supabase
     .from("work_order_services")
     .insert({
@@ -45,12 +60,13 @@ export async function addServiceToWorkOrder(
       discount_amount: serviceData.discount_amount ?? 0,
       discount_percentage: serviceData.discount_percentage ?? 0,
       final_price: finalPrice,
+      last_sold_price: lastSoldPrice,
       notes: serviceData.notes ?? null,
       created_by: user?.id ?? null,
       unit_cost: 0,
     })
     .select(
-      "id, work_order_id, organization_id, service_catalog_id, service_name, quantity, unit_price, unit_cost, discount_amount, discount_percentage, final_price, notes, created_by, created_at",
+      "id, work_order_id, organization_id, service_catalog_id, service_name, quantity, unit_price, unit_cost, discount_amount, discount_percentage, final_price, last_sold_price, notes, created_by, created_at",
     )
     .single();
 
@@ -99,6 +115,19 @@ export async function addServiceToWorkOrder(
   revalidateTag(cacheTags.dashboardMetrics(orgId), "max");
   revalidateTag(cacheTags.reports(orgId), "max");
 
+  await createAuditLog({
+    supabase: db,
+    action: "create",
+    table_name: "work_order_services",
+    record_id: data.id,
+    user_id: user?.id,
+    organization_id: orgId,
+    new_data: {
+      service_name: serviceData.service_name,
+      final_price: finalPrice,
+    },
+  });
+
   return data as unknown as WorkOrderService;
 }
 
@@ -136,6 +165,17 @@ export async function addPartToWorkOrder(
     partUnitCost = Number(catalogPart?.purchase_price ?? 0);
   }
 
+  // Look up last sold price from price history for this part
+  const { data: lastPartEntry } = await supabase
+    .from("part_price_history")
+    .select("unit_price")
+    .eq("organization_id", orgId)
+    .ilike("part_name", partData.part_name)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const lastSoldPrice = lastPartEntry?.unit_price ?? null;
+
   const { data, error } = await supabase
     .from("work_order_parts")
     .insert({
@@ -150,11 +190,12 @@ export async function addPartToWorkOrder(
       discount_amount: partData.discount_amount ?? 0,
       discount_percentage: partData.discount_percentage ?? 0,
       final_price: finalPrice,
+      last_sold_price: lastSoldPrice,
       notes: partData.notes ?? null,
       created_by: user?.id ?? null,
     })
     .select(
-      "id, work_order_id, organization_id, part_id, part_name, part_number, quantity, unit_price, unit_cost, discount_amount, discount_percentage, final_price, notes, created_at",
+      "id, work_order_id, organization_id, part_id, part_name, part_number, quantity, unit_price, unit_cost, discount_amount, discount_percentage, final_price, last_sold_price, notes, created_at",
     )
     .single();
 
@@ -199,6 +240,16 @@ export async function addPartToWorkOrder(
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
   revalidateTag(cacheTags.dashboardMetrics(orgId), "max");
   revalidateTag(cacheTags.reports(orgId), "max");
+
+  await createAuditLog({
+    supabase: db,
+    action: "create",
+    table_name: "work_order_parts",
+    record_id: data.id,
+    user_id: user?.id,
+    organization_id: orgId,
+    new_data: { part_name: partData.part_name, final_price: finalPrice },
+  });
 
   return data as unknown as WorkOrderPart;
 }

@@ -149,7 +149,7 @@ export function AddScheduleDialog({
           </Button>
         }
       />
-      <DialogContent zLayer={1} className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{t("serviceReminders.addNewSchedule")}</DialogTitle>
         </DialogHeader>

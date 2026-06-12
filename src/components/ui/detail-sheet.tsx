@@ -23,8 +23,6 @@ interface DetailSheetRootProps {
   /** Width of the sheet on desktop (default: "lg" = max-w-lg) */
   size?: SheetSize;
   className?: string;
-  /** Z-index layer for stacked overlays. 0 = default (z-50), 1 = z-51, etc. */
-  zLayer?: number;
 }
 
 // ─── Root ──────────────────────────────────────────────────────
@@ -35,7 +33,6 @@ export function DetailSheet({
   children,
   size = "lg",
   className,
-  zLayer = 0,
 }: DetailSheetRootProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -43,7 +40,6 @@ export function DetailSheet({
         side="right"
         size={size}
         className={cn("flex flex-col p-0 gap-0 overflow-hidden", className)}
-        zLayer={zLayer}
       >
         {children}
       </SheetContent>

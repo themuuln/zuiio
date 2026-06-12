@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/utils";
@@ -17,6 +18,8 @@ export function RevenueSplitBar({
   parts,
   loading,
 }: RevenueSplitBarProps) {
+  const t = useTranslations("finance");
+
   if (loading) return <Skeleton className="h-16 w-full rounded-xl" />;
   if (total === 0) return null;
 
@@ -27,7 +30,7 @@ export function RevenueSplitBar({
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-semibold">
-          Revenue Breakdown
+          {t("revenueBreakdown")}
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -35,18 +38,20 @@ export function RevenueSplitBar({
           <div
             className="bg-blue-500 transition-all"
             style={{ width: `${svcPct}%` }}
-            title={`Services: ${svcPct}%`}
+            title={`${t("dashboard.serviceRevenue")}: ${svcPct}%`}
           />
           <div
             className="bg-amber-500 transition-all"
             style={{ width: `${prtPct}%` }}
-            title={`Parts: ${prtPct}%`}
+            title={`${t("dashboard.partsRevenue")}: ${prtPct}%`}
           />
         </div>
-        <div className="flex justify-between text-sm">
+        <div className="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <span className="size-2.5 rounded-full bg-blue-500" />
-            <span className="text-muted-foreground">Services</span>
+            <span className="text-muted-foreground">
+              {t("dashboard.serviceRevenue")}
+            </span>
             <span className="font-semibold tabular-nums">
               {formatCurrency(service)}
             </span>
@@ -54,7 +59,9 @@ export function RevenueSplitBar({
           </div>
           <div className="flex items-center gap-2">
             <span className="size-2.5 rounded-full bg-amber-500" />
-            <span className="text-muted-foreground">Parts</span>
+            <span className="text-muted-foreground">
+              {t("dashboard.partsRevenue")}
+            </span>
             <span className="font-semibold tabular-nums">
               {formatCurrency(parts)}
             </span>

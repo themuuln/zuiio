@@ -1,14 +1,22 @@
 "use client";
 
-import { CheckCircle2, History, RotateCcw, User, Wrench } from "lucide-react";
+import {
+  CheckCircle2,
+  History,
+  Package,
+  RotateCcw,
+  User,
+  Wrench,
+} from "lucide-react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Typography } from "@/components/ui/typography";
 import {
   Tooltip,
-  TooltipTrigger,
   TooltipContent,
   TooltipProvider,
+  TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Typography } from "@/components/ui/typography";
 import type {
   WorkOrderServiceHistoryEntry,
   WorkOrderStatusHistory,
@@ -19,6 +27,7 @@ import {
   STATUS_TIMELINE_TEXT,
   STATUS_TRANSLATION_KEYS,
 } from "./_constants";
+import { ServiceDetailDialog } from "./_service-detail-dialog";
 
 interface StatusTimelineProps {
   statusHistory: WorkOrderStatusHistory[];
@@ -119,6 +128,11 @@ export function StatusTimeline({
   serviceHistory,
   t,
 }: StatusTimelineProps) {
+  const [selectedService, setSelectedService] = useState<{
+    service: { name: string; price: number };
+    entry: WorkOrderServiceHistoryEntry;
+  } | null>(null);
+
   const hasStatusHistory = (statusHistory ?? []).length > 0;
   const hasServiceHistory = (serviceHistory ?? []).length > 0;
   const deduped = hasStatusHistory ? deduplicateHistory(statusHistory) : [];
@@ -304,10 +318,13 @@ export function StatusTimeline({
                     {entry.services.length > 0 ? (
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {entry.services.map((service) => (
-                          <Badge
+                          <button
                             key={`${entry.work_order_id}-${service.name}-${service.price}`}
-                            variant="outline"
-                            className="gap-1.5 text-xs py-1 px-2"
+                            type="button"
+                            onClick={() =>
+                              setSelectedService({ service, entry })
+                            }
+                            className="inline-flex items-center gap-1.5 rounded-4xl border border-border text-foreground cursor-pointer transition-colors hover:bg-muted hover:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 text-xs py-1 px-2 font-medium"
                           >
                             <Wrench className="size-3 text-muted-foreground/60" />
                             <span className="truncate max-w-[140px]">
@@ -318,15 +335,41 @@ export function StatusTimeline({
                                 {service.price.toLocaleString()}₮
                               </span>
                             ) : null}
-                          </Badge>
+                          </button>
                         ))}
                       </div>
                     ) : null}
 
-                    <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                    {entry.parts.length > 0 ? (
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {entry.parts.map((part) => (
+                          <span
+                            key={`${entry.work_order_id}-${part.name}-${part.quantity}-${part.price}`}
+                            className="inline-flex items-center gap-1.5 rounded-4xl border border-border/60 bg-muted/30 text-muted-foreground text-xs py-1 px-2"
+                          >
+                            <Package className="size-3 text-muted-foreground/60" />
+                            <span className="truncate max-w-[140px]">
+                              {part.name}
+                            </span>
+                            {part.quantity > 1 ? (
+                              <span className="text-muted-foreground/60">
+                                ×{part.quantity}
+                              </span>
+                            ) : null}
+                            {part.price > 0 ? (
+                              <span className="font-mono text-muted-foreground/80 tabular-nums">
+                                {part.price.toLocaleString()}₮
+                              </span>
+                            ) : null}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    <div className="mt-2 flex items-center justify-between gap-2 text-xs text-muted-foreground">
                       {entry.total > 0 ? (
                         <span className="font-medium text-foreground/80">
-                          {entry.total.toLocaleString()} MNT
+                          {t("workOrderTotal")} {entry.total.toLocaleString()}₮
                         </span>
                       ) : null}
                       {entry.mechanic_name ? (
@@ -360,6 +403,15 @@ export function StatusTimeline({
           ) : null}
         </div>
       )}
+
+      <ServiceDetailDialog
+        open={selectedService !== null}
+        onOpenChange={(open) => {
+          if (!open) setSelectedService(null);
+        }}
+        service={selectedService?.service ?? null}
+        entry={selectedService?.entry ?? null}
+      />
     </section>
   );
 }

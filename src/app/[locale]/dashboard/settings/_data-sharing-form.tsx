@@ -5,12 +5,16 @@ import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Typography } from "@/components/ui/typography";
 import type { Organization } from "@/lib/types";
+import {
+  SettingsBlock,
+  SettingsGroup,
+  SettingsRow,
+} from "./_settings-layout";
 
 interface DataSharingFormProps {
   organization: Organization | undefined;
@@ -57,93 +61,82 @@ export function DataSharingForm({
         const message =
           err instanceof Error ? err.message : t("dataSharingFailedToast");
         toast.error(message);
-        setSharingEnabled(!checked); // revert
+        setSharingEnabled(!checked);
       } finally {
         setSaving(false);
       }
     },
-    [organization, onRefetch],
+    [organization, onRefetch, t],
   );
 
   if (!organization) {
     return (
-      <Card>
-        <CardContent className="flex flex-col gap-3 pt-6">
-          <Skeleton className="h-5 w-40" />
-          <Skeleton className="h-4 w-72" />
-          <Skeleton className="h-10 w-24" />
-        </CardContent>
-      </Card>
+      <SettingsBlock>
+        <Skeleton className="h-5 w-40" />
+        <Skeleton className="h-4 w-72" />
+        <Skeleton className="h-8 w-24" />
+      </SettingsBlock>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <Card>
-        <CardContent className="flex flex-col gap-4 pt-6">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col gap-1">
-              <Typography.Text className="font-medium">
-                {t("dataSharingTitle")}
-              </Typography.Text>
-              <Typography.Muted className="text-sm text-muted-foreground">
-                {t("dataSharingDesc")}
-              </Typography.Muted>
-            </div>
-            <Switch
-              checked={sharingEnabled}
-              onCheckedChange={handleToggle}
-              disabled={saving}
-            />
-          </div>
+    <SettingsBlock>
+      <SettingsGroup>
+        <SettingsRow
+          label={t("dataSharingTitle")}
+          description={t("dataSharingDesc")}
+        >
+          <Switch
+            checked={sharingEnabled}
+            onCheckedChange={handleToggle}
+            disabled={saving}
+          />
+        </SettingsRow>
+      </SettingsGroup>
 
-          <Separator />
+      <div className="flex flex-col gap-2">
+        <Typography.Text className="text-sm font-medium">
+          {t("whatGetsShared")}
+        </Typography.Text>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <SharedItem
+            label={t("sharedCustomerProfilesLabel")}
+            description={t("sharedCustomerProfilesDesc")}
+          />
+          <SharedItem
+            label={t("sharedVehicleDetailsLabel")}
+            description={t("sharedVehicleDetailsDesc")}
+          />
+          <SharedItem
+            label={t("sharedServiceHistoryLabel")}
+            description={t("sharedServiceHistoryDesc")}
+          />
+          <SharedItem
+            label={t("sharedInvoicesPaymentsLabel")}
+            description={t("sharedInvoicesPaymentsDesc")}
+          />
+        </div>
+      </div>
 
-          <div className="flex flex-col gap-3">
-            <Typography.Text className="text-sm font-medium">
-              {t("whatGetsShared")}
-            </Typography.Text>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <SharedItem
-                label={t("sharedCustomerProfilesLabel")}
-                description={t("sharedCustomerProfilesDesc")}
-              />
-              <SharedItem
-                label={t("sharedVehicleDetailsLabel")}
-                description={t("sharedVehicleDetailsDesc")}
-              />
-              <SharedItem
-                label={t("sharedServiceHistoryLabel")}
-                description={t("sharedServiceHistoryDesc")}
-              />
-              <SharedItem
-                label={t("sharedInvoicesPaymentsLabel")}
-                description={t("sharedInvoicesPaymentsDesc")}
-              />
-            </div>
-          </div>
+      <Separator />
 
-          <Separator />
-
-          <div className="flex flex-col gap-2">
-            <Typography.Text className="text-sm font-medium">
-              {t("accessRules")}
-            </Typography.Text>
-            <ul className="flex flex-col gap-1 text-sm text-muted-foreground">
-              <li>• {t("accessRuleViewOnly")}</li>
-              <li>• {t("accessRuleStaffAccess")}</li>
-              <li>• {t("accessRuleDisableAnytime")}</li>
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col gap-1.5">
+        <Typography.Text className="text-sm font-medium">
+          {t("accessRules")}
+        </Typography.Text>
+        <ul className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+          <li>• {t("accessRuleViewOnly")}</li>
+          <li>• {t("accessRuleStaffAccess")}</li>
+          <li>• {t("accessRuleDisableAnytime")}</li>
+        </ul>
+      </div>
 
       <Alert variant="default">
         <Info className="size-4" />
         <AlertTitle>{t("aboutDataSharing")}</AlertTitle>
         <AlertDescription>{t("aboutDataSharingDesc")}</AlertDescription>
       </Alert>
-    </div>
+    </SettingsBlock>
   );
 }
 
@@ -155,13 +148,11 @@ function SharedItem({
   description: string;
 }) {
   return (
-    <div className="flex items-start gap-2 rounded-md border p-3">
-      <Shield className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+    <div className="flex items-start gap-2 rounded-md border border-border px-2.5 py-2">
+      <Shield className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
       <div>
-        <Typography.Text className="text-sm font-medium">
-          {label}
-        </Typography.Text>
-        <Typography.Muted className="text-xs text-muted-foreground">
+        <Typography.Text className="text-xs font-medium">{label}</Typography.Text>
+        <Typography.Muted className="text-[11px] text-muted-foreground">
           {description}
         </Typography.Muted>
       </div>

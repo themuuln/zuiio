@@ -6,10 +6,10 @@ import {
   listOrganizations,
 } from "@/lib/services/admin-service";
 
-export const GET = createSimpleRouteHandler(async () => {
-  const isSuperAdmin = await checkSuperAdmin();
+export const GET = createSimpleRouteHandler(async ({ supabase }) => {
+  const isSuperAdmin = await checkSuperAdmin(supabase);
   if (!isSuperAdmin) throw new ForbiddenError();
 
-  const orgs = await listOrganizations();
+  const orgs = await listOrganizations(supabase);
   return NextResponse.json({ data: orgs });
 });

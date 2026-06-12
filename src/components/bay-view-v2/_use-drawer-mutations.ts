@@ -12,6 +12,9 @@ import type {
   WorkOrderService,
 } from "@/lib/types";
 
+import { createInvoiceAndRecordPayment } from "./_helpers";
+import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
+import type { PaymentMethodFees } from "./_payment-fees";
 import type { CatalogPartItem, CatalogServiceItem } from "./_drawer-types";
 import type { PostServiceFormData } from "./_schema";
 
@@ -23,6 +26,8 @@ interface UseDrawerMutationsParams {
   fetchWo: (silent?: boolean, orgIdOverride?: string) => Promise<void>;
   onRefresh: () => void;
   onOpenChange: (open: boolean) => void;
+  paymentMethodFees: PaymentMethodFees;
+  transferBanks: ResolvedTransferBank[];
 }
 
 export function useDrawerMutations({
@@ -33,6 +38,8 @@ export function useDrawerMutations({
   fetchWo,
   onRefresh,
   onOpenChange,
+  paymentMethodFees,
+  transferBanks,
 }: UseDrawerMutationsParams) {
   // ── Service state ──
 
@@ -90,50 +97,72 @@ export function useDrawerMutations({
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
   const [showCelebration, _setShowCelebration] = useState(false);
 
-  // ── Status change ──
+  // ── Status change (optimistic, no confirmation) ──
 
   async function changeStatus(newStatus: string) {
     const orgId = orgIdRef.current;
     if (!orgId || !workOrderId) return;
 
-    if (
-      (newStatus === "Completed" || newStatus === "Cancelled") &&
-      confirmStatus !== newStatus
-    ) {
-      setConfirmStatus(newStatus);
-      setStatusNotes("");
-      return;
+    // Snapshot for rollback
+    const prevWo = wo;
+    const isDestructive =
+      newStatus === "Completed" || newStatus === "Cancelled";
+
+    // Optimistic: update UI immediately
+    setWo((prev) =>
+      prev ? ({ ...prev, status: newStatus } as WorkOrderDetail) : prev,
+    );
+
+    if (isDestructive) {
+      // Undo toast for destructive changes
+      toast.dismiss();
+      toast(`Status changed to ${newStatus}`, {
+        action: {
+          label: "Undo",
+          onClick: () => {
+            if (prevWo) setWo(prevWo);
+            // Fire rollback API in background
+            fetch(`/api/organizations/${orgId}/work-orders/${workOrderId}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status: prevWo?.status }),
+            })
+              .then(() => {
+                fetchWo(true);
+                onRefresh();
+              })
+              .catch(() => {});
+          },
+        },
+        duration: 8000,
+      });
+    } else {
+      // Simple success toast for non-destructive changes
+      toast.dismiss();
+      toast.success(`Status changed to ${newStatus}`);
     }
 
-    setSaving(true);
-    try {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${workOrderId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            status: newStatus,
-            notes: statusNotes || undefined,
-          }),
-        },
-      );
-      const json = await res.json();
-      if (json.error) {
-        toast.error(json.error.message ?? "Failed to update status");
-      } else {
-        await fetchWo(true);
-        toast.dismiss();
-        toast.success(`Status changed to ${newStatus}`);
-        onRefresh();
-      }
-    } catch {
-      toast.error("Failed to update status");
-    } finally {
-      setSaving(false);
-      setConfirmStatus(null);
-      setStatusNotes("");
-    }
+    // Fire API in background — never blocks UI
+    fetch(`/api/organizations/${orgId}/work-orders/${workOrderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus }),
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.error) {
+          // Rollback on error
+          if (prevWo) setWo(prevWo);
+          toast.error(json.error.message ?? "Failed to update status");
+        } else {
+          fetchWo(true);
+          onRefresh();
+        }
+      })
+      .catch(() => {
+        if (prevWo) setWo(prevWo);
+        toast.error("Failed to update status");
+      });
   }
 
   // ── Mechanic assignment ──
@@ -169,7 +198,8 @@ export function useDrawerMutations({
   // Optimistic add: service appears immediately with editable price
   function addService(svc: CatalogServiceItem) {
     const tempId = `temp-${Math.random().toString(36).slice(2, 11)}`;
-    const defaultPrice = Number(svc.default_price ?? 0);
+    // Use last sold price from price memory, fall back to catalog default
+    const price = Number(svc.last_price ?? svc.default_price ?? 0);
     setAddingServiceIds((prev) => new Set([...prev, tempId]));
     setWo((prev) => {
       if (!prev) return prev;
@@ -182,12 +212,12 @@ export function useDrawerMutations({
             service_name: svc.name,
             service_catalog_id: svc._source === "global" ? null : svc.id,
             quantity: 1,
-            unit_price: defaultPrice,
-            final_price: defaultPrice,
+            unit_price: price,
+            final_price: price,
             discount_amount: 0,
             discount_percentage: 0,
             unit_cost: 0,
-            last_sold_price: null,
+            last_sold_price: svc.last_price ?? null,
             notes: null,
             description: null,
             mechanic_id: null,
@@ -371,7 +401,8 @@ export function useDrawerMutations({
   // Optimistic add: part appears immediately with editable price
   function addPart(item: CatalogPartItem) {
     const tempId = `temp-${Math.random().toString(36).slice(2, 11)}`;
-    const defaultPrice = Number(item.default_price ?? 0);
+    // Use last sold price from price memory, fall back to catalog default
+    const price = Number(item.last_price ?? item.default_price ?? 0);
     setAddingPartIds((prev) => new Set([...prev, tempId]));
     setWo((prev) => {
       if (!prev) return prev;
@@ -384,12 +415,12 @@ export function useDrawerMutations({
             part_name: item.name,
             part_id: item._source === "global" ? null : item.id,
             quantity: 1,
-            unit_price: defaultPrice,
-            final_price: defaultPrice,
+            unit_price: price,
+            final_price: price,
             discount_amount: 0,
             discount_percentage: 0,
             unit_cost: 0,
-            last_sold_price: null,
+            last_sold_price: item.last_price ?? null,
             notes: null,
             part_number: null,
             work_order_id: workOrderId,
@@ -924,64 +955,101 @@ export function useDrawerMutations({
   };
 
   async function handleReadyForPickup() {
-    if (!workOrderId || !wo?.vehicle_id) {
-      changeStatus("Ready for Pickup");
-      return;
-    }
-
-    try {
-      const services = await getWorkOrderServicesWithIntervals(workOrderId);
-      setPostFormServices(services);
+    // Open form immediately — don't block on API
+    if (workOrderId && wo?.vehicle_id) {
       setShowPostServiceForm(true);
-    } catch {
+      // Load services in background for the form
+      getWorkOrderServicesWithIntervals(workOrderId)
+        .then(setPostFormServices)
+        .catch(() => {
+          // If services fail to load, form still works with empty services
+        });
+    } else {
       changeStatus("Ready for Pickup");
     }
   }
 
   async function handlePostServiceFormSubmit(data: PostServiceFormData) {
     if (!workOrderId || !wo?.vehicle_id) return;
-    setSaving(true);
 
-    try {
-      await savePostServiceData({
+    // Snapshot for rollback
+    const prevWo = wo;
+
+    // Optimistic: update status immediately, close form
+    setWo((prev) =>
+      prev
+        ? ({ ...prev, status: "Ready for Pickup" } as WorkOrderDetail)
+        : prev,
+    );
+    setShowPostServiceForm(false);
+    setPostFormServices([]);
+
+    // Fire APIs in background — never blocks UI
+    Promise.all([
+      savePostServiceData({
         workOrderId,
         vehicleId: wo.vehicle_id as string,
         odometerReading: data.odometerReading,
         recommendations: data.recommendations,
         mechanicNotes: data.mechanicNotes,
-      });
+      }),
+      orgIdRef.current
+        ? fetch(
+            `/api/organizations/${orgIdRef.current}/work-orders/${workOrderId}`,
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                status: "Ready for Pickup",
+                notes: data.mechanicNotes || undefined,
+              }),
+            },
+          ).then((r) => r.json())
+        : Promise.reject(new Error("No org ID")),
+    ])
+      .then(async ([_, statusJson]) => {
+        if (statusJson.error) {
+          if (prevWo) setWo(prevWo);
+          toast.error(statusJson.error.message ?? "Failed to update status");
+          return;
+        }
 
-      const orgId = orgIdRef.current;
-      if (!orgId) return;
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${workOrderId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            status: "Ready for Pickup",
-            notes: data.mechanicNotes || undefined,
-          }),
-        },
-      );
-      const json = await res.json();
-      if (json.error) {
-        toast.error(json.error.message ?? "Failed to update status");
-      } else {
-        await fetchWo(true);
+        const orgId = orgIdRef.current;
+        const grandTotal =
+          (prevWo?.services?.reduce(
+            (s, svc) => s + Number(svc.final_price),
+            0,
+          ) ?? 0) +
+          (prevWo?.parts?.reduce((s, p) => s + Number(p.final_price), 0) ?? 0);
+
+        if (orgId && grandTotal > 0) {
+          try {
+            await createInvoiceAndRecordPayment(
+              orgId,
+              workOrderId,
+              data.paymentMethod,
+              paymentMethodFees[data.paymentMethod] ?? 0,
+              transferBanks,
+              data.transferBankId,
+            );
+          } catch (err) {
+            toast.warning(
+              err instanceof Error
+                ? err.message
+                : "Ready — but payment could not be recorded",
+            );
+          }
+        }
+
+        fetchWo(true);
         toast.dismiss();
         toast.success("Ready for Pickup — recommendations saved");
         onRefresh();
-      }
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to save post-service data",
-      );
-    } finally {
-      setSaving(false);
-      setShowPostServiceForm(false);
-      setPostFormServices([]);
-    }
+      })
+      .catch(() => {
+        if (prevWo) setWo(prevWo);
+        toast.error("Failed to save post-service data");
+      });
   }
 
   // ── Customer assignment ──

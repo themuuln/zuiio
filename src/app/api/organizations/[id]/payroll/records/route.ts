@@ -3,7 +3,7 @@ import { createRouteHandler } from "@/lib/api-handler";
 import { getPayrollRecords } from "@/lib/services/payroll-service";
 
 export const GET = createRouteHandler(
-  async ({ request, orgId }) => {
+  async ({ request, orgId, supabase }) => {
     const { searchParams } = new URL(request.url);
     const year = Number(searchParams.get("year"));
     const month = Number(searchParams.get("month"));
@@ -16,7 +16,13 @@ export const GET = createRouteHandler(
       );
     }
 
-    const records = await getPayrollRecords(orgId, year, month, branchId);
+    const records = await getPayrollRecords(
+      supabase,
+      orgId,
+      year,
+      month,
+      branchId,
+    );
     return NextResponse.json({ data: records });
   },
   { requiredPermission: { resource: "payroll", action: "read" } },

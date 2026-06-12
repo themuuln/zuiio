@@ -20,7 +20,7 @@ export function NewPurchaseOrderSheet({
       open={open}
       onOpenChange={onOpenChange}
       title={t("newPurchaseOrder")}
-      description="Захиалга үүсгэх"
+      desc="Захиалга үүсгэх"
       sheetSize="2xl"
     >
       <PurchaseOrderForm

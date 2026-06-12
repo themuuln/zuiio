@@ -41,15 +41,15 @@ export function useBayActionHandlers({
     setPendingStatusChange({ woId, status });
   }
 
-  async function handleStatusChangeConfirm(
+  function handleStatusChangeConfirm(
     woId: string,
     status: string,
     notes?: string,
   ) {
     setPendingStatusChange(null);
-    markPending(woId);
     const prev = data;
 
+    // Optimistic: update UI immediately
     setData((d) =>
       d
         ? {
@@ -75,22 +75,25 @@ export function useBayActionHandlers({
         : d,
     );
 
-    try {
-      await updateWorkOrderStatus(
-        woId,
-        status as "Ready for Pickup" | "Completed",
-        notes,
-      );
-    } catch (err) {
-      if (prev) setData(prev);
-      setToast({
-        message: `Failed to change status: ${err instanceof Error ? err.message : "Unknown error"}`,
-        variant: "error",
+    setToast({ message: `Status → ${status}`, variant: "info" });
+
+    // Fire API in background — never blocks UI
+    updateWorkOrderStatus(
+      woId,
+      status as "Ready for Pickup" | "Completed",
+      notes,
+    )
+      .then(() => {
+        fetchData(false);
+      })
+      .catch((err) => {
+        if (prev) setData(prev);
+        setToast({
+          message: `Failed to change status: ${err instanceof Error ? err.message : "Unknown error"}`,
+          variant: "error",
+        });
+        fetchData(false);
       });
-    } finally {
-      clearPending(woId);
-      fetchData(false);
-    }
   }
 
   async function handleQuickAssign(woId: string) {

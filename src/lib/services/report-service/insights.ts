@@ -6,7 +6,7 @@ import type {
   WorkOrderStatusDistribution,
 } from "@/lib/types";
 
-import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { withBranchFilter } from "@/lib/supabase/with-branch";
 
 import { formatCurrencyHelper, formatNum } from "./utils";
@@ -114,12 +114,13 @@ export function generateInsights(
  * Analyzes trends, margins, and comparisons to surface actionable intelligence.
  */
 export async function generateReportInsights(
+  db: SupabaseClient,
   orgId: string,
   dateFrom: string,
   dateTo: string,
   branchId: string | null = null,
 ): Promise<ReportInsight[]> {
-  const supabase = await createClient();
+  const supabase = db;
   const insights: ReportInsight[] = [];
   let insightId = 0;
 

@@ -1,8 +1,9 @@
 // ── Daily, weekly, monthly, and custom report functions ──────
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { cacheDurations, cacheTags } from "@/lib/cache/keys";
 import { withCache } from "@/lib/cache/with-cache";
-import { createClient } from "@/lib/supabase/server";
 import { withBranchFilter } from "@/lib/supabase/with-branch";
 
 import type {
@@ -17,12 +18,13 @@ import { getMechanicKpis } from "./mechanics";
 import { getRecentWorkOrdersBatched } from "./queries";
 
 export async function getDailyReport(
+  db: SupabaseClient,
   orgId: string,
   mechanicId: string | null,
   date: string,
   branchId: string | null = null,
 ): Promise<DailyReport> {
-  const supabase = await createClient();
+  const supabase = db;
 
   return withCache(
     ["getDailyReport", orgId, mechanicId ?? "all", date, branchId ?? "all"],
@@ -167,13 +169,14 @@ export async function getDailyReport(
 }
 
 export async function getCustomReport(
+  db: SupabaseClient,
   orgId: string,
   mechanicId: string | null,
   dateFrom: string,
   dateTo: string,
   branchId: string | null = null,
 ): Promise<DailyReport> {
-  const supabase = await createClient();
+  const supabase = db;
 
   return withCache(
     [
@@ -328,12 +331,13 @@ export async function getCustomReport(
 }
 
 export async function getWeeklyReport(
+  db: SupabaseClient,
   orgId: string,
   mechanicId: string | null,
   weekStart: string,
   branchId: string | null = null,
 ): Promise<WeeklyReport> {
-  const supabase = await createClient();
+  const supabase = db;
 
   return withCache(
     [
@@ -372,7 +376,7 @@ export async function getWeeklyReport(
           const d = new Date(weekStartDate);
           d.setDate(d.getDate() + i);
           const dateStr = d.toISOString().split("T")[0];
-          return getDailyReport(orgId, mechanicId, dateStr, branchId);
+          return getDailyReport(db, orgId, mechanicId, dateStr, branchId);
         }),
       );
       for (const daily of dailyResults) {
@@ -445,13 +449,14 @@ export async function getWeeklyReport(
 }
 
 export async function getMonthlyReport(
+  db: SupabaseClient,
   orgId: string,
   mechanicId: string | null,
   year: number,
   month: number,
   branchId: string | null = null,
 ): Promise<MonthlyReport> {
-  const supabase = await createClient();
+  const supabase = db;
 
   return withCache(
     [
@@ -558,6 +563,7 @@ export async function getMonthlyReport(
       while (weekStart <= lastDayDate) {
         const ws = weekStart.toISOString().split("T")[0];
         const weeklyReport = await getWeeklyReport(
+          db,
           orgId,
           mechanicId,
           ws,
@@ -635,12 +641,13 @@ export async function getMonthlyReport(
  * Revenue breakdown by service type.
  */
 export async function getServiceBreakdown(
+  db: SupabaseClient,
   orgId: string,
   dateFrom: string,
   dateTo: string,
   branchId: string | null = null,
 ): Promise<ServiceBreakdown[]> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data: wos } = await withBranchFilter(
     supabase

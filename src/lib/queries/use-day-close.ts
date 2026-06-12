@@ -45,14 +45,21 @@ const fetchDayCloseStatus = createOrgQuery<DayCloseStatus>("/day-close");
 export function useEodReport(
   orgId: string | undefined,
   date: string,
+  branchId?: string | null,
 ): UseQueryResult<EndOfDaySummary, Error> {
   return useQuery({
-    queryKey: reportKeys.summary(orgId ?? "", "eod", date, null),
+    queryKey: reportKeys.summary(orgId ?? "", "eod", date, branchId),
     queryFn: async () => {
       if (!orgId) {
         throw new Error("Organization is required");
       }
-      return fetchEodReport(orgId, { params: { type: "eod", date } });
+      return fetchEodReport(orgId, {
+        params: {
+          type: "eod",
+          date,
+          ...(branchId ? { branch_id: branchId } : {}),
+        },
+      });
     },
     enabled: !!orgId,
     staleTime: 30_000,
@@ -88,6 +95,7 @@ export function useDayCloseStatus(
 export function useCloseDay(
   orgId: string | undefined,
   date: string,
+  branchId?: string | null,
 ): UseMutationResult<CloseDayResponse, Error, void> {
   const queryClient = useQueryClient();
   const isOnline = useOnlineStatus();
@@ -117,7 +125,7 @@ export function useCloseDay(
         body: { date },
         queryKeysToInvalidate: [
           [...dayCloseKeys.status(orgId, date)],
-          [...reportKeys.summary(orgId, "eod", date, null)],
+          [...reportKeys.summary(orgId, "eod", date, branchId)],
         ],
       });
       return { queued: true } as unknown as CloseDayResponse;
@@ -133,7 +141,7 @@ export function useCloseDay(
             queryKey: dayCloseKeys.status(orgId, date),
           });
           queryClient.invalidateQueries({
-            queryKey: reportKeys.summary(orgId, "eod", date, null),
+            queryKey: reportKeys.summary(orgId, "eod", date, branchId),
           });
         }
       }

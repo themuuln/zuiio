@@ -1,7 +1,8 @@
 import crypto from "node:crypto";
+import { createAuditLog } from "@/lib/audit";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { reportServerError } from "@/lib/sentry-report-server";
-import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import type { InviteUserParams, OrgInvite } from "@/lib/types";
 
@@ -10,6 +11,7 @@ function generateToken(): string {
 }
 
 export async function createInvite(
+  db: SupabaseClient,
   orgId: string,
   params: InviteUserParams,
   invitedByUserId: string,
@@ -20,7 +22,7 @@ export async function createInvite(
     throw new ValidationError("Email is required");
   }
 
-  const supabase = await createClient();
+  const supabase = db;
 
   const existing = await supabase
     .from("org_invites")
@@ -56,6 +58,16 @@ export async function createInvite(
   if (error || !data) {
     throw new Error(error?.message ?? "Failed to create invite");
   }
+
+  await createAuditLog({
+    supabase,
+    action: "create",
+    table_name: "org_invites",
+    record_id: data.id,
+    user_id: invitedByUserId,
+    organization_id: orgId,
+    new_data: data as unknown as Record<string, unknown>,
+  });
 
   return data;
 }
@@ -149,11 +161,12 @@ export async function getOrgInvites(orgId: string): Promise<OrgInvite[]> {
 }
 
 export async function getInviteByToken(
+  db: SupabaseClient,
   token: string,
 ): Promise<
   OrgInvite & { organization_name: string; inviter_name: string | null }
 > {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data, error } = await supabase
     .from("org_invites")
@@ -186,10 +199,11 @@ export async function getInviteByToken(
 }
 
 export async function redeemInvite(
+  db: SupabaseClient,
   token: string,
   userId: string,
 ): Promise<{ organizationId: string }> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data, error } = await supabase.rpc("accept_invite", {
     invite_token: token,
@@ -214,30 +228,56 @@ export async function redeemInvite(
     throw new ValidationError("No organization ID returned from invitation");
   }
 
+  await createAuditLog({
+    supabase,
+    action: "update",
+    table_name: "org_invites",
+    record_id: token,
+    user_id: userId,
+    organization_id: result.organization_id,
+    new_data: { status: "accepted", accepting_user_id: userId },
+  });
+
   return { organizationId: result.organization_id };
 }
 
-export async function cancelInvite(inviteId: string): Promise<void> {
-  const supabase = await createClient();
+export async function cancelInvite(
+  db: SupabaseClient,
+  orgId: string,
+  inviteId: string,
+): Promise<void> {
+  const supabase = db;
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("org_invites")
     .update({ status: "cancelled", updated_at: new Date().toISOString() })
-    .eq("id", inviteId);
+    .eq("id", inviteId)
+    .eq("organization_id", orgId)
+    .eq("status", "pending")
+    .select("id")
+    .maybeSingle();
 
   if (error) {
     throw new Error(error.message ?? "Failed to cancel invite");
   }
+
+  if (!data) {
+    throw new NotFoundError("Pending invite not found");
+  }
 }
 
-export async function resendInvite(inviteId: string): Promise<void> {
-  const supabase = await createClient();
+export async function resendInvite(
+  db: SupabaseClient,
+  orgId: string,
+  inviteId: string,
+): Promise<void> {
+  const supabase = db;
 
   const newExpiry = new Date(
     Date.now() + 7 * 24 * 60 * 60 * 1000,
   ).toISOString();
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("org_invites")
     .update({
       expires_at: newExpiry,
@@ -245,9 +285,16 @@ export async function resendInvite(inviteId: string): Promise<void> {
       updated_at: new Date().toISOString(),
     })
     .eq("id", inviteId)
-    .eq("status", "pending");
+    .eq("organization_id", orgId)
+    .eq("status", "pending")
+    .select("id")
+    .maybeSingle();
 
   if (error) {
     throw new Error(error.message ?? "Failed to resend invite");
+  }
+
+  if (!data) {
+    throw new NotFoundError("Pending invite not found");
   }
 }

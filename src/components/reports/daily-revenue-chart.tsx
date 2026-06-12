@@ -4,29 +4,41 @@
  * Used on weekly and monthly report tabs.
  */
 
+import { useTranslations } from "next-intl";
 import { BarChart } from "@/components/charts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Typography } from "@/components/ui/typography";
 
 interface DailyRevenueChartProps {
   data: Array<{ date: string; revenue: number; label: string }>;
 }
 
 export function DailyRevenueChart({ data }: DailyRevenueChartProps) {
-  if (!data.length) return null;
+  const t = useTranslations("reports");
 
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-semibold">Daily Revenue</CardTitle>
+        <CardTitle className="text-sm font-semibold">
+          {t("dailyRevenue")}
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        <BarChart
-          data={data}
-          config={{ revenue: { label: "Revenue", color: "var(--chart-1)" } }}
-          xKey="label"
-          series={[{ key: "revenue", color: "var(--chart-1)" }]}
-          height={200}
-        />
+        {data.length > 0 ? (
+          <BarChart
+            data={data}
+            config={{
+              revenue: { label: t("revenue"), color: "var(--chart-1)" },
+            }}
+            xKey="label"
+            series={[{ key: "revenue", color: "var(--chart-1)" }]}
+            height={200}
+          />
+        ) : (
+          <Typography.Muted className="py-8 text-center text-sm text-muted-foreground">
+            {t("noDataForPeriod")}
+          </Typography.Muted>
+        )}
       </CardContent>
     </Card>
   );

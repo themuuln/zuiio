@@ -88,7 +88,7 @@ export async function updateWorkOrderStatus(
       .eq("id", id);
 
     // Schedule sync — fire-and-forget; service reminder schedules are non-critical
-    syncWorkOrderToSchedules(id).catch((err) =>
+    syncWorkOrderToSchedules(supabase, id).catch((err) =>
       reportServerError(
         `[WO ${id}] Failed to sync work order to schedules: ${err instanceof Error ? err.message : err}`,
       ),

@@ -27,27 +27,54 @@ function createMockDb() {
     };
 
     // Add chainable methods
-    ["select", "insert", "update", "delete", "upsert",
-     "eq", "neq", "gt", "gte", "lt", "lte", "is", "in",
-     "contains", "or", "and", "not", "order", "limit", "range",
-    ].forEach(m => addMethod(m));
+    [
+      "select",
+      "insert",
+      "update",
+      "delete",
+      "upsert",
+      "eq",
+      "neq",
+      "gt",
+      "gte",
+      "lt",
+      "lte",
+      "is",
+      "in",
+      "contains",
+      "or",
+      "and",
+      "not",
+      "order",
+      "limit",
+      "range",
+    ].forEach((m) => addMethod(m));
 
     // Add terminal methods
     addMethod("single", () => {
       calls.push({ table, method: "single" });
-      const response = tableResponses[table]?.single ?? { data: null, error: null };
+      const response = tableResponses[table]?.single ?? {
+        data: null,
+        error: null,
+      };
       return Promise.resolve(response);
     });
 
     addMethod("maybeSingle", () => {
       calls.push({ table, method: "maybeSingle" });
-      const response = tableResponses[table]?.maybeSingle ?? { data: null, error: null };
+      const response = tableResponses[table]?.maybeSingle ?? {
+        data: null,
+        error: null,
+      };
       return Promise.resolve(response);
     });
 
     // Make thenable
     chain.then = (resolve: Function) => {
-      const response = tableResponses[table]?.then ?? { data: null, error: null };
+      const response = tableResponses[table]?.then ?? {
+        data: null,
+        error: null,
+      };
       return Promise.resolve(response).then(resolve);
     };
 
@@ -77,7 +104,11 @@ function createMockDb() {
     },
   };
 
-  return db as unknown as SupabaseClient & { __calls: any[]; __setResponse: Function; __reset: Function };
+  return db as unknown as SupabaseClient & {
+    __calls: any[];
+    __setResponse: Function;
+    __reset: Function;
+  };
 }
 
 beforeEach(() => {
@@ -134,14 +165,28 @@ describe("Invoice Service - Tax Transfer", () => {
 
       db.__setResponse("work_order_services", "then", {
         data: [
-          { id: "svc-1", service_name: "Oil Change", quantity: 1, unit_price: 50000, discount_amount: 0, final_price: 50000 },
+          {
+            id: "svc-1",
+            service_name: "Oil Change",
+            quantity: 1,
+            unit_price: 50000,
+            discount_amount: 0,
+            final_price: 50000,
+          },
         ],
         error: null,
       });
 
       db.__setResponse("work_order_parts", "then", {
         data: [
-          { id: "part-1", part_name: "Oil Filter", quantity: 1, unit_price: 15000, discount_amount: 0, final_price: 15000 },
+          {
+            id: "part-1",
+            part_name: "Oil Filter",
+            quantity: 1,
+            unit_price: 15000,
+            discount_amount: 0,
+            final_price: 15000,
+          },
         ],
         error: null,
       });
@@ -160,9 +205,7 @@ describe("Invoice Service - Tax Transfer", () => {
         error: null,
       });
 
-      const result = await createInvoiceFromWorkOrder("org-1", "wo-1", {
-        supabase: db,
-      });
+      const result = await createInvoiceFromWorkOrder(db, "org-1", "wo-1");
 
       // Subtotal: 50000 + 15000 = 65000
       // Tax: 65000 * 10% = 6500
@@ -205,7 +248,14 @@ describe("Invoice Service - Tax Transfer", () => {
 
       db.__setResponse("work_order_services", "then", {
         data: [
-          { id: "svc-1", service_name: "Oil Change", quantity: 1, unit_price: 50000, discount_amount: 0, final_price: 50000 },
+          {
+            id: "svc-1",
+            service_name: "Oil Change",
+            quantity: 1,
+            unit_price: 50000,
+            discount_amount: 0,
+            final_price: 50000,
+          },
         ],
         error: null,
       });
@@ -229,9 +279,7 @@ describe("Invoice Service - Tax Transfer", () => {
         error: null,
       });
 
-      const result = await createInvoiceFromWorkOrder("org-1", "wo-2", {
-        supabase: db,
-      });
+      const result = await createInvoiceFromWorkOrder(db, "org-1", "wo-2");
 
       // Subtotal: 50000
       // Tax: 0 (НӨАТ disabled)
@@ -274,14 +322,28 @@ describe("Invoice Service - Tax Transfer", () => {
 
       db.__setResponse("work_order_services", "then", {
         data: [
-          { id: "svc-1", service_name: "Oil Change", quantity: 1, unit_price: 50000, discount_amount: 0, final_price: 50000 },
+          {
+            id: "svc-1",
+            service_name: "Oil Change",
+            quantity: 1,
+            unit_price: 50000,
+            discount_amount: 0,
+            final_price: 50000,
+          },
         ],
         error: null,
       });
 
       db.__setResponse("work_order_parts", "then", {
         data: [
-          { id: "part-1", part_name: "Oil Filter", quantity: 1, unit_price: 15000, discount_amount: 0, final_price: 15000 },
+          {
+            id: "part-1",
+            part_name: "Oil Filter",
+            quantity: 1,
+            unit_price: 15000,
+            discount_amount: 0,
+            final_price: 15000,
+          },
         ],
         error: null,
       });
@@ -300,9 +362,7 @@ describe("Invoice Service - Tax Transfer", () => {
         error: null,
       });
 
-      const result = await createInvoiceFromWorkOrder("org-1", "wo-3", {
-        supabase: db,
-      });
+      const result = await createInvoiceFromWorkOrder(db, "org-1", "wo-3");
 
       // Subtotal: 65000
       // Discount: 10000

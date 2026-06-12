@@ -1,7 +1,7 @@
-import { revalidateTag } from "next/cache";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { NotFoundError, ValidationError } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
+import { createMockSupabaseClient } from "@/test/mocks/supabase";
 import {
   cancelRefund,
   getInvoiceRefunds,
@@ -10,83 +10,34 @@ import {
   recordRefund,
 } from "./refund-service";
 
-vi.mock("@/lib/supabase/server", () => ({
-  createClient: vi.fn(),
-}));
-
 vi.mock("next/cache", () => ({
   revalidateTag: vi.fn(),
 }));
-
-// Mock Supabase client
-function createMockSupabaseClient() {
-  const mockSelect = vi.fn().mockReturnThis();
-  const mockInsert = vi.fn().mockReturnThis();
-  const mockUpdate = vi.fn().mockReturnThis();
-  const mockEq = vi.fn().mockReturnThis();
-  const mockIs = vi.fn().mockReturnThis();
-  const mockOrder = vi.fn().mockReturnThis();
-  const mockSingle = vi.fn();
-  const mockLimit = vi.fn().mockReturnThis();
-  const mockRange = vi.fn().mockReturnThis();
-  const mockGetUser = vi.fn();
-
-  return {
-    from: vi.fn().mockReturnValue({
-      select: mockSelect,
-      insert: mockInsert,
-      update: mockUpdate,
-      eq: mockEq,
-      is: mockIs,
-      order: mockOrder,
-      single: mockSingle,
-      limit: mockLimit,
-      range: mockRange,
-    }),
-    auth: {
-      getUser: mockGetUser,
-    },
-    rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
-    // Expose for assertions
-    _select: mockSelect,
-    _insert: mockInsert,
-    _update: mockUpdate,
-    _eq: mockEq,
-    _is: mockIs,
-    _order: mockOrder,
-    _single: mockSingle,
-    _limit: mockLimit,
-    _range: mockRange,
-  };
-}
+vi.mock("@/lib/audit", () => ({
+  createAuditLog: vi.fn().mockResolvedValue({ success: true, id: "audit-1" }),
+}));
 
 describe("RefundService", () => {
-  let mockDb: ReturnType<typeof createMockSupabaseClient>;
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockDb = createMockSupabaseClient();
-    vi.mocked(createClient).mockResolvedValue(mockDb as never);
-    vi.mocked(revalidateTag).mockImplementation(() => {});
-  });
+  const rawClient = createMockSupabaseClient();
+  const db = rawClient as unknown as SupabaseClient;
 
   describe("recordRefund", () => {
-    const mockInvoice = {
-      id: "inv-123",
-      total: 100000,
-      status: "paid",
-      amount_paid: 100000,
-      amount_refunded: 0,
-    };
-
-    const mockUser = { id: "user-123" };
-
     it("records a full refund successfully", async () => {
-      mockDb.auth.getUser.mockResolvedValue({ data: { user: mockUser } });
-      mockDb._single.mockResolvedValue({ data: mockInvoice, error: null });
-      mockDb._insert.mockResolvedValue({ error: null });
-      mockDb._eq.mockResolvedValue({ data: [{ amount: 100000 }], error: null });
-      mockDb._single.mockResolvedValue({
+      // rpc call succeeds
+      rawClient.rpc.mockResolvedValue({ data: null, error: null });
+      // 1st single: fetch the new refund
+      rawClient.from("invoice_refunds").single.mockResolvedValueOnce({
+        data: {
+          id: "refund-123",
+          invoice_id: "inv-123",
+          amount: 100000,
+          method: "cash",
+          status: "completed",
+        },
+        error: null,
+      });
+      // Awaited query: return updated refunds list
+      rawClient.__qb.resolveWith({
         data: [
           {
             id: "refund-123",
@@ -99,26 +50,28 @@ describe("RefundService", () => {
         error: null,
       });
 
-      const result = await recordRefund("inv-123", "org-123", {
+      const result = await recordRefund(db, "inv-123", "org-123", {
         amount: 100000,
         method: "cash",
       });
 
       expect(result).toBeDefined();
-      expect(mockDb.from).toHaveBeenCalledWith("invoice_refunds");
-      expect(mockDb.from).toHaveBeenCalledWith("invoices");
+      expect(rawClient.rpc).toHaveBeenCalledWith(
+        "record_refund_atomically",
+        expect.objectContaining({ p_invoice_id: "inv-123" }),
+      );
+      expect(rawClient.from).toHaveBeenCalledWith("invoice_refunds");
     });
 
     it("records a partial refund successfully", async () => {
-      mockDb.auth.getUser.mockResolvedValue({ data: { user: mockUser } });
-      mockDb._single.mockResolvedValue({
-        data: { ...mockInvoice, amount_refunded: 0 },
+      rawClient.rpc.mockResolvedValue({ data: null, error: null });
+      rawClient.from("invoice_refunds").single.mockResolvedValueOnce({
+        data: { id: "refund-123", amount: 50000, status: "completed" },
         error: null,
       });
-      mockDb._insert.mockResolvedValue({ error: null });
-      mockDb._eq.mockResolvedValue({ data: [{ amount: 100000 }], error: null });
+      rawClient.__qb.resolveWith({ data: [], error: null });
 
-      const result = await recordRefund("inv-123", "org-123", {
+      const result = await recordRefund(db, "inv-123", "org-123", {
         amount: 50000,
         method: "cash",
       });
@@ -126,67 +79,82 @@ describe("RefundService", () => {
       expect(result).toBeDefined();
     });
 
-    it("throws error when refund exceeds paid amount", async () => {
-      mockDb.auth.getUser.mockResolvedValue({ data: { user: mockUser } });
-      mockDb._single.mockResolvedValue({
-        data: { ...mockInvoice, amount_refunded: 80000 },
-        error: null,
+    it("throws error when rpc fails", async () => {
+      rawClient.rpc.mockResolvedValue({
+        data: null,
+        error: { message: "Refund exceeds paid amount" },
       });
 
       await expect(
-        recordRefund("inv-123", "org-123", {
+        recordRefund(db, "inv-123", "org-123", {
           amount: 50000,
           method: "cash",
         }),
-      ).rejects.toThrow(ValidationError);
+      ).rejects.toThrow("Refund exceeds paid amount");
     });
 
-    it("throws error for non-refundable invoice status", async () => {
-      mockDb.auth.getUser.mockResolvedValue({ data: { user: mockUser } });
-      mockDb._single.mockResolvedValue({
-        data: { ...mockInvoice, status: "draft" },
-        error: null,
+    it("throws error when refund exceeds paid amount", async () => {
+      rawClient.rpc.mockResolvedValue({
+        data: null,
+        error: { message: "Refund amount exceeds available balance" },
       });
 
       await expect(
-        recordRefund("inv-123", "org-123", {
+        recordRefund(db, "inv-123", "org-123", {
+          amount: 50000,
+          method: "cash",
+        }),
+      ).rejects.toThrow();
+    });
+
+    it("throws error for non-refundable invoice status", async () => {
+      rawClient.rpc.mockResolvedValue({
+        data: null,
+        error: { message: "Invoice status does not allow refunds" },
+      });
+
+      await expect(
+        recordRefund(db, "inv-123", "org-123", {
           amount: 100000,
           method: "cash",
         }),
-      ).rejects.toThrow(ValidationError);
+      ).rejects.toThrow();
     });
 
     it("throws error when invoice not found", async () => {
-      mockDb.auth.getUser.mockResolvedValue({ data: { user: mockUser } });
-      mockDb._single.mockResolvedValue({ data: null, error: null });
+      rawClient.rpc.mockResolvedValue({
+        data: null,
+        error: { message: "Invoice not found" },
+      });
 
       await expect(
-        recordRefund("inv-123", "org-123", {
+        recordRefund(db, "inv-123", "org-123", {
           amount: 100000,
           method: "cash",
         }),
-      ).rejects.toThrow(NotFoundError);
+      ).rejects.toThrow();
     });
   });
 
   describe("getRefunds", () => {
     it("returns refunds list", async () => {
-      const mockRefunds = [
-        {
-          id: "refund-123",
-          invoice_id: "inv-123",
-          amount: 50000,
-          invoices: {
-            invoice_number: "INV-2026-00001",
-            total: 100000,
-            customer_name: "Test Customer",
+      rawClient.__qb.resolveWith({
+        data: [
+          {
+            id: "refund-123",
+            invoice_id: "inv-123",
+            amount: 50000,
+            invoices: {
+              invoice_number: "INV-2026-00001",
+              total: 100000,
+              customer_name: "Test Customer",
+            },
           },
-        },
-      ];
+        ],
+        error: null,
+      });
 
-      mockDb._eq.mockResolvedValue({ data: mockRefunds, error: null });
-
-      const result = await getRefunds("org-123");
+      const result = await getRefunds(db, "org-123");
 
       expect(result).toHaveLength(1);
       expect(result[0].invoice_number).toBe("INV-2026-00001");
@@ -194,29 +162,33 @@ describe("RefundService", () => {
     });
 
     it("applies status filter", async () => {
-      mockDb._eq.mockResolvedValue({ data: [], error: null });
+      rawClient.__qb.resolveWith({ data: [], error: null });
 
-      await getRefunds("org-123", { status: "completed" });
+      await getRefunds(db, "org-123", { status: "completed" });
 
-      expect(mockDb._eq).toHaveBeenCalledWith("status", "completed");
+      expect(rawClient.from("invoice_refunds").eq).toHaveBeenCalledWith(
+        "status",
+        "completed",
+      );
     });
   });
 
   describe("getInvoiceRefunds", () => {
     it("returns refunds for specific invoice", async () => {
-      const mockRefunds = [
-        {
-          id: "refund-123",
-          invoice_id: "inv-123",
-          amount: 50000,
-          method: "cash",
-          status: "completed",
-        },
-      ];
+      rawClient.__qb.resolveWith({
+        data: [
+          {
+            id: "refund-123",
+            invoice_id: "inv-123",
+            amount: 50000,
+            method: "cash",
+            status: "completed",
+          },
+        ],
+        error: null,
+      });
 
-      mockDb._eq.mockResolvedValue({ data: mockRefunds, error: null });
-
-      const result = await getInvoiceRefunds("inv-123");
+      const result = await getInvoiceRefunds(db, "inv-123");
 
       expect(result).toHaveLength(1);
       expect(result[0].invoice_id).toBe("inv-123");
@@ -225,37 +197,32 @@ describe("RefundService", () => {
 
   describe("cancelRefund", () => {
     it("cancels a pending refund", async () => {
-      mockDb.auth.getUser.mockResolvedValue({
-        data: { user: { id: "user-123" } },
+      // 1st single: fetch existing refund
+      rawClient.from("invoice_refunds").single.mockResolvedValueOnce({
+        data: {
+          id: "refund-123",
+          status: "pending",
+          invoice_id: "inv-123",
+        },
+        error: null,
       });
-      mockDb._single
-        .mockResolvedValueOnce({
-          data: {
-            id: "refund-123",
-            status: "pending",
-            invoice_id: "inv-123",
-          },
-          error: null,
-        })
-        .mockResolvedValueOnce({
-          data: {
-            id: "refund-123",
-            status: "cancelled",
-            invoice_id: "inv-123",
-          },
-          error: null,
-        });
+      // 2nd single: update result
+      rawClient.from("invoice_refunds").single.mockResolvedValueOnce({
+        data: {
+          id: "refund-123",
+          status: "cancelled",
+          invoice_id: "inv-123",
+        },
+        error: null,
+      });
 
-      const result = await cancelRefund("refund-123", "org-123");
+      const result = await cancelRefund(db, "refund-123", "org-123");
 
       expect(result.status).toBe("cancelled");
     });
 
     it("throws error when trying to cancel completed refund", async () => {
-      mockDb.auth.getUser.mockResolvedValue({
-        data: { user: { id: "user-123" } },
-      });
-      mockDb._single.mockResolvedValue({
+      rawClient.from("invoice_refunds").single.mockResolvedValue({
         data: {
           id: "refund-123",
           status: "completed",
@@ -264,18 +231,18 @@ describe("RefundService", () => {
         error: null,
       });
 
-      await expect(cancelRefund("refund-123", "org-123")).rejects.toThrow(
+      await expect(cancelRefund(db, "refund-123", "org-123")).rejects.toThrow(
         ValidationError,
       );
     });
 
     it("throws error when refund not found", async () => {
-      mockDb.auth.getUser.mockResolvedValue({
-        data: { user: { id: "user-123" } },
+      rawClient.from("invoice_refunds").single.mockResolvedValue({
+        data: null,
+        error: null,
       });
-      mockDb._single.mockResolvedValue({ data: null, error: null });
 
-      await expect(cancelRefund("refund-123", "org-123")).rejects.toThrow(
+      await expect(cancelRefund(db, "refund-123", "org-123")).rejects.toThrow(
         NotFoundError,
       );
     });
@@ -283,7 +250,7 @@ describe("RefundService", () => {
 
   describe("getRefundStats", () => {
     it("returns aggregated stats", async () => {
-      mockDb._eq.mockResolvedValue({
+      rawClient.__qb.resolveWith({
         data: [
           { amount: 50000, status: "completed" },
           { amount: 30000, status: "completed" },
@@ -292,7 +259,7 @@ describe("RefundService", () => {
         error: null,
       });
 
-      const result = await getRefundStats("org-123");
+      const result = await getRefundStats(db, "org-123");
 
       expect(result.totalRefunded).toBe(80000);
       expect(result.refundCount).toBe(2);
@@ -300,9 +267,9 @@ describe("RefundService", () => {
     });
 
     it("returns zero stats when no refunds", async () => {
-      mockDb._eq.mockResolvedValue({ data: [], error: null });
+      rawClient.__qb.resolveWith({ data: [], error: null });
 
-      const result = await getRefundStats("org-123");
+      const result = await getRefundStats(db, "org-123");
 
       expect(result.totalRefunded).toBe(0);
       expect(result.refundCount).toBe(0);

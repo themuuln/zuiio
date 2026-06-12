@@ -6,26 +6,42 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import heic2any from "heic2any";
 
 interface PartPhotoUploadProps {
   orgId: string;
   partId?: string;
   imageUrl: string | null;
   onImageChange: (url: string | null) => void;
+  readOnly?: boolean;
 }
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic"];
-const MAX_SIZE = 5 * 1024 * 1024; // 5MB pre-compression limit
 const MAX_DIMENSION = 1200; // max width/height in pixels
 const JPEG_QUALITY = 0.8; // 80% quality — good balance
 
 async function compressImage(file: File): Promise<Blob> {
+  // Convert HEIC to JPEG first (browsers can't decode HEIC natively)
+  let processedFile = file;
+  if (file.type === "image/heic") {
+    const jpegBlob = await heic2any({
+      blob: file,
+      toType: "image/jpeg",
+      quality: JPEG_QUALITY,
+    });
+    processedFile = new File(
+      [jpegBlob as Blob],
+      file.name.replace(/\.heic$/i, ".jpg"),
+      { type: "image/jpeg" },
+    );
+  }
+
   // Load image into an HTMLImageElement
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
     const el = new window.Image();
     el.onload = () => resolve(el);
     el.onerror = () => reject(new Error("Failed to load image"));
-    el.src = URL.createObjectURL(file);
+    el.src = URL.createObjectURL(processedFile);
   });
 
   let { width, height } = img;
@@ -65,6 +81,7 @@ export default function PartPhotoUpload({
   partId,
   imageUrl,
   onImageChange,
+  readOnly = false,
 }: PartPhotoUploadProps) {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -73,11 +90,6 @@ export default function PartPhotoUpload({
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    if (file.size > MAX_SIZE) {
-      toast.error("Зураг 5MB-аас бага байх ёстой");
-      return;
-    }
 
     if (!ALLOWED_TYPES.includes(file.type)) {
       toast.error("Зөвхөн JPEG, PNG, WebP, HEIC зураг ашиглах боломжтой");
@@ -186,48 +198,50 @@ export default function PartPhotoUpload({
         className="hidden"
       />
 
-      {/* Buttons */}
-      <div className="flex flex-col gap-1.5">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => cameraInputRef.current?.click()}
-          disabled={isBusy}
-          className="w-full"
-        >
-          <Camera className="mr-1.5 size-3.5" />
-          {isBusy ? "Ачаалж байна..." : "Зураг авах"}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isBusy}
-          className="w-full"
-        >
-          {isBusy ? (
-            <Loader2 className="mr-1.5 size-3.5 animate-spin" />
-          ) : (
-            <span className="mr-1.5 text-xs">📁</span>
-          )}
-          {isBusy ? "Ачаалж байна..." : "Файлаас сонгох"}
-        </Button>
-        {imageUrl && (
+      {/* Buttons (hidden in readOnly mode) */}
+      {!readOnly && (
+        <div className="flex flex-col gap-1.5">
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             size="sm"
-            onClick={handleRemove}
+            onClick={() => cameraInputRef.current?.click()}
             disabled={isBusy}
-            className="w-full text-muted-foreground"
+            className="w-full"
           >
-            <Trash2 className="mr-1.5 size-3.5" />
-            Устгах
+            <Camera className="mr-1.5 size-3.5" />
+            {isBusy ? "Ачаалж байна..." : "Зураг авах"}
           </Button>
-        )}
-      </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isBusy}
+            className="w-full"
+          >
+            {isBusy ? (
+              <Loader2 className="mr-1.5 size-3.5 animate-spin" />
+            ) : (
+              <span className="mr-1.5 text-xs">📁</span>
+            )}
+            {isBusy ? "Ачаалж байна..." : "Файлаас сонгох"}
+          </Button>
+          {imageUrl && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleRemove}
+              disabled={isBusy}
+              className="w-full text-muted-foreground"
+            >
+              <Trash2 className="mr-1.5 size-3.5" />
+              Устгах
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

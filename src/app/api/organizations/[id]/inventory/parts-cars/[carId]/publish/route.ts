@@ -5,7 +5,7 @@ import { publishPartsCarPartsToCatalog } from "@/lib/services/parts-cars-service
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 export const POST = createRouteHandler(
-  async ({ request, orgId, user, params }) => {
+  async ({ request, orgId, user, params, supabase }) => {
     await requireActiveSubscription(orgId);
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
     const rateCheck = mutationRateLimiter.check(ip);
@@ -23,6 +23,7 @@ export const POST = createRouteHandler(
       );
     }
     const result = await publishPartsCarPartsToCatalog(
+      supabase,
       orgId,
       user.id,
       params.carId,

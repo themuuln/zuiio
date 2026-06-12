@@ -44,6 +44,7 @@ export const updateWorkOrderSchema = z
       .nullable()
       .optional(),
     customer_id: uuid.nullable().optional(),
+    nuat_enabled: z.boolean().optional(),
   })
   .refine(
     (data) =>
@@ -53,10 +54,11 @@ export const updateWorkOrderSchema = z
       data.diagnosis !== undefined ||
       data.notes !== undefined ||
       data.loss_reason !== undefined ||
-      data.customer_id !== undefined,
+      data.customer_id !== undefined ||
+      data.nuat_enabled !== undefined,
     {
       message:
-        "At least one of status, mechanic_id, complaint, diagnosis, notes, loss_reason, or customer_id is required",
+        "At least one of status, mechanic_id, complaint, diagnosis, notes, loss_reason, customer_id, or nuat_enabled is required",
     },
   );
 export type UpdateWorkOrderInput = z.infer<typeof updateWorkOrderSchema>;

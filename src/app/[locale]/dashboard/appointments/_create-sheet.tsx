@@ -24,7 +24,7 @@ export function AppointmentCreateSheet({
       open={open}
       onOpenChange={onOpenChange}
       title={t("newAppointment")}
-      description={t("createDescription")}
+      desc={t("createDescription")}
       sheetSize="lg"
     >
       <AppointmentForm

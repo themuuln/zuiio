@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
+import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { getWorkOrderDetail as _getWorkOrderDetail } from "@/lib/services/_queries/work-order-queries";
@@ -295,6 +296,16 @@ export async function createWorkOrder(
   );
   revalidateTag(cacheTags.bayView(orgId, orgId), "max");
 
+  await createAuditLog({
+    supabase: db,
+    action: "create",
+    table_name: "work_orders",
+    record_id: wo.id,
+    user_id: userId,
+    organization_id: orgId,
+    new_data: { status: "New", vehicle_id: params.vehicle_id },
+  });
+
   return getWorkOrder(db, wo.id);
 }
 
@@ -417,6 +428,17 @@ export async function cancelWorkOrder(
     })
     .eq("id", id)
     .eq("organization_id", orgId);
+
+  await createAuditLog({
+    supabase: db,
+    action: "update",
+    table_name: "work_orders",
+    record_id: id,
+    user_id: userId,
+    organization_id: orgId,
+    old_data: { status: existing.status },
+    new_data: { status: "Cancelled", loss_reason: reason ?? null },
+  });
 
   revalidateTag(cacheTags.workOrders(orgId), "max");
   revalidateTag(cacheTags.workOrder(id), "max");

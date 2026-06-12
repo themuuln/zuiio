@@ -459,7 +459,7 @@ export function VehicleDetailSheet({
                   >
                     <Trash2 className="size-4" />
                   </AlertDialogTrigger>
-                  <AlertDialogContent zLayer={1}>
+                  <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
                       <AlertDialogDescription>

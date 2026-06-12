@@ -33,7 +33,7 @@ export async function completeOrganizationLogin(
   }
 
   try {
-    await activateOrganizationAccess({
+    await activateOrganizationAccess(supabase, {
       organizationId: parsed.data.organizationId,
       pin: parsed.data.pin,
       confirmPin: parsed.data.confirmPin || "",

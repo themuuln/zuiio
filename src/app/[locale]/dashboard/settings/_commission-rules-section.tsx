@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Combobox,
   ComboboxContent,
@@ -59,6 +58,11 @@ import {
 } from "@/lib/queries/use-commission-rules";
 import type { MechanicCommissionRule } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
+import {
+  SettingsBlock,
+  SettingsError,
+  SettingsTableFrame,
+} from "./_settings-layout";
 
 const COMMISSION_TYPE_VALUES = [
   "percentage_of_labor",
@@ -453,20 +457,12 @@ export function CommissionRulesSection({ orgId }: CommissionRulesSectionProps) {
   }
 
   if (error) {
-    return (
-      <Card className="border-destructive/20">
-        <CardContent className="py-6">
-          <Typography.Text className="text-sm text-destructive">
-            {t("failedToLoadRules")}
-          </Typography.Text>
-        </CardContent>
-      </Card>
-    );
+    return <SettingsError message={t("failedToLoadRules")} />;
   }
 
   return (
     <>
-      <div className="flex mt-4 flex-col gap-4">
+      <SettingsBlock>
         <div className="flex items-center justify-between">
           <Typography.Muted className="text-sm text-muted-foreground">
             {t("commissionRulesDesc")}
@@ -478,25 +474,18 @@ export function CommissionRulesSection({ orgId }: CommissionRulesSectionProps) {
         </div>
 
         {!rules || rules.length === 0 ? (
-          <Card>
-            <CardContent>
-              <Empty>
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <Percent />
-                  </EmptyMedia>
-                  <EmptyTitle>{t("noCommissionRulesYet")}</EmptyTitle>
-                  <EmptyDescription>
-                    {t("noCommissionRulesDesc")}
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            </CardContent>
-          </Card>
+          <Empty className="border border-dashed py-6">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Percent />
+              </EmptyMedia>
+              <EmptyTitle>{t("noCommissionRulesYet")}</EmptyTitle>
+              <EmptyDescription>{t("noCommissionRulesDesc")}</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
-          <Card>
-            <CardContent className="p-0">
-              <Table>
+          <SettingsTableFrame>
+            <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
                     <TableHead className="px-4 py-3 font-medium">
@@ -578,11 +567,10 @@ export function CommissionRulesSection({ orgId }: CommissionRulesSectionProps) {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+            </Table>
+          </SettingsTableFrame>
         )}
-      </div>
+      </SettingsBlock>
 
       <CommissionFormDialog
         open={dialogOpen}

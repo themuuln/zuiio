@@ -1,6 +1,7 @@
 // ── Revenue forecast, targets, and management ───────────────
 
-import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { withBranchFilter } from "@/lib/supabase/with-branch";
 
 import type { ReportForecast, ReportTarget } from "@/lib/types";
@@ -9,12 +10,13 @@ import type { ReportForecast, ReportTarget } from "@/lib/types";
  * Revenue forecast — projects end-of-period revenue based on current pace.
  */
 export async function getRevenueForecast(
+  db: SupabaseClient,
   orgId: string,
   periodType: "daily" | "weekly" | "monthly",
   date: string,
   branchId: string | null = null,
 ): Promise<ReportForecast> {
-  const supabase = await createClient();
+  const supabase = db;
 
   // Determine period boundaries
   let periodStart: string;
@@ -152,12 +154,13 @@ export async function getRevenueForecast(
  * Stored in organization settings JSONB to avoid new tables.
  */
 export async function getRevenueTargets(
+  db: SupabaseClient,
   orgId: string,
   periodType: "daily" | "weekly" | "monthly",
   _date: string,
   branchId: string | null = null,
 ): Promise<ReportTarget[]> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data: org } = await supabase
     .from("organizations")
@@ -233,13 +236,14 @@ export async function getRevenueTargets(
 
 /** Set or update a revenue target */
 export async function setRevenueTarget(
+  db: SupabaseClient,
   orgId: string,
   periodType: "daily" | "weekly" | "monthly",
   periodStart: string,
   periodEnd: string,
   targetRevenue: number,
 ): Promise<ReportTarget> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data: org } = await supabase
     .from("organizations")

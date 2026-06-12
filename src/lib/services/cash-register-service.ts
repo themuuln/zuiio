@@ -178,15 +178,21 @@ export async function getCurrentSession(
 ): Promise<CashRegisterSessionWithEntries | null> {
   const today = localDateStr();
 
-  const { data } = await db
+  let query = db
     .from("cash_register_sessions")
     .select(SESSION_COLUMNS)
     .eq("organization_id", orgId)
-    .eq("branch_id", branchId ?? null)
     .eq("date", today)
     .eq("status", "open")
-    .is("deleted_at", null)
-    .maybeSingle();
+    .is("deleted_at", null);
+
+  // Only filter by branch_id when a specific branch is requested.
+  // branchId === undefined means "all branches" — find any open session.
+  if (branchId !== undefined) {
+    query = query.eq("branch_id", branchId ?? null);
+  }
+
+  const { data } = await query.maybeSingle();
 
   if (!data) return null;
 

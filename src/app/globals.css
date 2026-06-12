@@ -364,37 +364,3 @@
 [data-base-ui-portal] [data-base-ui-inert] {
   pointer-events: none;
 }
-
-/* ── Z-index layers for stacked overlays ────────────────────────
-   Used by SheetContent/DialogContent zLayer prop for Sheet→Sheet
-   stacking. z-50 is default; each additional layer increments by 1. */
-@utility z-51 {
-  z-index: 51;
-}
-@utility z-52 {
-  z-index: 52;
-}
-@utility z-53 {
-  z-index: 53;
-}
-@utility z-54 {
-  z-index: 54;
-}
-@utility z-55 {
-  z-index: 55;
-}
-@utility z-56 {
-  z-index: 56;
-}
-@utility z-57 {
-  z-index: 57;
-}
-@utility z-58 {
-  z-index: 58;
-}
-@utility z-59 {
-  z-index: 59;
-}
-@utility z-60 {
-  z-index: 60;
-}

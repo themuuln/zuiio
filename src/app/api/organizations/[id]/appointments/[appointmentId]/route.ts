@@ -8,8 +8,8 @@ import {
 } from "@/lib/services/appointment-service";
 
 export const GET = createRouteHandler(
-  async ({ params }) => {
-    const appointment = await getAppointment(params.appointmentId);
+  async ({ params, supabase }) => {
+    const appointment = await getAppointment(supabase, params.appointmentId);
     if (!appointment) {
       return NextResponse.json(
         { error: { code: "NOT_FOUND", message: "Appointment not found" } },
@@ -22,7 +22,7 @@ export const GET = createRouteHandler(
 );
 
 export const PATCH = createRouteHandler(
-  async ({ request, params }) => {
+  async ({ request, params, supabase }) => {
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
     const rateCheck = mutationRateLimiter.check(ip);
     if (!rateCheck.allowed) {
@@ -39,7 +39,11 @@ export const PATCH = createRouteHandler(
       );
     }
     const body = await request.json();
-    const appointment = await updateAppointment(params.appointmentId, body);
+    const appointment = await updateAppointment(
+      supabase,
+      params.appointmentId,
+      body,
+    );
     return NextResponse.json({ data: appointment });
   },
   {
@@ -48,7 +52,7 @@ export const PATCH = createRouteHandler(
 );
 
 export const DELETE = createRouteHandler(
-  async ({ request, params }) => {
+  async ({ request, params, supabase }) => {
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
     const rateCheck = mutationRateLimiter.check(ip);
     if (!rateCheck.allowed) {
@@ -64,7 +68,7 @@ export const DELETE = createRouteHandler(
         },
       );
     }
-    await deleteAppointment(params.appointmentId);
+    await deleteAppointment(supabase, params.appointmentId);
     return NextResponse.json({ data: null });
   },
   {

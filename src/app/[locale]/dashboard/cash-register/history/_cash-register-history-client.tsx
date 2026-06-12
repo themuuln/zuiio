@@ -69,7 +69,9 @@ export function CashRegisterHistoryClient() {
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12">
             <Banknote className="size-10 text-muted-foreground" />
-            <Typography.Muted>No closed sessions yet.</Typography.Muted>
+            <Typography.Muted>
+              {t("cashRegister.noClosedSessions")}
+            </Typography.Muted>
           </CardContent>
         </Card>
       ) : (

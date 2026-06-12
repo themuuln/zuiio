@@ -136,6 +136,37 @@ describe("expense-service", () => {
       expect(result[0].category).toBeNull();
     });
 
+    it("maps aliased category relation data", async () => {
+      db.__qb.resolveWith({
+        data: [
+          {
+            id: "exp-3",
+            organization_id: "org-1",
+            amount: 25000,
+            category: {
+              id: "cat-2",
+              name: "Fuel",
+              color: "#10b981",
+              icon: "truck",
+            },
+          },
+        ],
+        error: null,
+      });
+
+      const result = await getExpenses(
+        db as unknown as SupabaseClient,
+        "org-1",
+      );
+
+      expect(result[0].category).toEqual({
+        id: "cat-2",
+        name: "Fuel",
+        color: "#10b981",
+        icon: "truck",
+      });
+    });
+
     it("applies search filter with ilike", async () => {
       db.__qb.resolveWith({ data: [], error: null });
 
@@ -170,6 +201,20 @@ describe("expense-service", () => {
       });
 
       expect(db.from("expenses").is).toHaveBeenCalledWith("paid_at", null);
+    });
+
+    it("applies overdue filter", async () => {
+      db.__qb.resolveWith({ data: [], error: null });
+
+      await getExpenses(db as unknown as SupabaseClient, "org-1", {
+        overdue: true,
+      });
+
+      expect(db.from("expenses").is).toHaveBeenCalledWith("paid_at", null);
+      expect(db.from("expenses").lt).toHaveBeenCalledWith(
+        "due_date",
+        expect.any(String),
+      );
     });
 
     it("applies limit and offset", async () => {
@@ -244,6 +289,21 @@ describe("expense-service", () => {
       expect(stats.unpaidAmount).toBe(0);
       expect(stats.overdueCount).toBe(0);
       expect(stats.byCategory).toEqual([]);
+    });
+
+    it("applies branch filter when branchId is provided", async () => {
+      db.__qb.resolveWith({ data: [], error: null });
+
+      await getExpenseStats(
+        db as unknown as SupabaseClient,
+        "org-1",
+        "branch-1",
+      );
+
+      expect(db.from("expenses").eq).toHaveBeenCalledWith(
+        "branch_id",
+        "branch-1",
+      );
     });
 
     it("aggregates amounts and counts by category", async () => {

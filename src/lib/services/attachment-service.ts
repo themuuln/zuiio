@@ -1,14 +1,15 @@
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { WorkOrderAttachment } from "@/lib/types";
 
 export async function getAttachments(
+  db: SupabaseClient,
   orgId: string,
   workOrderId: string,
 ): Promise<WorkOrderAttachment[]> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data, error } = await supabase
     .from("work_order_attachments")
@@ -29,16 +30,17 @@ export interface CreateAttachmentParams {
   file_size: number;
   mime_type: string;
   storage_path: string;
-  public_url?: string;
+  public_url?: string | null;
   file_type: "photo" | "document" | "other";
 }
 
 export async function createAttachment(
+  db: SupabaseClient,
   orgId: string,
   workOrderId: string,
   params: CreateAttachmentParams,
 ): Promise<WorkOrderAttachment> {
-  const supabase = await createClient();
+  const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
   const { data, error } = await supabase
@@ -68,11 +70,12 @@ export async function createAttachment(
 }
 
 export async function deleteAttachment(
+  db: SupabaseClient,
   orgId: string,
   workOrderId: string,
   attachmentId: string,
 ): Promise<void> {
-  const supabase = await createClient();
+  const supabase = db;
   const deletedAt = new Date().toISOString();
 
   const { error } = await supabase

@@ -97,7 +97,7 @@ begin
     settings
   ) values (
     target_org_id,
-    'starter'::plan_type,
+    'enterprise'::plan_type,
     'trial',
     now(),
     now() + interval '14 days',
@@ -201,7 +201,7 @@ begin
     settings
   ) values (
     target_org_id,
-    'starter'::plan_type,
+    'enterprise'::plan_type,
     'trial',
     now(),
     now() + interval '14 days',

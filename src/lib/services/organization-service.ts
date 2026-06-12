@@ -1,8 +1,9 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
+import { createAuditLog } from "@/lib/audit";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { reportServerError } from "@/lib/sentry-report-server";
-import { createClient } from "@/lib/supabase/server";
 import type {
   CreateOrganizationParams,
   Organization,
@@ -12,6 +13,7 @@ import { buildUpdates, type FieldMap } from "./build-updates";
 import { trimField } from "./trim-field";
 
 export async function createOrganization(
+  db: SupabaseClient,
   params: CreateOrganizationParams,
   userId: string,
 ): Promise<Organization> {
@@ -20,7 +22,7 @@ export async function createOrganization(
   if (!name?.trim()) throw new ValidationError("Organization name is required");
   if (!slug?.trim()) throw new ValidationError("Organization slug is required");
 
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data: existing } = await supabase
     .from("organizations")
@@ -127,8 +129,11 @@ export async function createOrganization(
   return org as unknown as Organization;
 }
 
-export async function getOrganization(orgId: string): Promise<Organization> {
-  const supabase = await createClient();
+export async function getOrganization(
+  db: SupabaseClient,
+  orgId: string,
+): Promise<Organization> {
+  const supabase = db;
 
   const { data, error } = await supabase
     .from("organizations")
@@ -147,9 +152,10 @@ export async function getOrganization(orgId: string): Promise<Organization> {
 }
 
 export async function getUserOrganization(
+  db: SupabaseClient,
   userId: string,
 ): Promise<Organization | null> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data: membership } = await supabase
     .from("organization_users")
@@ -173,10 +179,11 @@ export async function getUserOrganization(
 }
 
 export async function updateOrganization(
+  db: SupabaseClient,
   orgId: string,
   params: UpdateOrganizationParams,
 ): Promise<Organization> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const fieldMap: FieldMap<UpdateOrganizationParams> = {
     columns: {
@@ -210,6 +217,15 @@ export async function updateOrganization(
   if (error || !data) {
     throw new NotFoundError("Organization not found");
   }
+
+  await createAuditLog({
+    supabase,
+    action: "update",
+    table_name: "organizations",
+    record_id: orgId,
+    organization_id: orgId,
+    new_data: data as unknown as Record<string, unknown>,
+  });
 
   revalidateTag(cacheTags.branches(orgId), "max");
 

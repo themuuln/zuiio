@@ -5,6 +5,7 @@ import { UserPlus, Wrench } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { NewMechanicSheet } from "@/components/new-mechanic-sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { MechanicAvatar } from "@/components/mechanic-avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +20,6 @@ import {
   ItemTitle,
 } from "@/components/ui/item";
 import { SidebarMenuButton, useSidebar } from "@/components/ui/sidebar";
-import { getMechanicColor, getMechanicInitials } from "@/lib/mechanic-colors";
 import { mechanicKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useProfile } from "@/lib/queries/use-profile";
@@ -132,17 +132,7 @@ export function MechanicSwitcher() {
             >
               <Item size="xs" className="border-0 w-full">
                 <ItemMedia variant="image">
-                  <Avatar className="size-5">
-                    <AvatarFallback
-                      className={cn(
-                        "text-[8px] font-medium",
-                        getMechanicColor(m.id).bg,
-                        getMechanicColor(m.id).text,
-                      )}
-                    >
-                      {getMechanicInitials(m.full_name)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <MechanicAvatar mechanic={m} className="size-5" />
                 </ItemMedia>
                 <ItemContent>
                   <ItemTitle className="text-xs">

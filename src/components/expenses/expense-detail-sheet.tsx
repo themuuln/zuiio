@@ -47,17 +47,16 @@ import {
   useUpdateExpense,
 } from "@/lib/queries/use-expenses";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { cn } from "@/lib/utils";
 import { formatMNT } from "@/lib/utils";
 
 // ── Constants ─────────────────────────────────────────────────
 
 const PAYMENT_METHODS = [
   "cash",
-  "credit_card",
-  "debit_card",
   "bank_transfer",
-  "mobile_bank",
-  "other",
+  "card",
+  "manual",
 ] as const;
 
 // ── Schema ───────────────────────────────────────────────────
@@ -72,7 +71,7 @@ const expenseSchema = z.object({
   vendorName: z.string().optional(),
   paymentMethod: z.string().optional(),
   referenceNumber: z.string().optional(),
-  paid: z.boolean().default(false),
+  paid: z.boolean(),
   notes: z.string().optional(),
 });
 
@@ -94,6 +93,14 @@ function syncForm(expense: NonNullable<ReturnType<typeof useExpense>["data"]>) {
   };
 }
 
+function isOverdue(expense: NonNullable<ReturnType<typeof useExpense>["data"]>) {
+  return !!(
+    !expense.paid_at &&
+    expense.due_date &&
+    new Date(expense.due_date) < new Date()
+  );
+}
+
 // ── Component ────────────────────────────────────────────────
 
 interface ExpenseDetailSheetProps {
@@ -112,7 +119,10 @@ export function ExpenseDetailSheet({
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
 
-  const { data: expense, isLoading: loading, error } = useExpense(expenseId);
+  const { data: expense, isLoading: loading, error } = useExpense(
+    orgId,
+    expenseId ?? undefined,
+  );
   const { data: categories } = useExpenseCategories(orgId);
   const updateExpense = useUpdateExpense(orgId);
   const deleteExpense = useDeleteExpense(orgId);
@@ -170,19 +180,17 @@ export function ExpenseDetailSheet({
     try {
       await updateExpense.mutateAsync({
         id: expenseId,
-        body: {
-          description: data.description.trim(),
-          amount: parseFloat(data.amount),
-          tax_amount: data.taxAmount ? parseFloat(data.taxAmount) : undefined,
-          expense_date: data.expenseDate || undefined,
-          due_date: data.dueDate || undefined,
-          category_id: data.categoryId || undefined,
-          vendor_name: data.vendorName?.trim() || undefined,
-          payment_method: data.paymentMethod || undefined,
-          reference_number: data.referenceNumber?.trim() || undefined,
-          paid_at: data.paid ? new Date().toISOString() : null,
-          notes: data.notes?.trim() || undefined,
-        },
+        description: data.description.trim(),
+        amount: parseFloat(data.amount),
+        taxAmount: data.taxAmount ? parseFloat(data.taxAmount) : undefined,
+        expenseDate: data.expenseDate || undefined,
+        dueDate: data.dueDate || null,
+        categoryId: data.categoryId || null,
+        vendorName: data.vendorName?.trim() || null,
+        paymentMethod: data.paymentMethod || null,
+        referenceNumber: data.referenceNumber?.trim() || null,
+        paidAt: data.paid ? new Date().toISOString() : null,
+        notes: data.notes?.trim() || null,
       });
       toast.dismiss();
       toast.success(t("expenseUpdated"));
@@ -206,6 +214,7 @@ export function ExpenseDetailSheet({
 
   const isLoadingData = loading || (open && !expense && !error);
   const notFound = open && !loading && !expense && !error;
+  const overdue = expense ? isOverdue(expense) : false;
 
   return (
     <DetailSheet open={open} onOpenChange={handleOpenChange} size="2xl">
@@ -216,7 +225,7 @@ export function ExpenseDetailSheet({
           title={
             <DetailSheet.Title className="truncate">
               {isLoadingData
-                ? "Loading\u2026"
+                ? commonT("loading")
                 : expense
                   ? expense.description
                   : t("details")}
@@ -227,9 +236,19 @@ export function ExpenseDetailSheet({
               <>
                 <Badge
                   variant={expense.paid_at ? "outline" : "secondary"}
-                  className="text-xs"
+                  className={cn(
+                    "text-xs",
+                    expense.paid_at &&
+                      "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-400",
+                    overdue &&
+                      "border-destructive/25 bg-destructive/5 text-destructive",
+                  )}
                 >
-                  {expense.paid_at ? t("paid") : t("unpaid")}
+                  {expense.paid_at
+                    ? t("paid")
+                    : overdue
+                      ? t("overdue")
+                      : t("unpaid")}
                 </Badge>
                 {expense.created_at && (
                   <span className="text-xs text-muted-foreground">
@@ -264,7 +283,7 @@ export function ExpenseDetailSheet({
                   >
                     <Trash2 className="size-4" />
                   </AlertDialogTrigger>
-                  <AlertDialogContent zLayer={1}>
+                  <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
                       <AlertDialogDescription>
@@ -296,7 +315,9 @@ export function ExpenseDetailSheet({
         {/* Error */}
         {error && !loading && (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <Typography.Muted className="text-sm">{error}</Typography.Muted>
+            <Typography.Muted className="text-sm">
+              {error instanceof Error ? error.message : String(error)}
+            </Typography.Muted>
             <Button
               variant="outline"
               size="sm"
@@ -311,7 +332,7 @@ export function ExpenseDetailSheet({
         {notFound && (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <Typography.Muted className="text-sm">
-              {t("notFound") ?? "Expense not found"}
+              {t("notFound")}
             </Typography.Muted>
             <Button
               variant="outline"
@@ -408,7 +429,7 @@ export function ExpenseDetailSheet({
 
                 {/* Due Date — optional */}
                 <Field>
-                  <FieldLabel>Due Date</FieldLabel>
+                  <FieldLabel>{t("due")}</FieldLabel>
                   <FieldContent>
                     <Input
                       id="eds-due-date"
@@ -530,19 +551,43 @@ export function ExpenseDetailSheet({
         {!editing && !isLoadingData && expense && (
           <div className="flex flex-col gap-3">
             {/* Amount */}
-            <section className="rounded-lg border border-border/60 bg-card/40 p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t("amount")}
-                </span>
-                <span className="text-xl font-semibold tabular-nums">
-                  {formatMNT(expense.amount)}
-                </span>
+            <section className="rounded-xl border border-border/60 bg-card/40 p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-1">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    {t("amount")}
+                  </span>
+                  <div className="text-2xl font-semibold tabular-nums">
+                    {formatMNT(expense.amount)}
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {expense.category && (
+                    <Badge variant="outline" className="font-normal">
+                      {expense.category.name}
+                    </Badge>
+                  )}
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      expense.paid_at &&
+                        "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-400",
+                      overdue &&
+                        "border-destructive/25 bg-destructive/5 text-destructive",
+                    )}
+                  >
+                    {expense.paid_at
+                      ? t("paid")
+                      : overdue
+                        ? t("overdue")
+                        : t("unpaid")}
+                  </Badge>
+                </div>
               </div>
               {expense.tax_amount != null && expense.tax_amount > 0 && (
-                <div className="flex items-center justify-between mt-1">
+                <div className="mt-3 flex items-center justify-between rounded-lg bg-muted/25 px-3 py-2">
                   <span className="text-xs text-muted-foreground">
-                    Tax included
+                    {t("taxIncluded")}
                   </span>
                   <span className="text-sm text-muted-foreground">
                     {formatMNT(expense.tax_amount)}
@@ -552,83 +597,63 @@ export function ExpenseDetailSheet({
             </section>
 
             {/* Details */}
-            <section className="rounded-lg border border-border/60 bg-card/40 p-3 flex flex-col gap-2.5">
+            <section className="rounded-xl border border-border/60 bg-card/40 p-4">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Details
+                {t("detailsSection")}
               </span>
-              {expense.expense_date && (
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    {t("expenseDate")}
-                  </span>
-                  <span>
-                    {new Date(expense.expense_date).toLocaleDateString()}
-                  </span>
-                </div>
-              )}
-              {expense.due_date && (
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Due Date</span>
-                  <span
-                    className={
-                      !expense.paid_at &&
-                      new Date(expense.due_date) < new Date()
-                        ? "font-medium text-destructive"
-                        : ""
-                    }
-                  >
-                    {new Date(expense.due_date).toLocaleDateString()}
-                    {!expense.paid_at &&
-                      new Date(expense.due_date) < new Date() &&
-                      " (Overdue)"}
-                  </span>
-                </div>
-              )}
-              {expense.category && (
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">{t("category")}</span>
-                  <span className="flex items-center gap-1.5">
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                {expense.expense_date && (
+                  <div className="flex items-center justify-between gap-3 rounded-lg bg-muted/20 px-3 py-2 text-sm">
+                    <span className="text-muted-foreground">
+                      {t("expenseDate")}
+                    </span>
+                    <span>
+                      {new Date(expense.expense_date).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+                {expense.due_date && (
+                  <div className="flex items-center justify-between gap-3 rounded-lg bg-muted/20 px-3 py-2 text-sm">
+                    <span className="text-muted-foreground">{t("due")}</span>
                     <span
-                      className="inline-block size-2 rounded-full"
-                      style={{ backgroundColor: expense.category.color }}
-                    />
-                    {expense.category.name}
-                  </span>
-                </div>
-              )}
-              {expense.vendor_name && (
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">{t("vendor")}</span>
-                  <span>{expense.vendor_name}</span>
-                </div>
-              )}
-              {expense.payment_method && (
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    {t("paymentMethod")}
-                  </span>
-                  <span className="capitalize">
-                    {t(expense.payment_method)}
-                  </span>
-                </div>
-              )}
-              {expense.reference_number && (
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    {t("referenceNumber")}
-                  </span>
-                  <span>{expense.reference_number}</span>
-                </div>
-              )}
+                      className={cn(overdue && "font-medium text-destructive")}
+                    >
+                      {new Date(expense.due_date).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+                {expense.vendor_name && (
+                  <div className="flex items-center justify-between gap-3 rounded-lg bg-muted/20 px-3 py-2 text-sm">
+                    <span className="text-muted-foreground">{t("vendor")}</span>
+                    <span className="truncate">{expense.vendor_name}</span>
+                  </div>
+                )}
+                {expense.payment_method && (
+                  <div className="flex items-center justify-between gap-3 rounded-lg bg-muted/20 px-3 py-2 text-sm">
+                    <span className="text-muted-foreground">
+                      {t("paymentMethod")}
+                    </span>
+                    <span className="capitalize">{t(expense.payment_method)}</span>
+                  </div>
+                )}
+                {expense.reference_number && (
+                  <div className="flex items-center justify-between gap-3 rounded-lg bg-muted/20 px-3 py-2 text-sm sm:col-span-2">
+                    <span className="text-muted-foreground">
+                      {t("referenceNumber")}
+                    </span>
+                    <span className="truncate">{expense.reference_number}</span>
+                  </div>
+                )}
+              </div>
             </section>
 
             {/* Notes */}
             {expense.notes && (
-              <section className="rounded-lg border border-border/60 bg-card/40 p-3">
+              <section className="rounded-xl border border-border/60 bg-card/40 p-4">
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   {t("notes")}
                 </span>
-                <Typography.Text className="mt-1.5 text-sm whitespace-pre-wrap">
+                <Typography.Text className="mt-2 text-sm whitespace-pre-wrap leading-6">
                   {expense.notes}
                 </Typography.Text>
               </section>

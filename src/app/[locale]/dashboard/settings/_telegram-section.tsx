@@ -12,35 +12,8 @@ import QRCode from "qrcode";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from "@/components/ui/item";
 import { Typography } from "@/components/ui/typography";
-
-function SectionHeading() {
-  const t = useTranslations("settings");
-  return (
-    <Item variant="default" className="border-0 p-0 gap-3">
-      <ItemMedia
-        variant="icon"
-        className="size-10 rounded-lg bg-muted [&_svg]:size-5 [&_svg]:text-muted-foreground"
-      >
-        <MessageCircle />
-      </ItemMedia>
-      <ItemContent>
-        <ItemTitle className="text-base tracking-tight">
-          {t("telegramBotTitle")}
-        </ItemTitle>
-        <ItemDescription>{t("telegramBotSectionDesc")}</ItemDescription>
-      </ItemContent>
-    </Item>
-  );
-}
+import { SettingsBlock } from "./_settings-layout";
 
 export function TelegramSection() {
   const [deepLink, setDeepLink] = useState<string | null>(null);
@@ -90,132 +63,110 @@ export function TelegramSection() {
   }
 
   return (
-    <section>
-      <SectionHeading />
-      <div className="mt-4 grid gap-6 lg:grid-cols-3">
-        <Card>
-          <CardContent className="flex flex-col gap-4 pt-6">
-            <div className="flex items-center gap-3">
-              <div className="flex size-12 items-center justify-center rounded-xl bg-sky-500/10">
-                <MessageCircle className="size-6 text-sky-500" />
-              </div>
-              <div>
-                <Typography.Text className="font-semibold">
-                  {t("telegramBotTitle")}
-                </Typography.Text>
-                <Typography.Muted className="text-xs text-muted-foreground">
-                  {t("telegramBotCardDesc")}
-                </Typography.Muted>
-              </div>
-            </div>
-            <Typography.Muted className="text-sm leading-relaxed text-muted-foreground">
-              {t("telegramBotAfterGenerate")}
-            </Typography.Muted>
-          </CardContent>
-        </Card>
+    <SettingsBlock className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-4">
+      <div className="flex flex-col gap-2">
+        <Typography.Muted className="text-xs leading-relaxed text-muted-foreground">
+          {t("telegramBotAfterGenerate")}
+        </Typography.Muted>
+        <Typography.Muted className="text-xs text-muted-foreground">
+          {t("telegramBotCardDesc")}
+        </Typography.Muted>
+      </div>
 
-        <Card className="lg:col-span-2">
-          <CardContent className="flex flex-col gap-4 pt-6">
-            <Typography.Text className="font-semibold text-sm">
-              {t("connectTelegram")}
-            </Typography.Text>
+      <div className="flex flex-col gap-3">
+        <Typography.Text className="text-sm font-medium">
+          {t("connectTelegram")}
+        </Typography.Text>
 
-            <ol className="flex flex-col gap-3 text-sm text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
-                  1
-                </span>
-                <span>{t("telegramStep1")}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
-                  2
-                </span>
-                <span>
-                  {t("telegramStep2")} <strong>t.me/tolom_bot</strong>
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
-                  3
-                </span>
-                <span>
-                  {t("telegramStep3")}{" "}
-                  <code className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">
-                    /start &lt;your_token&gt;
-                  </code>
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
-                  4
-                </span>
-                <span>{t("telegramStep4")}</span>
-              </li>
-            </ol>
+        <ol className="flex flex-col gap-2 text-xs text-muted-foreground">
+          <li className="flex items-start gap-2">
+            <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
+              1
+            </span>
+            <span>{t("telegramStep1")}</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
+              2
+            </span>
+            <span>
+              {t("telegramStep2")} <strong>t.me/tolom_bot</strong>
+            </span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
+              3
+            </span>
+            <span>
+              {t("telegramStep3")}{" "}
+              <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px]">
+                /start &lt;your_token&gt;
+              </code>
+            </span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
+              4
+            </span>
+            <span>{t("telegramStep4")}</span>
+          </li>
+        </ol>
 
-            <div className="mt-2 flex flex-wrap items-center gap-3">
-              <Button onClick={generateLink} disabled={loading}>
-                {loading ? (
-                  <>
-                    <RefreshCw className="mr-2 size-4 animate-spin" />
-                    {t("generating")}
-                  </>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" onClick={generateLink} disabled={loading}>
+            {loading ? (
+              <>
+                <RefreshCw className="mr-1.5 size-3.5 animate-spin" />
+                {t("generating")}
+              </>
+            ) : (
+              <>
+                <MessageCircle className="mr-1.5 size-3.5" />
+                {t("generateLink")}
+              </>
+            )}
+          </Button>
+
+          {deepLink ? (
+            <>
+              <Button variant="outline" size="sm" onClick={copyLink}>
+                {copied ? (
+                  <Check className="mr-1.5 size-3.5 text-green-500" />
                 ) : (
-                  <>
-                    <MessageCircle className="mr-2 size-4" />
-                    {t("generateLink")}
-                  </>
+                  <Copy className="mr-1.5 size-3.5" />
                 )}
+                {copied ? t("copiedLabel") : t("copyLink")}
               </Button>
 
-              {deepLink && (
-                <>
-                  <Button variant="outline" onClick={copyLink}>
-                    {copied ? (
-                      <Check className="mr-2 size-4 text-green-500" />
-                    ) : (
-                      <Copy className="mr-2 size-4" />
-                    )}
-                    {copied ? t("copiedLabel") : t("copyLink")}
-                  </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.open(deepLink, "_blank")}
+              >
+                <ExternalLink className="mr-1.5 size-3.5" />
+                {t("openInTelegram")}
+              </Button>
+            </>
+          ) : null}
+        </div>
 
-                  <Button
-                    variant="ghost"
-                    onClick={() => window.open(deepLink, "_blank")}
-                  >
-                    <ExternalLink className="mr-2 size-4" />
-                    {t("openInTelegram")}
-                  </Button>
-                </>
-              )}
+        {deepLink && qrDataUrl ? (
+          <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/20 p-3 sm:flex-row sm:items-start">
+            <div className="flex shrink-0 items-center justify-center rounded-md bg-background p-1">
+              {/* biome-ignore lint/performance/noImgElement: QR codes use inline data URIs, next/Image is not suitable */}
+              <img src={qrDataUrl} alt={t("qrCodeAlt")} className="size-28" />
             </div>
-
-            {deepLink && qrDataUrl && (
-              <div className="mt-2 flex flex-col gap-4 rounded-lg border bg-muted/30 p-4 sm:flex-row sm:items-start">
-                {/* QR Code */}
-                <div className="flex shrink-0 items-center justify-center rounded-lg bg-white p-1.5">
-                  {/* biome-ignore lint/performance/noImgElement: QR codes use inline data URIs, next/Image is not suitable */}
-                  <img
-                    src={qrDataUrl}
-                    alt={t("qrCodeAlt")}
-                    className="size-32"
-                  />
-                </div>
-                {/* Deep link text */}
-                <div className="flex min-w-0 flex-1 flex-col gap-2">
-                  <Typography.Muted className="text-xs text-muted-foreground">
-                    {t("scanQrHint")}
-                  </Typography.Muted>
-                  <code className="block break-all rounded-md bg-muted px-3 py-2 text-xs font-mono">
-                    {deepLink}
-                  </code>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <Typography.Muted className="text-xs text-muted-foreground">
+                {t("scanQrHint")}
+              </Typography.Muted>
+              <code className="block break-all rounded-md bg-muted px-2.5 py-1.5 font-mono text-[11px]">
+                {deepLink}
+              </code>
+            </div>
+          </div>
+        ) : null}
       </div>
-    </section>
+    </SettingsBlock>
   );
 }

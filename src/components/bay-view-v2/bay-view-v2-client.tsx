@@ -28,6 +28,7 @@ import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
 import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
 import { bayViewKeys } from "@/lib/queries/keys";
+import { useOrgSettings } from "@/lib/queries/use-org-settings";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useProfile } from "@/lib/queries/use-profile";
 import type { BayViewData, ShiftReport } from "@/lib/services/bay-view-service";
@@ -56,6 +57,11 @@ import {
 } from "./_types";
 import { useBayCountMutation } from "./_use-bay-count-mutation";
 import { useBayViewDialogs } from "./_use-bay-view-dialogs";
+import {
+  normalizeOrgTransferBankAccounts,
+  resolveOrgTransferBanks,
+} from "@/lib/payments/org-bank-accounts";
+import { resolvePaymentMethodFees } from "./_payment-fees";
 import { useBayViewPending } from "./_use-bay-view-pending";
 import { useBayViewToast } from "./_use-bay-view-toast";
 import { AssignDialog } from "./assign-dialog";
@@ -79,6 +85,13 @@ export function BayViewV2Client() {
   const branchFilter =
     selectedBranchId === "all" ? undefined : selectedBranchId;
   const { data: orgInfo } = useCurrentOrg();
+  const { settings: orgSettings } = useOrgSettings(orgInfo?.orgId);
+  const paymentMethodFees = resolvePaymentMethodFees(
+    orgSettings?.payment_method_fees,
+  );
+  const transferBanks = resolveOrgTransferBanks(
+    normalizeOrgTransferBankAccounts(orgSettings?.transfer_bank_accounts),
+  );
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -289,12 +302,19 @@ export function BayViewV2Client() {
       );
       return;
     }
-    // All forward transitions go direct — optimistic, no modal
-    if (
-      status === "Diagnosing" ||
-      status === "In Progress" ||
-      status === "Ready for Pickup"
-    ) {
+    if (status === "Ready for Pickup" && wo.vehicle?.id) {
+      pending.requestPostService(
+        woId,
+        wo.vehicle.id,
+        formatPlateNumber(wo.vehicle.plate_number ?? ""),
+        wo.vehicle.odometer ?? null,
+        status,
+        Number(wo.total),
+      );
+      return;
+    }
+    // Other forward transitions go direct — optimistic, no modal
+    if (status === "Diagnosing" || status === "In Progress") {
       handleStatusChangeConfirm(woId, status);
       return;
     }
@@ -324,6 +344,29 @@ export function BayViewV2Client() {
       mechanicNotes: postData.mechanicNotes,
     });
     await handleStatusChangeConfirm(p.woId, p.newStatus);
+
+    if (orgInfo?.orgId && p.totalCost > 0) {
+      const { createInvoiceAndRecordPayment } = await import("./_helpers");
+      try {
+        await createInvoiceAndRecordPayment(
+          orgInfo.orgId,
+          p.woId,
+          postData.paymentMethod,
+          paymentMethodFees[postData.paymentMethod] ?? 0,
+          transferBanks,
+          postData.transferBankId,
+        );
+      } catch (err) {
+        toast.setToast({
+          message:
+            err instanceof Error
+              ? err.message
+              : "Ready — but payment could not be recorded",
+          variant: "error",
+        });
+      }
+    }
+
     pending.clearPending();
   }
 
@@ -991,6 +1034,9 @@ export function BayViewV2Client() {
           currentOdometer={pending.pending.currentOdometer}
           bayData={pendingPostServiceBay}
           newStatus={pending.pending.newStatus}
+          grandTotal={pending.pending.totalCost}
+          paymentMethodFees={paymentMethodFees}
+          transferBanks={transferBanks}
           onConfirm={handlePostServiceConfirm}
         />
       )}

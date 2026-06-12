@@ -106,6 +106,7 @@ export function PartsTab({
   const [forkingData, setForkingData] =
     useState<Partial<CreatePartParams> | null>(null);
   const [editingPart, setEditingPart] = useState<PartsCatalogItem | null>(null);
+  const [viewingPart, setViewingPart] = useState<PartsCatalogItem | null>(null);
   const [editingThreshold, setEditingThreshold] = useState<string | null>(null);
   const [thresholdValue, setThresholdValue] = useState("");
   const [showDefaultThreshold, setShowDefaultThreshold] = useState(false);
@@ -604,11 +605,7 @@ export function PartsTab({
                             <Button
                               variant="ghost"
                               size="xs"
-                              render={
-                                <Link
-                                  href={`/dashboard/inventory/parts/${part.id}`}
-                                />
-                              }
+                              onClick={() => setViewingPart(part)}
                               title="View"
                             >
                               <Eye className="size-4" />
@@ -838,6 +835,34 @@ export function PartsTab({
             }}
             onSuccess={() => setEditingPart(null)}
             onCancel={() => setEditingPart(null)}
+          />
+        </Modal>
+      )}
+
+      {/* View Part Modal */}
+      {viewingPart && (
+        <Modal
+          title={
+            locale === "mn" && viewingPart.name_mn
+              ? viewingPart.name_mn
+              : viewingPart.name
+          }
+          onClose={() => setViewingPart(null)}
+        >
+          <PartForm
+            readOnly
+            initialData={{
+              name: viewingPart.name,
+              name_mn: viewingPart.name_mn ?? undefined,
+              part_number: viewingPart.part_number ?? undefined,
+              category: viewingPart.category ?? undefined,
+              description: viewingPart.description ?? undefined,
+              unit: viewingPart.unit ?? undefined,
+              default_price: viewingPart.default_price ?? undefined,
+              image_url: viewingPart.image_url ?? undefined,
+              location: viewingPart.location ?? undefined,
+            }}
+            onCancel={() => setViewingPart(null)}
           />
         </Modal>
       )}

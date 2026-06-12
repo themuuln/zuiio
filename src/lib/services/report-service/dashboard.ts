@@ -1,8 +1,9 @@
 // ── Dashboard data, daily timeline, and customer retention ──
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { cacheDurations, cacheTags } from "@/lib/cache/keys";
 import { withCache } from "@/lib/cache/with-cache";
-import { createClient } from "@/lib/supabase/server";
 import { withBranchFilter } from "@/lib/supabase/with-branch";
 
 import type {
@@ -26,6 +27,7 @@ import { generateInsights } from "./insights";
 // ── Dashboard (optimized: ~10 queries instead of ~236) ──────
 
 export async function getDashboardData(
+  db: SupabaseClient,
   orgId: string,
   periodOrOpts:
     | "today"
@@ -35,7 +37,7 @@ export async function getDashboardData(
     | { dateFrom: string; dateTo: string; branchId?: string | null } = "all",
   branchId: string | null = null,
 ): Promise<DashboardData> {
-  const supabase = await createClient();
+  const supabase = db;
 
   // Normalize params: support both string period and object with dateFrom/dateTo
   const resolvedPeriod =
@@ -357,10 +359,11 @@ export interface TimelineEvent {
 }
 
 export async function getDailyTimeline(
+  db: SupabaseClient,
   orgId: string,
   branchId: string | null = null,
 ): Promise<TimelineEvent[]> {
-  const supabase = await createClient();
+  const supabase = db;
   const today = new Date().toISOString().split("T")[0];
 
   const { data: wos, error: woError } = await withBranchFilter(
@@ -456,12 +459,13 @@ export async function getDailyTimeline(
  * Computes returning vs new customers, retention rate, and top customers.
  */
 export async function getCustomerRetention(
+  db: SupabaseClient,
   orgId: string,
   dateFrom: string,
   dateTo: string,
   branchId: string | null = null,
 ): Promise<CustomerRetentionData> {
-  const supabase = await createClient();
+  const supabase = db;
 
   // Get all WOs in period with customer info
   const { data: wos } = await withBranchFilter(

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
+import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import type {
@@ -92,6 +93,16 @@ export async function createService(
   if (error || !data)
     throw new Error(error?.message ?? "Failed to create service");
 
+  await createAuditLog({
+    supabase: db,
+    action: "create",
+    table_name: "service_catalog",
+    record_id: data.id,
+    user_id: userId,
+    organization_id: orgId,
+    new_data: data,
+  });
+
   revalidateTag(cacheTags.serviceCatalog(orgId), "max");
 
   return data as unknown as ServiceCatalog;
@@ -112,6 +123,14 @@ export async function updateService(
 ): Promise<ServiceCatalog> {
   const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  const { data: existingRecord } = await supabase
+    .from("service_catalog")
+    .select("*")
+    .eq("id", id)
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .single();
 
   const fieldMap: FieldMap<typeof params> = {
     columns: {
@@ -146,6 +165,17 @@ export async function updateService(
 
   if (error || !data) throw new NotFoundError("Service not found");
 
+  await createAuditLog({
+    supabase: db,
+    action: "update",
+    table_name: "service_catalog",
+    record_id: id,
+    user_id: userId,
+    organization_id: orgId,
+    old_data: existingRecord,
+    new_data: data,
+  });
+
   revalidateTag(cacheTags.serviceCatalog(orgId), "max");
 
   return data as unknown as ServiceCatalog;
@@ -157,6 +187,17 @@ export async function deleteService(
   orgId: string,
 ): Promise<void> {
   const supabase = db;
+
+  const { data: existingRecord } = await supabase
+    .from("service_catalog")
+    .select("*")
+    .eq("id", id)
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .single();
+
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+
   const { error } = await supabase
     .from("service_catalog")
     .update({ deleted_at: new Date().toISOString() })
@@ -165,6 +206,16 @@ export async function deleteService(
     .is("deleted_at", null);
 
   if (error) throw new NotFoundError("Service not found or already deleted");
+
+  await createAuditLog({
+    supabase: db,
+    action: "soft_delete",
+    table_name: "service_catalog",
+    record_id: id,
+    user_id: userId,
+    organization_id: orgId,
+    old_data: existingRecord,
+  });
 
   revalidateTag(cacheTags.serviceCatalog(orgId), "max");
 }

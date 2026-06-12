@@ -97,21 +97,72 @@ export function usePayRateUpsert(orgId: string | undefined) {
 
       await queue.enqueue({
         endpoint: `/api/organizations/${orgId}/payroll/pay-rates`,
-        method: "POST",
+        method: "PUT",
         body: { mechanicId, hourlyRate, effectiveFrom },
-        queryKeysToInvalidate: [[...payrollKeys.payRates(orgId ?? "")]],
+        queryKeysToInvalidate: [[...payrollKeys.payRatesRoot(orgId ?? "")]],
       });
       return { queued: true } as unknown as PayRate;
+    },
+    onMutate: async (variables) => {
+      const key = payrollKeys.payRatesRoot(orgId ?? "");
+      await queryClient.cancelQueries({ queryKey: key });
+
+      const snapshots = queryClient.getQueriesData<PayRate[]>({
+        queryKey: key,
+      });
+
+      for (const [queryKey, current] of snapshots) {
+        queryClient.setQueryData<PayRate[]>(queryKey, (old) => {
+          const list = old ?? current ?? [];
+          const existing = list.find(
+            (rate) => rate.mechanic_id === variables.mechanicId,
+          );
+
+          if (existing) {
+            return list.map((rate) =>
+              rate.mechanic_id === variables.mechanicId
+                ? {
+                    ...rate,
+                    hourly_rate: variables.hourlyRate,
+                    effective_from: variables.effectiveFrom,
+                    effective_to: null,
+                  }
+                : rate,
+            );
+          }
+
+          return [
+            ...list,
+            {
+              id: `temp-${variables.mechanicId}`,
+              organization_id: orgId ?? "",
+              mechanic_id: variables.mechanicId,
+              mechanic_name: null,
+              hourly_rate: variables.hourlyRate,
+              effective_from: variables.effectiveFrom,
+              effective_to: null,
+            },
+          ];
+        });
+      }
+
+      return { snapshots };
+    },
+    onError: (_error, _variables, context) => {
+      for (const [queryKey, data] of context?.snapshots ?? []) {
+        queryClient.setQueryData(queryKey, data);
+      }
     },
     onSuccess: (data) => {
       const d = data as unknown as Record<string, unknown>;
       if (d?.queued) {
         toast.info("Saved offline — will sync when connected");
-      } else {
-        queryClient.invalidateQueries({
-          queryKey: payrollKeys.payRates(orgId ?? ""),
-        });
       }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: payrollKeys.payRatesRoot(orgId ?? ""),
+      });
     },
   });
 }
@@ -119,20 +170,33 @@ export function usePayRateUpsert(orgId: string | undefined) {
 /**
  * Calculate monthly payroll. Invalidates records on success.
  */
-export function useCalculatePayroll(orgId: string | undefined) {
+export function useCalculatePayroll(
+  orgId: string | undefined,
+  branchId?: string | null,
+) {
   const queryClient = useQueryClient();
   const isOnline = useOnlineStatus();
   const queue = useMutationQueue();
 
   return useMutation({
-    mutationFn: async ({ year, month }: { year: number; month: number }) => {
+    mutationFn: async ({
+      year,
+      month,
+    }: {
+      year: number;
+      month: number;
+    }) => {
       if (isOnline) {
         const res = await fetch(
           `/api/organizations/${orgId}/payroll/calculate`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ year, month }),
+            body: JSON.stringify({
+              year,
+              month,
+              branch_id: branchId ?? null,
+            }),
           },
         );
         const json = await res.json();
@@ -144,9 +208,9 @@ export function useCalculatePayroll(orgId: string | undefined) {
       await queue.enqueue({
         endpoint: `/api/organizations/${orgId}/payroll/calculate`,
         method: "POST",
-        body: { year, month },
+        body: { year, month, branch_id: branchId ?? null },
         queryKeysToInvalidate: [
-          [...payrollKeys.records(orgId ?? "", year, month)],
+          [...payrollKeys.records(orgId ?? "", year, month, branchId ?? "all")],
         ],
       });
       return { queued: true } as unknown as PayrollRecord[];
@@ -155,15 +219,16 @@ export function useCalculatePayroll(orgId: string | undefined) {
       const d = data as unknown as Record<string, unknown>;
       if (d?.queued) {
         toast.info("Saved offline — will sync when connected");
-      } else {
-        queryClient.invalidateQueries({
-          queryKey: payrollKeys.records(
-            orgId ?? "",
-            variables.year,
-            variables.month,
-          ),
-        });
       }
+    },
+    onSettled: (_data, _error, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: payrollKeys.recordsPeriod(
+          orgId ?? "",
+          variables.year,
+          variables.month,
+        ),
+      });
     },
   });
 }
@@ -171,7 +236,10 @@ export function useCalculatePayroll(orgId: string | undefined) {
 /**
  * Update payroll record status (approve or mark paid).
  */
-export function useUpdatePayrollRecord(orgId: string | undefined) {
+export function useUpdatePayrollRecord(
+  orgId: string | undefined,
+  branchId?: string | null,
+) {
   const queryClient = useQueryClient();
   const isOnline = useOnlineStatus();
   const queue = useMutationQueue();
@@ -208,24 +276,58 @@ export function useUpdatePayrollRecord(orgId: string | undefined) {
         method: "PATCH",
         body: { action },
         queryKeysToInvalidate: [
-          [...payrollKeys.records(orgId ?? "", year, month)],
+          [...payrollKeys.records(orgId ?? "", year, month, branchId ?? "all")],
         ],
       });
       return { queued: true } as unknown as PayrollRecord;
+    },
+    onMutate: async (variables) => {
+      const key = payrollKeys.records(
+        orgId ?? "",
+        variables.year,
+        variables.month,
+        branchId ?? "all",
+      );
+
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<PayrollRecord[]>(key);
+
+      queryClient.setQueryData<PayrollRecord[]>(key, (old) =>
+        (old ?? []).map((record) =>
+          record.id === variables.recordId
+            ? {
+                ...record,
+                status: variables.action === "pay" ? "paid" : "approved",
+                paid_at:
+                  variables.action === "pay"
+                    ? new Date().toISOString()
+                    : record.paid_at,
+              }
+            : record,
+        ),
+      );
+
+      return { key, previous };
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.key) {
+        queryClient.setQueryData(context.key, context.previous);
+      }
     },
     onSuccess: (data, variables) => {
       const d = data as unknown as Record<string, unknown>;
       if (d?.queued) {
         toast.info("Saved offline — will sync when connected");
-      } else {
-        queryClient.invalidateQueries({
-          queryKey: payrollKeys.records(
-            orgId ?? "",
-            variables.year,
-            variables.month,
-          ),
-        });
       }
+    },
+    onSettled: (_data, _error, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: payrollKeys.recordsPeriod(
+          orgId ?? "",
+          variables.year,
+          variables.month,
+        ),
+      });
     },
   });
 }

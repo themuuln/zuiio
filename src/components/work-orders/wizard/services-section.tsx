@@ -299,7 +299,6 @@ export function ServicesSection() {
                   </div>
                   <NumericKeypad
                     value={svc.quantity}
-                    zLayer={1}
                     onChange={(val) =>
                       ctx.updateService(
                         idx,
@@ -317,7 +316,6 @@ export function ServicesSection() {
                   </NumericKeypad>
                   <NumericKeypad
                     value={svc.base_price}
-                    zLayer={1}
                     onChange={(val) =>
                       ctx.updateService(idx, "base_price", val)
                     }
@@ -331,7 +329,6 @@ export function ServicesSection() {
                   <div className="flex items-center gap-1">
                     <NumericKeypad
                       value={svc.discount_amount_mnt}
-                      zLayer={1}
                       onChange={(val) =>
                         ctx.updateService(idx, "discount_amount_mnt", val)
                       }

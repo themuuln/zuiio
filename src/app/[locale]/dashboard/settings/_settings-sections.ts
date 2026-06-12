@@ -9,6 +9,7 @@ import {
   Percent,
   Stethoscope,
   Tags,
+  Wallet,
 } from "lucide-react";
 
 export function getSettingsSections(t: (key: string) => string) {
@@ -42,6 +43,12 @@ export function getSettingsSections(t: (key: string) => string) {
       title: t("sectionPricing"),
       description: t("sectionPricingDesc"),
       icon: Tags,
+    },
+    {
+      value: "payments",
+      title: t("sectionPayments"),
+      description: t("sectionPaymentsDesc"),
+      icon: Wallet,
     },
     {
       value: "diagnosis",

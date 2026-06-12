@@ -118,6 +118,8 @@ type PurchaseOrderItemUpdate = Partial<Tables<"purchase_order_items">>;
 type StockThreshold = Tables<"stock_thresholds">;
 type StockThresholdInsert = TablesInsert<"stock_thresholds">;
 type StockThresholdUpdate = Partial<Tables<"stock_thresholds">>;
+export type StockTransfer = Tables<"stock_transfers">;
+export type StockTransferItem = Tables<"stock_transfer_items">;
 type PartsCars = Tables<"parts_cars">;
 type PartsCarsInsert = TablesInsert<"parts_cars">;
 type PartsCarsUpdate = Partial<Tables<"parts_cars">>;
@@ -129,6 +131,9 @@ type CustomerType = Customer["type"];
 type FuelType = Vehicle["fuel_type"];
 type InviteStatus = OrgInvite["status"];
 type TransmissionType = Vehicle["transmission"];
+
+// Price rules
+export type PriceRule = Tables<"price_rules">;
 
 export type {
   AuditLog,

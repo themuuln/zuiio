@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
+import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import {
   NotFoundError,
@@ -230,7 +231,7 @@ export async function createEstimate(
       customer_id: params.customer_id,
       vehicle_id: params.vehicle_id,
       estimate_number: estimateNumber,
-      status: "draft",
+      status: params.status ?? "draft",
       notes: params.notes?.trim() ?? null,
       terms: params.terms?.trim() ?? null,
       valid_until: params.valid_until ?? null,
@@ -285,6 +286,21 @@ export async function createEstimate(
   // Recalculate totals
   await recalculateEstimateTotals(db, estimate.id, orgId);
 
+  await createAuditLog({
+    supabase: db,
+    action: "create",
+    table_name: "estimates",
+    record_id: estimate.id,
+    user_id: user.id,
+    organization_id: orgId,
+    new_data: {
+      estimate_number: estimateNumber,
+      status: params.status ?? "draft",
+      customer_id: params.customer_id,
+      vehicle_id: params.vehicle_id,
+    },
+  });
+
   revalidateTag(cacheTags.estimates(orgId), "max");
 
   const created = await getEstimate(db, estimate.id, orgId);
@@ -306,6 +322,15 @@ export async function updateEstimate(
   params: UpdateEstimateParams,
 ): Promise<EstimateDetail> {
   const user = (await db.auth.getUser()).data.user;
+
+  const { data: oldEstimate } = await db
+    .from("estimates")
+    .select(
+      "id, status, notes, terms, discount_amount, discount_percentage, tax_total",
+    )
+    .eq("id", id)
+    .eq("organization_id", orgId)
+    .single();
 
   const updates: Record<string, unknown> = {
     updated_by: user?.id ?? null,
@@ -330,6 +355,17 @@ export async function updateEstimate(
     .is("deleted_at", null);
 
   if (error) throw new NotFoundError("Estimate not found");
+
+  await createAuditLog({
+    supabase: db,
+    action: "update",
+    table_name: "estimates",
+    record_id: id,
+    user_id: user?.id ?? undefined,
+    organization_id: orgId,
+    old_data: oldEstimate ?? undefined,
+    new_data: updates,
+  });
 
   // If items are provided, replace all items
   if (params.items) {
@@ -438,6 +474,15 @@ export async function convertEstimateToWorkOrder(
   // Fetch the estimate with items
   const estimate = await getEstimate(db, estimateId, orgId);
   if (!estimate) throw new NotFoundError("Estimate not found");
+
+  const oldEstimateData = {
+    id: estimate.id,
+    status: estimate.status,
+    estimate_number: estimate.estimate_number,
+    customer_id: estimate.customer_id,
+    vehicle_id: estimate.vehicle_id,
+  };
+
   if (estimate.status !== "approved") {
     throw new ValidationError(
       `Cannot convert estimate with status "${estimate.status}". Only "approved" estimates can be converted.`,
@@ -525,6 +570,17 @@ export async function convertEstimateToWorkOrder(
     })
     .eq("id", estimateId)
     .eq("organization_id", orgId);
+
+  await createAuditLog({
+    supabase: db,
+    action: "update",
+    table_name: "estimates",
+    record_id: estimateId,
+    user_id: user.id,
+    organization_id: orgId,
+    old_data: oldEstimateData,
+    new_data: { status: "converted", converted_work_order_id: wo.id },
+  });
 
   // Revalidate caches
   revalidateTag(cacheTags.estimates(orgId), "max");

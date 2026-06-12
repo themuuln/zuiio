@@ -1,5 +1,5 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { UnauthorizedError, ValidationError } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
 
 export interface UserOrganizationAccessOption {
   organizationId: string;
@@ -15,10 +15,10 @@ function isValidPin(pin: string): boolean {
   return /^[0-9]{4,6}$/.test(pin);
 }
 
-export async function listUserOrganizations(): Promise<
-  UserOrganizationAccessOption[]
-> {
-  const supabase = await createClient();
+export async function listUserOrganizations(
+  db: SupabaseClient,
+): Promise<UserOrganizationAccessOption[]> {
+  const supabase = db;
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -54,15 +54,16 @@ export async function listUserOrganizations(): Promise<
   }));
 }
 
-export async function activateOrganizationAccess(params: {
-  organizationId: string;
-  pin: string;
-  confirmPin?: string;
-}): Promise<void> {
-  const [supabase, organizations] = await Promise.all([
-    createClient(),
-    listUserOrganizations(),
-  ]);
+export async function activateOrganizationAccess(
+  db: SupabaseClient,
+  params: {
+    organizationId: string;
+    pin: string;
+    confirmPin?: string;
+  },
+): Promise<void> {
+  const organizations = await listUserOrganizations(db);
+  const supabase = db;
   const selected = organizations.find(
     (organization) => organization.organizationId === params.organizationId,
   );

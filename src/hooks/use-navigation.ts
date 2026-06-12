@@ -2,6 +2,7 @@
 
 import {
   AlertTriangle,
+  ArrowRightLeft,
   Banknote,
   BarChart3,
   Bell,
@@ -140,6 +141,11 @@ const navGroups: NavGroup[] = [
         labelKey: "nav.inventoryMovements",
         href: "/dashboard/inventory/movements",
         icon: ClipboardList,
+      },
+      {
+        labelKey: "nav.inventoryTransfers",
+        href: "/dashboard/inventory/transfers",
+        icon: ArrowRightLeft,
       },
       {
         labelKey: "nav.inventoryPartsCars",

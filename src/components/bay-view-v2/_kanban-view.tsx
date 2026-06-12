@@ -9,6 +9,7 @@ import { Typography } from "@/components/ui/typography";
 import type { BaySlotData } from "@/lib/services/bay-view-service";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { ALL_STATUSES, STATUS_COLUMN } from "./_constants";
 import { CondensedQueueItem } from "./_condensed-queue-item";
 import { BayCard } from "./bay-card";
 import { ErrorSection } from "./_error-section";
@@ -44,16 +45,9 @@ export function KanbanDropColumn({
   );
 }
 
-// ── KanbanView ─────────────────────────────────────────────────
-
-const STATUS_COLUMNS = ["New", "Diagnosing", "In Progress", "Ready for Pickup"];
-
-const COLUMN_COLORS: Record<string, string> = {
-  New: "border-t-amber-400 bg-amber-400/5",
-  Diagnosing: "border-t-blue-400 bg-blue-400/5",
-  "In Progress": "border-t-indigo-500 bg-indigo-500/5",
-  "Ready for Pickup": "border-t-emerald-500 bg-emerald-500/5",
-};
+const STATUS_COLUMNS = ALL_STATUSES.filter(
+  (s) => s !== "Completed" && s !== "Cancelled",
+);
 
 interface KanbanViewProps {
   searchedBays: BaySlotData[];
@@ -118,7 +112,7 @@ export const KanbanView = React.memo(function KanbanView({
               variant="ghost"
               onClick={handleFindEmptyBay}
               className="size-5 rounded hover:bg-muted text-muted-foreground/80 hover:text-foreground cursor-pointer"
-              title="Assign vehicle to an empty bay"
+              title={t("assignVehicleToBay")}
             >
               <Plus className="size-3" />
             </Button>
@@ -144,7 +138,7 @@ export const KanbanView = React.memo(function KanbanView({
                 <Plus className="size-4 text-muted-foreground/60" />
               </div>
               <Typography.Muted className="text-xs text-muted-foreground/45 font-semibold">
-                No Vacant Bays
+                {t("emptyBay")}
               </Typography.Muted>
             </div>
           )}
@@ -162,7 +156,7 @@ export const KanbanView = React.memo(function KanbanView({
             status={status}
             className={cn(
               "flex min-w-[280px] max-w-[320px] flex-shrink-0 flex-col gap-4 bg-card/85 backdrop-blur-sm rounded-xl py-3 border border-border/50 border-t-4 shadow-sm",
-              COLUMN_COLORS[status] ?? "border-t-primary",
+              STATUS_COLUMN[status] ?? "border-t-primary",
             )}
           >
             <div className="flex flex-row items-center justify-between gap-2 border-b border-border/40 px-4 pb-2.5 select-none">
@@ -176,7 +170,7 @@ export const KanbanView = React.memo(function KanbanView({
                   variant="ghost"
                   onClick={handleFindEmptyBay}
                   className="size-5 rounded hover:bg-muted text-muted-foreground/80 hover:text-foreground cursor-pointer"
-                  title="Assign vehicle to an empty bay"
+                  title={t("assignVehicleToBay")}
                 >
                   <Plus className="size-3" />
                 </Button>
@@ -221,7 +215,7 @@ export const KanbanView = React.memo(function KanbanView({
                     <Plus className="size-4 text-muted-foreground/60 group-hover/empty:text-primary" />
                   </div>
                   <Typography.Muted className="text-xs text-muted-foreground/45 font-semibold group-hover/empty:text-primary transition-colors">
-                    Assign Vehicle
+                    {t("assignVehicleToBay")}
                   </Typography.Muted>
                 </button>
               )}

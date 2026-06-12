@@ -70,7 +70,7 @@ export interface ServiceCompletionDatumInsert {
   odometer_reading?: number | null;
   customer_satisfaction?: number | null;
   customer_feedback?: string | null;
-  customer_preferences?: Record<string, unknown>;
+  customer_preferences?: Record<string, never>;
   next_appointment_date?: string | null;
   collected_at?: string;
   created_by?: string | null;

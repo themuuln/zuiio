@@ -18,9 +18,12 @@ vi.mock("@/lib/cache/with-cache", () => ({
   withCache: vi.fn((_key: unknown, fn: () => unknown) => fn()),
 }));
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
+vi.mock("@/lib/audit", () => ({
+  createAuditLog: vi.fn().mockResolvedValue({ success: true, id: "audit-1" }),
+}));
 
 describe("Service Catalog Service", () => {
-  const mockClient: any = createMockSupabaseClient();
+  let mockClient: any;
 
   const mockService = {
     id: "svc-1",
@@ -63,6 +66,7 @@ describe("Service Catalog Service", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockClient = createMockSupabaseClient();
     vi.mocked(createClient).mockResolvedValue(
       mockClient as unknown as Awaited<ReturnType<typeof createClient>>,
     );
@@ -218,6 +222,11 @@ describe("Service Catalog Service", () => {
         default_price: 79.99,
         is_active: false,
       };
+      // 1st .single(): existence check (old_data for audit)
+      mockClient
+        .from("service_catalog")
+        .single.mockResolvedValueOnce({ data: { ...updated }, error: null });
+      // 2nd .single(): update result
       mockClient
         .from("service_catalog")
         .single.mockResolvedValueOnce({ data: updated, error: null });
@@ -247,6 +256,12 @@ describe("Service Catalog Service", () => {
     });
 
     it("revalidates cache", async () => {
+      // 1st .single(): existence check
+      mockClient.from("service_catalog").single.mockResolvedValueOnce({
+        data: { ...mockService },
+        error: null,
+      });
+      // 2nd .single(): update result
       mockClient
         .from("service_catalog")
         .single.mockResolvedValueOnce({ data: mockService, error: null });
@@ -266,36 +281,43 @@ describe("Service Catalog Service", () => {
 
   describe("deleteService", () => {
     it("soft deletes (sets deleted_at)", async () => {
-      mockClient
-        .from("service_catalog")
-        .is.mockResolvedValueOnce({ error: null });
+      const freshMock = createMockSupabaseClient();
+      // deleteService makes 2 sequential queries on the same table:
+      // 1. select existing record (for audit old_data)
+      // 2. update to set deleted_at
+      // Use __qb.resolveWith() to set each response before its chain runs.
+      freshMock.__qb.resolveWith({ data: { id: "svc-1" }, error: null });
+      const deletePromise = deleteService(freshMock as any, "svc-1", "org-1");
+      freshMock.__qb.resolveWith({ error: null });
+      await deletePromise;
 
-      await deleteService(mockClient, "svc-1", "org-1");
-
-      expect(mockClient.from("service_catalog").update).toHaveBeenCalledWith(
+      expect(freshMock.from("service_catalog").update).toHaveBeenCalledWith(
         expect.objectContaining({ deleted_at: expect.any(String) }),
       );
     });
 
     it("throws NotFoundError when not found", async () => {
-      mockClient.from("service_catalog").is = vi.fn().mockResolvedValue({
-        error: { message: "Not found" },
-      });
+      const freshMock = createMockSupabaseClient();
+      // First query (select existing) returns null
+      freshMock.__qb.resolveWith({ data: null, error: null });
+      const p1 = deleteService(freshMock as any, "nonexistent", "org-1");
+      // Second query (update) returns error
+      freshMock.__qb.resolveWith({ error: { message: "Not found" } });
+      await expect(p1).rejects.toThrow(NotFoundError);
 
-      await expect(
-        deleteService(mockClient, "nonexistent", "org-1"),
-      ).rejects.toThrow(NotFoundError);
-      await expect(
-        deleteService(mockClient, "nonexistent", "org-1"),
-      ).rejects.toThrow("Service not found or already deleted");
+      // Second call
+      freshMock.__qb.resolveWith({ data: null, error: null });
+      const p2 = deleteService(freshMock as any, "nonexistent", "org-1");
+      freshMock.__qb.resolveWith({ error: { message: "Not found" } });
+      await expect(p2).rejects.toThrow("Service not found or already deleted");
     });
 
     it("revalidates cache", async () => {
-      mockClient
-        .from("service_catalog")
-        .is.mockResolvedValueOnce({ error: null });
-
-      await deleteService(mockClient, "svc-1", "org-1");
+      const freshMock = createMockSupabaseClient();
+      freshMock.__qb.resolveWith({ data: { id: "svc-1" }, error: null });
+      const deletePromise = deleteService(freshMock as any, "svc-1", "org-1");
+      freshMock.__qb.resolveWith({ error: null });
+      await deletePromise;
 
       expect(revalidateTag).toHaveBeenCalledWith(
         expect.stringContaining("service-catalog:org-1"),

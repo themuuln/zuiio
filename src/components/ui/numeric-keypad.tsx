@@ -9,15 +9,12 @@ interface NumericKeypadProps {
   value: number;
   onChange: (value: number) => void;
   children: React.ReactNode;
-  /** Z-index layer for stacked overlays. 0 = default (z-50), 1 = z-51, etc. */
-  zLayer?: number;
 }
 
 export function NumericKeypad({
   value,
   onChange,
   children,
-  zLayer = 0,
 }: NumericKeypadProps) {
   const t = useTranslations("common");
   const [open, setOpen] = React.useState(false);
@@ -83,7 +80,6 @@ export function NumericKeypad({
       {trigger}
       <DialogContent
         showCloseButton={false}
-        zLayer={zLayer}
         className="w-[300px] sm:w-[340px] gap-0 p-4 [&>button:last-child]:hidden"
       >
         {/* Value display */}

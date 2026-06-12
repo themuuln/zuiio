@@ -167,7 +167,7 @@ export function DrawerHeaderSection({
         </div>
 
         {/* Column 3: Status & Mechanic Assignment */}
-        <div className="flex items-center md:justify-end gap-3 overflow-hidden">
+        <div className="flex items-center md:justify-end gap-3 overflow-visible">
           {wo && orgId && workOrderId && (
             <MechanicMultiSelect
               leadMechanicId={wo.mechanic_id}

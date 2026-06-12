@@ -40,6 +40,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
+import { cn } from "@/lib/utils";
 import {
   useCreateExpenseCategory,
   useDeleteExpenseCategory,
@@ -103,6 +104,7 @@ export default function CategoriesPage() {
   const [formDescription, setFormDescription] = useState("");
   const [formColor, setFormColor] = useState("#3b82f6");
   const [isEditing, setIsEditing] = useState(false);
+  const categoryCount = categories?.length ?? 0;
 
   function openAddDialog() {
     setIsEditing(false);
@@ -114,6 +116,7 @@ export default function CategoriesPage() {
 
   function openEditDialog(category: ExpenseCategory) {
     setIsEditing(true);
+    setSelectedCategory(category);
     setFormName(category.name);
     setFormDescription(category.description ?? "");
     setFormColor(category.color);
@@ -175,7 +178,7 @@ export default function CategoriesPage() {
         <Card>
           <CardContent className="flex flex-col items-start gap-4 py-6">
             <Typography.Text className="text-destructive">
-              {error?.message ?? "Failed to load categories"}
+              {error?.message ?? t("common.somethingWentWrong")}
             </Typography.Text>
             <Button onClick={() => refetch()} variant="outline">
               {t("common.retry")}
@@ -192,15 +195,20 @@ export default function CategoriesPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <Typography.H1 className="text-2xl font-semibold tracking-tight">
-            Categories
+            {t("expenses.categories")}
           </Typography.H1>
           <Typography.Muted className="text-muted-foreground">
-            Organize expenses into categories for better tracking
+            {t("expenses.categoriesDescription")}
           </Typography.Muted>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-border bg-muted/30 px-2.5 py-1 text-xs text-muted-foreground">
+              {categoryCount} {t("expenses.categories").toLowerCase()}
+            </span>
+          </div>
         </div>
         <Button onClick={openAddDialog} size="default">
           <Plus className="size-4" />
-          Add Category
+          {t("expenses.addCategory")}
         </Button>
       </div>
 
@@ -216,7 +224,7 @@ export default function CategoriesPage() {
           <EmptyContent>
             <Button onClick={openAddDialog} variant="outline">
               <Plus className="size-4" />
-              Add Category
+              {t("expenses.addCategory")}
             </Button>
           </EmptyContent>
         </Empty>
@@ -224,23 +232,35 @@ export default function CategoriesPage() {
         /* Category grid */
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {categories.map((cat) => (
-            <Card key={cat.id}>
+            <Card
+              key={cat.id}
+              className="border-border/70 shadow-xs transition-colors hover:border-foreground/15"
+            >
               <div
                 className="h-1.5 shrink-0"
                 style={{ backgroundColor: cat.color }}
               />
               <CardHeader>
-                <CardTitle className="capitalize">{cat.name}</CardTitle>
-                {cat.description && (
-                  <CardDescription className="line-clamp-2">
-                    {cat.description}
-                  </CardDescription>
-                )}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="size-2.5 rounded-full"
+                      style={{ backgroundColor: cat.color }}
+                    />
+                    <CardTitle className="capitalize">{cat.name}</CardTitle>
+                  </div>
+                  {cat.description && (
+                    <CardDescription className="line-clamp-2">
+                      {cat.description}
+                    </CardDescription>
+                  )}
+                </div>
                 <CardAction>
-                  <div className="flex gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                  <div className="flex rounded-lg border border-border bg-muted/20 p-0.5">
                     <Button
                       size="icon-sm"
                       variant="ghost"
+                      className="rounded-md"
                       onClick={() => openEditDialog(cat)}
                       aria-label={t("expenses.editCategory", {
                         name: cat.name,
@@ -251,6 +271,7 @@ export default function CategoriesPage() {
                     <Button
                       size="icon-sm"
                       variant="ghost"
+                      className="rounded-md"
                       onClick={() => {
                         setSelectedCategory(cat);
                         setDeleteDialogOpen(true);
@@ -264,6 +285,12 @@ export default function CategoriesPage() {
                   </div>
                 </CardAction>
               </CardHeader>
+              <CardContent className="pt-0">
+                <div className="flex items-center justify-between rounded-lg bg-muted/25 px-3 py-2 text-xs text-muted-foreground">
+                  <span>{t("expenses.color")}</span>
+                  <span className="font-mono uppercase">{cat.color}</span>
+                </div>
+              </CardContent>
             </Card>
           ))}
         </div>
@@ -280,7 +307,7 @@ export default function CategoriesPage() {
             </DialogTitle>
           </DialogHeader>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
               <Label htmlFor="name">
                 {t("expenses.categoryName")}{" "}
@@ -310,35 +337,43 @@ export default function CategoriesPage() {
                 {CATEGORY_COLORS.map((color) => (
                   <Button
                     key={color.value}
+                    type="button"
                     onClick={() => setFormColor(color.value)}
                     variant="outline"
                     size="icon-sm"
-                    className="rounded-full"
+                    className={cn(
+                      "rounded-full border-2",
+                      formColor === color.value && "scale-105 border-foreground",
+                    )}
                     style={{
                       backgroundColor: color.value,
-                      outline:
-                        formColor === color.value
-                          ? "2px solid hsl(var(--foreground))"
-                          : undefined,
-                      outlineOffset: 2,
                     }}
                     aria-label={color.name}
                     title={color.name}
                   />
                 ))}
               </div>
+              <div className="rounded-lg bg-muted/25 px-3 py-2 text-xs text-muted-foreground">
+                {t("expenses.color")}: <span className="font-mono uppercase text-foreground">{formColor}</span>
+              </div>
             </div>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => handleDialogChange(false)}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={handleSave}
-              disabled={!formName.trim() || createCategory.isPending}
+              disabled={
+                !formName.trim() ||
+                createCategory.isPending ||
+                updateCategory.isPending
+              }
             >
-              {createCategory.isPending ? "Saving\u2026" : "Save"}
+              {createCategory.isPending || updateCategory.isPending
+                ? t("common.loading")
+                : t("common.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -366,7 +401,7 @@ export default function CategoriesPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               disabled={deleteCategory.isPending}
@@ -380,7 +415,9 @@ export default function CategoriesPage() {
                   });
               }}
             >
-              {deleteCategory.isPending ? "Deleting\u2026" : "Delete"}
+              {deleteCategory.isPending
+                ? t("common.loading")
+                : t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

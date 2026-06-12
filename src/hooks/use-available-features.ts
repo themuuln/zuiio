@@ -32,7 +32,7 @@ export function useAvailableFeatures() {
     queryFn: async () => {
       const res = await fetch(`/api/organizations/${orgId}/subscription`);
       const body = (await res.json()) as ApiResponse<{ planType: PlanType }>;
-      return body.data ?? { planType: "starter" };
+      return body.data ?? { planType: "enterprise" };
     },
     enabled: !!orgId,
     staleTime: 60_000,
@@ -50,7 +50,7 @@ export function useAvailableFeatures() {
     staleTime: 30_000,
   });
 
-  const planType: PlanType = subscription?.planType ?? "starter";
+  const planType: PlanType = subscription?.planType ?? "enterprise";
   const orgFlags = featureFlags ?? [];
   const loading = !orgId;
 

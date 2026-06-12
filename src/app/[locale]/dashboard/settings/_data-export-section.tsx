@@ -5,8 +5,9 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Typography } from "@/components/ui/typography";
+import { SettingsBlock } from "./_settings-layout";
 
 interface DataExportSectionProps {
   orgId: string;
@@ -14,70 +15,53 @@ interface DataExportSectionProps {
 
 export function DataExportSection({ orgId }: DataExportSectionProps) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      <Card className="relative overflow-hidden">
-        <div className="absolute left-0 top-0 h-full w-0.5 bg-blue-400/40" />
-        <CardContent className="p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/30">
-              <Download className="size-5 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <Typography.H3 className="text-sm font-semibold">
-                Export All Data
-              </Typography.H3>
-              <Typography.Muted className="mt-0.5 text-xs text-muted-foreground">
-                Download all your organization data as JSON.
-              </Typography.Muted>
-            </div>
-          </div>
-          <Typography.Muted className="mt-3 text-xs text-muted-foreground leading-relaxed">
-            Includes customers, vehicles, work orders, inventory, invoices, and
-            settings.
-          </Typography.Muted>
-          <div className="mt-4">
-            <ExportDataButton orgId={orgId} />
-          </div>
-        </CardContent>
-      </Card>
+    <SettingsBlock className="sm:grid sm:grid-cols-2 sm:gap-4">
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <Download className="size-4 text-muted-foreground" />
+          <Typography.Text className="text-sm font-medium">
+            Export All Data
+          </Typography.Text>
+        </div>
+        <Typography.Muted className="text-xs text-muted-foreground">
+          Download all your organization data as JSON. Includes customers,
+          vehicles, work orders, inventory, invoices, and settings.
+        </Typography.Muted>
+        <ExportDataButton orgId={orgId} />
+      </div>
 
-      <Card className="relative overflow-hidden">
-        <div className="absolute left-0 top-0 h-full w-0.5 bg-emerald-400/40" />
-        <CardContent className="p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950/30">
-              <Database className="size-5 text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <div>
-              <Typography.H3 className="text-sm font-semibold">
-                Database Backup
-              </Typography.H3>
-              <Typography.Muted className="mt-0.5 text-xs text-muted-foreground">
-                Back up from the command line.
-              </Typography.Muted>
-            </div>
+      <Separator className="sm:hidden" />
+
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <Database className="size-4 text-muted-foreground" />
+          <Typography.Text className="text-sm font-medium">
+            Database Backup
+          </Typography.Text>
+        </div>
+        <Typography.Muted className="text-xs text-muted-foreground">
+          Back up from the command line.
+        </Typography.Muted>
+        <div className="flex flex-col gap-1.5">
+          <div className="rounded-md bg-muted/40 px-2.5 py-2">
+            <Typography.Muted className="text-[11px] text-muted-foreground">
+              Local backup
+            </Typography.Muted>
+            <code className="mt-0.5 block font-mono text-xs text-foreground">
+              ./scripts/backup.sh
+            </code>
           </div>
-          <div className="mt-3 flex flex-col gap-1.5">
-            <div className="rounded-lg bg-muted/50 px-3 py-2">
-              <Typography.Muted className="text-xs text-muted-foreground">
-                Local backup
-              </Typography.Muted>
-              <code className="mt-0.5 block text-xs font-mono text-foreground">
-                ./scripts/backup.sh
-              </code>
-            </div>
-            <div className="rounded-lg bg-muted/50 px-3 py-2">
-              <Typography.Muted className="text-xs text-muted-foreground">
-                Remote backup
-              </Typography.Muted>
-              <code className="mt-0.5 block text-xs font-mono text-foreground">
-                ./scripts/backup.sh --remote
-              </code>
-            </div>
+          <div className="rounded-md bg-muted/40 px-2.5 py-2">
+            <Typography.Muted className="text-[11px] text-muted-foreground">
+              Remote backup
+            </Typography.Muted>
+            <code className="mt-0.5 block font-mono text-xs text-foreground">
+              ./scripts/backup.sh --remote
+            </code>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </SettingsBlock>
   );
 }
 
@@ -118,30 +102,31 @@ function ExportDataButton({ orgId }: { orgId: string }) {
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5">
       <Button
         variant="outline"
+        size="sm"
         onClick={handleExport}
         disabled={exporting || !orgId}
-        className="w-full"
+        className="w-fit"
       >
         {exporting ? (
           <>
-            <Loader2 className="mr-2 size-4 animate-spin" />
+            <Loader2 className="mr-2 size-3.5 animate-spin" />
             Exporting…
           </>
         ) : (
           <>
-            <Download className="mr-2 size-4" />
+            <Download className="mr-2 size-3.5" />
             Export Data
           </>
         )}
       </Button>
-      {exportError && (
+      {exportError ? (
         <Typography.Text className="text-xs text-destructive">
           {exportError}
         </Typography.Text>
-      )}
+      ) : null}
     </div>
   );
 }

@@ -9,6 +9,57 @@ Database layer conventions. Every query is org-scoped, every table has RLS.
 
 ---
 
+## ⚠️ Integration Prevention Rules (READ FIRST)
+
+**These rules prevent the #1 cause of Supabase errors in frontend testing.**
+
+### Before Writing ANY Service Code:
+
+1. **Verify RLS policies exist** for the table you're querying:
+   ```sql
+   SELECT policyname FROM pg_policies WHERE tablename = 'your_table' AND schemaname = 'public';
+   ```
+   - Must return 4 policies: `{table}_select`, `{table}_insert`, `{table}_update`, `{table}_delete`
+   - If missing → create migration with all 4 policies BEFORE writing service code
+
+2. **Verify types are current** — run `supabase gen types` after EVERY migration
+
+3. **Every query must include:**
+   ```typescript
+   .eq('organization_id', orgId)  // Multi-tenancy
+   .is('deleted_at', null)        // Soft delete filter
+   ```
+
+### Silent Failure Pattern
+
+RLS failures return `data: []` with **NO error**. This is the #1 cause of "Supabase errors" in testing.
+
+```typescript
+// ❌ This silently fails if RLS blocks the query
+const { data, error } = await supabase.from('work_orders').select('*');
+if (error) { /* Never triggered by RLS */ }
+
+// ✅ This catches the issue
+const { data, error } = await supabase
+  .from('work_orders')
+  .select('*')
+  .eq('organization_id', orgId);
+if (!data || data.length === 0) {
+  // Log or handle — could be RLS blocking
+}
+```
+
+### Key Checkpoints
+
+| Check | Before | After |
+|-------|--------|-------|
+| RLS policies on table | Service code | Migration |
+| Types regenerated | Code changes | Migration |
+| `.eq('organization_id', orgId)` | Every query | Testing |
+| `.is('deleted_at', null)` | Every SELECT | Testing |
+
+---
+
 ## Client Setup
 
 ### Server Client

@@ -2,7 +2,7 @@
 
 import { useDraggable } from "@dnd-kit/core";
 import { User, X } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MechanicAvatar } from "@/components/mechanic-avatar";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -10,7 +10,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { getMechanicColor, getMechanicInitials } from "@/lib/mechanic-colors";
 import { cn } from "@/lib/utils";
 
 interface MechanicBadgeProps {
@@ -72,8 +71,6 @@ export function MechanicBadge({
     );
   }
 
-  const color = getMechanicColor(mechanic.id);
-  const initials = getMechanicInitials(mechanic.full_name);
   return (
     <TooltipProvider delay={300}>
       <Tooltip>
@@ -113,27 +110,10 @@ export function MechanicBadge({
                     "hover:shadow-sm hover:border-primary/30",
                 )}
               >
-                <Avatar
-                  className={cn(
-                    compact ? "size-5" : "size-6",
-                    "shrink-0",
-                    "after:hidden",
-                  )}
-                >
-                  {mechanic.avatar_url && (
-                    <AvatarImage src={mechanic.avatar_url} alt="" />
-                  )}
-                  <AvatarFallback
-                    className={cn(
-                      compact ? "text-xs" : "text-xs",
-                      "font-medium",
-                      color.bg,
-                      color.text,
-                    )}
-                  >
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
+                <MechanicAvatar
+                  mechanic={mechanic}
+                  className={cn(compact ? "size-5" : "size-6", "shrink-0")}
+                />
                 {isHelper && (
                   <span className="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
                     H

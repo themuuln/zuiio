@@ -14,11 +14,11 @@ export const GET = createRouteHandler(async ({ params, supabase }) => {
   const invoiceId = params.invoiceId;
 
   // Fetch invoice with items and payments
-  const invoice = await getInvoice(invoiceId);
+  const invoice = await getInvoice(supabase, invoiceId);
 
   // Fetch org + main branch for PDF header
   const [org, { data: branch }, { data: orgSettings }] = await Promise.all([
-    getOrganization(params.id),
+    getOrganization(supabase, params.id),
     supabase
       .from("branches")
       .select("name, address, phone, email")

@@ -3,7 +3,7 @@ import { createRouteHandler } from "@/lib/api-handler";
 import { mutationRateLimiter } from "@/lib/rate-limit";
 import { generateRegistrationToken } from "@/lib/services/qr-token-service";
 
-export const POST = createRouteHandler(async ({ request, orgId }) => {
+export const POST = createRouteHandler(async ({ request, orgId, supabase }) => {
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
   const rateCheck = mutationRateLimiter.check(ip);
   if (!rateCheck.allowed) {
@@ -28,6 +28,10 @@ export const POST = createRouteHandler(async ({ request, orgId }) => {
     );
   }
 
-  const token = await generateRegistrationToken(orgId, body.mechanicId);
+  const token = await generateRegistrationToken(
+    supabase,
+    orgId,
+    body.mechanicId,
+  );
   return NextResponse.json({ data: token }, { status: 201 });
 });

@@ -156,9 +156,10 @@ export async function getWorkOrderDetail(
     { data: priorVisitProfiles },
     { data: priorVisitServices },
     { data: priorVisitHelpers },
+    { data: priorVisitParts },
   ] =
     priorVisitIds.length === 0
-      ? [{ data: [] }, { data: [] }, { data: [] }]
+      ? [{ data: [] }, { data: [] }, { data: [] }, { data: [] }]
       : await Promise.all([
           supabase
             .from("profiles")
@@ -171,6 +172,10 @@ export async function getWorkOrderDetail(
           supabase
             .from("work_order_helpers")
             .select("work_order_id, mechanic_id")
+            .in("work_order_id", priorVisitIds),
+          supabase
+            .from("work_order_parts")
+            .select("work_order_id, part_name, quantity, final_price")
             .in("work_order_id", priorVisitIds),
         ]);
 
@@ -220,6 +225,20 @@ export async function getWorkOrderDetail(
     priorVisitServicesMap.set(service.work_order_id, existing);
   }
 
+  const priorVisitPartsMap = new Map<
+    string,
+    WorkOrderServiceHistoryEntry["parts"]
+  >();
+  for (const part of priorVisitParts ?? []) {
+    const existing = priorVisitPartsMap.get(part.work_order_id) ?? [];
+    existing.push({
+      name: part.part_name,
+      quantity: part.quantity,
+      price: Number(part.final_price ?? 0),
+    });
+    priorVisitPartsMap.set(part.work_order_id, existing);
+  }
+
   return {
     ...wo,
     customer: customerData as Customer | null,
@@ -247,6 +266,7 @@ export async function getWorkOrderDetail(
         ? (priorVisitMechanicMap.get(visit.mechanic_id) ?? null)
         : null,
       services: priorVisitServicesMap.get(visit.id) ?? [],
+      parts: priorVisitPartsMap.get(visit.id) ?? [],
       helpers: priorVisitHelpersMap.get(visit.id) ?? [],
     })),
     diagnosis_label: labelData as DiagnosisLabel | null,

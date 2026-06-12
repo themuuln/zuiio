@@ -3,6 +3,7 @@
 import { Car, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SearchInput } from "@/components/search-input";
+import { transliterateMongolianPlate } from "@/lib/form-validation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -104,7 +105,9 @@ export function VehicleSection() {
             <SearchInput
               placeholder={t("searchByPlate")}
               loading={ctx.vehicleSearching}
-              onSearch={ctx.setVehicleSearch}
+              onSearch={(v) =>
+                ctx.setVehicleSearch(transliterateMongolianPlate(v))
+              }
               debounceMs={400}
             />
             {ctx.vehicleSearch && ctx.vehicles.length > 0 && (

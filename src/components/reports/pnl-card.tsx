@@ -3,9 +3,11 @@
  *
  * Shows: Revenue → COGS → Gross Profit → Expenses by category → Net Profit.
  */
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { Typography } from "@/components/ui/typography";
 import type { PnLSummary } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 
@@ -23,22 +25,22 @@ interface PnLRow {
   isPercent?: boolean;
 }
 
-function buildRows(data: PnLSummary): PnLRow[] {
+function buildRows(data: PnLSummary, t: (key: string) => string): PnLRow[] {
   const rows: PnLRow[] = [
     {
-      label: "Service Revenue",
+      label: t("serviceRevenue"),
       amount: data.revenue.service_revenue,
       indent: true,
     },
     {
-      label: "Parts Revenue",
+      label: t("partsRevenue"),
       amount: data.revenue.parts_revenue,
       indent: true,
     },
-    { label: "Total Revenue", amount: data.revenue.total, bold: true },
-    { label: "Cost of Goods Sold", amount: -data.cogs.total },
+    { label: t("totalRevenue"), amount: data.revenue.total, bold: true },
+    { label: t("costOfGoodsSold"), amount: -data.cogs.total },
     {
-      label: "Gross Profit",
+      label: t("grossProfit"),
       amount: data.gross_profit,
       bold: true,
       color:
@@ -47,7 +49,7 @@ function buildRows(data: PnLSummary): PnLRow[] {
           : "text-red-500",
     },
     {
-      label: "Gross Margin",
+      label: t("grossMargin"),
       amount: data.gross_margin_pct,
       isPercent: true,
       color: "text-muted-foreground",
@@ -62,9 +64,9 @@ function buildRows(data: PnLSummary): PnLRow[] {
     });
   }
 
-  rows.push({ label: "Total Expenses", amount: -data.expenses.total });
+  rows.push({ label: t("totalExpenses"), amount: -data.expenses.total });
   rows.push({
-    label: "Net Profit",
+    label: t("netProfit"),
     amount: data.net_profit,
     bold: true,
     color:
@@ -77,40 +79,47 @@ function buildRows(data: PnLSummary): PnLRow[] {
 }
 
 export function PnLCard({ data, loading }: PnLCardProps) {
-  if (loading) return <Skeleton className="h-[300px] rounded-xl" />;
-  if (!data) return null;
+  const t = useTranslations("reports");
 
-  const rows = buildRows(data);
+  if (loading) return <Skeleton className="h-[300px] rounded-xl" />;
 
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-semibold">Profit & Loss</CardTitle>
+        <CardTitle className="text-sm font-semibold">
+          {t("profitAndLoss")}
+        </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <Table>
-          <TableBody>
-            {rows.map((row, i) => (
-              <TableRow
-                key={`${row.label}-${i}`}
-                className={row.bold ? "font-semibold" : ""}
-              >
-                <TableCell
-                  className={`px-4 py-1.5 text-xs ${row.indent ? "pl-8" : ""}`}
+        {data ? (
+          <Table>
+            <TableBody>
+              {buildRows(data, t).map((row, i) => (
+                <TableRow
+                  key={`${row.label}-${i}`}
+                  className={row.bold ? "font-semibold" : ""}
                 >
-                  {row.label}
-                </TableCell>
-                <TableCell
-                  className={`px-4 py-1.5 text-right text-xs tabular-nums ${row.color ?? ""}`}
-                >
-                  {row.isPercent
-                    ? `${row.amount.toFixed(1)}%`
-                    : formatCurrency(row.amount)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                  <TableCell
+                    className={`px-4 py-1.5 text-xs ${row.indent ? "pl-8" : ""}`}
+                  >
+                    {row.label}
+                  </TableCell>
+                  <TableCell
+                    className={`px-4 py-1.5 text-right text-xs tabular-nums ${row.color ?? ""}`}
+                  >
+                    {row.isPercent
+                      ? `${row.amount.toFixed(1)}%`
+                      : formatCurrency(row.amount)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <Typography.Muted className="py-8 text-center text-sm text-muted-foreground">
+            {t("noDataForPeriod")}
+          </Typography.Muted>
+        )}
       </CardContent>
     </Card>
   );

@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5";
   };
+  graphql_public: {
+    Tables: {
+      [_ in never]: never;
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json;
+          operationName?: string;
+          query?: string;
+          variables?: Json;
+        };
+        Returns: Json;
+      };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
   public: {
     Tables: {
       app_config: {
@@ -392,6 +417,172 @@ export type Database = {
             columns: ["brand_id"];
             isOneToOne: false;
             referencedRelation: "car_brands";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      cash_register_entries: {
+        Row: {
+          amount: number;
+          created_at: string;
+          created_by: string | null;
+          description: string | null;
+          entry_type: string;
+          id: string;
+          organization_id: string;
+          session_id: string;
+          source: string;
+          source_id: string | null;
+        };
+        Insert: {
+          amount: number;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          entry_type: string;
+          id?: string;
+          organization_id: string;
+          session_id: string;
+          source: string;
+          source_id?: string | null;
+        };
+        Update: {
+          amount?: number;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          entry_type?: string;
+          id?: string;
+          organization_id?: string;
+          session_id?: string;
+          source?: string;
+          source_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "cash_register_entries_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "cash_register_entries_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "cash_register_entries_session_id_fkey";
+            columns: ["session_id"];
+            isOneToOne: false;
+            referencedRelation: "cash_register_sessions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      cash_register_sessions: {
+        Row: {
+          branch_id: string | null;
+          cash_in: number;
+          cash_out: number;
+          closed_at: string | null;
+          closed_by: string | null;
+          closing_balance: number | null;
+          created_at: string;
+          created_by: string | null;
+          date: string;
+          deleted_at: string | null;
+          discrepancy: number | null;
+          discrepancy_note: string | null;
+          expected_balance: number | null;
+          id: string;
+          opened_at: string;
+          opened_by: string | null;
+          opening_balance: number;
+          organization_id: string;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          branch_id?: string | null;
+          cash_in?: number;
+          cash_out?: number;
+          closed_at?: string | null;
+          closed_by?: string | null;
+          closing_balance?: number | null;
+          created_at?: string;
+          created_by?: string | null;
+          date?: string;
+          deleted_at?: string | null;
+          discrepancy?: number | null;
+          discrepancy_note?: string | null;
+          expected_balance?: number | null;
+          id?: string;
+          opened_at?: string;
+          opened_by?: string | null;
+          opening_balance?: number;
+          organization_id: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          branch_id?: string | null;
+          cash_in?: number;
+          cash_out?: number;
+          closed_at?: string | null;
+          closed_by?: string | null;
+          closing_balance?: number | null;
+          created_at?: string;
+          created_by?: string | null;
+          date?: string;
+          deleted_at?: string | null;
+          discrepancy?: number | null;
+          discrepancy_note?: string | null;
+          expected_balance?: number | null;
+          id?: string;
+          opened_at?: string;
+          opened_by?: string | null;
+          opening_balance?: number;
+          organization_id?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "cash_register_sessions_branch_id_fkey";
+            columns: ["branch_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "cash_register_sessions_closed_by_fkey";
+            columns: ["closed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "cash_register_sessions_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "cash_register_sessions_opened_by_fkey";
+            columns: ["opened_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "cash_register_sessions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
             referencedColumns: ["id"];
           },
         ];
@@ -1471,6 +1662,7 @@ export type Database = {
       invoice_payments: {
         Row: {
           amount: number;
+          cash_register_session_id: string | null;
           created_at: string;
           created_by: string | null;
           id: string;
@@ -1483,6 +1675,7 @@ export type Database = {
         };
         Insert: {
           amount: number;
+          cash_register_session_id?: string | null;
           created_at?: string;
           created_by?: string | null;
           id?: string;
@@ -1495,6 +1688,7 @@ export type Database = {
         };
         Update: {
           amount?: number;
+          cash_register_session_id?: string | null;
           created_at?: string;
           created_by?: string | null;
           id?: string;
@@ -1506,6 +1700,13 @@ export type Database = {
           reference?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "invoice_payments_cash_register_session_id_fkey";
+            columns: ["cash_register_session_id"];
+            isOneToOne: false;
+            referencedRelation: "cash_register_sessions";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "invoice_payments_invoice_id_fkey";
             columns: ["invoice_id"];
@@ -1602,8 +1803,8 @@ export type Database = {
           discount_total: number;
           due_at: string | null;
           einvoice_qr_code: string | null;
-          einvoice_registration_id: string | null;
           einvoice_registered_at: string | null;
+          einvoice_registration_id: string | null;
           einvoice_status: string | null;
           email_sent_at: string | null;
           footer: string | null;
@@ -1641,6 +1842,10 @@ export type Database = {
           deleted_at?: string | null;
           discount_total?: number;
           due_at?: string | null;
+          einvoice_qr_code?: string | null;
+          einvoice_registered_at?: string | null;
+          einvoice_registration_id?: string | null;
+          einvoice_status?: string | null;
           email_sent_at?: string | null;
           footer?: string | null;
           id?: string;
@@ -1677,6 +1882,10 @@ export type Database = {
           deleted_at?: string | null;
           discount_total?: number;
           due_at?: string | null;
+          einvoice_qr_code?: string | null;
+          einvoice_registered_at?: string | null;
+          einvoice_registration_id?: string | null;
+          einvoice_status?: string | null;
           email_sent_at?: string | null;
           footer?: string | null;
           id?: string;
@@ -2105,11 +2314,11 @@ export type Database = {
           date_format: string | null;
           default_currency: string | null;
           default_tax_rate: number | null;
-          invoice_prefix: string | null;
           einvoice_api_key: string | null;
           einvoice_enabled: boolean | null;
           einvoice_endpoint: string | null;
           einvoice_merchant_id: string | null;
+          invoice_prefix: string | null;
           ndsh_employee_rate: number | null;
           ndsh_employer_rate: number | null;
           ndsh_enabled: boolean | null;
@@ -2125,11 +2334,11 @@ export type Database = {
           date_format?: string | null;
           default_currency?: string | null;
           default_tax_rate?: number | null;
-          invoice_prefix?: string | null;
           einvoice_api_key?: string | null;
           einvoice_enabled?: boolean | null;
           einvoice_endpoint?: string | null;
           einvoice_merchant_id?: string | null;
+          invoice_prefix?: string | null;
           ndsh_employee_rate?: number | null;
           ndsh_employer_rate?: number | null;
           ndsh_enabled?: boolean | null;
@@ -2239,6 +2448,7 @@ export type Database = {
           settings: Json | null;
           sharing_enabled: boolean;
           slug: string;
+          tax_id: string | null;
           updated_at: string;
           updated_by: string | null;
         };
@@ -2255,6 +2465,7 @@ export type Database = {
           settings?: Json | null;
           sharing_enabled?: boolean;
           slug: string;
+          tax_id?: string | null;
           updated_at?: string;
           updated_by?: string | null;
         };
@@ -2271,6 +2482,7 @@ export type Database = {
           settings?: Json | null;
           sharing_enabled?: boolean;
           slug?: string;
+          tax_id?: string | null;
           updated_at?: string;
           updated_by?: string | null;
         };
@@ -2642,6 +2854,7 @@ export type Database = {
         Row: {
           amount: number;
           branch_id: string | null;
+          cash_register_session_id: string | null;
           created_at: string;
           created_by: string | null;
           deleted_at: string | null;
@@ -2656,6 +2869,7 @@ export type Database = {
         Insert: {
           amount: number;
           branch_id?: string | null;
+          cash_register_session_id?: string | null;
           created_at?: string;
           created_by?: string | null;
           deleted_at?: string | null;
@@ -2670,6 +2884,7 @@ export type Database = {
         Update: {
           amount?: number;
           branch_id?: string | null;
+          cash_register_session_id?: string | null;
           created_at?: string;
           created_by?: string | null;
           deleted_at?: string | null;
@@ -2687,6 +2902,13 @@ export type Database = {
             columns: ["branch_id"];
             isOneToOne: false;
             referencedRelation: "branches";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_cash_register_session_id_fkey";
+            columns: ["cash_register_session_id"];
+            isOneToOne: false;
+            referencedRelation: "cash_register_sessions";
             referencedColumns: ["id"];
           },
           {
@@ -3619,7 +3841,7 @@ export type Database = {
           created_by?: string | null;
           id?: string;
           maximum_quantity?: number | null;
-          minimum_quantity: number;
+          minimum_quantity?: number;
           notes?: string | null;
           organization_id: string;
           part_id: string;
@@ -5152,7 +5374,7 @@ export type Database = {
           notes?: string | null;
           nuat_enabled?: boolean | null;
           odometer_at_service?: number | null;
-          organization_id: string;
+          organization_id?: string;
           queue_order?: number;
           source_estimate_id?: string | null;
           started_at?: string | null;
@@ -5525,10 +5747,13 @@ export type CompositeTypes<
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DatabaseWithoutInternals["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never;
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       inventory_movement_type: [
@@ -5537,7 +5762,9 @@ export const Constants = {
         "adjustment",
         "transfer_in",
         "transfer_out",
+        "return",
         "waste",
+        "disassembly",
       ],
       invoice_status: [
         "draft",
@@ -5555,7 +5782,7 @@ export const Constants = {
         "brake",
         "body",
         "interior",
-        "interior",
+        "electrical",
         "cooling",
         "exhaust",
         "fuel",
@@ -5566,9 +5793,7 @@ export const Constants = {
       permission_action: [
         "create",
         "read",
-        "read",
         "update",
-        "delete",
         "delete",
         "manage",
         "write",

@@ -17,7 +17,7 @@ export function NewExpenseSheet({ open, onOpenChange }: NewExpenseSheetProps) {
       open={open}
       onOpenChange={onOpenChange}
       title={t("addExpense")}
-      description={t("subtitle")}
+      desc={t("subtitle")}
       sheetSize="2xl"
     >
       <ExpenseForm mode="full" />

@@ -24,7 +24,7 @@ export async function GET(
       discount_total, tax_total, grand_total,
       customer:customers(first_name, last_name, phone, email),
       vehicle:vehicles(plate_number, make, model, year),
-      items:estimate_items(description, item_type, quantity, unit_price, discount_amount, discount_percentage, line_total),
+      items:estimate_items(description, item_type, quantity, unit_price, discount_amount, discount_percentage, line_total, sort_order),
       organization:organizations(name, phone, email, address)
     `,
     )
@@ -56,15 +56,15 @@ export async function GET(
         tax_total: Number(estimate.tax_total ?? 0),
         grand_total: Number(estimate.grand_total ?? 0),
         subtotal: Number(estimate.subtotal ?? 0),
-        items: ((estimate.items ?? []) as Record<string, unknown>[]).map(
-          (item) => ({
+        items: [...((estimate.items ?? []) as Record<string, unknown>[])]
+          .sort((a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0))
+          .map((item) => ({
             ...item,
             unit_price: Number(item.unit_price),
             discount_amount: Number(item.discount_amount ?? 0),
             discount_percentage: Number(item.discount_percentage ?? 0),
             line_total: Number(item.line_total),
-          }),
-        ),
+          })),
       },
       org: orgData ?? { name: "TOLOM" },
     }),

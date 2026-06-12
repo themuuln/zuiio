@@ -4,10 +4,9 @@ import { Crown, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { MechanicAvatar } from "@/components/mechanic-avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getMechanicColor, getMechanicInitials } from "@/lib/mechanic-colors";
 import { cn } from "@/lib/utils";
 
 interface MechanicOption {
@@ -229,21 +228,13 @@ export function MechanicMultiSelect({
       {/* Chips — min-h prevents collapse when empty, flex-wrap handles overflow */}
       <div className="flex min-h-7 flex-wrap items-center gap-1 rounded-full border-border/60 px-1.5 py-0.5">
         {visible.map((m, i) => {
-          const color = getMechanicColor(m.id);
-          const initials = getMechanicInitials(m.full_name);
           return (
             <div
               key={m.id}
               className="flex h-6 items-center gap-1 rounded-full bg-muted px-1.5 text-xs font-medium"
             >
               {i === 0 && <Crown className="size-3 shrink-0 text-amber-500" />}
-              <Avatar className="size-4 shrink-0 after:hidden">
-                <AvatarFallback
-                  className={cn("text-[8px] font-medium", color.bg, color.text)}
-                >
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
+              <MechanicAvatar mechanic={m} className="size-4 shrink-0" />
               <span className="max-w-[60px] truncate">{m.full_name}</span>
             </div>
           );
@@ -296,8 +287,6 @@ export function MechanicMultiSelect({
             ) : (
               filteredMechanics.map((mechanic) => {
                 const isSelected = selectedIds.has(mechanic.id);
-                const color = getMechanicColor(mechanic.id);
-                const initials = getMechanicInitials(mechanic.full_name);
                 const isLead = value[0]?.id === mechanic.id;
                 return (
                   <button
@@ -313,17 +302,10 @@ export function MechanicMultiSelect({
                     }}
                     onPointerDown={(e) => e.stopPropagation()}
                   >
-                    <Avatar className="size-5 shrink-0 after:hidden">
-                      <AvatarFallback
-                        className={cn(
-                          "text-[9px] font-medium",
-                          color.bg,
-                          color.text,
-                        )}
-                      >
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
+                    <MechanicAvatar
+                      mechanic={mechanic}
+                      className="size-5 shrink-0"
+                    />
                     <span className="flex-1 truncate">
                       {mechanic.full_name}
                     </span>

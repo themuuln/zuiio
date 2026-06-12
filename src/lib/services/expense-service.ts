@@ -142,6 +142,7 @@ export async function getExpenses(
   },
 ): Promise<ExpenseWithCategory[]> {
   const supabase = db;
+  const todayStr = new Date().toISOString().slice(0, 10);
   let query = supabase
     .from("expenses")
     .select(
@@ -173,6 +174,10 @@ export async function getExpenses(
     }
   }
 
+  if (options?.overdue) {
+    query = query.is("paid_at", null).lt("due_date", todayStr);
+  }
+
   if (options?.search?.trim()) {
     const term = `%${options.search.trim()}%`;
     query = query.or(
@@ -193,11 +198,13 @@ export async function getExpenses(
   if (error) throw new Error(error.message ?? "Failed to fetch expenses");
 
   return (data ?? []).map((row: Record<string, unknown>) => {
-    const cat = row.expense_categories as unknown as Record<
+    const cat = (row.category ??
+      row.expense_categories) as unknown as Record<
       string,
       unknown
     > | null;
-    const { expense_categories: _, ...expense } = row;
+    const { category: _category, expense_categories: _expenseCategories, ...expense } =
+      row;
     return {
       ...expense,
       category: cat ?? null,
@@ -237,15 +244,20 @@ export async function getExpense(
 export async function getExpenseStats(
   db: SupabaseClient,
   orgId: string,
+  branchId?: string | null,
 ): Promise<ExpenseStats> {
   const supabase = db;
-  const { data: allExpenses } = await supabase
+  let query = supabase
     .from("expenses")
     .select(
       "id, amount, tax_amount, paid_at, due_date, expense_date, category_id, expense_categories(name)",
     )
     .eq("organization_id", orgId)
     .is("deleted_at", null);
+
+  if (branchId) query = withBranchFilter(query, branchId);
+
+  const { data: allExpenses } = await query;
 
   const expenses = (allExpenses ?? []) as unknown as Array<
     Record<string, unknown>

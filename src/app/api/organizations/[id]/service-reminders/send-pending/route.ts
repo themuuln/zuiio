@@ -4,7 +4,7 @@ import { mutationRateLimiter } from "@/lib/rate-limit";
 import { sendPendingReminders } from "@/lib/services/service-reminder-service";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
-export const POST = createRouteHandler(async ({ request, orgId }) => {
+export const POST = createRouteHandler(async ({ request, orgId, supabase }) => {
   await requireActiveSubscription(orgId);
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
   const rateCheck = mutationRateLimiter.check(ip);
@@ -21,6 +21,6 @@ export const POST = createRouteHandler(async ({ request, orgId }) => {
       },
     );
   }
-  const sent = await sendPendingReminders(orgId);
+  const sent = await sendPendingReminders(supabase, orgId);
   return NextResponse.json({ data: { sent } });
 });

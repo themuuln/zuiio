@@ -7,13 +7,6 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Field,
   FieldContent,
   FieldError,
@@ -21,7 +14,6 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -32,6 +24,11 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Typography } from "@/components/ui/typography";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
+import {
+  SettingsBlock,
+  SettingsGroup,
+  SettingsRow,
+} from "./_settings-layout";
 import { getNumberSetting, getStringSetting } from "./_settings-utils";
 
 export interface SettingsForm {
@@ -235,24 +232,15 @@ export function BusinessDefaultsForm({
   const watchedInvoicePrefix = rhfForm.watch("invoicePrefix");
 
   return (
-    <Card className="lg:col-span-2">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-sm font-semibold">
-          {t("businessDefaultsTitle")}
-        </CardTitle>
-        <CardDescription className="text-xs">
-          {t("businessDefaultsDesc")}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form
-          className="flex flex-col gap-6"
-          onSubmit={(e) => {
-            e.preventDefault();
-            onSubmit(e);
-          }}
-        >
-          <FieldGroup className="grid gap-4 sm:grid-cols-2">
+    <SettingsBlock className="lg:col-span-2">
+      <form
+        className="flex flex-col gap-4"
+        onSubmit={(e) => {
+          e.preventDefault();
+          onSubmit(e);
+        }}
+      >
+        <FieldGroup className="grid gap-3 sm:grid-cols-2">
             <Field data-invalid={!!rhfForm.formState.errors.invoicePrefix}>
               <FieldLabel htmlFor="invoicePrefix">
                 {t("invoicePrefix")}
@@ -295,7 +283,7 @@ export function BusinessDefaultsForm({
                 >
                   <SelectTrigger
                     id="defaultCurrency"
-                    className="h-11 w-full"
+                    className="h-9 w-full"
                     aria-invalid={!!rhfForm.formState.errors.defaultCurrency}
                   >
                     <CreditCard className="size-4 text-muted-foreground" />
@@ -316,32 +304,27 @@ export function BusinessDefaultsForm({
               </FieldContent>
             </Field>
 
-            {/* НӨАТ (VAT) Toggle */}
             <Field className="sm:col-span-2">
               <FieldContent>
-                <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 p-4">
-                  <div className="flex flex-col gap-1">
-                    <Label
-                      htmlFor="nuatEnabled"
-                      className="text-sm font-medium"
-                    >
-                      {currentLocale === "mn" ? "НӨАТ татвар" : "VAT"}
-                    </Label>
-                    <Typography.Muted className="text-xs">
-                      {currentLocale === "mn"
+                <SettingsGroup>
+                  <SettingsRow
+                    label={currentLocale === "mn" ? "НӨАТ татвар" : "VAT"}
+                    description={
+                      currentLocale === "mn"
                         ? "Нэмэгдсэн Өртөгт Татвар (10%)"
-                        : "Value Added Tax (10%)"}
-                    </Typography.Muted>
-                  </div>
-                  <Switch
-                    id="nuatEnabled"
-                    checked={nuatEnabled}
-                    onCheckedChange={(checked) => {
-                      setNuatEnabled(checked);
-                      setForm((prev) => ({ ...prev, nuatEnabled: checked }));
-                    }}
-                  />
-                </div>
+                        : "Value Added Tax (10%)"
+                    }
+                  >
+                    <Switch
+                      id="nuatEnabled"
+                      checked={nuatEnabled}
+                      onCheckedChange={(checked) => {
+                        setNuatEnabled(checked);
+                        setForm((prev) => ({ ...prev, nuatEnabled: checked }));
+                      }}
+                    />
+                  </SettingsRow>
+                </SettingsGroup>
               </FieldContent>
             </Field>
 
@@ -374,33 +357,28 @@ export function BusinessDefaultsForm({
               </Field>
             )}
 
-            {/* НДШ (Social Insurance) Toggle */}
             <Field className="sm:col-span-2">
               <FieldContent>
-                <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 p-4">
-                  <div className="flex flex-col gap-1">
-                    <Label
-                      htmlFor="ndshEnabled"
-                      className="text-sm font-medium"
-                    >
-                      {currentLocale === "mn"
-                        ? "НДШ тооцоо"
-                        : "Social Insurance"}
-                    </Label>
-                    <Typography.Muted className="text-xs">
-                      {currentLocale === "mn"
+                <SettingsGroup>
+                  <SettingsRow
+                    label={
+                      currentLocale === "mn" ? "НДШ тооцоо" : "Social Insurance"
+                    }
+                    description={
+                      currentLocale === "mn"
                         ? "Нийгмийн даатгалын шимтгэл"
-                        : "Payroll tax tracking"}
-                    </Typography.Muted>
-                  </div>
-                  <Switch
-                    id="ndshEnabled"
-                    checked={formData.ndshEnabled}
-                    onCheckedChange={(checked) => {
-                      setForm((prev) => ({ ...prev, ndshEnabled: checked }));
-                    }}
-                  />
-                </div>
+                        : "Payroll tax tracking"
+                    }
+                  >
+                    <Switch
+                      id="ndshEnabled"
+                      checked={formData.ndshEnabled}
+                      onCheckedChange={(checked) => {
+                        setForm((prev) => ({ ...prev, ndshEnabled: checked }));
+                      }}
+                    />
+                  </SettingsRow>
+                </SettingsGroup>
               </FieldContent>
             </Field>
 
@@ -460,34 +438,29 @@ export function BusinessDefaultsForm({
               </>
             )}
 
-            {/* E-Invoice (Э-Баримт) Toggle */}
             <Field className="sm:col-span-2">
               <FieldContent>
-                <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 p-4">
-                  <div className="flex flex-col gap-1">
-                    <Label
-                      htmlFor="einvoiceEnabled"
-                      className="text-sm font-medium"
-                    >
-                      {currentLocale === "mn" ? "Э-Баримт" : "E-Invoice"}
-                    </Label>
-                    <Typography.Muted className="text-xs">
-                      {currentLocale === "mn"
+                <SettingsGroup>
+                  <SettingsRow
+                    label={currentLocale === "mn" ? "Э-Баримт" : "E-Invoice"}
+                    description={
+                      currentLocale === "mn"
                         ? "Цахим нэхэмжлэл (Татварын ерөнхий газар)"
-                        : "Electronic invoice (General Taxation Authority)"}
-                    </Typography.Muted>
-                  </div>
-                  <Switch
-                    id="einvoiceEnabled"
-                    checked={formData.einvoiceEnabled}
-                    onCheckedChange={(checked) => {
-                      setForm((prev) => ({
-                        ...prev,
-                        einvoiceEnabled: checked,
-                      }));
-                    }}
-                  />
-                </div>
+                        : "Electronic invoice (General Taxation Authority)"
+                    }
+                  >
+                    <Switch
+                      id="einvoiceEnabled"
+                      checked={formData.einvoiceEnabled}
+                      onCheckedChange={(checked) => {
+                        setForm((prev) => ({
+                          ...prev,
+                          einvoiceEnabled: checked,
+                        }));
+                      }}
+                    />
+                  </SettingsRow>
+                </SettingsGroup>
               </FieldContent>
             </Field>
 
@@ -575,7 +548,7 @@ export function BusinessDefaultsForm({
                 >
                   <SelectTrigger
                     id="language"
-                    className="h-11 w-full"
+                    className="h-9 w-full"
                     aria-invalid={!!rhfForm.formState.errors.language}
                   >
                     <Globe className="size-4 text-muted-foreground" />
@@ -612,18 +585,17 @@ export function BusinessDefaultsForm({
             </div>
           )}
 
-          <div className="flex items-center justify-between gap-4 border-t border-border pt-4">
+          <div className="flex items-center justify-between gap-4 border-t border-border pt-3">
             <Typography.Muted className="text-xs text-muted-foreground">
               {watchedLanguage !== currentLocale
                 ? t("langWillReload")
                 : t("allChangesSaved")}
             </Typography.Muted>
-            <Button type="submit" disabled={saving} className="min-w-24">
+            <Button type="submit" disabled={saving} size="sm" className="min-w-20">
               {saving ? t("saving") : t("save")}
             </Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
+    </SettingsBlock>
   );
 }

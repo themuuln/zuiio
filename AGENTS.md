@@ -245,6 +245,67 @@ After first load, preserve page chrome (tabs, headers, buttons) on refetch. Only
 
 ---
 
+## Supabase Integration Rules
+
+**These rules prevent the most common integration bugs. Follow them on EVERY task touching Supabase.**
+
+### RLS Policy Checklist
+
+Every new table **MUST** have all 4 policies before any code references it:
+
+```sql
+ALTER TABLE my_table ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "my_table_select" ON my_table FOR SELECT
+  USING (organization_id = get_user_organization_id());
+
+CREATE POLICY "my_table_insert" ON my_table FOR INSERT
+  WITH CHECK (organization_id = get_user_organization_id());
+
+CREATE POLICY "my_table_update" ON my_table FOR UPDATE
+  USING (organization_id = get_user_organization_id())
+  WITH CHECK (organization_id = get_user_organization_id());
+
+CREATE POLICY "my_table_delete" ON my_table FOR DELETE
+  USING (organization_id = get_user_organization_id());
+```
+
+**Verify RLS coverage before writing service code:**
+```sql
+SELECT tablename, policyname FROM pg_policies WHERE schemaname = 'public' ORDER BY tablename;
+```
+
+### Service Query Checklist
+
+Every service query **MUST** include:
+
+| Clause | Purpose | Example |
+|--------|---------|--------|
+| `.eq('organization_id', orgId)` | Multi-tenancy scope | Required on every query |
+| `.is('deleted_at', null)` | Soft delete filter | Required on every SELECT |
+| `.select('col1, col2, ...')` | Explicit columns | Never `select('*')` in production |
+
+### Type Safety
+
+- **Regenerate types** after EVERY migration: `supabase gen types typescript --linked > src/lib/database.types.ts`
+- **Import from `@/lib/types`**, never from `@/lib/database.types` (breaks on regen)
+- **Service functions** must accept `db: SupabaseClient` as first param (enables testing)
+
+### Auth & Keys
+
+- **Client-side**: Use `anon` key only (respects RLS)
+- **Server-side**: Use `service_role` key only (bypasses RLS)
+- **Never** mix keys or use inline clients — always use factory functions
+
+### Silent Failure Detection
+
+RLS failures return `data: []` with **no error**. Always:
+1. Check `data` is not empty when expecting results
+2. Log response shape in development
+3. Test with different org users to verify isolation
+
+---
+
 ## Common Pitfalls
 
 | Issue | Symptom | Fix |
@@ -254,8 +315,11 @@ After first load, preserve page chrome (tabs, headers, buttons) on refetch. Only
 | Missing UNIQUE constraint | Upsert silently fails | Match `onConflict` to a `UNIQUE` constraint |
 | Upsert resets immutable fields | Status/paid_at wiped | Use check-then-update instead |
 | `revalidateTag` missing 2nd arg | TS error in Next.js 16 | `revalidateTag(tag, "default")` |
-| RLS blocking service queries | Empty results, no error | Service functions inherit request user's RLS |
+| **RLS blocking service queries** | **Empty results, no error** | **Add 4 RLS policies + `.eq('organization_id', orgId)`** |
 | Importing `@/lib/database.types` | Build breaks on type regen | Always use `@/lib/types` |
+| Missing RLS on new table | Data leaks across orgs | Every new table needs SELECT, INSERT, UPDATE, DELETE policies |
+| Types not regenerated | Frontend fields missing/wrong | Run `supabase gen types` after EVERY migration |
+| Service role in client | Bypasses RLS accidentally | Use anon key in browser, service_role in server only |
 
 ---
 

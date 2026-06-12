@@ -106,7 +106,6 @@ export function CustomerPickerModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="sm:max-w-md"
-        size="md"
         initialFocus={() =>
           document.getElementById("customer-picker-search") ?? undefined
         }

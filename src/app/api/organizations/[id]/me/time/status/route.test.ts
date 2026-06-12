@@ -53,7 +53,7 @@ describe("GET /api/organizations/[id]/me/time/status", () => {
   });
 
   it("returns clocked-in status with hours", async () => {
-    setupAuth();
+    const client = setupAuth();
     vi.mocked(getClockStatus).mockResolvedValue({
       clockedIn: true,
       since: "2025-06-09T10:00:00Z",
@@ -69,7 +69,7 @@ describe("GET /api/organizations/[id]/me/time/status", () => {
       since: "2025-06-09T10:00:00Z",
       todayHours: 4.5,
     });
-    expect(getClockStatus).toHaveBeenCalledWith(ORG_ID, USER_ID);
+    expect(getClockStatus).toHaveBeenCalledWith(client, ORG_ID, USER_ID);
   });
 
   it("returns clocked-out status", async () => {

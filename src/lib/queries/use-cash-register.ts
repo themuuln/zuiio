@@ -142,12 +142,24 @@ export function useOpenSession(
     },
     onSuccess: (data) => {
       if (orgId) {
+        // Set all possible branch keys so the UI updates immediately
+        // regardless of which branch filter the user has selected.
         queryClient.setQueryData(
           cashRegisterKeys.current(orgId, data.branch_id),
-          data,
+          { ...data, entries: [] },
         );
+        queryClient.setQueryData(cashRegisterKeys.current(orgId, null), {
+          ...data,
+          entries: [],
+        });
+        queryClient.setQueryData(cashRegisterKeys.current(orgId, "all"), {
+          ...data,
+          entries: [],
+        });
+        // Only invalidate the list, not the current query —
+        // we already have fresh data from the mutation response.
         queryClient.invalidateQueries({
-          queryKey: cashRegisterKeys.all(orgId),
+          queryKey: cashRegisterKeys.list(orgId),
         });
       }
       toast.success("Cash register opened");

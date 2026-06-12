@@ -27,7 +27,10 @@ const VALIDATED_HREFS = new Set([
 ]);
 
 // Pages still being implemented (yellow dot)
-const _IMPLEMENTING_HREFS = new Set(["/dashboard/cash-register"]);
+const _IMPLEMENTING_HREFS = new Set([
+  "/dashboard/cash-register",
+  "/dashboard/inventory/transfers",
+]);
 
 /**
  * Returns the validation status for a nav item by its href.

@@ -4,7 +4,7 @@ import React from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { MechanicAvatar } from "@/components/mechanic-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +21,6 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Typography } from "@/components/ui/typography";
-import { getMechanicColor, getMechanicInitials } from "@/lib/mechanic-colors";
 import type { Profile } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -44,9 +43,6 @@ function MechanicItem({ mechanic }: MechanicItemProps) {
       }
     : undefined;
 
-  const color = getMechanicColor(mechanic.id);
-  const initials = getMechanicInitials(mechanic.full_name);
-
   const jobCount = mechanic.current_jobs;
   const isAvailable = jobCount === 0;
 
@@ -62,13 +58,7 @@ function MechanicItem({ mechanic }: MechanicItemProps) {
         !isDragging && "hover:border-border hover:bg-muted/20",
       )}
     >
-      <Avatar className="size-6 shrink-0 after:hidden">
-        <AvatarFallback
-          className={cn("text-xs font-medium", color.bg, color.text)}
-        >
-          {initials}
-        </AvatarFallback>
-      </Avatar>
+      <MechanicAvatar mechanic={mechanic} className="size-6 shrink-0" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <Typography.Text className="text-xs font-medium truncate leading-tight text-foreground/90">

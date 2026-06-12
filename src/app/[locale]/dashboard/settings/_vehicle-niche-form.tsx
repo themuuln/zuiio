@@ -16,7 +16,6 @@ import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -28,6 +27,11 @@ import {
   type CarModel,
   carCatalogKeys,
 } from "@/lib/queries/use-car-catalog";
+import {
+  SettingsBlock,
+  SettingsGroup,
+  SettingsRow,
+} from "./_settings-layout";
 import type { Organization } from "@/lib/types";
 
 interface VehicleNicheFormProps {
@@ -230,44 +234,34 @@ export function VehicleNicheForm({
 
   if (!organization) {
     return (
-      <Card>
-        <CardContent className="flex flex-col gap-3 pt-6">
-          <Skeleton className="h-5 w-40" />
-          <Skeleton className="h-4 w-72" />
-          <Skeleton className="h-10 w-24" />
-        </CardContent>
-      </Card>
+      <SettingsBlock>
+        <Skeleton className="h-5 w-40" />
+        <Skeleton className="h-4 w-72" />
+        <Skeleton className="h-8 w-24" />
+      </SettingsBlock>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Main toggle card */}
-      <Card>
-        <CardContent className="flex flex-col gap-4 pt-6">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col gap-1">
-              <Typography.Text className="font-medium">
-                Show only specific vehicle brands
-              </Typography.Text>
-              <Typography.Muted className="text-sm text-muted-foreground">
-                Choose the vehicle brands and models your workshop works on.
-                Only selected brands will appear in vehicle creation, work
-                orders, and the parts catalog.
-              </Typography.Muted>
-            </div>
-            <Switch
-              checked={niche.enabled}
-              onCheckedChange={(checked) =>
-                setNiche((prev) => ({ ...prev, enabled: checked }))
-              }
-              disabled={saving}
-            />
-          </div>
+    <SettingsBlock>
+      <SettingsGroup>
+        <SettingsRow
+          label="Show only specific vehicle brands"
+          description="Choose the vehicle brands and models your workshop works on. Only selected brands will appear in vehicle creation, work orders, and the parts catalog."
+        >
+          <Switch
+            checked={niche.enabled}
+            onCheckedChange={(checked) =>
+              setNiche((prev) => ({ ...prev, enabled: checked }))
+            }
+            disabled={saving}
+          />
+        </SettingsRow>
+      </SettingsGroup>
 
-          {niche.enabled && (
-            <>
-              <Separator />
+      {niche.enabled ? (
+        <>
+          <Separator />
 
               {/* Summary badges */}
               <div className="flex flex-wrap items-center gap-2">
@@ -374,14 +368,11 @@ export function VehicleNicheForm({
                   </Button>
                 </div>
               )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+        </>
+      ) : null}
 
-      {/* Save button */}
       <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={saving} className="gap-2">
+        <Button size="sm" onClick={handleSave} disabled={saving} className="gap-2">
           {saving ? (
             <Loader2 className="size-4 animate-spin" />
           ) : (
@@ -397,7 +388,7 @@ export function VehicleNicheForm({
         <AlertTitle>{t("howNicheWorks")}</AlertTitle>
         <AlertDescription>{t("vehicleNicheDetails")}</AlertDescription>
       </Alert>
-    </div>
+    </SettingsBlock>
   );
 }
 

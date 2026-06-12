@@ -1,6 +1,6 @@
 "use client";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { MechanicAvatar } from "@/components/mechanic-avatar";
 import {
   Combobox,
   ComboboxContent,
@@ -9,7 +9,6 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-import { getMechanicColor, getMechanicInitials } from "@/lib/mechanic-colors";
 import { cn } from "@/lib/utils";
 
 interface Mechanic {
@@ -85,21 +84,15 @@ export function MechanicSelect({
         <ComboboxContent>
           <ComboboxList>
             {(mechanic: Mechanic) => {
-              const color = getMechanicColor(mechanic.id);
-              const initials = getMechanicInitials(getMechanicName(mechanic));
               return (
                 <ComboboxItem key={mechanic.id} value={mechanic}>
-                  <Avatar className="size-5 shrink-0 after:hidden">
-                    <AvatarFallback
-                      className={cn(
-                        "text-[9px] font-medium",
-                        color.bg,
-                        color.text,
-                      )}
-                    >
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
+                  <MechanicAvatar
+                    mechanic={{
+                      id: mechanic.id,
+                      full_name: getMechanicName(mechanic),
+                    }}
+                    className="size-5 shrink-0"
+                  />
                   <span>{getMechanicLabel(mechanic, showJobCount)}</span>
                 </ComboboxItem>
               );

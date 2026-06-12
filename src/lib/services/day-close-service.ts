@@ -1,5 +1,5 @@
 import { getEndOfDaySummary } from "@/lib/services/report-service";
-import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 function localDateStr(date?: Date): string {
   const d = date ?? new Date();
@@ -10,14 +10,15 @@ function localDateStr(date?: Date): string {
 }
 
 export async function closeDay(
+  db: SupabaseClient,
   orgId: string,
   userId: string,
   date: string,
 ): Promise<{ success: boolean; streak: number }> {
-  const supabase = await createClient();
+  const supabase = db;
 
   // Capture EOD snapshot before closing
-  const eodSummary = await getEndOfDaySummary(orgId, date);
+  const eodSummary = await getEndOfDaySummary(supabase, orgId, date);
 
   // Upsert day_close_logs with snapshot
   const { error } = await supabase.from("day_close_logs").upsert(
@@ -34,13 +35,16 @@ export async function closeDay(
   if (error) throw error;
 
   // Calculate streak
-  const streak = await getCloseStreak(orgId);
+  const streak = await getCloseStreak(db, orgId);
 
   return { success: true, streak };
 }
 
-export async function getCloseStreak(orgId: string): Promise<number> {
-  const supabase = await createClient();
+export async function getCloseStreak(
+  db: SupabaseClient,
+  orgId: string,
+): Promise<number> {
+  const supabase = db;
 
   const { data: logs } = await supabase
     .from("day_close_logs")
@@ -70,10 +74,11 @@ export async function getCloseStreak(orgId: string): Promise<number> {
 }
 
 export async function getDayCloseStatus(
+  db: SupabaseClient,
   orgId: string,
   date: string,
 ): Promise<{ isClosed: boolean; streak: number }> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { count } = await supabase
     .from("day_close_logs")
@@ -81,7 +86,7 @@ export async function getDayCloseStatus(
     .eq("organization_id", orgId)
     .eq("date", date);
 
-  const streak = await getCloseStreak(orgId);
+  const streak = await getCloseStreak(db, orgId);
 
   return {
     isClosed: (count ?? 0) > 0,

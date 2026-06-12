@@ -16,11 +16,11 @@ export const GET = createRouteHandler(async ({ supabase, orgId, request }) => {
   const ruleId = url.searchParams.get("id");
 
   if (ruleId) {
-    const rule = await getPriceRule(ruleId);
+    const rule = await getPriceRule(supabase, ruleId);
     return NextResponse.json({ data: rule });
   }
 
-  const rules = await getPriceRules(orgId);
+  const rules = await getPriceRules(supabase, orgId);
   return NextResponse.json({ data: rules });
 });
 
@@ -31,12 +31,12 @@ export const POST = createRouteHandler(
 
     if (body.action === "resolve") {
       // Price resolution endpoint
-      const result = await resolvePrice(orgId, body.input);
+      const result = await resolvePrice(supabase, orgId, body.input);
       return NextResponse.json({ data: result });
     }
 
     // Create rule
-    const rule = await createPriceRule(orgId, body, user?.id ?? null);
+    const rule = await createPriceRule(supabase, orgId, body, user?.id ?? null);
     return NextResponse.json({ data: rule }, { status: 201 });
   },
 );
@@ -51,7 +51,13 @@ export const PATCH = createRouteHandler(
     }
 
     const body = await request.json();
-    const rule = await updatePriceRule(ruleId, orgId, body, user?.id ?? null);
+    const rule = await updatePriceRule(
+      supabase,
+      ruleId,
+      orgId,
+      body,
+      user?.id ?? null,
+    );
     return NextResponse.json({ data: rule });
   },
 );
@@ -65,7 +71,7 @@ export const DELETE = createRouteHandler(
       return NextResponse.json({ error: "Missing rule id" }, { status: 400 });
     }
 
-    await deletePriceRule(ruleId, orgId);
+    await deletePriceRule(supabase, ruleId, orgId);
     return NextResponse.json({ success: true });
   },
 );

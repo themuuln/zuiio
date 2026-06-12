@@ -1,21 +1,15 @@
 "use client";
 
-import { Monitor, Moon, Palette, Sun } from "lucide-react";
+import { Monitor, Moon, Sun } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { SettingsForm } from "./_business-defaults-form";
+import { SettingsBlock } from "./_settings-layout";
 
 const THEME_OPTIONS = [
   { value: "light", label: "Light", icon: Sun },
@@ -54,65 +48,127 @@ export function AppearanceCustomization({
 }: AppearanceCustomizationProps) {
   const t = useTranslations("settings");
   return (
-    <Card>
-      <CardHeader className="pb-0">
+    <SettingsBlock>
+      <Field>
+        <FieldLabel>{t("theme")}</FieldLabel>
+        <ToggleGroup
+          value={theme ? [theme] : []}
+          onValueChange={(value) => {
+            const nextTheme = value[0];
+            if (nextTheme) {
+              setTheme(nextTheme);
+            }
+          }}
+          variant="outline"
+          className="flex w-fit flex-wrap gap-1 rounded-lg border border-border p-0.5"
+        >
+          {THEME_OPTIONS.map((option) => {
+            const Icon = option.icon;
+            return (
+              <ToggleGroupItem
+                key={option.value}
+                value={option.value}
+                className="h-8 rounded-md px-3 text-xs"
+              >
+                <Icon className="size-3.5" />
+                {option.label}
+              </ToggleGroupItem>
+            );
+          })}
+        </ToggleGroup>
+      </Field>
+
+      <Separator />
+
+      <Field>
+        <FieldLabel>{t("brandColor")}</FieldLabel>
         <div className="flex items-center gap-2">
-          <div className="flex size-7 items-center justify-center rounded-md bg-primary/10">
-            <Palette className="size-3.5 text-primary" />
-          </div>
-          <div>
-            <CardTitle className="text-sm font-semibold">
-              {t("appearanceSection")}
-            </CardTitle>
-            <CardDescription className="text-xs">
-              {t("appearanceDesc")}
-            </CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-6 pt-5">
-        <Field>
-          <FieldLabel>{t("theme")}</FieldLabel>
-          <ToggleGroup
-            value={theme ? [theme] : []}
-            onValueChange={(value) => {
-              const nextTheme = value[0];
-              if (nextTheme) {
-                setTheme(nextTheme);
+          <Button
+            variant="outline"
+            size="icon-xs"
+            className="relative size-8 shrink-0 overflow-hidden rounded-full border-2 p-0"
+            render={<label />}
+            style={{
+              backgroundColor:
+                form.brandColor ||
+                (typeof document !== "undefined"
+                  ? getComputedStyle(document.documentElement)
+                      .getPropertyValue("--primary")
+                      .trim()
+                  : "") ||
+                "#000000",
+            }}
+            aria-label={t("brandColorPicker")}
+          >
+            <input
+              type="color"
+              value={
+                form.brandColor ||
+                (typeof document !== "undefined"
+                  ? getComputedStyle(document.documentElement)
+                      .getPropertyValue("--primary")
+                      .trim()
+                  : "") ||
+                "#000000"
+              }
+              onChange={(e) => {
+                const color = e.target.value;
+                setForm((prev) => ({ ...prev, brandColor: color }));
+                preview(color);
+              }}
+              className="absolute inset-0 cursor-pointer opacity-0"
+            />
+          </Button>
+          <Input
+            value={form.brandColor}
+            onChange={(e) => {
+              const color = e.target.value;
+              setForm((prev) => ({ ...prev, brandColor: color }));
+              if (/^#[0-9a-fA-F]{6}$/.test(color)) {
+                preview(color);
               }
             }}
-            variant="outline"
-            className="flex w-fit flex-wrap gap-2 rounded-2xl border border-border bg-card p-1"
-          >
-            {THEME_OPTIONS.map((option) => {
-              const Icon = option.icon;
-              return (
-                <ToggleGroupItem
-                  key={option.value}
-                  value={option.value}
-                  className="h-11 rounded-xl px-4 text-sm"
-                >
-                  <Icon className="size-4" />
-                  {option.label}
-                </ToggleGroupItem>
-              );
-            })}
-          </ToggleGroup>
-        </Field>
-
-        <Separator />
-
-        <Field>
-          <FieldLabel>{t("brandColor")}</FieldLabel>
-          <div className="flex items-center gap-3">
+            placeholder={t("brandColorPlaceholder")}
+            className="h-8 w-28 font-mono text-xs"
+            maxLength={7}
+          />
+        </div>
+        {savedBrandColor ? (
+          <div className="flex items-center gap-1">
             <Button
-              variant="outline"
-              size="icon-xs"
-              className="size-9 rounded-full overflow-hidden p-0 border-2 relative shrink-0"
-              render={<label />}
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setForm((prev) => ({ ...prev, brandColor: savedBrandColor }));
+                preview(savedBrandColor);
+              }}
+              className="h-6 px-2 text-[11px] text-muted-foreground"
+            >
+              Reset to saved
+            </Button>
+          </div>
+        ) : null}
+        <div className="flex flex-wrap gap-1.5">
+          {BRAND_COLOR_PRESETS.map((preset) => (
+            <button
+              key={preset.label}
+              type="button"
+              onClick={() => {
+                setForm((prev) => ({
+                  ...prev,
+                  brandColor: preset.value,
+                }));
+                preview(preset.value);
+              }}
+              className={`size-7 rounded-full border-2 transition-all ${
+                form.brandColor === preset.value ||
+                (!form.brandColor && preset.value === "")
+                  ? "scale-110 border-foreground ring-2 ring-foreground/20"
+                  : "border-border hover:scale-110"
+              }`}
               style={{
                 backgroundColor:
-                  form.brandColor ||
+                  preset.value ||
                   (typeof document !== "undefined"
                     ? getComputedStyle(document.documentElement)
                         .getPropertyValue("--primary")
@@ -120,91 +176,12 @@ export function AppearanceCustomization({
                     : "") ||
                   "#000000",
               }}
-              aria-label={t("brandColorPicker")}
-            >
-              <input
-                type="color"
-                value={
-                  form.brandColor ||
-                  (typeof document !== "undefined"
-                    ? getComputedStyle(document.documentElement)
-                        .getPropertyValue("--primary")
-                        .trim()
-                    : "") ||
-                  "#000000"
-                }
-                onChange={(e) => {
-                  const color = e.target.value;
-                  setForm((prev) => ({ ...prev, brandColor: color }));
-                  preview(color);
-                }}
-                className="absolute inset-0 opacity-0 cursor-pointer"
-              />
-            </Button>
-            <Input
-              value={form.brandColor}
-              onChange={(e) => {
-                const color = e.target.value;
-                setForm((prev) => ({ ...prev, brandColor: color }));
-                if (/^#[0-9a-fA-F]{6}$/.test(color)) {
-                  preview(color);
-                }
-              }}
-              placeholder={t("brandColorPlaceholder")}
-              className="w-32 font-mono text-sm"
-              maxLength={7}
+              title={preset.label}
+              aria-label={preset.label}
             />
-          </div>
-          {savedBrandColor && (
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setForm((prev) => ({ ...prev, brandColor: savedBrandColor }));
-                  preview(savedBrandColor);
-                }}
-                className="h-6 text-[11px] px-2 text-muted-foreground"
-              >
-                Reset to saved
-              </Button>
-            </div>
-          )}
-          <div className="flex flex-wrap gap-2">
-            {BRAND_COLOR_PRESETS.map((preset) => (
-              <button
-                key={preset.label}
-                type="button"
-                onClick={() => {
-                  setForm((prev) => ({
-                    ...prev,
-                    brandColor: preset.value,
-                  }));
-                  preview(preset.value);
-                }}
-                className={`size-9 rounded-full border-2 transition-all ${
-                  form.brandColor === preset.value ||
-                  (!form.brandColor && preset.value === "")
-                    ? "border-foreground scale-110 ring-2 ring-foreground/20"
-                    : "border-border hover:scale-110"
-                }`}
-                style={{
-                  backgroundColor:
-                    preset.value ||
-                    (typeof document !== "undefined"
-                      ? getComputedStyle(document.documentElement)
-                          .getPropertyValue("--primary")
-                          .trim()
-                      : "") ||
-                    "#000000",
-                }}
-                title={preset.label}
-                aria-label={preset.label}
-              />
-            ))}
-          </div>
-        </Field>
-      </CardContent>
-    </Card>
+          ))}
+        </div>
+      </Field>
+    </SettingsBlock>
   );
 }

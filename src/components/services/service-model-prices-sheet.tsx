@@ -473,7 +473,7 @@ export function ServiceModelPricesSheet({
         open={showConfirmDiscard}
         onOpenChange={setShowConfirmDiscard}
       >
-        <AlertDialogContent zLayer={1}>
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t("discardTitle")}</AlertDialogTitle>
             <AlertDialogDescription>

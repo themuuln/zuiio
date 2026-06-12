@@ -1,33 +1,22 @@
 "use client";
-
 import type * as React from "react";
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
-
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { XIcon } from "lucide-react";
 
 /**
- * Z-index layer map for stacked overlays.
- * Layer 0 = default z-50, layer 1 = z-51, etc.
- * Used by SheetContent's zLayer prop for Sheet→Sheet stacking.
+ * Sheet root component.
+ * Wraps Base UI's Dialog.Root (Sheet is a side-dialog).
  */
-const zLayerClasses = [
-  "z-50",
-  "z-51",
-  "z-52",
-  "z-53",
-  "z-54",
-  "z-55",
-  "z-56",
-  "z-57",
-  "z-58",
-  "z-59",
-  "z-60",
-] as const;
-
-function Sheet({ ...props }: SheetPrimitive.Root.Props) {
-  return <SheetPrimitive.Root data-slot="sheet" {...props} />;
+function Sheet({ onOpenChange, ...props }: SheetPrimitive.Root.Props) {
+  return (
+    <SheetPrimitive.Root
+      data-slot="sheet"
+      onOpenChange={onOpenChange}
+      {...props}
+    />
+  );
 }
 
 function SheetTrigger({ ...props }: SheetPrimitive.Trigger.Props) {
@@ -42,17 +31,18 @@ function SheetPortal({ ...props }: SheetPrimitive.Portal.Props) {
   return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />;
 }
 
-function SheetOverlay({
-  className,
-  zLayer = 0,
-  ...props
-}: SheetPrimitive.Backdrop.Props & { zLayer?: number }) {
+/**
+ * Sheet overlay/backdrop.
+ * Uses data-nested-dialog-open to dim the parent when a child dialog opens.
+ */
+function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {
   return (
     <SheetPrimitive.Backdrop
       data-slot="sheet-overlay"
       className={cn(
-        "fixed inset-0 bg-black/10 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 supports-backdrop-filter:backdrop-blur-xs",
-        zLayerClasses[zLayer] ?? "z-50",
+        "fixed inset-0 z-50 bg-black/10 transition-opacity duration-150 supports-backdrop-filter:backdrop-blur-xs data-ending-style:opacity-0 data-starting-style:opacity-0",
+        // Dim the overlay when a child dialog is open
+        "after:absolute after:inset-0 after:bg-black/5 after:opacity-0 after:pointer-events-none after:transition-opacity after:duration-100 data-nested-dialog-open:after:opacity-100",
         className,
       )}
       {...props}
@@ -73,45 +63,52 @@ const sheetSizeClasses = {
 
 type SheetSize = keyof typeof sheetSizeClasses;
 
+/**
+ * Sheet content/popup.
+ * Slides in from a side. Uses Base UI's nested dialog system for stacking.
+ * Child dialogs automatically suppress their backdrops via Base UI.
+ */
 function SheetContent({
-  className,
   children,
   side = "right",
   showCloseButton = true,
   size = "sm",
-  zLayer = 0,
+  className,
   ...props
 }: SheetPrimitive.Popup.Props & {
   side?: "top" | "right" | "bottom" | "left";
   showCloseButton?: boolean;
   size?: SheetSize;
-  /** Z-index layer for stacked overlays. 0 = default (z-50), 1 = z-51, etc. */
-  zLayer?: number;
 }) {
-  const zClass = zLayerClasses[zLayer] ?? "z-50";
-
   return (
     <SheetPortal>
-      <SheetOverlay zLayer={zLayer} />
+      <SheetOverlay />
       <SheetPrimitive.Popup
         data-slot="sheet-content"
         data-side={side}
         className={cn(
-          "fixed flex flex-col gap-4 bg-popover bg-clip-padding text-sm text-popover-foreground shadow-lg transition duration-200 ease-in-out data-ending-style:opacity-0 data-starting-style:opacity-0 data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:border-t data-[side=bottom]:data-ending-style:translate-y-[2.5rem] data-[side=bottom]:data-starting-style:translate-y-[2.5rem] data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:h-full data-[side=left]:w-3/4 data-[side=left]:border-r data-[side=left]:data-ending-style:translate-x-[-2.5rem] data-[side=left]:data-starting-style:translate-x-[-2.5rem] data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:h-full data-[side=right]:w-3/4 data-[side=right]:border-l data-[side=right]:data-ending-style:translate-x-[2.5rem] data-[side=right]:data-starting-style:translate-x-[2.5rem] data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:h-auto data-[side=top]:border-b data-[side=top]:data-ending-style:translate-y-[-2.5rem] data-[side=top]:data-starting-style:translate-y-[-2.5rem]",
+          "fixed z-50 flex flex-col gap-4 bg-popover bg-clip-padding text-sm text-popover-foreground shadow-lg transition duration-200 ease-in-out pointer-events-none",
+          // Side-specific styles
+          "data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:border-t data-[side=bottom]:data-ending-style:translate-y-[2.5rem] data-[side=bottom]:data-starting-style:translate-y-[2.5rem]",
+          "data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:h-full data-[side=left]:w-3/4 data-[side=left]:border-r data-[side=left]:data-ending-style:translate-x-[-2.5rem] data-[side=left]:data-starting-style:translate-x-[-2.5rem]",
+          "data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:h-full data-[side=right]:w-3/4 data-[side=right]:border-l data-[side=right]:data-ending-style:translate-x-[2.5rem] data-[side=right]:data-starting-style:translate-x-[2.5rem]",
+          "data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:h-auto data-[side=top]:border-b data-[side=top]:data-ending-style:translate-y-[-2.5rem] data-[side=top]:data-starting-style:translate-y-[-2.5rem]",
           sheetSizeClasses[size],
-          zClass,
           className,
         )}
         {...props}
       >
-        {children}
+        {/* pointer-events: auto restores click interaction inside the sheet */}
+        <div className="pointer-events-auto flex flex-col gap-4 h-full">
+          {children}
+        </div>
         {showCloseButton && (
           <SheetPrimitive.Close
             data-slot="sheet-close"
             render={
               <Button
                 variant="ghost"
-                className="absolute top-3 right-3"
+                className="absolute top-3 right-3 pointer-events-auto"
                 size="icon-sm"
               />
             }
@@ -172,12 +169,14 @@ function SheetDescription({
 }
 
 export {
-  Sheet,
   SheetTrigger,
   SheetClose,
-  SheetContent,
-  SheetHeader,
-  SheetFooter,
-  SheetTitle,
   SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetOverlay,
+  SheetPortal,
+  SheetTitle,
+  SheetContent,
+  Sheet,
 };

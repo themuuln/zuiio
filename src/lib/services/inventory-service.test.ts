@@ -23,6 +23,9 @@ vi.mock("@/lib/cache/with-cache", () => ({
   withCache: vi.fn((_key: unknown, fn: () => unknown) => fn()),
 }));
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
+vi.mock("@/lib/audit", () => ({
+  createAuditLog: vi.fn().mockResolvedValue({ success: true, id: "audit-1" }),
+}));
 
 // ── Shared mock client ─────────────────────────────────────────
 
@@ -153,6 +156,7 @@ describe("createPart", () => {
     });
 
     const result = await createPart(
+      mockClient as any,
       "org-1",
       {
         name: "Тосны шүүлтүүр",
@@ -213,6 +217,12 @@ describe("updatePart", () => {
   };
 
   it("updates part fields and returns updated part", async () => {
+    // 1st .single(): existence check (old_data for audit)
+    mockClient.from("parts_catalog").single.mockResolvedValueOnce({
+      data: { ...updatedPart },
+      error: null,
+    });
+    // 2nd .single(): update result
     mockClient.from("parts_catalog").single.mockResolvedValueOnce({
       data: updatedPart,
       error: null,
@@ -243,7 +253,9 @@ describe("updatePart", () => {
       error: { message: "Not found" },
     });
 
-    const promise = updatePart("nonexistent", "org-1", { name: "Ghost Part" });
+    const promise = updatePart(mockClient as any, "nonexistent", "org-1", {
+      name: "Ghost Part",
+    });
 
     await expect(promise).rejects.toThrow(NotFoundError);
     await expect(promise).rejects.toThrow("Part not found");
@@ -283,7 +295,7 @@ describe("deletePart", () => {
         Promise.resolve({ error: { message: "Not found" } }),
       );
 
-    const promise = deletePart("nonexistent", "org-1");
+    const promise = deletePart(mockClient as any, "nonexistent", "org-1");
 
     await expect(promise).rejects.toThrow(NotFoundError);
     await expect(promise).rejects.toThrow("Part not found");
@@ -375,7 +387,8 @@ describe("createMovement", () => {
       error: null,
     });
 
-    const result = await createMovement(mockClient as any, mockClient as any, 
+    const result = await createMovement(
+      mockClient as any,
       "org-1",
       {
         part_id: "part-1",
@@ -409,7 +422,8 @@ describe("createMovement", () => {
 
   it("rejects when part_id is missing", async () => {
     await expect(
-      createMovement(mockClient as any, 
+      createMovement(
+        mockClient as any,
         "org-1",
         { part_id: "", movement_type: "purchase", quantity: 1 },
         "user-1",
@@ -417,7 +431,8 @@ describe("createMovement", () => {
     ).rejects.toThrow(ValidationError);
 
     await expect(
-      createMovement(mockClient as any, 
+      createMovement(
+        mockClient as any,
         "org-1",
         { part_id: "", movement_type: "purchase", quantity: 1 },
         "user-1",
@@ -427,7 +442,8 @@ describe("createMovement", () => {
 
   it("rejects when movement_type is missing", async () => {
     await expect(
-      createMovement(mockClient as any, 
+      createMovement(
+        mockClient as any,
         "org-1",
         // @ts-expect-error - testing runtime validation for missing movement_type
         { part_id: "part-1", quantity: 1 },
@@ -436,7 +452,8 @@ describe("createMovement", () => {
     ).rejects.toThrow(ValidationError);
 
     await expect(
-      createMovement(mockClient as any, 
+      createMovement(
+        mockClient as any,
         "org-1",
         // @ts-expect-error - testing runtime validation for missing movement_type
         { part_id: "part-1", quantity: 1 },
@@ -447,7 +464,8 @@ describe("createMovement", () => {
 
   it("rejects when quantity is zero", async () => {
     await expect(
-      createMovement(mockClient as any, 
+      createMovement(
+        mockClient as any,
         "org-1",
         { part_id: "part-1", movement_type: "purchase", quantity: 0 },
         "user-1",
@@ -455,7 +473,8 @@ describe("createMovement", () => {
     ).rejects.toThrow(ValidationError);
 
     await expect(
-      createMovement(mockClient as any, 
+      createMovement(
+        mockClient as any,
         "org-1",
         { part_id: "part-1", movement_type: "purchase", quantity: 0 },
         "user-1",
@@ -469,7 +488,8 @@ describe("createMovement", () => {
       error: { message: "Not found" },
     });
 
-    const promise = createMovement(mockClient as any, 
+    const promise = createMovement(
+      mockClient as any,
       "org-1",
       { part_id: "nonexistent", movement_type: "purchase", quantity: 5 },
       "user-1",
@@ -495,7 +515,8 @@ describe("createMovement", () => {
       error: null,
     });
 
-    const result = await createMovement(mockClient as any, mockClient as any, 
+    const result = await createMovement(
+      mockClient as any,
       "org-1",
       {
         part_id: "part-1",
@@ -564,11 +585,17 @@ describe("setStockThreshold", () => {
 
   it("rejects when part_id is missing", async () => {
     await expect(
-      setStockThreshold(mockClient as any, "org-1", { part_id: "", minimum_quantity: 10 }),
+      setStockThreshold(mockClient as any, "org-1", {
+        part_id: "",
+        minimum_quantity: 10,
+      }),
     ).rejects.toThrow(ValidationError);
 
     await expect(
-      setStockThreshold(mockClient as any, "org-1", { part_id: "", minimum_quantity: 10 }),
+      setStockThreshold(mockClient as any, "org-1", {
+        part_id: "",
+        minimum_quantity: 10,
+      }),
     ).rejects.toThrow("Part is required");
   });
 });

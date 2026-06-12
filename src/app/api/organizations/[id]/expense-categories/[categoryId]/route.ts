@@ -5,9 +5,11 @@ import {
   deleteExpenseCategory,
   updateExpenseCategory,
 } from "@/lib/services/expense-service";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 export const PATCH = createRouteHandler(
-  async ({ request, orgId, params, user }) => {
+  async ({ request, orgId, params, user, supabase }) => {
+    await requireActiveSubscription(orgId);
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
     const rateCheck = mutationRateLimiter.check(ip);
     if (!rateCheck.allowed) {
@@ -26,6 +28,7 @@ export const PATCH = createRouteHandler(
     const { categoryId } = params;
     const body = await request.json();
     const category = await updateExpenseCategory(
+      supabase,
       categoryId,
       orgId,
       body,
@@ -33,10 +36,12 @@ export const PATCH = createRouteHandler(
     );
     return NextResponse.json({ data: category });
   },
+  { requiredPermission: { resource: "expense_categories", action: "update" } },
 );
 
 export const DELETE = createRouteHandler(
-  async ({ request, orgId, params, user }) => {
+  async ({ request, orgId, params, user, supabase }) => {
+    await requireActiveSubscription(orgId);
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
     const rateCheck = mutationRateLimiter.check(ip);
     if (!rateCheck.allowed) {
@@ -53,7 +58,8 @@ export const DELETE = createRouteHandler(
       );
     }
     const { categoryId } = params;
-    await deleteExpenseCategory(categoryId, orgId, user.id);
+    await deleteExpenseCategory(supabase, categoryId, orgId, user.id);
     return NextResponse.json({ data: null });
   },
+  { requiredPermission: { resource: "expense_categories", action: "delete" } },
 );

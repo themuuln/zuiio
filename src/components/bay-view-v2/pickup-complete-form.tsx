@@ -6,13 +6,6 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   Field,
   FieldContent,
   FieldError,
@@ -138,143 +131,129 @@ export function PickupCompleteForm({
   });
 
   return (
-    <Dialog
-      open
-      onOpenChange={(next) => {
-        if (!next) onCancel();
-      }}
-    >
-      <DialogContent className="sm:max-w-md" showCloseButton={false}>
-        <DialogHeader className="flex flex-row items-center justify-between">
-          <DialogTitle className="flex items-center gap-2">
-            {t("pickupCompleteTitle")}
-          </DialogTitle>
-          <DialogDescription className="sr-only">
-            {t("pickupCompleteTitle")} — {vehiclePlate}
-          </DialogDescription>
-          <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50 rounded-md px-2 py-1">
-            {vehiclePlate}
+    <form onSubmit={onSubmit} className="flex flex-col gap-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold flex items-center gap-2">
+          {t("pickupCompleteTitle")}
+        </h3>
+        <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50 rounded-md px-2 py-1">
+          {vehiclePlate}
+        </span>
+      </div>
+      {/* Satisfaction */}
+      <Field>
+        <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+          <Star className="size-4" />
+          {t("pickupSummarySatisfaction")}
+          <span className="text-[10px] font-normal text-muted-foreground/60">
+            ({t("optional")})
           </span>
-        </DialogHeader>
-
-        <form onSubmit={onSubmit} className="flex flex-col gap-5 pt-1">
-          {/* Satisfaction */}
-          <Field>
-            <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
-              <Star className="size-4" />
-              {t("pickupSummarySatisfaction")}
-              <span className="text-[10px] font-normal text-muted-foreground/60">
-                ({t("optional")})
-              </span>
-            </FieldLabel>
-            <FieldContent>
-              <div className="flex items-center gap-3">
-                <StarRating
-                  value={satisfaction}
-                  onChange={(v) => form.setValue("satisfaction", v)}
-                />
-                {satisfaction != null && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 text-xs text-muted-foreground"
-                    onClick={() => form.setValue("satisfaction", null)}
-                  >
-                    {t("clearDate")}
-                  </Button>
-                )}
-              </div>
-            </FieldContent>
-          </Field>
-
-          {/* Feedback */}
-          <Field data-invalid={!!form.formState.errors.feedback}>
-            <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
-              <MessageSquare className="size-4" />
-              {t("pickupSummaryFeedback")}
-              <span className="text-[10px] font-normal text-muted-foreground/60">
-                ({t("optional")})
-              </span>
-            </FieldLabel>
-            <FieldContent>
-              <Input
-                placeholder={`${t("pickupSummaryFeedback")}...`}
-                className="h-10"
-                aria-invalid={!!form.formState.errors.feedback}
-                {...form.register("feedback")}
-              />
-              {form.formState.errors.feedback && (
-                <FieldError>
-                  {form.formState.errors.feedback.message}
-                </FieldError>
-              )}
-            </FieldContent>
-          </Field>
-
-          {/* Next appointment */}
-          <Field data-invalid={!!form.formState.errors.appointmentDate}>
-            <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
-              <CalendarIcon className="size-4" />
-              {t("pickupSummaryAppointmentDate")}
-            </FieldLabel>
-            <FieldContent>
-              <AppointmentDatePicker
-                value={appointmentDate ? new Date(appointmentDate) : undefined}
-                onChange={(d) =>
-                  form.setValue(
-                    "appointmentDate",
-                    d ? d.toISOString().split("T")[0] : "",
-                  )
-                }
-                minDate={now}
-                className="w-full h-10"
-              />
-              {form.formState.errors.appointmentDate && (
-                <FieldError>
-                  {form.formState.errors.appointmentDate.message}
-                </FieldError>
-              )}
-            </FieldContent>
-          </Field>
-
-          {/* Error */}
-          {error && (
-            <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 p-3 text-xs text-red-700 dark:text-red-400">
-              {error}
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex gap-2 justify-between pt-2 border-t">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={onSubmit}
-              size="sm"
-              disabled={saving}
-              className="text-muted-foreground text-xs"
-            >
-              {t("skipReview")}
-            </Button>
-            <div className="flex gap-2">
+        </FieldLabel>
+        <FieldContent>
+          <div className="flex items-center gap-3">
+            <StarRating
+              value={satisfaction}
+              onChange={(v) => form.setValue("satisfaction", v)}
+            />
+            {satisfaction != null && (
               <Button
-                variant="outline"
-                onClick={onCancel}
                 type="button"
-                size="default"
-                disabled={saving}
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-muted-foreground"
+                onClick={() => form.setValue("satisfaction", null)}
               >
-                {t("cancel")}
+                {t("clearDate")}
               </Button>
-              <Button type="submit" size="default" disabled={saving}>
-                {saving && <Loader2 className="size-4 animate-spin mr-1.5" />}
-                {saving ? t("saving") : t("complete")}
-              </Button>
-            </div>
+            )}
           </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </FieldContent>
+      </Field>
+
+      {/* Feedback */}
+      <Field data-invalid={!!form.formState.errors.feedback}>
+        <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+          <MessageSquare className="size-4" />
+          {t("pickupSummaryFeedback")}
+          <span className="text-[10px] font-normal text-muted-foreground/60">
+            ({t("optional")})
+          </span>
+        </FieldLabel>
+        <FieldContent>
+          <Input
+            placeholder={`${t("pickupSummaryFeedback")}...`}
+            className="h-10"
+            aria-invalid={!!form.formState.errors.feedback}
+            {...form.register("feedback")}
+          />
+          {form.formState.errors.feedback && (
+            <FieldError>{form.formState.errors.feedback.message}</FieldError>
+          )}
+        </FieldContent>
+      </Field>
+
+      {/* Next appointment */}
+      <Field data-invalid={!!form.formState.errors.appointmentDate}>
+        <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+          <CalendarIcon className="size-4" />
+          {t("pickupSummaryAppointmentDate")}
+        </FieldLabel>
+        <FieldContent>
+          <AppointmentDatePicker
+            value={appointmentDate ? new Date(appointmentDate) : undefined}
+            onChange={(d) =>
+              form.setValue(
+                "appointmentDate",
+                d ? d.toISOString().split("T")[0] : "",
+              )
+            }
+            minDate={now}
+            className="w-full h-10"
+          />
+          {form.formState.errors.appointmentDate && (
+            <FieldError>
+              {form.formState.errors.appointmentDate.message}
+            </FieldError>
+          )}
+        </FieldContent>
+      </Field>
+
+      {/* Error */}
+      {error && (
+        <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 p-3 text-xs text-red-700 dark:text-red-400">
+          {error}
+        </div>
+      )}
+
+      {/* Actions */}
+      <div className="flex gap-2 justify-between pt-2 border-t">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onSubmit}
+          size="sm"
+          disabled={saving}
+          className="text-muted-foreground text-xs"
+        >
+          {t("skipReview")}
+        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            type="button"
+            size="default"
+            disabled={saving}
+          >
+            {t("cancel")}
+          </Button>
+          <Button type="submit" size="default" disabled={saving}>
+            {saving && <Loader2 className="size-4 animate-spin mr-1.5" />}
+            {saving ? t("saving") : t("complete")}
+          </Button>
+        </div>
+      </div>
+    </form>
   );
 }

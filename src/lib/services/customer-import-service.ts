@@ -1,7 +1,7 @@
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
 import { ValidationError } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface ImportResult {
   imported: number;
@@ -122,11 +122,12 @@ function hasIdentifyingField(row: ParsedRow): boolean {
 }
 
 export async function importCustomers(
+  db: SupabaseClient,
   orgId: string,
   csvContent: string,
   userId: string,
 ): Promise<ImportResult> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { headers, rows } = parseCsv(csvContent);
 

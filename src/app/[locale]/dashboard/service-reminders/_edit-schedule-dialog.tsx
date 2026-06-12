@@ -96,7 +96,7 @@ export function EditScheduleDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent zLayer={1} className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{t("serviceReminders.editSchedule")}</DialogTitle>
         </DialogHeader>

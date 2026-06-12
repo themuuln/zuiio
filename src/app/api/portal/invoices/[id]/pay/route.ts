@@ -61,7 +61,7 @@ export const POST = createPortalRouteHandler(
     }
 
     // Record the payment
-    await recordPayment(invoiceId, invoice.organization_id, {
+    await recordPayment(supabase, invoiceId, invoice.organization_id, {
       amount: body.amount,
       method: "bank_transfer",
       reference: body.reference ?? null,

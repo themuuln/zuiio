@@ -1,6 +1,6 @@
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
-import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -41,10 +41,11 @@ export interface DeviceInfo {
  * The raw token is encoded into the QR; the server stores only its SHA-256 hash.
  */
 export async function generateClockToken(
+  db: SupabaseClient,
   orgId: string,
   actionType: "clock_in" | "clock_out",
 ): Promise<ClockToken> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data, error } = await supabase.rpc("generate_clock_token", {
     p_org_id: orgId,
@@ -73,10 +74,11 @@ export async function generateClockToken(
  * Called by the phone app after scanning a QR code at clock-in/out.
  */
 export async function verifyAndClaimClockToken(
+  db: SupabaseClient,
   rawToken: string,
   mechanicId: string,
 ): Promise<VerifiedClockToken> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data, error } = await supabase.rpc("verify_clock_token", {
     p_raw_token: rawToken,
@@ -96,12 +98,13 @@ export async function verifyAndClaimClockToken(
  * The device_fingerprint should be a stable unique ID generated on the phone.
  */
 export async function registerDevice(
+  db: SupabaseClient,
   orgId: string,
   registrationToken: string,
   deviceFingerprint: string,
   deviceName?: string,
 ): Promise<DeviceRegistration> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data, error } = await supabase.rpc("register_mechanic_device", {
     p_org_id: orgId,
@@ -132,10 +135,11 @@ export async function registerDevice(
  * This calls the list_mechanic_devices RPC so RLS is respected.
  */
 export async function getRegisteredDevices(
+  db: SupabaseClient,
   orgId: string,
   mechanicId?: string,
 ): Promise<DeviceInfo[]> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data, error } = await supabase.rpc("list_mechanic_devices", {
     p_org_id: orgId,
@@ -162,8 +166,11 @@ export async function getRegisteredDevices(
 /**
  * Admin-only: revoke a registered device (lost/stolen phone).
  */
-export async function revokeDevice(deviceId: string): Promise<void> {
-  const supabase = await createClient();
+export async function revokeDevice(
+  db: SupabaseClient,
+  deviceId: string,
+): Promise<void> {
+  const supabase = db;
 
   const { error } = await supabase.rpc("revoke_mechanic_device", {
     p_device_id: deviceId,
@@ -180,10 +187,11 @@ export async function revokeDevice(deviceId: string): Promise<void> {
  * Expires in 5 minutes.
  */
 export async function generateRegistrationToken(
+  db: SupabaseClient,
   orgId: string,
   mechanicId: string,
 ): Promise<ClockToken> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data, error } = await supabase.rpc("generate_registration_token", {
     p_org_id: orgId,

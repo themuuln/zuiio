@@ -1,4 +1,9 @@
 /**
+ * @deprecated Z-index layering for nested overlays is now handled automatically
+ * by the Base UI dialog system. No manual push/pop is needed.
+ * This file is kept for backward compatibility and will be removed in a
+ * future release.
+ *
  * Z-Index Stack Manager for overlay stacking (Sheet→Sheet, Sheet→Dialog, etc.)
  *
  * Base UI Dialog renders every portal at the same z-50 level. When multiple

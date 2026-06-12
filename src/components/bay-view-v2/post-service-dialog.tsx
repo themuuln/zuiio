@@ -31,20 +31,16 @@ import {
 import { Typography } from "@/components/ui/typography";
 import type { BaySlotData } from "@/lib/services/bay-view-service";
 import type { EnrichedServiceItem } from "@/lib/services/post-service-service";
+import { getDefaultTransferBank } from "@/lib/payments/org-bank-accounts";
+import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
+import { PaymentMethodField } from "./_payment-method-field";
+import type { PaymentMethodFees } from "./_payment-fees";
+import {
+  type BayPaymentMethod,
+  type PostServiceFormData,
+} from "./_schema";
 
-export interface PostServiceFormData {
-  odometerReading: number | null;
-  recommendations: Array<{
-    workOrderServiceId: string;
-    serviceName: string;
-    serviceCatalogId: string | null;
-    intervalMonths: number | null;
-    intervalKm: number | null;
-    priority: "standard" | "important" | "urgent";
-    notes?: string;
-  }>;
-  mechanicNotes: string;
-}
+export type { PostServiceFormData };
 
 interface ServiceFormEntry {
   workOrderServiceId: string;
@@ -66,6 +62,9 @@ interface Props {
   currentOdometer: number | null;
   bayData: BaySlotData;
   newStatus: string;
+  grandTotal: number;
+  paymentMethodFees: PaymentMethodFees;
+  transferBanks: ResolvedTransferBank[];
   onConfirm: (data: PostServiceFormData) => Promise<void>;
 }
 
@@ -106,6 +105,9 @@ export function PostServiceDialog({
   currentOdometer,
   bayData: _bayData,
   newStatus,
+  grandTotal,
+  paymentMethodFees,
+  transferBanks,
   onConfirm,
 }: Props) {
   const t = useTranslations("bayView");
@@ -113,6 +115,16 @@ export function PostServiceDialog({
     currentOdometer?.toString() ?? "",
   );
   const [mechanicNotes, setMechanicNotes] = useState("");
+  const [paymentMethod, setPaymentMethod] =
+    useState<BayPaymentMethod>("bank_transfer");
+  const [transferBankId, setTransferBankId] = useState<string | null>(
+    () => getDefaultTransferBank(transferBanks)?.id ?? null,
+  );
+  useEffect(() => {
+    if (!transferBankId && transferBanks.length > 0) {
+      setTransferBankId(getDefaultTransferBank(transferBanks)?.id ?? null);
+    }
+  }, [transferBanks, transferBankId]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [allExpanded, setAllExpanded] = useState(true);
@@ -174,6 +186,15 @@ export function PostServiceDialog({
       return;
     }
 
+    if (
+      paymentMethod === "bank_transfer" &&
+      transferBanks.length > 0 &&
+      !transferBankId
+    ) {
+      setError(t("transferBankRequired"));
+      return;
+    }
+
     setSaving(true);
     setError(null);
     try {
@@ -189,6 +210,8 @@ export function PostServiceDialog({
           notes: e.notes || undefined,
         })),
         mechanicNotes: mechanicNotes.trim(),
+        paymentMethod,
+        transferBankId,
       });
     } catch (err) {
       setError(
@@ -287,6 +310,18 @@ export function PostServiceDialog({
               placeholder={t("notePlaceholder")}
             />
           </div>
+
+          {!isComplete && (
+            <PaymentMethodField
+              value={paymentMethod}
+              onChange={setPaymentMethod}
+              transferBankId={transferBankId}
+              onTransferBankChange={setTransferBankId}
+              subtotal={grandTotal}
+              fees={paymentMethodFees}
+              transferBanks={transferBanks}
+            />
+          )}
 
           {/* Error */}
           {error && (

@@ -11,10 +11,10 @@ import { requireActiveSubscription } from "@/lib/services/subscription-enforceme
 import type { InvoiceStatus } from "@/lib/types";
 
 export const GET = createRouteHandler(
-  async ({ request, orgId }) => {
+  async ({ request, orgId, supabase }) => {
     const { searchParams } = new URL(request.url);
     const status = (searchParams.get("status") as InvoiceStatus) ?? undefined;
-    const invoices = await getInvoices(orgId, { status });
+    const invoices = await getInvoices(supabase, orgId, { status });
     return NextResponse.json({ data: invoices });
   },
   { requiredPermission: { resource: "invoices", action: "read" } },
@@ -42,7 +42,12 @@ export const POST = createRouteHandler(
 
     // Standalone invoice (no work order)
     if (body.items && Array.isArray(body.items) && body.items.length > 0) {
-      const invoice = await createStandaloneInvoice(orgId, body, user.id);
+      const invoice = await createStandaloneInvoice(
+        supabase,
+        orgId,
+        body,
+        user.id,
+      );
       return NextResponse.json({ data: invoice }, { status: 201 });
     }
 
@@ -53,13 +58,13 @@ export const POST = createRouteHandler(
       );
     }
     const invoice = await createInvoiceFromWorkOrder(
+      supabase,
       orgId,
       body.work_order_id,
       {
         dueDays: body.due_days ?? body.dueDays,
         notes: body.notes,
         terms: body.terms,
-        supabase,
         userId: user.id,
       },
     );

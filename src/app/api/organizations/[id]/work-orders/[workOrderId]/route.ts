@@ -76,8 +76,8 @@ export const PATCH = createRouteHandler(
         workOrderId,
         orgId,
         body.status,
-        body.notes,
-        body.loss_reason,
+        body.notes ?? undefined,
+        body.loss_reason ?? undefined,
       );
       return NextResponse.json({ data: wo });
     }
@@ -87,9 +87,31 @@ export const PATCH = createRouteHandler(
         supabase,
         workOrderId,
         orgId,
-        body.mechanic_id,
+        body.mechanic_id as string,
       );
       return NextResponse.json({ data: assignment });
+    }
+
+    if (body.nuat_enabled !== undefined) {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      const { error } = await supabase
+        .from("work_orders")
+        .update({
+          nuat_enabled: body.nuat_enabled,
+          updated_by: userId,
+        })
+        .eq("id", workOrderId)
+        .eq("organization_id", orgId);
+
+      if (error) {
+        return NextResponse.json(
+          { error: { code: "UPDATE_FAILED", message: error.message } },
+          { status: 500 },
+        );
+      }
+
+      const wo = await getWorkOrder(supabase, workOrderId);
+      return NextResponse.json({ data: wo });
     }
 
     if (body.customer_id !== undefined) {

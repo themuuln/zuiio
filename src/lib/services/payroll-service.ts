@@ -6,7 +6,8 @@
  */
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
-import { createClient } from "@/lib/supabase/server";
+import { createAuditLog } from "@/lib/audit";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 // ── Types ──────────────────────────────────────────
 
@@ -41,10 +42,11 @@ export interface PayrollRecord {
  * Get the current effective pay rate for a mechanic.
  */
 export async function getPayRate(
+  db: SupabaseClient,
   orgId: string,
   mechanicId: string,
 ): Promise<PayRate | null> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data } = await supabase
     .from("mechanic_pay_rates")
@@ -62,12 +64,13 @@ export async function getPayRate(
  * Ends the previous rate and inserts a new one.
  */
 export async function upsertPayRate(
+  db: SupabaseClient,
   orgId: string,
   mechanicId: string,
   hourlyRate: number,
   effectiveFrom: string,
 ): Promise<PayRate> {
-  const supabase = await createClient();
+  const supabase = db;
 
   // End the previous active rate the day before the new effective date
   const prevDate = new Date(effectiveFrom);
@@ -94,6 +97,15 @@ export async function upsertPayRate(
 
   if (error) throw error;
 
+  await createAuditLog({
+    supabase,
+    action: "create",
+    table_name: "mechanic_pay_rates",
+    record_id: data.id,
+    organization_id: orgId,
+    new_data: data as unknown as Record<string, unknown>,
+  });
+
   revalidateTag(cacheTags.reports(orgId), "default");
   return data as PayRate;
 }
@@ -104,10 +116,11 @@ export async function upsertPayRate(
  * Joins with profiles for mechanic names.
  */
 export async function listPayRates(
+  db: SupabaseClient,
   orgId: string,
   branchId?: string | null,
 ): Promise<PayRate[]> {
-  const supabase = await createClient();
+  const supabase = db;
 
   let query = supabase
     .from("mechanic_pay_rates")
@@ -160,12 +173,13 @@ export async function listPayRates(
  * Returns the created/updated payroll records.
  */
 export async function calculateMonthlyPayroll(
+  db: SupabaseClient,
   orgId: string,
   year: number,
   month: number,
   branchId?: string | null,
 ): Promise<PayrollRecord[]> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const periodStart = `${year}-${String(month).padStart(2, "0")}-01`;
   const lastDay = new Date(year, month, 0).getDate();
@@ -301,12 +315,13 @@ export async function calculateMonthlyPayroll(
  * Optionally filtered by branch (via profile branch assignment).
  */
 export async function getPayrollRecords(
+  db: SupabaseClient,
   orgId: string,
   year: number,
   month: number,
   branchId?: string | null,
 ): Promise<PayrollRecord[]> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const periodStart = `${year}-${String(month).padStart(2, "0")}-01`;
   const lastDay = new Date(year, month, 0).getDate();
@@ -356,11 +371,12 @@ export async function getPayrollRecords(
  * Update a payroll record's status.
  */
 export async function updatePayrollRecordStatus(
+  db: SupabaseClient,
   orgId: string,
   recordId: string,
   status: "draft" | "approved" | "paid",
 ): Promise<PayrollRecord> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const updateData: Record<string, string | null> = { status };
   if (status === "paid") {

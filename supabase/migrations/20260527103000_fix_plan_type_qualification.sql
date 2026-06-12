@@ -24,7 +24,7 @@ begin
     settings
   ) values (
     target_org_id,
-    'starter'::public.plan_type,
+    'enterprise'::public.plan_type,
     'trial',
     now(),
     now() + interval '14 days',
@@ -62,7 +62,7 @@ begin
       organization_id, plan_type, status, started_at,
       expires_at, grace_period_end, settings
     ) values (
-      target_org_id, 'starter'::public.plan_type, 'trial', now(),
+      target_org_id, 'enterprise'::public.plan_type, 'trial', now(),
       now() + interval '14 days', now() + interval '21 days',
       '{"trial": true}'::jsonb
     )
@@ -70,7 +70,7 @@ begin
   else
     update public.subscription_plans
     set status = 'trial',
-        plan_type = 'starter'::public.plan_type,
+        plan_type = 'enterprise'::public.plan_type,
         started_at = now(),
         expires_at = now() + interval '14 days',
         grace_period_end = now() + interval '21 days',

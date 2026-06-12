@@ -1,8 +1,35 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
-import type { Database } from "@/lib/database.types";
-
-type Tables = Database["public"]["Tables"];
+import type {
+  Branch,
+  Customer,
+  InventoryMovement,
+  Invoice,
+  InvoiceItem,
+  InvoicePayment,
+  MechanicAssignment,
+  Organization,
+  OrganizationUser,
+  PartsCatalog,
+  PartPriceHistory,
+  Profile,
+  PurchaseOrder,
+  PurchaseOrderItem,
+  Role,
+  ServiceCatalog,
+  ServicePriceHistory,
+  StockThreshold,
+  Supplier,
+  Vehicle,
+  VehicleModel,
+  VehicleOwner,
+  WorkOrder,
+  WorkOrderHelper,
+  WorkOrderNote,
+  WorkOrderPart,
+  WorkOrderService,
+  WorkOrderStatusHistory,
+} from "@/lib/types";
 
 interface OrgExport {
   exported_at: string;
@@ -12,32 +39,34 @@ interface OrgExport {
     slug: string;
     settings: Record<string, unknown> | null;
   };
-  branches: Tables["branches"]["Row"][];
-  users: Tables["organization_users"]["Row"][];
-  roles: Tables["roles"]["Row"][];
-  customers: Tables["customers"]["Row"][];
-  vehicles: Tables["vehicles"]["Row"][];
-  vehicle_owners: Tables["vehicle_owners"]["Row"][];
-  work_orders: Tables["work_orders"]["Row"][];
-  work_order_services: Tables["work_order_services"]["Row"][];
-  work_order_parts: Tables["work_order_parts"]["Row"][];
-  work_order_status_history: Tables["work_order_status_history"]["Row"][];
-  service_catalog: Tables["service_catalog"]["Row"][];
-  service_price_history: Tables["service_price_history"]["Row"][];
-  part_price_history: Tables["part_price_history"]["Row"][];
-  parts_catalog: Tables["parts_catalog"]["Row"][];
-  vehicle_models: Tables["vehicle_models"]["Row"][];
-  suppliers: Tables["suppliers"]["Row"][];
-  purchase_orders: Tables["purchase_orders"]["Row"][];
-  purchase_order_items: Tables["purchase_order_items"]["Row"][];
-  inventory_movements: Tables["inventory_movements"]["Row"][];
-  payments: Tables["payments"]["Row"][];
-  invoices: Tables["invoices"]["Row"][];
-  invoice_items: Tables["invoice_items"]["Row"][];
-  invoice_payments: Tables["invoice_payments"]["Row"][];
-  stock_thresholds: Tables["stock_thresholds"]["Row"][];
-  mechanic_assignments: Tables["mechanic_assignments"]["Row"][];
-  work_order_notes: Tables["work_order_notes"]["Row"][];
+  branches: Branch[];
+  users: (OrganizationUser & {
+    profiles: Pick<Profile, "full_name" | "email"> | null;
+  })[];
+  roles: Role[];
+  customers: Customer[];
+  vehicles: Vehicle[];
+  vehicle_owners: VehicleOwner[];
+  work_orders: WorkOrder[];
+  work_order_services: WorkOrderService[];
+  work_order_parts: WorkOrderPart[];
+  work_order_status_history: WorkOrderStatusHistory[];
+  service_catalog: ServiceCatalog[];
+  service_price_history: ServicePriceHistory[];
+  part_price_history: PartPriceHistory[];
+  parts_catalog: PartsCatalog[];
+  vehicle_models: VehicleModel[];
+  suppliers: Supplier[];
+  purchase_orders: PurchaseOrder[];
+  purchase_order_items: PurchaseOrderItem[];
+  inventory_movements: InventoryMovement[];
+  payments: Record<string, unknown>[];
+  invoices: Invoice[];
+  invoice_items: InvoiceItem[];
+  invoice_payments: InvoicePayment[];
+  stock_thresholds: StockThreshold[];
+  mechanic_assignments: MechanicAssignment[];
+  work_order_notes: WorkOrderNote[];
 }
 
 async function fetchAll<T>(

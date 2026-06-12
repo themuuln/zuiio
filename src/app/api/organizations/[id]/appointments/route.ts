@@ -9,9 +9,9 @@ import { requireActiveSubscription } from "@/lib/services/subscription-enforceme
 import type { AppointmentStatus } from "@/lib/types";
 
 export const GET = createRouteHandler(
-  async ({ request }) => {
+  async ({ request, supabase }) => {
     const { searchParams } = new URL(request.url);
-    const appointments = await getAppointments({
+    const appointments = await getAppointments(supabase, {
       status: (searchParams.get("status") as AppointmentStatus) ?? undefined,
       mechanic_id: searchParams.get("mechanic") ?? undefined,
       date: searchParams.get("date") ?? undefined,
@@ -26,7 +26,7 @@ export const GET = createRouteHandler(
 );
 
 export const POST = createRouteHandler(
-  async ({ request, orgId }) => {
+  async ({ request, orgId, supabase }) => {
     await requireActiveSubscription(orgId);
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
     const rateCheck = mutationRateLimiter.check(ip);
@@ -44,7 +44,7 @@ export const POST = createRouteHandler(
       );
     }
     const body = await request.json();
-    const appointment = await createAppointment(body);
+    const appointment = await createAppointment(supabase, body);
     return NextResponse.json({ data: appointment }, { status: 201 });
   },
   {

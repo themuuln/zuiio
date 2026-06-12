@@ -108,6 +108,7 @@ export interface CreateEstimateParams {
   customer_id: string;
   vehicle_id: string;
   branchId?: string | null;
+  status?: EstimateStatus;
   notes?: string | null;
   terms?: string | null;
   valid_until?: string | null;

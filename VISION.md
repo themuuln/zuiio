@@ -41,7 +41,7 @@ TOLOM is a vertical SaaS platform for auto repair shops — a full operating sys
 Browser / Tablet / Phone
         ↓
   Next.js 16 (App Router, RSC)
-  ├── [locale]/dashboard/*   → 20 feature modules
+  ├── [locale]/dashboard/*   → 22 feature modules
   ├── api/                   → RESTful API routes
   └── middleware.ts           → Auth + tenant routing
         ↓

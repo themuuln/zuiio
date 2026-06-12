@@ -1,8 +1,9 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
+import { createAuditLog } from "@/lib/audit";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { reportServerError } from "@/lib/sentry-report-server";
-import { createClient } from "@/lib/supabase/server";
 import { withBranchFilter } from "@/lib/supabase/with-branch";
 import type { ReminderLog, VehicleServiceSchedule } from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
@@ -50,11 +51,12 @@ const scheduleFieldMap: FieldMap<ScheduleUpdateParams> = {
 // ----------------------------------------------------------
 
 export async function getServiceSchedules(
+  db: SupabaseClient,
   orgId: string,
   vehicleId?: string,
   branchId?: string | null,
 ): Promise<VehicleServiceSchedule[]> {
-  const supabase = await createClient();
+  const supabase = db;
 
   let query = supabase
     .from("vehicle_service_schedules")
@@ -79,9 +81,10 @@ export async function getServiceSchedules(
 }
 
 export async function getServiceSchedule(
+  db: SupabaseClient,
   id: string,
 ): Promise<VehicleServiceSchedule> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data, error } = await supabase
     .from("vehicle_service_schedules")
@@ -97,6 +100,7 @@ export async function getServiceSchedule(
 }
 
 export async function createServiceSchedule(
+  db: SupabaseClient,
   orgId: string,
   userId: string,
   params: {
@@ -119,7 +123,7 @@ export async function createServiceSchedule(
       "At least one interval type (months or km) must be set",
     );
 
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data, error } = await supabase
     .from("vehicle_service_schedules")
@@ -152,6 +156,7 @@ export async function createServiceSchedule(
 }
 
 export async function updateServiceSchedule(
+  db: SupabaseClient,
   id: string,
   orgId: string,
   userId: string,
@@ -168,7 +173,7 @@ export async function updateServiceSchedule(
     notes?: string | null;
   },
 ): Promise<VehicleServiceSchedule> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const updates = buildUpdates(params, scheduleFieldMap);
   updates.updated_by = userId;
@@ -187,6 +192,16 @@ export async function updateServiceSchedule(
 
   if (error || !data) throw new NotFoundError("Service schedule not found");
 
+  await createAuditLog({
+    supabase,
+    action: "update",
+    table_name: "vehicle_service_schedules",
+    record_id: data.id,
+    user_id: userId,
+    organization_id: orgId,
+    new_data: data as unknown as Record<string, unknown>,
+  });
+
   revalidateTag(cacheTags.serviceSchedules(orgId), "max");
   revalidateTag(cacheTags.serviceSchedule(id), "max");
 
@@ -194,10 +209,19 @@ export async function updateServiceSchedule(
 }
 
 export async function deleteServiceSchedule(
+  db: SupabaseClient,
   id: string,
   orgId: string,
 ): Promise<void> {
-  const supabase = await createClient();
+  const supabase = db;
+
+  const { data: existing } = await supabase
+    .from("vehicle_service_schedules")
+    .select("id")
+    .eq("id", id)
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .single();
 
   const { error } = await supabase
     .from("vehicle_service_schedules")
@@ -207,6 +231,16 @@ export async function deleteServiceSchedule(
     .is("deleted_at", null);
 
   if (error) throw new NotFoundError("Service schedule not found");
+
+  if (existing) {
+    await createAuditLog({
+      supabase,
+      action: "soft_delete",
+      table_name: "vehicle_service_schedules",
+      record_id: id,
+      organization_id: orgId,
+    });
+  }
 
   revalidateTag(cacheTags.serviceSchedules(orgId), "max");
   revalidateTag(cacheTags.serviceSchedule(id), "max");
@@ -225,9 +259,10 @@ export async function deleteServiceSchedule(
  * Returns the number of schedules created/updated.
  */
 export async function syncWorkOrderToSchedules(
+  db: SupabaseClient,
   workOrderId: string,
 ): Promise<number> {
-  const supabase = await createClient();
+  const supabase = db;
 
   // Get the work order with its vehicle and services
   const { data: wo, error: woError } = await supabase
@@ -327,9 +362,10 @@ export async function syncWorkOrderToSchedules(
  * into vehicle_service_schedules. Idempotent — safe to re-run.
  */
 export async function backfillSchedulesFromHistory(
+  db: SupabaseClient,
   orgId: string,
 ): Promise<number> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data: completedWOs, error } = await supabase
     .from("work_orders")
@@ -341,7 +377,7 @@ export async function backfillSchedulesFromHistory(
   if (error || !completedWOs) return 0;
 
   const results = await Promise.all(
-    completedWOs.map((wo) => syncWorkOrderToSchedules(wo.id)),
+    completedWOs.map((wo) => syncWorkOrderToSchedules(db, wo.id)),
   );
   const totalSynced = results.reduce((sum, c) => sum + c, 0);
 
@@ -353,11 +389,12 @@ export async function backfillSchedulesFromHistory(
 // ----------------------------------------------------------
 
 export async function getReminderLogs(
+  db: SupabaseClient,
   orgId: string,
   vehicleId?: string,
   branchId?: string | null,
 ): Promise<ReminderLog[]> {
-  const supabase = await createClient();
+  const supabase = db;
 
   let query = supabase
     .from("reminder_logs")
@@ -399,8 +436,11 @@ export async function getReminderLogs(
  * and updates their status to "sent".
  * Returns the number of reminders sent.
  */
-export async function sendPendingReminders(orgId: string): Promise<number> {
-  const supabase = await createClient();
+export async function sendPendingReminders(
+  db: SupabaseClient,
+  orgId: string,
+): Promise<number> {
+  const supabase = db;
 
   const { data: logs, error } = await supabase
     .from("reminder_logs")
@@ -486,6 +526,7 @@ export async function sendPendingReminders(orgId: string): Promise<number> {
 }
 
 export async function createReminderLog(
+  db: SupabaseClient,
   orgId: string,
   params: {
     vehicle_service_schedule_id?: string;
@@ -500,7 +541,7 @@ export async function createReminderLog(
     error_message?: string;
   },
 ): Promise<ReminderLog> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data, error } = await supabase
     .from("reminder_logs")

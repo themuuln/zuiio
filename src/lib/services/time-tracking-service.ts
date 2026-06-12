@@ -1,6 +1,7 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
-import { createClient } from "@/lib/supabase/server";
+import { createAuditLog } from "@/lib/audit";
 
 export interface TimeLog {
   id: string;
@@ -22,10 +23,11 @@ export interface ClockStatus {
  * Clock in — inserts a new time log with clock_in = now().
  */
 export async function clockIn(
+  db: SupabaseClient,
   orgId: string,
   mechanicId: string,
 ): Promise<TimeLog> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data, error } = await supabase
     .from("mechanic_time_logs")
@@ -40,6 +42,16 @@ export async function clockIn(
 
   if (error) throw error;
 
+  await createAuditLog({
+    supabase,
+    action: "create",
+    table_name: "mechanic_time_logs",
+    record_id: data.id,
+    user_id: mechanicId,
+    organization_id: orgId,
+    new_data: data as unknown as Record<string, unknown>,
+  });
+
   revalidateTag(cacheTags.timeTracking(orgId, mechanicId), "default");
   return data;
 }
@@ -48,10 +60,11 @@ export async function clockIn(
  * Clock out — closes the latest open log, updates mechanic_daily_reports.
  */
 export async function clockOut(
+  db: SupabaseClient,
   orgId: string,
   mechanicId: string,
 ): Promise<TimeLog> {
-  const supabase = await createClient();
+  const supabase = db;
   const today = new Date().toISOString().split("T")[0];
 
   // Find the latest open log for today
@@ -81,6 +94,17 @@ export async function clockOut(
 
   if (updateError) throw updateError;
 
+  await createAuditLog({
+    supabase,
+    action: "update",
+    table_name: "mechanic_time_logs",
+    record_id: data.id,
+    user_id: mechanicId,
+    organization_id: orgId,
+    old_data: openLog as unknown as Record<string, unknown>,
+    new_data: data as unknown as Record<string, unknown>,
+  });
+
   await upsertDailyHours(supabase, orgId, mechanicId, today);
 
   revalidateTag(cacheTags.timeTracking(orgId, mechanicId), "default");
@@ -91,10 +115,11 @@ export async function clockOut(
  * Get today's open time log (null if clocked out).
  */
 export async function getTodayLog(
+  db: SupabaseClient,
   orgId: string,
   mechanicId: string,
 ): Promise<TimeLog | null> {
-  const supabase = await createClient();
+  const supabase = db;
   const today = new Date().toISOString().split("T")[0];
 
   const { data } = await supabase
@@ -115,10 +140,11 @@ export async function getTodayLog(
  * Get total hours worked today.
  */
 export async function getTodayHours(
+  db: SupabaseClient,
   orgId: string,
   mechanicId: string,
 ): Promise<number> {
-  const supabase = await createClient();
+  const supabase = db;
   const today = new Date().toISOString().split("T")[0];
 
   const { data } = await supabase
@@ -136,12 +162,13 @@ export async function getTodayHours(
  * Get today's clock status (clocked in + hours).
  */
 export async function getClockStatus(
+  db: SupabaseClient,
   orgId: string,
   mechanicId: string,
 ): Promise<ClockStatus> {
   const [openLog, todayHours] = await Promise.all([
-    getTodayLog(orgId, mechanicId),
-    getTodayHours(orgId, mechanicId),
+    getTodayLog(db, orgId, mechanicId),
+    getTodayHours(db, orgId, mechanicId),
   ]);
 
   return {
@@ -157,7 +184,7 @@ export async function getClockStatus(
  * Recalculate and upsert mechanic_daily_reports.hours_worked for today.
  */
 async function upsertDailyHours(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: SupabaseClient,
   orgId: string,
   mechanicId: string,
   date: string,

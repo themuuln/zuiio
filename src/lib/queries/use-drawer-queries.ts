@@ -18,6 +18,7 @@ import {
   globalCatalogKeys,
   inventoryKeys,
   mechanicKeys,
+  priceMemoryKeys,
   serviceKeys,
   workOrderKeys,
 } from "./keys";
@@ -28,10 +29,14 @@ import { useCurrentOrg } from "./use-organization";
 function mergeServices(
   orgServices: ServiceCatalog[],
   globalServices: GlobalServiceCatalog[],
+  priceMemory?: Record<string, { unit_price: number; created_at: string }>,
 ): CatalogServiceItem[] {
   const seen = new Set(orgServices.map((s) => s.name.toLowerCase()));
   return [
-    ...orgServices,
+    ...orgServices.map((s) => ({
+      ...s,
+      last_price: priceMemory?.[s.id]?.unit_price ?? null,
+    })),
     ...globalServices
       .filter((gs) => !seen.has(gs.name.toLowerCase()))
       .map((gs) => ({
@@ -41,6 +46,7 @@ function mergeServices(
         category: gs.category,
         desc: gs.description ?? null,
         default_price: 0,
+        last_price: priceMemory?.[gs.id]?.unit_price ?? null,
         is_active: true,
         estimated_duration_minutes: gs.estimated_duration_minutes,
         interval_km: null,
@@ -331,12 +337,55 @@ export function useDrawerQueries(woId: string | null): UseDrawerQueriesResult {
     staleTime: 60_000,
   });
 
+  // Price memory — org-wide last sold prices for services and parts
+  const priceMemoryQuery = useQuery({
+    queryKey: priceMemoryKeys.serviceLastUsed(orgId ?? ""),
+    queryFn: async () => {
+      const res = await fetch(`/api/organizations/${orgId}/price-history`);
+      const json = await res.json();
+      const data = json.data as {
+        services: Record<
+          string,
+          { unit_price?: number; last_price?: number; created_at?: string }
+        >;
+        parts: Record<string, { unit_price?: number; created_at?: string }>;
+      };
+      const serviceMap: Record<
+        string,
+        { unit_price: number; created_at: string }
+      > = {};
+      for (const [id, row] of Object.entries(data.services ?? {})) {
+        serviceMap[id] = {
+          unit_price: Number(row.unit_price ?? row.last_price ?? 0),
+          created_at: row.created_at ?? "",
+        };
+      }
+      const partsMap: Record<
+        string,
+        { unit_price: number; created_at: string }
+      > = {};
+      for (const [name, row] of Object.entries(data.parts ?? {})) {
+        partsMap[name] = {
+          unit_price: Number(row.unit_price ?? 0),
+          created_at: row.created_at ?? "",
+        };
+      }
+      return { services: serviceMap, parts: partsMap };
+    },
+    enabled: catalogsEnabled && !!orgId,
+    staleTime: 60_000,
+  });
+
   // ── Derived data (computed from cached queries) ──
 
   const catalog = useMemo(
     () =>
-      mergeServices(serviceQuery.data ?? [], globalServicesQuery.data ?? []),
-    [serviceQuery.data, globalServicesQuery.data],
+      mergeServices(
+        serviceQuery.data ?? [],
+        globalServicesQuery.data ?? [],
+        priceMemoryQuery.data?.services,
+      ),
+    [serviceQuery.data, globalServicesQuery.data, priceMemoryQuery.data],
   );
 
   const partsCatalog = useMemo(

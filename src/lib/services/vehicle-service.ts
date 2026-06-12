@@ -249,7 +249,7 @@ export async function createVehicle(
   }
 
   // Auto-learn make+model into catalog (fire-and-forget)
-  ensureVehicleModel(orgId, params.make, params.model).catch(() => {
+  ensureVehicleModel(supabase, orgId, params.make, params.model).catch(() => {
     // Silently ignore — catalog learning must never block vehicle creation
   });
 

@@ -2,7 +2,7 @@ import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   CreateCustomerCommunicationParams,
   CustomerCommunication,
@@ -18,10 +18,11 @@ export interface CustomerCommunicationWithStaff extends CustomerCommunication {
  * Includes the staff member's display name via profiles join.
  */
 export async function getCustomerCommunications(
+  db: SupabaseClient,
   orgId: string,
   customerId: string,
 ): Promise<CustomerCommunicationWithStaff[]> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data, error } = await supabase
     .from("customer_communications")
@@ -48,12 +49,13 @@ export async function getCustomerCommunications(
  * Creates a communication record with audit log.
  */
 export async function createCustomerCommunication(
+  db: SupabaseClient,
   orgId: string,
   customerId: string,
   params: CreateCustomerCommunicationParams,
   userId: string,
 ): Promise<CustomerCommunication> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data, error } = await supabase
     .from("customer_communications")
@@ -97,12 +99,13 @@ export async function createCustomerCommunication(
  * Soft-deletes a customer communication with audit log.
  */
 export async function deleteCustomerCommunication(
+  db: SupabaseClient,
   orgId: string,
   customerId: string,
   commId: string,
   userId: string,
 ): Promise<void> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data: existing } = await supabase
     .from("customer_communications")

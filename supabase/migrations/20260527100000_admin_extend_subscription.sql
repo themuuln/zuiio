@@ -28,7 +28,7 @@ begin
       organization_id, plan_type, status, started_at,
       expires_at, grace_period_end, settings
     ) values (
-      target_org_id, 'starter'::plan_type, 'trial', now(),
+      target_org_id, 'enterprise'::plan_type, 'trial', now(),
       now() + interval '14 days', now() + interval '21 days',
       '{"trial": true}'::jsonb
     )
@@ -37,7 +37,7 @@ begin
     -- Reset existing subscription to fresh trial
     update public.subscription_plans
     set status = 'trial',
-        plan_type = 'starter'::plan_type,
+        plan_type = 'enterprise'::plan_type,
         started_at = now(),
         expires_at = now() + interval '14 days',
         grace_period_end = now() + interval '21 days',

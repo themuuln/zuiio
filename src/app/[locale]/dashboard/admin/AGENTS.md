@@ -1,59 +1,57 @@
 # Admin Panel
 
-**Purpose:** Super-admin dashboard for managing all organizations — subscription plans, trial status, and org overview.
+**Purpose:** SaaS admin dashboard for managing organizations, sellers, marketing campaigns, and platform analytics.
 
 ## File Structure
 ```
 admin/
-├── page.tsx    # Full page: org list, plan management, trial extension
-├── error.tsx   # Sentry error boundary
-└── loading.tsx # Spinner skeleton
+├── page.tsx              # Main admin dashboard with analytics & navigation
+├── sellers/page.tsx      # Seller management & org assignments
+├── marketing/page.tsx    # Marketing campaign management
+├── error.tsx             # Sentry error boundary
+└── loading.tsx           # Spinner skeleton
 ```
+
+## Roles
+
+| Role | Access |
+|------|--------|
+| `super_admin` | Full access to all admin features |
+| `seller` | View assigned organizations |
+| `marketing_manager` | Manage marketing campaigns |
 
 ## Key Components
 
-- **`AdminPage`** — Entry point. Checks super-admin status via `GET /api/admin/me`. Non-super-admins see an access-denied screen. Super-admins see the full org management table.
-- **Org Table** — Lists all organizations with columns: name/slug, plan badge, status badge, and action buttons.
-- **Plan Buttons** — Row of 4 buttons (starter/pro/business/enterprise). Active plan is highlighted. Clicking switches the org's subscription plan.
-- **Extend Trial Button** — Resets trial for an org.
+- **`AdminPage`** — Entry point. Shows role badge, stats, and navigation cards to sellers/marketing.
+- **`SellersPage`** — Seller management. Super admins can assign/remove orgs. Sellers see their assigned orgs.
+- **`MarketingPage`** — Campaign CRUD. Create email/SMS/push campaigns with stats.
 
 ## Data Flow
 
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
-| `/api/admin/me` | GET | Check if current user is super-admin |
-| `/api/admin/organizations` | GET | List all organizations with subscriptions |
-| `/api/admin/organizations/{orgId}/subscription` | PATCH | Change plan type (body: `{ planType, status: "active" }`) |
-| `/api/admin/organizations/{orgId}/subscription` | PATCH | Extend trial (body: `{ action: "extend" }`) |
+| `/api/admin/me` | GET | Check admin role (returns `isAdmin`, `isSuperAdmin`, `role`) |
+| `/api/admin/organizations` | GET | List all organizations (super_admin only) |
+| `/api/admin/sellers` | GET | List seller assignments |
+| `/api/admin/sellers/assign` | POST | Assign seller to org (super_admin only) |
+| `/api/admin/sellers/assign/[id]` | DELETE | Remove assignment (super_admin only) |
+| `/api/admin/marketing/campaigns` | GET/POST | List/create campaigns |
+| `/api/admin/marketing/campaigns/[id]` | PATCH/DELETE | Update/delete campaign |
+| `/api/admin/stats` | GET | Platform analytics (super_admin only) |
 
-- Data fetched via raw `fetch()` + `useState` on mount (AbortController for cleanup).
-- Org list state updated optimistically after plan change.
+## Database Tables
 
-## Plan & Status Values
-
-| Plan | Badge Color |
-|------|-------------|
-| `starter` | Slate |
-| `pro` | Blue |
-| `business` | Purple |
-| `enterprise` | Amber |
-
-| Status | Badge Color |
-|--------|-------------|
-| `active` | Emerald |
-| `trial` | Cyan |
-| `cancelled` | Red |
-| `expired` | Rose |
+- `super_admins` — Admin users with `role` column (super_admin, seller, marketing_manager)
+- `seller_assignments` — Maps sellers to organizations
+- `marketing_campaigns` — Campaign records with stats
 
 ## Conventions
 
-- Access gated by `isSuperAdmin` from `/api/admin/me`.
-- UI text in English (not i18n via `useTranslations` — uses `t()` but labels are in English).
-- Footer note: "Changes take effect immediately. Plan limits are not enforced yet."
-- Uses `AdminOrg` type from `@/lib/services/admin-service`.
-- No sub-component files — everything inline in `page.tsx`.
+- Access gated by role via `checkAdminRole()` from admin-service.
+- Uses React Query for data fetching.
+- UI follows design system tokens.
 
 ## Dependencies
 
-- `@/lib/services/admin-service` — AdminOrg type
-- No React Query hooks — raw fetch pattern
+- `@/lib/services/admin-service` — All admin service functions
+- `@/lib/api-handler` — Route handlers

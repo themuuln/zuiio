@@ -3,9 +3,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-
 import { Button } from "@/components/ui/button";
 import { DetailSheet } from "@/components/ui/detail-sheet";
 import {
@@ -25,8 +24,6 @@ import {
 import { vehicleModelKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 
-// ── Types ────────────────────────────────────────────────────
-
 interface VehicleModelItem {
   id: string;
   make: string;
@@ -45,8 +42,6 @@ interface VehicleModelFormSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-// ── Body type options ────────────────────────────────────────
-
 const bodyTypeOptions = [
   "sedan",
   "suv",
@@ -58,9 +53,17 @@ const bodyTypeOptions = [
   "minivan",
   "convertible",
   "crossover",
-];
+] as const;
 
-// ── Component ────────────────────────────────────────────────
+const EMPTY_FORM = {
+  make: "",
+  model: "",
+  generation: "",
+  yearStart: "",
+  yearEnd: "",
+  engine: "",
+  bodyType: "",
+};
 
 export function VehicleModelFormSheet({
   mode,
@@ -74,51 +77,78 @@ export function VehicleModelFormSheet({
   const orgId = orgQuery.data?.orgId;
   const queryClient = useQueryClient();
 
-  // ── Form state ──────────────────────────────────────────────
-
-  const [make, setMake] = useState("");
-  const [model, setModel] = useState("");
-  const [generation, setGeneration] = useState("");
-  const [yearStart, setYearStart] = useState("");
-  const [yearEnd, setYearEnd] = useState("");
-  const [engine, setEngine] = useState("");
-  const [bodyType, setBodyType] = useState("");
+  const [make, setMake] = useState(EMPTY_FORM.make);
+  const [model, setModel] = useState(EMPTY_FORM.model);
+  const [generation, setGeneration] = useState(EMPTY_FORM.generation);
+  const [yearStart, setYearStart] = useState(EMPTY_FORM.yearStart);
+  const [yearEnd, setYearEnd] = useState(EMPTY_FORM.yearEnd);
+  const [engine, setEngine] = useState(EMPTY_FORM.engine);
+  const [bodyType, setBodyType] = useState(EMPTY_FORM.bodyType);
   const [showDetails, setShowDetails] = useState(false);
 
-  // Reset form when the sheet opens with a different item
-  const [prevItemId, setPrevItemId] = useState<string | null>(null);
-  if (mode === "edit" && item && item.id !== prevItemId) {
-    setPrevItemId(item.id);
-    setMake(item.make);
-    setModel(item.model);
-    setGeneration(item.generation ?? "");
-    setYearStart(item.year_start?.toString() ?? "");
-    setYearEnd(item.year_end?.toString() ?? "");
-    setEngine(item.engine ?? "");
-    setBodyType(item.body_type ?? "");
-    setShowDetails(
-      !!item.generation ||
-        !!item.year_start ||
-        !!item.year_end ||
-        !!item.engine ||
-        !!item.body_type,
-    );
-  }
+  const normalizedMake = make.trim();
+  const normalizedModel = model.trim();
+  const parsedYearStart = yearStart ? Number.parseInt(yearStart, 10) : null;
+  const parsedYearEnd = yearEnd ? Number.parseInt(yearEnd, 10) : null;
+  const yearRangeInvalid =
+    parsedYearStart != null &&
+    parsedYearEnd != null &&
+    parsedYearStart > parsedYearEnd;
 
-  // ── Mutations ───────────────────────────────────────────────
+  useEffect(() => {
+    if (!open) return;
+
+    if (mode === "edit" && item) {
+      setMake(item.make);
+      setModel(item.model);
+      setGeneration(item.generation ?? "");
+      setYearStart(item.year_start?.toString() ?? "");
+      setYearEnd(item.year_end?.toString() ?? "");
+      setEngine(item.engine ?? "");
+      setBodyType(item.body_type ?? "");
+      setShowDetails(
+        Boolean(
+          item.generation ||
+            item.year_start ||
+            item.year_end ||
+            item.engine ||
+            item.body_type,
+        ),
+      );
+      return;
+    }
+
+    setMake(EMPTY_FORM.make);
+    setModel(EMPTY_FORM.model);
+    setGeneration(EMPTY_FORM.generation);
+    setYearStart(EMPTY_FORM.yearStart);
+    setYearEnd(EMPTY_FORM.yearEnd);
+    setEngine(EMPTY_FORM.engine);
+    setBodyType(EMPTY_FORM.bodyType);
+    setShowDetails(false);
+  }, [item, mode, open]);
+
+  const bodyTypeItems = useMemo(
+    () =>
+      bodyTypeOptions.map((value) => ({
+        value,
+        label: t(`bodyTypes.${value}`),
+      })),
+    [t],
+  );
 
   const addMutation = useMutation({
     mutationFn: async () => {
-      if (!orgId) return;
+      if (!orgId) throw new Error(commonT("somethingWentWrong"));
       const r = await fetch(`/api/organizations/${orgId}/vehicle-models`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          make: make.trim(),
-          model: model.trim(),
+          make: normalizedMake,
+          model: normalizedModel,
           generation: generation.trim() || null,
-          year_start: yearStart ? parseInt(yearStart, 10) : null,
-          year_end: yearEnd ? parseInt(yearEnd, 10) : null,
+          year_start: parsedYearStart,
+          year_end: parsedYearEnd,
           engine: engine.trim() || null,
           body_type: bodyType || null,
         }),
@@ -136,11 +166,11 @@ export function VehicleModelFormSheet({
       );
       const optimistic: VehicleModelItem = {
         id: `temp-${Date.now()}`,
-        make: make.trim(),
-        model: model.trim(),
+        make: normalizedMake,
+        model: normalizedModel,
         generation: generation.trim() || null,
-        year_start: yearStart ? parseInt(yearStart, 10) : null,
-        year_end: yearEnd ? parseInt(yearEnd, 10) : null,
+        year_start: parsedYearStart,
+        year_end: parsedYearEnd,
         engine: engine.trim() || null,
         body_type: bodyType || null,
       };
@@ -150,17 +180,19 @@ export function VehicleModelFormSheet({
       );
       return { previous };
     },
-    onError: (_err, _vars, context) => {
+    onError: (err, _vars, context) => {
       if (context?.previous) {
         queryClient.setQueryData(
           vehicleModelKeys.list(orgId ?? ""),
           context.previous,
         );
       }
-      toast.error(t("common.somethingWentWrong"));
+      toast.error(
+        err instanceof Error ? err.message : commonT("somethingWentWrong"),
+      );
     },
     onSuccess: () => {
-      toast.success(t("vehicleModels.vehicleCreated"));
+      toast.success(t("vehicleCreated"));
       onOpenChange(false);
     },
     onSettled: () => {
@@ -172,18 +204,18 @@ export function VehicleModelFormSheet({
 
   const updateMutation = useMutation({
     mutationFn: async () => {
-      if (!orgId || !item) return;
+      if (!orgId || !item) throw new Error(commonT("somethingWentWrong"));
       const r = await fetch(
         `/api/organizations/${orgId}/vehicle-models/${item.id}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            make: make.trim(),
-            model: model.trim(),
+            make: normalizedMake,
+            model: normalizedModel,
             generation: generation.trim() || null,
-            year_start: yearStart ? parseInt(yearStart, 10) : null,
-            year_end: yearEnd ? parseInt(yearEnd, 10) : null,
+            year_start: parsedYearStart,
+            year_end: parsedYearEnd,
             engine: engine.trim() || null,
             body_type: bodyType || null,
           }),
@@ -207,11 +239,11 @@ export function VehicleModelFormSheet({
             entry.id === item?.id
               ? {
                   ...entry,
-                  make: make.trim(),
-                  model: model.trim(),
+                  make: normalizedMake,
+                  model: normalizedModel,
                   generation: generation.trim() || null,
-                  year_start: yearStart ? parseInt(yearStart, 10) : null,
-                  year_end: yearEnd ? parseInt(yearEnd, 10) : null,
+                  year_start: parsedYearStart,
+                  year_end: parsedYearEnd,
                   engine: engine.trim() || null,
                   body_type: bodyType || null,
                 }
@@ -220,17 +252,19 @@ export function VehicleModelFormSheet({
       );
       return { previous };
     },
-    onError: (_err, _vars, context) => {
+    onError: (err, _vars, context) => {
       if (context?.previous) {
         queryClient.setQueryData(
           vehicleModelKeys.list(orgId ?? ""),
           context.previous,
         );
       }
-      toast.error(t("common.somethingWentWrong"));
+      toast.error(
+        err instanceof Error ? err.message : commonT("somethingWentWrong"),
+      );
     },
     onSuccess: () => {
-      toast.success(t("vehicleModels.vehicleUpdated"));
+      toast.success(t("vehicleUpdated"));
       onOpenChange(false);
     },
     onSettled: () => {
@@ -240,48 +274,37 @@ export function VehicleModelFormSheet({
     },
   });
 
-  // ── Handlers ────────────────────────────────────────────────
-
   const isPending = addMutation.isPending || updateMutation.isPending;
-  const canSave = make.trim() && model.trim() && !isPending;
+  const canSave =
+    Boolean(normalizedMake) &&
+    Boolean(normalizedModel) &&
+    !yearRangeInvalid &&
+    !isPending;
 
-  const handleSave = () => {
+  function handleSave() {
     if (!canSave) return;
     if (mode === "edit") {
       updateMutation.mutate();
-    } else {
-      addMutation.mutate();
+      return;
     }
-  };
-
-  const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen) {
-      setShowDetails(false);
-    }
-    onOpenChange(nextOpen);
-  };
-
-  // ── Render ──────────────────────────────────────────────────
+    addMutation.mutate();
+  }
 
   return (
-    <DetailSheet open={open} onOpenChange={handleOpenChange} size="xl">
+    <DetailSheet open={open} onOpenChange={onOpenChange} size="xl">
       <DetailSheet.Header>
         <DetailSheet.Title>
-          {mode === "edit"
-            ? t("editVariant") || "Edit Variant"
-            : t("addNewModel") || "Add Vehicle Model"}
+          {mode === "edit" ? t("editVariant") : t("addNewModel")}
         </DetailSheet.Title>
         <DetailSheet.Description>
           {mode === "edit"
-            ? t("editVariantDescription") || "Update vehicle model details"
-            : t("addModelDescription") ||
-              "Add a new vehicle model to your catalog"}
+            ? t("editVariantDescription")
+            : t("addModelDescription")}
         </DetailSheet.Description>
       </DetailSheet.Header>
 
       <DetailSheet.Body>
         <FieldGroup>
-          {/* Required fields — make + model */}
           <div className="grid gap-4 sm:grid-cols-2">
             <Field>
               <FieldLabel>
@@ -289,7 +312,7 @@ export function VehicleModelFormSheet({
               </FieldLabel>
               <FieldContent>
                 <Input
-                  placeholder={t("makePlaceholder") || "e.g. Toyota"}
+                  placeholder={t("makePlaceholder")}
                   value={make}
                   onChange={(e) => setMake(e.target.value)}
                   data-1p-ignore
@@ -304,7 +327,7 @@ export function VehicleModelFormSheet({
               </FieldLabel>
               <FieldContent>
                 <Input
-                  placeholder={t("modelPlaceholder") || "e.g. Camry"}
+                  placeholder={t("modelPlaceholder")}
                   value={model}
                   onChange={(e) => setModel(e.target.value)}
                   data-1p-ignore
@@ -315,10 +338,9 @@ export function VehicleModelFormSheet({
             </Field>
           </div>
 
-          {/* Toggle details */}
           <Button
             type="button"
-            onClick={() => setShowDetails(!showDetails)}
+            onClick={() => setShowDetails((current) => !current)}
             variant="ghost"
             size="sm"
             className="w-fit text-muted-foreground"
@@ -328,19 +350,16 @@ export function VehicleModelFormSheet({
             ) : (
               <ChevronRight className="size-4" />
             )}
-            {showDetails
-              ? t("hideDetails") || "Hide details"
-              : t("addDetails") || "Add details"}
+            {showDetails ? t("hideDetails") : t("addDetails")}
           </Button>
 
-          {/* Optional fields */}
-          {showDetails && (
+          {showDetails ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 animate-in fade-in slide-in-from-top-1 duration-200">
               <Field>
-                <FieldLabel>{t("generation") || "Generation"}</FieldLabel>
+                <FieldLabel>{t("generation")}</FieldLabel>
                 <FieldContent>
                   <Input
-                    placeholder={t("generationPlaceholder") || "e.g. XV70"}
+                    placeholder={t("generationPlaceholder")}
                     value={generation}
                     onChange={(e) => setGeneration(e.target.value)}
                   />
@@ -348,7 +367,7 @@ export function VehicleModelFormSheet({
               </Field>
 
               <Field>
-                <FieldLabel>{t("yearFrom") || "Year start"}</FieldLabel>
+                <FieldLabel>{t("yearFrom")}</FieldLabel>
                 <FieldContent>
                   <Input
                     type="number"
@@ -362,7 +381,7 @@ export function VehicleModelFormSheet({
               </Field>
 
               <Field>
-                <FieldLabel>{t("yearTo") || "Year end"}</FieldLabel>
+                <FieldLabel>{t("yearTo")}</FieldLabel>
                 <FieldContent>
                   <Input
                     type="number"
@@ -376,10 +395,10 @@ export function VehicleModelFormSheet({
               </Field>
 
               <Field>
-                <FieldLabel>{t("engine") || "Engine"}</FieldLabel>
+                <FieldLabel>{t("engine")}</FieldLabel>
                 <FieldContent>
                   <Input
-                    placeholder={t("enginePlaceholder") || "e.g. 2.5L"}
+                    placeholder={t("enginePlaceholder")}
                     value={engine}
                     onChange={(e) => setEngine(e.target.value)}
                   />
@@ -387,23 +406,22 @@ export function VehicleModelFormSheet({
               </Field>
 
               <Field>
-                <FieldLabel>{t("bodyType") || "Body type"}</FieldLabel>
+                <FieldLabel>{t("bodyType")}</FieldLabel>
                 <FieldContent>
                   <Select
                     value={bodyType}
-                    onValueChange={(val: string | null) =>
-                      setBodyType(val ?? "")
-                    }
+                    onValueChange={(value) => setBodyType(value ?? "")}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue
-                        placeholder={t("selectBodyType") || "Select body type"}
-                      />
+                      <SelectValue placeholder={t("selectBodyType")} />
                     </SelectTrigger>
                     <SelectContent>
-                      {bodyTypeOptions.map((bt) => (
-                        <SelectItem key={bt} value={bt}>
-                          {bt.charAt(0).toUpperCase() + bt.slice(1)}
+                      {bodyTypeItems.map((bodyTypeItem) => (
+                        <SelectItem
+                          key={bodyTypeItem.value}
+                          value={bodyTypeItem.value}
+                        >
+                          {bodyTypeItem.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -411,22 +429,30 @@ export function VehicleModelFormSheet({
                 </FieldContent>
               </Field>
             </div>
-          )}
+          ) : null}
+
+          {yearRangeInvalid ? (
+            <p className="text-sm text-destructive">
+              {t("validation.yearRangeInvalid")}
+            </p>
+          ) : null}
         </FieldGroup>
       </DetailSheet.Body>
 
       <DetailSheet.Footer>
-        <Button variant="outline" onClick={() => handleOpenChange(false)}>
+        <Button variant="outline" onClick={() => onOpenChange(false)}>
           {commonT("cancel")}
         </Button>
         <Button onClick={handleSave} disabled={!canSave}>
           {isPending ? (
             <span className="flex items-center gap-2">
               <Loader2 className="size-4 animate-spin" />
-              {commonT("saving") || "Saving..."}
+              {commonT("saving")}
             </span>
+          ) : mode === "edit" ? (
+            t("saveChanges")
           ) : (
-            commonT("save") || "Save"
+            t("saveModel")
           )}
         </Button>
       </DetailSheet.Footer>

@@ -94,7 +94,7 @@ export function CashRegisterClient() {
       )}
 
       {/* Transaction List */}
-      {session && session.entries.length > 0 && (
+      {session?.entries && session.entries.length > 0 && (
         <TransactionList entries={session.entries} />
       )}
 
@@ -567,7 +567,7 @@ function CloseSessionDialog({
               id="discrepancy-note"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Optional note about discrepancy..."
+              placeholder={t("cashRegister.discrepancyNotePlaceholder")}
               rows={2}
             />
           </div>
@@ -658,7 +658,7 @@ function CashOutDialog({
               id="cashout-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="e.g., Change for customer, supplies..."
+              placeholder={t("cashRegister.cashOutDescriptionPlaceholder")}
             />
           </div>
           <Button

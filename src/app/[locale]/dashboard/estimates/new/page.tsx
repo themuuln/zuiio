@@ -743,7 +743,7 @@ export default function NewEstimatePage() {
               </Field>
 
               <Field className="md:col-span-2">
-                <FieldLabel>Valid Until</FieldLabel>
+                <FieldLabel>{t("validUntil")}</FieldLabel>
                 <FieldContent>
                   <Input
                     type="date"

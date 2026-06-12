@@ -11,6 +11,7 @@ export interface CatalogItem {
   name: string;
   name_mn?: string | null;
   default_price: number | null;
+  last_price?: number | null;
 }
 
 interface CatalogComboboxProps<T extends CatalogItem> {
@@ -91,7 +92,13 @@ export function CatalogCombobox<T extends CatalogItem>({
                   {locale === "mn" && item.name_mn ? item.name_mn : item.name}
                 </span>
                 <span className="shrink-0 tabular-nums font-medium text-muted-foreground">
-                  {formatMNT(Number(item.default_price))}
+                  {item.last_price ? (
+                    <span className="text-green-600 dark:text-green-400">
+                      {formatMNT(Number(item.last_price))}
+                    </span>
+                  ) : (
+                    formatMNT(Number(item.default_price))
+                  )}
                 </span>
               </Button>
             );

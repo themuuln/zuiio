@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { withBranchFilter } from "@/lib/supabase/with-branch";
 import type {
   InventoryTurnover,
@@ -14,11 +14,12 @@ import type {
  * Average inventory value is current stock-on-hand * default_price.
  */
 export async function getInventoryTurnover(
+  db: SupabaseClient,
   orgId: string,
   months = 12,
   branchId?: string | null,
 ): Promise<InventoryTurnover> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const since = new Date();
   since.setMonth(since.getMonth() - months);
@@ -75,11 +76,12 @@ interface UsageTrendRow {
  * Monthly usage by part and category from sale movements.
  */
 export async function getUsageTrends(
+  db: SupabaseClient,
   orgId: string,
   months = 6,
   branchId?: string | null,
 ): Promise<UsageTrend[]> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const since = new Date();
   since.setMonth(since.getMonth() - months);
@@ -149,11 +151,12 @@ export async function getUsageTrends(
  * Parts with quantity on hand but no sale movement in the last N days.
  */
 export async function getSlowMovingStock(
+  db: SupabaseClient,
   orgId: string,
   thresholdDays = 90,
   branchId?: string | null,
 ): Promise<SlowMovingItem[]> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - thresholdDays);

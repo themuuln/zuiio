@@ -20,7 +20,7 @@ export const GET = createRouteHandler(async ({ params, supabase, orgId }) => {
 
   // Fetch org + main branch for PDF header
   const [org, { data: branch }, { data: orgSettings }] = await Promise.all([
-    getOrganization(params.id),
+    getOrganization(supabase, params.id),
     supabase
       .from("branches")
       .select("name, address, phone, email")

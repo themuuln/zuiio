@@ -33,6 +33,11 @@ import { QuickActions } from "./_quick-actions";
 import { ServicesSection } from "./_services-section";
 import { StatusTimeline } from "./_status-timeline";
 import { TotalsSummary } from "./_totals-summary";
+import {
+  normalizeOrgTransferBankAccounts,
+  resolveOrgTransferBanks,
+} from "@/lib/payments/org-bank-accounts";
+import { resolvePaymentMethodFees } from "./_payment-fees";
 import { useDrawerMutations } from "./_use-drawer-mutations";
 import type { PickupCompleteData } from "./pickup-complete-form";
 import { PickupCompleteForm } from "./pickup-complete-form";
@@ -67,6 +72,12 @@ export function WorkOrderDetailDrawer({
   } = useDrawerQueries(workOrderId);
 
   const { settings: orgSettings } = useOrgSettings(orgId ?? undefined);
+  const paymentMethodFees = resolvePaymentMethodFees(
+    orgSettings?.payment_method_fees,
+  );
+  const transferBanks = resolveOrgTransferBanks(
+    normalizeOrgTransferBankAccounts(orgSettings?.transfer_bank_accounts),
+  );
 
   // Track first successful load for layout-preserving skeleton
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
@@ -144,6 +155,8 @@ export function WorkOrderDetailDrawer({
     fetchWo,
     onRefresh,
     onOpenChange,
+    paymentMethodFees,
+    transferBanks,
   });
 
   // ── Local-only state ──
@@ -337,6 +350,9 @@ export function WorkOrderDetailDrawer({
                       }
                       services={postFormServices}
                       newStatus="Ready for Pickup"
+                      grandTotal={grandTotal}
+                      paymentMethodFees={paymentMethodFees}
+                      transferBanks={transferBanks}
                       onConfirm={handlePostServiceFormSubmit}
                       onBack={handleCancelPostService}
                     />

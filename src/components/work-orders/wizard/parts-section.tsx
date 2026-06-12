@@ -223,7 +223,7 @@ export function PartsSection() {
         )}
 
         <Dialog open={showPartDialog} onOpenChange={setShowPartDialog}>
-          <DialogContent size="xl" className="max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{t("addPart")}</DialogTitle>
             </DialogHeader>
@@ -279,7 +279,6 @@ export function PartsSection() {
                     </div>
                     <NumericKeypad
                       value={part.quantity}
-                      zLayer={1}
                       onChange={(val) =>
                         ctx.updatePart(
                           idx,
@@ -297,7 +296,6 @@ export function PartsSection() {
                     </NumericKeypad>
                     <NumericKeypad
                       value={part.unit_price}
-                      zLayer={1}
                       onChange={(val) => ctx.updatePart(idx, "unit_price", val)}
                     >
                       <Input

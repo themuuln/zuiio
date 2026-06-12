@@ -2,17 +2,18 @@ import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CreateCustomerNoteParams, CustomerNote } from "@/lib/types";
 
 /**
  * Lists notes for a customer, ordered by created_at DESC.
  */
 export async function getCustomerNotes(
+  db: SupabaseClient,
   orgId: string,
   customerId: string,
 ): Promise<CustomerNote[]> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data, error } = await supabase
     .from("customer_notes")
@@ -32,12 +33,13 @@ export async function getCustomerNotes(
  * Creates a note for a customer with audit log.
  */
 export async function createCustomerNote(
+  db: SupabaseClient,
   orgId: string,
   customerId: string,
   params: CreateCustomerNoteParams,
   userId: string,
 ): Promise<CustomerNote> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data, error } = await supabase
     .from("customer_notes")
@@ -77,12 +79,13 @@ export async function createCustomerNote(
  * Soft-deletes a customer note with audit log.
  */
 export async function deleteCustomerNote(
+  db: SupabaseClient,
   orgId: string,
   customerId: string,
   noteId: string,
   userId: string,
 ): Promise<void> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data: existing } = await supabase
     .from("customer_notes")

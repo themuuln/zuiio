@@ -1,7 +1,8 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
+import { createAuditLog } from "@/lib/audit";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { logSupabaseResult } from "@/lib/supabase/logger";
 import type { UserProfile } from "@/lib/types";
@@ -11,9 +12,10 @@ import type { UserProfile } from "@/lib/types";
  * Joins organization_users → roles and profiles.
  */
 export async function getOrganizationUsers(
+  db: SupabaseClient,
   orgId: string,
 ): Promise<UserProfile[]> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const { data: members, error } = await supabase
     .from("organization_users")
@@ -82,13 +84,14 @@ export async function getOrganizationUsers(
  * The invited user must already have a profile row in the public.profiles table.
  */
 export async function inviteUser(
+  db: SupabaseClient,
   _orgId: string,
   email: string,
   _roleId?: string,
 ): Promise<void> {
   if (!email?.trim()) throw new ValidationError("Email is required");
 
-  const supabase = await createClient();
+  const supabase = db;
 
   // Find the user by email in auth.users — we use the supabase admin
   // approach through a profile lookup via public.profiles table.
@@ -128,11 +131,12 @@ export async function inviteUser(
  * Use this when you already have the user's auth ID.
  */
 export async function addUserToOrganization(
+  db: SupabaseClient,
   orgId: string,
   userId: string,
   roleId?: string,
 ): Promise<void> {
-  const supabase = await createClient();
+  const supabase = db;
 
   // Resolve role before any checks (needed for both insert and reactivate)
   let resolvedRoleId = roleId;
@@ -207,11 +211,12 @@ export async function addUserToOrganization(
  * Changes a user's role within the organization.
  */
 export async function updateUserRole(
+  db: SupabaseClient,
   userId: string,
   orgId: string,
   roleId: string,
 ): Promise<void> {
-  const supabase = await createClient();
+  const supabase = db;
 
   // Verify the role belongs to this organization
   const { data: role } = await supabase
@@ -245,6 +250,7 @@ export async function updateUserRole(
  * roleId, branchId (→ organization_users table).
  */
 export async function updateMember(
+  db: SupabaseClient,
   userId: string,
   orgId: string,
   params: {
@@ -254,7 +260,7 @@ export async function updateMember(
     branchId?: string | null;
   },
 ): Promise<void> {
-  const supabase = await createClient();
+  const supabase = db;
   // Service role client needed for profiles updates — RLS only allows
   // users to update their own profile (id = auth.uid()), but an org owner
   // editing another member's profile is not the profile owner.
@@ -268,7 +274,8 @@ export async function updateMember(
   if (Object.keys(profileUpdates).length > 0) {
     const { error: profileError } = await serviceRole
       .from("profiles")
-      .update(profileUpdates)
+      // biome-ignore lint/suspicious/noExplicitAny: dynamic update object
+      .update(profileUpdates as any)
       .eq("id", userId);
 
     logSupabaseResult(profileError, "profiles.update", {
@@ -321,7 +328,8 @@ export async function updateMember(
 
     const { error: membershipError } = await supabase
       .from("organization_users")
-      .update(membershipUpdates)
+      // biome-ignore lint/suspicious/noExplicitAny: dynamic update object
+      .update(membershipUpdates as any)
       .eq("user_id", userId)
       .eq("organization_id", orgId);
 
@@ -332,14 +340,32 @@ export async function updateMember(
     }
   }
 
+  await createAuditLog({
+    supabase,
+    action: "update",
+    table_name: "organization_users",
+    record_id: userId,
+    user_id: userId,
+    organization_id: orgId,
+    new_data: membershipUpdates as Record<string, unknown>,
+  });
+
   revalidateTag(cacheTags.organizationUsers(orgId), "max");
 }
 
 /**
  * Removes a user from the organization.
  */
-export async function removeUser(userId: string, orgId: string): Promise<void> {
-  const supabase = await createClient();
+export async function removeUser(
+  db: SupabaseClient,
+  userId: string,
+  orgId: string,
+): Promise<void> {
+  const supabase = db;
+
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser();
 
   // Prevent removing the last admin
   const { data: allAdmins } = await supabase
@@ -368,6 +394,16 @@ export async function removeUser(userId: string, orgId: string): Promise<void> {
     throw new NotFoundError("User membership not found");
   }
 
+  await createAuditLog({
+    supabase,
+    action: "update",
+    table_name: "organization_users",
+    record_id: userId,
+    user_id: currentUser?.id,
+    organization_id: orgId,
+    new_data: { removed_at: new Date().toISOString() },
+  });
+
   revalidateTag(cacheTags.organizationUsers(orgId), "max");
 }
 
@@ -375,8 +411,10 @@ export async function removeUser(userId: string, orgId: string): Promise<void> {
  * Gets the current authenticated user's profile, including their
  * organization membership and role information.
  */
-export async function getCurrentUserProfile(): Promise<UserProfile | null> {
-  const supabase = await createClient();
+export async function getCurrentUserProfile(
+  db: SupabaseClient,
+): Promise<UserProfile | null> {
+  const supabase = db;
 
   const { data: authData, error: authError } = await supabase.auth.getUser();
 

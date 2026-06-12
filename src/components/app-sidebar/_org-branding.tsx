@@ -168,7 +168,7 @@ export function OrgBranding() {
               className="gap-2 p-2 text-muted-foreground"
             >
               <CirclePlus className="size-4 shrink-0" />
-              <span className="text-xs">Add Branch</span>
+              <span className="text-xs">{t("common.addBranch")}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         )}

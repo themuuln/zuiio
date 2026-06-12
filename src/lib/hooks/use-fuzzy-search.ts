@@ -65,7 +65,8 @@ export function useFuzzySearch<T>(
   return useMemo(() => {
     const trimmed = query.trim();
     if (!trimmed || trimmed.length < minQueryLength) {
-      return preserveOrderBelowMinLength ? items : [...items];
+      // Always return a new array reference so React.memo detects changes
+      return [...items];
     }
 
     const result = fuse.search(trimmed);

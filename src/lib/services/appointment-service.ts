@@ -1,11 +1,12 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
+import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import {
   NotFoundError,
   UnauthorizedError,
   ValidationError,
 } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
 import { resolveBranchId, withBranchFilter } from "@/lib/supabase/with-branch";
 import type {
   Appointment,
@@ -17,8 +18,8 @@ import type {
 
 // ── Helpers ────────────────────────────────────────────────────
 
-async function getOrgId(): Promise<string> {
-  const supabase = await createClient();
+async function getOrgId(db: SupabaseClient): Promise<string> {
+  const supabase = db;
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -30,17 +31,20 @@ async function getOrgId(): Promise<string> {
 
 // ── Get Appointments ──────────────────────────────────────────
 
-export async function getAppointments(params?: {
-  status?: AppointmentStatus;
-  mechanic_id?: string;
-  date?: string;
-  date_from?: string;
-  date_to?: string;
-  customer_id?: string;
-  branchId?: string;
-}): Promise<AppointmentDetail[]> {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+export async function getAppointments(
+  db: SupabaseClient,
+  params?: {
+    status?: AppointmentStatus;
+    mechanic_id?: string;
+    date?: string;
+    date_from?: string;
+    date_to?: string;
+    customer_id?: string;
+    branchId?: string;
+  },
+): Promise<AppointmentDetail[]> {
+  const supabase = db;
+  const orgId = await getOrgId(db);
 
   let query = supabase
     .from("appointments")
@@ -114,10 +118,11 @@ export async function getAppointments(params?: {
  * linked estimate data. Returns null if not found or deleted.
  */
 export async function getAppointment(
+  db: SupabaseClient,
   id: string,
 ): Promise<AppointmentDetail | null> {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+  const supabase = db;
+  const orgId = await getOrgId(db);
 
   const { data } = await supabase
     .from("appointments")
@@ -163,6 +168,7 @@ export async function getAppointment(
  * Returns the full AppointmentDetail.
  */
 export async function createAppointment(
+  db: SupabaseClient,
   params: CreateAppointmentParams,
 ): Promise<AppointmentDetail> {
   if (!params.customer_id) throw new ValidationError("Customer is required");
@@ -170,8 +176,8 @@ export async function createAppointment(
   if (!params.title?.trim()) throw new ValidationError("Title is required");
   if (!params.scheduled_at) throw new ValidationError("Date/time is required");
 
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+  const supabase = db;
+  const orgId = await getOrgId(db);
   const user = (await supabase.auth.getUser()).data.user;
   if (!user) throw new UnauthorizedError();
 
@@ -206,9 +212,19 @@ export async function createAppointment(
     throw new Error(error?.message ?? "Failed to create appointment");
   }
 
+  await createAuditLog({
+    supabase,
+    action: "create",
+    table_name: "appointments",
+    record_id: data.id,
+    user_id: user.id,
+    organization_id: orgId,
+    new_data: data,
+  });
+
   revalidateTag(cacheTags.appointments(orgId), "default");
 
-  const created = await getAppointment(data.id);
+  const created = await getAppointment(db, data.id);
   if (!created) throw new Error("Failed to fetch created appointment");
   return created;
 }
@@ -220,12 +236,21 @@ export async function createAppointment(
  * Status transitions are allowed for all values in AppointmentStatus.
  */
 export async function updateAppointment(
+  db: SupabaseClient,
   id: string,
   params: UpdateAppointmentParams,
 ): Promise<AppointmentDetail> {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+  const supabase = db;
+  const orgId = await getOrgId(db);
   const user = (await supabase.auth.getUser()).data.user;
+
+  const { data: existingRecord } = await supabase
+    .from("appointments")
+    .select("*")
+    .eq("id", id)
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .single();
 
   const updates: Record<string, unknown> = { updated_by: user?.id ?? null };
 
@@ -249,9 +274,19 @@ export async function updateAppointment(
 
   if (error) throw new NotFoundError("Appointment not found");
 
+  await createAuditLog({
+    supabase,
+    action: "update",
+    table_name: "appointments",
+    record_id: id,
+    user_id: user?.id,
+    organization_id: orgId,
+    old_data: existingRecord,
+  });
+
   revalidateTag(cacheTags.appointments(orgId), "default");
 
-  const updated = await getAppointment(id);
+  const updated = await getAppointment(db, id);
   if (!updated) throw new NotFoundError("Appointment not found");
   return updated;
 }
@@ -262,10 +297,11 @@ export async function updateAppointment(
  * Quick status change helper. Shorthand for updateAppointment with just status.
  */
 export async function updateAppointmentStatus(
+  db: SupabaseClient,
   id: string,
   status: AppointmentStatus,
 ): Promise<AppointmentDetail> {
-  return updateAppointment(id, { status });
+  return updateAppointment(db, id, { status });
 }
 
 // ── Delete Appointment ────────────────────────────────────────
@@ -273,9 +309,21 @@ export async function updateAppointmentStatus(
 /**
  * Soft-deletes an appointment by setting deleted_at.
  */
-export async function deleteAppointment(id: string): Promise<void> {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
+export async function deleteAppointment(
+  db: SupabaseClient,
+  id: string,
+): Promise<void> {
+  const supabase = db;
+  const orgId = await getOrgId(db);
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  const { data: existingRecord } = await supabase
+    .from("appointments")
+    .select("*")
+    .eq("id", id)
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .single();
 
   const { error } = await supabase
     .from("appointments")
@@ -285,6 +333,16 @@ export async function deleteAppointment(id: string): Promise<void> {
     .is("deleted_at", null);
 
   if (error) throw new NotFoundError("Appointment not found");
+
+  await createAuditLog({
+    supabase,
+    action: "soft_delete",
+    table_name: "appointments",
+    record_id: id,
+    user_id: userId,
+    organization_id: orgId,
+    old_data: existingRecord,
+  });
 
   revalidateTag(cacheTags.appointments(orgId), "default");
 }

@@ -12,9 +12,11 @@ export const GET = createRouteHandler(
   async ({ request, orgId, supabase }) => {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type");
+    const branchId =
+      searchParams.get("branch_id") ?? searchParams.get("branchId") ?? undefined;
 
     if (type === "stats") {
-      const stats = await getExpenseStats(supabase, orgId);
+      const stats = await getExpenseStats(supabase, orgId, branchId);
       return NextResponse.json({ data: stats });
     }
 
@@ -32,7 +34,6 @@ export const GET = createRouteHandler(
       ? Number(searchParams.get("offset"))
       : undefined;
     const overdue = searchParams.get("overdue") === "true" ? true : undefined;
-    const branchId = searchParams.get("branch_id") ?? undefined;
 
     const expenses = await getExpenses(supabase, orgId, {
       search: q,

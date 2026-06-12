@@ -20,7 +20,7 @@ export function NewSupplierSheet({
       open={open}
       onOpenChange={onOpenChange}
       title={t("newSupplier")}
-      description={t("newSupplierDescription")}
+      desc={t("newSupplierDescription")}
       sheetSize="2xl"
     >
       <SupplierForm />

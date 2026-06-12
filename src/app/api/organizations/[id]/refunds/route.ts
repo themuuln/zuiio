@@ -25,12 +25,12 @@ function validate<T>(schema: z.ZodSchema<T>, data: unknown): T {
 }
 
 export const GET = createRouteHandler(
-  async ({ request, orgId }) => {
+  async ({ request, orgId, supabase }) => {
     const { searchParams } = new URL(request.url);
 
     // Handle /refunds/stats endpoint
     if (searchParams.get("action") === "stats") {
-      const stats = await getRefundStats(orgId);
+      const stats = await getRefundStats(supabase, orgId);
       return NextResponse.json({ data: stats });
     }
 
@@ -47,14 +47,18 @@ export const GET = createRouteHandler(
       ? Number.parseInt(searchParams.get("offset")!, 10)
       : undefined;
 
-    const refunds = await getRefunds(orgId, { status, limit, offset });
+    const refunds = await getRefunds(supabase, orgId, {
+      status,
+      limit,
+      offset,
+    });
     return NextResponse.json({ data: refunds });
   },
   { requiredPermission: { resource: "refunds", action: "read" } },
 );
 
 export const POST = createRouteHandler(
-  async ({ request, orgId }) => {
+  async ({ request, orgId, supabase }) => {
     await requireActiveSubscription(orgId);
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
     const rateCheck = mutationRateLimiter.check(ip);
@@ -75,7 +79,7 @@ export const POST = createRouteHandler(
     const body = await request.json();
     const params = validate(recordRefundSchema, body);
 
-    const refunds = await recordRefund(params.invoice_id, orgId, {
+    const refunds = await recordRefund(supabase, params.invoice_id, orgId, {
       amount: params.amount,
       method: params.method,
       reason: params.reason,

@@ -150,3 +150,47 @@ export interface SlowMovingItem {
   lastMovementDate: string | null;
   daysSinceLastMove: number;
 }
+
+// ── Stock Transfers ─────────────────────────────────────────────
+
+export type StockTransferStatus =
+  | "pending"
+  | "approved"
+  | "in_transit"
+  | "received"
+  | "completed"
+  | "cancelled";
+
+/** StockTransferItem from DB + optional joined fields */
+export type StockTransferItemRow = import("./core").StockTransferItem & {
+  part_name?: string;
+  part_number?: string | null;
+  unit?: string;
+  available_quantity?: number;
+};
+
+/** StockTransfer from DB + optional joined fields */
+export type StockTransferRow = import("./core").StockTransfer & {
+  from_branch_name?: string | null;
+  to_branch_name?: string;
+  created_by_name?: string | null;
+  items?: StockTransferItemRow[];
+  item_count?: number;
+  total_cost?: number;
+};
+
+export interface CreateTransferParams {
+  from_branch_id?: string | null;
+  to_branch_id: string;
+  notes?: string;
+  items: Array<{
+    part_id: string;
+    quantity: number;
+    unit_cost?: number;
+  }>;
+}
+
+export interface UpdateTransferParams {
+  notes?: string;
+  status?: StockTransferStatus;
+}

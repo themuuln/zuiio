@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { STATUS_STEPPER, STATUS_DOT } from "./_constants";
 
 const STEP_ORDER = ["New", "Diagnosing", "In Progress", "Ready for Pickup"];
 
@@ -13,13 +14,7 @@ export function StatusStepper({ currentStatus }: { currentStatus: string }) {
     return `calc(${pct}% - ${offset}px)`;
   })();
 
-  const lineColor = (() => {
-    if (currentStatus === "Diagnosing") return "bg-blue-500";
-    if (currentStatus === "In Progress") return "bg-indigo-500";
-    if (currentStatus === "Ready for Pickup" || currentStatus === "Completed")
-      return "bg-emerald-500";
-    return "";
-  })();
+  const lineColor = STATUS_STEPPER[currentStatus] ?? "";
 
   return (
     <div className="mt-1 flex items-center justify-between w-full relative px-1 select-none isolate">
@@ -44,7 +39,8 @@ export function StatusStepper({ currentStatus }: { currentStatus: string }) {
               className={cn(
                 "size-5 rounded-full border flex items-center justify-center text-xs font-black transition-all duration-300",
                 isPast &&
-                  "bg-emerald-500 border-emerald-500 text-white shadow-sm",
+                  STATUS_DOT["Ready for Pickup"] +
+                    " border-emerald-500 text-white shadow-sm",
                 isCurrent &&
                   "bg-indigo-600 border-indigo-600 text-white scale-110 shadow-sm shadow-indigo-600/30 font-bold",
                 isFuture &&

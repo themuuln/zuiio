@@ -3,7 +3,7 @@ import { createRouteHandler } from "@/lib/api-handler";
 import { calculateMonthlyPayroll } from "@/lib/services/payroll-service";
 
 export const POST = createRouteHandler(
-  async ({ request, orgId }) => {
+  async ({ request, orgId, supabase }) => {
     const body = await request.json();
     const { year, month, branch_id } = body;
 
@@ -15,6 +15,7 @@ export const POST = createRouteHandler(
     }
 
     const records = await calculateMonthlyPayroll(
+      supabase,
       orgId,
       year,
       month,

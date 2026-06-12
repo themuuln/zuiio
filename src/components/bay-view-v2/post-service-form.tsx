@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { getDefaultTransferBank } from "@/lib/payments/org-bank-accounts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +35,7 @@ import {
   postServiceSchema,
   type ServiceFormEntry,
 } from "./_schema";
+import { PaymentMethodField } from "./_payment-method-field";
 import { ServiceCard } from "./_service-card";
 
 // ── Component ──────────────────────────────────────────────
@@ -45,6 +47,9 @@ export function PostServiceFormBody({
   currentOdometer,
   services,
   newStatus,
+  grandTotal,
+  paymentMethodFees,
+  transferBanks,
   onConfirm,
   onBack,
 }: Omit<PostServiceFormProps, "woId" | "vehicleId" | "onCancel"> & {
@@ -54,6 +59,7 @@ export function PostServiceFormBody({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [allExpanded, setAllExpanded] = useState(true);
+  const defaultTransferBank = getDefaultTransferBank(transferBanks);
 
   const [entries, setEntries] = useState<ServiceFormEntry[]>(() =>
     services.map((svc) => ({
@@ -73,6 +79,8 @@ export function PostServiceFormBody({
     defaultValues: {
       odometer: currentOdometer?.toString() ?? "",
       mechanicNotes: "",
+      paymentMethod: "bank_transfer",
+      transferBankId: defaultTransferBank?.id ?? "",
     },
   });
 
@@ -85,6 +93,8 @@ export function PostServiceFormBody({
     [odometerRegister],
   );
 
+  const paymentMethod = form.watch("paymentMethod");
+  const transferBankId = form.watch("transferBankId");
   const odometerValue = form.watch("odometer");
   const odometerNum = useMemo(
     () => (odometerValue ? parseInt(odometerValue, 10) : null),
@@ -113,6 +123,15 @@ export function PostServiceFormBody({
       return;
     }
 
+    if (
+      data.paymentMethod === "bank_transfer" &&
+      transferBanks.length > 0 &&
+      !data.transferBankId
+    ) {
+      setError(t("transferBankRequired"));
+      return;
+    }
+
     setSaving(true);
     setError(null);
     try {
@@ -128,6 +147,8 @@ export function PostServiceFormBody({
           notes: e.notes || undefined,
         })),
         mechanicNotes: data.mechanicNotes?.trim() ?? "",
+        paymentMethod: data.paymentMethod,
+        transferBankId: data.transferBankId || null,
       });
     } catch (err) {
       setError(
@@ -240,6 +261,21 @@ export function PostServiceFormBody({
           </FieldContent>
         </Field>
 
+        {!isComplete && (
+          <PaymentMethodField
+            value={paymentMethod}
+            onChange={(method) => form.setValue("paymentMethod", method)}
+            transferBankId={transferBankId || null}
+            onTransferBankChange={(bankId) =>
+              form.setValue("transferBankId", bankId)
+            }
+            subtotal={grandTotal}
+            fees={paymentMethodFees}
+            transferBanks={transferBanks}
+            error={form.formState.errors.paymentMethod?.message}
+          />
+        )}
+
         {/* Error */}
         {error && (
           <div className="flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 p-3">
@@ -284,6 +320,9 @@ export function PostServiceForm({
   currentOdometer,
   services,
   newStatus,
+  grandTotal,
+  paymentMethodFees,
+  transferBanks,
   onConfirm,
   onCancel,
 }: PostServiceFormProps) {
@@ -291,6 +330,7 @@ export function PostServiceForm({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [allExpanded, setAllExpanded] = useState(true);
+  const defaultTransferBank = getDefaultTransferBank(transferBanks);
 
   // Build form entries from services (UI state, not form-managed)
   const [entries, setEntries] = useState<ServiceFormEntry[]>(() =>
@@ -311,6 +351,8 @@ export function PostServiceForm({
     defaultValues: {
       odometer: currentOdometer?.toString() ?? "",
       mechanicNotes: "",
+      paymentMethod: "bank_transfer",
+      transferBankId: defaultTransferBank?.id ?? "",
     },
   });
 
@@ -333,6 +375,8 @@ export function PostServiceForm({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [onCancel]);
 
+  const paymentMethod = form.watch("paymentMethod");
+  const transferBankId = form.watch("transferBankId");
   const odometerValue = form.watch("odometer");
   const odometerNum = useMemo(
     () => (odometerValue ? parseInt(odometerValue, 10) : null),
@@ -361,6 +405,15 @@ export function PostServiceForm({
       return;
     }
 
+    if (
+      data.paymentMethod === "bank_transfer" &&
+      transferBanks.length > 0 &&
+      !data.transferBankId
+    ) {
+      setError(t("transferBankRequired"));
+      return;
+    }
+
     setSaving(true);
     setError(null);
     try {
@@ -376,6 +429,8 @@ export function PostServiceForm({
           notes: e.notes || undefined,
         })),
         mechanicNotes: data.mechanicNotes?.trim() ?? "",
+        paymentMethod: data.paymentMethod,
+        transferBankId: data.transferBankId || null,
       });
     } catch (err) {
       setError(
@@ -504,6 +559,21 @@ export function PostServiceForm({
               )}
             </FieldContent>
           </Field>
+
+          {!isComplete && (
+            <PaymentMethodField
+              value={paymentMethod}
+              onChange={(method) => form.setValue("paymentMethod", method)}
+              transferBankId={transferBankId || null}
+              onTransferBankChange={(bankId) =>
+                form.setValue("transferBankId", bankId)
+              }
+              subtotal={grandTotal}
+              fees={paymentMethodFees}
+              transferBanks={transferBanks}
+              error={form.formState.errors.paymentMethod?.message}
+            />
+          )}
 
           {/* Error */}
           {error && (

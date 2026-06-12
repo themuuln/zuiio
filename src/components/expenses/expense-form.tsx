@@ -196,7 +196,7 @@ export function ExpenseForm({ onSuccess, onCancel }: ExpenseFormProps) {
 
               {/* Due Date — optional */}
               <Field>
-                <FieldLabel>Due Date</FieldLabel>
+                <FieldLabel>{t("due")}</FieldLabel>
                 <FieldContent>
                   <Input
                     id="expense-due-date"

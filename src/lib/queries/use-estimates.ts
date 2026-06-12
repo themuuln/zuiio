@@ -37,6 +37,49 @@ export interface EstimateListItem {
   } | null;
 }
 
+export interface PublicEstimateDetail {
+  id: string;
+  estimate_number: string;
+  status: EstimateStatus;
+  created_at: string;
+  valid_until: string | null;
+  notes: string | null;
+  terms: string | null;
+  subtotal: number;
+  discount_amount: number;
+  discount_percentage: number;
+  discount_total: number;
+  tax_total: number;
+  grand_total: number;
+  customer: {
+    first_name: string | null;
+    last_name: string | null;
+    phone: string | null;
+    email: string | null;
+  } | null;
+  vehicle: {
+    plate_number: string | null;
+    make: string | null;
+    model: string | null;
+    year: number | null;
+  } | null;
+  items: {
+    description: string;
+    item_type: string;
+    quantity: number;
+    unit_price: number;
+    discount_amount: number;
+    discount_percentage: number;
+    line_total: number;
+  }[];
+  organization: {
+    name: string;
+    phone: string | null;
+    email: string | null;
+    address: string | null;
+  } | null;
+}
+
 // ── List Hook ──────────────────────────────────────────────────
 
 export function useEstimates(
@@ -84,6 +127,20 @@ export function useEstimateDetail(
     },
     enabled: !!orgId && !!estimateId,
     staleTime: 15_000,
+  });
+}
+
+export function usePublicEstimate(token: string | undefined) {
+  return useQuery({
+    queryKey: ["estimate", "public", token ?? ""] as const,
+    queryFn: async (): Promise<PublicEstimateDetail> => {
+      const res = await fetch(`/api/estimate/public/${token}`);
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      return json.data as PublicEstimateDetail;
+    },
+    enabled: !!token,
+    staleTime: 60_000,
   });
 }
 

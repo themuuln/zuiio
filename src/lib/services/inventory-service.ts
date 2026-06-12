@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
+import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { resolveBranchId, withBranchFilter } from "@/lib/supabase/with-branch";
@@ -206,6 +207,15 @@ export async function createPart(
     .single();
   if (error || !data)
     throw new Error(error?.message ?? "Failed to create part");
+  await createAuditLog({
+    supabase: db,
+    action: "create",
+    table_name: "parts_catalog",
+    record_id: data.id,
+    user_id: userId,
+    organization_id: orgId,
+    new_data: data,
+  });
   revalidateTag(cacheTags.partsCatalog(orgId), "max");
   return data;
 }
@@ -218,6 +228,14 @@ export async function updatePart(
 ): Promise<PartsCatalogItem> {
   const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  const { data: existingRecord } = await supabase
+    .from("parts_catalog")
+    .select("*")
+    .eq("id", id)
+    .eq("organization_id", orgId)
+    .single();
+
   const updates = buildUpdates(params, partFieldMap);
   updates.updated_by = userId;
 
@@ -231,6 +249,16 @@ export async function updatePart(
     )
     .single();
   if (error || !data) throw new NotFoundError("Part not found");
+  await createAuditLog({
+    supabase: db,
+    action: "update",
+    table_name: "parts_catalog",
+    record_id: id,
+    user_id: userId,
+    organization_id: orgId,
+    old_data: existingRecord,
+    new_data: data,
+  });
   revalidateTag(cacheTags.partsCatalog(orgId), "max");
   return data;
 }
@@ -444,6 +472,15 @@ export async function createMovement(
     .single();
   if (error || !data)
     throw new Error(error?.message ?? "Failed to record movement");
+  await createAuditLog({
+    supabase: db,
+    action: "create",
+    table_name: "inventory_movements",
+    record_id: data.id,
+    user_id: userId,
+    organization_id: orgId,
+    new_data: data,
+  });
   revalidateTag(cacheTags.inventoryMovements(orgId), "max");
   revalidateTag(cacheTags.inventoryBalances(orgId), "max");
   return data;
@@ -534,6 +571,15 @@ export async function createSupplier(
     .single();
   if (error || !data)
     throw new Error(error?.message ?? "Failed to create supplier");
+  await createAuditLog({
+    supabase: db,
+    action: "create",
+    table_name: "suppliers",
+    record_id: data.id,
+    user_id: userId,
+    organization_id: orgId,
+    new_data: data,
+  });
   revalidateTag(cacheTags.suppliers(orgId), "max");
   return data as unknown as Supplier;
 }
@@ -546,6 +592,14 @@ export async function updateSupplier(
 ): Promise<Supplier> {
   const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
+
+  const { data: existingRecord } = await supabase
+    .from("suppliers")
+    .select("*")
+    .eq("id", id)
+    .eq("organization_id", orgId)
+    .single();
+
   const updates = buildUpdates(params, supplierFieldMap);
   updates.updated_by = userId;
 
@@ -559,6 +613,16 @@ export async function updateSupplier(
     )
     .single();
   if (error || !data) throw new NotFoundError("Supplier not found");
+  await createAuditLog({
+    supabase: db,
+    action: "update",
+    table_name: "suppliers",
+    record_id: id,
+    user_id: userId,
+    organization_id: orgId,
+    old_data: existingRecord,
+    new_data: data,
+  });
   revalidateTag(cacheTags.suppliers(orgId), "max");
   return data as unknown as Supplier;
 }
@@ -780,6 +844,14 @@ export async function receivePurchaseOrder(
     );
   }
 
+  // Capture existing PO for audit before status update
+  const { data: existingRecord } = await supabase
+    .from("purchase_orders")
+    .select("*")
+    .eq("id", id)
+    .eq("organization_id", orgId)
+    .single();
+
   // Determine new status
   const allReceived = items.every(
     (i) => i.quantity_received >= i.quantity_ordered,
@@ -801,6 +873,16 @@ export async function receivePurchaseOrder(
     .single();
 
   if (error || !data) throw new NotFoundError("Purchase order not found");
+  await createAuditLog({
+    supabase: db,
+    action: "update",
+    table_name: "purchase_orders",
+    record_id: id,
+    user_id: userId,
+    organization_id: orgId,
+    old_data: existingRecord,
+    new_data: data,
+  });
   revalidateTag(cacheTags.purchaseOrders(orgId), "max");
   revalidateTag(cacheTags.inventoryBalances(orgId), "max");
   return data as unknown as PurchaseOrder;

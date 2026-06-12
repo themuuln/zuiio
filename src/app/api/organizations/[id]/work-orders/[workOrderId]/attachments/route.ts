@@ -13,17 +13,17 @@ import {
 } from "@/lib/validation/work-orders";
 
 export const GET = createRouteHandler(
-  async ({ params, orgId }) => {
+  async ({ params, orgId, supabase }) => {
     await requireActiveSubscription(orgId);
     const { workOrderId } = params;
-    const data = await getAttachments(orgId, workOrderId);
+    const data = await getAttachments(supabase, orgId, workOrderId);
     return NextResponse.json({ data });
   },
   { requiredPermission: { resource: "work_orders", action: "read" } },
 );
 
 export const POST = createRouteHandler(
-  async ({ request, params, orgId }) => {
+  async ({ request, params, orgId, supabase }) => {
     await requireActiveSubscription(orgId);
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
     const rateCheck = mutationRateLimiter.check(ip);
@@ -42,14 +42,19 @@ export const POST = createRouteHandler(
     }
     const { workOrderId } = params;
     const body = await parseBody(request, createAttachmentSchema);
-    const attachment = await createAttachment(orgId, workOrderId, body);
+    const attachment = await createAttachment(
+      supabase,
+      orgId,
+      workOrderId,
+      body,
+    );
     return NextResponse.json({ data: attachment }, { status: 201 });
   },
   { requiredPermission: { resource: "work_orders", action: "update" } },
 );
 
 export const DELETE = createRouteHandler(
-  async ({ request, params, orgId }) => {
+  async ({ request, params, orgId, supabase }) => {
     await requireActiveSubscription(orgId);
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
     const rateCheck = mutationRateLimiter.check(ip);
@@ -80,7 +85,7 @@ export const DELETE = createRouteHandler(
         { status: 400 },
       );
     }
-    await deleteAttachment(orgId, workOrderId, attachmentId);
+    await deleteAttachment(supabase, orgId, workOrderId, attachmentId);
     return NextResponse.json({ data: null });
   },
   { requiredPermission: { resource: "work_orders", action: "update" } },

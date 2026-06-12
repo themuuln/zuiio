@@ -1,8 +1,6 @@
-import { formatInTimeZone } from "date-fns-tz";
 import { revalidateTag } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createClient } from "@/lib/supabase/server";
-import { TOLOM_TZ } from "@/lib/utils/timezone";
 import { createMockSupabaseClient } from "@/test/mocks/supabase";
 import {
   clockIn,
@@ -14,6 +12,9 @@ import {
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
+vi.mock("@/lib/audit", () => ({
+  createAuditLog: vi.fn().mockResolvedValue({ success: true, id: "audit-1" }),
+}));
 
 function makeBuilder<T = unknown>(data?: T) {
   const resolved = { data: data ?? null, error: null };
@@ -44,32 +45,31 @@ beforeEach(() => {
 });
 
 describe("clockIn", () => {
-  it("inserts time log with current local time and Asia/Ulaanbaatar timezone date", async () => {
+  it("inserts time log with current time and UTC date", async () => {
+    const today = new Date().toISOString().split("T")[0];
     const mockLog = {
       id: "log-1",
       organization_id: "org-1",
       mechanic_id: "mech-1",
       clock_in: new Date().toISOString(),
       clock_out: null,
-      date: formatInTimeZone(new Date(), TOLOM_TZ, "yyyy-MM-dd"),
+      date: today,
       notes: null,
     };
 
     const builder = makeBuilder(mockLog);
     mockClient.from = vi.fn().mockReturnValue(builder);
 
-    const result = await clockIn("org-1", "mech-1");
+    const result = await clockIn(mockClient as any, "org-1", "mech-1");
 
     expect(result.id).toBe("log-1");
-    expect(result.date).toBe(
-      formatInTimeZone(new Date(), TOLOM_TZ, "yyyy-MM-dd"),
-    );
+    expect(result.date).toBe(today);
     expect(mockClient.from).toHaveBeenCalledWith("mechanic_time_logs");
     expect(builder.insert).toHaveBeenCalledWith({
       organization_id: "org-1",
       mechanic_id: "mech-1",
       clock_in: expect.any(String),
-      date: formatInTimeZone(new Date(), TOLOM_TZ, "yyyy-MM-dd"),
+      date: today,
     });
     expect(revalidateTag).toHaveBeenCalled();
   });
@@ -110,7 +110,7 @@ describe("clockOut", () => {
 
     mockClient.from = vi.fn().mockReturnValue(builder);
 
-    const result = await clockOut("org-1", "mech-1");
+    const result = await clockOut(mockClient as any, "org-1", "mech-1");
 
     expect(result.clock_out).not.toBeNull();
     expect(builder.update).toHaveBeenCalledWith({
@@ -127,9 +127,9 @@ describe("clockOut", () => {
       .mockResolvedValue({ data: null, error: new Error("Not found") });
     mockClient.from = vi.fn().mockReturnValue(builder);
 
-    await expect(clockOut("org-1", "mech-1")).rejects.toThrow(
-      "No open time log found",
-    );
+    await expect(
+      clockOut(mockClient as any, "org-1", "mech-1"),
+    ).rejects.toThrow("No open time log found");
   });
 });
 
@@ -147,14 +147,14 @@ describe("getTodayLog", () => {
       .mockResolvedValue({ data: mockOpenLog, error: null });
     mockClient.from = vi.fn().mockReturnValue(builder);
 
-    const result = await getTodayLog("org-1", "mech-1");
+    const result = await getTodayLog(mockClient as any, "org-1", "mech-1");
     expect(result).toEqual(mockOpenLog);
     expect(builder.is).toHaveBeenCalledWith("clock_out", null);
   });
 });
 
 describe("getTodayHours", () => {
-  it("fetches hours worked for local current date", async () => {
+  it("fetches hours worked for current date", async () => {
     const mockReport = {
       hours_worked: 6.5,
     };
@@ -165,11 +165,11 @@ describe("getTodayHours", () => {
       .mockResolvedValue({ data: mockReport, error: null });
     mockClient.from = vi.fn().mockReturnValue(builder);
 
-    const result = await getTodayHours("org-1", "mech-1");
+    const result = await getTodayHours(mockClient as any, "org-1", "mech-1");
     expect(result).toBe(6.5);
     expect(builder.eq).toHaveBeenCalledWith(
       "report_date",
-      formatInTimeZone(new Date(), TOLOM_TZ, "yyyy-MM-dd"),
+      new Date().toISOString().split("T")[0],
     );
   });
 
@@ -180,7 +180,7 @@ describe("getTodayHours", () => {
       .mockResolvedValue({ data: null, error: null });
     mockClient.from = vi.fn().mockReturnValue(builder);
 
-    const result = await getTodayHours("org-1", "mech-1");
+    const result = await getTodayHours(mockClient as any, "org-1", "mech-1");
     expect(result).toBe(0);
   });
 });
@@ -204,7 +204,7 @@ describe("getClockStatus", () => {
 
     mockClient.from = vi.fn().mockReturnValue(builder);
 
-    const status = await getClockStatus("org-1", "mech-1");
+    const status = await getClockStatus(mockClient as any, "org-1", "mech-1");
     expect(status).toEqual({
       clockedIn: true,
       since: "2026-05-31T01:00:00.000Z",
@@ -221,7 +221,7 @@ describe("getClockStatus", () => {
 
     mockClient.from = vi.fn().mockReturnValue(builder);
 
-    const status = await getClockStatus("org-1", "mech-1");
+    const status = await getClockStatus(mockClient as any, "org-1", "mech-1");
     expect(status).toEqual({
       clockedIn: false,
       since: null,

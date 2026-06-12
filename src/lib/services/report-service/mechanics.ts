@@ -1,8 +1,9 @@
 // ── Mechanic KPIs, list, and performance trend ──────────────
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { cacheDurations, cacheTags } from "@/lib/cache/keys";
 import { withCache } from "@/lib/cache/with-cache";
-import { createClient } from "@/lib/supabase/server";
 import { withBranchFilter } from "@/lib/supabase/with-branch";
 
 import type { ReportMechanicKpi, TechnicianPerformance } from "@/lib/types";
@@ -10,7 +11,7 @@ import { getWeekKey } from "./utils";
 
 /** Extract per-mechanic KPI rows from work order data */
 export async function getMechanicKpis(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: SupabaseClient,
   _orgId: string,
   woIds: string[],
 ): Promise<ReportMechanicKpi[]> {
@@ -201,12 +202,13 @@ export async function getMechanicKpis(
 }
 
 export async function getMechanicsList(
+  db: SupabaseClient,
   orgId: string,
   branchId: string | null = null,
 ): Promise<
   { id: string; full_name: string | null; avatar_url: string | null }[]
 > {
-  const supabase = await createClient();
+  const supabase = db;
 
   return withCache(
     ["getMechanicsList", orgId, branchId ?? "all"],
@@ -245,6 +247,7 @@ export async function getMechanicsList(
 }
 
 export async function getMechanicPerformanceTrend(
+  db: SupabaseClient,
   orgId: string,
   mechanicId: string,
   period: "weekly" | "monthly" = "weekly",
@@ -252,7 +255,7 @@ export async function getMechanicPerformanceTrend(
   endDate: string,
   branchId: string | null = null,
 ): Promise<TechnicianPerformance> {
-  const supabase = await createClient();
+  const supabase = db;
 
   return withCache(
     [

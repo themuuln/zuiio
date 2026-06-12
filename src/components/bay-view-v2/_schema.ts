@@ -1,4 +1,15 @@
 import { z } from "zod";
+import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
+import type { PaymentMethodFees } from "./_payment-fees";
+
+export const PAYMENT_METHODS = [
+  "cash",
+  "card",
+  "bank_transfer",
+  "manual",
+] as const;
+
+export type BayPaymentMethod = (typeof PAYMENT_METHODS)[number];
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -33,6 +44,9 @@ export interface PostServiceFormData {
     notes?: string;
   }>;
   mechanicNotes: string;
+  paymentMethod: BayPaymentMethod;
+  /** Selected org transfer bank when paymentMethod is bank_transfer. */
+  transferBankId?: string | null;
 }
 
 export interface PostServiceFormProps {
@@ -42,6 +56,9 @@ export interface PostServiceFormProps {
   currentOdometer: number | null;
   services: WorkOrderServiceItem[];
   newStatus: string;
+  grandTotal: number;
+  paymentMethodFees: PaymentMethodFees;
+  transferBanks: ResolvedTransferBank[];
   onConfirm: (data: PostServiceFormData) => Promise<void>;
   onCancel: () => void;
 }
@@ -51,6 +68,8 @@ export interface PostServiceFormProps {
 export const postServiceSchema = z.object({
   odometer: z.string().optional(),
   mechanicNotes: z.string().optional(),
+  paymentMethod: z.enum(PAYMENT_METHODS),
+  transferBankId: z.string().optional(),
 });
 
 export type PostServiceFormValues = z.infer<typeof postServiceSchema>;

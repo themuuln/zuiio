@@ -1,11 +1,12 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from '@tanstack/react-query';
 import {
   Building2,
   CalendarClock,
   CreditCard,
   DollarSign,
+  ExternalLink,
   Palette,
   Pencil,
   Save,
@@ -14,40 +15,52 @@ import {
   Smartphone,
   Users,
   X,
-} from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
-import { z } from "zod";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+} from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
+import { z } from 'zod';
+import { Badge } from '@/components/ui/badge';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   Field,
   FieldContent,
   FieldError,
   FieldLabel,
-} from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Typography } from "@/components/ui/typography";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import { useForm, zodResolver } from "@/lib/hooks/use-form";
-import { orgKeys } from "@/lib/queries/keys";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
-import type { Organization, SubscriptionPlanInfo } from "@/lib/types";
+} from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Typography } from '@/components/ui/typography';
+import { useRightSidebar } from '@/hooks/use-right-sidebar';
+import { useForm, zodResolver } from '@/lib/hooks/use-form';
+import { orgKeys } from '@/lib/queries/keys';
+import { useCurrentOrg } from '@/lib/queries/use-organization';
+import type { Organization, SubscriptionPlanInfo } from '@/lib/types';
+import { cn } from '@/lib/utils';
+
+const orgEditSchema = z.object({
+  name: z
+    .string()
+    .min(1, 'Organization name is required')
+    .max(100, 'Name is too long'),
+  logoUrl: z.string().url('Invalid URL').or(z.literal('')),
+});
+
+type OrgEditValues = z.infer<typeof orgEditSchema>;
 
 export default function OrganizationPage() {
   const t = useTranslations();
-  const orgT = useTranslations("organization.page");
+  const orgT = useTranslations('organization');
+  const pageT = useTranslations('organization.page');
   const orgInfoQuery = useCurrentOrg();
   const orgId = orgInfoQuery.data?.orgId;
 
@@ -57,11 +70,13 @@ export default function OrganizationPage() {
     error: orgError,
     refetch: refetchOrg,
   } = useQuery({
-    queryKey: orgKeys.detail(orgId ?? ""),
+    queryKey: orgKeys.detail(orgId ?? ''),
     queryFn: async () => {
       const res = await fetch(`/api/organizations/${orgId}`);
       const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
+      if (!res.ok || json.error) {
+        throw new Error(json.error?.message ?? 'Failed to load organization');
+      }
       return json.data as Organization;
     },
     enabled: !!orgId,
@@ -73,65 +88,66 @@ export default function OrganizationPage() {
     isLoading: subLoading,
     error: subError,
   } = useQuery({
-    queryKey: orgKeys.subscription(orgId ?? ""),
+    queryKey: orgKeys.subscription(orgId ?? ''),
     queryFn: async () => {
       const res = await fetch(`/api/organizations/${orgId}/subscription`);
       const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
+      if (!res.ok || json.error) {
+        throw new Error(json.error?.message ?? 'Failed to load subscription');
+      }
       return json.data as SubscriptionPlanInfo;
     },
     enabled: !!orgId,
     staleTime: 30_000,
   });
 
-  // ── Org edit form schema ────────────────────────────────────
-
-  const orgEditSchema = z.object({
-    name: z
-      .string()
-      .min(1, "Organization name is required")
-      .max(100, "Name is too long"),
-    logoUrl: z.string().url("Invalid URL").or(z.literal("")),
-  });
-
-  type OrgEditValues = z.infer<typeof orgEditSchema>;
-
-  // Keep initial form values stable across renders for defaultValues
-  const initialOrgRef = useRef<OrgEditValues>({
-    name: organization?.name ?? "",
-    logoUrl: organization?.logo_url ?? "",
-  });
-
   const form = useForm<OrgEditValues>({
     resolver: zodResolver(orgEditSchema),
-    defaultValues: initialOrgRef.current,
+    defaultValues: {
+      name: '',
+      logoUrl: '',
+    },
   });
 
-  const watchedLogoUrl = form.watch("logoUrl");
+  const watchedLogoUrl = form.watch('logoUrl');
   const [editing, setEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  useEffect(() => {
+    if (!organization || editing) return;
+    form.reset({
+      name: organization.name ?? '',
+      logoUrl: organization.logo_url ?? '',
+    });
+  }, [editing, form, organization]);
+
   const handleSave = async () => {
     if (!orgId) return;
+
     setIsSaving(true);
     const values = form.getValues();
+
     try {
       const res = await fetch(`/api/organizations/${orgId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: values.name,
           logoUrl: values.logoUrl || null,
         }),
       });
       const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      toast.success(orgT("orgUpdated"));
+
+      if (!res.ok || json.error) {
+        throw new Error(json.error?.message ?? orgT('failedToUpdateOrg'));
+      }
+
+      toast.success(orgT('orgUpdated'));
       await refetchOrg();
       setEditing(false);
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : orgT("failedToUpdateOrg"),
+        err instanceof Error ? err.message : orgT('failedToUpdateOrg'),
       );
     } finally {
       setIsSaving(false);
@@ -140,8 +156,8 @@ export default function OrganizationPage() {
 
   const handleCancel = () => {
     form.reset({
-      name: organization?.name ?? "",
-      logoUrl: organization?.logo_url ?? "",
+      name: organization?.name ?? '',
+      logoUrl: organization?.logo_url ?? '',
     });
     setEditing(false);
   };
@@ -156,33 +172,107 @@ export default function OrganizationPage() {
   const formatPlanType = useCallback(
     (planType: string) => {
       const map: Record<string, string> = {
-        starter: orgT("planStarter"),
-        pro: orgT("planPro"),
-        business: orgT("planBusiness"),
-        enterprise: orgT("planEnterprise"),
+        starter: orgT('planStarter'),
+        pro: orgT('planPro'),
+        business: orgT('planBusiness'),
+        enterprise: orgT('planEnterprise'),
       };
+
       return map[planType] ?? planType;
     },
     [orgT],
   );
 
   const formatDate = useCallback((dateStr: string | null) => {
-    if (!dateStr) return "\u2014";
+    if (!dateStr) return '\u2014';
     return new Date(dateStr).toLocaleDateString();
   }, []);
+
+  const organizationSummary = useMemo(
+    () => [
+      {
+        label: pageT('nameLabel'),
+        value: organization?.name ?? '\u2014',
+      },
+      {
+        label: pageT('slugLabel'),
+        value: organization?.slug ?? '\u2014',
+      },
+      {
+        label: orgT('status'),
+        value: subscription?.status ?? '\u2014',
+        className: 'capitalize',
+      },
+    ],
+    [organization?.name, organization?.slug, orgT, pageT, subscription?.status],
+  );
+
+  const workspaceCards = useMemo(
+    () => [
+      {
+        href: '/dashboard/organization/members',
+        icon: Users,
+        title: orgT('members'),
+        description: orgT('inviteTeam'),
+        actionLabel: orgT('manageMembers'),
+        variant: 'default' as const,
+      },
+      {
+        href: '/dashboard/organization/roles',
+        icon: Shield,
+        title: orgT('team'),
+        description: orgT('manageTeamMembers'),
+        actionLabel: orgT('viewRoles'),
+        variant: 'outline' as const,
+      },
+      {
+        href: '/dashboard/organization/settings/theme',
+        icon: Palette,
+        title: orgT('theme'),
+        description: orgT('customizeColors'),
+        actionLabel: orgT('themeSettings'),
+        variant: 'outline' as const,
+      },
+      {
+        href: '/dashboard/payroll',
+        icon: DollarSign,
+        title: orgT('payroll'),
+        description: orgT('setHourlyRates'),
+        actionLabel: orgT('managePayroll'),
+        variant: 'outline' as const,
+      },
+      {
+        href: '/dashboard/organization/devices',
+        icon: Smartphone,
+        title: orgT('devices'),
+        description: orgT('registerDevices'),
+        actionLabel: orgT('manageDevices'),
+        variant: 'outline' as const,
+      },
+      {
+        href: '/dashboard/settings',
+        icon: Settings,
+        title: orgT('settings'),
+        description: orgT('commissionRules'),
+        actionLabel: orgT('openSettings'),
+        variant: 'outline' as const,
+      },
+    ],
+    [orgT],
+  );
 
   const { registerTab, unregisterTab } = useRightSidebar();
 
   useEffect(() => {
     registerTab(
-      "subscription",
-      orgT("subscription"),
+      'subscription',
+      orgT('subscription'),
       <div className="flex flex-col gap-2">
         {subscription ? (
           <>
             <div className="rounded-md border border-border/50 bg-card px-2.5 py-1.5">
               <Typography.Muted className="text-[10px] text-muted-foreground">
-                {orgT("plan")}
+                {orgT('plan')}
               </Typography.Muted>
               <Typography.Text className="text-xs font-medium">
                 {formatPlanType(subscription.planType)}
@@ -190,7 +280,7 @@ export default function OrganizationPage() {
             </div>
             <div className="rounded-md border border-border/50 bg-card px-2.5 py-1.5">
               <Typography.Muted className="text-[10px] text-muted-foreground">
-                {orgT("status")}
+                {orgT('status')}
               </Typography.Muted>
               <Typography.Text className="text-xs font-medium capitalize">
                 {subscription.status}
@@ -198,74 +288,89 @@ export default function OrganizationPage() {
             </div>
             <div className="rounded-md border border-border/50 bg-card px-2.5 py-1.5">
               <Typography.Muted className="text-[10px] text-muted-foreground">
-                {orgT("started")}
+                {orgT('started')}
               </Typography.Muted>
               <Typography.Text className="text-xs font-medium">
                 {formatDate(subscription.startedAt)}
               </Typography.Text>
             </div>
             {subscription.trial && subscription.expiresAt && (
-              <div className="rounded-md border border-amber-200/50 bg-amber-50/50 dark:border-amber-900/30 dark:bg-amber-950/20 px-2.5 py-1.5">
+              <div className="rounded-md border border-amber-200/50 bg-amber-50/50 px-2.5 py-1.5 dark:border-amber-900/30 dark:bg-amber-950/20">
                 <Typography.Muted className="text-[10px] text-muted-foreground">
-                  {orgT("trialEnds")}
+                  {orgT('trialEnds')}
                 </Typography.Muted>
                 <Typography.Text className="text-xs font-medium">
                   {formatDate(subscription.expiresAt)}
                 </Typography.Text>
               </div>
             )}
-            {subscription.planType !== "enterprise" && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-1 w-full h-8 text-xs"
-                render={<Link href="/pricing" />}
+            {subscription.planType !== 'enterprise' && (
+              <Link
+                href="/pricing"
+                className={cn(
+                  buttonVariants({ variant: 'outline', size: 'sm' }),
+                  'mt-1 h-8 w-full text-xs',
+                )}
               >
-                {orgT("upgradePlan")}
-              </Button>
+                {orgT('upgradePlan')}
+              </Link>
             )}
-            {subscription.planType === "enterprise" && (
+            {subscription.planType === 'enterprise' && (
               <Badge variant="secondary" className="mt-1 w-fit text-[10px]">
-                {orgT("currentPlan")}
+                {orgT('currentPlan')}
               </Badge>
             )}
           </>
         ) : (
           <Typography.Muted className="text-xs text-muted-foreground">
-            {orgT("noActiveSubscription")}
+            {orgT('noActiveSubscription')}
           </Typography.Muted>
         )}
       </div>,
     );
+
     registerTab(
-      "team",
-      orgT("team"),
-      <Typography.Muted className="text-xs text-muted-foreground px-2.5 py-1.5">
-        {orgT("manageTeamMembers")}
+      'team',
+      orgT('team'),
+      <Typography.Muted className="px-2.5 py-1.5 text-xs text-muted-foreground">
+        {orgT('manageTeamMembers')}
       </Typography.Muted>,
     );
+
     return () => {
-      unregisterTab("subscription");
-      unregisterTab("team");
+      unregisterTab('subscription');
+      unregisterTab('team');
     };
-  }, [registerTab, subscription, unregisterTab, formatDate, formatPlanType]);
+  }, [
+    formatDate,
+    formatPlanType,
+    orgT,
+    registerTab,
+    subscription,
+    unregisterTab,
+  ]);
 
   if (loading) {
     return (
       <div className="flex flex-col gap-6">
-        <div>
-          <Skeleton className="h-8 w-40" />
-          <Skeleton className="mt-2 size-56" />
+        <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm">
+          <Skeleton className="h-6 w-28" />
+          <Skeleton className="mt-3 h-8 w-48" />
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={`summary-${i}`} className="h-20 rounded-2xl" />
+            ))}
+          </div>
         </div>
-        <div className="grid gap-4 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <Card key={`skeleton-${i}`}>
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
+          {[1, 2].map((i) => (
+            <Card key={`card-${i}`}>
               <CardHeader>
                 <Skeleton className="h-5 w-28" />
                 <Skeleton className="h-4 w-32" />
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-8 w-36" />
+                <Skeleton className="h-24 rounded-2xl" />
               </CardContent>
             </Card>
           ))}
@@ -279,10 +384,10 @@ export default function OrganizationPage() {
       <div className="flex flex-col gap-6">
         <div>
           <Typography.H1 className="text-2xl font-semibold tracking-tight">
-            {t("nav.organization")}
+            {t('nav.organization')}
           </Typography.H1>
           <Typography.Muted className="text-muted-foreground">
-            Manage your organization
+            {pageT('manageYourOrg')}
           </Typography.Muted>
         </div>
         <Card>
@@ -296,7 +401,7 @@ export default function OrganizationPage() {
               }}
               variant="outline"
             >
-              {t("common.retry")}
+              {t('common.retry')}
             </Button>
           </CardContent>
         </Card>
@@ -305,21 +410,53 @@ export default function OrganizationPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <Typography.H1 className="text-2xl font-semibold tracking-tight">
-          {t("nav.organization")}
-        </Typography.H1>
-        <Typography.Muted className="text-muted-foreground">
-          {orgT("manageYourOrg")}
-        </Typography.Muted>
+    <div className="flex flex-col gap-6 pb-8">
+      <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-3">
+            <Badge variant="outline" className="w-fit rounded-full px-2.5 py-0.5">
+              <Building2 className="mr-1 size-3.5" />
+              {orgT('organization')}
+            </Badge>
+            <div>
+              <Typography.H1 className="text-2xl font-semibold tracking-tight md:text-3xl">
+                {t('nav.organization')}
+              </Typography.H1>
+              <Typography.Muted className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                {pageT('manageYourOrg')}
+              </Typography.Muted>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            {organizationSummary.map((item) => (
+              <div
+                key={item.label}
+                className="min-w-[132px] rounded-2xl border border-border/60 bg-muted/20 px-4 py-3"
+              >
+                <Typography.Muted className="text-xs text-muted-foreground">
+                  {item.label}
+                </Typography.Muted>
+                <Typography.Text
+                  className={cn(
+                    'mt-1 block truncate text-sm font-semibold',
+                    item.className,
+                  )}
+                >
+                  {item.value}
+                </Typography.Text>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
+        <Card className="border-border/60 shadow-sm">
+          <CardHeader className="gap-2 pb-4">
             <CardTitle className="flex items-center gap-2">
               <Building2 className="size-4" />
-              {orgT("organization")}
+              {orgT('organization')}
               {!editing && (
                 <Button
                   variant="ghost"
@@ -331,49 +468,57 @@ export default function OrganizationPage() {
                 </Button>
               )}
             </CardTitle>
-            <CardDescription>{orgT("workspaceDetails")}</CardDescription>
+            <CardDescription>{orgT('workspaceDetails')}</CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-3">
+          <CardContent className="flex flex-col gap-4">
             {editing ? (
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   form.handleSubmit(handleSave)();
                 }}
-                className="flex flex-col gap-3"
+                className="flex flex-col gap-4"
               >
                 <Field data-invalid={!!form.formState.errors.name}>
-                  <FieldLabel>{orgT("nameLabel")}</FieldLabel>
+                  <FieldLabel>{pageT('nameLabel')}</FieldLabel>
                   <FieldContent>
                     <Input
-                      placeholder={orgT("orgNamePlaceholder")}
+                      placeholder={pageT('orgNamePlaceholder')}
                       aria-invalid={!!form.formState.errors.name}
-                      {...form.register("name")}
+                      {...form.register('name')}
                     />
                     {form.formState.errors.name && (
-                      <FieldError>
-                        {form.formState.errors.name.message}
-                      </FieldError>
+                      <FieldError>{form.formState.errors.name.message}</FieldError>
                     )}
                   </FieldContent>
                 </Field>
 
-                <div>
-                  <Typography.Muted className="text-sm text-muted-foreground">
-                    {orgT("slugLabel")}
-                  </Typography.Muted>
-                  <Typography.Text className="font-medium">
-                    {organization?.slug ?? "\u2014"}
-                  </Typography.Text>
+                <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_160px]">
+                  <div className="rounded-2xl border border-border/60 bg-muted/20 px-4 py-3">
+                    <Typography.Muted className="text-xs text-muted-foreground">
+                      {pageT('slugLabel')}
+                    </Typography.Muted>
+                    <Typography.Text className="mt-1 font-medium">
+                      {organization?.slug ?? '\u2014'}
+                    </Typography.Text>
+                  </div>
+                  <div className="rounded-2xl border border-border/60 bg-muted/20 px-4 py-3">
+                    <Typography.Muted className="text-xs text-muted-foreground">
+                      {orgT('plan')}
+                    </Typography.Muted>
+                    <Typography.Text className="mt-1 font-medium">
+                      {subscription ? formatPlanType(subscription.planType) : '\u2014'}
+                    </Typography.Text>
+                  </div>
                 </div>
 
                 <Field data-invalid={!!form.formState.errors.logoUrl}>
-                  <FieldLabel>{orgT("logoUrlLabel")}</FieldLabel>
+                  <FieldLabel>{pageT('logoUrlLabel')}</FieldLabel>
                   <FieldContent>
                     <Input
-                      placeholder={orgT("logoUrlPlaceholder")}
+                      placeholder={pageT('logoUrlPlaceholder')}
                       aria-invalid={!!form.formState.errors.logoUrl}
-                      {...form.register("logoUrl")}
+                      {...form.register('logoUrl')}
                     />
                     {form.formState.errors.logoUrl && (
                       <FieldError>
@@ -381,18 +526,17 @@ export default function OrganizationPage() {
                       </FieldError>
                     )}
                     {watchedLogoUrl && (
-                      <div className="mt-2 rounded border p-1">
+                      <div className="mt-3 rounded-2xl border border-border/60 bg-muted/20 p-2">
                         <Image
                           src={watchedLogoUrl}
-                          alt={orgT("logoPreview")}
+                          alt={orgT('logoPreview')}
                           width={200}
                           height={80}
-                          className="max-h-20 rounded"
+                          className="max-h-20 rounded-lg"
                           unoptimized
                           onError={(e) => {
-                            (
-                              e.currentTarget as HTMLImageElement
-                            ).style.display = "none";
+                            (e.currentTarget as HTMLImageElement).style.display =
+                              'none';
                           }}
                         />
                       </div>
@@ -403,7 +547,7 @@ export default function OrganizationPage() {
                 <div className="flex gap-2 pt-2">
                   <Button type="submit" disabled={isSaving} size="sm">
                     <Save className="mr-1 size-3.5" />
-                    {isSaving ? orgT("saving") : orgT("saved")}
+                    {isSaving ? orgT('saving') : orgT('saved')}
                   </Button>
                   <Button
                     type="button"
@@ -413,236 +557,163 @@ export default function OrganizationPage() {
                     disabled={isSaving}
                   >
                     <X className="mr-1 size-3.5" />
-                    {orgT("cancel")}
+                    {orgT('cancel')}
                   </Button>
                 </div>
               </form>
             ) : (
-              <>
-                <div>
-                  <Typography.Muted className="text-sm text-muted-foreground">
-                    {orgT("nameLabel")}
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="rounded-2xl border border-border/60 bg-muted/20 px-4 py-3">
+                  <Typography.Muted className="text-xs text-muted-foreground">
+                    {pageT('nameLabel')}
                   </Typography.Muted>
-                  <Typography.Text className="font-medium">
-                    {organization?.name ?? "\u2014"}
+                  <Typography.Text className="mt-1 text-sm font-semibold">
+                    {organization?.name ?? '\u2014'}
                   </Typography.Text>
                 </div>
-                <div>
-                  <Typography.Muted className="text-sm text-muted-foreground">
-                    {orgT("slugLabel")}
+                <div className="rounded-2xl border border-border/60 bg-muted/20 px-4 py-3">
+                  <Typography.Muted className="text-xs text-muted-foreground">
+                    {pageT('slugLabel')}
                   </Typography.Muted>
-                  <Typography.Text className="font-medium">
-                    {organization?.slug ?? "\u2014"}
+                  <Typography.Text className="mt-1 text-sm font-semibold">
+                    {organization?.slug ?? '\u2014'}
                   </Typography.Text>
                 </div>
-              </>
+                <div className="rounded-2xl border border-border/60 bg-muted/20 px-4 py-3">
+                  <Typography.Muted className="text-xs text-muted-foreground">
+                    {pageT('logoUrlLabel')}
+                  </Typography.Muted>
+                  <Typography.Text className="mt-1 truncate text-sm font-semibold">
+                    {organization?.logo_url ?? '\u2014'}
+                  </Typography.Text>
+                </div>
+                <div className="rounded-2xl border border-border/60 bg-muted/20 px-4 py-3">
+                  <Typography.Muted className="text-xs text-muted-foreground">
+                    {orgT('subscription')}
+                  </Typography.Muted>
+                  <Typography.Text className="mt-1 text-sm font-semibold">
+                    {subscription ? formatPlanType(subscription.planType) : '\u2014'}
+                  </Typography.Text>
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
+        <Card className="border-border/60 shadow-sm">
+          <CardHeader className="gap-2 pb-4">
             <CardTitle className="flex items-center gap-2">
               <CreditCard className="size-4" />
-              {orgT("subscription")}
+              {orgT('subscription')}
             </CardTitle>
-            <CardDescription>{orgT("currentPlanAndBilling")}</CardDescription>
+            <CardDescription>{orgT('currentPlanAndBilling')}</CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-3">
+          <CardContent className="flex flex-col gap-4">
             {subscription ? (
               <>
-                <div className="flex items-center justify-between">
+                <div className="flex items-start justify-between gap-3 rounded-2xl border border-border/60 bg-muted/20 px-4 py-3">
                   <div>
-                    <Typography.Muted className="text-sm text-muted-foreground">
-                      {orgT("plan")}
+                    <Typography.Muted className="text-xs text-muted-foreground">
+                      {orgT('plan')}
                     </Typography.Muted>
-                    <Typography.Text className="font-medium">
+                    <Typography.Text className="mt-1 font-semibold">
                       {formatPlanType(subscription.planType)}
-                      {subscription.trial && (
-                        <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                          Trial
-                        </span>
-                      )}
                     </Typography.Text>
                   </div>
-                  {subscription.planType !== "enterprise" ? (
-                    <Button
-                      variant="default"
-                      size="sm"
-                      render={
-                        <Link href={`/pricing?plan=${subscription.planType}`} />
-                      }
+                  {subscription.trial ? (
+                    <Badge
+                      variant="outline"
+                      className="rounded-full border-amber-300 bg-amber-50 px-2.5 py-0.5 text-amber-700 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300"
                     >
-                      {t("subscription.upgradePlan")}
-                    </Button>
+                      {t('admin.trial')}
+                    </Badge>
                   ) : (
-                    <Badge variant="secondary">
-                      {t("subscription.currentPlan")}
+                    <Badge variant="secondary" className="rounded-full px-2.5 py-0.5 capitalize">
+                      {subscription.status}
                     </Badge>
                   )}
                 </div>
-                <div>
-                  <Typography.Muted className="text-sm text-muted-foreground">
-                    {orgT("status")}
-                  </Typography.Muted>
-                  <Typography.Text className="font-medium capitalize">
-                    {subscription.status}
-                  </Typography.Text>
-                </div>
-                <div>
-                  <Typography.Muted className="text-sm text-muted-foreground">
-                    {orgT("started")}
-                  </Typography.Muted>
-                  <Typography.Text className="font-medium">
-                    {formatDate(subscription.startedAt)}
-                  </Typography.Text>
-                </div>
-                {subscription.expiresAt && (
-                  <div>
-                    <Typography.Muted className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <CalendarClock className="size-3" />
-                      {orgT("trialEnds")}
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-border/60 bg-muted/20 px-4 py-3">
+                    <Typography.Muted className="text-xs text-muted-foreground">
+                      {orgT('started')}
                     </Typography.Muted>
-                    <Typography.Text className="font-medium">
+                    <Typography.Text className="mt-1 font-medium">
+                      {formatDate(subscription.startedAt)}
+                    </Typography.Text>
+                  </div>
+                  <div className="rounded-2xl border border-border/60 bg-muted/20 px-4 py-3">
+                    <Typography.Muted className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <CalendarClock className="size-3" />
+                      {orgT('trialEnds')}
+                    </Typography.Muted>
+                    <Typography.Text className="mt-1 font-medium">
                       {formatDate(subscription.expiresAt)}
                     </Typography.Text>
                   </div>
+                </div>
+
+                {subscription.planType !== 'enterprise' ? (
+                  <Link
+                    href={`/pricing?plan=${subscription.planType}`}
+                    className={cn(
+                      buttonVariants({ size: 'sm' }),
+                      'h-9 rounded-xl',
+                    )}
+                  >
+                    {orgT('upgradePlan')}
+                  </Link>
+                ) : (
+                  <Badge variant="secondary" className="w-fit rounded-full px-2.5 py-0.5">
+                    {orgT('currentPlan')}
+                  </Badge>
                 )}
               </>
             ) : (
               <Typography.Muted className="text-sm text-muted-foreground">
-                {orgT("noActiveSubscription")}
+                {orgT('noActiveSubscription')}
               </Typography.Muted>
             )}
           </CardContent>
         </Card>
+      </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="size-4" />
-              {orgT("members")}
-            </CardTitle>
-            <CardDescription>{orgT("teamManagement")}</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <Typography.Muted className="text-sm text-muted-foreground">
-              {orgT("inviteTeam")}
-            </Typography.Muted>
-            <Button
-              variant="outline"
-              className="w-full"
-              render={<Link href="/dashboard/organization/members" />}
-            >
-              <Users className="mr-2 size-4" />
-              {orgT("manageMembers")}
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full"
-              render={<Link href="/dashboard/organization/roles" />}
-            >
-              <Shield className="mr-2 size-4" />
-              {orgT("viewRoles")}
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {workspaceCards.map((item) => {
+          const Icon = item.icon;
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Palette className="size-4" />
-              {orgT("theme")}
-            </CardTitle>
-            <CardDescription>{orgT("customizeAppearance")}</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <Typography.Muted className="text-sm text-muted-foreground">
-              {orgT("customizeColors")}
-            </Typography.Muted>
-            <Button
-              variant="outline"
-              className="w-full"
-              render={<Link href="/dashboard/organization/settings/theme" />}
-            >
-              <Palette className="mr-2 size-4" />
-              {orgT("themeSettings")}
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="size-4" />
-              {orgT("payroll")}
-            </CardTitle>
-            <CardDescription>{orgT("mechanicPayRates")}</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <Typography.Muted className="text-sm text-muted-foreground">
-              {orgT("setHourlyRates")}
-            </Typography.Muted>
-            <Button
-              variant="outline"
-              className="w-full"
-              render={<Link href="/dashboard/payroll" />}
-            >
-              <DollarSign className="mr-2 size-4" />
-              {orgT("managePayroll")}
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Smartphone className="size-4" />
-              {orgT("devices")}
-            </CardTitle>
-            <CardDescription>
-              {orgT("mechanicTabletManagement")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <Typography.Muted className="text-sm text-muted-foreground">
-              {orgT("registerDevices")}
-            </Typography.Muted>
-            <Button
-              variant="outline"
-              className="w-full"
-              render={<Link href="/dashboard/organization/devices" />}
-            >
-              <Smartphone className="mr-2 size-4" />
-              {orgT("manageDevices")}
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="size-4" />
-              {orgT("settings")}
-            </CardTitle>
-            <CardDescription>
-              {orgT("businessDefaultsAndRules")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <Typography.Muted className="text-sm text-muted-foreground">
-              {orgT("commissionRules")}
-            </Typography.Muted>
-            <Button
-              variant="outline"
-              className="w-full"
-              render={<Link href="/dashboard/settings" />}
-            >
-              <Settings className="mr-2 size-4" />
-              {orgT("openSettings")}
-            </Button>
-          </CardContent>
-        </Card>
+          return (
+            <Card key={item.href} className="border-border/60 shadow-sm">
+              <CardHeader className="gap-3 pb-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex size-10 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                    <Icon className="size-4" />
+                  </div>
+                  <ExternalLink className="size-4 text-muted-foreground" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">{item.title}</CardTitle>
+                  <CardDescription className="mt-1 text-sm">
+                    {item.description}
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Link
+                  href={item.href}
+                  className={cn(
+                    buttonVariants({ variant: item.variant }),
+                    'h-10 w-full justify-between rounded-xl',
+                  )}
+                >
+                  <span>{item.actionLabel}</span>
+                  <ExternalLink className="size-4" />
+                </Link>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 // ── Profitability, P&L, and work order profit functions ──────
 
-import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { withBranchFilter } from "@/lib/supabase/with-branch";
 
 import type {
@@ -14,7 +15,7 @@ import type {
  * Reuses the same logic as getWorkOrderProfit but batched for many WOs.
  */
 export async function calculateProfitability(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: SupabaseClient,
   woIds: string[],
 ): Promise<ReportProfitability | null> {
   if (woIds.length === 0) return null;
@@ -78,7 +79,7 @@ export async function calculateProfitability(
  * For daily: previous day. For weekly: previous week. For monthly: previous month.
  */
 export async function getComparisonData(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: SupabaseClient,
   orgId: string,
   currentStart: string,
   currentEnd: string,
@@ -148,10 +149,11 @@ export async function getComparisonData(
 }
 
 export async function getWorkOrderProfit(
+  db: SupabaseClient,
   workOrderId: string,
   _orgId: string,
 ): Promise<import("@/lib/types").WorkOrderProfit> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const [servicesResult, partsResult] = await Promise.all([
     supabase
@@ -199,12 +201,15 @@ export async function getWorkOrderProfit(
   };
 }
 
-export async function getDashboardProfitSummary(orgId: string): Promise<{
+export async function getDashboardProfitSummary(
+  db: SupabaseClient,
+  orgId: string,
+): Promise<{
   todayProfit: import("@/lib/types").WorkOrderProfit;
   weekProfit: import("@/lib/types").WorkOrderProfit;
   monthProfit: import("@/lib/types").WorkOrderProfit;
 }> {
-  const supabase = await createClient();
+  const supabase = db;
   const now = new Date();
   const todayStart = new Date(
     now.getFullYear(),
@@ -300,7 +305,7 @@ export async function getDashboardProfitSummary(orgId: string): Promise<{
  * Only computes revenue + count — not full detail.
  */
 export async function getPreviousPeriodSummary(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: SupabaseClient,
   orgId: string,
   period: "today" | "week" | "month" | "all",
   branchId: string | null = null,
@@ -396,12 +401,13 @@ export async function getPreviousPeriodSummary(
  * Simplified P&L (Profit & Loss) statement.
  */
 export async function getPnLSummary(
+  db: SupabaseClient,
   orgId: string,
   dateFrom: string,
   dateTo: string,
   branchId: string | null = null,
 ): Promise<PnLSummary> {
-  const supabase = await createClient();
+  const supabase = db;
 
   // Fetch completed WOs in period
   const { data: wos } = await withBranchFilter(

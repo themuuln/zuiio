@@ -32,7 +32,6 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -69,6 +68,11 @@ import {
   useUpdateDiagnosisLabel,
 } from "@/lib/queries/use-diagnosis-labels";
 import type { DiagnosisLabel } from "@/lib/types";
+import {
+  SettingsBlock,
+  SettingsError,
+  SettingsTableFrame,
+} from "./_settings-layout";
 import { cn } from "@/lib/utils";
 
 const PRESET_COLORS = [
@@ -395,20 +399,12 @@ export function DiagnosisLabelsSection({ orgId }: DiagnosisLabelsSectionProps) {
   }
 
   if (error) {
-    return (
-      <Card className="border-destructive/20">
-        <CardContent className="py-6">
-          <Typography.Text className="text-sm text-destructive">
-            {t("loadFailed")}
-          </Typography.Text>
-        </CardContent>
-      </Card>
-    );
+    return <SettingsError message={t("loadFailed")} />;
   }
 
   return (
     <>
-      <div className="flex mt-4 flex-col gap-4">
+      <SettingsBlock>
         <div className="flex items-center justify-between">
           <Typography.Muted className="text-sm text-muted-foreground">
             {t("sectionDescription")}
@@ -420,23 +416,20 @@ export function DiagnosisLabelsSection({ orgId }: DiagnosisLabelsSectionProps) {
         </div>
 
         {!labels || labels.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center gap-3 py-12">
-              <Stethoscope className="size-10 text-muted-foreground/40" />
-              <div className="text-center">
-                <Typography.Text className="text-sm font-medium">
-                  {t("emptyTitle")}
-                </Typography.Text>
-                <Typography.Muted className="mt-0.5 text-xs text-muted-foreground">
-                  {t("emptyDescription")}
-                </Typography.Muted>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed py-8">
+            <Stethoscope className="size-8 text-muted-foreground/40" />
+            <div className="text-center">
+              <Typography.Text className="text-sm font-medium">
+                {t("emptyTitle")}
+              </Typography.Text>
+              <Typography.Muted className="mt-0.5 text-xs text-muted-foreground">
+                {t("emptyDescription")}
+              </Typography.Muted>
+            </div>
+          </div>
         ) : (
-          <Card>
-            <CardContent className="p-0">
-              <DndContext
+          <SettingsTableFrame>
+            <DndContext
                 collisionDetection={closestCenter}
                 modifiers={[restrictToVerticalAxis]}
                 sensors={sensors}
@@ -537,11 +530,10 @@ export function DiagnosisLabelsSection({ orgId }: DiagnosisLabelsSectionProps) {
                     </TableBody>
                   </SortableContext>
                 </Table>
-              </DndContext>
-            </CardContent>
-          </Card>
+            </DndContext>
+          </SettingsTableFrame>
         )}
-      </div>
+      </SettingsBlock>
 
       <LabelFormDialog
         open={dialogOpen}

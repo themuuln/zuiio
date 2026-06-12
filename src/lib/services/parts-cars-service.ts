@@ -2,7 +2,7 @@ import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { reportServerError } from "@/lib/sentry-report-server";
-import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   PartsCarParts,
   PartsCarPartsInsert,
@@ -13,8 +13,11 @@ import type {
 
 // ── Parts Cars ────────────────────────────────────────────────
 
-export async function getPartsCars(orgId: string): Promise<PartsCars[]> {
-  const supabase = await createClient();
+export async function getPartsCars(
+  db: SupabaseClient,
+  orgId: string,
+): Promise<PartsCars[]> {
+  const supabase = db;
   const { data, error } = await supabase
     .from("parts_cars")
     .select(
@@ -28,10 +31,11 @@ export async function getPartsCars(orgId: string): Promise<PartsCars[]> {
 }
 
 export async function getPartsCar(
+  db: SupabaseClient,
   orgId: string,
   carId: string,
 ): Promise<PartsCars> {
-  const supabase = await createClient();
+  const supabase = db;
   const { data, error } = await supabase
     .from("parts_cars")
     .select(
@@ -45,6 +49,7 @@ export async function getPartsCar(
 }
 
 export async function createPartsCar(
+  db: SupabaseClient,
   orgId: string,
   userId: string,
   params: Partial<PartsCarsInsert>,
@@ -52,7 +57,7 @@ export async function createPartsCar(
   if (!params.make || !params.model) {
     throw new ValidationError("Make and model are required");
   }
-  const supabase = await createClient();
+  const supabase = db;
   const { data, error } = await supabase
     .from("parts_cars")
     .insert({
@@ -81,11 +86,12 @@ export async function createPartsCar(
 }
 
 export async function updatePartsCar(
+  db: SupabaseClient,
   orgId: string,
   carId: string,
   params: Partial<PartsCarsUpdate>,
 ): Promise<PartsCars> {
-  const supabase = await createClient();
+  const supabase = db;
   const { data, error } = await supabase
     .from("parts_cars")
     .update({
@@ -104,10 +110,11 @@ export async function updatePartsCar(
 }
 
 export async function deletePartsCar(
+  db: SupabaseClient,
   orgId: string,
   carId: string,
 ): Promise<void> {
-  const supabase = await createClient();
+  const supabase = db;
   const { error } = await supabase
     .from("parts_cars")
     .update({
@@ -123,10 +130,11 @@ export async function deletePartsCar(
 // ── Parts Car Parts ───────────────────────────────────────────
 
 export async function getPartsCarParts(
+  db: SupabaseClient,
   orgId: string,
   carId: string,
 ): Promise<PartsCarParts[]> {
-  const supabase = await createClient();
+  const supabase = db;
   const { data, error } = await supabase
     .from("parts_car_parts")
     .select(
@@ -140,13 +148,14 @@ export async function getPartsCarParts(
 }
 
 export async function addPartsCarPart(
+  db: SupabaseClient,
   orgId: string,
   userId: string,
   carId: string,
   params: Partial<PartsCarPartsInsert>,
 ): Promise<PartsCarParts> {
   if (!params.name) throw new ValidationError("Part name is required");
-  const supabase = await createClient();
+  const supabase = db;
   const { data, error } = await supabase
     .from("parts_car_parts")
     .insert({
@@ -172,11 +181,12 @@ export async function addPartsCarPart(
 }
 
 export async function removePartsCarPart(
+  db: SupabaseClient,
   orgId: string,
   carId: string,
   partId: string,
 ): Promise<void> {
-  const supabase = await createClient();
+  const supabase = db;
   const { error } = await supabase
     .from("parts_car_parts")
     .delete()
@@ -190,14 +200,15 @@ export async function removePartsCarPart(
 // ── Disassembly Complete ──────────────────────────────────────
 
 export async function completeDisassembly(
+  db: SupabaseClient,
   orgId: string,
   userId: string,
   carId: string,
 ): Promise<PartsCars> {
-  const supabase = await createClient();
+  const supabase = db;
 
   const [car, { data: parts }] = await Promise.all([
-    getPartsCar(orgId, carId),
+    getPartsCar(db, orgId, carId),
     supabase
       .from("parts_car_parts")
       .select(
@@ -240,11 +251,12 @@ export async function completeDisassembly(
 // ── Publish to Catalog ─────────────────────────────────────────
 
 export async function publishPartsCarPartsToCatalog(
+  db: SupabaseClient,
   orgId: string,
   userId: string,
   carId: string,
 ): Promise<{ publishedCount: number; catalogIds: string[] }> {
-  const supabase = await createClient();
+  const supabase = db;
 
   // Get all parts from this car that don't have a linked catalog entry
   const { data: parts, error: partsError } = await supabase

@@ -71,7 +71,7 @@ export function useMechanics(
   branchId?: string | null,
 ): UseQueryResult<Array<{ id: string; full_name: string | null }>, Error> {
   return useQuery({
-    queryKey: mechanicKeys.list(orgId ?? ""),
+    queryKey: reportKeys.mechanics(orgId ?? "", branchId),
     queryFn: async () => {
       if (!orgId) {
         throw new Error("Organization is required");

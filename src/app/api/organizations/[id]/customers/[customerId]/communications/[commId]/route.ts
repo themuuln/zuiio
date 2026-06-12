@@ -5,7 +5,7 @@ import { deleteCustomerCommunication } from "@/lib/services/communication-servic
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 export const DELETE = createRouteHandler(
-  async ({ request, orgId, params, user }) => {
+  async ({ request, orgId, params, user, supabase }) => {
     await requireActiveSubscription(orgId);
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
     const rateCheck = mutationRateLimiter.check(ip);
@@ -23,7 +23,13 @@ export const DELETE = createRouteHandler(
       );
     }
     const { customerId, commId } = params;
-    await deleteCustomerCommunication(orgId, customerId, commId, user.id);
+    await deleteCustomerCommunication(
+      supabase,
+      orgId,
+      customerId,
+      commId,
+      user.id,
+    );
     return NextResponse.json({ data: null });
   },
 );

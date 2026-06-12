@@ -39,7 +39,7 @@ export function useExpenses(
   if (params?.endDate) filters.endDate = params.endDate;
   if (params?.paid !== undefined) filters.paid = String(params.paid);
   if (params?.overdue) filters.overdue = "true";
-  if (params?.branchId) filters.branchId = params.branchId;
+  if (params?.branchId) filters.branch_id = params.branchId;
 
   return useQuery({
     queryKey: expenseKeys.list(orgId ?? "", filters),
@@ -69,10 +69,19 @@ export function useExpense(
 // ── Expense stats ──
 const fetchExpenseStats = createOrgQuery<ExpenseStats>("/expenses");
 
-export function useExpenseStats(orgId: string | undefined) {
+export function useExpenseStats(
+  orgId: string | undefined,
+  branchId?: string | null,
+) {
   return useQuery({
-    queryKey: expenseKeys.stats(orgId ?? ""),
-    queryFn: () => fetchExpenseStats(orgId!, { params: { type: "stats" } }),
+    queryKey: expenseKeys.stats(orgId ?? "", branchId ?? "all"),
+    queryFn: () =>
+      fetchExpenseStats(orgId!, {
+        params: {
+          type: "stats",
+          ...(branchId ? { branch_id: branchId } : {}),
+        },
+      }),
     enabled: !!orgId,
   });
 }
@@ -217,6 +226,7 @@ export function useDeleteExpense(orgId: string | undefined) {
         body: undefined,
         queryKeysToInvalidate: [[...expenseKeys.all(orgId ?? "")]],
       });
+      return { queued: true } as const;
     },
     onSuccess: (data) => {
       const d = data as unknown as Record<string, unknown> | undefined;
@@ -425,6 +435,7 @@ export function useDeleteExpenseCategory(orgId: string | undefined) {
         body: undefined,
         queryKeysToInvalidate: [[...expenseKeys.all(orgId ?? "")]],
       });
+      return { queued: true } as const;
     },
     onMutate: async (id) => {
       const key = expenseKeys.categories(orgId ?? "");

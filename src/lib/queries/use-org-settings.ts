@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { useOnlineStatus } from "@/lib/hooks/use-online-status";
 import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
 import { toastRetry } from "@/lib/toast-utils";
+import type { OrgTransferBankAccount } from "@/lib/payments/org-bank-accounts";
 import { orgKeys } from "./keys";
 
 interface OrgSettings {
@@ -13,6 +14,10 @@ interface OrgSettings {
   timezone?: string;
   date_format?: string;
   language?: string;
+  /** Processing fee % keyed by payment method (e.g. card: 1). */
+  payment_method_fees?: Partial<Record<string, number>>;
+  /** Enabled transfer bank accounts for customer payments. */
+  transfer_bank_accounts?: OrgTransferBankAccount[];
   [key: string]: unknown;
 }
 

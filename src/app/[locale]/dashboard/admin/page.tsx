@@ -1,6 +1,15 @@
 "use client";
 
-import { Check, Loader2, RefreshCw, Shield, ShieldAlert } from "lucide-react";
+import {
+  Check,
+  Loader2,
+  Megaphone,
+  RefreshCw,
+  Shield,
+  ShieldAlert,
+  Users,
+} from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -41,9 +50,12 @@ export default function AdminPage() {
     queryFn: async () => {
       const res = await fetch("/api/admin/me");
       const json = await res.json();
-      return json.data?.isSuperAdmin ?? false;
+      return json.data;
     },
   });
+
+  const isSuperAdmin = meData?.isSuperAdmin === true;
+  const role = meData?.role;
 
   const { data: orgs = [], isLoading: orgsLoading } = useQuery<AdminOrg[]>({
     queryKey: ["admin", "organizations"],
@@ -52,11 +64,10 @@ export default function AdminPage() {
       const json = await res.json();
       return json.data ?? [];
     },
-    enabled: meData === true,
+    enabled: isSuperAdmin,
   });
 
-  const loading = meLoading || orgsLoading;
-  const isSuperAdmin = meData === true;
+  const loading = meLoading || (isSuperAdmin && orgsLoading);
 
   async function handlePlanChange(orgId: string, planType: string) {
     setSavingOrgId(orgId);
@@ -122,7 +133,7 @@ export default function AdminPage() {
     );
   }
 
-  if (!isSuperAdmin) {
+  if (!meData?.isAdmin) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <ShieldAlert className="size-10 text-destructive" />
@@ -136,6 +147,11 @@ export default function AdminPage() {
     );
   }
 
+  const activeOrgs = orgs.filter(
+    (o) => o.subscription?.status === "active",
+  ).length;
+  const trialOrgs = orgs.filter((o) => o.subscription?.trial).length;
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -148,10 +164,85 @@ export default function AdminPage() {
             {t("admin.dashboardDesc")}
           </Typography.Muted>
         </div>
-        <Badge variant="outline" className="text-xs">
-          {orgs.length} org{orgs.length === 1 ? "" : "s"}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-xs">
+            {role}
+          </Badge>
+          {isSuperAdmin && (
+            <Badge variant="outline" className="text-xs">
+              {orgs.length} org{orgs.length === 1 ? "" : "s"}
+            </Badge>
+          )}
+        </div>
       </div>
+
+      {/* Quick Navigation */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Link href="/admin/sellers">
+          <Card className="transition-colors hover:bg-muted/50 cursor-pointer">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Users className="size-4" />
+                Seller Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Typography.Muted className="text-xs">
+                Manage sellers and organization assignments
+              </Typography.Muted>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/admin/marketing">
+          <Card className="transition-colors hover:bg-muted/50 cursor-pointer">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Megaphone className="size-4" />
+                Marketing Campaigns
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Typography.Muted className="text-xs">
+                Create and manage email, SMS, and push campaigns
+              </Typography.Muted>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+
+      {/* Stats (super admin only) */}
+      {isSuperAdmin && orgs.length > 0 && (
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Total Orgs</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{orgs.length}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Active</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-emerald-600">
+                {activeOrgs}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">On Trial</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-cyan-600">
+                {trialOrgs}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <Card>
         <CardHeader className="pb-3">

@@ -9,15 +9,7 @@ import {
   type LookupResult,
   type ServiceHistoryEntry,
 } from "./_vehicle-registration-schema";
-
-const STATUS_COLORS: Record<string, string> = {
-  Completed: "bg-green-500",
-  "Ready for Pickup": "bg-green-400",
-  "In Progress": "bg-amber-500",
-  Diagnosing: "bg-blue-500",
-  New: "bg-slate-400",
-  Cancelled: "bg-red-400",
-};
+import { STATUS_DOT } from "./_constants";
 
 function ServiceTimelineEntry({
   entry,
@@ -26,7 +18,7 @@ function ServiceTimelineEntry({
   entry: ServiceHistoryEntry;
   isLast: boolean;
 }) {
-  const dotColor = STATUS_COLORS[entry.status] ?? "bg-slate-400";
+  const dotColor = STATUS_DOT[entry.status] ?? "bg-slate-400";
 
   return (
     <div key={entry.work_order_id} className="relative flex gap-3 pb-4">

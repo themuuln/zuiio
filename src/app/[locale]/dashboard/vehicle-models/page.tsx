@@ -10,7 +10,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
@@ -26,7 +26,18 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   Empty,
   EmptyContent,
@@ -35,6 +46,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
@@ -42,6 +54,7 @@ import type { ExportColumn } from "@/lib/export";
 import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
 import { vehicleModelKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { cn } from "@/lib/utils";
 import { HighlightText } from "@/lib/utils/search-utils";
 import { VehicleModelFormSheet } from "./_vehicle-model-form-sheet";
 
@@ -95,15 +108,22 @@ function buildTree(items: VehicleModelItem[]): MakeGroup[] {
 
 // ── Variant display helpers ──────────────────────────────────
 
-function variantYears(v: VariantItem): string {
-  if (v.year_start && v.year_end) return `${v.year_start}\u2013${v.year_end}`;
-  if (v.year_start) return `from ${v.year_start}`;
-  if (v.year_end) return `until ${v.year_end}`;
+function variantYears(
+  v: VariantItem,
+  t: (key: string, values?: Record<string, string | number>) => string,
+): string {
+  if (v.year_start && v.year_end) return `${v.year_start}-${v.year_end}`;
+  if (v.year_start) return t("yearFromValue", { year: v.year_start });
+  if (v.year_end) return t("yearToValue", { year: v.year_end });
   return "";
 }
 
-function variantDetailLine(v: VariantItem): string {
-  return [v.generation, v.engine, v.body_type].filter(Boolean).join(" \u00B7 ");
+function variantBodyTypeLabel(
+  value: string | null,
+  t: (key: string) => string,
+): string | null {
+  if (!value) return null;
+  return t(`bodyTypes.${value}`);
 }
 
 // ── Page component ────────────────────────────────────────────
@@ -184,9 +204,11 @@ export default function VehicleModelsPage() {
           context.previous,
         );
       }
-      toast.error(t("common.somethingWentWrong"));
+      toast.error(
+        _err instanceof Error ? _err.message : t("deleteFailed"),
+      );
     },
-    onSuccess: () => toast.success(t("vehicleModels.vehicleDeleted")),
+    onSuccess: () => toast.success(t("vehicleDeleted")),
     onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: vehicleModelKeys.list(orgId ?? ""),
@@ -253,6 +275,21 @@ export default function VehicleModelsPage() {
   const tree = buildTree(filteredModels);
 
   const totalCount = models.length;
+  const filteredCount = filteredModels.length;
+
+  useEffect(() => {
+    if (!search.trim()) return;
+
+    setExpandedMakes(new Set(tree.map((group) => group.make)));
+    setExpandedModels(
+      Object.fromEntries(
+        tree.map((group) => [
+          group.make,
+          new Set(group.models.map((modelGroup) => modelGroup.model)),
+        ]),
+      ),
+    );
+  }, [search, tree]);
 
   // ── Render ────────────────────────────────────────────────────
 
@@ -273,10 +310,10 @@ export default function VehicleModelsPage() {
           placeholder: t("searchPlaceholder"),
           value: search,
           onChange: setSearch,
-          resultLabel: filteredModels.length
-            ? `${filteredModels.length} variant${filteredModels.length === 1 ? "" : "s"}`
+          resultLabel: filteredCount
+            ? t("searchResults", { count: filteredCount })
             : undefined,
-          emptyLabel: search ? `No matches for "${search}"` : undefined,
+          emptyLabel: search ? t("noMatchesFor", { query: search }) : undefined,
         }}
         stats={
           <span>
@@ -310,24 +347,61 @@ export default function VehicleModelsPage() {
       />
 
       {/* ── Tree View ──────────────────────────────────────── */}
-      <Card>
+      <Card className="overflow-hidden border-border/70 bg-card">
+        <CardHeader className="border-b bg-muted/20 px-4 py-4 sm:px-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-lg font-semibold">
+                {t("title")}
+              </CardTitle>
+              <CardDescription>{t("subtitle")}</CardDescription>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="secondary" className="h-8 rounded-md px-3">
+                {tree.length} {t("make")}
+              </Badge>
+              <Badge variant="secondary" className="h-8 rounded-md px-3">
+                {tree.reduce((sum, group) => sum + group.models.length, 0)}{" "}
+                {t("modelCount", {
+                  count: tree.reduce((sum, group) => sum + group.models.length, 0),
+                }).replace(/^\d+\s*/, "")}
+              </Badge>
+              <Badge variant="secondary" className="h-8 rounded-md px-3">
+                {totalCount}{" "}
+                {t("variantCount", { count: totalCount }).replace(/^\d+\s*/, "")}
+              </Badge>
+            </div>
+          </div>
+        </CardHeader>
         <CardContent className="p-0">
           {orgQuery.isLoading || loading ? (
-            <div className="divide-y divide-border">
+            <div className="grid gap-3 p-4 sm:p-5">
               {[1, 2, 3].map((n) => (
-                <div key={n} className="flex items-center gap-3 p-4">
-                  <Skeleton className="size-4 rounded" />
-                  <Skeleton className="h-5 w-32" />
-                  <Skeleton className="h-4 w-12" />
+                <div
+                  key={n}
+                  className="overflow-hidden rounded-lg border border-border/60"
+                >
+                  <div className="flex min-h-16 items-center gap-4 px-4 py-3">
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-5 w-40" />
+                      <Skeleton className="h-4 w-28" />
+                    </div>
+                    <Skeleton className="h-8 w-20 rounded-md" />
+                  </div>
+                  <Separator />
+                  <div className="space-y-3 px-4 py-4">
+                    <Skeleton className="h-12 w-full rounded-md" />
+                    <Skeleton className="h-12 w-full rounded-md" />
+                  </div>
                 </div>
               ))}
             </div>
           ) : error ? (
-            <div className="flex flex-col items-center gap-4 py-12">
+            <div className="flex flex-col items-center gap-4 px-4 py-12">
               <Typography.Text className="text-destructive">
                 {error}
               </Typography.Text>
-              <Button onClick={() => refetch()}>Retry</Button>
+              <Button onClick={() => refetch()}>{t("retry")}</Button>
             </div>
           ) : tree.length === 0 ? (
             <Empty>
@@ -356,7 +430,7 @@ export default function VehicleModelsPage() {
               )}
             </Empty>
           ) : (
-            <div className="divide-y divide-border">
+            <div className="overflow-hidden rounded-b-xl">
               {tree.map((makeGroup) => {
                 const makeOpen = expandedMakes.has(makeGroup.make);
                 const variantCount = makeGroup.models.reduce(
@@ -365,145 +439,205 @@ export default function VehicleModelsPage() {
                 );
 
                 return (
-                  <div key={makeGroup.make}>
-                    {/* ── Make header ───────────────────────── */}
-                    <Button
-                      onClick={() => toggleMake(makeGroup.make)}
-                      variant="ghost"
-                      className={`w-full justify-start gap-2 px-4 py-3 font-semibold transition-colors hover:bg-muted/30 ${makeOpen ? "border-l-2 border-primary" : ""}`}
-                    >
-                      {makeOpen ? (
-                        <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-                      ) : (
-                        <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                      )}
-                      <HighlightText text={makeGroup.make} query={search} />
-                      <span className="text-xs font-normal text-muted-foreground">
-                        {t("modelCount", { count: makeGroup.models.length })} ·{" "}
-                        {t("variantCount", { count: variantCount })}
-                      </span>
-                    </Button>
+                  <Collapsible
+                    key={makeGroup.make}
+                    open={makeOpen}
+                    onOpenChange={() => toggleMake(makeGroup.make)}
+                  >
+                    <div className="border-b border-border/70 last:border-b-0">
+                      <CollapsibleTrigger className="w-full">
+                        <div className="flex min-h-16 w-full items-center gap-4 px-4 py-3 text-left transition-colors hover:bg-muted/30 sm:px-5">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Typography.Text className="text-base font-semibold">
+                                <HighlightText text={makeGroup.make} query={search} />
+                              </Typography.Text>
+                              <Badge variant="outline" className="h-7 rounded-md px-2.5">
+                                {makeGroup.models.length}{" "}
+                                {t("modelCount", { count: 2 }).replace(/^\d+\s*/, "")}
+                              </Badge>
+                              <Badge variant="outline" className="h-7 rounded-md px-2.5">
+                                {variantCount}{" "}
+                                {t("variantCount", { count: 2 }).replace(/^\d+\s*/, "")}
+                              </Badge>
+                            </div>
+                            <Typography.Muted className="mt-1 text-sm">
+                              {t("modelCount", { count: makeGroup.models.length })} ·{" "}
+                              {t("variantCount", { count: variantCount })}
+                            </Typography.Muted>
+                          </div>
+                          <div className="shrink-0 text-muted-foreground">
+                            {makeOpen ? (
+                              <ChevronDown className="size-4" />
+                            ) : (
+                              <ChevronRight className="size-4" />
+                            )}
+                          </div>
+                        </div>
+                      </CollapsibleTrigger>
 
-                    {/* ── Model rows ────────────────────────── */}
-                    {makeOpen && (
-                      <div className="border-t border-border/50">
-                        {makeGroup.models.map((modelGroup) => {
-                          const modelOpen =
-                            expandedModels[makeGroup.make]?.has(
-                              modelGroup.model,
-                            ) ?? false;
+                      <CollapsibleContent>
+                        <Separator />
+                        <div className="bg-muted/[0.04]">
+                          {makeGroup.models.map((modelGroup, modelIndex) => {
+                            const modelOpen =
+                              expandedModels[makeGroup.make]?.has(
+                                modelGroup.model,
+                              ) ?? false;
 
-                          return (
-                            <div key={modelGroup.model}>
-                              {/* Model header */}
-                              <Button
-                                onClick={() =>
+                            return (
+                              <Collapsible
+                                key={modelGroup.model}
+                                open={modelOpen}
+                                onOpenChange={() =>
                                   toggleModel(makeGroup.make, modelGroup.model)
                                 }
-                                variant="ghost"
-                                className="w-full justify-start gap-2 pl-10 pr-4 py-2.5 transition-colors hover:bg-muted/30"
                               >
-                                {modelOpen ? (
-                                  <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
-                                ) : (
-                                  <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
-                                )}
-                                <span className="font-medium text-sm">
-                                  <HighlightText
-                                    text={modelGroup.model}
-                                    query={search}
-                                  />
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  {t("variantCount", {
-                                    count: modelGroup.variants.length,
-                                  })}
-                                </span>
-                              </Button>
-
-                              {/* Variant leaf rows */}
-                              {modelOpen && (
-                                <div className="border-t border-border/30">
-                                  {modelGroup.variants.map((v) => (
-                                    <div
-                                      key={v.id}
-                                      className="group flex items-center gap-3 pl-16 pr-4 py-2.5 min-h-[40px] hover:bg-muted/30 transition-colors"
-                                    >
-                                      <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-                                        <span className="text-sm font-medium truncate">
-                                          <HighlightText
-                                            text={v.model}
-                                            query={search}
-                                          />
-                                        </span>
-                                        <Typography.Muted className="text-xs text-muted-foreground truncate">
-                                          {variantYears(v) && (
-                                            <span>{variantYears(v)}</span>
-                                          )}
-                                          {variantYears(v) &&
-                                            variantDetailLine(v) && (
-                                              <span className="mx-1 text-muted-foreground/40">
-                                                ·
-                                              </span>
-                                            )}
-                                          {variantDetailLine(v) && (
+                                <div
+                                  className={cn(
+                                    "bg-background",
+                                    modelIndex > 0 && "border-t border-border/60",
+                                  )}
+                                >
+                                  <CollapsibleTrigger className="w-full">
+                                    <div className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/20 sm:px-6">
+                                      <div className="min-w-0 flex-1">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                          <Typography.Text className="text-sm font-medium">
                                             <HighlightText
-                                              text={variantDetailLine(v)}
+                                              text={modelGroup.model}
                                               query={search}
                                             />
-                                          )}
-                                          {!variantYears(v) &&
-                                            !variantDetailLine(v) && (
-                                              <span className="italic text-muted-foreground/60">
-                                                {t("baseVariant")}
-                                              </span>
+                                          </Typography.Text>
+                                          <Badge
+                                            variant="secondary"
+                                            className="h-7 rounded-md px-2.5"
+                                          >
+                                            {modelGroup.variants.length}{" "}
+                                            {t("variantCount", { count: 2 }).replace(
+                                              /^\d+\s*/,
+                                              "",
                                             )}
-                                        </Typography.Muted>
+                                          </Badge>
+                                        </div>
                                       </div>
-
-                                      {v.body_type && (
-                                        <Badge
-                                          variant="outline"
-                                          className="shrink-0 text-xs"
-                                        >
-                                          {v.body_type}
-                                        </Badge>
-                                      )}
-
-                                      <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Button
-                                          variant="ghost"
-                                          size="icon-xs"
-                                          onClick={() => {
-                                            setFormMode("edit");
-                                            setFormItem(v);
-                                            setFormOpen(true);
-                                          }}
-                                          className="size-8"
-                                          aria-label={t("editVariant")}
-                                        >
-                                          <Pencil className="size-3.5" />
-                                        </Button>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon-xs"
-                                          onClick={() => setDeleteItem(v)}
-                                          className="size-8 text-destructive/70 hover:text-destructive"
-                                          aria-label={t("deleteVariant")}
-                                        >
-                                          <Trash2 className="size-3.5" />
-                                        </Button>
+                                      <div className="shrink-0 text-muted-foreground">
+                                        {modelOpen ? (
+                                          <ChevronDown className="size-4" />
+                                        ) : (
+                                          <ChevronRight className="size-4" />
+                                        )}
                                       </div>
                                     </div>
-                                  ))}
+                                  </CollapsibleTrigger>
+
+                                  <CollapsibleContent>
+                                    <Separator />
+                                    <div className="bg-muted/[0.03]">
+                                      {modelGroup.variants.map((v, variantIndex) => {
+                                        const bodyTypeLabel = variantBodyTypeLabel(
+                                          v.body_type,
+                                          t,
+                                        );
+                                        const years = variantYears(v, t);
+                                        const details = [
+                                          years,
+                                          v.engine,
+                                          bodyTypeLabel,
+                                        ]
+                                          .filter(Boolean)
+                                          .join(" \u00B7 ");
+
+                                        return (
+                                          <div
+                                            key={v.id}
+                                            className={cn(
+                                              "grid gap-3 px-4 py-4 sm:px-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.9fr)_auto] lg:items-center",
+                                              variantIndex > 0 &&
+                                                "border-t border-border/50",
+                                            )}
+                                          >
+                                            <div className="min-w-0">
+                                              <div className="flex flex-wrap items-center gap-2">
+                                                <Typography.Text className="text-sm font-medium">
+                                                  <HighlightText
+                                                    text={
+                                                      v.generation ||
+                                                      t("baseVariant")
+                                                    }
+                                                    query={search}
+                                                  />
+                                                </Typography.Text>
+                                                {!v.generation && details ? (
+                                                  <Badge
+                                                    variant="secondary"
+                                                    className="h-6 rounded-md px-2"
+                                                  >
+                                                    {t("baseVariant")}
+                                                  </Badge>
+                                                ) : null}
+                                              </div>
+                                              <Typography.Muted className="mt-1 text-sm">
+                                                <HighlightText
+                                                  text={`${v.make} ${v.model}`}
+                                                  query={search}
+                                                />
+                                              </Typography.Muted>
+                                            </div>
+
+                                            <div className="min-w-0">
+                                              {details ? (
+                                                <Typography.Muted className="text-sm leading-6">
+                                                  <HighlightText
+                                                    text={details}
+                                                    query={search}
+                                                  />
+                                                </Typography.Muted>
+                                              ) : (
+                                                <Typography.Muted className="text-sm">
+                                                  {t("baseVariant")}
+                                                </Typography.Muted>
+                                              )}
+                                            </div>
+
+                                            <div className="flex items-center gap-2 lg:justify-end">
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => {
+                                                  setFormMode("edit");
+                                                  setFormItem(v);
+                                                  setFormOpen(true);
+                                                }}
+                                                className="h-10 gap-2 px-3"
+                                                aria-label={t("editVariant")}
+                                              >
+                                                <Pencil className="size-4" />
+                                                <span>{t("editVariant")}</span>
+                                              </Button>
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setDeleteItem(v)}
+                                                className="h-10 px-3 text-destructive hover:text-destructive"
+                                                aria-label={t("deleteVariant")}
+                                              >
+                                                <Trash2 className="size-4" />
+                                              </Button>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </CollapsibleContent>
                                 </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
+                              </Collapsible>
+                            );
+                          })}
+                        </div>
+                      </CollapsibleContent>
+                    </div>
+                  </Collapsible>
                 );
               })}
             </div>
@@ -530,24 +664,24 @@ export default function VehicleModelsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>{t("deleteVariant")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete{" "}
+              {t("deleteConfirmationPrefix")}{" "}
               <span className="font-semibold text-foreground">
                 {deleteItem?.make} {deleteItem?.model}
               </span>
-              {deleteItem?.generation && <> ({deleteItem.generation})</>}? This
-              action cannot be undone.
+              {deleteItem?.generation && <> ({deleteItem.generation})</>}
+              {t("deleteConfirmationSuffix")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleteMutation.isPending}>
-              Cancel
+              {t("cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               disabled={deleteMutation.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+              {deleteMutation.isPending ? t("deleting") : t("deleteAction")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,408 +1,380 @@
 "use client";
 
-import { CheckCircle2, Clock, Download, FileText, XCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock,
+  Download,
+  FileText,
+  MapPin,
+  Phone,
+  Printer,
+  XCircle,
+} from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Typography } from "@/components/ui/typography";
+import { usePublicEstimate } from "@/lib/queries/use-estimates";
 import { formatCurrency } from "@/lib/utils";
 
-// ── Types ──────────────────────────────────────────────────────
-
-interface PublicEstimate {
-  id: string;
-  estimate_number: string;
-  status: string;
-  created_at: string;
-  valid_until: string | null;
-  notes: string | null;
-  terms: string | null;
-  subtotal: number;
-  discount_amount: number;
-  discount_percentage: number;
-  discount_total: number;
-  tax_total: number;
-  grand_total: number;
-  customer: {
-    first_name: string | null;
-    last_name: string | null;
-    phone: string | null;
-    email: string | null;
-  } | null;
-  vehicle: {
-    plate_number: string | null;
-    make: string | null;
-    model: string | null;
-    year: number | null;
-  } | null;
-  items: {
-    description: string;
-    item_type: string;
-    quantity: number;
-    unit_price: number;
-    discount_amount: number;
-    discount_percentage: number;
-    line_total: number;
-  }[];
-  organization: {
-    name: string;
-    phone: string | null;
-    email: string | null;
-    address: string | null;
-  } | null;
-}
-
-// ── Status config ──────────────────────────────────────────────
-
-const statusConfig: Record<
-  string,
-  { label: string; className: string; icon: typeof Clock }
-> = {
-  draft: {
-    label: "Draft",
-    className: "bg-gray-100 text-gray-700 border-gray-300",
-    icon: Clock,
-  },
-  sent: {
-    label: "Sent",
-    className: "bg-blue-100 text-blue-700 border-blue-300",
-    icon: FileText,
-  },
-  approved: {
-    label: "Approved",
-    className: "bg-green-100 text-green-700 border-green-300",
-    icon: CheckCircle2,
-  },
-  declined: {
-    label: "Declined",
-    className: "bg-red-100 text-red-700 border-red-300",
-    icon: XCircle,
-  },
-  expired: {
-    label: "Expired",
-    className: "bg-amber-100 text-amber-700 border-amber-300",
-    icon: Clock,
-  },
-  converted: {
-    label: "Converted",
-    className: "bg-purple-100 text-purple-700 border-purple-300",
-    icon: CheckCircle2,
-  },
-};
-
-// ── Component ──────────────────────────────────────────────────
+const STATUS_CONFIG: Record<string, { icon: typeof Clock; className: string }> =
+  {
+    draft: {
+      icon: Clock,
+      className: "bg-muted text-foreground",
+    },
+    sent: {
+      icon: FileText,
+      className: "bg-sky-100 text-sky-700 dark:bg-sky-950/30 dark:text-sky-300",
+    },
+    approved: {
+      icon: CheckCircle2,
+      className:
+        "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300",
+    },
+    declined: {
+      icon: XCircle,
+      className:
+        "bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive",
+    },
+    expired: {
+      icon: Clock,
+      className:
+        "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300",
+    },
+    converted: {
+      icon: CheckCircle2,
+      className:
+        "bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-300",
+    },
+  };
 
 export default function PublicEstimatePage() {
-  const t = useTranslations();
+  const t = useTranslations("estimates");
+  const commonT = useTranslations("common");
   const params = useParams();
   const token = params.token as string;
-  const [estimate, setEstimate] = useState<PublicEstimate | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const estimateQuery = usePublicEstimate(token);
+  const estimate = estimateQuery.data;
 
-  useEffect(() => {
-    if (!token) return;
-    fetch(`/api/estimate/public/${token}`)
-      .then((r) => {
-        if (!r.ok) throw new Error("Estimate not found");
-        return r.json();
-      })
-      .then((json) => {
-        setEstimate(json.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, [token]);
-
-  if (loading) {
+  if (estimateQuery.isLoading) {
     return (
-      <div className="min-h-screen bg-muted/30 p-4 md:p-8">
-        <div className="max-w-3xl mx-auto space-y-4">
-          <Skeleton className="h-12 w-48" />
-          <Skeleton className="h-64 w-full" />
+      <div className="min-h-screen bg-muted/20 px-4 py-6 md:px-6 md:py-8">
+        <div className="mx-auto flex max-w-5xl flex-col gap-6">
+          <Skeleton className="h-16 rounded-3xl" />
+          <Skeleton className="h-40 rounded-3xl" />
+          <Skeleton className="h-[420px] rounded-3xl" />
         </div>
       </div>
     );
   }
 
-  if (error || !estimate) {
+  if (!estimate) {
     return (
-      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
-        <Card className="max-w-md w-full">
-          <CardContent className="flex flex-col items-center gap-3 py-8">
-            <XCircle className="size-10 text-muted-foreground" />
-            <Typography.H3>{error ?? "Estimate not found"}</Typography.H3>
-            <Typography.Muted>
-              This estimate may have been removed or the link is invalid.
-            </Typography.Muted>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const status = statusConfig[estimate.status] ?? statusConfig.draft;
-  const StatusIcon = status.icon;
-  const customerName = [
-    estimate.customer?.first_name,
-    estimate.customer?.last_name,
-  ]
-    .filter(Boolean)
-    .join(" ");
-  const vehicleDisplay = estimate.vehicle
-    ? [estimate.vehicle.year, estimate.vehicle.make, estimate.vehicle.model]
-        .filter(Boolean)
-        .join(" ")
-    : null;
-
-  return (
-    <div className="min-h-screen bg-muted/30">
-      {/* Top bar */}
-      <div className="bg-background border-b px-4 py-2 flex items-center justify-between">
-        <span className="text-sm font-medium">
-          {estimate.organization?.name ?? "TOLOM"}
-        </span>
-        <div className="flex items-center gap-2">
-          <LocaleSwitcher />
-          <Button variant="outline" size="sm" onClick={() => window.print()}>
-            Print
-          </Button>
-          <Button
-            size="sm"
-            onClick={() =>
-              window.open(`/api/estimate/public/${token}/pdf`, "_blank")
-            }
-          >
-            <Download className="size-4" />
-            PDF
-          </Button>
-        </div>
-      </div>
-
-      <div className="max-w-3xl mx-auto p-4 md:p-8 space-y-6">
-        {/* Header */}
-        <div className="flex items-start justify-between">
-          <div>
-            <Typography.H2 className="text-2xl">
-              {estimate.estimate_number}
-            </Typography.H2>
-            <Typography.Muted>
-              Created {new Date(estimate.created_at).toLocaleDateString()}
-              {estimate.valid_until &&
-                ` · Valid until ${new Date(estimate.valid_until).toLocaleDateString()}`}
-            </Typography.Muted>
-          </div>
-          <Badge variant="outline" className={`gap-1.5 ${status.className}`}>
-            <StatusIcon className="size-3" />
-            {status.label}
-          </Badge>
-        </div>
-
-        {/* Customer & Vehicle */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardContent className="pt-4">
-              <Typography.Muted className="text-xs mb-1">
-                {t("common.customer")}
+      <div className="min-h-screen bg-muted/20 px-4 py-6 md:px-6 md:py-8">
+        <div className="mx-auto max-w-xl">
+          <Card className="rounded-3xl border-border/60 shadow-sm">
+            <CardContent className="py-12 text-center">
+              <XCircle className="mx-auto mb-4 size-10 text-muted-foreground" />
+              <Typography.H3>{t("publicUnavailableTitle")}</Typography.H3>
+              <Typography.Muted className="mt-2">
+                {estimateQuery.error instanceof Error
+                  ? estimateQuery.error.message
+                  : t("publicUnavailableDescription")}
               </Typography.Muted>
-              <Typography.Text className="font-medium">
-                {customerName || "—"}
-              </Typography.Text>
-              {estimate.customer?.phone && (
-                <Typography.Muted className="text-sm block">
-                  {estimate.customer.phone}
-                </Typography.Muted>
-              )}
-              {estimate.customer?.email && (
-                <Typography.Muted className="text-sm block">
-                  {estimate.customer.email}
-                </Typography.Muted>
-              )}
             </CardContent>
           </Card>
-          {estimate.vehicle && (
-            <Card>
-              <CardContent className="pt-4">
-                <Typography.Muted className="text-xs mb-1">
-                  {t("common.vehicle")}
-                </Typography.Muted>
-                <Typography.Text className="font-medium font-mono">
-                  {estimate.vehicle.plate_number}
-                </Typography.Text>
-                {vehicleDisplay && (
-                  <Typography.Muted className="text-sm block">
-                    {vehicleDisplay}
-                  </Typography.Muted>
-                )}
-              </CardContent>
-            </Card>
-          )}
+        </div>
+      </div>
+    );
+  }
+
+  const status = STATUS_CONFIG[estimate.status] ?? STATUS_CONFIG.draft;
+  const StatusIcon = status.icon;
+  const customerName =
+    [estimate.customer?.first_name, estimate.customer?.last_name]
+      .filter(Boolean)
+      .join(" ") || "—";
+
+  return (
+    <div className="min-h-screen bg-muted/20 px-4 py-6 print:bg-white md:px-6 md:py-8">
+      <div className="mx-auto flex max-w-5xl flex-col gap-6 print:max-w-none">
+        <div className="rounded-3xl border border-border/60 bg-background p-4 shadow-sm print:hidden">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <Typography.Text className="text-sm font-medium">
+                {estimate.organization?.name ?? "TOLOM"}
+              </Typography.Text>
+              <Typography.Muted className="mt-1">
+                {t("publicPageSubtitle")}
+              </Typography.Muted>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <LocaleSwitcher />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.print()}
+              >
+                <Printer className="size-4" />
+                {commonT("print")}
+              </Button>
+              <Button
+                size="sm"
+                onClick={() =>
+                  window.open(`/api/estimate/public/${token}/pdf`, "_blank")
+                }
+              >
+                <Download className="size-4" />
+                {t("downloadPdf")}
+              </Button>
+            </div>
+          </div>
         </div>
 
-        {/* Items */}
-        <Card>
-          <CardContent className="pt-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-8">#</TableHead>
-                  <TableHead>{t("estimates.description")}</TableHead>
-                  <TableHead className="text-right w-16">
-                    {t("estimates.qty")}
-                  </TableHead>
-                  <TableHead className="text-right w-24">
-                    {t("estimates.unitPrice")}
-                  </TableHead>
-                  <TableHead className="text-right w-20">
-                    {t("estimates.discount")}
-                  </TableHead>
-                  <TableHead className="text-right w-24">
-                    {t("estimates.total")}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {estimate.items.map((item, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell className="text-muted-foreground">
-                      {idx + 1}
-                    </TableCell>
-                    <TableCell>
-                      <span>{item.description}</span>
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] px-1 py-0 ml-2"
-                      >
-                        {item.item_type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {item.quantity}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-sm">
-                      {formatCurrency(item.unit_price)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm text-muted-foreground">
-                      {item.discount_amount > 0
-                        ? formatCurrency(item.discount_amount)
-                        : item.discount_percentage > 0
-                          ? `${item.discount_percentage}%`
-                          : "—"}
-                    </TableCell>
-                    <TableCell className="text-right font-mono font-medium text-sm">
-                      {formatCurrency(item.line_total)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <Card className="rounded-3xl border-border/60 shadow-sm">
+          <CardContent className="flex flex-col gap-6 p-6 md:p-8">
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge className={status.className}>
+                    <StatusIcon className="size-3.5" />
+                    {t(`status_${estimate.status}`)}
+                  </Badge>
+                  {estimate.valid_until ? (
+                    <Badge variant="outline">
+                      {t("validUntil")}:{" "}
+                      {new Date(estimate.valid_until).toLocaleDateString()}
+                    </Badge>
+                  ) : null}
+                </div>
+                <div>
+                  <Typography.H1 className="text-3xl font-semibold tracking-tight">
+                    {estimate.estimate_number}
+                  </Typography.H1>
+                  <Typography.Muted className="mt-1">
+                    {t("created")}{" "}
+                    {new Date(estimate.created_at).toLocaleDateString()}
+                  </Typography.Muted>
+                </div>
+              </div>
 
-        {/* Totals */}
-        <Card>
-          <CardContent className="pt-4">
-            <div className="space-y-2 ml-auto max-w-xs">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {t("estimates.subtotal")}
-                </span>
-                <span className="font-mono">
-                  {formatCurrency(estimate.subtotal)}
-                </span>
+              <div className="rounded-2xl border border-border/60 bg-muted/20 px-4 py-3 md:min-w-56">
+                <Typography.Text className="text-xs uppercase tracking-wide text-muted-foreground">
+                  {t("grandTotal")}
+                </Typography.Text>
+                <Typography.Text className="mt-1 block font-mono text-2xl font-semibold">
+                  {formatCurrency(Number(estimate.grand_total ?? 0))}
+                </Typography.Text>
               </div>
-              {estimate.discount_total > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    {t("estimates.discount")}
-                  </span>
-                  <span className="font-mono text-destructive">
-                    -{formatCurrency(estimate.discount_total)}
-                  </span>
-                </div>
-              )}
-              {estimate.tax_total > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    {t("estimates.tax")}
-                  </span>
-                  <span className="font-mono">
-                    {formatCurrency(estimate.tax_total)}
-                  </span>
-                </div>
-              )}
-              <div className="flex justify-between text-lg font-semibold border-t pt-2">
-                <span>{t("estimates.grandTotal")}</span>
-                <span className="font-mono">
-                  {formatCurrency(estimate.grand_total)}
-                </span>
-              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card className="rounded-2xl border-border/60 shadow-none">
+                <CardHeader>
+                  <CardTitle className="text-base">
+                    {t("customerInfo")}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Typography.Text className="font-medium">
+                    {customerName}
+                  </Typography.Text>
+                  {estimate.customer?.phone ? (
+                    <Typography.Muted>
+                      {estimate.customer.phone}
+                    </Typography.Muted>
+                  ) : null}
+                  {estimate.customer?.email ? (
+                    <Typography.Muted>
+                      {estimate.customer.email}
+                    </Typography.Muted>
+                  ) : null}
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-2xl border-border/60 shadow-none">
+                <CardHeader>
+                  <CardTitle className="text-base">
+                    {t("vehicleInfo")}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Typography.Text className="font-medium font-mono">
+                    {estimate.vehicle?.plate_number ?? "—"}
+                  </Typography.Text>
+                  <Typography.Muted>
+                    {[
+                      estimate.vehicle?.year,
+                      estimate.vehicle?.make,
+                      estimate.vehicle?.model,
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                  </Typography.Muted>
+                </CardContent>
+              </Card>
             </div>
           </CardContent>
         </Card>
 
-        {/* Notes & Terms */}
-        {(estimate.notes || estimate.terms) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {estimate.notes && (
-              <Card>
-                <CardContent className="pt-4">
-                  <Typography.Muted className="text-xs mb-1">
-                    {t("estimates.notes")}
-                  </Typography.Muted>
-                  <Typography.Text className="text-sm whitespace-pre-wrap">
-                    {estimate.notes}
+        <Card className="rounded-3xl border-border/60 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-base">{t("lineItems")}</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            {estimate.items.map((item, index) => (
+              <div
+                key={`${item.description}-${index}`}
+                className="rounded-2xl border border-border/60 bg-card p-4"
+              >
+                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex size-8 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground">
+                        {index + 1}
+                      </div>
+                      <Badge variant="outline">{t(item.item_type)}</Badge>
+                    </div>
+                    <Typography.Text className="font-medium">
+                      {item.description}
+                    </Typography.Text>
+                    <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-3">
+                      <span>
+                        {t("qty")}: {item.quantity}
+                      </span>
+                      <span>
+                        {t("unitPrice")}:{" "}
+                        {formatCurrency(Number(item.unit_price ?? 0))}
+                      </span>
+                      <span>
+                        {t("discount")}:{" "}
+                        {Number(item.discount_amount ?? 0) > 0
+                          ? formatCurrency(Number(item.discount_amount ?? 0))
+                          : Number(item.discount_percentage ?? 0) > 0
+                            ? `${item.discount_percentage}%`
+                            : "—"}
+                      </span>
+                    </div>
+                  </div>
+                  <Typography.Text className="font-mono text-lg font-semibold">
+                    {formatCurrency(Number(item.line_total ?? 0))}
                   </Typography.Text>
-                </CardContent>
-              </Card>
-            )}
-            {estimate.terms && (
-              <Card>
-                <CardContent className="pt-4">
-                  <Typography.Muted className="text-xs mb-1">
-                    {t("estimates.terms")}
-                  </Typography.Muted>
-                  <Typography.Text className="text-sm whitespace-pre-wrap">
-                    {estimate.terms}
-                  </Typography.Text>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        )}
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
 
-        {/* Footer */}
-        <div className="text-center text-xs text-muted-foreground pt-4 border-t">
-          {estimate.organization?.name ?? "TOLOM"}
-          {estimate.organization?.phone && ` · ${estimate.organization.phone}`}
+        <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_320px]">
+          <Card className="rounded-3xl border-border/60 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-base">{t("quoteDetails")}</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-2">
+              <div>
+                <Typography.Text className="text-sm font-medium">
+                  {t("notes")}
+                </Typography.Text>
+                <div className="mt-2 min-h-28 rounded-xl border border-border/60 px-3 py-2 text-sm">
+                  {estimate.notes || "—"}
+                </div>
+              </div>
+              <div>
+                <Typography.Text className="text-sm font-medium">
+                  {t("terms")}
+                </Typography.Text>
+                <div className="mt-2 min-h-28 rounded-xl border border-border/60 px-3 py-2 text-sm">
+                  {estimate.terms || "—"}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-3xl border-border/60 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-base">{t("summary")}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">{t("subtotal")}</span>
+                <span className="font-mono">
+                  {formatCurrency(Number(estimate.subtotal ?? 0))}
+                </span>
+              </div>
+              {Number(estimate.discount_total ?? 0) > 0 ? (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">{t("discount")}</span>
+                  <span className="font-mono text-destructive">
+                    -{formatCurrency(Number(estimate.discount_total ?? 0))}
+                  </span>
+                </div>
+              ) : null}
+              {Number(estimate.tax_total ?? 0) > 0 ? (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">{t("tax")}</span>
+                  <span className="font-mono">
+                    {formatCurrency(Number(estimate.tax_total ?? 0))}
+                  </span>
+                </div>
+              ) : null}
+              <div className="flex items-center justify-between border-t pt-3">
+                <Typography.Text className="font-medium">
+                  {t("grandTotal")}
+                </Typography.Text>
+                <Typography.Text className="font-mono text-xl font-semibold">
+                  {formatCurrency(Number(estimate.grand_total ?? 0))}
+                </Typography.Text>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </div>
 
-      {/* Print styles */}
-      <style>{`
-        @media print {
-          body * { visibility: hidden; }
-          .max-w-3xl, .max-w-3xl * { visibility: visible; }
-          .max-w-3xl { position: absolute; left: 0; top: 0; width: 100%; }
-          .bg-muted\\/30 { background: white !important; }
-        }
-      `}</style>
+        <Card className="rounded-3xl border-border/60 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-base">{commonT("contact")}</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-2xl border border-border/60 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <Phone className="size-4 text-muted-foreground" />
+                <Typography.Text className="font-medium">
+                  {commonT("phone")}
+                </Typography.Text>
+              </div>
+              <Typography.Muted className="mt-2">
+                {estimate.organization?.phone || "—"}
+              </Typography.Muted>
+            </div>
+            <div className="rounded-2xl border border-border/60 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <FileText className="size-4 text-muted-foreground" />
+                <Typography.Text className="font-medium">
+                  {commonT("email")}
+                </Typography.Text>
+              </div>
+              <Typography.Muted className="mt-2">
+                {estimate.organization?.email || "—"}
+              </Typography.Muted>
+            </div>
+            <div className="rounded-2xl border border-border/60 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <MapPin className="size-4 text-muted-foreground" />
+                <Typography.Text className="font-medium">
+                  {commonT("address")}
+                </Typography.Text>
+              </div>
+              <Typography.Muted className="mt-2">
+                {estimate.organization?.address || "—"}
+              </Typography.Muted>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -1,18 +1,20 @@
 // ── End-of-day summary functions ────────────────────────────
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { cacheDurations, cacheTags } from "@/lib/cache/keys";
 import { withCache } from "@/lib/cache/with-cache";
-import { createClient } from "@/lib/supabase/server";
 import { withBranchFilter } from "@/lib/supabase/with-branch";
 
 import type { EndOfDaySummary } from "@/lib/types";
 
 export async function getEndOfDaySummary(
+  db: SupabaseClient,
   orgId: string,
   date: string,
   branchId: string | null = null,
 ): Promise<EndOfDaySummary> {
-  const supabase = await createClient();
+  const supabase = db;
 
   return withCache(
     ["getEndOfDaySummary", orgId, date, branchId ?? "all"],
@@ -48,7 +50,7 @@ export async function getEndOfDaySummary(
 }
 
 async function getEndOfDaySummaryFromScopedWorkOrders(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: SupabaseClient,
   orgId: string,
   date: string,
   branchId: string | null,

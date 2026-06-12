@@ -4,8 +4,10 @@
  * Shows positive/warning/danger/info insights with icons and actionable suggestions.
  */
 import { AlertTriangle, CheckCircle2, Info } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
 import type { ReportInsight } from "@/lib/types";
 
 const SEVERITY_CONFIG = {
@@ -41,6 +43,8 @@ interface InsightAlertsProps {
 }
 
 export function InsightAlerts({ insights, loading }: InsightAlertsProps) {
+  const t = useTranslations("reports");
+
   if (loading) {
     return (
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -51,7 +55,17 @@ export function InsightAlerts({ insights, loading }: InsightAlertsProps) {
     );
   }
 
-  if (!insights.length) return null;
+  if (!insights.length) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <Typography.Muted className="text-center text-sm text-muted-foreground">
+            {t("noDataForPeriod")}
+          </Typography.Muted>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -64,6 +78,7 @@ export function InsightAlerts({ insights, loading }: InsightAlertsProps) {
               <div className="flex items-start gap-2">
                 <Icon
                   className={`mt-0.5 size-4 shrink-0 ${config.iconColor}`}
+                  aria-hidden="true"
                 />
                 <div className="flex flex-col gap-0.5">
                   <span className="text-xs font-semibold">{insight.title}</span>

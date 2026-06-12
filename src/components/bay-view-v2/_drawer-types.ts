@@ -11,6 +11,7 @@ export type CatalogServiceItem = Partial<ServiceCatalog> & {
   name: string;
   name_mn?: string | null;
   default_price: number;
+  last_price?: number | null;
   _source?: "org" | "global";
 };
 
@@ -19,6 +20,7 @@ export type CatalogPartItem = Partial<PartsCatalogItem> & {
   name: string;
   name_mn?: string | null;
   default_price: number;
+  last_price?: number | null;
   _source?: "org" | "global";
 };
 

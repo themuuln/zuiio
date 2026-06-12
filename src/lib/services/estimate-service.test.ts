@@ -170,6 +170,97 @@ describe("EstimateService", () => {
       expect(mockClient.rpc).toHaveBeenCalledWith("generate_estimate_number");
     });
 
+    it("uses the provided status when creating an estimate", async () => {
+      const { createEstimate } = await import(
+        "@/lib/services/estimate-service"
+      );
+
+      vi.mocked(mockClient.rpc).mockResolvedValue({
+        data: "EST-00002",
+        error: null,
+      });
+
+      let insertedEstimate: Record<string, unknown> | null = null;
+      let fromCallCount = 0;
+
+      vi.mocked(mockClient.from).mockImplementation((table: string) => {
+        fromCallCount++;
+
+        if (table === "estimates" && fromCallCount === 1) {
+          const chain: Record<string, unknown> = {};
+          chain.insert = vi.fn().mockImplementation((value: unknown) => {
+            insertedEstimate = value as Record<string, unknown>;
+            return {
+              select: vi.fn().mockReturnValue({
+                single: vi.fn().mockResolvedValue({
+                  data: { id: "est-2" },
+                  error: null,
+                }),
+              }),
+            };
+          });
+          return chain as never;
+        }
+
+        if (table === "estimate_items" && fromCallCount === 2) {
+          return {
+            insert: vi.fn().mockResolvedValue({ data: null, error: null }),
+          } as never;
+        }
+
+        if (table === "estimate_items" && fromCallCount === 3) {
+          return chainableResolve({}, []) as never;
+        }
+
+        if (table === "estimates" && fromCallCount === 4) {
+          return chainableResolve(
+            {},
+            { discount_amount: 0, discount_percentage: 0, tax_total: 0 },
+          ) as never;
+        }
+
+        if (table === "estimates" && fromCallCount === 5) {
+          return chainableResolve({}, null) as never;
+        }
+
+        return chainableResolve(
+          {},
+          {
+            id: "est-2",
+            estimate_number: "EST-00002",
+            status: "sent",
+            customer_id: "cust-1",
+            vehicle_id: "veh-1",
+            subtotal: 120000,
+            discount_total: 0,
+            tax_total: 0,
+            grand_total: 120000,
+            customer: null,
+            vehicle: null,
+            items: [],
+            converted_work_order: null,
+            appointment: null,
+          },
+        ) as never;
+      });
+
+      await createEstimate(mockClient as never, "org-1", {
+        customer_id: "cust-1",
+        vehicle_id: "veh-1",
+        status: "sent",
+        items: [
+          {
+            item_type: "service",
+            description: "Diagnostics",
+            quantity: 1,
+            unit_price: 120000,
+          },
+        ],
+      });
+
+      expect(insertedEstimate?.status).toBe("sent");
+    });
+
     it("rejects when customer is missing", async () => {
       const { createEstimate } = await import(
         "@/lib/services/estimate-service"

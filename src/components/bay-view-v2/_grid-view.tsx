@@ -18,6 +18,16 @@ interface GridViewProps {
   onQuickAddService?: (woId: string) => void;
   onQuickAddParts?: (woId: string) => void;
   orgId?: string | null;
+  /** Available mechanics for quick assign */
+  mechanics?: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  }[];
+  /** Called when assigning a mechanic to the work order */
+  onAssignMechanic?: (woId: string, mechanicId: string) => Promise<void>;
+  /** Called when removing the mechanic from the work order */
+  onRemoveMechanic?: (woId: string) => Promise<void>;
 }
 
 export const GridView = React.memo(function GridView({
@@ -33,6 +43,9 @@ export const GridView = React.memo(function GridView({
   onQuickAddService,
   onQuickAddParts,
   orgId,
+  mechanics = [],
+  onAssignMechanic,
+  onRemoveMechanic,
 }: GridViewProps) {
   return (
     <div className="grid w-full h-full min-h-0 [grid-auto-rows:1fr] grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -52,6 +65,9 @@ export const GridView = React.memo(function GridView({
             onQuickAddService={onQuickAddService}
             onQuickAddParts={onQuickAddParts}
             orgId={orgId}
+            mechanics={mechanics}
+            onAssignMechanic={onAssignMechanic}
+            onRemoveMechanic={onRemoveMechanic}
           />
         </ErrorSection>
       ))}

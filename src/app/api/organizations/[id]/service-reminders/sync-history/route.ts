@@ -4,7 +4,7 @@ import { mutationRateLimiter } from "@/lib/rate-limit";
 import { backfillSchedulesFromHistory } from "@/lib/services/service-reminder-service";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
-export const POST = createRouteHandler(async ({ request, orgId }) => {
+export const POST = createRouteHandler(async ({ request, orgId, supabase }) => {
   await requireActiveSubscription(orgId);
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
   const rateCheck = mutationRateLimiter.check(ip);
@@ -21,6 +21,6 @@ export const POST = createRouteHandler(async ({ request, orgId }) => {
       },
     );
   }
-  const synced = await backfillSchedulesFromHistory(orgId);
+  const synced = await backfillSchedulesFromHistory(supabase, orgId);
   return NextResponse.json({ data: { synced } });
 });

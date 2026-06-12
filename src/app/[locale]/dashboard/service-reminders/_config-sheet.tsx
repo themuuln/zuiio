@@ -74,7 +74,7 @@ export function ConfigSheet({ orgId }: ConfigSheetProps) {
       <SheetTrigger render={<Button variant="outline" size="icon-xs" />}>
         <Settings className="size-4" />
       </SheetTrigger>
-      <SheetContent side="right" zLayer={0} className="w-80 sm:w-96">
+      <SheetContent side="right" className="w-80 sm:w-96">
         <SheetHeader>
           <SheetTitle>{t("serviceReminders.configTitle")}</SheetTitle>
           <SheetDescription>
