@@ -1,12 +1,14 @@
 "use client";
 
 import { MagnifyingGlass, Package } from "@phosphor-icons/react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { CategoryChip } from "@/components/shop/category-chips";
 import { CategoryChips } from "@/components/shop/category-chips";
 import type { ProductCardProduct } from "@/components/shop/product-card";
 import { ProductCard } from "@/components/shop/product-card";
 import { SearchBar } from "@/components/shop/search-bar";
+import { Button } from "@/components/ui/button";
 import {
   Empty,
   EmptyContent,
@@ -134,9 +136,9 @@ function EmptyCatalogState() {
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <p className="text-xs text-muted-foreground">
-          Бүтээгдэхүүн нэмсэний дараа энд харагдах болно.
-        </p>
+        <Button render={<Link href="/products/new" />}>
+          Бүтээгдэхүүн нэмэх
+        </Button>
       </EmptyContent>
     </Empty>
   );
