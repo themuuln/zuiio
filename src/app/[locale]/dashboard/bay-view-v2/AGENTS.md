@@ -21,7 +21,6 @@ The bay-view-v2 component directory is the canonical implementation for both `/d
 | File | Purpose |
 |------|---------|
 | `bay-view-v2-client.tsx` | Main client component — orchestrates all bay views |
-| `bay-view-provider.tsx` | Context provider for bay state |
 | `_grid-view.tsx` | Grid layout of bays |
 | `_kanban-view.tsx` | Kanban-style bay layout |
 | `_list-view.tsx` | List-style bay layout |

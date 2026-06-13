@@ -27,6 +27,10 @@ import {
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
 import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
+import {
+  normalizeOrgTransferBankAccounts,
+  resolveOrgTransferBanks,
+} from "@/lib/payments/org-bank-accounts";
 import { bayViewKeys } from "@/lib/queries/keys";
 import { useOrgSettings } from "@/lib/queries/use-org-settings";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -40,14 +44,21 @@ import {
 import { useSelectedBranchId, useSetSelectedBranchId } from "@/lib/stores";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { formatPlateNumber } from "@/lib/utils";
-import { useBayActionHandlers } from "./_bay-action-handlers";
 import { useBayDragHandlers } from "./_bay-drag-handlers";
+import {
+  useUpdateBayViewStatus,
+  useAssignVehicleToBay,
+  useRemoveVehicleFromBay,
+  useUpdateBayCount,
+} from "@/lib/queries/use-bay-view";
+import { EmptyBayActionDialog } from "./_empty-bay-action-dialog";
 import { BayViewErrorState } from "./_error-state";
 import { GridView } from "./_grid-view";
 import { KanbanView } from "./_kanban-view";
 import { KpiCards } from "./_kpi-cards";
 import { ListView } from "./_list-view";
 import { BayViewPageSkeleton } from "./_page-skeleton";
+import { resolvePaymentMethodFees } from "./_payment-fees";
 import { Toolbar } from "./_toolbar";
 import {
   type ActiveDragState,
@@ -57,15 +68,9 @@ import {
 } from "./_types";
 import { useBayCountMutation } from "./_use-bay-count-mutation";
 import { useBayViewDialogs } from "./_use-bay-view-dialogs";
-import {
-  normalizeOrgTransferBankAccounts,
-  resolveOrgTransferBanks,
-} from "@/lib/payments/org-bank-accounts";
-import { resolvePaymentMethodFees } from "./_payment-fees";
 import { useBayViewPending } from "./_use-bay-view-pending";
 import { useBayViewToast } from "./_use-bay-view-toast";
 import { AssignDialog } from "./assign-dialog";
-import { EmptyBayActionDialog } from "./_empty-bay-action-dialog";
 import { BayCardDragPreview } from "./bay-card";
 import { MechanicPanel } from "./mechanic-panel";
 import type { PickupCompleteData } from "./pickup-complete-dialog";
@@ -124,6 +129,12 @@ export function BayViewV2Client() {
     await shiftQuery.refetch();
   }, [bayQuery, shiftQuery]);
 
+  // ── Mutations ──────────────────────────────────────────────
+  const updateStatusMutation = useUpdateBayViewStatus(branchFilter);
+  const assignMutation = useAssignVehicleToBay(branchFilter);
+  const removeMutation = useRemoveVehicleFromBay(branchFilter);
+  const updateBayCountMutation = useUpdateBayCount(branchFilter);
+
   /** Optimistic update wrapper — writes directly to React Query cache. */
   const setData = useCallback(
     (updater: React.SetStateAction<BayViewData | null>) => {
@@ -142,9 +153,12 @@ export function BayViewV2Client() {
   const toast = useBayViewToast();
   const bayCount = useBayCountMutation({
     currentBayCount: data?.bayCount ?? 0,
-    onApply: useCallback(async (next: number) => {
-      void next;
-    }, []),
+    onApply: useCallback(
+      async (next: number) => {
+        await updateBayCountMutation.mutateAsync({ count: next });
+      },
+      [updateBayCountMutation],
+    ),
     onRefetch: fetchData,
   });
 
@@ -154,6 +168,9 @@ export function BayViewV2Client() {
   const [emptyBayBayNumber, setEmptyBayBayNumber] = useState<number | null>(
     null,
   );
+  const [directAssignBayNumber, setDirectAssignBayNumber] = useState<
+    number | null
+  >(null);
   const woIdFromUrl = searchParams.get("woId");
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(!!woIdFromUrl);
   const [detailWoId, setDetailWoId] = useState<string | null>(woIdFromUrl);
@@ -256,40 +273,14 @@ export function BayViewV2Client() {
     setActiveDrag(null);
   }
 
-  // ── Action handlers ──────────────────────────────────────────
-  const {
-    handleStatusClick: rawHandleStatusClick,
-    handleStatusChangeConfirm,
-    handleRemoveFromBay,
-  } = useBayActionHandlers({
-    queryClient,
-    data,
-    setData,
-    setPendingStatusChange: (
-      value:
-        | { woId: string; status: string }
-        | null
-        | ((
-            prev: { woId: string; status: string } | null,
-          ) => { woId: string; status: string } | null),
-    ) => {
-      if (value === null) {
-        pending.clearPending();
-      } else if (typeof value === "function") {
-        // This shouldn't happen in practice, but satisfy the type
-        const result = value(null);
-        if (result) pending.requestStatusChange(result.woId, result.status);
-      } else {
-        pending.requestStatusChange(value.woId, value.status);
-      }
-    },
-    markPending,
-    clearPending,
-    fetchData,
-    setToast: toast.setToast,
-  });
-
   // ── Status intercept ─────────────────────────────────────────
+  const rawHandleStatusClick = useCallback(
+    (woId: string, status: string) => {
+      pending.requestStatusChange(woId, status);
+    },
+    [pending],
+  );
+
   function handleStatusClick(woId: string, status: string) {
     const wo = data?.bays.find((b) => b.workOrder?.id === woId)?.workOrder;
     if (!wo) {
@@ -319,7 +310,7 @@ export function BayViewV2Client() {
     }
     // Other forward transitions go direct — optimistic, no modal
     if (status === "Diagnosing" || status === "In Progress") {
-      handleStatusChangeConfirm(woId, status);
+      updateStatusMutation.mutate({ woId, status });
       return;
     }
     rawHandleStatusClick(woId, status);
@@ -330,7 +321,7 @@ export function BayViewV2Client() {
     status: string,
     notes?: string,
   ) {
-    handleStatusChangeConfirm(woId, status, notes);
+    updateStatusMutation.mutate({ woId, status, notes });
     pending.clearPending();
   }
 
@@ -347,7 +338,7 @@ export function BayViewV2Client() {
       recommendations: postData.recommendations,
       mechanicNotes: postData.mechanicNotes,
     });
-    await handleStatusChangeConfirm(p.woId, p.newStatus);
+    updateStatusMutation.mutate({ woId: p.woId, status: p.newStatus });
 
     if (orgInfo?.orgId && p.totalCost > 0) {
       const { createInvoiceAndRecordPayment } = await import("./_helpers");
@@ -387,7 +378,7 @@ export function BayViewV2Client() {
       customerFeedback: pickupData.customerFeedback,
       nextAppointmentDate: pickupData.nextAppointmentDate,
     });
-    await handleStatusChangeConfirm(p.woId, p.newStatus);
+    updateStatusMutation.mutate({ woId: p.woId, status: p.newStatus });
     pending.clearPending();
   }
 
@@ -544,23 +535,22 @@ export function BayViewV2Client() {
     ],
   );
 
+  // ── Register & assign directly to bay ─────────────────────────
+  const handleRegisterAndAssign = useCallback(
+    (bayNumber: number) => {
+      setEmptyBayBayNumber(null);
+      setDirectAssignBayNumber(bayNumber);
+      dialogs.set("vehicleReg", true);
+    },
+    [dialogs],
+  );
+
   // ── Quick assign handlers ────────────────────────────────────
   const handleQuickAssignToBay = useCallback(
-    async (workOrderId: string, bayNumber: number) => {
-      markPending(workOrderId);
-      try {
-        await assignVehicleToBay(workOrderId, bayNumber);
-        toast.setToast({
-          message: `${t("assignedToBay")} ${bayNumber}`,
-          variant: "info",
-        });
-        await fetchData();
-      } catch {
-        toast.setToast({ message: t("failedToAssign"), variant: "error" });
-      }
-      clearPending(workOrderId);
+    (workOrderId: string, bayNumber: number) => {
+      assignMutation.mutate({ workOrderId, bayNumber });
     },
-    [t, markPending, clearPending, fetchData, toast.setToast],
+    [assignMutation],
   );
 
   const handleQueueItemClick = useCallback(
@@ -576,24 +566,25 @@ export function BayViewV2Client() {
   );
 
   const handleQuickAssign = useCallback(
-    async (workOrderId: string) => {
-      markPending(workOrderId);
-      try {
-        const bay = data?.bays.find((b) => !b.workOrder);
-        if (bay) {
-          await assignVehicleToBay(workOrderId, bay.bayNumber);
-          toast.setToast({
-            message: `${t("assignedToBay")} ${bay.bayNumber}`,
-            variant: "info",
-          });
-          await fetchData();
-        }
-      } catch {
-        toast.setToast({ message: t("failedToAssign"), variant: "error" });
+    (workOrderId: string) => {
+      const bay = data?.bays.find((b) => !b.workOrder);
+      if (!bay) {
+        toast.setToast({
+          message: "No empty bay available",
+          variant: "error",
+        });
+        return;
       }
-      clearPending(workOrderId);
+      assignMutation.mutate({ workOrderId, bayNumber: bay.bayNumber });
     },
-    [data, t, markPending, clearPending, fetchData, toast.setToast],
+    [data?.bays, assignMutation, toast.setToast],
+  );
+
+  const handleRemoveFromBay = useCallback(
+    (woId: string) => {
+      removeMutation.mutate({ woId });
+    },
+    [removeMutation],
   );
 
   const handleAssignToBay = useCallback(
@@ -795,6 +786,194 @@ export function BayViewV2Client() {
     [fetchData, toast.setToast],
   );
 
+  // ── Add helper (optimistic) ──────────────────────────────────
+  const handleAddHelper = useCallback(
+    async (woId: string, mechanicId: string) => {
+      markPending(woId);
+      const prev = data;
+
+      // Optimistic: add mechanic to helpers in the cache
+      setData((d) => {
+        if (!d) return d;
+        const mechanic = d.mechanics.find((m) => m.id === mechanicId);
+        if (!mechanic) return d;
+        return {
+          ...d,
+          bays: d.bays.map((bay) => {
+            if (bay.workOrder?.id !== woId) return bay;
+            const alreadyAssigned = bay.workOrder.helpers.some(
+              (h) => h.id === mechanicId,
+            );
+            if (alreadyAssigned) return bay;
+            return {
+              ...bay,
+              workOrder: {
+                ...bay.workOrder,
+                helpers: [
+                  ...bay.workOrder.helpers,
+                  {
+                    id: mechanic.id,
+                    full_name: mechanic.full_name,
+                    avatar_url: mechanic.avatar_url,
+                  },
+                ],
+              },
+            };
+          }),
+        };
+      });
+
+      try {
+        const res = await fetch(
+          `/api/organizations/${orgInfo?.orgId}/work-orders/${woId}/helpers`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ mechanic_id: mechanicId }),
+          },
+        );
+        const json = await res.json();
+        if (json.error) {
+          // Rollback on server error
+          if (prev) setData(prev);
+          toast.setToast({ message: json.error.message, variant: "error" });
+          return;
+        }
+        toast.setToast({
+          message: "Helper mechanic added",
+          variant: "info",
+        });
+      } catch {
+        // Rollback on network error
+        if (prev) setData(prev);
+        toast.setToast({
+          message: "Failed to add helper mechanic",
+          variant: "error",
+        });
+      } finally {
+        clearPending(woId);
+        await fetchData();
+      }
+    },
+    [
+      orgInfo?.orgId,
+      data,
+      markPending,
+      clearPending,
+      setData,
+      fetchData,
+      toast.setToast,
+    ],
+  );
+
+  // ── Reorder mechanics ────────────────────────────────────────
+  const handleReorderMechanics = useCallback(
+    async (woId: string, orderedMechanicIds: string[]) => {
+      markPending(woId);
+      const prev = data;
+
+      // Get the first mechanic ID as the new lead, rest as helpers
+      const [newLeadId, ...helperIds] = orderedMechanicIds;
+      if (!newLeadId) {
+        clearPending(woId);
+        return;
+      }
+
+      // Optimistic: update the cache immediately
+      setData((d) => {
+        if (!d) return d;
+        return {
+          ...d,
+          bays: d.bays.map((bay) => {
+            if (bay.workOrder?.id !== woId) return bay;
+            const mechanics = d.mechanics;
+            const newLead = mechanics.find((m) => m.id === newLeadId) ?? null;
+            // Build new helpers list preserving profile data
+            const newHelpers = helperIds
+              .map((id) => {
+                const existing = bay.workOrder?.helpers.find(
+                  (h) => h.id === id,
+                );
+                if (existing) return existing;
+                const profile = mechanics.find((m) => m.id === id);
+                return profile
+                  ? {
+                      id: profile.id,
+                      full_name: profile.full_name,
+                      avatar_url: profile.avatar_url,
+                    }
+                  : null;
+              })
+              .filter(Boolean) as {
+              id: string;
+              full_name: string | null;
+              avatar_url: string | null;
+            }[];
+
+            return {
+              ...bay,
+              workOrder: bay.workOrder
+                ? { ...bay.workOrder, mechanic: newLead, helpers: newHelpers }
+                : null,
+            };
+          }),
+        };
+      });
+
+      try {
+        // PATCH the work order to update the lead mechanic
+        const leadRes = await fetch(
+          `/api/organizations/${orgInfo?.orgId}/work-orders/${woId}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ mechanic_id: newLeadId }),
+          },
+        );
+        const leadJson = await leadRes.json();
+        if (leadJson.error) throw new Error(leadJson.error.message);
+
+        // PUT the helpers with new order
+        if (helperIds.length > 0) {
+          const helpersRes = await fetch(
+            `/api/organizations/${orgInfo?.orgId}/work-orders/${woId}/helpers`,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ mechanic_ids: helperIds }),
+            },
+          );
+          const helpersJson = await helpersRes.json();
+          if (helpersJson.error) throw new Error(helpersJson.error.message);
+        }
+
+        toast.setToast({
+          message: "Mechanics reordered",
+          variant: "info",
+        });
+      } catch {
+        // Rollback on failure
+        if (prev) setData(prev);
+        toast.setToast({
+          message: "Failed to reorder mechanics",
+          variant: "error",
+        });
+      } finally {
+        clearPending(woId);
+        await fetchData();
+      }
+    },
+    [
+      orgInfo?.orgId,
+      data,
+      markPending,
+      clearPending,
+      setData,
+      fetchData,
+      toast.setToast,
+    ],
+  );
+
   // ── Assign mechanic (quick assign from BayCard) ──────────────
   const handleAssignMechanic = useCallback(
     async (woId: string, mechanicId: string) => {
@@ -952,6 +1131,8 @@ export function BayViewV2Client() {
                       mechanics={data?.mechanics ?? []}
                       onAssignMechanic={handleAssignMechanic}
                       onRemoveMechanic={handleRemoveMechanic}
+                      onAddHelper={handleAddHelper}
+                      onReorderMechanics={handleReorderMechanics}
                     />
                   </div>
                 ))}
@@ -970,6 +1151,8 @@ export function BayViewV2Client() {
                   mechanics={data?.mechanics ?? []}
                   onAssignMechanic={handleAssignMechanic}
                   onRemoveMechanic={handleRemoveMechanic}
+                  onAddHelper={handleAddHelper}
+                  onReorderMechanics={handleReorderMechanics}
                 />
               </div>
             ))}
@@ -1156,6 +1339,9 @@ export function BayViewV2Client() {
           setEmptyBayBayNumber(null);
           dialogs.set("vehicleReg", true);
         }}
+        onSelectRegisterAndAssign={() => {
+          handleRegisterAndAssign(emptyBayBayNumber ?? 0);
+        }}
         onSelectQueueItem={handleEmptyBayQueueSelect}
       />
 
@@ -1198,7 +1384,10 @@ export function BayViewV2Client() {
       />
       <VehicleRegistrationDialog
         open={dialogs.open.vehicleReg}
-        onOpenChange={(v) => dialogs.set("vehicleReg", v)}
+        onOpenChange={(v) => {
+          dialogs.set("vehicleReg", v);
+          if (!v) setDirectAssignBayNumber(null);
+        }}
         onQueued={() => {
           dialogs.hide("vehicleReg");
           toast.setToast({
@@ -1207,6 +1396,18 @@ export function BayViewV2Client() {
           });
           void fetchData();
         }}
+        onAssigned={() => {
+          dialogs.hide("vehicleReg");
+          setDirectAssignBayNumber(null);
+          toast.setToast({
+            message: t("assignedDirectlyToBay", {
+              bayNumber: directAssignBayNumber ?? 0,
+            }),
+            variant: "info",
+          });
+          void fetchData();
+        }}
+        assignBayNumber={directAssignBayNumber ?? undefined}
         branchId={branchFilter}
       />
       {toast.toast && (
