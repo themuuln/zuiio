@@ -10,6 +10,8 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
+import type { VariantSelection } from "@/components/services/variant-picker";
+import { VariantSelectionDialog } from "@/components/services/variant-selection-dialog";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -32,7 +34,11 @@ import { DrawerCelebration } from "./_drawer-celebration";
 import { DrawerFooter } from "./_drawer-footer";
 import { DrawerHeaderSection } from "./_drawer-header";
 import { DrawerLoading, DrawerSkeleton } from "./_drawer-loading";
-import type { WorkOrderDetailDrawerProps } from "./_drawer-types";
+import type {
+  CatalogPartItem,
+  CatalogServiceItem,
+  WorkOrderDetailDrawerProps,
+} from "./_drawer-types";
 import { UnsavedWarning } from "./_drawer-unsaved-warning";
 import { createInvoiceAndRecordPayment } from "./_helpers";
 import { NotesSection } from "./_notes-section";
@@ -169,8 +175,123 @@ export function WorkOrderDetailDrawer({
   const [showCelebration, setShowCelebration] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
+
+  // Variant selection state
+  const [pendingVariantItem, setPendingVariantItem] = useState<{
+    entityType: "service" | "part";
+    entityId: string;
+    entityName: string;
+    defaultPrice: number;
+    onConfirm: (selection: VariantSelection | null) => void;
+    onSkip: () => void;
+  } | null>(null);
+
   const isFirstRender = useRef(true);
   const handleCancelPickup = () => setShowPickupForm(false);
+
+  // ── Variant-aware service/part selection handlers ──
+
+  async function handleServiceSelect(svc: CatalogServiceItem) {
+    if (svc.id && svc._source !== "global") {
+      // Check if this service has variants
+      try {
+        const res = await fetch(
+          `/api/organizations/${orgId}/catalog-variants`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "list-items",
+              entity_type: "service",
+              entity_id: svc.id,
+            }),
+          },
+        );
+        const json = await res.json();
+        const items = json.data as Array<{ id: string }>;
+        if (items.length > 0) {
+          // Show variant picker
+          setPendingVariantItem({
+            entityType: "service",
+            entityId: svc.id,
+            entityName: svc.name,
+            defaultPrice: Number(svc.last_price ?? svc.default_price ?? 0),
+            onConfirm: (selection) => {
+              if (selection) {
+                const svcWithVariant = {
+                  ...svc,
+                  last_price: selection.price,
+                  variant_id: selection.variantId,
+                  variant_label: selection.label,
+                } as CatalogServiceItem & {
+                  variant_id?: string | null;
+                  variant_label?: string;
+                };
+                addService(svcWithVariant);
+              } else {
+                addService(svc);
+              }
+            },
+            onSkip: () => addService(svc),
+          });
+          return;
+        }
+      } catch {
+        // If variant check fails, proceed as normal
+      }
+    }
+    addService(svc);
+  }
+
+  async function handlePartSelect(part: CatalogPartItem) {
+    if (part.id && part._source !== "global") {
+      try {
+        const res = await fetch(
+          `/api/organizations/${orgId}/catalog-variants`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "list-items",
+              entity_type: "part",
+              entity_id: part.id,
+            }),
+          },
+        );
+        const json = await res.json();
+        const items = json.data as Array<{ id: string }>;
+        if (items.length > 0) {
+          setPendingVariantItem({
+            entityType: "part",
+            entityId: part.id,
+            entityName: part.name,
+            defaultPrice: Number(part.last_price ?? part.default_price ?? 0),
+            onConfirm: (selection) => {
+              if (selection) {
+                const partWithVariant = {
+                  ...part,
+                  last_price: selection.price,
+                  variant_id: selection.variantId,
+                  variant_label: selection.label,
+                } as CatalogPartItem & {
+                  variant_id?: string | null;
+                  variant_label?: string;
+                };
+                addPart(partWithVariant);
+              } else {
+                addPart(part);
+              }
+            },
+            onSkip: () => addPart(part),
+          });
+          return;
+        }
+      } catch {
+        // proceed as normal
+      }
+    }
+    addPart(part);
+  }
 
   // Reset fullscreen when drawer closes
   useEffect(() => {
@@ -481,7 +602,7 @@ export function WorkOrderDetailDrawer({
                                   onAddServiceOpenChange={
                                     handleServiceDrawerOpenChange
                                   }
-                                  onAddService={addService}
+                                  onAddService={handleServiceSelect}
                                   onRemoveService={removeService}
                                   onEditPriceSave={handleServicePriceSave}
                                   onEditQtySave={handleServiceQtySave}
@@ -499,7 +620,7 @@ export function WorkOrderDetailDrawer({
                                   onAddPartOpenChange={
                                     handlePartDrawerOpenChange
                                   }
-                                  onAddPart={addPart}
+                                  onAddPart={handlePartSelect}
                                   onRemovePart={removePart}
                                   onEditPriceSave={handlePartPriceSave}
                                   onEditQtySave={handlePartQtySave}
@@ -700,6 +821,22 @@ export function WorkOrderDetailDrawer({
           onSelect={(customer) => {
             assignCustomer(customer.id);
           }}
+        />
+      )}
+
+      {/* Variant Selection Dialog */}
+      {pendingVariantItem && (
+        <VariantSelectionDialog
+          open={!!pendingVariantItem}
+          onOpenChange={(_open: boolean) => {
+            setPendingVariantItem(null);
+          }}
+          entityType={pendingVariantItem.entityType}
+          entityId={pendingVariantItem.entityId}
+          entityName={pendingVariantItem.entityName}
+          defaultPrice={pendingVariantItem.defaultPrice}
+          onConfirm={pendingVariantItem.onConfirm}
+          onSkip={pendingVariantItem.onSkip}
         />
       )}
     </>

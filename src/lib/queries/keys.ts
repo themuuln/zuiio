@@ -445,6 +445,16 @@ export const priceRuleKeys = {
   list: (orgId: string) => [...priceRuleKeys.all(orgId), "list"] as const,
 };
 
+export const catalogVariantKeys = {
+  all: (orgId: string) => ["organizations", orgId, "catalog-variants"] as const,
+  groups: (orgId: string) =>
+    [...catalogVariantKeys.all(orgId), "groups"] as const,
+  options: (orgId: string, groupId?: string) =>
+    [...catalogVariantKeys.all(orgId), "options", groupId ?? "all"] as const,
+  items: (orgId: string, entityType: string, entityId: string) =>
+    [...catalogVariantKeys.all(orgId), "items", entityType, entityId] as const,
+};
+
 export const cashRegisterKeys = {
   all: (orgId: string) => ["organizations", orgId, "cash-register"] as const,
   current: (orgId: string, branchId?: string | null) =>

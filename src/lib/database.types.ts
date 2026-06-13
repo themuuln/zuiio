@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5";
   };
-  graphql_public: {
-    Tables: {
-      [_ in never]: never;
-    };
-    Views: {
-      [_ in never]: never;
-    };
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json;
-          operationName?: string;
-          query?: string;
-          variables?: Json;
-        };
-        Returns: Json;
-      };
-    };
-    Enums: {
-      [_ in never]: never;
-    };
-    CompositeTypes: {
-      [_ in never]: never;
-    };
-  };
   public: {
     Tables: {
       app_config: {
@@ -131,6 +106,13 @@ export type Database = {
             columns: ["customer_id"];
             isOneToOne: false;
             referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "appointments_mechanic_id_fkey";
+            columns: ["mechanic_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
           {
@@ -587,6 +569,146 @@ export type Database = {
           },
         ];
       };
+      catalog_item_variants: {
+        Row: {
+          barcode: string | null;
+          cost: number | null;
+          created_at: string;
+          created_by: string | null;
+          deleted_at: string | null;
+          entity_id: string;
+          entity_type: string;
+          id: string;
+          is_active: boolean;
+          organization_id: string;
+          price: number | null;
+          sku: string | null;
+          sort_order: number;
+          updated_at: string;
+          updated_by: string | null;
+          variant_data: Json;
+          variant_label: string;
+        };
+        Insert: {
+          barcode?: string | null;
+          cost?: number | null;
+          created_at?: string;
+          created_by?: string | null;
+          deleted_at?: string | null;
+          entity_id: string;
+          entity_type: string;
+          id?: string;
+          is_active?: boolean;
+          organization_id: string;
+          price?: number | null;
+          sku?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+          variant_data?: Json;
+          variant_label: string;
+        };
+        Update: {
+          barcode?: string | null;
+          cost?: number | null;
+          created_at?: string;
+          created_by?: string | null;
+          deleted_at?: string | null;
+          entity_id?: string;
+          entity_type?: string;
+          id?: string;
+          is_active?: boolean;
+          organization_id?: string;
+          price?: number | null;
+          sku?: string | null;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+          variant_data?: Json;
+          variant_label?: string;
+        };
+        Relationships: [];
+      };
+      catalog_variant_groups: {
+        Row: {
+          applies_to: string;
+          created_at: string;
+          deleted_at: string | null;
+          id: string;
+          name: string;
+          name_mn: string | null;
+          organization_id: string;
+          sort_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          applies_to?: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          name: string;
+          name_mn?: string | null;
+          organization_id: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          applies_to?: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          name?: string;
+          name_mn?: string | null;
+          organization_id?: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      catalog_variant_options: {
+        Row: {
+          created_at: string;
+          deleted_at: string | null;
+          group_id: string;
+          id: string;
+          label: string;
+          label_mn: string | null;
+          organization_id: string;
+          sort_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          deleted_at?: string | null;
+          group_id: string;
+          id?: string;
+          label: string;
+          label_mn?: string | null;
+          organization_id: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          deleted_at?: string | null;
+          group_id?: string;
+          id?: string;
+          label?: string;
+          label_mn?: string | null;
+          organization_id?: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "catalog_variant_options_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "catalog_variant_groups";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       clock_in_tokens: {
         Row: {
           action_type: string;
@@ -953,6 +1075,7 @@ export type Database = {
       };
       estimate_items: {
         Row: {
+          catalog_item_variant_id: string | null;
           created_at: string;
           created_by: string | null;
           description: string;
@@ -972,8 +1095,10 @@ export type Database = {
           tax_rate: number | null;
           unit_cost: number;
           unit_price: number;
+          variant_label: string | null;
         };
         Insert: {
+          catalog_item_variant_id?: string | null;
           created_at?: string;
           created_by?: string | null;
           description: string;
@@ -993,8 +1118,10 @@ export type Database = {
           tax_rate?: number | null;
           unit_cost?: number;
           unit_price?: number;
+          variant_label?: string | null;
         };
         Update: {
+          catalog_item_variant_id?: string | null;
           created_at?: string;
           created_by?: string | null;
           description?: string;
@@ -1014,8 +1141,16 @@ export type Database = {
           tax_rate?: number | null;
           unit_cost?: number;
           unit_price?: number;
+          variant_label?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "estimate_items_catalog_item_variant_id_fkey";
+            columns: ["catalog_item_variant_id"];
+            isOneToOne: false;
+            referencedRelation: "catalog_item_variants";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "estimate_items_estimate_id_fkey";
             columns: ["estimate_id"];
@@ -1136,6 +1271,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "branches";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "estimates_converted_work_order_id_fkey";
+            columns: ["converted_work_order_id"];
+            isOneToOne: false;
+            referencedRelation: "work_order_costs";
+            referencedColumns: ["work_order_id"];
           },
           {
             foreignKeyName: "estimates_converted_work_order_id_fkey";
@@ -1940,7 +2082,74 @@ export type Database = {
             foreignKeyName: "invoices_work_order_id_fkey";
             columns: ["work_order_id"];
             isOneToOne: false;
+            referencedRelation: "work_order_costs";
+            referencedColumns: ["work_order_id"];
+          },
+          {
+            foreignKeyName: "invoices_work_order_id_fkey";
+            columns: ["work_order_id"];
+            isOneToOne: false;
             referencedRelation: "work_orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      marketing_campaigns: {
+        Row: {
+          clicked_count: number;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          name: string;
+          opened_count: number;
+          organization_id: string | null;
+          sent_count: number;
+          status: string;
+          target_count: number;
+          type: string;
+          updated_at: string;
+        };
+        Insert: {
+          clicked_count?: number;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          name: string;
+          opened_count?: number;
+          organization_id?: string | null;
+          sent_count?: number;
+          status?: string;
+          target_count?: number;
+          type: string;
+          updated_at?: string;
+        };
+        Update: {
+          clicked_count?: number;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          name?: string;
+          opened_count?: number;
+          organization_id?: string | null;
+          sent_count?: number;
+          status?: string;
+          target_count?: number;
+          type?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "marketing_campaigns_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "super_admins";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "marketing_campaigns_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
             referencedColumns: ["id"];
           },
         ];
@@ -1989,6 +2198,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "organizations";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "mechanic_assignments_work_order_id_fkey";
+            columns: ["work_order_id"];
+            isOneToOne: false;
+            referencedRelation: "work_order_costs";
+            referencedColumns: ["work_order_id"];
           },
           {
             foreignKeyName: "mechanic_assignments_work_order_id_fkey";
@@ -2597,6 +2813,13 @@ export type Database = {
             foreignKeyName: "part_price_history_work_order_id_fkey";
             columns: ["work_order_id"];
             isOneToOne: false;
+            referencedRelation: "work_order_costs";
+            referencedColumns: ["work_order_id"];
+          },
+          {
+            foreignKeyName: "part_price_history_work_order_id_fkey";
+            columns: ["work_order_id"];
+            isOneToOne: false;
             referencedRelation: "work_orders";
             referencedColumns: ["id"];
           },
@@ -2917,6 +3140,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "organizations";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payments_work_order_id_fkey";
+            columns: ["work_order_id"];
+            isOneToOne: false;
+            referencedRelation: "work_order_costs";
+            referencedColumns: ["work_order_id"];
           },
           {
             foreignKeyName: "payments_work_order_id_fkey";
@@ -3471,6 +3701,42 @@ export type Database = {
           },
         ];
       };
+      seller_assignments: {
+        Row: {
+          created_at: string;
+          id: string;
+          organization_id: string;
+          seller_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          organization_id: string;
+          seller_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          organization_id?: string;
+          seller_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "seller_assignments_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "seller_assignments_seller_id_fkey";
+            columns: ["seller_id"];
+            isOneToOne: false;
+            referencedRelation: "super_admins";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       service_catalog: {
         Row: {
           branch_id: string | null;
@@ -3621,6 +3887,13 @@ export type Database = {
             foreignKeyName: "service_completion_data_work_order_id_fkey";
             columns: ["work_order_id"];
             isOneToOne: false;
+            referencedRelation: "work_order_costs";
+            referencedColumns: ["work_order_id"];
+          },
+          {
+            foreignKeyName: "service_completion_data_work_order_id_fkey";
+            columns: ["work_order_id"];
+            isOneToOne: false;
             referencedRelation: "work_orders";
             referencedColumns: ["id"];
           },
@@ -3705,6 +3978,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "vehicles";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "service_price_history_work_order_id_fkey";
+            columns: ["work_order_id"];
+            isOneToOne: false;
+            referencedRelation: "work_order_costs";
+            referencedColumns: ["work_order_id"];
           },
           {
             foreignKeyName: "service_price_history_work_order_id_fkey";
@@ -3804,6 +4084,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "service_catalog";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "service_recommendations_work_order_id_fkey";
+            columns: ["work_order_id"];
+            isOneToOne: false;
+            referencedRelation: "work_order_costs";
+            referencedColumns: ["work_order_id"];
           },
           {
             foreignKeyName: "service_recommendations_work_order_id_fkey";
@@ -4151,16 +4438,19 @@ export type Database = {
         Row: {
           created_at: string;
           id: string;
+          role: string;
           user_id: string;
         };
         Insert: {
           created_at?: string;
           id?: string;
+          role?: string;
           user_id: string;
         };
         Update: {
           created_at?: string;
           id?: string;
+          role?: string;
           user_id?: string;
         };
         Relationships: [];
@@ -4914,6 +5204,13 @@ export type Database = {
             foreignKeyName: "work_order_attachments_work_order_id_fkey";
             columns: ["work_order_id"];
             isOneToOne: false;
+            referencedRelation: "work_order_costs";
+            referencedColumns: ["work_order_id"];
+          },
+          {
+            foreignKeyName: "work_order_attachments_work_order_id_fkey";
+            columns: ["work_order_id"];
+            isOneToOne: false;
             referencedRelation: "work_orders";
             referencedColumns: ["id"];
           },
@@ -4978,6 +5275,13 @@ export type Database = {
             foreignKeyName: "work_order_commissions_work_order_id_fkey";
             columns: ["work_order_id"];
             isOneToOne: false;
+            referencedRelation: "work_order_costs";
+            referencedColumns: ["work_order_id"];
+          },
+          {
+            foreignKeyName: "work_order_commissions_work_order_id_fkey";
+            columns: ["work_order_id"];
+            isOneToOne: false;
             referencedRelation: "work_orders";
             referencedColumns: ["id"];
           },
@@ -5018,6 +5322,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "organizations";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "work_order_helpers_work_order_id_fkey";
+            columns: ["work_order_id"];
+            isOneToOne: false;
+            referencedRelation: "work_order_costs";
+            referencedColumns: ["work_order_id"];
           },
           {
             foreignKeyName: "work_order_helpers_work_order_id_fkey";
@@ -5065,6 +5376,13 @@ export type Database = {
             foreignKeyName: "work_order_notes_work_order_id_fkey";
             columns: ["work_order_id"];
             isOneToOne: false;
+            referencedRelation: "work_order_costs";
+            referencedColumns: ["work_order_id"];
+          },
+          {
+            foreignKeyName: "work_order_notes_work_order_id_fkey";
+            columns: ["work_order_id"];
+            isOneToOne: false;
             referencedRelation: "work_orders";
             referencedColumns: ["id"];
           },
@@ -5072,6 +5390,7 @@ export type Database = {
       };
       work_order_parts: {
         Row: {
+          catalog_item_variant_id: string | null;
           created_at: string;
           created_by: string | null;
           discount_amount: number | null;
@@ -5087,9 +5406,11 @@ export type Database = {
           quantity: number;
           unit_cost: number;
           unit_price: number;
+          variant_label: string | null;
           work_order_id: string;
         };
         Insert: {
+          catalog_item_variant_id?: string | null;
           created_at?: string;
           created_by?: string | null;
           discount_amount?: number | null;
@@ -5105,9 +5426,11 @@ export type Database = {
           quantity?: number;
           unit_cost?: number;
           unit_price?: number;
+          variant_label?: string | null;
           work_order_id: string;
         };
         Update: {
+          catalog_item_variant_id?: string | null;
           created_at?: string;
           created_by?: string | null;
           discount_amount?: number | null;
@@ -5123,9 +5446,17 @@ export type Database = {
           quantity?: number;
           unit_cost?: number;
           unit_price?: number;
+          variant_label?: string | null;
           work_order_id?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "work_order_parts_catalog_item_variant_id_fkey";
+            columns: ["catalog_item_variant_id"];
+            isOneToOne: false;
+            referencedRelation: "catalog_item_variants";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "work_order_parts_organization_id_fkey";
             columns: ["organization_id"];
@@ -5144,6 +5475,13 @@ export type Database = {
             foreignKeyName: "work_order_parts_work_order_id_fkey";
             columns: ["work_order_id"];
             isOneToOne: false;
+            referencedRelation: "work_order_costs";
+            referencedColumns: ["work_order_id"];
+          },
+          {
+            foreignKeyName: "work_order_parts_work_order_id_fkey";
+            columns: ["work_order_id"];
+            isOneToOne: false;
             referencedRelation: "work_orders";
             referencedColumns: ["id"];
           },
@@ -5151,6 +5489,7 @@ export type Database = {
       };
       work_order_services: {
         Row: {
+          catalog_item_variant_id: string | null;
           created_at: string;
           created_by: string | null;
           description: string | null;
@@ -5167,9 +5506,11 @@ export type Database = {
           service_name: string;
           unit_cost: number;
           unit_price: number;
+          variant_label: string | null;
           work_order_id: string;
         };
         Insert: {
+          catalog_item_variant_id?: string | null;
           created_at?: string;
           created_by?: string | null;
           description?: string | null;
@@ -5186,9 +5527,11 @@ export type Database = {
           service_name: string;
           unit_cost?: number;
           unit_price?: number;
+          variant_label?: string | null;
           work_order_id: string;
         };
         Update: {
+          catalog_item_variant_id?: string | null;
           created_at?: string;
           created_by?: string | null;
           description?: string | null;
@@ -5205,9 +5548,17 @@ export type Database = {
           service_name?: string;
           unit_cost?: number;
           unit_price?: number;
+          variant_label?: string | null;
           work_order_id?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "work_order_services_catalog_item_variant_id_fkey";
+            columns: ["catalog_item_variant_id"];
+            isOneToOne: false;
+            referencedRelation: "catalog_item_variants";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "work_order_services_organization_id_fkey";
             columns: ["organization_id"];
@@ -5221,6 +5572,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "service_catalog";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "work_order_services_work_order_id_fkey";
+            columns: ["work_order_id"];
+            isOneToOne: false;
+            referencedRelation: "work_order_costs";
+            referencedColumns: ["work_order_id"];
           },
           {
             foreignKeyName: "work_order_services_work_order_id_fkey";
@@ -5269,6 +5627,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "organizations";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "work_order_status_history_work_order_id_fkey";
+            columns: ["work_order_id"];
+            isOneToOne: false;
+            referencedRelation: "work_order_costs";
+            referencedColumns: ["work_order_id"];
           },
           {
             foreignKeyName: "work_order_status_history_work_order_id_fkey";
@@ -5408,6 +5773,13 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "work_orders_mechanic_id_fkey";
+            columns: ["mechanic_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
             foreignKeyName: "work_orders_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
@@ -5432,7 +5804,29 @@ export type Database = {
       };
     };
     Views: {
-      [_ in never]: never;
+      work_order_costs: {
+        Row: {
+          gross_profit: number | null;
+          margin_percent: number | null;
+          organization_id: string | null;
+          parts_cost: number | null;
+          parts_revenue: number | null;
+          services_cost: number | null;
+          services_revenue: number | null;
+          total_cost: number | null;
+          total_revenue: number | null;
+          work_order_id: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "work_orders_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Functions: {
       accept_invite: {
@@ -5751,9 +6145,6 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       inventory_movement_type: [

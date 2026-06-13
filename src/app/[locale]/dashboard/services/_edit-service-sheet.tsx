@@ -1,11 +1,12 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Dices, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { VariantEditorSheet } from "@/components/services/variant-editor-sheet";
 import { Button } from "@/components/ui/button";
 import {
   Combobox,
@@ -15,7 +16,14 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-import { DetailSheet } from "@/components/ui/detail-sheet";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import {
   Field,
   FieldContent,
@@ -52,6 +60,7 @@ export function EditServiceSheet({
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
   const [categoryInput, setCategoryInput] = useState("");
+  const [showVariants, setShowVariants] = useState(false);
 
   // Reset form when the sheet opens with a different service
   const [prevServiceId, setPrevServiceId] = useState<string | null>(null);
@@ -142,144 +151,187 @@ export function EditServiceSheet({
   };
 
   return (
-    <DetailSheet open={open} onOpenChange={handleOpenChange} size="lg">
-      <DetailSheet.Header>
-        <DetailSheet.Title>{t("editService")}</DetailSheet.Title>
-        <DetailSheet.Description>
-          {t("editServiceDescription")}
-        </DetailSheet.Description>
-      </DetailSheet.Header>
+    <>
+      <Drawer
+        open={open}
+        onOpenChange={handleOpenChange}
+        swipeDirection="right"
+        modal={false}
+      >
+        <DrawerContent contentClassName="bg-background">
+          <DrawerHeader className="border-b border-border px-5 py-5 pr-16">
+            <div className="flex items-center justify-between">
+              <div>
+                <DrawerTitle>{t("editService")}</DrawerTitle>
+                <DrawerDescription>
+                  {t("editServiceDescription")}
+                </DrawerDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0 gap-1.5"
+                onClick={() => setShowVariants(true)}
+              >
+                <Dices className="size-4" />
+                {t("manageVariants")}
+              </Button>
+            </div>
+          </DrawerHeader>
 
-      <DetailSheet.Body>
-        <FieldGroup>
-          {/* Name */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field>
-              <FieldLabel>
-                {t("serviceName")} <span className="text-destructive">*</span>
-              </FieldLabel>
-              <FieldContent>
-                <Input
-                  placeholder={t("namePlaceholderEn")}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </FieldContent>
-            </Field>
-            <Field>
-              <FieldLabel>{t("nameMn")}</FieldLabel>
-              <FieldContent>
-                <Input
-                  placeholder={t("namePlaceholderMn")}
-                  value={nameMn}
-                  onChange={(e) => setNameMn(e.target.value)}
-                />
-              </FieldContent>
-            </Field>
+          <div className="flex-1 overflow-y-auto px-5 py-5">
+            <FieldGroup>
+              {/* Name */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field>
+                  <FieldLabel>
+                    {t("serviceName")}{" "}
+                    <span className="text-destructive">*</span>
+                  </FieldLabel>
+                  <FieldContent>
+                    <Input
+                      placeholder={t("namePlaceholderEn")}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </FieldContent>
+                </Field>
+                <Field>
+                  <FieldLabel>{t("nameMn")}</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      placeholder={t("namePlaceholderMn")}
+                      value={nameMn}
+                      onChange={(e) => setNameMn(e.target.value)}
+                    />
+                  </FieldContent>
+                </Field>
+              </div>
+
+              {/* Default Price */}
+              <Field>
+                <FieldLabel>
+                  {t("price")} (₮) <span className="text-destructive">*</span>
+                </FieldLabel>
+                <FieldContent>
+                  <Input
+                    type="number"
+                    min="0"
+                    placeholder="45000"
+                    value={defaultPrice}
+                    onChange={(e) => setDefaultPrice(e.target.value)}
+                  />
+                </FieldContent>
+              </Field>
+
+              {/* Category Combobox */}
+              <Field>
+                <FieldLabel>{t("category")}</FieldLabel>
+                <FieldContent>
+                  <Combobox
+                    items={categories.map((c) => ({ name: c }))}
+                    value={category ? { name: category } : null}
+                    onValueChange={(item) => {
+                      setCategory(item?.name ?? "");
+                      setCategoryInput("");
+                    }}
+                    onInputValueChange={(val) => setCategoryInput(val)}
+                    isItemEqualToValue={(a, b) => a.name === b.name}
+                    itemToStringLabel={(item) => item?.name ?? ""}
+                  >
+                    <ComboboxInput
+                      placeholder={t("categoryPlaceholder")}
+                      showTrigger
+                      showClear={!!category}
+                      className="h-10"
+                    />
+                    <ComboboxContent>
+                      <ComboboxList>
+                        {(item: { name: string }) => (
+                          <ComboboxItem key={item.name} value={item}>
+                            <span>{item.name}</span>
+                          </ComboboxItem>
+                        )}
+                      </ComboboxList>
+                      {categoryInput.trim() &&
+                        !categories.some(
+                          (c) =>
+                            c.toLowerCase() ===
+                            categoryInput.trim().toLowerCase(),
+                        ) && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setCategory(categoryInput.trim());
+                              setCategoryInput("");
+                            }}
+                            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-left hover:bg-accent cursor-pointer border-t border-border"
+                          >
+                            <span>
+                              {t("createCategory", {
+                                name: categoryInput.trim(),
+                              })}
+                            </span>
+                          </button>
+                        )}
+                      <ComboboxEmpty />
+                    </ComboboxContent>
+                  </Combobox>
+                </FieldContent>
+              </Field>
+
+              {/* Description */}
+              <Field>
+                <FieldLabel>{t("description")}</FieldLabel>
+                <FieldContent>
+                  <Input
+                    placeholder={t("descriptionPlaceholder")}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
+                </FieldContent>
+              </Field>
+            </FieldGroup>
           </div>
 
-          {/* Default Price */}
-          <Field>
-            <FieldLabel>
-              {t("price")} (₮) <span className="text-destructive">*</span>
-            </FieldLabel>
-            <FieldContent>
-              <Input
-                type="number"
-                min="0"
-                placeholder="45000"
-                value={defaultPrice}
-                onChange={(e) => setDefaultPrice(e.target.value)}
-              />
-            </FieldContent>
-          </Field>
-
-          {/* Category Combobox */}
-          <Field>
-            <FieldLabel>{t("category")}</FieldLabel>
-            <FieldContent>
-              <Combobox
-                items={categories.map((c) => ({ name: c }))}
-                value={category ? { name: category } : null}
-                onValueChange={(item) => {
-                  setCategory(item?.name ?? "");
-                  setCategoryInput("");
-                }}
-                onInputValueChange={(val) => setCategoryInput(val)}
-                isItemEqualToValue={(a, b) => a.name === b.name}
-                itemToStringLabel={(item) => item?.name ?? ""}
+          <DrawerFooter className="border-t border-border bg-background/95 px-5 py-4 backdrop-blur">
+            <div className="flex w-full gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => handleOpenChange(false)}
               >
-                <ComboboxInput
-                  placeholder={t("categoryPlaceholder")}
-                  showTrigger
-                  showClear={!!category}
-                  className="h-10"
-                />
-                <ComboboxContent>
-                  <ComboboxList>
-                    {(item: { name: string }) => (
-                      <ComboboxItem key={item.name} value={item}>
-                        <span>{item.name}</span>
-                      </ComboboxItem>
-                    )}
-                  </ComboboxList>
-                  {categoryInput.trim() &&
-                    !categories.some(
-                      (c) =>
-                        c.toLowerCase() === categoryInput.trim().toLowerCase(),
-                    ) && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setCategory(categoryInput.trim());
-                          setCategoryInput("");
-                        }}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-left hover:bg-accent cursor-pointer border-t border-border"
-                      >
-                        <span>
-                          {t("createCategory", { name: categoryInput.trim() })}
-                        </span>
-                      </button>
-                    )}
-                  <ComboboxEmpty />
-                </ComboboxContent>
-              </Combobox>
-            </FieldContent>
-          </Field>
+                {commonT("cancel")}
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={handleSave}
+                disabled={updateMutation.isPending || !name.trim()}
+              >
+                {updateMutation.isPending ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="size-4 animate-spin" />
+                    {t("saving")}
+                  </span>
+                ) : (
+                  commonT("save")
+                )}
+              </Button>
+            </div>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
 
-          {/* Description */}
-          <Field>
-            <FieldLabel>{t("description")}</FieldLabel>
-            <FieldContent>
-              <Input
-                placeholder={t("descriptionPlaceholder")}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </FieldContent>
-          </Field>
-        </FieldGroup>
-      </DetailSheet.Body>
-
-      <DetailSheet.Footer>
-        <Button variant="outline" onClick={() => handleOpenChange(false)}>
-          {commonT("cancel")}
-        </Button>
-        <Button
-          onClick={handleSave}
-          disabled={updateMutation.isPending || !name.trim()}
-        >
-          {updateMutation.isPending ? (
-            <span className="flex items-center gap-2">
-              <Loader2 className="size-4 animate-spin" />
-              {t("saving")}
-            </span>
-          ) : (
-            commonT("save")
-          )}
-        </Button>
-      </DetailSheet.Footer>
-    </DetailSheet>
+      {/* Variant Editor */}
+      <VariantEditorSheet
+        entityType="service"
+        entityId={service?.id ?? null}
+        entityName={service?.name ?? ""}
+        defaultPrice={service?.default_price ?? 0}
+        open={showVariants}
+        onOpenChange={setShowVariants}
+      />
+    </>
   );
 }

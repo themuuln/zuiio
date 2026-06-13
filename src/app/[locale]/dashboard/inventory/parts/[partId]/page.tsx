@@ -1,10 +1,15 @@
 "use client";
 
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Dices } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { PartForm } from "@/components/inventory/part-form";
+import { VariantEditorSheet } from "@/components/services/variant-editor-sheet";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useItemVariants } from "@/lib/queries/use-catalog-variants";
 import {
   useInventoryBalances,
   useInventoryMovements,
@@ -13,7 +18,6 @@ import {
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId } from "@/lib/stores";
-import { DetailsForm } from "./_details-form";
 import { PartHeader } from "./_header";
 import { StockHistory } from "./_stock-history";
 import { ThresholdCard } from "./_threshold-card";
@@ -27,6 +31,14 @@ export default function PartDetailPage() {
   const orgId = org?.orgId ?? null;
   const selectedBranchId = useSelectedBranchId();
   const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
+
+  const [showVariants, setShowVariants] = useState(false);
+
+  const { data: variants = [] } = useItemVariants(
+    orgId ?? undefined,
+    "part",
+    partId,
+  );
 
   const {
     data: parts = [],
@@ -123,7 +135,7 @@ export default function PartDetailPage() {
           />
         </div>
 
-        {/* Right column: Threshold + Details */}
+        {/* Right column: Threshold + Details + Variants */}
         <div className="flex flex-col gap-6">
           <ThresholdCard
             orgId={orgId}
@@ -132,9 +144,59 @@ export default function PartDetailPage() {
             onHand={onHand}
             isLoading={thresholdsLoading}
           />
-          {part && <DetailsForm part={part} />}
+          {part && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-base font-semibold">
+                  {t("editPartDetails")}
+                </CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 shrink-0"
+                  onClick={() => setShowVariants(true)}
+                >
+                  <Dices className="size-4" />
+                  {t("manageVariants")}
+                  {variants.length > 0 && (
+                    <Badge variant="secondary" className="ml-1 text-xs">
+                      {variants.length}
+                    </Badge>
+                  )}
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <PartForm
+                  partId={part.id}
+                  initialData={{
+                    name: part.name,
+                    name_mn: part.name_mn ?? undefined,
+                    part_number: part.part_number ?? undefined,
+                    category: part.category ?? undefined,
+                    description: part.description ?? undefined,
+                    unit: part.unit ?? undefined,
+                    default_price: part.default_price ?? undefined,
+                    image_url: part.image_url ?? undefined,
+                    location: part.location ?? undefined,
+                  }}
+                  onSuccess={() => {}}
+                  onCancel={undefined}
+                />
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
+
+      {/* Variant Editor */}
+      <VariantEditorSheet
+        entityType="part"
+        entityId={part?.id ?? null}
+        entityName={part?.name ?? ""}
+        defaultPrice={part?.default_price ?? 0}
+        open={showVariants}
+        onOpenChange={setShowVariants}
+      />
     </div>
   );
 }

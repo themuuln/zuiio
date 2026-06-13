@@ -91,6 +91,12 @@ export const cacheTags = {
   // Cash Register
   cashRegisterSessions: (orgId: string) => `cash-register-sessions:${orgId}`,
   cashRegisterSession: (id: string) => `cash-register-session:${id}`,
+
+  // Catalog Variants
+  variantGroups: (orgId: string) => `variant-groups:${orgId}`,
+  variantOptions: (orgId: string) => `variant-options:${orgId}`,
+  itemVariants: (orgId: string, entityType: string, entityId: string) =>
+    `item-variants:${orgId}:${entityType}:${entityId}`,
 } as const;
 
 // Cache duration constants (in seconds)

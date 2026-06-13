@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
 import {
+  getWorkOrderParts,
   getWorkOrderServicesWithIntervals,
   savePostServiceData,
 } from "@/lib/services/post-service-service";
@@ -11,11 +13,9 @@ import type {
   WorkOrderPart,
   WorkOrderService,
 } from "@/lib/types";
-
-import { createInvoiceAndRecordPayment } from "./_helpers";
-import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
-import type { PaymentMethodFees } from "./_payment-fees";
 import type { CatalogPartItem, CatalogServiceItem } from "./_drawer-types";
+import { createInvoiceAndRecordPayment } from "./_helpers";
+import type { PaymentMethodFees } from "./_payment-fees";
 import type { PostServiceFormData } from "./_schema";
 
 interface UseDrawerMutationsParams {
@@ -72,6 +72,16 @@ export function useDrawerMutations({
       service_catalog_id: string | null;
       catalog_interval_months: number | null;
       catalog_interval_km: number | null;
+    }>
+  >([]);
+  const [postFormParts, setPostFormParts] = useState<
+    Array<{
+      id: string;
+      part_name: string;
+      part_number: string | null;
+      quantity: number;
+      unit_price: number;
+      final_price: number;
     }>
   >([]);
 
@@ -225,7 +235,12 @@ export function useDrawerMutations({
             organization_id: null,
             created_by: null,
             created_at: new Date().toISOString(),
-          } as WorkOrderService,
+            // Carry name_mn so the list shows the translated name immediately
+            name_mn: svc.name_mn ?? null,
+            // Variant info
+            catalog_item_variant_id: (svc as any).variant_id ?? null,
+            variant_label: (svc as any).variant_label ?? null,
+          } as WorkOrderService & { name_mn?: string | null },
         ],
       };
     });
@@ -251,6 +266,8 @@ export function useDrawerMutations({
             service_name: svc.service_name,
             quantity: svc.quantity ?? 1,
             unit_price: price,
+            catalog_item_variant_id: (svc as any).catalog_item_variant_id ?? null,
+            variant_label: (svc as any).variant_label ?? null,
           }),
         },
       );
@@ -427,7 +444,12 @@ export function useDrawerMutations({
             organization_id: null,
             created_by: null,
             created_at: new Date().toISOString(),
-          } as WorkOrderPart,
+            // Carry name_mn so the list shows the translated name immediately
+            name_mn: item.name_mn ?? null,
+            // Variant info
+            catalog_item_variant_id: (item as any).variant_id ?? null,
+            variant_label: (item as any).variant_label ?? null,
+          } as WorkOrderPart & { name_mn?: string | null },
         ],
       };
     });
@@ -452,6 +474,8 @@ export function useDrawerMutations({
             part_name: part.part_name,
             quantity: part.quantity ?? 1,
             unit_price: price,
+            catalog_item_variant_id: (part as any).catalog_item_variant_id ?? null,
+            variant_label: (part as any).variant_label ?? null,
           }),
         },
       );
@@ -747,6 +771,14 @@ export function useDrawerMutations({
   // ── Quantity editing ──
 
   async function handleServiceQtySave(serviceId: string, qty: number) {
+    // Temp services: confirm the add via API with current price, then update qty
+    if (serviceId.startsWith("temp-")) {
+      const svc = wo?.services?.find((s) => s.id === serviceId);
+      const price = svc ? Number(svc.final_price ?? svc.unit_price ?? 0) : 0;
+      await confirmAddService(serviceId, price);
+      return;
+    }
+
     const orgId = orgIdRef.current;
     if (!orgId || !workOrderId) return;
     const numVal = qty;
@@ -952,17 +984,23 @@ export function useDrawerMutations({
   const handleCancelPostService = () => {
     setShowPostServiceForm(false);
     setPostFormServices([]);
+    setPostFormParts([]);
   };
 
   async function handleReadyForPickup() {
     // Open form immediately — don't block on API
     if (workOrderId && wo?.vehicle_id) {
       setShowPostServiceForm(true);
-      // Load services in background for the form
+      // Load services and parts in background for the form
       getWorkOrderServicesWithIntervals(workOrderId)
         .then(setPostFormServices)
         .catch(() => {
           // If services fail to load, form still works with empty services
+        });
+      getWorkOrderParts(workOrderId)
+        .then(setPostFormParts)
+        .catch(() => {
+          // If parts fail to load, form still works with empty parts
         });
     } else {
       changeStatus("Ready for Pickup");
@@ -983,6 +1021,7 @@ export function useDrawerMutations({
     );
     setShowPostServiceForm(false);
     setPostFormServices([]);
+    setPostFormParts([]);
 
     // Fire APIs in background — never blocks UI
     Promise.all([
@@ -1142,6 +1181,7 @@ export function useDrawerMutations({
     invoicePublicToken,
     showPostServiceForm,
     postFormServices,
+    postFormParts,
     showUnsavedWarning,
     setShowUnsavedWarning,
     showCelebration,
