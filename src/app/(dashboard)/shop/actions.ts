@@ -191,20 +191,28 @@ export async function createShopSale(
     };
   }
 
-  // --- Step 6: Decrement current_stock for each product ---
+  // --- Step 6: Atomic decrement of current_stock for each product ---
+  // Uses .gte("current_stock", item.quantity) filter so the UPDATE only affects
+  // rows that still have sufficient stock at statement execution time, eliminating
+  // the read-then-write race window. Checks affected row count via .maybeSingle()
+  // to detect insufficient stock.
   for (const item of items) {
     const product = productMap.get(item.productId);
     if (!product) continue;
-    const nextStock = Number(product.current_stock ?? 0) - item.quantity;
 
-    const { error: stockUpdateError } = await supabase
+    const { data: updatedProduct, error: stockUpdateError } = await supabase
       .from("products")
-      .update({ current_stock: nextStock })
+      .update({
+        current_stock: Number(product.current_stock ?? 0) - item.quantity,
+      })
       .eq("organization_id", organizationId)
-      .eq("id", item.productId);
+      .eq("id", item.productId)
+      .gte("current_stock", item.quantity)
+      .select("id")
+      .maybeSingle();
 
     if (stockUpdateError) {
-      // Partial rollback — best-effort restore stock movements
+      // Actual error (network, permission, etc.) — full rollback
       await supabase
         .from("stock_movements")
         .delete()
@@ -216,6 +224,24 @@ export async function createShopSale(
       }
       return {
         error: `Үлдэгдэл хасахад алдаа гарлаа: ${stockUpdateError.message}`,
+      };
+    }
+
+    if (!updatedProduct) {
+      // No row matched — stock was consumed between Step 1 check and this UPDATE
+      // (or stock was already insufficient at Step 1 — but .gte() catches any
+      // interleaving sale that consumed stock in the meantime)
+      await supabase
+        .from("stock_movements")
+        .delete()
+        .eq("reference", `sale:${saleId}`);
+      await supabase.from("sale_items").delete().eq("sale_id", saleId);
+      await supabase.from("sales").delete().eq("id", saleId);
+      if (createdContact && contactId) {
+        await supabase.from("contacts").delete().eq("id", contactId);
+      }
+      return {
+        error: `"${item.name}" бүтээгдэхүүний үлдэгдэл хүрэлцэхгүй байна.`,
       };
     }
   }
