@@ -8,9 +8,9 @@ import {
 } from "@/lib/services/inventory-service";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
-export const GET = createRouteHandler(async ({ params, supabase }) => {
+export const GET = createRouteHandler(async ({ params, supabase, orgId }) => {
   const { partId } = params;
-  const part = await getPart(supabase, partId);
+  const part = await getPart(supabase, partId, orgId);
   return NextResponse.json({ data: part });
 });
 

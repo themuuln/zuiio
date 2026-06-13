@@ -368,6 +368,8 @@ export default function WorkOrderDetailPage() {
 
   const addServiceLine = async (svc: ServiceCatalog) => {
     if (!orgId || !woId) return;
+    // Price history is best-effort — never block the add
+    let unitPrice = svc.default_price ?? 0;
     try {
       const prices = await fetchServicePriceHistory(
         orgId,
@@ -375,8 +377,11 @@ export default function WorkOrderDetailPage() {
         wo?.vehicle?.make,
         wo?.vehicle?.model,
       );
-      const unitPrice = prices[0] ?? svc.default_price ?? 0;
-
+      unitPrice = prices[0] ?? svc.default_price ?? 0;
+    } catch {
+      // Fall back to default_price
+    }
+    try {
       // Optimistic: inject service with temp ID
       const prev = queryClient.getQueryData<WorkOrderDetail>(detailKey);
       const tempId = `temp-${Date.now()}`;

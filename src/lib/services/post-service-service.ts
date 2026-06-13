@@ -179,7 +179,7 @@ export async function savePostServiceData(
       .from("vehicles")
       .select("odometer")
       .eq("id", vehicleId)
-      .single();
+      .maybeSingle();
 
     if (
       vehicle &&
@@ -261,7 +261,7 @@ export async function savePostServiceData(
           .from("work_orders")
           .select("customer_id")
           .eq("id", workOrderId)
-          .single();
+          .maybeSingle();
 
         await supabase.from("reminder_logs").insert({
           organization_id: orgId,
@@ -358,7 +358,7 @@ export async function saveCompletionData(
     .from("work_orders")
     .select("customer_id")
     .eq("id", workOrderId)
-    .single();
+    .maybeSingle();
 
   if (wo?.customer_id) {
     if (!existing) {
@@ -367,7 +367,7 @@ export async function saveCompletionData(
         .from("customers")
         .select("total_visits")
         .eq("id", wo.customer_id)
-        .single();
+        .maybeSingle();
 
       await supabase
         .from("customers")
@@ -461,6 +461,49 @@ export async function getWorkOrderServicesWithIntervals(
   });
 }
 
+// ── Get work order parts for the post-service form ──
+
+export interface WorkOrderPartItem {
+  id: string;
+  part_name: string;
+  part_number: string | null;
+  quantity: number;
+  unit_price: number;
+  final_price: number;
+}
+
+export async function getWorkOrderParts(
+  workOrderId: string,
+): Promise<WorkOrderPartItem[]> {
+  const supabase = await createClient();
+  const orgId = await getOrgId();
+
+  const { data, error } = await supabase
+    .from("work_order_parts")
+    .select(`
+      id,
+      part_name,
+      part_number,
+      quantity,
+      unit_price,
+      final_price
+    `)
+    .eq("work_order_id", workOrderId)
+    .eq("organization_id", orgId)
+    .order("created_at");
+
+  if (error) throw new Error(`Failed to fetch parts: ${error.message}`);
+
+  return (data ?? []).map((part) => ({
+    id: part.id,
+    part_name: part.part_name,
+    part_number: part.part_number,
+    quantity: part.quantity,
+    unit_price: Number(part.unit_price),
+    final_price: Number(part.final_price),
+  }));
+}
+
 // ── Get recommendations for a work order ──
 
 export async function getRecommendations(workOrderId: string) {
@@ -491,9 +534,9 @@ export async function getCompletionData(workOrderId: string) {
       "id, organization_id, branch_id, work_order_id, vehicle_id, odometer_reading, customer_satisfaction, customer_feedback, customer_preferences, next_appointment_date, collected_at, created_by, created_at",
     )
     .eq("work_order_id", workOrderId)
-    .single();
+    .maybeSingle();
 
-  if (error && error.code !== "PGRST116") {
+  if (error) {
     throw new Error(`Failed to fetch completion data: ${error.message}`);
   }
   return data ?? null;

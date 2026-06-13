@@ -160,6 +160,7 @@ export async function getPartsCatalog(
 export async function getPart(
   db: SupabaseClient,
   id: string,
+  orgId: string,
 ): Promise<PartsCatalogItem> {
   const supabase = db;
   const { data, error } = await supabase
@@ -168,6 +169,7 @@ export async function getPart(
       "id, organization_id, name, name_mn, part_number, category, description, unit, default_price, purchase_price, image_url, location, last_purchase_price, is_active, created_at, updated_at, created_by, updated_by, global_part_id",
     )
     .eq("id", id)
+    .eq("organization_id", orgId)
     .is("deleted_at", null)
     .single();
   if (error || !data) throw new NotFoundError("Part not found");
@@ -231,7 +233,9 @@ export async function updatePart(
 
   const { data: existingRecord } = await supabase
     .from("parts_catalog")
-    .select("*")
+    .select(
+      "id, name, name_mn, part_number, category, description, unit, default_price, image_url, location, is_active, global_part_id",
+    )
     .eq("id", id)
     .eq("organization_id", orgId)
     .single();
@@ -521,7 +525,10 @@ export async function getSuppliers(
 
   const { data, error, count } = await supabase
     .from("suppliers")
-    .select("*", { count: "exact" })
+    .select(
+      "id, organization_id, name, contact_person, phone, email, address, tax_id, payment_terms, notes, is_active, created_at, updated_at, created_by, updated_by",
+      { count: "exact" },
+    )
     .eq("organization_id", orgId)
     .is("deleted_at", null)
     .order("name")
@@ -595,7 +602,9 @@ export async function updateSupplier(
 
   const { data: existingRecord } = await supabase
     .from("suppliers")
-    .select("*")
+    .select(
+      "id, name, contact_person, phone, email, address, tax_id, payment_terms, notes, is_active",
+    )
     .eq("id", id)
     .eq("organization_id", orgId)
     .single();
@@ -847,7 +856,9 @@ export async function receivePurchaseOrder(
   // Capture existing PO for audit before status update
   const { data: existingRecord } = await supabase
     .from("purchase_orders")
-    .select("*")
+    .select(
+      "id, organization_id, supplier_id, order_number, status, total_amount, notes",
+    )
     .eq("id", id)
     .eq("organization_id", orgId)
     .single();

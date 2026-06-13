@@ -1,17 +1,18 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { mutationRateLimiter } from "@/lib/rate-limit";
-import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import {
   assignHelperToWorkOrder,
   removeHelperFromWorkOrder,
+  reorderWorkOrderHelpers,
 } from "@/lib/services/bay-view-service";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 export const POST = createRouteHandler(
   async ({ request, params, orgId }) => {
     await requireActiveSubscription(orgId);
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-    const rateCheck = mutationRateLimiter.check(ip);
+    const rateCheck = await mutationRateLimiter.check(ip);
     if (!rateCheck.allowed) {
       return NextResponse.json(
         { error: { code: "RATE_LIMITED", message: "Too many requests" } },
@@ -49,7 +50,7 @@ export const DELETE = createRouteHandler(
   async ({ request, params, orgId }) => {
     await requireActiveSubscription(orgId);
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-    const rateCheck = mutationRateLimiter.check(ip);
+    const rateCheck = await mutationRateLimiter.check(ip);
     if (!rateCheck.allowed) {
       return NextResponse.json(
         { error: { code: "RATE_LIMITED", message: "Too many requests" } },
@@ -78,6 +79,44 @@ export const DELETE = createRouteHandler(
       );
     }
     await removeHelperFromWorkOrder(workOrderId, mechanicId);
+    return NextResponse.json({ data: null });
+  },
+  { requiredPermission: { resource: "work_orders", action: "update" } },
+);
+
+export const PUT = createRouteHandler(
+  async ({ request, params, orgId }) => {
+    await requireActiveSubscription(orgId);
+    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+    const rateCheck = await mutationRateLimiter.check(ip);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: { code: "RATE_LIMITED", message: "Too many requests" } },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(
+              Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+            ),
+          },
+        },
+      );
+    }
+    const { workOrderId } = params;
+    const body = await request.json();
+    const { mechanic_ids } = body;
+    if (!Array.isArray(mechanic_ids) || mechanic_ids.length === 0) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "mechanic_ids array is required",
+          },
+        },
+        { status: 400 },
+      );
+    }
+    await reorderWorkOrderHelpers(workOrderId, mechanic_ids);
     return NextResponse.json({ data: null });
   },
   { requiredPermission: { resource: "work_orders", action: "update" } },

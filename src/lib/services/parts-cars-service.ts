@@ -1,8 +1,9 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 import { reportServerError } from "@/lib/sentry-report-server";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   PartsCarParts,
   PartsCarPartsInsert,
@@ -43,6 +44,7 @@ export async function getPartsCar(
     )
     .eq("id", carId)
     .eq("organization_id", orgId)
+    .is("deleted_at", null)
     .single();
   if (error || !data) throw new NotFoundError("Parts car not found");
   return data;
@@ -296,9 +298,9 @@ export async function publishPartsCarPartsToCatalog(
       .single();
 
     if (catalogError) {
-      console.error(
-        `Failed to create catalog entry for part ${part.id}:`,
-        catalogError,
+      logger.error(
+        { partId: part.id, carId, error: catalogError },
+        `Failed to create catalog entry for part ${part.id}`,
       );
       continue;
     }
@@ -336,9 +338,9 @@ export async function publishPartsCarPartsToCatalog(
       });
 
     if (movementError) {
-      console.error(
-        `Failed to create inventory movement for part ${catalogItem.id}:`,
-        movementError,
+      logger.error(
+        { partId: catalogItem.id, carId, error: movementError },
+        `Failed to create inventory movement for part ${catalogItem.id}`,
       );
     }
   }

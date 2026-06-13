@@ -1,8 +1,8 @@
-import { revalidateTag } from "next/cache";
-import { cacheTags } from "@/lib/cache/keys";
-import { createAuditLog } from "@/lib/audit";
-import { NotFoundError, ValidationError } from "@/lib/errors";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { revalidateTag } from "next/cache";
+import { createAuditLog } from "@/lib/audit";
+import { cacheTags } from "@/lib/cache/keys";
+import { NotFoundError, ValidationError } from "@/lib/errors";
 import type { PriceRule } from "@/lib/types";
 
 export type { PriceRule } from "@/lib/types";
@@ -92,8 +92,11 @@ export async function getPriceRules(
 
   const { data, error } = await supabase
     .from("price_rules")
-    .select("*")
+    .select(
+      "id, organization_id, name, description, apply_to, conditions, conditions_description, operator, value, priority, part_category, service_category, part_name_pattern, service_name_pattern, is_active, created_at, updated_at, deleted_at, created_by, updated_by",
+    )
     .eq("organization_id", orgId)
+    .is("deleted_at", null)
     .order("priority")
     .order("name");
 
@@ -109,9 +112,12 @@ export async function getActivePriceRules(
 
   const { data, error } = await supabase
     .from("price_rules")
-    .select("*")
+    .select(
+      "id, organization_id, name, description, apply_to, conditions, conditions_description, operator, value, priority, part_category, service_category, part_name_pattern, service_name_pattern, is_active, created_at, updated_at, deleted_at, created_by, updated_by",
+    )
     .eq("organization_id", orgId)
     .eq("is_active", true)
+    .is("deleted_at", null)
     .order("priority")
     .order("name");
 
@@ -128,8 +134,11 @@ export async function getPriceRule(
 
   const { data, error } = await supabase
     .from("price_rules")
-    .select("*")
+    .select(
+      "id, organization_id, name, description, apply_to, conditions, conditions_description, operator, value, priority, part_category, service_category, part_name_pattern, service_name_pattern, is_active, created_at, updated_at, deleted_at, created_by, updated_by",
+    )
     .eq("id", id)
+    .is("deleted_at", null)
     .single();
 
   if (error || !data) throw new NotFoundError("Price rule not found");
@@ -167,7 +176,9 @@ export async function createPriceRule(
       created_by: userId ?? null,
       updated_by: userId ?? null,
     })
-    .select("*")
+    .select(
+      "id, organization_id, name, description, apply_to, conditions, conditions_description, operator, value, priority, part_category, service_category, part_name_pattern, service_name_pattern, is_active, created_at, updated_at, deleted_at, created_by, updated_by",
+    )
     .single();
 
   if (error || !data)
@@ -225,7 +236,9 @@ export async function updatePriceRule(
     .update(updates as any)
     .eq("id", id)
     .eq("organization_id", orgId)
-    .select("*")
+    .select(
+      "id, organization_id, name, description, apply_to, conditions, conditions_description, operator, value, priority, part_category, service_category, part_name_pattern, service_name_pattern, is_active, created_at, updated_at, deleted_at, created_by, updated_by",
+    )
     .single();
 
   if (error || !data) throw new NotFoundError("Price rule not found");
@@ -258,7 +271,10 @@ export async function deletePriceRule(
 
   const { error } = await supabase
     .from("price_rules")
-    .delete()
+    .update({
+      deleted_at: new Date().toISOString(),
+      updated_by: currentUser?.id ?? null,
+    })
     .eq("id", id)
     .eq("organization_id", orgId);
 

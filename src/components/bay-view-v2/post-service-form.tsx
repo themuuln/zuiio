@@ -8,10 +8,10 @@ import {
   Gauge,
   Loader2,
   MessageSquare,
+  Package,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { getDefaultTransferBank } from "@/lib/payments/org-bank-accounts";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,15 +27,18 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
+import { getDefaultTransferBank } from "@/lib/payments/org-bank-accounts";
+import { formatMNT } from "@/lib/utils";
+import { PaymentMethodField } from "./_payment-method-field";
 import {
   type PostServiceFormProps,
   type PostServiceFormValues,
   postServiceSchema,
   type ServiceFormEntry,
 } from "./_schema";
-import { PaymentMethodField } from "./_payment-method-field";
 import { ServiceCard } from "./_service-card";
 
 // ── Component ──────────────────────────────────────────────
@@ -46,6 +49,7 @@ export function PostServiceFormBody({
   vehiclePlate,
   currentOdometer,
   services,
+  parts,
   newStatus,
   grandTotal,
   paymentMethodFees,
@@ -85,13 +89,17 @@ export function PostServiceFormBody({
   });
 
   const odometerRegister = form.register("odometer");
+  const odometerRef = useRef<HTMLInputElement | null>(null);
   const mergedOdometerRef = useCallback(
     (el: HTMLInputElement | null) => {
       odometerRegister.ref({ current: el });
-      if (el) el.focus();
+      odometerRef.current = el;
     },
-    [odometerRegister],
+    [odometerRegister.ref],
   );
+  useEffect(() => {
+    odometerRef.current?.focus();
+  }, []);
 
   const paymentMethod = form.watch("paymentMethod");
   const transferBankId = form.watch("transferBankId");
@@ -152,11 +160,23 @@ export function PostServiceFormBody({
       });
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to save post-service data",
+        err instanceof Error ? err.message : t("failedToSavePostServiceData"),
       );
+    } finally {
       setSaving(false);
     }
   });
+
+  // Sync all entries expanded/collapsed when the "Expand All" / "Collapse All" button is clicked
+  const toggleAllExpanded = useCallback(() => {
+    setAllExpanded((prev) => {
+      const next = !prev;
+      setEntries((prevEntries) =>
+        prevEntries.map((e) => ({ ...e, expanded: next })),
+      );
+      return next;
+    });
+  }, []);
 
   const isComplete = newStatus === "Completed";
 
@@ -169,97 +189,158 @@ export function PostServiceFormBody({
       </div>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
-        {/* Odometer */}
-        <Field data-invalid={!!form.formState.errors.odometer}>
-          <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
-            <Gauge className="size-4" />
-            {t("postServiceOdometer")}
-          </FieldLabel>
-          <FieldContent>
-            <Input
-              ref={mergedOdometerRef}
-              type="number"
-              placeholder={t("postServiceOdometerPlaceholder")}
-              className="h-10"
-              min={0}
-              aria-invalid={!!form.formState.errors.odometer}
-              onChange={odometerRegister.onChange}
-              onBlur={odometerRegister.onBlur}
-              name={odometerRegister.name}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  onSubmit(e as unknown as React.FormEvent);
-                }
-              }}
-            />
-            {form.formState.errors.odometer && (
-              <FieldError>{form.formState.errors.odometer.message}</FieldError>
-            )}
-          </FieldContent>
-        </Field>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Left column */}
+          <div className="flex flex-col gap-4">
+            {/* Odometer */}
+            <Field data-invalid={!!form.formState.errors.odometer}>
+              <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+                <Gauge className="size-4" />
+                {t("postServiceOdometer")}
+              </FieldLabel>
+              <FieldContent>
+                <div className="relative max-w-full">
+                  <Input
+                    ref={mergedOdometerRef}
+                    type="number"
+                    placeholder={t("postServiceOdometerPlaceholder")}
+                    className="h-10 pr-10"
+                    min={0}
+                    aria-invalid={!!form.formState.errors.odometer}
+                    onChange={odometerRegister.onChange}
+                    onBlur={odometerRegister.onBlur}
+                    name={odometerRegister.name}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        onSubmit(e as unknown as React.FormEvent);
+                      }
+                    }}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none select-none">
+                    км
+                  </span>
+                </div>
+                {form.formState.errors.odometer && (
+                  <FieldError>
+                    {form.formState.errors.odometer.message}
+                  </FieldError>
+                )}
+              </FieldContent>
+            </Field>
 
-        {/* Services */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
-              <MessageSquare className="size-4" />
-              {t("postServiceServicesTitle")}
-              <Badge variant="secondary">{entries.length}</Badge>
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setAllExpanded(!allExpanded)}
-              className="gap-1 text-xs h-auto"
-              type="button"
-            >
-              {allExpanded ? (
-                <ChevronUp className="size-3" />
-              ) : (
-                <ChevronDown className="size-3" />
+            {/* Services */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+                  <MessageSquare className="size-4" />
+                  {t("postServiceServicesTitle")}
+                  <Badge variant="secondary">{entries.length}</Badge>
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleAllExpanded}
+                  className="gap-1 text-xs h-auto"
+                  type="button"
+                >
+                  {allExpanded ? (
+                    <ChevronUp className="size-3" />
+                  ) : (
+                    <ChevronDown className="size-3" />
+                  )}
+                  {allExpanded ? t("collapseToggle") : t("expandToggle")}
+                </Button>
+              </div>
+
+              {!hasEntries && (
+                <Typography.Muted className="text-xs text-muted-foreground/60 italic py-6 text-center">
+                  {t("noServicesRecorded")}
+                </Typography.Muted>
               )}
-              {allExpanded ? "Collapse" : "Expand"}
-            </Button>
+
+              <div className="flex flex-col gap-2">
+                {entries.map((entry, idx) => (
+                  <ServiceCard
+                    key={entry.workOrderServiceId}
+                    entry={entry}
+                    odometer={odometerNum}
+                    onChange={(updates) => updateEntry(idx, updates)}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
 
-          {!hasEntries && (
-            <Typography.Muted className="text-xs text-muted-foreground/60 italic py-2">
-              No services recorded on this work order.
-            </Typography.Muted>
-          )}
+          {/* Right column */}
+          <div className="flex flex-col gap-4">
+            {/* Mechanic notes */}
+            <Field data-invalid={!!form.formState.errors.mechanicNotes}>
+              <FieldLabel className="text-xs font-semibold text-muted-foreground">
+                {t("mechanicNotesLabel")}
+              </FieldLabel>
+              <FieldContent>
+                <Textarea
+                  placeholder={t("notePlaceholder")}
+                  rows={3}
+                  aria-invalid={!!form.formState.errors.mechanicNotes}
+                  className="min-h-[72px] resize-none"
+                  {...form.register("mechanicNotes")}
+                />
+                {form.formState.errors.mechanicNotes && (
+                  <FieldError>
+                    {form.formState.errors.mechanicNotes.message}
+                  </FieldError>
+                )}
+              </FieldContent>
+            </Field>
 
-          <div className="flex flex-col gap-2">
-            {entries.map((entry, idx) => (
-              <ServiceCard
-                key={entry.workOrderServiceId}
-                entry={entry}
-                odometer={odometerNum}
-                onChange={(updates) => updateEntry(idx, updates)}
-              />
-            ))}
+            {/* Parts */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+                  <Package className="size-4" />
+                  {t("parts")}
+                  <Badge variant="secondary">{parts.length}</Badge>
+                </span>
+              </div>
+
+              {parts.length === 0 ? (
+                <Typography.Muted className="text-xs text-muted-foreground/60 italic py-6 text-center">
+                  {t("noPartsRecorded")}
+                </Typography.Muted>
+              ) : (
+                <div className="flex flex-col gap-1.5">
+                  {parts.map((part) => (
+                    <div
+                      key={part.id}
+                      className="flex items-center justify-between rounded-lg border border-border/60 bg-card/50 px-3 py-2"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <span className="text-sm font-medium">
+                          {part.part_name}
+                        </span>
+                        {part.part_number && (
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            #{part.part_number}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0 ml-3">
+                        <span className="text-xs text-muted-foreground tabular-nums">
+                          {part.quantity} x {formatMNT(part.unit_price)}
+                        </span>
+                        <span className="text-sm font-medium tabular-nums">
+                          {formatMNT(part.final_price)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-
-        {/* Mechanic notes */}
-        <Field data-invalid={!!form.formState.errors.mechanicNotes}>
-          <FieldLabel className="text-xs font-semibold text-muted-foreground">
-            Mechanic Notes
-          </FieldLabel>
-          <FieldContent>
-            <Input
-              placeholder={t("notePlaceholder")}
-              className="h-10"
-              aria-invalid={!!form.formState.errors.mechanicNotes}
-              {...form.register("mechanicNotes")}
-            />
-            {form.formState.errors.mechanicNotes && (
-              <FieldError>
-                {form.formState.errors.mechanicNotes.message}
-              </FieldError>
-            )}
-          </FieldContent>
-        </Field>
 
         {!isComplete && (
           <PaymentMethodField
@@ -287,17 +368,23 @@ export function PostServiceFormBody({
         )}
 
         {/* Actions */}
-        <div className="flex gap-2 justify-end pt-2 border-t">
+        <div className="flex gap-3 justify-end pt-3 border-t">
           <Button
             variant="outline"
             onClick={onBack}
             type="button"
             size="default"
             disabled={saving}
+            className="h-10 min-w-[100px]"
           >
             {t("cancel")}
           </Button>
-          <Button type="submit" size="default" disabled={saving}>
+          <Button
+            type="submit"
+            size="default"
+            disabled={saving}
+            className="h-10 min-w-[140px]"
+          >
             {saving && <Loader2 className="size-4 animate-spin mr-1.5" />}
             {saving
               ? t("postServiceSaving")
@@ -319,6 +406,7 @@ export function PostServiceForm({
   vehiclePlate,
   currentOdometer,
   services,
+  parts,
   newStatus,
   grandTotal,
   paymentMethodFees,
@@ -358,13 +446,17 @@ export function PostServiceForm({
 
   // Merge form.register ref with auto-focus ref for odometer
   const odometerRegister = form.register("odometer");
+  const odometerRef = useRef<HTMLInputElement | null>(null);
   const mergedOdometerRef = useCallback(
     (el: HTMLInputElement | null) => {
       odometerRegister.ref({ current: el });
-      if (el) el.focus();
+      odometerRef.current = el;
     },
-    [odometerRegister],
+    [odometerRegister.ref],
   );
+  useEffect(() => {
+    odometerRef.current?.focus();
+  }, []);
 
   // Escape key handler
   useEffect(() => {
@@ -434,11 +526,23 @@ export function PostServiceForm({
       });
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to save post-service data",
+        err instanceof Error ? err.message : t("failedToSavePostServiceData"),
       );
+    } finally {
       setSaving(false);
     }
   });
+
+  // Sync all entries expanded/collapsed when the "Expand All" / "Collapse All" button is clicked
+  const toggleAllExpanded = useCallback(() => {
+    setAllExpanded((prev) => {
+      const next = !prev;
+      setEntries((prevEntries) =>
+        prevEntries.map((e) => ({ ...e, expanded: next })),
+      );
+      return next;
+    });
+  }, []);
 
   const isComplete = newStatus === "Completed";
 
@@ -466,99 +570,158 @@ export function PostServiceForm({
         </DialogHeader>
 
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
-          {/* Odometer */}
-          <Field data-invalid={!!form.formState.errors.odometer}>
-            <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
-              <Gauge className="size-4" />
-              {t("postServiceOdometer")}
-            </FieldLabel>
-            <FieldContent>
-              <Input
-                ref={mergedOdometerRef}
-                type="number"
-                placeholder={t("postServiceOdometerPlaceholder")}
-                className="h-10"
-                min={0}
-                aria-invalid={!!form.formState.errors.odometer}
-                onChange={odometerRegister.onChange}
-                onBlur={odometerRegister.onBlur}
-                name={odometerRegister.name}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    onSubmit(e as unknown as React.FormEvent);
-                  }
-                }}
-              />
-              {form.formState.errors.odometer && (
-                <FieldError>
-                  {form.formState.errors.odometer.message}
-                </FieldError>
-              )}
-            </FieldContent>
-          </Field>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Left column */}
+            <div className="flex flex-col gap-4">
+              {/* Odometer */}
+              <Field data-invalid={!!form.formState.errors.odometer}>
+                <FieldLabel className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+                  <Gauge className="size-4" />
+                  {t("postServiceOdometer")}
+                </FieldLabel>
+                <FieldContent>
+                  <div className="relative max-w-full">
+                    <Input
+                      ref={mergedOdometerRef}
+                      type="number"
+                      placeholder={t("postServiceOdometerPlaceholder")}
+                      className="h-10 pr-10"
+                      min={0}
+                      aria-invalid={!!form.formState.errors.odometer}
+                      onChange={odometerRegister.onChange}
+                      onBlur={odometerRegister.onBlur}
+                      name={odometerRegister.name}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          onSubmit(e as unknown as React.FormEvent);
+                        }
+                      }}
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none select-none">
+                      км
+                    </span>
+                  </div>
+                  {form.formState.errors.odometer && (
+                    <FieldError>
+                      {form.formState.errors.odometer.message}
+                    </FieldError>
+                  )}
+                </FieldContent>
+              </Field>
 
-          {/* Services */}
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
-                <MessageSquare className="size-4" />
-                {t("postServiceServicesTitle")}
-                <Badge variant="secondary">{entries.length}</Badge>
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setAllExpanded(!allExpanded)}
-                className="gap-1 text-xs h-auto"
-                type="button"
-              >
-                {allExpanded ? (
-                  <ChevronUp className="size-3" />
-                ) : (
-                  <ChevronDown className="size-3" />
+              {/* Services */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+                    <MessageSquare className="size-4" />
+                    {t("postServiceServicesTitle")}
+                    <Badge variant="secondary">{entries.length}</Badge>
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleAllExpanded}
+                    className="gap-1 text-xs h-auto"
+                    type="button"
+                  >
+                    {allExpanded ? (
+                      <ChevronUp className="size-3" />
+                    ) : (
+                      <ChevronDown className="size-3" />
+                    )}
+                    {allExpanded ? t("collapseToggle") : t("expandToggle")}
+                  </Button>
+                </div>
+
+                {!hasEntries && (
+                  <Typography.Muted className="text-xs text-muted-foreground/60 italic py-6 text-center">
+                    {t("noServicesRecorded")}
+                  </Typography.Muted>
                 )}
-                {allExpanded ? "Collapse" : "Expand"}
-              </Button>
+
+                <div className="flex flex-col gap-2">
+                  {entries.map((entry, idx) => (
+                    <ServiceCard
+                      key={entry.workOrderServiceId}
+                      entry={entry}
+                      odometer={odometerNum}
+                      onChange={(updates) => updateEntry(idx, updates)}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
 
-            {!hasEntries && (
-              <Typography.Muted className="text-xs text-muted-foreground/60 italic py-2">
-                No services recorded on this work order.
-              </Typography.Muted>
-            )}
+            {/* Right column */}
+            <div className="flex flex-col gap-4">
+              {/* Mechanic notes */}
+              <Field data-invalid={!!form.formState.errors.mechanicNotes}>
+                <FieldLabel className="text-xs font-semibold text-muted-foreground">
+                  {t("mechanicNotesLabel")}
+                </FieldLabel>
+                <FieldContent>
+                  <Textarea
+                    placeholder={t("notePlaceholder")}
+                    rows={3}
+                    aria-invalid={!!form.formState.errors.mechanicNotes}
+                    className="min-h-[72px] resize-none"
+                    {...form.register("mechanicNotes")}
+                  />
+                  {form.formState.errors.mechanicNotes && (
+                    <FieldError>
+                      {form.formState.errors.mechanicNotes.message}
+                    </FieldError>
+                  )}
+                </FieldContent>
+              </Field>
 
-            <div className="flex flex-col gap-2">
-              {entries.map((entry, idx) => (
-                <ServiceCard
-                  key={entry.workOrderServiceId}
-                  entry={entry}
-                  odometer={odometerNum}
-                  onChange={(updates) => updateEntry(idx, updates)}
-                />
-              ))}
+              {/* Parts */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+                    <Package className="size-4" />
+                    {t("parts")}
+                    <Badge variant="secondary">{parts.length}</Badge>
+                  </span>
+                </div>
+
+                {parts.length === 0 ? (
+                  <Typography.Muted className="text-xs text-muted-foreground/60 italic py-6 text-center">
+                    {t("noPartsRecorded")}
+                  </Typography.Muted>
+                ) : (
+                  <div className="flex flex-col gap-1.5">
+                    {parts.map((part) => (
+                      <div
+                        key={part.id}
+                        className="flex items-center justify-between rounded-lg border border-border/60 bg-card/50 px-3 py-2"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <span className="text-sm font-medium">
+                            {part.part_name}
+                          </span>
+                          {part.part_number && (
+                            <span className="ml-2 text-xs text-muted-foreground">
+                              #{part.part_number}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0 ml-3">
+                          <span className="text-xs text-muted-foreground tabular-nums">
+                            {part.quantity} x {formatMNT(part.unit_price)}
+                          </span>
+                          <span className="text-sm font-medium tabular-nums">
+                            {formatMNT(part.final_price)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-
-          {/* Mechanic notes */}
-          <Field data-invalid={!!form.formState.errors.mechanicNotes}>
-            <FieldLabel className="text-xs font-semibold text-muted-foreground">
-              Mechanic Notes
-            </FieldLabel>
-            <FieldContent>
-              <Input
-                placeholder={t("notePlaceholder")}
-                className="h-10"
-                aria-invalid={!!form.formState.errors.mechanicNotes}
-                {...form.register("mechanicNotes")}
-              />
-              {form.formState.errors.mechanicNotes && (
-                <FieldError>
-                  {form.formState.errors.mechanicNotes.message}
-                </FieldError>
-              )}
-            </FieldContent>
-          </Field>
 
           {!isComplete && (
             <PaymentMethodField
@@ -586,17 +749,23 @@ export function PostServiceForm({
           )}
 
           {/* Actions */}
-          <div className="flex gap-2 justify-end pt-2 border-t">
+          <div className="flex gap-3 justify-end pt-3 border-t">
             <Button
               variant="outline"
               onClick={onCancel}
               type="button"
               size="default"
               disabled={saving}
+              className="h-10 min-w-[100px]"
             >
               {t("cancel")}
             </Button>
-            <Button type="submit" size="default" disabled={saving}>
+            <Button
+              type="submit"
+              size="default"
+              disabled={saving}
+              className="h-10 min-w-[140px]"
+            >
               {saving && <Loader2 className="size-4 animate-spin mr-1.5" />}
               {saving
                 ? t("postServiceSaving")

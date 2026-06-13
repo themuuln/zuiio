@@ -198,8 +198,9 @@ async function fetchBayViewData(
     activeWoIds.length > 0
       ? supabase
           .from("work_order_helpers")
-          .select("work_order_id, mechanic_id")
+          .select("work_order_id, mechanic_id, sort_order")
           .in("work_order_id", activeWoIds)
+          .order("sort_order")
       : Promise.resolve({ data: [] }),
     // 2b. Mechanic profiles for work order assignments
     mainMechanicIds.length > 0
@@ -614,7 +615,9 @@ export async function assignHelperToWorkOrder(
     .from("work_orders")
     .select("mechanic_id")
     .eq("id", workOrderId)
-    .single();
+    .eq("organization_id", orgId)
+    .is("deleted_at", null)
+    .maybeSingle();
 
   if (wo?.mechanic_id === mechanicId) {
     return; // Already the main mechanic
@@ -651,10 +654,55 @@ export async function removeHelperFromWorkOrder(
     .from("work_order_helpers")
     .delete()
     .eq("work_order_id", workOrderId)
-    .eq("mechanic_id", mechanicId);
+    .eq("mechanic_id", mechanicId)
+    .eq("organization_id", orgId);
 
   if (error)
     throw new Error(error.message ?? "Failed to remove helper mechanic");
+
+  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
+  revalidateTag(cacheTags.workOrder(workOrderId), "max");
+  revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
+}
+
+// ── Reorder Helpers ────────────────────────────────────────────
+
+export async function reorderWorkOrderHelpers(
+  workOrderId: string,
+  orderedMechanicIds: string[],
+): Promise<void> {
+  const {
+    data: { user },
+  } = await (await createClient()).auth.getUser();
+  if (!user) throw new UnauthorizedError();
+  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
+
+  // First, get existing helper rows so we can update sort_order by id
+  const { data: existing, error: fetchErr } = await supabase
+    .from("work_order_helpers")
+    .select("id, mechanic_id")
+    .eq("work_order_id", workOrderId)
+    .eq("organization_id", orgId);
+
+  if (fetchErr) throw new Error(fetchErr.message ?? "Failed to fetch helpers");
+
+  // Build a map of mechanic_id → row id
+  const idByMechanic = new Map<string, string>();
+  for (const row of existing ?? []) {
+    idByMechanic.set(row.mechanic_id, row.id);
+  }
+
+  // Update each row's sort_order based on the new ordering
+  for (let i = 0; i < orderedMechanicIds.length; i++) {
+    const rowId = idByMechanic.get(orderedMechanicIds[i]);
+    if (!rowId) continue; // skip if not found (shouldn't happen)
+    const { error: updErr } = await supabase
+      .from("work_order_helpers")
+      .update({ sort_order: i })
+      .eq("id", rowId);
+
+    if (updErr) throw new Error(updErr.message ?? "Failed to reorder helper");
+  }
 
   revalidateTag(cacheTags.bayView(orgId, orgId), "max");
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
@@ -675,7 +723,8 @@ export async function clearHelpersFromWorkOrder(
   await supabase
     .from("work_order_helpers")
     .delete()
-    .eq("work_order_id", workOrderId);
+    .eq("work_order_id", workOrderId)
+    .eq("organization_id", orgId);
 
   revalidateTag(cacheTags.bayView(orgId, orgId), "max");
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
