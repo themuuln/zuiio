@@ -8,7 +8,6 @@ import {
   User,
   Wrench,
 } from "lucide-react";
-import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
@@ -27,7 +26,6 @@ import {
   STATUS_TIMELINE_TEXT,
   STATUS_TRANSLATION_KEYS,
 } from "./_constants";
-import { ServiceDetailDialog } from "./_service-detail-dialog";
 
 interface StatusTimelineProps {
   statusHistory: WorkOrderStatusHistory[];
@@ -128,11 +126,6 @@ export function StatusTimeline({
   serviceHistory,
   t,
 }: StatusTimelineProps) {
-  const [selectedService, setSelectedService] = useState<{
-    service: { name: string; price: number };
-    entry: WorkOrderServiceHistoryEntry;
-  } | null>(null);
-
   const hasStatusHistory = (statusHistory ?? []).length > 0;
   const hasServiceHistory = (serviceHistory ?? []).length > 0;
   const deduped = hasStatusHistory ? deduplicateHistory(statusHistory) : [];
@@ -296,11 +289,12 @@ export function StatusTimeline({
                     key={entry.work_order_id}
                     className="rounded-lg border border-border/50 bg-background/50 p-3"
                   >
+                    {/* Header: status + date */}
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs font-semibold">
                         {entry.status}
                       </span>
-                      <span className="text-xs text-muted-foreground/70">
+                      <span className="shrink-0 text-xs text-muted-foreground/70">
                         {new Date(entry.created_at).toLocaleDateString([], {
                           year: "numeric",
                           month: "short",
@@ -310,91 +304,149 @@ export function StatusTimeline({
                     </div>
 
                     {entry.complaint ? (
-                      <Typography.Muted className="mt-1 text-xs">
+                      <Typography.Muted className="mt-1.5 text-xs leading-relaxed">
                         {entry.complaint}
                       </Typography.Muted>
                     ) : null}
 
+                    {/* Services */}
                     {entry.services.length > 0 ? (
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {entry.services.map((service) => (
-                          <button
-                            key={`${entry.work_order_id}-${service.name}-${service.price}`}
-                            type="button"
-                            onClick={() =>
-                              setSelectedService({ service, entry })
-                            }
-                            className="inline-flex items-center gap-1.5 rounded-4xl border border-border text-foreground cursor-pointer transition-colors hover:bg-muted hover:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 text-xs py-1 px-2 font-medium"
-                          >
-                            <Wrench className="size-3 text-muted-foreground/60" />
-                            <span className="truncate max-w-[140px]">
-                              {service.name}
-                            </span>
-                            {service.price > 0 ? (
-                              <span className="font-mono text-muted-foreground/80 tabular-nums">
-                                {service.price.toLocaleString()}₮
-                              </span>
-                            ) : null}
-                          </button>
-                        ))}
+                      <div className="mt-3 flex flex-col gap-1.5">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50">
+                          {t("services")}
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {entry.services.map((service) => (
+                            <Tooltip
+                              key={`${entry.work_order_id}-${service.name}`}
+                            >
+                              <TooltipTrigger>
+                                <span className="inline-flex items-center gap-1.5 rounded-4xl border border-border text-foreground text-xs py-1 pl-1.5 pr-2 font-medium">
+                                  <span className="flex items-center justify-center size-4 rounded-full bg-blue-500/10">
+                                    <Wrench className="size-2.5 text-blue-500" />
+                                  </span>
+                                  <span className="truncate max-w-[120px]">
+                                    {service.name}
+                                  </span>
+                                  {service.price > 0 ? (
+                                    <span className="font-mono text-muted-foreground/80 tabular-nums">
+                                      {service.price.toLocaleString()}₮
+                                    </span>
+                                  ) : null}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side="top"
+                                className="max-w-[200px]"
+                              >
+                                <p className="text-xs">{service.name}</p>
+                                {service.price > 0 ? (
+                                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                                    {service.price.toLocaleString()}₮
+                                  </p>
+                                ) : null}
+                              </TooltipContent>
+                            </Tooltip>
+                          ))}
+                        </div>
                       </div>
                     ) : null}
 
+                    {/* Parts */}
                     {entry.parts.length > 0 ? (
-                      <div className="mt-1.5 flex flex-wrap gap-1.5">
-                        {entry.parts.map((part) => (
-                          <span
-                            key={`${entry.work_order_id}-${part.name}-${part.quantity}-${part.price}`}
-                            className="inline-flex items-center gap-1.5 rounded-4xl border border-border/60 bg-muted/30 text-muted-foreground text-xs py-1 px-2"
-                          >
-                            <Package className="size-3 text-muted-foreground/60" />
-                            <span className="truncate max-w-[140px]">
-                              {part.name}
-                            </span>
-                            {part.quantity > 1 ? (
-                              <span className="text-muted-foreground/60">
-                                ×{part.quantity}
-                              </span>
-                            ) : null}
-                            {part.price > 0 ? (
-                              <span className="font-mono text-muted-foreground/80 tabular-nums">
-                                {part.price.toLocaleString()}₮
-                              </span>
-                            ) : null}
-                          </span>
-                        ))}
+                      <div className="mt-2.5 flex flex-col gap-1.5">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50">
+                          {t("parts")}
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {entry.parts.map((part) => (
+                            <Tooltip
+                              key={`${entry.work_order_id}-${part.name}`}
+                            >
+                              <TooltipTrigger>
+                                <span className="inline-flex items-center gap-1.5 rounded-4xl border border-border/60 bg-muted/30 text-muted-foreground text-xs py-1 pl-1.5 pr-2">
+                                  <span className="flex items-center justify-center size-4 rounded-full bg-amber-500/10">
+                                    <Package className="size-2.5 text-amber-500" />
+                                  </span>
+                                  <span className="truncate max-w-[120px]">
+                                    {part.name}
+                                  </span>
+                                  {part.quantity > 1 ? (
+                                    <span className="text-muted-foreground/60">
+                                      ×{part.quantity}
+                                    </span>
+                                  ) : null}
+                                  {part.price > 0 ? (
+                                    <span className="font-mono text-muted-foreground/80 tabular-nums">
+                                      {part.price.toLocaleString()}₮
+                                    </span>
+                                  ) : null}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side="top"
+                                className="max-w-[200px]"
+                              >
+                                <p className="text-xs">{part.name}</p>
+                                {part.price > 0 ? (
+                                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                                    {part.quantity > 1
+                                      ? `${part.quantity} × `
+                                      : ""}
+                                    {part.price.toLocaleString()}₮
+                                  </p>
+                                ) : null}
+                              </TooltipContent>
+                            </Tooltip>
+                          ))}
+                        </div>
                       </div>
                     ) : null}
 
-                    <div className="mt-2 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                    {/* Footer: total + assignees */}
+                    <div className="mt-3 flex items-end justify-between gap-2 border-t border-border/30 pt-2.5">
                       {entry.total > 0 ? (
-                        <span className="font-medium text-foreground/80">
-                          {t("workOrderTotal")} {entry.total.toLocaleString()}₮
-                        </span>
-                      ) : null}
-                      {entry.mechanic_name ? (
-                        <span className="flex items-center gap-1">
-                          <User className="size-3" />
-                          {entry.mechanic_name}
-                        </span>
-                      ) : null}
-                      {entry.helpers.length > 0 ? (
-                        <TooltipProvider delay={200}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="flex items-center gap-1 text-muted-foreground/70">
-                                +{entry.helpers.length} helper
-                                {entry.helpers.length > 1 ? "s" : ""}
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent side="top">
-                              {entry.helpers
-                                .map((h) => h.full_name ?? "Unknown")
-                                .join(", ")}
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      ) : null}
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50 whitespace-nowrap">
+                            {t("workOrderTotal")}
+                          </span>
+                          <span className="font-semibold text-foreground/90 tabular-nums">
+                            {entry.total.toLocaleString()}₮
+                          </span>
+                        </div>
+                      ) : (
+                        <div />
+                      )}
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        {entry.mechanic_name ? (
+                          <span className="flex items-center gap-1 text-xs text-muted-foreground/80">
+                            <User className="size-3 text-muted-foreground/50" />
+                            {entry.mechanic_name}
+                          </span>
+                        ) : null}
+                        {entry.helpers.length > 0 ? (
+                          <TooltipProvider delay={200}>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <span className="flex items-center gap-1 text-xs text-muted-foreground/60">
+                                  +{entry.helpers.length}
+                                  <span className="hidden sm:inline">
+                                    {entry.helpers.length === 1
+                                      ? "helper"
+                                      : "helpers"}
+                                  </span>
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent side="top">
+                                {entry.helpers
+                                  .map((h) => h.full_name ?? "Unknown")
+                                  .join(", ")}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : null}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -403,15 +455,6 @@ export function StatusTimeline({
           ) : null}
         </div>
       )}
-
-      <ServiceDetailDialog
-        open={selectedService !== null}
-        onOpenChange={(open) => {
-          if (!open) setSelectedService(null);
-        }}
-        service={selectedService?.service ?? null}
-        entry={selectedService?.entry ?? null}
-      />
     </section>
   );
 }

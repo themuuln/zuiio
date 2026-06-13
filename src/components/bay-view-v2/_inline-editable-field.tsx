@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
 
 interface InlineEditableFieldProps {
   /** Current display value */
@@ -14,17 +13,17 @@ interface InlineEditableFieldProps {
   parseInput?: (raw: string) => number;
   /** Input type — "number" for numeric, "text" for strings */
   type?: "number" | "text";
-  /** Additional classes for the display button */
+  /** Additional classes for the root element */
   className?: string;
-  /** Additional classes for the editing input */
-  inputClassName?: string;
 }
 
 /**
- * Reusable inline-editable field.
+ * Inline-editable field that avoids any DOM swap or layout shift.
  *
- * Displays as a ghost button that switches to an input on click.
- * Saves on blur/Enter, cancels on Escape.
+ * Always renders a single `<input>` element. In display mode it looks like
+ * plain text (no border, no focus ring, transparent background, cursor
+ * pointer). On focus it switches to editable mode. Since it's the same
+ * DOM node the whole time, font, padding, and alignment never change.
  */
 export function InlineEditableField({
   value,
@@ -33,68 +32,93 @@ export function InlineEditableField({
   parseInput,
   type = "number",
   className = "",
-  inputClassName = "",
 }: InlineEditableFieldProps) {
+  const isNumber = type === "number";
   const [editing, setEditing] = useState(false);
-  const [editValue, setEditValue] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [editText, setEditText] = useState("");
+  const commitRef = useRef(value);
 
-  const handleStart = useCallback(() => {
-    const raw = formatDisplay ? formatDisplay(value) : String(value);
-    setEditValue(raw);
+  const displayText = formatDisplay ? formatDisplay(value) : String(value);
+
+  // Live-format the edit text for display in the input while typing
+  const inputValue =
+    editing && parseInput && formatDisplay && isNumber
+      ? (() => {
+          const num = parseInput(editText);
+          return Number.isNaN(num) ? editText : formatDisplay(num);
+        })()
+      : editing
+        ? editText
+        : displayText;
+
+  const handleFocus = useCallback(() => {
+    setEditText(String(value));
     setEditing(true);
-  }, [value, formatDisplay]);
+  }, [value]);
 
   const handleSave = useCallback(() => {
     setEditing(false);
-    const parsed = parseInput ? parseInput(editValue) : Number(editValue);
-    if (!Number.isNaN(parsed)) {
+    const parsed = parseInput ? parseInput(editText) : Number(editText);
+    if (!Number.isNaN(parsed) && parsed !== commitRef.current) {
+      commitRef.current = parsed;
       onSave(parsed);
     }
-  }, [editValue, parseInput, onSave]);
+  }, [editText, parseInput, onSave]);
 
-  const handleCancel = useCallback(() => {
-    setEditing(false);
-  }, []);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        (e.target as HTMLInputElement).blur();
+      }
+      if (e.key === "Escape") {
+        setEditing(false);
+      }
+    },
+    [],
+  );
 
-  if (editing) {
-    const isNumber = type === "number";
-    return (
-      <input
-        ref={inputRef}
-        type="text"
-        inputMode={isNumber ? "numeric" : "text"}
-        className={`inline-flex h-auto w-auto min-w-0 px-0.5 text-xs font-semibold tabular-nums rounded-sm border border-transparent bg-transparent outline-none ring-0 focus:border-primary/60 focus:ring-0 ${
-          isNumber
-            ? "[-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            : ""
-        } ${inputClassName}`}
-        style={{ width: Math.max(String(editValue).length, 2) + "ch" }}
-        value={editValue}
-        onChange={(e) =>
-          setEditValue(
-            isNumber ? e.target.value.replace(/^0+(?=\d)/, "") : e.target.value,
-          )
-        }
-        onBlur={handleSave}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") handleSave();
-          if (e.key === "Escape") handleCancel();
-        }}
-        autoFocus
-        onFocus={(e) => e.target.select()}
-      />
-    );
-  }
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const raw = e.target.value;
+      if (parseInput && formatDisplay && isNumber) {
+        // Strip formatting and keep raw number string
+        const num = parseInput(raw);
+        setEditText(Number.isNaN(num) ? raw : num.toString());
+      } else {
+        setEditText(raw);
+      }
+    },
+    [parseInput, formatDisplay, isNumber],
+  );
 
   return (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={handleStart}
-      className={`font-semibold tabular-nums h-auto px-0.5 rounded-sm hover:underline hover:decoration-dashed hover:underline-offset-2 ${className}`}
-    >
-      {formatDisplay ? formatDisplay(value) : String(value)}
-    </Button>
+    <input
+      type="text"
+      inputMode={isNumber ? "numeric" : "text"}
+      value={inputValue}
+      onFocus={handleFocus}
+      onBlur={handleSave}
+      onKeyDown={handleKeyDown}
+      onChange={handleChange}
+      className={[
+        // Shared sizing / font — identical in both modes
+        "inline-flex items-center min-w-0 px-0.5",
+        "text-xs font-semibold tabular-nums font-sans leading-none h-auto",
+        "bg-transparent border-0",
+        isNumber
+          ? "[-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          : "",
+        // Display mode: looks like plain text
+        !editing
+          ? "cursor-pointer rounded hover:underline hover:decoration-dashed hover:underline-offset-2"
+          : "",
+        // Editing mode: keep native cursor, no focus ring
+        editing ? "outline-none ring-0" : "",
+        className,
+      ].join(" ")}
+      style={{ width: `${Math.max(String(inputValue).length + 2, 4)}ch` }}
+      aria-label={displayText}
+    />
   );
 }

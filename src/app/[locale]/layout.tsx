@@ -8,6 +8,7 @@ import NuqsProvider from "@/components/nuqs-provider";
 import { OfflineBanner } from "@/components/offline-banner";
 import { OfflineQueueIndicator } from "@/components/offline-queue-indicator";
 import QueryProvider from "@/components/query-provider";
+import { DrawerProvider } from "@/components/drawer-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { routing } from "@/lib/i18n/routing";
 import { MutationQueueProvider } from "@/lib/offline/mutation-queue-provider";
@@ -56,7 +57,7 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <div className="flex min-h-dvh flex-col antialiased">
+    <DrawerProvider>
       <TooltipProvider>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <NuqsProvider>
@@ -73,11 +74,12 @@ export default async function LocaleLayout({
                 toastOptions={{
                   duration: 4000,
                 }}
+                style={{ zIndex: 9999 }}
               />
             </QueryProvider>
           </NuqsProvider>
         </NextIntlClientProvider>
       </TooltipProvider>
-    </div>
+    </DrawerProvider>
   );
 }
