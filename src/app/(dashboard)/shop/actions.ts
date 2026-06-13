@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { requireAppContext } from "@/lib/erp";
 import { getString, normalizePhone } from "@/lib/validation";
 
@@ -224,5 +223,5 @@ export async function createShopSale(
   // --- Success ---
   revalidatePath("/shop");
   revalidatePath("/shop/history");
-  redirect(`/shop/receipt/${saleId}`);
+  return { saleId };
 }

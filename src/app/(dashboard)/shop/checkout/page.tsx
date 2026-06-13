@@ -9,6 +9,7 @@ import {
   Spinner,
 } from "@phosphor-icons/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { createShopSale } from "@/app/(dashboard)/shop/actions";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
@@ -41,7 +42,8 @@ const paymentMethods = [
 ] as const;
 
 export default function CheckoutPage() {
-  const { items, totalAmount } = useCart();
+  const { items, totalAmount, clearCart } = useCart();
+  const router = useRouter();
   const [contacts, setContacts] = useState<Contact[]>([]);
 
   // Customer state
@@ -133,6 +135,14 @@ export default function CheckoutPage() {
     },
     undefined,
   );
+
+  // On successful sale, clear cart and navigate to receipt
+  useEffect(() => {
+    if (state && "saleId" in state && state.saleId) {
+      clearCart();
+      router.push(`/shop/receipt/${state.saleId}`);
+    }
+  }, [state, clearCart, router]);
 
   // Guard: empty cart
   if (items.length === 0) {
