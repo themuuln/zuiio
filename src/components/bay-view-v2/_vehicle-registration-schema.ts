@@ -11,13 +11,13 @@ export const vehicleRegistrationSchema = z.object({
   vin: z.string().optional(),
   engine: z.string().optional(),
   odometer: z.string().optional(),
-  custFirstName: z.string().optional(),
+  custFirstName: z.string().min(1, "First name is required"),
   custLastName: z.string().optional(),
   custPhone: z
     .string()
-    .optional()
+    .min(1, "Phone number is required")
     .refine(
-      (val) => !val || isValidMongolianPhone(val),
+      (val) => isValidMongolianPhone(val),
       "Enter a valid Mongolian phone number (8 digits)",
     ),
   complaint: z.string().optional(),

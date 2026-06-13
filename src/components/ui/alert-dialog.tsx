@@ -1,13 +1,10 @@
 "use client";
-import type * as React from "react";
-import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 
-/**
- * AlertDialog root component.
- * Wraps Base UI's AlertDialog.Root with consistent styling.
- */
+import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog";
+import type * as React from "react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
 function AlertDialog({ ...props }: AlertDialogPrimitive.Root.Props) {
   return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />;
 }
@@ -24,10 +21,6 @@ function AlertDialogPortal({ ...props }: AlertDialogPrimitive.Portal.Props) {
   );
 }
 
-/**
- * AlertDialog overlay/backdrop.
- * Uses data-nested-dialog-open to dim the parent when a child dialog opens.
- */
 function AlertDialogOverlay({
   className,
   ...props
@@ -37,8 +30,6 @@ function AlertDialogOverlay({
       data-slot="alert-dialog-overlay"
       className={cn(
         "fixed inset-0 isolate z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
-        // Dim the overlay when a child dialog is open
-        "after:absolute after:inset-0 after:bg-black/5 after:opacity-0 after:pointer-events-none after:transition-opacity after:duration-100 data-nested-dialog-open:after:opacity-100",
         className,
       )}
       {...props}
@@ -46,13 +37,9 @@ function AlertDialogOverlay({
   );
 }
 
-/**
- * AlertDialog content/popup.
- * Uses Base UI's --nested-dialogs CSS variable for automatic stacking.
- */
 function AlertDialogContent({
-  size = "default",
   className,
+  size = "default",
   ...props
 }: AlertDialogPrimitive.Popup.Props & {
   size?: "default" | "sm";
@@ -64,20 +51,7 @@ function AlertDialogContent({
         data-slot="alert-dialog-content"
         data-size={size}
         className={cn(
-          "group/alert-dialog-content fixed left-1/2 z-50 grid w-full -translate-x-1/2 gap-4 rounded-xl bg-popover p-4 text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none",
-          // Nested dialog positioning
-          "top-[calc(50%+1.25rem*var(--nested-dialogs,0))]",
-          "-translate-y-[calc(50%-1.25rem*var(--nested-dialogs,0))]",
-          // Scale down parent dialogs when nested
-          "scale-[calc(1-0.1*var(--nested-dialogs,0))]",
-          // Transitions for smooth nesting animation
-          "transition-[top,scale,opacity] ease-out",
-          // Size variants
-          "data-[size=default]:max-w-xs data-[size=sm]:max-w-xs data-[size=default]:sm:max-w-sm",
-          // Entry/exit animations
-          "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-          // Dim overlay on parent when child is open
-          "after:absolute after:inset-0 after:bg-black/5 after:opacity-0 after:pointer-events-none after:transition-opacity after:duration-100 after:ease-out data-nested-dialog-open:after:opacity-100",
+          "group/alert-dialog-content fixed top-1/2 left-1/2 z-50 grid w-full -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none data-[size=default]:max-w-xs data-[size=sm]:max-w-xs data-[size=default]:sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           className,
         )}
         {...props}
@@ -180,9 +154,9 @@ function AlertDialogAction({
 }
 
 function AlertDialogCancel({
+  className,
   variant = "outline",
   size = "default",
-  className,
   ...props
 }: AlertDialogPrimitive.Close.Props &
   Pick<React.ComponentProps<typeof Button>, "variant" | "size">) {

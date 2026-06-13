@@ -13,23 +13,27 @@ export async function getEndOfDaySummary(
   orgId: string,
   date: string,
   branchId: string | null = null,
+  mechanicId: string | null = null,
 ): Promise<EndOfDaySummary> {
   const supabase = db;
 
   return withCache(
-    ["getEndOfDaySummary", orgId, date, branchId ?? "all"],
+    ["getEndOfDaySummary", orgId, date, branchId ?? "all", mechanicId ?? "all"],
     async () => {
-      const { data: workOrders } = await withBranchFilter(
-        supabase
-          .from("work_orders")
-          .select("id, mechanic_id")
-          .eq("organization_id", orgId)
-          .gte("completed_at", `${date}T00:00:00`)
-          .lte("completed_at", `${date}T23:59:59`)
-          .eq("status", "Completed")
-          .is("deleted_at", null),
-        branchId,
-      );
+      let query = supabase
+        .from("work_orders")
+        .select("id, mechanic_id")
+        .eq("organization_id", orgId)
+        .gte("completed_at", `${date}T00:00:00`)
+        .lte("completed_at", `${date}T23:59:59`)
+        .eq("status", "Completed")
+        .is("deleted_at", null);
+
+      if (mechanicId) {
+        query = query.eq("mechanic_id", mechanicId);
+      }
+
+      const { data: workOrders } = await withBranchFilter(query, branchId);
 
       return getEndOfDaySummaryFromScopedWorkOrders(
         supabase,

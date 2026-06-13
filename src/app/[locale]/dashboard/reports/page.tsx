@@ -63,10 +63,9 @@ import { Typography } from "@/components/ui/typography";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { useSelectedBranchGuard } from "@/hooks/use-selected-branch-guard";
 import type { ExportColumn } from "@/lib/export";
+import { useBranchComparison } from "@/lib/queries/use-branch-comparison";
 import { useBranches } from "@/lib/queries/use-branches";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { BranchComparisonView } from "./_branch-comparison-view";
-import { useBranchComparison } from "@/lib/queries/use-branch-comparison";
 import {
   useMechanics,
   useReport,
@@ -85,6 +84,7 @@ import type {
   ReportProfitability,
 } from "@/lib/types";
 import { formatCurrency, hasMultipleBranches } from "@/lib/utils";
+import { BranchComparisonView } from "./_branch-comparison-view";
 
 // ── Types ──────────────────────────────────────────────────
 

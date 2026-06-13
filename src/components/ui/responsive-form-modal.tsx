@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
@@ -14,10 +15,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { DetailSheet } from "./detail-sheet";
+import { DetailDrawer } from "./detail-drawer";
 
 export type ResponsiveFormModalProps = {
   open: boolean;
@@ -30,7 +30,7 @@ export type ResponsiveFormModalProps = {
   useDialogOnDesktop?: boolean;
   /** Width size for the side Sheet on desktop (default: "xl") */
   sheetSize?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl";
-  /** opt footer content (rendered in all paths: Drawer, Dialog, and DetailSheet) */
+  /** opt footer content (rendered in all paths: Drawer, Dialog, and DetailDrawer) */
   footer?: React.ReactNode;
 };
 
@@ -115,27 +115,27 @@ export function ResponsiveFormModal({
     );
   }
 
-  // Desktop: Right Side Sheet (standard) — now uses DetailSheet
+  // Desktop: Right Side Sheet (standard) — now uses DetailDrawer
   return (
-    <DetailSheet
+    <DetailDrawer
       open={open}
       onOpenChange={onOpenChange}
       size={sheetSize as any}
     >
-      <DetailSheet.Header className="p-6 pb-2">
-        <DetailSheet.Title className="text-xl font-bold">
+      <DetailDrawer.Header className="p-6 pb-2">
+        <DetailDrawer.Title className="text-xl font-bold">
           {title}
-        </DetailSheet.Title>
+        </DetailDrawer.Title>
         {desc && (
-          <DetailSheet.Description className="text-sm">
+          <DetailDrawer.Description className="text-sm">
             {desc}
-          </DetailSheet.Description>
+          </DetailDrawer.Description>
         )}
-      </DetailSheet.Header>
-      <DetailSheet.Body className="px-6">
+      </DetailDrawer.Header>
+      <DetailDrawer.Body className="px-6">
         <div className={cn("py-2", className)}>{childrenWithClose}</div>
-      </DetailSheet.Body>
-      {footer && <DetailSheet.Footer>{footer}</DetailSheet.Footer>}
-    </DetailSheet>
+      </DetailDrawer.Body>
+      {footer && <DetailDrawer.Footer>{footer}</DetailDrawer.Footer>}
+    </DetailDrawer>
   );
 }

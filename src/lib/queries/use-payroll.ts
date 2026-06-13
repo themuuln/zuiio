@@ -179,13 +179,7 @@ export function useCalculatePayroll(
   const queue = useMutationQueue();
 
   return useMutation({
-    mutationFn: async ({
-      year,
-      month,
-    }: {
-      year: number;
-      month: number;
-    }) => {
+    mutationFn: async ({ year, month }: { year: number; month: number }) => {
       if (isOnline) {
         const res = await fetch(
           `/api/organizations/${orgId}/payroll/calculate`,
@@ -215,7 +209,7 @@ export function useCalculatePayroll(
       });
       return { queued: true } as unknown as PayrollRecord[];
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data, _variables) => {
       const d = data as unknown as Record<string, unknown>;
       if (d?.queued) {
         toast.info("Saved offline — will sync when connected");
@@ -314,7 +308,7 @@ export function useUpdatePayrollRecord(
         queryClient.setQueryData(context.key, context.previous);
       }
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data, _variables) => {
       const d = data as unknown as Record<string, unknown>;
       if (d?.queued) {
         toast.info("Saved offline — will sync when connected");

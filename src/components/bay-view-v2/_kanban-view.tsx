@@ -1,18 +1,18 @@
 "use client";
 
-import React from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { Plus } from "lucide-react";
+import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import type { BaySlotData } from "@/lib/services/bay-view-service";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { ALL_STATUSES, STATUS_COLUMN } from "./_constants";
 import { CondensedQueueItem } from "./_condensed-queue-item";
-import { BayCard } from "./bay-card";
+import { ALL_STATUSES, STATUS_COLUMN } from "./_constants";
 import { ErrorSection } from "./_error-section";
+import { BayCard } from "./bay-card";
 
 // ── KanbanDropColumn (moved from _types.tsx) ───────────────────
 

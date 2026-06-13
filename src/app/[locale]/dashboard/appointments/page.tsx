@@ -2,7 +2,6 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, Plus } from "lucide-react";
-import { appointmentKeys } from "@/lib/queries/keys";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -25,6 +24,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
+import { appointmentKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId } from "@/lib/stores";
 import type { Appointment, AppointmentStatus } from "@/lib/types";
@@ -141,7 +141,7 @@ export default function AppointmentsPage() {
                 requested: "",
               }).map((value) => (
                 <SelectItem key={value} value={value}>
-                  {t("status_" + value)}
+                  {t(`status_${value}`)}
                 </SelectItem>
               ))}
           </SelectContent>
@@ -168,7 +168,7 @@ export default function AppointmentsPage() {
             <EmptyDescription>
               {statusFilter !== "all"
                 ? t("noAppointmentsWithStatus", {
-                    status: t("status_" + statusFilter),
+                    status: t(`status_${statusFilter}`),
                   })
                 : t("scheduleFirst")}
             </EmptyDescription>
@@ -225,7 +225,7 @@ export default function AppointmentsPage() {
                         requested: "",
                       }).map((value) => (
                         <SelectItem key={value} value={value}>
-                          {t("status_" + value)}
+                          {t(`status_${value}`)}
                         </SelectItem>
                       ))}
                   </SelectContent>

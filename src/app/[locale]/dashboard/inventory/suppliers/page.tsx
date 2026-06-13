@@ -5,18 +5,8 @@ import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
-import { ListPageShell } from "@/components/list-page-shell";
-import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { DataTable } from "@/components/ui/data-table";
-import {
-  Empty,
-  EmptyContent,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import { DataTablePage } from "@/components/ui/data-table-page";
 import { useClientNow } from "@/hooks/use-client-now";
 import { usePageHeader } from "@/hooks/use-page-header";
 import type { ExportColumn } from "@/lib/export";
@@ -80,7 +70,7 @@ export default function SuppliersPage() {
   );
 
   return (
-    <ListPageShell
+    <DataTablePage
       title={t("suppliersTitle")}
       description={t("suppliersSubtitle")}
       loading={isLoading && suppliers.length === 0}
@@ -91,71 +81,49 @@ export default function SuppliersPage() {
           </Button>
         </Link>
       }
-    >
-      <ListToolbar
-        search={{
-          placeholder: t("searchSuppliers"),
-          value: search,
-          onChange: setSearch,
-        }}
-        stats={
-          <span>
-            {filtered.length} {t("suppliers")}
-          </span>
-        }
-        actions={
-          <ExportButton
-            data={filtered}
-            columns={exportColumns}
-            filename={`suppliers-${now.toISOString().split("T")[0]}.xlsx`}
-            sheetName="Suppliers"
-          />
-        }
-      />
-
-      {filtered.length === 0 ? (
-        <Card className="py-0">
-          <CardContent className="p-0">
-            <Empty>
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <Building2 />
-                </EmptyMedia>
-                <EmptyTitle>{t("noSuppliers")}</EmptyTitle>
-              </EmptyHeader>
-              <EmptyContent>
-                <Link href="/dashboard/inventory/suppliers/new">
-                  <Button>{t("addFirstSupplier")}</Button>
-                </Link>
-              </EmptyContent>
-            </Empty>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card className="py-0">
-          <CardContent className="p-0">
-            <DataTable
-              columns={columns}
-              data={filtered}
-              getRowId={(row) => row.id}
-              pageSize={20}
-              renderMobileCard={(s) => (
-                <div className="flex flex-col gap-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="size-4 shrink-0 text-muted-foreground/60" />
-                    <span className="font-medium truncate">{s.name}</span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border/50 pt-2 text-xs text-muted-foreground">
-                    <span>{s.contact_person || "—"}</span>
-                    <span>{s.phone || "—"}</span>
-                    <span className="truncate">{s.email || "—"}</span>
-                  </div>
-                </div>
-              )}
-            />
-          </CardContent>
-        </Card>
+      columns={columns}
+      data={filtered}
+      getRowId={(row) => row.id}
+      pageSize={20}
+      search={{
+        placeholder: t("searchSuppliers"),
+        value: search,
+        onChange: setSearch,
+      }}
+      stats={
+        <span>
+          {filtered.length} {t("suppliers")}
+        </span>
+      }
+      actions={
+        <ExportButton
+          data={filtered}
+          columns={exportColumns}
+          filename={`suppliers-${now.toISOString().split("T")[0]}.xlsx`}
+          sheetName="Suppliers"
+        />
+      }
+      onRowClick={(row) => setDetailSupplierId(row.id)}
+      renderMobileCard={(s) => (
+        <div className="flex flex-col gap-2 text-sm">
+          <div className="flex items-center gap-2">
+            <Building2 className="size-4 shrink-0 text-muted-foreground/60" />
+            <span className="font-medium truncate">{s.name}</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border/50 pt-2 text-xs text-muted-foreground">
+            <span>{s.contact_person || "—"}</span>
+            <span>{s.phone || "—"}</span>
+            <span className="truncate">{s.email || "—"}</span>
+          </div>
+        </div>
       )}
-    </ListPageShell>
+      emptyTitle={t("noSuppliers")}
+      emptyIcon={Building2}
+      emptyAction={
+        <Link href="/dashboard/inventory/suppliers/new">
+          <Button>{t("addFirstSupplier")}</Button>
+        </Link>
+      }
+    />
   );
 }

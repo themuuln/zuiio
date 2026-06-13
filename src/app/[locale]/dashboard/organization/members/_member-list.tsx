@@ -12,19 +12,19 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Empty,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-  EmptyDescription,
-  EmptyContent,
-} from "@/components/ui/empty";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import {
   Select,
   SelectContent,
@@ -138,7 +138,10 @@ export function MemberList({
                       {member.fullName ?? member.username ?? t("unnamed")}
                     </Typography.Text>
                     <Typography.Muted className="block truncate text-xs">
-                      {member.phone ?? member.username ?? member.email ?? t("noContact")}
+                      {member.phone ??
+                        member.username ??
+                        member.email ??
+                        t("noContact")}
                     </Typography.Muted>
                   </div>
                 </div>

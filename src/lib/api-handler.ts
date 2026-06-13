@@ -5,8 +5,13 @@ import {
   toApiErrorResponse,
   UnauthorizedError,
 } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 import { mutationRateLimiter } from "@/lib/rate-limit";
-import { requirePermission, requireRole } from "@/lib/supabase/role-guard";
+import {
+  type PermissionAction,
+  requirePermission,
+  requireRole,
+} from "@/lib/supabase/role-guard";
 import { createClient } from "@/lib/supabase/server";
 
 // ── Types ─────────────────────────────────────────────────────
@@ -31,7 +36,7 @@ interface RouteHandlerOptions {
   /** Minimum role level required for this route */
   minimumRole?: "Org Owner" | "Manager" | "Mechanic" | "Guest";
   /** Specific permission required for this route (checked after minimumRole) */
-  requiredPermission?: { resource: string; action: string };
+  requiredPermission?: { resource: string; action: PermissionAction };
   /** Apply mutation rate limiting (60 req/min) to this route */
   rateLimit?: boolean;
 }
@@ -58,6 +63,8 @@ export function createRouteHandler(
   options?: RouteHandlerOptions,
 ) {
   return async (request: NextRequest, context: RouteContext) => {
+    const start = performance.now();
+
     try {
       const supabase = await createClient();
       const {
@@ -101,7 +108,7 @@ export function createRouteHandler(
       // Apply mutation rate limiting
       if (options?.rateLimit) {
         const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-        const rateCheck = mutationRateLimiter.check(ip);
+        const rateCheck = await mutationRateLimiter.check(ip);
         if (!rateCheck.allowed) {
           return NextResponse.json(
             { error: { code: "RATE_LIMITED", message: "Too many requests" } },
@@ -117,9 +124,41 @@ export function createRouteHandler(
         }
       }
 
-      return await handler({ request, params, orgId, user, supabase });
+      const response = await handler({
+        request,
+        params,
+        orgId,
+        user,
+        supabase,
+      });
+
+      const duration = Math.round(performance.now() - start);
+      logger.info(
+        {
+          method: request.method,
+          path: request.nextUrl.pathname,
+          status: response.status,
+          duration,
+          userId: user.id,
+          orgId: orgId || undefined,
+        },
+        "API request completed",
+      );
+
+      return response;
     } catch (error) {
       const { status, body, headers } = toApiErrorResponse(error);
+      const duration = Math.round(performance.now() - start);
+      logger.error(
+        {
+          method: request.method,
+          path: request.nextUrl.pathname,
+          status,
+          duration,
+          err: error,
+        },
+        "API request failed",
+      );
       return NextResponse.json(body, { status, headers });
     }
   };
@@ -147,6 +186,8 @@ type SimpleRouteHandler = (ctx: SimpleHandlerContext) => Promise<NextResponse>;
  */
 export function createSimpleRouteHandler(handler: SimpleRouteHandler) {
   return async (request: NextRequest) => {
+    const start = performance.now();
+
     try {
       const supabase = await createClient();
       const {
@@ -155,9 +196,34 @@ export function createSimpleRouteHandler(handler: SimpleRouteHandler) {
 
       if (!user) throw new UnauthorizedError();
 
-      return await handler({ request, user, supabase });
+      const response = await handler({ request, user, supabase });
+
+      const duration = Math.round(performance.now() - start);
+      logger.info(
+        {
+          method: request.method,
+          path: request.nextUrl.pathname,
+          status: response.status,
+          duration,
+          userId: user.id,
+        },
+        "Simple API request completed",
+      );
+
+      return response;
     } catch (error) {
       const { status, body, headers } = toApiErrorResponse(error);
+      const duration = Math.round(performance.now() - start);
+      logger.error(
+        {
+          method: request.method,
+          path: request.nextUrl.pathname,
+          status,
+          duration,
+          err: error,
+        },
+        "Simple API request failed",
+      );
       return NextResponse.json(body, { status, headers });
     }
   };

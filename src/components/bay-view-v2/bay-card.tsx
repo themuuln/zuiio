@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useCallback } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { useQueryClient } from "@tanstack/react-query";
+import React, { useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { prefetchDrawerData } from "@/lib/queries/use-drawer-queries";
 import { cn } from "@/lib/utils";
@@ -14,11 +14,7 @@ import type { BayCardProps } from "./_bay-card-types";
 
 export type { BayCardProps } from "./_bay-card-types";
 
-export function BayCardDragPreview({
-  bay,
-}: {
-  bay: BayCardProps["bay"];
-}) {
+export function BayCardDragPreview({ bay }: { bay: BayCardProps["bay"] }) {
   return <BayCardPreview bay={bay} />;
 }
 
@@ -39,6 +35,8 @@ export const BayCard = React.memo(function BayCard({
   mechanics = [],
   onAssignMechanic,
   onRemoveMechanic,
+  onAddHelper,
+  onReorderMechanics,
 }: BayCardProps) {
   const queryClient = useQueryClient();
   const { setNodeRef, isOver } = useDroppable({
@@ -100,7 +98,18 @@ export const BayCard = React.memo(function BayCard({
           onClick={() => wo && onOpenDetail(wo.id)}
           onMouseEnter={handleMouseEnter}
         >
-          {wo && <BayCardAccent status={wo.status} />}
+          {wo && (
+            <BayCardAccent
+              status={wo.status}
+              elapsedMinutes={
+                wo.started_at
+                  ? Math.round(
+                      (Date.now() - new Date(wo.started_at).getTime()) / 60_000,
+                    )
+                  : null
+              }
+            />
+          )}
 
           {wo ? (
             <BayCardOccupied
@@ -118,6 +127,8 @@ export const BayCard = React.memo(function BayCard({
               onQuickAddParts={onQuickAddParts}
               onAssignMechanic={onAssignMechanic}
               onRemoveMechanic={onRemoveMechanic}
+              onAddHelper={onAddHelper}
+              onReorderMechanics={onReorderMechanics}
             />
           ) : (
             <BayCardEmptyState

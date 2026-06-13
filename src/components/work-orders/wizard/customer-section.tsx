@@ -45,7 +45,7 @@ export function CustomerSection() {
   }
 
   return (
-    <Card>
+    <Card data-wizard-step="customer">
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <User className="size-4" />

@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { bayViewKeys } from "@/lib/queries/keys";
-import { useAnyDialogOpen, useBayViewStore } from "@/lib/stores/bay-view-store";
+import { useEffect } from "react";
 import { usePolling } from "@/hooks/use-polling";
+import { bayViewKeys } from "@/lib/queries/keys";
 import { useSelectedBranchId } from "@/lib/stores";
+import { useAnyDialogOpen } from "@/lib/stores/bay-view-store";
 
 /**
  * Manages dialog state, polling pause/resume, and URL sync.
@@ -14,7 +14,8 @@ import { useSelectedBranchId } from "@/lib/stores";
 export function DialogManager() {
   const queryClient = useQueryClient();
   const selectedBranchId = useSelectedBranchId();
-  const branchFilter = selectedBranchId === "all" ? undefined : selectedBranchId;
+  const branchFilter =
+    selectedBranchId === "all" ? undefined : selectedBranchId;
   const anyDialogOpen = useAnyDialogOpen();
 
   const refetchBayView = async () => {

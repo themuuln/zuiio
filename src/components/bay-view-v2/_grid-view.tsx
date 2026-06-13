@@ -2,8 +2,8 @@
 
 import React from "react";
 import type { BaySlotData } from "@/lib/services/bay-view-service";
-import { BayCard } from "./bay-card";
 import { ErrorSection } from "./_error-section";
+import { BayCard } from "./bay-card";
 
 interface GridViewProps {
   bays: BaySlotData[];
@@ -28,6 +28,13 @@ interface GridViewProps {
   onAssignMechanic?: (woId: string, mechanicId: string) => Promise<void>;
   /** Called when removing the mechanic from the work order */
   onRemoveMechanic?: (woId: string) => Promise<void>;
+  /** Called when adding a helper mechanic */
+  onAddHelper?: (woId: string, mechanicId: string) => Promise<void>;
+  /** Called when reordering mechanics */
+  onReorderMechanics?: (
+    woId: string,
+    orderedMechanicIds: string[],
+  ) => Promise<void>;
 }
 
 export const GridView = React.memo(function GridView({
@@ -46,6 +53,8 @@ export const GridView = React.memo(function GridView({
   mechanics = [],
   onAssignMechanic,
   onRemoveMechanic,
+  onAddHelper,
+  onReorderMechanics,
 }: GridViewProps) {
   return (
     <div className="grid w-full h-full min-h-0 [grid-auto-rows:1fr] grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -68,6 +77,8 @@ export const GridView = React.memo(function GridView({
             mechanics={mechanics}
             onAssignMechanic={onAssignMechanic}
             onRemoveMechanic={onRemoveMechanic}
+            onAddHelper={onAddHelper}
+            onReorderMechanics={onReorderMechanics}
           />
         </ErrorSection>
       ))}

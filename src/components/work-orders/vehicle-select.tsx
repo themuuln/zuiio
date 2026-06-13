@@ -1,12 +1,11 @@
 "use client";
 
 import { Car, Plus } from "lucide-react";
-import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useMemo, useState } from "react";
 import { z } from "zod";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
-import { transliterateMongolianPlate } from "@/lib/form-validation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Combobox,
@@ -33,7 +32,10 @@ import {
 import { PlateInput } from "@/components/ui/plate-input";
 import { Typography } from "@/components/ui/typography";
 import { inputProps } from "@/lib/form-ux";
-import { isValidMongolianPlate } from "@/lib/form-validation";
+import {
+  isValidMongolianPlate,
+  transliterateMongolianPlate,
+} from "@/lib/form-validation";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useMakes, useModelsByMake } from "@/lib/queries/use-vehicle-models";
 import type { Vehicle } from "@/lib/types";

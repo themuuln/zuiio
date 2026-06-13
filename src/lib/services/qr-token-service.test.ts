@@ -1,6 +1,6 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { describe, expect, it, vi } from "vitest";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { createMockSupabaseClient } from "@/test/mocks/supabase";
 import {
   generateClockToken,

@@ -1,5 +1,5 @@
-import { getEndOfDaySummary } from "@/lib/services/report-service";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getEndOfDaySummary } from "@/lib/services/report-service";
 
 function localDateStr(date?: Date): string {
   const d = date ?? new Date();

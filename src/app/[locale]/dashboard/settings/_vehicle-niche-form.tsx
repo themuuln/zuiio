@@ -27,12 +27,8 @@ import {
   type CarModel,
   carCatalogKeys,
 } from "@/lib/queries/use-car-catalog";
-import {
-  SettingsBlock,
-  SettingsGroup,
-  SettingsRow,
-} from "./_settings-layout";
 import type { Organization } from "@/lib/types";
+import { SettingsBlock, SettingsGroup, SettingsRow } from "./_settings-layout";
 
 interface VehicleNicheFormProps {
   organization: Organization | undefined;
@@ -230,7 +226,7 @@ export function VehicleNicheForm({
     } finally {
       setSaving(false);
     }
-  }, [organization, niche, onRefetch]);
+  }, [organization, niche, onRefetch, t]);
 
   if (!organization) {
     return (
@@ -263,116 +259,120 @@ export function VehicleNicheForm({
         <>
           <Separator />
 
-              {/* Summary badges */}
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="secondary" className="gap-1">
-                  <Car className="size-3" />
-                  {niche.brand_ids.length} brand
-                  {niche.brand_ids.length !== 1 && "s"}
-                </Badge>
-                {niche.model_ids.length > 0 && (
-                  <Badge variant="secondary" className="gap-1">
-                    <CarFront className="size-3" />
-                    {niche.model_ids.length} model
-                    {niche.model_ids.length !== 1 && "s"}
-                  </Badge>
-                )}
-                {niche.brand_ids.length === 0 && (
-                  <Typography.Muted className="text-xs">
-                    Select brands below to restrict your workshop
-                  </Typography.Muted>
-                )}
-              </div>
+          {/* Summary badges */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="secondary" className="gap-1">
+              <Car className="size-3" />
+              {niche.brand_ids.length} brand
+              {niche.brand_ids.length !== 1 && "s"}
+            </Badge>
+            {niche.model_ids.length > 0 && (
+              <Badge variant="secondary" className="gap-1">
+                <CarFront className="size-3" />
+                {niche.model_ids.length} model
+                {niche.model_ids.length !== 1 && "s"}
+              </Badge>
+            )}
+            {niche.brand_ids.length === 0 && (
+              <Typography.Muted className="text-xs">
+                Select brands below to restrict your workshop
+              </Typography.Muted>
+            )}
+          </div>
 
-              {/* Brand selection */}
+          {/* Brand selection */}
+          <div className="flex flex-col gap-2">
+            <Typography.Text className="text-sm font-medium">
+              Vehicle Brands
+            </Typography.Text>
+            <Typography.Muted className="text-xs text-muted-foreground">
+              Select the brands your workshop services. Expand a brand to narrow
+              it down to specific models.
+            </Typography.Muted>
+
+            {brandsLoading ? (
               <div className="flex flex-col gap-2">
-                <Typography.Text className="text-sm font-medium">
-                  Vehicle Brands
-                </Typography.Text>
-                <Typography.Muted className="text-xs text-muted-foreground">
-                  Select the brands your workshop services. Expand a brand to
-                  narrow it down to specific models.
-                </Typography.Muted>
-
-                {brandsLoading ? (
-                  <div className="flex flex-col gap-2">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Skeleton key={i} className="h-12 w-full" />
-                    ))}
-                  </div>
-                ) : allBrands.length === 0 ? (
-                  <Typography.Muted className="py-4 text-center text-sm">
-                    No vehicle brands found in the catalog
-                  </Typography.Muted>
-                ) : (
-                  <ScrollArea className="max-h-[420px]">
-                    <div className="flex flex-col gap-1">
-                      {allBrands.map((brand) => (
-                        <BrandRow
-                          key={brand.id}
-                          brand={brand}
-                          selected={niche.brand_ids.includes(brand.id)}
-                          expanded={expandedBrands.has(brand.id)}
-                          models={modelsByBrand[brand.id]}
-                          modelsLoading={
-                            expandedBrands.has(brand.id) &&
-                            !modelsByBrand[brand.id]
-                          }
-                          selectedModelIds={niche.model_ids}
-                          onToggleBrand={toggleBrand}
-                          onToggleExpand={toggleExpandBrand}
-                          onToggleModel={toggleModel}
-                          onToggleAllModels={toggleAllModelsForBrand}
-                        />
-                      ))}
-                    </div>
-                  </ScrollArea>
-                )}
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
               </div>
-
-              {/* Quick actions */}
-              {allBrands.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={selectAllBrands}
-                    disabled={saving}
-                  >
-                    Select all
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={invertBrands}
-                    disabled={saving}
-                  >
-                    Invert
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setNiche((prev) => ({
-                        ...prev,
-                        brand_ids: [],
-                        model_ids: [],
-                      }))
-                    }
-                    disabled={saving}
-                  >
-                    Clear all
-                  </Button>
+            ) : allBrands.length === 0 ? (
+              <Typography.Muted className="py-4 text-center text-sm">
+                No vehicle brands found in the catalog
+              </Typography.Muted>
+            ) : (
+              <ScrollArea className="max-h-[420px]">
+                <div className="flex flex-col gap-1">
+                  {allBrands.map((brand) => (
+                    <BrandRow
+                      key={brand.id}
+                      brand={brand}
+                      selected={niche.brand_ids.includes(brand.id)}
+                      expanded={expandedBrands.has(brand.id)}
+                      models={modelsByBrand[brand.id]}
+                      modelsLoading={
+                        expandedBrands.has(brand.id) && !modelsByBrand[brand.id]
+                      }
+                      selectedModelIds={niche.model_ids}
+                      onToggleBrand={toggleBrand}
+                      onToggleExpand={toggleExpandBrand}
+                      onToggleModel={toggleModel}
+                      onToggleAllModels={toggleAllModelsForBrand}
+                    />
+                  ))}
                 </div>
-              )}
+              </ScrollArea>
+            )}
+          </div>
+
+          {/* Quick actions */}
+          {allBrands.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={selectAllBrands}
+                disabled={saving}
+              >
+                Select all
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={invertBrands}
+                disabled={saving}
+              >
+                Invert
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setNiche((prev) => ({
+                    ...prev,
+                    brand_ids: [],
+                    model_ids: [],
+                  }))
+                }
+                disabled={saving}
+              >
+                Clear all
+              </Button>
+            </div>
+          )}
         </>
       ) : null}
 
       <div className="flex justify-end">
-        <Button size="sm" onClick={handleSave} disabled={saving} className="gap-2">
+        <Button
+          size="sm"
+          onClick={handleSave}
+          disabled={saving}
+          className="gap-2"
+        >
           {saving ? (
             <Loader2 className="size-4 animate-spin" />
           ) : (

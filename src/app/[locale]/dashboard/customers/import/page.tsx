@@ -206,43 +206,46 @@ export default function ImportCustomersPage() {
     totalRows: number;
   } | null>(null);
 
-  const handleFile = useCallback(async (file: File | undefined) => {
-    if (!file) return;
+  const handleFile = useCallback(
+    async (file: File | undefined) => {
+      if (!file) return;
 
-    if (!file.name.endsWith(".csv")) {
-      toast.error(t("import.onlyCsv"));
-      return;
-    }
+      if (!file.name.endsWith(".csv")) {
+        toast.error(t("import.onlyCsv"));
+        return;
+      }
 
-    const content = await file.text();
-    if (!content.trim()) {
-      toast.error(t("import.csvEmpty"));
-      return;
-    }
+      const content = await file.text();
+      if (!content.trim()) {
+        toast.error(t("import.csvEmpty"));
+        return;
+      }
 
-    fileContentRef.current = content;
-    const { headers, rows, totalLines } = parsePreview(content);
+      fileContentRef.current = content;
+      const { headers, rows, totalLines } = parsePreview(content);
 
-    if (headers.length === 0) {
-      toast.error(t("import.noValidHeaders"));
-      return;
-    }
+      if (headers.length === 0) {
+        toast.error(t("import.noValidHeaders"));
+        return;
+      }
 
-    previewRef.current = {
-      filename: file.name,
-      headers,
-      rows,
-      totalRows: totalLines,
-    };
+      previewRef.current = {
+        filename: file.name,
+        headers,
+        rows,
+        totalRows: totalLines,
+      };
 
-    setState({
-      status: "preview",
-      filename: file.name,
-      headers,
-      rows,
-      totalRows: totalLines,
-    });
-  }, []);
+      setState({
+        status: "preview",
+        filename: file.name,
+        headers,
+        rows,
+        totalRows: totalLines,
+      });
+    },
+    [t],
+  );
 
   const handleDrop = useCallback(
     (event: React.DragEvent) => {
@@ -312,7 +315,7 @@ export default function ImportCustomersPage() {
       setState({ status: "error", message: t("import.failed") });
       toast.error(t("import.failed"));
     }
-  }, [orgId]);
+  }, [orgId, t]);
 
   const handleDownloadTemplate = useCallback(() => {
     const blob = new Blob([CSV_TEMPLATE], { type: "text/csv" });

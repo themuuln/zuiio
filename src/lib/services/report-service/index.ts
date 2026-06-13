@@ -2,58 +2,51 @@
 // Re-exports everything that was previously exported from report-service.ts
 // to preserve the public API for consumers.
 
-// ── Utilities (re-exported for internal use and external consumers) ──
-export { formatNum, formatCurrencyHelper, getWeekKey } from "./utils";
-
-// ── Batched query helpers ──
+// ── Branch Comparison ──
+export { getBranchComparison } from "./branch-comparison";
+export type { TimelineEvent } from "./dashboard";
+// ── Dashboard ──
 export {
-  getRevenueTrendBatched,
-  getTopServicesBatched,
-  getTechnicianPerformanceBatched,
-  getRecentWorkOrdersBatched,
-  getServiceCategoryBreakdownBatched,
-  getCustomerAcquisitionTrendBatched,
-} from "./queries";
-
+  getCustomerRetention,
+  getDailyTimeline,
+  getDashboardData,
+} from "./dashboard";
+// ── End of Day ──
+export { getEndOfDaySummary } from "./eod";
+// ── Insights ──
+export { generateInsights, generateReportInsights } from "./insights";
+// ── Mechanics ──
+export {
+  getMechanicKpis,
+  getMechanicPerformanceTrend,
+  getMechanicsList,
+} from "./mechanics";
 // ── Profitability ──
 export {
   calculateProfitability,
   getComparisonData,
-  getWorkOrderProfit,
   getDashboardProfitSummary,
-  getPreviousPeriodSummary,
   getPnLSummary,
+  getPreviousPeriodSummary,
+  getWorkOrderProfit,
 } from "./profitability";
-
-// ── Mechanics ──
+// ── Batched query helpers ──
 export {
-  getMechanicKpis,
-  getMechanicsList,
-  getMechanicPerformanceTrend,
-} from "./mechanics";
-
+  getCustomerAcquisitionTrendBatched,
+  getRecentWorkOrdersBatched,
+  getRevenueTrendBatched,
+  getServiceCategoryBreakdownBatched,
+  getTechnicianPerformanceBatched,
+  getTopServicesBatched,
+} from "./queries";
 // ── Reports ──
 export {
-  getDailyReport,
   getCustomReport,
-  getWeeklyReport,
+  getDailyReport,
   getMonthlyReport,
   getServiceBreakdown,
+  getWeeklyReport,
 } from "./reports";
-
-// ── End of Day ──
-export { getEndOfDaySummary } from "./eod";
-
-// ── Dashboard ──
-export {
-  getDashboardData,
-  getDailyTimeline,
-  getCustomerRetention,
-} from "./dashboard";
-export type { TimelineEvent } from "./dashboard";
-
-// ── Insights ──
-export { generateInsights, generateReportInsights } from "./insights";
 
 // ── Revenue ──
 export {
@@ -61,6 +54,5 @@ export {
   getRevenueTargets,
   setRevenueTarget,
 } from "./revenue";
-
-// ── Branch Comparison ──
-export { getBranchComparison } from "./branch-comparison";
+// ── Utilities (re-exported for internal use and external consumers) ──
+export { formatCurrencyHelper, formatNum, getWeekKey } from "./utils";

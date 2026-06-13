@@ -6,7 +6,6 @@ import {
   getPlanFeatures,
   isPlanFeatureEnabled,
   PLAN_FEATURES,
-  type PlanType,
 } from "./plan-features";
 
 describe("PLAN_FEATURES", () => {

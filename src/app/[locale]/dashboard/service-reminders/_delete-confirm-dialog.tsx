@@ -1,5 +1,6 @@
 "use client";
 
+import { AlertTriangle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { AlertTriangle } from "lucide-react";
 import type { ServiceScheduleItem } from "@/lib/queries/use-service-reminders";
 import { formatVehicleLabel } from "./_utils";
 

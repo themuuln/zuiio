@@ -39,7 +39,7 @@ export default function LoginPage() {
       return () => clearTimeout(timeout);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [state?.formError, isPending]);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const searchParams = useSearchParams();

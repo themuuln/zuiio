@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Calculator,
-  CheckCircle2,
-  ClipboardList,
-  DollarSign,
-  Users,
-} from "lucide-react";
+import { Calculator, CheckCircle2, ClipboardList, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -45,6 +39,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Typography } from "@/components/ui/typography";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 import {
   useCalculatePayroll,
   usePayRates,
@@ -52,7 +47,6 @@ import {
   usePayrollRecords,
   useUpdatePayrollRecord,
 } from "@/lib/queries/use-payroll";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useMechanics } from "@/lib/queries/use-reports";
 import { useSelectedBranchId } from "@/lib/stores";
 import { formatMNT } from "@/lib/utils";

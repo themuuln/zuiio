@@ -10,14 +10,13 @@ import {
   Send,
   Wrench,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { SearchInput } from "@/components/search-input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -98,6 +97,7 @@ function calculateLineTotal(line: {
 export default function NewEstimatePage() {
   const t = useTranslations("estimates");
   const commonT = useTranslations("common");
+  const locale = useLocale();
   const router = useRouter();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId ?? "";
@@ -330,72 +330,70 @@ export default function NewEstimatePage() {
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6 pb-8">
-      <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-          <div className="space-y-3">
-            <Button variant="ghost" size="sm" onClick={() => router.back()}>
-              <ArrowLeft className="size-4" />
-              {commonT("back")}
-            </Button>
+      <div className="flex flex-col gap-5 pb-2 xl:flex-row xl:items-start xl:justify-between">
+        <div className="space-y-3">
+          <Button variant="ghost" size="sm" onClick={() => router.back()}>
+            <ArrowLeft className="size-4" />
+            {commonT("back")}
+          </Button>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary" className="rounded-full px-2.5 py-0.5">
-                <Receipt className="size-3.5" />
-                {t("status_draft")}
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="secondary" className="rounded-full px-2.5 py-0.5">
+              <Receipt className="size-3.5" />
+              {t("status_draft")}
+            </Badge>
+            {branchId && (
+              <Badge variant="outline" className="rounded-full px-2.5 py-0.5">
+                {commonT("branch")}
               </Badge>
-              {branchId && (
-                <Badge variant="outline" className="rounded-full px-2.5 py-0.5">
-                  {commonT("branch")}
-                </Badge>
-              )}
-            </div>
-
-            <div>
-              <Typography.H1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                {t("newQuoteTitle")}
-              </Typography.H1>
-              <Typography.Muted className="mt-1 max-w-2xl text-sm">
-                {t("pageDescription")}
-              </Typography.Muted>
-            </div>
+            )}
           </div>
 
-          <div className="grid gap-3 rounded-2xl border border-border/60 bg-muted/20 p-4 sm:grid-cols-3 xl:min-w-[420px]">
-            <div>
-              <Typography.Text className="text-xs uppercase tracking-wide text-muted-foreground">
-                {t("subtotal")}
-              </Typography.Text>
-              <Typography.Text className="mt-1 block font-mono text-lg font-semibold">
-                {formatCurrency(subtotal)}
-              </Typography.Text>
-            </div>
-            <div>
-              <Typography.Text className="text-xs uppercase tracking-wide text-muted-foreground">
-                {t("discount")}
-              </Typography.Text>
-              <Typography.Text className="mt-1 block font-mono text-lg font-semibold">
-                {formatCurrency(quoteDiscountTotal)}
-              </Typography.Text>
-            </div>
-            <div>
-              <Typography.Text className="text-xs uppercase tracking-wide text-muted-foreground">
-                {t("grandTotal")}
-              </Typography.Text>
-              <Typography.Text className="mt-1 block font-mono text-lg font-semibold">
-                {formatCurrency(grandTotal)}
-              </Typography.Text>
-            </div>
+          <div>
+            <Typography.H1 className="text-2xl font-semibold tracking-tight md:text-3xl">
+              {t("newQuoteTitle")}
+            </Typography.H1>
+            <Typography.Muted className="mt-1 max-w-2xl text-sm">
+              {t("pageDescription")}
+            </Typography.Muted>
+          </div>
+        </div>
+
+        <div className="grid gap-3 rounded-2xl border border-border/60 bg-muted/20 p-4 sm:grid-cols-3 xl:min-w-[420px]">
+          <div>
+            <Typography.Text className="text-xs uppercase tracking-wide text-muted-foreground">
+              {t("subtotal")}
+            </Typography.Text>
+            <Typography.Text className="mt-1 block font-mono text-lg font-semibold">
+              {formatCurrency(subtotal)}
+            </Typography.Text>
+          </div>
+          <div>
+            <Typography.Text className="text-xs uppercase tracking-wide text-muted-foreground">
+              {t("discount")}
+            </Typography.Text>
+            <Typography.Text className="mt-1 block font-mono text-lg font-semibold">
+              {formatCurrency(quoteDiscountTotal)}
+            </Typography.Text>
+          </div>
+          <div>
+            <Typography.Text className="text-xs uppercase tracking-wide text-muted-foreground">
+              {t("grandTotal")}
+            </Typography.Text>
+            <Typography.Text className="mt-1 block font-mono text-lg font-semibold">
+              {formatCurrency(grandTotal)}
+            </Typography.Text>
           </div>
         </div>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex flex-col gap-6">
-          <Card className="rounded-3xl border-border/60 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-base">{t("customerInfo")}</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
+          <section>
+            <Typography.H2 className="mb-4 text-base font-medium">
+              {t("customerInfo")}
+            </Typography.H2>
+            <div className="grid gap-4 md:grid-cols-2">
               <CustomerSelect
                 orgId={orgId}
                 selectedCustomer={customer}
@@ -412,314 +410,321 @@ export default function NewEstimatePage() {
                 onSelect={setVehicle}
                 onClear={() => setVehicle(null)}
               />
-            </CardContent>
-          </Card>
+            </div>
+          </section>
 
-          <Card className="rounded-3xl border-border/60 shadow-sm">
-            <CardHeader className="gap-4">
-              <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <CardTitle className="text-base">{t("lineItems")}</CardTitle>
-                  <Typography.Muted className="mt-1">
-                    {t("noItemsDescription")}
-                  </Typography.Muted>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <Sheet>
-                    <SheetTrigger
-                      render={<Button variant="outline" size="sm" />}
-                    >
-                      <Plus className="size-4" />
-                      {t("addService")}
-                    </SheetTrigger>
-                    <SheetContent side="right" size="lg" className="w-full">
-                      <SheetHeader>
-                        <SheetTitle>{t("addServiceTitle")}</SheetTitle>
-                        <SheetDescription>
-                          {t("searchServicesPlaceholder")}
-                        </SheetDescription>
-                      </SheetHeader>
-                      <div className="flex flex-col gap-4 p-4">
-                        <SearchInput
-                          placeholder={t("searchServicesPlaceholder")}
-                          onSearch={searchServices}
-                          loading={searchingServices}
-                          debounceMs={400}
-                        />
-                        <div className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto">
-                          {services.map((service) => (
-                            <button
-                              key={service.id}
-                              type="button"
-                              className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-4 py-3 text-left transition-colors hover:bg-muted/30"
-                              onClick={() => {
-                                addServiceLine(service);
-                                setServiceSearch("");
-                                setServices([]);
-                              }}
-                            >
-                              <div>
-                                <Typography.Text className="font-medium">
-                                  {service.name}
-                                </Typography.Text>
-                              </div>
-                              <Typography.Text className="font-mono text-sm text-muted-foreground">
-                                {formatCurrency(
-                                  Number(service.default_price ?? 0),
-                                )}
-                              </Typography.Text>
-                            </button>
-                          ))}
-                          {serviceSearch &&
-                          services.length === 0 &&
-                          !searchingServices ? (
-                            <div className="rounded-2xl border border-dashed p-4 text-center text-sm text-muted-foreground">
-                              {commonT("noResults")}
-                            </div>
-                          ) : null}
-                        </div>
-                      </div>
-                    </SheetContent>
-                  </Sheet>
-
-                  <Sheet>
-                    <SheetTrigger
-                      render={<Button variant="outline" size="sm" />}
-                    >
-                      <Plus className="size-4" />
-                      {t("addPart")}
-                    </SheetTrigger>
-                    <SheetContent side="right" size="lg" className="w-full">
-                      <SheetHeader>
-                        <SheetTitle>{t("addPartTitle")}</SheetTitle>
-                        <SheetDescription>
-                          {t("searchPartsPlaceholder")}
-                        </SheetDescription>
-                      </SheetHeader>
-                      <div className="flex flex-col gap-4 p-4">
-                        <SearchInput
-                          placeholder={t("searchPartsPlaceholder")}
-                          onSearch={searchParts}
-                          loading={searchingParts}
-                          debounceMs={400}
-                        />
-                        <div className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto">
-                          {parts.map((part) => (
-                            <button
-                              key={part.id}
-                              type="button"
-                              className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-4 py-3 text-left transition-colors hover:bg-muted/30"
-                              onClick={() => {
-                                addPartLine(part);
-                                setPartSearch("");
-                                setParts([]);
-                              }}
-                            >
-                              <div>
-                                <Typography.Text className="font-medium">
-                                  {part.part_name}
-                                </Typography.Text>
-                              </div>
-                              <Typography.Text className="font-mono text-sm text-muted-foreground">
-                                {formatCurrency(Number(part.unit_price ?? 0))}
-                              </Typography.Text>
-                            </button>
-                          ))}
-                          {partSearch &&
-                          parts.length === 0 &&
-                          !searchingParts ? (
-                            <div className="rounded-2xl border border-dashed p-4 text-center text-sm text-muted-foreground">
-                              {commonT("noResults")}
-                            </div>
-                          ) : null}
-                        </div>
-                      </div>
-                    </SheetContent>
-                  </Sheet>
-
-                  <Button variant="outline" size="sm" onClick={addCustomLine}>
-                    <Plus className="size-4" />
-                    {t("addCustom")}
-                  </Button>
-                </div>
+          <section>
+            <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <Typography.H2 className="text-base font-medium">
+                  {t("lineItems")}
+                </Typography.H2>
+                <Typography.Muted className="mt-1">
+                  {t("noItemsDescription")}
+                </Typography.Muted>
               </div>
-            </CardHeader>
 
-            <CardContent>
-              {lines.length === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed py-14 text-center">
-                  <div className="rounded-full bg-muted p-3">
-                    <Receipt className="size-6 text-muted-foreground" />
-                  </div>
-                  <Typography.Text className="font-medium">
-                    {t("noItemsTitle")}
-                  </Typography.Text>
-                  <Typography.Muted className="max-w-sm">
-                    {t("noItemsDescription")}
-                  </Typography.Muted>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  {lines.map((line, index) => {
-                    const config = ITEM_TYPE_CONFIG[line.item_type];
-                    const TypeIcon = config.icon;
-
-                    return (
-                      <div
-                        key={line.id}
-                        className="rounded-2xl border border-border/60 bg-card p-4"
-                      >
-                        <div className="flex flex-col gap-4">
-                          <div className="flex flex-wrap items-start justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                              <div className="flex size-9 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground">
-                                {index + 1}
-                              </div>
-                              <div>
-                                <Badge
-                                  variant={config.badge}
-                                  className="rounded-full px-2.5 py-0.5"
-                                >
-                                  <TypeIcon className="size-3.5" />
-                                  {t(config.label)}
-                                </Badge>
-                              </div>
+              <div className="flex flex-wrap gap-2">
+                <Sheet>
+                  <SheetTrigger render={<Button variant="outline" size="sm" />}>
+                    <Plus className="size-4" />
+                    {t("addService")}
+                  </SheetTrigger>
+                  <SheetContent side="right" size="lg" className="w-full">
+                    <SheetHeader>
+                      <SheetTitle>{t("addServiceTitle")}</SheetTitle>
+                      <SheetDescription>
+                        {t("searchServicesPlaceholder")}
+                      </SheetDescription>
+                    </SheetHeader>
+                    <div className="flex flex-col gap-4 p-4">
+                      <SearchInput
+                        placeholder={t("searchServicesPlaceholder")}
+                        onSearch={searchServices}
+                        loading={searchingServices}
+                        debounceMs={400}
+                      />
+                      <div className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto">
+                        {services.map((service) => (
+                          <button
+                            key={service.id}
+                            type="button"
+                            className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-4 py-3 text-left transition-colors hover:bg-muted/30"
+                            onClick={() => {
+                              addServiceLine(service);
+                              setServiceSearch("");
+                              setServices([]);
+                            }}
+                          >
+                            <div>
+                              <Typography.Text className="font-medium">
+                                {service.name}
+                              </Typography.Text>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive"
-                              onClick={() => removeLine(line.id)}
-                            >
-                              {commonT("delete")}
-                            </Button>
-                          </div>
-
-                          <div className="grid gap-4 md:grid-cols-[minmax(0,1.8fr)_repeat(4,minmax(0,1fr))]">
-                            <Field>
-                              <FieldLabel>{t("description")}</FieldLabel>
-                              <FieldContent>
-                                <Input
-                                  value={line.description}
-                                  onChange={(event) =>
-                                    updateLine(line.id, {
-                                      description: event.target.value,
-                                    })
-                                  }
-                                  placeholder={t("descriptionPlaceholder")}
-                                  className="h-11"
-                                />
-                              </FieldContent>
-                            </Field>
-
-                            <Field>
-                              <FieldLabel>{t("qty")}</FieldLabel>
-                              <FieldContent>
-                                <Input
-                                  type="number"
-                                  min={1}
-                                  value={line.quantity}
-                                  onChange={(event) =>
-                                    updateLine(line.id, {
-                                      quantity: Math.max(
-                                        1,
-                                        Number(event.target.value) || 1,
-                                      ),
-                                    })
-                                  }
-                                  className="h-11 text-right"
-                                />
-                              </FieldContent>
-                            </Field>
-
-                            <Field>
-                              <FieldLabel>{t("unitPrice")}</FieldLabel>
-                              <FieldContent>
-                                <Input
-                                  type="number"
-                                  min={0}
-                                  value={line.unit_price}
-                                  onChange={(event) =>
-                                    updateLine(line.id, {
-                                      unit_price: Math.max(
-                                        0,
-                                        Number(event.target.value) || 0,
-                                      ),
-                                    })
-                                  }
-                                  className="h-11 text-right"
-                                />
-                              </FieldContent>
-                            </Field>
-
-                            <Field>
-                              <FieldLabel>{t("discountPercent")}</FieldLabel>
-                              <FieldContent>
-                                <Input
-                                  type="number"
-                                  min={0}
-                                  max={100}
-                                  value={line.discount_percentage}
-                                  onChange={(event) =>
-                                    updateLine(line.id, {
-                                      discount_percentage: Math.max(
-                                        0,
-                                        Math.min(
-                                          100,
-                                          Number(event.target.value) || 0,
-                                        ),
-                                      ),
-                                    })
-                                  }
-                                  className="h-11 text-right"
-                                />
-                              </FieldContent>
-                            </Field>
-
-                            <Field>
-                              <FieldLabel>{t("discountAmount")}</FieldLabel>
-                              <FieldContent>
-                                <Input
-                                  type="number"
-                                  min={0}
-                                  value={line.discount_amount}
-                                  onChange={(event) =>
-                                    updateLine(line.id, {
-                                      discount_amount: Math.max(
-                                        0,
-                                        Number(event.target.value) || 0,
-                                      ),
-                                    })
-                                  }
-                                  className="h-11 text-right"
-                                />
-                              </FieldContent>
-                            </Field>
-                          </div>
-
-                          <div className="flex items-center justify-between rounded-2xl bg-muted/30 px-4 py-3">
-                            <Typography.Text className="text-sm text-muted-foreground">
-                              {t("total")}
+                            <Typography.Text className="font-mono text-sm text-muted-foreground">
+                              {formatCurrency(
+                                Number(service.default_price ?? 0),
+                              )}
                             </Typography.Text>
-                            <Typography.Text className="font-mono font-semibold">
+                          </button>
+                        ))}
+                        {serviceSearch &&
+                        services.length === 0 &&
+                        !searchingServices ? (
+                          <div className="rounded-2xl border border-dashed p-4 text-center text-sm text-muted-foreground">
+                            {commonT("noResults")}
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+
+                <Sheet>
+                  <SheetTrigger render={<Button variant="outline" size="sm" />}>
+                    <Plus className="size-4" />
+                    {t("addPart")}
+                  </SheetTrigger>
+                  <SheetContent side="right" size="lg" className="w-full">
+                    <SheetHeader>
+                      <SheetTitle>{t("addPartTitle")}</SheetTitle>
+                      <SheetDescription>
+                        {t("searchPartsPlaceholder")}
+                      </SheetDescription>
+                    </SheetHeader>
+                    <div className="flex flex-col gap-4 p-4">
+                      <SearchInput
+                        placeholder={t("searchPartsPlaceholder")}
+                        onSearch={searchParts}
+                        loading={searchingParts}
+                        debounceMs={400}
+                      />
+                      <div className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto">
+                        {parts.map((part) => (
+                          <button
+                            key={part.id}
+                            type="button"
+                            className="flex items-center justify-between rounded-2xl border border-border/60 bg-card px-4 py-3 text-left transition-colors hover:bg-muted/30"
+                            onClick={() => {
+                              addPartLine(part);
+                              setPartSearch("");
+                              setParts([]);
+                            }}
+                          >
+                            <div>
+                              <Typography.Text className="font-medium">
+                                {part.part_name}
+                              </Typography.Text>
+                            </div>
+                            <Typography.Text className="font-mono text-sm text-muted-foreground">
+                              {formatCurrency(Number(part.unit_price ?? 0))}
+                            </Typography.Text>
+                          </button>
+                        ))}
+                        {partSearch && parts.length === 0 && !searchingParts ? (
+                          <div className="rounded-2xl border border-dashed p-4 text-center text-sm text-muted-foreground">
+                            {commonT("noResults")}
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+
+                <Button variant="outline" size="sm" onClick={addCustomLine}>
+                  <Plus className="size-4" />
+                  {t("addCustom")}
+                </Button>
+              </div>
+            </div>
+
+            {lines.length === 0 ? (
+              <div className="mt-4 flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed py-14 text-center">
+                <div className="rounded-full bg-muted p-3">
+                  <Receipt className="size-6 text-muted-foreground" />
+                </div>
+                <Typography.Text className="font-medium">
+                  {t("noItemsTitle")}
+                </Typography.Text>
+                <Typography.Muted className="max-w-sm">
+                  {t("noItemsDescription")}
+                </Typography.Muted>
+              </div>
+            ) : (
+              <div className="mt-4 flex flex-col">
+                {/* Header row */}
+                <div className="hidden gap-4 border-b border-border/60 px-1 pb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground md:grid md:grid-cols-[minmax(0,1.8fr)_repeat(4,minmax(0,1fr))_80px]">
+                  <span>{t("description")}</span>
+                  <span className="text-right">{t("qty")}</span>
+                  <span className="text-right">{t("unitPrice")}</span>
+                  <span className="text-right">{t("discountPercent")}</span>
+                  <span className="text-right">{t("discountAmount")}</span>
+                  <span className="text-right">{t("total")}</span>
+                </div>
+
+                {lines.map((line, index) => {
+                  const config = ITEM_TYPE_CONFIG[line.item_type];
+                  const TypeIcon = config.icon;
+
+                  return (
+                    <div
+                      key={line.id}
+                      className="border-b border-border/30 py-4 last:border-b-0"
+                    >
+                      <div className="flex flex-col gap-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex items-center gap-3">
+                            <div className="flex size-7 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+                              {index + 1}
+                            </div>
+                            <Badge
+                              variant={config.badge}
+                              className="rounded-full px-2 py-0.5"
+                            >
+                              <TypeIcon className="size-3" />
+                              {t(config.label)}
+                            </Badge>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-auto px-2 py-1 text-xs text-destructive"
+                            onClick={() => removeLine(line.id)}
+                          >
+                            {commonT("delete")}
+                          </Button>
+                        </div>
+
+                        <div className="grid gap-3 md:grid-cols-[minmax(0,1.8fr)_repeat(4,minmax(0,1fr))_80px] md:items-end">
+                          <Field>
+                            <FieldLabel className="md:sr-only">
+                              {t("description")}
+                            </FieldLabel>
+                            <FieldContent>
+                              <Input
+                                value={line.description}
+                                onChange={(event) =>
+                                  updateLine(line.id, {
+                                    description: event.target.value,
+                                  })
+                                }
+                                placeholder={t("descriptionPlaceholder")}
+                                className="h-10"
+                              />
+                            </FieldContent>
+                          </Field>
+
+                          <Field>
+                            <FieldLabel className="md:sr-only">
+                              {t("qty")}
+                            </FieldLabel>
+                            <FieldContent>
+                              <Input
+                                type="number"
+                                min={1}
+                                value={line.quantity}
+                                onChange={(event) =>
+                                  updateLine(line.id, {
+                                    quantity: Math.max(
+                                      1,
+                                      Number(event.target.value) || 1,
+                                    ),
+                                  })
+                                }
+                                className="h-10 text-right"
+                              />
+                            </FieldContent>
+                          </Field>
+
+                          <Field>
+                            <FieldLabel className="md:sr-only">
+                              {t("unitPrice")}
+                            </FieldLabel>
+                            <FieldContent>
+                              <Input
+                                type="number"
+                                min={0}
+                                value={line.unit_price}
+                                onChange={(event) =>
+                                  updateLine(line.id, {
+                                    unit_price: Math.max(
+                                      0,
+                                      Number(event.target.value) || 0,
+                                    ),
+                                  })
+                                }
+                                className="h-10 text-right"
+                              />
+                            </FieldContent>
+                          </Field>
+
+                          <Field>
+                            <FieldLabel className="md:sr-only">
+                              {t("discountPercent")}
+                            </FieldLabel>
+                            <FieldContent>
+                              <Input
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={line.discount_percentage}
+                                onChange={(event) =>
+                                  updateLine(line.id, {
+                                    discount_percentage: Math.max(
+                                      0,
+                                      Math.min(
+                                        100,
+                                        Number(event.target.value) || 0,
+                                      ),
+                                    ),
+                                  })
+                                }
+                                className="h-10 text-right"
+                              />
+                            </FieldContent>
+                          </Field>
+
+                          <Field>
+                            <FieldLabel className="md:sr-only">
+                              {t("discountAmount")}
+                            </FieldLabel>
+                            <FieldContent>
+                              <Input
+                                type="number"
+                                min={0}
+                                value={line.discount_amount}
+                                onChange={(event) =>
+                                  updateLine(line.id, {
+                                    discount_amount: Math.max(
+                                      0,
+                                      Number(event.target.value) || 0,
+                                    ),
+                                  })
+                                }
+                                className="h-10 text-right"
+                              />
+                            </FieldContent>
+                          </Field>
+
+                          <div className="flex items-end pb-1.5">
+                            <Typography.Text className="w-full text-right font-mono text-sm font-semibold">
                               {formatCurrency(line.line_total)}
                             </Typography.Text>
                           </div>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
 
-          <Card className="rounded-3xl border-border/60 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-base">{t("notes")}</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
+          <section>
+            <Typography.H2 className="mb-4 text-base font-medium">
+              {t("notes")}
+            </Typography.H2>
+            <div className="grid gap-4 md:grid-cols-2">
               <Field>
                 <FieldLabel>{t("notes")}</FieldLabel>
                 <FieldContent>
@@ -752,16 +757,16 @@ export default function NewEstimatePage() {
                   />
                 </FieldContent>
               </Field>
-            </CardContent>
-          </Card>
+            </div>
+          </section>
         </div>
 
         <div className="flex flex-col gap-6">
-          <Card className="rounded-3xl border-border/60 shadow-sm xl:sticky xl:top-6">
-            <CardHeader>
-              <CardTitle className="text-base">{t("summary")}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
+          <div className="rounded-2xl border border-border/40 bg-muted/15 p-5 xl:sticky xl:top-6">
+            <Typography.H2 className="mb-4 text-base font-medium">
+              {t("summary")}
+            </Typography.H2>
+            <div className="flex flex-col gap-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">{t("subtotal")}</span>
@@ -810,7 +815,7 @@ export default function NewEstimatePage() {
                   <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 p-3">
                     <div className="flex flex-col">
                       <Label className="text-xs font-medium">
-                        {org?.locale === "en" ? "VAT" : "НӨАТ"}
+                        {locale === "en" ? "VAT" : "НӨАТ"}
                       </Label>
                       <span className="text-[10px] text-muted-foreground">
                         {defaultTaxRate}%
@@ -877,8 +882,8 @@ export default function NewEstimatePage() {
                   {t("cancel")}
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>

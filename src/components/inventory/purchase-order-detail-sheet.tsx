@@ -6,9 +6,9 @@ import { useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DetailSheet } from "@/components/ui/detail-sheet";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
-import { SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import {
   Table,
   TableBody,
@@ -101,15 +101,15 @@ export function PurchaseOrderDetailSheet({
   const canOrder = po?.status === "draft";
 
   return (
-    <DetailSheet open={open} onOpenChange={onOpenChange} size="2xl">
-      <SheetHeader className="px-4 py-3 border-b border-border shrink-0">
+    <DetailDrawer open={open} onOpenChange={onOpenChange} size="2xl">
+      <DrawerHeader className="px-4 py-3 border-b border-border shrink-0">
         <DetailSheetHeader
           icon={Truck}
           iconLoading={isLoading}
           title={
-            <SheetTitle className="text-base">
+            <DrawerTitle className="text-base">
               {isLoading ? "Loading…" : po ? po.order_number : t("poNotFound")}
-            </SheetTitle>
+            </DrawerTitle>
           }
           subtitle={
             po ? (
@@ -125,7 +125,7 @@ export function PurchaseOrderDetailSheet({
             ) : undefined
           }
         />
-      </SheetHeader>
+      </DrawerHeader>
 
       {/* Loading */}
       {isLoading && (
@@ -277,6 +277,6 @@ export function PurchaseOrderDetailSheet({
           </div>
         </div>
       )}
-    </DetailSheet>
+    </DetailDrawer>
   );
 }

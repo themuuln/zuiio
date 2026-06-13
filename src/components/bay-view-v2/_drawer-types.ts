@@ -4,25 +4,44 @@ import type {
   WorkOrderDetail,
 } from "@/lib/types";
 
+/**
+ * Price match quality tiers for fallback pricing memory.
+ * - "exact": same make + same model as the current vehicle
+ * - "same_make": same make, different model (same generation/family)
+ * - "fallback": different make and model (closest available match)
+ */
+export type PriceMatchQuality = "exact" | "same_make" | "fallback";
+
+export type PricingMemoryInfo = {
+  /** The vehicle make this price was recorded on */
+  last_make?: string | null;
+  /** The vehicle model this price was recorded on */
+  last_model?: string | null;
+  /** How well this price matches the current vehicle */
+  match_quality?: PriceMatchQuality | null;
+};
+
 // ── Catalog item types that accept both org and global items ──
 
-export type CatalogServiceItem = Partial<ServiceCatalog> & {
-  id: string;
-  name: string;
-  name_mn?: string | null;
-  default_price: number;
-  last_price?: number | null;
-  _source?: "org" | "global";
-};
+export type CatalogServiceItem = Partial<ServiceCatalog> &
+  PricingMemoryInfo & {
+    id: string;
+    name: string;
+    name_mn?: string | null;
+    default_price: number;
+    last_price?: number | null;
+    _source?: "org" | "global";
+  };
 
-export type CatalogPartItem = Partial<PartsCatalogItem> & {
-  id: string;
-  name: string;
-  name_mn?: string | null;
-  default_price: number;
-  last_price?: number | null;
-  _source?: "org" | "global";
-};
+export type CatalogPartItem = Partial<PartsCatalogItem> &
+  PricingMemoryInfo & {
+    id: string;
+    name: string;
+    name_mn?: string | null;
+    default_price: number;
+    last_price?: number | null;
+    _source?: "org" | "global";
+  };
 
 // ── Hook param types ──
 

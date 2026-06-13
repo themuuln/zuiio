@@ -63,7 +63,7 @@ function parseAccounts(): SmtpAccount[] {
 /** Get the next transporter in round-robin order. */
 function getTransporter(): Transporter {
   parseAccounts();
-  const transporter = _transporters![_currentIndex % _transporters!.length];
+  const transporter = _transporters?.[_currentIndex % _transporters?.length];
   _currentIndex++;
   return transporter;
 }
@@ -71,7 +71,7 @@ function getTransporter(): Transporter {
 /** Get the from-email matching the current round-robin account. */
 function getFromEmail(): string {
   parseAccounts();
-  const account = _accounts![_currentIndex % _accounts!.length];
+  const account = _accounts?.[_currentIndex % _accounts?.length];
   return account.from;
 }
 
@@ -598,7 +598,7 @@ export async function testEmailConfig(): Promise<boolean> {
 /** Return the number of configured SMTP accounts (for diagnostics). */
 export function getSmtpAccountCount(): number {
   parseAccounts();
-  return _accounts!.length;
+  return _accounts?.length;
 }
 
 // ── Estimate Email ─────────────────────────────────────────────

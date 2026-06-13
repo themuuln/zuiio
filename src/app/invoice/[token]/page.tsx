@@ -217,7 +217,7 @@ export default function PublicInvoicePage() {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, t]);
 
   useEffect(() => {
     fetchInvoice();
@@ -240,7 +240,7 @@ export default function PublicInvoicePage() {
       { key: "discount_amount", label: t("discount"), format: "currency" },
       { key: "total_price", label: t("total"), format: "currency" },
     ],
-    [],
+    [t],
   );
 
   const paymentColumns: ExportColumn<InvoicePayment>[] = useMemo(
@@ -250,7 +250,7 @@ export default function PublicInvoicePage() {
       { key: "reference", label: t("reference") },
       { key: "amount", label: t("amount"), format: "currency" },
     ],
-    [],
+    [t],
   );
 
   const servicesTotal = items

@@ -24,11 +24,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Typography } from "@/components/ui/typography";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
-import {
-  SettingsBlock,
-  SettingsGroup,
-  SettingsRow,
-} from "./_settings-layout";
+import { SettingsBlock, SettingsGroup, SettingsRow } from "./_settings-layout";
 import { getNumberSetting, getStringSetting } from "./_settings-utils";
 
 export interface SettingsForm {
@@ -241,361 +237,364 @@ export function BusinessDefaultsForm({
         }}
       >
         <FieldGroup className="grid gap-3 sm:grid-cols-2">
-            <Field data-invalid={!!rhfForm.formState.errors.invoicePrefix}>
-              <FieldLabel htmlFor="invoicePrefix">
-                {t("invoicePrefix")}
-              </FieldLabel>
-              <FieldContent>
-                <div className="relative">
-                  <FileText className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="invoicePrefix"
-                    value={watchedInvoicePrefix}
-                    onChange={(e) =>
-                      rhfForm.setValue(
-                        "invoicePrefix",
-                        e.target.value.toUpperCase(),
-                      )
-                    }
-                    className="pl-9"
-                    maxLength={12}
-                    aria-invalid={!!rhfForm.formState.errors.invoicePrefix}
-                  />
-                </div>
-                {rhfForm.formState.errors.invoicePrefix && (
-                  <FieldError>
-                    {rhfForm.formState.errors.invoicePrefix.message}
-                  </FieldError>
-                )}
-              </FieldContent>
-            </Field>
+          <Field data-invalid={!!rhfForm.formState.errors.invoicePrefix}>
+            <FieldLabel htmlFor="invoicePrefix">
+              {t("invoicePrefix")}
+            </FieldLabel>
+            <FieldContent>
+              <div className="relative">
+                <FileText className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="invoicePrefix"
+                  value={watchedInvoicePrefix}
+                  onChange={(e) =>
+                    rhfForm.setValue(
+                      "invoicePrefix",
+                      e.target.value.toUpperCase(),
+                    )
+                  }
+                  className="pl-9"
+                  maxLength={12}
+                  aria-invalid={!!rhfForm.formState.errors.invoicePrefix}
+                />
+              </div>
+              {rhfForm.formState.errors.invoicePrefix && (
+                <FieldError>
+                  {rhfForm.formState.errors.invoicePrefix.message}
+                </FieldError>
+              )}
+            </FieldContent>
+          </Field>
 
-            <Field data-invalid={!!rhfForm.formState.errors.defaultCurrency}>
-              <FieldLabel htmlFor="defaultCurrency">
-                {t("defaultCurrency")}
-              </FieldLabel>
-              <FieldContent>
-                <Select
-                  value={rhfForm.watch("defaultCurrency")}
-                  onValueChange={(value) =>
-                    value && rhfForm.setValue("defaultCurrency", value)
+          <Field data-invalid={!!rhfForm.formState.errors.defaultCurrency}>
+            <FieldLabel htmlFor="defaultCurrency">
+              {t("defaultCurrency")}
+            </FieldLabel>
+            <FieldContent>
+              <Select
+                value={rhfForm.watch("defaultCurrency")}
+                onValueChange={(value) =>
+                  value && rhfForm.setValue("defaultCurrency", value)
+                }
+              >
+                <SelectTrigger
+                  id="defaultCurrency"
+                  className="h-9 w-full"
+                  aria-invalid={!!rhfForm.formState.errors.defaultCurrency}
+                >
+                  <CreditCard className="size-4 text-muted-foreground" />
+                  <SelectValue placeholder={t("selectCurrency")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="MNT">{t("currencyMnt")}</SelectItem>
+                  <SelectItem value="CNY">{t("currencyCny")}</SelectItem>
+                  <SelectItem value="USD">{t("currencyUsd")}</SelectItem>
+                  <SelectItem value="EUR">{t("currencyEur")}</SelectItem>
+                </SelectContent>
+              </Select>
+              {rhfForm.formState.errors.defaultCurrency && (
+                <FieldError>
+                  {rhfForm.formState.errors.defaultCurrency.message}
+                </FieldError>
+              )}
+            </FieldContent>
+          </Field>
+
+          <Field className="sm:col-span-2">
+            <FieldContent>
+              <SettingsGroup>
+                <SettingsRow
+                  label={currentLocale === "mn" ? "НӨАТ татвар" : "VAT"}
+                  description={
+                    currentLocale === "mn"
+                      ? "Нэмэгдсэн Өртөгт Татвар (10%)"
+                      : "Value Added Tax (10%)"
                   }
                 >
-                  <SelectTrigger
-                    id="defaultCurrency"
-                    className="h-9 w-full"
-                    aria-invalid={!!rhfForm.formState.errors.defaultCurrency}
-                  >
-                    <CreditCard className="size-4 text-muted-foreground" />
-                    <SelectValue placeholder={t("selectCurrency")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="MNT">{t("currencyMnt")}</SelectItem>
-                    <SelectItem value="CNY">{t("currencyCny")}</SelectItem>
-                    <SelectItem value="USD">{t("currencyUsd")}</SelectItem>
-                    <SelectItem value="EUR">{t("currencyEur")}</SelectItem>
-                  </SelectContent>
-                </Select>
-                {rhfForm.formState.errors.defaultCurrency && (
+                  <Switch
+                    id="nuatEnabled"
+                    checked={nuatEnabled}
+                    onCheckedChange={(checked) => {
+                      setNuatEnabled(checked);
+                      setForm((prev) => ({ ...prev, nuatEnabled: checked }));
+                    }}
+                  />
+                </SettingsRow>
+              </SettingsGroup>
+            </FieldContent>
+          </Field>
+
+          {/* НӨАТ Rate - only shown when enabled */}
+          {nuatEnabled && (
+            <Field data-invalid={!!rhfForm.formState.errors.defaultTaxRate}>
+              <FieldLabel htmlFor="defaultTaxRate">
+                {currentLocale === "mn" ? "НӨАТ хувь" : "VAT Rate"}
+              </FieldLabel>
+              <FieldContent>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="defaultTaxRate"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    className="w-24"
+                    aria-invalid={!!rhfForm.formState.errors.defaultTaxRate}
+                    {...rhfForm.register("defaultTaxRate")}
+                  />
+                  <span className="text-sm text-muted-foreground">%</span>
+                </div>
+                {rhfForm.formState.errors.defaultTaxRate && (
                   <FieldError>
-                    {rhfForm.formState.errors.defaultCurrency.message}
+                    {rhfForm.formState.errors.defaultTaxRate.message}
                   </FieldError>
                 )}
               </FieldContent>
             </Field>
+          )}
 
-            <Field className="sm:col-span-2">
-              <FieldContent>
-                <SettingsGroup>
-                  <SettingsRow
-                    label={currentLocale === "mn" ? "НӨАТ татвар" : "VAT"}
-                    description={
-                      currentLocale === "mn"
-                        ? "Нэмэгдсэн Өртөгт Татвар (10%)"
-                        : "Value Added Tax (10%)"
-                    }
-                  >
-                    <Switch
-                      id="nuatEnabled"
-                      checked={nuatEnabled}
-                      onCheckedChange={(checked) => {
-                        setNuatEnabled(checked);
-                        setForm((prev) => ({ ...prev, nuatEnabled: checked }));
-                      }}
-                    />
-                  </SettingsRow>
-                </SettingsGroup>
-              </FieldContent>
-            </Field>
+          <Field className="sm:col-span-2">
+            <FieldContent>
+              <SettingsGroup>
+                <SettingsRow
+                  label={
+                    currentLocale === "mn" ? "НДШ тооцоо" : "Social Insurance"
+                  }
+                  description={
+                    currentLocale === "mn"
+                      ? "Нийгмийн даатгалын шимтгэл"
+                      : "Payroll tax tracking"
+                  }
+                >
+                  <Switch
+                    id="ndshEnabled"
+                    checked={formData.ndshEnabled}
+                    onCheckedChange={(checked) => {
+                      setForm((prev) => ({ ...prev, ndshEnabled: checked }));
+                    }}
+                  />
+                </SettingsRow>
+              </SettingsGroup>
+            </FieldContent>
+          </Field>
 
-            {/* НӨАТ Rate - only shown when enabled */}
-            {nuatEnabled && (
-              <Field data-invalid={!!rhfForm.formState.errors.defaultTaxRate}>
-                <FieldLabel htmlFor="defaultTaxRate">
-                  {currentLocale === "mn" ? "НӨАТ хувь" : "VAT Rate"}
+          {/* НДШ Rates - only shown when enabled */}
+          {formData.ndshEnabled && (
+            <>
+              <Field>
+                <FieldLabel>
+                  {currentLocale === "mn" ? "Ажил олгогч НДШ" : "Employer НДШ"}
                 </FieldLabel>
                 <FieldContent>
                   <div className="flex items-center gap-2">
                     <Input
-                      id="defaultTaxRate"
                       type="number"
                       min="0"
                       max="100"
                       step="0.1"
                       className="w-24"
-                      aria-invalid={!!rhfForm.formState.errors.defaultTaxRate}
-                      {...rhfForm.register("defaultTaxRate")}
+                      value={formData.ndshEmployerRate}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          ndshEmployerRate: e.target.value,
+                        }))
+                      }
                     />
                     <span className="text-sm text-muted-foreground">%</span>
                   </div>
-                  {rhfForm.formState.errors.defaultTaxRate && (
-                    <FieldError>
-                      {rhfForm.formState.errors.defaultTaxRate.message}
-                    </FieldError>
-                  )}
                 </FieldContent>
               </Field>
-            )}
-
-            <Field className="sm:col-span-2">
-              <FieldContent>
-                <SettingsGroup>
-                  <SettingsRow
-                    label={
-                      currentLocale === "mn" ? "НДШ тооцоо" : "Social Insurance"
-                    }
-                    description={
-                      currentLocale === "mn"
-                        ? "Нийгмийн даатгалын шимтгэл"
-                        : "Payroll tax tracking"
-                    }
-                  >
-                    <Switch
-                      id="ndshEnabled"
-                      checked={formData.ndshEnabled}
-                      onCheckedChange={(checked) => {
-                        setForm((prev) => ({ ...prev, ndshEnabled: checked }));
-                      }}
-                    />
-                  </SettingsRow>
-                </SettingsGroup>
-              </FieldContent>
-            </Field>
-
-            {/* НДШ Rates - only shown when enabled */}
-            {formData.ndshEnabled && (
-              <>
-                <Field>
-                  <FieldLabel>
-                    {currentLocale === "mn"
-                      ? "Ажил олгогч НДШ"
-                      : "Employer НДШ"}
-                  </FieldLabel>
-                  <FieldContent>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                        className="w-24"
-                        value={formData.ndshEmployerRate}
-                        onChange={(e) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            ndshEmployerRate: e.target.value,
-                          }))
-                        }
-                      />
-                      <span className="text-sm text-muted-foreground">%</span>
-                    </div>
-                  </FieldContent>
-                </Field>
-                <Field>
-                  <FieldLabel>
-                    {currentLocale === "mn" ? "Ажилтан НДШ" : "Employee НДШ"}
-                  </FieldLabel>
-                  <FieldContent>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                        className="w-24"
-                        value={formData.ndshEmployeeRate}
-                        onChange={(e) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            ndshEmployeeRate: e.target.value,
-                          }))
-                        }
-                      />
-                      <span className="text-sm text-muted-foreground">%</span>
-                    </div>
-                  </FieldContent>
-                </Field>
-              </>
-            )}
-
-            <Field className="sm:col-span-2">
-              <FieldContent>
-                <SettingsGroup>
-                  <SettingsRow
-                    label={currentLocale === "mn" ? "Э-Баримт" : "E-Invoice"}
-                    description={
-                      currentLocale === "mn"
-                        ? "Цахим нэхэмжлэл (Татварын ерөнхий газар)"
-                        : "Electronic invoice (General Taxation Authority)"
-                    }
-                  >
-                    <Switch
-                      id="einvoiceEnabled"
-                      checked={formData.einvoiceEnabled}
-                      onCheckedChange={(checked) => {
-                        setForm((prev) => ({
-                          ...prev,
-                          einvoiceEnabled: checked,
-                        }));
-                      }}
-                    />
-                  </SettingsRow>
-                </SettingsGroup>
-              </FieldContent>
-            </Field>
-
-            {/* E-Invoice Settings - only shown when enabled */}
-            {formData.einvoiceEnabled && (
-              <>
-                <Field>
-                  <FieldLabel>
-                    {currentLocale === "mn" ? "Merchant ID" : "Merchant ID"}
-                  </FieldLabel>
-                  <FieldContent>
+              <Field>
+                <FieldLabel>
+                  {currentLocale === "mn" ? "Ажилтан НДШ" : "Employee НДШ"}
+                </FieldLabel>
+                <FieldContent>
+                  <div className="flex items-center gap-2">
                     <Input
-                      value={formData.einvoiceMerchantId}
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      className="w-24"
+                      value={formData.ndshEmployeeRate}
                       onChange={(e) =>
                         setForm((prev) => ({
                           ...prev,
-                          einvoiceMerchantId: e.target.value,
+                          ndshEmployeeRate: e.target.value,
                         }))
                       }
-                      placeholder={t("merchantIdPlaceholder")}
                     />
-                  </FieldContent>
-                </Field>
-                <Field>
-                  <FieldLabel>
-                    {currentLocale === "mn" ? "API Түлхүүр" : "API Key"}
-                  </FieldLabel>
-                  <FieldContent>
-                    <Input
-                      type="password"
-                      value={formData.einvoiceApiKey}
-                      onChange={(e) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          einvoiceApiKey: e.target.value,
-                        }))
-                      }
-                      placeholder={t("apiKeyPlaceholder")}
-                    />
-                  </FieldContent>
-                </Field>
-              </>
-            )}
-
-            <Field data-invalid={!!rhfForm.formState.errors.timezone}>
-              <FieldLabel htmlFor="timezone">{t("timezone")}</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="timezone"
-                  aria-invalid={!!rhfForm.formState.errors.timezone}
-                  {...rhfForm.register("timezone")}
-                />
-                {rhfForm.formState.errors.timezone && (
-                  <FieldError>
-                    {rhfForm.formState.errors.timezone.message}
-                  </FieldError>
-                )}
-              </FieldContent>
-            </Field>
-
-            <Field data-invalid={!!rhfForm.formState.errors.dateFormat}>
-              <FieldLabel htmlFor="dateFormat">{t("dateFormat")}</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="dateFormat"
-                  aria-invalid={!!rhfForm.formState.errors.dateFormat}
-                  {...rhfForm.register("dateFormat")}
-                />
-                {rhfForm.formState.errors.dateFormat && (
-                  <FieldError>
-                    {rhfForm.formState.errors.dateFormat.message}
-                  </FieldError>
-                )}
-              </FieldContent>
-            </Field>
-
-            <Field data-invalid={!!rhfForm.formState.errors.language}>
-              <FieldLabel htmlFor="language">{t("defaultLanguage")}</FieldLabel>
-              <FieldContent>
-                <Select
-                  value={rhfForm.watch("language")}
-                  onValueChange={(value) =>
-                    value && rhfForm.setValue("language", value)
-                  }
-                >
-                  <SelectTrigger
-                    id="language"
-                    className="h-9 w-full"
-                    aria-invalid={!!rhfForm.formState.errors.language}
-                  >
-                    <Globe className="size-4 text-muted-foreground" />
-                    <SelectValue placeholder={t("selectLanguage")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="mn">{t("languageMn")}</SelectItem>
-                    <SelectItem value="en">{t("languageEn")}</SelectItem>
-                  </SelectContent>
-                </Select>
-                {rhfForm.formState.errors.language && (
-                  <FieldError>
-                    {rhfForm.formState.errors.language.message}
-                  </FieldError>
-                )}
-                {currentLocale !== watchedLanguage && (
-                  <Typography.Muted className="text-xs text-muted-foreground">
-                    {t("languageChangeAfterSave")}
-                  </Typography.Muted>
-                )}
-              </FieldContent>
-            </Field>
-          </FieldGroup>
-
-          {(error || successMessage) && (
-            <div
-              className={
-                error
-                  ? "rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"
-                  : "rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
-              }
-            >
-              {error ?? successMessage}
-            </div>
+                    <span className="text-sm text-muted-foreground">%</span>
+                  </div>
+                </FieldContent>
+              </Field>
+            </>
           )}
 
-          <div className="flex items-center justify-between gap-4 border-t border-border pt-3">
-            <Typography.Muted className="text-xs text-muted-foreground">
-              {watchedLanguage !== currentLocale
-                ? t("langWillReload")
-                : t("allChangesSaved")}
-            </Typography.Muted>
-            <Button type="submit" disabled={saving} size="sm" className="min-w-20">
-              {saving ? t("saving") : t("save")}
-            </Button>
+          <Field className="sm:col-span-2">
+            <FieldContent>
+              <SettingsGroup>
+                <SettingsRow
+                  label={currentLocale === "mn" ? "Э-Баримт" : "E-Invoice"}
+                  description={
+                    currentLocale === "mn"
+                      ? "Цахим нэхэмжлэл (Татварын ерөнхий газар)"
+                      : "Electronic invoice (General Taxation Authority)"
+                  }
+                >
+                  <Switch
+                    id="einvoiceEnabled"
+                    checked={formData.einvoiceEnabled}
+                    onCheckedChange={(checked) => {
+                      setForm((prev) => ({
+                        ...prev,
+                        einvoiceEnabled: checked,
+                      }));
+                    }}
+                  />
+                </SettingsRow>
+              </SettingsGroup>
+            </FieldContent>
+          </Field>
+
+          {/* E-Invoice Settings - only shown when enabled */}
+          {formData.einvoiceEnabled && (
+            <>
+              <Field>
+                <FieldLabel>
+                  {currentLocale === "mn" ? "Merchant ID" : "Merchant ID"}
+                </FieldLabel>
+                <FieldContent>
+                  <Input
+                    value={formData.einvoiceMerchantId}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        einvoiceMerchantId: e.target.value,
+                      }))
+                    }
+                    placeholder={t("merchantIdPlaceholder")}
+                  />
+                </FieldContent>
+              </Field>
+              <Field>
+                <FieldLabel>
+                  {currentLocale === "mn" ? "API Түлхүүр" : "API Key"}
+                </FieldLabel>
+                <FieldContent>
+                  <Input
+                    type="password"
+                    value={formData.einvoiceApiKey}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        einvoiceApiKey: e.target.value,
+                      }))
+                    }
+                    placeholder={t("apiKeyPlaceholder")}
+                  />
+                </FieldContent>
+              </Field>
+            </>
+          )}
+
+          <Field data-invalid={!!rhfForm.formState.errors.timezone}>
+            <FieldLabel htmlFor="timezone">{t("timezone")}</FieldLabel>
+            <FieldContent>
+              <Input
+                id="timezone"
+                aria-invalid={!!rhfForm.formState.errors.timezone}
+                {...rhfForm.register("timezone")}
+              />
+              {rhfForm.formState.errors.timezone && (
+                <FieldError>
+                  {rhfForm.formState.errors.timezone.message}
+                </FieldError>
+              )}
+            </FieldContent>
+          </Field>
+
+          <Field data-invalid={!!rhfForm.formState.errors.dateFormat}>
+            <FieldLabel htmlFor="dateFormat">{t("dateFormat")}</FieldLabel>
+            <FieldContent>
+              <Input
+                id="dateFormat"
+                aria-invalid={!!rhfForm.formState.errors.dateFormat}
+                {...rhfForm.register("dateFormat")}
+              />
+              {rhfForm.formState.errors.dateFormat && (
+                <FieldError>
+                  {rhfForm.formState.errors.dateFormat.message}
+                </FieldError>
+              )}
+            </FieldContent>
+          </Field>
+
+          <Field data-invalid={!!rhfForm.formState.errors.language}>
+            <FieldLabel htmlFor="language">{t("defaultLanguage")}</FieldLabel>
+            <FieldContent>
+              <Select
+                value={rhfForm.watch("language")}
+                onValueChange={(value) =>
+                  value && rhfForm.setValue("language", value)
+                }
+              >
+                <SelectTrigger
+                  id="language"
+                  className="h-9 w-full"
+                  aria-invalid={!!rhfForm.formState.errors.language}
+                >
+                  <Globe className="size-4 text-muted-foreground" />
+                  <SelectValue placeholder={t("selectLanguage")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="mn">{t("languageMn")}</SelectItem>
+                  <SelectItem value="en">{t("languageEn")}</SelectItem>
+                </SelectContent>
+              </Select>
+              {rhfForm.formState.errors.language && (
+                <FieldError>
+                  {rhfForm.formState.errors.language.message}
+                </FieldError>
+              )}
+              {currentLocale !== watchedLanguage && (
+                <Typography.Muted className="text-xs text-muted-foreground">
+                  {t("languageChangeAfterSave")}
+                </Typography.Muted>
+              )}
+            </FieldContent>
+          </Field>
+        </FieldGroup>
+
+        {(error || successMessage) && (
+          <div
+            className={
+              error
+                ? "rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+                : "rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+            }
+          >
+            {error ?? successMessage}
           </div>
-        </form>
+        )}
+
+        <div className="flex items-center justify-between gap-4 border-t border-border pt-3">
+          <Typography.Muted className="text-xs text-muted-foreground">
+            {watchedLanguage !== currentLocale
+              ? t("langWillReload")
+              : t("allChangesSaved")}
+          </Typography.Muted>
+          <Button
+            type="submit"
+            disabled={saving}
+            size="sm"
+            className="min-w-20"
+          >
+            {saving ? t("saving") : t("save")}
+          </Button>
+        </div>
+      </form>
     </SettingsBlock>
   );
 }

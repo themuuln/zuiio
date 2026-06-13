@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { logger } from "@/lib/logger";
 import { reportServerError } from "@/lib/sentry-report-server";
 
 // System user used as created_by/updated_by for public booking records
@@ -208,7 +209,8 @@ async function sendBookingNotification(
     settings?.notification_email ?? branch?.email ?? null;
 
   if (!notificationEmail) {
-    console.warn(
+    logger.warn(
+      { orgId },
       `No notification email configured for org ${orgId} — booking created without notification`,
     );
     return;

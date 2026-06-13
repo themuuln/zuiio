@@ -3,6 +3,7 @@ import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 import { resolveBranchId, withBranchFilter } from "@/lib/supabase/with-branch";
 import type {
   CreateCustomerParams,
@@ -315,8 +316,13 @@ export async function createCustomer(
         [existing.first_name, existing.last_name].filter(Boolean).join(" ") ||
         existing.company_name ||
         existing.phone;
-      console.warn(
-        `[duplicate] Phone ${params.phone.trim()} already belongs to "${existingName}" (${existing.id})`,
+      logger.warn(
+        {
+          existingCustomerId: existing.id,
+          existingName,
+          phone: params.phone.trim(),
+        },
+        `Phone ${params.phone.trim()} already belongs to "${existingName}" (${existing.id})`,
       );
     }
   }
@@ -336,8 +342,13 @@ export async function createCustomer(
         [existing.first_name, existing.last_name].filter(Boolean).join(" ") ||
         existing.company_name ||
         existing.email;
-      console.warn(
-        `[duplicate] Email ${params.email.trim()} already belongs to "${existingName}" (${existing.id})`,
+      logger.warn(
+        {
+          existingCustomerId: existing.id,
+          existingName,
+          email: params.email.trim(),
+        },
+        `Email ${params.email.trim()} already belongs to "${existingName}" (${existing.id})`,
       );
     }
   }

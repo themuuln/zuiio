@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
 import { useClientNow } from "@/hooks/use-client-now";
 import type { ExportColumn } from "@/lib/export";
@@ -56,7 +56,6 @@ export function TransactionsTab({
   filteredWorkOrders,
   data,
 }: TransactionsTabProps) {
-  const t = useTranslations();
   const financeT = useTranslations("finance");
   const now = useClientNow();
 
@@ -291,12 +290,7 @@ export function TransactionsTab({
           />
         }
       />
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold">
-            {t("dashboard.recentWorkOrders")}
-          </CardTitle>
-        </CardHeader>
+      <Card className="py-0">
         <CardContent className="p-0">
           <DataTable
             columns={columns}

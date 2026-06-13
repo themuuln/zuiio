@@ -3,6 +3,7 @@ import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 import { getWorkOrderDetail as _getWorkOrderDetail } from "@/lib/services/_queries/work-order-queries";
 import { resolveBranchId, withBranchFilter } from "@/lib/supabase/with-branch";
 import type {
@@ -55,7 +56,8 @@ export async function getWorkOrders(
         discount_percentage, odometer_at_service, queue_order, notes,
         completed_at, started_at, loss_reason,
         customer:customers(first_name, last_name, phone),
-        vehicle:vehicles(plate_number, make, model)
+        vehicle:vehicles(plate_number, make, model),
+        mechanic_profile:profiles!work_orders_mechanic_id_fkey(full_name, avatar_url)
       `,
       usePagination ? { count: "exact" } : undefined,
     )
@@ -96,99 +98,92 @@ export async function getWorkOrders(
   const { data, error } = await query;
   if (error) throw new Error(error.message ?? "Failed to fetch work orders");
 
-  const rows = (data ?? []) as unknown as Array<
-    WorkOrderWithRefs & { mechanic_id: string | null }
-  >;
-  const mechanicIds = [
-    ...new Set(rows.flatMap((r) => (r.mechanic_id ? [r.mechanic_id] : []))),
-  ] as string[];
-  const mechanicMap = new Map<
-    string,
-    { full_name: string | null; avatar_url: string | null }
-  >();
-  if (mechanicIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, full_name, avatar_url")
-      .in("id", mechanicIds);
-    for (const p of profiles ?? []) {
-      mechanicMap.set(p.id, {
-        full_name: p.full_name,
-        avatar_url: p.avatar_url,
-      });
-    }
-  }
+  const rows = (data ?? []) as unknown as Array<{
+    id: string;
+    organization_id: string;
+    branch_id: string | null;
+    customer_id: string | null;
+    vehicle_id: string | null;
+    status: string;
+    complaint: string | null;
+    description: string | null;
+    bay_number: number | null;
+    created_at: string;
+    updated_at: string | null;
+    mechanic_id: string | null;
+    total: number | null;
+    subtotal: number | null;
+    discount_total: number | null;
+    discount_amount: number | null;
+    discount_percentage: number | null;
+    odometer_at_service: number | null;
+    queue_order: number | null;
+    notes: string | null;
+    completed_at: string | null;
+    started_at: string | null;
+    loss_reason: string | null;
+    customer: {
+      first_name: string | null;
+      last_name: string | null;
+      phone: string | null;
+    } | null;
+    vehicle: {
+      plate_number: string | null;
+      make: string | null;
+      model: string | null;
+    } | null;
+    mechanic_profile: {
+      full_name: string | null;
+      avatar_url: string | null;
+    } | null;
+  }>;
 
+  // Fetch costs from the work_order_costs view separately (it's a view, not a table,
+  // so FK-based joins are not supported by the schema cache).
   const workOrderIds = rows.map((r) => r.id);
-  const costMap = new Map<
+  const costsMap = new Map<
     string,
     {
-      services_cost: number;
-      parts_cost: number;
-      services_revenue: number;
-      parts_revenue: number;
+      services_cost: number | null;
+      parts_cost: number | null;
+      services_revenue: number | null;
+      parts_revenue: number | null;
+      gross_profit: number | null;
+      margin_percent: number | null;
     }
   >();
 
   if (workOrderIds.length > 0) {
-    const { data: servicesData } = await supabase
-      .from("work_order_services")
-      .select("work_order_id, unit_cost, quantity, final_price")
+    const { data: costRows } = await supabase
+      .from("work_order_costs")
+      .select(
+        "work_order_id, services_cost, parts_cost, services_revenue, parts_revenue, gross_profit, margin_percent",
+      )
       .in("work_order_id", workOrderIds);
 
-    const { data: partsData } = await supabase
-      .from("work_order_parts")
-      .select("work_order_id, unit_cost, quantity, final_price")
-      .in("work_order_id", workOrderIds);
-
-    for (const id of workOrderIds) {
-      costMap.set(id, {
-        services_cost: 0,
-        parts_cost: 0,
-        services_revenue: 0,
-        parts_revenue: 0,
-      });
-    }
-    for (const s of servicesData ?? []) {
-      const entry = costMap.get(s.work_order_id);
-      if (entry) {
-        entry.services_cost += Number(s.unit_cost) * s.quantity;
-        entry.services_revenue += Number(s.final_price);
-      }
-    }
-    for (const p of partsData ?? []) {
-      const entry = costMap.get(p.work_order_id);
-      if (entry) {
-        entry.parts_cost += Number(p.unit_cost) * p.quantity;
-        entry.parts_revenue += Number(p.final_price);
+    if (costRows) {
+      for (const c of costRows) {
+        costsMap.set(c.work_order_id, c);
       }
     }
   }
 
   return rows.map((r) => {
-    const costs = costMap.get(r.id);
-    const services_revenue = costs?.services_revenue ?? 0;
-    const parts_revenue = costs?.parts_revenue ?? 0;
-    const total_revenue = services_revenue + parts_revenue;
-    const total_cost = (costs?.services_cost ?? 0) + (costs?.parts_cost ?? 0);
-    const gross_profit = total_revenue - total_cost;
-    const margin_percent =
-      total_revenue > 0 ? (gross_profit / total_revenue) * 100 : 0;
+    const c = costsMap.get(r.id);
     return {
       ...r,
       grand_total: r.total ?? 0,
-      services_cost: costs?.services_cost ?? 0,
-      parts_cost: costs?.parts_cost ?? 0,
-      services_revenue,
-      parts_revenue,
-      gross_profit,
-      margin_percent: Math.round(margin_percent * 100) / 100,
-      mechanic: r.mechanic_id
-        ? (mechanicMap.get(r.mechanic_id) ?? {
-            full_name: null,
-            avatar_url: null,
-          })
-        : null,
+      services_cost: c?.services_cost ?? 0,
+      parts_cost: c?.parts_cost ?? 0,
+      services_revenue: c?.services_revenue ?? 0,
+      parts_revenue: c?.parts_revenue ?? 0,
+      gross_profit: c?.gross_profit ?? 0,
+      margin_percent: c?.margin_percent ?? 0,
+      mechanic: r.mechanic_profile
+        ? r.mechanic_profile
+        : r.mechanic_id
+          ? { full_name: null, avatar_url: null }
+          : null,
     };
   }) as unknown as WorkOrderWithRefs[];
 }
@@ -336,8 +331,9 @@ export async function recalculateWorkOrderTotals(
   const parts = partsResult?.data ?? [];
   const wo = woResult?.data ?? null;
   if (!wo) {
-    console.warn(
-      `[WO ${workOrderId}] recalculateWorkOrderTotals: work order not found, skipping totals update`,
+    logger.warn(
+      { workOrderId },
+      `recalculateWorkOrderTotals: work order not found, skipping totals update`,
     );
     return;
   }

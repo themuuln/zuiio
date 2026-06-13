@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Typography } from "@/components/ui/typography";
 import { Link, useRouter } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -41,7 +40,7 @@ interface TaxReportSummary {
 export default function TaxReportPage() {
   const t = useTranslations("reports");
   const commonT = useTranslations("common");
-  const router = useRouter();
+  const _router = useRouter();
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId ?? "";
 
@@ -85,7 +84,14 @@ export default function TaxReportPage() {
   const exportCSV = () => {
     if (!report) return;
 
-    const headers = ["Type", "Date", "Reference", "Description", "Amount", "Tax"];
+    const headers = [
+      "Type",
+      "Date",
+      "Reference",
+      "Description",
+      "Amount",
+      "Tax",
+    ];
     const rows = report.items.map((item) => [
       item.type,
       item.date,
@@ -165,7 +171,9 @@ export default function TaxReportPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardContent className="pt-6">
-                <Typography.Muted className="text-xs">{t("totalSales")}</Typography.Muted>
+                <Typography.Muted className="text-xs">
+                  {t("totalSales")}
+                </Typography.Muted>
                 <Typography.Text className="text-lg font-semibold">
                   {formatCurrency(report.summary.totalSalesWithTax)}
                 </Typography.Text>
@@ -176,7 +184,9 @@ export default function TaxReportPage() {
             </Card>
             <Card>
               <CardContent className="pt-6">
-                <Typography.Muted className="text-xs">{t("vatCollected")}</Typography.Muted>
+                <Typography.Muted className="text-xs">
+                  {t("vatCollected")}
+                </Typography.Muted>
                 <Typography.Text className="text-lg font-semibold text-primary">
                   {formatCurrency(report.summary.totalTaxCollected)}
                 </Typography.Text>
@@ -184,7 +194,9 @@ export default function TaxReportPage() {
             </Card>
             <Card>
               <CardContent className="pt-6">
-                <Typography.Muted className="text-xs">{t("totalPurchases")}</Typography.Muted>
+                <Typography.Muted className="text-xs">
+                  {t("totalPurchases")}
+                </Typography.Muted>
                 <Typography.Text className="text-lg font-semibold">
                   {formatCurrency(report.summary.totalPurchasesWithTax)}
                 </Typography.Text>
@@ -195,7 +207,9 @@ export default function TaxReportPage() {
             </Card>
             <Card>
               <CardContent className="pt-6">
-                <Typography.Muted className="text-xs">{t("vatPaid")}</Typography.Muted>
+                <Typography.Muted className="text-xs">
+                  {t("vatPaid")}
+                </Typography.Muted>
                 <Typography.Text className="text-lg font-semibold">
                   {formatCurrency(report.summary.totalTaxPaid)}
                 </Typography.Text>
@@ -204,11 +218,19 @@ export default function TaxReportPage() {
           </div>
 
           {/* Net НӨАТ */}
-          <Card className={report.summary.netTaxPayable > 0 ? "border-destructive/50" : "border-emerald-500/50"}>
+          <Card
+            className={
+              report.summary.netTaxPayable > 0
+                ? "border-destructive/50"
+                : "border-emerald-500/50"
+            }
+          >
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <Typography.Muted className="text-xs">{t("netVatPayable")}</Typography.Muted>
+                  <Typography.Muted className="text-xs">
+                    {t("netVatPayable")}
+                  </Typography.Muted>
                   <Typography.Text className="text-2xl font-bold">
                     {formatCurrency(report.summary.netTaxPayable)}
                   </Typography.Text>
@@ -269,11 +291,15 @@ export default function TaxReportPage() {
                                 : "bg-muted text-muted-foreground"
                             }`}
                           >
-                            {item.type === "invoice" ? t("sale") : t("purchase")}
+                            {item.type === "invoice"
+                              ? t("sale")
+                              : t("purchase")}
                           </span>
                         </td>
                         <td className="py-2">{item.date}</td>
-                        <td className="py-2 font-mono text-xs">{item.reference}</td>
+                        <td className="py-2 font-mono text-xs">
+                          {item.reference}
+                        </td>
                         <td className="py-2">{item.description}</td>
                         <td className="py-2 text-right font-mono">
                           {formatCurrency(item.amountWithTax)}

@@ -154,24 +154,31 @@ export const Toolbar = React.memo(function Toolbar({
               const Icon = opt.icon;
               const isActive = viewMode === opt.mode;
               return (
-                <button
-                  key={opt.mode}
-                  type="button"
-                  onClick={() => setViewMode(opt.mode)}
-                  aria-pressed={isActive}
-                  className={cn(
-                    "flex items-center gap-2 rounded-md px-3 text-xs font-semibold transition-all cursor-pointer h-full",
-                    isActive
-                      ? "bg-background text-foreground shadow-sm font-bold border border-border/30"
-                      : "text-muted-foreground/80 hover:bg-muted/70 hover:text-foreground",
-                  )}
-                  title={t(opt.labelKey)}
-                >
-                  <Icon className="size-4" />
-                  <span className="hidden md:inline text-xs">
+                <Tooltip key={opt.mode}>
+                  <TooltipTrigger
+                    render={
+                      <button
+                        type="button"
+                        onClick={() => setViewMode(opt.mode)}
+                        aria-pressed={isActive}
+                        className={cn(
+                          "flex items-center justify-center rounded-md px-2 text-xs font-semibold transition-all cursor-pointer h-full",
+                          isActive
+                            ? "bg-background text-foreground shadow-sm font-bold border border-border/30"
+                            : "text-muted-foreground/80 hover:bg-muted/70 hover:text-foreground",
+                        )}
+                      />
+                    }
+                  >
+                    <Icon className="size-4" />
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="bottom"
+                    className="text-xs font-semibold"
+                  >
                     {t(opt.labelKey)}
-                  </span>
-                </button>
+                  </TooltipContent>
+                </Tooltip>
               );
             })}
           </div>
@@ -213,8 +220,8 @@ export const Toolbar = React.memo(function Toolbar({
                 {
                   key: "New",
                   label: t("newStatus"),
-                  dot: STATUS_DOT["New"],
-                  activeBg: STATUS_FILTER_ACTIVE["New"],
+                  dot: STATUS_DOT.New,
+                  activeBg: STATUS_FILTER_ACTIVE.New,
                 },
                 {
                   key: "Ready for Pickup",

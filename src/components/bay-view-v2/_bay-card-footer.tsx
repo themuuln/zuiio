@@ -20,7 +20,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { BayCardActionHandlers, BayCardWorkOrder } from "./_bay-card-types";
+import type {
+  BayCardActionHandlers,
+  BayCardWorkOrder,
+} from "./_bay-card-types";
 
 interface BayCardFooterProps
   extends Pick<
@@ -51,67 +54,67 @@ export function BayCardFooter({
   const t = useTranslations("bayView");
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2">
+    <div className="flex items-center gap-2 px-3 py-2.5">
       {workOrder.status === "New" && (
         <Button
-          size="xs"
-          className="gap-1 rounded bg-blue-600 text-xs font-bold text-white shadow-sm hover:bg-blue-700"
+          size="sm"
+          className="h-8 gap-1.5 rounded-lg bg-blue-600 text-xs font-bold text-white shadow-sm hover:bg-blue-700"
           onClick={(e) => {
             e.stopPropagation();
             onStatusChange(workOrder.id, "Diagnosing");
           }}
           disabled={isPending}
         >
-          <Play className="size-3" /> Start
+          <Play className="size-3.5" /> Start
         </Button>
       )}
       {workOrder.status === "Diagnosing" && (
         <Button
-          size="xs"
-          className="gap-1 rounded bg-indigo-600 text-xs font-bold text-white shadow-sm hover:bg-indigo-700"
+          size="sm"
+          className="h-8 gap-1.5 rounded-lg bg-indigo-600 text-xs font-bold text-white shadow-sm hover:bg-indigo-700"
           onClick={(e) => {
             e.stopPropagation();
             onStatusChange(workOrder.id, "In Progress");
           }}
           disabled={isPending}
         >
-          <Wrench className="size-3" /> Repair
+          <Wrench className="size-3.5" /> Repair
         </Button>
       )}
       {workOrder.status === "In Progress" && (
         <Button
-          size="xs"
-          className="gap-1 rounded bg-emerald-600 text-xs font-bold text-white shadow-sm hover:bg-emerald-700"
+          size="sm"
+          className="h-8 gap-1.5 rounded-lg bg-emerald-600 text-xs font-bold text-white shadow-sm hover:bg-emerald-700"
           onClick={(e) => {
             e.stopPropagation();
             onStatusChange(workOrder.id, "Ready for Pickup");
           }}
           disabled={isPending}
         >
-          <Check className="size-3" /> Ready
+          <Check className="size-3.5" /> Ready
         </Button>
       )}
       {workOrder.status === "Ready for Pickup" && (
         <Button
-          size="xs"
-          className="gap-1 rounded bg-emerald-600 text-xs font-bold text-white shadow-sm hover:bg-emerald-700"
+          size="sm"
+          className="h-8 gap-1.5 rounded-lg bg-emerald-600 text-xs font-bold text-white shadow-sm hover:bg-emerald-700"
           onClick={(e) => {
             e.stopPropagation();
             onStatusChange(workOrder.id, "Completed");
           }}
           disabled={isPending}
         >
-          <CheckCircle className="size-3" /> Complete
+          <CheckCircle className="size-3.5" /> Complete
         </Button>
       )}
       <div className="ml-auto flex items-center gap-1">
         <DropdownMenu>
           <DropdownMenuTrigger onClick={(e) => e.stopPropagation()}>
             <Button
-              size="icon-xs"
+              size="icon-sm"
               variant="ghost"
               disabled={isPending}
-              className="text-muted-foreground/60 hover:text-foreground"
+              className="size-8 rounded-lg text-muted-foreground/60 hover:text-foreground"
             >
               <MoreHorizontal className="size-4" />
             </Button>
@@ -169,7 +172,7 @@ export function BayCardFooter({
           onRemoveFromBay && (
             <Button
               type="button"
-              size="icon-xs"
+              size="icon-sm"
               variant="ghost"
               onClick={(e) => {
                 e.stopPropagation();
@@ -177,7 +180,7 @@ export function BayCardFooter({
               }}
               title={t("removeFromBay")}
               disabled={isPending}
-              className="text-muted-foreground/60 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/20"
+              className="size-8 rounded-lg text-muted-foreground/60 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/20"
             >
               <Trash2 className="size-3.5" />
             </Button>

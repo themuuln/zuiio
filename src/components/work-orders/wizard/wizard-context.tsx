@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   createContext,
   type ReactNode,
@@ -12,7 +13,6 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
-import { useTranslations } from "next-intl";
 import { customerKeys } from "@/lib/queries/keys";
 import {
   type GlobalPart,

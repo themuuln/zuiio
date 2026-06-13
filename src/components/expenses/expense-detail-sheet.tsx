@@ -19,7 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DetailSheet } from "@/components/ui/detail-sheet";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
 import {
   Field,
@@ -47,17 +47,11 @@ import {
   useUpdateExpense,
 } from "@/lib/queries/use-expenses";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { cn } from "@/lib/utils";
-import { formatMNT } from "@/lib/utils";
+import { cn, formatMNT } from "@/lib/utils";
 
 // ── Constants ─────────────────────────────────────────────────
 
-const PAYMENT_METHODS = [
-  "cash",
-  "bank_transfer",
-  "card",
-  "manual",
-] as const;
+const PAYMENT_METHODS = ["cash", "bank_transfer", "card", "manual"] as const;
 
 // ── Schema ───────────────────────────────────────────────────
 
@@ -93,7 +87,9 @@ function syncForm(expense: NonNullable<ReturnType<typeof useExpense>["data"]>) {
   };
 }
 
-function isOverdue(expense: NonNullable<ReturnType<typeof useExpense>["data"]>) {
+function isOverdue(
+  expense: NonNullable<ReturnType<typeof useExpense>["data"]>,
+) {
   return !!(
     !expense.paid_at &&
     expense.due_date &&
@@ -119,10 +115,11 @@ export function ExpenseDetailSheet({
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
 
-  const { data: expense, isLoading: loading, error } = useExpense(
-    orgId,
-    expenseId ?? undefined,
-  );
+  const {
+    data: expense,
+    isLoading: loading,
+    error,
+  } = useExpense(orgId, expenseId ?? undefined);
   const { data: categories } = useExpenseCategories(orgId);
   const updateExpense = useUpdateExpense(orgId);
   const deleteExpense = useDeleteExpense(orgId);
@@ -217,19 +214,19 @@ export function ExpenseDetailSheet({
   const overdue = expense ? isOverdue(expense) : false;
 
   return (
-    <DetailSheet open={open} onOpenChange={handleOpenChange} size="2xl">
-      <DetailSheet.Header>
+    <DetailDrawer open={open} onOpenChange={handleOpenChange} size="2xl">
+      <DetailDrawer.Header>
         <DetailSheetHeader
           icon={Pencil}
           iconLoading={isLoadingData}
           title={
-            <DetailSheet.Title className="truncate">
+            <DetailDrawer.Title className="truncate">
               {isLoadingData
                 ? commonT("loading")
                 : expense
                   ? expense.description
                   : t("details")}
-            </DetailSheet.Title>
+            </DetailDrawer.Title>
           }
           subtitle={
             expense ? (
@@ -302,9 +299,9 @@ export function ExpenseDetailSheet({
             ) : undefined
           }
         />
-      </DetailSheet.Header>
+      </DetailDrawer.Header>
 
-      <DetailSheet.Body>
+      <DetailDrawer.Body>
         {/* Loading */}
         {isLoadingData && (
           <div className="flex items-center justify-center py-20">
@@ -633,7 +630,9 @@ export function ExpenseDetailSheet({
                     <span className="text-muted-foreground">
                       {t("paymentMethod")}
                     </span>
-                    <span className="capitalize">{t(expense.payment_method)}</span>
+                    <span className="capitalize">
+                      {t(expense.payment_method)}
+                    </span>
                   </div>
                 )}
                 {expense.reference_number && (
@@ -660,11 +659,11 @@ export function ExpenseDetailSheet({
             )}
           </div>
         )}
-      </DetailSheet.Body>
+      </DetailDrawer.Body>
 
       {/* Footer — edit mode only */}
       {editing && (
-        <DetailSheet.Footer>
+        <DetailDrawer.Footer>
           <Button
             type="button"
             variant="outline"
@@ -689,8 +688,8 @@ export function ExpenseDetailSheet({
             )}
             {updateExpense.isPending ? commonT("saving") : commonT("save")}
           </Button>
-        </DetailSheet.Footer>
+        </DetailDrawer.Footer>
       )}
-    </DetailSheet>
+    </DetailDrawer>
   );
 }

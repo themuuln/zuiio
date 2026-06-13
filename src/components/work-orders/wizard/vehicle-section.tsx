@@ -3,7 +3,6 @@
 import { Car, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SearchInput } from "@/components/search-input";
-import { transliterateMongolianPlate } from "@/lib/form-validation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -16,6 +15,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { VehicleForm } from "@/components/vehicles/vehicle-form";
+import { transliterateMongolianPlate } from "@/lib/form-validation";
 import { useWizardContext } from "./wizard-context";
 
 export function VehicleSection() {
@@ -46,7 +46,7 @@ export function VehicleSection() {
   }
 
   return (
-    <Card>
+    <Card data-wizard-step="vehicle">
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <Car className="size-4" />

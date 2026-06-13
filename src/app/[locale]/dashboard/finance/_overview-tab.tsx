@@ -20,6 +20,7 @@ import { Typography } from "@/components/ui/typography";
 import type { RevenueTrendPoint } from "@/lib/types";
 
 const EMPTY_REVENUE_TREND: RevenueTrendPoint[] = [];
+
 import { formatCurrency } from "@/lib/utils";
 import { EmptyFinanceState } from "./_empty-finance-state";
 import { KpiCard } from "./_kpi-card";

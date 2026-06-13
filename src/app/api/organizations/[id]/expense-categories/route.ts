@@ -8,17 +8,20 @@ import {
 } from "@/lib/services/expense-service";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
-export const GET = createRouteHandler(async ({ orgId, user, supabase }) => {
-  await seedDefaultExpenseCategories(supabase, orgId, user.id);
-  const categories = await getCategories(supabase, orgId);
-  return NextResponse.json({ data: categories });
-}, { requiredPermission: { resource: "expense_categories", action: "read" } });
+export const GET = createRouteHandler(
+  async ({ orgId, user, supabase }) => {
+    await seedDefaultExpenseCategories(supabase, orgId, user.id);
+    const categories = await getCategories(supabase, orgId);
+    return NextResponse.json({ data: categories });
+  },
+  { requiredPermission: { resource: "expense_categories", action: "read" } },
+);
 
 export const POST = createRouteHandler(
   async ({ request, orgId, user, supabase }) => {
     await requireActiveSubscription(orgId);
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-    const rateCheck = mutationRateLimiter.check(ip);
+    const rateCheck = await mutationRateLimiter.check(ip);
     if (!rateCheck.allowed) {
       return NextResponse.json(
         { error: { code: "RATE_LIMITED", message: "Too many requests" } },

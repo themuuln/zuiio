@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { generateUUID } from "@/lib/crypto-utils";
 import { AppError } from "@/lib/errors";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
@@ -28,7 +29,7 @@ async function generateUniqueSlug(
   if (!existing) return baseSlug;
 
   // Slug taken — append a suffix
-  return `${baseSlug.slice(0, 51)}-${crypto.randomUUID().slice(0, 8)}`;
+  return `${baseSlug.slice(0, 51)}-${generateUUID().slice(0, 8)}`;
 }
 
 /** Transliterate Cyrillic → Latin, then slugify. */

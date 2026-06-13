@@ -13,7 +13,9 @@ export const GET = createRouteHandler(
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type");
     const branchId =
-      searchParams.get("branch_id") ?? searchParams.get("branchId") ?? undefined;
+      searchParams.get("branch_id") ??
+      searchParams.get("branchId") ??
+      undefined;
 
     if (type === "stats") {
       const stats = await getExpenseStats(supabase, orgId, branchId);
@@ -55,7 +57,7 @@ export const POST = createRouteHandler(
   async ({ request, orgId, user, supabase }) => {
     await requireActiveSubscription(orgId);
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-    const rateCheck = mutationRateLimiter.check(ip);
+    const rateCheck = await mutationRateLimiter.check(ip);
     if (!rateCheck.allowed) {
       return NextResponse.json(
         { error: { code: "RATE_LIMITED", message: "Too many requests" } },

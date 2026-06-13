@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
 import type { MongolianBank } from "@/lib/payments/mongolian-banks";
+import { cn } from "@/lib/utils";
 
 interface BankLogoProps {
   bank: Pick<MongolianBank, "logo" | "nameEn" | "brandColor">;

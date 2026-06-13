@@ -39,7 +39,7 @@ export const PATCH = createRouteHandler(
   async ({ request, supabase, params, orgId, user }) => {
     await requireActiveSubscription(orgId);
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-    const rateCheck = mutationRateLimiter.check(ip);
+    const rateCheck = await mutationRateLimiter.check(ip);
     if (!rateCheck.allowed) {
       return NextResponse.json(
         { error: { code: "RATE_LIMITED", message: "Too many requests" } },
@@ -92,7 +92,7 @@ export const PATCH = createRouteHandler(
 export const POST = createRouteHandler(async ({ request, params, orgId }) => {
   await requireActiveSubscription(orgId);
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-  const rateCheck = mutationRateLimiter.check(ip);
+  const rateCheck = await mutationRateLimiter.check(ip);
   if (!rateCheck.allowed) {
     return NextResponse.json(
       { error: { code: "RATE_LIMITED", message: "Too many requests" } },

@@ -4,6 +4,7 @@ import { Loader2, Star } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { BankLogo } from "@/components/banks/bank-logo";
+import { DEFAULT_PAYMENT_METHOD_FEES } from "@/components/bay-view-v2/_payment-fees";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,14 +12,13 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Typography } from "@/components/ui/typography";
-import { DEFAULT_PAYMENT_METHOD_FEES } from "@/components/bay-view-v2/_payment-fees";
+import { MONGOLIAN_BANKS } from "@/lib/payments/mongolian-banks";
+import type { OrgTransferBankAccount } from "@/lib/payments/org-bank-accounts";
+import { normalizeOrgTransferBankAccounts } from "@/lib/payments/org-bank-accounts";
 import {
   useOrgSettings,
   useUpdateOrgSettings,
 } from "@/lib/queries/use-org-settings";
-import { MONGOLIAN_BANKS } from "@/lib/payments/mongolian-banks";
-import type { OrgTransferBankAccount } from "@/lib/payments/org-bank-accounts";
-import { normalizeOrgTransferBankAccounts } from "@/lib/payments/org-bank-accounts";
 import {
   SettingsBlock,
   SettingsFieldset,
@@ -199,76 +199,76 @@ export function PaymentSettingsSection({ orgId }: PaymentSettingsSectionProps) {
                 key={bankMeta.id}
                 className="flex flex-col gap-3 px-3 py-3 sm:px-4"
               >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <BankLogo bank={bankMeta} size="md" />
-                      <div className="min-w-0">
-                        <Typography.Text className="font-medium truncate block">
-                          {label}
-                        </Typography.Text>
-                        {bank.isDefault && (
-                          <Badge variant="outline" className="mt-1">
-                            {t("transferBankDefault")}
-                          </Badge>
-                        )}
-                      </div>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <BankLogo bank={bankMeta} size="md" />
+                    <div className="min-w-0">
+                      <Typography.Text className="font-medium truncate block">
+                        {label}
+                      </Typography.Text>
+                      {bank.isDefault && (
+                        <Badge variant="outline" className="mt-1">
+                          {t("transferBankDefault")}
+                        </Badge>
+                      )}
                     </div>
-                    <Switch
-                      checked={bank.enabled}
-                      onCheckedChange={(checked) =>
-                        updateBank(bankMeta.id, { enabled: checked })
-                      }
-                      aria-label={t("transferBankEnable", { bank: label })}
-                    />
                   </div>
+                  <Switch
+                    checked={bank.enabled}
+                    onCheckedChange={(checked) =>
+                      updateBank(bankMeta.id, { enabled: checked })
+                    }
+                    aria-label={t("transferBankEnable", { bank: label })}
+                  />
+                </div>
 
-                  {bank.enabled && (
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="flex flex-col gap-2 sm:col-span-2">
-                        <Label htmlFor={`account-${bankMeta.id}`}>
-                          {t("transferBankAccountNumber")}
-                        </Label>
-                        <Input
-                          id={`account-${bankMeta.id}`}
-                          value={bank.accountNumber}
-                          onChange={(event) =>
-                            updateBank(bankMeta.id, {
-                              accountNumber: event.target.value,
-                            })
-                          }
-                          placeholder="MN00 0000 0000 0000 0000"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2 sm:col-span-2">
-                        <Label htmlFor={`holder-${bankMeta.id}`}>
-                          {t("transferBankAccountHolder")}
-                        </Label>
-                        <Input
-                          id={`holder-${bankMeta.id}`}
-                          value={bank.accountHolder ?? ""}
-                          onChange={(event) =>
-                            updateBank(bankMeta.id, {
-                              accountHolder: event.target.value,
-                            })
-                          }
-                          placeholder={t("transferBankAccountHolderPlaceholder")}
-                        />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          disabled={!bank.accountNumber.trim()}
-                          onClick={() => setDefaultBank(bankMeta.id)}
-                          className="gap-1.5"
-                        >
-                          <Star className="size-3.5" />
-                          {t("transferBankSetDefault")}
-                        </Button>
-                      </div>
+                {bank.enabled && (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="flex flex-col gap-2 sm:col-span-2">
+                      <Label htmlFor={`account-${bankMeta.id}`}>
+                        {t("transferBankAccountNumber")}
+                      </Label>
+                      <Input
+                        id={`account-${bankMeta.id}`}
+                        value={bank.accountNumber}
+                        onChange={(event) =>
+                          updateBank(bankMeta.id, {
+                            accountNumber: event.target.value,
+                          })
+                        }
+                        placeholder="MN00 0000 0000 0000 0000"
+                      />
                     </div>
-                  )}
+                    <div className="flex flex-col gap-2 sm:col-span-2">
+                      <Label htmlFor={`holder-${bankMeta.id}`}>
+                        {t("transferBankAccountHolder")}
+                      </Label>
+                      <Input
+                        id={`holder-${bankMeta.id}`}
+                        value={bank.accountHolder ?? ""}
+                        onChange={(event) =>
+                          updateBank(bankMeta.id, {
+                            accountHolder: event.target.value,
+                          })
+                        }
+                        placeholder={t("transferBankAccountHolderPlaceholder")}
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={!bank.accountNumber.trim()}
+                        onClick={() => setDefaultBank(bankMeta.id)}
+                        className="gap-1.5"
+                      >
+                        <Star className="size-3.5" />
+                        {t("transferBankSetDefault")}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}

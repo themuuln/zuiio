@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { useEffect } from "react";
 import { PageErrorState } from "@/components/page-state";
 import { reportError } from "@/lib/sentry-report";
 

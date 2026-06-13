@@ -3,7 +3,8 @@
 import { Camera, Loader2, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useCallback, useState } from "react";
+import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
@@ -22,13 +23,9 @@ export default function OrgLogoUpload({
   onLogoChange,
 }: OrgLogoUploadProps) {
   const [uploading, setUploading] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
   const t = useTranslations("organization");
 
-  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  async function uploadFile(file: File) {
     if (file.size > 5 * 1024 * 1024) {
       toast.error(t("logo.sizeError"));
       return;
@@ -75,9 +72,30 @@ export default function OrgLogoUpload({
       toast.error(err instanceof Error ? err.message : t("logo.uploadFailed"));
     } finally {
       setUploading(false);
-      if (inputRef.current) inputRef.current.value = "";
     }
   }
+
+  const onDrop = useCallback(
+    (accepted: File[]) => {
+      const file = accepted[0];
+      if (file) uploadFile(file);
+    },
+    [uploadFile],
+  );
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      "image/png": [".png"],
+      "image/jpeg": [".jpg", ".jpeg"],
+      "image/webp": [".webp"],
+      "image/svg+xml": [".svg"],
+    },
+    maxFiles: 1,
+    disabled: uploading,
+    noClick: true,
+    noKeyboard: true,
+  });
 
   async function handleRemove() {
     setUploading(true);
@@ -108,7 +126,15 @@ export default function OrgLogoUpload({
 
   return (
     <div className="flex items-center gap-4">
-      <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted">
+      <div
+        {...getRootProps()}
+        className={`relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border-2 transition-colors ${
+          isDragActive
+            ? "border-primary bg-primary/10"
+            : "border-border bg-muted"
+        } ${uploading ? "cursor-default" : "cursor-pointer"}`}
+      >
+        <input {...getInputProps()} />
         {logoUrl ? (
           <Image
             src={logoUrl}
@@ -123,6 +149,11 @@ export default function OrgLogoUpload({
             {orgName.charAt(0).toUpperCase()}
           </span>
         )}
+        {isDragActive && (
+          <div className="absolute inset-0 flex items-center justify-center bg-primary/20 text-xs font-medium text-primary">
+            Drop
+          </div>
+        )}
         {uploading && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/60">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
@@ -130,18 +161,11 @@ export default function OrgLogoUpload({
         )}
       </div>
       <div className="flex flex-col gap-1.5">
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/png,image/jpeg,image/webp,image/svg+xml"
-          onChange={handleFileSelect}
-          className="hidden"
-        />
         <Button
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => inputRef.current?.click()}
+          onClick={() => document.getElementById("org-dropzone-input")?.click()}
           disabled={uploading}
         >
           <Camera className="mr-1.5 size-3.5" />

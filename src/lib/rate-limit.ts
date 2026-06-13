@@ -1,26 +1,12 @@
 /**
- * Simple in-memory rate limiter with configurable params.
- * Production recommendation: Replace with Redis-based limiter (Upstash/Vercel KV).
+ * Rate limiter with Upstash Redis backend for production,
+ * falling back to in-memory storage when Upstash env vars are not set (local dev).
  */
 
-interface RateLimitEntry {
-  count: number;
-  resetAt: number;
-}
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
-const store = new Map<string, RateLimitEntry>();
-
-// Clean up expired entries every 5 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, entry] of store) {
-    if (now > entry.resetAt) {
-      store.delete(key);
-    }
-  }
-}, 300_000);
-
-// ── Rate Limiter Config ────────────────────────────────────────
+// ── Rate Limiter Types ──────────────────────────────────────────
 
 export interface RateLimiterConfig {
   windowMs?: number;
@@ -34,42 +20,105 @@ export interface RateLimiterResult {
 }
 
 export interface RateLimiter {
-  check: (ip: string) => RateLimiterResult;
+  check: (ip: string) => RateLimiterResult | Promise<RateLimiterResult>;
 }
 
-// ── Factory ───────────────────────────────────────────────────
+// ── In-memory fallback (same interface as Upstash) ───────────────
 
-export function createRateLimiter(config?: RateLimiterConfig): RateLimiter {
-  const windowMs = config?.windowMs ?? 60_000;
-  const maxRequests = config?.maxRequests ?? 5;
+interface MemEntry {
+  count: number;
+  resetAt: number;
+}
 
-  function check(ip: string): RateLimiterResult {
-    const now = Date.now();
-    const entry = store.get(ip);
+const memStore = new Map<string, MemEntry>();
 
-    if (!entry || now > entry.resetAt) {
-      store.set(ip, { count: 1, resetAt: now + windowMs });
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of memStore) {
+    if (now > entry.resetAt) memStore.delete(key);
+  }
+}, 300_000);
+
+function createMemLimiter(maxRequests: number, windowMs: number): RateLimiter {
+  return {
+    check(ip: string): RateLimiterResult {
+      const now = Date.now();
+      const entry = memStore.get(ip);
+
+      if (!entry || now > entry.resetAt) {
+        memStore.set(ip, { count: 1, resetAt: now + windowMs });
+        return {
+          allowed: true,
+          remaining: maxRequests - 1,
+          resetAt: now + windowMs,
+        };
+      }
+
+      entry.count++;
+
+      if (entry.count > maxRequests) {
+        return { allowed: false, remaining: 0, resetAt: entry.resetAt };
+      }
+
       return {
         allowed: true,
-        remaining: maxRequests - 1,
-        resetAt: now + windowMs,
+        remaining: maxRequests - entry.count,
+        resetAt: entry.resetAt,
       };
-    }
+    },
+  };
+}
 
-    entry.count++;
+// ── Upstash Redis limiter factory ───────────────────────────────
 
-    if (entry.count > maxRequests) {
-      return { allowed: false, remaining: 0, resetAt: entry.resetAt };
-    }
+function createUpstashLimiter(
+  maxRequests: number,
+  windowMs: number,
+): RateLimiter {
+  const redis = Redis.fromEnv();
+  const limiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(maxRequests, `${windowMs}ms`),
+    analytics: true,
+    prefix: "tolom",
+  });
 
-    return {
-      allowed: true,
-      remaining: maxRequests - entry.count,
-      resetAt: entry.resetAt,
-    };
+  return {
+    async check(ip: string): Promise<RateLimiterResult> {
+      try {
+        const { success, limit, remaining, reset } = await limiter.limit(ip);
+        return {
+          allowed: success,
+          remaining,
+          resetAt: Date.now() + reset,
+        };
+      } catch {
+        // Redis unavailable — fail open (allow the request through)
+        return {
+          allowed: true,
+          remaining: 1,
+          resetAt: Date.now() + windowMs,
+        };
+      }
+    },
+  };
+}
+
+// ── Factory that picks backend based on env ─────────────────────
+
+function createRateLimiter(config?: RateLimiterConfig): RateLimiter {
+  const maxRequests = config?.maxRequests ?? 5;
+  const windowMs = config?.windowMs ?? 60_000;
+
+  const hasUpstash =
+    typeof process !== "undefined" &&
+    (process.env.UPSTASH_REDIS_REST_URL || process.env.KV_URL);
+
+  if (hasUpstash) {
+    return createUpstashLimiter(maxRequests, windowMs);
   }
 
-  return { check };
+  return createMemLimiter(maxRequests, windowMs);
 }
 
 // ── Named Limiters ────────────────────────────────────────────

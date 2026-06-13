@@ -16,6 +16,7 @@ import {
   VehicleSection,
   WizardProvider,
 } from "@/components/work-orders/wizard";
+import { WizardStepIndicator } from "@/components/work-orders/wizard/wizard-step-indicator";
 import { Link } from "@/lib/i18n/navigation";
 
 function NewWorkOrderForm() {
@@ -32,6 +33,8 @@ function NewWorkOrderForm() {
 
   return (
     <div className="flex flex-col gap-6 max-w-3xl mx-auto tablet-touch">
+      <WizardStepIndicator />
+
       {/* Header */}
       <div className="flex items-center gap-3">
         <Button

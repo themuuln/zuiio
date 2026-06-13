@@ -20,6 +20,8 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { ExportButton } from "@/components/export-button";
+import { RefundDialog } from "@/components/invoices/_refund-dialog";
+import { RefundReceipt } from "@/components/invoices/_refund-receipt";
 import { MechanicSelect } from "@/components/mechanic-select";
 import { ContactCard } from "@/components/sidebar-tabs/contact-card";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
@@ -45,8 +47,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
 import WorkOrderPhotoUpload from "@/components/work-order-photo-upload";
-import { RefundDialog } from "@/components/invoices/_refund-dialog";
-import { RefundReceipt } from "@/components/invoices/_refund-receipt";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import type { ExportColumn } from "@/lib/export";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
@@ -244,7 +244,7 @@ export default function WorkOrderDetailPage() {
       sidebar.unregisterTab("customer");
       sidebar.unregisterTab("timeline");
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [sidebar.unregisterTab, t, sidebar.registerTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Data effect: update tab content when work order data changes
   useEffect(() => {
@@ -315,7 +315,7 @@ export default function WorkOrderDetailPage() {
         emptyMessage={t("noStatusChanges")}
       />,
     );
-  }, [wo, sidebar.updateTabContent, sidebar.setActiveTab]);
+  }, [wo, sidebar.updateTabContent, sidebar.setActiveTab, t]);
 
   const serviceExportColumns: ExportColumn<WorkOrderService>[] = useMemo(
     () => [
@@ -325,7 +325,7 @@ export default function WorkOrderDetailPage() {
       { key: "discount_amount", label: t("discount"), format: "currency" },
       { key: "final_price", label: t("finalPrice"), format: "currency" },
     ],
-    [],
+    [t],
   );
 
   const partExportColumns: ExportColumn<WorkOrderPart>[] = useMemo(
@@ -335,7 +335,7 @@ export default function WorkOrderDetailPage() {
       { key: "unit_price", label: t("unitPrice"), format: "currency" },
       { key: "final_price", label: t("finalPrice"), format: "currency" },
     ],
-    [],
+    [t],
   );
 
   const changeStatus = (newStatus: string, lossReason?: string) => {

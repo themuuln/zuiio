@@ -1,8 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useOnlineStatus } from "@/lib/hooks/use-online-status";
 import type { useMutationQueue } from "./mutation-queue-provider";
 
 interface OfflineQueueConfig<TData, TVariables> {
@@ -62,7 +60,7 @@ export function withOfflineQueue<TData, TVariables>({
   skipQueue = false,
   mutationFn,
 }: OfflineQueueConfig<TData, TVariables>) {
-  const isOnlineFn = () => false; // placeholder — overridden at call site
+  const _isOnlineFn = () => false; // placeholder — overridden at call site
 
   // Return a wrapped mutation function that can be used with useMutation
   return async function wrappedMutationFn(

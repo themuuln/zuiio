@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { STATUS_STEPPER, STATUS_DOT } from "./_constants";
+import { STATUS_DOT, STATUS_STEPPER } from "./_constants";
 
 const STEP_ORDER = ["New", "Diagnosing", "In Progress", "Ready for Pickup"];
 

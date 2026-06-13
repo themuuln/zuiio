@@ -2,8 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useOnlineStatus } from "@/lib/hooks/use-online-status";
 import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
-import { toastRetry } from "@/lib/toast-utils";
 import type { OrgTransferBankAccount } from "@/lib/payments/org-bank-accounts";
+import { toastRetry } from "@/lib/toast-utils";
 import { orgKeys } from "./keys";
 
 interface OrgSettings {

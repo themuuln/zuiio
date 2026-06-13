@@ -64,7 +64,7 @@ const primaryItems: NavItem[] = [
 
 const navGroups: NavGroup[] = [
   {
-    labelKey: "nav.group.operations",
+    labelKey: "nav.group.shopFloor",
     icon: Wrench,
     children: [
       {
@@ -73,30 +73,30 @@ const navGroups: NavGroup[] = [
         icon: LayoutGrid,
       },
       {
-        labelKey: "nav.mechanic",
-        href: "/dashboard/mechanic",
-        icon: Wrench,
-      },
-      {
-        labelKey: "nav.mechanicPerformance",
-        href: "/dashboard/mechanic-performance",
-        icon: TrendingUp,
-      },
-      {
         labelKey: "nav.workOrders",
         href: "/dashboard/work-orders",
         icon: ClipboardList,
+      },
+      {
+        labelKey: "nav.mechanic",
+        href: "/dashboard/mechanic",
+        icon: Wrench,
       },
       {
         labelKey: "nav.services",
         href: "/dashboard/services",
         icon: Sparkles,
       },
+      {
+        labelKey: "nav.estimates",
+        href: "/dashboard/estimates",
+        icon: FileText,
+      },
     ],
     isCollapsible: false,
   },
   {
-    labelKey: "nav.group.crm",
+    labelKey: "nav.group.customers",
     icon: Users,
     children: [
       {
@@ -109,11 +109,6 @@ const navGroups: NavGroup[] = [
         labelKey: "nav.serviceReminders",
         href: "/dashboard/service-reminders",
         icon: Bell,
-      },
-      {
-        labelKey: "nav.estimates",
-        href: "/dashboard/estimates",
-        icon: FileText,
       },
     ],
     isCollapsible: false,
@@ -166,7 +161,7 @@ const navGroups: NavGroup[] = [
     isCollapsible: false,
   },
   {
-    labelKey: "nav.group.financials",
+    labelKey: "nav.group.finances",
     icon: DollarSign,
     children: [
       {
@@ -198,6 +193,11 @@ const navGroups: NavGroup[] = [
         labelKey: "nav.endOfDay",
         href: "/dashboard/eod-close",
         icon: ClipboardList,
+      },
+      {
+        labelKey: "nav.mechanicPerformance",
+        href: "/dashboard/mechanic-performance",
+        icon: TrendingUp,
       },
     ],
     isCollapsible: false,
@@ -246,8 +246,8 @@ const sections: NavSection[] = [
   },
 ];
 
-/** The Financials group label — hidden from mechanics who lack reports.read */
-const FINANCIALS_GROUP_KEY = "nav.group.financials";
+/** The Finances group label — hidden from mechanics who lack reports.read */
+const FINANCES_GROUP_KEY = "nav.group.finances";
 
 export function useNavigation() {
   const pathname = usePathname();
@@ -274,7 +274,7 @@ export function useNavigation() {
     "nav.appointments": FEATURE_KEYS.APPOINTMENTS,
     "nav.vehicleModels": FEATURE_KEYS.VEHICLE_MODELS,
     "nav.endOfDay": FEATURE_KEYS.EOD_CLOSE,
-    "nav.group.financials": FEATURE_KEYS.FINANCE,
+    "nav.group.finances": FEATURE_KEYS.FINANCE,
     "/dashboard/inventory/alerts": FEATURE_KEYS.INVENTORY_ALERTS,
     "/dashboard/inventory/valuation": FEATURE_KEYS.INVENTORY_VALUATION,
     "/dashboard/inventory/purchase-orders": FEATURE_KEYS.PURCHASE_ORDERS,
@@ -296,11 +296,11 @@ export function useNavigation() {
 
   let filteredNavGroups = isDefinitelyMechanic
     ? navGroups
-        .filter((g) => g.labelKey !== FINANCIALS_GROUP_KEY)
+        .filter((g) => g.labelKey !== FINANCES_GROUP_KEY)
         .map((g) => ({
           ...g,
           children:
-            g.labelKey === "nav.group.operations"
+            g.labelKey === "nav.group.shopFloor"
               ? g.children.filter((c) => c.href !== "/dashboard/bay-view")
               : g.children,
         }))
@@ -348,7 +348,7 @@ export function useNavigation() {
   };
 
   const filteredSections = isDefinitelyMechanic
-    ? sections.filter((s) => s.labelKey !== FINANCIALS_GROUP_KEY)
+    ? sections.filter((s) => s.labelKey !== FINANCES_GROUP_KEY)
     : sections;
 
   // Stable fallback — never null

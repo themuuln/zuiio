@@ -86,7 +86,7 @@ export async function preloadAll(
           try {
             await preloadEndpoint(orgId, endpoint);
             progress.succeeded++;
-          } catch (err) {
+          } catch (_err) {
             progress.failed++;
             progress.errors.push(endpoint.path);
             // Don't throw — continue with other endpoints

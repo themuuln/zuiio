@@ -1,6 +1,6 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMockSupabaseClient } from "@/test/mocks/supabase";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
 // ── Mocks ─────────────────────────────────────────────────────
 
@@ -42,7 +42,11 @@ function chainableResolve(
   obj.maybeSingle = vi.fn().mockResolvedValue({ data: result, error: null });
   // biome-ignore lint/suspicious/noThenProperty: intentional thenable for Supabase mock chain
   obj.then = vi.fn().mockImplementation((resolve: (v: unknown) => unknown) =>
-    resolve({ data: result, count: Array.isArray(result) ? result.length : 0, error: null }),
+    resolve({
+      data: result,
+      count: Array.isArray(result) ? result.length : 0,
+      error: null,
+    }),
   );
   return obj;
 }
@@ -59,13 +63,19 @@ describe("Tax Service", () => {
       const { getOrgTaxSettings } = await import("./tax-service");
 
       vi.mocked(mockClient.from).mockReturnValue(
-        chainableResolve({}, {
-          nuat_enabled: true,
-          default_tax_rate: 10,
-        }) as never,
+        chainableResolve(
+          {},
+          {
+            nuat_enabled: true,
+            default_tax_rate: 10,
+          },
+        ) as never,
       );
 
-      const result = await getOrgTaxSettings(mockClient as unknown as SupabaseClient, "org-1");
+      const result = await getOrgTaxSettings(
+        mockClient as unknown as SupabaseClient,
+        "org-1",
+      );
 
       expect(result.nuatEnabled).toBe(true);
       expect(result.taxRate).toBe(10);
@@ -78,7 +88,10 @@ describe("Tax Service", () => {
         chainableResolve({}, null) as never,
       );
 
-      const result = await getOrgTaxSettings(mockClient as unknown as SupabaseClient, "org-1");
+      const result = await getOrgTaxSettings(
+        mockClient as unknown as SupabaseClient,
+        "org-1",
+      );
 
       expect(result.nuatEnabled).toBe(false);
       expect(result.taxRate).toBe(10);
@@ -249,7 +262,10 @@ describe("Tax Service", () => {
       const { updateOrgNuatSettings } = await import("./tax-service");
 
       vi.mocked(mockClient.from).mockReturnValue(
-        chainableResolve({}, { nuat_enabled: true, default_tax_rate: 10 }) as never,
+        chainableResolve(
+          {},
+          { nuat_enabled: true, default_tax_rate: 10 },
+        ) as never,
       );
 
       const result = await updateOrgNuatSettings(
@@ -267,10 +283,7 @@ describe("Tax Service", () => {
     it("calculates tax for a normal item", async () => {
       const { calculateItemTax } = await import("./tax-service");
 
-      const result = calculateItemTax(
-        { total_price: 50000 },
-        10,
-      );
+      const result = calculateItemTax({ total_price: 50000 }, 10);
 
       expect(result.taxAmount).toBe(5000);
       expect(result.isExempt).toBe(false);
@@ -293,10 +306,7 @@ describe("Tax Service", () => {
     it("uses custom tax rate when set on item", async () => {
       const { calculateItemTax } = await import("./tax-service");
 
-      const result = calculateItemTax(
-        { total_price: 100000, tax_rate: 5 },
-        10,
-      );
+      const result = calculateItemTax({ total_price: 100000, tax_rate: 5 }, 10);
 
       // 100000 * 5% = 5000
       expect(result.taxAmount).toBe(5000);
@@ -321,15 +331,15 @@ describe("Tax Service", () => {
       const { calculateItemsTax } = await import("./tax-service");
 
       const items = [
-        { total_price: 50000, is_tax_exempt: false },  // Tax: 5000
-        { total_price: 30000, is_tax_exempt: true },   // Tax: 0
-        { total_price: 20000, is_tax_exempt: false },  // Tax: 2000
+        { total_price: 50000, is_tax_exempt: false }, // Tax: 5000
+        { total_price: 30000, is_tax_exempt: true }, // Tax: 0
+        { total_price: 20000, is_tax_exempt: false }, // Tax: 2000
       ];
 
       const result = calculateItemsTax(items, 10);
 
-      expect(result.totalTaxable).toBe(70000);  // 50000 + 20000
-      expect(result.totalTax).toBe(7000);       // 5000 + 2000
+      expect(result.totalTaxable).toBe(70000); // 50000 + 20000
+      expect(result.totalTax).toBe(7000); // 5000 + 2000
     });
 
     it("returns 0 when all items are exempt", async () => {

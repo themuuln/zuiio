@@ -26,8 +26,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { DetailSheet } from "@/components/ui/detail-sheet";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
+import { DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
@@ -44,8 +45,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { SheetFixedBottom } from "@/components/ui/sheet-fixed-bottom";
 import { Typography } from "@/components/ui/typography";
 import { ColorSelect } from "@/components/vehicles/color-select";
 import { usePageHeader } from "@/hooks/use-page-header";
@@ -411,19 +410,19 @@ export function VehicleDetailSheet({
   const notFound = open && !loading && !vehicle && !error;
 
   return (
-    <DetailSheet open={open} onOpenChange={handleOpenChange} size="2xl">
-      <SheetHeader className="px-4 py-3 border-b border-border shrink-0">
+    <DetailDrawer open={open} onOpenChange={handleOpenChange} size="2xl">
+      <DrawerHeader className="px-4 py-3 border-b border-border shrink-0">
         <DetailSheetHeader
           icon={Pencil}
           iconLoading={isLoadingData}
           title={
-            <SheetTitle className="text-base truncate">
+            <DrawerTitle className="text-base truncate">
               {isLoadingData
                 ? t("loading")
                 : vehicle
                   ? vehicle.plate_number
                   : t("vehicleNotFound")}
-            </SheetTitle>
+            </DrawerTitle>
           }
           subtitle={
             vehicle ? (
@@ -481,7 +480,7 @@ export function VehicleDetailSheet({
             ) : undefined
           }
         />
-      </SheetHeader>
+      </DrawerHeader>
 
       {/* Loading */}
       {isLoadingData && (
@@ -726,7 +725,7 @@ export function VehicleDetailSheet({
 
           {/* Footer — fixed bottom, outside scrollable body */}
           {editing && (
-            <SheetFixedBottom>
+            <DetailDrawer.Footer>
               <div className="flex gap-3">
                 <Button
                   type="button"
@@ -753,11 +752,11 @@ export function VehicleDetailSheet({
                   {editMutation.isPending ? t("saving") : commonT("save")}
                 </Button>
               </div>
-            </SheetFixedBottom>
+            </DetailDrawer.Footer>
           )}
         </>
       )}
-    </DetailSheet>
+    </DetailDrawer>
   );
 }
 

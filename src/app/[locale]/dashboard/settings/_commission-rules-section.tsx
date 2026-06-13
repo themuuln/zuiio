@@ -486,87 +486,86 @@ export function CommissionRulesSection({ orgId }: CommissionRulesSectionProps) {
         ) : (
           <SettingsTableFrame>
             <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="px-4 py-3 font-medium">
-                      {t("tableName")}
-                    </TableHead>
-                    <TableHead className="px-4 py-3 font-medium">
-                      {t("tableMechanic")}
-                    </TableHead>
-                    <TableHead className="px-4 py-3 font-medium">
-                      {t("tableType")}
-                    </TableHead>
-                    <TableHead className="px-4 py-3 font-medium text-right">
-                      {t("tableValue")}
-                    </TableHead>
-                    <TableHead className="px-4 py-3 font-medium text-right">
-                      {t("tableMinMax")}
-                    </TableHead>
-                    <TableHead className="px-4 py-3 font-medium">
-                      {t("tableStatus")}
-                    </TableHead>
-                    <TableHead className="px-4 py-3 font-medium text-right">
-                      {t("tableActions")}
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rules.map((rule) => (
-                    <TableRow key={rule.id} className="border-b border-border">
-                      <TableCell className="px-4 py-3 font-medium">
-                        {rule.name}
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-muted-foreground">
-                        {"mechanic_name" in rule
-                          ? ((rule.mechanic_name as string) ??
-                            t("allMechanics"))
-                          : t("allMechanics")}
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        {getCommissionTypeLabel(rule.commission_type, t)}
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-right tabular-nums">
-                        {getCommissionValueDisplay(rule)}
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-right tabular-nums text-muted-foreground">
-                        {rule.min_commission != null
-                          ? formatCurrency(rule.min_commission)
-                          : "—"}
-                        {" / "}
-                        {rule.max_commission != null
-                          ? formatCurrency(rule.max_commission)
-                          : "—"}
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <Badge
-                          variant={rule.is_active ? "default" : "secondary"}
-                          className="text-xs"
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="px-4 py-3 font-medium">
+                    {t("tableName")}
+                  </TableHead>
+                  <TableHead className="px-4 py-3 font-medium">
+                    {t("tableMechanic")}
+                  </TableHead>
+                  <TableHead className="px-4 py-3 font-medium">
+                    {t("tableType")}
+                  </TableHead>
+                  <TableHead className="px-4 py-3 font-medium text-right">
+                    {t("tableValue")}
+                  </TableHead>
+                  <TableHead className="px-4 py-3 font-medium text-right">
+                    {t("tableMinMax")}
+                  </TableHead>
+                  <TableHead className="px-4 py-3 font-medium">
+                    {t("tableStatus")}
+                  </TableHead>
+                  <TableHead className="px-4 py-3 font-medium text-right">
+                    {t("tableActions")}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rules.map((rule) => (
+                  <TableRow key={rule.id} className="border-b border-border">
+                    <TableCell className="px-4 py-3 font-medium">
+                      {rule.name}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-muted-foreground">
+                      {"mechanic_name" in rule
+                        ? ((rule.mechanic_name as string) ?? t("allMechanics"))
+                        : t("allMechanics")}
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      {getCommissionTypeLabel(rule.commission_type, t)}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right tabular-nums">
+                      {getCommissionValueDisplay(rule)}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right tabular-nums text-muted-foreground">
+                      {rule.min_commission != null
+                        ? formatCurrency(rule.min_commission)
+                        : "—"}
+                      {" / "}
+                      {rule.max_commission != null
+                        ? formatCurrency(rule.max_commission)
+                        : "—"}
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      <Badge
+                        variant={rule.is_active ? "default" : "secondary"}
+                        className="text-xs"
+                      >
+                        {rule.is_active ? t("active") : t("inactive")}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => openEditDialog(rule)}
                         >
-                          {rule.is_active ? t("active") : t("inactive")}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            onClick={() => openEditDialog(rule)}
-                          >
-                            <Pencil className="size-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            onClick={() => handleDelete(rule.id)}
-                          >
-                            <Trash2 className="size-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => handleDelete(rule.id)}
+                        >
+                          <Trash2 className="size-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
             </Table>
           </SettingsTableFrame>
         )}

@@ -10,9 +10,7 @@ export function SettingsBlock({
   readonly children: ReactNode;
   readonly className?: string;
 }) {
-  return (
-    <div className={cn("flex flex-col gap-3", className)}>{children}</div>
-  );
+  return <div className={cn("flex flex-col gap-3", className)}>{children}</div>;
 }
 
 export function SettingsGroup({
@@ -53,7 +51,9 @@ export function SettingsRow({
       )}
     >
       <div className="min-w-0 flex-1">
-        <Typography.Text className="text-sm font-medium">{label}</Typography.Text>
+        <Typography.Text className="text-sm font-medium">
+          {label}
+        </Typography.Text>
         {description ? (
           <Typography.Muted className="text-xs text-muted-foreground">
             {description}
@@ -104,7 +104,10 @@ export function SettingsTableFrame({
 }) {
   return (
     <div
-      className={cn("overflow-hidden rounded-lg border border-border", className)}
+      className={cn(
+        "overflow-hidden rounded-lg border border-border",
+        className,
+      )}
     >
       {children}
     </div>
@@ -133,7 +136,11 @@ export function SettingsListItem({
   );
 }
 
-export function SettingsSectionDivider({ className }: { readonly className?: string }) {
+export function SettingsSectionDivider({
+  className,
+}: {
+  readonly className?: string;
+}) {
   return <Separator className={cn("my-1", className)} />;
 }
 

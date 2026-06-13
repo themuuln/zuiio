@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
+import type { WorkOrderPartItem } from "@/lib/services/post-service-service";
 import type { PaymentMethodFees } from "./_payment-fees";
 
 export const PAYMENT_METHODS = [
@@ -55,6 +56,8 @@ export interface PostServiceFormProps {
   vehiclePlate: string;
   currentOdometer: number | null;
   services: WorkOrderServiceItem[];
+  /** Parts from this work order displayed for reference */
+  parts: WorkOrderPartItem[];
   newStatus: string;
   grandTotal: number;
   paymentMethodFees: PaymentMethodFees;

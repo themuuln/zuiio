@@ -71,5 +71,5 @@ export function useFuzzySearch<T>(
 
     const result = fuse.search(trimmed);
     return result.map((r) => r.item);
-  }, [fuse, items, query, minQueryLength, preserveOrderBelowMinLength]);
+  }, [fuse, items, query, minQueryLength]);
 }

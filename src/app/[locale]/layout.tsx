@@ -4,11 +4,11 @@ import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { Toaster } from "sonner";
+import { DrawerProvider } from "@/components/drawer-provider";
 import NuqsProvider from "@/components/nuqs-provider";
 import { OfflineBanner } from "@/components/offline-banner";
 import { OfflineQueueIndicator } from "@/components/offline-queue-indicator";
 import QueryProvider from "@/components/query-provider";
-import { DrawerProvider } from "@/components/drawer-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { routing } from "@/lib/i18n/routing";
 import { MutationQueueProvider } from "@/lib/offline/mutation-queue-provider";
@@ -68,11 +68,11 @@ export default async function LocaleLayout({
                 <OfflineQueueIndicator />
               </MutationQueueProvider>
               <Toaster
-                position="bottom-left"
+                position="bottom-right"
                 richColors
                 closeButton
                 toastOptions={{
-                  duration: 4000,
+                  duration: 3000,
                 }}
                 style={{ zIndex: 9999 }}
               />

@@ -1,5 +1,6 @@
 "use client";
 
+import { format } from "date-fns";
 import {
   BarChart3,
   Clock,
@@ -9,15 +10,14 @@ import {
   Users,
   Wrench,
 } from "lucide-react";
-import { format } from "date-fns";
-import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useEffect, useMemo, useState } from "react";
+import type { DateRange } from "react-day-picker";
 import { BarChart } from "@/components/charts";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import type { DateRange } from "react-day-picker";
 import {
   Sheet,
   SheetContent,
@@ -30,12 +30,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { useBranches } from "@/lib/queries/use-branches";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
 import {
-  useMechanicKpis,
-  useMechanicHours,
   useMechanicCommissions,
+  useMechanicHours,
+  useMechanicKpis,
 } from "@/lib/queries/use-mechanic-performance";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId } from "@/lib/stores";
 import type { MechanicReview } from "@/lib/types/service-params";
 import { cn, formatMNT } from "@/lib/utils";
@@ -285,7 +285,7 @@ export default function MechanicPerformancePage() {
       unregisterTab("summary");
       unregisterTab("leaderboard");
     };
-  }, [mechanics, registerTab]);
+  }, [mechanics, registerTab, unregisterTab, t]);
 
   const totals = useMemo(
     () => ({

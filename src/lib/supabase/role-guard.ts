@@ -87,7 +87,7 @@ export async function requireRole(
  *
  * Throws ForbiddenError if the user lacks the permission.
  */
-type PermissionAction =
+export type PermissionAction =
   | "invite"
   | "create"
   | "read"

@@ -1,9 +1,8 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { Eye, Shield, ShieldCheck, ShieldHalf, Wrench } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";

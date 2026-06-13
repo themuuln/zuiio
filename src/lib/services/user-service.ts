@@ -1,10 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
-import { cacheTags } from "@/lib/cache/keys";
 import { createAuditLog } from "@/lib/audit";
+import { cacheTags } from "@/lib/cache/keys";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
-import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { logSupabaseResult } from "@/lib/supabase/logger";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import type { UserProfile } from "@/lib/types";
 
 /**

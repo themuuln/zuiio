@@ -15,7 +15,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
 import {
   Tooltip,
   TooltipContent,
@@ -23,8 +22,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Typography } from "@/components/ui/typography";
 import type { WorkOrderListItem } from "@/lib/queries/use-work-orders";
-
-import { formatMNT } from "@/lib/utils";
+import { cn, formatMNT } from "@/lib/utils";
 
 // ── Status helpers ────────────────────────────────────────────
 
@@ -58,8 +56,10 @@ function getVehicleDisplay(wo: WorkOrderListItem): string {
     .join(" ");
 }
 
-function getDaysSince(dateStr: string, now: Date): number {
+function getDaysSince(dateStr: string | null | undefined, now: Date): number {
+  if (!dateStr) return 0;
   const created = new Date(dateStr);
+  if (Number.isNaN(created.getTime())) return 0;
   return Math.floor(
     (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24),
   );

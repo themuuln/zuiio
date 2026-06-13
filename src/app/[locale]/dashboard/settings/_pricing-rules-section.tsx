@@ -2,7 +2,6 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Tags, Trash2 } from "lucide-react";
-import { priceRuleKeys } from "@/lib/queries/keys";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -29,6 +28,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
+import { priceRuleKeys } from "@/lib/queries/keys";
 import { SettingsBlock, SettingsListItem } from "./_settings-layout";
 
 interface PriceRule {
@@ -423,71 +423,68 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
         <SettingsBlock className="gap-2">
           {sortedRules.map((rule) => (
             <SettingsListItem key={rule.id} inactive={!rule.is_active}>
-                <div className="flex flex-1 flex-col gap-1.5 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <Typography.Text className="text-sm font-medium">
-                      {rule.name}
-                    </Typography.Text>
-                    <Badge
-                      variant={rule.is_active ? "default" : "secondary"}
-                      className="text-[10px] px-1.5 py-0"
-                    >
-                      {rule.is_active ? t("active") : t("inactive")}
-                    </Badge>
-                    <Badge
-                      variant="outline"
-                      className="text-[10px] px-1.5 py-0"
-                    >
-                      {rule.apply_to === "both"
-                        ? t("appliesBoth")
-                        : rule.apply_to === "part"
-                          ? t("appliesParts")
-                          : t("appliesServices")}
-                    </Badge>
-                  </div>
-                  {rule.description && (
-                    <Typography.Muted className="text-xs text-muted-foreground">
-                      {rule.description}
-                    </Typography.Muted>
+              <div className="flex flex-1 flex-col gap-1.5 min-w-0">
+                <div className="flex items-center gap-2">
+                  <Typography.Text className="text-sm font-medium">
+                    {rule.name}
+                  </Typography.Text>
+                  <Badge
+                    variant={rule.is_active ? "default" : "secondary"}
+                    className="text-[10px] px-1.5 py-0"
+                  >
+                    {rule.is_active ? t("active") : t("inactive")}
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    {rule.apply_to === "both"
+                      ? t("appliesBoth")
+                      : rule.apply_to === "part"
+                        ? t("appliesParts")
+                        : t("appliesServices")}
+                  </Badge>
+                </div>
+                {rule.description && (
+                  <Typography.Muted className="text-xs text-muted-foreground">
+                    {rule.description}
+                  </Typography.Muted>
+                )}
+                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[11px]">
+                    {t("priority")} {rule.priority}
+                  </span>
+                  <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[11px]">
+                    {operatorDescription(rule.operator, rule.value)}
+                  </span>
+                  {rule.conditions_description && (
+                    <span className="text-muted-foreground/70">
+                      → {rule.conditions_description}
+                    </span>
                   )}
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[11px]">
-                      {t("priority")} {rule.priority}
-                    </span>
-                    <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[11px]">
-                      {operatorDescription(rule.operator, rule.value)}
-                    </span>
-                    {rule.conditions_description && (
-                      <span className="text-muted-foreground/70">
-                        → {rule.conditions_description}
-                      </span>
-                    )}
-                  </div>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <Switch
-                    checked={rule.is_active}
-                    onCheckedChange={(checked) =>
-                      toggleMutation.mutate({ id: rule.id, is_active: checked })
-                    }
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-8"
-                    onClick={() => openEdit(rule)}
-                  >
-                    <Pencil className="size-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 text-destructive"
-                    onClick={() => setDeleteConfirm(rule.id)}
-                  >
-                    <Trash2 className="size-3.5" />
-                  </Button>
-                </div>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <Switch
+                  checked={rule.is_active}
+                  onCheckedChange={(checked) =>
+                    toggleMutation.mutate({ id: rule.id, is_active: checked })
+                  }
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-8"
+                  onClick={() => openEdit(rule)}
+                >
+                  <Pencil className="size-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-8 text-destructive"
+                  onClick={() => setDeleteConfirm(rule.id)}
+                >
+                  <Trash2 className="size-3.5" />
+                </Button>
+              </div>
             </SettingsListItem>
           ))}
         </SettingsBlock>

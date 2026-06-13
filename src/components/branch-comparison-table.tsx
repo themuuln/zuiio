@@ -129,7 +129,6 @@ function formatValue(
       return formatCurrency(value);
     case "percent":
       return `${value}%`;
-    case "number":
     default:
       return String(Math.round(value));
   }

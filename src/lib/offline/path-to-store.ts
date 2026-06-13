@@ -53,7 +53,7 @@ export function getStoreForPath(apiPath: string): StoreName | undefined {
 
   // Try prefix match (e.g. /customers/123 → /customers)
   for (const [prefix, store] of Object.entries(PATH_TO_STORE)) {
-    if (apiPath.startsWith(prefix + "/") || apiPath === prefix) {
+    if (apiPath.startsWith(`${prefix}/`) || apiPath === prefix) {
       return store;
     }
   }

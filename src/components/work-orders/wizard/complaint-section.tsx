@@ -27,7 +27,7 @@ export function ComplaintSection() {
     activeLabels.find((l) => l.id === ctx.diagnosisLabelId) ?? null;
 
   return (
-    <Card>
+    <Card data-wizard-step="complaint">
       <CardHeader>
         <CardTitle className="text-base">{t("complaint")}</CardTitle>
       </CardHeader>

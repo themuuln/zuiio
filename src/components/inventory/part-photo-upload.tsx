@@ -2,11 +2,12 @@
 
 import { Camera, Loader2, Trash2 } from "lucide-react";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { generateUUID } from "@/lib/crypto-utils";
 import { createClient } from "@/lib/supabase/client";
-import heic2any from "heic2any";
 
 interface PartPhotoUploadProps {
   orgId: string;
@@ -17,13 +18,14 @@ interface PartPhotoUploadProps {
 }
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic"];
-const MAX_DIMENSION = 1200; // max width/height in pixels
-const JPEG_QUALITY = 0.8; // 80% quality — good balance
+const MAX_DIMENSION = 1200;
+const JPEG_QUALITY = 0.8;
 
 async function compressImage(file: File): Promise<Blob> {
-  // Convert HEIC to JPEG first (browsers can't decode HEIC natively)
   let processedFile = file;
   if (file.type === "image/heic") {
+    // Dynamic import to avoid SSR breakage (heic2any references window at module level)
+    const heic2any = (await import("heic2any")).default;
     const jpegBlob = await heic2any({
       blob: file,
       toType: "image/jpeg",
@@ -36,7 +38,6 @@ async function compressImage(file: File): Promise<Blob> {
     );
   }
 
-  // Load image into an HTMLImageElement
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
     const el = new window.Image();
     el.onload = () => resolve(el);
@@ -46,14 +47,12 @@ async function compressImage(file: File): Promise<Blob> {
 
   let { width, height } = img;
 
-  // Scale down if exceeds max dimension
   if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
     const ratio = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height);
     width = Math.round(width * ratio);
     height = Math.round(height * ratio);
   }
 
-  // Draw onto canvas and export as JPEG
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
@@ -61,7 +60,6 @@ async function compressImage(file: File): Promise<Blob> {
   if (!ctx) throw new Error("Canvas not supported");
   ctx.drawImage(img, 0, 0, width, height);
 
-  // Clean up object URL
   URL.revokeObjectURL(img.src);
 
   return new Promise((resolve, reject) => {
@@ -84,13 +82,9 @@ export default function PartPhotoUpload({
   readOnly = false,
 }: PartPhotoUploadProps) {
   const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  async function uploadFile(file: File) {
     if (!ALLOWED_TYPES.includes(file.type)) {
       toast.error("Зөвхөн JPEG, PNG, WebP, HEIC зураг ашиглах боломжтой");
       return;
@@ -98,13 +92,12 @@ export default function PartPhotoUpload({
 
     setUploading(true);
     try {
-      // Compress image before upload
       const originalSize = file.size;
       const compressed = await compressImage(file);
       const saved = Math.round((1 - compressed.size / originalSize) * 100);
 
       const supabase = createClient();
-      const uniqueName = `${crypto.randomUUID()}.jpg`;
+      const uniqueName = `${generateUUID()}.jpg`;
       const storagePath = `${orgId}/${partId ?? "new"}/${uniqueName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -131,16 +124,40 @@ export default function PartPhotoUpload({
       toast.error(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      if (cameraInputRef.current) cameraInputRef.current.value = "";
     }
+  }
+
+  const onDrop = useCallback(
+    (accepted: File[]) => {
+      const file = accepted[0];
+      if (file) uploadFile(file);
+    },
+    [uploadFile],
+  );
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      "image/jpeg": [".jpg", ".jpeg"],
+      "image/png": [".png"],
+      "image/webp": [".webp"],
+      "image/heic": [".heic"],
+    },
+    maxFiles: 1,
+    disabled: uploading || readOnly,
+    noClick: true,
+    noKeyboard: true,
+  });
+
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) uploadFile(file);
   }
 
   async function handleRemove() {
     if (!imageUrl) return;
     setUploading(true);
     try {
-      // Extract storage path from the public URL
       const supabase = createClient();
       const urlParts = imageUrl.split("/part-photos/");
       if (urlParts[1]) {
@@ -160,8 +177,16 @@ export default function PartPhotoUpload({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Preview */}
-      <div className="relative flex size-24 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted">
+      {/* Dropzone area wrapping the preview + inputs */}
+      <div
+        {...getRootProps()}
+        className={`relative flex size-24 items-center justify-center overflow-hidden rounded-lg border-2 transition-colors ${
+          isDragActive
+            ? "border-primary bg-primary/10"
+            : "border-border bg-muted"
+        } ${!readOnly && !isBusy ? "cursor-pointer" : "cursor-default"}`}
+      >
+        <input {...getInputProps()} />
         {imageUrl ? (
           <Image
             src={imageUrl}
@@ -174,6 +199,11 @@ export default function PartPhotoUpload({
         ) : (
           <Camera className="size-8 text-muted-foreground/40" />
         )}
+        {isDragActive && (
+          <div className="absolute inset-0 flex items-center justify-center bg-primary/20 text-xs font-medium text-primary">
+            Drop image
+          </div>
+        )}
         {uploading && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/60">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
@@ -181,14 +211,7 @@ export default function PartPhotoUpload({
         )}
       </div>
 
-      {/* Hidden inputs */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp,image/heic"
-        onChange={handleFileSelect}
-        className="hidden"
-      />
+      {/* Camera capture input (kept separate, no drag-drop) */}
       <input
         ref={cameraInputRef}
         type="file"
@@ -211,21 +234,6 @@ export default function PartPhotoUpload({
           >
             <Camera className="mr-1.5 size-3.5" />
             {isBusy ? "Ачаалж байна..." : "Зураг авах"}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isBusy}
-            className="w-full"
-          >
-            {isBusy ? (
-              <Loader2 className="mr-1.5 size-3.5 animate-spin" />
-            ) : (
-              <span className="mr-1.5 text-xs">📁</span>
-            )}
-            {isBusy ? "Ачаалж байна..." : "Файлаас сонгох"}
           </Button>
           {imageUrl && (
             <Button

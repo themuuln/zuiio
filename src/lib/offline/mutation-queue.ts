@@ -1,6 +1,7 @@
 "use client";
 
 import { type IDBPDatabase, openDB } from "idb";
+import { generateUUID } from "@/lib/crypto-utils";
 
 // ─── Types ─────────────────────────────────────────────────────
 
@@ -58,7 +59,7 @@ export async function enqueueMutation(
   >,
 ): Promise<string> {
   const db = await getDb();
-  const id = crypto.randomUUID();
+  const id = generateUUID();
   const record: QueuedMutation = {
     ...mutation,
     id,

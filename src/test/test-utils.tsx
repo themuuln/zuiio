@@ -47,8 +47,8 @@ function customRenderHook<Result, Props>(
 }
 
 export {
-  customRender as render,
-  customRenderHook as renderHook,
   createTestQueryClient,
   createWrapper,
+  customRender as render,
+  customRenderHook as renderHook,
 };

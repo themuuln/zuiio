@@ -24,7 +24,9 @@ export function SummaryCards({ counts }: SummaryCardsProps) {
             <Calendar className="size-4 text-primary" />
           </div>
           <div>
-            <p className="text-2xl font-semibold leading-none">{counts.total}</p>
+            <p className="text-2xl font-semibold leading-none">
+              {counts.total}
+            </p>
             <p className="mt-1 text-xs text-muted-foreground">
               {t("serviceReminders.totalSchedules")}
             </p>

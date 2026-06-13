@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Typography } from "@/components/ui/typography";
+import { generateUUID } from "@/lib/crypto-utils";
 import { useRouter } from "@/lib/i18n/navigation";
 import {
   useCreatePurchaseOrder,
@@ -47,7 +48,7 @@ export default function NewPurchaseOrderPage() {
     setItems((prev) => [
       ...prev,
       {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         part_id: "",
         quantity_ordered: 1,
         unit_cost: 0,

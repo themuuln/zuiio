@@ -9,11 +9,11 @@ import {
   updateVehicle,
 } from "@/lib/services/vehicle-service";
 
-export const GET = createRouteHandler(async ({ orgId, params }) => {
+export const GET = createRouteHandler(async ({ orgId, params, supabase }) => {
   const { vehicleId } = params;
   const [vehicle, serviceHistory] = await Promise.all([
-    getVehicle(vehicleId, orgId),
-    getVehicleServiceHistory(orgId, vehicleId),
+    getVehicle(supabase, vehicleId, orgId),
+    getVehicleServiceHistory(supabase, orgId, vehicleId),
   ]);
   return NextResponse.json({
     data: { ...vehicle, service_history: serviceHistory },
@@ -21,10 +21,10 @@ export const GET = createRouteHandler(async ({ orgId, params }) => {
 });
 
 export const PATCH = createRouteHandler(
-  async ({ request, orgId, params, user }) => {
+  async ({ request, orgId, params, user, supabase }) => {
     await requireActiveSubscription(orgId);
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-    const rateCheck = mutationRateLimiter.check(ip);
+    const rateCheck = await mutationRateLimiter.check(ip);
     if (!rateCheck.allowed) {
       return NextResponse.json(
         { error: { code: "RATE_LIMITED", message: "Too many requests" } },
@@ -40,16 +40,22 @@ export const PATCH = createRouteHandler(
     }
     const { vehicleId } = params;
     const body = await request.json();
-    const vehicle = await updateVehicle(vehicleId, orgId, body, user.id);
+    const vehicle = await updateVehicle(
+      supabase,
+      vehicleId,
+      orgId,
+      body,
+      user.id,
+    );
     return NextResponse.json({ data: vehicle });
   },
 );
 
 export const DELETE = createRouteHandler(
-  async ({ request, orgId, params, user }) => {
+  async ({ request, orgId, params, user, supabase }) => {
     await requireActiveSubscription(orgId);
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-    const rateCheck = mutationRateLimiter.check(ip);
+    const rateCheck = await mutationRateLimiter.check(ip);
     if (!rateCheck.allowed) {
       return NextResponse.json(
         { error: { code: "RATE_LIMITED", message: "Too many requests" } },
@@ -64,7 +70,7 @@ export const DELETE = createRouteHandler(
       );
     }
     const { vehicleId } = params;
-    await deleteVehicle(vehicleId, orgId, user.id);
+    await deleteVehicle(supabase, vehicleId, orgId, user.id);
     return NextResponse.json({ data: null });
   },
 );

@@ -40,7 +40,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
-import { cn } from "@/lib/utils";
 import {
   useCreateExpenseCategory,
   useDeleteExpenseCategory,
@@ -49,6 +48,7 @@ import {
 } from "@/lib/queries/use-expenses";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { ExpenseCategory } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 const CATEGORY_COLORS = [
   { name: "Blue", value: "#3b82f6" },
@@ -343,7 +343,8 @@ export default function CategoriesPage() {
                     size="icon-sm"
                     className={cn(
                       "rounded-full border-2",
-                      formColor === color.value && "scale-105 border-foreground",
+                      formColor === color.value &&
+                        "scale-105 border-foreground",
                     )}
                     style={{
                       backgroundColor: color.value,
@@ -354,7 +355,10 @@ export default function CategoriesPage() {
                 ))}
               </div>
               <div className="rounded-lg bg-muted/25 px-3 py-2 text-xs text-muted-foreground">
-                {t("expenses.color")}: <span className="font-mono uppercase text-foreground">{formColor}</span>
+                {t("expenses.color")}:{" "}
+                <span className="font-mono uppercase text-foreground">
+                  {formColor}
+                </span>
               </div>
             </div>
           </div>

@@ -72,5 +72,5 @@ export function useRealtime({
         channelRef.current = null;
       }
     };
-  }, [table, JSON.stringify(queryKey), filter, enabled, schema, queryClient]);
+  }, [table, filter, enabled, schema, queryClient, queryKey]);
 }

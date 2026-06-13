@@ -1,8 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
-import { cacheTags } from "@/lib/cache/keys";
 import { createAuditLog } from "@/lib/audit";
+import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { withBranchFilter } from "@/lib/supabase/with-branch";
 import type { ReminderLog, VehicleServiceSchedule } from "@/lib/types";
@@ -506,7 +507,10 @@ export async function sendPendingReminders(
             .eq("id", log.id);
           return true;
         } else {
-          console.warn(`Reminder ${log.id}: No recipient email`);
+          logger.warn(
+            { reminderLogId: log.id },
+            `Reminder ${log.id}: No recipient email`,
+          );
           return false;
         }
       } catch (err) {

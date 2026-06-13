@@ -11,7 +11,7 @@ export function MechanicSection() {
   const t = useTranslations("workOrderWizard");
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div data-wizard-step="mechanic" className="grid gap-6 md:grid-cols-2">
       <Card>
         <CardHeader>
           <CardTitle className="text-base">{t("mechanic")}</CardTitle>

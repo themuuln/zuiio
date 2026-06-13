@@ -506,9 +506,7 @@ export async function updateWorkOrderPartPrice(
 
       const newFinalPrice = Number(postUpdate?.final_price ?? 0);
       const effectiveUnitPrice =
-        updatedPart.quantity > 0
-          ? newFinalPrice / updatedPart.quantity
-          : 0;
+        updatedPart.quantity > 0 ? newFinalPrice / updatedPart.quantity : 0;
 
       await supabase.from("part_price_history").insert({
         organization_id: orgId,

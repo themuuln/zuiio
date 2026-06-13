@@ -13,22 +13,13 @@ import { useTranslations } from "next-intl";
 import { useEffect, useMemo } from "react";
 import type { DateRange } from "react-day-picker";
 import { ExportButton } from "@/components/export-button";
-import { ListPageShell } from "@/components/list-page-shell";
-import { ListToolbar } from "@/components/list-toolbar";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTablePage } from "@/components/ui/data-table-page";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import {
-  Empty,
-  EmptyContent,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import {
   Select,
   SelectContent,
@@ -52,8 +43,7 @@ import {
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId } from "@/lib/stores";
 import type { ExpenseWithCategory } from "@/lib/types";
-import { cn } from "@/lib/utils";
-import { formatMNT } from "@/lib/utils";
+import { cn, formatMNT } from "@/lib/utils";
 import { columns } from "./_columns";
 
 // ── Inline KPI Card ──
@@ -183,6 +173,7 @@ export default function ExpensesPage() {
 
   const {
     data: expenses,
+    isLoading: expensesLoading,
     isFetching: expensesFetching,
     isError,
     error,
@@ -251,11 +242,13 @@ export default function ExpensesPage() {
     sidebar.setActiveTab,
     sidebar.unregisterTab,
     stats,
+    t,
   ]);
 
-  const isFirstLoad =
-    !expenses && !search && !categoryId && paidFilter === "all";
-  const showLoadingScreen = orgLoading || (statsLoading && isFirstLoad);
+  const displayError =
+    isError || (!orgId && !orgLoading)
+      ? (error?.message ?? t("common.noOrganization"))
+      : null;
 
   // ── Export columns ──
 
@@ -277,26 +270,155 @@ export default function ExpensesPage() {
         value: (e) => (e.paid_at ? t("expenses.paid") : t("expenses.unpaid")),
       },
     ],
-    [],
+    [t],
   );
 
-  const displayError =
-    isError || (!orgId && !orgLoading)
-      ? (error?.message ?? t("common.noOrganization"))
-      : null;
   const resultCount = expenses?.length ?? 0;
   const categoryCount = categories?.length ?? 0;
   const hasFilters = activeCount > 0;
 
+  // ── KPI cards ──
+
+  const kpiCards = (
+    <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+      <KpiCard
+        label={t("expenses.totalExpenses")}
+        value={stats ? String(stats.totalExpenses) : "\u2014"}
+        icon={Wallet}
+        loading={statsLoading}
+        tone="default"
+      />
+      <KpiCard
+        label={t("expenses.totalAmount")}
+        value={stats ? formatMNT(stats.totalAmount) : "\u2014"}
+        icon={DollarSign}
+        loading={statsLoading}
+        tone="success"
+      />
+      <KpiCard
+        label={t("expenses.thisMonth")}
+        value={stats ? formatMNT(stats.thisMonth) : "\u2014"}
+        icon={TrendingUp}
+        loading={statsLoading}
+        tone="warning"
+      />
+      <KpiCard
+        label={t("sidebar.overdue")}
+        value={stats ? String(stats.overdueCount) : "\u2014"}
+        icon={AlertCircle}
+        loading={statsLoading}
+        tone="danger"
+      />
+      <KpiCard
+        label={t("expenses.unpaid")}
+        value={stats ? formatMNT(stats.unpaidAmount) : "\u2014"}
+        icon={Clock}
+        loading={statsLoading}
+        tone="warning"
+      />
+    </div>
+  );
+
+  // ── Badge bar ──
+
+  const badgeBar = (
+    <Card className="border-border/70 bg-muted/20 shadow-xs">
+      <CardContent className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="outline" className="bg-background">
+            {t("expenses.resultCount", { count: resultCount })}
+          </Badge>
+          <Badge variant="outline" className="bg-background">
+            {t("expenses.categories")}: {categoryCount}
+          </Badge>
+          {stats && stats.overdueCount > 0 && (
+            <Badge
+              variant="outline"
+              className="border-destructive/25 bg-destructive/5 text-destructive"
+            >
+              {t("expenses.overdue")}: {stats.overdueCount}
+            </Badge>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          {branchFilter && (
+            <Badge variant="secondary" className="font-normal">
+              {t("expenses.branchFiltered")}
+            </Badge>
+          )}
+          {hasFilters && (
+            <Badge variant="secondary" className="font-normal">
+              {t("expenses.filterCount", { count: activeCount })}
+            </Badge>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  // ── Filter controls ──
+
+  const filterControls = (
+    <div className="flex flex-wrap items-center gap-3">
+      <Select
+        value={categoryId || "all"}
+        onValueChange={(value) => setCategory(value === "all" ? "" : value)}
+      >
+        <SelectTrigger size="sm" className="min-w-44">
+          <SelectValue placeholder={t("expenses.category")} />
+        </SelectTrigger>
+        <SelectContent align="start">
+          <SelectItem value="all">{t("expenses.allStatus")}</SelectItem>
+          {categories?.map((cat) => (
+            <SelectItem key={cat.id} value={cat.id}>
+              {cat.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <DateRangePicker
+        value={rangeValue}
+        onChange={handleRangeChange}
+        className="w-[240px]"
+      />
+      {activeCount > 0 && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-9 px-2 text-muted-foreground hover:text-foreground text-xs"
+          onClick={resetAll}
+        >
+          {t("expenses.clearFilters")}
+        </Button>
+      )}
+
+      <ToggleGroup
+        multiple={false}
+        value={[paidFilter]}
+        onValueChange={(value) => {
+          if (value.length > 0) setStatus(value[0]);
+        }}
+        spacing={1}
+      >
+        {PAID_FILTER_OPTIONS.map((opt) => (
+          <ToggleGroupItem key={opt.key} value={opt.key}>
+            {opt.label}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+    </div>
+  );
+
   return (
-    <ListPageShell
+    <DataTablePage
       title={t("nav.expenses")}
       description={
         resultCount
           ? t("expenses.resultCount", { count: resultCount })
           : undefined
       }
-      loading={showLoadingScreen}
+      loading={orgLoading || expensesLoading}
       error={displayError}
       onRetry={refetch}
       headerAction={
@@ -305,263 +427,121 @@ export default function ExpensesPage() {
           {t("expenses.addExpenseButton")}
         </Button>
       }
-    >
-      {/* ── KPI Cards ── */}
-      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-        <KpiCard
-          label={t("expenses.totalExpenses")}
-          value={stats ? String(stats.totalExpenses) : "\u2014"}
-          icon={Wallet}
-          loading={statsLoading}
-          tone="default"
+      columns={columns}
+      data={expenses ?? []}
+      getRowId={(row) => row.id}
+      pageSize={20}
+      search={{
+        placeholder: t("expenses.searchPlaceholder"),
+        value: search,
+        onChange: setSearch,
+        loading: expensesFetching,
+        resultLabel: expenses?.length
+          ? t("expenses.resultCount", { count: expenses.length })
+          : undefined,
+        emptyLabel: search
+          ? t("expenses.noMatches", { query: search })
+          : undefined,
+      }}
+      filters={filterControls}
+      actions={
+        <ExportButton
+          data={expenses ?? []}
+          columns={exportColumns}
+          filename={`expenses-${now.toISOString().split("T")[0]}.xlsx`}
+          sheetName="Expenses"
         />
-        <KpiCard
-          label={t("expenses.totalAmount")}
-          value={stats ? formatMNT(stats.totalAmount) : "\u2014"}
-          icon={DollarSign}
-          loading={statsLoading}
-          tone="success"
-        />
-        <KpiCard
-          label={t("expenses.thisMonth")}
-          value={stats ? formatMNT(stats.thisMonth) : "\u2014"}
-          icon={TrendingUp}
-          loading={statsLoading}
-          tone="warning"
-        />
-        <KpiCard
-          label={t("sidebar.overdue")}
-          value={stats ? String(stats.overdueCount) : "\u2014"}
-          icon={AlertCircle}
-          loading={statsLoading}
-          tone="danger"
-        />
-        <KpiCard
-          label={t("expenses.unpaid")}
-          value={stats ? formatMNT(stats.unpaidAmount) : "\u2014"}
-          icon={Clock}
-          loading={statsLoading}
-          tone="warning"
-        />
-      </div>
-
-      <Card className="border-border/70 bg-muted/20 shadow-xs">
-        <CardContent className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className="bg-background">
-              {t("expenses.resultCount", { count: resultCount })}
-            </Badge>
-            <Badge variant="outline" className="bg-background">
-              {t("expenses.categories")}: {categoryCount}
-            </Badge>
-            {stats && stats.overdueCount > 0 && (
+      }
+      stats={
+        <span className="text-sm text-muted-foreground">
+          {t("expenses.resultCount", { count: expenses?.length ?? 0 })}
+        </span>
+      }
+      beforeTable={
+        <>
+          {kpiCards}
+          {badgeBar}
+        </>
+      }
+      onRowClick={(row) => setDetailExpenseId(row.id)}
+      emptyTitle={t("expenses.noExpenses")}
+      emptyIcon={Wallet}
+      emptyAction={
+        <Button onClick={() => setNewExpenseSheetOpen(true)} variant="outline">
+          {t("expenses.addFirstExpense")}
+        </Button>
+      }
+      renderMobileCard={(expense) => {
+        const overdue =
+          !expense.paid_at &&
+          !!expense.due_date &&
+          new Date(expense.due_date) < now;
+        const dateStr = (() => {
+          try {
+            return new Date(expense.expense_date).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            });
+          } catch {
+            return expense.expense_date;
+          }
+        })();
+        return (
+          <div className="flex flex-col gap-3 text-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 space-y-1">
+                <span className="block truncate font-medium">
+                  {expense.description}
+                </span>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <span>{dateStr}</span>
+                  {expense.category?.name && (
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-foreground/80">
+                      {expense.category.name}
+                    </span>
+                  )}
+                </div>
+              </div>
               <Badge
                 variant="outline"
-                className="border-destructive/25 bg-destructive/5 text-destructive"
+                className={cn(
+                  "shrink-0 text-[10px] px-1.5 py-0",
+                  expense.paid_at &&
+                    "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-400",
+                  overdue &&
+                    "border-destructive/25 bg-destructive/5 text-destructive",
+                )}
               >
-                {t("expenses.overdue")}: {stats.overdueCount}
+                {expense.paid_at
+                  ? t("expenses.paid")
+                  : overdue
+                    ? t("expenses.overdue")
+                    : t("expenses.unpaid")}
               </Badge>
-            )}
+            </div>
+            <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
+              <div className="min-w-0 space-y-1">
+                <span className="block truncate">
+                  {expense.vendor_name || expense.category?.name || "\u2014"}
+                </span>
+                {expense.due_date && (
+                  <span
+                    className={cn(
+                      "block",
+                      overdue && "font-medium text-destructive",
+                    )}
+                  >
+                    {t("expenses.due")}: {expense.due_date}
+                  </span>
+                )}
+              </div>
+              <span className="text-sm font-semibold tabular-nums">
+                {formatMNT(expense.amount)}
+              </span>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            {branchFilter && (
-              <Badge variant="secondary" className="font-normal">
-                {t("expenses.branchFiltered")}
-              </Badge>
-            )}
-            {hasFilters && (
-              <Badge variant="secondary" className="font-normal">
-                {t("expenses.filterCount", { count: activeCount })}
-              </Badge>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ── Filter Bar ── */}
-      <ListToolbar
-        search={{
-          placeholder: t("expenses.searchPlaceholder"),
-          value: search,
-          onChange: setSearch,
-          loading: expensesFetching,
-          resultLabel: expenses?.length
-            ? t("expenses.resultCount", { count: expenses.length })
-            : undefined,
-          emptyLabel: search
-            ? t("expenses.noMatches", { query: search })
-            : undefined,
-        }}
-        filters={
-          <div className="flex flex-wrap items-center gap-3">
-            <Select
-              value={categoryId || "all"}
-              onValueChange={(value) =>
-                setCategory(value === "all" ? "" : value)
-              }
-            >
-              <SelectTrigger size="sm" className="min-w-44">
-                <SelectValue placeholder={t("expenses.category")} />
-              </SelectTrigger>
-              <SelectContent align="start">
-                <SelectItem value="all">{t("expenses.allStatus")}</SelectItem>
-                {categories?.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <DateRangePicker
-              value={rangeValue}
-              onChange={handleRangeChange}
-              className="w-[240px]"
-            />
-            {activeCount > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-9 px-2 text-muted-foreground hover:text-foreground text-xs"
-                onClick={resetAll}
-              >
-                {t("expenses.clearFilters")}
-              </Button>
-            )}
-
-            <ToggleGroup
-              multiple={false}
-              value={[paidFilter]}
-              onValueChange={(value) => {
-                if (value.length > 0) setStatus(value[0]);
-              }}
-              spacing={1}
-            >
-              {PAID_FILTER_OPTIONS.map((opt) => (
-                <ToggleGroupItem key={opt.key} value={opt.key}>
-                  {opt.label}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-          </div>
-        }
-        actions={
-          <ExportButton
-            data={expenses ?? []}
-            columns={exportColumns}
-            filename={`expenses-${now.toISOString().split("T")[0]}.xlsx`}
-            sheetName="Expenses"
-          />
-        }
-        stats={
-          <span className="text-sm text-muted-foreground">
-            {t("expenses.resultCount", { count: expenses?.length ?? 0 })}
-          </span>
-        }
-      />
-
-      {/* ── Table / Empty State ── */}
-      <Card className="overflow-hidden border-border/70 py-0 shadow-xs">
-        <CardContent className="p-0">
-          {!expenses || expenses.length === 0 ? (
-            <Empty>
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <Wallet />
-                </EmptyMedia>
-                <EmptyTitle>{t("expenses.noExpenses")}</EmptyTitle>
-              </EmptyHeader>
-              <EmptyContent>
-                <Button
-                  onClick={() => setNewExpenseSheetOpen(true)}
-                  variant="outline"
-                >
-                  {t("expenses.addFirstExpense")}
-                </Button>
-              </EmptyContent>
-            </Empty>
-          ) : (
-            <DataTable
-              columns={columns}
-              data={expenses}
-              getRowId={(row) => row.id}
-              pageSize={20}
-              onRowClick={(row) => setDetailExpenseId(row.id)}
-              renderMobileCard={(expense) => {
-                const overdue =
-                  !expense.paid_at &&
-                  !!expense.due_date &&
-                  new Date(expense.due_date) < now;
-                const dateStr = (() => {
-                  try {
-                    return new Date(expense.expense_date).toLocaleDateString(
-                      "en-US",
-                      { month: "short", day: "numeric" },
-                    );
-                  } catch {
-                    return expense.expense_date;
-                  }
-                })();
-                return (
-                  <div className="flex flex-col gap-3 text-sm">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 space-y-1">
-                        <span className="block truncate font-medium">
-                          {expense.description}
-                        </span>
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                          <span>{dateStr}</span>
-                          {expense.category?.name && (
-                            <span className="rounded-full bg-muted px-2 py-0.5 text-foreground/80">
-                              {expense.category.name}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "shrink-0 text-[10px] px-1.5 py-0",
-                          expense.paid_at &&
-                            "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-400",
-                          overdue &&
-                            "border-destructive/25 bg-destructive/5 text-destructive",
-                        )}
-                      >
-                        {expense.paid_at
-                          ? t("expenses.paid")
-                          : overdue
-                            ? t("expenses.overdue")
-                            : t("expenses.unpaid")}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
-                      <div className="min-w-0 space-y-1">
-                        <span className="block truncate">
-                          {expense.vendor_name || expense.category?.name || "—"}
-                        </span>
-                        {expense.due_date && (
-                          <span
-                            className={cn(
-                              "block",
-                              overdue && "font-medium text-destructive",
-                            )}
-                          >
-                            {t("expenses.due")}: {expense.due_date}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-sm font-semibold tabular-nums">
-                        {formatMNT(expense.amount)}
-                      </span>
-                    </div>
-                  </div>
-                );
-              }}
-            />
-          )}
-        </CardContent>
-      </Card>
-    </ListPageShell>
+        );
+      }}
+    />
   );
 }

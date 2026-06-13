@@ -1,15 +1,40 @@
 "use client";
 
-import { Crown, Plus } from "lucide-react";
+import {
+  DndContext,
+  type DragEndEvent,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { arrayMove, useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { Crown, GripVertical, Loader2, Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { MechanicAvatar } from "@/components/mechanic-avatar";
-import { Button } from "@/components/ui/button";
+import {
+  type SortableItem,
+  SortableListBody,
+} from "@/components/sortable-list";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-interface MechanicOption {
+interface MechanicOption extends SortableItem {
   id: string;
   full_name: string;
   current_jobs?: number;
@@ -31,6 +56,75 @@ interface MechanicMultiSelectProps {
   saving: boolean;
   onLeadChange: (mechanicId: string) => void;
   onHelpersChange: () => void;
+}
+
+function SortableMechanicRow({
+  mechanic,
+  isAssigned,
+  isLead,
+  onToggle,
+}: {
+  mechanic: MechanicOption;
+  isAssigned: boolean;
+  isLead: boolean;
+  onToggle?: (mechanicId: string) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: mechanic.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "flex items-center gap-2 rounded-lg px-2.5 py-2.5",
+        isDragging && "opacity-50 bg-accent/30 shadow-sm",
+      )}
+    >
+      <span
+        {...attributes}
+        {...listeners}
+        className="flex size-5 shrink-0 cursor-grab touch-manipulation items-center justify-center rounded hover:bg-muted/60 active:cursor-grabbing"
+      >
+        <GripVertical className="size-3 text-muted-foreground/30" />
+      </span>
+      <Checkbox
+        checked={isAssigned}
+        onCheckedChange={() => onToggle?.(mechanic.id)}
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+        className="size-4 shrink-0"
+        aria-label={`Toggle ${mechanic.full_name}`}
+      />
+      <MechanicAvatar mechanic={mechanic} className="size-7 shrink-0" />
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-xs font-medium">{mechanic.full_name}</div>
+        {mechanic.current_jobs !== undefined && (
+          <div className="text-[10px] text-muted-foreground">
+            {mechanic.current_jobs > 0
+              ? `${mechanic.current_jobs} active jobs`
+              : "Available"}
+          </div>
+        )}
+      </div>
+      {isLead && (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-amber-500/12 px-2 py-1 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+          <Crown className="size-3" />
+          Lead
+        </span>
+      )}
+    </div>
+  );
 }
 
 /** Build ordered value: [lead, ...helpers] */
@@ -65,31 +159,29 @@ export function MechanicMultiSelect({
   onHelpersChange,
 }: MechanicMultiSelectProps) {
   const t = useTranslations("bayView");
-  const inFlightRef = useRef(0);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [popoverOpen, setPopoverOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [isMutatingMechanicId, setIsMutatingMechanicId] = useState<
+    string | null
+  >(null);
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+  );
 
   const serverValue = useMemo(
     () => buildSelectedValue(leadMechanicId, helpers, mechanics),
     [leadMechanicId, helpers, mechanics],
   );
 
-  // Single source of truth: null means use server value
+  // Pessimistic local state: set AFTER API success, cleared when refetch arrives
   const [localValue, setLocalValue] = useState<MechanicOption[] | null>(null);
-
-  // Ref to always have latest value in callbacks without stale closures
-  const valueRef = useRef(serverValue);
   const value = localValue ?? serverValue;
-  valueRef.current = value;
 
-  // Sync: when server matches local, drop local
+  // Sync: when server catches up, drop local
   useEffect(() => {
     if (!localValue) return;
-    if (inFlightRef.current > 0) return; // still waiting for API
     const localIds = localValue
       .map((m) => m.id)
       .sort()
@@ -98,257 +190,360 @@ export function MechanicMultiSelect({
       .map((m) => m.id)
       .sort()
       .join(",");
-    if (localIds === serverIds) {
-      setLocalValue(null);
-    }
+    if (localIds === serverIds) setLocalValue(null);
   }, [localValue, serverValue]);
 
-  // Focus search input when dropdown opens
+  // Reset search when popover opens
   useEffect(() => {
-    if (dropdownOpen) {
-      requestAnimationFrame(() => searchInputRef.current?.focus());
-    } else {
-      setSearch("");
-    }
-  }, [dropdownOpen]);
+    if (!popoverOpen) setSearch("");
+  }, [popoverOpen]);
 
-  // Close dropdown on click outside
-  useEffect(() => {
-    if (!dropdownOpen) return;
+  const allItems = useMemo(() => {
+    const assignedIds = new Set(value.map((m) => m.id));
+    return [...value, ...mechanics.filter((m) => !assignedIds.has(m.id))];
+  }, [value, mechanics]);
 
-    function handleClickOutside(e: MouseEvent) {
-      const target = e.target as Node;
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(target) &&
-        triggerRef.current &&
-        !triggerRef.current.contains(target)
-      ) {
-        setDropdownOpen(false);
-      }
-    }
+  const handleDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      const { active, over } = event;
+      setActiveDragId(null);
+      if (!over || active.id === over.id) return;
 
-    document.addEventListener("mousedown", handleClickOutside, true);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside, true);
-  }, [dropdownOpen]);
+      const oldIndex = allItems.findIndex((m) => m.id === active.id);
+      const newIndex = allItems.findIndex((m) => m.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return;
 
-  const toggleMechanic = useCallback(
-    async (mechanic: MechanicOption) => {
-      if (!workOrderId) return;
+      const assignedCount = value.length;
+      const wasUnassigned = oldIndex >= assignedCount;
+      const isNowAssigned = newIndex < assignedCount;
 
-      const currentValue = valueRef.current;
-      const isSelected = currentValue.some((m) => m.id === mechanic.id);
-
-      // Optimistic: compute new value immediately
-      const newValue = isSelected
-        ? currentValue.filter((m) => m.id !== mechanic.id)
-        : [...currentValue, mechanic];
-      setLocalValue(newValue);
-
-      if (isSelected) {
-        // Removing
-        const wasLead = currentValue[0]?.id === mechanic.id;
-        if (wasLead) {
-          const newLead = newValue[0];
-          if (newLead) onLeadChange(newLead.id);
+      if (wasUnassigned && isNowAssigned) {
+        if (newIndex === 0) {
+          // Assign as lead
+          onLeadChange(String(active.id));
+          const candidate = mechanics.find((m) => m.id === active.id);
+          if (candidate) setLocalValue([candidate, ...value]);
+          setPopoverOpen(false);
         } else {
-          inFlightRef.current++;
-          try {
-            const res = await fetch(
-              `/api/organizations/${orgId}/work-orders/${workOrderId}/helpers?mechanicId=${mechanic.id}`,
-              { method: "DELETE" },
-            );
-            const json = await res.json();
-            if (!res.ok || json.error) {
-              toast.error(json.error?.message ?? t("failedToRemoveHelper"));
-              setLocalValue(null); // rollback
-            } else {
-              toast.dismiss();
-              toast.success(t("helperRemoved"));
-              onHelpersChange();
-            }
-          } catch {
-            toast.error(t("failedToRemoveHelper"));
-            setLocalValue(null); // rollback
-          } finally {
-            inFlightRef.current--;
-          }
-        }
-      } else {
-        // Adding
-        const isFirst = currentValue.length === 0;
-        if (isFirst) {
-          onLeadChange(mechanic.id);
-        } else {
-          inFlightRef.current++;
+          // Assign as helper via API
+          if (!workOrderId || isMutatingMechanicId) return;
+          setIsMutatingMechanicId(String(active.id));
           try {
             const res = await fetch(
               `/api/organizations/${orgId}/work-orders/${workOrderId}/helpers`,
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ mechanic_id: mechanic.id }),
+                body: JSON.stringify({ mechanic_id: active.id }),
               },
             );
             const json = await res.json();
             if (!res.ok || json.error) {
               toast.error(json.error?.message ?? t("failedToAddHelper"));
-              setLocalValue(null); // rollback
             } else {
               toast.dismiss();
               toast.success(t("helperAdded"));
+              const mechanic = mechanics.find((m) => m.id === active.id);
+              if (mechanic) setLocalValue([...value, mechanic]);
               onHelpersChange();
             }
           } catch {
             toast.error(t("failedToAddHelper"));
-            setLocalValue(null); // rollback
           } finally {
-            inFlightRef.current--;
+            setIsMutatingMechanicId(null);
           }
         }
+      } else if (!wasUnassigned && isNowAssigned) {
+        // Reorder within assigned section
+        const reordered = arrayMove(allItems, oldIndex, newIndex);
+        const newOrderedIds = reordered
+          .slice(0, assignedCount)
+          .map((m) => m.id);
+        if (newOrderedIds[0] !== leadMechanicId) {
+          onLeadChange(newOrderedIds[0]);
+        }
+        setLocalValue(
+          newOrderedIds
+            .map((id) => mechanics.find((m) => m.id === id))
+            .filter((m): m is MechanicOption => !!m),
+        );
+      } else if (!wasUnassigned && !isNowAssigned) {
+        // Dragged from assigned to unassigned → remove
+        const wasLead = oldIndex === 0;
+        if (wasLead) {
+          // Removing the lead — promote next helper to lead
+          const remaining = value.filter((m) => m.id !== active.id);
+          if (remaining.length > 0) {
+            onLeadChange(remaining[0].id);
+          }
+          setLocalValue(remaining);
+        } else {
+          // Removing a helper via API
+          if (!workOrderId || isMutatingMechanicId) return;
+          setIsMutatingMechanicId(String(active.id));
+          try {
+            const res = await fetch(
+              `/api/organizations/${orgId}/work-orders/${workOrderId}/helpers?mechanicId=${active.id}`,
+              { method: "DELETE" },
+            );
+            const json = await res.json();
+            if (!res.ok || json.error) {
+              toast.error(json.error?.message ?? t("failedToRemoveHelper"));
+            } else {
+              toast.dismiss();
+              toast.success(t("helperRemoved"));
+              setLocalValue(value.filter((m) => m.id !== active.id));
+              onHelpersChange();
+            }
+          } catch {
+            toast.error(t("failedToRemoveHelper"));
+          } finally {
+            setIsMutatingMechanicId(null);
+          }
+        }
+        setPopoverOpen(false);
       }
     },
-    [workOrderId, orgId, onLeadChange, onHelpersChange, t],
+    [
+      allItems,
+      value,
+      mechanics,
+      workOrderId,
+      orgId,
+      leadMechanicId,
+      onLeadChange,
+      onHelpersChange,
+      t,
+      isMutatingMechanicId,
+    ],
   );
 
   const CHIP_LIMIT = 3;
   const visible = value.slice(0, CHIP_LIMIT);
   const hiddenCount = value.length - visible.length;
-  const selectedIds = useMemo(() => new Set(value.map((m) => m.id)), [value]);
-
-  const filteredMechanics = useMemo(() => {
-    if (!search.trim()) return mechanics;
-    const q = search.toLowerCase();
-    return mechanics.filter((m) => m.full_name.toLowerCase().includes(q));
-  }, [mechanics, search]);
 
   return (
     <div className="relative">
-      {/* Chips — min-h prevents collapse when empty, flex-wrap handles overflow */}
-      <div className="flex min-h-7 flex-wrap items-center gap-1 rounded-full border-border/60 px-1.5 py-0.5">
-        {visible.map((m, i) => {
-          return (
-            <div
-              key={m.id}
-              className="flex h-6 items-center gap-1 rounded-full bg-muted px-1.5 text-xs font-medium"
-            >
-              {i === 0 && <Crown className="size-3 shrink-0 text-amber-500" />}
-              <MechanicAvatar mechanic={m} className="size-4 shrink-0" />
-              <span className="max-w-[60px] truncate">{m.full_name}</span>
-            </div>
-          );
-        })}
-        {hiddenCount > 0 && (
-          <span className="shrink-0 text-xs text-muted-foreground">
-            +{hiddenCount}
-          </span>
-        )}
-        <Button
-          ref={triggerRef}
-          variant="outline"
-          size="icon-xs"
-          className="h-6 w-6 rounded-full"
-          onClick={(e) => {
-            e.stopPropagation();
-            setDropdownOpen((o) => !o);
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          disabled={saving}
-          aria-label={t("addPlaceholder")}
-          aria-expanded={dropdownOpen}
+      <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+        <DndContext
+          sensors={sensors}
+          onDragStart={({ active }) => setActiveDragId(String(active.id))}
+          onDragEnd={handleDragEnd}
+          onDragCancel={() => setActiveDragId(null)}
         >
-          <Plus className="size-3" />
-        </Button>
-      </div>
-
-      {/* Inline dropdown */}
-      {dropdownOpen && (
-        <div
-          ref={dropdownRef}
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => e.stopPropagation()}
-          className="absolute top-full left-0 z-50 mt-1 w-64 rounded-lg border bg-popover p-1 shadow-md ring-1 ring-foreground/10"
-        >
-          <Input
-            ref={searchInputRef}
-            placeholder={t("addPlaceholder")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-8 text-xs"
-            onPointerDown={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
-          />
-          <div className="no-scrollbar mt-1 max-h-60 overflow-y-auto">
-            {filteredMechanics.length === 0 ? (
-              <div className="py-2 text-center text-xs text-muted-foreground">
-                {t("noMechanics")}
-              </div>
-            ) : (
-              filteredMechanics.map((mechanic) => {
-                const isSelected = selectedIds.has(mechanic.id);
-                const isLead = value[0]?.id === mechanic.id;
-                return (
-                  <button
-                    key={mechanic.id}
-                    type="button"
-                    className={cn(
-                      "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs outline-none hover:bg-accent hover:text-accent-foreground",
-                      isSelected && "bg-accent/50",
-                    )}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleMechanic(mechanic);
-                    }}
-                    onPointerDown={(e) => e.stopPropagation()}
-                  >
-                    <MechanicAvatar
-                      mechanic={mechanic}
-                      className="size-5 shrink-0"
-                    />
-                    <span className="flex-1 truncate">
-                      {mechanic.full_name}
-                    </span>
-                    {mechanic.current_jobs !== undefined &&
-                      mechanic.current_jobs > 0 && (
-                        <span className="text-[10px] text-muted-foreground">
-                          {mechanic.current_jobs}j
-                        </span>
-                      )}
-                    {isLead && (
-                      <Crown className="size-3 shrink-0 text-amber-500" />
-                    )}
-                    <div
-                      className={cn(
-                        "flex size-4 shrink-0 items-center justify-center rounded-sm border",
-                        isSelected
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-muted-foreground/30",
-                      )}
-                    >
-                      {isSelected && (
-                        <svg
-                          className="size-3"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={3}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M5 13l4 4L19 7"
+          <div className="flex min-h-9 min-w-[150px] max-w-[220px] items-center gap-1.5 rounded-xl border border-border/70 bg-background/90 px-2 py-1 shadow-sm backdrop-blur-sm">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+              {visible.length === 0 ? (
+                <span className="px-1 text-xs font-medium text-muted-foreground">
+                  {t("selectMechanic")}
+                </span>
+              ) : null}
+              <TooltipProvider delay={120}>
+                {visible.map((m, i) => {
+                  const isLead = i === 0;
+                  return (
+                    <Tooltip key={m.id}>
+                      <TooltipTrigger
+                        render={
+                          <div
+                            className={cn(
+                              "relative inline-flex size-7 shrink-0 items-center justify-center rounded-lg border shadow-sm transition-colors",
+                              isLead
+                                ? "border-amber-500/35 bg-amber-500/12"
+                                : "border-border/70 bg-muted/70",
+                            )}
                           />
-                        </svg>
-                      )}
-                    </div>
-                  </button>
-                );
-              })
-            )}
+                        }
+                      >
+                        <MechanicAvatar
+                          mechanic={m}
+                          className="size-6 shrink-0"
+                        />
+                        {isLead ? (
+                          <span className="absolute -top-0.5 -left-0.5 flex size-3.5 items-center justify-center rounded-full bg-amber-500 text-amber-950 shadow-sm">
+                            <Crown className="size-2" />
+                          </span>
+                        ) : null}
+                      </TooltipTrigger>
+                      <TooltipContent side="top" sideOffset={6}>
+                        {m.full_name}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </TooltipProvider>
+              {hiddenCount > 0 && (
+                <span className="inline-flex h-6 shrink-0 items-center rounded-lg border border-border/70 bg-muted/60 px-2 text-[10px] font-semibold text-muted-foreground">
+                  +{hiddenCount}
+                </span>
+              )}
+            </div>
+            <PopoverTrigger
+              render={
+                <button
+                  type="button"
+                  disabled={saving || isMutatingMechanicId !== null}
+                  className={cn(
+                    "flex size-7 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-muted/50 hover:bg-muted hover:text-foreground transition-colors",
+                    saving || isMutatingMechanicId !== null
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-pointer",
+                  )}
+                  aria-label={t("addPlaceholder")}
+                >
+                  {isMutatingMechanicId ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : (
+                    <Plus className="size-3" />
+                  )}
+                </button>
+              }
+            />
           </div>
-        </div>
-      )}
+
+          <PopoverContent
+            className="w-72 p-0"
+            side="bottom"
+            align="end"
+            sideOffset={4}
+          >
+            <div className="flex flex-col">
+              <div className="flex items-center justify-between border-b border-border/50 px-3 py-2">
+                <span className="text-xs font-semibold">
+                  {t("selectMechanic")}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setPopoverOpen(false)}
+                  className="text-muted-foreground/40 hover:text-foreground transition-colors"
+                >
+                  <X className="size-3" />
+                </button>
+              </div>
+
+              <div className="border-b border-border/50 px-3 py-2">
+                <div className="relative">
+                  <Input
+                    autoFocus
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder={t("selectMechanic")}
+                    className="h-7 pl-2 pr-2 text-xs"
+                    onKeyDown={(e) => {
+                      if (e.key === "Escape") {
+                        setSearch("");
+                        setPopoverOpen(false);
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+
+              <SortableListBody
+                items={mechanics}
+                assignedItems={value}
+                search={search}
+                searchPredicate={(m, q) =>
+                  m.full_name.toLowerCase().includes(q)
+                }
+                emptyText={
+                  t("allMechanicsAssigned") ?? "All mechanics assigned"
+                }
+                noResultsText={t("noMechanics") ?? "No mechanics found"}
+                renderItem={(m, { isAssigned, isLead }) => (
+                  <SortableMechanicRow
+                    mechanic={m as MechanicOption}
+                    isAssigned={isAssigned}
+                    isLead={isLead}
+                    onToggle={(mechanicId) => {
+                      if (isAssigned) {
+                        // Unassign — if lead, promote next helper; if helper, remove
+                        if (isLead) {
+                          const remaining = value.filter(
+                            (v) => v.id !== mechanicId,
+                          );
+                          if (remaining.length > 0) {
+                            onLeadChange(remaining[0].id);
+                          }
+                          setLocalValue(remaining);
+                        } else {
+                          setPopoverOpen(false);
+                          fetch(
+                            `/api/organizations/${orgId}/work-orders/${workOrderId}/helpers?mechanicId=${mechanicId}`,
+                            { method: "DELETE" },
+                          )
+                            .then((res) => res.json())
+                            .then((json) => {
+                              if (!json.error) {
+                                setLocalValue(
+                                  value.filter((v) => v.id !== mechanicId),
+                                );
+                                onHelpersChange();
+                              }
+                            })
+                            .catch(() => {});
+                        }
+                      } else {
+                        // Assign — lead if first, helper otherwise
+                        if (value.length === 0) {
+                          onLeadChange(mechanicId);
+                          const candidate = mechanics.find(
+                            (m) => m.id === mechanicId,
+                          );
+                          if (candidate) setLocalValue([candidate]);
+                        } else {
+                          setPopoverOpen(false);
+                          fetch(
+                            `/api/organizations/${orgId}/work-orders/${workOrderId}/helpers`,
+                            {
+                              method: "POST",
+                              headers: {
+                                "Content-Type": "application/json",
+                              },
+                              body: JSON.stringify({
+                                mechanic_id: mechanicId,
+                              }),
+                            },
+                          )
+                            .then((res) => res.json())
+                            .then((json) => {
+                              if (!json.error) {
+                                const candidate = mechanics.find(
+                                  (m) => m.id === mechanicId,
+                                );
+                                if (candidate)
+                                  setLocalValue([...value, candidate]);
+                                onHelpersChange();
+                              }
+                            })
+                            .catch(() => {});
+                        }
+                      }
+                    }}
+                  />
+                )}
+              />
+            </div>
+          </PopoverContent>
+
+          <DragOverlay>
+            {(() => {
+              if (!activeDragId) return null;
+              const dragged = allItems.find((m) => m.id === activeDragId);
+              if (!dragged) return null;
+              return (
+                <div className="flex items-center gap-2 rounded-md bg-card px-2 py-1.5 shadow-lg ring-1 ring-border/50">
+                  <GripVertical className="size-3 text-muted-foreground/30" />
+                  <MechanicAvatar mechanic={dragged} className="size-6" />
+                  <span className="text-xs font-medium">
+                    {dragged.full_name}
+                  </span>
+                </div>
+              );
+            })()}
+          </DragOverlay>
+        </DndContext>
+      </Popover>
     </div>
   );
 }

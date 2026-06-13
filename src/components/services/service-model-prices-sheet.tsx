@@ -24,9 +24,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DetailSheet } from "@/components/ui/detail-sheet";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
+import { DrawerDescription, DrawerTitle } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
-import { SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { Typography } from "@/components/ui/typography";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import {
@@ -199,7 +199,7 @@ export function ServiceModelPricesSheet({
         return upsertMutation.mutateAsync({
           vehicle_model_id: vmId,
           specific_price:
-            specificPrice != null && !isNaN(specificPrice)
+            specificPrice != null && !Number.isNaN(specificPrice)
               ? specificPrice
               : null,
         });
@@ -232,15 +232,15 @@ export function ServiceModelPricesSheet({
 
   return (
     <>
-      <DetailSheet open={open} onOpenChange={handleCloseAttempt} size="lg">
-        <DetailSheet.Header bordered={false}>
+      <DetailDrawer open={open} onOpenChange={handleCloseAttempt} size="lg">
+        <DetailDrawer.Header bordered={false}>
           <div className="flex items-center justify-between">
-            <SheetTitle>{t("modelSpecificPrices")}</SheetTitle>
+            <DrawerTitle>{t("modelSpecificPrices")}</DrawerTitle>
             <Badge variant="secondary" className="shrink-0">
               {t("customCount", { count: customCount, total: totalModels })}
             </Badge>
           </div>
-          <SheetDescription>
+          <DrawerDescription>
             {t("setDifferentPrices", { name: serviceName })}
             <br />
             {t("defaultPriceLabel")}{" "}
@@ -248,8 +248,8 @@ export function ServiceModelPricesSheet({
               {formatMNT(defaultPrice)}
             </span>
             . {t("leaveEmptyDefault")}
-          </SheetDescription>
-        </DetailSheet.Header>
+          </DrawerDescription>
+        </DetailDrawer.Header>
 
         {/* ── Search + Bulk Actions ── */}
         {!fetchError && (
@@ -307,7 +307,7 @@ export function ServiceModelPricesSheet({
         )}
 
         {/* ── Model List ── */}
-        <DetailSheet.Body className="space-y-4">
+        <DetailDrawer.Body className="space-y-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="size-6 animate-spin text-muted-foreground" />
@@ -437,10 +437,10 @@ export function ServiceModelPricesSheet({
               </div>
             ))
           )}
-        </DetailSheet.Body>
+        </DetailDrawer.Body>
 
         {/* ── Footer ── */}
-        <DetailSheet.Footer className="flex-row gap-2 sm:gap-2">
+        <DetailDrawer.Footer className="flex-row gap-2 sm:gap-2">
           <Button
             variant="outline"
             className="flex-1 h-11"
@@ -465,8 +465,8 @@ export function ServiceModelPricesSheet({
               </>
             )}
           </Button>
-        </DetailSheet.Footer>
-      </DetailSheet>
+        </DetailDrawer.Footer>
+      </DetailDrawer>
 
       {/* ── Confirm Discard Dialog ── */}
       <AlertDialog

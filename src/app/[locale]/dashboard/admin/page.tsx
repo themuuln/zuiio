@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Check,
   Loader2,
@@ -12,7 +13,6 @@ import {
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

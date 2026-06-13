@@ -10,6 +10,7 @@ import {
   Search,
   User,
   Wrench,
+  Zap,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -61,6 +62,8 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onQueued?: () => void;
+  onAssigned?: () => void;
+  assignBayNumber?: number;
   branchId?: string;
 }
 
@@ -167,6 +170,8 @@ export function VehicleRegistrationDialog({
   open,
   onOpenChange,
   onQueued,
+  onAssigned,
+  assignBayNumber,
   branchId,
 }: Props) {
   const t = useTranslations("bayView");
@@ -199,7 +204,6 @@ export function VehicleRegistrationDialog({
 
   // ── Collapsible sections ──────────────────────────────────
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
-  const [showOwnerInfo, setShowOwnerInfo] = useState(false);
 
   const plateRef = useRef<HTMLInputElement>(null);
 
@@ -245,7 +249,6 @@ export function VehicleRegistrationDialog({
       setSearchResults([]);
       setShowDropdown(false);
       setShowTechnicalDetails(false);
-      setShowOwnerInfo(false);
       form.reset({
         make: "",
         model: "",
@@ -384,12 +387,37 @@ export function VehicleRegistrationDialog({
         setSaveSuccess(true);
         setSaveMode(saveResult.isUpdate ? "updated" : "created");
 
+        // Add to queue immediately after saving
+        const { addVehicleToQueue } = await import(
+          "@/lib/services/bay-view-actions"
+        );
+        const { workOrderId } = await addVehicleToQueue({
+          vehicleId: saveResult.vehicle.id,
+          customerId: saveResult.customerId ?? "",
+          complaint: data.complaint?.trim() || undefined,
+          branchId,
+        });
+
+        // Direct assign to bay if requested
+        if (assignBayNumber) {
+          const { assignVehicleToBay } = await import(
+            "@/lib/services/bay-view-service"
+          );
+          await assignVehicleToBay(workOrderId, assignBayNumber);
+        }
+
         // Re-lookup to update timeline
         const refreshResult = await lookupVehicleByPlate(
           plate.trim().toUpperCase(),
         );
         setLookupResult(refreshResult);
         setLookupDone(true);
+
+        if (assignBayNumber) {
+          onAssigned?.();
+        } else {
+          onQueued?.();
+        }
       } catch (err) {
         setSaveError(
           err instanceof Error ? err.message : t("common.somethingWentWrong"),
@@ -398,7 +426,7 @@ export function VehicleRegistrationDialog({
         setSaving(false);
       }
     },
-    [plate, getSavePayload, t],
+    [plate, getSavePayload, t, branchId, onQueued, onAssigned, assignBayNumber],
   );
 
   // ── Queue handler ─────────────────────────────────────────
@@ -409,6 +437,8 @@ export function VehicleRegistrationDialog({
       savedCustomerId,
       lookupResult,
     );
+
+    let workOrderId: string | undefined;
 
     if (!vehicleId) {
       // Vehicle hasn't been saved yet — save first
@@ -427,35 +457,48 @@ export function VehicleRegistrationDialog({
         const { addVehicleToQueue } = await import(
           "@/lib/services/bay-view-actions"
         );
-        await addVehicleToQueue({
+        ({ workOrderId } = await addVehicleToQueue({
           vehicleId: saveResult.vehicle.id,
           customerId: saveResult.customerId ?? "",
           complaint: formData.complaint?.trim() || undefined,
           branchId,
-        });
+        }));
       } catch (err) {
         setQueueError(
           err instanceof Error ? err.message : t("common.somethingWentWrong"),
         );
         return;
       }
-    } else if (!customerId) {
-      setQueueError(t("fillOwnerInfo"));
-      return;
     } else {
-      // Both IDs resolved — queue directly
+      // Vehicle exists — queue directly
       setQueueSaving(true);
       setQueueError(null);
       try {
         const { addVehicleToQueue } = await import(
           "@/lib/services/bay-view-actions"
         );
-        await addVehicleToQueue({
+        ({ workOrderId } = await addVehicleToQueue({
           vehicleId,
-          customerId,
+          customerId: customerId ?? undefined,
           complaint: formData.complaint?.trim() || undefined,
           branchId,
-        });
+        }));
+      } catch (err) {
+        setQueueError(
+          err instanceof Error ? err.message : t("common.somethingWentWrong"),
+        );
+        setQueueSaving(false);
+        return;
+      }
+    }
+
+    // Direct assign to bay if requested
+    if (assignBayNumber && workOrderId) {
+      try {
+        const { assignVehicleToBay } = await import(
+          "@/lib/services/bay-view-service"
+        );
+        await assignVehicleToBay(workOrderId, assignBayNumber);
       } catch (err) {
         setQueueError(
           err instanceof Error ? err.message : t("common.somethingWentWrong"),
@@ -466,13 +509,19 @@ export function VehicleRegistrationDialog({
     }
 
     setQueueSaving(false);
-    onQueued?.();
+    if (assignBayNumber) {
+      onAssigned?.();
+    } else {
+      onQueued?.();
+    }
   }, [
     plate,
     savedVehicleId,
     savedCustomerId,
     lookupResult,
     onQueued,
+    onAssigned,
+    assignBayNumber,
     form,
     getSavePayload,
     branchId,
@@ -480,17 +529,7 @@ export function VehicleRegistrationDialog({
   ]);
 
   // ── Derived state ─────────────────────────────────────────
-  const { vehicleId: resolvedVehicleId, customerId: resolvedCustomerId } =
-    resolveQueueIds(savedVehicleId, savedCustomerId, lookupResult);
-  const canQueue = !!resolvedVehicleId && !!resolvedCustomerId;
-
   const formValues = form.watch();
-  const needsSave =
-    !lookupResult.exists &&
-    plate.trim() &&
-    formValues.make.trim() &&
-    formValues.model.trim();
-
   const isExistingVehicle = lookupDone && lookupResult.exists;
 
   return (
@@ -628,8 +667,14 @@ export function VehicleRegistrationDialog({
             {isExistingVehicle && (
               <div className="flex flex-col gap-3 bg-muted/30 border border-border/60 rounded-lg p-4">
                 <Label className="flex items-center gap-2 text-sm font-semibold">
-                  <MessageSquarePlus className="size-4 text-primary" />
-                  Add to Waiting Queue
+                  {assignBayNumber ? (
+                    <Zap className="size-4 text-emerald-500" />
+                  ) : (
+                    <MessageSquarePlus className="size-4 text-primary" />
+                  )}
+                  {assignBayNumber
+                    ? t("assignToBayNumber", { bayNumber: assignBayNumber })
+                    : t("addToWaitingQueue")}
                 </Label>
 
                 <Field data-invalid={!!form.formState.errors.complaint}>
@@ -652,16 +697,20 @@ export function VehicleRegistrationDialog({
                   type="button"
                   variant="default"
                   size="default"
-                  disabled={queueSaving || !canQueue}
+                  disabled={queueSaving}
                   onClick={handleAddToQueue}
                   className="w-full"
                 >
                   {queueSaving ? (
                     <Loader2 className="size-4 animate-spin" />
                   ) : (
-                    <MessageSquarePlus className="size-4" />
+                    <Zap className="size-4" />
                   )}
-                  {queueSaving ? t("addingToQueue") : t("addQueueButton")}
+                  {queueSaving
+                    ? t("addingToQueue")
+                    : assignBayNumber
+                      ? t("assignToBayNumber", { bayNumber: assignBayNumber })
+                      : t("addQueueButton")}
                 </Button>
               </div>
             )}
@@ -787,71 +836,52 @@ export function VehicleRegistrationDialog({
                   </CollapsibleContent>
                 </Collapsible>
 
-                {/* ── Collapsible: Owner Info ──────────────── */}
-                <Collapsible
-                  open={showOwnerInfo}
-                  onOpenChange={setShowOwnerInfo}
-                >
-                  <CollapsibleTrigger className="flex items-center gap-2 text-xs font-medium text-muted-foreground/70 hover:text-muted-foreground transition-colors py-1">
-                    <ChevronDown
-                      className={`size-3 transition-transform ${showOwnerInfo ? "rotate-180" : ""}`}
-                    />
-                    {t("ownerInfo")}{" "}
-                    <span className="text-muted-foreground/50">(optional)</span>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pt-2">
-                    <div className="flex flex-col gap-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        <Field
-                          data-invalid={!!form.formState.errors.custFirstName}
-                        >
-                          <FieldContent>
-                            <Input
-                              placeholder="e.g. Bat"
-                              className="text-xs"
-                              aria-invalid={
-                                !!form.formState.errors.custFirstName
-                              }
-                              {...form.register("custFirstName")}
-                            />
-                          </FieldContent>
-                        </Field>
-                        <Field
-                          data-invalid={!!form.formState.errors.custLastName}
-                        >
-                          <FieldContent>
-                            <Input
-                              placeholder="e.g. Erdene"
-                              className="text-xs"
-                              aria-invalid={
-                                !!form.formState.errors.custLastName
-                              }
-                              {...form.register("custLastName")}
-                            />
-                          </FieldContent>
-                        </Field>
-                      </div>
-                      <Field data-invalid={!!form.formState.errors.custPhone}>
-                        <FieldContent>
-                          <Input
-                            type="tel"
-                            placeholder="e.g. 99112233"
-                            inputMode="tel"
-                            autoComplete="tel"
-                            className="text-xs"
-                            aria-invalid={!!form.formState.errors.custPhone}
-                            {...form.register("custPhone")}
-                          />
-                          {form.formState.errors.custPhone && (
-                            <FieldError>
-                              {form.formState.errors.custPhone.message}
-                            </FieldError>
-                          )}
-                        </FieldContent>
-                      </Field>
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
+                {/* ── Owner Info ──────────────────────────── */}
+                <div className="flex flex-col gap-2">
+                  <Label className="text-xs font-medium text-muted-foreground">
+                    {t("ownerInfo")}
+                  </Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Field data-invalid={!!form.formState.errors.custFirstName}>
+                      <FieldContent>
+                        <Input
+                          placeholder="e.g. Bat"
+                          className="text-xs"
+                          aria-invalid={!!form.formState.errors.custFirstName}
+                          {...form.register("custFirstName")}
+                        />
+                      </FieldContent>
+                    </Field>
+                    <Field data-invalid={!!form.formState.errors.custLastName}>
+                      <FieldContent>
+                        <Input
+                          placeholder="e.g. Erdene"
+                          className="text-xs"
+                          aria-invalid={!!form.formState.errors.custLastName}
+                          {...form.register("custLastName")}
+                        />
+                      </FieldContent>
+                    </Field>
+                  </div>
+                  <Field data-invalid={!!form.formState.errors.custPhone}>
+                    <FieldContent>
+                      <Input
+                        type="tel"
+                        placeholder="e.g. 99112233"
+                        inputMode="tel"
+                        autoComplete="tel"
+                        className="text-xs"
+                        aria-invalid={!!form.formState.errors.custPhone}
+                        {...form.register("custPhone")}
+                      />
+                      {form.formState.errors.custPhone && (
+                        <FieldError>
+                          {form.formState.errors.custPhone.message}
+                        </FieldError>
+                      )}
+                    </FieldContent>
+                  </Field>
+                </div>
 
                 {/* ── Complaint ────────────────────────────── */}
                 <div className="border-t border-border/50 pt-4">
@@ -869,19 +899,6 @@ export function VehicleRegistrationDialog({
                   </Field>
                 </div>
 
-                {/* ── Queue hint ───────────────────────────── */}
-                {needsSave && !canQueue && (
-                  <Typography.Muted className="text-xs text-muted-foreground/60">
-                    Save the vehicle first, then you can add it to the queue.
-                  </Typography.Muted>
-                )}
-
-                {lookupResult.exists && !resolvedCustomerId && (
-                  <Typography.Text className="text-xs text-amber-600">
-                    Fill in owner info (name + phone) and save to add to queue.
-                  </Typography.Text>
-                )}
-
                 {/* ── Actions ──────────────────────────────── */}
                 <div className="flex flex-col gap-2">
                   <Button
@@ -893,65 +910,16 @@ export function VehicleRegistrationDialog({
                     {saving ? (
                       <Loader2 className="size-4 animate-spin" />
                     ) : (
-                      <Car className="size-4" />
+                      <Zap className="size-4" />
                     )}
-                    {saving ? t("saving") : t("registerVehicleBtn")}
+                    {saving
+                      ? t("saving")
+                      : assignBayNumber
+                        ? t("saveAndAssignToBay", {
+                            bayNumber: assignBayNumber,
+                          })
+                        : t("saveAndAddToQueue")}
                   </Button>
-
-                  {/* Save & Queue (combined) */}
-                  {needsSave && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full"
-                      disabled={saving || queueSaving}
-                      onClick={async () => {
-                        // Save first, then queue
-                        const formData = form.getValues();
-                        if (!formData.make.trim() || !formData.model.trim())
-                          return;
-
-                        setSaving(true);
-                        setSaveError(null);
-                        try {
-                          const { quickRegisterVehicle } = await import(
-                            "@/lib/services/bay-view-actions"
-                          );
-                          const saveResult = await quickRegisterVehicle(
-                            getSavePayload(formData),
-                          );
-                          setSavedVehicleId(saveResult.vehicle.id);
-                          setSavedCustomerId(saveResult.customerId);
-
-                          const { addVehicleToQueue } = await import(
-                            "@/lib/services/bay-view-actions"
-                          );
-                          await addVehicleToQueue({
-                            vehicleId: saveResult.vehicle.id,
-                            customerId: saveResult.customerId ?? "",
-                            complaint: formData.complaint?.trim() || undefined,
-                            branchId,
-                          });
-                          onQueued?.();
-                        } catch (err) {
-                          setSaveError(
-                            err instanceof Error
-                              ? err.message
-                              : t("common.somethingWentWrong"),
-                          );
-                        } finally {
-                          setSaving(false);
-                        }
-                      }}
-                    >
-                      {saving || queueSaving ? (
-                        <Loader2 className="size-4 animate-spin" />
-                      ) : (
-                        <MessageSquarePlus className="size-4" />
-                      )}
-                      {t("saveAndAddToQueue")}
-                    </Button>
-                  )}
                 </div>
               </form>
             )}

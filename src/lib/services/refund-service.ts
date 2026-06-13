@@ -1,8 +1,8 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   InvoiceRefund,
   RefundStats,
@@ -53,7 +53,7 @@ export async function recordRefund(
     supabase,
     action: "create",
     table_name: "invoice_refunds",
-    record_id: newRefund!.id,
+    record_id: newRefund?.id,
     user_id: userId ?? undefined,
     organization_id: orgId,
     new_data: newRefund ?? {

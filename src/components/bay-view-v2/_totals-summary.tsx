@@ -35,7 +35,7 @@ export function TotalsSummary({
   const taxLabel = locale === "mn" ? "НӨАТ" : "VAT";
 
   return (
-    <section className="rounded-lg bg-gradient-to-br from-primary/5 to-primary/[0.02] border border-primary/10">
+    <section className="rounded-lg">
       {/* Always-visible grand total row — clickable toggle */}
       <button
         type="button"

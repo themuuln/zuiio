@@ -170,5 +170,5 @@ export async function optimisticUpdate<T>(
 
 // ── Re-exports ───────────────────────────────────────────────
 
+export type { FieldError, FieldErrors, UseFormProps, UseFormReturn };
 export { useRHFForm as useForm };
-export type { UseFormReturn, UseFormProps, FieldErrors, FieldError };

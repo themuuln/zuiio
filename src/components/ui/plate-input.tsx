@@ -139,4 +139,4 @@ const PlateInput = forwardRef<HTMLInputElement, PlateInputProps>(
   },
 );
 
-export { PlateInput, BuuzHint };
+export { BuuzHint, PlateInput };

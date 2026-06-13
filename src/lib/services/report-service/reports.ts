@@ -12,9 +12,8 @@ import type {
   ServiceBreakdown,
   WeeklyReport,
 } from "@/lib/types";
-
-import { calculateProfitability, getComparisonData } from "./profitability";
 import { getMechanicKpis } from "./mechanics";
+import { calculateProfitability, getComparisonData } from "./profitability";
 import { getRecentWorkOrdersBatched } from "./queries";
 
 export async function getDailyReport(

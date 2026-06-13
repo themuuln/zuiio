@@ -4,11 +4,9 @@ import { TrendingUp } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { ExportButton } from "@/components/export-button";
-import { ListPageShell } from "@/components/list-page-shell";
-import { ListToolbar } from "@/components/list-toolbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTablePage } from "@/components/ui/data-table-page";
 import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
 import type { ExportColumn } from "@/lib/export";
@@ -82,49 +80,24 @@ export default function ValuationPage() {
     </div>
   );
 
-  return (
-    <ListPageShell
-      title={t("valuationTitle")}
-      description={t("valuationSubtitle")}
-      loading={isLoading && balances.length === 0}
-    >
-      {/* KPI card — total inventory value */}
-      <Card className="bg-primary/5 border-primary/10">
-        <CardContent className="flex items-center gap-4 py-6">
-          <TrendingUp className="size-8 text-primary" />
-          <div>
-            <Typography.Muted className="text-sm text-muted-foreground">
-              {t("totalInventoryValue")}
-            </Typography.Muted>
-            <Typography.Text className="text-2xl font-semibold tabular-nums">
-              {totalValue.toLocaleString("mn-MN")} ₮
-            </Typography.Text>
-          </div>
-        </CardContent>
-      </Card>
+  const kpiCard = (
+    <Card className="bg-primary/5 border-primary/10">
+      <CardContent className="flex items-center gap-4 py-6">
+        <TrendingUp className="size-8 text-primary" />
+        <div>
+          <Typography.Muted className="text-sm text-muted-foreground">
+            {t("totalInventoryValue")}
+          </Typography.Muted>
+          <Typography.Text className="text-2xl font-semibold tabular-nums">
+            {totalValue.toLocaleString("mn-MN")} {"\u20AE"}
+          </Typography.Text>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
-      <ListToolbar
-        search={{
-          placeholder: t("searchParts"),
-          value: search,
-          onChange: setSearch,
-        }}
-        stats={
-          <span>
-            {filtered.length} {t("parts")}
-          </span>
-        }
-        actions={
-          <ExportButton
-            data={filtered}
-            columns={exportColumns}
-            filename={`inventory-valuation-${now.toISOString().split("T")[0]}.xlsx`}
-            sheetName="Valuation"
-          />
-        }
-      />
-
-      {/* Category filter chips */}
+  const categoryFilters =
+    categories.length > 0 ? (
       <div className="flex flex-wrap gap-2">
         <Button
           variant={categoryFilter === "" ? "default" : "outline"}
@@ -144,45 +117,64 @@ export default function ValuationPage() {
           </Button>
         ))}
       </div>
+    ) : undefined;
 
-      <Card>
-        <CardContent className="p-0 overflow-x-auto">
-          <DataTable
-            columns={columns}
-            data={filtered}
-            loading={isLoading}
-            emptyState={emptyState}
-            getRowId={(row) =>
-              row.part_id ?? row.part_name ?? Math.random().toString()
-            }
-            pageSize={20}
-            renderMobileCard={(v) => (
-              <div className="flex flex-col gap-2 text-sm">
-                <div className="flex flex-col gap-0.5">
-                  <span className="font-medium truncate">{v.part_name}</span>
-                  <span className="text-xs text-muted-foreground truncate">
-                    {v.part_number || "—"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
-                  <span>{v.category || "—"}</span>
-                  <span className="tabular-nums">
-                    {v.quantity_on_hand} {v.unit}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">
-                    Avg: {v.avgUnitCost.toLocaleString("mn-MN")} ₮
-                  </span>
-                  <span className="font-semibold tabular-nums text-sm">
-                    {v.totalValue.toLocaleString("mn-MN")} ₮
-                  </span>
-                </div>
-              </div>
-            )}
-          />
-        </CardContent>
-      </Card>
-    </ListPageShell>
+  return (
+    <DataTablePage
+      title={t("valuationTitle")}
+      description={t("valuationSubtitle")}
+      loading={isLoading && balances.length === 0}
+      columns={columns}
+      data={filtered}
+      getRowId={(row) =>
+        row.part_id ?? row.part_name ?? Math.random().toString()
+      }
+      pageSize={20}
+      search={{
+        placeholder: t("searchParts"),
+        value: search,
+        onChange: setSearch,
+      }}
+      stats={
+        <span>
+          {filtered.length} {t("parts")}
+        </span>
+      }
+      actions={
+        <ExportButton
+          data={filtered}
+          columns={exportColumns}
+          filename={`inventory-valuation-${now.toISOString().split("T")[0]}.xlsx`}
+          sheetName="Valuation"
+        />
+      }
+      filters={categoryFilters}
+      beforeTable={kpiCard}
+      emptyState={emptyState}
+      renderMobileCard={(v) => (
+        <div className="flex flex-col gap-2 text-sm">
+          <div className="flex flex-col gap-0.5">
+            <span className="font-medium truncate">{v.part_name}</span>
+            <span className="text-xs text-muted-foreground truncate">
+              {v.part_number || "\u2014"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
+            <span>{v.category || "\u2014"}</span>
+            <span className="tabular-nums">
+              {v.quantity_on_hand} {v.unit}
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">
+              Avg: {v.avgUnitCost.toLocaleString("mn-MN")} {"\u20AE"}
+            </span>
+            <span className="font-semibold tabular-nums text-sm">
+              {v.totalValue.toLocaleString("mn-MN")} {"\u20AE"}
+            </span>
+          </div>
+        </div>
+      )}
+    />
   );
 }

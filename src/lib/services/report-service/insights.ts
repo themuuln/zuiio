@@ -1,13 +1,12 @@
 // ── Insight generation (dashboard + report-level) ───────────
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { withBranchFilter } from "@/lib/supabase/with-branch";
 import type {
   DashboardSummary,
   ReportInsight,
   WorkOrderStatusDistribution,
 } from "@/lib/types";
-
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { withBranchFilter } from "@/lib/supabase/with-branch";
 
 import { formatCurrencyHelper, formatNum } from "./utils";
 

@@ -32,6 +32,12 @@ import {
   resolveOrgTransferBanks,
 } from "@/lib/payments/org-bank-accounts";
 import { bayViewKeys } from "@/lib/queries/keys";
+import {
+  useAssignVehicleToBay,
+  useRemoveVehicleFromBay,
+  useUpdateBayCount,
+  useUpdateBayViewStatus,
+} from "@/lib/queries/use-bay-view";
 import { useOrgSettings } from "@/lib/queries/use-org-settings";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useProfile } from "@/lib/queries/use-profile";
@@ -45,12 +51,6 @@ import { useSelectedBranchId, useSetSelectedBranchId } from "@/lib/stores";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { formatPlateNumber } from "@/lib/utils";
 import { useBayDragHandlers } from "./_bay-drag-handlers";
-import {
-  useUpdateBayViewStatus,
-  useAssignVehicleToBay,
-  useRemoveVehicleFromBay,
-  useUpdateBayCount,
-} from "@/lib/queries/use-bay-view";
 import { EmptyBayActionDialog } from "./_empty-bay-action-dialog";
 import { BayViewErrorState } from "./_error-state";
 import { GridView } from "./_grid-view";
@@ -627,7 +627,7 @@ export function BayViewV2Client() {
     setBatchCompletePending(true);
     const readyWos = data.bays
       .filter((b) => b.workOrder?.status === "Ready for Pickup")
-      .map((b) => b.workOrder!.id);
+      .map((b) => b.workOrder?.id);
 
     const { updateWorkOrderStatus } = await import(
       "@/lib/services/bay-view-service"
@@ -690,7 +690,17 @@ export function BayViewV2Client() {
       <Users className="size-4" />,
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [
+    t,
+    registerTab,
+    handleQuickAssign,
+    pendingWoIds,
+    handleQueueItemClick,
+    data,
+    handleQuickAssignToBay,
+    filteredQueue,
+    availableBays,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -698,7 +708,7 @@ export function BayViewV2Client() {
       unregisterTab("mechanics");
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [unregisterTab]);
 
   // Use refs for callbacks to avoid effect re-fires that cause render loops.
   const handleQuickAssignRef = useRef(handleQuickAssign);
@@ -724,7 +734,7 @@ export function BayViewV2Client() {
     );
     updateTabContent("mechanics", <MechanicPanel mechanics={data.mechanics} />);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, filteredQueue, pendingWoIds, availableBays]);
+  }, [data, filteredQueue, pendingWoIds, availableBays, updateTabContent]);
 
   // ── Realtime subscriptions ─────────────────────────────────
   useRealtimeMulti({
@@ -1038,7 +1048,7 @@ export function BayViewV2Client() {
   const occupiedBays = data.bays.filter((b) => b.workOrder).length;
   const pendingPostServiceBay =
     pending.pending?.type === "postService"
-      ? (data.bays.find((b) => b.workOrder?.id === pending.pending!.woId) ??
+      ? (data.bays.find((b) => b.workOrder?.id === pending.pending?.woId) ??
         null)
       : null;
 

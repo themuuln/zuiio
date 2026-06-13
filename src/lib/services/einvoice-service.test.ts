@@ -41,15 +41,13 @@ function chainableResolve(
   obj.single = vi.fn().mockResolvedValue({ data: result, error: null });
   obj.maybeSingle = vi.fn().mockResolvedValue({ data: result, error: null });
   // biome-ignore lint/suspicious/noThenProperty: intentional thenable for Supabase mock chain
-  obj.then = vi
-    .fn()
-    .mockImplementation((resolve: (v: unknown) => unknown) =>
-      resolve({
-        data: result,
-        count: Array.isArray(result) ? result.length : 0,
-        error: null,
-      }),
-    );
+  obj.then = vi.fn().mockImplementation((resolve: (v: unknown) => unknown) =>
+    resolve({
+      data: result,
+      count: Array.isArray(result) ? result.length : 0,
+      error: null,
+    }),
+  );
   return obj;
 }
 

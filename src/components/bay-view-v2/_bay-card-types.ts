@@ -20,6 +20,11 @@ export interface BayCardActionHandlers {
   onQuickAddParts?: (woId: string) => void;
   onAssignMechanic?: (woId: string, mechanicId: string) => Promise<void>;
   onRemoveMechanic?: (woId: string) => Promise<void>;
+  onAddHelper?: (woId: string, mechanicId: string) => Promise<void>;
+  onReorderMechanics?: (
+    woId: string,
+    orderedMechanicIds: string[],
+  ) => Promise<void>;
 }
 
 export interface BayCardProps extends BayCardActionHandlers {

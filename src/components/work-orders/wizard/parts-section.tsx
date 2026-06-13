@@ -34,7 +34,7 @@ export function PartsSection() {
     : [];
 
   return (
-    <Card>
+    <Card data-wizard-step="parts">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-base">{t("parts")}</CardTitle>
         <Button

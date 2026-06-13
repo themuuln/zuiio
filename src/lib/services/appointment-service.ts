@@ -51,9 +51,10 @@ export async function getAppointments(
     .select(
       `
       *,
-      customer:customers(*),
-      vehicle:vehicles(*),
-      estimate:estimates(id, estimate_number, status, grand_total)
+      customer:customers(first_name, last_name, phone),
+      vehicle:vehicles(plate_number, make, model, color),
+      estimate:estimates(id, estimate_number, status, grand_total),
+      mechanic_profile:profiles!appointments_mechanic_id_fkey(id, full_name)
     `,
     )
     .eq("organization_id", orgId)
@@ -73,41 +74,21 @@ export async function getAppointments(
   if (params?.date_from) query = query.gte("scheduled_at", params.date_from);
   if (params?.date_to) query = query.lte("scheduled_at", params.date_to);
 
-  // Fetch mechanic profiles in batch
   const { data } = await query;
   const appointments = (data ?? []) as unknown as (Appointment & {
     customer: Record<string, unknown> | null;
     vehicle: Record<string, unknown> | null;
     estimate: Record<string, unknown> | null;
+    mechanic_profile: { id: string; full_name: string | null } | null;
   })[];
-
-  const mechanicIds = [
-    ...new Set(
-      appointments.flatMap((a) => (a.mechanic_id ? [a.mechanic_id] : [])),
-    ),
-  ] as string[];
-  const mechanicMap = new Map<
-    string,
-    { id: string; full_name: string | null }
-  >();
-  if (mechanicIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", mechanicIds);
-    for (const p of profiles ?? []) {
-      mechanicMap.set(p.id, p);
-    }
-  }
 
   return appointments.map((a) => ({
     ...a,
-    mechanic: a.mechanic_id
-      ? (mechanicMap.get(a.mechanic_id) ?? {
-          id: a.mechanic_id,
-          full_name: null,
-        })
-      : null,
+    mechanic: a.mechanic_profile
+      ? { id: a.mechanic_profile.id, full_name: a.mechanic_profile.full_name }
+      : a.mechanic_id
+        ? { id: a.mechanic_id, full_name: null }
+        : null,
   })) as unknown as AppointmentDetail[];
 }
 
@@ -129,9 +110,10 @@ export async function getAppointment(
     .select(
       `
       *,
-      customer:customers(*),
-      vehicle:vehicles(*),
-      estimate:estimates(id, estimate_number, status, grand_total)
+      customer:customers(first_name, last_name, phone),
+      vehicle:vehicles(plate_number, make, model, color),
+      estimate:estimates(id, estimate_number, status, grand_total),
+      mechanic_profile:profiles!appointments_mechanic_id_fkey(id, full_name)
     `,
     )
     .eq("id", id)
@@ -145,19 +127,20 @@ export async function getAppointment(
     customer: Record<string, unknown> | null;
     vehicle: Record<string, unknown> | null;
     estimate: Record<string, unknown> | null;
+    mechanic_profile: { id: string; full_name: string | null } | null;
   };
 
-  let mechanic: { id: string; full_name: string | null } | null = null;
-  if (appointment.mechanic_id) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .eq("id", appointment.mechanic_id)
-      .single();
-    mechanic = profile ?? { id: appointment.mechanic_id, full_name: null };
-  }
-
-  return { ...appointment, mechanic } as unknown as AppointmentDetail;
+  return {
+    ...appointment,
+    mechanic: appointment.mechanic_profile
+      ? {
+          id: appointment.mechanic_profile.id,
+          full_name: appointment.mechanic_profile.full_name,
+        }
+      : appointment.mechanic_id
+        ? { id: appointment.mechanic_id, full_name: null }
+        : null,
+  } as unknown as AppointmentDetail;
 }
 
 // ── Create Appointment ────────────────────────────────────────
@@ -246,7 +229,9 @@ export async function updateAppointment(
 
   const { data: existingRecord } = await supabase
     .from("appointments")
-    .select("*")
+    .select(
+      "id, title, scheduled_at, description, notes, mechanic_id, status, customer_id, vehicle_id",
+    )
     .eq("id", id)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
@@ -319,7 +304,9 @@ export async function deleteAppointment(
 
   const { data: existingRecord } = await supabase
     .from("appointments")
-    .select("*")
+    .select(
+      "id, title, scheduled_at, description, notes, mechanic_id, status, customer_id, vehicle_id",
+    )
     .eq("id", id)
     .eq("organization_id", orgId)
     .is("deleted_at", null)

@@ -68,12 +68,12 @@ import {
   useUpdateDiagnosisLabel,
 } from "@/lib/queries/use-diagnosis-labels";
 import type { DiagnosisLabel } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import {
   SettingsBlock,
   SettingsError,
   SettingsTableFrame,
 } from "./_settings-layout";
-import { cn } from "@/lib/utils";
 
 const PRESET_COLORS = [
   { value: "#dc2626", label: "Engine" },
@@ -430,106 +430,102 @@ export function DiagnosisLabelsSection({ orgId }: DiagnosisLabelsSectionProps) {
         ) : (
           <SettingsTableFrame>
             <DndContext
-                collisionDetection={closestCenter}
-                modifiers={[restrictToVerticalAxis]}
-                sensors={sensors}
-                onDragEnd={handleDragEnd}
-              >
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/50">
-                      <TableHead className="w-10 px-2 py-3" />
-                      <TableHead className="px-4 py-3 font-medium">
-                        {t("nameMn")}
-                      </TableHead>
-                      <TableHead className="px-4 py-3 font-medium">
-                        {t("name")}
-                      </TableHead>
-                      <TableHead className="px-4 py-3 font-medium">
-                        {t("color")}
-                      </TableHead>
-                      <TableHead className="px-4 py-3 font-medium">
-                        {t("status")}
-                      </TableHead>
-                      <TableHead className="px-4 py-3 font-medium text-right">
-                        {t("actions")}
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <SortableContext
-                    items={items.map((l) => l.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    <TableBody>
-                      {items.map((label) => (
-                        <DraggableRow key={label.id} label={label}>
-                          <TableCell className="w-10 px-2 py-3">
-                            <DragHandle id={label.id} />
-                          </TableCell>
-                          <TableCell className="px-4 py-3 font-medium">
-                            <div className="flex items-center gap-2">
-                              {label.color && (
-                                <div
-                                  className="size-3 rounded-full"
-                                  style={{ backgroundColor: label.color }}
-                                />
-                              )}
-                              {label.name_mn ?? label.name}
-                            </div>
-                          </TableCell>
-                          <TableCell className="px-4 py-3 text-muted-foreground">
-                            {label.name}
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            {label.color ? (
-                              <div className="flex items-center gap-1.5">
-                                <div
-                                  className="size-4 rounded-full border"
-                                  style={{ backgroundColor: label.color }}
-                                />
-                                <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
-                                  {label.color}
-                                </code>
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground/50">
-                                –
-                              </span>
+              collisionDetection={closestCenter}
+              modifiers={[restrictToVerticalAxis]}
+              sensors={sensors}
+              onDragEnd={handleDragEnd}
+            >
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="w-10 px-2 py-3" />
+                    <TableHead className="px-4 py-3 font-medium">
+                      {t("nameMn")}
+                    </TableHead>
+                    <TableHead className="px-4 py-3 font-medium">
+                      {t("name")}
+                    </TableHead>
+                    <TableHead className="px-4 py-3 font-medium">
+                      {t("color")}
+                    </TableHead>
+                    <TableHead className="px-4 py-3 font-medium">
+                      {t("status")}
+                    </TableHead>
+                    <TableHead className="px-4 py-3 font-medium text-right">
+                      {t("actions")}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <SortableContext
+                  items={items.map((l) => l.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <TableBody>
+                    {items.map((label) => (
+                      <DraggableRow key={label.id} label={label}>
+                        <TableCell className="w-10 px-2 py-3">
+                          <DragHandle id={label.id} />
+                        </TableCell>
+                        <TableCell className="px-4 py-3 font-medium">
+                          <div className="flex items-center gap-2">
+                            {label.color && (
+                              <div
+                                className="size-3 rounded-full"
+                                style={{ backgroundColor: label.color }}
+                              />
                             )}
-                          </TableCell>
-                          <TableCell className="px-4 py-3">
-                            <Badge
-                              variant={
-                                label.is_active ? "default" : "secondary"
-                              }
-                              className="text-xs"
-                            >
-                              {label.is_active ? t("active") : t("inactive")}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="px-4 py-3 text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                onClick={() => openEditDialog(label)}
-                              >
-                                <Pencil className="size-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                onClick={() => handleDelete(label.id)}
-                              >
-                                <Trash2 className="size-4 text-destructive" />
-                              </Button>
+                            {label.name_mn ?? label.name}
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-muted-foreground">
+                          {label.name}
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          {label.color ? (
+                            <div className="flex items-center gap-1.5">
+                              <div
+                                className="size-4 rounded-full border"
+                                style={{ backgroundColor: label.color }}
+                              />
+                              <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
+                                {label.color}
+                              </code>
                             </div>
-                          </TableCell>
-                        </DraggableRow>
-                      ))}
-                    </TableBody>
-                  </SortableContext>
-                </Table>
+                          ) : (
+                            <span className="text-muted-foreground/50">–</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <Badge
+                            variant={label.is_active ? "default" : "secondary"}
+                            className="text-xs"
+                          >
+                            {label.is_active ? t("active") : t("inactive")}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              onClick={() => openEditDialog(label)}
+                            >
+                              <Pencil className="size-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              onClick={() => handleDelete(label.id)}
+                            >
+                              <Trash2 className="size-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </DraggableRow>
+                    ))}
+                  </TableBody>
+                </SortableContext>
+              </Table>
             </DndContext>
           </SettingsTableFrame>
         )}

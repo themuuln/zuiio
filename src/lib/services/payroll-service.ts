@@ -4,10 +4,11 @@
  * Built on top of mechanic_time_logs and mechanic_daily_reports.
  * Monthly calculation is idempotent — re-running recalculates.
  */
-import { revalidateTag } from "next/cache";
-import { cacheTags } from "@/lib/cache/keys";
-import { createAuditLog } from "@/lib/audit";
+
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { revalidateTag } from "next/cache";
+import { createAuditLog } from "@/lib/audit";
+import { cacheTags } from "@/lib/cache/keys";
 
 // ── Types ──────────────────────────────────────────
 
@@ -50,7 +51,9 @@ export async function getPayRate(
 
   const { data } = await supabase
     .from("mechanic_pay_rates")
-    .select("*")
+    .select(
+      "id, organization_id, mechanic_id, hourly_rate, effective_from, effective_to",
+    )
     .eq("organization_id", orgId)
     .eq("mechanic_id", mechanicId)
     .is("effective_to", null)
@@ -124,7 +127,9 @@ export async function listPayRates(
 
   let query = supabase
     .from("mechanic_pay_rates")
-    .select("*")
+    .select(
+      "id, organization_id, mechanic_id, hourly_rate, effective_from, effective_to",
+    )
     .eq("organization_id", orgId)
     .is("effective_to", null);
 
@@ -329,7 +334,9 @@ export async function getPayrollRecords(
 
   let query = supabase
     .from("payroll_records")
-    .select("*")
+    .select(
+      "id, organization_id, mechanic_id, period_start, period_end, total_hours, hourly_rate, gross_pay, status, paid_at, notes",
+    )
     .eq("organization_id", orgId)
     .eq("period_start", periodStart)
     .eq("period_end", periodEnd);

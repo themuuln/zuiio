@@ -25,16 +25,16 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ElapsedTimer } from "@/components/bay-view-v2/_elapsed-timer";
 import type { PickupCompleteData } from "@/components/bay-view-v2/pickup-complete-dialog";
 import { PickupCompleteDialog } from "@/components/bay-view-v2/pickup-complete-dialog";
-import { ElapsedTimer } from "@/components/bay-view-v2/_elapsed-timer";
 import { ShiftReportDialog } from "@/components/bay-view-v2/shift-report-dialog";
 import { StatusNotesModal } from "@/components/bay-view-v2/status-notes-modal";
+import { MechanicAvatar } from "@/components/mechanic-avatar";
 import { MechanicSelect } from "@/components/mechanic-select";
 import { NewMechanicSheet } from "@/components/new-mechanic-sheet";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
-import { MechanicAvatar } from "@/components/mechanic-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,9 +55,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
 import { useCurrentUserRole } from "@/hooks/use-current-user-role";
-import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
+import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
 import { Link } from "@/lib/i18n/navigation";
+import { mechanicKeys } from "@/lib/queries/keys";
 import {
   useClockStatus,
   useClockToggle,
@@ -67,7 +68,6 @@ import {
   useMechanicWorkOrders,
 } from "@/lib/queries/use-mechanic-dashboard";
 import { useUpdateWorkOrderStatus } from "@/lib/queries/use-work-order-detail";
-import { mechanicKeys } from "@/lib/queries/keys";
 
 import { cn, formatMNT } from "@/lib/utils";
 
@@ -572,7 +572,7 @@ function MechanicDashboard({
       unregisterTab("jobs");
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [registerTab, unregisterTab]);
+  }, [registerTab, unregisterTab, t]);
 
   // ── Data: update tab content without reopening ─────────
   useEffect(() => {
@@ -610,7 +610,7 @@ function MechanicDashboard({
         emptyMessage={t("mechanic.noActiveWorkOrders")}
       />,
     );
-  }, [eod, assignedWos, sortedWos, dataLoading, updateTabContent]);
+  }, [eod, assignedWos, sortedWos, dataLoading, updateTabContent, t]);
 
   const updateStatus = useUpdateWorkOrderStatus(orgId);
   const clockMutation = useClockToggle(orgId);
@@ -853,7 +853,7 @@ function MechanicDashboard({
               {t("mechanic.jobsPerDay")}
             </span>
           </div>
-          <MechanicTrendChart data={trend!.weeklyTrend} />
+          <MechanicTrendChart data={trend?.weeklyTrend} />
         </>
       )}
 

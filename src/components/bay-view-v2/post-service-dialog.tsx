@@ -8,17 +8,12 @@ import {
   Gauge,
   Loader2,
   MessageSquare,
+  Package,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -28,17 +23,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Typography } from "@/components/ui/typography";
-import type { BaySlotData } from "@/lib/services/bay-view-service";
-import type { EnrichedServiceItem } from "@/lib/services/post-service-service";
-import { getDefaultTransferBank } from "@/lib/payments/org-bank-accounts";
-import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
-import { PaymentMethodField } from "./_payment-method-field";
-import type { PaymentMethodFees } from "./_payment-fees";
 import {
-  type BayPaymentMethod,
-  type PostServiceFormData,
-} from "./_schema";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Typography } from "@/components/ui/typography";
+import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
+import { getDefaultTransferBank } from "@/lib/payments/org-bank-accounts";
+import type { BaySlotData } from "@/lib/services/bay-view-service";
+import type {
+  EnrichedServiceItem,
+  WorkOrderPartItem,
+} from "@/lib/services/post-service-service";
+import { getWorkOrderParts } from "@/lib/services/post-service-service";
+import { formatMNT } from "@/lib/utils";
+import type { PaymentMethodFees } from "./_payment-fees";
+import { PaymentMethodField } from "./_payment-method-field";
+import type { BayPaymentMethod, PostServiceFormData } from "./_schema";
 
 export type { PostServiceFormData };
 
@@ -130,6 +133,8 @@ export function PostServiceDialog({
   const [allExpanded, setAllExpanded] = useState(true);
   const [services, setServices] = useState<EnrichedServiceItem[]>([]);
   const [servicesLoading, setServicesLoading] = useState(true);
+  const [parts, setParts] = useState<WorkOrderPartItem[]>([]);
+  const [partsLoading, setPartsLoading] = useState(true);
 
   // Fetch services on open
   useEffect(() => {
@@ -143,9 +148,26 @@ export function PostServiceDialog({
         const data = await getWorkOrderServicesWithIntervals(woId);
         setServices(data);
       } catch {
-        setError("Failed to load services");
+        setError(t("failedToLoadServices"));
       } finally {
         setServicesLoading(false);
+      }
+    }
+    load();
+  }, [open, woId, t]);
+
+  // Fetch parts on open
+  useEffect(() => {
+    if (!open) return;
+    async function load() {
+      setPartsLoading(true);
+      try {
+        const data = await getWorkOrderParts(woId);
+        setParts(data);
+      } catch {
+        // Parts are informational only — silently fail
+      } finally {
+        setPartsLoading(false);
       }
     }
     load();
@@ -215,7 +237,7 @@ export function PostServiceDialog({
       });
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to save post-service data",
+        err instanceof Error ? err.message : t("failedToSavePostServiceData"),
       );
       setSaving(false);
     }
@@ -297,6 +319,59 @@ export function PostServiceDialog({
                 />
               ))}
             </div>
+          </div>
+
+          {/* Parts */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+                <Package className="size-4" />
+                {t("parts")}
+                <Badge variant="secondary">{parts.length}</Badge>
+              </span>
+            </div>
+
+            {partsLoading && (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="size-5 animate-spin text-muted-foreground" />
+              </div>
+            )}
+
+            {!partsLoading && parts.length === 0 && (
+              <Typography.Muted className="text-xs text-muted-foreground/60 italic py-2">
+                {t("noPartsRecorded")}
+              </Typography.Muted>
+            )}
+
+            {!partsLoading && parts.length > 0 && (
+              <div className="flex flex-col gap-1.5">
+                {parts.map((part) => (
+                  <div
+                    key={part.id}
+                    className="flex items-center justify-between rounded-lg border border-border/60 bg-card/50 px-3 py-2"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <span className="text-sm font-medium">
+                        {part.part_name}
+                      </span>
+                      {part.part_number && (
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          #{part.part_number}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0 ml-3">
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {part.quantity} x {formatMNT(part.unit_price)}
+                      </span>
+                      <span className="text-sm font-medium tabular-nums">
+                        {formatMNT(part.final_price)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Mechanic notes */}
@@ -479,7 +554,7 @@ function ServiceCard({
             </div>
             <div className="flex flex-col gap-1">
               <Label className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider">
-                Notes
+                {t("notesLabel")}
               </Label>
               <Input
                 value={entry.notes}

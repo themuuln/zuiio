@@ -71,6 +71,8 @@ export function createMockSupabaseClient() {
     "is",
     "in",
     "contains",
+    "like",
+    "ilike",
     "or",
     "and",
     "not",

@@ -25,8 +25,8 @@ import {
   SortAsc,
   SortDesc,
 } from "lucide-react";
-import * as React from "react";
 import { useTranslations } from "next-intl";
+import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -436,14 +436,11 @@ export function DataTablePagination<TData>({
       {/* Left: selected count + column visibility */}
       <div className="flex flex-1 items-center gap-4">
         <div className="hidden text-sm text-muted-foreground sm:block">
-          {table.getFilteredSelectedRowModel().rows.length > 0 && (
-            <>
-              {t("rowsSelected", {
-                selected: table.getFilteredSelectedRowModel().rows.length,
-                total: table.getFilteredRowModel().rows.length,
-              })}
-            </>
-          )}
+          {table.getFilteredSelectedRowModel().rows.length > 0 &&
+            t("rowsSelected", {
+              selected: table.getFilteredSelectedRowModel().rows.length,
+              total: table.getFilteredRowModel().rows.length,
+            })}
         </div>
         {showColumnVisibility && <DataTableViewOptions table={table} />}
       </div>

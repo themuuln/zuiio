@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
   CatalogPartItem,
   CatalogServiceItem,
+  PriceMatchQuality,
 } from "@/components/bay-view-v2/_drawer-types";
 import type {
   GlobalPartCatalog,
@@ -24,58 +25,151 @@ import {
 } from "./keys";
 import { useCurrentOrg } from "./use-organization";
 
+// ── Match quality helper ───────────────────────────────────────
+
+/**
+ * Determine how well a stored price record matches the current vehicle.
+ *
+ * Tiers:
+ * - "exact":  same make + same model (exact vehicle match)
+ * - "same_make": same make, different model (same family, different generation)
+ * - "fallback": different make entirely (closest available price)
+ */
+function computeMatchQuality(
+  lastMake: string | null | undefined,
+  lastModel: string | null | undefined,
+  currentMake: string | null | undefined,
+  currentModel: string | null | undefined,
+): PriceMatchQuality | null {
+  if (!lastMake || !currentMake) return null;
+  // Normalise for comparison
+  const lm = lastMake.toLowerCase();
+  const lmd = lastModel?.toLowerCase();
+  const cm = currentMake.toLowerCase();
+  const cmd = currentModel?.toLowerCase();
+
+  if (lm === cm) {
+    if (lmd && cmd && lmd === cmd) return "exact";
+    return "same_make";
+  }
+  return "fallback";
+}
+
+/** Price memory entry shape returned by the API — includes vehicle context. */
+interface PriceMemoryEntry {
+  unit_price: number;
+  last_price?: number;
+  created_at: string;
+  last_make?: string;
+  last_model?: string;
+}
+
 // ── Merge helpers ──────────────────────────────────────────────
 
 function mergeServices(
   orgServices: ServiceCatalog[],
   globalServices: GlobalServiceCatalog[],
-  priceMemory?: Record<string, { unit_price: number; created_at: string }>,
+  priceMemory?: Record<string, PriceMemoryEntry>,
+  currentMake?: string | null,
+  currentModel?: string | null,
 ): CatalogServiceItem[] {
   const seen = new Set(orgServices.map((s) => s.name.toLowerCase()));
   return [
-    ...orgServices.map((s) => ({
-      ...s,
-      last_price: priceMemory?.[s.id]?.unit_price ?? null,
-    })),
+    ...orgServices.map((s) => {
+      const pm = priceMemory?.[s.id];
+      return {
+        ...s,
+        last_price: pm?.unit_price ?? null,
+        last_make: pm?.last_make ?? null,
+        last_model: pm?.last_model ?? null,
+        match_quality: computeMatchQuality(
+          pm?.last_make,
+          pm?.last_model,
+          currentMake,
+          currentModel,
+        ),
+      };
+    }),
     ...globalServices
       .filter((gs) => !seen.has(gs.name.toLowerCase()))
-      .map((gs) => ({
-        id: gs.id,
-        name: gs.name,
-        name_mn: gs.name_mn,
-        category: gs.category,
-        desc: gs.description ?? null,
-        default_price: 0,
-        last_price: priceMemory?.[gs.id]?.unit_price ?? null,
-        is_active: true,
-        estimated_duration_minutes: gs.estimated_duration_minutes,
-        interval_km: null,
-        interval_months: null,
-        _source: "global" as const,
-      })),
+      .map((gs) => {
+        const pm = priceMemory?.[gs.id];
+        return {
+          id: gs.id,
+          name: gs.name,
+          name_mn: gs.name_mn,
+          category: gs.category,
+          desc: gs.description ?? null,
+          default_price: 0,
+          last_price: pm?.unit_price ?? null,
+          last_make: pm?.last_make ?? null,
+          last_model: pm?.last_model ?? null,
+          match_quality: computeMatchQuality(
+            pm?.last_make,
+            pm?.last_model,
+            currentMake,
+            currentModel,
+          ),
+          is_active: true,
+          estimated_duration_minutes: gs.estimated_duration_minutes,
+          interval_km: null,
+          interval_months: null,
+          _source: "global" as const,
+        };
+      }),
   ];
 }
 
 function mergeParts(
   orgParts: PartsCatalogItem[],
   globalParts: GlobalPartCatalog[],
+  priceMemory?: Record<string, PriceMemoryEntry>,
+  currentMake?: string | null,
+  currentModel?: string | null,
 ): CatalogPartItem[] {
   const seen = new Set(orgParts.map((p) => p.name.toLowerCase()));
   return [
-    ...orgParts.map((p) => ({ ...p, default_price: p.default_price ?? 0 })),
+    ...orgParts.map((p) => {
+      const pm = priceMemory?.[p.name.toLowerCase()];
+      return {
+        ...p,
+        default_price: p.default_price ?? 0,
+        last_price: pm?.unit_price ?? p.default_price ?? 0,
+        last_make: pm?.last_make ?? null,
+        last_model: pm?.last_model ?? null,
+        match_quality: computeMatchQuality(
+          pm?.last_make,
+          pm?.last_model,
+          currentMake,
+          currentModel,
+        ),
+      };
+    }),
     ...globalParts
       .filter((gp) => !seen.has(gp.name.toLowerCase()))
-      .map((gp) => ({
-        id: gp.id,
-        name: gp.name,
-        name_mn: gp.name_mn,
-        category: gp.category,
-        desc: gp.description ?? null,
-        part_number: gp.part_number,
-        default_price: 0,
-        is_active: true,
-        _source: "global" as const,
-      })),
+      .map((gp) => {
+        const pm = priceMemory?.[gp.name.toLowerCase()];
+        return {
+          id: gp.id,
+          name: gp.name,
+          name_mn: gp.name_mn,
+          category: gp.category,
+          desc: gp.description ?? null,
+          part_number: gp.part_number,
+          default_price: 0,
+          last_price: pm?.unit_price ?? null,
+          last_make: pm?.last_make ?? null,
+          last_model: pm?.last_model ?? null,
+          match_quality: computeMatchQuality(
+            pm?.last_make,
+            pm?.last_model,
+            currentMake,
+            currentModel,
+          ),
+          is_active: true,
+          _source: "global" as const,
+        };
+      }),
   ];
 }
 
@@ -343,31 +437,30 @@ export function useDrawerQueries(woId: string | null): UseDrawerQueriesResult {
     queryFn: async () => {
       const res = await fetch(`/api/organizations/${orgId}/price-history`);
       const json = await res.json();
+      if (!res.ok || json.error) {
+        // Price memory is best-effort — return empty on failure
+        return { services: {}, parts: {} };
+      }
       const data = json.data as {
-        services: Record<
-          string,
-          { unit_price?: number; last_price?: number; created_at?: string }
-        >;
-        parts: Record<string, { unit_price?: number; created_at?: string }>;
+        services: Record<string, PriceMemoryEntry>;
+        parts: Record<string, PriceMemoryEntry>;
       };
-      const serviceMap: Record<
-        string,
-        { unit_price: number; created_at: string }
-      > = {};
-      for (const [id, row] of Object.entries(data.services ?? {})) {
+      const serviceMap: Record<string, PriceMemoryEntry> = {};
+      for (const [id, row] of Object.entries(data?.services ?? {})) {
         serviceMap[id] = {
           unit_price: Number(row.unit_price ?? row.last_price ?? 0),
           created_at: row.created_at ?? "",
+          last_make: row.last_make ?? undefined,
+          last_model: row.last_model ?? undefined,
         };
       }
-      const partsMap: Record<
-        string,
-        { unit_price: number; created_at: string }
-      > = {};
-      for (const [name, row] of Object.entries(data.parts ?? {})) {
+      const partsMap: Record<string, PriceMemoryEntry> = {};
+      for (const [name, row] of Object.entries(data?.parts ?? {})) {
         partsMap[name] = {
           unit_price: Number(row.unit_price ?? 0),
           created_at: row.created_at ?? "",
+          last_make: row.last_make ?? undefined,
+          last_model: row.last_model ?? undefined,
         };
       }
       return { services: serviceMap, parts: partsMap };
@@ -375,6 +468,11 @@ export function useDrawerQueries(woId: string | null): UseDrawerQueriesResult {
     enabled: catalogsEnabled && !!orgId,
     staleTime: 60_000,
   });
+
+  // ── Vehicle context for match quality ──
+
+  const currentMake = woQuery.data?.vehicle?.make;
+  const currentModel = woQuery.data?.vehicle?.model;
 
   // ── Derived data (computed from cached queries) ──
 
@@ -384,13 +482,34 @@ export function useDrawerQueries(woId: string | null): UseDrawerQueriesResult {
         serviceQuery.data ?? [],
         globalServicesQuery.data ?? [],
         priceMemoryQuery.data?.services,
+        currentMake,
+        currentModel,
       ),
-    [serviceQuery.data, globalServicesQuery.data, priceMemoryQuery.data],
+    [
+      serviceQuery.data,
+      globalServicesQuery.data,
+      priceMemoryQuery.data,
+      currentMake,
+      currentModel,
+    ],
   );
 
   const partsCatalog = useMemo(
-    () => mergeParts(partsQuery.data ?? [], globalPartsQuery.data ?? []),
-    [partsQuery.data, globalPartsQuery.data],
+    () =>
+      mergeParts(
+        partsQuery.data ?? [],
+        globalPartsQuery.data ?? [],
+        priceMemoryQuery.data?.parts,
+        currentMake,
+        currentModel,
+      ),
+    [
+      partsQuery.data,
+      globalPartsQuery.data,
+      priceMemoryQuery.data?.parts,
+      currentMake,
+      currentModel,
+    ],
   );
 
   const lowStockMap = useMemo(

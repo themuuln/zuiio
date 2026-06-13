@@ -96,7 +96,7 @@ export function EditMemberSheet({
 
   // Reset form when member changes
   const { reset } = form;
-  const memberId = member.id;
+  const _memberId = member.id;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     reset({
@@ -105,14 +105,7 @@ export function EditMemberSheet({
       roleId: valueOrEmpty(member.roleId),
       branchId: valueOrEmpty(member.branchId),
     });
-  }, [
-    memberId,
-    member.fullName,
-    member.phone,
-    member.roleId,
-    member.branchId,
-    reset,
-  ]);
+  }, [member.fullName, member.phone, member.roleId, member.branchId, reset]);
 
   const handleSubmitForm = form.handleSubmit(async (data) => {
     await onSave(member.id, {

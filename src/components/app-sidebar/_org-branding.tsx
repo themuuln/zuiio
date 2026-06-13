@@ -103,7 +103,7 @@ export function OrgBranding() {
             <button
               type="button"
               suppressHydrationWarning
-              className="flex items-center gap-3 rounded-xl px-2 h-9 transition-colors hover:bg-sidebar-accent/50 cursor-pointer group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-start group-data-[collapsible=icon]:rounded-xl group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:self-start group-data-[collapsible=icon]:ml-[-2px] group-data-[collapsible=icon]:group-hover:w-full group-data-[collapsible=icon]:group-hover:h-9 group-data-[collapsible=icon]:group-hover:pl-0 group-data-[collapsible=icon]:group-hover:pr-2 group-data-[collapsible=icon]:group-hover:bg-transparent group-data-[collapsible=icon]:group-hover:hover:bg-sidebar-accent/50"
+              className="flex items-center gap-3 rounded-xl px-2 h-9 transition-colors hover:bg-sidebar-accent/50 cursor-pointer group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-start group-data-[collapsible=icon]:rounded-xl group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:self-start group-data-[collapsible=icon]:group-hover:w-full group-data-[collapsible=icon]:group-hover:h-9 group-data-[collapsible=icon]:group-hover:pl-0 group-data-[collapsible=icon]:group-hover:pr-2 group-data-[collapsible=icon]:group-hover:bg-transparent group-data-[collapsible=icon]:group-hover:hover:bg-sidebar-accent/50"
             >
               {trigger}
               {label}
@@ -116,23 +116,26 @@ export function OrgBranding() {
             align="start"
             sideOffset={4}
           >
-            {/* All Branches */}
-            <DropdownMenuItem
-              onClick={() => setSelectedBranchId("all")}
-              className="gap-2 p-2"
-            >
-              <div className="flex size-5 items-center justify-center rounded-md bg-sidebar-primary/10 text-sidebar-primary shrink-0">
-                <Building2 className="size-3" />
-              </div>
-              <span className="flex-1 text-xs font-medium">
-                {t("dashboard.allBranches")}
-              </span>
-              {allSelected && (
-                <Check className="size-3.5 shrink-0 text-primary" />
-              )}
-            </DropdownMenuItem>
-
-            <DropdownMenuSeparator />
+            {/* Only show "All Branches" when there's more than one branch */}
+            {branches.length > 1 && (
+              <>
+                <DropdownMenuItem
+                  onClick={() => setSelectedBranchId("all")}
+                  className="gap-2 p-2"
+                >
+                  <div className="flex size-5 items-center justify-center rounded-md bg-sidebar-primary/10 text-sidebar-primary shrink-0">
+                    <Building2 className="size-3" />
+                  </div>
+                  <span className="flex-1 text-xs font-medium">
+                    {t("dashboard.allBranches")}
+                  </span>
+                  {allSelected && (
+                    <Check className="size-3.5 shrink-0 text-primary" />
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
 
             {/* Branch list */}
             {branches.map((branch) => (

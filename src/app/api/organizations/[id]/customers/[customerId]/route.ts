@@ -12,12 +12,12 @@ import {
   getCustomerWorkOrders,
 } from "@/lib/services/vehicle-service";
 
-export const GET = createRouteHandler(async ({ orgId, params }) => {
+export const GET = createRouteHandler(async ({ supabase, orgId, params }) => {
   const { customerId } = params;
   const [customer, vehicles, workOrders] = await Promise.all([
-    getCustomer(customerId, orgId),
-    getCustomerVehicles(orgId, customerId),
-    getCustomerWorkOrders(orgId, customerId),
+    getCustomer(supabase, customerId, orgId),
+    getCustomerVehicles(supabase, orgId, customerId),
+    getCustomerWorkOrders(supabase, orgId, customerId),
   ]);
   return NextResponse.json({
     data: { ...customer, vehicles, work_orders: workOrders },
@@ -25,10 +25,10 @@ export const GET = createRouteHandler(async ({ orgId, params }) => {
 });
 
 export const PATCH = createRouteHandler(
-  async ({ request, orgId, params, user }) => {
+  async ({ request, supabase, orgId, params, user }) => {
     await requireActiveSubscription(orgId);
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-    const rateCheck = mutationRateLimiter.check(ip);
+    const rateCheck = await mutationRateLimiter.check(ip);
     if (!rateCheck.allowed) {
       return NextResponse.json(
         { error: { code: "RATE_LIMITED", message: "Too many requests" } },
@@ -44,16 +44,22 @@ export const PATCH = createRouteHandler(
     }
     const { customerId } = params;
     const body = await request.json();
-    const customer = await updateCustomer(customerId, orgId, body, user.id);
+    const customer = await updateCustomer(
+      supabase,
+      customerId,
+      orgId,
+      body,
+      user.id,
+    );
     return NextResponse.json({ data: customer });
   },
 );
 
 export const DELETE = createRouteHandler(
-  async ({ request, orgId, params, user }) => {
+  async ({ request, supabase, orgId, params, user }) => {
     await requireActiveSubscription(orgId);
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-    const rateCheck = mutationRateLimiter.check(ip);
+    const rateCheck = await mutationRateLimiter.check(ip);
     if (!rateCheck.allowed) {
       return NextResponse.json(
         { error: { code: "RATE_LIMITED", message: "Too many requests" } },
@@ -68,7 +74,7 @@ export const DELETE = createRouteHandler(
       );
     }
     const { customerId } = params;
-    await deleteCustomer(customerId, orgId, user.id);
+    await deleteCustomer(supabase, customerId, orgId, user.id);
     return NextResponse.json({ data: null });
   },
 );

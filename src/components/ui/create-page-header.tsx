@@ -1,8 +1,8 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
-import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { Link } from "@/lib/i18n/navigation";

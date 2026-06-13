@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { describe, expect, it, vi } from "vitest";
 import { NotFoundError } from "@/lib/errors";
 import { createMockSupabaseClient } from "@/test/mocks/supabase";
 import { cancelInvite, resendInvite } from "./invite-service";

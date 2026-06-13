@@ -4,8 +4,6 @@ import { BarChart3, Car, Clock, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ExportButton } from "@/components/export-button";
-import { ListPageShell } from "@/components/list-page-shell";
-import { ListToolbar } from "@/components/list-toolbar";
 import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import {
@@ -19,16 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { DataTable } from "@/components/ui/data-table";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import { DataTablePage } from "@/components/ui/data-table-page";
 import { useClientNow } from "@/hooks/use-client-now";
 import { usePageHeader } from "@/hooks/use-page-header";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
@@ -57,11 +46,6 @@ export default function VehiclesPage() {
     refetch,
   } = useVehicles(org?.orgId, search, branchFilter);
   const deleteVehicle = useDeleteVehicle(org?.orgId);
-
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
-  useEffect(() => {
-    if (vehicles) setHasLoadedOnce(true);
-  }, [vehicles]);
 
   const list: VehicleRow[] = vehicles ?? [];
 
@@ -148,12 +132,14 @@ export default function VehiclesPage() {
 
   return (
     <>
-      <ListPageShell
+      <DataTablePage
         title={t("title")}
         description={
-          isFetching ? "Searching…" : t("searchResults", { count: list.length })
+          isFetching
+            ? "Searching\u2026"
+            : t("searchResults", { count: list.length })
         }
-        loading={isLoading && !hasLoadedOnce}
+        loading={isLoading}
         error={displayError}
         onRetry={refetch}
         headerAction={
@@ -162,87 +148,59 @@ export default function VehiclesPage() {
             {t("addVehicle")}
           </Button>
         }
-      >
-        <ListToolbar
-          search={{
-            placeholder: t("searchByPlateOrVin"),
-            value: search,
-            onChange: setSearch,
-            loading: isFetching,
-          }}
-          actions={
-            <div className="flex items-center gap-2">
-              <ExportButton
-                data={list}
-                columns={exportColumns}
-                filename={`vehicles-${now.toISOString().split("T")[0]}.xlsx`}
-                sheetName="Vehicles"
-              />
+        columns={columns}
+        data={list}
+        getRowId={(row) => row.id}
+        pageSize={20}
+        search={{
+          placeholder: t("searchByPlateOrVin"),
+          value: search,
+          onChange: setSearch,
+          loading: isFetching,
+        }}
+        actions={
+          <ExportButton
+            data={list}
+            columns={exportColumns}
+            filename={`vehicles-${now.toISOString().split("T")[0]}.xlsx`}
+            sheetName="Vehicles"
+          />
+        }
+        onRowClick={(row) => setDetailVehicleId(row.id)}
+        renderMobileCard={(v) => (
+          <div className="flex flex-col gap-2 text-sm">
+            <div className="flex items-center gap-2.5">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted/60 ring-1 ring-border">
+                <Car className="size-4 text-muted-foreground/70" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <span className="font-mono text-sm font-semibold tracking-wide truncate block">
+                  {v.plate_number}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {[v.year, v.make, v.model].filter(Boolean).join(" ")}
+                </span>
+              </div>
             </div>
-          }
-        />
-
-        <Card className="py-0">
-          <CardContent className="p-0">
-            {(!vehicles && hasLoadedOnce) || isLoading ? (
-              <DataTable columns={columns} data={[]} loading />
-            ) : list.length === 0 ? (
-              <Empty>
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <Car />
-                  </EmptyMedia>
-                  <EmptyTitle>
-                    {search ? t("noMatchForPlateOrVin") : t("noVehicles")}
-                  </EmptyTitle>
-                  <EmptyDescription>
-                    {t("noVehiclesDesc") || ""}
-                  </EmptyDescription>
-                </EmptyHeader>
-                {!search && (
-                  <EmptyContent>
-                    <Button
-                      onClick={() => setNewVehicleDialogOpen(true)}
-                      variant="outline"
-                    >
-                      {t("addFirstVehicle")}
-                    </Button>
-                  </EmptyContent>
-                )}
-              </Empty>
-            ) : (
-              <DataTable
-                columns={columns}
-                data={list}
-                getRowId={(row) => row.id}
-                pageSize={20}
-                onRowClick={(row) => setDetailVehicleId(row.id)}
-                renderMobileCard={(v) => (
-                  <div className="flex flex-col gap-2 text-sm">
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted/60 ring-1 ring-border">
-                        <Car className="size-4 text-muted-foreground/70" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <span className="font-mono text-sm font-semibold tracking-wide truncate block">
-                          {v.plate_number}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {[v.year, v.make, v.model].filter(Boolean).join(" ")}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
-                      <span className="truncate font-mono">{v.vin || "—"}</span>
-                      <span>{v.owner_name ?? "—"}</span>
-                    </div>
-                  </div>
-                )}
-              />
-            )}
-          </CardContent>
-        </Card>
-      </ListPageShell>
+            <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
+              <span className="truncate font-mono">{v.vin || "\u2014"}</span>
+              <span>{v.owner_name ?? "\u2014"}</span>
+            </div>
+          </div>
+        )}
+        emptyTitle={search ? t("noMatchForPlateOrVin") : t("noVehicles")}
+        emptyIcon={Car}
+        emptyAction={
+          !search ? (
+            <Button
+              onClick={() => setNewVehicleDialogOpen(true)}
+              variant="outline"
+            >
+              {t("addFirstVehicle")}
+            </Button>
+          ) : undefined
+        }
+      />
 
       <AlertDialog
         open={!!vehicleToDelete}

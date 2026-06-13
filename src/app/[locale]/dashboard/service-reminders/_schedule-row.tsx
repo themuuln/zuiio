@@ -5,8 +5,8 @@ import {
   BellOff,
   CheckCircle,
   FileText,
-  Phone,
   Pencil,
+  Phone,
   SkipForward,
   Trash2,
   XCircle,
@@ -20,11 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { TableCell, TableRow } from "@/components/ui/table";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+
 import type { ServiceScheduleItem } from "@/lib/queries/use-service-reminders";
 import { DueStatusBadge, StatusBadge } from "./_badges";
 import {
@@ -67,17 +63,10 @@ export function ScheduleRow({
         <div className="flex flex-col gap-0.5">
           <span className="font-medium">{item.service_name}</span>
           {item.notes && (
-            <Tooltip>
-              <TooltipTrigger>
-                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                  <FileText className="size-3" />
-                  <span className="truncate max-w-[120px]">{item.notes}</span>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="max-w-[200px] text-xs">{item.notes}</p>
-              </TooltipContent>
-            </Tooltip>
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+              <FileText className="size-3" />
+              <span className="truncate max-w-[120px]">{item.notes}</span>
+            </span>
           )}
         </div>
       </TableCell>

@@ -35,9 +35,9 @@ import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId, useSetSelectedBranchId } from "@/lib/stores";
 import type { WorkOrderDetail } from "@/lib/types";
 import { formatCurrency, hasMultipleBranches } from "@/lib/utils";
+import { BranchComparisonSection } from "./_branch-comparison-section";
 import { DailyTimeline } from "./_daily-timeline";
 import { KpiCard } from "./_kpi-cards";
-import { BranchComparisonSection } from "./_branch-comparison-section";
 import { LowStockCard } from "./_low-stock-card";
 import { DateFilterBar } from "./_period-bar";
 import { RecentWorkOrdersTable } from "./_recent-work-orders";
@@ -320,15 +320,20 @@ export default function DashboardPage() {
     current: number,
     previous: number,
     formatAsCurrency: boolean,
-  ): { direction: "up" | "down" | "neutral"; value: string } | null {
+  ): {
+    direction: "up" | "down" | "neutral";
+    value: string;
+    percent?: string;
+  } | null {
     if (!summaryComparison) return null;
     const direction =
       current > previous ? "up" : current < previous ? "down" : "neutral";
+    const diff = Math.abs(current - previous);
+    const percent = previous > 0 ? Math.round((diff / previous) * 100) : 0;
     return {
       direction,
-      value: formatAsCurrency
-        ? formatCurrency(Math.abs(current - previous))
-        : String(Math.abs(current - previous)),
+      value: formatAsCurrency ? formatCurrency(diff) : String(diff),
+      percent: percent > 0 ? `${percent}%` : undefined,
     };
   }
 
@@ -408,22 +413,20 @@ export default function DashboardPage() {
               accentKey="totalRevenue"
               trend={
                 summaryComparison
-                  ? {
-                      direction:
-                        (summary?.totalRevenue ?? 0) >
-                        (summaryComparison.totalRevenue ?? 0)
-                          ? "up"
-                          : (summary?.totalRevenue ?? 0) <
-                              (summaryComparison.totalRevenue ?? 0)
-                            ? "down"
-                            : "neutral",
-                      value: formatCurrency(
-                        Math.abs(
-                          (summary?.totalRevenue ?? 0) -
-                            (summaryComparison.totalRevenue ?? 0),
-                        ),
-                      ),
-                    }
+                  ? (() => {
+                      const cur = summary?.totalRevenue ?? 0;
+                      const prev = summaryComparison.totalRevenue ?? 0;
+                      const diff = Math.abs(cur - prev);
+                      const dir =
+                        cur > prev ? "up" : cur < prev ? "down" : "neutral";
+                      const pct =
+                        prev > 0 ? Math.round((diff / prev) * 100) : 0;
+                      return {
+                        direction: dir,
+                        value: formatCurrency(diff),
+                        percent: pct > 0 ? `${pct}%` : undefined,
+                      };
+                    })()
                   : null
               }
             />

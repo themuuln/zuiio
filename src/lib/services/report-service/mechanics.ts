@@ -177,7 +177,7 @@ export async function getMechanicKpis(
         };
       })
       .filter(Boolean)
-      .sort((a, b) => new Date(b!.date).getTime() - new Date(a!.date).getTime())
+      .sort((a, b) => new Date(b?.date).getTime() - new Date(a?.date).getTime())
       .slice(0, 10) as ReportMechanicKpi["recent_reviews"];
 
     kpis.push({

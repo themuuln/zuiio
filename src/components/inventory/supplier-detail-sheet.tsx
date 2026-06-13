@@ -6,7 +6,7 @@ import { useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { DetailSheet } from "@/components/ui/detail-sheet";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
 import {
   Field,
@@ -131,22 +131,22 @@ export function SupplierDetailSheet({
   const notFound = open && !suppliersLoading && !supplier;
 
   return (
-    <DetailSheet open={open} onOpenChange={handleOpenChange} size="2xl">
-      <DetailSheet.Header>
+    <DetailDrawer open={open} onOpenChange={handleOpenChange} size="2xl">
+      <DetailDrawer.Header>
         <DetailSheetHeader
           icon={Pencil}
           title={
             <>
-              <DetailSheet.Title>{t("editSupplier")}</DetailSheet.Title>
-              <DetailSheet.Description>
+              <DetailDrawer.Title>{t("editSupplier")}</DetailDrawer.Title>
+              <DetailDrawer.Description>
                 {supplier?.name ?? "..."}
-              </DetailSheet.Description>
+              </DetailDrawer.Description>
             </>
           }
         />
-      </DetailSheet.Header>
+      </DetailDrawer.Header>
 
-      <DetailSheet.Body>
+      <DetailDrawer.Body>
         {isLoading ? (
           <div className="flex flex-col gap-4">
             <Skeleton className="h-4 w-16" />
@@ -282,10 +282,10 @@ export function SupplierDetailSheet({
             </FieldGroup>
           </form>
         )}
-      </DetailSheet.Body>
+      </DetailDrawer.Body>
 
       {!isLoading && !notFound && (
-        <DetailSheet.Footer>
+        <DetailDrawer.Footer>
           <Button
             type="button"
             variant="outline"
@@ -307,8 +307,8 @@ export function SupplierDetailSheet({
             )}
             {updateSupplier.isPending ? t("saving") : t("save")}
           </Button>
-        </DetailSheet.Footer>
+        </DetailDrawer.Footer>
       )}
-    </DetailSheet>
+    </DetailDrawer>
   );
 }

@@ -1,3 +1,5 @@
+"use client";
+
 import { Loader2Icon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";

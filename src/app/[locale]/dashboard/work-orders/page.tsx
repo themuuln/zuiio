@@ -389,7 +389,7 @@ export default function WorkOrdersPage() {
             </EmptyContent>
           </Empty>
         ) : (
-          <Card className="rounded-none py-0">
+          <Card className="py-0">
             <CardContent className="p-0">
               <DataTable
                 columns={columns}

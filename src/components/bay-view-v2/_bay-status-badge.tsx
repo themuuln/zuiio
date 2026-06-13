@@ -10,7 +10,11 @@ interface BayStatusBadgeProps {
   className?: string;
 }
 
-export function BayStatusBadge({ status, label, className }: BayStatusBadgeProps) {
+export function BayStatusBadge({
+  status,
+  label,
+  className,
+}: BayStatusBadgeProps) {
   return (
     <Badge
       variant="outline"

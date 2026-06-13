@@ -10,11 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Typography } from "@/components/ui/typography";
 import type { Organization } from "@/lib/types";
-import {
-  SettingsBlock,
-  SettingsGroup,
-  SettingsRow,
-} from "./_settings-layout";
+import { SettingsBlock, SettingsGroup, SettingsRow } from "./_settings-layout";
 
 interface DataSharingFormProps {
   organization: Organization | undefined;
@@ -151,7 +147,9 @@ function SharedItem({
     <div className="flex items-start gap-2 rounded-md border border-border px-2.5 py-2">
       <Shield className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
       <div>
-        <Typography.Text className="text-xs font-medium">{label}</Typography.Text>
+        <Typography.Text className="text-xs font-medium">
+          {label}
+        </Typography.Text>
         <Typography.Muted className="text-[11px] text-muted-foreground">
           {description}
         </Typography.Muted>

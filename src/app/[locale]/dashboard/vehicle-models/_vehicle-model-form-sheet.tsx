@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { DetailSheet } from "@/components/ui/detail-sheet";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import {
   Field,
   FieldContent,
@@ -291,19 +291,19 @@ export function VehicleModelFormSheet({
   }
 
   return (
-    <DetailSheet open={open} onOpenChange={onOpenChange} size="xl">
-      <DetailSheet.Header>
-        <DetailSheet.Title>
+    <DetailDrawer open={open} onOpenChange={onOpenChange} size="xl">
+      <DetailDrawer.Header>
+        <DetailDrawer.Title>
           {mode === "edit" ? t("editVariant") : t("addNewModel")}
-        </DetailSheet.Title>
-        <DetailSheet.Description>
+        </DetailDrawer.Title>
+        <DetailDrawer.Description>
           {mode === "edit"
             ? t("editVariantDescription")
             : t("addModelDescription")}
-        </DetailSheet.Description>
-      </DetailSheet.Header>
+        </DetailDrawer.Description>
+      </DetailDrawer.Header>
 
-      <DetailSheet.Body>
+      <DetailDrawer.Body>
         <FieldGroup>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field>
@@ -437,9 +437,9 @@ export function VehicleModelFormSheet({
             </p>
           ) : null}
         </FieldGroup>
-      </DetailSheet.Body>
+      </DetailDrawer.Body>
 
-      <DetailSheet.Footer>
+      <DetailDrawer.Footer>
         <Button variant="outline" onClick={() => onOpenChange(false)}>
           {commonT("cancel")}
         </Button>
@@ -455,7 +455,7 @@ export function VehicleModelFormSheet({
             t("saveModel")
           )}
         </Button>
-      </DetailSheet.Footer>
-    </DetailSheet>
+      </DetailDrawer.Footer>
+    </DetailDrawer>
   );
 }

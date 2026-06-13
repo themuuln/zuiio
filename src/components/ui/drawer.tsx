@@ -179,10 +179,7 @@ function DrawerIndentBackground({
   );
 }
 
-function DrawerIndent({
-  className,
-  ...props
-}: DrawerPrimitive.Indent.Props) {
+function DrawerIndent({ className, ...props }: DrawerPrimitive.Indent.Props) {
   return (
     <DrawerPrimitive.Indent
       data-slot="drawer-indent"

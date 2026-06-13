@@ -1,7 +1,7 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError } from "@/lib/errors";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type { WorkOrderAttachment } from "@/lib/types";
 
 export async function getAttachments(

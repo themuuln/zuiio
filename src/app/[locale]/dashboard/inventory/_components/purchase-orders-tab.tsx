@@ -74,7 +74,7 @@ export function PurchaseOrdersTab({
         (po.supplier?.name ?? "").toLowerCase().includes(q) ||
         (poStatusLabels[po.status] ?? po.status).toLowerCase().includes(q),
     );
-  }, [purchaseOrders, search]);
+  }, [purchaseOrders, search, poStatusLabels]);
 
   const poExportColumns: ExportColumn<PurchaseOrderWithSupplier>[] = [
     { key: "order_number", label: "PO #" },

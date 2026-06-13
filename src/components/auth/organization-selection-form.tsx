@@ -9,6 +9,8 @@ import { Typography } from "@/components/ui/typography";
 import type { CompleteOrganizationLoginState } from "@/lib/actions/complete-organization-login";
 import type { UserOrganizationAccessOption } from "@/lib/services/organization-access-service";
 
+const DEV_PIN = "1234";
+
 interface OrganizationSelectionFormProps {
   organizations: UserOrganizationAccessOption[];
   action: (
@@ -43,8 +45,9 @@ export function OrganizationSelectionForm({
   copy,
 }: OrganizationSelectionFormProps) {
   const [state, formAction, isPending] = useActionState(action, {});
-  const [pin, setPin] = useState("");
-  const [confirmPin, setConfirmPin] = useState("");
+  const formRef = useRef<HTMLFormElement>(null);
+  const [pin, setPin] = useState(DEV_PIN);
+  const [confirmPin, setConfirmPin] = useState(DEV_PIN);
   const [searchQuery, setSearchQuery] = useState("");
 
   const fieldErrors = state?.fieldErrors ?? {};
@@ -103,6 +106,15 @@ export function OrganizationSelectionForm({
     }
   }, [state?.redirectTo]);
 
+  // Dev auto-submit: automatically complete org login when DEV_PIN is set
+  useEffect(() => {
+    if (DEV_PIN && !state?.formError && !state?.redirectTo && !isPending) {
+      const timeout = setTimeout(() => formRef.current?.requestSubmit(), 300);
+      return () => clearTimeout(timeout);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state?.redirectTo, state?.formError, isPending]);
+
   if (organizations.length === 0) {
     return (
       <div className="flex flex-col gap-3 text-center">
@@ -128,6 +140,7 @@ export function OrganizationSelectionForm({
       </div>
 
       <form
+        ref={formRef}
         action={formAction}
         className="flex flex-col gap-4"
         onKeyDown={(e) => {

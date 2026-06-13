@@ -1,21 +1,34 @@
 "use client";
 
-import { Loader2, Search, UserPlus, X } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import {
+  DndContext,
+  type DragEndEvent,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { arrayMove, useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical, Search, UserPlus, X } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { MechanicAvatar } from "@/components/mechanic-avatar";
-import { Button } from "@/components/ui/button";
+import {
+  type SortableItem,
+  SortableListBody,
+} from "@/components/sortable-list";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Typography } from "@/components/ui/typography";
-import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
-interface Mechanic {
+interface Mechanic extends SortableItem {
   id: string;
   full_name: string | null;
   avatar_url: string | null;
@@ -23,217 +36,335 @@ interface Mechanic {
 }
 
 interface MechanicQuickAssignProps {
-  /** Current work order ID to assign mechanic to */
-  _workOrderId?: string;
-  /** Current mechanic (if any) — shown as selected */
   currentMechanic?: Mechanic | null;
-  /** All available mechanics */
+  hasLeadMechanic?: boolean;
+  helperMechanics?: Mechanic[];
   mechanics: Mechanic[];
-  /** Called when a mechanic is selected */
-  onAssign: (mechanicId: string) => Promise<void>;
-  /** Called to remove the current mechanic */
-  onRemove?: () => Promise<void>;
-  /** Disable interactions */
+  onAssignLead: (mechanicId: string) => Promise<void>;
+  onAssignHelper: (mechanicId: string) => Promise<void>;
+  onUnassign?: (mechanicId: string) => Promise<void>;
+  onReorder?: (orderedMechanicIds: string[]) => Promise<void>;
   disabled?: boolean;
+}
+
+function SortableMechanicRow({
+  mechanic,
+  isAssigned,
+  isLead,
+  onToggle,
+}: {
+  mechanic: Mechanic;
+  isAssigned: boolean;
+  isLead: boolean;
+  onToggle?: (mechanicId: string) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: mechanic.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "flex items-center gap-1 rounded-md px-1 py-1",
+        isDragging && "opacity-50 bg-accent/30 shadow-sm",
+      )}
+    >
+      <span
+        {...attributes}
+        {...listeners}
+        className="flex size-5 shrink-0 cursor-grab touch-manipulation items-center justify-center rounded hover:bg-muted/60 active:cursor-grabbing"
+      >
+        <GripVertical className="size-3 text-muted-foreground/30" />
+      </span>
+      <Checkbox
+        checked={isAssigned}
+        onCheckedChange={() => onToggle?.(mechanic.id)}
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+        className="size-4 shrink-0"
+        aria-label={`Toggle ${mechanic.full_name ?? "mechanic"}`}
+      />
+      <MechanicAvatar mechanic={mechanic} className="size-6 shrink-0" />
+      <span className="min-w-0 flex-1 truncate text-xs font-medium">
+        {mechanic.full_name ?? "Unknown"}
+      </span>
+      {isLead && (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-amber-500/12 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
+          Lead
+        </span>
+      )}
+      {isAssigned && !isLead && (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-sky-500/12 px-1.5 py-0.5 text-[10px] font-semibold text-sky-600 dark:text-sky-400">
+          Helper
+        </span>
+      )}
+    </div>
+  );
 }
 
 export function MechanicQuickAssign({
   currentMechanic,
   mechanics,
-  onAssign,
-  onRemove,
+  hasLeadMechanic = false,
+  helperMechanics = [],
+  onAssignLead,
+  onAssignHelper,
+  onUnassign,
+  onReorder,
   disabled = false,
 }: MechanicQuickAssignProps) {
   const t = useTranslations("bayView");
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [saving, setSaving] = useState<string | null>(null);
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return mechanics;
-    const q = search.toLowerCase();
-    return mechanics.filter(
-      (m) =>
-        m.full_name?.toLowerCase().includes(q) ||
-        m.id.toLowerCase().includes(q),
-    );
-  }, [mechanics, search]);
-
-  const handleSelect = useCallback(
-    async (mechanicId: string) => {
-      if (mechanicId === currentMechanic?.id) return;
-      setSaving(mechanicId);
-      try {
-        await onAssign(mechanicId);
-        setOpen(false);
-        setSearch("");
-      } finally {
-        setSaving(null);
-      }
-    },
-    [currentMechanic?.id, onAssign],
+  // Local optimistic set of assigned mechanic IDs — merges with server props
+  // so checkbox toggle updates the UI immediately even if the parent
+  // doesn't re-render into the open portal.
+  const [localAssignedIds, setLocalAssignedIds] = useState<Set<string> | null>(
+    null,
   );
 
-  const handleRemove = useCallback(async () => {
-    if (!onRemove) return;
-    setSaving("remove");
-    try {
-      await onRemove();
-      setOpen(false);
-    } finally {
-      setSaving(null);
+  // Sync local state with server when popover opens
+  useEffect(() => {
+    if (open) setLocalAssignedIds(null);
+  }, [open]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+  );
+
+  const serverAssignedIds = useMemo(
+    () =>
+      new Set([
+        ...(currentMechanic ? [currentMechanic.id] : []),
+        ...helperMechanics.map((m) => m.id),
+      ]),
+    [currentMechanic, helperMechanics],
+  );
+
+  // Sync local with server when popover opens, then let local take over
+  const effectiveAssignedIds = localAssignedIds ?? serverAssignedIds;
+
+  // Preserve order: [lead, ...helpers], but only include mechanics still in the effective set
+  const assignedMechanics = useMemo(() => {
+    const ordered = [];
+    if (currentMechanic && effectiveAssignedIds.has(currentMechanic.id)) {
+      ordered.push(currentMechanic);
     }
-  }, [onRemove]);
+    for (const h of helperMechanics) {
+      if (effectiveAssignedIds.has(h.id)) {
+        ordered.push(h);
+      }
+    }
+    return ordered;
+  }, [currentMechanic, helperMechanics, effectiveAssignedIds]);
+
+  const allItems = useMemo(() => {
+    const assignedIds = new Set(assignedMechanics.map((m) => m.id));
+    return [
+      ...assignedMechanics,
+      ...mechanics.filter((m) => !assignedIds.has(m.id)),
+    ];
+  }, [assignedMechanics, mechanics]);
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      setActiveDragId(null);
+      if (!over || active.id === over.id) return;
+
+      const oldIndex = allItems.findIndex((m) => m.id === active.id);
+      const newIndex = allItems.findIndex((m) => m.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      const assignedCount = assignedMechanics.length;
+      const wasUnassigned = oldIndex >= assignedCount;
+      const isNowAssigned = newIndex < assignedCount;
+
+      if (wasUnassigned && isNowAssigned) {
+        setLocalAssignedIds((prev) => {
+          const base = prev ?? serverAssignedIds;
+          const next = new Set(base);
+          next.add(String(active.id));
+          return next;
+        });
+        setOpen(false);
+        setSearch("");
+        if (!hasLeadMechanic && newIndex === 0) {
+          onAssignLead(String(active.id)).catch(() => {});
+        } else {
+          onAssignHelper(String(active.id)).catch(() => {});
+        }
+      } else if (!wasUnassigned && isNowAssigned && onReorder) {
+        const reordered = arrayMove(allItems, oldIndex, newIndex);
+        setOpen(false);
+        setSearch("");
+        onReorder(reordered.slice(0, assignedCount).map((m) => m.id)).catch(
+          () => {},
+        );
+      } else if (!wasUnassigned && !isNowAssigned && onUnassign) {
+        setLocalAssignedIds((prev) => {
+          const base = prev ?? serverAssignedIds;
+          const next = new Set(base);
+          next.delete(String(active.id));
+          return next;
+        });
+        setOpen(false);
+        setSearch("");
+        onUnassign(String(active.id)).catch(() => {});
+      }
+    },
+    [
+      allItems,
+      assignedMechanics.length,
+      serverAssignedIds,
+      hasLeadMechanic,
+      onAssignLead,
+      onAssignHelper,
+      onUnassign,
+      onReorder,
+    ],
+  );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        render={
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={(e) => e.stopPropagation()}
-            className={cn(
-              "flex size-6 items-center justify-center rounded-full border border-dashed transition-all duration-200",
-              "text-muted-foreground/40 hover:text-primary hover:border-primary/50 hover:bg-primary/10",
-              "active:scale-95 disabled:opacity-40 disabled:pointer-events-none",
-            )}
-          >
-            <UserPlus className="size-3" />
-          </button>
-        }
-      />
-      <PopoverContent
-        className="w-64 p-0"
-        side="bottom"
-        align="start"
-        sideOffset={4}
+      <DndContext
+        sensors={sensors}
+        onDragStart={({ active }) => setActiveDragId(String(active.id))}
+        onDragEnd={handleDragEnd}
+        onDragCancel={() => setActiveDragId(null)}
       >
-        <div className="flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-border/50 px-3 py-2">
-            <Typography.Text className="text-xs font-semibold">
-              {currentMechanic ? "Change Mechanic" : "Assign Mechanic"}
-            </Typography.Text>
+        <PopoverTrigger
+          render={
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setOpen(false);
-              }}
-              className="text-muted-foreground/40 hover:text-foreground transition-colors"
+              disabled={disabled}
+              onClick={(e) => e.stopPropagation()}
+              className={cn(
+                "flex size-6 items-center justify-center rounded-full border border-dashed transition-all duration-200",
+                "text-muted-foreground/40 hover:text-primary hover:border-primary/50 hover:bg-primary/10",
+                "active:scale-95 disabled:opacity-40 disabled:pointer-events-none",
+              )}
             >
-              <X className="size-3" />
+              <UserPlus className="size-3" />
             </button>
-          </div>
-
-          {/* Search */}
-          <div className="border-b border-border/50 px-3 py-2">
-            <div className="relative">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-muted-foreground/40" />
-              <Input
-                autoFocus
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={t("searchMechanics")}
-                className="h-7 pl-7 pr-2 text-xs"
-                onKeyDown={(e) => {
-                  if (e.key === "Escape") {
-                    setSearch("");
-                    setOpen(false);
-                  }
+          }
+        />
+        <PopoverContent
+          className="w-72 p-0"
+          side="bottom"
+          align="start"
+          sideOffset={4}
+        >
+          <div className="flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-border/50 px-3 py-2">
+              <Typography.Text className="text-xs font-semibold">
+                {hasLeadMechanic
+                  ? "Add Helper"
+                  : currentMechanic
+                    ? "Change Mechanic"
+                    : "Assign Mechanic"}
+              </Typography.Text>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpen(false);
                 }}
-              />
+                className="text-muted-foreground/40 hover:text-foreground transition-colors"
+              >
+                <X className="size-3" />
+              </button>
             </div>
-          </div>
 
-          {/* Current mechanic */}
-          {currentMechanic && (
+            {/* Search */}
             <div className="border-b border-border/50 px-3 py-2">
-              <Typography.Muted className="text-[10px] font-medium uppercase tracking-wider mb-1.5">
-                Current
-              </Typography.Muted>
-              <div className="flex items-center gap-2">
-                <MechanicAvatar mechanic={currentMechanic} className="size-6" />
-                <span className="text-xs font-medium flex-1 truncate">
-                  {currentMechanic.full_name ?? "Unknown"}
-                </span>
-                {onRemove && (
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemove();
-                    }}
-                    disabled={saving !== null}
-                    className="text-muted-foreground/40 hover:text-red-500"
-                  >
-                    {saving === "remove" ? (
-                      <Loader2 className="size-3 animate-spin" />
-                    ) : (
-                      <X className="size-3" />
-                    )}
-                  </Button>
-                )}
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-muted-foreground/40" />
+                <Input
+                  autoFocus
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={t("searchMechanics")}
+                  className="h-7 pl-7 pr-2 text-xs"
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") {
+                      setSearch("");
+                      setOpen(false);
+                    }
+                  }}
+                />
               </div>
             </div>
-          )}
 
-          {/* Mechanic list */}
-          <ScrollArea className="max-h-[200px]">
-            <div className="p-1">
-              {filtered.length === 0 ? (
-                <div className="px-3 py-4 text-center">
-                  <Typography.Muted className="text-xs">
-                    {search ? "No mechanics found" : "No mechanics available"}
-                  </Typography.Muted>
-                </div>
-              ) : (
-                filtered.map((m) => {
-                  const isSelected = m.id === currentMechanic?.id;
-                  const isSaving = saving === m.id;
-
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      disabled={isSelected || saving !== null}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSelect(m.id);
-                      }}
-                      className={cn(
-                        "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors",
-                        "hover:bg-accent/50 disabled:opacity-50",
-                        isSelected && "bg-accent/30",
-                      )}
-                    >
-                      <MechanicAvatar mechanic={m} className="size-6" />
-                      <span className="text-xs font-medium flex-1 truncate">
-                        {m.full_name ?? "Unknown"}
-                      </span>
-                      {m.current_jobs !== undefined && (
-                        <span className="text-[10px] text-muted-foreground tabular-nums">
-                          {m.current_jobs}
-                        </span>
-                      )}
-                      {isSelected && (
-                        <span className="text-[10px] text-primary font-medium">
-                          Current
-                        </span>
-                      )}
-                      {isSaving && (
-                        <Loader2 className="size-3 animate-spin text-primary" />
-                      )}
-                    </button>
-                  );
-                })
+            <SortableListBody
+              items={mechanics}
+              assignedItems={assignedMechanics}
+              search={search}
+              searchPredicate={(m, q) =>
+                (m.full_name?.toLowerCase().includes(q) ?? false) ||
+                m.id.toLowerCase().includes(q)
+              }
+              emptyText={t("allMechanicsAssigned") ?? "All mechanics assigned"}
+              noResultsText={t("noMechanicsFound") ?? "No mechanics found"}
+              renderItem={(m, { isAssigned, isLead }) => (
+                <SortableMechanicRow
+                  mechanic={m as Mechanic}
+                  isAssigned={isAssigned}
+                  isLead={isLead}
+                  onToggle={(id) => {
+                    setLocalAssignedIds((prev) => {
+                      const base = prev ?? serverAssignedIds;
+                      const next = new Set(base);
+                      if (isAssigned) {
+                        next.delete(id);
+                      } else {
+                        next.add(id);
+                      }
+                      return next;
+                    });
+                    if (isAssigned) {
+                      onUnassign?.(id).catch(() => {});
+                    } else if (!hasLeadMechanic) {
+                      onAssignLead(id).catch(() => {});
+                    } else {
+                      onAssignHelper(id).catch(() => {});
+                    }
+                  }}
+                />
               )}
-            </div>
-          </ScrollArea>
-        </div>
-      </PopoverContent>
+            />
+          </div>
+        </PopoverContent>
+
+        <DragOverlay>
+          {(() => {
+            if (!activeDragId) return null;
+            const dragged = allItems.find((m) => m.id === activeDragId);
+            if (!dragged) return null;
+            return (
+              <div className="flex items-center gap-2 rounded-md bg-card px-2 py-1.5 shadow-lg ring-1 ring-border/50">
+                <GripVertical className="size-3 text-muted-foreground/30" />
+                <MechanicAvatar mechanic={dragged} className="size-6" />
+                <span className="text-xs font-medium">{dragged.full_name}</span>
+              </div>
+            );
+          })()}
+        </DragOverlay>
+      </DndContext>
     </Popover>
   );
 }

@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
+import { generateUUID } from "@/lib/crypto-utils";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import {
   isValidMongolianPlate,
@@ -40,7 +41,7 @@ export async function getVehicles(
   let query = supabase
     .from("vehicles")
     .select(
-      "*, vehicle_owners(customer_id, customers(first_name, last_name, phone))",
+      "id, organization_id, branch_id, plate_number, make, model, year, color, vin, odometer, fuel_type, transmission, category, next_service_at, created_at, deleted_at, vehicle_owners(customer_id, customers(first_name, last_name, phone))",
     )
     .eq("organization_id", orgId)
     .is("deleted_at", null)
@@ -233,7 +234,7 @@ export async function createVehicle(
   // Link to customer
   if (params.customerId) {
     const { error: ownerError } = await supabase.from("vehicle_owners").insert({
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       organization_id: orgId,
       vehicle_id: vehicle.id,
       customer_id: params.customerId,
@@ -379,7 +380,7 @@ export async function updateVehicle(
 
     // Create new ownership
     await supabase.from("vehicle_owners").insert({
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       organization_id: orgId,
       vehicle_id: id,
       customer_id: params.customerId,

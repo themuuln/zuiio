@@ -6,6 +6,11 @@ import { Typography } from "@/components/ui/typography";
 import { formatMNT } from "@/lib/utils";
 import { InlineEditableField } from "./_inline-editable-field";
 
+/** Strip ₮ prefix and non-digit characters for price parsing */
+function parseMNT(raw: string): number {
+  return Number(raw.replace(/[^\d.-]/g, ""));
+}
+
 interface WorkOrderListHeaderProps {
   name: string;
   qty: string;
@@ -21,7 +26,7 @@ export function WorkOrderListHeader({
     <div className="flex items-center gap-2 px-1 mb-1 text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">
       <div className="flex-1">{name}</div>
       <div className="text-right min-w-[2ch]">{qty}</div>
-      <div className="w-20 text-right">{price}</div>
+      <div className="min-w-[5rem] w-auto text-right">{price}</div>
       <div className="w-7" />
     </div>
   );
@@ -77,16 +82,16 @@ export function WorkOrderRow({
           value={quantity}
           formatDisplay={(v) => String(v)}
           onSave={onQtySave}
-          className="justify-end text-xs text-muted-foreground"
-          inputClassName="text-center"
+          className="text-right text-xs text-muted-foreground"
         />
       </div>
-      <div className="w-20 text-right">
+      <div className="min-w-[5rem] w-auto text-right">
         <InlineEditableField
           value={price}
           formatDisplay={(v) => formatMNT(v)}
+          parseInput={parseMNT}
           onSave={onPriceSave}
-          className="font-semibold"
+          className="font-semibold text-right"
         />
       </div>
       <div className="w-7 flex justify-center">

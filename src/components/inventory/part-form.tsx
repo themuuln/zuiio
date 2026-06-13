@@ -3,7 +3,6 @@
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import PartPhotoUpload from "./part-photo-upload";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { CreatableCombobox } from "@/components/ui/combobox";
@@ -25,6 +24,7 @@ import {
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useCreatePart } from "@/lib/queries/use-wizard-data";
 import type { CreatePartParams, PartsCatalogItem } from "@/lib/types";
+import PartPhotoUpload from "./part-photo-upload";
 
 // ── Schema ───────────────────────────────────────────────────
 
@@ -334,78 +334,76 @@ export function PartForm({
 
         {/* ── Full Details extra fields ── */}
         {currentMode === "full" && (
-          <>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field data-invalid={!!form.formState.errors.default_price}>
-                <FieldLabel>Default Selling Price (₮)</FieldLabel>
-                <FieldContent>
-                  <Input
-                    type="number"
-                    min="0"
-                    placeholder="15000"
-                    aria-invalid={!!form.formState.errors.default_price}
-                    {...form.register("default_price")}
-                  />
-                  {form.formState.errors.default_price && (
-                    <FieldError>
-                      {form.formState.errors.default_price.message}
-                    </FieldError>
-                  )}
-                </FieldContent>
-              </Field>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field data-invalid={!!form.formState.errors.default_price}>
+              <FieldLabel>Default Selling Price (₮)</FieldLabel>
+              <FieldContent>
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="15000"
+                  aria-invalid={!!form.formState.errors.default_price}
+                  {...form.register("default_price")}
+                />
+                {form.formState.errors.default_price && (
+                  <FieldError>
+                    {form.formState.errors.default_price.message}
+                  </FieldError>
+                )}
+              </FieldContent>
+            </Field>
 
-              <Field data-invalid={!!form.formState.errors.purchase_price}>
-                <FieldLabel>Purchase Price (₮)</FieldLabel>
-                <FieldContent>
-                  <Input
-                    type="number"
-                    min="0"
-                    placeholder="10000"
-                    aria-invalid={!!form.formState.errors.purchase_price}
-                    {...form.register("purchase_price")}
-                  />
-                  {form.formState.errors.purchase_price && (
-                    <FieldError>
-                      {form.formState.errors.purchase_price.message}
-                    </FieldError>
-                  )}
-                </FieldContent>
-              </Field>
+            <Field data-invalid={!!form.formState.errors.purchase_price}>
+              <FieldLabel>Purchase Price (₮)</FieldLabel>
+              <FieldContent>
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="10000"
+                  aria-invalid={!!form.formState.errors.purchase_price}
+                  {...form.register("purchase_price")}
+                />
+                {form.formState.errors.purchase_price && (
+                  <FieldError>
+                    {form.formState.errors.purchase_price.message}
+                  </FieldError>
+                )}
+              </FieldContent>
+            </Field>
 
-              <Field>
-                <FieldLabel>Unit</FieldLabel>
-                <FieldContent>
-                  <Input
-                    placeholder="e.g. piece, liter"
-                    disabled={readOnly}
-                    {...form.register("unit")}
-                  />
-                </FieldContent>
-              </Field>
+            <Field>
+              <FieldLabel>Unit</FieldLabel>
+              <FieldContent>
+                <Input
+                  placeholder="e.g. piece, liter"
+                  disabled={readOnly}
+                  {...form.register("unit")}
+                />
+              </FieldContent>
+            </Field>
 
-              <Field>
-                <FieldLabel>Description</FieldLabel>
-                <FieldContent>
-                  <Input
-                    placeholder="Optional description"
-                    disabled={readOnly}
-                    {...form.register("description")}
-                  />
-                </FieldContent>
-              </Field>
+            <Field>
+              <FieldLabel>Description</FieldLabel>
+              <FieldContent>
+                <Input
+                  placeholder="Optional description"
+                  disabled={readOnly}
+                  {...form.register("description")}
+                />
+              </FieldContent>
+            </Field>
 
-              <Field>
-                <FieldLabel>Тавиурын байршил</FieldLabel>
-                <FieldContent>
-                  <Input
-                    placeholder="e.g. A-3-12"
-                    disabled={readOnly}
-                    {...form.register("location")}
-                  />
-                </FieldContent>
-              </Field>
-            </div>
-          </>
+            <Field>
+              <FieldLabel>Тавиурын байршил</FieldLabel>
+              <FieldContent>
+                <Input
+                  placeholder="e.g. A-3-12"
+                  disabled={readOnly}
+                  {...form.register("location")}
+                />
+              </FieldContent>
+            </Field>
+          </div>
         )}
       </FieldGroup>
 

@@ -5,9 +5,8 @@
  * createOrgQuery pattern from use-mechanic-dashboard.ts.
  */
 import { type UseQueryResult, useQuery } from "@tanstack/react-query";
-
-import { mechanicPerfKeys } from "./keys";
 import { createOrgQuery } from "./factory";
+import { mechanicPerfKeys } from "./keys";
 
 // ── Types ──────────────────────────────────────────
 

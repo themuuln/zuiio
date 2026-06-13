@@ -30,6 +30,7 @@ import {
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId } from "@/lib/stores";
 import { formatCurrency } from "@/lib/utils";
+import { NewEstimateSheet } from "./_new-estimate-sheet";
 
 const STATUS_ORDER = [
   "all",
@@ -153,6 +154,7 @@ export default function EstimatesPage() {
   const selectedBranchId = useSelectedBranchId();
   const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [newOpen, setNewOpen] = useState(false);
 
   const { search, setSearch, status, setStatus } = useTableFilters(
     "estimates",
@@ -236,7 +238,7 @@ export default function EstimatesPage() {
       }
       onRetry={() => estimatesQuery.refetch()}
       headerAction={
-        <Button onClick={() => router.push("/dashboard/estimates/new")}>
+        <Button onClick={() => setNewOpen(true)}>
           <Plus className="size-4" />
           {t("newQuote")}
         </Button>
@@ -332,7 +334,7 @@ export default function EstimatesPage() {
                 <EmptyDescription>{t("noQuotesDesc")}</EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
-                <Button onClick={() => router.push("/dashboard/estimates/new")}>
+                <Button onClick={() => setNewOpen(true)}>
                   <Plus className="size-4" />
                   {t("createQuote")}
                 </Button>
@@ -360,6 +362,7 @@ export default function EstimatesPage() {
           )}
         </CardContent>
       </Card>
+      <NewEstimateSheet open={newOpen} onOpenChange={setNewOpen} />
     </ListPageShell>
   );
 }

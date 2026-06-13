@@ -12,7 +12,7 @@ import type {
   DashboardSummary,
   WorkOrderStatusDistribution,
 } from "@/lib/types";
-
+import { generateInsights } from "./insights";
 import { getPreviousPeriodSummary } from "./profitability";
 import {
   getCustomerAcquisitionTrendBatched,
@@ -22,7 +22,6 @@ import {
   getTechnicianPerformanceBatched,
   getTopServicesBatched,
 } from "./queries";
-import { generateInsights } from "./insights";
 
 // ── Dashboard (optimized: ~10 queries instead of ~236) ──────
 

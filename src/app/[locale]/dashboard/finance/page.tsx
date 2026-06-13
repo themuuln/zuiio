@@ -61,6 +61,7 @@ function formatInvoiceDate(iso: string): string {
     return iso;
   }
 }
+
 import type { ExportColumn } from "@/lib/export";
 import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
 import { useTableFilters } from "@/lib/hooks/use-url-filters";
@@ -758,9 +759,8 @@ export default function FinancePage() {
   const setSelectedBranchId = useSetSelectedBranchId();
   const { settings: orgSettings } = useOrgSettings(orgId ?? undefined);
   const financeSeparate =
-    (orgSettings as Record<string, unknown>)?.[
-      "finance_separate_per_branch"
-    ] === true;
+    (orgSettings as Record<string, unknown>)?.finance_separate_per_branch ===
+    true;
   const branchFilter =
     financeSeparate && selectedBranchId !== "all" ? selectedBranchId : null;
   const { data: branches = [] } = useBranches(orgId ?? undefined);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Clock3, ShieldCheck, UserPlus, Users } from "lucide-react";
+import { Clock3, ShieldCheck, UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -105,7 +105,7 @@ export default function MembersPage() {
   });
 
   const members = membersQuery.data ?? [];
-  const allInvites = invitesQuery.data ?? [];
+  const _allInvites = invitesQuery.data ?? [];
   const roles = rolesQuery.data ?? [];
   const branches = branchesQuery.data ?? [];
   const invites = useMemo(

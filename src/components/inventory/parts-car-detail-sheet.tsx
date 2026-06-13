@@ -14,10 +14,10 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-import { DetailSheet } from "@/components/ui/detail-sheet";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
+import { DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
-import { SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Typography } from "@/components/ui/typography";
 import {
@@ -205,19 +205,19 @@ export function PartsCarDetailSheet({
   const canAddParts = car?.status === "disassembling";
 
   return (
-    <DetailSheet open={open} onOpenChange={onOpenChange} size="2xl">
-      <SheetHeader className="px-4 py-3 border-b border-border shrink-0">
+    <DetailDrawer open={open} onOpenChange={onOpenChange} size="2xl">
+      <DrawerHeader className="px-4 py-3 border-b border-border shrink-0">
         <DetailSheetHeader
           icon={Car}
           iconLoading={isLoadingData}
           title={
-            <SheetTitle className="text-base truncate">
+            <DrawerTitle className="text-base truncate">
               {isLoadingData
                 ? "Loading…"
                 : car
                   ? `${car.make} ${car.model}`
                   : t("notFound")}
-            </SheetTitle>
+            </DrawerTitle>
           }
           subtitle={
             car ? (
@@ -272,7 +272,7 @@ export function PartsCarDetailSheet({
             ) : undefined
           }
         />
-      </SheetHeader>
+      </DrawerHeader>
 
       {isLoadingData && (
         <div className="flex items-center justify-center py-20">
@@ -605,6 +605,6 @@ export function PartsCarDetailSheet({
           </div>
         </div>
       )}
-    </DetailSheet>
+    </DetailDrawer>
   );
 }

@@ -1,5 +1,5 @@
-import { NotFoundError } from "@/lib/errors";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { NotFoundError } from "@/lib/errors";
 import type {
   SubscriptionPlan,
   SubscriptionPlanInfo,

@@ -204,9 +204,7 @@ export default function VehicleModelsPage() {
           context.previous,
         );
       }
-      toast.error(
-        _err instanceof Error ? _err.message : t("deleteFailed"),
-      );
+      toast.error(_err instanceof Error ? _err.message : t("deleteFailed"));
     },
     onSuccess: () => toast.success(t("vehicleDeleted")),
     onSettled: () => {
@@ -363,12 +361,18 @@ export default function VehicleModelsPage() {
               <Badge variant="secondary" className="h-8 rounded-md px-3">
                 {tree.reduce((sum, group) => sum + group.models.length, 0)}{" "}
                 {t("modelCount", {
-                  count: tree.reduce((sum, group) => sum + group.models.length, 0),
+                  count: tree.reduce(
+                    (sum, group) => sum + group.models.length,
+                    0,
+                  ),
                 }).replace(/^\d+\s*/, "")}
               </Badge>
               <Badge variant="secondary" className="h-8 rounded-md px-3">
                 {totalCount}{" "}
-                {t("variantCount", { count: totalCount }).replace(/^\d+\s*/, "")}
+                {t("variantCount", { count: totalCount }).replace(
+                  /^\d+\s*/,
+                  "",
+                )}
               </Badge>
             </div>
           </div>
@@ -450,20 +454,37 @@ export default function VehicleModelsPage() {
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
                               <Typography.Text className="text-base font-semibold">
-                                <HighlightText text={makeGroup.make} query={search} />
+                                <HighlightText
+                                  text={makeGroup.make}
+                                  query={search}
+                                />
                               </Typography.Text>
-                              <Badge variant="outline" className="h-7 rounded-md px-2.5">
+                              <Badge
+                                variant="outline"
+                                className="h-7 rounded-md px-2.5"
+                              >
                                 {makeGroup.models.length}{" "}
-                                {t("modelCount", { count: 2 }).replace(/^\d+\s*/, "")}
+                                {t("modelCount", { count: 2 }).replace(
+                                  /^\d+\s*/,
+                                  "",
+                                )}
                               </Badge>
-                              <Badge variant="outline" className="h-7 rounded-md px-2.5">
+                              <Badge
+                                variant="outline"
+                                className="h-7 rounded-md px-2.5"
+                              >
                                 {variantCount}{" "}
-                                {t("variantCount", { count: 2 }).replace(/^\d+\s*/, "")}
+                                {t("variantCount", { count: 2 }).replace(
+                                  /^\d+\s*/,
+                                  "",
+                                )}
                               </Badge>
                             </div>
                             <Typography.Muted className="mt-1 text-sm">
-                              {t("modelCount", { count: makeGroup.models.length })} ·{" "}
-                              {t("variantCount", { count: variantCount })}
+                              {t("modelCount", {
+                                count: makeGroup.models.length,
+                              })}{" "}
+                              · {t("variantCount", { count: variantCount })}
                             </Typography.Muted>
                           </div>
                           <div className="shrink-0 text-muted-foreground">
@@ -496,7 +517,8 @@ export default function VehicleModelsPage() {
                                 <div
                                   className={cn(
                                     "bg-background",
-                                    modelIndex > 0 && "border-t border-border/60",
+                                    modelIndex > 0 &&
+                                      "border-t border-border/60",
                                   )}
                                 >
                                   <CollapsibleTrigger className="w-full">
@@ -514,10 +536,9 @@ export default function VehicleModelsPage() {
                                             className="h-7 rounded-md px-2.5"
                                           >
                                             {modelGroup.variants.length}{" "}
-                                            {t("variantCount", { count: 2 }).replace(
-                                              /^\d+\s*/,
-                                              "",
-                                            )}
+                                            {t("variantCount", {
+                                              count: 2,
+                                            }).replace(/^\d+\s*/, "")}
                                           </Badge>
                                         </div>
                                       </div>
@@ -534,100 +555,109 @@ export default function VehicleModelsPage() {
                                   <CollapsibleContent>
                                     <Separator />
                                     <div className="bg-muted/[0.03]">
-                                      {modelGroup.variants.map((v, variantIndex) => {
-                                        const bodyTypeLabel = variantBodyTypeLabel(
-                                          v.body_type,
-                                          t,
-                                        );
-                                        const years = variantYears(v, t);
-                                        const details = [
-                                          years,
-                                          v.engine,
-                                          bodyTypeLabel,
-                                        ]
-                                          .filter(Boolean)
-                                          .join(" \u00B7 ");
+                                      {modelGroup.variants.map(
+                                        (v, variantIndex) => {
+                                          const bodyTypeLabel =
+                                            variantBodyTypeLabel(
+                                              v.body_type,
+                                              t,
+                                            );
+                                          const years = variantYears(v, t);
+                                          const details = [
+                                            years,
+                                            v.engine,
+                                            bodyTypeLabel,
+                                          ]
+                                            .filter(Boolean)
+                                            .join(" \u00B7 ");
 
-                                        return (
-                                          <div
-                                            key={v.id}
-                                            className={cn(
-                                              "grid gap-3 px-4 py-4 sm:px-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.9fr)_auto] lg:items-center",
-                                              variantIndex > 0 &&
-                                                "border-t border-border/50",
-                                            )}
-                                          >
-                                            <div className="min-w-0">
-                                              <div className="flex flex-wrap items-center gap-2">
-                                                <Typography.Text className="text-sm font-medium">
-                                                  <HighlightText
-                                                    text={
-                                                      v.generation ||
-                                                      t("baseVariant")
-                                                    }
-                                                    query={search}
-                                                  />
-                                                </Typography.Text>
-                                                {!v.generation && details ? (
-                                                  <Badge
-                                                    variant="secondary"
-                                                    className="h-6 rounded-md px-2"
-                                                  >
-                                                    {t("baseVariant")}
-                                                  </Badge>
-                                                ) : null}
-                                              </div>
-                                              <Typography.Muted className="mt-1 text-sm">
-                                                <HighlightText
-                                                  text={`${v.make} ${v.model}`}
-                                                  query={search}
-                                                />
-                                              </Typography.Muted>
-                                            </div>
-
-                                            <div className="min-w-0">
-                                              {details ? (
-                                                <Typography.Muted className="text-sm leading-6">
-                                                  <HighlightText
-                                                    text={details}
-                                                    query={search}
-                                                  />
-                                                </Typography.Muted>
-                                              ) : (
-                                                <Typography.Muted className="text-sm">
-                                                  {t("baseVariant")}
-                                                </Typography.Muted>
+                                          return (
+                                            <div
+                                              key={v.id}
+                                              className={cn(
+                                                "grid gap-3 px-4 py-4 sm:px-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.9fr)_auto] lg:items-center",
+                                                variantIndex > 0 &&
+                                                  "border-t border-border/50",
                                               )}
-                                            </div>
+                                            >
+                                              <div className="min-w-0">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                  <Typography.Text className="text-sm font-medium">
+                                                    <HighlightText
+                                                      text={
+                                                        v.generation ||
+                                                        t("baseVariant")
+                                                      }
+                                                      query={search}
+                                                    />
+                                                  </Typography.Text>
+                                                  {!v.generation && details ? (
+                                                    <Badge
+                                                      variant="secondary"
+                                                      className="h-6 rounded-md px-2"
+                                                    >
+                                                      {t("baseVariant")}
+                                                    </Badge>
+                                                  ) : null}
+                                                </div>
+                                                <Typography.Muted className="mt-1 text-sm">
+                                                  <HighlightText
+                                                    text={`${v.make} ${v.model}`}
+                                                    query={search}
+                                                  />
+                                                </Typography.Muted>
+                                              </div>
 
-                                            <div className="flex items-center gap-2 lg:justify-end">
-                                              <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => {
-                                                  setFormMode("edit");
-                                                  setFormItem(v);
-                                                  setFormOpen(true);
-                                                }}
-                                                className="h-10 gap-2 px-3"
-                                                aria-label={t("editVariant")}
-                                              >
-                                                <Pencil className="size-4" />
-                                                <span>{t("editVariant")}</span>
-                                              </Button>
-                                              <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => setDeleteItem(v)}
-                                                className="h-10 px-3 text-destructive hover:text-destructive"
-                                                aria-label={t("deleteVariant")}
-                                              >
-                                                <Trash2 className="size-4" />
-                                              </Button>
+                                              <div className="min-w-0">
+                                                {details ? (
+                                                  <Typography.Muted className="text-sm leading-6">
+                                                    <HighlightText
+                                                      text={details}
+                                                      query={search}
+                                                    />
+                                                  </Typography.Muted>
+                                                ) : (
+                                                  <Typography.Muted className="text-sm">
+                                                    {t("baseVariant")}
+                                                  </Typography.Muted>
+                                                )}
+                                              </div>
+
+                                              <div className="flex items-center gap-2 lg:justify-end">
+                                                <Button
+                                                  variant="outline"
+                                                  size="sm"
+                                                  onClick={() => {
+                                                    setFormMode("edit");
+                                                    setFormItem(v);
+                                                    setFormOpen(true);
+                                                  }}
+                                                  className="h-10 gap-2 px-3"
+                                                  aria-label={t("editVariant")}
+                                                >
+                                                  <Pencil className="size-4" />
+                                                  <span>
+                                                    {t("editVariant")}
+                                                  </span>
+                                                </Button>
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  onClick={() =>
+                                                    setDeleteItem(v)
+                                                  }
+                                                  className="h-10 px-3 text-destructive hover:text-destructive"
+                                                  aria-label={t(
+                                                    "deleteVariant",
+                                                  )}
+                                                >
+                                                  <Trash2 className="size-4" />
+                                                </Button>
+                                              </div>
                                             </div>
-                                          </div>
-                                        );
-                                      })}
+                                          );
+                                        },
+                                      )}
                                     </div>
                                   </CollapsibleContent>
                                 </div>

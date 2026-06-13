@@ -18,7 +18,7 @@ import type {
   ServiceBreakdown,
 } from "@/lib/types";
 import { createOrgQuery } from "./factory";
-import { mechanicKeys, reportKeys } from "./keys";
+import { reportKeys } from "./keys";
 
 // ── Fetchers ────────────────────────────────────────────────
 

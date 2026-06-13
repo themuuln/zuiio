@@ -1,7 +1,9 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
+import pMap from "p-map";
+import Papa from "papaparse";
 import { cacheTags } from "@/lib/cache/keys";
 import { ValidationError } from "@/lib/errors";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface ImportResult {
   imported: number;
@@ -32,86 +34,6 @@ const EXPECTED_HEADERS = [
   "source",
 ] as const;
 
-function parseCsvLine(line: string): string[] {
-  const result: string[] = [];
-  let current = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    if (char === '"') {
-      if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
-        current += '"';
-        i++;
-      } else {
-        inQuotes = !inQuotes;
-      }
-    } else if (char === "," && !inQuotes) {
-      result.push(current.trim());
-      current = "";
-    } else {
-      current += char;
-    }
-  }
-  result.push(current.trim());
-
-  return result;
-}
-
-function parseCsv(content: string): { headers: string[]; rows: string[][] } {
-  const lines = content.trim().split("\n");
-  if (lines.length < 2) {
-    return { headers: [], rows: [] };
-  }
-
-  const headers = parseCsvLine(lines[0]);
-  const rows = lines
-    .slice(1)
-    .flatMap((line) => (line.trim().length > 0 ? [parseCsvLine(line)] : []));
-
-  return { headers, rows };
-}
-
-function mapRow(headers: string[], values: string[]): ParsedRow {
-  const row: ParsedRow = {};
-  for (let i = 0; i < headers.length && i < values.length; i++) {
-    const header = headers[i].trim();
-    const value = values[i].trim();
-
-    if (!value) continue;
-
-    switch (header) {
-      case "firstName":
-      case "first_name":
-        row.firstName = value;
-        break;
-      case "lastName":
-      case "last_name":
-        row.lastName = value;
-        break;
-      case "phone":
-        row.phone = value;
-        break;
-      case "email":
-        row.email = value;
-        break;
-      case "address":
-        row.address = value;
-        break;
-      case "notes":
-        row.notes = value;
-        break;
-      case "type":
-        row.type = value;
-        break;
-      case "source":
-        row.source = value;
-        break;
-    }
-  }
-  return row;
-}
-
 function hasIdentifyingField(row: ParsedRow): boolean {
   return !!(
     row.phone?.trim() ||
@@ -129,14 +51,29 @@ export async function importCustomers(
 ): Promise<ImportResult> {
   const supabase = db;
 
-  const { headers, rows } = parseCsv(csvContent);
+  // Use papaparse for robust CSV parsing
+  const parsed = Papa.parse(csvContent, {
+    skipEmptyLines: true,
+    header: true,
+    transformHeader: (h: string) => h.trim(),
+    transform: (value: string) => value.trim(),
+  });
 
-  if (headers.length === 0) {
+  if (parsed.errors.length > 0) {
+    const csvError = parsed.errors[0];
+    throw new ValidationError(
+      `CSV parse error at row ${csvError.row}: ${csvError.message}`,
+    );
+  }
+
+  const rawRows = parsed.data as Record<string, string>[];
+  if (rawRows.length === 0) {
     throw new ValidationError("CSV file is empty or has no valid headers");
   }
 
+  const headers = parsed.meta.fields ?? [];
   const hasExpectedHeader = headers.some((h) =>
-    EXPECTED_HEADERS.some((expected) => expected === h.trim()),
+    EXPECTED_HEADERS.some((expected) => expected === h),
   );
   if (!hasExpectedHeader) {
     throw new ValidationError(
@@ -147,8 +84,17 @@ export async function importCustomers(
   const errors: { row: number; message: string }[] = [];
   const validRows: ParsedRow[] = [];
 
-  for (let i = 0; i < rows.length; i++) {
-    const customer = mapRow(headers, rows[i]);
+  for (let i = 0; i < rawRows.length; i++) {
+    const customer: ParsedRow = {
+      firstName: rawRows[i].firstName ?? rawRows[i].first_name ?? undefined,
+      lastName: rawRows[i].lastName ?? rawRows[i].last_name ?? undefined,
+      phone: rawRows[i].phone ?? undefined,
+      email: rawRows[i].email ?? undefined,
+      address: rawRows[i].address ?? undefined,
+      notes: rawRows[i].notes ?? undefined,
+      type: rawRows[i].type ?? undefined,
+      source: rawRows[i].source ?? undefined,
+    };
     const rowNumber = i + 2;
 
     if (!hasIdentifyingField(customer)) {
@@ -189,10 +135,11 @@ export async function importCustomers(
     }
   }
 
-  const toInsert: ParsedRow[] = [];
+  // Use a Map keyed by phone+email to track CSV row numbers
   const validRowIndex = new Map<ParsedRow, number>(
     validRows.map((r, idx) => [r, idx]),
   );
+  const toInsert: ParsedRow[] = [];
   for (const row of validRows) {
     if (row.phone && existingPhones.has(row.phone)) {
       errors.push({
@@ -207,73 +154,78 @@ export async function importCustomers(
   const BATCH_SIZE = 50;
   let imported = 0;
 
-  const batchResults = await Promise.all(
-    Array.from(
-      { length: Math.ceil(toInsert.length / BATCH_SIZE) },
-      async (_, batchIdx) => {
-        const start = batchIdx * BATCH_SIZE;
-        const batch = toInsert.slice(start, start + BATCH_SIZE);
+  // Use p-map for concurrent batch processing
+  const batches: ParsedRow[][] = [];
+  for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
+    batches.push(toInsert.slice(i, i + BATCH_SIZE));
+  }
 
-        const dbRows = batch.map((row) => ({
-          organization_id: orgId,
-          type: row.type === "company" ? "company" : "individual",
-          first_name: row.firstName?.trim() || null,
-          last_name: row.lastName?.trim() || null,
-          phone: row.phone?.trim() || null,
-          email: row.email?.trim() || null,
-          address: row.address?.trim() || null,
-          notes: row.notes?.trim() || null,
-          source: row.source?.trim() || null,
-          created_by: userId,
-          updated_by: userId,
-        }));
+  const batchResults = await pMap(
+    batches,
+    async (batch) => {
+      const dbRows = batch.map((row) => ({
+        organization_id: orgId,
+        type: row.type === "company" ? "company" : "individual",
+        first_name: row.firstName?.trim() || null,
+        last_name: row.lastName?.trim() || null,
+        phone: row.phone?.trim() || null,
+        email: row.email?.trim() || null,
+        address: row.address?.trim() || null,
+        notes: row.notes?.trim() || null,
+        source: row.source?.trim() || null,
+        created_by: userId,
+        updated_by: userId,
+      }));
 
-        const { data, error } = await supabase
-          .from("customers")
-          .insert(dbRows)
-          .select("id");
+      const { data, error } = await supabase
+        .from("customers")
+        .insert(dbRows)
+        .select("id");
 
-        if (error) {
-          const results = await Promise.all(
-            dbRows.map(async (row) => {
-              const { error: singleError } = await supabase
-                .from("customers")
-                .insert(row);
-              return { row, error: singleError };
-            }),
-          );
+      if (error) {
+        // Batch insert failed — fall back to individual inserts
+        const results = await pMap(
+          dbRows,
+          async (row) => {
+            const { error: singleError } = await supabase
+              .from("customers")
+              .insert(row);
+            return { row, error: singleError };
+          },
+          { concurrency: 10 },
+        );
 
-          let batchImported = 0;
-          const batchErrors: typeof errors = [];
-          for (const { row, error: singleError } of results) {
-            if (singleError) {
-              const csvRowNumber =
-                (validRowIndex.get(batch[dbRows.indexOf(row)]) ?? 0) + 2;
-              if (
-                singleError.code === "23505" ||
-                singleError.message?.toLowerCase().includes("duplicate") ||
-                singleError.message?.toLowerCase().includes("unique")
-              ) {
-                batchErrors.push({
-                  row: csvRowNumber,
-                  message: `Duplicate phone number: ${row.phone}`,
-                });
-              } else {
-                batchErrors.push({
-                  row: csvRowNumber,
-                  message: singleError.message,
-                });
-              }
+        let batchImported = 0;
+        const batchErrors: typeof errors = [];
+        for (const { row, error: singleError } of results) {
+          if (singleError) {
+            const csvRowNumber =
+              (validRowIndex.get(batch[dbRows.indexOf(row)]) ?? 0) + 2;
+            if (
+              singleError.code === "23505" ||
+              singleError.message?.toLowerCase().includes("duplicate") ||
+              singleError.message?.toLowerCase().includes("unique")
+            ) {
+              batchErrors.push({
+                row: csvRowNumber,
+                message: `Duplicate phone number: ${row.phone}`,
+              });
             } else {
-              batchImported++;
+              batchErrors.push({
+                row: csvRowNumber,
+                message: singleError.message,
+              });
             }
+          } else {
+            batchImported++;
           }
-          return { imported: batchImported, errors: batchErrors };
-        } else {
-          return { imported: data?.length ?? 0, errors: [] as typeof errors };
         }
-      },
-    ),
+        return { imported: batchImported, errors: batchErrors };
+      } else {
+        return { imported: data?.length ?? 0, errors: [] as typeof errors };
+      }
+    },
+    { concurrency: 5 },
   );
 
   for (const br of batchResults) {

@@ -198,13 +198,15 @@ export async function getExpenses(
   if (error) throw new Error(error.message ?? "Failed to fetch expenses");
 
   return (data ?? []).map((row: Record<string, unknown>) => {
-    const cat = (row.category ??
-      row.expense_categories) as unknown as Record<
+    const cat = (row.category ?? row.expense_categories) as unknown as Record<
       string,
       unknown
     > | null;
-    const { category: _category, expense_categories: _expenseCategories, ...expense } =
-      row;
+    const {
+      category: _category,
+      expense_categories: _expenseCategories,
+      ...expense
+    } = row;
     return {
       ...expense,
       category: cat ?? null,

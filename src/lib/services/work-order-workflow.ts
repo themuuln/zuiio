@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { syncWorkOrderToSchedules } from "@/lib/services/service-reminder-service";
 import type { MechanicAssignment, WorkOrder } from "@/lib/types";
@@ -120,8 +121,14 @@ export async function updateWorkOrderStatus(
           for (const p of catalogParts) {
             const available = balanceMap.get(p.part_id!) ?? 0;
             if (p.quantity > available) {
-              console.warn(
-                `[WO ${id}] Part ${p.part_id}: deducting ${p.quantity} but only ${available} available in stock`,
+              logger.warn(
+                {
+                  workOrderId: id,
+                  partId: p.part_id,
+                  requested: p.quantity,
+                  available,
+                },
+                `Part ${p.part_id}: deducting ${p.quantity} but only ${available} available in stock`,
               );
             }
           }

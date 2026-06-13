@@ -43,7 +43,7 @@ export function TransferBankPicker({
       </FieldLabel>
       <FieldContent>
         <div
-          className="flex flex-col gap-2"
+          className="grid grid-cols-1 gap-2"
           role="radiogroup"
           aria-label={t("transferBank")}
         >
@@ -58,22 +58,30 @@ export function TransferBankPicker({
                 aria-checked={selected}
                 onClick={() => onChange(bank.id)}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors",
+                  "flex items-center gap-3 rounded-lg border px-3 py-3 text-left transition-colors border-l-2",
                   selected
-                    ? "border-primary bg-primary/5"
-                    : "border-border/60 bg-card/50 hover:bg-muted/30",
+                    ? "bg-muted/40"
+                    : "border-border/60 border-l-border/60 bg-card/50 hover:bg-muted/20",
                 )}
+                style={
+                  selected
+                    ? {
+                        borderLeftColor: bank.brandColor,
+                        backgroundColor: `${bank.brandColor}08`,
+                      }
+                    : { borderLeftColor: bank.brandColor }
+                }
               >
-                <BankLogo bank={bank} />
+                <BankLogo bank={bank} size="md" />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium truncate">
+                  <span className="block text-sm font-medium truncate mb-0.5">
                     {label}
                   </span>
-                  <span className="block text-[11px] text-muted-foreground tabular-nums">
+                  <span className="block text-base font-semibold tabular-nums tracking-wide">
                     {bank.accountNumber}
                   </span>
                   {bank.accountHolder && (
-                    <span className="block text-[10px] text-muted-foreground truncate">
+                    <span className="block text-xs text-muted-foreground truncate mt-0.5">
                       {bank.accountHolder}
                     </span>
                   )}
@@ -87,6 +95,7 @@ export function TransferBankPicker({
             );
           })}
         </div>
+
         {error && <FieldError>{error}</FieldError>}
       </FieldContent>
     </Field>

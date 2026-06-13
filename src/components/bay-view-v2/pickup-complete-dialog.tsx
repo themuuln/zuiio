@@ -9,8 +9,8 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { AppointmentDatePicker } from "@/components/ui/appointment-date-picker";
 import { Button } from "@/components/ui/button";
-
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AppointmentDatePicker } from "@/components/ui/appointment-date-picker";
 import { useClientNow } from "@/hooks/use-client-now";
 import { cn } from "@/lib/utils";
 

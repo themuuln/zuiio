@@ -16,7 +16,7 @@ export function SummarySection() {
   return (
     <>
       {/* Totals */}
-      <Card className="border-primary/20">
+      <Card data-wizard-step="summary" className="border-primary/20">
         <CardContent className="p-6">
           <div className="flex flex-col gap-3">
             <div className="flex justify-between text-sm">

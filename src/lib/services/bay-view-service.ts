@@ -262,7 +262,7 @@ async function fetchBayViewData(
     }
     const profile = mechanicMap.get(h.mechanic_id);
     if (profile) {
-      helpersByWo.get(h.work_order_id)!.push(profile);
+      helpersByWo.get(h.work_order_id)?.push(profile);
     }
   }
 

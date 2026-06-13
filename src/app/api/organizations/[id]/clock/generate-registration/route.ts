@@ -5,7 +5,7 @@ import { generateRegistrationToken } from "@/lib/services/qr-token-service";
 
 export const POST = createRouteHandler(async ({ request, orgId, supabase }) => {
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-  const rateCheck = mutationRateLimiter.check(ip);
+  const rateCheck = await mutationRateLimiter.check(ip);
   if (!rateCheck.allowed) {
     return NextResponse.json(
       { error: { code: "RATE_LIMITED", message: "Too many requests" } },

@@ -1,25 +1,26 @@
 /**
  * Server-side error reporting utility.
  *
- * Bridges console.error() calls in services and API routes to Sentry.
+ * Bridges error logging in services and API routes to Sentry.
  * Use this instead of bare console.error() for unexpected failures
- * so errors are both logged locally AND sent to Sentry.
+ * so errors are both logged via structured logger AND sent to Sentry.
  *
  * For expected errors (validation, not-found), just throw the appropriate
  * AppError and let api-handler.ts handle it.
  */
 import * as Sentry from "@sentry/nextjs";
+import { logger } from "@/lib/logger";
 
 export function reportServerError(
   message: string,
   error?: unknown,
   context?: Record<string, unknown>,
 ) {
-  // Local visibility
+  // Local visibility via pino
   if (error) {
-    console.error(message, error);
+    logger.error({ err: error, ...context }, message);
   } else {
-    console.error(message);
+    logger.error(context ?? {}, message);
   }
 
   // Sentry

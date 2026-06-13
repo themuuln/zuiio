@@ -72,9 +72,7 @@ export async function createInvoiceAndRecordPayment(
 
   const noteParts: string[] = [];
   if (feeAmount > 0) {
-    noteParts.push(
-      `Processing fee (${feePercent}%): ${formatMNT(feeAmount)}`,
-    );
+    noteParts.push(`Processing fee (${feePercent}%): ${formatMNT(feeAmount)}`);
   }
   if (transferBank) {
     noteParts.push(

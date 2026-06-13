@@ -1,15 +1,23 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Separator } from "@/components/ui/separator";
-import type { BayCardProps } from "./_bay-card-types";
 import { BayCardFooter } from "./_bay-card-footer";
 import { BayCardMechanicsRow } from "./_bay-card-mechanics-row";
+import type { BayCardProps } from "./_bay-card-types";
 import { BayCardVehicleInfo } from "./_bay-card-vehicle-info";
 import { BayNumberLabel } from "./_bay-number-label";
 import { BayStatusBadge } from "./_bay-status-badge";
 import { STATUS_TRANSLATION_KEYS } from "./_constants";
+
+/** Elapsed minutes helper */
+function elapsedMinutes(startedAt: string | null | undefined): number | null {
+  if (!startedAt) return null;
+  const ms = Date.now() - new Date(startedAt).getTime();
+  const mins = Math.round(ms / 60_000);
+  return Number.isFinite(mins) && mins >= 0 ? mins : null;
+}
 
 type BayCardOccupiedProps = Pick<
   BayCardProps,
@@ -27,6 +35,8 @@ type BayCardOccupiedProps = Pick<
   | "onQuickAddParts"
   | "onAssignMechanic"
   | "onRemoveMechanic"
+  | "onAddHelper"
+  | "onReorderMechanics"
 >;
 
 export function BayCardOccupied({
@@ -44,10 +54,16 @@ export function BayCardOccupied({
   onQuickAddParts,
   onAssignMechanic,
   onRemoveMechanic,
+  onAddHelper,
+  onReorderMechanics,
 }: BayCardOccupiedProps) {
   const t = useTranslations("bayView");
   const wo = bay.workOrder;
   if (!wo) return null;
+
+  const elapsed = elapsedMinutes(wo.started_at);
+  const isStuck = elapsed != null && elapsed > 120;
+  const isCritical = elapsed != null && elapsed > 180;
 
   return (
     <>
@@ -61,10 +77,26 @@ export function BayCardOccupied({
             <Loader2 className="size-3 animate-spin text-muted-foreground/60" />
           )}
         </div>
-        <BayStatusBadge
-          status={wo.status}
-          label={t(STATUS_TRANSLATION_KEYS[wo.status])}
-        />
+        <div className="flex items-center gap-1.5">
+          {isStuck && (
+            <span
+              title={
+                isCritical ? "Over 3 hours in bay!" : "Over 2 hours in bay"
+              }
+              className={`inline-flex size-5 cursor-default items-center justify-center rounded-full ${
+                isCritical
+                  ? "bg-rose-500/10 text-rose-500"
+                  : "bg-amber-500/10 text-amber-500"
+              }`}
+            >
+              <AlertTriangle className="size-3 animate-pulse" />
+            </span>
+          )}
+          <BayStatusBadge
+            status={wo.status}
+            label={t(STATUS_TRANSLATION_KEYS[wo.status])}
+          />
+        </div>
       </div>
 
       <Separator />
@@ -84,6 +116,8 @@ export function BayCardOccupied({
           onRemoveHelper={onRemoveHelper}
           onAssignMechanic={onAssignMechanic}
           onRemoveMechanic={onRemoveMechanic}
+          onAddHelper={onAddHelper}
+          onReorderMechanics={onReorderMechanics}
         />
       </div>
 

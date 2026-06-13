@@ -5,10 +5,9 @@ import { AlertCircle, ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
-import { cn } from "@/lib/utils";
 import { Typography } from "@/components/ui/typography";
 import type { ExpenseWithCategory } from "@/lib/types";
-import { formatMNT } from "@/lib/utils";
+import { cn, formatMNT } from "@/lib/utils";
 
 // ── Header Components (hooks must be in components, not in column defs) ──
 

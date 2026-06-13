@@ -19,7 +19,7 @@ export function ServicesSection() {
   const [showQuickService, setShowQuickService] = useState(false);
 
   return (
-    <Card>
+    <Card data-wizard-step="services">
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <Wrench className="size-4" />

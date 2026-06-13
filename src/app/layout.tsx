@@ -1,12 +1,15 @@
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
-import { JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import Script from "next/script";
 import type { ReactNode } from "react";
 import ThemeProvider from "@/components/theme-provider";
 import "./globals.css";
+import { cn } from "@/lib/utils";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tolom.app";
 
@@ -53,7 +56,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="mn"
-      className={`${sfProDisplay.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={cn(
+        "h-full",
+        "antialiased",
+        sfProDisplay.variable,
+        jetbrainsMono.variable,
+        "font-sans",
+        inter.variable,
+      )}
       suppressHydrationWarning
     >
       <head>

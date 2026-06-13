@@ -1,8 +1,8 @@
 "use client";
 
 import { Wallet } from "lucide-react";
-import { useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { useEffect } from "react";
 import { TransferBankPicker } from "@/components/banks/transfer-bank-picker";
 import {
   Field,
@@ -18,8 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Typography } from "@/components/ui/typography";
-import { getDefaultTransferBank } from "@/lib/payments/org-bank-accounts";
 import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
+import { getDefaultTransferBank } from "@/lib/payments/org-bank-accounts";
 import { formatMNT } from "@/lib/utils";
 import {
   computePaymentFeeAmount,

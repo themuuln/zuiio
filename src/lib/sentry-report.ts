@@ -12,9 +12,13 @@ export function reportError(error: unknown, boundary?: string) {
   // Local visibility (devtools / server logs)
   console.error(boundary ? `[${boundary}]` : "Error:", err);
 
-  // Sentry
-  Sentry.captureException(err, {
-    tags: { source: "error-boundary" },
-    ...(boundary && { extra: { boundary } }),
-  });
+  // Sentry — guard against SDK not being fully initialized
+  try {
+    Sentry.captureException(err, {
+      tags: { source: "error-boundary" },
+      ...(boundary && { extra: { boundary } }),
+    });
+  } catch {
+    // Sentry SDK may not be ready yet — avoid error-in-error
+  }
 }

@@ -26,6 +26,11 @@ import {
 } from "@/components/ui/table";
 import { Typography } from "@/components/ui/typography";
 import { useBranches } from "@/lib/queries/use-branches";
+import { useCreateBranch } from "@/lib/queries/use-create-branch";
+import {
+  useOrgSettings,
+  useUpdateOrgSettings,
+} from "@/lib/queries/use-org-settings";
 import {
   SettingsBlock,
   SettingsError,
@@ -33,11 +38,6 @@ import {
   SettingsRow,
   SettingsTableFrame,
 } from "./_settings-layout";
-import { useCreateBranch } from "@/lib/queries/use-create-branch";
-import {
-  useOrgSettings,
-  useUpdateOrgSettings,
-} from "@/lib/queries/use-org-settings";
 
 interface BranchesSectionProps {
   orgId: string;
@@ -53,9 +53,8 @@ export function BranchesSection({ orgId }: BranchesSectionProps) {
   const [addBranchOpen, setAddBranchOpen] = useState(false);
 
   const financeSeparate =
-    (orgSettings as Record<string, unknown>)?.[
-      "finance_separate_per_branch"
-    ] === true;
+    (orgSettings as Record<string, unknown>)?.finance_separate_per_branch ===
+    true;
 
   const handleToggleFinanceSeparation = async (checked: boolean) => {
     try {

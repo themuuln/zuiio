@@ -101,7 +101,7 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
     } finally {
       setMechanicLoading(false);
     }
-  }, [orgId]);
+  }, [orgId, t]);
 
   // Reset state when dialog opens
   useEffect(() => {

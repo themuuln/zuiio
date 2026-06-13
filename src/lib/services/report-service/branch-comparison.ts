@@ -82,7 +82,7 @@ export async function getBranchComparison(
         const bid = wo.branch_id as string;
         if (!bid) continue;
         if (!woByBranch.has(bid)) woByBranch.set(bid, []);
-        woByBranch.get(bid)!.push(wo.id);
+        woByBranch.get(bid)?.push(wo.id);
       }
 
       // ── 6. Fetch services + parts revenue per branch ──

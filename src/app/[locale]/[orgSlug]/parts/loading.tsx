@@ -1,5 +1,3 @@
-import { Package } from "lucide-react";
-
 export default function StorefrontLoading() {
   return (
     <div className="min-h-screen bg-background">

@@ -1,57 +1,67 @@
 "use client";
 
+import { DndContext, DragOverlay, useSensor, useSensors } from "@dnd-kit/core";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { GripVertical } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { useCurrentUserRole } from "@/lib/queries/use-profile";
-import { useOrgSettings } from "@/lib/queries/use-org-settings";
-import { useProfile } from "@/lib/queries/use-profile";
-import { useSelectedBranchId, useSetSelectedBranchId } from "@/lib/stores";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
-import { bayViewKeys } from "@/lib/queries/keys";
-import type { BaySlotData, BayViewData, ShiftReport } from "@/lib/services/bay-view-service";
-import { getBayViewDataFresh, getShiftReport } from "@/lib/services/bay-view-service";
 import {
   normalizeOrgTransferBankAccounts,
   resolveOrgTransferBanks,
 } from "@/lib/payments/org-bank-accounts";
-import { resolvePaymentMethodFees } from "./_payment-fees";
-import { ErrorBoundary } from "@/components/error-boundary";
+import { bayViewKeys } from "@/lib/queries/keys";
+import {
+  useRemoveVehicleFromBay,
+  useUpdateBayCount,
+  useUpdateBayViewStatus,
+} from "@/lib/queries/use-bay-view";
+import { useOrgSettings } from "@/lib/queries/use-org-settings";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useCurrentUserRole, useProfile } from "@/lib/queries/use-profile";
+import type {
+  BaySlotData,
+  BayViewData,
+  ShiftReport,
+} from "@/lib/services/bay-view-service";
+import {
+  getBayViewDataFresh,
+  getShiftReport,
+} from "@/lib/services/bay-view-service";
+import { useSelectedBranchId, useSetSelectedBranchId } from "@/lib/stores";
+import type { Vehicle, WorkOrder } from "@/lib/types";
+import { formatPlateNumber } from "@/lib/utils";
+import { useBayDragHandlers } from "./_bay-drag-handlers";
 import { BayViewErrorState } from "./_error-state";
-import { ErrorSection } from "./_error-section";
 import { GridView } from "./_grid-view";
 import { KanbanView } from "./_kanban-view";
 import { KpiCards } from "./_kpi-cards";
 import { ListView } from "./_list-view";
+import { BayViewPageSkeleton } from "./_page-skeleton";
+import { resolvePaymentMethodFees } from "./_payment-fees";
 import { Toolbar } from "./_toolbar";
-import { WorkOrderDetailDrawer } from "./work-order-detail-drawer";
-import { useBayDragHandlers } from "./_bay-drag-handlers";
 import {
-  useUpdateBayViewStatus,
-  useRemoveVehicleFromBay,
-  useUpdateBayCount,
-} from "@/lib/queries/use-bay-view";
+  type ActiveDragState,
+  GuardedPointerSensor,
+  GuardedTouchSensor,
+  type ViewMode,
+} from "./_types";
+import { useBayCountMutation } from "./_use-bay-count-mutation";
+import { useBayViewDialogs } from "./_use-bay-view-dialogs";
 import { useBayViewPending } from "./_use-bay-view-pending";
 import { useBayViewToast } from "./_use-bay-view-toast";
-import { useBayViewDialogs } from "./_use-bay-view-dialogs";
-import { useBayCountMutation } from "./_use-bay-count-mutation";
-import { DndContext, DragOverlay, useSensor, useSensors } from "@dnd-kit/core";
-import { type ActiveDragState, GuardedPointerSensor, GuardedTouchSensor, type ViewMode } from "./_types";
+import { AssignDialog } from "./assign-dialog";
 import { BayCardDragPreview } from "./bay-card";
-import { GripVertical } from "lucide-react";
-import { StatusNotesModal } from "./status-notes-modal";
-import type { PostServiceFormData } from "./post-service-dialog";
-import { PostServiceDialog } from "./post-service-dialog";
 import type { PickupCompleteData } from "./pickup-complete-dialog";
 import { PickupCompleteDialog } from "./pickup-complete-dialog";
-import { VehicleRegistrationDialog } from "./vehicle-registration-dialog";
+import type { PostServiceFormData } from "./post-service-dialog";
+import { PostServiceDialog } from "./post-service-dialog";
 import { ShiftReportDialog } from "./shift-report-dialog";
-import { AssignDialog } from "./assign-dialog";
+import { StatusNotesModal } from "./status-notes-modal";
 import { ToastMessage } from "./toast-message";
-import { formatPlateNumber } from "@/lib/utils";
-import { BayViewPageSkeleton } from "./_page-skeleton";
-import type { Vehicle, WorkOrder } from "@/lib/types";
+import { VehicleRegistrationDialog } from "./vehicle-registration-dialog";
+import { WorkOrderDetailDrawer } from "./work-order-detail-drawer";
 
 /**
  * Self-contained Bay View content component.
@@ -63,14 +73,17 @@ export function BayViewContent() {
   const queryClient = useQueryClient();
   const { data: orgInfo } = useCurrentOrg();
   const { settings: orgSettings } = useOrgSettings(orgInfo?.orgId);
-  const paymentMethodFees = resolvePaymentMethodFees(orgSettings?.payment_method_fees);
+  const paymentMethodFees = resolvePaymentMethodFees(
+    orgSettings?.payment_method_fees,
+  );
   const transferBanks = resolveOrgTransferBanks(
     normalizeOrgTransferBankAccounts(orgSettings?.transfer_bank_accounts),
   );
 
   const selectedBranchId = useSelectedBranchId();
   const setSelectedBranchId = useSetSelectedBranchId();
-  const branchFilter = selectedBranchId === "all" ? undefined : selectedBranchId;
+  const branchFilter =
+    selectedBranchId === "all" ? undefined : selectedBranchId;
   const { role: userRole } = useCurrentUserRole();
 
   // ── React Query ──────────────────────────────────────────────
@@ -135,8 +148,13 @@ export function BayViewContent() {
   const [pendingWoIds, setPendingWoIds] = useState<Record<string, boolean>>({});
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   const [detailWoId, setDetailWoId] = useState<string | null>(null);
-  const [drawerInitialAction, setDrawerInitialAction] = useState<"add-service" | "add-part" | null>(null);
-  const [currentProfile, setCurrentProfile] = useState<{ id: string; full_name: string | null } | null>(null);
+  const [drawerInitialAction, _setDrawerInitialAction] = useState<
+    "add-service" | "add-part" | null
+  >(null);
+  const [currentProfile, setCurrentProfile] = useState<{
+    id: string;
+    full_name: string | null;
+  } | null>(null);
   const [myJobsOnly, setMyJobsOnly] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [baySearchQuery, setBaySearchQuery] = useState("");
@@ -162,7 +180,10 @@ export function BayViewContent() {
   const { data: profileData } = useProfile();
   useEffect(() => {
     if (profileData?.id) {
-      setCurrentProfile({ id: profileData.id, full_name: profileData.fullName ?? null });
+      setCurrentProfile({
+        id: profileData.id,
+        full_name: profileData.fullName ?? null,
+      });
     }
   }, [profileData?.id, profileData?.fullName]);
 
@@ -232,7 +253,11 @@ export function BayViewContent() {
     pending.requestStatusChange(woId, status);
   }
 
-  async function handleStatusModalConfirm(woId: string, status: string, notes?: string) {
+  async function handleStatusModalConfirm(
+    woId: string,
+    status: string,
+    notes?: string,
+  ) {
     updateStatusMutation.mutate({ woId, status, notes });
     pending.clearPending();
   }
@@ -240,7 +265,9 @@ export function BayViewContent() {
   async function handlePostServiceConfirm(postData: PostServiceFormData) {
     const p = pending.pending;
     if (p?.type !== "postService") return;
-    const { savePostServiceData } = await import("@/lib/services/post-service-service");
+    const { savePostServiceData } = await import(
+      "@/lib/services/post-service-service"
+    );
     await savePostServiceData({
       workOrderId: p.woId,
       vehicleId: p.vehicleId,
@@ -255,7 +282,9 @@ export function BayViewContent() {
   async function handlePickupCompleteConfirm(pickupData: PickupCompleteData) {
     const p = pending.pending;
     if (p?.type !== "pickupComplete") return;
-    const { saveCompletionData } = await import("@/lib/services/post-service-service");
+    const { saveCompletionData } = await import(
+      "@/lib/services/post-service-service"
+    );
     await saveCompletionData({
       workOrderId: p.woId,
       vehicleId: p.vehicleId,
@@ -276,7 +305,9 @@ export function BayViewContent() {
   );
 
   async function handleAssign(workOrderId: string, _mechanicId?: string) {
-    const { assignVehicleToBay } = await import("@/lib/services/bay-view-service");
+    const { assignVehicleToBay } = await import(
+      "@/lib/services/bay-view-service"
+    );
     await assignVehicleToBay(workOrderId, dialogs.assignBay ?? 0);
     dialogs.closeAssign();
     await fetchData();
@@ -284,7 +315,9 @@ export function BayViewContent() {
 
   const handleRemoveHelper = useCallback(
     async (woId: string, mechanicId: string) => {
-      const { removeHelperFromWorkOrder } = await import("@/lib/services/bay-view-service");
+      const { removeHelperFromWorkOrder } = await import(
+        "@/lib/services/bay-view-service"
+      );
       await removeHelperFromWorkOrder(woId, mechanicId);
       await fetchData();
     },
@@ -293,7 +326,9 @@ export function BayViewContent() {
 
   const handleAssignMechanic = useCallback(
     async (woId: string, mechanicId: string) => {
-      const { assignMechanicToWorkOrder } = await import("@/lib/services/bay-view-service");
+      const { assignMechanicToWorkOrder } = await import(
+        "@/lib/services/bay-view-service"
+      );
       await assignMechanicToWorkOrder(woId, mechanicId);
       await fetchData();
     },
@@ -302,7 +337,9 @@ export function BayViewContent() {
 
   const handleRemoveMechanic = useCallback(
     async (woId: string) => {
-      const { unassignMechanicFromWorkOrder } = await import("@/lib/services/bay-view-service");
+      const { unassignMechanicFromWorkOrder } = await import(
+        "@/lib/services/bay-view-service"
+      );
       await unassignMechanicFromWorkOrder(woId);
       await fetchData();
     },
@@ -314,7 +351,11 @@ export function BayViewContent() {
     data,
     setData,
     setActiveDrag: setActiveDrag as React.Dispatch<
-      React.SetStateAction<{ type: string; label: string; previewBay?: BaySlotData | null } | null>
+      React.SetStateAction<{
+        type: string;
+        label: string;
+        previewBay?: BaySlotData | null;
+      } | null>
     >,
     onStatusChange: handleStatusClick,
     markPending,
@@ -332,11 +373,15 @@ export function BayViewContent() {
   const trendDelta =
     shiftReport && prevShiftReport
       ? {
-          bayUtilization: shiftReport.bayUtilization - prevShiftReport.bayUtilization,
+          bayUtilization:
+            shiftReport.bayUtilization - prevShiftReport.bayUtilization,
           activeJobs: shiftReport.activeJobs - prevShiftReport.activeJobs,
-          completedToday: shiftReport.completedToday - prevShiftReport.completedToday,
+          completedToday:
+            shiftReport.completedToday - prevShiftReport.completedToday,
           revenueToday: shiftReport.revenueToday - prevShiftReport.revenueToday,
-          revenuePerLaborHour: shiftReport.revenuePerLaborHour - prevShiftReport.revenuePerLaborHour,
+          revenuePerLaborHour:
+            shiftReport.revenuePerLaborHour -
+            prevShiftReport.revenuePerLaborHour,
         }
       : null;
 
@@ -344,12 +389,18 @@ export function BayViewContent() {
   const readyWosCount = useMemo(
     () =>
       data?.waitingQueue.filter(
-        (wo) => wo.status === "Ready for Pickup" || wo.status === "Awaiting Parts" || wo.status === "On Hold",
+        (wo) =>
+          wo.status === "Ready for Pickup" ||
+          wo.status === "Awaiting Parts" ||
+          wo.status === "On Hold",
       ).length ?? 0,
     [data?.waitingQueue],
   );
 
-  const occupiedBays = useMemo(() => data?.bays.filter((b) => b.workOrder).length ?? 0, [data?.bays]);
+  const occupiedBays = useMemo(
+    () => data?.bays.filter((b) => b.workOrder).length ?? 0,
+    [data?.bays],
+  );
 
   const statusFilteredBays = useMemo(() => {
     if (!data) return [];
@@ -385,10 +436,19 @@ export function BayViewContent() {
     },
   );
 
-  const filteredQueue = useFuzzySearch(data?.waitingQueue ?? [], baySearchQuery, {
-    keys: ["vehicle.plate_number", "vehicle.make", "vehicle.model", "customer_name"],
-    threshold: 0.4,
-  });
+  const filteredQueue = useFuzzySearch(
+    data?.waitingQueue ?? [],
+    baySearchQuery,
+    {
+      keys: [
+        "vehicle.plate_number",
+        "vehicle.make",
+        "vehicle.model",
+        "customer_name",
+      ],
+      threshold: 0.4,
+    },
+  );
 
   const searchedBranchSections = useMemo(() => {
     if (!data?.branchSections || data.branchSections.length <= 1) return null;
@@ -407,7 +467,9 @@ export function BayViewContent() {
   // ── Pending WO for dialogs ───────────────────────────────────
   const pendingPostServiceBay = useMemo(() => {
     if (pending.pending?.type !== "postService") return null;
-    return data?.bays.find((b) => b.workOrder?.id === pending.pending!.woId) ?? null;
+    return (
+      data?.bays.find((b) => b.workOrder?.id === pending.pending?.woId) ?? null
+    );
   }, [pending.pending, data?.bays]);
 
   // ── Loading / Error states ───────────────────────────────────
@@ -445,8 +507,14 @@ export function BayViewContent() {
           setBatchCompleteDialogOpen={(v) => dialogs.set("batchComplete", v)}
           setShowVehicleReg={(v) => dialogs.set("vehicleReg", v)}
           setShowShiftReport={(v) => dialogs.set("shiftReport", v)}
-          bayCountMutationInFlightRef={{ current: false } as React.MutableRefObject<boolean>}
-          bayCountDebounceRef={{ current: null } as React.MutableRefObject<ReturnType<typeof setTimeout> | null>}
+          bayCountMutationInFlightRef={
+            { current: false } as React.MutableRefObject<boolean>
+          }
+          bayCountDebounceRef={
+            { current: null } as React.MutableRefObject<ReturnType<
+              typeof setTimeout
+            > | null>
+          }
           bayCountPending={bayCount.pending}
           bayCountInputValue={bayCount.inputValue}
           setBayCountInputValue={bayCount.setInputValue}
@@ -465,7 +533,9 @@ export function BayViewContent() {
           occupiedBays={occupiedBays}
           bayCount={data.bayCount}
           waitingQueueLength={data.waitingQueue.length}
-          bays={data.branchSections?.flatMap((section) => section.bays) ?? data.bays}
+          bays={
+            data.branchSections?.flatMap((section) => section.bays) ?? data.bays
+          }
           waitingQueue={data.waitingQueue}
           onOpenWorkOrder={handleOpenDetail}
           t={t}
@@ -479,7 +549,9 @@ export function BayViewContent() {
                   <div key={section.branchId} className="mb-6 last:mb-0">
                     {searchedBranchSections.length > 1 && (
                       <div className="flex items-center gap-2 mb-3">
-                        <span className="text-sm font-semibold text-foreground/80">{section.branchName}</span>
+                        <span className="text-sm font-semibold text-foreground/80">
+                          {section.branchName}
+                        </span>
                       </div>
                     )}
                     <GridView
@@ -522,7 +594,9 @@ export function BayViewContent() {
                   <div key={section.branchId} className="mb-6 last:mb-0">
                     {searchedBranchSections.length > 1 && (
                       <div className="flex items-center gap-2 mb-3">
-                        <span className="text-sm font-semibold text-foreground/80">{section.branchName}</span>
+                        <span className="text-sm font-semibold text-foreground/80">
+                          {section.branchName}
+                        </span>
                       </div>
                     )}
                     <KanbanView
@@ -534,7 +608,12 @@ export function BayViewContent() {
                       onRemoveFromBay={handleRemoveFromBay}
                       onOpenDetail={handleOpenDetail}
                       onAssignClick={handleEmptyBayClick}
-                      onNoEmptyBays={() => toast.setToast({ message: "No empty bays available", variant: "error" })}
+                      onNoEmptyBays={() =>
+                        toast.setToast({
+                          message: "No empty bays available",
+                          variant: "error",
+                        })
+                      }
                       onQueueItemClick={handleQueueItemClick}
                       onRemoveHelper={handleRemoveHelper}
                       t={t}
@@ -554,7 +633,12 @@ export function BayViewContent() {
                   onRemoveFromBay={handleRemoveFromBay}
                   onOpenDetail={handleOpenDetail}
                   onAssignClick={handleEmptyBayClick}
-                  onNoEmptyBays={() => toast.setToast({ message: "No empty bays available", variant: "error" })}
+                  onNoEmptyBays={() =>
+                    toast.setToast({
+                      message: "No empty bays available",
+                      variant: "error",
+                    })
+                  }
                   onQueueItemClick={handleQueueItemClick}
                   onRemoveHelper={handleRemoveHelper}
                   t={t}
@@ -569,16 +653,30 @@ export function BayViewContent() {
                   <div key={section.branchId} className="mb-6 last:mb-0">
                     {searchedBranchSections.length > 1 && (
                       <div className="flex items-center gap-2 mb-3">
-                        <span className="text-sm font-semibold text-foreground/80">{section.branchName}</span>
+                        <span className="text-sm font-semibold text-foreground/80">
+                          {section.branchName}
+                        </span>
                       </div>
                     )}
-                    <ListView bays={section.bays} onOpenDetail={handleOpenDetail} onAssignClick={handleEmptyBayClick} orgId={orgInfo?.orgId} t={t} />
+                    <ListView
+                      bays={section.bays}
+                      onOpenDetail={handleOpenDetail}
+                      onAssignClick={handleEmptyBayClick}
+                      orgId={orgInfo?.orgId}
+                      t={t}
+                    />
                   </div>
                 ))}
               </div>
             ) : (
               <div className="flex-1 min-h-0 overflow-y-auto p-5">
-                <ListView bays={searchedBays} onOpenDetail={handleOpenDetail} onAssignClick={handleEmptyBayClick} orgId={orgInfo?.orgId} t={t} />
+                <ListView
+                  bays={searchedBays}
+                  onOpenDetail={handleOpenDetail}
+                  onAssignClick={handleEmptyBayClick}
+                  orgId={orgInfo?.orgId}
+                  t={t}
+                />
               </div>
             ))}
         </div>
@@ -597,7 +695,9 @@ export function BayViewContent() {
       {pending.pending?.type === "postService" && pendingPostServiceBay && (
         <PostServiceDialog
           open
-          onOpenChange={(open) => { if (!open) pending.clearPending(); }}
+          onOpenChange={(open) => {
+            if (!open) pending.clearPending();
+          }}
           woId={pending.pending.woId}
           vehicleId={pending.pending.vehicleId}
           vehiclePlate={pending.pending.vehiclePlate}
@@ -614,7 +714,9 @@ export function BayViewContent() {
       {pending.pending?.type === "pickupComplete" && (
         <PickupCompleteDialog
           open
-          onOpenChange={(open) => { if (!open) pending.clearPending(); }}
+          onOpenChange={(open) => {
+            if (!open) pending.clearPending();
+          }}
           woId={pending.pending.woId}
           vehiclePlate={pending.pending.vehiclePlate}
           totalCost={pending.pending.totalCost}
@@ -642,13 +744,19 @@ export function BayViewContent() {
         <AssignDialog
           key={dialogs.assignBay}
           open={dialogs.open.assign}
-          onOpenChange={(open) => { if (!open) dialogs.closeAssign(); }}
+          onOpenChange={(open) => {
+            if (!open) dialogs.closeAssign();
+          }}
           bayNumber={dialogs.assignBay}
-          queue={data.waitingQueue as (WorkOrder & { vehicle: Vehicle | null })[]}
-          mechanics={data.mechanics.map((m: { id: string; full_name: string | null }) => ({
-            id: m.id,
-            full_name: m.full_name,
-          }))}
+          queue={
+            data.waitingQueue as (WorkOrder & { vehicle: Vehicle | null })[]
+          }
+          mechanics={data.mechanics.map(
+            (m: { id: string; full_name: string | null }) => ({
+              id: m.id,
+              full_name: m.full_name,
+            }),
+          )}
           onAssign={handleAssign}
         />
       )}
@@ -657,7 +765,9 @@ export function BayViewContent() {
         <WorkOrderDetailDrawer
           workOrderId={detailWoId}
           open={detailDrawerOpen}
-          onOpenChange={(open) => { if (!open) handleCloseDetail(); }}
+          onOpenChange={(open) => {
+            if (!open) handleCloseDetail();
+          }}
           onRefresh={() => fetchData()}
           initialAction={drawerInitialAction}
         />

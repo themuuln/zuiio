@@ -5,7 +5,12 @@ import { useTranslations } from "next-intl";
 import { useEffect, useReducer, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { DetailSheet } from "@/components/ui/detail-sheet";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
+import {
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import {
   Field,
   FieldContent,
@@ -20,11 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { Typography } from "@/components/ui/typography";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 
@@ -120,14 +120,14 @@ function MechanicCredentialsView({
   };
 
   return (
-    <DetailSheet open={open} onOpenChange={onOpenChange} size="2xl">
-      <SheetHeader>
-        <SheetTitle className="flex items-center gap-2 text-base">
+    <DetailDrawer open={open} onOpenChange={onOpenChange} size="2xl">
+      <DrawerHeader>
+        <DrawerTitle className="flex items-center gap-2 text-base">
           <CheckCircle className="size-4 text-emerald-500" />
           {t("credentialsTitle")}
-        </SheetTitle>
-        <SheetDescription>{t("credentialsDescription")}</SheetDescription>
-      </SheetHeader>
+        </DrawerTitle>
+        <DrawerDescription>{t("credentialsDescription")}</DrawerDescription>
+      </DrawerHeader>
 
       <div className="flex flex-1 flex-col gap-6 px-4">
         <div className="rounded-lg border bg-muted/30 p-4">
@@ -175,7 +175,7 @@ function MechanicCredentialsView({
           </Button>
         </div>
       </div>
-    </DetailSheet>
+    </DetailDrawer>
   );
 }
 
@@ -218,7 +218,7 @@ export function NewMechanicSheet({
     };
 
     loadRoles();
-  }, [open, orgId]);
+  }, [open, orgId, t]);
 
   // Reset form on close
   const handleOpenChange = (open: boolean) => {
@@ -295,14 +295,14 @@ export function NewMechanicSheet({
 
   // Show form
   return (
-    <DetailSheet open={open} onOpenChange={handleOpenChange} size="2xl">
-      <SheetHeader>
-        <SheetTitle className="flex items-center gap-2 text-base">
+    <DetailDrawer open={open} onOpenChange={handleOpenChange} size="2xl">
+      <DrawerHeader>
+        <DrawerTitle className="flex items-center gap-2 text-base">
           <UserPlus className="size-4" />
           {t("formTitle")}
-        </SheetTitle>
-        <SheetDescription>{t("formDescription")}</SheetDescription>
-      </SheetHeader>
+        </DrawerTitle>
+        <DrawerDescription>{t("formDescription")}</DrawerDescription>
+      </DrawerHeader>
 
       <form
         onSubmit={handleSubmit}
@@ -445,6 +445,6 @@ export function NewMechanicSheet({
           </Button>
         </div>
       </form>
-    </DetailSheet>
+    </DetailDrawer>
   );
 }

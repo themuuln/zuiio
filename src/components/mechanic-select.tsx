@@ -9,7 +9,6 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-import { cn } from "@/lib/utils";
 
 interface Mechanic {
   id: string;

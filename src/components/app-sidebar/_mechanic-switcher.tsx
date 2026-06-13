@@ -3,9 +3,9 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { UserPlus, Wrench } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { MechanicAvatar } from "@/components/mechanic-avatar";
 import { NewMechanicSheet } from "@/components/new-mechanic-sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { MechanicAvatar } from "@/components/mechanic-avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +23,6 @@ import { SidebarMenuButton, useSidebar } from "@/components/ui/sidebar";
 import { mechanicKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useProfile } from "@/lib/queries/use-profile";
-import { cn } from "@/lib/utils";
 
 const MECHANIC_STORAGE_KEY = "tolom_active_mechanic";
 

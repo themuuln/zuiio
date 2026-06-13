@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
-import { cacheTags } from "@/lib/cache/keys";
 import { createAuditLog } from "@/lib/audit";
+import { cacheTags } from "@/lib/cache/keys";
 
 export interface TimeLog {
   id: string;
@@ -70,7 +70,9 @@ export async function clockOut(
   // Find the latest open log for today
   const { data: openLog, error: findError } = await supabase
     .from("mechanic_time_logs")
-    .select("*")
+    .select(
+      "id, organization_id, mechanic_id, clock_in, clock_out, date, notes",
+    )
     .eq("mechanic_id", mechanicId)
     .eq("organization_id", orgId)
     .eq("date", today)
@@ -124,7 +126,9 @@ export async function getTodayLog(
 
   const { data } = await supabase
     .from("mechanic_time_logs")
-    .select("*")
+    .select(
+      "id, organization_id, mechanic_id, clock_in, clock_out, date, notes",
+    )
     .eq("mechanic_id", mechanicId)
     .eq("organization_id", orgId)
     .eq("date", today)

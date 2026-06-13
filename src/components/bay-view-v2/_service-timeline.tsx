@@ -3,13 +3,13 @@ import { useTranslations } from "next-intl";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Typography } from "@/components/ui/typography";
 import { formatMNT } from "@/lib/utils";
+import { STATUS_DOT } from "./_constants";
 import {
   formatDate,
   formatTime,
   type LookupResult,
   type ServiceHistoryEntry,
 } from "./_vehicle-registration-schema";
-import { STATUS_DOT } from "./_constants";
 
 function ServiceTimelineEntry({
   entry,

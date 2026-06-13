@@ -1,0 +1,54 @@
+# Deploy VitePress docs to GitHub Pages
+name: Deploy Docs
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'docs/**'
+      - 'website/docs/**'
+      - '.documentizer/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          if [ -f "website/package.json" ]; then
+            cd website && npm ci
+          else
+            npm ci
+          fi
+
+      - name: Build docs
+        run: |
+          if [ -f "website/package.json" ]; then
+            cd website && npm run docs:build
+          else
+            npm run docs:build
+          fi
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: |
+            website/docs/.vitepress/dist
+            docs/.vitepress/dist
+          keep_files: true

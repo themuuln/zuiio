@@ -1,10 +1,10 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
 import { Plus } from "lucide-react";
+import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { LucideIcon } from "lucide-react";
 
 interface SectionCardProps {
   /** Icon component (e.g. Wrench, Package) */

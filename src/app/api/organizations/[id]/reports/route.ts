@@ -217,6 +217,7 @@ export const GET = createRouteHandler(
           orgId,
           date,
           branchId,
+          mid || null,
         );
         return NextResponse.json({ data: summary });
       }

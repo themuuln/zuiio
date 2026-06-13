@@ -73,7 +73,7 @@ export function SuppliersTab({
         onError: (err: Error) => toast.error(err.message),
       });
     },
-    [deleteSupplier],
+    [deleteSupplier, t],
   );
 
   const columns: ColumnDef<Supplier>[] = useMemo(
@@ -148,7 +148,7 @@ export function SuppliersTab({
         ),
       },
     ],
-    [handleDeleteSupplier],
+    [handleDeleteSupplier, t],
   );
 
   function handleSaveSupplier(e: React.SyntheticEvent<HTMLFormElement>) {

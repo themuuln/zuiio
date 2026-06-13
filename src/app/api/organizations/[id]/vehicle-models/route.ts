@@ -28,7 +28,7 @@ export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
 export const POST = createRouteHandler(async ({ request, orgId, supabase }) => {
   await requireActiveSubscription(orgId);
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-  const rateCheck = mutationRateLimiter.check(ip);
+  const rateCheck = await mutationRateLimiter.check(ip);
   if (!rateCheck.allowed) {
     return NextResponse.json(
       { error: { code: "RATE_LIMITED", message: "Too many requests" } },

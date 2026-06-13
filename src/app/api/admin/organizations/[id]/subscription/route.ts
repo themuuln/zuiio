@@ -11,7 +11,7 @@ import {
 
 async function guard(request: Request, supabase: SupabaseClient) {
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-  const rateCheck = mutationRateLimiter.check(ip);
+  const rateCheck = await mutationRateLimiter.check(ip);
   if (!rateCheck.allowed) {
     throw {
       response: NextResponse.json(

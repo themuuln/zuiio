@@ -54,17 +54,20 @@ const MECHANIC_COLORS = [
   },
 ] as const;
 
+export function getMechanicColor(
+  id: string | null | undefined,
+): (typeof MECHANIC_COLORS)[number] {
+  const safeId = id ?? "";
+  const index = hashCode(safeId) % MECHANIC_COLORS.length;
+  return MECHANIC_COLORS[index];
+}
+
 function hashCode(str: string): number {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
   }
   return Math.abs(hash);
-}
-
-export function getMechanicColor(id: string): (typeof MECHANIC_COLORS)[number] {
-  const index = hashCode(id) % MECHANIC_COLORS.length;
-  return MECHANIC_COLORS[index];
 }
 
 export function getMechanicInitials(name: string | null | undefined): string {

@@ -32,15 +32,15 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { DetailSheet } from "@/components/ui/detail-sheet";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
+import { DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import {
   Item,
   ItemContent,
   ItemDescription,
   ItemTitle,
 } from "@/components/ui/item";
-import { SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Typography } from "@/components/ui/typography";
 import { usePageHeader } from "@/hooks/use-page-header";
 import { customerKeys } from "@/lib/queries/keys";
@@ -270,19 +270,19 @@ export function CustomerDetailSheet({
   const notFound = open && !loading && !customer && !error;
 
   return (
-    <DetailSheet open={open} onOpenChange={handleOpenChange} size="2xl">
-      <SheetHeader className="px-4 py-3 border-b border-border shrink-0">
+    <DetailDrawer open={open} onOpenChange={handleOpenChange} size="2xl">
+      <DrawerHeader className="px-4 py-3 border-b border-border shrink-0">
         <DetailSheetHeader
           icon={customer?.type === "company" ? Building2 : Pencil}
           iconLoading={isLoadingData}
           title={
-            <SheetTitle className="text-base truncate">
+            <DrawerTitle className="text-base truncate">
               {isLoadingData
                 ? "Loading…"
                 : customer
                   ? getDisplayName(customer)
                   : t("customerNotFound")}
-            </SheetTitle>
+            </DrawerTitle>
           }
           subtitle={
             customer ? (
@@ -337,7 +337,7 @@ export function CustomerDetailSheet({
             ) : undefined
           }
         />
-      </SheetHeader>
+      </DrawerHeader>
 
       {isLoadingData && (
         <div className="flex items-center justify-center py-20">
@@ -543,7 +543,7 @@ export function CustomerDetailSheet({
           )}
         </div>
       )}
-    </DetailSheet>
+    </DetailDrawer>
   );
 }
 

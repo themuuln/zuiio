@@ -1,5 +1,5 @@
-import { memo } from "react";
 import { ArrowDown, ArrowUp, type LucideIcon } from "lucide-react";
+import { memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
@@ -64,7 +64,11 @@ export const KpiCard = memo(function KpiCard({
   icon: LucideIcon;
   loading?: boolean;
   accentKey?: string;
-  trend?: { direction: "up" | "down" | "neutral"; value: string } | null;
+  trend?: {
+    direction: "up" | "down" | "neutral";
+    value: string;
+    percent?: string;
+  } | null;
   comparisonLabel?: string;
 }) {
   const accent = accentKey ? KPI_ACCENTS[accentKey] : undefined;
@@ -99,7 +103,7 @@ export const KpiCard = memo(function KpiCard({
             </div>
             {trend && (
               <div
-                className={`flex items-center gap-0.5 text-xs font-medium mb-1 ${
+                className={`flex items-center gap-1 text-xs font-medium mb-1 ${
                   trend.direction === "up"
                     ? "text-emerald-600"
                     : trend.direction === "down"
@@ -112,7 +116,10 @@ export const KpiCard = memo(function KpiCard({
                 ) : trend.direction === "down" ? (
                   <ArrowDown className="size-3" />
                 ) : null}
-                {trend.value}
+                <span>{trend.value}</span>
+                {trend.percent && (
+                  <span className="opacity-75">({trend.percent})</span>
+                )}
               </div>
             )}
           </div>

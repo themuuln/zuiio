@@ -28,6 +28,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: i18n check
+        run: pnpm i18n:all
+
       - name: Lint
         run: pnpm lint
 

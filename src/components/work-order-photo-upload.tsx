@@ -1,10 +1,12 @@
 "use client";
 
 import { Loader2, Paperclip } from "lucide-react";
-import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useCallback, useState } from "react";
+import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { generateUUID } from "@/lib/crypto-utils";
 import { useCreateAttachment } from "@/lib/queries/use-work-order-attachments";
 import { createClient } from "@/lib/supabase/client";
 
@@ -27,14 +29,10 @@ export default function WorkOrderPhotoUpload({
   workOrderId,
 }: WorkOrderPhotoUploadProps) {
   const [uploading, setUploading] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
   const createAttachment = useCreateAttachment(orgId, workOrderId);
   const t = useTranslations("workOrderDetail");
 
-  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  async function uploadFile(file: File) {
     if (file.size > MAX_SIZE) {
       toast.error(t("fileTooLarge"));
       return;
@@ -49,7 +47,7 @@ export default function WorkOrderPhotoUpload({
     try {
       const supabase = createClient();
       const ext = file.name.split(".").pop() ?? "jpg";
-      const uniqueName = `${crypto.randomUUID()}.${ext}`;
+      const uniqueName = `${generateUUID()}.${ext}`;
       const storagePath = `${orgId}/${workOrderId}/${uniqueName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -78,27 +76,43 @@ export default function WorkOrderPhotoUpload({
       toast.error(err instanceof Error ? err.message : t("uploadFailed"));
     } finally {
       setUploading(false);
-      if (inputRef.current) inputRef.current.value = "";
     }
   }
+
+  const onDrop = useCallback(
+    (accepted: File[]) => {
+      const file = accepted[0];
+      if (file) uploadFile(file);
+    },
+    [uploadFile],
+  );
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      "image/jpeg": [".jpg", ".jpeg"],
+      "image/png": [".png"],
+      "image/webp": [".webp"],
+      "image/heic": [".heic"],
+      "application/pdf": [".pdf"],
+    },
+    maxFiles: 1,
+    disabled: uploading || createAttachment.isPending,
+    noClick: true,
+    noKeyboard: true,
+  });
 
   const isBusy = uploading || createAttachment.isPending;
 
   return (
-    <div>
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp,image/heic,application/pdf"
-        onChange={handleFileSelect}
-        className="hidden"
-      />
+    <div {...getRootProps()} className="relative">
+      <input {...getInputProps()} />
       <Button
         type="button"
         variant="outline"
         size="sm"
-        onClick={() => inputRef.current?.click()}
         disabled={isBusy}
+        className={isDragActive ? "border-primary bg-primary/10" : ""}
       >
         {isBusy ? (
           <Loader2 className="mr-1.5 size-3.5 animate-spin" />

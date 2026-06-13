@@ -10,9 +10,8 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-
-import { clockKeys, mechanicKeys } from "./keys";
 import { createOrgQuery } from "./factory";
+import { clockKeys, mechanicKeys } from "./keys";
 
 // ── Types ──────────────────────────────────────────
 
@@ -72,9 +71,12 @@ export function useMechanicEod(
       const today = new Date().toISOString().split("T")[0];
       const data = await fetchReports(orgId!, {
         params: { type: "eod", date: today, mechanic: userId! },
-        cacheKeyParams: { type: "eod" },
+        cacheKeyParams: { type: "eod", mechanic: userId! },
       });
-      return data?.mechanics?.[0] ?? null;
+      const mechanic = (data?.mechanics ?? []).find(
+        (m: { mechanic_id: string }) => m.mechanic_id === userId!,
+      );
+      return mechanic ?? null;
     },
     enabled: !!orgId && !!userId,
     staleTime: 15_000,

@@ -1,8 +1,8 @@
 import crypto from "node:crypto";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAuditLog } from "@/lib/audit";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { reportServerError } from "@/lib/sentry-report-server";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import type { InviteUserParams, OrgInvite } from "@/lib/types";
 

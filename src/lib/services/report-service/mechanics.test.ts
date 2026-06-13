@@ -426,7 +426,11 @@ describe("getMechanicsList", () => {
       return builder;
     });
 
-    const result = await getMechanicsList(mockClient as any, "org-1", "branch-1");
+    const result = await getMechanicsList(
+      mockClient as any,
+      "org-1",
+      "branch-1",
+    );
 
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe("user-1");
@@ -459,7 +463,11 @@ describe("getMechanicsList", () => {
       return builder;
     });
 
-    const result = await getMechanicsList(mockClient as any, "org-1", "branch-1");
+    const result = await getMechanicsList(
+      mockClient as any,
+      "org-1",
+      "branch-1",
+    );
 
     expect(result).toEqual([]);
   });
@@ -517,7 +525,14 @@ describe("getMechanicPerformanceTrend", () => {
       return builder;
     });
 
-    const result = await getMechanicPerformanceTrend(mockClient as any, "org-1", "mech-1", "weekly", "2026-01-01", "2026-01-31");
+    const result = await getMechanicPerformanceTrend(
+      mockClient as any,
+      "org-1",
+      "mech-1",
+      "weekly",
+      "2026-01-01",
+      "2026-01-31",
+    );
 
     expect(result.id).toBe("mech-1");
     expect(result.name).toBe("John Mechanic");
@@ -527,8 +542,8 @@ describe("getMechanicPerformanceTrend", () => {
 
     // All 4 orders should be grouped into a single week
     expect(result.weeklyTrend).toHaveLength(1);
-    expect(result.weeklyTrend![0].orders).toBe(4);
-    expect(result.weeklyTrend![0].revenue).toBe(500);
+    expect(result.weeklyTrend?.[0].orders).toBe(4);
+    expect(result.weeklyTrend?.[0].revenue).toBe(500);
   });
 
   it("computes monthly trend grouped by YYYY-MM", async () => {
@@ -574,14 +589,21 @@ describe("getMechanicPerformanceTrend", () => {
       return builder;
     });
 
-    const result = await getMechanicPerformanceTrend(mockClient as any, "org-1", "mech-2", "monthly", "2026-02-01", "2026-02-28");
+    const result = await getMechanicPerformanceTrend(
+      mockClient as any,
+      "org-1",
+      "mech-2",
+      "monthly",
+      "2026-02-01",
+      "2026-02-28",
+    );
 
     expect(result.completedOrders).toBe(4);
     expect(result.revenue).toBe(1000); // 250*4
     expect(result.weeklyTrend).toHaveLength(1);
-    expect(result.weeklyTrend![0].week).toBe("2026-02");
-    expect(result.weeklyTrend![0].orders).toBe(4);
-    expect(result.weeklyTrend![0].revenue).toBe(1000);
+    expect(result.weeklyTrend?.[0].week).toBe("2026-02");
+    expect(result.weeklyTrend?.[0].orders).toBe(4);
+    expect(result.weeklyTrend?.[0].revenue).toBe(1000);
   });
 
   it("returns zero revenue and orders when no completed work orders exist", async () => {
@@ -604,7 +626,14 @@ describe("getMechanicPerformanceTrend", () => {
       return builder;
     });
 
-    const result = await getMechanicPerformanceTrend(mockClient as any, "org-1", "mech-3", "weekly", "2026-01-01", "2026-01-31");
+    const result = await getMechanicPerformanceTrend(
+      mockClient as any,
+      "org-1",
+      "mech-3",
+      "weekly",
+      "2026-01-01",
+      "2026-01-31",
+    );
 
     expect(result.name).toBe("Idle Mechanic");
     expect(result.completedOrders).toBe(0);
@@ -653,7 +682,14 @@ describe("getMechanicPerformanceTrend", () => {
     });
 
     // Mar 1 → Mar 5 = 4 days span → 2 orders / 4 days = 0.5
-    const result = await getMechanicPerformanceTrend(mockClient as any, "org-1", "mech-4", "weekly", "2026-03-01", "2026-03-05");
+    const result = await getMechanicPerformanceTrend(
+      mockClient as any,
+      "org-1",
+      "mech-4",
+      "weekly",
+      "2026-03-01",
+      "2026-03-05",
+    );
 
     expect(result.completedOrders).toBe(2);
     expect(result.jobsPerDay).toBe(0.5); // 2 orders / 4 days
@@ -693,7 +729,15 @@ describe("getMechanicPerformanceTrend", () => {
       return builder;
     });
 
-    const result = await getMechanicPerformanceTrend(mockClient as any, "org-1", "mech-5", "weekly", "2026-04-01", "2026-04-30", "branch-1");
+    const result = await getMechanicPerformanceTrend(
+      mockClient as any,
+      "org-1",
+      "mech-5",
+      "weekly",
+      "2026-04-01",
+      "2026-04-30",
+      "branch-1",
+    );
 
     expect(result.completedOrders).toBe(1);
     expect(result.revenue).toBe(300);

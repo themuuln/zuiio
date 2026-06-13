@@ -100,15 +100,15 @@ describe("getBranchComparison", () => {
 
     const branchA = result.branches.find((b) => b.branchId === "b1");
     expect(branchA).toBeDefined();
-    expect(branchA!.branchName).toBe("Branch A");
-    expect(branchA!.isMain).toBe(true);
-    expect(branchA!.completedWorkOrders).toBe(2);
+    expect(branchA?.branchName).toBe("Branch A");
+    expect(branchA?.isMain).toBe(true);
+    expect(branchA?.completedWorkOrders).toBe(2);
 
     const branchB = result.branches.find((b) => b.branchId === "b2");
     expect(branchB).toBeDefined();
-    expect(branchB!.branchName).toBe("Branch B");
-    expect(branchB!.isMain).toBe(false);
-    expect(branchB!.completedWorkOrders).toBe(1);
+    expect(branchB?.branchName).toBe("Branch B");
+    expect(branchB?.isMain).toBe(false);
+    expect(branchB?.completedWorkOrders).toBe(1);
   });
 
   it("calculates revenue from services and parts", async () => {

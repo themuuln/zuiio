@@ -95,8 +95,15 @@ export function toApiErrorResponse(error: unknown): ApiErrorResponse {
     };
   }
 
-  // Log the unexpected error server-side but never expose internals
-  console.error("Unhandled API error:", error);
+  // Log the unexpected error server-side but never expose internals — lazy import
+  // to keep this function synchronous for all callers.
+  import("@/lib/logger")
+    .then(({ logger }) =>
+      logger.error({ err: error }, "Unhandled API error"),
+    )
+    .catch(() => {
+      // Logger unavailable — silently swallow
+    });
 
   const message =
     process.env.NODE_ENV === "development" && error instanceof Error

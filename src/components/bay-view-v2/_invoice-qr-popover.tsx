@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import QRCode from "qrcode";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface InvoiceQrPopoverProps {

@@ -1,8 +1,8 @@
 "use client";
 
 import { AlertTriangle, ArrowLeft, Package } from "lucide-react";
-import { useTranslations } from "next-intl";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";

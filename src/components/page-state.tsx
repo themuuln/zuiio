@@ -5,7 +5,6 @@ import {
   FileSearch,
   type LucideIcon,
   RefreshCw,
-  Search,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";

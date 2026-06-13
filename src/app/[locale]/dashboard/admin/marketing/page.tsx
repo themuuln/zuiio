@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Loader2,
@@ -11,6 +10,7 @@ import {
   Smartphone,
   Trash2,
 } from "lucide-react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

@@ -44,11 +44,7 @@ export function BayCardPreview({ bay, className }: BayCardPreviewProps) {
         />
 
         <div className="flex items-center gap-2 border-t border-border/30 pt-2.5">
-          <BayCardMechanicsRow
-            workOrder={wo}
-            disabled
-            variant="preview"
-          />
+          <BayCardMechanicsRow workOrder={wo} disabled variant="preview" />
         </div>
       </CardContent>
     </Card>

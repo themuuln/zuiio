@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -10,7 +9,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Car, Clock, CornerDownRight, Search, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
