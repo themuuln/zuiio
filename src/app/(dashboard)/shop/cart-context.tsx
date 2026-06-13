@@ -9,28 +9,14 @@ import {
   useReducer,
   useRef,
 } from "react";
+import type { CartItem } from "@/lib/shop-cart";
+import {
+  cartReducer,
+  computeItemCount,
+  computeTotalAmount,
+} from "@/lib/shop-cart";
 
-export type CartItem = {
-  productId: string;
-  name: string;
-  unitPrice: number;
-  quantity: number;
-  unit: string;
-  maxStock: number;
-};
-
-type CartState = {
-  items: CartItem[];
-};
-
-type CartAction =
-  | { type: "ADD_ITEM"; payload: CartItem }
-  | { type: "REMOVE_ITEM"; payload: { productId: string } }
-  | {
-      type: "UPDATE_QUANTITY";
-      payload: { productId: string; quantity: number };
-    }
-  | { type: "CLEAR_CART" };
+export type { CartItem } from "@/lib/shop-cart";
 
 type CartContextValue = {
   items: CartItem[];
@@ -64,58 +50,6 @@ function saveCartToStorage(items: CartItem[]) {
   }
 }
 
-function cartReducer(state: CartState, action: CartAction): CartState {
-  switch (action.type) {
-    case "ADD_ITEM": {
-      const existing = state.items.find(
-        (item) => item.productId === action.payload.productId,
-      );
-      if (existing) {
-        const newQty = Math.min(existing.quantity + 1, existing.maxStock);
-        return {
-          items: state.items.map((item) =>
-            item.productId === action.payload.productId
-              ? { ...item, quantity: newQty }
-              : item,
-          ),
-        };
-      }
-      return {
-        items: [...state.items, { ...action.payload, quantity: 1 }],
-      };
-    }
-    case "REMOVE_ITEM":
-      return {
-        items: state.items.filter(
-          (item) => item.productId !== action.payload.productId,
-        ),
-      };
-    case "UPDATE_QUANTITY": {
-      if (action.payload.quantity <= 0) {
-        return {
-          items: state.items.filter(
-            (item) => item.productId !== action.payload.productId,
-          ),
-        };
-      }
-      return {
-        items: state.items.map((item) =>
-          item.productId === action.payload.productId
-            ? {
-                ...item,
-                quantity: Math.min(action.payload.quantity, item.maxStock),
-              }
-            : item,
-        ),
-      };
-    }
-    case "CLEAR_CART":
-      return { items: [] };
-    default:
-      return state;
-  }
-}
-
 const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
@@ -124,15 +58,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   });
   const initialized = useRef(false);
 
-  // Load from storage on mount
+  // Load from storage on mount (preserving quantities)
   React.useEffect(() => {
     if (!initialized.current) {
       initialized.current = true;
       const stored = loadCartFromStorage();
       if (stored.length > 0) {
-        for (const item of stored) {
-          dispatch({ type: "ADD_ITEM", payload: item });
-        }
+        dispatch({ type: "LOAD_FROM_STORAGE", payload: stored });
       }
     }
   }, []);
@@ -169,11 +101,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo(
     () => ({
       items: state.items,
-      itemCount: state.items.reduce((sum, item) => sum + item.quantity, 0),
-      totalAmount: state.items.reduce(
-        (sum, item) => sum + item.unitPrice * item.quantity,
-        0,
-      ),
+      itemCount: computeItemCount(state.items),
+      totalAmount: computeTotalAmount(state.items),
       addItem,
       removeItem,
       updateQuantity,
