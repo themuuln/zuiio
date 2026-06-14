@@ -50,6 +50,15 @@ The `/shop` route provides a mobile-first point-of-sale interface for front-desk
 
 The sidebar auto-collapses to icon-only mode on shop routes, maximizing space for the POS interface.
 
+## Commission Support
+
+The `/commissions` route provides staff commission tracking and payout management:
+
+- **Commission Calculation** — each sale item accrues a 10% commission based on the product sale price, stored per sale item for a complete audit trail
+- **Staff Assignment** — a staff picker is available in both the Shop POS checkout flow and the admin sale form; auto-assigns the logged-in user as the responsible staff member, with the ability to override the selection
+- **Payout Management** — commissions can be paid out via the `/commissions` page, with full tracking of what was paid, to whom, and which sale items were covered
+- **Commission Reports** — detailed commission breakdowns are available in `/reports`, showing earned commissions, paid amounts, and outstanding balances per staff member
+
 ## Reports
 
 The `/reports` route provides a comprehensive end-of-day financial and operational report for any date range:
@@ -87,7 +96,7 @@ Share uses a SECURITY DEFINER Postgres function for secure, controlled data acce
 
 - **Route groups:** `(auth)` for login/register, `(dashboard)` for authenticated pages, `/r` for public share pages (no auth)
 - **Shop POS:** `/shop` route group with mobile-first layout (bottom tab bar, collapsed sidebar)
-- **Data:** Supabase PostgreSQL with RLS — tables for organizations, profiles, products, categories, contacts, sales, sale_items, stock_movements, expenses, shared_reports
+- **Data:** Supabase PostgreSQL with RLS — tables for organizations, profiles, products, categories, contacts, sales, sale_items, stock_movements, expenses, shared_reports, commission_payouts, commission_payout_items
 - **React Query + Optimistic UI:** Client-side caching with stale-while-revalidate. All mutations (shop checkout, product/sale/expense creation) use optimistic updates with automatic rollback on error and error toasts via sonner. Dual invalidation: server `revalidatePath` + client `invalidateQueries`.
 - **Supabase Realtime:** Live cache invalidation via `useRealtimeSubscriptions` hook — 4 organization-scoped channels (products, sales, contacts, expenses). Sales changes also invalidate inventory cache. Channels cleand up on unmount, no leaks.
 - **Query Infrastructure:** `lib/query/` — `QueryProvider` wrapper, entity key factories (`keys.ts`), per-entity hooks (`useProducts`, `useSales`, `useExpenses`, `useContacts`, `useInventory`), and the subscriptions hook.
