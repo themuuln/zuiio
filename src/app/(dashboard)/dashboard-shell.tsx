@@ -3,6 +3,7 @@
 import { Drawer } from "@base-ui/react/drawer";
 import {
   Buildings,
+  ChartBar,
   CreditCard,
   CurrencyDollar,
   GearSix,
@@ -39,6 +40,7 @@ import { APP_NAME } from "@/lib/constants";
 
 const navItems = [
   { title: "Хяналтын самбар", href: "/", icon: House },
+  { title: "Тайлан", href: "/reports", icon: ChartBar },
   { title: "Бүтээгдэхүүн", href: "/products", icon: Package },
   { title: "Агуулах", href: "/inventory", icon: Warehouse },
   { title: "Борлуулалт", href: "/sales", icon: CurrencyDollar },
