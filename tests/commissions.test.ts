@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  buildStaffSummary,
   calculateCommission,
-  validatePayoutRequest,
   calculatePayoutTotal,
   getAlreadyPaidIds,
-  buildStaffSummary,
+  validatePayoutRequest,
 } from "@/lib/commissions";
 
 // --- Existing commission calculation tests ---
@@ -139,8 +139,14 @@ test("calculateCommission matches SQL ROUND(total_price * 0.10, 2) semantics", (
 // --- Payout validation tests ---
 
 test("validatePayoutRequest rejects null/empty profileId", () => {
-  assert.notEqual(validatePayoutRequest({ profileId: null, selectedItemIds: ["id1"] }), null);
-  assert.notEqual(validatePayoutRequest({ profileId: "", selectedItemIds: ["id1"] }), null);
+  assert.notEqual(
+    validatePayoutRequest({ profileId: null, selectedItemIds: ["id1"] }),
+    null,
+  );
+  assert.notEqual(
+    validatePayoutRequest({ profileId: "", selectedItemIds: ["id1"] }),
+    null,
+  );
 });
 
 test("validatePayoutRequest rejects empty selected items (VAL-PAY-009)", () => {
@@ -149,7 +155,7 @@ test("validatePayoutRequest rejects empty selected items (VAL-PAY-009)", () => {
     selectedItemIds: [],
   });
   assert.notEqual(error, null);
-  assert(error!.includes("комиссууд"));
+  assert((error as string).includes("комиссууд"));
 });
 
 test("validatePayoutRequest accepts valid payload", () => {
@@ -174,10 +180,7 @@ test("calculatePayoutTotal returns 0 for empty items", () => {
 });
 
 test("getAlreadyPaidIds finds already paid items correctly", () => {
-  const paidItems = [
-    { sale_item_id: "item-1" },
-    { sale_item_id: "item-3" },
-  ];
+  const paidItems = [{ sale_item_id: "item-1" }, { sale_item_id: "item-3" }];
   const selectedIds = ["item-1", "item-2", "item-3", "item-4"];
 
   const alreadyPaid = getAlreadyPaidIds(paidItems, selectedIds);
