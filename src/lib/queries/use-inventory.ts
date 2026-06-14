@@ -1,8 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { useOnlineStatus } from "@/lib/hooks/use-online-status";
-import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
-import { toastRetry } from "@/lib/toast-utils";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   GlobalPartCatalog,
   InventoryBalanceWithAvgCost,
@@ -19,6 +15,7 @@ import type {
   UpdatePartParams,
   UsageTrend,
 } from "@/lib/types";
+import { useOrgMutation } from "./mutation-factory";
 import { createOrgQuery } from "./factory";
 import { globalCatalogKeys, inventoryKeys } from "./keys";
 
@@ -110,50 +107,10 @@ export function usePartCategories(orgId: string | undefined) {
 }
 
 export function useCreatePartCategory(orgId: string | undefined) {
-  const qc = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-
-  return useMutation({
-    mutationFn: async (name: string) => {
-      if (!orgId) throw new Error("No organization ID");
-
-      if (isOnline) {
-        const res = await fetch(
-          `/api/organizations/${orgId}/inventory/part-categories`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name }),
-          },
-        );
-        const json = await res.json();
-        if (!res.ok || json.error) {
-          throw new Error(json.error?.message ?? "Failed to create category");
-        }
-        return json.data as { id: string; name: string };
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/inventory/part-categories`,
-        method: "POST",
-        body: { name },
-        queryKeysToInvalidate: [[...inventoryKeys.categories(orgId)]],
-      });
-      return { queued: true } as unknown as { id: string; name: string };
-    },
-    onSuccess: (data) => {
-      const d = data as unknown as Record<string, unknown>;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        if (orgId) {
-          qc.invalidateQueries({
-            queryKey: inventoryKeys.categories(orgId),
-          });
-        }
-      }
-    },
+  return useOrgMutation<unknown, string>({
+    endpoint: `/api/organizations/${orgId}/inventory/part-categories`,
+    method: "POST",
+    queryKey: inventoryKeys.categories(orgId ?? ""),
   });
 }
 
@@ -339,905 +296,253 @@ export function useSlowMovingStock(
   });
 }
 
-// ── Mutation hooks (unchanged) ──────────────────────────────
+// ── Mutation hooks ──────────────────────────────────────────
 
 export function useCreateMovement(orgId: string | undefined) {
-  const qc = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-  return useMutation({
-    mutationFn: async (body: {
-      part_id: string;
-      movement_type: string;
-      quantity: number;
-      unit_cost?: number;
-      unit_price?: number;
-      reference_type?: string;
-      reference_id?: string;
-      notes?: string;
-    }) => {
-      if (isOnline) {
-        const res = await fetch(
-          `/api/organizations/${orgId}/inventory/movements`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          },
-        );
-        const json = await res.json();
-        if (json.error) throw new Error(json.error.message);
-        return json.data as InventoryMovement;
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/inventory/movements`,
-        method: "POST",
-        body,
-        queryKeysToInvalidate: [
-          [...inventoryKeys.movements(orgId ?? "")],
-          [...inventoryKeys.balances(orgId ?? "")],
-          [...inventoryKeys.parts(orgId ?? "")],
-        ],
-      });
-      return { queued: true } as unknown as InventoryMovement;
-    },
-    onSuccess: (data) => {
-      const d = data as unknown as Record<string, unknown>;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        qc.invalidateQueries({
-          queryKey: inventoryKeys.movements(orgId ?? ""),
-        });
-        qc.invalidateQueries({ queryKey: inventoryKeys.balances(orgId ?? "") });
-        qc.invalidateQueries({ queryKey: inventoryKeys.parts(orgId ?? "") });
-      }
-    },
+  return useOrgMutation<InventoryMovement, {
+    part_id: string;
+    movement_type: string;
+    quantity: number;
+    unit_cost?: number;
+    unit_price?: number;
+    reference_type?: string;
+    reference_id?: string;
+    notes?: string;
+  }>({
+    endpoint: `/api/organizations/${orgId}/inventory/movements`,
+    method: "POST",
+    queryKey: inventoryKeys.movements(orgId ?? ""),
+    invalidateKeys: [
+      inventoryKeys.balances(orgId ?? ""),
+      inventoryKeys.parts(orgId ?? ""),
+    ],
   });
 }
 
 export function useCreateSupplier(orgId: string | undefined) {
-  const qc = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-  const mutation = useMutation({
-    mutationFn: async (body: {
-      name: string;
-      contact_person?: string;
-      phone?: string;
-      email?: string;
-      address?: string;
-      tax_id?: string;
-      payment_terms?: string;
-      notes?: string;
-    }) => {
-      if (isOnline) {
-        const res = await fetch(
-          `/api/organizations/${orgId}/inventory/suppliers`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          },
-        );
-        const json = await res.json();
-        if (json.error) throw new Error(json.error.message);
-        return json.data as Supplier;
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/inventory/suppliers`,
-        method: "POST",
-        body,
-        queryKeysToInvalidate: [[...inventoryKeys.suppliers(orgId ?? "")]],
-      });
-      return { queued: true } as unknown as Supplier;
+  return useOrgMutation<Supplier, {
+    name: string;
+    contact_person?: string;
+    phone?: string;
+    email?: string;
+    address?: string;
+    tax_id?: string;
+    payment_terms?: string;
+    notes?: string;
+  }>({
+    endpoint: `/api/organizations/${orgId}/inventory/suppliers`,
+    method: "POST",
+    queryKey: inventoryKeys.suppliers(orgId ?? ""),
+    optimisticUpdate: (cached, body) => {
+      const optimistic: Supplier = {
+        id: `temp-${Date.now()}`,
+        organization_id: orgId ?? "",
+        branch_id: null,
+        name: body.name,
+        contact_person: body.contact_person ?? null,
+        phone: body.phone ?? null,
+        email: body.email ?? null,
+        address: body.address ?? null,
+        tax_id: body.tax_id ?? null,
+        payment_terms: body.payment_terms ?? null,
+        notes: body.notes ?? null,
+        is_active: true,
+        created_by: null,
+        updated_by: null,
+        deleted_at: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      return [...cached, optimistic];
     },
-    onMutate: async (body) => {
-      const key = inventoryKeys.suppliers(orgId ?? "");
-      await qc.cancelQueries({ queryKey: key });
-      const previous = qc.getQueryData<Supplier[]>(key);
-      if (previous) {
-        const optimistic: Supplier = {
-          id: `temp-${Date.now()}`,
-          organization_id: orgId ?? "",
-          branch_id: null,
-          name: body.name,
-          contact_person: body.contact_person ?? null,
-          phone: body.phone ?? null,
-          email: body.email ?? null,
-          address: body.address ?? null,
-          tax_id: body.tax_id ?? null,
-          payment_terms: body.payment_terms ?? null,
-          notes: body.notes ?? null,
-          is_active: true,
-          created_by: null,
-          updated_by: null,
-          deleted_at: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        qc.setQueryData<Supplier[]>(key, [...previous, optimistic]);
-      }
-      return { previous };
-    },
-    onError: (err, variables, context) => {
-      if (context?.previous)
-        qc.setQueryData<Supplier[]>(
-          inventoryKeys.suppliers(orgId ?? ""),
-          context.previous,
-        );
-      toastRetry(err.message, () => mutation.mutateAsync(variables));
-    },
-    onSuccess: (data) => {
-      const d = data as unknown as Record<string, unknown>;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        toast.dismiss();
-        toast.success("Supplier created");
-      }
-    },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: inventoryKeys.suppliers(orgId ?? "") });
-    },
+    successMessage: "Supplier created",
   });
-  return mutation;
 }
 
 export function useUpdateSupplier(orgId: string | undefined) {
-  const qc = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-  const mutation = useMutation({
-    mutationFn: async ({
-      id,
-      body,
-    }: {
-      id: string;
-      body: Partial<Supplier>;
-    }) => {
-      if (isOnline) {
-        const res = await fetch(
-          `/api/organizations/${orgId}/inventory/suppliers?supplierId=${id}`,
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          },
-        );
-        const json = await res.json();
-        if (json.error) throw new Error(json.error.message);
-        return json.data as Supplier;
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/inventory/suppliers?supplierId=${id}`,
-        method: "PATCH",
-        body,
-        queryKeysToInvalidate: [[...inventoryKeys.suppliers(orgId ?? "")]],
-      });
-      return { queued: true } as unknown as Supplier;
-    },
-    onMutate: async ({ id, body }) => {
-      const key = inventoryKeys.suppliers(orgId ?? "");
-      await qc.cancelQueries({ queryKey: key });
-      const previous = qc.getQueryData<Supplier[]>(key);
-      if (previous) {
-        qc.setQueryData<Supplier[]>(
-          key,
-          previous.map((s) =>
-            s.id === id
-              ? { ...s, ...body, updated_at: new Date().toISOString() }
-              : s,
-          ),
-        );
-      }
-      return { previous };
-    },
-    onError: (err, variables, context) => {
-      if (context?.previous)
-        qc.setQueryData<Supplier[]>(
-          inventoryKeys.suppliers(orgId ?? ""),
-          context.previous,
-        );
-      toastRetry(err.message, () => mutation.mutateAsync(variables));
-    },
-    onSuccess: (data) => {
-      const d = data as unknown as Record<string, unknown>;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        toast.dismiss();
-        toast.success("Supplier updated");
-      }
-    },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: inventoryKeys.suppliers(orgId ?? "") });
-    },
+  return useOrgMutation<Supplier, { id: string; body: Partial<Supplier> }>({
+    endpoint: ({ id }) => `/api/organizations/${orgId}/inventory/suppliers?supplierId=${id}`,
+    method: "PATCH",
+    queryKey: inventoryKeys.suppliers(orgId ?? ""),
+    optimisticUpdate: (cached, { id, body }) =>
+      cached.map((s) =>
+        s.id === id
+          ? { ...s, ...body, updated_at: new Date().toISOString() }
+          : s,
+      ),
+    successMessage: "Supplier updated",
   });
-  return mutation;
 }
 
 export function useDeleteSupplier(orgId: string | undefined) {
-  const qc = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-  const mutation = useMutation({
-    mutationFn: async (id: string) => {
-      if (isOnline) {
-        const res = await fetch(
-          `/api/organizations/${orgId}/inventory/suppliers?supplierId=${id}`,
-          {
-            method: "DELETE",
-          },
-        );
-        const json = await res.json();
-        if (json.error) throw new Error(json.error.message);
-        return json.data;
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/inventory/suppliers?supplierId=${id}`,
-        method: "DELETE",
-        body: undefined,
-        queryKeysToInvalidate: [[...inventoryKeys.suppliers(orgId ?? "")]],
-      });
-    },
-    onMutate: async (id) => {
-      const key = inventoryKeys.suppliers(orgId ?? "");
-      await qc.cancelQueries({ queryKey: key });
-      const previous = qc.getQueryData<Supplier[]>(key);
-      if (previous) {
-        qc.setQueryData<Supplier[]>(
-          key,
-          previous.filter((s) => s.id !== id),
-        );
-      }
-      return { previous };
-    },
-    onError: (err, variables, context) => {
-      if (context?.previous)
-        qc.setQueryData<Supplier[]>(
-          inventoryKeys.suppliers(orgId ?? ""),
-          context.previous,
-        );
-      toastRetry(err.message, () => mutation.mutateAsync(variables));
-    },
-    onSuccess: (data) => {
-      const d = data as unknown as Record<string, unknown> | undefined;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        toast.dismiss();
-        toast.success("Supplier deleted");
-      }
-    },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: inventoryKeys.suppliers(orgId ?? "") });
-    },
+  return useOrgMutation<Supplier, string>({
+    endpoint: (id) => `/api/organizations/${orgId}/inventory/suppliers?supplierId=${id}`,
+    method: "DELETE",
+    queryKey: inventoryKeys.suppliers(orgId ?? ""),
+    optimisticUpdate: (cached, id) => cached.filter((s) => s.id !== id),
+    successMessage: "Supplier deleted",
   });
-  return mutation;
 }
 
 export function useUpdatePart(orgId: string | undefined) {
-  const qc = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-  const mutation = useMutation({
-    mutationFn: async ({
-      id,
-      body,
-    }: {
-      id: string;
-      body: UpdatePartParams;
-    }) => {
-      if (!orgId) throw new Error("No organization ID");
-
-      if (isOnline) {
-        const res = await fetch(
-          `/api/organizations/${orgId}/inventory/parts/${id}`,
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          },
-        );
-        let json: Record<string, unknown>;
-        try {
-          json = await res.json();
-        } catch {
-          throw new Error(
-            `Server returned ${res.status} ${res.statusText}. Please try again.`,
-          );
-        }
-        const apiError2 = json.error as { message?: string } | undefined;
-        if (apiError2) throw new Error(apiError2.message ?? "Request failed");
-        return json.data as PartsCatalogItem;
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/inventory/parts/${id}`,
-        method: "PATCH",
-        body,
-        queryKeysToInvalidate: [[...inventoryKeys.parts(orgId)]],
-      });
-      return { queued: true } as unknown as PartsCatalogItem;
-    },
-    onMutate: async ({ id, body }) => {
-      const key = inventoryKeys.parts(orgId ?? "");
-      await qc.cancelQueries({ queryKey: key });
-      const previous = qc.getQueryData<PartsCatalogItem[]>(key);
-      if (previous) {
-        qc.setQueryData<PartsCatalogItem[]>(
-          key,
-          previous.map((p) =>
-            p.id === id
-              ? { ...p, ...body, updated_at: new Date().toISOString() }
-              : p,
-          ),
-        );
-      }
-      return { previous };
-    },
-    onError: (err, variables, context) => {
-      if (context?.previous)
-        qc.setQueryData<PartsCatalogItem[]>(
-          inventoryKeys.parts(orgId ?? ""),
-          context.previous,
-        );
-      toastRetry(err.message, () => mutation.mutateAsync(variables));
-    },
-    onSuccess: (data) => {
-      const d = data as unknown as Record<string, unknown>;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        toast.dismiss();
-        toast.success("Part updated");
-      }
-    },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: inventoryKeys.parts(orgId ?? "") });
-      qc.invalidateQueries({
-        queryKey: inventoryKeys.balances(orgId ?? ""),
-      });
-    },
+  return useOrgMutation<PartsCatalogItem, { id: string; body: UpdatePartParams }>({
+    endpoint: ({ id }) => `/api/organizations/${orgId}/inventory/parts/${id}`,
+    method: "PATCH",
+    queryKey: inventoryKeys.parts(orgId ?? ""),
+    invalidateKeys: [inventoryKeys.balances(orgId ?? "")],
+    optimisticUpdate: (cached, { id, body }) =>
+      cached.map((p) =>
+        p.id === id
+          ? { ...p, ...body, updated_at: new Date().toISOString() }
+          : p,
+      ),
+    successMessage: "Part updated",
   });
-  return mutation;
 }
 
 export function useCreatePurchaseOrder(orgId: string | undefined) {
-  const qc = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-  return useMutation({
-    mutationFn: async (body: {
-      supplier_id?: string;
-      order_number: string;
+  return useOrgMutation<PurchaseOrder, {
+    supplier_id?: string;
+    order_number: string;
+    notes?: string;
+    items: Array<{
+      part_id: string;
+      quantity_ordered: number;
+      unit_cost: number;
       notes?: string;
-      items: Array<{
-        part_id: string;
-        quantity_ordered: number;
-        unit_cost: number;
-        notes?: string;
-      }>;
-    }) => {
-      if (isOnline) {
-        const res = await fetch(
-          `/api/organizations/${orgId}/inventory/purchase-orders`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          },
-        );
-        const json = await res.json();
-        if (json.error) throw new Error(json.error.message);
-        return json.data as PurchaseOrder;
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/inventory/purchase-orders`,
-        method: "POST",
-        body,
-        queryKeysToInvalidate: [[...inventoryKeys.purchaseOrders(orgId ?? "")]],
-      });
-      return { queued: true } as unknown as PurchaseOrder;
-    },
-    onSuccess: (data) => {
-      const d = data as unknown as Record<string, unknown>;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        qc.invalidateQueries({
-          queryKey: inventoryKeys.purchaseOrders(orgId ?? ""),
-        });
-      }
-    },
+    }>;
+  }>({
+    endpoint: `/api/organizations/${orgId}/inventory/purchase-orders`,
+    method: "POST",
+    queryKey: inventoryKeys.purchaseOrders(orgId ?? ""),
   });
 }
 
 export function useUpdatePurchaseOrder(orgId: string | undefined) {
-  const qc = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-  return useMutation({
-    mutationFn: async ({
-      id,
-      body,
-    }: {
-      id: string;
-      body: Partial<PurchaseOrder>;
-    }) => {
-      if (isOnline) {
-        const res = await fetch(
-          `/api/organizations/${orgId}/inventory/purchase-orders?poId=${id}`,
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          },
-        );
-        const json = await res.json();
-        if (json.error) throw new Error(json.error.message);
-        return json.data as PurchaseOrder;
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/inventory/purchase-orders?poId=${id}`,
-        method: "PATCH",
-        body,
-        queryKeysToInvalidate: [[...inventoryKeys.purchaseOrders(orgId ?? "")]],
-      });
-      return { queued: true } as unknown as PurchaseOrder;
-    },
-    onSuccess: (data) => {
-      const d = data as unknown as Record<string, unknown>;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        qc.invalidateQueries({
-          queryKey: inventoryKeys.purchaseOrders(orgId ?? ""),
-        });
-      }
-    },
+  return useOrgMutation<PurchaseOrder, { id: string; body: Partial<PurchaseOrder> }>({
+    endpoint: ({ id }) => `/api/organizations/${orgId}/inventory/purchase-orders?poId=${id}`,
+    method: "PATCH",
+    queryKey: inventoryKeys.purchaseOrders(orgId ?? ""),
   });
 }
 
 export function useReceivePurchaseOrder(orgId: string | undefined) {
-  const qc = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-  return useMutation({
-    mutationFn: async (poId: string) => {
-      if (isOnline) {
-        const res = await fetch(
-          `/api/organizations/${orgId}/inventory/purchase-orders/${poId}/receive`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-          },
-        );
-        const json = await res.json();
-        if (json.error) throw new Error(json.error.message);
-        return json.data as PurchaseOrder;
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/inventory/purchase-orders/${poId}/receive`,
-        method: "POST",
-        body: {},
-        queryKeysToInvalidate: [
-          [...inventoryKeys.purchaseOrders(orgId ?? "")],
-          [...inventoryKeys.balances(orgId ?? "")],
-          [...inventoryKeys.parts(orgId ?? "")],
-          [...inventoryKeys.movements(orgId ?? "")],
-        ],
-      });
-      return { queued: true } as unknown as PurchaseOrder;
-    },
-    onSuccess: (data) => {
-      const d = data as unknown as Record<string, unknown>;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        qc.invalidateQueries({
-          queryKey: inventoryKeys.purchaseOrders(orgId ?? ""),
-        });
-        qc.invalidateQueries({ queryKey: inventoryKeys.balances(orgId ?? "") });
-        qc.invalidateQueries({ queryKey: inventoryKeys.parts(orgId ?? "") });
-        qc.invalidateQueries({
-          queryKey: inventoryKeys.movements(orgId ?? ""),
-        });
-      }
-    },
+  return useOrgMutation<PurchaseOrder, string>({
+    endpoint: (poId) => `/api/organizations/${orgId}/inventory/purchase-orders/${poId}/receive`,
+    method: "POST",
+    queryKey: inventoryKeys.purchaseOrders(orgId ?? ""),
+    invalidateKeys: [
+      inventoryKeys.balances(orgId ?? ""),
+      inventoryKeys.parts(orgId ?? ""),
+      inventoryKeys.movements(orgId ?? ""),
+    ],
   });
 }
 
 export function useCreatePartsCar(orgId: string | undefined) {
-  const qc = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-  return useMutation({
-    mutationFn: async (body: {
-      make: string;
-      model: string;
-      year?: number;
-      vin?: string;
-      license_plate?: string;
-      purchase_cost?: number;
-      currency?: string;
-      arrival_date?: string;
-      notes?: string;
-    }) => {
-      if (isOnline) {
-        const res = await fetch(
-          `/api/organizations/${orgId}/inventory/parts-cars`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          },
-        );
-        if (!res.ok) {
-          const json = await res.json();
-          throw new Error(json.error?.message ?? "Failed to create parts car");
-        }
-        const json = await res.json();
-        return json.data as PartsCars;
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/inventory/parts-cars`,
-        method: "POST",
-        body,
-        queryKeysToInvalidate: [[...inventoryKeys.partsCars(orgId ?? "")]],
-      });
-      return { queued: true } as unknown as PartsCars;
-    },
-    onSuccess: (data) => {
-      const d = data as unknown as Record<string, unknown>;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        qc.invalidateQueries({
-          queryKey: inventoryKeys.partsCars(orgId ?? ""),
-        });
-      }
-    },
+  return useOrgMutation<PartsCars, {
+    make: string;
+    model: string;
+    year?: number;
+    vin?: string;
+    license_plate?: string;
+    purchase_cost?: number;
+    currency?: string;
+    arrival_date?: string;
+    notes?: string;
+  }>({
+    endpoint: `/api/organizations/${orgId}/inventory/parts-cars`,
+    method: "POST",
+    queryKey: inventoryKeys.partsCars(orgId ?? ""),
   });
 }
 
 export function useStartDisassembly(orgId: string | undefined) {
-  const qc = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-  return useMutation({
-    mutationFn: async (carId: string) => {
-      if (isOnline) {
-        const res = await fetch(
-          `/api/organizations/${orgId}/inventory/parts-cars/${carId}`,
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: "disassembling" }),
-          },
-        );
-        if (!res.ok) {
-          const json = await res.json();
-          throw new Error(json.error?.message ?? "Failed to start disassembly");
-        }
-        const json = await res.json();
-        return json.data as PartsCars;
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/inventory/parts-cars/${carId}`,
-        method: "PATCH",
-        body: { status: "disassembling" },
-        queryKeysToInvalidate: [[...inventoryKeys.partsCars(orgId ?? "")]],
-      });
-      return { queued: true } as unknown as PartsCars;
-    },
-    onSuccess: (data) => {
-      const d = data as unknown as Record<string, unknown>;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        qc.invalidateQueries({
-          queryKey: inventoryKeys.partsCars(orgId ?? ""),
-        });
-      }
-    },
+  return useOrgMutation<PartsCars, string>({
+    endpoint: (carId) => `/api/organizations/${orgId}/inventory/parts-cars/${carId}`,
+    method: "PATCH",
+    queryKey: inventoryKeys.partsCars(orgId ?? ""),
   });
 }
 
 export function useCompleteDisassembly(orgId: string | undefined) {
   const qc = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-  return useMutation({
-    mutationFn: async (carId: string) => {
-      if (isOnline) {
-        const res = await fetch(
-          `/api/organizations/${orgId}/inventory/parts-cars/${carId}/complete`,
-          { method: "POST" },
-        );
-        if (!res.ok) {
-          const json = await res.json();
-          throw new Error(
-            json.error?.message ?? "Failed to complete disassembly",
-          );
-        }
-        const json = await res.json();
-        return json.data as PartsCars;
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/inventory/parts-cars/${carId}/complete`,
-        method: "POST",
-        body: {},
-        queryKeysToInvalidate: [[...inventoryKeys.partsCars(orgId ?? "")]],
+  return useOrgMutation<PartsCars, string>({
+    endpoint: (carId) => `/api/organizations/${orgId}/inventory/parts-cars/${carId}/complete`,
+    method: "POST",
+    queryKey: inventoryKeys.partsCars(orgId ?? ""),
+    onSuccess: (_data, carId) => {
+      qc.invalidateQueries({
+        queryKey: inventoryKeys.partsCar(orgId ?? "", carId),
       });
-      return { queued: true } as unknown as PartsCars;
-    },
-    onSuccess: (data, carId) => {
-      const d = data as unknown as Record<string, unknown>;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        qc.invalidateQueries({
-          queryKey: inventoryKeys.partsCars(orgId ?? ""),
-        });
-        qc.invalidateQueries({
-          queryKey: inventoryKeys.partsCar(orgId ?? "", carId),
-        });
-      }
     },
   });
 }
 
 export function usePublishPartsCarToCatalog(orgId: string | undefined) {
   const qc = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-  return useMutation({
-    mutationFn: async (carId: string) => {
-      if (isOnline) {
-        const res = await fetch(
-          `/api/organizations/${orgId}/inventory/parts-cars/${carId}/publish`,
-          { method: "POST" },
-        );
-        if (!res.ok) {
-          const json = await res.json();
-          throw new Error(
-            json.error?.message ?? "Failed to publish parts to catalog",
-          );
-        }
-        const json = await res.json();
-        return json.data as { publishedCount: number; catalogIds: string[] };
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/inventory/parts-cars/${carId}/publish`,
-        method: "POST",
-        body: {},
-        queryKeysToInvalidate: [[...inventoryKeys.partsCars(orgId ?? "")]],
+  return useOrgMutation<
+    { publishedCount: number; catalogIds: string[] },
+    string
+  >({
+    endpoint: (carId) => `/api/organizations/${orgId}/inventory/parts-cars/${carId}/publish`,
+    method: "POST",
+    queryKey: inventoryKeys.partsCars(orgId ?? ""),
+    invalidateKeys: [
+      inventoryKeys.parts(orgId ?? ""),
+      inventoryKeys.balances(orgId ?? ""),
+    ],
+    onSuccess: (_data, carId) => {
+      qc.invalidateQueries({
+        queryKey: inventoryKeys.partsCar(orgId ?? "", carId),
       });
-      return { queued: true } as unknown as {
-        publishedCount: number;
-        catalogIds: string[];
-      };
-    },
-    onSuccess: (data, carId) => {
-      const d = data as unknown as Record<string, unknown>;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        qc.invalidateQueries({
-          queryKey: inventoryKeys.partsCars(orgId ?? ""),
-        });
-        qc.invalidateQueries({
-          queryKey: inventoryKeys.partsCar(orgId ?? "", carId),
-        });
-        qc.invalidateQueries({
-          queryKey: inventoryKeys.partsCarParts(orgId ?? "", carId),
-        });
-        qc.invalidateQueries({ queryKey: inventoryKeys.parts(orgId ?? "") });
-        qc.invalidateQueries({ queryKey: inventoryKeys.balances(orgId ?? "") });
-      }
+      qc.invalidateQueries({
+        queryKey: inventoryKeys.partsCarParts(orgId ?? "", carId),
+      });
     },
   });
 }
 
 export function useAddPartsCarPart(orgId: string | undefined) {
-  const qc = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-  return useMutation({
-    mutationFn: async ({
-      carId,
-      ...body
-    }: {
-      carId: string;
-      name: string;
-      part_id?: string;
-      location_group?: string;
-      quantity?: number;
-      condition?: string;
-      estimated_price?: number;
-      notes?: string;
-    }) => {
-      if (isOnline) {
-        const res = await fetch(
-          `/api/organizations/${orgId}/inventory/parts-cars/${carId}/parts`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          },
-        );
-        if (!res.ok) {
-          const json = await res.json();
-          throw new Error(json.error?.message ?? "Failed to add part");
-        }
-        const json = await res.json();
-        return json.data as PartsCarParts;
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/inventory/parts-cars/${carId}/parts`,
-        method: "POST",
-        body,
-        queryKeysToInvalidate: [
-          [...inventoryKeys.partsCarParts(orgId ?? "", carId)],
-        ],
-      });
-      return { queued: true } as unknown as PartsCarParts;
-    },
-    onSuccess: (data, variables) => {
-      const d = data as unknown as Record<string, unknown>;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        qc.invalidateQueries({
-          queryKey: inventoryKeys.partsCarParts(orgId ?? "", variables.carId),
-        });
-      }
-    },
+  return useOrgMutation<PartsCarParts, {
+    carId: string;
+    name: string;
+    part_id?: string;
+    location_group?: string;
+    quantity?: number;
+    condition?: string;
+    estimated_price?: number;
+    notes?: string;
+  }>({
+    endpoint: (vars) => `/api/organizations/${orgId}/inventory/parts-cars/${vars.carId}/parts`,
+    method: "POST",
+    queryKey: inventoryKeys.partsCars(orgId ?? ""),
   });
 }
 
 export function useRemovePartsCarPart(orgId: string | undefined) {
-  const qc = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-  return useMutation({
-    mutationFn: async ({
-      carId,
-      partId,
-    }: {
-      carId: string;
-      partId: string;
-    }) => {
-      if (isOnline) {
-        const res = await fetch(
-          `/api/organizations/${orgId}/inventory/parts-cars/${carId}/parts/${partId}`,
-          { method: "DELETE" },
-        );
-        if (!res.ok) {
-          const json = await res.json();
-          throw new Error(json.error?.message ?? "Failed to remove part");
-        }
-        return;
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/inventory/parts-cars/${carId}/parts/${partId}`,
-        method: "DELETE",
-        body: undefined,
-        queryKeysToInvalidate: [
-          [...inventoryKeys.partsCarParts(orgId ?? "", carId)],
-        ],
-      });
-    },
-    onSuccess: (data, variables) => {
-      const d = data as unknown as Record<string, unknown> | undefined;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        qc.invalidateQueries({
-          queryKey: inventoryKeys.partsCarParts(orgId ?? "", variables.carId),
-        });
-      }
-    },
+  return useOrgMutation<unknown, {
+    carId: string;
+    partId: string;
+  }>({
+    endpoint: (vars) => `/api/organizations/${orgId}/inventory/parts-cars/${vars.carId}/parts/${vars.partId}`,
+    method: "DELETE",
+    queryKey: inventoryKeys.partsCars(orgId ?? ""),
   });
 }
 
 export function useUpdatePartsCar(orgId: string | undefined) {
-  const qc = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-  return useMutation({
-    mutationFn: async ({
-      id,
-      ...data
-    }: { id: string } & Record<string, unknown>) => {
-      if (isOnline) {
-        const res = await fetch(
-          `/api/organizations/${orgId}/inventory/parts-cars/${id}`,
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
-          },
-        );
-        if (!res.ok) {
-          const json = await res.json();
-          throw new Error(json.error?.message ?? "Failed to update parts car");
-        }
-        return res.json();
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/inventory/parts-cars/${id}`,
-        method: "PATCH",
-        body: data,
-        queryKeysToInvalidate: [[...inventoryKeys.partsCars(orgId ?? "")]],
-      });
-      return { queued: true } as unknown as unknown;
-    },
-    onSuccess: (data) => {
-      const d = data as unknown as Record<string, unknown>;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        qc.invalidateQueries({
-          queryKey: inventoryKeys.partsCars(orgId ?? ""),
-        });
-      }
-    },
+  return useOrgMutation<unknown, { id: string } & Record<string, unknown>>({
+    endpoint: ({ id }) => `/api/organizations/${orgId}/inventory/parts-cars/${id}`,
+    method: "PATCH",
+    queryKey: inventoryKeys.partsCars(orgId ?? ""),
   });
 }
 
 export function useDeletePartsCar(orgId: string | undefined) {
-  const qc = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-  return useMutation({
-    mutationFn: async (id: string) => {
-      if (isOnline) {
-        const res = await fetch(
-          `/api/organizations/${orgId}/inventory/parts-cars/${id}`,
-          {
-            method: "DELETE",
-          },
-        );
-        if (!res.ok) {
-          const json = await res.json();
-          throw new Error(json.error?.message ?? "Failed to delete parts car");
-        }
-        return;
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/inventory/parts-cars/${id}`,
-        method: "DELETE",
-        body: undefined,
-        queryKeysToInvalidate: [[...inventoryKeys.partsCars(orgId ?? "")]],
-      });
-    },
-    onSuccess: (data) => {
-      const d = data as unknown as Record<string, unknown> | undefined;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        qc.invalidateQueries({
-          queryKey: inventoryKeys.partsCars(orgId ?? ""),
-        });
-      }
-    },
+  return useOrgMutation<unknown, string>({
+    endpoint: (id) => `/api/organizations/${orgId}/inventory/parts-cars/${id}`,
+    method: "DELETE",
+    queryKey: inventoryKeys.partsCars(orgId ?? ""),
   });
 }

@@ -1,7 +1,8 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+import { useOrgMutation } from "./mutation-factory";
 
 // ── Query Keys ─────────────────────────────────────────────────
 
@@ -111,84 +112,49 @@ export function useFollowupDetail(orgId: string, followupId: string | null) {
 }
 
 export function useCreateFollowup(orgId: string) {
-  const qc = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (input: {
-      customer_id: string;
-      vehicle_id?: string;
-      work_order_id?: string;
-      estimate_id?: string;
-      invoice_id?: string;
-      type?: string;
-      subject: string;
-      notes?: string;
-      due_at: string;
-      assigned_to?: string;
-    }) => {
-      const res = await fetch(`/api/organizations/${orgId}/followups`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(input),
-      });
-      if (!res.ok) throw new Error("Failed to create follow-up");
-      return res.json();
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: followupKeys.all });
-    },
+  return useOrgMutation<unknown, {
+    customer_id: string;
+    vehicle_id?: string;
+    work_order_id?: string;
+    estimate_id?: string;
+    invoice_id?: string;
+    type?: string;
+    subject: string;
+    notes?: string;
+    due_at: string;
+    assigned_to?: string;
+  }>({
+    endpoint: `/api/organizations/${orgId}/followups`,
+    method: "POST",
+    queryKey: followupKeys.all,
+    successMessage: "Follow-up created",
   });
 }
 
 export function useUpdateFollowup(orgId: string) {
-  const qc = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      followupId,
-      ...input
-    }: {
-      followupId: string;
-      type?: string;
-      subject?: string;
-      notes?: string;
-      due_at?: string;
-      assigned_to?: string;
-      action?: "complete" | "cancel";
-      outcome?: string;
-      outcome_notes?: string;
-    }) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/followups/${followupId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(input),
-        },
-      );
-      if (!res.ok) throw new Error("Failed to update follow-up");
-      return res.json();
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: followupKeys.all });
-    },
+  return useOrgMutation<unknown, {
+    followupId: string;
+    type?: string;
+    subject?: string;
+    notes?: string;
+    due_at?: string;
+    assigned_to?: string;
+    action?: "complete" | "cancel";
+    outcome?: string;
+    outcome_notes?: string;
+  }>({
+    endpoint: (vars) => `/api/organizations/${orgId}/followups/${vars.followupId}`,
+    method: "PATCH",
+    queryKey: followupKeys.all,
+    successMessage: "Follow-up updated",
   });
 }
 
 export function useDeleteFollowup(orgId: string) {
-  const qc = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (followupId: string) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/followups/${followupId}`,
-        { method: "DELETE" },
-      );
-      if (!res.ok) throw new Error("Failed to delete follow-up");
-      return res.json();
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: followupKeys.all });
-    },
+  return useOrgMutation<unknown, string>({
+    endpoint: (followupId) => `/api/organizations/${orgId}/followups/${followupId}`,
+    method: "DELETE",
+    queryKey: followupKeys.all,
+    successMessage: "Follow-up deleted",
   });
 }

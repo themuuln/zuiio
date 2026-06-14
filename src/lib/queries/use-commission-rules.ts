@@ -1,11 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { useOnlineStatus } from "@/lib/hooks/use-online-status";
-import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
-import { commissionKeys } from "@/lib/queries/keys";
-import { toastRetry } from "@/lib/toast-utils";
+import { useQuery } from "@tanstack/react-query";
 import type { MechanicCommissionRule } from "@/lib/types";
+import { useOrgMutation } from "./mutation-factory";
 import { createOrgQuery } from "./factory";
+import { commissionKeys } from "./keys";
 
 const fetchCommissionRules =
   createOrgQuery<MechanicCommissionRule[]>("/commission-rules");
@@ -19,214 +16,58 @@ export function useCommissionRules(orgId: string | undefined) {
 }
 
 export function useCreateCommissionRule(orgId: string | undefined) {
-  const qc = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-  const mutation = useMutation({
-    mutationFn: async (body: Partial<MechanicCommissionRule>) => {
-      if (isOnline) {
-        const res = await fetch(
-          `/api/organizations/${orgId}/commission-rules`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          },
-        );
-        if (!res.ok) throw new Error("Failed to create commission rule");
-        return res.json();
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/commission-rules`,
-        method: "POST",
-        body,
-        queryKeysToInvalidate: [[...commissionKeys.list(orgId ?? "")]],
-      });
-      return { queued: true } as unknown as unknown;
+  return useOrgMutation<MechanicCommissionRule, Partial<MechanicCommissionRule>>({
+    endpoint: `/api/organizations/${orgId}/commission-rules`,
+    method: "POST",
+    queryKey: commissionKeys.list(orgId ?? ""),
+    optimisticUpdate: (cached, body) => {
+      const maxPriority = Math.max(
+        ...cached.map((r) => r.priority ?? 0),
+        0,
+      );
+      const optimistic: MechanicCommissionRule = {
+        id: `temp-${Date.now()}`,
+        organization_id: orgId ?? "",
+        mechanic_id: body.mechanic_id ?? null,
+        name: body.name ?? "",
+        commission_type: body.commission_type ?? "percentage_of_labor",
+        commission_value: body.commission_value ?? 0,
+        min_commission: body.min_commission ?? null,
+        max_commission: body.max_commission ?? null,
+        is_active: body.is_active ?? true,
+        priority: body.priority ?? maxPriority + 1,
+        created_by: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        deleted_at: null,
+      };
+      return [...cached, optimistic];
     },
-    onMutate: async (body) => {
-      const key = commissionKeys.list(orgId ?? "");
-      await qc.cancelQueries({ queryKey: key });
-      const previous = qc.getQueryData<MechanicCommissionRule[]>(key);
-      if (previous) {
-        const maxPriority = Math.max(
-          ...previous.map((r) => r.priority ?? 0),
-          0,
-        );
-        const optimistic: MechanicCommissionRule = {
-          id: `temp-${Date.now()}`,
-          organization_id: orgId ?? "",
-          mechanic_id: body.mechanic_id ?? null,
-          name: body.name ?? "",
-          commission_type: body.commission_type ?? "percentage_of_labor",
-          commission_value: body.commission_value ?? 0,
-          min_commission: body.min_commission ?? null,
-          max_commission: body.max_commission ?? null,
-          is_active: body.is_active ?? true,
-          priority: body.priority ?? maxPriority + 1,
-          created_by: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          deleted_at: null,
-        };
-        qc.setQueryData<MechanicCommissionRule[]>(key, [
-          ...previous,
-          optimistic,
-        ]);
-      }
-      return { previous };
-    },
-    onError: (err, body, context) => {
-      if (context?.previous)
-        qc.setQueryData<MechanicCommissionRule[]>(
-          commissionKeys.list(orgId ?? ""),
-          context.previous,
-        );
-      toastRetry(err.message, () => mutation.mutateAsync(body));
-    },
-    onSuccess: (data) => {
-      const d = data as unknown as Record<string, unknown>;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        toast.dismiss();
-        toast.success("Commission rule created");
-      }
-    },
-    onSettled: () =>
-      qc.invalidateQueries({ queryKey: commissionKeys.list(orgId ?? "") }),
+    successMessage: "Commission rule created",
   });
-  return mutation;
 }
 
 export function useUpdateCommissionRule(orgId: string | undefined) {
-  const qc = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-  const mutation = useMutation({
-    mutationFn: async ({
-      id,
-      body,
-    }: {
-      id: string;
-      body: Partial<MechanicCommissionRule>;
-    }) => {
-      if (isOnline) {
-        const res = await fetch(
-          `/api/organizations/${orgId}/commission-rules/${id}`,
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          },
-        );
-        if (!res.ok) throw new Error("Failed to update commission rule");
-        return res.json();
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/commission-rules/${id}`,
-        method: "PATCH",
-        body,
-        queryKeysToInvalidate: [[...commissionKeys.list(orgId ?? "")]],
-      });
-      return { queued: true } as unknown as unknown;
-    },
-    onMutate: async ({ id, body }) => {
-      const key = commissionKeys.list(orgId ?? "");
-      await qc.cancelQueries({ queryKey: key });
-      const previous = qc.getQueryData<MechanicCommissionRule[]>(key);
-      if (previous) {
-        qc.setQueryData<MechanicCommissionRule[]>(
-          key,
-          previous.map((r) =>
-            r.id === id
-              ? { ...r, ...body, updated_at: new Date().toISOString() }
-              : r,
-          ),
-        );
-      }
-      return { previous };
-    },
-    onError: (err, vars, context) => {
-      if (context?.previous)
-        qc.setQueryData<MechanicCommissionRule[]>(
-          commissionKeys.list(orgId ?? ""),
-          context.previous,
-        );
-      toastRetry(err.message, () => mutation.mutateAsync(vars));
-    },
-    onSuccess: (data) => {
-      const d = data as unknown as Record<string, unknown>;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        toast.dismiss();
-        toast.success("Commission rule updated");
-      }
-    },
-    onSettled: () =>
-      qc.invalidateQueries({ queryKey: commissionKeys.list(orgId ?? "") }),
+  return useOrgMutation<MechanicCommissionRule, { id: string; body: Partial<MechanicCommissionRule> }>({
+    endpoint: (vars) => `/api/organizations/${orgId}/commission-rules/${vars.id}`,
+    method: "PATCH",
+    queryKey: commissionKeys.list(orgId ?? ""),
+    optimisticUpdate: (cached, { id, body }) =>
+      cached.map((r) =>
+        r.id === id
+          ? { ...r, ...body, updated_at: new Date().toISOString() }
+          : r,
+      ),
+    successMessage: "Commission rule updated",
   });
-  return mutation;
 }
 
 export function useDeleteCommissionRule(orgId: string | undefined) {
-  const qc = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-  const mutation = useMutation({
-    mutationFn: async (id: string) => {
-      if (isOnline) {
-        const res = await fetch(
-          `/api/organizations/${orgId}/commission-rules/${id}`,
-          {
-            method: "DELETE",
-          },
-        );
-        if (!res.ok) throw new Error("Failed to delete commission rule");
-        return;
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/commission-rules/${id}`,
-        method: "DELETE",
-        body: undefined,
-        queryKeysToInvalidate: [[...commissionKeys.list(orgId ?? "")]],
-      });
-    },
-    onMutate: async (id) => {
-      const key = commissionKeys.list(orgId ?? "");
-      await qc.cancelQueries({ queryKey: key });
-      const previous = qc.getQueryData<MechanicCommissionRule[]>(key);
-      if (previous) {
-        qc.setQueryData<MechanicCommissionRule[]>(
-          key,
-          previous.filter((r) => r.id !== id),
-        );
-      }
-      return { previous };
-    },
-    onError: (err, id, context) => {
-      if (context?.previous)
-        qc.setQueryData<MechanicCommissionRule[]>(
-          commissionKeys.list(orgId ?? ""),
-          context.previous,
-        );
-      toastRetry(err.message, () => mutation.mutateAsync(id));
-    },
-    onSuccess: (data) => {
-      const d = data as unknown as Record<string, unknown> | undefined;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        toast.dismiss();
-        toast.success("Commission rule deleted");
-      }
-    },
-    onSettled: () =>
-      qc.invalidateQueries({ queryKey: commissionKeys.list(orgId ?? "") }),
+  return useOrgMutation<MechanicCommissionRule, string>({
+    endpoint: (id) => `/api/organizations/${orgId}/commission-rules/${id}`,
+    method: "DELETE",
+    queryKey: commissionKeys.list(orgId ?? ""),
+    optimisticUpdate: (cached, id) => cached.filter((r) => r.id !== id),
+    successMessage: "Commission rule deleted",
   });
-  return mutation;
 }

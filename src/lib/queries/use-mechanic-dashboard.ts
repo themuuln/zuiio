@@ -6,10 +6,9 @@
  */
 import {
   type UseQueryResult,
-  useMutation,
   useQuery,
-  useQueryClient,
 } from "@tanstack/react-query";
+import { useOrgMutation } from "./mutation-factory";
 import { createOrgQuery } from "./factory";
 import { clockKeys, mechanicKeys } from "./keys";
 
@@ -195,24 +194,10 @@ export function useClockStatus(
  * so the next poll picks up the new state immediately.
  */
 export function useClockToggle(orgId: string | undefined) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (action: "clock-in" | "clock-out") => {
-      const res = await fetch(`/api/organizations/${orgId}/me/time/${action}`, {
-        method: "POST",
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error?.message ?? `Failed to ${action}`);
-      }
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: clockKeys.status(orgId ?? ""),
-      });
-    },
+  return useOrgMutation<unknown, "clock-in" | "clock-out">({
+    endpoint: (action) => `/api/organizations/${orgId}/me/time/${action}`,
+    method: "POST",
+    queryKey: clockKeys.status(orgId ?? ""),
   });
 }
 
