@@ -3,7 +3,7 @@
 import { Drawer } from "@base-ui/react/drawer";
 import { Barcode, NotePencil, Package, Tag, X } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { updateProduct } from "@/app/(dashboard)/products/actions";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -74,11 +74,11 @@ export function ProductEditDrawer({
   const trimmedUnitQuery = unitQuery.trim();
   const loweredUnitQuery = trimmedUnitQuery.toLowerCase();
   const [allUnits, setAllUnits] = useState<string[]>([...initialUnits]);
-  const unitExactMatch =
+  const unitLabelMatch =
     loweredUnitQuery === "" ||
-    allUnits.some((u) => u.toLowerCase() === loweredUnitQuery);
+    allUnits.some((u) => u.toLowerCase().includes(loweredUnitQuery));
   const unitItems: string[] =
-    trimmedUnitQuery !== "" && !unitExactMatch
+    trimmedUnitQuery !== "" && !unitLabelMatch
       ? [...allUnits, unitQuery.trim()]
       : allUnits;
 
@@ -89,11 +89,13 @@ export function ProductEditDrawer({
   const [allCategoryNames, setAllCategoryNames] = useState<string[]>([
     ...initialCategoryNames,
   ]);
-  const categoryExactMatch =
+  const categoryLabelMatch =
     loweredCategoryQuery === "" ||
-    allCategoryNames.some((c) => c.toLowerCase() === loweredCategoryQuery);
+    allCategoryNames.some((c) =>
+      c.toLowerCase().includes(loweredCategoryQuery),
+    );
   const categoryItems: string[] =
-    trimmedCategoryQuery !== "" && !categoryExactMatch
+    trimmedCategoryQuery !== "" && !categoryLabelMatch
       ? [...allCategoryNames, categoryQuery.trim()]
       : allCategoryNames;
 
