@@ -35,7 +35,7 @@ export function DateRangeForm() {
           name="from"
           type="date"
           defaultValue={from}
-          className="h-8 w-40"
+          className="h-8 w-40 max-w-full"
         />
       </div>
       <div className="flex flex-col gap-1.5">
@@ -45,7 +45,7 @@ export function DateRangeForm() {
           name="to"
           type="date"
           defaultValue={to}
-          className="h-8 w-40"
+          className="h-8 w-40 max-w-full"
         />
       </div>
       <Button type="submit" size="sm">
