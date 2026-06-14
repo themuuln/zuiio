@@ -138,6 +138,7 @@ export function ProductsPageClient({
             {STOCK_FILTERS.map((f) => (
               <button
                 key={f.value}
+                type="button"
                 onClick={() => setStockFilter(f.value)}
                 className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                   stockFilter === f.value
@@ -152,6 +153,7 @@ export function ProductsPageClient({
 
           {hasFilters && (
             <button
+              type="button"
               onClick={() => {
                 setSearch("");
                 setCategoryFilter("");
@@ -173,6 +175,7 @@ export function ProductsPageClient({
             </p>
             {hasFilters && (
               <button
+                type="button"
                 onClick={() => {
                   setSearch("");
                   setCategoryFilter("");

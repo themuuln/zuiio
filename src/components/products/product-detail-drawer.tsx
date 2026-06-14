@@ -110,9 +110,9 @@ export function ProductDetailDrawer({
                           <CaretRight className="size-4" weight="bold" />
                         </button>
                         <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5">
-                          {images.map((_, i) => (
+                          {images.map((url, i) => (
                             <button
-                              key={i}
+                              key={url}
                               type="button"
                               onClick={() => setImgIndex(i)}
                               className={cn(

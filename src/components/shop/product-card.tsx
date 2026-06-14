@@ -90,9 +90,9 @@ export function ProductCard({ product }: { product: ProductCardProduct }) {
                   <CaretRight className="size-3.5" weight="bold" />
                 </button>
                 <div className="absolute bottom-1.5 left-1/2 flex -translate-x-1/2 gap-1">
-                  {images.map((_, i) => (
+                  {images.map((url, i) => (
                     <button
-                      key={i}
+                      key={url}
                       type="button"
                       onClick={(e) => {
                         e.preventDefault();
