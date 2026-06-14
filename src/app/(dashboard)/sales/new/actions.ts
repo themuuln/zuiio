@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { calculateCommission } from "@/lib/commissions";
 import { validateSaleInput } from "@/lib/domain-rules";
 import {
   isValidPositiveNumber,
@@ -15,6 +16,25 @@ export async function createSale(
   formData: FormData,
 ) {
   const { supabase, organizationId, userId } = await requireAppContext();
+
+  // --- Resolve salesperson ---
+  const salespersonId = getString(formData, "salesperson_id") || userId;
+
+  // Validate cross-org salesperson override
+  if (salespersonId !== userId) {
+    const { data: salesperson } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", salespersonId)
+      .eq("organization_id", organizationId)
+      .maybeSingle();
+
+    if (!salesperson) {
+      return {
+        error: "Сонгосон борлуулагч танай байгууллагад хамаарахгүй байна.",
+      };
+    }
+  }
 
   const productId = getString(formData, "product_id");
   const quantity = parseAmount(formData.get("quantity"));
@@ -112,6 +132,7 @@ export async function createSale(
       status,
       notes: getString(formData, "notes") || null,
       created_by: userId,
+      salesperson_id: salespersonId,
     })
     .select("id")
     .single();
@@ -123,12 +144,16 @@ export async function createSale(
     return { error: saleError.message };
   }
 
+  const commissionAmount =
+    status === "cancelled" ? 0 : calculateCommission(totalAmount);
+
   const { error: itemError } = await supabase.from("sale_items").insert({
     sale_id: sale.id,
     product_id: productId,
     quantity,
     unit_price: unitPrice,
     total_price: totalAmount,
+    commission_amount: commissionAmount,
   });
 
   if (itemError) {
