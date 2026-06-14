@@ -118,6 +118,14 @@ export function validateCategoryInput(input: { name: string }) {
   return null;
 }
 
+export function validateContactInput(input: { name: string }) {
+  if (!input.name.trim()) {
+    return "Харилцагчийн нэр шаардлагатай.";
+  }
+
+  return null;
+}
+
 export function validateStockMovementInput(input: {
   productId: string;
   type: string;
