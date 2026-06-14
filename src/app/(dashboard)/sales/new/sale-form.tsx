@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { StaffPicker } from "@/components/shop/staff-picker";
 import { Button } from "@/components/ui/button";
 import {
   Combobox,
@@ -402,6 +403,8 @@ export function SaleForm({
               </ComboboxContent>
             </Combobox>
           </Field>
+
+          <StaffPicker />
 
           <Field>
             <FieldLabel htmlFor="status">Төлөв</FieldLabel>
