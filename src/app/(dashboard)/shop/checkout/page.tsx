@@ -6,11 +6,12 @@ import {
   CreditCard,
   FileText,
   ShoppingCart,
-  Spinner,
 } from "@phosphor-icons/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { createShopSale } from "@/app/(dashboard)/shop/actions";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
 import { CustomerPicker } from "@/components/shop/customer-picker";
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/empty";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { productKeys, saleKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
 
 type Contact = {
@@ -105,6 +107,8 @@ export default function CheckoutPage() {
   };
 
   // Set hidden fields before form submission
+  const queryClient = useQueryClient();
+
   const handleFormSubmit = (formData: FormData) => {
     formData.set(
       "items",
@@ -128,21 +132,135 @@ export default function CheckoutPage() {
     }
   };
 
-  const [state, formAction, isPending] = useActionState(
-    async (prev: { error?: string } | undefined, formData: FormData) => {
-      handleFormSubmit(formData);
-      return createShopSale(prev, formData);
+  // useMutation wrapping createShopSale with optimistic updates
+  const mutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const result = await createShopSale(undefined, formData);
+      if (result?.error) throw new Error(result.error);
+      return result as { saleId: string };
     },
-    undefined,
-  );
+    onMutate: async (formData) => {
+      // Cancel any in-flight queries so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey: saleKeys.all() });
+      await queryClient.cancelQueries({ queryKey: productKeys.all() });
 
-  // On successful sale, clear cart and navigate to receipt
-  useEffect(() => {
-    if (state && "saleId" in state && state.saleId) {
-      clearCart();
-      router.push(`/shop/receipt/${state.saleId}`);
-    }
-  }, [state, clearCart, router]);
+      // Snapshot current cache entries for rollback
+      const previousSales = queryClient.getQueriesData({
+        queryKey: saleKeys.all(),
+      });
+      const previousProducts = queryClient.getQueriesData({
+        queryKey: productKeys.all(),
+      });
+
+      // Parse items from formData for optimistic updates
+      const itemsRaw = formData.get("items")?.toString();
+      if (itemsRaw) {
+        try {
+          const cartItems = JSON.parse(itemsRaw) as Array<{
+            productId: string;
+            name: string;
+            unitPrice: number;
+            quantity: number;
+          }>;
+          const totalAmount = cartItems.reduce(
+            (sum, item) => sum + item.unitPrice * item.quantity,
+            0,
+          );
+          const paid = Number(formData.get("paid_amount") ?? 0);
+          const payMethod =
+            formData.get("payment_method")?.toString() || "cash";
+          const custName = formData.get("customer_name")?.toString();
+
+          // Build optimistic sale entry
+          const optimisticSale = {
+            id: `opt-${Date.now()}`,
+            total_amount: totalAmount,
+            paid_amount: paid,
+            payment_method: payMethod,
+            status: "completed",
+            sale_date: new Date().toISOString(),
+            created_at: new Date().toISOString(),
+            contact_id: null,
+            contacts: custName ? { name: custName } : null,
+          };
+
+          // Optimistically prepend sale to all sales list caches
+          queryClient.setQueriesData(
+            { queryKey: saleKeys.all(), type: "active" },
+            (oldData: unknown) => {
+              if (Array.isArray(oldData)) {
+                return [optimisticSale, ...oldData];
+              }
+              return oldData;
+            },
+          );
+
+          // Optimistically decrement stock for each purchased product
+          queryClient.setQueriesData(
+            { queryKey: productKeys.all(), type: "active" },
+            (oldData: unknown) => {
+              if (Array.isArray(oldData)) {
+                return oldData.map((product: Record<string, unknown>) => {
+                  const cartItem = cartItems.find(
+                    (i) => i.productId === product.id,
+                  );
+                  if (cartItem) {
+                    return {
+                      ...product,
+                      current_stock: Math.max(
+                        0,
+                        Number(product.current_stock ?? 0) - cartItem.quantity,
+                      ),
+                    };
+                  }
+                  return product;
+                });
+              }
+              return oldData;
+            },
+          );
+        } catch {
+          // Items parsing failed — skip optimistic update
+        }
+      }
+
+      return { previousSales, previousProducts };
+    },
+    onSuccess: (data) => {
+      if (data?.saleId) {
+        clearCart();
+        router.push(`/shop/receipt/${data.saleId}`);
+      }
+    },
+    onError: (err, _formData, context) => {
+      // Rollback sales caches to snapshot
+      if (context?.previousSales) {
+        for (const [key, data] of context.previousSales) {
+          queryClient.setQueryData(key, data);
+        }
+      }
+      // Rollback products caches to snapshot
+      if (context?.previousProducts) {
+        for (const [key, data] of context.previousProducts) {
+          queryClient.setQueryData(key, data);
+        }
+      }
+      toast.error(err?.message || "Алдаа гарлаа");
+    },
+    onSettled: () => {
+      // Always invalidate to reconcile with server state
+      queryClient.invalidateQueries({ queryKey: saleKeys.all() });
+      queryClient.invalidateQueries({ queryKey: productKeys.all() });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (mutation.isPending) return; // prevent double submission
+    const formData = new FormData(e.currentTarget);
+    handleFormSubmit(formData);
+    mutation.mutate(formData);
+  };
 
   // Guard: empty cart
   if (items.length === 0) {
@@ -169,7 +287,7 @@ export default function CheckoutPage() {
   return (
     <form
       ref={formRef}
-      action={formAction}
+      onSubmit={handleSubmit}
       className="flex flex-col gap-5 pb-28"
     >
       <h1 className="text-lg font-semibold">Төлбөр тооцоо</h1>
@@ -292,27 +410,20 @@ export default function CheckoutPage() {
       </section>
 
       {/* Error message */}
-      {state?.error && (
+      {mutation.error && (
         <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {state.error}
+          {mutation.error.message}
         </div>
       )}
 
-      {/* Submit button */}
+      {/* Submit button — no loading spinner per optimistic update pattern */}
       <Button
         type="submit"
         size="lg"
         className="sticky bottom-24 mt-2 h-[56px] w-full text-sm font-semibold"
-        disabled={!isFormValid || isPending}
+        disabled={!isFormValid || mutation.isPending}
       >
-        {isPending ? (
-          <>
-            <Spinner className="mr-2 size-4 animate-spin" />
-            Үүсгэж байна...
-          </>
-        ) : (
-          "Борлуулалт үүсгэх"
-        )}
+        {mutation.isPending ? "Үүсгэж байна..." : "Борлуулалт үүсгэх"}
       </Button>
     </form>
   );
