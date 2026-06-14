@@ -1,6 +1,7 @@
 "use client";
 
-import { ShoppingCart } from "@phosphor-icons/react";
+import { CaretLeft, CaretRight, ShoppingCart } from "@phosphor-icons/react";
+import { useState } from "react";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,8 @@ export type ProductCardProduct = {
   unit: string | null;
   sku: string | null;
   category_id: string | null;
+  image_url?: string | null;
+  image_urls?: string[] | null;
 };
 
 export function ProductCard({ product }: { product: ProductCardProduct }) {
@@ -35,6 +38,13 @@ export function ProductCard({ product }: { product: ProductCardProduct }) {
     });
   };
 
+  const [imgIndex, setImgIndex] = useState(0);
+  const images = product.image_urls?.length
+    ? product.image_urls
+    : product.image_url
+      ? [product.image_url]
+      : [];
+
   return (
     <Card
       className={cn(
@@ -42,14 +52,75 @@ export function ProductCard({ product }: { product: ProductCardProduct }) {
         isOutOfStock && "opacity-60",
       )}
     >
-      {/* Top section: placeholder image area */}
+      {/* Top section: image gallery */}
       <div
         className={cn(
-          "flex aspect-square items-center justify-center bg-muted/30",
+          "group relative flex aspect-square items-center justify-center overflow-hidden bg-muted/30",
           isOutOfStock && "bg-muted/10",
         )}
       >
-        {isOutOfStock ? (
+        {images.length > 0 ? (
+          <>
+            <img
+              src={images[imgIndex]}
+              alt={product.name}
+              className="h-full w-full object-cover transition-opacity"
+              loading="lazy"
+            />
+            {images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setImgIndex((i) => (i - 1 + images.length) % images.length);
+                  }}
+                  className="absolute left-1 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white opacity-0 transition-opacity hover:bg-black/60 group-hover:opacity-100"
+                >
+                  <CaretLeft className="size-3.5" weight="bold" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setImgIndex((i) => (i + 1) % images.length);
+                  }}
+                  className="absolute right-1 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white opacity-0 transition-opacity hover:bg-black/60 group-hover:opacity-100"
+                >
+                  <CaretRight className="size-3.5" weight="bold" />
+                </button>
+                <div className="absolute bottom-1.5 left-1/2 flex -translate-x-1/2 gap-1">
+                  {images.map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setImgIndex(i);
+                      }}
+                      className={cn(
+                        "size-1.5 rounded-full transition-all",
+                        i === imgIndex
+                          ? "bg-white w-3"
+                          : "bg-white/50 hover:bg-white/80",
+                      )}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+            {isOutOfStock && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                <Badge
+                  variant="outline"
+                  className="border-destructive/40 text-destructive"
+                >
+                  Дууссан
+                </Badge>
+              </div>
+            )}
+          </>
+        ) : isOutOfStock ? (
           <Badge
             variant="outline"
             className="border-destructive/40 text-destructive"

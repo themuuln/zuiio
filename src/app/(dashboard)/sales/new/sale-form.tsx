@@ -61,9 +61,12 @@ const statusLabels: Record<string, string> = {
 export function SaleForm({
   products,
   customers,
+  onSuccess,
 }: {
   products: ProductOption[];
   customers: CustomerOption[];
+  /** Called after a successful sale instead of redirecting to /sales. Used by the drawer variant. */
+  onSuccess?: () => void;
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -153,7 +156,11 @@ export function SaleForm({
       return { salesSnapshot, productsSnapshot };
     },
     onSuccess: () => {
-      router.push("/sales");
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.push("/sales");
+      }
     },
     onError: (err, _vars, context) => {
       if (context?.salesSnapshot) {
@@ -189,13 +196,13 @@ export function SaleForm({
   const highlightedProductRef = useRef<ProductOption | null | undefined>(null);
   const trimmedProductQuery = productQuery.trim();
   const loweredProductQuery = trimmedProductQuery.toLowerCase();
-  const productExactMatch =
+  const productLabelMatch =
     loweredProductQuery === "" ||
-    products.some((p) => p.name.toLowerCase() === loweredProductQuery);
+    products.some((p) => p.name.toLowerCase().includes(loweredProductQuery));
   const [createdProducts, setCreatedProducts] = useState<ProductOption[]>([]);
   const allProducts = [...products, ...createdProducts];
   const productItems: ProductOption[] =
-    trimmedProductQuery !== "" && !productExactMatch
+    trimmedProductQuery !== "" && !productLabelMatch
       ? [
           ...allProducts,
           {
@@ -215,11 +222,14 @@ export function SaleForm({
   const [allPaymentMethods, setAllPaymentMethods] = useState<string[]>([
     ...initialPaymentMethods,
   ]);
-  const paymentExactMatch =
+  const paymentLabelMatch =
     trimmedPaymentQuery === "" ||
-    allPaymentMethods.some((m) => m.toLowerCase() === trimmedPaymentQuery);
+    allPaymentMethods.some((m) => {
+      const label = paymentMethodLabels[m] ?? m;
+      return label.toLowerCase().includes(trimmedPaymentQuery);
+    });
   const paymentItems: string[] =
-    trimmedPaymentQuery !== "" && !paymentExactMatch
+    trimmedPaymentQuery !== "" && !paymentLabelMatch
       ? [...allPaymentMethods, paymentQuery.trim()]
       : allPaymentMethods;
 
@@ -230,11 +240,14 @@ export function SaleForm({
   const [allStatuses, setAllStatuses] = useState<string[]>([
     ...initialStatuses,
   ]);
-  const statusExactMatch =
+  const statusLabelMatch =
     trimmedStatusQuery === "" ||
-    allStatuses.some((s) => s.toLowerCase() === trimmedStatusQuery);
+    allStatuses.some((s) => {
+      const label = statusLabels[s] ?? s;
+      return label.toLowerCase().includes(trimmedStatusQuery);
+    });
   const statusItems: string[] =
-    trimmedStatusQuery !== "" && !statusExactMatch
+    trimmedStatusQuery !== "" && !statusLabelMatch
       ? [...allStatuses, statusQuery.trim()]
       : allStatuses;
 

@@ -8,7 +8,9 @@ export default async function ShopCatalogPage() {
   const [{ data: products }, { data: categories }] = await Promise.all([
     supabase
       .from("products")
-      .select("id, name, sku, unit, sale_price, current_stock, category_id")
+      .select(
+        "id, name, sku, unit, sale_price, current_stock, category_id, image_url, image_urls",
+      )
       .eq("organization_id", organizationId)
       .order("name", { ascending: true }),
     supabase
@@ -26,6 +28,8 @@ export default async function ShopCatalogPage() {
     sale_price: p.sale_price,
     current_stock: p.current_stock,
     category_id: p.category_id,
+    image_url: p.image_url,
+    image_urls: p.image_urls,
   }));
 
   const categoryList = (categories ?? []).map((c) => ({

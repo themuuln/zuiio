@@ -143,6 +143,9 @@ export type Database = {
           currency: string | null;
           id: string;
           name: string;
+          report_email_enabled: boolean;
+          report_email_recipient: string | null;
+          report_email_time: string | null;
           slug: string;
         };
         Insert: {
@@ -151,6 +154,9 @@ export type Database = {
           currency?: string | null;
           id?: string;
           name: string;
+          report_email_enabled?: boolean;
+          report_email_recipient?: string | null;
+          report_email_time?: string | null;
           slug: string;
         };
         Update: {
@@ -159,6 +165,9 @@ export type Database = {
           currency?: string | null;
           id?: string;
           name?: string;
+          report_email_enabled?: boolean;
+          report_email_recipient?: string | null;
+          report_email_time?: string | null;
           slug?: string;
         };
         Relationships: [];
@@ -171,6 +180,8 @@ export type Database = {
           created_at: string | null;
           current_stock: number | null;
           id: string;
+          image_url: string | null;
+          image_urls: string[] | null;
           min_stock: number | null;
           name: string;
           organization_id: string;
@@ -185,6 +196,8 @@ export type Database = {
           created_at?: string | null;
           current_stock?: number | null;
           id?: string;
+          image_url?: string | null;
+          image_urls?: string[] | null;
           min_stock?: number | null;
           name: string;
           organization_id: string;
@@ -199,6 +212,8 @@ export type Database = {
           created_at?: string | null;
           current_stock?: number | null;
           id?: string;
+          image_url?: string | null;
+          image_urls?: string[] | null;
           min_stock?: number | null;
           name?: string;
           organization_id?: string;
@@ -467,6 +482,98 @@ export type Database = {
           },
         ];
       };
+      smtp_configs: {
+        Row: {
+          created_at: string | null;
+          daily_count: number;
+          from_email: string;
+          from_name: string | null;
+          host: string;
+          id: string;
+          is_active: boolean;
+          last_reset_date: string;
+          password: string;
+          port: number;
+          priority: number;
+          updated_at: string | null;
+          username: string;
+        };
+        Insert: {
+          created_at?: string | null;
+          daily_count?: number;
+          from_email: string;
+          from_name?: string | null;
+          host?: string;
+          id?: string;
+          is_active?: boolean;
+          last_reset_date?: string;
+          password: string;
+          port?: number;
+          priority?: number;
+          updated_at?: string | null;
+          username: string;
+        };
+        Update: {
+          created_at?: string | null;
+          daily_count?: number;
+          from_email?: string;
+          from_name?: string | null;
+          host?: string;
+          id?: string;
+          is_active?: boolean;
+          last_reset_date?: string;
+          password?: string;
+          port?: number;
+          priority?: number;
+          updated_at?: string | null;
+          username?: string;
+        };
+        Relationships: [];
+      };
+      report_email_log: {
+        Row: {
+          created_at: string | null;
+          error_message: string | null;
+          id: string;
+          organization_id: string;
+          recipient_email: string;
+          report_date: string;
+          sent_at: string | null;
+          smtp_config_id: string | null;
+          status: string;
+        };
+        Insert: {
+          created_at?: string | null;
+          error_message?: string | null;
+          id?: string;
+          organization_id: string;
+          recipient_email: string;
+          report_date?: string;
+          sent_at?: string | null;
+          smtp_config_id?: string | null;
+          status?: string;
+        };
+        Update: {
+          created_at?: string | null;
+          error_message?: string | null;
+          id?: string;
+          organization_id?: string;
+          recipient_email?: string;
+          report_date?: string;
+          sent_at?: string | null;
+          smtp_config_id?: string | null;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "report_email_log_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -477,9 +584,29 @@ export type Database = {
         Returns: Json;
       };
       get_current_organization: { Args: never; Returns: string };
+      get_public_products: {
+        Args: { p_slug: string };
+        Returns: Json;
+      };
+      get_public_product: {
+        Args: { p_slug: string; p_product_id: string };
+        Returns: Json;
+      };
       get_public_report_data: {
         Args: { p_token: string };
         Returns: Json;
+      };
+      increment_smtp_count: {
+        Args: { config_id: string };
+        Returns: undefined;
+      };
+      schedule_daily_report_cron: {
+        Args: { app_url: string };
+        Returns: string;
+      };
+      unschedule_daily_report_cron: {
+        Args: never;
+        Returns: string;
       };
     };
     Enums: {

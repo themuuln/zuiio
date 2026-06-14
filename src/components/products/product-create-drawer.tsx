@@ -120,11 +120,11 @@ export function ProductCreateDrawer({ companyType }: { companyType: string }) {
   const trimmedUnitQuery = unitQuery.trim();
   const loweredUnitQuery = trimmedUnitQuery.toLowerCase();
   const [allUnits, setAllUnits] = useState<string[]>([...initialUnits]);
-  const unitExactMatch =
+  const unitLabelMatch =
     loweredUnitQuery === "" ||
-    allUnits.some((u) => u.toLowerCase() === loweredUnitQuery);
+    allUnits.some((u) => u.toLowerCase().includes(loweredUnitQuery));
   const unitItems: string[] =
-    trimmedUnitQuery !== "" && !unitExactMatch
+    trimmedUnitQuery !== "" && !unitLabelMatch
       ? [...allUnits, unitQuery.trim()]
       : allUnits;
 
@@ -135,11 +135,13 @@ export function ProductCreateDrawer({ companyType }: { companyType: string }) {
   const [allCategoryNames, setAllCategoryNames] = useState<string[]>([
     ...new Set([...initialCategories, ...presets]),
   ]);
-  const categoryExactMatch =
+  const categoryLabelMatch =
     loweredCategoryQuery === "" ||
-    allCategoryNames.some((c) => c.toLowerCase() === loweredCategoryQuery);
+    allCategoryNames.some((c) =>
+      c.toLowerCase().includes(loweredCategoryQuery),
+    );
   const categoryItems: string[] =
-    trimmedCategoryQuery !== "" && !categoryExactMatch
+    trimmedCategoryQuery !== "" && !categoryLabelMatch
       ? [...allCategoryNames, categoryQuery.trim()]
       : allCategoryNames;
 

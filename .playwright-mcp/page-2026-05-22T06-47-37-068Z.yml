@@ -1,0 +1,34 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: Бүртгүүлэх
+      - generic [ref=e6]: Шинэ бүртгэл үүсгэх
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - group [ref=e10]:
+          - generic [ref=e11]: Нэр
+          - generic [ref=e12]:
+            - img
+            - textbox "Нэр" [ref=e13]:
+              - /placeholder: Батболд
+        - group [ref=e14]:
+          - generic [ref=e15]: Имэйл
+          - generic [ref=e16]:
+            - img
+            - textbox "Имэйл" [ref=e17]:
+              - /placeholder: name@example.com
+        - group [ref=e18]:
+          - generic [ref=e19]: Нууц үг
+          - generic [ref=e20]:
+            - img
+            - textbox "Нууц үг" [ref=e21]:
+              - /placeholder: ••••••••
+      - button "Бүртгүүлэх" [ref=e22]:
+        - text: Бүртгүүлэх
+        - img
+      - paragraph [ref=e23]:
+        - text: Бүртгэлтэй юу?
+        - link "Нэвтрэх" [ref=e24] [cursor=pointer]:
+          - /url: /login
+  - button "Open Next.js Dev Tools" [ref=e30] [cursor=pointer]:
+    - img [ref=e31]

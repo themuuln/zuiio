@@ -124,11 +124,11 @@ export default function NewExpensePage() {
   const [allCategories, setAllCategories] = useState<string[]>([
     ...initialCategories,
   ]);
-  const categoryExactMatch =
+  const categoryLabelMatch =
     loweredCategoryQuery === "" ||
-    allCategories.some((c) => c.toLowerCase() === loweredCategoryQuery);
+    allCategories.some((c) => c.toLowerCase().includes(loweredCategoryQuery));
   const categoryItems: string[] =
-    trimmedCategoryQuery !== "" && !categoryExactMatch
+    trimmedCategoryQuery !== "" && !categoryLabelMatch
       ? [...allCategories, categoryQuery.trim()]
       : allCategories;
 
@@ -138,11 +138,14 @@ export default function NewExpensePage() {
   const [allPaymentMethods, setAllPaymentMethods] = useState<string[]>([
     ...initialPaymentMethods,
   ]);
-  const paymentExactMatch =
+  const paymentLabelMatch =
     trimmedPaymentQuery === "" ||
-    allPaymentMethods.some((m) => m.toLowerCase() === trimmedPaymentQuery);
+    allPaymentMethods.some((m) => {
+      const label = paymentMethodLabels[m] ?? m;
+      return label.toLowerCase().includes(trimmedPaymentQuery);
+    });
   const paymentItems: string[] =
-    trimmedPaymentQuery !== "" && !paymentExactMatch
+    trimmedPaymentQuery !== "" && !paymentLabelMatch
       ? [...allPaymentMethods, paymentQuery.trim()]
       : allPaymentMethods;
 
