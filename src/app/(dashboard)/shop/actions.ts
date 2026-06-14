@@ -276,3 +276,23 @@ export async function createShopSale(
   revalidatePath("/shop/history");
   return { saleId };
 }
+
+/**
+ * Returns all profiles in the current organization and the current user's ID.
+ * Used by the StaffPicker component for salesperson selection.
+ */
+export async function getStaffList() {
+  const { supabase, organizationId, userId } = await requireAppContext();
+
+  const { data: profiles, error } = await supabase
+    .from("profiles")
+    .select("id, full_name, role")
+    .eq("organization_id", organizationId)
+    .order("full_name");
+
+  if (error) {
+    return { error: "Борлуулагчдын жагсаалт авахад алдаа гарлаа." };
+  }
+
+  return { profiles: profiles ?? [], currentUserId: userId };
+}
