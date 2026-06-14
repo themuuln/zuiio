@@ -369,33 +369,37 @@ export async function getCommissionSummaryReport(
   }
 
   // Get per-staff paid amounts
+  // Decompose the triple-join (commission_payout_items -> sale_items -> sales)
+  // into two simpler queries for reliability.
   const staffPaidMap = new Map<string, number>();
   if (allItemIds.length > 0) {
-    const { data: staffPaidItems } = await supabase
+    // Step 1: Fetch commission_payout_items directly (no joins needed)
+    const { data: payoutItems } = await supabase
       .from("commission_payout_items")
-      .select(
-        `sale_item_id, commission_amount,
-         sale_items!inner(
-           sales!inner(
-             salesperson_id
-           )
-         )`,
-      )
+      .select("sale_item_id, commission_amount")
       .in("sale_item_id", allItemIds);
 
-    if (staffPaidItems) {
-      for (const pi of staffPaidItems as unknown as Array<{
-        sale_item_id: string;
-        commission_amount: number;
-        sale_items: {
-          sales: {
-            salesperson_id: string;
-          };
-        };
-      }>) {
-        const staffId = pi.sale_items.sales.salesperson_id;
-        const amount = Number(pi.commission_amount);
-        staffPaidMap.set(staffId, (staffPaidMap.get(staffId) ?? 0) + amount);
+    // Step 2: Fetch sale_items joined with sales to get the salesperson_id mapping
+    const { data: saleItemStaff } = await supabase
+      .from("sale_items")
+      .select("id, sales!inner(salesperson_id)")
+      .in("id", allItemIds);
+
+    if (payoutItems && saleItemStaff) {
+      // Build sale_item_id -> salesperson_id mapping
+      const itemIdToStaffId = new Map<string, string>();
+      for (const si of saleItemStaff) {
+        const sale = si.sales as { salesperson_id: string };
+        itemIdToStaffId.set(si.id, sale.salesperson_id);
+      }
+
+      // Aggregate paid amounts by staff
+      for (const pi of payoutItems) {
+        const staffId = itemIdToStaffId.get(pi.sale_item_id);
+        if (staffId) {
+          const amount = Number(pi.commission_amount);
+          staffPaidMap.set(staffId, (staffPaidMap.get(staffId) ?? 0) + amount);
+        }
       }
     }
   }
