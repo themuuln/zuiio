@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import type * as React from "react";
 import { CartProvider } from "@/app/(dashboard)/shop/cart-context";
 import { BottomBar } from "@/components/shop/bottom-bar";
+import { RealtimeSubscriptions } from "@/lib/query/realtime-subscriptions";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function ShopLayout({
@@ -34,6 +35,7 @@ export default async function ShopLayout({
 
   return (
     <CartProvider>
+      <RealtimeSubscriptions orgId={profile.organization_id} />
       {/* Shop container: full-width, mobile-first, no sidebar */}
       <div className="flex min-h-svh flex-col bg-background">
         {/* Top header bar */}

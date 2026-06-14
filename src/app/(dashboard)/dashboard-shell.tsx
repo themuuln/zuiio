@@ -37,6 +37,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { APP_NAME } from "@/lib/constants";
+import { RealtimeSubscriptions } from "@/lib/query/realtime-subscriptions";
 
 const navItems = [
   { title: "Хяналтын самбар", href: "/", icon: House },
@@ -52,12 +53,14 @@ const navItems = [
 
 type DashboardShellProps = {
   children: React.ReactNode;
+  organizationId: string | null;
   organizationName: string | null;
   userFullName: string | null;
 };
 
 export function DashboardShell({
   children,
+  organizationId,
   organizationName,
   userFullName,
 }: DashboardShellProps) {
@@ -92,6 +95,7 @@ export function DashboardShell({
 
   return (
     <Drawer.Provider>
+      <RealtimeSubscriptions orgId={organizationId} />
       <Drawer.IndentBackground className="pointer-events-none fixed inset-0 z-10 bg-black/10 opacity-0 transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-active:opacity-100 dark:bg-black/40" />
       <Drawer.Indent className="relative z-0 min-h-dvh transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-active:origin-[center_top] data-active:scale-[0.97] data-active:rounded-xl">
         <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
