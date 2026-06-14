@@ -6,7 +6,7 @@ import {
   deleteSupplier,
   getSuppliers,
   updateSupplier,
-} from "@/lib/services/inventory-service";
+} from "@/lib/services/supplier-service";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 export const GET = createRouteHandler(

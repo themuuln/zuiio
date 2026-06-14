@@ -5,7 +5,7 @@ import {
   createPurchaseOrder,
   getPurchaseOrders,
   updatePurchaseOrder,
-} from "@/lib/services/inventory-service";
+} from "@/lib/services/purchase-order-service";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {

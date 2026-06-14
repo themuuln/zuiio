@@ -80,9 +80,8 @@ describe("Service Catalog Service", () => {
         { ...mockService, id: "svc-1", name: "Oil Change" },
         { ...mockService, id: "svc-2", name: "Tire Rotation" },
       ];
-      mockClient
-        .from("service_catalog")
-        .limit.mockResolvedValueOnce({ data: services, error: null });
+      // Factory uses .range() internally; provide data via qb thenable
+      mockClient.__qb.resolveWith({ data: services, error: null, count: 2 });
 
       const result = await getServices(mockClient, "org-1");
 
@@ -92,9 +91,11 @@ describe("Service Catalog Service", () => {
 
     it("supports category filter", async () => {
       const services = [{ ...mockService, category: "Maintenance" }];
-      mockClient
-        .from("service_catalog")
-        .limit.mockResolvedValueOnce({ data: services, error: null });
+      mockClient.__qb.resolveWith({
+        data: services,
+        error: null,
+        count: 1,
+      });
 
       const result = await getServices(mockClient, "org-1", "Maintenance");
 
@@ -104,9 +105,7 @@ describe("Service Catalog Service", () => {
     });
 
     it("returns empty array when no data", async () => {
-      mockClient
-        .from("service_catalog")
-        .limit.mockResolvedValueOnce({ data: [], error: null });
+      mockClient.__qb.resolveWith({ data: [], error: null, count: 0 });
 
       const result = await getServices(mockClient, "org-1");
 
@@ -252,7 +251,7 @@ describe("Service Catalog Service", () => {
       ).rejects.toThrow(NotFoundError);
       await expect(
         updateService(mockClient, "nonexistent", "org-1", { name: "Updated" }),
-      ).rejects.toThrow("Service not found");
+      ).rejects.toThrow("service_catalog not found");
     });
 
     it("revalidates cache", async () => {
@@ -282,14 +281,20 @@ describe("Service Catalog Service", () => {
   describe("deleteService", () => {
     it("soft deletes (sets deleted_at)", async () => {
       const freshMock = createMockSupabaseClient();
-      // deleteService makes 2 sequential queries on the same table:
-      // 1. select existing record (for audit old_data)
-      // 2. update to set deleted_at
-      // Use __qb.resolveWith() to set each response before its chain runs.
-      freshMock.__qb.resolveWith({ data: { id: "svc-1" }, error: null });
-      const deletePromise = deleteService(freshMock as any, "svc-1", "org-1");
-      freshMock.__qb.resolveWith({ error: null });
-      await deletePromise;
+      // deleteService calls auth.getUser() first, then crud.softDelete which
+      // does select -> update. We need to set up qb resolve values properly.
+      // Use mockReturnValueOnce on .single() to make the first query resolve
+      // with a record, then __qb.resolveWith for the update.
+      const firstSelect = {
+        then: (onFulfilled: (v: unknown) => unknown) =>
+          Promise.resolve({
+            data: { id: "svc-1", organization_id: "org-1" },
+            error: null,
+          }).then(onFulfilled),
+      };
+      freshMock.from("service_catalog").single.mockReturnValueOnce(firstSelect);
+
+      await deleteService(freshMock as any, "svc-1", "org-1");
 
       expect(freshMock.from("service_catalog").update).toHaveBeenCalledWith(
         expect.objectContaining({ deleted_at: expect.any(String) }),
@@ -298,26 +303,39 @@ describe("Service Catalog Service", () => {
 
     it("throws NotFoundError when not found", async () => {
       const freshMock = createMockSupabaseClient();
-      // First query (select existing) returns null
-      freshMock.__qb.resolveWith({ data: null, error: null });
-      const p1 = deleteService(freshMock as any, "nonexistent", "org-1");
-      // Second query (update) returns error
-      freshMock.__qb.resolveWith({ error: { message: "Not found" } });
-      await expect(p1).rejects.toThrow(NotFoundError);
+      // First query (select existing) returns null — factory throws immediately
+      const notFoundSelect = {
+        then: (onFulfilled: (v: unknown) => unknown) =>
+          Promise.resolve({
+            data: null,
+            error: null,
+          }).then(onFulfilled),
+      };
+      freshMock
+        .from("service_catalog")
+        .single.mockReturnValueOnce(notFoundSelect);
 
-      // Second call
-      freshMock.__qb.resolveWith({ data: null, error: null });
-      const p2 = deleteService(freshMock as any, "nonexistent", "org-1");
-      freshMock.__qb.resolveWith({ error: { message: "Not found" } });
-      await expect(p2).rejects.toThrow("Service not found or already deleted");
+      await expect(
+        deleteService(freshMock as any, "nonexistent", "org-1"),
+      ).rejects.toThrow(NotFoundError);
+
+      await expect(
+        deleteService(freshMock as any, "nonexistent", "org-1"),
+      ).rejects.toThrow("service_catalog not found");
     });
 
     it("revalidates cache", async () => {
       const freshMock = createMockSupabaseClient();
-      freshMock.__qb.resolveWith({ data: { id: "svc-1" }, error: null });
-      const deletePromise = deleteService(freshMock as any, "svc-1", "org-1");
-      freshMock.__qb.resolveWith({ error: null });
-      await deletePromise;
+      const firstSelect = {
+        then: (onFulfilled: (v: unknown) => unknown) =>
+          Promise.resolve({
+            data: { id: "svc-1", organization_id: "org-1" },
+            error: null,
+          }).then(onFulfilled),
+      };
+      freshMock.from("service_catalog").single.mockReturnValueOnce(firstSelect);
+
+      await deleteService(freshMock as any, "svc-1", "org-1");
 
       expect(revalidateTag).toHaveBeenCalledWith(
         expect.stringContaining("service-catalog:org-1"),
