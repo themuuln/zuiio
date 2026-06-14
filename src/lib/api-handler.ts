@@ -7,6 +7,7 @@ import {
 } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import { mutationRateLimiter } from "@/lib/rate-limit";
+import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import {
   type PermissionAction,
   requirePermission,
@@ -39,6 +40,8 @@ interface RouteHandlerOptions {
   requiredPermission?: { resource: string; action: PermissionAction };
   /** Apply mutation rate limiting (60 req/min) to this route */
   rateLimit?: boolean;
+  /** Require an active subscription for this route */
+  subscription?: boolean;
 }
 
 // ── Route Handler Factory ─────────────────────────────────────
@@ -122,6 +125,11 @@ export function createRouteHandler(
             },
           );
         }
+      }
+
+      // Check active subscription
+      if (options?.subscription && orgId) {
+        await requireActiveSubscription(orgId);
       }
 
       const response = await handler({
