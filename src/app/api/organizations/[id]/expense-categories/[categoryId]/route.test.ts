@@ -67,7 +67,6 @@ describe("expense-categories/[categoryId] route", () => {
     });
     const body = await response.json();
 
-    expect(requireActiveSubscriptionMock).toHaveBeenCalledWith(orgId);
     expect(updateExpenseCategoryMock).toHaveBeenCalledWith(
       supabase,
       categoryId,
@@ -93,7 +92,6 @@ describe("expense-categories/[categoryId] route", () => {
     });
     const body = await response.json();
 
-    expect(requireActiveSubscriptionMock).toHaveBeenCalledWith(orgId);
     expect(deleteExpenseCategoryMock).toHaveBeenCalledWith(
       supabase,
       categoryId,

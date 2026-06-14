@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import type { z } from "zod";
 import { createRouteHandler } from "@/lib/api-handler";
-import { mutationRateLimiter } from "@/lib/rate-limit";
 import {
   getRefundStats,
   getRefunds,
   recordRefund,
 } from "@/lib/services/refund-service";
-import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import { recordRefundSchema } from "@/lib/validation/refunds";
 
 function validate<T>(schema: z.ZodSchema<T>, data: unknown): T {
@@ -59,23 +57,6 @@ export const GET = createRouteHandler(
 
 export const POST = createRouteHandler(
   async ({ request, orgId, supabase }) => {
-    await requireActiveSubscription(orgId);
-    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-    const rateCheck = await mutationRateLimiter.check(ip);
-    if (!rateCheck.allowed) {
-      return NextResponse.json(
-        { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": String(
-              Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
-            ),
-          },
-        },
-      );
-    }
-
     const body = await request.json();
     const params = validate(recordRefundSchema, body);
 
@@ -89,5 +70,9 @@ export const POST = createRouteHandler(
 
     return NextResponse.json({ data: refunds }, { status: 201 });
   },
-  { requiredPermission: { resource: "refunds", action: "create" } },
+  {
+    rateLimit: true,
+    subscription: true,
+    requiredPermission: { resource: "refunds", action: "create" },
+  },
 );

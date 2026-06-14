@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
-import { mutationRateLimiter } from "@/lib/rate-limit";
 import {
   deleteAppointment,
   getAppointment,
@@ -23,21 +22,6 @@ export const GET = createRouteHandler(
 
 export const PATCH = createRouteHandler(
   async ({ request, params, supabase }) => {
-    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-    const rateCheck = await mutationRateLimiter.check(ip);
-    if (!rateCheck.allowed) {
-      return NextResponse.json(
-        { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": String(
-              Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
-            ),
-          },
-        },
-      );
-    }
     const body = await request.json();
     const appointment = await updateAppointment(
       supabase,
@@ -47,31 +31,18 @@ export const PATCH = createRouteHandler(
     return NextResponse.json({ data: appointment });
   },
   {
+    rateLimit: true,
     requiredPermission: { resource: "customers", action: "update" },
   },
 );
 
 export const DELETE = createRouteHandler(
   async ({ request, params, supabase }) => {
-    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-    const rateCheck = await mutationRateLimiter.check(ip);
-    if (!rateCheck.allowed) {
-      return NextResponse.json(
-        { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": String(
-              Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
-            ),
-          },
-        },
-      );
-    }
     await deleteAppointment(supabase, params.appointmentId);
     return NextResponse.json({ data: null });
   },
   {
+    rateLimit: true,
     requiredPermission: { resource: "customers", action: "delete" },
   },
 );

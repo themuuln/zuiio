@@ -80,7 +80,6 @@ describe("organizations/[id]/invites route", () => {
     });
     const body = await response.json();
 
-    expect(requireActiveSubscriptionMock).toHaveBeenCalledWith(orgId);
     expect(createInviteMock).toHaveBeenCalledWith(
       supabase,
       orgId,
@@ -108,7 +107,6 @@ describe("organizations/[id]/invites route", () => {
     });
     const body = await response.json();
 
-    expect(requireActiveSubscriptionMock).toHaveBeenCalledWith(orgId);
     expect(resendInviteMock).toHaveBeenCalledWith(supabase, orgId, "invite-1");
     expect(body.success).toBe(true);
   });
@@ -131,7 +129,6 @@ describe("organizations/[id]/invites route", () => {
     });
     const body = await response.json();
 
-    expect(requireActiveSubscriptionMock).toHaveBeenCalledWith(orgId);
     expect(cancelInviteMock).toHaveBeenCalledWith(supabase, orgId, "invite-1");
     expect(body.success).toBe(true);
   });

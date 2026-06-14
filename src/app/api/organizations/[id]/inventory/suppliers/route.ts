@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
-import { mutationRateLimiter } from "@/lib/rate-limit";
 import {
   createSupplier,
   deleteSupplier,
   getSuppliers,
   updateSupplier,
 } from "@/lib/services/supplier-service";
-import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 export const GET = createRouteHandler(
   async ({ orgId, supabase }) => {
@@ -19,47 +17,19 @@ export const GET = createRouteHandler(
 
 export const POST = createRouteHandler(
   async ({ request, orgId, user, supabase }) => {
-    await requireActiveSubscription(orgId);
-    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-    const rateCheck = await mutationRateLimiter.check(ip);
-    if (!rateCheck.allowed) {
-      return NextResponse.json(
-        { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": String(
-              Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
-            ),
-          },
-        },
-      );
-    }
     const body = await request.json();
     const supplier = await createSupplier(supabase, orgId, body, user.id);
     return NextResponse.json({ data: supplier }, { status: 201 });
   },
-  { requiredPermission: { resource: "inventory", action: "create" } },
+  {
+    rateLimit: true,
+    subscription: true,
+    requiredPermission: { resource: "inventory", action: "create" },
+  },
 );
 
 export const PATCH = createRouteHandler(
   async ({ request, orgId, supabase }) => {
-    await requireActiveSubscription(orgId);
-    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-    const rateCheck = await mutationRateLimiter.check(ip);
-    if (!rateCheck.allowed) {
-      return NextResponse.json(
-        { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": String(
-              Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
-            ),
-          },
-        },
-      );
-    }
     const { searchParams } = new URL(request.url);
     const itemId = searchParams.get("supplierId") ?? searchParams.get("id");
     if (!itemId) {
@@ -72,26 +42,11 @@ export const PATCH = createRouteHandler(
     const supplier = await updateSupplier(supabase, itemId, orgId, body);
     return NextResponse.json({ data: supplier });
   },
+  { rateLimit: true, subscription: true },
 );
 
 export const DELETE = createRouteHandler(
   async ({ request, orgId, supabase }) => {
-    await requireActiveSubscription(orgId);
-    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-    const rateCheck = await mutationRateLimiter.check(ip);
-    if (!rateCheck.allowed) {
-      return NextResponse.json(
-        { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": String(
-              Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
-            ),
-          },
-        },
-      );
-    }
     const { searchParams } = new URL(request.url);
     const itemId = searchParams.get("supplierId") ?? searchParams.get("id");
     if (!itemId) {
@@ -103,4 +58,5 @@ export const DELETE = createRouteHandler(
     await deleteSupplier(supabase, itemId, orgId);
     return NextResponse.json({ data: { success: true } });
   },
+  { rateLimit: true, subscription: true },
 );

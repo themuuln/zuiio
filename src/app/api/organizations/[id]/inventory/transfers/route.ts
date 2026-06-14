@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
-import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import { createTransfer, getTransfers } from "@/lib/services/transfer-service";
 
 export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
@@ -21,10 +20,12 @@ export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
 
 export const POST = createRouteHandler(
   async ({ request, orgId, user, supabase }) => {
-    await requireActiveSubscription(orgId);
     const body = await request.json();
     const transfer = await createTransfer(supabase, orgId, body, user.id);
     return NextResponse.json({ data: transfer }, { status: 201 });
   },
-  { requiredPermission: { resource: "inventory", action: "create" } },
+  {
+    subscription: true,
+    requiredPermission: { resource: "inventory", action: "create" },
+  },
 );

@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createRouteHandler } from "@/lib/api-handler";
 import { NotFoundError, ValidationError } from "@/lib/errors";
-import { mutationRateLimiter } from "@/lib/rate-limit";
 import {
   addInvoiceItem,
   deleteInvoice,
@@ -14,7 +13,6 @@ import {
   updateInvoiceItem,
   updateInvoiceStatus,
 } from "@/lib/services/invoice-service";
-import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 // ── Zod schemas for each PATCH action ────────────────────────
 // Zod errors are caught in the route handler and re-thrown as
@@ -80,22 +78,6 @@ export const GET = createRouteHandler(async ({ params, supabase }) => {
 
 export const PATCH = createRouteHandler(
   async ({ request, orgId, params, supabase }) => {
-    await requireActiveSubscription(orgId);
-    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-    const rateCheck = await mutationRateLimiter.check(ip);
-    if (!rateCheck.allowed) {
-      return NextResponse.json(
-        { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": String(
-              Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
-            ),
-          },
-        },
-      );
-    }
     const { invoiceId } = params;
     const body = await request.json();
 
@@ -196,28 +178,14 @@ export const PATCH = createRouteHandler(
       { status: 400 },
     );
   },
+  { rateLimit: true, subscription: true },
 );
 
 export const DELETE = createRouteHandler(
   async ({ request, orgId, params, supabase }) => {
-    await requireActiveSubscription(orgId);
-    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-    const rateCheck = await mutationRateLimiter.check(ip);
-    if (!rateCheck.allowed) {
-      return NextResponse.json(
-        { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": String(
-              Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
-            ),
-          },
-        },
-      );
-    }
     const { invoiceId } = params;
     await deleteInvoice(supabase, invoiceId, orgId);
     return NextResponse.json({ data: null });
   },
+  { rateLimit: true, subscription: true },
 );

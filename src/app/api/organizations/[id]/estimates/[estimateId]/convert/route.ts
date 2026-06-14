@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { convertEstimateToWorkOrder } from "@/lib/services/estimate-service";
-import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 /**
  * POST /api/organizations/[id]/estimates/[estimateId]/convert
@@ -12,7 +11,6 @@ import { requireActiveSubscription } from "@/lib/services/subscription-enforceme
  */
 export const POST = createRouteHandler(
   async ({ params, orgId, supabase }) => {
-    await requireActiveSubscription(orgId);
     const workOrder = await convertEstimateToWorkOrder(
       supabase,
       params.estimateId,
@@ -21,6 +19,7 @@ export const POST = createRouteHandler(
     return NextResponse.json({ data: workOrder }, { status: 201 });
   },
   {
+    subscription: true,
     requiredPermission: { resource: "work_orders", action: "create" },
   },
 );

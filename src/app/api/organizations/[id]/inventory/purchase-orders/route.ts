@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
-import { mutationRateLimiter } from "@/lib/rate-limit";
 import {
   createPurchaseOrder,
   getPurchaseOrders,
   updatePurchaseOrder,
 } from "@/lib/services/purchase-order-service";
-import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
   const { searchParams } = new URL(request.url);
@@ -23,47 +21,19 @@ export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
 
 export const POST = createRouteHandler(
   async ({ request, orgId, user, supabase }) => {
-    await requireActiveSubscription(orgId);
-    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-    const rateCheck = await mutationRateLimiter.check(ip);
-    if (!rateCheck.allowed) {
-      return NextResponse.json(
-        { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": String(
-              Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
-            ),
-          },
-        },
-      );
-    }
     const body = await request.json();
     const po = await createPurchaseOrder(supabase, orgId, body, user.id);
     return NextResponse.json({ data: po }, { status: 201 });
   },
-  { requiredPermission: { resource: "inventory", action: "create" } },
+  {
+    rateLimit: true,
+    subscription: true,
+    requiredPermission: { resource: "inventory", action: "create" },
+  },
 );
 
 export const PATCH = createRouteHandler(
   async ({ request, orgId, supabase }) => {
-    await requireActiveSubscription(orgId);
-    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-    const rateCheck = await mutationRateLimiter.check(ip);
-    if (!rateCheck.allowed) {
-      return NextResponse.json(
-        { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": String(
-              Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
-            ),
-          },
-        },
-      );
-    }
     const { searchParams } = new URL(request.url);
     const poId = searchParams.get("poId") ?? searchParams.get("id");
     if (!poId) {
@@ -76,4 +46,5 @@ export const PATCH = createRouteHandler(
     const po = await updatePurchaseOrder(supabase, poId, orgId, body);
     return NextResponse.json({ data: po });
   },
+  { rateLimit: true, subscription: true },
 );

@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { ValidationError } from "@/lib/errors";
-import { mutationRateLimiter } from "@/lib/rate-limit";
 import { receivePurchaseOrder } from "@/lib/services/inventory-service";
-import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
 export const GET = createRouteHandler(async ({ supabase, params, orgId }) => {
   const { purchaseOrderId } = params;
@@ -37,22 +35,6 @@ export const GET = createRouteHandler(async ({ supabase, params, orgId }) => {
 
 export const PATCH = createRouteHandler(
   async ({ request, supabase, params, orgId, user }) => {
-    await requireActiveSubscription(orgId);
-    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-    const rateCheck = await mutationRateLimiter.check(ip);
-    if (!rateCheck.allowed) {
-      return NextResponse.json(
-        { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": String(
-              Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
-            ),
-          },
-        },
-      );
-    }
     const { purchaseOrderId } = params;
     const body = await request.json();
 
@@ -87,32 +69,20 @@ export const PATCH = createRouteHandler(
 
     return NextResponse.json({ data: po });
   },
+  { rateLimit: true, subscription: true },
 );
 
-export const POST = createRouteHandler(async ({ request, params, orgId, supabase }) => {
-  await requireActiveSubscription(orgId);
-  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-  const rateCheck = await mutationRateLimiter.check(ip);
-  if (!rateCheck.allowed) {
-    return NextResponse.json(
-      { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-      {
-        status: 429,
-        headers: {
-          "Retry-After": String(
-            Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
-          ),
-        },
-      },
-    );
-  }
-  const { purchaseOrderId } = params;
-  const body = await request.json();
+export const POST = createRouteHandler(
+  async ({ request, params, orgId, supabase }) => {
+    const { purchaseOrderId } = params;
+    const body = await request.json();
 
-  if (body.action === "receive") {
-    const po = await receivePurchaseOrder(supabase, purchaseOrderId, orgId);
-    return NextResponse.json({ data: po });
-  }
+    if (body.action === "receive") {
+      const po = await receivePurchaseOrder(supabase, purchaseOrderId, orgId);
+      return NextResponse.json({ data: po });
+    }
 
-  throw new ValidationError("Unsupported action. Use action: 'receive'.");
-});
+    throw new ValidationError("Unsupported action. Use action: 'receive'.");
+  },
+  { rateLimit: true, subscription: true },
+);

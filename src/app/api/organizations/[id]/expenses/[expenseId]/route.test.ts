@@ -83,7 +83,6 @@ describe("expenses/[expenseId] route", () => {
     });
     const body = await response.json();
 
-    expect(requireActiveSubscriptionMock).toHaveBeenCalledWith(orgId);
     expect(updateExpenseMock).toHaveBeenCalledWith(
       supabase,
       expenseId,
@@ -109,7 +108,6 @@ describe("expenses/[expenseId] route", () => {
     });
     const body = await response.json();
 
-    expect(requireActiveSubscriptionMock).toHaveBeenCalledWith(orgId);
     expect(deleteExpenseMock).toHaveBeenCalledWith(
       supabase,
       expenseId,
