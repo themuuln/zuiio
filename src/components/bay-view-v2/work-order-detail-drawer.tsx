@@ -62,6 +62,8 @@ export function WorkOrderDetailDrawer({
   onRefresh,
   initialAction,
   branchFilter,
+  assignMechanicMutation: drawerAssignMechanicMutation,
+  assignCustomerMutation: drawerAssignCustomerMutation,
 }: WorkOrderDetailDrawerProps) {
   const t = useTranslations("bayView");
   const locale = useLocale();
@@ -167,6 +169,8 @@ export function WorkOrderDetailDrawer({
     paymentMethodFees,
     transferBanks,
     branchId: branchFilter,
+    assignMechanicMutation: drawerAssignMechanicMutation,
+    assignCustomerMutation: drawerAssignCustomerMutation,
   });
 
   // ── Local-only state ──

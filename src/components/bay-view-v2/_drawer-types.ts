@@ -84,4 +84,16 @@ export interface WorkOrderDetailDrawerProps {
   initialAction?: "add-service" | "add-part" | null;
   /** Branch filter for bay view cache key (optimistic drawer mutations) */
   branchFilter?: string;
+  /**
+   * Pre-built mutation hooks for mechanic/customer assignment.
+   * When provided, the drawer uses these instead of raw fetch().
+   */
+  assignMechanicMutation?: {
+    mutateAsync: (vars: { woId: string; mechanicId: string }) => Promise<void>;
+  };
+  assignCustomerMutation?: {
+    mutateAsync: (
+      vars: { woId: string; customerId: string | null; customerName?: string | null },
+    ) => Promise<void>;
+  };
 }

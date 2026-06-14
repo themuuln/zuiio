@@ -34,11 +34,6 @@ export class GuardedTouchSensor extends TouchSensor {
   ];
 }
 
-export interface ToastState {
-  message: string;
-  variant: "info" | "error";
-}
-
 export interface ActiveDragState {
   type: string;
   label: string;

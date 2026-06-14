@@ -23,7 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
+import { toast } from "sonner";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
 import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
@@ -70,7 +70,6 @@ import {
 import { useBayCountMutation } from "./_use-bay-count-mutation";
 import { useBayViewDialogs } from "./_use-bay-view-dialogs";
 import { useBayViewPending } from "./_use-bay-view-pending";
-import { useBayViewToast } from "./_use-bay-view-toast";
 import { AssignDialog } from "./assign-dialog";
 import { BayCardDragPreview } from "./bay-card";
 import { MechanicPanel } from "./mechanic-panel";
@@ -81,7 +80,6 @@ import { PostServiceDialog } from "./post-service-dialog";
 import { QueuePanel } from "./queue-panel";
 import { ShiftReportDialog } from "./shift-report-dialog";
 import { StatusNotesModal } from "./status-notes-modal";
-import { ToastMessage } from "./toast-message";
 import { VehicleRegistrationDialog } from "./vehicle-registration-dialog";
 import { WorkOrderDetailDrawer } from "./work-order-detail-drawer";
 
@@ -147,7 +145,6 @@ export function BayViewV2Client() {
   // ── Extracted hooks ──────────────────────────────────────────
   const dialogs = useBayViewDialogs();
   const pending = useBayViewPending();
-  const toast = useBayViewToast();
   const bayCount = useBayCountMutation({
     currentBayCount: data?.bayCount ?? 0,
     onApply: useCallback(
@@ -269,7 +266,6 @@ export function BayViewV2Client() {
       onReorderQueue: handleReorderQueue,
       markPending,
       clearPending,
-      setToast: toast.setToast,
     });
 
   function onDragStart(event: Parameters<typeof rawDragStart>[0]) {
@@ -388,13 +384,12 @@ export function BayViewV2Client() {
           postData.transferBankId,
         );
       } catch (err) {
-        toast.setToast({
-          message:
-            err instanceof Error
-              ? err.message
-              : "Ready — but payment could not be recorded",
-          variant: "error",
-        });
+        toast.dismiss();
+        toast.error(
+          err instanceof Error
+            ? err.message
+            : "Ready — but payment could not be recorded",
+        );
       }
     }
 
@@ -586,15 +581,13 @@ export function BayViewV2Client() {
     (workOrderId: string) => {
       const bay = data?.bays.find((b) => !b.workOrder);
       if (!bay) {
-        toast.setToast({
-          message: "No empty bay available",
-          variant: "error",
-        });
+        toast.dismiss();
+        toast.error("No empty bay available");
         return;
       }
       assignMutation.mutate({ workOrderId, bayNumber: bay.bayNumber });
     },
-    [data?.bays, assignMutation, toast.setToast],
+    [data?.bays, assignMutation],
   );
 
   const handleRemoveFromBay = useCallback(
@@ -643,21 +636,20 @@ export function BayViewV2Client() {
     const failed = results.filter((r) => r.status === "rejected").length;
 
     if (succeeded === readyWos.length) {
-      toast.setToast({
-        message: t("batchCompleteSuccess", { count: succeeded }),
-        variant: "info",
-      });
+      toast.dismiss();
+      toast.success(t("batchCompleteSuccess", { count: succeeded }));
     } else if (failed === readyWos.length) {
-      toast.setToast({ message: t("batchCompleteError"), variant: "error" });
+      toast.dismiss();
+      toast.error(t("batchCompleteError"));
     } else {
-      toast.setToast({
-        message: t("batchCompletePartial", {
+      toast.dismiss();
+      toast.error(
+        t("batchCompletePartial", {
           successCount: succeeded,
           totalCount: readyWos.length,
           failCount: failed,
         }),
-        variant: "error",
-      });
+      );
     }
     setBatchCompletePending(false);
     await fetchData();
@@ -879,20 +871,14 @@ export function BayViewV2Client() {
         }
 
         toast.dismiss();
-        toast.setToast({
-          message: "Mechanics reordered",
-          variant: "info",
-        });
+        toast.success("Mechanics reordered");
       } catch {
         // Rollback on failure — invalidate so fresh data is fetched
         queryClient.invalidateQueries({
           queryKey: bayViewKeys.data(branchFilter),
         });
         toast.dismiss();
-        toast.setToast({
-          message: "Failed to reorder mechanics",
-          variant: "error",
-        });
+        toast.error("Failed to reorder mechanics");
       }
     },
     [orgInfo?.orgId, branchFilter, queryClient],
@@ -1057,12 +1043,10 @@ export function BayViewV2Client() {
                       onRemoveFromBay={handleRemoveFromBay}
                       onOpenDetail={handleOpenDetail}
                       onAssignClick={handleEmptyBayClick}
-                      onNoEmptyBays={() =>
-                        toast.setToast({
-                          message: "No empty bays available",
-                          variant: "error",
-                        })
-                      }
+                      onNoEmptyBays={() => {
+                        toast.dismiss();
+                        toast.error("No empty bays available");
+                      }}
                       onQueueItemClick={handleQueueItemClick}
                       onRemoveHelper={handleRemoveHelper}
                       t={t}
@@ -1082,12 +1066,10 @@ export function BayViewV2Client() {
                   onRemoveFromBay={handleRemoveFromBay}
                   onOpenDetail={handleOpenDetail}
                   onAssignClick={handleEmptyBayClick}
-                  onNoEmptyBays={() =>
-                    toast.setToast({
-                      message: "No empty bays available",
-                      variant: "error",
-                    })
-                  }
+                  onNoEmptyBays={() => {
+                        toast.dismiss();
+                        toast.error("No empty bays available");
+                      }}
                   onQueueItemClick={handleQueueItemClick}
                   onRemoveHelper={handleRemoveHelper}
                   t={t}
@@ -1260,6 +1242,8 @@ export function BayViewV2Client() {
           onRefresh={fetchData}
           initialAction={drawerInitialAction}
           branchFilter={branchFilter}
+          assignMechanicMutation={assignMechanicMutation}
+          assignCustomerMutation={assignCustomerMutation}
         />
       </ErrorBoundary>
 
@@ -1275,33 +1259,24 @@ export function BayViewV2Client() {
         }}
         onQueued={() => {
           dialogs.hide("vehicleReg");
-          toast.setToast({
-            message: "Added to waiting queue",
-            variant: "info",
-          });
+          toast.dismiss();
+          toast.success("Added to waiting queue");
           void fetchData();
         }}
         onAssigned={() => {
           dialogs.hide("vehicleReg");
           setDirectAssignBayNumber(null);
-          toast.setToast({
-            message: t("assignedDirectlyToBay", {
+          toast.dismiss();
+          toast.success(
+            t("assignedDirectlyToBay", {
               bayNumber: directAssignBayNumber ?? 0,
             }),
-            variant: "info",
-          });
+          );
           void fetchData();
         }}
         assignBayNumber={directAssignBayNumber ?? undefined}
         branchId={branchFilter}
       />
-      {toast.toast && (
-        <ToastMessage
-          message={toast.toast.message}
-          variant={toast.toast.variant}
-          onDismiss={toast.dismiss}
-        />
-      )}
     </DndContext>
   );
 }

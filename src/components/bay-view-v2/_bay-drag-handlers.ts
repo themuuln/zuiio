@@ -2,14 +2,10 @@
 
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
+import { toast } from "sonner";
 import { reportServerError } from "@/lib/sentry-report-server";
 import type { BaySlotData, BayViewData } from "@/lib/services/bay-view-service";
 import type { Vehicle, WorkOrder } from "@/lib/types";
-
-interface ToastState {
-  message: string;
-  variant: "info" | "error";
-}
 
 interface UseBayDragHandlersParams {
   data: BayViewData | null;
@@ -40,7 +36,6 @@ interface UseBayDragHandlersParams {
   ) => Promise<void>;
   markPending: (...ids: string[]) => void;
   clearPending: (...ids: string[]) => void;
-  setToast: React.Dispatch<React.SetStateAction<ToastState | null>>;
 }
 
 export function useBayDragHandlers({
@@ -56,7 +51,6 @@ export function useBayDragHandlers({
   onReorderQueue,
   markPending,
   clearPending,
-  setToast,
 }: UseBayDragHandlersParams) {
   function handleDragStart(event: DragStartEvent) {
     const { active } = event;
@@ -123,10 +117,8 @@ export function useBayDragHandlers({
         markPending(woId, targetWo.id);
         onSwapBays(woId, currentBay.bayNumber, targetWo.id, bayNumber)
           .catch((err) => {
-            setToast({
-              message: `Swap failed: ${err instanceof Error ? err.message : "Unknown error"}`,
-              variant: "error",
-            });
+            toast.dismiss();
+            toast.error(`Swap failed: ${err instanceof Error ? err.message : "Unknown error"}`);
           })
           .finally(() => {
             clearPending(woId, targetWo.id);
@@ -158,10 +150,8 @@ export function useBayDragHandlers({
         const bay = data?.bays.find((b) => b.bayNumber === bayNumber);
         targetWoId = bay?.workOrder?.id ?? null;
         if (!targetWoId) {
-          setToast({
-            message: "Drop the vehicle here first, then assign a mechanic.",
-            variant: "info",
-          });
+          toast.dismiss();
+          toast("Drop the vehicle here first, then assign a mechanic.");
           return;
         }
       } else if (overId.startsWith("vehicle-")) {
@@ -219,11 +209,8 @@ export function useBayDragHandlers({
           const bayNumber = Number.parseInt(overId.replace("bay-", ""), 10);
           const bay = data?.bays.find((b) => b.bayNumber === bayNumber);
           if (!bay?.workOrder) {
-            setToast({
-              message:
-                "Drop the vehicle here first, then reassign the mechanic.",
-              variant: "info",
-            });
+            toast.dismiss();
+            toast("Drop the vehicle here first, then reassign the mechanic.");
             return null;
           }
           return bay.workOrder.id !== currentWoId ? bay.workOrder.id : null;
@@ -273,10 +260,8 @@ export function useBayDragHandlers({
         // Fire reorder in background
         onReorderQueue(updates).catch((err) => {
           reportServerError("Re-order failed:", err);
-          setToast({
-            message: "Re-order failed — please try again",
-            variant: "error",
-          });
+          toast.dismiss();
+          toast.error("Re-order failed — please try again");
         });
       }
       return;
