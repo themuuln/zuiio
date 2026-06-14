@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createAuditLog } from "@/lib/audit";
+import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/server";
 import { createMockSupabaseClient } from "@/test/mocks/supabase";
 import {
@@ -71,7 +72,7 @@ describe("createCustomer", () => {
       error: null,
     });
 
-    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const warnSpy = vi.spyOn(logger, "warn").mockImplementation(() => {});
 
     const result = await createCustomer(
       mockClient,
@@ -81,10 +82,11 @@ describe("createCustomer", () => {
     );
 
     expect(result.first_name).toBe("Dul");
-    expect(consoleSpy).toHaveBeenCalledWith(
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.any(Object),
       expect.stringContaining("99112233"),
     );
-    consoleSpy.mockRestore();
+    warnSpy.mockRestore();
   });
 
   it("validates that at least one identifying field is required", async () => {
@@ -131,7 +133,7 @@ describe("getCustomer", () => {
 
     await expect(
       getCustomer(mockClient, "nonexistent", "org-1"),
-    ).rejects.toThrow("Customer not found");
+    ).rejects.toThrow("customers not found");
   });
 });
 
@@ -350,7 +352,7 @@ describe("updateCustomer", () => {
         { firstName: "Test" },
         "user-1",
       ),
-    ).rejects.toThrow("Customer not found");
+    ).rejects.toThrow("customers not found");
   });
 
   it("throws ValidationError when only updated_by is set", async () => {
@@ -478,7 +480,7 @@ describe("deleteCustomer", () => {
 
     await expect(
       deleteCustomer(mockClient, "nonexistent", "org-1", "user-1"),
-    ).rejects.toThrow("Customer not found");
+    ).rejects.toThrow("customers not found");
   });
 
   it("creates audit log for soft_delete", async () => {

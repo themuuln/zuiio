@@ -724,7 +724,8 @@ describe("expense-service", () => {
   // ── deleteExpenseCategory ─────────────────────────
   describe("deleteExpenseCategory", () => {
     it("soft-deletes a category", async () => {
-      db.__qb.resolveWith({ data: null, error: null });
+      // Factory softDelete fetches existing first via .single()
+      db.__qb.resolveWith({ data: { id: "cat-1" }, error: null });
 
       await deleteExpenseCategory(
         db as unknown as SupabaseClient,
@@ -737,17 +738,18 @@ describe("expense-service", () => {
       expect(revalidateTag).toHaveBeenCalled();
     });
 
-    it("does not throw on update error (service ignores it)", async () => {
-      // deleteExpenseCategory doesn't check the error — it just calls update
-      // and revalidates. So this should NOT throw.
-      await deleteExpenseCategory(
-        db as unknown as SupabaseClient,
-        "cat-missing",
-        "org-1",
-        "user-1",
-      );
+    it("throws NotFoundError when category does not exist", async () => {
+      // Factory softDelete checks existence and throws NotFoundError
+      db.__qb.resolveWith({ data: null, error: null });
 
-      expect(db.from("expense_categories").update).toHaveBeenCalled();
+      await expect(
+        deleteExpenseCategory(
+          db as unknown as SupabaseClient,
+          "cat-missing",
+          "org-1",
+          "user-1",
+        ),
+      ).rejects.toThrow("expense_categories not found");
     });
   });
 });

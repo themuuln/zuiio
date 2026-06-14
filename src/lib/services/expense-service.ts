@@ -15,7 +15,76 @@ import type {
   UpdateExpenseParams,
 } from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
+import { createCrudService } from "./create-crud-service";
 import { trimField } from "./trim-field";
+
+// ── Factory for expense_categories ──────────────────────────────
+
+const categoryCrud = createCrudService<
+  ExpenseCategory,
+  CreateExpenseCategoryParams,
+  UpdateExpenseCategoryParams
+>({
+  tableName: "expense_categories",
+  selectColumns:
+    "id, organization_id, name, description, color, icon, sort_order, is_active, created_at, updated_at, deleted_at",
+  selectColumnsById:
+    "id, organization_id, name, description, color, icon, sort_order, is_active, created_by, updated_by, created_at, updated_at",
+  cacheTagKey: (orgId: string) => cacheTags.expenseCategories(orgId),
+  fieldMap: {
+    columns: {
+      name: "name",
+      description: "description",
+      color: "color",
+      icon: "icon",
+      sortOrder: "sort_order",
+      isActive: "is_active",
+    },
+    transforms: {
+      name: trimField,
+      description: trimField,
+    },
+  },
+  orderBy: { column: "sort_order", direction: "asc" },
+  hooks: {
+    beforeCreate: async (params, ctx) => {
+      if (!params.name?.trim()) {
+        throw new ValidationError("Category name is required");
+      }
+      // Check for duplicate
+      const { data: existing } = await ctx.db
+        .from("expense_categories")
+        .select("id")
+        .eq("organization_id", ctx.orgId)
+        .eq("name", params.name.trim())
+        .is("deleted_at", null)
+        .maybeSingle();
+      if (existing) {
+        throw new ConflictError("A category with this name already exists");
+      }
+      return {
+        name: params.name.trim(),
+        description: params.description?.trim() ?? null,
+        color: params.color ?? "#6b7280",
+        icon: params.icon ?? "receipt",
+        sort_order: params.sortOrder ?? 0,
+      } as Partial<CreateExpenseCategoryParams>;
+    },
+  },
+});
+
+// ── Factory for expenses ───────────────────────────────────────
+
+const expenseCrud = createCrudService<
+  Expense,
+  CreateExpenseParams,
+  UpdateExpenseParams
+>({
+  tableName: "expenses",
+  selectColumns:
+    "id, organization_id, branch_id, category_id, vendor_name, description, amount, tax_amount, expense_date, due_date, paid_at, payment_method, reference_number, receipt_url, notes, is_recurring, recurrence_interval, created_by, updated_by, created_at, updated_at",
+  cacheTagKey: (orgId: string) => cacheTags.expenses(orgId),
+});
 
 const expenseFieldMap: FieldMap<UpdateExpenseParams> = {
   columns: {
@@ -41,21 +110,6 @@ const expenseFieldMap: FieldMap<UpdateExpenseParams> = {
     notes: trimField,
     paymentMethod: (v) => (v as string) || null,
     recurrenceInterval: (v) => (v as string) || null,
-  },
-};
-
-const expenseCategoryFieldMap: FieldMap<UpdateExpenseCategoryParams> = {
-  columns: {
-    name: "name",
-    description: "description",
-    color: "color",
-    icon: "icon",
-    sortOrder: "sort_order",
-    isActive: "is_active",
-  },
-  transforms: {
-    name: trimField,
-    description: trimField,
   },
 };
 
@@ -474,35 +528,7 @@ export async function deleteExpense(
   orgId: string,
   userId: string,
 ): Promise<void> {
-  const supabase = db;
-  const { data: existing } = await supabase
-    .from("expenses")
-    .select("id")
-    .eq("id", id)
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .single();
-
-  if (!existing) throw new NotFoundError("Expense not found");
-
-  const { error } = await supabase
-    .from("expenses")
-    .update({ deleted_at: new Date().toISOString(), updated_by: userId })
-    .eq("id", id)
-    .eq("organization_id", orgId);
-
-  if (error) throw new Error(error.message);
-
-  await createAuditLog({
-    supabase,
-    action: "soft_delete",
-    table_name: "expenses",
-    record_id: id,
-    user_id: userId,
-    organization_id: orgId,
-  });
-
-  revalidateTag(cacheTags.expenses(orgId), "max");
+  await expenseCrud.softDelete(db, orgId, id, userId);
 }
 
 // ── Get expense categories ─────────────────────────
@@ -510,18 +536,8 @@ export async function getExpenseCategories(
   db: SupabaseClient,
   orgId: string,
 ): Promise<ExpenseCategory[]> {
-  const supabase = db;
-  const { data, error } = await supabase
-    .from("expense_categories")
-    .select(
-      "id, organization_id, name, description, color, icon, sort_order, is_active, created_at, updated_at, deleted_at",
-    )
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .order("sort_order", { ascending: true });
-
-  if (error) throw new Error(error.message);
-  return (data ?? []) as unknown as ExpenseCategory[];
+  const result = await categoryCrud.getAll(db, orgId, { pageSize: 1000 });
+  return result.data;
 }
 
 // ── Create expense category ────────────────────────
@@ -531,49 +547,7 @@ export async function createExpenseCategory(
   params: CreateExpenseCategoryParams,
   userId: string,
 ): Promise<ExpenseCategory> {
-  if (!params.name?.trim()) {
-    throw new ValidationError("Category name is required");
-  }
-
-  const supabase = db;
-
-  // Check for duplicate
-  const { data: existing } = await supabase
-    .from("expense_categories")
-    .select("id")
-    .eq("organization_id", orgId)
-    .eq("name", params.name.trim())
-    .is("deleted_at", null)
-    .maybeSingle();
-
-  if (existing) {
-    throw new ConflictError("A category with this name already exists");
-  }
-
-  const { data, error } = await supabase
-    .from("expense_categories")
-    .insert({
-      organization_id: orgId,
-      name: params.name.trim(),
-      description: params.description?.trim() || null,
-      color: params.color ?? "#6b7280",
-      icon: params.icon ?? "receipt",
-      sort_order: params.sortOrder ?? 0,
-      created_by: userId,
-      updated_by: userId,
-    })
-    .select(
-      "id, organization_id, name, description, color, icon, sort_order, is_active, created_by, updated_by, created_at, updated_at",
-    )
-    .single();
-
-  if (error || !data) {
-    throw new Error(error?.message ?? "Failed to create category");
-  }
-
-  revalidateTag(cacheTags.expenseCategories(orgId), "max");
-
-  return data;
+  return categoryCrud.create(db, orgId, params, userId);
 }
 
 // ── Update expense category ────────────────────────
@@ -584,32 +558,7 @@ export async function updateExpenseCategory(
   params: UpdateExpenseCategoryParams,
   userId: string,
 ): Promise<ExpenseCategory> {
-  const supabase = db;
-  const updates = buildUpdates(params, expenseCategoryFieldMap);
-  updates.updated_by = userId;
-
-  if (Object.keys(updates).length <= 1) {
-    throw new ValidationError("No fields to update");
-  }
-
-  const { data, error } = await supabase
-    .from("expense_categories")
-    .update(updates)
-    .eq("id", id)
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .select(
-      "id, organization_id, name, description, color, icon, sort_order, is_active, created_by, updated_by, created_at, updated_at",
-    )
-    .single();
-
-  if (error || !data) {
-    throw new NotFoundError("Category not found");
-  }
-
-  revalidateTag(cacheTags.expenseCategories(orgId), "max");
-
-  return data;
+  return categoryCrud.update(db, orgId, id, params, userId);
 }
 
 // ── Delete expense category (soft) ─────────────────
@@ -619,14 +568,5 @@ export async function deleteExpenseCategory(
   orgId: string,
   userId: string,
 ): Promise<void> {
-  const supabase = db;
-  const { error } = await supabase
-    .from("expense_categories")
-    .update({ deleted_at: new Date().toISOString(), updated_by: userId })
-    .eq("id", id)
-    .eq("organization_id", orgId);
-
-  if (error) throw new NotFoundError("Category not found");
-
-  revalidateTag(cacheTags.expenseCategories(orgId), "max");
+  await categoryCrud.softDelete(db, orgId, id, userId);
 }

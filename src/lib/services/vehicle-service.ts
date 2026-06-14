@@ -18,9 +18,35 @@ import type {
   WorkOrder,
 } from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
+import { createCrudService } from "./create-crud-service";
 import { trimField } from "./trim-field";
 
 import { ensureVehicleModel } from "./vehicle-models-service";
+
+// ── Factory-backed CRUD ───────────────────────────────────────
+
+const crud = createCrudService<
+  Vehicle,
+  CreateVehicleParams,
+  UpdateVehicleParams
+>({
+  tableName: "vehicles",
+  selectColumns:
+    "id, organization_id, branch_id, plate_number, make, model, year, color, vin, odometer, fuel_type, transmission, category, next_service_at, created_at, deleted_at",
+  cacheTagKey: (orgId: string) => cacheTags.vehicles(orgId),
+  hooks: {
+    // Plate search support via onQuery hook
+    onQuery: (query, options) => {
+      const search = options?.search as string | undefined;
+      if (search?.trim()) {
+        const term = `%${search.trim()}%`;
+        // biome-ignore lint/suspicious/noExplicitAny: factory hook type is PostgrestQueryBuilder lacking or()
+        return (query as any).or(`plate_number.ilike.${term},vin.ilike.${term}`);
+      }
+      return query;
+    },
+  },
+});
 
 /**
  * Lists all vehicles for an organization with optional filtering.
@@ -414,37 +440,7 @@ export async function deleteVehicle(
   orgId: string,
   userId: string,
 ): Promise<void> {
-  const supabase = db;
-  const { data: existing } = await supabase
-    .from("vehicles")
-    .select("id")
-    .eq("id", id)
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .single();
-
-  if (!existing) {
-    throw new NotFoundError("Vehicle not found");
-  }
-
-  const { error } = await supabase
-    .from("vehicles")
-    .update({ deleted_at: new Date().toISOString(), updated_by: userId })
-    .eq("id", id)
-    .eq("organization_id", orgId);
-
-  if (error) throw new Error(error.message);
-
-  await createAuditLog({
-    supabase,
-    action: "soft_delete",
-    table_name: "vehicles",
-    record_id: id,
-    user_id: userId,
-    organization_id: orgId,
-  });
-
-  revalidateTag(cacheTags.vehicles(orgId), "max");
+  await crud.softDelete(db, orgId, id, userId);
 }
 
 /**
