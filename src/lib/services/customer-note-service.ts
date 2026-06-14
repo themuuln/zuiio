@@ -1,9 +1,44 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
-import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
-import { NotFoundError } from "@/lib/errors";
 import type { CreateCustomerNoteParams, CustomerNote } from "@/lib/types";
+import { createCrudService } from "./create-crud-service";
+
+// ── Factory-backed CRUD ───────────────────────────────────────
+
+const crud = createCrudService<
+  CustomerNote,
+  CreateCustomerNoteParams,
+  Record<string, never>
+>({
+  tableName: "customer_notes",
+  selectColumns:
+    "id, organization_id, customer_id, content, type, created_by, created_at, updated_at",
+  cacheTagKey: (orgId: string) => `customer-notes:${orgId}`,
+  orderBy: { column: "created_at", direction: "desc" },
+  hooks: {
+    beforeCreate: async (params) => {
+      return {
+        content: params.content?.trim(),
+        type: params.type ?? "general",
+      } as Partial<CreateCustomerNoteParams>;
+    },
+    onQuery: (query, options) => {
+      if (options?.customerId) {
+        return (query as any).eq("customer_id", options.customerId);
+      }
+      return query;
+    },
+    afterCreate: async (result, ctx) => {
+      const note = result as unknown as { customer_id: string };
+      if (note.customer_id) {
+        revalidateTag(cacheTags.customerNotes(ctx.orgId, note.customer_id), "max");
+      }
+    },
+  },
+});
+
+// ── Backward-compatible wrappers ──────────────────────────────
 
 /**
  * Lists notes for a customer, ordered by created_at DESC.
@@ -13,20 +48,8 @@ export async function getCustomerNotes(
   orgId: string,
   customerId: string,
 ): Promise<CustomerNote[]> {
-  const supabase = db;
-
-  const { data, error } = await supabase
-    .from("customer_notes")
-    .select(
-      "id, organization_id, customer_id, content, type, created_by, created_at, updated_at, deleted_at",
-    )
-    .eq("organization_id", orgId)
-    .eq("customer_id", customerId)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
-
-  if (error) throw new Error(error.message);
-  return data ?? [];
+  const result = await crud.getAll(db, orgId, { customerId, pageSize: 1000 });
+  return result.data;
 }
 
 /**
@@ -39,40 +62,14 @@ export async function createCustomerNote(
   params: CreateCustomerNoteParams,
   userId: string,
 ): Promise<CustomerNote> {
-  const supabase = db;
-
-  const { data, error } = await supabase
-    .from("customer_notes")
-    .insert({
-      organization_id: orgId,
-      customer_id: customerId,
-      content: params.content.trim(),
-      type: params.type ?? "general",
-      created_by: userId,
-    })
-    .select(
-      "id, organization_id, customer_id, content, type, created_by, created_at, updated_at",
-    )
-    .single();
-
-  if (error || !data) {
-    throw new Error(error?.message ?? "Failed to create customer note");
-  }
-
-  // Audit log
-  await createAuditLog({
-    supabase,
-    action: "create",
-    table_name: "customer_notes",
-    record_id: data.id,
-    user_id: userId,
-    organization_id: orgId,
-    new_data: data as unknown as unknown as Record<string, unknown>,
-  });
-
+  const result = await crud.create(
+    db,
+    orgId,
+    { ...params, customer_id: customerId } as CreateCustomerNoteParams,
+    userId,
+  );
   revalidateTag(cacheTags.customerNotes(orgId, customerId), "max");
-
-  return data as unknown as CustomerNote;
+  return result;
 }
 
 /**
@@ -85,37 +82,6 @@ export async function deleteCustomerNote(
   noteId: string,
   userId: string,
 ): Promise<void> {
-  const supabase = db;
-
-  const { data: existing } = await supabase
-    .from("customer_notes")
-    .select("id")
-    .eq("id", noteId)
-    .eq("organization_id", orgId)
-    .eq("customer_id", customerId)
-    .is("deleted_at", null)
-    .single();
-
-  if (!existing) {
-    throw new NotFoundError("Customer note not found");
-  }
-
-  const { error } = await supabase
-    .from("customer_notes")
-    .update({ deleted_at: new Date().toISOString() })
-    .eq("id", noteId)
-    .eq("organization_id", orgId);
-
-  if (error) throw new Error(error.message);
-
-  await createAuditLog({
-    supabase,
-    action: "soft_delete",
-    table_name: "customer_notes",
-    record_id: noteId,
-    user_id: userId,
-    organization_id: orgId,
-  });
-
+  await crud.softDelete(db, orgId, noteId, userId);
   revalidateTag(cacheTags.customerNotes(orgId, customerId), "max");
 }

@@ -15,6 +15,9 @@ vi.mock("@/lib/cache/with-cache", () => ({
   withCache: vi.fn((_key: unknown, fn: () => unknown) => fn()),
 }));
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
+vi.mock("@/lib/audit", () => ({
+  createAuditLog: vi.fn().mockResolvedValue({ success: true, id: "audit-1" }),
+}));
 
 function makeBuilder<T = unknown>(data?: T) {
   const resolved = { data: data ?? null, error: null };
@@ -111,7 +114,8 @@ describe("updateBranch", () => {
 
 describe("deleteBranch", () => {
   it("soft deletes and revalidates", async () => {
-    const builder = makeBuilder();
+    // Factory's softDelete prefetches the record, so single() must return data
+    const builder = makeBuilder({ id: "b-1" });
     builder.then = vi.fn((resolve: (v: unknown) => void) =>
       resolve({ data: null, error: null }),
     );

@@ -10,6 +10,11 @@ import {
   updateFollowup,
 } from "./followup-service";
 
+vi.mock("@/lib/audit", () => ({
+  createAuditLog: vi.fn().mockResolvedValue({ success: true, id: "audit-1" }),
+}));
+vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
+
 function mockDb(overrides: Record<string, unknown> = {}) {
   const chain: Record<string, unknown> = {
     select: vi.fn().mockReturnThis(),
@@ -137,10 +142,12 @@ describe("FollowupService", () => {
       });
 
       expect(result).toEqual({ id: "f1" });
-      expect(db.from().update).toHaveBeenCalledWith({
-        subject: "Updated subject",
-        notes: "Updated notes",
-      });
+      expect(db.from().update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subject: "Updated subject",
+          notes: "Updated notes",
+        }),
+      );
     });
   });
 

@@ -1,29 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
-import { NotFoundError } from "@/lib/errors";
 import type { WorkOrderAttachment } from "@/lib/types";
+import { createCrudService } from "./create-crud-service";
 
-export async function getAttachments(
-  db: SupabaseClient,
-  orgId: string,
-  workOrderId: string,
-): Promise<WorkOrderAttachment[]> {
-  const supabase = db;
-
-  const { data, error } = await supabase
-    .from("work_order_attachments")
-    .select(
-      "id, organization_id, work_order_id, file_name, file_size, mime_type, storage_path, public_url, file_type, uploaded_by, created_at, deleted_at",
-    )
-    .eq("organization_id", orgId)
-    .eq("work_order_id", workOrderId)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
-
-  if (error) throw new Error(error.message ?? "Failed to fetch attachments");
-  return (data ?? []) as WorkOrderAttachment[];
-}
+// ── Types ──────────────────────────────────────────────────────
 
 export interface CreateAttachmentParams {
   file_name: string;
@@ -34,39 +15,65 @@ export interface CreateAttachmentParams {
   file_type: "photo" | "document" | "other";
 }
 
+// ── Factory-backed CRUD ───────────────────────────────────────
+
+const crud = createCrudService<
+  WorkOrderAttachment,
+  CreateAttachmentParams,
+  Record<string, never>
+>({
+  tableName: "work_order_attachments",
+  selectColumns:
+    "id, organization_id, work_order_id, file_name, file_size, mime_type, storage_path, public_url, file_type, uploaded_by, created_at, deleted_at",
+  cacheTagKey: () => "work-order-attachments",
+  orderBy: { column: "created_at", direction: "desc" },
+  hooks: {
+    onQuery: (query, options) => {
+      if (options?.workOrderId) {
+        return (query as any).eq("work_order_id", options.workOrderId);
+      }
+      return query;
+    },
+    afterCreate: async (result) => {
+      const attachment = result as unknown as { work_order_id: string };
+      if (attachment.work_order_id) {
+        revalidateTag(cacheTags.workOrderAttachments(attachment.work_order_id), "max");
+      }
+    },
+    beforeCreate: async (params) => {
+      return {
+        public_url: params.public_url ?? null,
+      } as Partial<CreateAttachmentParams>;
+    },
+  },
+});
+
+// ── Backward-compatible wrappers ──────────────────────────────
+
+export async function getAttachments(
+  db: SupabaseClient,
+  orgId: string,
+  workOrderId: string,
+): Promise<WorkOrderAttachment[]> {
+  const result = await crud.getAll(db, orgId, { workOrderId, pageSize: 1000 });
+  return result.data;
+}
+
 export async function createAttachment(
   db: SupabaseClient,
   orgId: string,
   workOrderId: string,
   params: CreateAttachmentParams,
 ): Promise<WorkOrderAttachment> {
-  const supabase = db;
-  const userId = (await supabase.auth.getUser()).data.user?.id;
-
-  const { data, error } = await supabase
-    .from("work_order_attachments")
-    .insert({
-      organization_id: orgId,
-      work_order_id: workOrderId,
-      file_name: params.file_name,
-      file_size: params.file_size,
-      mime_type: params.mime_type,
-      storage_path: params.storage_path,
-      public_url: params.public_url ?? null,
-      file_type: params.file_type,
-      uploaded_by: userId,
-    })
-    .select(
-      "id, organization_id, work_order_id, file_name, file_size, mime_type, storage_path, public_url, file_type, uploaded_by, created_at, deleted_at",
-    )
-    .single();
-
-  if (error || !data)
-    throw new Error(error?.message ?? "Failed to create attachment");
-
+  const userId = (await db.auth.getUser()).data.user?.id;
+  const result = await crud.create(
+    db,
+    orgId,
+    { ...params, work_order_id: workOrderId } as CreateAttachmentParams,
+    userId ?? "",
+  );
   revalidateTag(cacheTags.workOrderAttachments(workOrderId), "max");
-
-  return data as unknown as WorkOrderAttachment;
+  return result;
 }
 
 export async function deleteAttachment(
@@ -75,18 +82,7 @@ export async function deleteAttachment(
   workOrderId: string,
   attachmentId: string,
 ): Promise<void> {
-  const supabase = db;
-  const deletedAt = new Date().toISOString();
-
-  const { error } = await supabase
-    .from("work_order_attachments")
-    .update({ deleted_at: deletedAt })
-    .eq("id", attachmentId)
-    .eq("organization_id", orgId)
-    .eq("work_order_id", workOrderId)
-    .is("deleted_at", null);
-
-  if (error) throw new NotFoundError("Attachment not found");
-
+  const userId = (await db.auth.getUser()).data.user?.id;
+  await crud.softDelete(db, orgId, attachmentId, userId ?? "");
   revalidateTag(cacheTags.workOrderAttachments(workOrderId), "max");
 }

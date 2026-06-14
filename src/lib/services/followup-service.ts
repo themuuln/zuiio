@@ -1,5 +1,57 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { cacheTags } from "@/lib/cache/keys";
 import type { CustomerFollowup } from "@/lib/types";
+import { createCrudService } from "./create-crud-service";
+
+// ── Factory-backed CRUD ───────────────────────────────────────
+
+type CreateFollowupInput = {
+  customer_id: string;
+  vehicle_id?: string;
+  work_order_id?: string;
+  estimate_id?: string;
+  invoice_id?: string;
+  type?: string;
+  subject: string;
+  notes?: string;
+  due_at: string;
+  assigned_to?: string;
+  created_by?: string;
+};
+
+type UpdateFollowupInput = {
+  type?: string;
+  subject?: string;
+  notes?: string;
+  due_at?: string;
+  status?: string;
+  outcome?: string;
+  outcome_notes?: string;
+  assigned_to?: string;
+  completed_at?: string;
+  cancelled_at?: string;
+};
+
+const crud = createCrudService<CustomerFollowup, CreateFollowupInput, UpdateFollowupInput>({
+  tableName: "customer_followups",
+  selectColumns: "*",
+  selectColumnsById: "*",
+  cacheTagKey: (orgId: string) => `followups:${orgId}`,
+  hooks: {
+    beforeCreate: async (input) => {
+      return {
+        type: input.type ?? "call",
+        vehicle_id: input.vehicle_id ?? null,
+        work_order_id: input.work_order_id ?? null,
+        estimate_id: input.estimate_id ?? null,
+        invoice_id: input.invoice_id ?? null,
+        notes: input.notes ?? null,
+        assigned_to: input.assigned_to ?? null,
+        created_by: input.created_by ?? null,
+      } as Partial<CreateFollowupInput>;
+    },
+  },
+});
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -91,44 +143,9 @@ export async function getFollowup(
 export async function createFollowup(
   db: SupabaseClient,
   orgId: string,
-  input: {
-    customer_id: string;
-    vehicle_id?: string;
-    work_order_id?: string;
-    estimate_id?: string;
-    invoice_id?: string;
-    type?: string;
-    subject: string;
-    notes?: string;
-    due_at: string;
-    assigned_to?: string;
-    created_by?: string;
-  },
+  input: CreateFollowupInput,
 ): Promise<CustomerFollowup> {
-  const { data, error } = await db
-    .from("customer_followups")
-    .insert({
-      organization_id: orgId,
-      customer_id: input.customer_id,
-      vehicle_id: input.vehicle_id ?? null,
-      work_order_id: input.work_order_id ?? null,
-      estimate_id: input.estimate_id ?? null,
-      invoice_id: input.invoice_id ?? null,
-      type: input.type ?? "call",
-      subject: input.subject,
-      notes: input.notes ?? null,
-      due_at: input.due_at,
-      assigned_to: input.assigned_to ?? null,
-      created_by: input.created_by ?? null,
-    })
-    .select()
-    .single();
-
-  if (error) {
-    throw new Error(`Failed to create follow-up: ${error.message}`);
-  }
-
-  return data as CustomerFollowup;
+  return crud.create(db, orgId, input, input.created_by ?? "");
 }
 
 // ── Update follow-up ───────────────────────────────────────────
@@ -137,33 +154,9 @@ export async function updateFollowup(
   db: SupabaseClient,
   id: string,
   orgId: string,
-  input: {
-    type?: string;
-    subject?: string;
-    notes?: string;
-    due_at?: string;
-    status?: string;
-    outcome?: string;
-    outcome_notes?: string;
-    assigned_to?: string;
-    completed_at?: string;
-    cancelled_at?: string;
-  },
+  input: UpdateFollowupInput,
 ): Promise<CustomerFollowup> {
-  const { data, error } = await db
-    .from("customer_followups")
-    .update(input)
-    .eq("id", id)
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .select()
-    .single();
-
-  if (error) {
-    throw new Error(`Failed to update follow-up: ${error.message}`);
-  }
-
-  return data as CustomerFollowup;
+  return crud.update(db, orgId, id, input, "");
 }
 
 // ── Complete follow-up ─────────────────────────────────────────
@@ -203,15 +196,7 @@ export async function deleteFollowup(
   id: string,
   orgId: string,
 ): Promise<void> {
-  const { error } = await db
-    .from("customer_followups")
-    .update({ deleted_at: new Date().toISOString() })
-    .eq("id", id)
-    .eq("organization_id", orgId);
-
-  if (error) {
-    throw new Error(`Failed to delete follow-up: ${error.message}`);
-  }
+  await crud.softDelete(db, orgId, id, "");
 }
 
 // ── Get overdue follow-ups ─────────────────────────────────────
