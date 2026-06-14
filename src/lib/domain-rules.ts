@@ -118,6 +118,30 @@ export function validateCategoryInput(input: { name: string }) {
   return null;
 }
 
+export function validateStockMovementInput(input: {
+  productId: string;
+  type: string;
+  quantity: number;
+}) {
+  if (!input.productId.trim()) {
+    return "Бүтээгдэхүүн сонгоно уу.";
+  }
+
+  if (!["in", "adjustment"].includes(input.type)) {
+    return "Хөдөлгөөний төрөл буруу байна.";
+  }
+
+  if (input.type === "in" && input.quantity <= 0) {
+    return "Орлогын тоо хэмжээ 0-ээс их байх ёстой.";
+  }
+
+  if (input.type === "adjustment" && input.quantity === 0) {
+    return "Тохируулгын тоо хэмжээ 0-ээс ялгаатай байх ёстой.";
+  }
+
+  return null;
+}
+
 export function validateSaleInput(input: {
   productId: string;
   quantity: number;
