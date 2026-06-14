@@ -1,6 +1,9 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Combobox,
@@ -18,6 +21,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
+import { productKeys, saleKeys } from "@/lib/query/keys";
 import { createSale } from "./actions";
 
 type ProductOption = {
@@ -61,11 +65,121 @@ export function SaleForm({
   products: ProductOption[];
   customers: CustomerOption[];
 }) {
-  const [state, action, pending] = useActionState(createSale, undefined);
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const [selectedProduct, setSelectedProduct] = useState<ProductOption | null>(
     products[0] ?? null,
   );
   const [quantity, setQuantity] = useState("1");
+
+  const saleMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const result = await createSale(undefined, formData);
+      if (result?.error) throw new Error(result.error);
+      return result;
+    },
+    onMutate: async (formData) => {
+      await queryClient.cancelQueries({ queryKey: saleKeys.all() });
+      await queryClient.cancelQueries({ queryKey: productKeys.all() });
+
+      const salesSnapshot = queryClient.getQueriesData({
+        queryKey: saleKeys.all(),
+      });
+      const productsSnapshot = queryClient.getQueriesData({
+        queryKey: productKeys.all(),
+      });
+
+      // Parse form data for optimistic updates
+      const productId = formData.get("product_id")?.toString() ?? "";
+      const quantityVal = Number(formData.get("quantity") ?? 0);
+      const unitPrice = Number(formData.get("unit_price") ?? 0);
+      const totalAmount = quantityVal * unitPrice;
+      const paidAmount = Number(formData.get("paid_amount") ?? totalAmount);
+      const paymentMethod =
+        formData.get("payment_method")?.toString() ?? "cash";
+      const status = formData.get("status")?.toString() ?? "completed";
+      const saleDate =
+        formData.get("sale_date")?.toString() ?? formatRouteDate();
+      const customerName = formData.get("customer_name")?.toString() ?? "";
+
+      // Build optimistic sale entry
+      const optimisticSale = {
+        id: `opt-${Date.now()}`,
+        product_id: productId,
+        quantity: quantityVal,
+        unit_price: unitPrice,
+        total_amount: totalAmount,
+        paid_amount: paidAmount,
+        payment_method: paymentMethod,
+        status,
+        sale_date: saleDate,
+        created_at: new Date().toISOString(),
+        contacts: customerName ? { name: customerName } : null,
+      };
+
+      // Optimistically add sale to sales list caches
+      queryClient.setQueriesData(
+        { queryKey: saleKeys.all(), type: "active" },
+        (oldData: unknown) => {
+          if (Array.isArray(oldData)) {
+            return [optimisticSale, ...oldData];
+          }
+          return oldData;
+        },
+      );
+
+      // Optimistically decrement stock in products caches
+      queryClient.setQueriesData(
+        { queryKey: productKeys.all(), type: "active" },
+        (oldData: unknown) => {
+          if (Array.isArray(oldData)) {
+            return oldData.map((product: Record<string, unknown>) => {
+              if (product.id === productId) {
+                return {
+                  ...product,
+                  current_stock: Math.max(
+                    0,
+                    Number(product.current_stock ?? 0) - quantityVal,
+                  ),
+                };
+              }
+              return product;
+            });
+          }
+          return oldData;
+        },
+      );
+
+      return { salesSnapshot, productsSnapshot };
+    },
+    onSuccess: () => {
+      router.push("/sales");
+    },
+    onError: (err, _vars, context) => {
+      if (context?.salesSnapshot) {
+        for (const [key, data] of context.salesSnapshot) {
+          queryClient.setQueryData(key, data);
+        }
+      }
+      if (context?.productsSnapshot) {
+        for (const [key, data] of context.productsSnapshot) {
+          queryClient.setQueryData(key, data);
+        }
+      }
+      toast.error(err.message || "Борлуулалт үүсгэхэд алдаа гарлаа.");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: saleKeys.all() });
+      queryClient.invalidateQueries({ queryKey: productKeys.all() });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (saleMutation.isPending) return;
+    const formData = new FormData(e.currentTarget);
+    saleMutation.mutate(formData);
+  };
 
   const total =
     Number(quantity || 0) * Number(selectedProduct?.sale_price ?? 0);
@@ -125,7 +239,7 @@ export function SaleForm({
       : allStatuses;
 
   return (
-    <form action={action} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid gap-5 md:grid-cols-2">
         <FieldGroup>
           <Field>
@@ -369,14 +483,17 @@ export function SaleForm({
         Нийт дүн: <span className="font-semibold">{formatCurrency(total)}</span>
       </div>
 
-      {state?.error ? (
+      {saleMutation.error ? (
         <div className="rounded-none bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {state.error}
+          {saleMutation.error.message}
         </div>
       ) : null}
 
-      <Button type="submit" disabled={pending || !products.length}>
-        Борлуулалт хадгалах
+      <Button
+        type="submit"
+        disabled={saleMutation.isPending || !products.length}
+      >
+        {saleMutation.isPending ? "Хадгалах..." : "Борлуулалт хадгалах"}
       </Button>
     </form>
   );

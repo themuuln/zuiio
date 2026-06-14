@@ -2,8 +2,10 @@
 
 import { Drawer } from "@base-ui/react/drawer";
 import { Barcode, Package, Plus, Tag, X } from "@phosphor-icons/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { createProduct } from "@/app/(dashboard)/products/new/actions";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -21,7 +23,8 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { type CompanyType, PRESET_CATEGORIES } from "@/lib/constants";
+import { PRESET_CATEGORIES } from "@/lib/constants";
+import { productKeys } from "@/lib/query/keys";
 
 const initialUnits = [
   "ширхэг",
@@ -42,9 +45,75 @@ const initialCategories = ["Хоол, ундаа", "Спорт хоол", "Ху�
 
 export function ProductCreateDrawer({ companyType }: { companyType: string }) {
   const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState(createProduct, undefined);
   const router = useRouter();
+  const queryClient = useQueryClient();
   const presets = PRESET_CATEGORIES[companyType] ?? [];
+
+  const productMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const result = await createProduct(undefined, formData);
+      if (result?.error) throw new Error(result.error);
+      return result;
+    },
+    onMutate: async (formData) => {
+      await queryClient.cancelQueries({ queryKey: productKeys.all() });
+      const snapshot = queryClient.getQueriesData({
+        queryKey: productKeys.all(),
+      });
+
+      // Build optimistic product from form data
+      const name = formData.get("name")?.toString() ?? "";
+      const sku = formData.get("sku")?.toString() ?? "";
+      const barcode = formData.get("barcode")?.toString() ?? "";
+      const unit = formData.get("unit")?.toString() ?? "ширхэг";
+      const categoryName = formData.get("category_name")?.toString() ?? "";
+      const costPrice = Number(formData.get("cost_price") ?? 0);
+      const salePrice = Number(formData.get("sale_price") ?? 0);
+      const currentStock = Number(formData.get("current_stock") ?? 0);
+      const minStock = Number(formData.get("min_stock") ?? 0);
+
+      const optimisticProduct = {
+        id: `opt-${Date.now()}`,
+        name,
+        sku: sku || null,
+        barcode: barcode || null,
+        unit,
+        category_name: categoryName || null,
+        cost_price: costPrice,
+        sale_price: salePrice,
+        current_stock: currentStock,
+        min_stock: minStock,
+        created_at: new Date().toISOString(),
+      };
+
+      queryClient.setQueriesData(
+        { queryKey: productKeys.all(), type: "active" },
+        (oldData: unknown) => {
+          if (Array.isArray(oldData)) {
+            return [optimisticProduct, ...oldData];
+          }
+          return oldData;
+        },
+      );
+
+      return { snapshot };
+    },
+    onSuccess: () => {
+      setOpen(false);
+      router.refresh();
+    },
+    onError: (err, _vars, context) => {
+      if (context?.snapshot) {
+        for (const [key, data] of context.snapshot) {
+          queryClient.setQueryData(key, data);
+        }
+      }
+      toast.error(err.message || "Бүтээгдэхүүн үүсгэхэд алдаа гарлаа.");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: productKeys.all() });
+    },
+  });
 
   // --- Unit combobox (creatable) ---
   const [unitQuery, setUnitQuery] = useState("");
@@ -74,12 +143,12 @@ export function ProductCreateDrawer({ companyType }: { companyType: string }) {
       ? [...allCategoryNames, categoryQuery.trim()]
       : allCategoryNames;
 
-  useEffect(() => {
-    if (state && "success" in state) {
-      setOpen(false);
-      router.refresh();
-    }
-  }, [state, router]);
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (productMutation.isPending) return;
+    const formData = new FormData(e.currentTarget);
+    productMutation.mutate(formData);
+  };
 
   return (
     <Drawer.Root swipeDirection="right" open={open} onOpenChange={setOpen}>
@@ -107,7 +176,7 @@ export function ProductCreateDrawer({ companyType }: { companyType: string }) {
                 </Drawer.Close>
               </div>
 
-              <form action={formAction} className="space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid gap-5">
                   <FieldGroup>
                     <Field>
@@ -282,9 +351,9 @@ export function ProductCreateDrawer({ companyType }: { companyType: string }) {
                   </FieldGroup>
                 </div>
 
-                {state?.error ? (
+                {productMutation.error ? (
                   <div className="rounded-none bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                    {state.error}
+                    {productMutation.error.message}
                   </div>
                 ) : null}
 
@@ -298,10 +367,10 @@ export function ProductCreateDrawer({ companyType }: { companyType: string }) {
                   </Drawer.Close>
                   <button
                     type="submit"
-                    disabled={pending}
+                    disabled={productMutation.isPending}
                     className={buttonVariants({ variant: "default" })}
                   >
-                    Хадгалах
+                    {productMutation.isPending ? "Хадгалах..." : "Хадгалах"}
                   </button>
                 </div>
               </form>
