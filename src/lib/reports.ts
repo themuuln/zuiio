@@ -305,7 +305,8 @@ export async function getCommissionSummaryReport(
   const { data: commissionItems } = await supabase
     .from("sale_items")
     .select(
-      `commission_amount,
+      `id,
+       commission_amount,
        sales!inner(
          salesperson_id,
          profiles!sales_salesperson_id_fkey(full_name),
@@ -325,13 +326,15 @@ export async function getCommissionSummaryReport(
     return { totalEarned: 0, totalPaid: 0, totalUnpaid: 0, staffBreakdown: [] };
   }
 
-  // Build per-staff aggregation
+  // Build per-staff aggregation and collect sale_item IDs
+  const allItemIds: string[] = [];
   const staffMap = new Map<
     string,
     { fullName: string; saleItemIds: string[]; earned: number }
   >();
 
   for (const item of commissionItems as unknown as Array<{
+    id: string;
     commission_amount: number;
     sales: {
       salesperson_id: string;
@@ -342,30 +345,13 @@ export async function getCommissionSummaryReport(
     const fullName = item.sales.profiles?.full_name ?? "Unknown";
     const earned = Number(item.commission_amount);
 
+    allItemIds.push(item.id);
+
     if (!staffMap.has(staffId)) {
       staffMap.set(staffId, { fullName, saleItemIds: [], earned: 0 });
     }
     const entry = staffMap.get(staffId)!;
     entry.earned += earned;
-  }
-
-  // Get all sale_item IDs to check paid status
-  const allItemIds: string[] = [];
-  // We need to collect item IDs - we can re-fetch, or use a different approach
-  const { data: rawItems } = await supabase
-    .from("sale_items")
-    .select("id")
-    .eq("sales.organization_id", organizationId)
-    .gte("sales.sale_date", dateFrom)
-    .lte("sales.sale_date", dateTo)
-    .neq("sales.status", "cancelled")
-    .not("sales.salesperson_id", "is", null)
-    .gt("commission_amount", 0);
-
-  if (rawItems) {
-    for (const item of rawItems) {
-      allItemIds.push(item.id);
-    }
   }
 
   // Get per-staff paid amounts
