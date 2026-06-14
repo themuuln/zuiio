@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { amountSchema } from "./schemas";
 
 // ── Expense Payment Methods ────────────────────────────────────
 
@@ -13,13 +14,7 @@ export const PAYMENT_METHODS = [
 
 export const expenseSchema = z.object({
   description: z.string().min(1, "Description is required"),
-  amount: z
-    .string()
-    .min(1, "Amount is required")
-    .refine((val) => {
-      const n = Number(val);
-      return !Number.isNaN(n) && n > 0;
-    }, "Enter a valid amount"),
+  amount: amountSchema,
   expenseDate: z.string().optional(),
   dueDate: z.string().optional(),
   categoryId: z.string().optional(),

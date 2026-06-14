@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
-import { NotFoundError, ValidationError } from "@/lib/errors";
+import { AppError, NotFoundError, ValidationError } from "@/lib/errors";
 import { resolveBranchId } from "@/lib/supabase/with-branch";
 import type { PaginatedResponse } from "@/lib/types";
 import { buildUpdates, type FieldMap } from "./build-updates";
@@ -179,7 +179,7 @@ function toPaginatedResponse<T>(
 function extractId(row: Record<string, unknown>): string {
   const id = row.id;
   if (typeof id !== "string" || !id) {
-    throw new Error("Inserted record is missing an 'id' field");
+    throw new AppError("Inserted record is missing an 'id' field", "INTERNAL_ERROR", 500);
   }
   return id;
 }
@@ -267,7 +267,7 @@ export function createCrudService<
     );
 
     if (error) {
-      throw new Error(error.message);
+      throw new AppError(error.message, "DATABASE_ERROR", 500);
     }
 
     return toPaginatedResponse<TRecord>(data ?? [], count, page, pageSize);
@@ -340,7 +340,7 @@ export function createCrudService<
       .single();
 
     if (error || !data) {
-      throw new Error(error?.message ?? `Failed to create ${tableName}`);
+      throw new AppError(error?.message ?? `Failed to create ${tableName}`, "DATABASE_ERROR", 500);
     }
 
     const result = toTypedResponse<TRecord>(data);
@@ -436,7 +436,7 @@ export function createCrudService<
       .single();
 
     if (error || !data) {
-      throw new Error(error?.message ?? `Failed to update ${tableName}`);
+      throw new AppError(error?.message ?? `Failed to update ${tableName}`, "DATABASE_ERROR", 500);
     }
 
     const result = toTypedResponse<TRecord>(data);
@@ -506,7 +506,7 @@ export function createCrudService<
       .eq("organization_id", orgId);
 
     if (error) {
-      throw new Error(error.message);
+      throw new AppError(error.message, "DATABASE_ERROR", 500);
     }
 
     // Audit log

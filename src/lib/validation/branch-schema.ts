@@ -6,7 +6,7 @@ import { emailSchema, phoneSchema } from "./schemas";
 export const branchSchema = z.object({
   name: z.string().min(1, "Branch name is required"),
   address: z.string().optional(),
-  phone: z.string().optional(),
+  phone: phoneSchema.optional(),
   email: emailSchema,
 });
 
