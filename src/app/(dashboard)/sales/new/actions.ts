@@ -166,14 +166,23 @@ export async function createSale(
   }
 
   if (status !== "cancelled") {
-    const nextStock = Number(product.current_stock ?? 0) - quantity;
-    const { error: stockUpdateError } = await supabase
+    // Atomic stock decrement: .gte("current_stock", quantity) ensures the
+    // UPDATE only affects rows with sufficient stock at statement execution
+    // time, preventing lost updates from concurrent requests. This matches
+    // the pattern already used in createShopSale (shop/actions.ts).
+    const { data: updatedProduct, error: stockUpdateError } = await supabase
       .from("products")
-      .update({ current_stock: nextStock })
+      .update({
+        current_stock: Number(product.current_stock ?? 0) - quantity,
+      })
       .eq("organization_id", organizationId)
-      .eq("id", productId);
+      .eq("id", productId)
+      .gte("current_stock", quantity)
+      .select("id")
+      .maybeSingle();
 
     if (stockUpdateError) {
+      // Actual error (network, permission, etc.) — full rollback
       await supabase
         .from("stock_movements")
         .delete()
@@ -184,6 +193,21 @@ export async function createSale(
         await supabase.from("contacts").delete().eq("id", createdContactId);
       }
       return { error: stockUpdateError.message };
+    }
+
+    if (!updatedProduct) {
+      // .gte() condition failed: stock was consumed between the initial
+      // stock check and this atomic UPDATE by a concurrent request.
+      await supabase
+        .from("stock_movements")
+        .delete()
+        .eq("reference", `sale:${sale.id}`);
+      await supabase.from("sale_items").delete().eq("sale_id", sale.id);
+      await supabase.from("sales").delete().eq("id", sale.id);
+      if (createdContactId) {
+        await supabase.from("contacts").delete().eq("id", createdContactId);
+      }
+      return { error: "Үлдэгдэл хүрэлцэхгүй байна." };
     }
   }
 
