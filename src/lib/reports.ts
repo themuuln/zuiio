@@ -40,12 +40,28 @@ export type PendingSaleRow = {
   paymentMethod: string | null;
 };
 
+export type CommissionStaffRow = {
+  staffName: string;
+  staffId: string;
+  earned: number;
+  paid: number;
+  unpaid: number;
+};
+
+export type CommissionSummaryData = {
+  totalEarned: number;
+  totalPaid: number;
+  totalUnpaid: number;
+  staffBreakdown: CommissionStaffRow[];
+};
+
 export type ReportData = {
   financialSummary: FinancialSummary;
   productSales: ProductSalesRow[];
   expenseBreakdown: ExpenseCategoryRow[];
   stockMovements: StockMovementsSummary;
   pendingSales: PendingSaleRow[];
+  commissionSummary: CommissionSummaryData;
 };
 
 // ─── Internal helpers ─────────────────────────────────────────────────
@@ -274,6 +290,163 @@ export async function getPendingSales(
 }
 
 /**
+ * Returns commission summary (earned/paid/unpaid) with per-staff breakdown
+ * for the given organization and date range. Excludes cancelled sales and
+ * sales with null salesperson_id.
+ */
+export async function getCommissionSummaryReport(
+  supabase: SupabaseClient<Database>,
+  organizationId: string,
+  dateFrom: string,
+  dateTo: string,
+): Promise<CommissionSummaryData> {
+  // Fetch all sale_items with commission_amount > 0 from non-cancelled sales
+  // in the date range that have a salesperson assigned
+  const { data: commissionItems } = await supabase
+    .from("sale_items")
+    .select(
+      `commission_amount,
+       sales!inner(
+         salesperson_id,
+         profiles!sales_salesperson_id_fkey(full_name),
+         sale_date,
+         status,
+         organization_id
+       )`,
+    )
+    .eq("sales.organization_id", organizationId)
+    .gte("sales.sale_date", dateFrom)
+    .lte("sales.sale_date", dateTo)
+    .neq("sales.status", "cancelled")
+    .not("sales.salesperson_id", "is", null)
+    .gt("commission_amount", 0);
+
+  if (!commissionItems || commissionItems.length === 0) {
+    return { totalEarned: 0, totalPaid: 0, totalUnpaid: 0, staffBreakdown: [] };
+  }
+
+  // Build per-staff aggregation
+  const staffMap = new Map<
+    string,
+    { fullName: string; saleItemIds: string[]; earned: number }
+  >();
+
+  for (const item of commissionItems as unknown as Array<{
+    commission_amount: number;
+    sales: {
+      salesperson_id: string;
+      profiles: { full_name: string | null } | null;
+    };
+  }>) {
+    const staffId = item.sales.salesperson_id;
+    const fullName = item.sales.profiles?.full_name ?? "Unknown";
+    const earned = Number(item.commission_amount);
+
+    if (!staffMap.has(staffId)) {
+      staffMap.set(staffId, { fullName, saleItemIds: [], earned: 0 });
+    }
+    const entry = staffMap.get(staffId)!;
+    entry.earned += earned;
+  }
+
+  // Get all sale_item IDs to check paid status
+  const allItemIds: string[] = [];
+  // We need to collect item IDs - we can re-fetch, or use a different approach
+  const { data: rawItems } = await supabase
+    .from("sale_items")
+    .select("id")
+    .eq("sales.organization_id", organizationId)
+    .gte("sales.sale_date", dateFrom)
+    .lte("sales.sale_date", dateTo)
+    .neq("sales.status", "cancelled")
+    .not("sales.salesperson_id", "is", null)
+    .gt("commission_amount", 0);
+
+  if (rawItems) {
+    for (const item of rawItems) {
+      allItemIds.push(item.id);
+    }
+  }
+
+  // Get paid amounts for these items from payout_items
+  let paidItemAmounts = 0;
+  if (allItemIds.length > 0) {
+    const { data: payoutItems } = await supabase
+      .from("commission_payout_items")
+      .select("sale_item_id, commission_amount")
+      .in("sale_item_id", allItemIds);
+
+    if (payoutItems) {
+      paidItemAmounts = payoutItems.reduce(
+        (sum, pi) => sum + Number(pi.commission_amount),
+        0,
+      );
+    }
+  }
+
+  // Get per-staff paid amounts
+  const staffPaidMap = new Map<string, number>();
+  if (allItemIds.length > 0) {
+    const { data: staffPaidItems } = await supabase
+      .from("commission_payout_items")
+      .select(
+        `sale_item_id, commission_amount,
+         sale_items!inner(
+           sales!inner(
+             salesperson_id
+           )
+         )`,
+      )
+      .in("sale_item_id", allItemIds);
+
+    if (staffPaidItems) {
+      for (const pi of staffPaidItems as unknown as Array<{
+        sale_item_id: string;
+        commission_amount: number;
+        sale_items: {
+          sales: {
+            salesperson_id: string;
+          };
+        };
+      }>) {
+        const staffId = pi.sale_items.sales.salesperson_id;
+        const amount = Number(pi.commission_amount);
+        staffPaidMap.set(staffId, (staffPaidMap.get(staffId) ?? 0) + amount);
+      }
+    }
+  }
+
+  let totalEarned = 0;
+  let totalPaid = 0;
+  const staffBreakdown: CommissionStaffRow[] = [];
+
+  for (const [staffId, data] of staffMap.entries()) {
+    const paid = staffPaidMap.get(staffId) ?? 0;
+    const unpaid = Math.max(0, data.earned - paid);
+    totalEarned += data.earned;
+    totalPaid += paid;
+
+    staffBreakdown.push({
+      staffName: data.fullName,
+      staffId,
+      earned: data.earned,
+      paid,
+      unpaid,
+    });
+  }
+
+  // Sort by earned descending
+  staffBreakdown.sort((a, b) => b.earned - a.earned);
+
+  return {
+    totalEarned,
+    totalPaid,
+    totalUnpaid: Math.max(0, totalEarned - totalPaid),
+    staffBreakdown,
+  };
+}
+
+/**
  * Fetches all report sections in parallel and returns a single ReportData object.
  */
 export async function getFullReport(
@@ -288,12 +461,14 @@ export async function getFullReport(
     expenseBreakdown,
     stockMovements,
     pendingSales,
+    commissionSummary,
   ] = await Promise.all([
     getFinancialSummary(supabase, organizationId, dateFrom, dateTo),
     getProductSalesBreakdown(supabase, organizationId, dateFrom, dateTo),
     getExpenseBreakdownByCategory(supabase, organizationId, dateFrom, dateTo),
     getStockMovementsSummary(supabase, organizationId, dateFrom, dateTo),
     getPendingSales(supabase, organizationId, dateFrom, dateTo),
+    getCommissionSummaryReport(supabase, organizationId, dateFrom, dateTo),
   ]);
 
   return {
@@ -302,5 +477,6 @@ export async function getFullReport(
     expenseBreakdown,
     stockMovements,
     pendingSales,
+    commissionSummary,
   };
 }

@@ -39,6 +39,7 @@ type SaleItem = {
   quantity: number;
   unit_price: number;
   total_price: number;
+  commission_amount: number;
   product_id: string | null;
   products: { name: string; unit: string | null } | null;
 };
@@ -112,6 +113,7 @@ function SaleDetailContent({
               <span className="w-12 text-right">Тоо</span>
               <span className="w-20 text-right">Үнэ</span>
               <span className="w-20 text-right">Дүн</span>
+              <span className="w-20 text-right">Комисс</span>
             </div>
             <div className="border-t border-border" />
             {/* Item rows */}
@@ -130,6 +132,11 @@ function SaleDetailContent({
                 </span>
                 <span className="w-20 text-right text-sm font-semibold tabular-nums">
                   {formatCurrency(item.total_price)}
+                </span>
+                <span className="w-20 text-right text-xs tabular-nums text-muted-foreground">
+                  {item.commission_amount > 0
+                    ? formatCurrency(item.commission_amount)
+                    : "-"}
                 </span>
               </div>
             ))}
@@ -243,11 +250,11 @@ export default async function SaleDetailPage({
     );
   }
 
-  // Fetch sale items with product info
+  // Fetch sale items with product info and commission
   const { data: items } = await supabase
     .from("sale_items")
     .select(
-      "id, quantity, unit_price, total_price, product_id, products(name, unit)",
+      "id, quantity, unit_price, total_price, commission_amount, product_id, products(name, unit)",
     )
     .eq("sale_id", id)
     .order("id", { ascending: true });

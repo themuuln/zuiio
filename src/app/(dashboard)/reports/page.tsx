@@ -1,4 +1,5 @@
 import { PageShell } from "@/components/erp/page-shell";
+import { CommissionSummary } from "@/components/reports/commission-summary";
 import { ExpenseBreakdown } from "@/components/reports/expense-breakdown";
 import { FinancialSummary } from "@/components/reports/financial-summary";
 import { PendingSales } from "@/components/reports/pending-sales";
@@ -45,6 +46,8 @@ export default async function ReportsPage({
       <StockMovements data={report.stockMovements} />
 
       <PendingSales data={report.pendingSales} />
+
+      <CommissionSummary data={report.commissionSummary} />
     </PageShell>
   );
 }
