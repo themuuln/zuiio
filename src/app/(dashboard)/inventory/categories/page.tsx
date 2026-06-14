@@ -15,18 +15,39 @@ export type CategoryRow = {
 export default async function CategoriesPage() {
   const { supabase, organizationId } = await requireAppContext();
 
-  const { data: categories } = await supabase
-    .from("categories")
-    .select(`id, name, products(count)`)
-    .eq("organization_id", organizationId)
-    .order("name", { ascending: true });
+  // Fetch categories and products separately to avoid RLS issues with
+  // Supabase FK subqueries (products(count) doesn't resolve through RLS).
+  const [categoriesResult, productsResult] = await Promise.all([
+    supabase
+      .from("categories")
+      .select("id, name")
+      .eq("organization_id", organizationId)
+      .order("name", { ascending: true }),
+    supabase
+      .from("products")
+      .select("id, category_id")
+      .eq("organization_id", organizationId),
+  ]);
+
+  const categories = categoriesResult.data;
+  const products = productsResult.data ?? [];
+
+  // Count products per category_id in JavaScript
+  const productCountMap = new Map<string, number>();
+  for (const product of products) {
+    if (product.category_id) {
+      productCountMap.set(
+        product.category_id,
+        (productCountMap.get(product.category_id) ?? 0) + 1,
+      );
+    }
+  }
 
   const tableData: CategoryRow[] =
     categories?.map((category) => ({
       id: category.id,
       name: category.name,
-      product_count:
-        (category.products as unknown as { count: number })?.count ?? 0,
+      product_count: productCountMap.get(category.id) ?? 0,
     })) ?? [];
 
   return (
