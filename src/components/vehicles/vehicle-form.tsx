@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { vehicleSchema as sharedVehicleSchema } from "@/lib/validation/vehicle-schema";
 import { CustomerForm } from "@/components/customers/customer-form";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
 import { ColorSelect } from "@/components/vehicles/color-select";
 import { inputProps } from "@/lib/form-ux";
-import { isValidMongolianPlate } from "@/lib/form-validation";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { vehicleKeys } from "@/lib/queries/keys";
 import {
@@ -65,43 +65,11 @@ import {
 import type { CreateVehicleParams, Customer, Vehicle } from "@/lib/types";
 
 // ── Schema ───────────────────────────────────────────────────
+// Import shared vehicle schema — fields match exactly.
 // Number fields are strings in the form (matching <Input type="number">).
 // Validated in submit handler, converted to number there.
 
-const vehicleSchema = z.object({
-  plateNumber: z
-    .string()
-    .min(1, "Plate number is required")
-    .refine(
-      (val) => isValidMongolianPlate(val),
-      "Must be 4 digits + 3 letters (e.g. 4444УНА)",
-    ),
-  make: z.string().min(1, "Brand is required"),
-  model: z.string().min(1, "Model is required"),
-  year: z.string().optional(),
-  vin: z.string().optional(),
-  chassisNumber: z.string().optional(),
-  trim: z.string().optional(),
-  color: z.string().optional(),
-  engine: z.string().optional(),
-  fuelType: z.string().optional(),
-  transmission: z.string().optional(),
-  drivetrain: z.string().optional(),
-  bodyType: z.string().optional(),
-  odometer: z.string().optional(),
-  notes: z.string().optional(),
-  licenseExpiryAt: z.string().optional(),
-  nextServiceAt: z.string().optional(),
-  importDate: z.string().optional(),
-  countryOfOrigin: z.string().optional(),
-  category: z.string().optional(),
-  seats: z.string().optional(),
-  steering: z.string().optional(),
-  height: z.string().optional(),
-  width: z.string().optional(),
-  length: z.string().optional(),
-  weight: z.string().optional(),
-});
+const vehicleSchema = sharedVehicleSchema;
 
 type VehicleFormValues = z.infer<typeof vehicleSchema>;
 

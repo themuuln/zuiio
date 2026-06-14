@@ -4,6 +4,7 @@ import { AlertTriangle, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { z } from "zod";
+import { partSchema as sharedPartSchema } from "@/lib/validation/part-schema";
 import { Button } from "@/components/ui/button";
 import { CreatableCombobox } from "@/components/ui/combobox";
 import {
@@ -27,17 +28,19 @@ import type { CreatePartParams, PartsCatalogItem } from "@/lib/types";
 import PartPhotoUpload from "./part-photo-upload";
 
 // ── Schema ───────────────────────────────────────────────────
+// Import shared part schema validators but use snake_case field names
+// matching form field names (name_mn, part_number, default_price, purchase_price).
 
 const partSchema = z.object({
-  name_mn: z.string().min(1, "Монгол нэр шаардлагатай"),
-  name: z.string().optional(),
-  part_number: z.string().optional(),
-  default_price: z.string().optional(),
-  purchase_price: z.string().optional(),
-  category: z.string().optional(),
-  unit: z.string().optional(),
-  description: z.string().optional(),
-  location: z.string().optional(),
+  name_mn: sharedPartSchema.shape.nameMn,
+  name: sharedPartSchema.shape.name,
+  part_number: sharedPartSchema.shape.partNumber,
+  default_price: sharedPartSchema.shape.defaultPrice,
+  purchase_price: sharedPartSchema.shape.purchasePrice,
+  category: sharedPartSchema.shape.category,
+  unit: sharedPartSchema.shape.unit,
+  description: sharedPartSchema.shape.description,
+  location: sharedPartSchema.shape.location,
 });
 
 type PartFormValues = z.infer<typeof partSchema>;

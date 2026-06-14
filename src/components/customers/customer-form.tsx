@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { customerSchema as sharedCustomerSchema } from "@/lib/validation/customer-schema";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -30,19 +31,13 @@ import { useCreateCustomer } from "@/lib/queries/use-wizard-data";
 import type { CreateCustomerParams, Customer } from "@/lib/types";
 
 // ── Schema ───────────────────────────────────────────────────
-// Base schema with all optional — mode-specific validation runs in handleSubmit.
+// Import shared customer schema and relax phone/email for mode-specific
+// validation in handleSubmit (quick mode requires phone, full mode depends on type).
 
-const customerSchema = z.object({
+const customerSchema = sharedCustomerSchema.extend({
   type: z.enum(["individual", "company"]),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  companyName: z.string().optional(),
-  contactPerson: z.string().optional(),
   phone: z.string().optional(),
   email: z.string().optional(),
-  address: z.string().optional(),
-  notes: z.string().optional(),
-  source: z.string().optional(),
 });
 
 type CustomerFormValues = z.infer<typeof customerSchema>;

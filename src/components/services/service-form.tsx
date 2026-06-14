@@ -4,6 +4,7 @@ import { AlertTriangle, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { z } from "zod";
+import { serviceSchema as sharedServiceSchema } from "@/lib/validation/service-schema";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -20,20 +21,15 @@ import { useCreateService } from "@/lib/queries/use-wizard-data";
 import type { CreateServiceCatalogParams, ServiceCatalog } from "@/lib/types";
 
 // ── Schema ───────────────────────────────────────────────────
-// Number fields are strings in the form (matching <Input type="number">).
-// Validated via refine, converted to number in the submit handler.
+// Import shared service schema validators but use snake_case field names
+// matching form field names (name_mn, default_price).
 
 const serviceSchema = z.object({
-  name: z.string().min(1, "Service name is required"),
-  name_mn: z.string().optional(),
-  default_price: z
-    .string()
-    .refine(
-      (v) => v.trim() !== "" && !Number.isNaN(Number(v)) && Number(v) >= 0,
-      "Enter a valid price",
-    ),
-  category: z.string().optional(),
-  description: z.string().optional(),
+  name: sharedServiceSchema.shape.name,
+  name_mn: sharedServiceSchema.shape.nameMn,
+  default_price: sharedServiceSchema.shape.defaultPrice,
+  category: sharedServiceSchema.shape.category,
+  description: sharedServiceSchema.shape.description,
 });
 
 type ServiceFormValues = z.infer<typeof serviceSchema>;

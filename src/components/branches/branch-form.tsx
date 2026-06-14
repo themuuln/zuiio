@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod";
+import { branchSchema as sharedBranchSchema } from "@/lib/validation/branch-schema";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -19,12 +20,11 @@ import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Branch, CreateBranchParams } from "@/lib/types";
 
 // ── Schema ───────────────────────────────────────────────────
+// Import shared branch schema — override phone to accept any string
+// (form validates phone in API call, not client-side).
 
-const branchSchema = z.object({
-  name: z.string().min(1, "Branch name is required"),
-  address: z.string().optional(),
+const branchSchema = sharedBranchSchema.extend({
   phone: z.string().optional(),
-  email: z.string().email().optional().or(z.literal("")),
 });
 
 type BranchFormValues = z.infer<typeof branchSchema>;

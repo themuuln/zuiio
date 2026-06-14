@@ -4,6 +4,7 @@ import { Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod";
+import { phoneSchema, emailSchema } from "@/lib/validation/schemas";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -20,12 +21,14 @@ import { useCreateSupplier } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 
 // ── Schema ───────────────────────────────────────────────────
+// Use shared validators for phone/email patterns. No supplier-specific
+// schema module exists yet — inline the domain-specific fields.
 
 const supplierSchema = z.object({
   name: z.string().min(1, "Name is required"),
   contactPerson: z.string().optional(),
-  phone: z.string().optional(),
-  email: z.string().optional(),
+  phone: phoneSchema.optional(),
+  email: emailSchema,
   address: z.string().optional(),
   taxId: z.string().optional(),
   paymentTerms: z.string().optional(),

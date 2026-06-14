@@ -3,6 +3,10 @@
 import { Wallet } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { z } from "zod";
+import {
+  expenseSchema as sharedExpenseSchema,
+  PAYMENT_METHODS,
+} from "@/lib/validation/expense-schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,25 +35,11 @@ import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { CreateExpenseParams } from "@/lib/types";
 
 // ── Schema ───────────────────────────────────────────────────
+// Import shared expense schema — override paymentMethod to string
+// (form doesn't enforce enum at schema level).
 
-const expenseSchema = z.object({
-  description: z.string().min(1, "Description is required"),
-  amount: z
-    .string()
-    .min(1, "Amount is required")
-    .refine((val) => {
-      const n = Number(val);
-      return !Number.isNaN(n) && n > 0;
-    }, "Enter a valid amount"),
-  expenseDate: z.string().optional(),
-  dueDate: z.string().optional(),
-  categoryId: z.string().optional(),
-  vendorName: z.string().optional(),
-  taxAmount: z.string().optional(),
+const expenseSchema = sharedExpenseSchema.extend({
   paymentMethod: z.string().optional(),
-  referenceNumber: z.string().optional(),
-  paid: z.boolean(),
-  notes: z.string().optional(),
 });
 
 type ExpenseFormValues = z.infer<typeof expenseSchema>;
@@ -67,8 +57,6 @@ const defaultExpenseValues: ExpenseFormValues = {
   paid: false,
   notes: "",
 };
-
-const PAYMENT_METHODS = ["cash", "card", "bank_transfer", "manual"] as const;
 
 // ── Props ────────────────────────────────────────────────────
 
