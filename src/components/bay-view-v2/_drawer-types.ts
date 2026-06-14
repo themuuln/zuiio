@@ -82,4 +82,6 @@ export interface WorkOrderDetailDrawerProps {
   onOpenChange: (open: boolean) => void;
   onRefresh: () => void;
   initialAction?: "add-service" | "add-part" | null;
+  /** Branch filter for bay view cache key (optimistic drawer mutations) */
+  branchFilter?: string;
 }

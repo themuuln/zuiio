@@ -61,6 +61,7 @@ export function WorkOrderDetailDrawer({
   onOpenChange,
   onRefresh,
   initialAction,
+  branchFilter,
 }: WorkOrderDetailDrawerProps) {
   const t = useTranslations("bayView");
   const locale = useLocale();
@@ -165,6 +166,7 @@ export function WorkOrderDetailDrawer({
     onOpenChange,
     paymentMethodFees,
     transferBanks,
+    branchId: branchFilter,
   });
 
   // ── Local-only state ──
@@ -386,7 +388,7 @@ export function WorkOrderDetailDrawer({
 
   // ── Ready for Pickup (simplified) ──
 
-  function handleMarkReady() {
+  async function handleMarkReady() {
     if (workOrderId) {
       setShowReadyForm(true);
     }

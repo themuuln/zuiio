@@ -1,8 +1,11 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
+import { bayViewKeys } from "@/lib/queries/keys";
+import type { BayViewData } from "@/lib/services/bay-view-service";
 import {
   getWorkOrderParts,
   getWorkOrderServicesWithIntervals,
@@ -28,6 +31,8 @@ interface UseDrawerMutationsParams {
   onOpenChange: (open: boolean) => void;
   paymentMethodFees: PaymentMethodFees;
   transferBanks: ResolvedTransferBank[];
+  /** Branch filter used for bay view cache key (for optimistic updates) */
+  branchId?: string;
 }
 
 export function useDrawerMutations({
@@ -40,7 +45,9 @@ export function useDrawerMutations({
   onOpenChange,
   paymentMethodFees,
   transferBanks,
+  branchId,
 }: UseDrawerMutationsParams) {
+  const queryClient = useQueryClient();
   // ── Service state ──
 
   const [serviceSearch, setServiceSearch] = useState("");
@@ -180,7 +187,51 @@ export function useDrawerMutations({
   async function assignMechanic(mechanicId: string) {
     const orgId = orgIdRef.current;
     if (!orgId || !workOrderId) return;
-    setSaving(true);
+    const prevWo = wo;
+
+    // Optimistic: update drawer state immediately
+    setWo((prev) => {
+      if (!prev) return prev;
+      // If mechanicId is null/empty, clear the mechanic
+      if (!mechanicId) {
+        return { ...prev, mechanic_id: null } as WorkOrderDetail;
+      }
+      return { ...prev, mechanic_id: mechanicId } as WorkOrderDetail;
+    });
+
+    // Optimistic: update bay view cache if we have a branchId
+    if (branchId) {
+      const bayViewKey = bayViewKeys.data(branchId);
+      queryClient.setQueryData<BayViewData>(bayViewKey, (prev) => {
+        if (!prev) return prev;
+        // Find mechanic name from the roster
+        const mech = mechanicId
+          ? prev.mechanics.find((m) => m.id === mechanicId)
+          : undefined;
+        return {
+          ...prev,
+          bays: prev.bays.map((b) =>
+            b.workOrder?.id === workOrderId && b.workOrder
+              ? {
+                  ...b,
+                  workOrder: {
+                    ...b.workOrder,
+                    mechanic: mechanicId
+                      ? {
+                          id: mechanicId,
+                          full_name: mech?.full_name ?? null,
+                          avatar_url: mech?.avatar_url ?? null,
+                        }
+                      : null,
+                    mechanic_id: mechanicId || null,
+                  },
+                }
+              : b,
+          ),
+        };
+      });
+    }
+
     try {
       const res = await fetch(
         `/api/organizations/${orgId}/work-orders/${workOrderId}`,
@@ -191,12 +242,35 @@ export function useDrawerMutations({
         },
       );
       const json = await res.json();
-      if (json.error) toast.error(json.error.message);
-      else {
+      if (json.error) {
+        // Rollback drawer state
+        if (prevWo) setWo(prevWo);
+        // Rollback bay view cache
+        if (branchId) {
+          queryClient.invalidateQueries({
+            queryKey: bayViewKeys.data(branchId),
+          });
+        }
+        toast.error(json.error.message);
+      } else {
         await fetchWo(true);
         onRefresh();
+        toast.dismiss();
+        if (mechanicId) {
+          toast.success("Mechanic assigned");
+        } else {
+          toast.success("Mechanic removed");
+        }
       }
     } catch {
+      // Rollback drawer state
+      if (prevWo) setWo(prevWo);
+      // Rollback bay view cache
+      if (branchId) {
+        queryClient.invalidateQueries({
+          queryKey: bayViewKeys.data(branchId),
+        });
+      }
       toast.error("Failed to assign mechanic");
     } finally {
       setSaving(false);
@@ -1093,10 +1167,45 @@ export function useDrawerMutations({
 
   // ── Customer assignment ──
 
-  async function assignCustomer(customerId: string | null) {
+  async function assignCustomer(customerId: string | null, customerName?: string | null) {
     const orgId = orgIdRef.current;
     if (!orgId || !workOrderId) return;
-    setSaving(true);
+    const prevWo = wo;
+
+    // Optimistic: update drawer state immediately
+    setWo((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        customer_id: customerId,
+        customer: customerId
+          ? (prev.customer ?? { id: customerId, full_name: customerName ?? null, company_name: null })
+          : null,
+      } as WorkOrderDetail;
+    });
+
+    // Optimistic: update bay view cache if we have a branchId
+    if (branchId) {
+      const bayViewKey = bayViewKeys.data(branchId);
+      queryClient.setQueryData<BayViewData>(bayViewKey, (prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          bays: prev.bays.map((b) =>
+            b.workOrder?.id === workOrderId && b.workOrder
+              ? {
+                  ...b,
+                  workOrder: {
+                    ...b.workOrder,
+                    customer_name: customerId ? (customerName ?? "Customer") : null,
+                  },
+                }
+              : b,
+          ),
+        };
+      });
+    }
+
     try {
       const res = await fetch(
         `/api/organizations/${orgId}/work-orders/${workOrderId}`,
@@ -1108,6 +1217,14 @@ export function useDrawerMutations({
       );
       const json = await res.json();
       if (json.error) {
+        // Rollback drawer state
+        if (prevWo) setWo(prevWo);
+        // Rollback bay view cache
+        if (branchId) {
+          queryClient.invalidateQueries({
+            queryKey: bayViewKeys.data(branchId),
+          });
+        }
         toast.error(json.error.message ?? "Failed to assign customer");
       } else {
         await fetchWo(true);
@@ -1118,6 +1235,14 @@ export function useDrawerMutations({
         }
       }
     } catch {
+      // Rollback drawer state
+      if (prevWo) setWo(prevWo);
+      // Rollback bay view cache
+      if (branchId) {
+        queryClient.invalidateQueries({
+          queryKey: bayViewKeys.data(branchId),
+        });
+      }
       toast.error("Failed to assign customer");
     } finally {
       setSaving(false);

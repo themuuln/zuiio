@@ -205,6 +205,329 @@ export function useRemoveVehicleFromBay(branchId: string | undefined) {
   });
 }
 
+// ─── Assign Mechanic ────────────────────────────────────────────
+
+export function useAssignMechanicToWorkOrder(branchId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      woId,
+      mechanicId,
+    }: {
+      woId: string;
+      mechanicId: string;
+    }) => {
+      const { assignMechanicToWorkOrder } = await import(
+        "@/lib/services/bay-view-service"
+      );
+      await assignMechanicToWorkOrder(woId, mechanicId);
+    },
+    onMutate: async (vars) => {
+      const key = bayViewKeys.data(branchId);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<BayViewData>(key);
+      if (previous) {
+        const mechName =
+          previous.mechanics.find((m) => m.id === vars.mechanicId)
+            ?.full_name ?? null;
+        queryClient.setQueryData<BayViewData>(key, {
+          ...previous,
+          bays: previous.bays.map((b) => {
+            let bay = b;
+            // If mechanic was assigned elsewhere, clear them from that bay
+            if (bay.workOrder?.mechanic?.id === vars.mechanicId) {
+              bay = {
+                ...bay,
+                workOrder: bay.workOrder
+                  ? {
+                      ...bay.workOrder,
+                      mechanic: null,
+                      mechanic_id: null,
+                    }
+                  : null,
+              };
+            }
+            // Assign mechanic to target work order
+            if (bay.workOrder?.id === vars.woId && bay.workOrder) {
+              bay = {
+                ...bay,
+                workOrder: {
+                  ...bay.workOrder,
+                  mechanic: {
+                    id: vars.mechanicId,
+                    full_name: mechName,
+                    avatar_url: null,
+                  },
+                  mechanic_id: vars.mechanicId,
+                  status: "In Progress" as const,
+                },
+              };
+            }
+            return bay;
+          }),
+        });
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      rollbackOnError(queryClient, branchId, context);
+      toast.error("Failed to assign mechanic");
+    },
+    onSuccess: () => {
+      toast.dismiss();
+      toast.success("Mechanic assigned");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: bayViewKeys.data(branchId) });
+    },
+  });
+}
+
+// ─── Remove Mechanic ───────────────────────────────────────────
+
+export function useRemoveMechanicFromWorkOrder(
+  branchId: string | undefined,
+) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ woId }: { woId: string }) => {
+      const { unassignMechanicFromWorkOrder } = await import(
+        "@/lib/services/bay-view-service"
+      );
+      await unassignMechanicFromWorkOrder(woId);
+    },
+    onMutate: async (vars) => {
+      const key = bayViewKeys.data(branchId);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<BayViewData>(key);
+      if (previous) {
+        queryClient.setQueryData<BayViewData>(key, {
+          ...previous,
+          bays: previous.bays.map((b) =>
+            b.workOrder?.id === vars.woId && b.workOrder
+              ? {
+                  ...b,
+                  workOrder: {
+                    ...b.workOrder,
+                    mechanic: null,
+                    mechanic_id: null,
+                  },
+                }
+              : b,
+          ),
+        });
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      rollbackOnError(queryClient, branchId, context);
+      toast.error("Failed to remove mechanic");
+    },
+    onSuccess: () => {
+      toast.dismiss();
+      toast.success("Mechanic removed");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: bayViewKeys.data(branchId) });
+    },
+  });
+}
+
+// ─── Add Helper ────────────────────────────────────────────────
+
+export function useAddHelperToWorkOrder(branchId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      woId,
+      mechanicId,
+    }: {
+      woId: string;
+      mechanicId: string;
+    }) => {
+      const { assignHelperToWorkOrder } = await import(
+        "@/lib/services/bay-view-service"
+      );
+      await assignHelperToWorkOrder(woId, mechanicId);
+    },
+    onMutate: async (vars) => {
+      const key = bayViewKeys.data(branchId);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<BayViewData>(key);
+      if (previous) {
+        const mechanic = previous.mechanics.find(
+          (m) => m.id === vars.mechanicId,
+        );
+        queryClient.setQueryData<BayViewData>(key, {
+          ...previous,
+          bays: previous.bays.map((b) => {
+            if (b.workOrder?.id !== vars.woId || !b.workOrder) return b;
+            // No-op if mechanic is already a helper
+            if (b.workOrder.helpers.some((h) => h.id === vars.mechanicId))
+              return b;
+            // No-op if mechanic is the main mechanic
+            if (b.workOrder.mechanic?.id === vars.mechanicId) return b;
+            return {
+              ...b,
+              workOrder: {
+                ...b.workOrder,
+                helpers: [
+                  ...b.workOrder.helpers,
+                  {
+                    id: vars.mechanicId,
+                    full_name: mechanic?.full_name ?? null,
+                    avatar_url: mechanic?.avatar_url ?? null,
+                  },
+                ],
+              },
+            };
+          }),
+        });
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      rollbackOnError(queryClient, branchId, context);
+      toast.error("Failed to add helper");
+    },
+    onSuccess: () => {
+      toast.dismiss();
+      toast.success("Helper added");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: bayViewKeys.data(branchId) });
+    },
+  });
+}
+
+// ─── Remove Helper ─────────────────────────────────────────────
+
+export function useRemoveHelperFromWorkOrder(branchId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      woId,
+      mechanicId,
+    }: {
+      woId: string;
+      mechanicId: string;
+    }) => {
+      const { removeHelperFromWorkOrder } = await import(
+        "@/lib/services/bay-view-service"
+      );
+      await removeHelperFromWorkOrder(woId, mechanicId);
+    },
+    onMutate: async (vars) => {
+      const key = bayViewKeys.data(branchId);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<BayViewData>(key);
+      if (previous) {
+        queryClient.setQueryData<BayViewData>(key, {
+          ...previous,
+          bays: previous.bays.map((b) =>
+            b.workOrder?.id === vars.woId && b.workOrder
+              ? {
+                  ...b,
+                  workOrder: {
+                    ...b.workOrder,
+                    helpers: b.workOrder.helpers.filter(
+                      (h) => h.id !== vars.mechanicId,
+                    ),
+                  },
+                }
+              : b,
+          ),
+        });
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      rollbackOnError(queryClient, branchId, context);
+      toast.error("Failed to remove helper");
+    },
+    onSuccess: () => {
+      toast.dismiss();
+      toast.success("Helper removed");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: bayViewKeys.data(branchId) });
+    },
+  });
+}
+
+// ─── Assign Customer ───────────────────────────────────────────
+
+export function useAssignCustomerToWorkOrder(
+  branchId: string | undefined,
+  orgId: string | undefined,
+) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      woId,
+      customerId,
+      customerName,
+    }: {
+      woId: string;
+      customerId: string | null;
+      customerName?: string | null;
+    }) => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/work-orders/${woId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ customer_id: customerId }),
+        },
+      );
+      const json = await res.json();
+      if (json.error)
+        throw new Error(json.error.message ?? "Failed to assign customer");
+      return json.data;
+    },
+    onMutate: async (vars) => {
+      const key = bayViewKeys.data(branchId);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<BayViewData>(key);
+      if (previous) {
+        queryClient.setQueryData<BayViewData>(key, {
+          ...previous,
+          bays: previous.bays.map((b) =>
+            b.workOrder?.id === vars.woId && b.workOrder
+              ? {
+                  ...b,
+                  workOrder: {
+                    ...b.workOrder,
+                    customer_name: vars.customerName ?? null,
+                  },
+                }
+              : b,
+          ),
+        });
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      rollbackOnError(queryClient, branchId, context);
+      toast.error("Failed to assign customer");
+    },
+    onSuccess: (_, vars) => {
+      toast.dismiss();
+      if (vars.customerId) {
+        toast.success("Customer assigned");
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: bayViewKeys.data(branchId) });
+    },
+  });
+}
+
 // ─── Bay Count ─────────────────────────────────────────────────
 
 export function useUpdateBayCount(branchId: string | undefined) {

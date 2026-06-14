@@ -33,7 +33,12 @@ import {
 } from "@/lib/payments/org-bank-accounts";
 import { bayViewKeys } from "@/lib/queries/keys";
 import {
+  useAddHelperToWorkOrder,
+  useAssignCustomerToWorkOrder,
+  useAssignMechanicToWorkOrder,
   useAssignVehicleToBay,
+  useRemoveHelperFromWorkOrder,
+  useRemoveMechanicFromWorkOrder,
   useRemoveVehicleFromBay,
   useUpdateBayCount,
   useUpdateBayViewStatus,
@@ -42,11 +47,7 @@ import { useOrgSettings } from "@/lib/queries/use-org-settings";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useProfile } from "@/lib/queries/use-profile";
 import type { BayViewData, ShiftReport } from "@/lib/services/bay-view-service";
-import {
-  assignVehicleToBay,
-  getBayViewDataFresh,
-  getShiftReport,
-} from "@/lib/services/bay-view-service";
+import { getBayViewDataFresh, getShiftReport } from "@/lib/services/bay-view-service";
 import { useSelectedBranchId, useSetSelectedBranchId } from "@/lib/stores";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { formatPlateNumber } from "@/lib/utils";
@@ -134,17 +135,13 @@ export function BayViewV2Client() {
   const assignMutation = useAssignVehicleToBay(branchFilter);
   const removeMutation = useRemoveVehicleFromBay(branchFilter);
   const updateBayCountMutation = useUpdateBayCount(branchFilter);
-
-  /** Optimistic update wrapper — writes directly to React Query cache. */
-  const setData = useCallback(
-    (updater: React.SetStateAction<BayViewData | null>) => {
-      queryClient.setQueryData(
-        bayViewKeys.data(branchFilter),
-        (prev: BayViewData | null) =>
-          typeof updater === "function" ? updater(prev) : updater,
-      );
-    },
-    [queryClient, branchFilter],
+  const assignMechanicMutation = useAssignMechanicToWorkOrder(branchFilter);
+  const removeMechanicMutation = useRemoveMechanicFromWorkOrder(branchFilter);
+  const addHelperMutation = useAddHelperToWorkOrder(branchFilter);
+  const removeHelperMutation = useRemoveHelperFromWorkOrder(branchFilter);
+  const assignCustomerMutation = useAssignCustomerToWorkOrder(
+    branchFilter,
+    orgInfo?.orgId,
   );
 
   // ── Extracted hooks ──────────────────────────────────────────
@@ -223,16 +220,55 @@ export function BayViewV2Client() {
   const keyboardSensor = useSensor(KeyboardSensor);
   const sensors = useSensors(pointerSensor, touchSensor, keyboardSensor);
 
+  // ── Swap bays callback ──────────────────────────────────────
+  const handleSwapBays = useCallback(
+    async (
+      woId: string,
+      srcBay: number,
+      targetWoId: string,
+      targetBay: number,
+    ) => {
+      const { swapBayNumbers } = await import(
+        "@/lib/services/bay-view-service"
+      );
+      await swapBayNumbers(woId, srcBay, targetWoId, targetBay);
+      await fetchData();
+    },
+    [fetchData],
+  );
+
+  // ── Reorder queue callback ─────────────────────────────────
+  const handleReorderQueue = useCallback(
+    async (updates: { id: string; queue_order: number }[]) => {
+      const { reorderQueue } = await import(
+        "@/lib/services/bay-view-service"
+      );
+      await reorderQueue(updates);
+      await fetchData();
+    },
+    [fetchData],
+  );
+
   // ── Drag handlers ────────────────────────────────────────────
   const { handleDragStart: rawDragStart, handleDragEnd: rawDragEnd } =
     useBayDragHandlers({
       data,
-      setData,
       setActiveDrag,
       onStatusChange: handleStatusClick,
+      assignMechanic: (vars) =>
+        assignMechanicMutation.mutate(vars),
+      removeMechanic: (vars) =>
+        removeMechanicMutation.mutate(vars),
+      addHelper: (vars) =>
+        addHelperMutation.mutate(vars),
+      assignToBay: (vars) =>
+        assignMutation.mutate(vars),
+      removeFromBay: (vars) =>
+        removeMutation.mutate(vars),
+      onSwapBays: handleSwapBays,
+      onReorderQueue: handleReorderQueue,
       markPending,
       clearPending,
-      fetchData,
       setToast: toast.setToast,
     });
 
@@ -507,32 +543,13 @@ export function BayViewV2Client() {
   );
 
   const handleEmptyBayQueueSelect = useCallback(
-    async (workOrderId: string) => {
+    (workOrderId: string) => {
       const bayNumber = emptyBayBayNumber;
       if (bayNumber === null) return;
       setEmptyBayBayNumber(null);
-      // Assign directly to bay
-      markPending(workOrderId);
-      try {
-        await assignVehicleToBay(workOrderId, bayNumber);
-        toast.setToast({
-          message: `${t("assignedToBay")} ${bayNumber}`,
-          variant: "info",
-        });
-        await fetchData();
-      } catch {
-        toast.setToast({ message: t("failedToAssign"), variant: "error" });
-      }
-      clearPending(workOrderId);
+      assignMutation.mutate({ workOrderId, bayNumber });
     },
-    [
-      emptyBayBayNumber,
-      t,
-      markPending,
-      clearPending,
-      fetchData,
-      toast.setToast,
-    ],
+    [emptyBayBayNumber, assignMutation],
   );
 
   // ── Register & assign directly to bay ─────────────────────────
@@ -590,33 +607,19 @@ export function BayViewV2Client() {
   const handleAssignToBay = useCallback(
     async (workOrderId: string, mechanicId?: string) => {
       if (dialogs.assignBay === null) return;
-      markPending(workOrderId);
-      try {
-        await assignVehicleToBay(workOrderId, dialogs.assignBay);
-        if (mechanicId) {
-          const { assignMechanicToWorkOrder } = await import(
-            "@/lib/services/bay-view-service"
-          );
-          await assignMechanicToWorkOrder(workOrderId, mechanicId);
-        }
-        toast.setToast({
-          message: `${t("assignedToBay")} ${dialogs.assignBay}`,
-          variant: "info",
+      assignMutation.mutate({
+        workOrderId,
+        bayNumber: dialogs.assignBay,
+      });
+      if (mechanicId) {
+        assignMechanicMutation.mutate({
+          woId: workOrderId,
+          mechanicId,
         });
-        await fetchData();
-      } catch {
-        toast.setToast({ message: t("failedToAssign"), variant: "error" });
       }
-      clearPending(workOrderId);
+      dialogs.closeAssign();
     },
-    [
-      dialogs.assignBay,
-      t,
-      markPending,
-      clearPending,
-      fetchData,
-      toast.setToast,
-    ],
+    [dialogs.assignBay, assignMutation, assignMechanicMutation],
   );
 
   // ── Batch complete ───────────────────────────────────────────
@@ -633,7 +636,7 @@ export function BayViewV2Client() {
       "@/lib/services/bay-view-service"
     );
     const results = await Promise.allSettled(
-      readyWos.map((woId) => updateWorkOrderStatus(woId, "Completed")),
+      readyWos.filter((id): id is string => !!id).map((woId) => updateWorkOrderStatus(woId, "Completed")),
     );
 
     const succeeded = results.filter((r) => r.status === "fulfilled").length;
@@ -780,155 +783,73 @@ export function BayViewV2Client() {
   // ── Remove helper ────────────────────────────────────────────
   const handleRemoveHelper = useCallback(
     async (woId: string, mechId: string) => {
-      try {
-        const { removeHelperFromWorkOrder } = await import(
-          "@/lib/services/bay-view-service"
-        );
-        await removeHelperFromWorkOrder(woId, mechId);
-        await fetchData();
-      } catch {
-        toast.setToast({
-          message: "Failed to remove helper",
-          variant: "error",
-        });
-      }
+      removeHelperMutation.mutate({ woId, mechanicId: mechId });
     },
-    [fetchData, toast.setToast],
+    [removeHelperMutation],
   );
 
-  // ── Add helper (optimistic) ──────────────────────────────────
+  // ── Add helper ───────────────────────────────────────────────
   const handleAddHelper = useCallback(
     async (woId: string, mechanicId: string) => {
-      markPending(woId);
-      const prev = data;
-
-      // Optimistic: add mechanic to helpers in the cache
-      setData((d) => {
-        if (!d) return d;
-        const mechanic = d.mechanics.find((m) => m.id === mechanicId);
-        if (!mechanic) return d;
-        return {
-          ...d,
-          bays: d.bays.map((bay) => {
-            if (bay.workOrder?.id !== woId) return bay;
-            const alreadyAssigned = bay.workOrder.helpers.some(
-              (h) => h.id === mechanicId,
-            );
-            if (alreadyAssigned) return bay;
-            return {
-              ...bay,
-              workOrder: {
-                ...bay.workOrder,
-                helpers: [
-                  ...bay.workOrder.helpers,
-                  {
-                    id: mechanic.id,
-                    full_name: mechanic.full_name,
-                    avatar_url: mechanic.avatar_url,
-                  },
-                ],
-              },
-            };
-          }),
-        };
-      });
-
-      try {
-        const res = await fetch(
-          `/api/organizations/${orgInfo?.orgId}/work-orders/${woId}/helpers`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ mechanic_id: mechanicId }),
-          },
-        );
-        const json = await res.json();
-        if (json.error) {
-          // Rollback on server error
-          if (prev) setData(prev);
-          toast.setToast({ message: json.error.message, variant: "error" });
-          return;
-        }
-        toast.setToast({
-          message: "Helper mechanic added",
-          variant: "info",
-        });
-      } catch {
-        // Rollback on network error
-        if (prev) setData(prev);
-        toast.setToast({
-          message: "Failed to add helper mechanic",
-          variant: "error",
-        });
-      } finally {
-        clearPending(woId);
-        await fetchData();
-      }
+      addHelperMutation.mutate({ woId, mechanicId });
     },
-    [
-      orgInfo?.orgId,
-      data,
-      markPending,
-      clearPending,
-      setData,
-      fetchData,
-      toast.setToast,
-    ],
+    [addHelperMutation],
   );
 
   // ── Reorder mechanics ────────────────────────────────────────
   const handleReorderMechanics = useCallback(
     async (woId: string, orderedMechanicIds: string[]) => {
-      markPending(woId);
-      const prev = data;
-
-      // Get the first mechanic ID as the new lead, rest as helpers
       const [newLeadId, ...helperIds] = orderedMechanicIds;
-      if (!newLeadId) {
-        clearPending(woId);
-        return;
-      }
+      if (!newLeadId) return;
 
-      // Optimistic: update the cache immediately
-      setData((d) => {
-        if (!d) return d;
-        return {
-          ...d,
-          bays: d.bays.map((bay) => {
-            if (bay.workOrder?.id !== woId) return bay;
-            const mechanics = d.mechanics;
-            const newLead = mechanics.find((m) => m.id === newLeadId) ?? null;
-            // Build new helpers list preserving profile data
-            const newHelpers = helperIds
-              .map((id) => {
-                const existing = bay.workOrder?.helpers.find(
-                  (h) => h.id === id,
-                );
-                if (existing) return existing;
-                const profile = mechanics.find((m) => m.id === id);
-                return profile
+      // Optimistic: update the cache immediately via the bay view cache
+      queryClient.setQueryData<BayViewData>(
+        bayViewKeys.data(branchFilter),
+        (prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            bays: prev.bays.map((bay) => {
+              if (bay.workOrder?.id !== woId) return bay;
+              const mechanics = prev.mechanics;
+              const newLead =
+                mechanics.find((m) => m.id === newLeadId) ?? null;
+              // Build new helpers list preserving profile data
+              const newHelpers = helperIds
+                .map((id) => {
+                  const existing = bay.workOrder?.helpers.find(
+                    (h) => h.id === id,
+                  );
+                  if (existing) return existing;
+                  const profile = mechanics.find((m) => m.id === id);
+                  return profile
+                    ? {
+                        id: profile.id,
+                        full_name: profile.full_name,
+                        avatar_url: profile.avatar_url,
+                      }
+                    : null;
+                })
+                .filter(Boolean) as {
+                id: string;
+                full_name: string | null;
+                avatar_url: string | null;
+              }[];
+
+              return {
+                ...bay,
+                workOrder: bay.workOrder
                   ? {
-                      id: profile.id,
-                      full_name: profile.full_name,
-                      avatar_url: profile.avatar_url,
+                      ...bay.workOrder,
+                      mechanic: newLead,
+                      helpers: newHelpers,
                     }
-                  : null;
-              })
-              .filter(Boolean) as {
-              id: string;
-              full_name: string | null;
-              avatar_url: string | null;
-            }[];
-
-            return {
-              ...bay,
-              workOrder: bay.workOrder
-                ? { ...bay.workOrder, mechanic: newLead, helpers: newHelpers }
-                : null,
-            };
-          }),
-        };
-      });
+                  : null,
+              };
+            }),
+          };
+        },
+      );
 
       try {
         // PATCH the work order to update the lead mechanic
@@ -957,87 +878,40 @@ export function BayViewV2Client() {
           if (helpersJson.error) throw new Error(helpersJson.error.message);
         }
 
+        toast.dismiss();
         toast.setToast({
           message: "Mechanics reordered",
           variant: "info",
         });
       } catch {
-        // Rollback on failure
-        if (prev) setData(prev);
+        // Rollback on failure — invalidate so fresh data is fetched
+        queryClient.invalidateQueries({
+          queryKey: bayViewKeys.data(branchFilter),
+        });
+        toast.dismiss();
         toast.setToast({
           message: "Failed to reorder mechanics",
           variant: "error",
         });
-      } finally {
-        clearPending(woId);
-        await fetchData();
       }
     },
-    [
-      orgInfo?.orgId,
-      data,
-      markPending,
-      clearPending,
-      setData,
-      fetchData,
-      toast.setToast,
-    ],
+    [orgInfo?.orgId, branchFilter, queryClient],
   );
 
   // ── Assign mechanic (quick assign from BayCard) ──────────────
   const handleAssignMechanic = useCallback(
     async (woId: string, mechanicId: string) => {
-      try {
-        const res = await fetch(
-          `/api/organizations/${orgInfo?.orgId}/work-orders/${woId}`,
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ mechanic_id: mechanicId }),
-          },
-        );
-        const json = await res.json();
-        if (json.error) {
-          toast.setToast({ message: json.error.message, variant: "error" });
-        } else {
-          await fetchData();
-        }
-      } catch {
-        toast.setToast({
-          message: "Failed to assign mechanic",
-          variant: "error",
-        });
-      }
+      assignMechanicMutation.mutate({ woId, mechanicId });
     },
-    [orgInfo?.orgId, fetchData, toast.setToast],
+    [assignMechanicMutation],
   );
 
   // ── Remove mechanic (quick remove from BayCard) ──────────────
   const handleRemoveMechanic = useCallback(
     async (woId: string) => {
-      try {
-        const res = await fetch(
-          `/api/organizations/${orgInfo?.orgId}/work-orders/${woId}`,
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ mechanic_id: null }),
-          },
-        );
-        const json = await res.json();
-        if (json.error) {
-          toast.setToast({ message: json.error.message, variant: "error" });
-        } else {
-          await fetchData();
-        }
-      } catch {
-        toast.setToast({
-          message: "Failed to remove mechanic",
-          variant: "error",
-        });
-      }
+      removeMechanicMutation.mutate({ woId });
     },
-    [orgInfo?.orgId, fetchData, toast.setToast],
+    [removeMechanicMutation],
   );
 
   // ── Loading / error ──────────────────────────────────────────
@@ -1385,6 +1259,7 @@ export function BayViewV2Client() {
           }}
           onRefresh={fetchData}
           initialAction={drawerInitialAction}
+          branchFilter={branchFilter}
         />
       </ErrorBoundary>
 

@@ -13,6 +13,10 @@ import {
 } from "@/lib/payments/org-bank-accounts";
 import { bayViewKeys } from "@/lib/queries/keys";
 import {
+  useAddHelperToWorkOrder,
+  useAssignMechanicToWorkOrder,
+  useAssignVehicleToBay,
+  useRemoveMechanicFromWorkOrder,
   useRemoveVehicleFromBay,
   useUpdateBayCount,
   useUpdateBayViewStatus,
@@ -125,8 +129,12 @@ export function BayViewContent() {
 
   // ── Mutations ──────────────────────────────────────────────
   const updateStatusMutation = useUpdateBayViewStatus(branchFilter);
+  const assignMutation = useAssignVehicleToBay(branchFilter);
   const removeMutation = useRemoveVehicleFromBay(branchFilter);
   const updateBayCountMutation = useUpdateBayCount(branchFilter);
+  const assignMechanicMutation = useAssignMechanicToWorkOrder(branchFilter);
+  const removeMechanicMutation = useRemoveMechanicFromWorkOrder(branchFilter);
+  const addHelperMutation = useAddHelperToWorkOrder(branchFilter);
 
   // ── Extracted hooks ──────────────────────────────────────────
   const dialogs = useBayViewDialogs();
@@ -315,41 +323,69 @@ export function BayViewContent() {
 
   const handleRemoveHelper = useCallback(
     async (woId: string, mechanicId: string) => {
-      const { removeHelperFromWorkOrder } = await import(
-        "@/lib/services/bay-view-service"
-      );
-      await removeHelperFromWorkOrder(woId, mechanicId);
-      await fetchData();
+      void removeHelperFromWorkOrderInternal(woId, mechanicId);
     },
-    [fetchData],
+    [],
   );
 
   const handleAssignMechanic = useCallback(
     async (woId: string, mechanicId: string) => {
-      const { assignMechanicToWorkOrder } = await import(
-        "@/lib/services/bay-view-service"
-      );
-      await assignMechanicToWorkOrder(woId, mechanicId);
-      await fetchData();
+      assignMechanicMutation.mutate({ woId, mechanicId });
     },
-    [fetchData],
+    [assignMechanicMutation],
   );
 
   const handleRemoveMechanic = useCallback(
     async (woId: string) => {
-      const { unassignMechanicFromWorkOrder } = await import(
+      removeMechanicMutation.mutate({ woId });
+    },
+    [removeMechanicMutation],
+  );
+
+  // ── Swap bays callback ──────────────────────────────────────
+  const handleSwapBays = useCallback(
+    async (
+      woId: string,
+      srcBay: number,
+      targetWoId: string,
+      targetBay: number,
+    ) => {
+      const { swapBayNumbers } = await import(
         "@/lib/services/bay-view-service"
       );
-      await unassignMechanicFromWorkOrder(woId);
+      await swapBayNumbers(woId, srcBay, targetWoId, targetBay);
       await fetchData();
     },
     [fetchData],
   );
 
+  // ── Reorder queue callback ─────────────────────────────────
+  const handleReorderQueue = useCallback(
+    async (updates: { id: string; queue_order: number }[]) => {
+      const { reorderQueue } = await import(
+        "@/lib/services/bay-view-service"
+      );
+      await reorderQueue(updates);
+      await fetchData();
+    },
+    [fetchData],
+  );
+
+  // Temporary helper for removeHelper that doesn't have a mutation
+  async function removeHelperFromWorkOrderInternal(
+    woId: string,
+    mechanicId: string,
+  ) {
+    const { removeHelperFromWorkOrder } = await import(
+      "@/lib/services/bay-view-service"
+    );
+    await removeHelperFromWorkOrder(woId, mechanicId);
+    await fetchData();
+  }
+
   // ── Drag handlers ────────────────────────────────────────────
   const { handleDragStart, handleDragEnd } = useBayDragHandlers({
     data,
-    setData,
     setActiveDrag: setActiveDrag as React.Dispatch<
       React.SetStateAction<{
         type: string;
@@ -358,9 +394,15 @@ export function BayViewContent() {
       } | null>
     >,
     onStatusChange: handleStatusClick,
+    assignMechanic: (vars) => assignMechanicMutation.mutate(vars),
+    removeMechanic: (vars) => removeMechanicMutation.mutate(vars),
+    addHelper: (vars) => addHelperMutation.mutate(vars),
+    assignToBay: (vars) => assignMutation.mutate(vars),
+    removeFromBay: (vars) => removeMutation.mutate(vars),
+    onSwapBays: handleSwapBays,
+    onReorderQueue: handleReorderQueue,
     markPending,
     clearPending,
-    fetchData,
     setToast: toast.setToast,
   });
 
