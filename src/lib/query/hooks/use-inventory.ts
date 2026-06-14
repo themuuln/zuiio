@@ -1,8 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { createClient } from "@/lib/supabase/client";
 import { inventoryKeys } from "@/lib/query/keys";
+import { createClient } from "@/lib/supabase/client";
 
 export function useInventory(orgId: string) {
   const supabase = createClient();

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 import { APP_DESCRIPTION, APP_NAME } from "@/lib/constants";
 import { QueryProvider } from "@/lib/query/provider";
 import "./globals.css";
