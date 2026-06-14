@@ -57,9 +57,13 @@ function createQueryBuilder(results?: {
     error: { message: "Not found", code: "PGRST116" },
   });
 
-  const builder: Record<string, ReturnType<typeof vi.fn>> & {
+  interface BuilderType {
+    [key: string]: ReturnType<typeof vi.fn> | Array<unknown> | (() => Array<{ method: string; args: unknown[] }>);
+    _chainCalls: Array<{ method: string; args: unknown[] }>;
     _getChainCalls: () => Array<{ method: string; args: unknown[] }>;
-  } = {
+  }
+
+  const builder: BuilderType = {
     eq: vi.fn(),
     is: vi.fn(),
     order: vi.fn(),
@@ -75,7 +79,7 @@ function createQueryBuilder(results?: {
     not: vi.fn(),
     in: vi.fn(),
     maybeSingle: vi.fn(),
-    _chainCalls: [],
+    _chainCalls: [] as Array<{ method: string; args: unknown[] }>,
     _getChainCalls: function () {
       return this._chainCalls as Array<{ method: string; args: unknown[] }>;
     },

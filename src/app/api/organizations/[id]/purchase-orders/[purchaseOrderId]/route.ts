@@ -89,7 +89,7 @@ export const PATCH = createRouteHandler(
   },
 );
 
-export const POST = createRouteHandler(async ({ request, params, orgId }) => {
+export const POST = createRouteHandler(async ({ request, params, orgId, supabase }) => {
   await requireActiveSubscription(orgId);
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
   const rateCheck = await mutationRateLimiter.check(ip);
@@ -110,7 +110,7 @@ export const POST = createRouteHandler(async ({ request, params, orgId }) => {
   const body = await request.json();
 
   if (body.action === "receive") {
-    const po = await receivePurchaseOrder(purchaseOrderId, orgId);
+    const po = await receivePurchaseOrder(supabase, purchaseOrderId, orgId);
     return NextResponse.json({ data: po });
   }
 

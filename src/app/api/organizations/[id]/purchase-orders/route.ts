@@ -7,12 +7,12 @@ import {
 } from "@/lib/services/inventory-service";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
-export const GET = createRouteHandler(async ({ orgId }) => {
-  const orders = await getPurchaseOrders(orgId);
+export const GET = createRouteHandler(async ({ orgId, supabase }) => {
+  const orders = await getPurchaseOrders(supabase, orgId);
   return NextResponse.json({ data: orders });
 });
 
-export const POST = createRouteHandler(async ({ request, orgId, user }) => {
+export const POST = createRouteHandler(async ({ request, orgId, user, supabase }) => {
   await requireActiveSubscription(orgId);
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
   const rateCheck = await mutationRateLimiter.check(ip);
@@ -30,6 +30,6 @@ export const POST = createRouteHandler(async ({ request, orgId, user }) => {
     );
   }
   const body = await request.json();
-  const order = await createPurchaseOrder(orgId, body, user.id);
+  const order = await createPurchaseOrder(supabase, orgId, body, user.id);
   return NextResponse.json({ data: order }, { status: 201 });
 });

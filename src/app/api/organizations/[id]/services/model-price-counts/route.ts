@@ -7,7 +7,7 @@ import { getServiceModelPriceCounts } from "@/lib/services/service-catalog-servi
  * Returns a map of service_catalog_id → count of models with custom prices.
  * Used to avoid N+1 badge queries on the services listing page.
  */
-export const GET = createRouteHandler(async ({ orgId }) => {
-  const counts = await getServiceModelPriceCounts(orgId);
+export const GET = createRouteHandler(async ({ orgId, supabase }) => {
+  const counts = await getServiceModelPriceCounts(supabase, orgId);
   return NextResponse.json({ data: counts });
 });

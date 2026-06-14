@@ -4,12 +4,12 @@ import { mutationRateLimiter } from "@/lib/rate-limit";
 import { createSupplier, getSuppliers } from "@/lib/services/inventory-service";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
-export const GET = createRouteHandler(async ({ orgId }) => {
-  const suppliers = await getSuppliers(orgId);
+export const GET = createRouteHandler(async ({ orgId, supabase }) => {
+  const suppliers = await getSuppliers(supabase, orgId);
   return NextResponse.json({ data: suppliers });
 });
 
-export const POST = createRouteHandler(async ({ request, orgId, user }) => {
+export const POST = createRouteHandler(async ({ request, orgId, user, supabase }) => {
   await requireActiveSubscription(orgId);
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
   const rateCheck = await mutationRateLimiter.check(ip);
@@ -27,6 +27,6 @@ export const POST = createRouteHandler(async ({ request, orgId, user }) => {
     );
   }
   const body = await request.json();
-  const supplier = await createSupplier(orgId, body, user.id);
+  const supplier = await createSupplier(supabase, orgId, body, user.id);
   return NextResponse.json({ data: supplier }, { status: 201 });
 });

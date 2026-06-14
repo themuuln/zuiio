@@ -8,13 +8,13 @@ import {
 } from "@/lib/services/inventory-service";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
-export const GET = createRouteHandler(async ({ orgId, params }) => {
+export const GET = createRouteHandler(async ({ orgId, params, supabase }) => {
   const { supplierId } = params;
-  const supplier = await getSupplier(supplierId, orgId);
+  const supplier = await getSupplier(supabase, supplierId, orgId);
   return NextResponse.json({ data: supplier });
 });
 
-export const PATCH = createRouteHandler(async ({ request, orgId, params }) => {
+export const PATCH = createRouteHandler(async ({ request, orgId, params, supabase }) => {
   await requireActiveSubscription(orgId);
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
   const rateCheck = await mutationRateLimiter.check(ip);
@@ -33,11 +33,11 @@ export const PATCH = createRouteHandler(async ({ request, orgId, params }) => {
   }
   const { supplierId } = params;
   const body = await request.json();
-  const supplier = await updateSupplier(supplierId, orgId, body);
+  const supplier = await updateSupplier(supabase, supplierId, orgId, body);
   return NextResponse.json({ data: supplier });
 });
 
-export const DELETE = createRouteHandler(async ({ request, orgId, params }) => {
+export const DELETE = createRouteHandler(async ({ request, orgId, params, supabase }) => {
   await requireActiveSubscription(orgId);
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
   const rateCheck = await mutationRateLimiter.check(ip);
@@ -55,6 +55,6 @@ export const DELETE = createRouteHandler(async ({ request, orgId, params }) => {
     );
   }
   const { supplierId } = params;
-  await deleteSupplier(supplierId, orgId);
+  await deleteSupplier(supabase, supplierId, orgId);
   return NextResponse.json({ data: null });
 });

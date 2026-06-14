@@ -49,9 +49,9 @@ export interface CrudServiceHooks<TRecord, TInsert, TUpdate> {
    * Use for additional filters (search, date ranges, etc.).
    */
   onQuery?: (
-    query: ReturnType<SupabaseClient["from"]>,
+    query: any,
     options?: Record<string, unknown>,
-  ) => ReturnType<SupabaseClient["from"]>;
+  ) => any;
 }
 
 /**
@@ -350,17 +350,17 @@ export function createCrudService<
       supabase: db,
       action: "create",
       table_name: tableName,
-      record_id: extractId(data as Record<string, unknown>),
+      record_id: extractId(data as unknown as Record<string, unknown>),
       user_id: userId,
       organization_id: orgId,
-      new_data: data as Record<string, unknown>,
+      new_data: data as unknown as Record<string, unknown>,
     });
 
     // Cache invalidation
     revalidateTag(cacheTagKey(orgId), "max");
 
     if (cacheTagKeyById) {
-      revalidateTag(cacheTagKeyById(extractId(data as Record<string, unknown>)), "max");
+      revalidateTag(cacheTagKeyById(extractId(data as unknown as Record<string, unknown>)), "max");
     }
 
     // afterCreate hook
@@ -449,8 +449,8 @@ export function createCrudService<
       record_id: id,
       user_id: userId,
       organization_id: orgId,
-      old_data: existing as Record<string, unknown>,
-      new_data: data as Record<string, unknown>,
+      old_data: existing as unknown as Record<string, unknown>,
+      new_data: data as unknown as Record<string, unknown>,
     });
 
     // Cache invalidation
@@ -517,7 +517,7 @@ export function createCrudService<
       record_id: id,
       user_id: userId,
       organization_id: orgId,
-      old_data: existing as Record<string, unknown>,
+      old_data: existing as unknown as Record<string, unknown>,
     });
 
     // Cache invalidation

@@ -4,7 +4,7 @@ import { mutationRateLimiter } from "@/lib/rate-limit";
 import { receivePurchaseOrder } from "@/lib/services/purchase-order-service";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 
-export const POST = createRouteHandler(async ({ request, params, orgId }) => {
+export const POST = createRouteHandler(async ({ request, params, orgId, supabase }) => {
   await requireActiveSubscription(orgId);
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
   const rateCheck = await mutationRateLimiter.check(ip);
@@ -21,6 +21,6 @@ export const POST = createRouteHandler(async ({ request, params, orgId }) => {
       },
     );
   }
-  const po = await receivePurchaseOrder(params.purchaseOrderId, orgId);
+  const po = await receivePurchaseOrder(supabase, params.purchaseOrderId, orgId);
   return NextResponse.json({ data: po });
 });
