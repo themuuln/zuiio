@@ -368,22 +368,6 @@ export async function getCommissionSummaryReport(
     }
   }
 
-  // Get paid amounts for these items from payout_items
-  let paidItemAmounts = 0;
-  if (allItemIds.length > 0) {
-    const { data: payoutItems } = await supabase
-      .from("commission_payout_items")
-      .select("sale_item_id, commission_amount")
-      .in("sale_item_id", allItemIds);
-
-    if (payoutItems) {
-      paidItemAmounts = payoutItems.reduce(
-        (sum, pi) => sum + Number(pi.commission_amount),
-        0,
-      );
-    }
-  }
-
   // Get per-staff paid amounts
   const staffPaidMap = new Map<string, number>();
   if (allItemIds.length > 0) {

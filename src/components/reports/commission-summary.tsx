@@ -33,7 +33,8 @@ export function CommissionSummary({ data }: { data: CommissionSummaryData }) {
     {
       title: "Төлөгдөөгүй комисс",
       value: data.totalUnpaid,
-      color: data.totalUnpaid > 0 ? "text-destructive" : "text-muted-foreground",
+      color:
+        data.totalUnpaid > 0 ? "text-destructive" : "text-muted-foreground",
     },
   ];
 
