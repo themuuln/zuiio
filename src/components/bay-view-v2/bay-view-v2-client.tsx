@@ -12,6 +12,7 @@ import { Building2, GripVertical, List, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { ErrorBoundary } from "@/components/error-boundary";
 import {
   AlertDialog,
@@ -23,7 +24,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
 import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
 import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
@@ -47,7 +47,10 @@ import { useOrgSettings } from "@/lib/queries/use-org-settings";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useProfile } from "@/lib/queries/use-profile";
 import type { BayViewData, ShiftReport } from "@/lib/services/bay-view-service";
-import { getBayViewDataFresh, getShiftReport } from "@/lib/services/bay-view-service";
+import {
+  getBayViewDataFresh,
+  getShiftReport,
+} from "@/lib/services/bay-view-service.actions";
 import { useSelectedBranchId, useSetSelectedBranchId } from "@/lib/stores";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { formatPlateNumber } from "@/lib/utils";
@@ -226,7 +229,7 @@ export function BayViewV2Client() {
       targetBay: number,
     ) => {
       const { swapBayNumbers } = await import(
-        "@/lib/services/bay-view-service"
+        "@/lib/services/bay-view-service.actions"
       );
       await swapBayNumbers(woId, srcBay, targetWoId, targetBay);
       await fetchData();
@@ -237,9 +240,7 @@ export function BayViewV2Client() {
   // ── Reorder queue callback ─────────────────────────────────
   const handleReorderQueue = useCallback(
     async (updates: { id: string; queue_order: number }[]) => {
-      const { reorderQueue } = await import(
-        "@/lib/services/bay-view-service"
-      );
+      const { reorderQueue } = await import("@/lib/services/bay-view-service.actions");
       await reorderQueue(updates);
       await fetchData();
     },
@@ -252,16 +253,11 @@ export function BayViewV2Client() {
       data,
       setActiveDrag,
       onStatusChange: handleStatusClick,
-      assignMechanic: (vars) =>
-        assignMechanicMutation.mutate(vars),
-      removeMechanic: (vars) =>
-        removeMechanicMutation.mutate(vars),
-      addHelper: (vars) =>
-        addHelperMutation.mutate(vars),
-      assignToBay: (vars) =>
-        assignMutation.mutate(vars),
-      removeFromBay: (vars) =>
-        removeMutation.mutate(vars),
+      assignMechanic: (vars) => assignMechanicMutation.mutate(vars),
+      removeMechanic: (vars) => removeMechanicMutation.mutate(vars),
+      addHelper: (vars) => addHelperMutation.mutate(vars),
+      assignToBay: (vars) => assignMutation.mutate(vars),
+      removeFromBay: (vars) => removeMutation.mutate(vars),
       onSwapBays: handleSwapBays,
       onReorderQueue: handleReorderQueue,
       markPending,
@@ -626,10 +622,12 @@ export function BayViewV2Client() {
       .map((b) => b.workOrder?.id);
 
     const { updateWorkOrderStatus } = await import(
-      "@/lib/services/bay-view-service"
+      "@/lib/services/bay-view-service.actions"
     );
     const results = await Promise.allSettled(
-      readyWos.filter((id): id is string => !!id).map((woId) => updateWorkOrderStatus(woId, "Completed")),
+      readyWos
+        .filter((id): id is string => !!id)
+        .map((woId) => updateWorkOrderStatus(woId, "Completed")),
     );
 
     const succeeded = results.filter((r) => r.status === "fulfilled").length;
@@ -804,8 +802,7 @@ export function BayViewV2Client() {
             bays: prev.bays.map((bay) => {
               if (bay.workOrder?.id !== woId) return bay;
               const mechanics = prev.mechanics;
-              const newLead =
-                mechanics.find((m) => m.id === newLeadId) ?? null;
+              const newLead = mechanics.find((m) => m.id === newLeadId) ?? null;
               // Build new helpers list preserving profile data
               const newHelpers = helperIds
                 .map((id) => {
@@ -1067,9 +1064,9 @@ export function BayViewV2Client() {
                   onOpenDetail={handleOpenDetail}
                   onAssignClick={handleEmptyBayClick}
                   onNoEmptyBays={() => {
-                        toast.dismiss();
-                        toast.error("No empty bays available");
-                      }}
+                    toast.dismiss();
+                    toast.error("No empty bays available");
+                  }}
                   onQueueItemClick={handleQueueItemClick}
                   onRemoveHelper={handleRemoveHelper}
                   t={t}

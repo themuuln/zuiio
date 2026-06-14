@@ -34,7 +34,7 @@ export function ShiftReportDialog({ open, onOpenChange }: Props) {
       setError(null);
       try {
         const { getShiftReport } = await import(
-          "@/lib/services/bay-view-service"
+          "@/lib/services/bay-view-service.actions"
         );
         const data = await getShiftReport();
         setReport(data);

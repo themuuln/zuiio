@@ -41,7 +41,7 @@ export function useUpdateBayViewStatus(branchId: string | undefined) {
       notes?: string;
     }) => {
       const { updateWorkOrderStatus } = await import(
-        "@/lib/services/bay-view-service"
+        "@/lib/services/bay-view-service.actions"
       );
       await updateWorkOrderStatus(
         woId,
@@ -106,7 +106,7 @@ export function useAssignVehicleToBay(branchId: string | undefined) {
       bayNumber: number;
     }) => {
       const { assignVehicleToBay } = await import(
-        "@/lib/services/bay-view-service"
+        "@/lib/services/bay-view-service.actions"
       );
       await assignVehicleToBay(workOrderId, bayNumber);
     },
@@ -164,7 +164,7 @@ export function useRemoveVehicleFromBay(branchId: string | undefined) {
   return useMutation({
     mutationFn: async ({ woId }: { woId: string }) => {
       const { removeVehicleFromBay } = await import(
-        "@/lib/services/bay-view-service"
+        "@/lib/services/bay-view-service.actions"
       );
       await removeVehicleFromBay(woId);
     },
@@ -219,7 +219,7 @@ export function useAssignMechanicToWorkOrder(branchId: string | undefined) {
       mechanicId: string;
     }) => {
       const { assignMechanicToWorkOrder } = await import(
-        "@/lib/services/bay-view-service"
+        "@/lib/services/bay-view-service.actions"
       );
       await assignMechanicToWorkOrder(woId, mechanicId);
     },
@@ -229,8 +229,8 @@ export function useAssignMechanicToWorkOrder(branchId: string | undefined) {
       const previous = queryClient.getQueryData<BayViewData>(key);
       if (previous) {
         const mechName =
-          previous.mechanics.find((m) => m.id === vars.mechanicId)
-            ?.full_name ?? null;
+          previous.mechanics.find((m) => m.id === vars.mechanicId)?.full_name ??
+          null;
         queryClient.setQueryData<BayViewData>(key, {
           ...previous,
           bays: previous.bays.map((b) => {
@@ -286,15 +286,13 @@ export function useAssignMechanicToWorkOrder(branchId: string | undefined) {
 
 // ─── Remove Mechanic ───────────────────────────────────────────
 
-export function useRemoveMechanicFromWorkOrder(
-  branchId: string | undefined,
-) {
+export function useRemoveMechanicFromWorkOrder(branchId: string | undefined) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ woId }: { woId: string }) => {
       const { unassignMechanicFromWorkOrder } = await import(
-        "@/lib/services/bay-view-service"
+        "@/lib/services/bay-view-service.actions"
       );
       await unassignMechanicFromWorkOrder(woId);
     },
@@ -349,7 +347,7 @@ export function useAddHelperToWorkOrder(branchId: string | undefined) {
       mechanicId: string;
     }) => {
       const { assignHelperToWorkOrder } = await import(
-        "@/lib/services/bay-view-service"
+        "@/lib/services/bay-view-service.actions"
       );
       await assignHelperToWorkOrder(woId, mechanicId);
     },
@@ -417,7 +415,7 @@ export function useRemoveHelperFromWorkOrder(branchId: string | undefined) {
       mechanicId: string;
     }) => {
       const { removeHelperFromWorkOrder } = await import(
-        "@/lib/services/bay-view-service"
+        "@/lib/services/bay-view-service.actions"
       );
       await removeHelperFromWorkOrder(woId, mechanicId);
     },
@@ -536,7 +534,7 @@ export function useUpdateBayCount(branchId: string | undefined) {
   return useMutation({
     mutationFn: async ({ count }: { count: number }) => {
       const { updateBayCount } = await import(
-        "@/lib/services/bay-view-service"
+        "@/lib/services/bay-view-service.actions"
       );
       await updateBayCount(count);
     },

@@ -1,85 +1,36 @@
-"use server";
+// ── Pure Service Functions ─────────────────────────────────────
+// All functions accept `db: SupabaseClient` as first parameter and
+// `orgId: string` as second parameter. No server action directives,
+// no inline auth checks, no createClient() calls.
 
 import { revalidateTag } from "next/cache";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { cacheTags } from "@/lib/cache/keys";
 import {
   NotFoundError,
-  UnauthorizedError,
   ValidationError,
 } from "@/lib/errors";
 import { createWorkOrder } from "@/lib/services/work-order-service";
-import { createClient } from "@/lib/supabase/server";
 import { withBranchFilter } from "@/lib/supabase/with-branch";
 import type { Profile, Vehicle, WorkOrder } from "@/lib/types";
 import { updateWorkOrderStatus as updateWorkOrderStatusCanonical } from "./work-order-workflow";
+import type {
+  BaySlotData,
+  BayViewData,
+  BranchInfo,
+  BranchSectionData,
+  ShiftReport,
+} from "./bay-view-service.types";
 
-// ── Types ──────────────────────────────────────────────────────
-
-export interface BaySlotData {
-  bayNumber: number;
-  workOrder:
-    | (WorkOrder & {
-        vehicle: Vehicle | null;
-        mechanic: {
-          id: string;
-          full_name: string | null;
-          avatar_url: string | null;
-        } | null;
-        helpers: {
-          id: string;
-          full_name: string | null;
-          avatar_url: string | null;
-        }[];
-        customer_name: string | null;
-      })
-    | null;
-}
-
-export interface BranchInfo {
-  id: string;
-  name: string;
-}
-
-export interface BranchSectionData {
-  branchId: string;
-  branchName: string;
-  bayCount: number;
-  bays: BaySlotData[];
-}
-
-export interface BayViewData {
-  bayCount: number;
-  bays: BaySlotData[];
-  branches: BranchInfo[];
-  /** Present when viewing "All" — one section per branch with its bay grid. */
-  branchSections?: BranchSectionData[];
-  waitingQueue: (WorkOrder & {
-    vehicle: Vehicle | null;
-  })[];
-  mechanics: (Profile & { current_jobs: number })[];
-}
-
-// ── Helpers ────────────────────────────────────────────────────
-
-async function getOrgId(): Promise<string> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new UnauthorizedError();
-
-  const { data, error } = await supabase.rpc("get_user_organization_id");
-
-  if (error) {
-    throw new UnauthorizedError(error.message);
-  }
-
-  if (!data) {
-    throw new UnauthorizedError("Choose an organization to continue");
-  }
-
-  return data;
-}
+// Re-export types for backward compatibility
+export type {
+  BaySlotData,
+  BayViewData,
+  BranchInfo,
+  BranchSectionData,
+  ShiftReport,
+};
+export type { UpdateStatusParams } from "./bay-view-service.types";
 
 // ── Helpers for multi-branch sections ─────────────────────────
 
@@ -119,23 +70,22 @@ function buildBranchSections(
 // ── Get Bay View Data ──────────────────────────────────────────
 
 async function fetchBayViewData(
+  db: SupabaseClient,
   orgId: string,
   branchId?: string,
 ): Promise<BayViewData> {
-  const supabase = await createClient();
-
   // ── Batch 1: Independent queries (run in parallel) ──
   // branches, work_orders, and organization_users have no deps on each other
   const [{ data: allBranches }, { data: activeWOs }, memberQueryResult] =
     await Promise.all([
       // 1a. Branches (for pills, bay count, branch sections)
-      supabase
+      db
         .from("branches")
         .select("id, name, settings")
         .eq("organization_id", orgId)
         .order("name"),
       // 1b. Active work orders (with vehicle + customer joins)
-      supabase
+      db
         .from("work_orders")
         .select(`
         *,
@@ -149,7 +99,7 @@ async function fetchBayViewData(
         .order("created_at", { ascending: true }),
       // 1c. Mechanic role members (for mechanic panel)
       (async () => {
-        let q = supabase
+        let q = db
           .from("organization_users")
           .select("user_id, roles!inner(name)")
           .eq("organization_id", orgId)
@@ -196,7 +146,7 @@ async function fetchBayViewData(
   ] = await Promise.all([
     // 2a. Helper records (needs activeWoIds)
     activeWoIds.length > 0
-      ? supabase
+      ? db
           .from("work_order_helpers")
           .select("work_order_id, mechanic_id, sort_order")
           .in("work_order_id", activeWoIds)
@@ -204,14 +154,14 @@ async function fetchBayViewData(
       : Promise.resolve({ data: [] }),
     // 2b. Mechanic profiles for work order assignments
     mainMechanicIds.length > 0
-      ? supabase
+      ? db
           .from("profiles")
           .select("id, full_name, avatar_url")
           .in("id", mainMechanicIds)
       : Promise.resolve({ data: [] }),
     // 2c. Mechanic profiles for mechanic panel
     mechUserIds.length > 0
-      ? supabase
+      ? db
           .from("profiles")
           .select("id, full_name, phone, avatar_url")
           .in("id", mechUserIds)
@@ -233,7 +183,7 @@ async function fetchBayViewData(
   );
   const { data: extraProfiles } =
     extraMechIds.length > 0
-      ? await supabase
+      ? await db
           .from("profiles")
           .select("id, full_name, avatar_url")
           .in("id", extraMechIds)
@@ -330,52 +280,33 @@ async function fetchBayViewData(
   };
 }
 
-/**
- * Cached version — good for initial load and auto-refresh polling.
- * Cache is invalidated by revalidateTag calls in mutation functions.
- */
-export async function getBayViewData(branchId?: string): Promise<BayViewData> {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new UnauthorizedError();
-  const orgId = await getOrgId();
-
-  return fetchBayViewData(orgId, branchId);
-}
-
-/**
- * Fresh (uncached) version — call after any mutation to ensure
- * the UI sees the committed database state immediately.
- */
-export async function getBayViewDataFresh(
+export async function getBayViewData(
+  db: SupabaseClient,
+  orgId: string,
   branchId?: string,
 ): Promise<BayViewData> {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new UnauthorizedError();
-  const orgId = await getOrgId();
-  return fetchBayViewData(orgId, branchId);
+  return fetchBayViewData(db, orgId, branchId);
+}
+
+export async function getBayViewDataFresh(
+  db: SupabaseClient,
+  orgId: string,
+  branchId?: string,
+): Promise<BayViewData> {
+  return fetchBayViewData(db, orgId, branchId);
 }
 
 // ── Assign Vehicle to Bay ─────────────────────────────────────
 
 export async function assignVehicleToBay(
+  db: SupabaseClient,
+  orgId: string,
   workOrderId: string,
   bayNumber: number,
 ): Promise<void> {
-  // Single supabase client — reuse for auth + all operations
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new UnauthorizedError();
-  const orgId = await getOrgId();
-
   // Run conflict check, clear old data, and assign in one parallel batch.
   const assignFn = async () => {
-    const { error } = await supabase
+    const { error } = await db
       .from("work_orders")
       .update({
         bay_number: bayNumber,
@@ -390,7 +321,7 @@ export async function assignVehicleToBay(
     return { error };
   };
   const [{ data: conflict }, { error: assignError }] = await Promise.all([
-    supabase
+    db
       .from("work_orders")
       .select("id")
       .eq("organization_id", orgId)
@@ -399,15 +330,15 @@ export async function assignVehicleToBay(
       .is("deleted_at", null)
       .maybeSingle(),
     assignFn(),
-    supabase
+    db
       .from("work_order_helpers")
       .delete()
       .eq("work_order_id", workOrderId),
-    supabase
+    db
       .from("work_order_services")
       .delete()
       .eq("work_order_id", workOrderId),
-    supabase.from("work_order_parts").delete().eq("work_order_id", workOrderId),
+    db.from("work_order_parts").delete().eq("work_order_id", workOrderId),
   ]);
 
   if (conflict && conflict.id !== workOrderId) {
@@ -425,21 +356,17 @@ export async function assignVehicleToBay(
 // ── Swap two occupied bays ─────────────────────────────────────
 
 export async function swapBayNumbers(
+  db: SupabaseClient,
+  orgId: string,
   workOrderIdA: string,
   bayNumberA: number,
   workOrderIdB: string,
   bayNumberB: number,
 ): Promise<void> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new UnauthorizedError();
-  const orgId = await getOrgId();
   const now = new Date().toISOString();
 
   // Step 1: temporarily clear both bays so no conflict check fires
-  const { error: clearErr } = await supabase
+  const { error: clearErr } = await db
     .from("work_orders")
     .update({ bay_number: null, updated_at: now })
     .in("id", [workOrderIdA, workOrderIdB])
@@ -448,12 +375,12 @@ export async function swapBayNumbers(
 
   // Step 2: assign each vehicle to the other's bay (both bays are now free)
   const { error: swapErr } = await Promise.all([
-    supabase
+    db
       .from("work_orders")
       .update({ bay_number: bayNumberA, updated_at: now })
       .eq("id", workOrderIdB)
       .eq("organization_id", orgId),
-    supabase
+    db
       .from("work_orders")
       .update({ bay_number: bayNumberB, updated_at: now })
       .eq("id", workOrderIdA)
@@ -466,7 +393,7 @@ export async function swapBayNumbers(
     throw new Error(swapErr.message ?? "Failed to assign vehicle to bay");
 
   // Step 3: clean up helpers for both work orders
-  await supabase
+  await db
     .from("work_order_helpers")
     .delete()
     .in("work_order_id", [workOrderIdA, workOrderIdB]);
@@ -480,14 +407,12 @@ export async function swapBayNumbers(
 
 // ── Remove Vehicle from Bay ───────────────────────────────────
 
-export async function removeVehicleFromBay(workOrderId: string): Promise<void> {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new UnauthorizedError();
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
-
-  const { error } = await supabase
+export async function removeVehicleFromBay(
+  db: SupabaseClient,
+  orgId: string,
+  workOrderId: string,
+): Promise<void> {
+  const { error } = await db
     .from("work_orders")
     .update({
       bay_number: null,
@@ -506,15 +431,9 @@ export async function removeVehicleFromBay(workOrderId: string): Promise<void> {
 
   // Clear helpers, services, and parts
   await Promise.all([
-    supabase
-      .from("work_order_helpers")
-      .delete()
-      .eq("work_order_id", workOrderId),
-    supabase
-      .from("work_order_services")
-      .delete()
-      .eq("work_order_id", workOrderId),
-    supabase.from("work_order_parts").delete().eq("work_order_id", workOrderId),
+    db.from("work_order_helpers").delete().eq("work_order_id", workOrderId),
+    db.from("work_order_services").delete().eq("work_order_id", workOrderId),
+    db.from("work_order_parts").delete().eq("work_order_id", workOrderId),
   ]);
 
   revalidateTag(cacheTags.bayView(orgId, orgId), "max");
@@ -525,16 +444,12 @@ export async function removeVehicleFromBay(workOrderId: string): Promise<void> {
 // ── Assign Mechanic ────────────────────────────────────────────
 
 export async function assignMechanicToWorkOrder(
+  db: SupabaseClient,
+  orgId: string,
   workOrderId: string,
   mechanicId: string,
 ): Promise<void> {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new UnauthorizedError();
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
-
-  const { error } = await supabase
+  const { error } = await db
     .from("work_orders")
     .update({
       mechanic_id: mechanicId,
@@ -547,7 +462,7 @@ export async function assignMechanicToWorkOrder(
   if (error) throw new Error(error.message ?? "Failed to assign mechanic");
 
   // If this mechanic was previously a helper on this WO, remove them from helpers
-  await supabase
+  await db
     .from("work_order_helpers")
     .delete()
     .eq("work_order_id", workOrderId)
@@ -561,15 +476,11 @@ export async function assignMechanicToWorkOrder(
 // ── Unassign Mechanic ─────────────────────────────────────────
 
 export async function unassignMechanicFromWorkOrder(
+  db: SupabaseClient,
+  orgId: string,
   workOrderId: string,
 ): Promise<void> {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new UnauthorizedError();
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
-
-  const { error } = await supabase
+  const { error } = await db
     .from("work_orders")
     .update({
       mechanic_id: null,
@@ -588,17 +499,14 @@ export async function unassignMechanicFromWorkOrder(
 // ── Assign Helper Mechanic ──────────────────────────────────────
 
 export async function assignHelperToWorkOrder(
+  db: SupabaseClient,
+  orgId: string,
   workOrderId: string,
   mechanicId: string,
+  userId: string,
 ): Promise<void> {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new UnauthorizedError();
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
-
   // Check if this mechanic is already a helper on this WO
-  const { data: existing } = await supabase
+  const { data: existing } = await db
     .from("work_order_helpers")
     .select("id")
     .eq("work_order_id", workOrderId)
@@ -611,7 +519,7 @@ export async function assignHelperToWorkOrder(
   }
 
   // Don't add as helper if they're already the main mechanic
-  const { data: wo } = await supabase
+  const { data: wo } = await db
     .from("work_orders")
     .select("mechanic_id")
     .eq("id", workOrderId)
@@ -623,11 +531,11 @@ export async function assignHelperToWorkOrder(
     return; // Already the main mechanic
   }
 
-  const { error } = await supabase.from("work_order_helpers").insert({
+  const { error } = await db.from("work_order_helpers").insert({
     work_order_id: workOrderId,
     organization_id: orgId,
     mechanic_id: mechanicId,
-    created_by: user.id,
+    created_by: userId,
   });
 
   if (error)
@@ -641,16 +549,12 @@ export async function assignHelperToWorkOrder(
 // ── Remove Helper Mechanic ──────────────────────────────────────
 
 export async function removeHelperFromWorkOrder(
+  db: SupabaseClient,
+  orgId: string,
   workOrderId: string,
   mechanicId: string,
 ): Promise<void> {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new UnauthorizedError();
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
-
-  const { error } = await supabase
+  const { error } = await db
     .from("work_order_helpers")
     .delete()
     .eq("work_order_id", workOrderId)
@@ -668,17 +572,13 @@ export async function removeHelperFromWorkOrder(
 // ── Reorder Helpers ────────────────────────────────────────────
 
 export async function reorderWorkOrderHelpers(
+  db: SupabaseClient,
+  orgId: string,
   workOrderId: string,
   orderedMechanicIds: string[],
 ): Promise<void> {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new UnauthorizedError();
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
-
   // First, get existing helper rows so we can update sort_order by id
-  const { data: existing, error: fetchErr } = await supabase
+  const { data: existing, error: fetchErr } = await db
     .from("work_order_helpers")
     .select("id, mechanic_id")
     .eq("work_order_id", workOrderId)
@@ -696,7 +596,7 @@ export async function reorderWorkOrderHelpers(
   for (let i = 0; i < orderedMechanicIds.length; i++) {
     const rowId = idByMechanic.get(orderedMechanicIds[i]);
     if (!rowId) continue; // skip if not found (shouldn't happen)
-    const { error: updErr } = await supabase
+    const { error: updErr } = await db
       .from("work_order_helpers")
       .update({ sort_order: i })
       .eq("id", rowId);
@@ -712,15 +612,11 @@ export async function reorderWorkOrderHelpers(
 // ── Clear All Helpers from Work Order ──────────────────────────
 
 export async function clearHelpersFromWorkOrder(
+  db: SupabaseClient,
+  orgId: string,
   workOrderId: string,
 ): Promise<void> {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new UnauthorizedError();
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
-
-  await supabase
+  await db
     .from("work_order_helpers")
     .delete()
     .eq("work_order_id", workOrderId)
@@ -733,24 +629,14 @@ export async function clearHelpersFromWorkOrder(
 
 // ── Update Work Order Status ───────────────────────────────────
 
-export type UpdateStatusParams = {
-  woId: string;
-  status:
-    | "New"
-    | "Diagnosing"
-    | "In Progress"
-    | "Ready for Pickup"
-    | "Completed"
-    | "Cancelled";
-  notes?: string;
-};
-
 /**
- * Server-action wrapper that delegates to the canonical updateWorkOrderStatus
+ * Pure service function that delegates to the canonical updateWorkOrderStatus
  * in work-order-workflow.ts. This ensures inventory deduction, schedule sync,
  * and full cache invalidation (dashboardMetrics, reports) run on status change.
  */
 export async function updateWorkOrderStatus(
+  db: SupabaseClient,
+  orgId: string,
   workOrderId: string,
   status:
     | "New"
@@ -761,10 +647,8 @@ export async function updateWorkOrderStatus(
     | "Cancelled",
   notes?: string,
 ): Promise<void> {
-  const supabase = await createClient();
-  const orgId = await getOrgId();
   await updateWorkOrderStatusCanonical(
-    supabase,
+    db,
     workOrderId,
     orgId,
     status,
@@ -774,18 +658,16 @@ export async function updateWorkOrderStatus(
 
 // ── Update Bay Count ───────────────────────────────────────────
 
-export async function updateBayCount(count: number): Promise<number> {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new UnauthorizedError();
+export async function updateBayCount(
+  db: SupabaseClient,
+  orgId: string,
+  count: number,
+): Promise<number> {
   if (count < 1 || count > 50)
     throw new ValidationError("Bay count must be between 1 and 50");
 
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
-
   // Get current branch settings
-  const { data: branch } = await supabase
+  const { data: branch } = await db
     .from("branches")
     .select("id, settings")
     .eq("organization_id", orgId)
@@ -800,7 +682,7 @@ export async function updateBayCount(count: number): Promise<number> {
 
   // If reducing bay count, unassign vehicles from removed bays
   if (count < oldCount) {
-    await supabase
+    await db
       .from("work_orders")
       .update({
         bay_number: null,
@@ -815,7 +697,7 @@ export async function updateBayCount(count: number): Promise<number> {
 
   const newSettings = { ...currentSettings, bay_count: count };
 
-  const { error } = await supabase
+  const { error } = await db
     .from("branches")
     .update({ settings: newSettings, updated_at: new Date().toISOString() })
     .eq("id", branch.id);
@@ -828,17 +710,15 @@ export async function updateBayCount(count: number): Promise<number> {
 
 // ── Seed Waiting Queue ─────────────────────────────────────────
 
-export async function seedWaitingQueue(): Promise<{
+export async function seedWaitingQueue(
+  db: SupabaseClient,
+  orgId: string,
+  userId: string,
+): Promise<{
   created: number;
   errors: string[];
 }> {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new UnauthorizedError();
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
-
-  const { data: branch } = await supabase
+  const { data: branch } = await db
     .from("branches")
     .select("id")
     .eq("organization_id", orgId)
@@ -970,7 +850,7 @@ export async function seedWaitingQueue(): Promise<{
     try {
       // Find or create customer
       let custId: string;
-      const { data: existingCust } = await supabase
+      const { data: existingCust } = await db
         .from("customers")
         .select("id")
         .eq("organization_id", orgId)
@@ -982,7 +862,7 @@ export async function seedWaitingQueue(): Promise<{
         custId = existingCust.id;
       } else {
         const [first, ...rest] = v.owner.split(" ");
-        const { data: newCust } = await supabase
+        const { data: newCust } = await db
           .from("customers")
           .insert({
             organization_id: orgId,
@@ -990,8 +870,8 @@ export async function seedWaitingQueue(): Promise<{
             first_name: first,
             last_name: rest.join(" ") || null,
             phone: v.phone,
-            created_by: user.id,
-            updated_by: user.id,
+            created_by: userId,
+            updated_by: userId,
           })
           .select("id")
           .single();
@@ -1001,7 +881,7 @@ export async function seedWaitingQueue(): Promise<{
 
       // Find or create vehicle
       let vehId: string;
-      const { data: existingVeh } = await supabase
+      const { data: existingVeh } = await db
         .from("vehicles")
         .select("id")
         .eq("organization_id", orgId)
@@ -1012,7 +892,7 @@ export async function seedWaitingQueue(): Promise<{
       if (existingVeh) {
         vehId = existingVeh.id;
       } else {
-        const { data: newVeh } = await supabase
+        const { data: newVeh } = await db
           .from("vehicles")
           .insert({
             organization_id: orgId,
@@ -1022,8 +902,8 @@ export async function seedWaitingQueue(): Promise<{
             model: v.model,
             plate_number: v.plate,
             year: v.year,
-            created_by: user.id,
-            updated_by: user.id,
+            created_by: userId,
+            updated_by: userId,
           })
           .select("id")
           .single();
@@ -1032,7 +912,7 @@ export async function seedWaitingQueue(): Promise<{
       }
 
       // createWorkOrder — same RLS path as the API route (works in production)
-      await createWorkOrder(supabase, orgId, {
+      await createWorkOrder(db, orgId, {
         customer_id: custId,
         vehicle_id: vehId,
         branchId: branch.id,
@@ -1054,16 +934,12 @@ export async function seedWaitingQueue(): Promise<{
 // ── Assign Vehicle to First Available Bay ─────────────────────
 
 export async function assignToFirstAvailableBay(
+  db: SupabaseClient,
+  orgId: string,
   workOrderId: string,
 ): Promise<number> {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new UnauthorizedError();
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
-
   // Get current bay count
-  const { data: branch } = await supabase
+  const { data: branch } = await db
     .from("branches")
     .select("settings")
     .eq("organization_id", orgId)
@@ -1075,7 +951,7 @@ export async function assignToFirstAvailableBay(
       ?.bay_count as number) ?? 6;
 
   // Find occupied bays
-  const { data: active } = await supabase
+  const { data: active } = await db
     .from("work_orders")
     .select("bay_number")
     .eq("organization_id", orgId)
@@ -1095,7 +971,7 @@ export async function assignToFirstAvailableBay(
   }
 
   // Assign to that bay — clear old data, start fresh
-  const { error } = await supabase
+  const { error } = await db
     .from("work_orders")
     .update({
       bay_number: firstEmpty,
@@ -1114,15 +990,9 @@ export async function assignToFirstAvailableBay(
 
   // Clear old services and parts
   await Promise.all([
-    supabase
-      .from("work_order_services")
-      .delete()
-      .eq("work_order_id", workOrderId),
-    supabase.from("work_order_parts").delete().eq("work_order_id", workOrderId),
-    supabase
-      .from("work_order_helpers")
-      .delete()
-      .eq("work_order_id", workOrderId),
+    db.from("work_order_services").delete().eq("work_order_id", workOrderId),
+    db.from("work_order_parts").delete().eq("work_order_id", workOrderId),
+    db.from("work_order_helpers").delete().eq("work_order_id", workOrderId),
   ]);
 
   revalidateTag(cacheTags.bayView(orgId, orgId), "max");
@@ -1134,17 +1004,13 @@ export async function assignToFirstAvailableBay(
 // ── Reorder Waiting Queue ────────────────────────────────────
 
 export async function reorderQueue(
+  db: SupabaseClient,
+  orgId: string,
   updates: { id: string; queue_order: number }[],
 ): Promise<void> {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new UnauthorizedError();
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
-
   await Promise.all(
     updates.map(async (u) => {
-      const { error } = await supabase
+      const { error } = await db
         .from("work_orders")
         .update({
           queue_order: u.queue_order,
@@ -1164,25 +1030,13 @@ export async function reorderQueue(
 
 // ── Shift Report ─────────────────────────────────────────────
 
-export interface ShiftReport {
-  completedToday: number;
-  revenueToday: number;
-  avgDurationMinutes: number;
-  bayUtilization: number;
-  bayCount: number;
-  activeJobs: number;
-  revenuePerLaborHour: number;
-}
-
-export async function getShiftReport(branchId?: string): Promise<ShiftReport> {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new UnauthorizedError();
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
-
+export async function getShiftReport(
+  db: SupabaseClient,
+  orgId: string,
+  branchId?: string,
+): Promise<ShiftReport> {
   // Get bay count from selected branch or main branch
-  const branchQuery = supabase
+  const branchQuery = db
     .from("branches")
     .select("settings")
     .eq("organization_id", orgId);
@@ -1204,7 +1058,7 @@ export async function getShiftReport(branchId?: string): Promise<ShiftReport> {
   const [{ data: completed }, { data: active }, { data: inBay }] =
     await Promise.all([
       withBranchFilter(
-        supabase
+        db
           .from("work_orders")
           .select("total, completed_at, started_at")
           .eq("organization_id", orgId)
@@ -1214,7 +1068,7 @@ export async function getShiftReport(branchId?: string): Promise<ShiftReport> {
         branchId,
       ),
       withBranchFilter(
-        supabase
+        db
           .from("work_orders")
           .select("id, started_at")
           .eq("organization_id", orgId)
@@ -1223,7 +1077,7 @@ export async function getShiftReport(branchId?: string): Promise<ShiftReport> {
         branchId,
       ),
       withBranchFilter(
-        supabase
+        db
           .from("work_orders")
           .select("id")
           .eq("organization_id", orgId)
@@ -1296,14 +1150,12 @@ export async function getShiftReport(branchId?: string): Promise<ShiftReport> {
 // ── Update Bay View PIN ──────────────────────────────────────
 
 export async function updateBayViewPin(
+  db: SupabaseClient,
+  orgId: string,
   currentPin: string,
   newPin: string,
   confirmPin: string,
 ): Promise<void> {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new UnauthorizedError();
   if (!/^[0-9]{4,6}$/.test(newPin)) {
     throw new ValidationError("PIN must be 4 to 6 digits");
   }
@@ -1311,10 +1163,8 @@ export async function updateBayViewPin(
     throw new ValidationError("PIN confirmation does not match");
   }
 
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
-
   // Verify current PIN first
-  const { data: verified } = await supabase.rpc(
+  const { data: verified } = await db.rpc(
     "verify_organization_bay_view_pin",
     {
       target_org_id: orgId,
@@ -1327,7 +1177,7 @@ export async function updateBayViewPin(
   }
 
   // Set new PIN
-  const { error } = await supabase.rpc("set_organization_bay_view_pin", {
+  const { error } = await db.rpc("set_organization_bay_view_pin", {
     target_org_id: orgId,
     plain_pin: newPin,
   });

@@ -401,7 +401,7 @@ export function VehicleRegistrationDialog({
         // Direct assign to bay if requested
         if (assignBayNumber) {
           const { assignVehicleToBay } = await import(
-            "@/lib/services/bay-view-service"
+            "@/lib/services/bay-view-service.actions"
           );
           await assignVehicleToBay(workOrderId, assignBayNumber);
         }
@@ -496,7 +496,7 @@ export function VehicleRegistrationDialog({
     if (assignBayNumber && workOrderId) {
       try {
         const { assignVehicleToBay } = await import(
-          "@/lib/services/bay-view-service"
+          "@/lib/services/bay-view-service.actions"
         );
         await assignVehicleToBay(workOrderId, assignBayNumber);
       } catch (err) {

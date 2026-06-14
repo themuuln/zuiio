@@ -93,7 +93,7 @@ export function PinSettingsDialog({ open, onOpenChange }: Props) {
 
     try {
       const { updateBayViewPin } = await import(
-        "@/lib/services/bay-view-service"
+        "@/lib/services/bay-view-service.actions"
       );
       await updateBayViewPin(data.currentPin, data.newPin, data.confirmPin);
       setSuccess(true);

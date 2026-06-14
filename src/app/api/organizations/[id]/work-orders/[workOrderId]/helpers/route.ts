@@ -7,7 +7,7 @@ import {
 } from "@/lib/services/bay-view-service";
 
 export const POST = createRouteHandler(
-  async ({ request, params, orgId }) => {
+  async ({ request, params, orgId, supabase, user }) => {
     const { workOrderId } = params;
     const body = await request.json();
     const mechanicId = body?.mechanic_id;
@@ -22,7 +22,7 @@ export const POST = createRouteHandler(
         { status: 400 },
       );
     }
-    await assignHelperToWorkOrder(workOrderId, mechanicId);
+    await assignHelperToWorkOrder(supabase, orgId, workOrderId, mechanicId, user.id);
     return NextResponse.json({ data: null }, { status: 201 });
   },
   {
@@ -33,7 +33,7 @@ export const POST = createRouteHandler(
 );
 
 export const DELETE = createRouteHandler(
-  async ({ request, params, orgId }) => {
+  async ({ request, params, orgId, supabase }) => {
     const { workOrderId } = params;
     const { searchParams } = new URL(request.url);
     const mechanicId = searchParams.get("mechanicId");
@@ -48,7 +48,7 @@ export const DELETE = createRouteHandler(
         { status: 400 },
       );
     }
-    await removeHelperFromWorkOrder(workOrderId, mechanicId);
+    await removeHelperFromWorkOrder(supabase, orgId, workOrderId, mechanicId);
     return NextResponse.json({ data: null });
   },
   {
@@ -59,7 +59,7 @@ export const DELETE = createRouteHandler(
 );
 
 export const PUT = createRouteHandler(
-  async ({ request, params, orgId }) => {
+  async ({ request, params, orgId, supabase }) => {
     const { workOrderId } = params;
     const body = await request.json();
     const { mechanic_ids } = body;
@@ -74,7 +74,7 @@ export const PUT = createRouteHandler(
         { status: 400 },
       );
     }
-    await reorderWorkOrderHelpers(workOrderId, mechanic_ids);
+    await reorderWorkOrderHelpers(supabase, orgId, workOrderId, mechanic_ids);
     return NextResponse.json({ data: null });
   },
   {
