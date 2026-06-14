@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { calculateCommission } from "@/lib/commissions";
+import {
+  calculateCommission,
+  validatePayoutRequest,
+  calculatePayoutTotal,
+  getAlreadyPaidIds,
+  buildStaffSummary,
+} from "@/lib/commissions";
+
+// --- Existing commission calculation tests ---
 
 test("calculateCommission returns 10% of total_price rounded to 2 decimal places", () => {
   // 10,000 * 0.10 = 1,000.00
@@ -126,4 +134,99 @@ test("calculateCommission matches SQL ROUND(total_price * 0.10, 2) semantics", (
       `Failed for totalPrice=${totalPrice}`,
     );
   }
+});
+
+// --- Payout validation tests ---
+
+test("validatePayoutRequest rejects null/empty profileId", () => {
+  assert.notEqual(validatePayoutRequest({ profileId: null, selectedItemIds: ["id1"] }), null);
+  assert.notEqual(validatePayoutRequest({ profileId: "", selectedItemIds: ["id1"] }), null);
+});
+
+test("validatePayoutRequest rejects empty selected items (VAL-PAY-009)", () => {
+  const error = validatePayoutRequest({
+    profileId: "profile-1",
+    selectedItemIds: [],
+  });
+  assert.notEqual(error, null);
+  assert(error!.includes("комиссууд"));
+});
+
+test("validatePayoutRequest accepts valid payload", () => {
+  const error = validatePayoutRequest({
+    profileId: "profile-1",
+    selectedItemIds: ["item-1", "item-2"],
+  });
+  assert.equal(error, null);
+});
+
+test("calculatePayoutTotal sums commission amounts correctly", () => {
+  const items = [
+    { commission_amount: 1000.0 },
+    { commission_amount: 2500.5 },
+    { commission_amount: 750.25 },
+  ];
+  assert.equal(calculatePayoutTotal(items), 4250.75);
+});
+
+test("calculatePayoutTotal returns 0 for empty items", () => {
+  assert.equal(calculatePayoutTotal([]), 0);
+});
+
+test("getAlreadyPaidIds finds already paid items correctly", () => {
+  const paidItems = [
+    { sale_item_id: "item-1" },
+    { sale_item_id: "item-3" },
+  ];
+  const selectedIds = ["item-1", "item-2", "item-3", "item-4"];
+
+  const alreadyPaid = getAlreadyPaidIds(paidItems, selectedIds);
+  assert.deepEqual(alreadyPaid, ["item-1", "item-3"]);
+});
+
+test("getAlreadyPaidIds returns empty array when none are paid (VAL-PAY-006)", () => {
+  const paidItems: Array<{ sale_item_id: string }> = [];
+  const selectedIds = ["item-1", "item-2"];
+
+  const alreadyPaid = getAlreadyPaidIds(paidItems, selectedIds);
+  assert.equal(alreadyPaid.length, 0);
+});
+
+test("buildStaffSummary computes correct unpaid balance", () => {
+  const summary = buildStaffSummary({
+    profileId: "p1",
+    fullName: "Test User",
+    totalEarned: 5000,
+    totalPaid: 1500,
+  });
+
+  assert.equal(summary.profileId, "p1");
+  assert.equal(summary.fullName, "Test User");
+  assert.equal(summary.totalEarned, 5000);
+  assert.equal(summary.totalPaid, 1500);
+  assert.equal(summary.totalUnpaid, 3500);
+});
+
+test("buildStaffSummary handles zero values", () => {
+  const summary = buildStaffSummary({
+    profileId: "p2",
+    fullName: "Zero User",
+    totalEarned: 0,
+    totalPaid: 0,
+  });
+
+  assert.equal(summary.totalEarned, 0);
+  assert.equal(summary.totalPaid, 0);
+  assert.equal(summary.totalUnpaid, 0);
+});
+
+test("buildStaffSummary prevents negative unpaid", () => {
+  const summary = buildStaffSummary({
+    profileId: "p3",
+    fullName: "Overpaid User",
+    totalEarned: 100,
+    totalPaid: 200,
+  });
+
+  assert.equal(summary.totalUnpaid, 0); // Can't have negative unpaid
 });

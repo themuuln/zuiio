@@ -4,6 +4,7 @@ import { Drawer } from "@base-ui/react/drawer";
 import {
   Buildings,
   ChartBar,
+  Coin,
   CreditCard,
   CurrencyDollar,
   Folder,
@@ -47,6 +48,7 @@ const navItems = [
   { title: "Агуулах", href: "/inventory", icon: Warehouse },
   { title: "Ангилалууд", href: "/inventory/categories", icon: Folder },
   { title: "Борлуулалт", href: "/sales", icon: CurrencyDollar },
+  { title: "Комисс", href: "/commissions", icon: Coin },
   { title: "Зарлага", href: "/expenses", icon: CreditCard },
   { title: "Харилцагчид", href: "/customers", icon: Users },
   { title: "Нийлүүлэгчид", href: "/suppliers", icon: Buildings },

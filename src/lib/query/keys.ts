@@ -48,3 +48,11 @@ export const movementKeys = {
   lists: (orgId: string) => ["stock_movements", "list", orgId] as const,
   detail: (id: string) => ["stock_movements", "detail", id] as const,
 };
+
+export const commissionKeys = {
+  all: () => ["commissions"] as const,
+  summary: (orgId: string) => ["commissions", "summary", orgId] as const,
+  unpaidItems: (orgId: string, profileId: string) =>
+    ["commissions", "unpaid", orgId, profileId] as const,
+  history: (orgId: string) => ["commissions", "history", orgId] as const,
+};
