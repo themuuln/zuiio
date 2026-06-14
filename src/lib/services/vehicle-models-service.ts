@@ -1,174 +1,52 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
-import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import type { VehicleModel } from "@/lib/types";
-import { buildUpdates, type FieldMap } from "./build-updates";
+import { createCrudService } from "./create-crud-service";
 import { trimField } from "./trim-field";
 
-export async function getVehicleModels(
-  db: SupabaseClient,
-  orgId: string,
-  make?: string,
-): Promise<VehicleModel[]> {
-  const supabase = db;
+type CreateParams = {
+  make: string;
+  model: string;
+  generation?: string | null;
+  year_start?: number | null;
+  year_end?: number | null;
+  engine?: string | null;
+  body_type?: string | null;
+  class?: string | null;
+};
 
-  let query = supabase
-    .from("vehicle_models")
-    .select(
-      "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, class, is_active, created_at, updated_at, deleted_at",
-    )
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .order("make")
-    .order("model");
+type UpdateParams = {
+  make?: string;
+  model?: string;
+  generation?: string | null;
+  year_start?: number | null;
+  year_end?: number | null;
+  engine?: string | null;
+  body_type?: string | null;
+  class?: string | null;
+  is_active?: boolean;
+};
 
-  if (make) {
-    query = query.eq("make", make);
-  }
-
-  const { data, error } = await query;
-  if (error) throw new Error(error.message ?? "Failed to fetch vehicle models");
-  return (data ?? []) as unknown as VehicleModel[];
-}
-
-export async function getVehicleModel(
-  db: SupabaseClient,
-  id: string,
-): Promise<VehicleModel> {
-  const supabase = db;
-
-  const { data, error } = await supabase
-    .from("vehicle_models")
-    .select(
-      "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, class, is_active, created_by, updated_by, created_at, updated_at, deleted_at",
-    )
-    .eq("id", id)
-    .is("deleted_at", null)
-    .single();
-
-  if (error || !data) throw new NotFoundError("Vehicle model not found");
-  return data;
-}
-
-export async function getDistinctMakes(
-  db: SupabaseClient,
-  orgId: string,
-): Promise<string[]> {
-  const supabase = db;
-
-  const { data, error } = await supabase
-    .from("vehicle_models")
-    .select("make")
-    .eq("organization_id", orgId)
-    .is("deleted_at", null)
-    .order("make");
-
-  if (error) throw new Error(error.message ?? "Failed to fetch makes");
-
-  const makes = [...new Set(data.map((r) => r.make))];
-  return makes;
-}
-
-export async function createVehicleModel(
-  db: SupabaseClient,
-  orgId: string,
-  params: {
-    make: string;
-    model: string;
-    generation?: string | null;
-    year_start?: number | null;
-    year_end?: number | null;
-    engine?: string | null;
-    body_type?: string | null;
-    class?: string | null;
-  },
-): Promise<VehicleModel> {
-  if (!params.make?.trim()) throw new ValidationError("Make is required");
-  if (!params.model?.trim()) throw new ValidationError("Model is required");
-  if (
-    params.year_start != null &&
-    params.year_end != null &&
-    params.year_start > params.year_end
-  ) {
+function validateYearRange(
+  yearStart?: number | null,
+  yearEnd?: number | null,
+): void {
+  if (yearStart != null && yearEnd != null && yearStart > yearEnd)
     throw new ValidationError(
       "Year start must be less than or equal to year end",
     );
-  }
-
-  const supabase = db;
-  const userId = (await supabase.auth.getUser()).data.user?.id;
-
-  const { data, error } = await supabase
-    .from("vehicle_models")
-    .insert({
-      organization_id: orgId,
-      make: params.make.trim(),
-      model: params.model.trim(),
-      generation: params.generation?.trim() ?? null,
-      year_start: params.year_start ?? null,
-      year_end: params.year_end ?? null,
-      engine: params.engine?.trim() ?? null,
-      body_type: params.body_type?.trim() ?? null,
-      class: params.class?.trim() ?? null,
-      is_active: true,
-      created_by: userId,
-      updated_by: userId,
-    })
-    .select(
-      "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, class, is_active, created_by, updated_by, created_at, updated_at",
-    )
-    .single();
-
-  if (error || !data)
-    throw new Error(error?.message ?? "Failed to create vehicle model");
-
-  await createAuditLog({
-    supabase,
-    action: "create",
-    table_name: "vehicle_models",
-    record_id: data.id,
-    user_id: userId,
-    organization_id: orgId,
-    new_data: data as unknown as Record<string, unknown>,
-  });
-
-  revalidateTag(cacheTags.vehicleModels(orgId), "max");
-
-  return data as unknown as VehicleModel;
 }
 
-export async function updateVehicleModel(
-  db: SupabaseClient,
-  id: string,
-  orgId: string,
-  params: {
-    make?: string;
-    model?: string;
-    generation?: string | null;
-    year_start?: number | null;
-    year_end?: number | null;
-    engine?: string | null;
-    body_type?: string | null;
-    class?: string | null;
-    is_active?: boolean;
-  },
-): Promise<VehicleModel> {
-  const supabase = db;
-  const userId = (await supabase.auth.getUser()).data.user?.id;
-
-  if (
-    params.year_start != null &&
-    params.year_end != null &&
-    params.year_start > params.year_end
-  ) {
-    throw new ValidationError(
-      "Year start must be less than or equal to year end",
-    );
-  }
-
-  const fieldMap: FieldMap<typeof params> = {
+const crud = createCrudService<VehicleModel, CreateParams, UpdateParams>({
+  tableName: "vehicle_models",
+  selectColumns:
+    "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, class, is_active, created_at, updated_at, deleted_at",
+  selectColumnsById:
+    "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, class, is_active, created_by, updated_by, created_at, updated_at, deleted_at",
+  cacheTagKey: (orgId: string) => cacheTags.vehicleModels(orgId),
+  fieldMap: {
     columns: {
       make: "make",
       model: "model",
@@ -188,37 +66,101 @@ export async function updateVehicleModel(
       body_type: trimField,
       class: trimField,
     },
-  };
+  },
+  hooks: {
+    beforeCreate: async (p) => {
+      if (!p.make?.trim()) throw new ValidationError("Make is required");
+      if (!p.model?.trim()) throw new ValidationError("Model is required");
+      validateYearRange(p.year_start, p.year_end);
+      return {
+        make: p.make.trim(),
+        model: p.model.trim(),
+        generation: p.generation?.trim() ?? null,
+        year_start: p.year_start ?? null,
+        year_end: p.year_end ?? null,
+        engine: p.engine?.trim() ?? null,
+        body_type: p.body_type?.trim() ?? null,
+        class: p.class?.trim() ?? null,
+        is_active: true,
+      } as Partial<CreateParams>;
+    },
+    beforeUpdate: async (_e, p) => {
+      validateYearRange(p.year_start, p.year_end);
+      return {};
+    },
+    onQuery: (query, o) => {
+      // biome-ignore lint/suspicious/noExplicitAny: factory hook type is PostgrestQueryBuilder lacking order()
+      let q = query as any;
+      q = q
+        .order("make", { ascending: true })
+        .order("model", { ascending: true });
+      if (o?.make) q = q.eq("make", o.make);
+      return q;
+    },
+  },
+});
 
-  const updates = buildUpdates(params, fieldMap) as Partial<VehicleModel>;
-  updates.updated_by = userId;
+export async function getVehicleModels(
+  db: SupabaseClient,
+  orgId: string,
+  make?: string,
+): Promise<VehicleModel[]> {
+  const result = await crud.getAll(db, orgId, {
+    pageSize: 1000,
+    ...(make ? { make } : {}),
+  });
+  return result.data;
+}
 
-  const { data, error } = await supabase
+export async function getVehicleModel(
+  db: SupabaseClient,
+  id: string,
+): Promise<VehicleModel> {
+  const { data, error } = await db
     .from("vehicle_models")
-    .update(updates)
+    .select(
+      "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, class, is_active, created_by, updated_by, created_at, updated_at, deleted_at",
+    )
     .eq("id", id)
+    .is("deleted_at", null)
+    .single();
+  if (error || !data) throw new NotFoundError("Vehicle model not found");
+  return data as unknown as VehicleModel;
+}
+
+export async function getDistinctMakes(
+  db: SupabaseClient,
+  orgId: string,
+): Promise<string[]> {
+  const { data, error } = await db
+    .from("vehicle_models")
+    .select("make")
     .eq("organization_id", orgId)
     .is("deleted_at", null)
-    .select(
-      "id, organization_id, make, model, generation, year_start, year_end, engine, body_type, class, is_active, created_by, updated_by, created_at, updated_at",
-    )
-    .single();
+    .order("make");
+  if (error) throw new Error(error.message ?? "Failed to fetch makes");
+  return [...new Set(data.map((r) => r.make))];
+}
 
-  if (error || !data) throw new NotFoundError("Vehicle model not found");
+export async function createVehicleModel(
+  db: SupabaseClient,
+  orgId: string,
+  params: CreateParams,
+): Promise<VehicleModel> {
+  const userId = (await db.auth.getUser()).data.user?.id;
+  if (!userId) throw new NotFoundError("Not authenticated");
+  return crud.create(db, orgId, params, userId);
+}
 
-  await createAuditLog({
-    supabase,
-    action: "update",
-    table_name: "vehicle_models",
-    record_id: data.id,
-    user_id: userId,
-    organization_id: orgId,
-    new_data: data as unknown as Record<string, unknown>,
-  });
-
-  revalidateTag(cacheTags.vehicleModels(orgId), "max");
-
-  return data as unknown as VehicleModel;
+export async function updateVehicleModel(
+  db: SupabaseClient,
+  id: string,
+  orgId: string,
+  params: UpdateParams,
+): Promise<VehicleModel> {
+  const userId = (await db.auth.getUser()).data.user?.id;
+  if (!userId) throw new NotFoundError("Not authenticated");
+  return crud.update(db, orgId, id, params, userId);
 }
 
 export async function deleteVehicleModel(
@@ -226,66 +168,34 @@ export async function deleteVehicleModel(
   id: string,
   orgId: string,
 ): Promise<void> {
-  const supabase = db;
-
-  const {
-    data: { user: currentUser },
-  } = await supabase.auth.getUser();
-
-  const { error } = await supabase
-    .from("vehicle_models")
-    .update({ deleted_at: new Date().toISOString() })
-    .eq("id", id)
-    .eq("organization_id", orgId)
-    .is("deleted_at", null);
-
-  if (error)
-    throw new NotFoundError("Vehicle model not found or already deleted");
-
-  await createAuditLog({
-    supabase,
-    action: "soft_delete",
-    table_name: "vehicle_models",
-    record_id: id,
-    user_id: currentUser?.id,
-    organization_id: orgId,
-  });
-
-  revalidateTag(cacheTags.vehicleModels(orgId), "max");
+  const userId = (await db.auth.getUser()).data.user?.id;
+  if (!userId) throw new NotFoundError("Not authenticated");
+  await crud.softDelete(db, orgId, id, userId);
 }
 
-/**
- * Ensures a make+model pair exists in the vehicle_models catalog.
- * Creates it if missing. Safe to call on every vehicle creation.
- */
 export async function ensureVehicleModel(
   db: SupabaseClient,
   orgId: string,
   make: string,
   model: string,
 ): Promise<void> {
-  const normalizedMake = make.trim();
-  const normalizedModel = model.trim();
-  if (!normalizedMake || !normalizedModel) return;
-
-  const supabase = db;
-
-  const { count, error } = await supabase
+  const nm = make.trim();
+  const nmod = model.trim();
+  if (!nm || !nmod) return;
+  const { count, error } = await db
     .from("vehicle_models")
     .select("*", { count: "exact", head: true })
     .eq("organization_id", orgId)
-    .eq("make", normalizedMake)
-    .eq("model", normalizedModel)
+    .eq("make", nm)
+    .eq("model", nmod)
     .is("deleted_at", null);
-
   if (error) return;
-
   if (count === 0) {
-    const userId = (await supabase.auth.getUser()).data.user?.id;
-    await supabase.from("vehicle_models").insert({
+    const userId = (await db.auth.getUser()).data.user?.id;
+    await db.from("vehicle_models").insert({
       organization_id: orgId,
-      make: normalizedMake,
-      model: normalizedModel,
+      make: nm,
+      model: nmod,
       is_active: true,
       created_by: userId,
       updated_by: userId,
