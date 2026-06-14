@@ -477,6 +477,10 @@ export type Database = {
         Returns: Json;
       };
       get_current_organization: { Args: never; Returns: string };
+      get_public_report_data: {
+        Args: { p_token: string };
+        Returns: Json;
+      };
     };
     Enums: {
       [_ in never]: never;

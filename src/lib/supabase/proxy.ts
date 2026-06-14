@@ -35,7 +35,11 @@ export async function updateSession(request: NextRequest) {
       request.nextUrl.pathname.startsWith(`${route}/`),
   );
 
-  if (!user && !isPublicRoute) {
+  // Allow public share links (/r/[token]) without auth.
+  // The /r/[token] page handles data access via the get_public_report_data RPC function.
+  const isShareRoute = request.nextUrl.pathname.startsWith("/r/");
+
+  if (!user && !isPublicRoute && !isShareRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set(
