@@ -19,6 +19,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 import { logout } from "@/app/(dashboard)/actions";
+import { ThemeToggle } from "@/components/erp/theme-toggle";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -139,12 +140,14 @@ export function DashboardShell({
                       return (
                         <SidebarMenuItem key={item.href}>
                           <SidebarMenuButton
-                            render={<Link href={item.href} prefetch={false} />}
+                            asChild
                             isActive={isActive}
                             tooltip={item.title}
                           >
-                            <Icon />
-                            <span>{item.title}</span>
+                            <Link href={item.href} prefetch={false}>
+                              <Icon />
+                              <span>{item.title}</span>
+                            </Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                       );
@@ -157,18 +160,26 @@ export function DashboardShell({
             <SidebarFooter>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton
-                    render={<Link href="/settings" prefetch={false} />}
-                  >
-                    <Avatar className="size-6">
-                      <AvatarFallback className="text-xs">
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="truncate">
-                      {userFullName || "Хэрэглэгч"}
-                    </span>
+                  <SidebarMenuButton asChild>
+                    <Link href="/settings" prefetch={false}>
+                      <Avatar className="size-6">
+                        <AvatarFallback className="text-xs">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="truncate">
+                        {userFullName || "Хэрэглэгч"}
+                      </span>
+                    </Link>
                   </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <div className="flex items-center gap-2 px-3 py-1.5">
+                    <ThemeToggle />
+                    <span className="text-sm text-muted-foreground">
+                      Гэрэлтэй / Харанхуй
+                    </span>
+                  </div>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   <form action={logout}>
