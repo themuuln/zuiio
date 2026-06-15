@@ -45,8 +45,9 @@ describe("store-credit-service", () => {
       const rawClient = createMockSupabaseClient();
       const db = rawClient as any;
 
-      rawClient.from("invoices").single
-        .mockResolvedValueOnce({
+      rawClient
+        .from("invoices")
+        .single.mockResolvedValueOnce({
           data: { customer_id: "cust-1", customer_name: "John Doe" },
           error: null,
         })

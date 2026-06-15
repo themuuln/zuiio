@@ -12,15 +12,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const DataTableChart = dynamic(
@@ -42,8 +42,8 @@ export function TableCellViewer({ item }: { item: TableCellViewerItem }) {
   const isMobile = useIsMobile();
 
   return (
-    <Sheet>
-      <SheetTrigger
+    <Drawer>
+      <DrawerTrigger
         render={
           <Button
             variant="link"
@@ -52,17 +52,16 @@ export function TableCellViewer({ item }: { item: TableCellViewerItem }) {
         }
       >
         {item.header}
-      </SheetTrigger>
-      <SheetContent
-        side={isMobile ? "bottom" : "right"}
+      </DrawerTrigger>
+      <DrawerContent
         showCloseButton={false}
       >
-        <SheetHeader className="gap-1">
-          <SheetTitle>{item.header}</SheetTitle>
-          <SheetDescription>
+        <DrawerHeader className="gap-1">
+          <DrawerTitle>{item.header}</DrawerTitle>
+          <DrawerDescription>
             Showing total visitors for the last 6 months
-          </SheetDescription>
-        </SheetHeader>
+          </DrawerDescription>
+        </DrawerHeader>
         <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
           {!isMobile && <DataTableChart />}
           <form className="flex flex-col gap-4">
@@ -138,11 +137,11 @@ export function TableCellViewer({ item }: { item: TableCellViewerItem }) {
             </div>
           </form>
         </div>
-        <SheetFooter>
+        <DrawerFooter>
           <Button>Apply</Button>
-          <SheetClose render={<Button variant="outline" />}>Close</SheetClose>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+          <DrawerClose render={<Button variant="outline" />}>Close</DrawerClose>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 }

@@ -27,6 +27,7 @@ const DETAIL_NAMES = [
   "vehicle",
   "customer",
   "partsCar",
+  "workOrder",
 ] as const;
 
 type SheetName = (typeof SHEET_NAMES)[number];
@@ -83,6 +84,8 @@ interface PageHeaderContextValue {
   setDetailCustomerId: (id: string | null) => void;
   detailPartsCarId: string | null;
   setDetailPartsCarId: (id: string | null) => void;
+  detailWorkOrderId: string | null;
+  setDetailWorkOrderId: (id: string | null) => void;
 }
 
 interface PageHeaderState {
@@ -169,6 +172,8 @@ export function PageHeaderProvider({ children }: { children: ReactNode }) {
         setDetailCustomerId: makeDetailSetter("customer"),
         detailPartsCarId: detailIds.partsCar,
         setDetailPartsCarId: makeDetailSetter("partsCar"),
+        detailWorkOrderId: detailIds.workOrder,
+        setDetailWorkOrderId: makeDetailSetter("workOrder"),
       }}
     >
       {children}

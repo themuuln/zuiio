@@ -5,6 +5,7 @@ import type { useTranslations } from "next-intl";
 import React from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import {
   Field,
   FieldContent,
@@ -19,14 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { inputProps } from "@/lib/form-ux";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 
 interface Role {
@@ -88,17 +82,22 @@ export function InviteSheet({
     });
   }
 
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle>{t("inviteNew")}</SheetTitle>
-          <SheetDescription>{t("inviteDescription")}</SheetDescription>
-        </SheetHeader>
+  const handleFormSubmit = form.handleSubmit(handleSubmit);
 
+  return (
+    <DetailDrawer open={open} onOpenChange={onOpenChange} size="md">
+      <DetailDrawer.Header>
+        <DetailDrawer.Title>{t("inviteNew")}</DetailDrawer.Title>
+        <DetailDrawer.Description>
+          {t("inviteDescription")}
+        </DetailDrawer.Description>
+      </DetailDrawer.Header>
+
+      <DetailDrawer.Body>
         <form
-          onSubmit={form.handleSubmit(handleSubmit)}
-          className="flex flex-col gap-5 py-6"
+          id="invite-form"
+          onSubmit={handleFormSubmit}
+          className="flex flex-col gap-5"
         >
           <Field data-invalid={!!form.formState.errors.email}>
             <FieldLabel htmlFor="invite-email">{t("emailLabel")}</FieldLabel>
@@ -109,6 +108,7 @@ export function InviteSheet({
                 placeholder={t("emailPlaceholder")}
                 aria-invalid={!!form.formState.errors.email}
                 {...form.register("email")}
+                {...inputProps("email")}
               />
               {form.formState.errors.email && (
                 <FieldError>{form.formState.errors.email.message}</FieldError>
@@ -140,26 +140,29 @@ export function InviteSheet({
               )}
             </FieldContent>
           </Field>
-
-          <SheetFooter className="mt-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              {t("cancel")}
-            </Button>
-            <Button type="submit" disabled={sending}>
-              {sending ? (
-                <Loader2 className="mr-2 size-4 animate-spin" />
-              ) : (
-                <MailPlus className="mr-2 size-4" />
-              )}
-              {t("sendInvite")}
-            </Button>
-          </SheetFooter>
         </form>
-      </SheetContent>
-    </Sheet>
+      </DetailDrawer.Body>
+
+      <DetailDrawer.Footer>
+        <Button
+          variant="outline"
+          onClick={() => onOpenChange(false)}
+        >
+          {t("cancel")}
+        </Button>
+        <Button
+          form="invite-form"
+          type="submit"
+          disabled={sending}
+        >
+          {sending ? (
+            <Loader2 className="mr-2 size-4 animate-spin" />
+          ) : (
+            <MailPlus className="mr-2 size-4" />
+          )}
+          {t("sendInvite")}
+        </Button>
+      </DetailDrawer.Footer>
+    </DetailDrawer>
   );
 }

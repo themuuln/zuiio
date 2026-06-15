@@ -32,10 +32,12 @@ export const logger = pino({
     ? {}
     : {
         transport: {
-          target: "pino/file",
+          target: "pino-pretty",
           options: {
-            destination: 1, // stdout
             colorize: true,
+            translateTime: "HH:MM:ss",
+            ignore: "pid,hostname",
+            singleLine: true,
           },
         },
       }),

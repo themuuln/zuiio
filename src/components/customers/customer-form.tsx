@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { customerSchema as sharedCustomerSchema } from "@/lib/validation/customer-schema";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -29,6 +28,8 @@ import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useCreateCustomer } from "@/lib/queries/use-wizard-data";
 import type { CreateCustomerParams, Customer } from "@/lib/types";
+import { customerSchema as sharedCustomerSchema } from "@/lib/validation/customer-schema";
+import { emailSchema } from "@/lib/validation/schemas";
 
 // ── Schema ───────────────────────────────────────────────────
 // Import shared customer schema and relax phone/email for mode-specific
@@ -37,7 +38,7 @@ import type { CreateCustomerParams, Customer } from "@/lib/types";
 const customerSchema = sharedCustomerSchema.extend({
   type: z.enum(["individual", "company"]),
   phone: z.string().optional(),
-  email: z.string().optional(),
+  email: emailSchema,
 });
 
 type CustomerFormValues = z.infer<typeof customerSchema>;

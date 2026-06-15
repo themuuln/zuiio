@@ -3,6 +3,7 @@
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -14,6 +15,27 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
+import { inputProps } from "@/lib/form-ux";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
+
+// ── Schema ─────────────────────────────────────────────────────
+
+const bookingSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  phone: z
+    .string()
+    .min(1, "Phone is required")
+    .refine((val) => /^\+976\d{8}$/.test(val.replace(/[\s-]/g, "")), {
+      message: "Enter a valid Mongolian phone number",
+    }),
+  plate: z.string().min(1, "Plate number is required"),
+  notes: z.string().optional(),
+  requestedDate: z.string().optional(),
+});
+
+type BookingValues = z.infer<typeof bookingSchema>;
+
+// ── Component ──────────────────────────────────────────────────
 
 interface BookingRequestFormProps {
   token: string;
@@ -31,116 +53,104 @@ export function BookingRequestForm({
   initialPhone,
 }: BookingRequestFormProps) {
   const t = useTranslations("booking");
-  const [name, setName] = useState(initialName ?? "");
-  const [phone, setPhone] = useState(initialPhone ?? "");
-  const [plate, setPlate] = useState("");
-  const [notes, setNotes] = useState("");
-  const [requestedDate, setRequestedDate] = useState("");
   const [sending, setSending] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
+  const form = useForm<BookingValues>({
+    resolver: zodResolver(bookingSchema),
+    defaultValues: {
+      name: initialName ?? "",
+      phone: initialPhone ?? "",
+      plate: "",
+      notes: "",
+      requestedDate: "",
+    },
+  });
 
-    if (!name.trim()) {
-      newErrors.name = t("nameRequired");
-    }
-    if (!phone.trim()) {
-      newErrors.phone = t("phoneRequired");
-    } else {
-      const normalized = phone.trim().replace(/[\s-]/g, "");
-      if (!/^\+976\d{8}$/.test(normalized)) {
-        newErrors.phone = t("phoneInvalid");
-      }
-    }
-    if (!plate.trim()) {
-      newErrors.plate = t("vehiclePlateRequired");
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-
+  const handleSubmit = form.handleSubmit(async (data) => {
     setSending(true);
+    setSubmitError(null);
+
     try {
       const endpoint = apiEndpoint ?? `/api/booking/${token}`;
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: name.trim(),
-          phone: phone.trim(),
-          plate: plate.trim(),
-          notes: notes.trim() || undefined,
-          requestedDate: requestedDate || undefined,
+          name: data.name.trim(),
+          phone: data.phone.trim(),
+          plate: data.plate.trim(),
+          notes: data.notes?.trim() || undefined,
+          requestedDate: data.requestedDate || undefined,
         }),
       });
 
       const json = await res.json();
 
       if (!res.ok) {
-        setErrors({
-          submit: json.error?.message ?? t("submitFailed"),
-        });
+        setSubmitError(json.error?.message ?? t("submitFailed"));
         return;
       }
 
       onSuccess(json.data?.message ?? t("submitSuccess"));
     } catch {
-      setErrors({ submit: t("networkError") });
+      setSubmitError(t("networkError"));
     } finally {
       setSending(false);
     }
-  };
+  });
 
   return (
     <form onSubmit={handleSubmit} noValidate>
       <Card className="border-border">
         <CardContent className="p-6 flex flex-col gap-4">
-          <Field>
+          <Field data-invalid={!!form.formState.errors.name}>
             <FieldLabel>
               {t("name")} <span className="text-destructive">*</span>
             </FieldLabel>
             <FieldContent>
               <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
                 placeholder={t("namePlaceholder")}
+                aria-invalid={!!form.formState.errors.name}
+                {...form.register("name")}
               />
-              {errors.name && <FieldError>{errors.name}</FieldError>}
+              {form.formState.errors.name && (
+                <FieldError>{form.formState.errors.name.message}</FieldError>
+              )}
             </FieldContent>
           </Field>
 
-          <Field>
+          <Field data-invalid={!!form.formState.errors.phone}>
             <FieldLabel>
               {t("phone")} <span className="text-destructive">*</span>
             </FieldLabel>
             <FieldContent>
               <Input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
                 placeholder={t("phonePlaceholder")}
                 type="tel"
+                aria-invalid={!!form.formState.errors.phone}
+                {...inputProps("phone")}
+                {...form.register("phone")}
               />
-              {errors.phone && <FieldError>{errors.phone}</FieldError>}
+              {form.formState.errors.phone && (
+                <FieldError>{form.formState.errors.phone.message}</FieldError>
+              )}
             </FieldContent>
           </Field>
 
-          <Field>
+          <Field data-invalid={!!form.formState.errors.plate}>
             <FieldLabel>
               {t("vehiclePlate")} <span className="text-destructive">*</span>
             </FieldLabel>
             <FieldContent>
               <Input
-                value={plate}
-                onChange={(e) => setPlate(e.target.value)}
                 placeholder={t("vehiclePlatePlaceholder")}
+                aria-invalid={!!form.formState.errors.plate}
+                {...form.register("plate")}
               />
-              {errors.plate && <FieldError>{errors.plate}</FieldError>}
+              {form.formState.errors.plate && (
+                <FieldError>{form.formState.errors.plate.message}</FieldError>
+              )}
             </FieldContent>
           </Field>
 
@@ -149,9 +159,8 @@ export function BookingRequestForm({
             <FieldContent>
               <Input
                 type="date"
-                value={requestedDate}
-                onChange={(e) => setRequestedDate(e.target.value)}
                 min={new Date().toISOString().split("T")[0]}
+                {...form.register("requestedDate")}
               />
             </FieldContent>
           </Field>
@@ -160,17 +169,16 @@ export function BookingRequestForm({
             <FieldLabel>{t("notes")}</FieldLabel>
             <FieldContent>
               <Textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
                 placeholder={t("notesPlaceholder")}
                 rows={3}
+                {...form.register("notes")}
               />
             </FieldContent>
           </Field>
 
-          {errors.submit && (
+          {submitError && (
             <Typography.Muted className="text-xs text-destructive text-center">
-              {errors.submit}
+              {submitError}
             </Typography.Muted>
           )}
 

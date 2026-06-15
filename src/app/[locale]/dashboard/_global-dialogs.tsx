@@ -91,7 +91,7 @@ const NewPurchaseOrderSheet = dynamic(
 );
 const AppointmentCreateSheet = dynamic(
   () =>
-    import("@/app/[locale]/dashboard/appointments/_create-sheet").then(
+    import("@/components/appointments/create-sheet").then(
       (m) => m.AppointmentCreateSheet,
     ),
   { ssr: false },
@@ -100,6 +100,13 @@ const NewPartsCarSheet = dynamic(
   () =>
     import("@/components/inventory/new-parts-car-sheet").then(
       (m) => m.NewPartsCarSheet,
+    ),
+  { ssr: false },
+);
+const WorkOrderDetailSheet = dynamic(
+  () =>
+    import("@/components/work-orders/work-order-detail-sheet").then(
+      (m) => m.WorkOrderDetailSheet,
     ),
   { ssr: false },
 );
@@ -134,6 +141,8 @@ export function GlobalDialogs() {
     setDetailCustomerId,
     detailPartsCarId,
     setDetailPartsCarId,
+    detailWorkOrderId,
+    setDetailWorkOrderId,
   } = usePageHeader();
 
   return (
@@ -210,6 +219,13 @@ export function GlobalDialogs() {
       <NewPartsCarSheet
         open={isNewPartsCarSheetOpen}
         onOpenChange={setNewPartsCarSheetOpen}
+      />
+      <WorkOrderDetailSheet
+        open={detailWorkOrderId !== null}
+        onOpenChange={(open) =>
+          setDetailWorkOrderId(open ? detailWorkOrderId : null)
+        }
+        workOrderId={detailWorkOrderId ?? ""}
       />
     </>
   );

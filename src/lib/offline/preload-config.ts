@@ -82,6 +82,7 @@ export const PRELOAD_ENDPOINTS: PreloadEndpoint[] = [
     path: "/expenses",
     priority: "medium",
     label: "Expenses",
+    params: { limit: "1000" },
   },
   {
     store: "payroll",

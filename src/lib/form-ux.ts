@@ -7,7 +7,13 @@
 
 /** Strip non-digits and cap at 8 (Mongolian phone length). */
 export function formatMongolianPhone(value: string): string {
-  return value.replace(/\D/g, "").slice(0, 8);
+  const digits = value.replace(/\D/g, "");
+  // Handle full-format numbers with +976 country code: strip the prefix
+  // and keep only the 8-digit local number.
+  if (digits.startsWith("976") && digits.length > 8) {
+    return digits.slice(3).slice(0, 8);
+  }
+  return digits.slice(0, 8);
 }
 
 /**

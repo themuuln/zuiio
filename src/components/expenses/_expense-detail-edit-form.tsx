@@ -1,7 +1,7 @@
 "use client";
 
-import type { UseFormReturn } from "react-hook-form";
 import { useTranslations } from "next-intl";
+import type { UseFormReturn } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Field,
@@ -19,7 +19,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { PAYMENT_METHODS, type ExpenseFormValues } from "./_expense-detail-utils";
+import {
+  type ExpenseFormValues,
+  PAYMENT_METHODS,
+} from "./_expense-detail-utils";
 
 interface ExpenseCategory {
   id: string;
@@ -87,9 +90,7 @@ export function ExpenseDetailEditForm({
                 {...form.register("amount")}
               />
               {form.formState.errors.amount && (
-                <FieldError>
-                  {form.formState.errors.amount.message}
-                </FieldError>
+                <FieldError>{form.formState.errors.amount.message}</FieldError>
               )}
             </FieldContent>
           </Field>
@@ -141,9 +142,7 @@ export function ExpenseDetailEditForm({
             <FieldContent>
               <Select
                 value={form.watch("categoryId") || ""}
-                onValueChange={(val) =>
-                  form.setValue("categoryId", val ?? "")
-                }
+                onValueChange={(val) => form.setValue("categoryId", val ?? "")}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={commonT("all")} />

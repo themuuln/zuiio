@@ -3,10 +3,6 @@
 import { Wallet } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { z } from "zod";
-import {
-  expenseSchema as sharedExpenseSchema,
-  PAYMENT_METHODS,
-} from "@/lib/validation/expense-schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -33,6 +29,10 @@ import {
 } from "@/lib/queries/use-expenses";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { CreateExpenseParams } from "@/lib/types";
+import {
+  PAYMENT_METHODS,
+  expenseSchema as sharedExpenseSchema,
+} from "@/lib/validation/expense-schema";
 
 // ── Schema ───────────────────────────────────────────────────
 // Import shared expense schema — override paymentMethod to string

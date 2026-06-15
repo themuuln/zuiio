@@ -128,8 +128,8 @@ describe("customer-service characterization", () => {
         type: "individual",
       };
 
-      db.from("customers").single
-        .mockResolvedValueOnce({ data: existing, error: null })
+      db.from("customers")
+        .single.mockResolvedValueOnce({ data: existing, error: null })
         .mockResolvedValueOnce({
           data: { ...existing, first_name: "New" },
           error: null,

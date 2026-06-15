@@ -4,7 +4,6 @@ import { AlertTriangle, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { z } from "zod";
-import { serviceSchema as sharedServiceSchema } from "@/lib/validation/service-schema";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -19,6 +18,7 @@ import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useCreateService } from "@/lib/queries/use-wizard-data";
 import type { CreateServiceCatalogParams, ServiceCatalog } from "@/lib/types";
+import { serviceSchema as sharedServiceSchema } from "@/lib/validation/service-schema";
 
 // ── Schema ───────────────────────────────────────────────────
 // Import shared service schema validators but use snake_case field names

@@ -118,7 +118,9 @@ export function useBayDragHandlers({
         onSwapBays(woId, currentBay.bayNumber, targetWo.id, bayNumber)
           .catch((err) => {
             toast.dismiss();
-            toast.error(`Swap failed: ${err instanceof Error ? err.message : "Unknown error"}`);
+            toast.error(
+              `Swap failed: ${err instanceof Error ? err.message : "Unknown error"}`,
+            );
           })
           .finally(() => {
             clearPending(woId, targetWo.id);
@@ -250,10 +252,7 @@ export function useBayDragHandlers({
         const queryClient = (globalThis as Record<string, unknown>)
           .__queryClient as
           | {
-              setQueryData: (
-                key: unknown,
-                data: unknown,
-              ) => void;
+              setQueryData: (key: unknown, data: unknown) => void;
             }
           | undefined;
 

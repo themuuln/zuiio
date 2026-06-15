@@ -112,18 +112,21 @@ export function useFollowupDetail(orgId: string, followupId: string | null) {
 }
 
 export function useCreateFollowup(orgId: string) {
-  return useOrgMutation<unknown, {
-    customer_id: string;
-    vehicle_id?: string;
-    work_order_id?: string;
-    estimate_id?: string;
-    invoice_id?: string;
-    type?: string;
-    subject: string;
-    notes?: string;
-    due_at: string;
-    assigned_to?: string;
-  }>({
+  return useOrgMutation<
+    unknown,
+    {
+      customer_id: string;
+      vehicle_id?: string;
+      work_order_id?: string;
+      estimate_id?: string;
+      invoice_id?: string;
+      type?: string;
+      subject: string;
+      notes?: string;
+      due_at: string;
+      assigned_to?: string;
+    }
+  >({
     endpoint: `/api/organizations/${orgId}/followups`,
     method: "POST",
     queryKey: followupKeys.all,
@@ -132,18 +135,22 @@ export function useCreateFollowup(orgId: string) {
 }
 
 export function useUpdateFollowup(orgId: string) {
-  return useOrgMutation<unknown, {
-    followupId: string;
-    type?: string;
-    subject?: string;
-    notes?: string;
-    due_at?: string;
-    assigned_to?: string;
-    action?: "complete" | "cancel";
-    outcome?: string;
-    outcome_notes?: string;
-  }>({
-    endpoint: (vars) => `/api/organizations/${orgId}/followups/${vars.followupId}`,
+  return useOrgMutation<
+    unknown,
+    {
+      followupId: string;
+      type?: string;
+      subject?: string;
+      notes?: string;
+      due_at?: string;
+      assigned_to?: string;
+      action?: "complete" | "cancel";
+      outcome?: string;
+      outcome_notes?: string;
+    }
+  >({
+    endpoint: (vars) =>
+      `/api/organizations/${orgId}/followups/${vars.followupId}`,
     method: "PATCH",
     queryKey: followupKeys.all,
     successMessage: "Follow-up updated",
@@ -152,7 +159,8 @@ export function useUpdateFollowup(orgId: string) {
 
 export function useDeleteFollowup(orgId: string) {
   return useOrgMutation<unknown, string>({
-    endpoint: (followupId) => `/api/organizations/${orgId}/followups/${followupId}`,
+    endpoint: (followupId) =>
+      `/api/organizations/${orgId}/followups/${followupId}`,
     method: "DELETE",
     queryKey: followupKeys.all,
     successMessage: "Follow-up deleted",

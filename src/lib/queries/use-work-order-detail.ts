@@ -1,6 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ServiceCatalog, WorkOrderDetail } from "@/lib/types";
-import { useOrgMutation } from "./mutation-factory";
 import { createOrgQuery } from "./factory";
 import {
   inventoryKeys,
@@ -8,6 +7,7 @@ import {
   serviceKeys,
   workOrderKeys,
 } from "./keys";
+import { useOrgMutation } from "./mutation-factory";
 
 export async function fetchServicePriceHistory(
   orgId: string,
@@ -146,12 +146,15 @@ export function usePartPriceHistory(
 export function useUpdateWorkOrderStatus(orgId: string | undefined) {
   const queryClient = useQueryClient();
 
-  return useOrgMutation<WorkOrderDetail, {
-    woId: string;
-    status: string;
-    notes?: string;
-    loss_reason?: string;
-  }>({
+  return useOrgMutation<
+    WorkOrderDetail,
+    {
+      woId: string;
+      status: string;
+      notes?: string;
+      loss_reason?: string;
+    }
+  >({
     endpoint: (vars) => `/api/organizations/${orgId}/work-orders/${vars.woId}`,
     method: "PATCH",
     queryKey: workOrderKeys.all(orgId ?? ""),
@@ -171,10 +174,13 @@ export function useUpdateWorkOrderStatus(orgId: string | undefined) {
 }
 
 export function useAssignMechanic(orgId: string | undefined) {
-  return useOrgMutation<WorkOrderDetail, {
-    woId: string;
-    mechanicId: string | null;
-  }>({
+  return useOrgMutation<
+    WorkOrderDetail,
+    {
+      woId: string;
+      mechanicId: string | null;
+    }
+  >({
     endpoint: (vars) => `/api/organizations/${orgId}/work-orders/${vars.woId}`,
     method: "PATCH",
     queryKey: workOrderKeys.all(orgId ?? ""),
@@ -183,16 +189,20 @@ export function useAssignMechanic(orgId: string | undefined) {
 }
 
 export function useAddService(orgId: string | undefined) {
-  return useOrgMutation<unknown, {
-    woId: string;
-    body: {
-      service_catalog_id: string;
-      service_name: string;
-      quantity: number;
-      unit_price: number;
-    };
-  }>({
-    endpoint: (vars) => `/api/organizations/${orgId}/work-orders/${vars.woId}/services`,
+  return useOrgMutation<
+    unknown,
+    {
+      woId: string;
+      body: {
+        service_catalog_id: string;
+        service_name: string;
+        quantity: number;
+        unit_price: number;
+      };
+    }
+  >({
+    endpoint: (vars) =>
+      `/api/organizations/${orgId}/work-orders/${vars.woId}/services`,
     method: "POST",
     queryKey: workOrderKeys.all(orgId ?? ""),
     successMessage: "Service added",
@@ -200,11 +210,15 @@ export function useAddService(orgId: string | undefined) {
 }
 
 export function useRemoveService(orgId: string | undefined) {
-  return useOrgMutation<unknown, {
-    woId: string;
-    serviceId: string;
-  }>({
-    endpoint: (vars) => `/api/organizations/${orgId}/work-orders/${vars.woId}/services`,
+  return useOrgMutation<
+    unknown,
+    {
+      woId: string;
+      serviceId: string;
+    }
+  >({
+    endpoint: (vars) =>
+      `/api/organizations/${orgId}/work-orders/${vars.woId}/services`,
     method: "DELETE",
     queryKey: workOrderKeys.all(orgId ?? ""),
     successMessage: "Service removed",
@@ -212,15 +226,19 @@ export function useRemoveService(orgId: string | undefined) {
 }
 
 export function useAddPart(orgId: string | undefined) {
-  return useOrgMutation<unknown, {
-    woId: string;
-    body: {
-      part_name: string;
-      quantity: number;
-      unit_price: number;
-    };
-  }>({
-    endpoint: (vars) => `/api/organizations/${orgId}/work-orders/${vars.woId}/parts`,
+  return useOrgMutation<
+    unknown,
+    {
+      woId: string;
+      body: {
+        part_name: string;
+        quantity: number;
+        unit_price: number;
+      };
+    }
+  >({
+    endpoint: (vars) =>
+      `/api/organizations/${orgId}/work-orders/${vars.woId}/parts`,
     method: "POST",
     queryKey: workOrderKeys.all(orgId ?? ""),
     successMessage: "Part added",
@@ -228,11 +246,15 @@ export function useAddPart(orgId: string | undefined) {
 }
 
 export function useRemovePart(orgId: string | undefined) {
-  return useOrgMutation<unknown, {
-    woId: string;
-    partId: string;
-  }>({
-    endpoint: (vars) => `/api/organizations/${orgId}/work-orders/${vars.woId}/parts`,
+  return useOrgMutation<
+    unknown,
+    {
+      woId: string;
+      partId: string;
+    }
+  >({
+    endpoint: (vars) =>
+      `/api/organizations/${orgId}/work-orders/${vars.woId}/parts`,
     method: "DELETE",
     queryKey: workOrderKeys.all(orgId ?? ""),
     successMessage: "Part removed",
@@ -285,7 +307,8 @@ export function useRecordPayment(orgId: string | undefined) {
       notes?: string;
     }
   >({
-    endpoint: (vars) => `/api/organizations/${orgId}/invoices/${vars.invoiceId}/payments`,
+    endpoint: (vars) =>
+      `/api/organizations/${orgId}/invoices/${vars.invoiceId}/payments`,
     method: "POST",
     queryKey: ["invoice-payments", orgId ?? ""],
   });

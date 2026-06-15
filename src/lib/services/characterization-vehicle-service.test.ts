@@ -44,7 +44,11 @@ describe("vehicle-service characterization", () => {
             vehicle_owners: [
               {
                 customer_id: "c1",
-                customers: { first_name: "John", last_name: "Doe", phone: "555-0100" },
+                customers: {
+                  first_name: "John",
+                  last_name: "Doe",
+                  phone: "555-0100",
+                },
               },
             ],
           },
@@ -120,8 +124,8 @@ describe("vehicle-service characterization", () => {
 
   describe("updateVehicle", () => {
     it("updates vehicle and returns updated data", async () => {
-      db.from("vehicles").single
-        .mockResolvedValueOnce({
+      db.from("vehicles")
+        .single.mockResolvedValueOnce({
           data: {
             id: "v1",
             plate_number: "4444УНА",
@@ -177,7 +181,11 @@ describe("vehicle-service characterization", () => {
             vehicle_owners: [
               {
                 customer_id: "c1",
-                customers: { first_name: "John", last_name: "Doe", phone: null },
+                customers: {
+                  first_name: "John",
+                  last_name: "Doe",
+                  phone: null,
+                },
               },
             ],
           },

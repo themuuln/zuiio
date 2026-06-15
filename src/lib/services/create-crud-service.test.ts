@@ -25,9 +25,8 @@ vi.mock("@/lib/supabase/with-branch", () => ({
 
 const mockBuildUpdates = vi.fn();
 vi.mock("./build-updates", async () => {
-  const actual = await vi.importActual<typeof import("./build-updates")>(
-    "./build-updates",
-  );
+  const actual =
+    await vi.importActual<typeof import("./build-updates")>("./build-updates");
   return {
     ...actual,
     buildUpdates: (...args: unknown[]) => mockBuildUpdates(...args),
@@ -38,7 +37,11 @@ vi.mock("./build-updates", async () => {
 // Mock Query Builder
 // ---------------------------------------------------------------------------
 
-type AsyncResult = Promise<{ data: unknown; count?: number | null; error: unknown }>;
+type AsyncResult = Promise<{
+  data: unknown;
+  count?: number | null;
+  error: unknown;
+}>;
 
 function createQueryBuilder(results?: {
   rangeResult?: AsyncResult;
@@ -58,7 +61,10 @@ function createQueryBuilder(results?: {
   });
 
   interface BuilderType {
-    [key: string]: ReturnType<typeof vi.fn> | Array<unknown> | (() => Array<{ method: string; args: unknown[] }>);
+    [key: string]:
+      | ReturnType<typeof vi.fn>
+      | Array<unknown>
+      | (() => Array<{ method: string; args: unknown[] }>);
     _chainCalls: Array<{ method: string; args: unknown[] }>;
     _getChainCalls: () => Array<{ method: string; args: unknown[] }>;
   }
@@ -230,8 +236,14 @@ describe("getAll", () => {
     const eqCalls = builder._getChainCalls().filter((c) => c.method === "eq");
     const isCalls = builder._getChainCalls().filter((c) => c.method === "is");
 
-    expect(eqCalls.some((c) => c.args[0] === "organization_id" && c.args[1] === "org-1")).toBe(true);
-    expect(isCalls.some((c) => c.args[0] === "deleted_at" && c.args[1] === null)).toBe(true);
+    expect(
+      eqCalls.some(
+        (c) => c.args[0] === "organization_id" && c.args[1] === "org-1",
+      ),
+    ).toBe(true);
+    expect(
+      isCalls.some((c) => c.args[0] === "deleted_at" && c.args[1] === null),
+    ).toBe(true);
   });
 
   it("returns a PaginatedResponse with correct shape", async () => {
@@ -292,7 +304,9 @@ describe("getAll", () => {
 
     const eqCalls = builder._getChainCalls().filter((c) => c.method === "eq");
     expect(
-      eqCalls.some((c) => c.args[0] === "branch_id" && c.args[1] === "branch-2"),
+      eqCalls.some(
+        (c) => c.args[0] === "branch_id" && c.args[1] === "branch-2",
+      ),
     ).toBe(true);
   });
 
@@ -315,7 +329,9 @@ describe("getAll", () => {
 
     await crud.getAll(db, "org-1");
 
-    const orderCalls = builder._getChainCalls().filter((c) => c.method === "order");
+    const orderCalls = builder
+      ._getChainCalls()
+      .filter((c) => c.method === "order");
     expect(orderCalls.length).toBeGreaterThanOrEqual(1);
     expect(orderCalls[0].args[0]).toBe("name");
   });
@@ -342,7 +358,10 @@ describe("getAll", () => {
     await crud.getAll(db, "org-1", options as any);
 
     expect(onQuery).toHaveBeenCalledTimes(1);
-    expect(onQuery).toHaveBeenCalledWith(expect.any(Object), expect.objectContaining({ search: "test" }));
+    expect(onQuery).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({ search: "test" }),
+    );
   });
 
   it("throws error when Supabase query fails", async () => {
@@ -386,7 +405,9 @@ describe("getAll", () => {
 
     await crud.getAll(db, "org-1");
 
-    const rangeCalls = builder._getChainCalls().filter((c) => c.method === "range");
+    const rangeCalls = builder
+      ._getChainCalls()
+      .filter((c) => c.method === "range");
     expect(rangeCalls.length).toBeGreaterThanOrEqual(1);
     // offset = (1-1)*50 = 0, end = 0 + 50 - 1 = 49
     expect(rangeCalls[0].args).toEqual([0, 49]);
@@ -410,7 +431,9 @@ describe("getAll", () => {
 
     await crud.getAll(db, "org-1", { pageSize: 999 });
 
-    const rangeCalls = builder._getChainCalls().filter((c) => c.method === "range");
+    const rangeCalls = builder
+      ._getChainCalls()
+      .filter((c) => c.method === "range");
     expect(rangeCalls[0].args).toEqual([0, 99]); // 100 - 1
   });
 });
@@ -449,7 +472,9 @@ describe("getById", () => {
       eqCalls.some((c) => c.args[0] === "id" && c.args[1] === "rec-1"),
     ).toBe(true);
     expect(
-      eqCalls.some((c) => c.args[0] === "organization_id" && c.args[1] === "org-1"),
+      eqCalls.some(
+        (c) => c.args[0] === "organization_id" && c.args[1] === "org-1",
+      ),
     ).toBe(true);
     const isCalls = builder._getChainCalls().filter((c) => c.method === "is");
     expect(
@@ -501,7 +526,11 @@ describe("create", () => {
       }),
     });
     const db = { from: vi.fn().mockReturnValue(builder) } as any;
-    mockCreateAuditLog.mockResolvedValue({ success: true, id: "audit-1", error: null });
+    mockCreateAuditLog.mockResolvedValue({
+      success: true,
+      id: "audit-1",
+      error: null,
+    });
 
     const crud = createCrudService<
       TestRecord,
@@ -513,12 +542,19 @@ describe("create", () => {
       cacheTagKey: (orgId) => `test:${orgId}`,
     });
 
-    const result = await crud.create(db, "org-1", { name: "New Item" }, "user-1");
+    const result = await crud.create(
+      db,
+      "org-1",
+      { name: "New Item" },
+      "user-1",
+    );
 
     expect(result).toEqual(createdRecord);
 
     // Verify insert was called with org + user fields added
-    const insertCalls = builder._getChainCalls().filter((c) => c.method === "insert");
+    const insertCalls = builder
+      ._getChainCalls()
+      .filter((c) => c.method === "insert");
     expect(insertCalls.length).toBe(1);
     const insertArg = insertCalls[0].args[0] as Record<string, unknown>;
     expect(insertArg.organization_id).toBe("org-1");
@@ -540,7 +576,11 @@ describe("create", () => {
       }),
     });
     const db = { from: vi.fn().mockReturnValue(builder) } as any;
-    mockCreateAuditLog.mockResolvedValue({ success: true, id: "audit-1", error: null });
+    mockCreateAuditLog.mockResolvedValue({
+      success: true,
+      id: "audit-1",
+      error: null,
+    });
 
     const crud = createCrudService<
       TestRecord,
@@ -580,7 +620,11 @@ describe("create", () => {
       }),
     });
     const db = { from: vi.fn().mockReturnValue(builder) } as any;
-    mockCreateAuditLog.mockResolvedValue({ success: true, id: "audit-1", error: null });
+    mockCreateAuditLog.mockResolvedValue({
+      success: true,
+      id: "audit-1",
+      error: null,
+    });
 
     const crud = createCrudService<
       TestRecord,
@@ -614,7 +658,11 @@ describe("create", () => {
     const db = { from: vi.fn().mockReturnValue(builder) } as any;
 
     const beforeCreate = vi.fn().mockResolvedValue({ name: "Modified Name" });
-    mockCreateAuditLog.mockResolvedValue({ success: true, id: "audit-1", error: null });
+    mockCreateAuditLog.mockResolvedValue({
+      success: true,
+      id: "audit-1",
+      error: null,
+    });
 
     const crud = createCrudService<
       TestRecord,
@@ -635,7 +683,9 @@ describe("create", () => {
       expect.objectContaining({ orgId: "org-1", userId: "user-1" }),
     );
     // Verify the merged name was inserted
-    const insertCalls = builder._getChainCalls().filter((c) => c.method === "insert");
+    const insertCalls = builder
+      ._getChainCalls()
+      .filter((c) => c.method === "insert");
     const insertArg = insertCalls[0].args[0] as Record<string, unknown>;
     expect(insertArg.name).toBe("Modified Name");
   });
@@ -655,7 +705,11 @@ describe("create", () => {
     const db = { from: vi.fn().mockReturnValue(builder) } as any;
 
     const afterCreate = vi.fn().mockResolvedValue(undefined);
-    mockCreateAuditLog.mockResolvedValue({ success: true, id: "audit-1", error: null });
+    mockCreateAuditLog.mockResolvedValue({
+      success: true,
+      id: "audit-1",
+      error: null,
+    });
 
     const crud = createCrudService<
       TestRecord,
@@ -668,7 +722,12 @@ describe("create", () => {
       hooks: { afterCreate },
     });
 
-    const result = await crud.create(db, "org-1", { name: "New Item" }, "user-1");
+    const result = await crud.create(
+      db,
+      "org-1",
+      { name: "New Item" },
+      "user-1",
+    );
 
     expect(afterCreate).toHaveBeenCalledTimes(1);
     expect(afterCreate).toHaveBeenCalledWith(
@@ -691,7 +750,11 @@ describe("create", () => {
       }),
     });
     const db = { from: vi.fn().mockReturnValue(builder) } as any;
-    mockCreateAuditLog.mockResolvedValue({ success: true, id: "audit-1", error: null });
+    mockCreateAuditLog.mockResolvedValue({
+      success: true,
+      id: "audit-1",
+      error: null,
+    });
 
     const crud = createCrudService<
       TestRecord,
@@ -703,15 +766,19 @@ describe("create", () => {
       cacheTagKey: (orgId) => `test:${orgId}`,
     });
 
-    await crud.create(db, "org-1", { name: "New Item", branchId: "branch-1" }, "user-1");
-
-    expect(mockResolveBranchId).toHaveBeenCalledWith(
+    await crud.create(
       db,
       "org-1",
-      "branch-1",
-      { strict: false },
+      { name: "New Item", branchId: "branch-1" },
+      "user-1",
     );
-    const insertCalls = builder._getChainCalls().filter((c) => c.method === "insert");
+
+    expect(mockResolveBranchId).toHaveBeenCalledWith(db, "org-1", "branch-1", {
+      strict: false,
+    });
+    const insertCalls = builder
+      ._getChainCalls()
+      .filter((c) => c.method === "insert");
     const insertArg = insertCalls[0].args[0] as Record<string, unknown>;
     expect(insertArg.branch_id).toBe("branch-1");
     // branchId (camelCase) should have been deleted
@@ -768,7 +835,11 @@ describe("update", () => {
       .mockResolvedValueOnce({ data: existingRecord, error: null })
       .mockResolvedValueOnce({ data: updatedRecord, error: null });
     const db = { from: vi.fn().mockReturnValue(builder) } as any;
-    mockCreateAuditLog.mockResolvedValue({ success: true, id: "audit-1", error: null });
+    mockCreateAuditLog.mockResolvedValue({
+      success: true,
+      id: "audit-1",
+      error: null,
+    });
     mockBuildUpdates.mockReturnValue({ name: "Updated Name" });
 
     const crud = createCrudService<
@@ -782,7 +853,13 @@ describe("update", () => {
       fieldMap: testFieldMap,
     });
 
-    const result = await crud.update(db, "org-1", "rec-1", { name: "Updated Name" }, "user-1");
+    const result = await crud.update(
+      db,
+      "org-1",
+      "rec-1",
+      { name: "Updated Name" },
+      "user-1",
+    );
 
     expect(result).toEqual(updatedRecord);
   });
@@ -853,7 +930,11 @@ describe("update", () => {
       .mockResolvedValueOnce({ data: existingRecord, error: null })
       .mockResolvedValueOnce({ data: updatedRecord, error: null });
     const db = { from: vi.fn().mockReturnValue(builder) } as any;
-    mockCreateAuditLog.mockResolvedValue({ success: true, id: "audit-1", error: null });
+    mockCreateAuditLog.mockResolvedValue({
+      success: true,
+      id: "audit-1",
+      error: null,
+    });
     mockBuildUpdates.mockReturnValue({ name: "Updated Name" });
 
     const crud = createCrudService<
@@ -895,7 +976,11 @@ describe("update", () => {
       .mockResolvedValueOnce({ data: existingRecord, error: null })
       .mockResolvedValueOnce({ data: updatedRecord, error: null });
     const db = { from: vi.fn().mockReturnValue(builder) } as any;
-    mockCreateAuditLog.mockResolvedValue({ success: true, id: "audit-1", error: null });
+    mockCreateAuditLog.mockResolvedValue({
+      success: true,
+      id: "audit-1",
+      error: null,
+    });
     mockBuildUpdates.mockReturnValue({ name: "Updated Name" });
 
     const crud = createCrudService<
@@ -930,7 +1015,11 @@ describe("update", () => {
       .mockResolvedValueOnce({ data: existingRecord, error: null })
       .mockResolvedValueOnce({ data: updatedRecord, error: null });
     const db = { from: vi.fn().mockReturnValue(builder) } as any;
-    mockCreateAuditLog.mockResolvedValue({ success: true, id: "audit-1", error: null });
+    mockCreateAuditLog.mockResolvedValue({
+      success: true,
+      id: "audit-1",
+      error: null,
+    });
     mockBuildUpdates.mockReturnValue({ name: "Updated Name" });
 
     const crud = createCrudService<
@@ -968,7 +1057,11 @@ describe("update", () => {
       .mockResolvedValueOnce({ data: existingRecord, error: null })
       .mockResolvedValueOnce({ data: updatedRecord, error: null });
     const db = { from: vi.fn().mockReturnValue(builder) } as any;
-    mockCreateAuditLog.mockResolvedValue({ success: true, id: "audit-1", error: null });
+    mockCreateAuditLog.mockResolvedValue({
+      success: true,
+      id: "audit-1",
+      error: null,
+    });
     mockBuildUpdates.mockReturnValue({ name: "Updated Name" });
 
     const crud = createCrudService<
@@ -983,7 +1076,13 @@ describe("update", () => {
       hooks: { afterUpdate },
     });
 
-    const result = await crud.update(db, "org-1", "rec-1", { name: "Updated Name" }, "user-1");
+    const result = await crud.update(
+      db,
+      "org-1",
+      "rec-1",
+      { name: "Updated Name" },
+      "user-1",
+    );
 
     expect(afterUpdate).toHaveBeenCalledTimes(1);
     expect(afterUpdate).toHaveBeenCalledWith(
@@ -1004,7 +1103,11 @@ describe("update", () => {
       .mockResolvedValueOnce({ data: existingRecord, error: null })
       .mockResolvedValueOnce({ data: updatedRecord, error: null });
     const db = { from: vi.fn().mockReturnValue(builder) } as any;
-    mockCreateAuditLog.mockResolvedValue({ success: true, id: "audit-1", error: null });
+    mockCreateAuditLog.mockResolvedValue({
+      success: true,
+      id: "audit-1",
+      error: null,
+    });
     mockBuildUpdates.mockReturnValue({ name: "Updated via fieldMap" });
 
     const crud = createCrudService<
@@ -1018,7 +1121,13 @@ describe("update", () => {
       fieldMap: testFieldMap,
     });
 
-    await crud.update(db, "org-1", "rec-1", { name: "Updated via fieldMap" }, "user-1");
+    await crud.update(
+      db,
+      "org-1",
+      "rec-1",
+      { name: "Updated via fieldMap" },
+      "user-1",
+    );
 
     // Verify buildUpdates was called with params and fieldMap
     expect(mockBuildUpdates).toHaveBeenCalledWith(
@@ -1048,7 +1157,11 @@ describe("softDelete", () => {
       }),
     });
     const db = { from: vi.fn().mockReturnValue(builder) } as any;
-    mockCreateAuditLog.mockResolvedValue({ success: true, id: "audit-1", error: null });
+    mockCreateAuditLog.mockResolvedValue({
+      success: true,
+      id: "audit-1",
+      error: null,
+    });
 
     const crud = createCrudService<
       TestRecord,
@@ -1062,7 +1175,9 @@ describe("softDelete", () => {
 
     await crud.softDelete(db, "org-1", "rec-1", "user-1");
 
-    const updateCalls = builder._getChainCalls().filter((c) => c.method === "update");
+    const updateCalls = builder
+      ._getChainCalls()
+      .filter((c) => c.method === "update");
     expect(updateCalls.length).toBe(1);
     const updateArg = updateCalls[0].args[0] as Record<string, unknown>;
     expect(updateArg).toHaveProperty("deleted_at");
@@ -1102,7 +1217,11 @@ describe("softDelete", () => {
       }),
     });
     const db = { from: vi.fn().mockReturnValue(builder) } as any;
-    mockCreateAuditLog.mockResolvedValue({ success: true, id: "audit-1", error: null });
+    mockCreateAuditLog.mockResolvedValue({
+      success: true,
+      id: "audit-1",
+      error: null,
+    });
 
     const crud = createCrudService<
       TestRecord,
@@ -1137,7 +1256,11 @@ describe("softDelete", () => {
       }),
     });
     const db = { from: vi.fn().mockReturnValue(builder) } as any;
-    mockCreateAuditLog.mockResolvedValue({ success: true, id: "audit-1", error: null });
+    mockCreateAuditLog.mockResolvedValue({
+      success: true,
+      id: "audit-1",
+      error: null,
+    });
 
     const crud = createCrudService<
       TestRecord,
@@ -1165,7 +1288,11 @@ describe("softDelete", () => {
       }),
     });
     const db = { from: vi.fn().mockReturnValue(builder) } as any;
-    mockCreateAuditLog.mockResolvedValue({ success: true, id: "audit-1", error: null });
+    mockCreateAuditLog.mockResolvedValue({
+      success: true,
+      id: "audit-1",
+      error: null,
+    });
 
     const crud = createCrudService<
       TestRecord,
@@ -1194,7 +1321,9 @@ describe("softDelete", () => {
 
 describe("type-safe response mapping", () => {
   it("getAll returns correctly typed PaginatedResponse", async () => {
-    const fakeData = [{ id: "1", name: "Item", organization_id: "org-1", deleted_at: null }];
+    const fakeData = [
+      { id: "1", name: "Item", organization_id: "org-1", deleted_at: null },
+    ];
     const builder = createQueryBuilder({
       rangeResult: Promise.resolve({ data: fakeData, count: 1, error: null }),
     });
@@ -1210,7 +1339,10 @@ describe("type-safe response mapping", () => {
       cacheTagKey: (orgId) => `test:${orgId}`,
     });
 
-    const result: PaginatedResponse<TestRecord> = await crud.getAll(db, "org-1");
+    const result: PaginatedResponse<TestRecord> = await crud.getAll(
+      db,
+      "org-1",
+    );
     // Type-level assertion: result.data[0] should be TestRecord
     const first: TestRecord = result.data[0];
     expect(first.id).toBe("1");
@@ -1218,7 +1350,12 @@ describe("type-safe response mapping", () => {
   });
 
   it("getById returns correctly typed record", async () => {
-    const fakeRecord = { id: "1", name: "Item", organization_id: "org-1", deleted_at: null };
+    const fakeRecord = {
+      id: "1",
+      name: "Item",
+      organization_id: "org-1",
+      deleted_at: null,
+    };
     const builder = createQueryBuilder({
       singleResult: Promise.resolve({ data: fakeRecord, error: null }),
     });
@@ -1240,12 +1377,21 @@ describe("type-safe response mapping", () => {
   });
 
   it("create returns correctly typed record", async () => {
-    const fakeRecord = { id: "new-1", name: "New", organization_id: "org-1", deleted_at: null };
+    const fakeRecord = {
+      id: "new-1",
+      name: "New",
+      organization_id: "org-1",
+      deleted_at: null,
+    };
     const builder = createQueryBuilder({
       singleResult: Promise.resolve({ data: fakeRecord, error: null }),
     });
     const db = { from: vi.fn().mockReturnValue(builder) } as any;
-    mockCreateAuditLog.mockResolvedValue({ success: true, id: "audit-1", error: null });
+    mockCreateAuditLog.mockResolvedValue({
+      success: true,
+      id: "audit-1",
+      error: null,
+    });
 
     const crud = createCrudService<
       TestRecord,
@@ -1257,7 +1403,12 @@ describe("type-safe response mapping", () => {
       cacheTagKey: (orgId) => `test:${orgId}`,
     });
 
-    const result: TestRecord = await crud.create(db, "org-1", { name: "New" }, "user-1");
+    const result: TestRecord = await crud.create(
+      db,
+      "org-1",
+      { name: "New" },
+      "user-1",
+    );
     expect(result.id).toBe("new-1");
     expect(result.name).toBe("New");
   });
@@ -1290,7 +1441,9 @@ describe("selectColumnsById override", () => {
 
     await crud.getById(db, "org-1", "1");
 
-    const selectCalls = builder._getChainCalls().filter((c) => c.method === "select");
+    const selectCalls = builder
+      ._getChainCalls()
+      .filter((c) => c.method === "select");
     expect(selectCalls.length).toBeGreaterThanOrEqual(1);
     // The last select call should be for getById
     const lastSelect = selectCalls[selectCalls.length - 1];

@@ -7,7 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
 import type { OrgTheme } from "@/lib/types";
-import { SHADCN_PRESETS, RADIUS_OPTIONS, oklchToHex, hexToOklch } from "./_theme-color-presets";
+import {
+  hexToOklch,
+  oklchToHex,
+  RADIUS_OPTIONS,
+  SHADCN_PRESETS,
+} from "./_theme-color-presets";
 
 export function OrgThemeSettings() {
   const { theme, setTheme } = useOrgTheme();

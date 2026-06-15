@@ -15,6 +15,7 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { MechanicAvatar } from "@/components/mechanic-avatar";
+import { MechanicAvatarGroup } from "@/components/mechanic-avatar-chip";
 import {
   type SortableItem,
   SortableListBody,
@@ -26,12 +27,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 interface MechanicOption extends SortableItem {
@@ -319,8 +314,6 @@ export function MechanicMultiSelect({
   );
 
   const CHIP_LIMIT = 3;
-  const visible = value.slice(0, CHIP_LIMIT);
-  const hiddenCount = value.length - visible.length;
 
   return (
     <div className="relative">
@@ -333,50 +326,13 @@ export function MechanicMultiSelect({
         >
           <div className="flex min-h-9 min-w-[150px] max-w-[220px] items-center gap-1.5 rounded-xl border border-border/70 bg-background/90 px-2 py-1 shadow-sm backdrop-blur-sm">
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-              {visible.length === 0 ? (
-                <span className="px-1 text-xs font-medium text-muted-foreground">
-                  {t("selectMechanic")}
-                </span>
-              ) : null}
-              <TooltipProvider delay={120}>
-                {visible.map((m, i) => {
-                  const isLead = i === 0;
-                  return (
-                    <Tooltip key={m.id}>
-                      <TooltipTrigger
-                        render={
-                          <div
-                            className={cn(
-                              "relative inline-flex size-7 shrink-0 items-center justify-center rounded-lg border shadow-sm transition-colors",
-                              isLead
-                                ? "border-amber-500/35 bg-amber-500/12"
-                                : "border-border/70 bg-muted/70",
-                            )}
-                          />
-                        }
-                      >
-                        <MechanicAvatar
-                          mechanic={m}
-                          className="size-6 shrink-0"
-                        />
-                        {isLead ? (
-                          <span className="absolute -top-0.5 -left-0.5 flex size-3.5 items-center justify-center rounded-full bg-amber-500 text-amber-950 shadow-sm">
-                            <Crown className="size-2" />
-                          </span>
-                        ) : null}
-                      </TooltipTrigger>
-                      <TooltipContent side="top" sideOffset={6}>
-                        {m.full_name}
-                      </TooltipContent>
-                    </Tooltip>
-                  );
-                })}
-              </TooltipProvider>
-              {hiddenCount > 0 && (
-                <span className="inline-flex h-6 shrink-0 items-center rounded-lg border border-border/70 bg-muted/60 px-2 text-[10px] font-semibold text-muted-foreground">
-                  +{hiddenCount}
-                </span>
-              )}
+              <MechanicAvatarGroup
+                mechanics={value}
+                leadId={leadMechanicId}
+                limit={CHIP_LIMIT}
+                size="sm"
+                emptyPlaceholder={t("selectMechanic")}
+              />
             </div>
             <PopoverTrigger
               render={

@@ -2,7 +2,12 @@ import { z } from "zod";
 
 // ── Constants ─────────────────────────────────────────────────
 
-export const PAYMENT_METHODS = ["cash", "bank_transfer", "card", "manual"] as const;
+export const PAYMENT_METHODS = [
+  "cash",
+  "bank_transfer",
+  "card",
+  "manual",
+] as const;
 
 // ── Schema ───────────────────────────────────────────────────
 

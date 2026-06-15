@@ -37,7 +37,6 @@ import { usePageHeader } from "@/hooks/use-page-header";
 import type { ExportColumn } from "@/lib/export";
 import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
 import { useTableFilters } from "@/lib/hooks/use-url-filters";
-import { useRouter } from "@/lib/i18n/navigation";
 import { workOrderKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useUpdateWorkOrderStatus } from "@/lib/queries/use-work-order-detail";
@@ -163,9 +162,9 @@ const exportColumns: ExportColumn<WorkOrderListItem>[] = [
 export default function WorkOrdersPage() {
   const t = useTranslations();
   const tWorkOrders = useTranslations("workOrders");
-  const { push } = useRouter();
   const now = useClientNow();
   const queryClient = useQueryClient();
+  const { setDetailWorkOrderId } = usePageHeader();
   const {
     search,
     setSearch,
@@ -309,9 +308,9 @@ export default function WorkOrdersPage() {
         onStatusChange: handleStatusChange,
         onCancel: (woId) => setCancelTarget(woId),
         updatePending: updateStatus.isPending,
-        now,
+        onViewDetail: (woId) => setDetailWorkOrderId(woId),
       }),
-    [handleStatusChange, updateStatus.isPending, now],
+    [handleStatusChange, updateStatus.isPending, setDetailWorkOrderId],
   );
 
   return (
@@ -396,7 +395,7 @@ export default function WorkOrdersPage() {
                 data={list}
                 getRowId={(row) => row.id}
                 pageSize={20}
-                onRowClick={(row) => push(`/dashboard/work-orders/${row.id}`)}
+                onRowClick={(row) => setDetailWorkOrderId(row.id)}
                 showColumnVisibility
                 renderMobileCard={(wo) => {
                   const customerName =

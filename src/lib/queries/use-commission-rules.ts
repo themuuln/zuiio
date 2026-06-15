@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import type { MechanicCommissionRule } from "@/lib/types";
-import { useOrgMutation } from "./mutation-factory";
 import { createOrgQuery } from "./factory";
 import { commissionKeys } from "./keys";
+import { useOrgMutation } from "./mutation-factory";
 
 const fetchCommissionRules =
   createOrgQuery<MechanicCommissionRule[]>("/commission-rules");
@@ -16,15 +16,15 @@ export function useCommissionRules(orgId: string | undefined) {
 }
 
 export function useCreateCommissionRule(orgId: string | undefined) {
-  return useOrgMutation<MechanicCommissionRule, Partial<MechanicCommissionRule>>({
+  return useOrgMutation<
+    MechanicCommissionRule,
+    Partial<MechanicCommissionRule>
+  >({
     endpoint: `/api/organizations/${orgId}/commission-rules`,
     method: "POST",
     queryKey: commissionKeys.list(orgId ?? ""),
     optimisticUpdate: (cached, body) => {
-      const maxPriority = Math.max(
-        ...cached.map((r) => r.priority ?? 0),
-        0,
-      );
+      const maxPriority = Math.max(...cached.map((r) => r.priority ?? 0), 0);
       const optimistic: MechanicCommissionRule = {
         id: `temp-${Date.now()}`,
         organization_id: orgId ?? "",
@@ -48,8 +48,12 @@ export function useCreateCommissionRule(orgId: string | undefined) {
 }
 
 export function useUpdateCommissionRule(orgId: string | undefined) {
-  return useOrgMutation<MechanicCommissionRule, { id: string; body: Partial<MechanicCommissionRule> }>({
-    endpoint: (vars) => `/api/organizations/${orgId}/commission-rules/${vars.id}`,
+  return useOrgMutation<
+    MechanicCommissionRule,
+    { id: string; body: Partial<MechanicCommissionRule> }
+  >({
+    endpoint: (vars) =>
+      `/api/organizations/${orgId}/commission-rules/${vars.id}`,
     method: "PATCH",
     queryKey: commissionKeys.list(orgId ?? ""),
     optimisticUpdate: (cached, { id, body }) =>

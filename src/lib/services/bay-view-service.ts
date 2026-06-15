@@ -3,17 +3,13 @@
 // `orgId: string` as second parameter. No server action directives,
 // no inline auth checks, no createClient() calls.
 
-import { revalidateTag } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
-import {
-  NotFoundError,
-  ValidationError,
-} from "@/lib/errors";
+import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createWorkOrder } from "@/lib/services/work-order-service";
 import { withBranchFilter } from "@/lib/supabase/with-branch";
 import type { Profile, Vehicle, WorkOrder } from "@/lib/types";
-import { updateWorkOrderStatus as updateWorkOrderStatusCanonical } from "./work-order-workflow";
 import type {
   BaySlotData,
   BayViewData,
@@ -21,7 +17,9 @@ import type {
   BranchSectionData,
   ShiftReport,
 } from "./bay-view-service.types";
+import { updateWorkOrderStatus as updateWorkOrderStatusCanonical } from "./work-order-workflow";
 
+export type { UpdateStatusParams } from "./bay-view-service.types";
 // Re-export types for backward compatibility
 export type {
   BaySlotData,
@@ -30,7 +28,6 @@ export type {
   BranchSectionData,
   ShiftReport,
 };
-export type { UpdateStatusParams } from "./bay-view-service.types";
 
 // ── Helpers for multi-branch sections ─────────────────────────
 
@@ -330,14 +327,8 @@ export async function assignVehicleToBay(
       .is("deleted_at", null)
       .maybeSingle(),
     assignFn(),
-    db
-      .from("work_order_helpers")
-      .delete()
-      .eq("work_order_id", workOrderId),
-    db
-      .from("work_order_services")
-      .delete()
-      .eq("work_order_id", workOrderId),
+    db.from("work_order_helpers").delete().eq("work_order_id", workOrderId),
+    db.from("work_order_services").delete().eq("work_order_id", workOrderId),
     db.from("work_order_parts").delete().eq("work_order_id", workOrderId),
   ]);
 
@@ -647,13 +638,7 @@ export async function updateWorkOrderStatus(
     | "Cancelled",
   notes?: string,
 ): Promise<void> {
-  await updateWorkOrderStatusCanonical(
-    db,
-    workOrderId,
-    orgId,
-    status,
-    notes,
-  );
+  await updateWorkOrderStatusCanonical(db, workOrderId, orgId, status, notes);
 }
 
 // ── Update Bay Count ───────────────────────────────────────────
@@ -1164,13 +1149,10 @@ export async function updateBayViewPin(
   }
 
   // Verify current PIN first
-  const { data: verified } = await db.rpc(
-    "verify_organization_bay_view_pin",
-    {
-      target_org_id: orgId,
-      plain_pin: currentPin,
-    },
-  );
+  const { data: verified } = await db.rpc("verify_organization_bay_view_pin", {
+    target_org_id: orgId,
+    plain_pin: currentPin,
+  });
 
   if (!verified) {
     throw new ValidationError("Current PIN is incorrect");

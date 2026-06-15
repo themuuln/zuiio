@@ -130,9 +130,9 @@ export function WorkflowSection() {
                     <Icon className="size-5 text-primary" />
                   </div>
                   <CardTitle className="text-base">
-                    {t(`${pillar.key}Title`)}
+                    {(t as any)(`${pillar.key}Title`)}
                   </CardTitle>
-                  <CardDescription>{t(`${pillar.key}Desc`)}</CardDescription>
+                  <CardDescription>{(t as any)(`${pillar.key}Desc`)}</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-3 pt-0">
                   {[1, 2, 3].map((item) => (
@@ -141,7 +141,7 @@ export function WorkflowSection() {
                         <Check className="size-3 text-primary" />
                       </div>
                       <Typography.Muted className="text-sm text-muted-foreground">
-                        {t(`${pillar.key}Point${item}`)}
+                        {(t as any)(`${pillar.key}Point${item}`)}
                       </Typography.Muted>
                     </div>
                   ))}
@@ -182,10 +182,10 @@ export function DifferentiatorsSection() {
                     <Icon className="size-5 text-primary" />
                   </div>
                   <CardTitle className="text-lg">
-                    {t(`${item.key}Title`)}
+                    {(t as any)(`${item.key}Title`)}
                   </CardTitle>
                   <CardDescription className="text-sm leading-6">
-                    {t(`${item.key}Desc`)}
+                    {(t as any)(`${item.key}Desc`)}
                   </CardDescription>
                 </CardHeader>
               </Card>
@@ -221,20 +221,20 @@ export function TestimonialsSection() {
               </CardHeader>
               <CardContent>
                 <blockquote className="text-sm leading-relaxed text-muted-foreground">
-                  &ldquo;{t(`testimonial${i}`)}&rdquo;
+                  &ldquo;{(t as any)(`testimonial${i}`)}&rdquo;
                 </blockquote>
               </CardContent>
               <CardFooter className="border-t pt-4">
                 <div className="flex items-center gap-3">
                   <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
-                    {t(`testimonial${i}Author`).charAt(0)}
+                    {(t as any)(`testimonial${i}Author`).charAt(0)}
                   </div>
                   <div>
                     <div className="text-sm font-medium">
-                      {t(`testimonial${i}Author`)}
+                      {(t as any)(`testimonial${i}Author`)}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {t(`testimonial${i}Role`)}
+                      {(t as any)(`testimonial${i}Role`)}
                     </div>
                   </div>
                 </div>
@@ -297,9 +297,9 @@ export function PricingSection() {
         </div>
         <div className="mt-12 grid gap-6 lg:grid-cols-3">
           {PRICING_TIERS.map((tier, index) => {
-            const name = t(`${tier.key}Name`);
-            const price = t(`${tier.key}Price`);
-            const desc = t(`${tier.key}Desc`);
+            const name = (t as any)(`${tier.key}Name`);
+            const price = (t as any)(`${tier.key}Price`);
+            const desc = (t as any)(`${tier.key}Desc`);
             const monthlyPrice = MONTHLY_PRICES[index];
             const annualPrice = Math.round(monthlyPrice * 12 * 0.8);
 

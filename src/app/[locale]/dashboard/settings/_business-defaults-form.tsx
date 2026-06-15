@@ -3,7 +3,7 @@
 import { CreditCard, FileText, Globe } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -142,6 +142,13 @@ const businessDefaultsSchema = z.object({
       const num = Number(val);
       return !Number.isNaN(num) && num >= 0 && num <= 100;
     }, "Tax rate must be between 0 and 100"),
+  nuatEnabled: z.boolean(),
+  ndshEnabled: z.boolean(),
+  ndshEmployerRate: z.string().optional(),
+  ndshEmployeeRate: z.string().optional(),
+  einvoiceEnabled: z.boolean(),
+  einvoiceApiKey: z.string().optional(),
+  einvoiceMerchantId: z.string().optional(),
   timezone: z.string().min(1, "Timezone is required"),
   dateFormat: z.string().min(1, "Date format is required"),
   language: z.string().min(1, "Language is required"),
@@ -170,7 +177,6 @@ export function BusinessDefaultsForm({
   onSubmit,
 }: BusinessDefaultsFormProps) {
   const t = useTranslations("settings");
-  const [nuatEnabled, setNuatEnabled] = useState(formData.nuatEnabled);
 
   const rhfForm = useForm<BusinessDefaultsValues>({
     resolver: zodResolver(businessDefaultsSchema),
@@ -178,6 +184,13 @@ export function BusinessDefaultsForm({
       invoicePrefix: formData.invoicePrefix,
       defaultCurrency: formData.defaultCurrency,
       defaultTaxRate: formData.defaultTaxRate,
+      nuatEnabled: formData.nuatEnabled,
+      ndshEnabled: formData.ndshEnabled,
+      ndshEmployerRate: formData.ndshEmployerRate,
+      ndshEmployeeRate: formData.ndshEmployeeRate,
+      einvoiceEnabled: formData.einvoiceEnabled,
+      einvoiceApiKey: formData.einvoiceApiKey,
+      einvoiceMerchantId: formData.einvoiceMerchantId,
       timezone: formData.timezone,
       dateFormat: formData.dateFormat,
       language: formData.language,
@@ -185,12 +198,7 @@ export function BusinessDefaultsForm({
     },
   });
 
-  const formRef = useRef(formData);
-  useEffect(() => {
-    formRef.current = formData;
-  }, [formData]);
-
-  // Keep parent state in sync when form values change
+  // Sync RHF values to parent state so sidebar/other sections stay in sync
   useEffect(() => {
     const subscription = rhfForm.watch((values) => {
       setForm((prev) => {
@@ -199,7 +207,14 @@ export function BusinessDefaultsForm({
           invoicePrefix: values.invoicePrefix ?? prev.invoicePrefix,
           defaultCurrency: values.defaultCurrency ?? prev.defaultCurrency,
           defaultTaxRate: values.defaultTaxRate ?? prev.defaultTaxRate,
-          nuatEnabled,
+          nuatEnabled: values.nuatEnabled ?? prev.nuatEnabled,
+          ndshEnabled: values.ndshEnabled ?? prev.ndshEnabled,
+          ndshEmployerRate: values.ndshEmployerRate ?? prev.ndshEmployerRate,
+          ndshEmployeeRate: values.ndshEmployeeRate ?? prev.ndshEmployeeRate,
+          einvoiceEnabled: values.einvoiceEnabled ?? prev.einvoiceEnabled,
+          einvoiceApiKey: values.einvoiceApiKey ?? prev.einvoiceApiKey,
+          einvoiceMerchantId:
+            values.einvoiceMerchantId ?? prev.einvoiceMerchantId,
           timezone: values.timezone ?? prev.timezone,
           dateFormat: values.dateFormat ?? prev.dateFormat,
           language: values.language ?? prev.language,
@@ -211,6 +226,12 @@ export function BusinessDefaultsForm({
           next.defaultCurrency === prev.defaultCurrency &&
           next.defaultTaxRate === prev.defaultTaxRate &&
           next.nuatEnabled === prev.nuatEnabled &&
+          next.ndshEnabled === prev.ndshEnabled &&
+          next.ndshEmployerRate === prev.ndshEmployerRate &&
+          next.ndshEmployeeRate === prev.ndshEmployeeRate &&
+          next.einvoiceEnabled === prev.einvoiceEnabled &&
+          next.einvoiceApiKey === prev.einvoiceApiKey &&
+          next.einvoiceMerchantId === prev.einvoiceMerchantId &&
           next.timezone === prev.timezone &&
           next.dateFormat === prev.dateFormat &&
           next.language === prev.language &&
@@ -222,10 +243,13 @@ export function BusinessDefaultsForm({
       });
     });
     return () => subscription.unsubscribe();
-  }, [rhfForm.watch, setForm, nuatEnabled]);
+  }, [rhfForm.watch, setForm]);
 
   const watchedLanguage = rhfForm.watch("language");
   const watchedInvoicePrefix = rhfForm.watch("invoicePrefix");
+  const watchedNuatEnabled = rhfForm.watch("nuatEnabled");
+  const watchedNdshEnabled = rhfForm.watch("ndshEnabled");
+  const watchedEinvoiceEnabled = rhfForm.watch("einvoiceEnabled");
 
   return (
     <SettingsBlock className="lg:col-span-2">
@@ -233,7 +257,9 @@ export function BusinessDefaultsForm({
         className="flex flex-col gap-4"
         onSubmit={(e) => {
           e.preventDefault();
-          onSubmit(e);
+          rhfForm.handleSubmit(() => {
+            onSubmit(e);
+          })();
         }}
       >
         <FieldGroup className="grid gap-3 sm:grid-cols-2">
@@ -313,11 +339,10 @@ export function BusinessDefaultsForm({
                 >
                   <Switch
                     id="nuatEnabled"
-                    checked={nuatEnabled}
-                    onCheckedChange={(checked) => {
-                      setNuatEnabled(checked);
-                      setForm((prev) => ({ ...prev, nuatEnabled: checked }));
-                    }}
+                    checked={watchedNuatEnabled}
+                    onCheckedChange={(checked) =>
+                      rhfForm.setValue("nuatEnabled", checked)
+                    }
                   />
                 </SettingsRow>
               </SettingsGroup>
@@ -325,7 +350,7 @@ export function BusinessDefaultsForm({
           </Field>
 
           {/* НӨАТ Rate - only shown when enabled */}
-          {nuatEnabled && (
+          {watchedNuatEnabled && (
             <Field data-invalid={!!rhfForm.formState.errors.defaultTaxRate}>
               <FieldLabel htmlFor="defaultTaxRate">
                 {currentLocale === "mn" ? "НӨАТ хувь" : "VAT Rate"}
@@ -368,10 +393,10 @@ export function BusinessDefaultsForm({
                 >
                   <Switch
                     id="ndshEnabled"
-                    checked={formData.ndshEnabled}
-                    onCheckedChange={(checked) => {
-                      setForm((prev) => ({ ...prev, ndshEnabled: checked }));
-                    }}
+                    checked={watchedNdshEnabled}
+                    onCheckedChange={(checked) =>
+                      rhfForm.setValue("ndshEnabled", checked)
+                    }
                   />
                 </SettingsRow>
               </SettingsGroup>
@@ -379,7 +404,7 @@ export function BusinessDefaultsForm({
           </Field>
 
           {/* НДШ Rates - only shown when enabled */}
-          {formData.ndshEnabled && (
+          {watchedNdshEnabled && (
             <>
               <Field>
                 <FieldLabel>
@@ -393,13 +418,7 @@ export function BusinessDefaultsForm({
                       max="100"
                       step="0.1"
                       className="w-24"
-                      value={formData.ndshEmployerRate}
-                      onChange={(e) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          ndshEmployerRate: e.target.value,
-                        }))
-                      }
+                      {...rhfForm.register("ndshEmployerRate")}
                     />
                     <span className="text-sm text-muted-foreground">%</span>
                   </div>
@@ -417,13 +436,7 @@ export function BusinessDefaultsForm({
                       max="100"
                       step="0.1"
                       className="w-24"
-                      value={formData.ndshEmployeeRate}
-                      onChange={(e) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          ndshEmployeeRate: e.target.value,
-                        }))
-                      }
+                      {...rhfForm.register("ndshEmployeeRate")}
                     />
                     <span className="text-sm text-muted-foreground">%</span>
                   </div>
@@ -445,13 +458,10 @@ export function BusinessDefaultsForm({
                 >
                   <Switch
                     id="einvoiceEnabled"
-                    checked={formData.einvoiceEnabled}
-                    onCheckedChange={(checked) => {
-                      setForm((prev) => ({
-                        ...prev,
-                        einvoiceEnabled: checked,
-                      }));
-                    }}
+                    checked={watchedEinvoiceEnabled}
+                    onCheckedChange={(checked) =>
+                      rhfForm.setValue("einvoiceEnabled", checked)
+                    }
                   />
                 </SettingsRow>
               </SettingsGroup>
@@ -459,7 +469,7 @@ export function BusinessDefaultsForm({
           </Field>
 
           {/* E-Invoice Settings - only shown when enabled */}
-          {formData.einvoiceEnabled && (
+          {watchedEinvoiceEnabled && (
             <>
               <Field>
                 <FieldLabel>
@@ -467,14 +477,8 @@ export function BusinessDefaultsForm({
                 </FieldLabel>
                 <FieldContent>
                   <Input
-                    value={formData.einvoiceMerchantId}
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        einvoiceMerchantId: e.target.value,
-                      }))
-                    }
                     placeholder={t("merchantIdPlaceholder")}
+                    {...rhfForm.register("einvoiceMerchantId")}
                   />
                 </FieldContent>
               </Field>
@@ -485,14 +489,8 @@ export function BusinessDefaultsForm({
                 <FieldContent>
                   <Input
                     type="password"
-                    value={formData.einvoiceApiKey}
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        einvoiceApiKey: e.target.value,
-                      }))
-                    }
                     placeholder={t("apiKeyPlaceholder")}
+                    {...rhfForm.register("einvoiceApiKey")}
                   />
                 </FieldContent>
               </Field>

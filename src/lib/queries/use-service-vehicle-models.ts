@@ -2,8 +2,8 @@
  * React Query hooks for vehicle-model-specific service pricing.
  */
 import { useQuery } from "@tanstack/react-query";
-import { useOrgMutation } from "./mutation-factory";
 import { serviceKeys, vehicleModelKeys } from "./keys";
+import { useOrgMutation } from "./mutation-factory";
 
 export interface VehicleModelServiceRow {
   id: string;
@@ -46,10 +46,13 @@ export function useUpsertServiceVehicleModelPrice(
   orgId: string | undefined,
   serviceId: string | undefined,
 ) {
-  return useOrgMutation<VehicleModelServiceRow, {
-    vehicle_model_id: string;
-    specific_price: number | null;
-  }>({
+  return useOrgMutation<
+    VehicleModelServiceRow,
+    {
+      vehicle_model_id: string;
+      specific_price: number | null;
+    }
+  >({
     endpoint: `/api/organizations/${orgId}/services/${serviceId}/vehicle-models`,
     method: "POST",
     queryKey: serviceKeys.vehicleModels(orgId ?? "", serviceId ?? ""),

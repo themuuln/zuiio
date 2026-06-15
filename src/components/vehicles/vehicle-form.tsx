@@ -5,8 +5,7 @@ import { AlertTriangle, Loader2, Plus, Search, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { z } from "zod";
-import { vehicleSchema as sharedVehicleSchema } from "@/lib/validation/vehicle-schema";
+import type { z } from "zod";
 import { CustomerForm } from "@/components/customers/customer-form";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
@@ -63,6 +62,7 @@ import {
   useCustomerSearch,
 } from "@/lib/queries/use-wizard-data";
 import type { CreateVehicleParams, Customer, Vehicle } from "@/lib/types";
+import { vehicleSchema as sharedVehicleSchema } from "@/lib/validation/vehicle-schema";
 
 // ── Schema ───────────────────────────────────────────────────
 // Import shared vehicle schema — fields match exactly.

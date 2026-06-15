@@ -24,11 +24,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Drawer,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { Typography } from "@/components/ui/typography";
 import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
 import { getDefaultTransferBank } from "@/lib/payments/org-bank-accounts";
@@ -246,19 +247,19 @@ export function PostServiceDialog({
   const isComplete = newStatus === "Completed";
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="max-h-[85vh]" showCloseButton={false}>
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2 text-base">
+    <Drawer open={open} onOpenChange={onOpenChange} swipeDirection="right">
+      <DrawerContent className="sm:max-w-md" showCloseButton={false}>
+        <DrawerHeader>
+          <DrawerTitle className="flex items-center gap-2 text-base">
             <Car className="size-4 text-muted-foreground" />
             {isComplete ? t("postServiceCompleteTitle") : t("postServiceTitle")}
             <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50 px-2 py-1 ml-1">
               {vehiclePlate}
             </span>
-          </SheetTitle>
-        </SheetHeader>
+          </DrawerTitle>
+        </DrawerHeader>
 
-        <div className="flex flex-col gap-4 overflow-y-auto px-4 pb-4">
+        <div className="flex-1 overflow-y-auto px-4">
           {/* Odometer */}
           <div className="flex flex-col gap-2">
             <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
@@ -407,29 +408,28 @@ export function PostServiceDialog({
               </Typography.Text>
             </div>
           )}
-
-          {/* Actions */}
-          <div className="flex gap-2 justify-end pt-2 border-t">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              size="default"
-              disabled={saving}
-            >
-              {t("cancel")}
-            </Button>
-            <Button onClick={handleSubmit} size="default" disabled={saving}>
-              {saving && <Loader2 className="size-4 animate-spin mr-1.5" />}
-              {saving
-                ? t("postServiceSaving")
-                : isComplete
-                  ? t("complete")
-                  : t("markReady")}
-            </Button>
-          </div>
         </div>
-      </SheetContent>
-    </Sheet>
+
+        <DrawerFooter className="flex-row items-center justify-end gap-2 border-t px-4 py-3">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            size="default"
+            disabled={saving}
+          >
+            {t("cancel")}
+          </Button>
+          <Button onClick={handleSubmit} size="default" disabled={saving}>
+            {saving && <Loader2 className="size-4 animate-spin mr-1.5" />}
+            {saving
+              ? t("postServiceSaving")
+              : isComplete
+                ? t("complete")
+                : t("markReady")}
+          </Button>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 }
 

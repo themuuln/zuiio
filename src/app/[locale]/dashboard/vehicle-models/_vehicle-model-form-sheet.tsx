@@ -5,11 +5,13 @@ import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import {
   Field,
   FieldContent,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
@@ -21,8 +23,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { vehicleModelKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+
+// ── Types ──────────────────────────────────────────────────────
 
 interface VehicleModelItem {
   id: string;
@@ -55,15 +60,29 @@ const bodyTypeOptions = [
   "crossover",
 ] as const;
 
-const EMPTY_FORM = {
-  make: "",
-  model: "",
-  generation: "",
-  yearStart: "",
-  yearEnd: "",
-  engine: "",
-  bodyType: "",
-};
+// ── Schema ─────────────────────────────────────────────────────
+
+export const vehicleModelSchema = z
+  .object({
+    make: z.string().min(1, "Brand is required"),
+    model: z.string().min(1, "Model is required"),
+    generation: z.string().optional(),
+    yearStart: z.string().optional(),
+    yearEnd: z.string().optional(),
+    engine: z.string().optional(),
+    bodyType: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (!data.yearStart || !data.yearEnd) return true;
+      return Number(data.yearStart) <= Number(data.yearEnd);
+    },
+    { message: "Year range is invalid", path: ["yearEnd"] },
+  );
+
+type VehicleModelValues = z.infer<typeof vehicleModelSchema>;
+
+// ── Component ──────────────────────────────────────────────────
 
 export function VehicleModelFormSheet({
   mode,
@@ -77,35 +96,35 @@ export function VehicleModelFormSheet({
   const orgId = orgQuery.data?.orgId;
   const queryClient = useQueryClient();
 
-  const [make, setMake] = useState(EMPTY_FORM.make);
-  const [model, setModel] = useState(EMPTY_FORM.model);
-  const [generation, setGeneration] = useState(EMPTY_FORM.generation);
-  const [yearStart, setYearStart] = useState(EMPTY_FORM.yearStart);
-  const [yearEnd, setYearEnd] = useState(EMPTY_FORM.yearEnd);
-  const [engine, setEngine] = useState(EMPTY_FORM.engine);
-  const [bodyType, setBodyType] = useState(EMPTY_FORM.bodyType);
   const [showDetails, setShowDetails] = useState(false);
 
-  const normalizedMake = make.trim();
-  const normalizedModel = model.trim();
-  const parsedYearStart = yearStart ? Number.parseInt(yearStart, 10) : null;
-  const parsedYearEnd = yearEnd ? Number.parseInt(yearEnd, 10) : null;
-  const yearRangeInvalid =
-    parsedYearStart != null &&
-    parsedYearEnd != null &&
-    parsedYearStart > parsedYearEnd;
+  const form = useForm<VehicleModelValues>({
+    resolver: zodResolver(vehicleModelSchema),
+    defaultValues: {
+      make: "",
+      model: "",
+      generation: "",
+      yearStart: "",
+      yearEnd: "",
+      engine: "",
+      bodyType: "",
+    },
+  });
 
+  // Reset form when sheet opens / item changes
   useEffect(() => {
     if (!open) return;
 
     if (mode === "edit" && item) {
-      setMake(item.make);
-      setModel(item.model);
-      setGeneration(item.generation ?? "");
-      setYearStart(item.year_start?.toString() ?? "");
-      setYearEnd(item.year_end?.toString() ?? "");
-      setEngine(item.engine ?? "");
-      setBodyType(item.body_type ?? "");
+      form.reset({
+        make: item.make,
+        model: item.model,
+        generation: item.generation ?? "",
+        yearStart: item.year_start?.toString() ?? "",
+        yearEnd: item.year_end?.toString() ?? "",
+        engine: item.engine ?? "",
+        bodyType: item.body_type ?? "",
+      });
       setShowDetails(
         Boolean(
           item.generation ||
@@ -118,15 +137,17 @@ export function VehicleModelFormSheet({
       return;
     }
 
-    setMake(EMPTY_FORM.make);
-    setModel(EMPTY_FORM.model);
-    setGeneration(EMPTY_FORM.generation);
-    setYearStart(EMPTY_FORM.yearStart);
-    setYearEnd(EMPTY_FORM.yearEnd);
-    setEngine(EMPTY_FORM.engine);
-    setBodyType(EMPTY_FORM.bodyType);
+    form.reset({
+      make: "",
+      model: "",
+      generation: "",
+      yearStart: "",
+      yearEnd: "",
+      engine: "",
+      bodyType: "",
+    });
     setShowDetails(false);
-  }, [item, mode, open]);
+  }, [item, mode, open, form]);
 
   const bodyTypeItems = useMemo(
     () =>
@@ -137,27 +158,31 @@ export function VehicleModelFormSheet({
     [t],
   );
 
+  const watchedMake = form.watch("make");
+  const watchedModel = form.watch("model");
+  const watchedBodyType = form.watch("bodyType");
+
   const addMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (data: VehicleModelValues) => {
       if (!orgId) throw new Error(commonT("somethingWentWrong"));
       const r = await fetch(`/api/organizations/${orgId}/vehicle-models`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          make: normalizedMake,
-          model: normalizedModel,
-          generation: generation.trim() || null,
-          year_start: parsedYearStart,
-          year_end: parsedYearEnd,
-          engine: engine.trim() || null,
-          body_type: bodyType || null,
+          make: data.make.trim(),
+          model: data.model.trim(),
+          generation: data.generation?.trim() || null,
+          year_start: data.yearStart ? Number(data.yearStart) : null,
+          year_end: data.yearEnd ? Number(data.yearEnd) : null,
+          engine: data.engine?.trim() || null,
+          body_type: data.bodyType || null,
         }),
       });
       const d = await r.json();
       if (d.error) throw new Error(d.error.message);
       return d.data as VehicleModelItem;
     },
-    onMutate: async () => {
+    onMutate: async (data) => {
       await queryClient.cancelQueries({
         queryKey: vehicleModelKeys.list(orgId ?? ""),
       });
@@ -166,13 +191,13 @@ export function VehicleModelFormSheet({
       );
       const optimistic: VehicleModelItem = {
         id: `temp-${Date.now()}`,
-        make: normalizedMake,
-        model: normalizedModel,
-        generation: generation.trim() || null,
-        year_start: parsedYearStart,
-        year_end: parsedYearEnd,
-        engine: engine.trim() || null,
-        body_type: bodyType || null,
+        make: data.make.trim(),
+        model: data.model.trim(),
+        generation: data.generation?.trim() || null,
+        year_start: data.yearStart ? Number(data.yearStart) : null,
+        year_end: data.yearEnd ? Number(data.yearEnd) : null,
+        engine: data.engine?.trim() || null,
+        body_type: data.bodyType || null,
       };
       queryClient.setQueryData<VehicleModelItem[]>(
         vehicleModelKeys.list(orgId ?? ""),
@@ -203,7 +228,7 @@ export function VehicleModelFormSheet({
   });
 
   const updateMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (data: VehicleModelValues) => {
       if (!orgId || !item) throw new Error(commonT("somethingWentWrong"));
       const r = await fetch(
         `/api/organizations/${orgId}/vehicle-models/${item.id}`,
@@ -211,13 +236,13 @@ export function VehicleModelFormSheet({
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            make: normalizedMake,
-            model: normalizedModel,
-            generation: generation.trim() || null,
-            year_start: parsedYearStart,
-            year_end: parsedYearEnd,
-            engine: engine.trim() || null,
-            body_type: bodyType || null,
+            make: data.make.trim(),
+            model: data.model.trim(),
+            generation: data.generation?.trim() || null,
+            year_start: data.yearStart ? Number(data.yearStart) : null,
+            year_end: data.yearEnd ? Number(data.yearEnd) : null,
+            engine: data.engine?.trim() || null,
+            body_type: data.bodyType || null,
           }),
         },
       );
@@ -225,7 +250,7 @@ export function VehicleModelFormSheet({
       if (d.error) throw new Error(d.error.message);
       return d.data as VehicleModelItem;
     },
-    onMutate: async () => {
+    onMutate: async (data) => {
       await queryClient.cancelQueries({
         queryKey: vehicleModelKeys.list(orgId ?? ""),
       });
@@ -239,13 +264,13 @@ export function VehicleModelFormSheet({
             entry.id === item?.id
               ? {
                   ...entry,
-                  make: normalizedMake,
-                  model: normalizedModel,
-                  generation: generation.trim() || null,
-                  year_start: parsedYearStart,
-                  year_end: parsedYearEnd,
-                  engine: engine.trim() || null,
-                  body_type: bodyType || null,
+                  make: data.make.trim(),
+                  model: data.model.trim(),
+                  generation: data.generation?.trim() || null,
+                  year_start: data.yearStart ? Number(data.yearStart) : null,
+                  year_end: data.yearEnd ? Number(data.yearEnd) : null,
+                  engine: data.engine?.trim() || null,
+                  body_type: data.bodyType || null,
                 }
               : entry,
           ),
@@ -275,20 +300,19 @@ export function VehicleModelFormSheet({
   });
 
   const isPending = addMutation.isPending || updateMutation.isPending;
-  const canSave =
-    Boolean(normalizedMake) &&
-    Boolean(normalizedModel) &&
-    !yearRangeInvalid &&
-    !isPending;
 
-  function handleSave() {
-    if (!canSave) return;
+  const handleSave = form.handleSubmit((data) => {
     if (mode === "edit") {
-      updateMutation.mutate();
+      updateMutation.mutate(data);
       return;
     }
-    addMutation.mutate();
-  }
+    addMutation.mutate(data);
+  });
+
+  const isSaveDisabled =
+    !watchedMake.trim() ||
+    !watchedModel.trim() ||
+    isPending;
 
   return (
     <DetailDrawer open={open} onOpenChange={onOpenChange} size="xl">
@@ -306,34 +330,40 @@ export function VehicleModelFormSheet({
       <DetailDrawer.Body>
         <FieldGroup>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field>
+            <Field data-invalid={!!form.formState.errors.make}>
               <FieldLabel>
                 {t("make")} <span className="text-destructive">*</span>
               </FieldLabel>
               <FieldContent>
                 <Input
                   placeholder={t("makePlaceholder")}
-                  value={make}
-                  onChange={(e) => setMake(e.target.value)}
                   data-1p-ignore
                   data-lpignore="true"
                   autoComplete="off"
+                  aria-invalid={!!form.formState.errors.make}
+                  {...form.register("make")}
                 />
+                {form.formState.errors.make && (
+                  <FieldError>{form.formState.errors.make.message}</FieldError>
+                )}
               </FieldContent>
             </Field>
-            <Field>
+            <Field data-invalid={!!form.formState.errors.model}>
               <FieldLabel>
                 {t("model")} <span className="text-destructive">*</span>
               </FieldLabel>
               <FieldContent>
                 <Input
                   placeholder={t("modelPlaceholder")}
-                  value={model}
-                  onChange={(e) => setModel(e.target.value)}
                   data-1p-ignore
                   data-lpignore="true"
                   autoComplete="off"
+                  aria-invalid={!!form.formState.errors.model}
+                  {...form.register("model")}
                 />
+                {form.formState.errors.model && (
+                  <FieldError>{form.formState.errors.model.message}</FieldError>
+                )}
               </FieldContent>
             </Field>
           </div>
@@ -360,13 +390,12 @@ export function VehicleModelFormSheet({
                 <FieldContent>
                   <Input
                     placeholder={t("generationPlaceholder")}
-                    value={generation}
-                    onChange={(e) => setGeneration(e.target.value)}
+                    {...form.register("generation")}
                   />
                 </FieldContent>
               </Field>
 
-              <Field>
+              <Field data-invalid={!!form.formState.errors.yearEnd}>
                 <FieldLabel>{t("yearFrom")}</FieldLabel>
                 <FieldContent>
                   <Input
@@ -374,13 +403,12 @@ export function VehicleModelFormSheet({
                     min="1900"
                     max="2100"
                     placeholder="2014"
-                    value={yearStart}
-                    onChange={(e) => setYearStart(e.target.value)}
+                    {...form.register("yearStart")}
                   />
                 </FieldContent>
               </Field>
 
-              <Field>
+              <Field data-invalid={!!form.formState.errors.yearEnd}>
                 <FieldLabel>{t("yearTo")}</FieldLabel>
                 <FieldContent>
                   <Input
@@ -388,9 +416,14 @@ export function VehicleModelFormSheet({
                     min="1900"
                     max="2100"
                     placeholder="2020"
-                    value={yearEnd}
-                    onChange={(e) => setYearEnd(e.target.value)}
+                    aria-invalid={!!form.formState.errors.yearEnd}
+                    {...form.register("yearEnd")}
                   />
+                  {form.formState.errors.yearEnd && (
+                    <FieldError>
+                      {form.formState.errors.yearEnd.message}
+                    </FieldError>
+                  )}
                 </FieldContent>
               </Field>
 
@@ -399,8 +432,7 @@ export function VehicleModelFormSheet({
                 <FieldContent>
                   <Input
                     placeholder={t("enginePlaceholder")}
-                    value={engine}
-                    onChange={(e) => setEngine(e.target.value)}
+                    {...form.register("engine")}
                   />
                 </FieldContent>
               </Field>
@@ -409,8 +441,10 @@ export function VehicleModelFormSheet({
                 <FieldLabel>{t("bodyType")}</FieldLabel>
                 <FieldContent>
                   <Select
-                    value={bodyType}
-                    onValueChange={(value) => setBodyType(value ?? "")}
+                    value={watchedBodyType}
+                    onValueChange={(value) =>
+                      form.setValue("bodyType", value ?? "")
+                    }
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder={t("selectBodyType")} />
@@ -431,11 +465,7 @@ export function VehicleModelFormSheet({
             </div>
           ) : null}
 
-          {yearRangeInvalid ? (
-            <p className="text-sm text-destructive">
-              {t("validation.yearRangeInvalid")}
-            </p>
-          ) : null}
+          {/* Year range validation is handled by Zod refine on yearEnd */}
         </FieldGroup>
       </DetailDrawer.Body>
 
@@ -443,7 +473,7 @@ export function VehicleModelFormSheet({
         <Button variant="outline" onClick={() => onOpenChange(false)}>
           {commonT("cancel")}
         </Button>
-        <Button onClick={handleSave} disabled={!canSave}>
+        <Button onClick={handleSave} disabled={isSaveDisabled}>
           {isPending ? (
             <span className="flex items-center gap-2">
               <Loader2 className="size-4 animate-spin" />

@@ -42,6 +42,7 @@ import {
   Plus,
 } from "lucide-react";
 import * as React from "react";
+import type { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -67,7 +68,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { z } from "zod";
 import { columns, DraggableRow, schema } from "./_data-table-columns";
 
 export { schema };
@@ -357,5 +357,3 @@ export function DataTable({
     </Tabs>
   );
 }
-
-

@@ -9,12 +9,12 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { DetailDrawer } from "./detail-drawer";
@@ -67,25 +67,25 @@ export function ResponsiveFormModal({
   // Mobile view: bottom Drawer
   if (isMobile) {
     return (
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent
-          className="max-h-[92vh] flex flex-col"
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent
           showCloseButton={false}
+          contentClassName="max-h-[92vh] flex flex-col"
         >
-          <SheetHeader className="text-left shrink-0">
-            <SheetTitle className="text-lg font-semibold">{title}</SheetTitle>
+          <DrawerHeader className="text-left shrink-0">
+            <DrawerTitle className="text-lg font-semibold">{title}</DrawerTitle>
             {desc && (
-              <SheetDescription className="text-xs">{desc}</SheetDescription>
+              <DrawerDescription className="text-xs">{desc}</DrawerDescription>
             )}
-          </SheetHeader>
+          </DrawerHeader>
           <ScrollArea className="flex-1 overflow-y-auto px-4 pb-6">
             <div className={cn("py-2", className)}>{childrenWithClose}</div>
           </ScrollArea>
           {footer && (
             <div className="shrink-0 border-t px-4 py-3">{footer}</div>
           )}
-        </SheetContent>
-      </Sheet>
+        </DrawerContent>
+      </Drawer>
     );
   }
 

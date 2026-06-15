@@ -30,15 +30,14 @@ import {
 } from "@/lib/queries/use-expenses";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { cn } from "@/lib/utils";
-
+import { ExpenseDetailEditForm } from "./_expense-detail-edit-form";
 import {
-  expenseSchema,
   type ExpenseFormValues,
-  syncForm,
+  expenseSchema,
   isOverdue,
+  syncForm,
 } from "./_expense-detail-utils";
 import { ExpenseDetailView } from "./_expense-detail-view";
-import { ExpenseDetailEditForm } from "./_expense-detail-edit-form";
 
 // ── Component ────────────────────────────────────────────────
 

@@ -17,16 +17,16 @@ import { SearchInput } from "@/components/search-input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
@@ -58,6 +58,10 @@ const quoteSchema = z.object({
   notes: z.string().optional(),
   terms: z.string().optional(),
   valid_until: z.string().optional(),
+  discountAmount: z.number().min(0).optional(),
+  discountPercent: z.number().min(0).max(100).optional(),
+  nuatEnabled: z.boolean().optional(),
+  taxTotal: z.number().min(0).optional(),
 });
 
 type QuoteValues = z.infer<typeof quoteSchema>;
@@ -114,10 +118,6 @@ export function NewEstimateSheet({
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [lines, setLines] = useState<QuoteLine[]>([]);
   const [savingState, setSavingState] = useState<"draft" | "sent" | null>(null);
-  const [discountAmount, setDiscountAmount] = useState(0);
-  const [discountPercent, setDiscountPercent] = useState(0);
-  const [nuatEnabled, setNuatEnabled] = useState(false);
-  const [taxTotal, setTaxTotal] = useState(0);
 
   // Get org tax rate for auto-calculation
   const defaultTaxRate =
@@ -145,6 +145,10 @@ export function NewEstimateSheet({
       notes: "",
       terms: "",
       valid_until: "",
+      discountAmount: 0,
+      discountPercent: 0,
+      nuatEnabled: false,
+      taxTotal: 0,
     },
   });
 
@@ -264,6 +268,10 @@ export function NewEstimateSheet({
   };
 
   const subtotal = lines.reduce((sum, line) => sum + line.line_total, 0);
+  const discountAmount = form.watch("discountAmount") ?? 0;
+  const discountPercent = form.watch("discountPercent") ?? 0;
+  const nuatEnabled = form.watch("nuatEnabled") ?? false;
+  const taxTotal = form.watch("taxTotal") ?? 0;
   const quoteDiscountTotal =
     discountAmount + subtotal * (discountPercent / 100);
   // Auto-calculate tax when НӨАТ is enabled
@@ -275,6 +283,11 @@ export function NewEstimateSheet({
 
   const handleSave = async (status: "draft" | "sent") => {
     if (!orgId) return;
+
+    // Run Zod validation before proceeding
+    const isValid = await form.trigger();
+    if (!isValid) return;
+
     if (!customer) {
       toast.error(t("pleaseSelectCustomer"));
       return;
@@ -402,8 +415,8 @@ export function NewEstimateSheet({
                   <Plus className="size-3.5" />
                   {t("addCustom")}
                 </Button>
-                <Sheet>
-                  <SheetTrigger
+                <Drawer>
+                  <DrawerTrigger
                     render={
                       <Button
                         variant="outline"
@@ -414,14 +427,14 @@ export function NewEstimateSheet({
                   >
                     <Plus className="size-3.5" />
                     {t("addService")}
-                  </SheetTrigger>
-                  <SheetContent side="right" size="lg" className="w-full">
-                    <SheetHeader>
-                      <SheetTitle>{t("addServiceTitle")}</SheetTitle>
-                      <SheetDescription>
+                  </DrawerTrigger>
+                  <DrawerContent className="sm:max-w-lg w-full">
+                    <DrawerHeader>
+                      <DrawerTitle>{t("addServiceTitle")}</DrawerTitle>
+                      <DrawerDescription>
                         {t("searchServicesPlaceholder")}
-                      </SheetDescription>
-                    </SheetHeader>
+                      </DrawerDescription>
+                    </DrawerHeader>
                     <div className="flex flex-col gap-4 p-4">
                       <SearchInput
                         placeholder={t("searchServicesPlaceholder")}
@@ -462,10 +475,10 @@ export function NewEstimateSheet({
                         ) : null}
                       </div>
                     </div>
-                  </SheetContent>
-                </Sheet>
-                <Sheet>
-                  <SheetTrigger
+                  </DrawerContent>
+                </Drawer>
+                <Drawer>
+                  <DrawerTrigger
                     render={
                       <Button
                         variant="outline"
@@ -476,14 +489,14 @@ export function NewEstimateSheet({
                   >
                     <Plus className="size-3.5" />
                     {t("addPart")}
-                  </SheetTrigger>
-                  <SheetContent side="right" size="lg" className="w-full">
-                    <SheetHeader>
-                      <SheetTitle>{t("addPartTitle")}</SheetTitle>
-                      <SheetDescription>
+                  </DrawerTrigger>
+                  <DrawerContent className="sm:max-w-lg w-full">
+                    <DrawerHeader>
+                      <DrawerTitle>{t("addPartTitle")}</DrawerTitle>
+                      <DrawerDescription>
                         {t("searchPartsPlaceholder")}
-                      </SheetDescription>
-                    </SheetHeader>
+                      </DrawerDescription>
+                    </DrawerHeader>
                     <div className="flex flex-col gap-4 p-4">
                       <SearchInput
                         placeholder={t("searchPartsPlaceholder")}
@@ -520,8 +533,8 @@ export function NewEstimateSheet({
                         ) : null}
                       </div>
                     </div>
-                  </SheetContent>
-                </Sheet>
+                  </DrawerContent>
+                </Drawer>
               </div>
             </div>
 
@@ -697,7 +710,8 @@ export function NewEstimateSheet({
                 max={100}
                 value={discountPercent}
                 onChange={(event) =>
-                  setDiscountPercent(
+                  form.setValue(
+                    "discountPercent",
                     Math.max(0, Math.min(100, Number(event.target.value) || 0)),
                   )
                 }
@@ -713,7 +727,8 @@ export function NewEstimateSheet({
                 min={0}
                 value={discountAmount}
                 onChange={(event) =>
-                  setDiscountAmount(
+                  form.setValue(
+                    "discountAmount",
                     Math.max(0, Number(event.target.value) || 0),
                   )
                 }
@@ -727,7 +742,9 @@ export function NewEstimateSheet({
                 </Label>
                 <Switch
                   checked={nuatEnabled}
-                  onCheckedChange={setNuatEnabled}
+                  onCheckedChange={(checked) =>
+                    form.setValue("nuatEnabled", checked)
+                  }
                   className="scale-75"
                 />
               </div>
@@ -737,7 +754,10 @@ export function NewEstimateSheet({
                   min={0}
                   value={taxTotal}
                   onChange={(event) =>
-                    setTaxTotal(Math.max(0, Number(event.target.value) || 0))
+                    form.setValue(
+                      "taxTotal",
+                      Math.max(0, Number(event.target.value) || 0),
+                    )
                   }
                   className="h-7 w-20 text-right text-xs"
                   placeholder={t("tax")}

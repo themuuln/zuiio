@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createClient } from "@/lib/supabase/server";
 import { createMockSupabaseClient } from "@/test/mocks/supabase";
 import { updateWorkOrderStatus } from "./bay-view-service.actions";
@@ -78,7 +78,9 @@ describe("bay-view pure service functions", () => {
   }
 
   it("updateWorkOrderStatus accepts db and orgId as first params", async () => {
-    const { updateWorkOrderStatus: pureUpdate } = await import("./bay-view-service");
+    const { updateWorkOrderStatus: pureUpdate } = await import(
+      "./bay-view-service"
+    );
     const mockDb = createMockSupabaseClient();
 
     await pureUpdate(asDb(mockDb), "org-1", "wo-1", "Diagnosing", "note");

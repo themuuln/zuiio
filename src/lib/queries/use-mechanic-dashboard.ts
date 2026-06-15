@@ -4,13 +4,10 @@
  * Uses createOrgQuery for offline IndexedDB caching on data hooks.
  * Clock hooks use raw fetch (real-time data, no offline value).
  */
-import {
-  type UseQueryResult,
-  useQuery,
-} from "@tanstack/react-query";
-import { useOrgMutation } from "./mutation-factory";
+import { type UseQueryResult, useQuery } from "@tanstack/react-query";
 import { createOrgQuery } from "./factory";
 import { clockKeys, mechanicKeys } from "./keys";
+import { useOrgMutation } from "./mutation-factory";
 
 // ── Types ──────────────────────────────────────────
 

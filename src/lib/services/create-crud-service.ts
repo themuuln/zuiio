@@ -48,10 +48,7 @@ export interface CrudServiceHooks<TRecord, TInsert, TUpdate> {
    * Called on every getAll query after base filters are applied.
    * Use for additional filters (search, date ranges, etc.).
    */
-  onQuery?: (
-    query: any,
-    options?: Record<string, unknown>,
-  ) => any;
+  onQuery?: (query: any, options?: Record<string, unknown>) => any;
 }
 
 /**
@@ -179,7 +176,11 @@ function toPaginatedResponse<T>(
 function extractId(row: Record<string, unknown>): string {
   const id = row.id;
   if (typeof id !== "string" || !id) {
-    throw new AppError("Inserted record is missing an 'id' field", "INTERNAL_ERROR", 500);
+    throw new AppError(
+      "Inserted record is missing an 'id' field",
+      "INTERNAL_ERROR",
+      500,
+    );
   }
   return id;
 }
@@ -224,8 +225,7 @@ export function createCrudService<
     hooks,
   } = config;
 
-  const selectColumnsById =
-    config.selectColumnsById ?? selectColumns;
+  const selectColumnsById = config.selectColumnsById ?? selectColumns;
 
   // ── getAll ──────────────────────────────────────────────
 
@@ -275,25 +275,22 @@ export function createCrudService<
 
   // ── getById ─────────────────────────────────────────────
 
-  const getById: CrudServiceReturn<TRecord, TInsert, TUpdate>["getById"] = async (
-    db,
-    orgId,
-    id,
-  ) => {
-    const { data, error } = await db
-      .from(tableName)
-      .select(selectColumnsById)
-      .eq("id", id)
-      .eq("organization_id", orgId)
-      .is("deleted_at", null)
-      .single();
+  const getById: CrudServiceReturn<TRecord, TInsert, TUpdate>["getById"] =
+    async (db, orgId, id) => {
+      const { data, error } = await db
+        .from(tableName)
+        .select(selectColumnsById)
+        .eq("id", id)
+        .eq("organization_id", orgId)
+        .is("deleted_at", null)
+        .single();
 
-    if (error || !data) {
-      throw new NotFoundError(`${tableName} not found`);
-    }
+      if (error || !data) {
+        throw new NotFoundError(`${tableName} not found`);
+      }
 
-    return toTypedResponse<TRecord>(data);
-  };
+      return toTypedResponse<TRecord>(data);
+    };
 
   // ── create ──────────────────────────────────────────────
 
@@ -321,9 +318,14 @@ export function createCrudService<
     // Resolve branch ID if the param set includes a branchId
     if ("branchId" in insertParams) {
       const branchId = insertParams.branchId as string | undefined | null;
-      const resolvedId = await resolveBranchId(db, orgId, branchId ?? undefined, {
-        strict: false,
-      });
+      const resolvedId = await resolveBranchId(
+        db,
+        orgId,
+        branchId ?? undefined,
+        {
+          strict: false,
+        },
+      );
       insertParams.branch_id = resolvedId;
       delete insertParams.branchId;
     }
@@ -340,7 +342,11 @@ export function createCrudService<
       .single();
 
     if (error || !data) {
-      throw new AppError(error?.message ?? `Failed to create ${tableName}`, "DATABASE_ERROR", 500);
+      throw new AppError(
+        error?.message ?? `Failed to create ${tableName}`,
+        "DATABASE_ERROR",
+        500,
+      );
     }
 
     const result = toTypedResponse<TRecord>(data);
@@ -360,7 +366,10 @@ export function createCrudService<
     revalidateTag(cacheTagKey(orgId), "max");
 
     if (cacheTagKeyById) {
-      revalidateTag(cacheTagKeyById(extractId(data as unknown as Record<string, unknown>)), "max");
+      revalidateTag(
+        cacheTagKeyById(extractId(data as unknown as Record<string, unknown>)),
+        "max",
+      );
     }
 
     // afterCreate hook
@@ -436,7 +445,11 @@ export function createCrudService<
       .single();
 
     if (error || !data) {
-      throw new AppError(error?.message ?? `Failed to update ${tableName}`, "DATABASE_ERROR", 500);
+      throw new AppError(
+        error?.message ?? `Failed to update ${tableName}`,
+        "DATABASE_ERROR",
+        500,
+      );
     }
 
     const result = toTypedResponse<TRecord>(data);
@@ -469,63 +482,60 @@ export function createCrudService<
 
   // ── softDelete ──────────────────────────────────────────
 
-  const softDelete: CrudServiceReturn<
-    TRecord,
-    TInsert,
-    TUpdate
-  >["softDelete"] = async (db, orgId, id, userId) => {
-    const ctx: ServiceContext = { db, orgId, userId };
+  const softDelete: CrudServiceReturn<TRecord, TInsert, TUpdate>["softDelete"] =
+    async (db, orgId, id, userId) => {
+      const ctx: ServiceContext = { db, orgId, userId };
 
-    // Fetch existing record
-    const { data: existing, error: fetchError } = await db
-      .from(tableName)
-      .select(selectColumnsById)
-      .eq("id", id)
-      .eq("organization_id", orgId)
-      .is("deleted_at", null)
-      .single();
+      // Fetch existing record
+      const { data: existing, error: fetchError } = await db
+        .from(tableName)
+        .select(selectColumnsById)
+        .eq("id", id)
+        .eq("organization_id", orgId)
+        .is("deleted_at", null)
+        .single();
 
-    if (fetchError || !existing) {
-      throw new NotFoundError(`${tableName} not found`);
-    }
+      if (fetchError || !existing) {
+        throw new NotFoundError(`${tableName} not found`);
+      }
 
-    const existingRecord = toTypedResponse<TRecord>(existing);
+      const existingRecord = toTypedResponse<TRecord>(existing);
 
-    // beforeDelete hook
-    if (hooks?.beforeDelete) {
-      await hooks.beforeDelete(existingRecord, ctx);
-    }
+      // beforeDelete hook
+      if (hooks?.beforeDelete) {
+        await hooks.beforeDelete(existingRecord, ctx);
+      }
 
-    const { error } = await db
-      .from(tableName)
-      .update({
-        deleted_at: new Date().toISOString(),
-        updated_by: userId,
-      })
-      .eq("id", id)
-      .eq("organization_id", orgId);
+      const { error } = await db
+        .from(tableName)
+        .update({
+          deleted_at: new Date().toISOString(),
+          updated_by: userId,
+        })
+        .eq("id", id)
+        .eq("organization_id", orgId);
 
-    if (error) {
-      throw new AppError(error.message, "DATABASE_ERROR", 500);
-    }
+      if (error) {
+        throw new AppError(error.message, "DATABASE_ERROR", 500);
+      }
 
-    // Audit log
-    await createAuditLog({
-      supabase: db,
-      action: "soft_delete",
-      table_name: tableName,
-      record_id: id,
-      user_id: userId,
-      organization_id: orgId,
-      old_data: existing as unknown as Record<string, unknown>,
-    });
+      // Audit log
+      await createAuditLog({
+        supabase: db,
+        action: "soft_delete",
+        table_name: tableName,
+        record_id: id,
+        user_id: userId,
+        organization_id: orgId,
+        old_data: existing as unknown as Record<string, unknown>,
+      });
 
-    // Cache invalidation
-    revalidateTag(cacheTagKey(orgId), "max");
-    if (cacheTagKeyById) {
-      revalidateTag(cacheTagKeyById(id), "max");
-    }
-  };
+      // Cache invalidation
+      revalidateTag(cacheTagKey(orgId), "max");
+      if (cacheTagKeyById) {
+        revalidateTag(cacheTagKeyById(id), "max");
+      }
+    };
 
   return { getAll, getById, create, update, softDelete };
 }

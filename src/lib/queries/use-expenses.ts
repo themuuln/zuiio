@@ -8,9 +8,9 @@ import type {
   UpdateExpenseCategoryParams,
   UpdateExpenseParams,
 } from "@/lib/types";
-import { useOrgMutation } from "./mutation-factory";
 import { createOrgQuery } from "./factory";
 import { expenseKeys } from "./keys";
+import { useOrgMutation } from "./mutation-factory";
 
 interface ExpenseListParams {
   q?: string;
@@ -109,7 +109,10 @@ export function useCreateExpense(orgId: string | undefined) {
 
 // ── Update expense ──
 export function useUpdateExpense(orgId: string | undefined) {
-  return useOrgMutation<ExpenseWithCategory, UpdateExpenseParams & { id: string }>({
+  return useOrgMutation<
+    ExpenseWithCategory,
+    UpdateExpenseParams & { id: string }
+  >({
     endpoint: (vars) => `/api/organizations/${orgId}/expenses/${vars.id}`,
     method: "PATCH",
     queryKey: expenseKeys.all(orgId ?? ""),
@@ -155,8 +158,12 @@ export function useCreateExpenseCategory(orgId: string | undefined) {
 
 // ── Update category (optimistic) ──
 export function useUpdateExpenseCategory(orgId: string | undefined) {
-  return useOrgMutation<ExpenseCategory, UpdateExpenseCategoryParams & { id: string }>({
-    endpoint: (vars) => `/api/organizations/${orgId}/expense-categories/${vars.id}`,
+  return useOrgMutation<
+    ExpenseCategory,
+    UpdateExpenseCategoryParams & { id: string }
+  >({
+    endpoint: (vars) =>
+      `/api/organizations/${orgId}/expense-categories/${vars.id}`,
     method: "PATCH",
     queryKey: expenseKeys.categories(orgId ?? ""),
     optimisticUpdate: (cached, vars) => {

@@ -5,6 +5,7 @@ import type { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import {
   Field,
   FieldContent,
@@ -19,14 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 
 interface Role {
@@ -117,14 +110,20 @@ export function EditMemberSheet({
   });
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle>{t("editTitle")}</SheetTitle>
-          <SheetDescription>{t("editDescription")}</SheetDescription>
-        </SheetHeader>
+    <DetailDrawer open={open} onOpenChange={onOpenChange} size="md">
+      <DetailDrawer.Header>
+        <DetailDrawer.Title>{t("editTitle")}</DetailDrawer.Title>
+        <DetailDrawer.Description>
+          {t("editDescription")}
+        </DetailDrawer.Description>
+      </DetailDrawer.Header>
 
-        <form onSubmit={handleSubmitForm} className="flex flex-col gap-5 py-6">
+      <DetailDrawer.Body>
+        <form
+          id="edit-member-form"
+          onSubmit={handleSubmitForm}
+          className="flex flex-col gap-5"
+        >
           {/* ── Full Name ──────────────────────────────────── */}
           <Field data-invalid={!!form.formState.errors.fullName}>
             <FieldLabel htmlFor="edit-name">{t("nameLabel")}</FieldLabel>
@@ -216,26 +215,29 @@ export function EditMemberSheet({
               )}
             </FieldContent>
           </Field>
-
-          <SheetFooter className="mt-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              {t("cancel")}
-            </Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? (
-                <Loader2 className="mr-2 size-4 animate-spin" />
-              ) : (
-                <Save className="mr-2 size-4" />
-              )}
-              {t("save")}
-            </Button>
-          </SheetFooter>
         </form>
-      </SheetContent>
-    </Sheet>
+      </DetailDrawer.Body>
+
+      <DetailDrawer.Footer>
+        <Button
+          variant="outline"
+          onClick={() => onOpenChange(false)}
+        >
+          {t("cancel")}
+        </Button>
+        <Button
+          form="edit-member-form"
+          type="submit"
+          disabled={saving}
+        >
+          {saving ? (
+            <Loader2 className="mr-2 size-4 animate-spin" />
+          ) : (
+            <Save className="mr-2 size-4" />
+          )}
+          {t("save")}
+        </Button>
+      </DetailDrawer.Footer>
+    </DetailDrawer>
   );
 }

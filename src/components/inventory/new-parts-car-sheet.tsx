@@ -16,12 +16,12 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { inputProps } from "@/lib/form-ux";
@@ -115,26 +115,26 @@ export function NewPartsCarSheet({
   });
 
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent
-        side="right"
-        className="w-full sm:max-w-xl md:max-w-2xl p-0 gap-0"
+    <Drawer open={open} onOpenChange={handleOpenChange}>
+      <DrawerContent
+        className="w-full sm:max-w-xl md:max-w-2xl"
+        contentClassName="p-0 gap-0"
       >
-        <SheetHeader className="px-4 py-3 border-b border-border shrink-0">
+        <DrawerHeader className="px-4 py-3 border-b border-border shrink-0">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center size-10 shrink-0 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">
               <Car className="size-5 text-primary" />
             </div>
             <div>
-              <SheetTitle className="text-base">
+              <DrawerTitle className="text-base">
                 Шинэ задаргааны машин
-              </SheetTitle>
-              <SheetDescription className="text-xs text-muted-foreground">
+              </DrawerTitle>
+              <DrawerDescription className="text-xs text-muted-foreground">
                 Хятадаас ирсэн машины мэдээллийг бүртгэх
-              </SheetDescription>
+              </DrawerDescription>
             </div>
           </div>
-        </SheetHeader>
+        </DrawerHeader>
 
         <div className="flex-1 overflow-y-auto min-h-0">
           {orgQuery.isPending ? (
@@ -366,7 +366,7 @@ export function NewPartsCarSheet({
             </Button>
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 }

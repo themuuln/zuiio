@@ -44,9 +44,6 @@ const partFieldMap: FieldMap<UpdatePartParams> = {
   },
 };
 
-
-
-
 // ── Parts Catalog ─────────────────────────────────────────────
 
 export async function getPartsCatalog(
@@ -455,20 +452,19 @@ export async function createMovement(
 // ── Re-exports for backward compatibility ──────────────────────
 
 export {
+  createPurchaseOrder,
+  getPurchaseOrderItems,
+  getPurchaseOrders,
+  receivePurchaseOrder,
+  updatePurchaseOrder,
+} from "./purchase-order-service";
+export {
+  createSupplier,
+  deleteSupplier,
   getSupplier,
   getSuppliers,
-  createSupplier,
   updateSupplier,
-  deleteSupplier,
 } from "./supplier-service";
-
-export {
-  getPurchaseOrders,
-  getPurchaseOrderItems,
-  createPurchaseOrder,
-  updatePurchaseOrder,
-  receivePurchaseOrder,
-} from "./purchase-order-service";
 
 // ── Stock Thresholds ──────────────────────────────────────────
 

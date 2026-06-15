@@ -19,12 +19,12 @@ import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { Typography } from "@/components/ui/typography";
@@ -685,29 +685,29 @@ export default function MechanicPerformancePage() {
       </div>
 
       {/* Mechanic Detail Sheet */}
-      <Sheet
+      <Drawer
         open={selectedMechanic !== null}
         onOpenChange={(open) => {
           if (!open) setSelectedMechanic(null);
         }}
       >
-        <SheetContent
-          side="right"
-          className="flex flex-col p-0 overflow-hidden"
+        <DrawerContent
+          className="sm:max-w-lg"
+          contentClassName="flex flex-col p-0 overflow-hidden"
         >
           {selectedMechanic && (
             <>
-              <SheetHeader className="p-6 pb-4 shrink-0 text-left border-b border-border">
-                <SheetTitle className="text-xl font-bold flex items-center gap-2">
+              <DrawerHeader className="p-6 pb-4 shrink-0 text-left border-b border-border">
+                <DrawerTitle className="text-xl font-bold flex items-center gap-2">
                   <span>{selectedMechanic.mechanic_name}</span>
                   {selectedMechanic === sortedMechanics[0] && (
                     <span className="text-[10px] font-medium text-amber-600 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded-full">
                       {t("topBadge")}
                     </span>
                   )}
-                </SheetTitle>
-                <SheetDescription>{t("performanceBreakdown")}</SheetDescription>
-              </SheetHeader>
+                </DrawerTitle>
+                <DrawerDescription>{t("performanceBreakdown")}</DrawerDescription>
+              </DrawerHeader>
 
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {/* KPI grid */}
@@ -893,8 +893,8 @@ export default function MechanicPerformancePage() {
               </div>
             </>
           )}
-        </SheetContent>
-      </Sheet>
+        </DrawerContent>
+      </Drawer>
     </>
   );
 }

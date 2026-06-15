@@ -41,7 +41,9 @@ const crud = createCrudService<
       if (search?.trim()) {
         const term = `%${search.trim()}%`;
         // biome-ignore lint/suspicious/noExplicitAny: factory hook type is PostgrestQueryBuilder lacking or()
-        return (query as any).or(`plate_number.ilike.${term},vin.ilike.${term}`);
+        return (query as any).or(
+          `plate_number.ilike.${term},vin.ilike.${term}`,
+        );
       }
       return query;
     },

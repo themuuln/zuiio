@@ -132,7 +132,12 @@ describe("expense-service characterization", () => {
       db.__qb.resolveWith({ data: { id: "exp-1" }, error: null });
 
       await expect(
-        deleteExpense(db as unknown as SupabaseClient, "exp-1", "org-1", "user-1"),
+        deleteExpense(
+          db as unknown as SupabaseClient,
+          "exp-1",
+          "org-1",
+          "user-1",
+        ),
       ).resolves.toBeUndefined();
     });
   });

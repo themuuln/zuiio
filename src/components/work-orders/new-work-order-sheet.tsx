@@ -7,11 +7,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ComplaintSection,
@@ -129,23 +129,22 @@ export function NewWorkOrderSheet({
   const t = useTranslations("workOrders");
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        size="xl"
-        className="flex w-full flex-col gap-0 p-0"
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent
+        className="sm:max-w-xl w-full"
+        contentClassName="flex flex-col gap-0 p-0"
         showCloseButton
       >
-        <SheetHeader className="px-4 pt-4">
-          <SheetTitle>{t("newWorkOrder")}</SheetTitle>
-        </SheetHeader>
+        <DrawerHeader className="px-4 pt-4">
+          <DrawerTitle>{t("newWorkOrder")}</DrawerTitle>
+        </DrawerHeader>
         <WizardProvider onCreated={() => onOpenChange(false)}>
           <ScrollArea className="min-h-0 flex-1">
             <NewWorkOrderSheetForm onClose={() => onOpenChange(false)} />
           </ScrollArea>
           <SheetBottomBar onClose={() => onOpenChange(false)} />
         </WizardProvider>
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 }

@@ -1,11 +1,8 @@
-import {
-  type UseQueryResult,
-  useQuery,
-} from "@tanstack/react-query";
+import { type UseQueryResult, useQuery } from "@tanstack/react-query";
 import type { CreateCustomerParams, Customer } from "@/lib/types";
-import { useOrgMutation } from "./mutation-factory";
 import { createOrgQuery } from "./factory";
 import { customerKeys } from "./keys";
+import { useOrgMutation } from "./mutation-factory";
 
 interface CustomerWithVehicleCount extends Customer {
   vehicle_count?: number;

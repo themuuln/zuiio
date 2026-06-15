@@ -3,15 +3,16 @@
 import { Settings } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
+import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
 import {
   Item,
   ItemActions,
   ItemContent,
-  ItemDescription,
   ItemTitle,
 } from "@/components/ui/item";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -19,20 +20,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { Typography } from "@/components/ui/typography";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import {
   useOrgSettings,
   useUpdateOrgSettings,
 } from "@/lib/queries/use-org-settings";
+
+// ── Schema ─────────────────────────────────────────────────────
+
+const configSchema = z.object({
+  channel: z.string().min(1),
+  autoEnable: z.boolean(),
+});
+
+type ConfigValues = z.infer<typeof configSchema>;
+
+// ── Component ──────────────────────────────────────────────────
 
 interface ConfigSheetProps {
   orgId: string | undefined;
@@ -44,100 +49,119 @@ export function ConfigSheet({ orgId }: ConfigSheetProps) {
   const { settings: orgSettings } = useOrgSettings(orgId);
   const updateOrgSettings = useUpdateOrgSettings(orgId);
 
-  const defaultChannel =
-    (orgSettings?.reminder_default_channel as string) ?? "in_app";
-  const autoEnable = orgSettings?.reminder_auto_enable !== false;
+  const form = useForm<ConfigValues>({
+    resolver: zodResolver(configSchema),
+    defaultValues: {
+      channel: "in_app",
+      autoEnable: true,
+    },
+  });
 
-  const [configChannel, setConfigChannel] = useState(defaultChannel);
-  const [configAutoEnable, setConfigAutoEnable] = useState(autoEnable);
-
-  // Sync state when org settings load
+  // Sync when org settings load
   useEffect(() => {
     if (orgSettings) {
-      setConfigChannel(
-        (orgSettings?.reminder_default_channel as string) ?? "in_app",
-      );
-      setConfigAutoEnable(orgSettings?.reminder_auto_enable !== false);
+      form.reset({
+        channel: (orgSettings?.reminder_default_channel as string) ?? "in_app",
+        autoEnable: orgSettings?.reminder_auto_enable !== false,
+      });
     }
-  }, [orgSettings]);
+  }, [orgSettings, form]);
 
-  const handleSaveConfig = async () => {
+  const handleSave = form.handleSubmit(async (data) => {
     await updateOrgSettings.mutateAsync({
-      reminder_default_channel: configChannel,
-      reminder_auto_enable: configAutoEnable,
+      reminder_default_channel: data.channel,
+      reminder_auto_enable: data.autoEnable,
     });
     setOpen(false);
-  };
+  });
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger render={<Button variant="outline" size="icon-xs" />}>
+    <>
+      <Button variant="outline" size="icon-xs" onClick={() => setOpen(true)}>
         <Settings className="size-4" />
-      </SheetTrigger>
-      <SheetContent side="right" className="w-80 sm:w-96">
-        <SheetHeader>
-          <SheetTitle>{t("serviceReminders.configTitle")}</SheetTitle>
-          <SheetDescription>
+      </Button>
+      <DetailDrawer open={open} onOpenChange={setOpen} size="md">
+        <DetailDrawer.Header>
+          <DetailDrawer.Title>
+            {t("serviceReminders.configTitle")}
+          </DetailDrawer.Title>
+          <DetailDrawer.Description>
             {t("serviceReminders.configDescription")}
-          </SheetDescription>
-        </SheetHeader>
-        <div className="flex mt-6 flex-col gap-6">
-          <div className="flex flex-col gap-3">
-            <Label htmlFor="default-channel">
-              {t("serviceReminders.defaultChannel")}
-            </Label>
-            <Typography.Muted className="text-xs text-muted-foreground">
-              {t("serviceReminders.defaultChannelDescription")}
-            </Typography.Muted>
-            <Select
-              value={configChannel}
-              onValueChange={(v) => v && setConfigChannel(v)}
-            >
-              <SelectTrigger id="default-channel">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="in_app">
-                  {t("serviceReminders.channelInApp")}
-                </SelectItem>
-                <SelectItem value="email">
-                  {t("serviceReminders.channelEmail")}
-                </SelectItem>
-                <SelectItem value="both">
-                  {t("serviceReminders.channelBoth")}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          </DetailDrawer.Description>
+        </DetailDrawer.Header>
 
-          <Item variant="outline" className="justify-between rounded-lg p-4">
-            <ItemContent className="gap-0.5">
-              <ItemTitle className="text-sm">
-                {t("serviceReminders.autoEnable")}
-              </ItemTitle>
-              <ItemDescription className="text-xs">
-                {t("serviceReminders.autoEnableDescription")}
-              </ItemDescription>
-            </ItemContent>
-            <ItemActions>
-              <Switch
-                checked={configAutoEnable}
-                onCheckedChange={setConfigAutoEnable}
-              />
-            </ItemActions>
-          </Item>
+        <DetailDrawer.Body>
+          <form
+            id="config-form"
+            onSubmit={handleSave}
+            className="flex flex-col gap-6"
+          >
+            <Field>
+              <FieldLabel htmlFor="default-channel">
+                {t("serviceReminders.defaultChannel")}
+              </FieldLabel>
+              <FieldContent>
+                <Typography.Muted className="text-xs text-muted-foreground">
+                  {t("serviceReminders.defaultChannelDescription")}
+                </Typography.Muted>
+                <Select
+                  value={form.watch("channel")}
+                  onValueChange={(v) => v && form.setValue("channel", v)}
+                >
+                  <SelectTrigger id="default-channel">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="in_app">
+                      {t("serviceReminders.channelInApp")}
+                    </SelectItem>
+                    <SelectItem value="email">
+                      {t("serviceReminders.channelEmail")}
+                    </SelectItem>
+                    <SelectItem value="both">
+                      {t("serviceReminders.channelBoth")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </FieldContent>
+            </Field>
 
+            <Item variant="outline" className="justify-between rounded-lg p-4">
+              <ItemContent className="gap-0.5">
+                <ItemTitle className="text-sm">
+                  {t("serviceReminders.autoEnable")}
+                </ItemTitle>
+                <Typography.Muted className="text-xs">
+                  {t("serviceReminders.autoEnableDescription")}
+                </Typography.Muted>
+              </ItemContent>
+              <ItemActions>
+                <Switch
+                  checked={form.watch("autoEnable")}
+                  onCheckedChange={(checked) =>
+                    form.setValue("autoEnable", checked)
+                  }
+                />
+              </ItemActions>
+            </Item>
+          </form>
+        </DetailDrawer.Body>
+
+        <DetailDrawer.Footer>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            {t("common.cancel")}
+          </Button>
           <Button
-            className="w-full"
-            onClick={handleSaveConfig}
+            form="config-form"
+            type="submit"
             disabled={updateOrgSettings.isPending}
           >
             {updateOrgSettings.isPending
               ? t("common.saving")
               : t("common.save")}
           </Button>
-        </div>
-      </SheetContent>
-    </Sheet>
+        </DetailDrawer.Footer>
+      </DetailDrawer>
+    </>
   );
 }

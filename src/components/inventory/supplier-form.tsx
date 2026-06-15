@@ -4,7 +4,6 @@ import { Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod";
-import { phoneSchema, emailSchema } from "@/lib/validation/schemas";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -19,6 +18,7 @@ import { inputProps } from "@/lib/form-ux";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useCreateSupplier } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { emailSchema, phoneSchema } from "@/lib/validation/schemas";
 
 // ── Schema ───────────────────────────────────────────────────
 // Use shared validators for phone/email patterns. No supplier-specific

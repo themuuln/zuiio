@@ -81,20 +81,14 @@ export function ExpenseDetailView({ expense }: ExpenseDetailViewProps) {
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {expense.expense_date && (
             <div className="flex items-center justify-between gap-3 rounded-lg bg-muted/20 px-3 py-2 text-sm">
-              <span className="text-muted-foreground">
-                {t("expenseDate")}
-              </span>
-              <span>
-                {new Date(expense.expense_date).toLocaleDateString()}
-              </span>
+              <span className="text-muted-foreground">{t("expenseDate")}</span>
+              <span>{new Date(expense.expense_date).toLocaleDateString()}</span>
             </div>
           )}
           {expense.due_date && (
             <div className="flex items-center justify-between gap-3 rounded-lg bg-muted/20 px-3 py-2 text-sm">
               <span className="text-muted-foreground">{t("due")}</span>
-              <span
-                className={cn(overdue && "font-medium text-destructive")}
-              >
+              <span className={cn(overdue && "font-medium text-destructive")}>
                 {new Date(expense.due_date).toLocaleDateString()}
               </span>
             </div>
@@ -110,9 +104,7 @@ export function ExpenseDetailView({ expense }: ExpenseDetailViewProps) {
               <span className="text-muted-foreground">
                 {t("paymentMethod")}
               </span>
-              <span className="capitalize">
-                {t(expense.payment_method)}
-              </span>
+              <span className="capitalize">{t(expense.payment_method)}</span>
             </div>
           )}
           {expense.reference_number && (

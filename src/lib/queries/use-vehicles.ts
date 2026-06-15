@@ -1,11 +1,8 @@
-import {
-  type UseQueryResult,
-  useQuery,
-} from "@tanstack/react-query";
+import { type UseQueryResult, useQuery } from "@tanstack/react-query";
 import type { CreateVehicleParams, Vehicle } from "@/lib/types";
-import { useOrgMutation } from "./mutation-factory";
 import { createOrgQuery } from "./factory";
 import { vehicleKeys } from "./keys";
+import { useOrgMutation } from "./mutation-factory";
 
 const fetchVehicles = createOrgQuery<Vehicle[]>("/vehicles");
 

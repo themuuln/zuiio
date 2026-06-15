@@ -35,7 +35,7 @@ const CONCURRENCY: Record<string, number> = {
 };
 
 /** Request timeout in ms */
-const TIMEOUT_MS = 10_000;
+const TIMEOUT_MS = 30_000;
 
 // ─── Engine ───────────────────────────────────────────────────
 
@@ -88,7 +88,11 @@ export async function preloadAll(
             progress.succeeded++;
           } catch (_err) {
             progress.failed++;
-            progress.errors.push(endpoint.path);
+            const msg =
+              _err instanceof Error
+                ? `${endpoint.path} — ${_err.message}`
+                : endpoint.path;
+            progress.errors.push(msg);
             // Don't throw — continue with other endpoints
           } finally {
             progress.done++;

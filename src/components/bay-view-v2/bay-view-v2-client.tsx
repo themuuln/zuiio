@@ -240,7 +240,9 @@ export function BayViewV2Client() {
   // ── Reorder queue callback ─────────────────────────────────
   const handleReorderQueue = useCallback(
     async (updates: { id: string; queue_order: number }[]) => {
-      const { reorderQueue } = await import("@/lib/services/bay-view-service.actions");
+      const { reorderQueue } = await import(
+        "@/lib/services/bay-view-service.actions"
+      );
       await reorderQueue(updates);
       await fetchData();
     },

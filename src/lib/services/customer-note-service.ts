@@ -32,7 +32,10 @@ const crud = createCrudService<
     afterCreate: async (result, ctx) => {
       const note = result as unknown as { customer_id: string };
       if (note.customer_id) {
-        revalidateTag(cacheTags.customerNotes(ctx.orgId, note.customer_id), "max");
+        revalidateTag(
+          cacheTags.customerNotes(ctx.orgId, note.customer_id),
+          "max",
+        );
       }
     },
   },

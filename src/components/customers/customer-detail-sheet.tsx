@@ -16,7 +16,8 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   CustomerEditForm,
-  type CustomerFormState,
+  type CustomerEditValues,
+  customerEditSchema,
 } from "@/app/[locale]/dashboard/customers/[id]/_customer-edit-form";
 import { CustomerFollowupsSection } from "@/components/customers/customer-followups-section";
 import { StatusBadge } from "@/components/status-badge";
@@ -43,6 +44,7 @@ import {
 } from "@/components/ui/item";
 import { Typography } from "@/components/ui/typography";
 import { usePageHeader } from "@/hooks/use-page-header";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { customerKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { WorkOrderStatus } from "@/lib/types";
@@ -86,20 +88,7 @@ interface CustomerDetailResponse {
   work_orders?: WorkOrderSummary[];
 }
 
-const emptyForm: CustomerFormState = {
-  type: "individual",
-  firstName: "",
-  lastName: "",
-  companyName: "",
-  contactPerson: "",
-  phone: "",
-  email: "",
-  address: "",
-  source: "",
-  notes: "",
-};
-
-function syncForm(c: CustomerDetailResponse): CustomerFormState {
+function syncForm(c: CustomerDetailResponse): CustomerEditValues {
   return {
     type: c.type,
     firstName: c.first_name ?? "",
@@ -169,14 +158,28 @@ export function CustomerDetailSheet({
   const error = queryError ? queryError.message : null;
 
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState<CustomerFormState>(emptyForm);
+  const form = useForm<CustomerEditValues>({
+    resolver: zodResolver(customerEditSchema),
+    defaultValues: {
+      type: "individual",
+      firstName: "",
+      lastName: "",
+      companyName: "",
+      contactPerson: "",
+      phone: "",
+      email: "",
+      address: "",
+      source: "",
+      notes: "",
+    },
+  });
 
   useEffect(() => {
     if (customer && open) {
-      setForm(syncForm(customer));
+      form.reset(syncForm(customer));
       setEditing(false);
     }
-  }, [customer, open]);
+  }, [customer, open, form]);
 
   const handleOpenChange = useCallback(
     (value: boolean) => {
@@ -187,7 +190,7 @@ export function CustomerDetailSheet({
   );
 
   const editMutation = useMutation({
-    mutationFn: async (formData: CustomerFormState) => {
+    mutationFn: async (formData: CustomerEditValues) => {
       const res = await fetch(
         `/api/organizations/${orgId}/customers/${customerId}`,
         {
@@ -261,10 +264,10 @@ export function CustomerDetailSheet({
     },
   });
 
-  const handleSave = () => {
+  const handleSave = form.handleSubmit((formData) => {
     if (!customerId) return;
-    editMutation.mutate(form);
-  };
+    editMutation.mutate(formData);
+  });
 
   const isLoadingData = loading || (open && !customer && !error);
   const notFound = open && !loading && !customer && !error;
@@ -298,7 +301,7 @@ export function CustomerDetailSheet({
                   variant="ghost"
                   size="icon-xs"
                   onClick={() => {
-                    setForm(syncForm(customer));
+                    form.reset(syncForm(customer));
                     setEditing(true);
                   }}
                 >
@@ -418,17 +421,14 @@ export function CustomerDetailSheet({
           {editing && (
             <form
               id="customer-detail-form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSave();
-              }}
+              onSubmit={handleSave}
               className="px-4 py-3 border-b border-border/50"
             >
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 {t("details")}
               </span>
               <div className="mt-2">
-                <CustomerEditForm form={form} setForm={setForm} t={t} />
+                <CustomerEditForm form={form} t={t} />
               </div>
             </form>
           )}
@@ -519,7 +519,7 @@ export function CustomerDetailSheet({
                   variant="outline"
                   className="flex-1"
                   onClick={() => {
-                    if (customer) setForm(syncForm(customer));
+                    if (customer) form.reset(syncForm(customer));
                     setEditing(false);
                   }}
                 >

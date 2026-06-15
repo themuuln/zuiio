@@ -4,7 +4,6 @@ import { AlertTriangle, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { z } from "zod";
-import { partSchema as sharedPartSchema } from "@/lib/validation/part-schema";
 import { Button } from "@/components/ui/button";
 import { CreatableCombobox } from "@/components/ui/combobox";
 import {
@@ -25,6 +24,7 @@ import {
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useCreatePart } from "@/lib/queries/use-wizard-data";
 import type { CreatePartParams, PartsCatalogItem } from "@/lib/types";
+import { partSchema as sharedPartSchema } from "@/lib/validation/part-schema";
 import PartPhotoUpload from "./part-photo-upload";
 
 // ── Schema ───────────────────────────────────────────────────

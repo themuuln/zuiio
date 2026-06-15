@@ -98,7 +98,7 @@ export default function BlogPage() {
                   size="sm"
                   onClick={() => setActiveCategory(cat)}
                 >
-                  {t(`category${cat.charAt(0).toUpperCase()}${cat.slice(1)}`)}
+                  {(t as any)(`category${cat.charAt(0).toUpperCase()}${cat.slice(1)}`)}
                 </Button>
               ))}
             </div>
@@ -141,26 +141,26 @@ export default function BlogPage() {
                 <Card key={article.id} className="flex flex-col">
                   <CardHeader>
                     <Badge variant="secondary" className="mb-2 w-fit">
-                      {t(`article${article.id}Category`)}
+                      {(t as any)(`article${article.id}Category`)}
                     </Badge>
                     <CardTitle className="text-sm leading-snug">
-                      {t(`article${article.id}Title`)}
+                      {(t as any)(`article${article.id}Title`)}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="flex-1">
                     <CardDescription className="text-xs leading-relaxed">
-                      {t(`article${article.id}Desc`)}
+                      {(t as any)(`article${article.id}Desc`)}
                     </CardDescription>
                   </CardContent>
                   <CardFooter className="flex-col items-start gap-3 border-t pt-4">
                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Calendar className="size-3" />
-                        {t(`article${article.id}Date`)}
+                        {(t as any)(`article${article.id}Date`)}
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="size-3" />
-                        {t(`article${article.id}MinRead`)}
+                        {(t as any)(`article${article.id}MinRead`)}
                       </span>
                     </div>
                     <Button variant="link" className="h-auto p-0 text-xs">

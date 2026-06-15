@@ -1,9 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "@/lib/i18n/navigation";
 import { setCookie } from "@/lib/utils";
 
 export function LocaleSwitcher() {

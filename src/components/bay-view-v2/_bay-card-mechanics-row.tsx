@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import { MechanicAvatarChip } from "@/components/mechanic-avatar-chip";
 import type { BayCardMechanic, BayCardWorkOrder } from "./_bay-card-types";
 import { MechanicQuickAssign } from "./_mechanic-quick-assign";
 import { MechanicBadge } from "./mechanic-badge";
@@ -62,12 +63,10 @@ export function BayCardMechanicsRow({
       )}
       {!isPreview &&
         workOrder.helpers.map((helper) => (
-          <MechanicBadge
+          <MechanicAvatarChip
             key={helper.id}
-            workOrderId={workOrder.id}
             mechanic={helper}
-            disabled={isPending}
-            compact
+            size="sm"
             onRemove={
               onRemoveHelper
                 ? () => onRemoveHelper(workOrder.id, helper.id)

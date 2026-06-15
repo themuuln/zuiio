@@ -32,7 +32,11 @@ type UpdateFollowupInput = {
   cancelled_at?: string;
 };
 
-const crud = createCrudService<CustomerFollowup, CreateFollowupInput, UpdateFollowupInput>({
+const crud = createCrudService<
+  CustomerFollowup,
+  CreateFollowupInput,
+  UpdateFollowupInput
+>({
   tableName: "customer_followups",
   selectColumns: "*",
   selectColumnsById: "*",

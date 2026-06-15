@@ -4,7 +4,6 @@ import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { z } from "zod";
-import { branchSchema as sharedBranchSchema } from "@/lib/validation/branch-schema";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -18,6 +17,7 @@ import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useCreateBranch } from "@/lib/queries/use-create-branch";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Branch, CreateBranchParams } from "@/lib/types";
+import { branchSchema as sharedBranchSchema } from "@/lib/validation/branch-schema";
 
 // ── Schema ───────────────────────────────────────────────────
 // Import shared branch schema — override phone to accept any string

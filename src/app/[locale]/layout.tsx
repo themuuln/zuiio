@@ -5,6 +5,7 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { Toaster } from "sonner";
 import { DrawerProvider } from "@/components/drawer-provider";
+import { HtmlLang } from "@/components/html-lang";
 import NuqsProvider from "@/components/nuqs-provider";
 import { OfflineBanner } from "@/components/offline-banner";
 import { OfflineQueueIndicator } from "@/components/offline-queue-indicator";
@@ -60,6 +61,7 @@ export default async function LocaleLayout({
     <DrawerProvider>
       <TooltipProvider>
         <NextIntlClientProvider locale={locale} messages={messages}>
+          <HtmlLang />
           <NuqsProvider>
             <QueryProvider>
               <MutationQueueProvider>

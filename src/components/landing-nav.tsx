@@ -25,13 +25,13 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { Typography } from "@/components/ui/typography";
 import { onLinkHover } from "@/lib/prefetch";
 
@@ -197,20 +197,20 @@ export function LandingNav() {
 
         <div className="flex items-center gap-2">
           <LocaleSwitcher />
-          <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
-            <SheetTrigger
+          <Drawer open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+            <DrawerTrigger
               render={
                 <Button variant="ghost" size="icon-sm" className="md:hidden" />
               }
             >
               <Menu className="size-4" />
               <span className="sr-only">{t("navOpenMenu")}</span>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[88vw] max-w-sm gap-0 p-0">
-              <SheetHeader className="border-b">
-                <SheetTitle>{appT("name")}</SheetTitle>
-                <SheetDescription>{appT("tagline")}</SheetDescription>
-              </SheetHeader>
+            </DrawerTrigger>
+            <DrawerContent className="w-[88vw] max-w-sm gap-0 p-0">
+              <DrawerHeader className="border-b">
+                <DrawerTitle>{appT("name")}</DrawerTitle>
+                <DrawerDescription>{appT("tagline")}</DrawerDescription>
+              </DrawerHeader>
               <div className="flex flex-col gap-1 p-4">
                 {mobileLinks.map((item) => (
                   <Button
@@ -254,8 +254,8 @@ export function LandingNav() {
                   </Button>
                 </div>
               </div>
-            </SheetContent>
-          </Sheet>
+            </DrawerContent>
+          </Drawer>
           <Button
             variant="ghost"
             size="sm"

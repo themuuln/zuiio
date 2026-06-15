@@ -6,12 +6,12 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
 
 /**
@@ -35,8 +35,8 @@ export function OfflineQueueIndicator() {
   if (relevantMutations.length === 0 && !isReplaying) return null;
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>
         <Button
           variant="outline"
           size="sm"
@@ -55,12 +55,12 @@ export function OfflineQueueIndicator() {
                 : t("queueEmpty")}
           </Badge>
         </Button>
-      </SheetTrigger>
+      </DrawerTrigger>
 
-      <SheetContent side="right" className="w-80">
-        <SheetHeader>
-          <SheetTitle>{t("offlineQueue")}</SheetTitle>
-        </SheetHeader>
+      <DrawerContent className="w-80">
+        <DrawerHeader>
+          <DrawerTitle>{t("offlineQueue")}</DrawerTitle>
+        </DrawerHeader>
 
         <div className="mt-4 flex flex-col gap-2">
           {relevantMutations.length === 0 ? (
@@ -100,7 +100,7 @@ export function OfflineQueueIndicator() {
             ))
           )}
         </div>
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 }

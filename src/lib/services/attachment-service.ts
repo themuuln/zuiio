@@ -37,7 +37,10 @@ const crud = createCrudService<
     afterCreate: async (result) => {
       const attachment = result as unknown as { work_order_id: string };
       if (attachment.work_order_id) {
-        revalidateTag(cacheTags.workOrderAttachments(attachment.work_order_id), "max");
+        revalidateTag(
+          cacheTags.workOrderAttachments(attachment.work_order_id),
+          "max",
+        );
       }
     },
     beforeCreate: async (params) => {

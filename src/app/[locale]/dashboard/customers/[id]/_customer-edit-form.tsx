@@ -1,205 +1,130 @@
 "use client";
 
 import type { useTranslations } from "next-intl";
+import type { UseFormReturn } from "react-hook-form";
+import { z } from "zod";
+import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { formatMongolianPhone, inputProps } from "@/lib/form-ux";
 
 type CustomerType = "individual" | "company";
 
-export interface CustomerFormState {
-  type: CustomerType;
-  firstName: string;
-  lastName: string;
-  companyName: string;
-  contactPerson: string;
-  phone: string;
-  email: string;
-  address: string;
-  source: string;
-  notes: string;
-}
+export const customerEditSchema = z.object({
+  type: z.enum(["individual", "company"]),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  companyName: z.string().optional(),
+  contactPerson: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().optional(),
+  address: z.string().optional(),
+  source: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export type CustomerEditValues = z.infer<typeof customerEditSchema>;
 
 interface CustomerEditFormProps {
-  form: CustomerFormState;
-  setForm: React.Dispatch<React.SetStateAction<CustomerFormState>>;
+  form: UseFormReturn<CustomerEditValues>;
   t: ReturnType<typeof useTranslations<"customers">>;
 }
 
-export function CustomerEditForm({ form, setForm, t }: CustomerEditFormProps) {
+export function CustomerEditForm({ form, t }: CustomerEditFormProps) {
+  const watchedType = form.watch("type");
+
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <div className="sm:col-span-2">
-        <label className="mb-1 block text-sm font-medium" htmlFor="type">
-          {t("type")}
-        </label>
-        <select
-          id="type"
-          value={form.type}
-          onChange={(event) =>
-            setForm((current) => ({
-              ...current,
-              type: event.target.value as CustomerType,
-            }))
-          }
-          className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm"
-        >
-          <option value="individual">{t("individual")}</option>
-          <option value="company">{t("company")}</option>
-        </select>
-      </div>
+      <Field className="sm:col-span-2">
+        <FieldLabel>{t("type")}</FieldLabel>
+        <FieldContent>
+          <Select
+            value={watchedType}
+            onValueChange={(val) => {
+              form.setValue("type", val as CustomerType);
+            }}
+          >
+            <SelectTrigger className="w-full h-11" aria-label={t("type")}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="individual">{t("individual")}</SelectItem>
+              <SelectItem value="company">{t("company")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </FieldContent>
+      </Field>
 
-      {form.type === "company" ? (
+      {watchedType === "company" ? (
         <>
-          <div>
-            <label
-              className="mb-1 block text-sm font-medium"
-              htmlFor="companyName"
-            >
-              {t("companyName")}
-            </label>
-            <Input
-              id="companyName"
-              value={form.companyName}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  companyName: event.target.value,
-                }))
-              }
-              className="h-11"
-            />
-          </div>
-          <div>
-            <label
-              className="mb-1 block text-sm font-medium"
-              htmlFor="contactPerson"
-            >
-              {t("contactPerson")}
-            </label>
-            <Input
-              id="contactPerson"
-              value={form.contactPerson}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  contactPerson: event.target.value,
-                }))
-              }
-              className="h-11"
-            />
-          </div>
+          <Field>
+            <FieldLabel>{t("companyName")}</FieldLabel>
+            <FieldContent>
+              <Input className="h-11" {...form.register("companyName")} />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>{t("contactPerson")}</FieldLabel>
+            <FieldContent>
+              <Input className="h-11" {...form.register("contactPerson")} />
+            </FieldContent>
+          </Field>
         </>
       ) : (
         <>
-          <div>
-            <label
-              className="mb-1 block text-sm font-medium"
-              htmlFor="firstName"
-            >
-              {t("firstName")}
-            </label>
-            <Input
-              id="firstName"
-              value={form.firstName}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  firstName: event.target.value,
-                }))
-              }
-              className="h-11"
-            />
-          </div>
-          <div>
-            <label
-              className="mb-1 block text-sm font-medium"
-              htmlFor="lastName"
-            >
-              {t("lastName")}
-            </label>
-            <Input
-              id="lastName"
-              value={form.lastName}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  lastName: event.target.value,
-                }))
-              }
-              className="h-11"
-            />
-          </div>
+          <Field>
+            <FieldLabel>{t("firstName")}</FieldLabel>
+            <FieldContent>
+              <Input className="h-11" {...form.register("firstName")} />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>{t("lastName")}</FieldLabel>
+            <FieldContent>
+              <Input className="h-11" {...form.register("lastName")} />
+            </FieldContent>
+          </Field>
         </>
       )}
 
-      <div>
-        <label className="mb-1 block text-sm font-medium" htmlFor="phone">
-          {t("phone")}
-        </label>
-        <Input
-          id="phone"
-          type="tel"
-          value={form.phone}
-          onChange={(event) =>
-            setForm((current) => ({
-              ...current,
-              phone: formatMongolianPhone(event.target.value),
-            }))
-          }
-          className="h-11"
-          {...inputProps("phone")}
-        />
-      </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium" htmlFor="email">
-          {t("email")}
-        </label>
-        <Input
-          id="email"
-          type="email"
-          value={form.email}
-          onChange={(event) =>
-            setForm((current) => ({
-              ...current,
-              email: event.target.value,
-            }))
-          }
-          className="h-11"
-        />
-      </div>
-      <div className="sm:col-span-2">
-        <label className="mb-1 block text-sm font-medium" htmlFor="address">
-          {t("address")}
-        </label>
-        <Input
-          id="address"
-          value={form.address}
-          onChange={(event) =>
-            setForm((current) => ({
-              ...current,
-              address: event.target.value,
-            }))
-          }
-          className="h-11"
-        />
-      </div>
-      <div className="sm:col-span-2">
-        <label className="mb-1 block text-sm font-medium" htmlFor="notes">
-          {t("notes")}
-        </label>
-        <textarea
-          id="notes"
-          value={form.notes}
-          onChange={(event) =>
-            setForm((current) => ({
-              ...current,
-              notes: event.target.value,
-            }))
-          }
-          rows={4}
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm"
-        />
-      </div>
+      <Field>
+        <FieldLabel>{t("phone")}</FieldLabel>
+        <FieldContent>
+          <Input
+            type="tel"
+            className="h-11"
+            {...inputProps("phone")}
+            {...form.register("phone", {
+              setValueAs: (v) => formatMongolianPhone(v ?? ""),
+            })}
+          />
+        </FieldContent>
+      </Field>
+      <Field>
+        <FieldLabel>{t("email")}</FieldLabel>
+        <FieldContent>
+          <Input type="email" className="h-11" {...form.register("email")} />
+        </FieldContent>
+      </Field>
+      <Field className="sm:col-span-2">
+        <FieldLabel>{t("address")}</FieldLabel>
+        <FieldContent>
+          <Input className="h-11" {...form.register("address")} />
+        </FieldContent>
+      </Field>
+      <Field className="sm:col-span-2">
+        <FieldLabel>{t("notes")}</FieldLabel>
+        <FieldContent>
+          <Textarea rows={4} {...form.register("notes")} />
+        </FieldContent>
+      </Field>
     </div>
   );
 }

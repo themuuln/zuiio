@@ -14,6 +14,7 @@
 6. **Optimistic by default.** All user-facing mutations must update the UI synchronously before server confirmation. Load `.agents/skills/optimistic-ui/SKILL.md` before writing mutation code.
 7. **Test coverage is non-negotiable.** Every service function, API route, and RLS policy has tests. Ship tests with implementation.
 8. **Load skills before coding.** Check the Skills section → load the listed skills for your task type BEFORE writing any code. Don't skip this.
+9. **Use drawers for detail/edit/add/action views.** Every detail view, edit form, add form, or action interface must use a shadcn Sheet (drawer) rather than a new page or dialog. Keeps context and navigation intact. Use the `side="right"` variant as the default.
 
 ## Skills
 

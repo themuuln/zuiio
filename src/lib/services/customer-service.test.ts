@@ -114,7 +114,12 @@ describe("createCustomer", () => {
 
   it("validates that at least one identifying field is required", async () => {
     await expect(
-      createCustomer(mockClient as unknown as SupabaseClient, "org-1", { firstName: "" }, "user-1"),
+      createCustomer(
+        mockClient as unknown as SupabaseClient,
+        "org-1",
+        { firstName: "" },
+        "user-1",
+      ),
     ).rejects.toThrow("At least one identifying field");
   });
 });
@@ -142,7 +147,11 @@ describe("getCustomer", () => {
       error: null,
     });
 
-    const result = await getCustomer(mockClient as unknown as SupabaseClient, "c1", "org-1");
+    const result = await getCustomer(
+      mockClient as unknown as SupabaseClient,
+      "c1",
+      "org-1",
+    );
 
     expect(result.id).toBe("c1");
     expect(result.first_name).toBe("Bat");
@@ -155,7 +164,11 @@ describe("getCustomer", () => {
     });
 
     await expect(
-      getCustomer(mockClient as unknown as SupabaseClient, "nonexistent", "org-1"),
+      getCustomer(
+        mockClient as unknown as SupabaseClient,
+        "nonexistent",
+        "org-1",
+      ),
     ).rejects.toThrow("customers not found");
   });
 });
@@ -194,7 +207,10 @@ describe("getCustomers", () => {
       error: null,
     });
 
-    const result = await getCustomers(mockClient as unknown as SupabaseClient, "org-1");
+    const result = await getCustomers(
+      mockClient as unknown as SupabaseClient,
+      "org-1",
+    );
 
     expect(result.data).toHaveLength(2);
     expect(result.data[0].first_name).toBe("Bat");
@@ -221,7 +237,11 @@ describe("getCustomers", () => {
       error: null,
     });
 
-    const result = await getCustomers(mockClient as unknown as SupabaseClient, "org-1", { search: "Bat" });
+    const result = await getCustomers(
+      mockClient as unknown as SupabaseClient,
+      "org-1",
+      { search: "Bat" },
+    );
 
     expect(result.data).toHaveLength(1);
     expect(result.data[0].first_name).toBe("Bat");
@@ -245,7 +265,10 @@ describe("getCustomers", () => {
       error: null,
     });
 
-    const result = await getCustomers(mockClient as unknown as SupabaseClient, "org-1");
+    const result = await getCustomers(
+      mockClient as unknown as SupabaseClient,
+      "org-1",
+    );
 
     expect(result.data[0]).toHaveProperty("vehicle_count");
   });
@@ -257,7 +280,10 @@ describe("getCustomers", () => {
       error: null,
     });
 
-    const result = await getCustomers(mockClient as unknown as SupabaseClient, "org-1");
+    const result = await getCustomers(
+      mockClient as unknown as SupabaseClient,
+      "org-1",
+    );
 
     expect(result.data).toEqual([]);
     expect(result.total).toBe(0);
@@ -279,10 +305,14 @@ describe("getCustomers", () => {
       error: null,
     });
 
-    const result = await getCustomers(mockClient as unknown as SupabaseClient, "org-1", {
-      page: 2,
-      pageSize: 5,
-    });
+    const result = await getCustomers(
+      mockClient as unknown as SupabaseClient,
+      "org-1",
+      {
+        page: 2,
+        pageSize: 5,
+      },
+    );
 
     expect(result.page).toBe(2);
     expect(result.pageSize).toBe(5);
@@ -385,7 +415,13 @@ describe("updateCustomer", () => {
     });
 
     await expect(
-      updateCustomer(mockClient as unknown as SupabaseClient, "c1", "org-1", {}, "user-1"),
+      updateCustomer(
+        mockClient as unknown as SupabaseClient,
+        "c1",
+        "org-1",
+        {},
+        "user-1",
+      ),
     ).rejects.toThrow("No fields to update");
   });
 
@@ -485,7 +521,12 @@ describe("deleteCustomer", () => {
       error: null,
     });
 
-    await deleteCustomer(mockClient as unknown as SupabaseClient, "c1", "org-1", "user-1");
+    await deleteCustomer(
+      mockClient as unknown as SupabaseClient,
+      "c1",
+      "org-1",
+      "user-1",
+    );
 
     expect(createAuditLog).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -502,7 +543,12 @@ describe("deleteCustomer", () => {
     });
 
     await expect(
-      deleteCustomer(mockClient as unknown as SupabaseClient, "nonexistent", "org-1", "user-1"),
+      deleteCustomer(
+        mockClient as unknown as SupabaseClient,
+        "nonexistent",
+        "org-1",
+        "user-1",
+      ),
     ).rejects.toThrow("customers not found");
   });
 
@@ -512,7 +558,12 @@ describe("deleteCustomer", () => {
       error: null,
     });
 
-    await deleteCustomer(mockClient as unknown as SupabaseClient, "c1", "org-1", "user-1");
+    await deleteCustomer(
+      mockClient as unknown as SupabaseClient,
+      "c1",
+      "org-1",
+      "user-1",
+    );
 
     expect(createAuditLog).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -531,7 +582,12 @@ describe("deleteCustomer", () => {
       error: null,
     });
 
-    await deleteCustomer(mockClient as unknown as SupabaseClient, "c1", "org-1", "user-1");
+    await deleteCustomer(
+      mockClient as unknown as SupabaseClient,
+      "c1",
+      "org-1",
+      "user-1",
+    );
 
     expect(revalidateTag).toHaveBeenCalledWith(
       expect.stringContaining("customers"),
@@ -567,7 +623,11 @@ describe("searchCustomers", () => {
       error: null,
     });
 
-    const result = await searchCustomers(mockClient as unknown as SupabaseClient, "org-1", "Bat");
+    const result = await searchCustomers(
+      mockClient as unknown as SupabaseClient,
+      "org-1",
+      "Bat",
+    );
 
     expect(result.data).toHaveLength(1);
     expect(result.data[0].first_name).toBe("Bat");
@@ -593,7 +653,11 @@ describe("searchCustomers", () => {
       error: null,
     });
 
-    const result = await searchCustomers(mockClient as unknown as SupabaseClient, "org-1", "Bat");
+    const result = await searchCustomers(
+      mockClient as unknown as SupabaseClient,
+      "org-1",
+      "Bat",
+    );
 
     expect(result.data).toHaveLength(1);
     expect(result.data[0].phone).toBe("99112233");

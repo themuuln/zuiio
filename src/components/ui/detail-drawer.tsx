@@ -34,6 +34,8 @@ interface DetailDrawerRootProps {
   /** Width of the drawer on desktop (default: "lg" = max-w-lg) */
   size?: DrawerSize;
   className?: string;
+  /** Whether clicking the backdrop closes the drawer (default: true) */
+  modal?: boolean;
 }
 
 // ─── Root ──────────────────────────────────────────────────────
@@ -44,9 +46,15 @@ export function DetailDrawer({
   children,
   size = "lg",
   className,
+  modal = true,
 }: DetailDrawerRootProps) {
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} swipeDirection="right">
+    <Drawer
+      open={open}
+      onOpenChange={onOpenChange}
+      swipeDirection="right"
+      modal={modal}
+    >
       <DrawerContent
         showCloseButton={false}
         className={drawerSizeClasses[size]}
@@ -68,12 +76,15 @@ interface DetailDrawerHeaderProps {
   className?: string;
   /** Show a bottom border (default: true) */
   bordered?: boolean;
+  /** Optional action elements rendered on the right side of the header (e.g. buttons) */
+  actions?: React.ReactNode;
 }
 
 DetailDrawer.Header = function DetailDrawerHeaderComponent({
   children,
   className,
   bordered = true,
+  actions,
 }: DetailDrawerHeaderProps) {
   return (
     <DrawerHeader
@@ -83,7 +94,14 @@ DetailDrawer.Header = function DetailDrawerHeaderComponent({
         className,
       )}
     >
-      {children}
+      {actions ? (
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex flex-col gap-0.5 min-w-0">{children}</div>
+          <div className="shrink-0">{actions}</div>
+        </div>
+      ) : (
+        children
+      )}
     </DrawerHeader>
   );
 };

@@ -1,6 +1,13 @@
 "use client";
 
-import { Loader2, Wifi, WifiOff } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Loader2,
+  Wifi,
+  WifiOff,
+} from "lucide-react";
+import { useState } from "react";
 import { Progress } from "@/components/ui/progress";
 import { useOnlineStatus } from "@/lib/hooks/use-online-status";
 import type { PreloadProgress } from "@/lib/offline/preload-engine";
@@ -21,6 +28,7 @@ interface PreloadScreenProps {
  */
 export function PreloadScreen({ progress }: PreloadScreenProps) {
   const isOnline = useOnlineStatus();
+  const [showErrors, setShowErrors] = useState(false);
   const percent = progress
     ? Math.round((progress.done / Math.max(progress.total, 1)) * 100)
     : 0;
@@ -64,6 +72,34 @@ export function PreloadScreen({ progress }: PreloadScreenProps) {
               <span className="text-destructive">{progress.failed} failed</span>
             )}
             <span>{progress.total - progress.done} remaining</span>
+          </div>
+        )}
+
+        {/* Failed endpoints detail */}
+        {progress && progress.errors.length > 0 && (
+          <div className="w-full">
+            <button
+              type="button"
+              onClick={() => setShowErrors(!showErrors)}
+              className="flex w-full items-center gap-1 text-xs text-destructive hover:underline"
+            >
+              {showErrors ? (
+                <ChevronDown className="size-3" />
+              ) : (
+                <ChevronRight className="size-3" />
+              )}
+              {progress.errors.length} failed{" — "}
+              tap to {showErrors ? "hide" : "show"}
+            </button>
+            {showErrors && (
+              <ul className="mt-1 space-y-0.5 pl-4">
+                {progress.errors.map((err, i) => (
+                  <li key={i} className="text-xs text-muted-foreground">
+                    {err}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 

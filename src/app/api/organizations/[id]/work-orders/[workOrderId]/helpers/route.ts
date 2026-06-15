@@ -22,7 +22,13 @@ export const POST = createRouteHandler(
         { status: 400 },
       );
     }
-    await assignHelperToWorkOrder(supabase, orgId, workOrderId, mechanicId, user.id);
+    await assignHelperToWorkOrder(
+      supabase,
+      orgId,
+      workOrderId,
+      mechanicId,
+      user.id,
+    );
     return NextResponse.json({ data: null }, { status: 201 });
   },
   {

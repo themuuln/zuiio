@@ -22,13 +22,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
@@ -425,18 +425,18 @@ export default function NewEstimatePage() {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <Sheet>
-                  <SheetTrigger render={<Button variant="outline" size="sm" />}>
+                <Drawer>
+                  <DrawerTrigger render={<Button variant="outline" size="sm" />}>
                     <Plus className="size-4" />
                     {t("addService")}
-                  </SheetTrigger>
-                  <SheetContent side="right" size="lg" className="w-full">
-                    <SheetHeader>
-                      <SheetTitle>{t("addServiceTitle")}</SheetTitle>
-                      <SheetDescription>
+                  </DrawerTrigger>
+                  <DrawerContent className="sm:max-w-lg w-full">
+                    <DrawerHeader>
+                      <DrawerTitle>{t("addServiceTitle")}</DrawerTitle>
+                      <DrawerDescription>
                         {t("searchServicesPlaceholder")}
-                      </SheetDescription>
-                    </SheetHeader>
+                      </DrawerDescription>
+                    </DrawerHeader>
                     <div className="flex flex-col gap-4 p-4">
                       <SearchInput
                         placeholder={t("searchServicesPlaceholder")}
@@ -477,21 +477,21 @@ export default function NewEstimatePage() {
                         ) : null}
                       </div>
                     </div>
-                  </SheetContent>
-                </Sheet>
+                  </DrawerContent>
+                </Drawer>
 
-                <Sheet>
-                  <SheetTrigger render={<Button variant="outline" size="sm" />}>
+                <Drawer>
+                  <DrawerTrigger render={<Button variant="outline" size="sm" />}>
                     <Plus className="size-4" />
                     {t("addPart")}
-                  </SheetTrigger>
-                  <SheetContent side="right" size="lg" className="w-full">
-                    <SheetHeader>
-                      <SheetTitle>{t("addPartTitle")}</SheetTitle>
-                      <SheetDescription>
+                  </DrawerTrigger>
+                  <DrawerContent className="sm:max-w-lg w-full">
+                    <DrawerHeader>
+                      <DrawerTitle>{t("addPartTitle")}</DrawerTitle>
+                      <DrawerDescription>
                         {t("searchPartsPlaceholder")}
-                      </SheetDescription>
-                    </SheetHeader>
+                      </DrawerDescription>
+                    </DrawerHeader>
                     <div className="flex flex-col gap-4 p-4">
                       <SearchInput
                         placeholder={t("searchPartsPlaceholder")}
@@ -528,8 +528,8 @@ export default function NewEstimatePage() {
                         ) : null}
                       </div>
                     </div>
-                  </SheetContent>
-                </Sheet>
+                  </DrawerContent>
+                </Drawer>
 
                 <Button variant="outline" size="sm" onClick={addCustomLine}>
                   <Plus className="size-4" />

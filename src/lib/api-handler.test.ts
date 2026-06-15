@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ForbiddenError } from "@/lib/errors";
 import { createRouteHandler } from "./api-handler";
 
@@ -53,7 +53,9 @@ function createRequest(url = "http://localhost:3000/api/orgs/org-123/items") {
   return new NextRequest(url, { method: "GET" });
 }
 
-function createRouteContext(params: Record<string, string> = { id: "org-123" }) {
+function createRouteContext(
+  params: Record<string, string> = { id: "org-123" },
+) {
   return { params: Promise.resolve(params) };
 }
 

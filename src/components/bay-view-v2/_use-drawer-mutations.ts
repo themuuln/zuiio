@@ -40,13 +40,11 @@ interface UseDrawerMutationsParams {
     mutateAsync: (vars: { woId: string; mechanicId: string }) => Promise<void>;
   };
   assignCustomerMutation?: {
-    mutateAsync: (
-      vars: {
-        woId: string;
-        customerId: string | null;
-        customerName?: string | null;
-      },
-    ) => Promise<void>;
+    mutateAsync: (vars: {
+      woId: string;
+      customerId: string | null;
+      customerName?: string | null;
+    }) => Promise<void>;
   };
 }
 
@@ -217,7 +215,10 @@ export function useDrawerMutations({
 
     try {
       if (assignMechanicMutation) {
-        await assignMechanicMutation.mutateAsync({ woId: workOrderId, mechanicId });
+        await assignMechanicMutation.mutateAsync({
+          woId: workOrderId,
+          mechanicId,
+        });
       } else {
         // Fallback: raw fetch if no mutation hook provided
         const res = await fetch(
@@ -242,7 +243,9 @@ export function useDrawerMutations({
     } catch (err) {
       // Rollback drawer state
       if (prevWo) setWo(prevWo);
-      toast.error(err instanceof Error ? err.message : "Failed to assign mechanic");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to assign mechanic",
+      );
     } finally {
       setSaving(false);
     }
@@ -311,7 +314,8 @@ export function useDrawerMutations({
             service_name: svc.service_name,
             quantity: svc.quantity ?? 1,
             unit_price: price,
-            catalog_item_variant_id: (svc as any).catalog_item_variant_id ?? null,
+            catalog_item_variant_id:
+              (svc as any).catalog_item_variant_id ?? null,
             variant_label: (svc as any).variant_label ?? null,
           }),
         },
@@ -519,7 +523,8 @@ export function useDrawerMutations({
             part_name: part.part_name,
             quantity: part.quantity ?? 1,
             unit_price: price,
-            catalog_item_variant_id: (part as any).catalog_item_variant_id ?? null,
+            catalog_item_variant_id:
+              (part as any).catalog_item_variant_id ?? null,
             variant_label: (part as any).variant_label ?? null,
           }),
         },
@@ -1138,7 +1143,10 @@ export function useDrawerMutations({
 
   // ── Customer assignment ──
 
-  async function assignCustomer(customerId: string | null, customerName?: string | null) {
+  async function assignCustomer(
+    customerId: string | null,
+    customerName?: string | null,
+  ) {
     const orgId = orgIdRef.current;
     if (!orgId || !workOrderId) return;
     const prevWo = wo;
@@ -1150,14 +1158,22 @@ export function useDrawerMutations({
         ...prev,
         customer_id: customerId,
         customer: customerId
-          ? (prev.customer ?? { id: customerId, full_name: customerName ?? null, company_name: null })
+          ? (prev.customer ?? {
+              id: customerId,
+              full_name: customerName ?? null,
+              company_name: null,
+            })
           : null,
       } as WorkOrderDetail;
     });
 
     try {
       if (assignCustomerMutation) {
-        await assignCustomerMutation.mutateAsync({ woId: workOrderId, customerId, customerName });
+        await assignCustomerMutation.mutateAsync({
+          woId: workOrderId,
+          customerId,
+          customerName,
+        });
       } else {
         // Fallback: raw fetch if no mutation hook provided
         const res = await fetch(
@@ -1169,7 +1185,8 @@ export function useDrawerMutations({
           },
         );
         const json = await res.json();
-        if (json.error) throw new Error(json.error.message ?? "Failed to assign customer");
+        if (json.error)
+          throw new Error(json.error.message ?? "Failed to assign customer");
       }
       await fetchWo(true);
       onRefresh();
@@ -1180,7 +1197,9 @@ export function useDrawerMutations({
     } catch (err) {
       // Rollback drawer state
       if (prevWo) setWo(prevWo);
-      toast.error(err instanceof Error ? err.message : "Failed to assign customer");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to assign customer",
+      );
     } finally {
       setSaving(false);
     }

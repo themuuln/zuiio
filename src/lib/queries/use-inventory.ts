@@ -15,9 +15,9 @@ import type {
   UpdatePartParams,
   UsageTrend,
 } from "@/lib/types";
-import { useOrgMutation } from "./mutation-factory";
 import { createOrgQuery } from "./factory";
 import { globalCatalogKeys, inventoryKeys } from "./keys";
+import { useOrgMutation } from "./mutation-factory";
 
 // ── Global Catalog Fetcher ───────────────────────────────────
 
@@ -299,16 +299,19 @@ export function useSlowMovingStock(
 // ── Mutation hooks ──────────────────────────────────────────
 
 export function useCreateMovement(orgId: string | undefined) {
-  return useOrgMutation<InventoryMovement, {
-    part_id: string;
-    movement_type: string;
-    quantity: number;
-    unit_cost?: number;
-    unit_price?: number;
-    reference_type?: string;
-    reference_id?: string;
-    notes?: string;
-  }>({
+  return useOrgMutation<
+    InventoryMovement,
+    {
+      part_id: string;
+      movement_type: string;
+      quantity: number;
+      unit_cost?: number;
+      unit_price?: number;
+      reference_type?: string;
+      reference_id?: string;
+      notes?: string;
+    }
+  >({
     endpoint: `/api/organizations/${orgId}/inventory/movements`,
     method: "POST",
     queryKey: inventoryKeys.movements(orgId ?? ""),
@@ -320,16 +323,19 @@ export function useCreateMovement(orgId: string | undefined) {
 }
 
 export function useCreateSupplier(orgId: string | undefined) {
-  return useOrgMutation<Supplier, {
-    name: string;
-    contact_person?: string;
-    phone?: string;
-    email?: string;
-    address?: string;
-    tax_id?: string;
-    payment_terms?: string;
-    notes?: string;
-  }>({
+  return useOrgMutation<
+    Supplier,
+    {
+      name: string;
+      contact_person?: string;
+      phone?: string;
+      email?: string;
+      address?: string;
+      tax_id?: string;
+      payment_terms?: string;
+      notes?: string;
+    }
+  >({
     endpoint: `/api/organizations/${orgId}/inventory/suppliers`,
     method: "POST",
     queryKey: inventoryKeys.suppliers(orgId ?? ""),
@@ -361,7 +367,8 @@ export function useCreateSupplier(orgId: string | undefined) {
 
 export function useUpdateSupplier(orgId: string | undefined) {
   return useOrgMutation<Supplier, { id: string; body: Partial<Supplier> }>({
-    endpoint: ({ id }) => `/api/organizations/${orgId}/inventory/suppliers?supplierId=${id}`,
+    endpoint: ({ id }) =>
+      `/api/organizations/${orgId}/inventory/suppliers?supplierId=${id}`,
     method: "PATCH",
     queryKey: inventoryKeys.suppliers(orgId ?? ""),
     optimisticUpdate: (cached, { id, body }) =>
@@ -376,7 +383,8 @@ export function useUpdateSupplier(orgId: string | undefined) {
 
 export function useDeleteSupplier(orgId: string | undefined) {
   return useOrgMutation<Supplier, string>({
-    endpoint: (id) => `/api/organizations/${orgId}/inventory/suppliers?supplierId=${id}`,
+    endpoint: (id) =>
+      `/api/organizations/${orgId}/inventory/suppliers?supplierId=${id}`,
     method: "DELETE",
     queryKey: inventoryKeys.suppliers(orgId ?? ""),
     optimisticUpdate: (cached, id) => cached.filter((s) => s.id !== id),
@@ -385,7 +393,10 @@ export function useDeleteSupplier(orgId: string | undefined) {
 }
 
 export function useUpdatePart(orgId: string | undefined) {
-  return useOrgMutation<PartsCatalogItem, { id: string; body: UpdatePartParams }>({
+  return useOrgMutation<
+    PartsCatalogItem,
+    { id: string; body: UpdatePartParams }
+  >({
     endpoint: ({ id }) => `/api/organizations/${orgId}/inventory/parts/${id}`,
     method: "PATCH",
     queryKey: inventoryKeys.parts(orgId ?? ""),
@@ -401,17 +412,20 @@ export function useUpdatePart(orgId: string | undefined) {
 }
 
 export function useCreatePurchaseOrder(orgId: string | undefined) {
-  return useOrgMutation<PurchaseOrder, {
-    supplier_id?: string;
-    order_number: string;
-    notes?: string;
-    items: Array<{
-      part_id: string;
-      quantity_ordered: number;
-      unit_cost: number;
+  return useOrgMutation<
+    PurchaseOrder,
+    {
+      supplier_id?: string;
+      order_number: string;
       notes?: string;
-    }>;
-  }>({
+      items: Array<{
+        part_id: string;
+        quantity_ordered: number;
+        unit_cost: number;
+        notes?: string;
+      }>;
+    }
+  >({
     endpoint: `/api/organizations/${orgId}/inventory/purchase-orders`,
     method: "POST",
     queryKey: inventoryKeys.purchaseOrders(orgId ?? ""),
@@ -419,8 +433,12 @@ export function useCreatePurchaseOrder(orgId: string | undefined) {
 }
 
 export function useUpdatePurchaseOrder(orgId: string | undefined) {
-  return useOrgMutation<PurchaseOrder, { id: string; body: Partial<PurchaseOrder> }>({
-    endpoint: ({ id }) => `/api/organizations/${orgId}/inventory/purchase-orders?poId=${id}`,
+  return useOrgMutation<
+    PurchaseOrder,
+    { id: string; body: Partial<PurchaseOrder> }
+  >({
+    endpoint: ({ id }) =>
+      `/api/organizations/${orgId}/inventory/purchase-orders?poId=${id}`,
     method: "PATCH",
     queryKey: inventoryKeys.purchaseOrders(orgId ?? ""),
   });
@@ -428,7 +446,8 @@ export function useUpdatePurchaseOrder(orgId: string | undefined) {
 
 export function useReceivePurchaseOrder(orgId: string | undefined) {
   return useOrgMutation<PurchaseOrder, string>({
-    endpoint: (poId) => `/api/organizations/${orgId}/inventory/purchase-orders/${poId}/receive`,
+    endpoint: (poId) =>
+      `/api/organizations/${orgId}/inventory/purchase-orders/${poId}/receive`,
     method: "POST",
     queryKey: inventoryKeys.purchaseOrders(orgId ?? ""),
     invalidateKeys: [
@@ -440,17 +459,20 @@ export function useReceivePurchaseOrder(orgId: string | undefined) {
 }
 
 export function useCreatePartsCar(orgId: string | undefined) {
-  return useOrgMutation<PartsCars, {
-    make: string;
-    model: string;
-    year?: number;
-    vin?: string;
-    license_plate?: string;
-    purchase_cost?: number;
-    currency?: string;
-    arrival_date?: string;
-    notes?: string;
-  }>({
+  return useOrgMutation<
+    PartsCars,
+    {
+      make: string;
+      model: string;
+      year?: number;
+      vin?: string;
+      license_plate?: string;
+      purchase_cost?: number;
+      currency?: string;
+      arrival_date?: string;
+      notes?: string;
+    }
+  >({
     endpoint: `/api/organizations/${orgId}/inventory/parts-cars`,
     method: "POST",
     queryKey: inventoryKeys.partsCars(orgId ?? ""),
@@ -459,7 +481,8 @@ export function useCreatePartsCar(orgId: string | undefined) {
 
 export function useStartDisassembly(orgId: string | undefined) {
   return useOrgMutation<PartsCars, string>({
-    endpoint: (carId) => `/api/organizations/${orgId}/inventory/parts-cars/${carId}`,
+    endpoint: (carId) =>
+      `/api/organizations/${orgId}/inventory/parts-cars/${carId}`,
     method: "PATCH",
     queryKey: inventoryKeys.partsCars(orgId ?? ""),
   });
@@ -468,7 +491,8 @@ export function useStartDisassembly(orgId: string | undefined) {
 export function useCompleteDisassembly(orgId: string | undefined) {
   const qc = useQueryClient();
   return useOrgMutation<PartsCars, string>({
-    endpoint: (carId) => `/api/organizations/${orgId}/inventory/parts-cars/${carId}/complete`,
+    endpoint: (carId) =>
+      `/api/organizations/${orgId}/inventory/parts-cars/${carId}/complete`,
     method: "POST",
     queryKey: inventoryKeys.partsCars(orgId ?? ""),
     onSuccess: (_data, carId) => {
@@ -485,7 +509,8 @@ export function usePublishPartsCarToCatalog(orgId: string | undefined) {
     { publishedCount: number; catalogIds: string[] },
     string
   >({
-    endpoint: (carId) => `/api/organizations/${orgId}/inventory/parts-cars/${carId}/publish`,
+    endpoint: (carId) =>
+      `/api/organizations/${orgId}/inventory/parts-cars/${carId}/publish`,
     method: "POST",
     queryKey: inventoryKeys.partsCars(orgId ?? ""),
     invalidateKeys: [
@@ -504,28 +529,36 @@ export function usePublishPartsCarToCatalog(orgId: string | undefined) {
 }
 
 export function useAddPartsCarPart(orgId: string | undefined) {
-  return useOrgMutation<PartsCarParts, {
-    carId: string;
-    name: string;
-    part_id?: string;
-    location_group?: string;
-    quantity?: number;
-    condition?: string;
-    estimated_price?: number;
-    notes?: string;
-  }>({
-    endpoint: (vars) => `/api/organizations/${orgId}/inventory/parts-cars/${vars.carId}/parts`,
+  return useOrgMutation<
+    PartsCarParts,
+    {
+      carId: string;
+      name: string;
+      part_id?: string;
+      location_group?: string;
+      quantity?: number;
+      condition?: string;
+      estimated_price?: number;
+      notes?: string;
+    }
+  >({
+    endpoint: (vars) =>
+      `/api/organizations/${orgId}/inventory/parts-cars/${vars.carId}/parts`,
     method: "POST",
     queryKey: inventoryKeys.partsCars(orgId ?? ""),
   });
 }
 
 export function useRemovePartsCarPart(orgId: string | undefined) {
-  return useOrgMutation<unknown, {
-    carId: string;
-    partId: string;
-  }>({
-    endpoint: (vars) => `/api/organizations/${orgId}/inventory/parts-cars/${vars.carId}/parts/${vars.partId}`,
+  return useOrgMutation<
+    unknown,
+    {
+      carId: string;
+      partId: string;
+    }
+  >({
+    endpoint: (vars) =>
+      `/api/organizations/${orgId}/inventory/parts-cars/${vars.carId}/parts/${vars.partId}`,
     method: "DELETE",
     queryKey: inventoryKeys.partsCars(orgId ?? ""),
   });
@@ -533,7 +566,8 @@ export function useRemovePartsCarPart(orgId: string | undefined) {
 
 export function useUpdatePartsCar(orgId: string | undefined) {
   return useOrgMutation<unknown, { id: string } & Record<string, unknown>>({
-    endpoint: ({ id }) => `/api/organizations/${orgId}/inventory/parts-cars/${id}`,
+    endpoint: ({ id }) =>
+      `/api/organizations/${orgId}/inventory/parts-cars/${id}`,
     method: "PATCH",
     queryKey: inventoryKeys.partsCars(orgId ?? ""),
   });

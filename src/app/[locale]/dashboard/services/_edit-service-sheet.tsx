@@ -3,8 +3,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dices, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 
 import { VariantEditorSheet } from "@/components/services/variant-editor-sheet";
 import { Button } from "@/components/ui/button";
@@ -16,24 +17,37 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import {
   Field,
   FieldContent,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { inputProps } from "@/lib/form-ux";
+import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { serviceKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { ServiceCatalog } from "@/lib/types";
+
+// ── Schema ─────────────────────────────────────────────────────
+
+const editServiceSchema = z.object({
+  name: z.string().min(1, "Service name is required"),
+  nameMn: z.string().optional(),
+  defaultPrice: z
+    .string()
+    .min(1, "Price is required")
+    .refine((val) => !Number.isNaN(parseFloat(val)), "Enter a valid price"),
+  category: z.string().optional(),
+  description: z.string().optional(),
+});
+
+type EditServiceValues = z.infer<typeof editServiceSchema>;
+
+// ── Props ──────────────────────────────────────────────────────
 
 interface EditServiceSheetProps {
   service: ServiceCatalog | null;
@@ -54,28 +68,38 @@ export function EditServiceSheet({
   const orgId = orgQuery.data?.orgId;
   const queryClient = useQueryClient();
 
-  const [name, setName] = useState("");
-  const [nameMn, setNameMn] = useState("");
-  const [defaultPrice, setDefaultPrice] = useState("");
-  const [category, setCategory] = useState("");
-  const [description, setDescription] = useState("");
   const [categoryInput, setCategoryInput] = useState("");
   const [showVariants, setShowVariants] = useState(false);
 
-  // Reset form when the sheet opens with a different service
-  const [prevServiceId, setPrevServiceId] = useState<string | null>(null);
-  if (service && service.id !== prevServiceId) {
-    setPrevServiceId(service.id);
-    setName(service.name);
-    setNameMn(service.name_mn ?? "");
-    setDefaultPrice(String(service.default_price));
-    setCategory(service.category ?? "");
-    setDescription(service.description ?? "");
-    setCategoryInput("");
-  }
+  const form = useForm<EditServiceValues>({
+    resolver: zodResolver(editServiceSchema),
+    defaultValues: {
+      name: "",
+      nameMn: "",
+      defaultPrice: "",
+      category: "",
+      description: "",
+    },
+  });
+
+  // Reset form when service changes
+  useEffect(() => {
+    if (service) {
+      form.reset({
+        name: service.name,
+        nameMn: service.name_mn ?? "",
+        defaultPrice: String(service.default_price),
+        category: service.category ?? "",
+        description: service.description ?? "",
+      });
+      setCategoryInput("");
+    }
+  }, [service, form]);
+
+  const watchedCategory = form.watch("category");
 
   const updateMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (data: EditServiceValues) => {
       if (!orgId || !service) return;
       const r = await fetch(
         `/api/organizations/${orgId}/services/${service.id}`,
@@ -83,11 +107,11 @@ export function EditServiceSheet({
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            name: name.trim(),
-            name_mn: nameMn.trim() || null,
-            default_price: parseFloat(defaultPrice) || 0,
-            category: category || null,
-            description: description.trim() || null,
+            name: data.name.trim(),
+            name_mn: data.nameMn?.trim() || null,
+            default_price: parseFloat(data.defaultPrice) || 0,
+            category: data.category?.trim() || null,
+            description: data.description?.trim() || null,
           }),
         },
       );
@@ -95,7 +119,7 @@ export function EditServiceSheet({
       if (d.error) throw new Error(d.error.message);
       return d.data as ServiceCatalog;
     },
-    onMutate: async () => {
+    onMutate: async (data) => {
       await queryClient.cancelQueries({
         queryKey: serviceKeys.list(orgId ?? ""),
       });
@@ -109,11 +133,11 @@ export function EditServiceSheet({
             s.id === service?.id
               ? {
                   ...s,
-                  name: name.trim(),
-                  name_mn: nameMn.trim() || null,
-                  default_price: parseFloat(defaultPrice) || 0,
-                  category: category || null,
-                  description: description.trim() || null,
+                  name: data.name.trim(),
+                  name_mn: data.nameMn?.trim() || null,
+                  default_price: parseFloat(data.defaultPrice) || 0,
+                  category: data.category?.trim() || null,
+                  description: data.description?.trim() || null,
                 }
               : s,
           ),
@@ -140,10 +164,9 @@ export function EditServiceSheet({
     },
   });
 
-  const handleSave = () => {
-    if (!name.trim()) return;
-    updateMutation.mutate();
-  };
+  const handleSave = form.handleSubmit((data) => {
+    updateMutation.mutate(data);
+  });
 
   const handleOpenChange = (open: boolean) => {
     if (!open) setCategoryInput("");
@@ -152,176 +175,182 @@ export function EditServiceSheet({
 
   return (
     <>
-      <Drawer
+      <DetailDrawer
         open={open}
         onOpenChange={handleOpenChange}
-        swipeDirection="right"
+        size="lg"
         modal={false}
       >
-        <DrawerContent contentClassName="bg-background">
-          <DrawerHeader className="border-b border-border px-5 py-5 pr-16">
-            <div className="flex items-center justify-between">
-              <div>
-                <DrawerTitle>{t("editService")}</DrawerTitle>
-                <DrawerDescription>
-                  {t("editServiceDescription")}
-                </DrawerDescription>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="shrink-0 gap-1.5"
-                onClick={() => setShowVariants(true)}
-              >
-                <Dices className="size-4" />
-                {t("manageVariants")}
-              </Button>
-            </div>
-          </DrawerHeader>
+        <DetailDrawer.Header
+          actions={
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 gap-1.5"
+              onClick={() => setShowVariants(true)}
+            >
+              <Dices className="size-4" />
+              {t("manageVariants")}
+            </Button>
+          }
+        >
+          <DetailDrawer.Title>{t("editService")}</DetailDrawer.Title>
+          <DetailDrawer.Description>
+            {t("editServiceDescription")}
+          </DetailDrawer.Description>
+        </DetailDrawer.Header>
 
-          <div className="flex-1 overflow-y-auto px-5 py-5">
-            <FieldGroup>
-              {/* Name */}
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field>
-                  <FieldLabel>
-                    {t("serviceName")}{" "}
-                    <span className="text-destructive">*</span>
-                  </FieldLabel>
-                  <FieldContent>
-                    <Input
-                      placeholder={t("namePlaceholderEn")}
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                    />
-                  </FieldContent>
-                </Field>
-                <Field>
-                  <FieldLabel>{t("nameMn")}</FieldLabel>
-                  <FieldContent>
-                    <Input
-                      placeholder={t("namePlaceholderMn")}
-                      value={nameMn}
-                      onChange={(e) => setNameMn(e.target.value)}
-                    />
-                  </FieldContent>
-                </Field>
-              </div>
-
-              {/* Default Price */}
-              <Field>
+        <DetailDrawer.Body>
+          <FieldGroup>
+            {/* Name */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field data-invalid={!!form.formState.errors.name}>
                 <FieldLabel>
-                  {t("price")} (₮) <span className="text-destructive">*</span>
+                  {t("serviceName")}{" "}
+                  <span className="text-destructive">*</span>
                 </FieldLabel>
                 <FieldContent>
                   <Input
-                    type="number"
-                    min="0"
-                    placeholder="45000"
-                    value={defaultPrice}
-                    onChange={(e) => setDefaultPrice(e.target.value)}
+                    placeholder={t("namePlaceholderEn")}
+                    aria-invalid={!!form.formState.errors.name}
+                    {...form.register("name")}
                   />
+                  {form.formState.errors.name && (
+                    <FieldError>
+                      {form.formState.errors.name.message}
+                    </FieldError>
+                  )}
                 </FieldContent>
               </Field>
-
-              {/* Category Combobox */}
               <Field>
-                <FieldLabel>{t("category")}</FieldLabel>
-                <FieldContent>
-                  <Combobox
-                    items={categories.map((c) => ({ name: c }))}
-                    value={category ? { name: category } : null}
-                    onValueChange={(item) => {
-                      setCategory(item?.name ?? "");
-                      setCategoryInput("");
-                    }}
-                    onInputValueChange={(val) => setCategoryInput(val)}
-                    isItemEqualToValue={(a, b) => a.name === b.name}
-                    itemToStringLabel={(item) => item?.name ?? ""}
-                  >
-                    <ComboboxInput
-                      placeholder={t("categoryPlaceholder")}
-                      showTrigger
-                      showClear={!!category}
-                      className="h-10"
-                    />
-                    <ComboboxContent>
-                      <ComboboxList>
-                        {(item: { name: string }) => (
-                          <ComboboxItem key={item.name} value={item}>
-                            <span>{item.name}</span>
-                          </ComboboxItem>
-                        )}
-                      </ComboboxList>
-                      {categoryInput.trim() &&
-                        !categories.some(
-                          (c) =>
-                            c.toLowerCase() ===
-                            categoryInput.trim().toLowerCase(),
-                        ) && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setCategory(categoryInput.trim());
-                              setCategoryInput("");
-                            }}
-                            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-left hover:bg-accent cursor-pointer border-t border-border"
-                          >
-                            <span>
-                              {t("createCategory", {
-                                name: categoryInput.trim(),
-                              })}
-                            </span>
-                          </button>
-                        )}
-                      <ComboboxEmpty />
-                    </ComboboxContent>
-                  </Combobox>
-                </FieldContent>
-              </Field>
-
-              {/* Description */}
-              <Field>
-                <FieldLabel>{t("description")}</FieldLabel>
+                <FieldLabel>{t("nameMn")}</FieldLabel>
                 <FieldContent>
                   <Input
-                    placeholder={t("descriptionPlaceholder")}
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder={t("namePlaceholderMn")}
+                    {...form.register("nameMn")}
                   />
                 </FieldContent>
               </Field>
-            </FieldGroup>
-          </div>
-
-          <DrawerFooter className="border-t border-border bg-background/95 px-5 py-4 backdrop-blur">
-            <div className="flex w-full gap-2">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => handleOpenChange(false)}
-              >
-                {commonT("cancel")}
-              </Button>
-              <Button
-                className="flex-1"
-                onClick={handleSave}
-                disabled={updateMutation.isPending || !name.trim()}
-              >
-                {updateMutation.isPending ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 className="size-4 animate-spin" />
-                    {t("saving")}
-                  </span>
-                ) : (
-                  commonT("save")
-                )}
-              </Button>
             </div>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+
+            {/* Default Price */}
+            <Field data-invalid={!!form.formState.errors.defaultPrice}>
+              <FieldLabel>
+                {t("price")} (₮) <span className="text-destructive">*</span>
+              </FieldLabel>
+              <FieldContent>
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="45000"
+                  aria-invalid={!!form.formState.errors.defaultPrice}
+                  {...inputProps("price")}
+                  {...form.register("defaultPrice")}
+                />
+                {form.formState.errors.defaultPrice && (
+                  <FieldError>
+                    {form.formState.errors.defaultPrice.message}
+                  </FieldError>
+                )}
+              </FieldContent>
+            </Field>
+
+            {/* Category Combobox */}
+            <Field>
+              <FieldLabel>{t("category")}</FieldLabel>
+              <FieldContent>
+                <Combobox
+                  items={categories.map((c) => ({ name: c }))}
+                  value={watchedCategory ? { name: watchedCategory } : null}
+                  onValueChange={(item) => {
+                    form.setValue("category", item?.name ?? "");
+                    setCategoryInput("");
+                  }}
+                  onInputValueChange={(val) => setCategoryInput(val)}
+                  isItemEqualToValue={(a, b) => a.name === b.name}
+                  itemToStringLabel={(item) => item?.name ?? ""}
+                >
+                  <ComboboxInput
+                    placeholder={t("categoryPlaceholder")}
+                    showTrigger
+                    showClear={!!watchedCategory}
+                    className="h-10"
+                  />
+                  <ComboboxContent>
+                    <ComboboxList>
+                      {(item: { name: string }) => (
+                        <ComboboxItem key={item.name} value={item}>
+                          <span>{item.name}</span>
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                    {categoryInput.trim() &&
+                      !categories.some(
+                        (c) =>
+                          c.toLowerCase() ===
+                          categoryInput.trim().toLowerCase(),
+                      ) && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            form.setValue("category", categoryInput.trim());
+                            setCategoryInput("");
+                          }}
+                          className="flex w-full items-center gap-2 px-3 py-2 text-sm text-left hover:bg-accent cursor-pointer border-t border-border"
+                        >
+                          <span>
+                            {t("createCategory", {
+                              name: categoryInput.trim(),
+                            })}
+                          </span>
+                        </button>
+                      )}
+                    <ComboboxEmpty />
+                  </ComboboxContent>
+                </Combobox>
+              </FieldContent>
+            </Field>
+
+            {/* Description */}
+            <Field>
+              <FieldLabel>{t("description")}</FieldLabel>
+              <FieldContent>
+                <Input
+                  placeholder={t("descriptionPlaceholder")}
+                  {...form.register("description")}
+                />
+              </FieldContent>
+            </Field>
+          </FieldGroup>
+        </DetailDrawer.Body>
+
+        <DetailDrawer.Footer>
+          <div className="flex w-full gap-2">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => handleOpenChange(false)}
+            >
+              {commonT("cancel")}
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={handleSave}
+              disabled={updateMutation.isPending}
+            >
+              {updateMutation.isPending ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="size-4 animate-spin" />
+                  {t("saving")}
+                </span>
+              ) : (
+                commonT("save")
+              )}
+            </Button>
+          </div>
+        </DetailDrawer.Footer>
+      </DetailDrawer>
 
       {/* Variant Editor */}
       <VariantEditorSheet

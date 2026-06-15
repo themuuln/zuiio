@@ -55,7 +55,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
-      lang="mn"
+      lang="en"
       className={cn(
         "h-full",
         "antialiased",

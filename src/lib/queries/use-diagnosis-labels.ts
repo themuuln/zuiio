@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import type { DiagnosisLabel } from "@/lib/types";
-import { useOrgMutation } from "./mutation-factory";
 import { createOrgQuery } from "./factory";
 import { diagnosisLabelKeys } from "./keys";
+import { useOrgMutation } from "./mutation-factory";
 
 const fetchDiagnosisLabels =
   createOrgQuery<DiagnosisLabel[]>("/diagnosis-labels");
@@ -42,8 +42,12 @@ export function useCreateDiagnosisLabel(orgId: string | undefined) {
 }
 
 export function useUpdateDiagnosisLabel(orgId: string | undefined) {
-  return useOrgMutation<DiagnosisLabel, { id: string; body: Partial<DiagnosisLabel> }>({
-    endpoint: (vars) => `/api/organizations/${orgId}/diagnosis-labels/${vars.id}`,
+  return useOrgMutation<
+    DiagnosisLabel,
+    { id: string; body: Partial<DiagnosisLabel> }
+  >({
+    endpoint: (vars) =>
+      `/api/organizations/${orgId}/diagnosis-labels/${vars.id}`,
     method: "PATCH",
     queryKey: diagnosisLabelKeys.list(orgId ?? ""),
     optimisticUpdate: (cached, { id, body }) =>

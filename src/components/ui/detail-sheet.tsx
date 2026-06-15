@@ -3,18 +3,29 @@
 import type React from "react";
 
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 
 // ─── Types ─────────────────────────────────────────────────────
 
 type SheetSize = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl";
+
+const sheetSizeToDrawer: Record<SheetSize, string> = {
+  sm: "sm:max-w-sm",
+  md: "sm:max-w-md",
+  lg: "sm:max-w-lg",
+  xl: "sm:max-w-xl",
+  "2xl": "sm:max-w-2xl",
+  "3xl": "sm:max-w-3xl",
+  "4xl": "sm:max-w-4xl",
+  "5xl": "sm:max-w-5xl",
+};
 
 interface DetailSheetRootProps {
   open: boolean;
@@ -35,15 +46,18 @@ export function DetailSheet({
   className,
 }: DetailSheetRootProps) {
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        size={size}
-        className={cn("flex flex-col p-0 gap-0 overflow-hidden", className)}
+    <Drawer open={open} onOpenChange={onOpenChange} swipeDirection="right">
+      <DrawerContent
+        showCloseButton={false}
+        className={sheetSizeToDrawer[size]}
+        contentClassName={cn(
+          "flex flex-col p-0 gap-0 overflow-hidden",
+          className,
+        )}
       >
         {children}
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 }
 
@@ -62,7 +76,7 @@ DetailSheet.Header = function DetailSheetHeaderComponent({
   bordered = true,
 }: DetailSheetHeaderProps) {
   return (
-    <SheetHeader
+    <DrawerHeader
       className={cn(
         "shrink-0 p-4",
         bordered && "border-b border-border",
@@ -70,7 +84,7 @@ DetailSheet.Header = function DetailSheetHeaderComponent({
       )}
     >
       {children}
-    </SheetHeader>
+    </DrawerHeader>
   );
 };
 
@@ -86,7 +100,7 @@ DetailSheet.Title = function DetailSheetTitleComponent({
   className,
 }: DetailSheetTitleProps) {
   return (
-    <SheetTitle className={cn("text-base", className)}>{children}</SheetTitle>
+    <DrawerTitle className={cn("text-base", className)}>{children}</DrawerTitle>
   );
 };
 
@@ -102,9 +116,9 @@ DetailSheet.Description = function DetailSheetDescriptionComponent({
   className,
 }: DetailSheetDescriptionProps) {
   return (
-    <SheetDescription className={cn("text-sm", className)}>
+    <DrawerDescription className={cn("text-sm", className)}>
       {children}
-    </SheetDescription>
+    </DrawerDescription>
   );
 };
 
@@ -141,7 +155,7 @@ DetailSheet.Footer = function DetailSheetFooterComponent({
   bordered = true,
 }: DetailSheetFooterProps) {
   return (
-    <SheetFooter
+    <DrawerFooter
       className={cn(
         "shrink-0 p-4",
         bordered && "border-t border-border",
@@ -149,7 +163,7 @@ DetailSheet.Footer = function DetailSheetFooterComponent({
       )}
     >
       {children}
-    </SheetFooter>
+    </DrawerFooter>
   );
 };
 
@@ -189,3 +203,4 @@ DetailSheet.Section = function DetailSheetSectionComponent({
     </div>
   );
 };
+

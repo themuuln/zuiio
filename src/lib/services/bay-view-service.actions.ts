@@ -1,10 +1,14 @@
 "use server";
 
-import { UnauthorizedError } from "@/lib/errors";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { UnauthorizedError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
-import type { BayViewData, ShiftReport, UpdateStatusParams } from "./bay-view-service.types";
 import * as service from "./bay-view-service";
+import type {
+  BayViewData,
+  ShiftReport,
+  UpdateStatusParams,
+} from "./bay-view-service.types";
 
 /** Thin auth helper for server actions. Creates client, checks auth, resolves orgId. */
 async function withOrg<T>(
@@ -44,8 +48,12 @@ export async function getBayViewData(branchId?: string): Promise<BayViewData> {
   return withOrg((db, orgId) => service.getBayViewData(db, orgId, branchId));
 }
 
-export async function getBayViewDataFresh(branchId?: string): Promise<BayViewData> {
-  return withOrg((db, orgId) => service.getBayViewDataFresh(db, orgId, branchId));
+export async function getBayViewDataFresh(
+  branchId?: string,
+): Promise<BayViewData> {
+  return withOrg((db, orgId) =>
+    service.getBayViewDataFresh(db, orgId, branchId),
+  );
 }
 
 export async function getShiftReport(branchId?: string): Promise<ShiftReport> {
@@ -58,7 +66,9 @@ export async function assignVehicleToBay(
   workOrderId: string,
   bayNumber: number,
 ): Promise<void> {
-  return withOrg((db, orgId) => service.assignVehicleToBay(db, orgId, workOrderId, bayNumber));
+  return withOrg((db, orgId) =>
+    service.assignVehicleToBay(db, orgId, workOrderId, bayNumber),
+  );
 }
 
 export async function swapBayNumbers(
@@ -68,12 +78,21 @@ export async function swapBayNumbers(
   bayNumberB: number,
 ): Promise<void> {
   return withOrg((db, orgId) =>
-    service.swapBayNumbers(db, orgId, workOrderIdA, bayNumberA, workOrderIdB, bayNumberB),
+    service.swapBayNumbers(
+      db,
+      orgId,
+      workOrderIdA,
+      bayNumberA,
+      workOrderIdB,
+      bayNumberB,
+    ),
   );
 }
 
 export async function removeVehicleFromBay(workOrderId: string): Promise<void> {
-  return withOrg((db, orgId) => service.removeVehicleFromBay(db, orgId, workOrderId));
+  return withOrg((db, orgId) =>
+    service.removeVehicleFromBay(db, orgId, workOrderId),
+  );
 }
 
 export async function assignMechanicToWorkOrder(
@@ -85,8 +104,12 @@ export async function assignMechanicToWorkOrder(
   );
 }
 
-export async function unassignMechanicFromWorkOrder(workOrderId: string): Promise<void> {
-  return withOrg((db, orgId) => service.unassignMechanicFromWorkOrder(db, orgId, workOrderId));
+export async function unassignMechanicFromWorkOrder(
+  workOrderId: string,
+): Promise<void> {
+  return withOrg((db, orgId) =>
+    service.unassignMechanicFromWorkOrder(db, orgId, workOrderId),
+  );
 }
 
 export async function assignHelperToWorkOrder(
@@ -102,7 +125,9 @@ export async function removeHelperFromWorkOrder(
   workOrderId: string,
   mechanicId: string,
 ): Promise<void> {
-  return withOrg((db, orgId) => service.removeHelperFromWorkOrder(db, orgId, workOrderId, mechanicId));
+  return withOrg((db, orgId) =>
+    service.removeHelperFromWorkOrder(db, orgId, workOrderId, mechanicId),
+  );
 }
 
 export async function updateWorkOrderStatus(
@@ -110,7 +135,9 @@ export async function updateWorkOrderStatus(
   status: UpdateStatusParams["status"],
   notes?: string,
 ): Promise<void> {
-  return withOrg((db, orgId) => service.updateWorkOrderStatus(db, orgId, workOrderId, status, notes));
+  return withOrg((db, orgId) =>
+    service.updateWorkOrderStatus(db, orgId, workOrderId, status, notes),
+  );
 }
 
 export async function updateBayCount(count: number): Promise<number> {
@@ -128,5 +155,7 @@ export async function updateBayViewPin(
   newPin: string,
   confirmPin: string,
 ): Promise<void> {
-  return withOrg((db, orgId) => service.updateBayViewPin(db, orgId, currentPin, newPin, confirmPin));
+  return withOrg((db, orgId) =>
+    service.updateBayViewPin(db, orgId, currentPin, newPin, confirmPin),
+  );
 }

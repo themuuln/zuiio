@@ -5,14 +5,11 @@
  * background refetching, and mutation support.
  */
 
-import {
-  type UseQueryResult,
-  useQuery,
-} from "@tanstack/react-query";
+import { type UseQueryResult, useQuery } from "@tanstack/react-query";
 import type { EndOfDaySummary } from "@/lib/types";
-import { useOrgMutation } from "./mutation-factory";
 import { createOrgQuery } from "./factory";
 import { dayCloseKeys, reportKeys } from "./keys";
+import { useOrgMutation } from "./mutation-factory";
 
 // ── Types ──────────────────────────────────────────────────
 

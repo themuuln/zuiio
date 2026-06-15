@@ -92,8 +92,10 @@ export interface WorkOrderDetailDrawerProps {
     mutateAsync: (vars: { woId: string; mechanicId: string }) => Promise<void>;
   };
   assignCustomerMutation?: {
-    mutateAsync: (
-      vars: { woId: string; customerId: string | null; customerName?: string | null },
-    ) => Promise<void>;
+    mutateAsync: (vars: {
+      woId: string;
+      customerId: string | null;
+      customerName?: string | null;
+    }) => Promise<void>;
   };
 }

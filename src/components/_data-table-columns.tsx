@@ -2,11 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import {
-  type ColumnDef,
-  flexRender,
-  type Row,
-} from "@tanstack/react-table";
+import { type ColumnDef, flexRender, type Row } from "@tanstack/react-table";
 import {
   CircleCheck,
   EllipsisVertical,
@@ -36,10 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  TableCell,
-  TableRow,
-} from "@/components/ui/table";
+import { TableCell, TableRow } from "@/components/ui/table";
 import { TableCellViewer } from "./_data-table-cell-viewer";
 
 export const schema = z.object({

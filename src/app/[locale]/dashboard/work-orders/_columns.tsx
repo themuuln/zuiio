@@ -21,6 +21,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Typography } from "@/components/ui/typography";
+import { useClientNow } from "@/hooks/use-client-now";
 import type { WorkOrderListItem } from "@/lib/queries/use-work-orders";
 import { cn, formatMNT } from "@/lib/utils";
 
@@ -80,7 +81,7 @@ interface ColumnCallbacks {
   onStatusChange: (woId: string, newStatus: string) => void;
   onCancel: (woId: string) => void;
   updatePending: boolean;
-  now: Date;
+  onViewDetail?: (woId: string) => void;
 }
 
 export function createColumns(
@@ -231,7 +232,8 @@ export function createColumns(
       },
       cell: ({ row }) => {
         const t = useTranslations("workOrders");
-        const days = getDaysSince(row.original.created_at, cb.now);
+        const now = useClientNow();
+        const days = getDaysSince(row.original.created_at, now);
         return (
           <span className="text-sm text-muted-foreground tabular-nums">
             {getAgeDisplay(days, t)}
@@ -418,11 +420,7 @@ export function createColumns(
             />
             <DropdownMenuContent align="end" className="min-w-[140px]">
               <DropdownMenuGroup>
-                <DropdownMenuItem
-                  onClick={() =>
-                    (window.location.href = `/dashboard/work-orders/${wo.id}`)
-                  }
-                >
+                <DropdownMenuItem onClick={() => cb.onViewDetail?.(wo.id)}>
                   {t("viewDetails")}
                 </DropdownMenuItem>
                 {wo.status !== "Cancelled" && (
