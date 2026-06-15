@@ -14,6 +14,7 @@ export type ProductCardProduct = {
   current_stock: number | null;
   unit: string | null;
   sku: string | null;
+  barcode: string | null;
   category_id: string | null;
 };
 

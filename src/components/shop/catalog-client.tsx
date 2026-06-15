@@ -3,6 +3,7 @@
 import { MagnifyingGlass, Package } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { BarcodeInput } from "@/components/shop/barcode-input";
 import type { CategoryChip } from "@/components/shop/category-chips";
 import { CategoryChips } from "@/components/shop/category-chips";
 import type { ProductCardProduct } from "@/components/shop/product-card";
@@ -70,6 +71,9 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
       {/* Search bar */}
       <SearchBar value={searchQuery} onChange={setSearchQuery} />
 
+      {/* Barcode scanner input */}
+      <BarcodeInput products={products} />
+
       {/* Category chips */}
       <CategoryChips
         categories={categories}
@@ -136,8 +140,8 @@ function EmptyCatalogState() {
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button render={<Link href="/products/new" />}>
-          Бүтээгдэхүүн нэмэх
+        <Button asChild>
+          <Link href="/products/new">Бүтээгдэхүүн нэмэх</Link>
         </Button>
       </EmptyContent>
     </Empty>

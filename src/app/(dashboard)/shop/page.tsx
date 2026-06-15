@@ -8,7 +8,9 @@ export default async function ShopCatalogPage() {
   const [{ data: products }, { data: categories }] = await Promise.all([
     supabase
       .from("products")
-      .select("id, name, sku, unit, sale_price, current_stock, category_id")
+      .select(
+        "id, name, sku, barcode, unit, sale_price, current_stock, category_id",
+      )
       .eq("organization_id", organizationId)
       .order("name", { ascending: true }),
     supabase
@@ -22,6 +24,7 @@ export default async function ShopCatalogPage() {
     id: p.id,
     name: p.name,
     sku: p.sku,
+    barcode: p.barcode,
     unit: p.unit,
     sale_price: p.sale_price,
     current_stock: p.current_stock,
