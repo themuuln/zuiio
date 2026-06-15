@@ -1,5 +1,7 @@
 import { Receipt } from "@phosphor-icons/react/dist/ssr";
+import Link from "next/link";
 import { NewSaleButton } from "@/components/shop/new-sale-button";
+import { ReceiptPrintButton } from "@/components/shop/receipt-print-button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Empty,
@@ -57,9 +59,14 @@ type SaleData = {
 type ReceiptContentProps = {
   sale: SaleData;
   items: SaleItem[];
+  organizationName: string;
 };
 
-function ReceiptContent({ sale, items }: ReceiptContentProps) {
+function ReceiptContent({
+  sale,
+  items,
+  organizationName,
+}: ReceiptContentProps) {
   const paidAmount = Number(sale.paid_amount ?? 0);
   const totalAmount = Number(sale.total_amount);
   const change = paidAmount > totalAmount ? paidAmount - totalAmount : 0;
@@ -69,12 +76,168 @@ function ReceiptContent({ sale, items }: ReceiptContentProps) {
     "-";
 
   return (
-    <div className="flex flex-col gap-4 pb-20">
-      {/* Header */}
+    <div className="flex flex-col gap-4 pb-20 print-content">
+      {/* Print styles */}
+      <style>{`
+        @media print {
+          @page {
+            size: 80mm auto;
+            margin: 0;
+          }
+
+          * {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+
+          body {
+            background: white !important;
+            color: black !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+
+          /* Hide shop layout header */
+          header.sticky {
+            display: none !important;
+          }
+
+          /* Hide bottom navigation bar */
+          nav.fixed {
+            display: none !important;
+          }
+
+          /* Hide elements with no-print class */
+          .no-print {
+            display: none !important;
+          }
+
+          /* Reset main content for print */
+          main {
+            max-width: 80mm !important;
+            padding: 4mm !important;
+            margin: 0 auto !important;
+          }
+
+          /* Receipt print container */
+          .print-content {
+            max-width: 80mm !important;
+            margin: 0 auto !important;
+            padding: 2mm 0 !important;
+            background: white !important;
+            color: black !important;
+            font-size: 10px !important;
+            line-height: 1.4 !important;
+          }
+
+          .print-content h1 {
+            font-size: 14px !important;
+            font-weight: 700 !important;
+            margin-bottom: 2mm !important;
+          }
+
+          .print-content .text-xs,
+          .print-content .text-muted-foreground {
+            font-size: 8px !important;
+            color: #333 !important;
+          }
+
+          .print-content .text-sm {
+            font-size: 9px !important;
+          }
+
+          .print-content .text-lg {
+            font-size: 12px !important;
+          }
+
+          .print-content .tabular-nums {
+            font-variant-numeric: tabular-nums !important;
+          }
+
+          /* Remove card borders/shadows in print */
+          .print-content .rounded-xl,
+          .print-content .border-border {
+            border: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+          }
+
+          /* Item rows need compact spacing */
+          .print-content .gap-4 {
+            gap: 2mm !important;
+          }
+
+          .print-content .gap-2 {
+            gap: 1mm !important;
+          }
+
+          .print-content .gap-1 {
+            gap: 0.5mm !important;
+          }
+
+          .print-content .pb-20 {
+            padding-bottom: 0 !important;
+          }
+
+          .print-content .border-b {
+            border-bottom: 1px solid #ccc !important;
+          }
+
+          .print-content .border-t {
+            border-top: 1px solid #ccc !important;
+          }
+
+          .print-content .px-3 {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+          }
+
+          .print-content .py-3,
+          .print-content .px-4,
+          .print-content .py-4 {
+            padding: 0 !important;
+          }
+
+          /* Item list columns */
+          .print-content .flex.items-center.gap-2.text-sm {
+            font-size: 8px !important;
+            gap: 1mm !important;
+          }
+
+          /* Divider lines */
+          .print-content .border-border {
+            border-color: #ccc !important;
+          }
+
+          /* Totals section */
+          .print-content .gap-1\\.5 {
+            gap: 0.5mm !important;
+          }
+
+          /* Green text for change/status */
+          .print-content [class*="text-green"] {
+            color: #333 !important;
+          }
+        }
+      `}</style>
+
+      {/* Header area with print button */}
+      <div className="no-print mb-2 flex items-center justify-between gap-2">
+        <Link
+          href="/shop/history"
+          className="text-xs text-muted-foreground hover:text-foreground"
+        >
+          ← Түүх рүү буцах
+        </Link>
+        <ReceiptPrintButton />
+      </div>
+
+      {/* Receipt header */}
       <div className="flex flex-col items-center gap-1 border-b border-border pb-4">
-        <h1 className="text-lg font-semibold">Баримт</h1>
+        <h1 className="text-lg font-semibold">{organizationName}</h1>
         <p className="text-xs text-muted-foreground">
-          #{(sale.id ?? "").slice(0, 8).toUpperCase()}
+          Баримт #{(sale.id ?? "").slice(0, 8).toUpperCase()}
         </p>
         <p className="text-xs text-muted-foreground">
           {formatDate(sale.created_at ?? sale.sale_date)}
@@ -166,9 +329,15 @@ function ReceiptContent({ sale, items }: ReceiptContentProps) {
         </div>
       </div>
 
-      {/* New Sale button */}
-      <div className="mt-2">
+      {/* Action buttons — hidden during print */}
+      <div className="no-print mt-2 flex flex-col gap-2">
         <NewSaleButton />
+        <Link
+          href="/shop/history"
+          className="flex h-[52px] w-full items-center justify-center rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground"
+        >
+          Түүх рүү буцах
+        </Link>
       </div>
     </div>
   );
@@ -181,6 +350,13 @@ export default async function ReceiptPage({
 }) {
   const { id } = await params;
   const { supabase, organizationId } = await requireAppContext();
+
+  // Fetch organization info for store name
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("name")
+    .eq("id", organizationId)
+    .single();
 
   // Fetch sale with contact info
   const { data: sale } = await supabase
@@ -196,6 +372,9 @@ export default async function ReceiptPage({
   if (!sale) {
     return (
       <div className="flex flex-col gap-4 pb-20">
+        <div className="no-print mb-2 flex items-center justify-between gap-2">
+          <p className="text-xs text-muted-foreground">Түүх рүү буцах</p>
+        </div>
         <h1 className="text-lg font-semibold">Баримт</h1>
         <Empty className="min-h-[300px] rounded-xl border border-dashed border-border bg-card/50">
           <EmptyHeader>
@@ -225,6 +404,7 @@ export default async function ReceiptPage({
     <ReceiptContent
       sale={sale as unknown as SaleData}
       items={(items ?? []) as SaleItem[]}
+      organizationName={org?.name ?? "Дэлгүүр"}
     />
   );
 }
