@@ -12,6 +12,7 @@ import {
   Warning,
 } from "@phosphor-icons/react";
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import {
   Bar,
   BarChart,
@@ -21,6 +22,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { toast } from "sonner";
 
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { KpiGrid } from "@/components/erp/kpi-grid";
@@ -29,6 +31,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, formatDate } from "@/lib/format";
+
+// Module-level flag to prevent duplicate toasts on same-session navigation.
+// Resets on full page reload (module re-evaluation).
+let lowStockToastShownInSession = false;
 
 export interface DashboardData {
   todaySalesTotal: number;
@@ -81,6 +87,24 @@ function statusLabel(status: string | null): string {
 }
 
 export function DashboardClient({ data }: { data: DashboardData }) {
+  // Show low-stock toast notification on mount
+  const hasShownToast = useRef(false);
+  useEffect(() => {
+    if (
+      data.lowStockCount > 0 &&
+      !hasShownToast.current &&
+      !lowStockToastShownInSession
+    ) {
+      hasShownToast.current = true;
+      lowStockToastShownInSession = true;
+      toast.warning(`${data.lowStockCount} бүтээгдэхүүний нөөц бага байна`, {
+        description:
+          "Бүтээгдэхүүний нөөц хэт бага түвшинд хүрсэн тул нөхөх шаардлагатай.",
+        duration: 5000,
+      });
+    }
+  }, [data.lowStockCount]);
+
   const hasAnyData =
     data.todaySalesTotal > 0 ||
     data.todayExpensesTotal > 0 ||
