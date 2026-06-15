@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { createClient as createSupabaseJsClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/server-service";
 
@@ -45,14 +46,16 @@ export async function register(
     return { error: "Хэрэглэгч үүсгэхэд алдаа гарлаа." };
   }
 
-  // Use service client for admin operations (bypasses RLS)
+  // Use service client for profile upsert (bypasses RLS)
   const serviceClient = createServiceClient();
 
-  // Create profile
-  const { error: profileError } = await serviceClient.from("profiles").insert({
-    id: user.id,
-    full_name: fullName.trim(),
-  });
+  // Create or update profile (database trigger may auto-create on signup)
+  const { error: profileError } = await serviceClient
+    .from("profiles")
+    .upsert(
+      { id: user.id, full_name: fullName.trim() },
+      { onConflict: "id" },
+    );
 
   if (profileError) {
     return { error: `Профайл үүсгэхэд алдаа гарлаа: ${profileError.message}` };
@@ -60,14 +63,42 @@ export async function register(
 
   // Create a default organization via RPC
   const defaultOrgName = `${fullName.trim()} - Байгууллага`;
-  const slugBase = email.trim().split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "-");
+  const slugBase = email
+    .trim()
+    .split("@")[0]
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "-");
   const defaultSlug = `${slugBase}-org`;
 
-  const { error: rpcError } = await serviceClient.rpc("create_organization", {
-    org_name: defaultOrgName,
-    org_slug: defaultSlug,
-    org_type: "retail",
-  });
+  // Use the user's access token for RPC (requires auth context for auth.uid())
+  const accessToken = authData.session?.access_token;
+  let rpcError;
+  if (accessToken) {
+    const userClient = createSupabaseJsClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        },
+        auth: { autoRefreshToken: false, persistSession: false },
+      },
+    );
+    const result = await userClient.rpc("create_organization", {
+      org_name: defaultOrgName,
+      org_slug: defaultSlug,
+      org_type: "retail",
+    });
+    rpcError = result.error;
+  } else {
+    // Fallback: try with service client (may fail if RPC checks auth.uid())
+    const result = await serviceClient.rpc("create_organization", {
+      org_name: defaultOrgName,
+      org_slug: defaultSlug,
+      org_type: "retail",
+    });
+    rpcError = result.error;
+  }
 
   if (rpcError) {
     return {
