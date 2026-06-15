@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
-
+import { PageShell } from "@/components/erp/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PageShell } from "@/components/erp/page-shell";
 import { requireAppContext } from "@/lib/erp";
 import { formatCurrency, formatDate } from "@/lib/format";
 
@@ -11,15 +10,6 @@ const paymentMethodLabels: Record<string, string> = {
   card: "Карт",
   bank_transfer: "Данс",
   invoice: "Нэхэмжлэл",
-};
-
-type SaleItem = {
-  id: string;
-  quantity: number;
-  unit_price: number;
-  total_price: number;
-  product_id: string | null;
-  products: { name: string; unit: string | null } | null;
 };
 
 function StatusBadge({ status }: { status: string | null }) {
@@ -77,8 +67,7 @@ export default async function SaleDetailPage({
     .eq("sale_id", id)
     .order("id", { ascending: true });
 
-  const contactName =
-    (sale.contacts as { name: string } | null)?.name ?? null;
+  const contactName = (sale.contacts as { name: string } | null)?.name ?? null;
 
   return (
     <PageShell

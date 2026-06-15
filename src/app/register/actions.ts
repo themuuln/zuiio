@@ -1,7 +1,7 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { createClient as createSupabaseJsClient } from "@supabase/supabase-js";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/server-service";
 
@@ -52,10 +52,7 @@ export async function register(
   // Create or update profile (database trigger may auto-create on signup)
   const { error: profileError } = await serviceClient
     .from("profiles")
-    .upsert(
-      { id: user.id, full_name: fullName.trim() },
-      { onConflict: "id" },
-    );
+    .upsert({ id: user.id, full_name: fullName.trim() }, { onConflict: "id" });
 
   if (profileError) {
     return { error: `Профайл үүсгэхэд алдаа гарлаа: ${profileError.message}` };
@@ -72,18 +69,16 @@ export async function register(
 
   // Use the user's access token for RPC (requires auth context for auth.uid())
   const accessToken = authData.session?.access_token;
-  let rpcError;
+  let rpcError: { message: string } | null = null;
   if (accessToken) {
-    const userClient = createSupabaseJsClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        },
-        auth: { autoRefreshToken: false, persistSession: false },
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+    const userClient = createSupabaseJsClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: { Authorization: `Bearer ${accessToken}` },
       },
-    );
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
     const result = await userClient.rpc("create_organization", {
       org_name: defaultOrgName,
       org_slug: defaultSlug,
