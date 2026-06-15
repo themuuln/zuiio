@@ -26,6 +26,10 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  if (!profile.organization_id) {
+    redirect("/organization/new");
+  }
+
   return (
     <DashboardShell
       organizationId={profile.organization_id}
