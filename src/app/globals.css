@@ -363,11 +363,18 @@
    <body>. Base UI Dialog portals inherit this, becoming unclickable.
    Restore pointer-events on the portal wrapper so dialog content
    can receive clicks. The InternalBackdrop must stay non-interactive
-   so clicks pass through to the actual dialog popup. */
+   so clicks pass through to the actual dialog popup.
+
+   NOTE: Only the InternalBackdrop (first child) should have
+   pointer-events: none. The user's DialogOverlay (backdrop) also
+   receives data-base-ui-inert from FloatingFocusManager's markOthers(),
+   but it MUST remain interactive so it can intercept clicks and
+   trigger outside-press dismissal. Never use a plain descendant
+   selector here as it would disable backdrop clicks. */
 [data-base-ui-portal] {
   pointer-events: auto;
 }
 
-[data-base-ui-portal] [data-base-ui-inert] {
+[data-base-ui-portal] > [data-base-ui-inert]:first-child {
   pointer-events: none;
 }
