@@ -5,6 +5,7 @@ import {
   CustomersTable,
 } from "@/components/customers/customers-table";
 import { ErpEmptyState } from "@/components/erp/empty-state";
+import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAppContext } from "@/lib/erp";
@@ -32,7 +33,15 @@ export default async function CustomersPage() {
     <PageShell
       title="Харилцагчид"
       description="Авлага, холбоо барих мэдээлэл, худалдан авагчийн баазаа удирдана."
-      actions={<CustomerCreateDrawer />}
+      actions={
+        <>
+          <ExportButton
+            href="/api/export/customers"
+            filename={`customers-${new Date().toISOString().slice(0, 10)}.csv`}
+          />
+          <CustomerCreateDrawer />
+        </>
+      }
     >
       {!customers?.length ? (
         <ErpEmptyState

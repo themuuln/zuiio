@@ -2,6 +2,7 @@ import { Receipt } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 
 import { ErpEmptyState } from "@/components/erp/empty-state";
+import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,8 +24,7 @@ export default async function SalesPage() {
     sales?.map((sale) => ({
       id: sale.id,
       sale_date: sale.sale_date,
-      contact_name:
-        (sale.contacts as { name: string } | null)?.name ?? null,
+      contact_name: (sale.contacts as { name: string } | null)?.name ?? null,
       total_amount: sale.total_amount,
       paid_amount: sale.paid_amount,
       status: sale.status,
@@ -36,9 +36,15 @@ export default async function SalesPage() {
       title="Борлуулалт"
       description="Борлуулалтын жагсаалт, статус, төлбөрийн мэдээлэл."
       actions={
-        <Button asChild size="sm">
-          <Link href="/sales/new">Шинэ борлуулалт</Link>
-        </Button>
+        <>
+          <ExportButton
+            href="/api/export/sales"
+            filename={`sales-${new Date().toISOString().slice(0, 10)}.csv`}
+          />
+          <Button asChild size="sm">
+            <Link href="/sales/new">Шинэ борлуулалт</Link>
+          </Button>
+        </>
       }
     >
       {!sales?.length ? (

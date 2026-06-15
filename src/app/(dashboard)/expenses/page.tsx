@@ -2,6 +2,7 @@ import { Coins } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 
 import { ErpEmptyState } from "@/components/erp/empty-state";
+import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,9 +33,15 @@ export default async function ExpensesPage() {
       title="Зарлага"
       description="Байгууллагын зарлагын жагсаалт, ангилал, төлбөрийн мэдээлэл."
       actions={
-        <Button asChild size="sm">
-          <Link href="/expenses/new">Шинэ зарлага</Link>
-        </Button>
+        <>
+          <ExportButton
+            href="/api/export/expenses"
+            filename={`expenses-${new Date().toISOString().slice(0, 10)}.csv`}
+          />
+          <Button asChild size="sm">
+            <Link href="/expenses/new">Шинэ зарлага</Link>
+          </Button>
+        </>
       }
     >
       {!expenses?.length ? (

@@ -2,6 +2,7 @@ import { Folder, Plus, Warehouse } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 
 import { ErpEmptyState } from "@/components/erp/empty-state";
+import { ExportButton } from "@/components/erp/export-button";
 import { KpiGrid } from "@/components/erp/kpi-grid";
 import { PageShell } from "@/components/erp/page-shell";
 import { StatCard } from "@/components/erp/stat-card";
@@ -131,6 +132,12 @@ export default async function InventoryOverviewPage() {
     <PageShell
       title="Агуулах"
       description="Агуулахын үлдэгдэл, нөөц, барааны хөдөлгөөний мэдээлэл"
+      actions={
+        <ExportButton
+          href="/api/export/inventory"
+          filename={`inventory-${new Date().toISOString().slice(0, 10)}.csv`}
+        />
+      }
     >
       {!hasAnyProducts && !hasStockValue ? (
         <>

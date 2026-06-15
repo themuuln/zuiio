@@ -1,5 +1,6 @@
 import { Buildings } from "@phosphor-icons/react/dist/ssr";
 import { ErpEmptyState } from "@/components/erp/empty-state";
+import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
 import { SupplierCreateDrawer } from "@/components/suppliers/supplier-create-drawer";
 import {
@@ -32,7 +33,15 @@ export default async function SuppliersPage() {
     <PageShell
       title="Нийлүүлэгчид"
       description="Импорт, ханган нийлүүлэлтийн эх үүсвэр, өглөгийн үлдэгдлээ хянах төв."
-      actions={<SupplierCreateDrawer />}
+      actions={
+        <>
+          <ExportButton
+            href="/api/export/suppliers"
+            filename={`suppliers-${new Date().toISOString().slice(0, 10)}.csv`}
+          />
+          <SupplierCreateDrawer />
+        </>
+      }
     >
       {!suppliers?.length ? (
         <ErpEmptyState

@@ -1,5 +1,6 @@
 import { Package } from "@phosphor-icons/react/dist/ssr";
 import { ErpEmptyState } from "@/components/erp/empty-state";
+import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
 import { ProductCreateDrawer } from "@/components/products/product-create-drawer";
 import {
@@ -40,7 +41,15 @@ export default async function ProductsPage() {
     <PageShell
       title="Бүтээгдэхүүн"
       description="Бүтээгдэхүүний каталог, үлдэгдэл, үнийн мэдээллийг нэг дороос удирдана."
-      actions={<ProductCreateDrawer companyType="" />}
+      actions={
+        <>
+          <ExportButton
+            href="/api/export/products"
+            filename={`products-${new Date().toISOString().slice(0, 10)}.csv`}
+          />
+          <ProductCreateDrawer companyType="" />
+        </>
+      }
     >
       {!products?.length ? (
         <ErpEmptyState

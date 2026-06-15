@@ -1,3 +1,4 @@
+import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
 import { ExpenseBreakdown } from "@/components/reports/expense-breakdown";
 import { FinancialSummary } from "@/components/reports/financial-summary";
@@ -32,7 +33,15 @@ export default async function ReportsPage({
     <PageShell
       title="Тайлан"
       description={`${from} - ${to} өдрийн санхүүгийн болон үйл ажиллагааны нэгдсэн тайлан.`}
-      actions={<ShareDialog dateFrom={from} dateTo={to} />}
+      actions={
+        <>
+          <ExportButton
+            href={`/api/export/reports?from=${from}&to=${to}`}
+            filename={`report-${from}-to-${to}.csv`}
+          />
+          <ShareDialog dateFrom={from} dateTo={to} />
+        </>
+      }
     >
       <DateRangeForm />
 
