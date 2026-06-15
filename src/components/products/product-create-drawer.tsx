@@ -1,11 +1,14 @@
 "use client";
 
 import { Drawer } from "@base-ui/react/drawer";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Barcode, Package, Plus, Tag, X } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 import { createProduct } from "@/app/(dashboard)/products/new/actions";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -43,11 +46,45 @@ const initialUnits = [
 
 const initialCategories = ["Хоол, ундаа", "Спорт хоол", "Хувцас", "Creatine"];
 
+const productSchema = z.object({
+  name: z.string().min(1, "Нэр шаардлагатай"),
+  sku: z.string().optional(),
+  barcode: z.string().optional(),
+  unit: z.string().min(1, "Нэгж шаардлагатай"),
+  category_name: z.string().optional(),
+  cost_price: z.number().min(0),
+  sale_price: z.number().min(0),
+  current_stock: z.number().min(0),
+  min_stock: z.number().min(0),
+});
+
+type ProductValues = z.infer<typeof productSchema>;
+
 export function ProductCreateDrawer({ companyType }: { companyType: string }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const queryClient = useQueryClient();
   const presets = PRESET_CATEGORIES[companyType] ?? [];
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm<ProductValues>({
+    resolver: zodResolver(productSchema),
+    defaultValues: {
+      name: "",
+      sku: "",
+      barcode: "",
+      unit: "ширхэг",
+      category_name: "",
+      cost_price: 0,
+      sale_price: 0,
+      current_stock: 0,
+      min_stock: 0,
+    },
+  });
 
   const productMutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -115,6 +152,21 @@ export function ProductCreateDrawer({ companyType }: { companyType: string }) {
     },
   });
 
+  const onSubmit = (data: ProductValues) => {
+    if (productMutation.isPending) return;
+    const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("sku", data.sku ?? "");
+    formData.append("barcode", data.barcode ?? "");
+    formData.append("unit", data.unit);
+    formData.append("category_name", data.category_name ?? "");
+    formData.append("cost_price", String(data.cost_price));
+    formData.append("sale_price", String(data.sale_price));
+    formData.append("current_stock", String(data.current_stock));
+    formData.append("min_stock", String(data.min_stock));
+    productMutation.mutate(formData);
+  };
+
   // --- Unit combobox (creatable) ---
   const [unitQuery, setUnitQuery] = useState("");
   const trimmedUnitQuery = unitQuery.trim();
@@ -143,13 +195,6 @@ export function ProductCreateDrawer({ companyType }: { companyType: string }) {
       ? [...allCategoryNames, categoryQuery.trim()]
       : allCategoryNames;
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (productMutation.isPending) return;
-    const formData = new FormData(e.currentTarget);
-    productMutation.mutate(formData);
-  };
-
   return (
     <Drawer.Root swipeDirection="right" open={open} onOpenChange={setOpen}>
       <Drawer.Trigger className={buttonVariants({ variant: "default" })}>
@@ -176,7 +221,7 @@ export function ProductCreateDrawer({ companyType }: { companyType: string }) {
                 </Drawer.Close>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                 <div className="grid gap-5">
                   <FieldGroup>
                     <Field>
@@ -185,12 +230,17 @@ export function ProductCreateDrawer({ companyType }: { companyType: string }) {
                         <Package className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
                           id="name"
-                          name="name"
                           required
                           className="pl-9"
                           placeholder="Цай 500гр"
+                          {...register("name")}
                         />
                       </div>
+                      {errors.name && (
+                        <p className="text-xs text-destructive">
+                          {errors.name.message}
+                        </p>
+                      )}
                     </Field>
                     <Field>
                       <FieldLabel htmlFor="sku">SKU</FieldLabel>
@@ -198,9 +248,9 @@ export function ProductCreateDrawer({ companyType }: { companyType: string }) {
                         <Tag className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
                           id="sku"
-                          name="sku"
                           className="pl-9"
                           placeholder="TEA-500"
+                          {...register("sku")}
                         />
                       </div>
                     </Field>
@@ -210,94 +260,125 @@ export function ProductCreateDrawer({ companyType }: { companyType: string }) {
                         <Barcode className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
                           id="barcode"
-                          name="barcode"
                           className="pl-9"
                           placeholder="8654..."
+                          {...register("barcode")}
                         />
                       </div>
                     </Field>
                     <Field>
                       <FieldLabel htmlFor="unit">Нэгж</FieldLabel>
-                      <Combobox
+                      <Controller
                         name="unit"
-                        items={unitItems}
-                        defaultValue="ширхэг"
-                        onValueChange={(next: string | null) => {
-                          if (next && !allUnits.includes(next)) {
-                            setAllUnits((prev) => [...prev, next]);
-                          }
-                          setUnitQuery("");
-                        }}
-                        itemToStringLabel={(item: string) =>
-                          allUnits.includes(item) ? item : `"${item}" үүсгэх`
-                        }
-                        inputValue={unitQuery}
-                        onInputValueChange={setUnitQuery}
-                      >
-                        <ComboboxInput
-                          id="unit"
-                          placeholder="ширхэг"
-                          showTrigger
-                          className="w-full"
-                        />
-                        <ComboboxContent>
-                          <ComboboxEmpty>Нэгж байхгүй</ComboboxEmpty>
-                          <ComboboxList>
-                            {(item: string) => (
-                              <ComboboxItem key={item} value={item}>
-                                {allUnits.includes(item) ||
-                                initialUnits.includes(item as any)
+                        control={control}
+                        render={({ field }) => (
+                          <Combobox
+                            name="unit"
+                            items={unitItems}
+                            value={field.value}
+                            onValueChange={(next: string | null) => {
+                              if (next && !allUnits.includes(next)) {
+                                setAllUnits((prev) => [...prev, next]);
+                              }
+                              setUnitQuery("");
+                              field.onChange(next ?? "");
+                            }}
+                            itemToStringLabel={(item: string | null) =>
+                              item
+                                ? allUnits.includes(item)
                                   ? item
-                                  : `"${item}" үүсгэх`}
-                              </ComboboxItem>
-                            )}
-                          </ComboboxList>
-                        </ComboboxContent>
-                      </Combobox>
+                                  : `"${item}" үүсгэх`
+                                : ""
+                            }
+                            inputValue={unitQuery}
+                            onInputValueChange={setUnitQuery}
+                          >
+                            <ComboboxInput
+                              id="unit"
+                              placeholder="ширхэг"
+                              showTrigger
+                              className="w-full"
+                            />
+                            <ComboboxContent>
+                              <ComboboxEmpty>Нэгж байхгүй</ComboboxEmpty>
+                              <ComboboxList>
+                                {(item: string) => (
+                                  <ComboboxItem key={item} value={item}>
+                                    {allUnits.includes(item) ||
+                                    initialUnits.includes(item)
+                                      ? item
+                                      : `"${item}" үүсгэх`}
+                                  </ComboboxItem>
+                                )}
+                              </ComboboxList>
+                            </ComboboxContent>
+                          </Combobox>
+                        )}
+                      />
+                      {errors.unit && (
+                        <p className="text-xs text-destructive">
+                          {errors.unit.message}
+                        </p>
+                      )}
                     </Field>
                     <Field>
                       <FieldLabel htmlFor="category_name">Ангилал</FieldLabel>
-                      <Combobox
+                      <Controller
                         name="category_name"
-                        items={categoryItems}
-                        onValueChange={(next: string | null) => {
-                          if (next && !allCategoryNames.includes(next)) {
-                            setAllCategoryNames((prev) => [...prev, next]);
-                          }
-                          setCategoryQuery("");
-                        }}
-                        itemToStringLabel={(item: string) =>
-                          allCategoryNames.includes(item)
-                            ? item
-                            : `"${item}" үүсгэх`
-                        }
-                        inputValue={categoryQuery}
-                        onInputValueChange={setCategoryQuery}
-                      >
-                        <ComboboxInput
-                          id="category_name"
-                          placeholder="Ангилал сонгох эсвэл бичих"
-                          showTrigger
-                          className="w-full"
-                        />
-                        <ComboboxContent>
-                          <ComboboxEmpty>Ангилал байхгүй</ComboboxEmpty>
-                          <ComboboxList>
-                            {(item: string) => (
-                              <ComboboxItem key={item} value={item}>
-                                {allCategoryNames.includes(item) ||
-                                initialCategories.includes(item as any)
+                        control={control}
+                        render={({ field }) => (
+                          <Combobox
+                            name="category_name"
+                            items={categoryItems}
+                            value={field.value}
+                            onValueChange={(next: string | null) => {
+                              if (next && !allCategoryNames.includes(next)) {
+                                setAllCategoryNames((prev) => [...prev, next]);
+                              }
+                              setCategoryQuery("");
+                              field.onChange(next ?? "");
+                            }}
+                            itemToStringLabel={(item: string | null) =>
+                              item
+                                ? allCategoryNames.includes(item)
                                   ? item
-                                  : `"${item}" үүсгэх`}
-                              </ComboboxItem>
-                            )}
-                          </ComboboxList>
-                        </ComboboxContent>
-                      </Combobox>
+                                  : `"${item}" үүсгэх`
+                                : ""
+                            }
+                            inputValue={categoryQuery}
+                            onInputValueChange={setCategoryQuery}
+                          >
+                            <ComboboxInput
+                              id="category_name"
+                              placeholder="Ангилал сонгох эсвэл бичих"
+                              showTrigger
+                              className="w-full"
+                            />
+                            <ComboboxContent>
+                              <ComboboxEmpty>Ангилал байхгүй</ComboboxEmpty>
+                              <ComboboxList>
+                                {(item: string) => (
+                                  <ComboboxItem key={item} value={item}>
+                                    {allCategoryNames.includes(item) ||
+                                    initialCategories.includes(item)
+                                      ? item
+                                      : `"${item}" үүсгэх`}
+                                  </ComboboxItem>
+                                )}
+                              </ComboboxList>
+                            </ComboboxContent>
+                          </Combobox>
+                        )}
+                      />
                       <FieldDescription>
                         Байгууллагын төрөлд тохирсон ангиллууд санал болгогдоно.
                         Шинэ нэр оруулбал автоматаар үүсгэнэ.
                       </FieldDescription>
+                      {errors.category_name && (
+                        <p className="text-xs text-destructive">
+                          {errors.category_name.message}
+                        </p>
+                      )}
                     </Field>
                   </FieldGroup>
 
@@ -306,22 +387,22 @@ export function ProductCreateDrawer({ companyType }: { companyType: string }) {
                       <FieldLabel htmlFor="cost_price">Өртөг үнэ</FieldLabel>
                       <Input
                         id="cost_price"
-                        name="cost_price"
                         type="number"
                         min="0"
                         step="0.01"
                         defaultValue="0"
+                        {...register("cost_price", { valueAsNumber: true })}
                       />
                     </Field>
                     <Field>
                       <FieldLabel htmlFor="sale_price">Зарах үнэ</FieldLabel>
                       <Input
                         id="sale_price"
-                        name="sale_price"
                         type="number"
                         min="0"
                         step="0.01"
                         defaultValue="0"
+                        {...register("sale_price", { valueAsNumber: true })}
                       />
                     </Field>
                     <Field>
@@ -330,22 +411,22 @@ export function ProductCreateDrawer({ companyType }: { companyType: string }) {
                       </FieldLabel>
                       <Input
                         id="current_stock"
-                        name="current_stock"
                         type="number"
                         min="0"
                         step="0.01"
                         defaultValue="0"
+                        {...register("current_stock", { valueAsNumber: true })}
                       />
                     </Field>
                     <Field>
                       <FieldLabel htmlFor="min_stock">Доод үлдэгдэл</FieldLabel>
                       <Input
                         id="min_stock"
-                        name="min_stock"
                         type="number"
                         min="0"
                         step="0.01"
                         defaultValue="0"
+                        {...register("min_stock", { valueAsNumber: true })}
                       />
                     </Field>
                   </FieldGroup>

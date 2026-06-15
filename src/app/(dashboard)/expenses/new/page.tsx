@@ -1,9 +1,12 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -26,14 +29,14 @@ import { formatRouteDate } from "@/lib/format";
 import { expenseKeys } from "@/lib/query/keys";
 import { createExpense } from "./actions";
 
-const initialPaymentMethods = ["cash", "bank_transfer", "card"] as const;
+const initialPaymentMethods: string[] = ["cash", "bank_transfer", "card"];
 const paymentMethodLabels: Record<string, string> = {
   cash: "Бэлэн",
   bank_transfer: "Данс",
   card: "Карт",
 };
 
-const initialCategories = [
+const initialCategories: string[] = [
   "Түрээс",
   "Тээвэр",
   "Цалин",
@@ -46,11 +49,37 @@ const initialCategories = [
   "Засвар үйлчилгээ",
   "Хоол",
   "Бусад",
-] as const;
+];
+
+const expenseSchema = z.object({
+  category: z.string().min(1, "Ангилал шаардлагатай"),
+  amount: z.number().positive("Дүн 0-ээс их байх ёстой"),
+  expense_date: z.string().min(1, "Огноо шаардлагатай"),
+  payment_method: z.string().min(1, "Төлбөрийн арга шаардлагатай"),
+  description: z.string().optional(),
+});
+
+type ExpenseValues = z.infer<typeof expenseSchema>;
 
 export default function NewExpensePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm<ExpenseValues>({
+    resolver: zodResolver(expenseSchema),
+    defaultValues: {
+      category: "",
+      amount: 0,
+      expense_date: formatRouteDate(),
+      payment_method: "cash",
+      description: "",
+    },
+  });
 
   const expenseMutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -110,10 +139,14 @@ export default function NewExpensePage() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const onSubmit = (data: ExpenseValues) => {
     if (expenseMutation.isPending) return;
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData();
+    formData.append("category", data.category);
+    formData.append("amount", String(data.amount));
+    formData.append("expense_date", data.expense_date);
+    formData.append("payment_method", data.payment_method);
+    formData.append("description", data.description ?? "");
     expenseMutation.mutate(formData);
   };
 
@@ -163,115 +196,155 @@ export default function NewExpensePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="category">Ангилал</FieldLabel>
-                <Combobox
+                <Controller
                   name="category"
-                  items={categoryItems}
-                  required
-                  onValueChange={(next: string | null) => {
-                    if (next && !allCategories.includes(next)) {
-                      setAllCategories((prev) => [...prev, next]);
-                    }
-                    setCategoryQuery("");
-                  }}
-                  itemToStringLabel={(item: string) =>
-                    allCategories.includes(item) ? item : `"${item}" үүсгэх`
-                  }
-                  inputValue={categoryQuery}
-                  onInputValueChange={setCategoryQuery}
-                >
-                  <ComboboxInput
-                    id="category"
-                    placeholder="Түрээс, тээвэр, цалин..."
-                    showTrigger
-                    className="w-full"
-                  />
-                  <ComboboxContent>
-                    <ComboboxEmpty>Ангилал байхгүй</ComboboxEmpty>
-                    <ComboboxList>
-                      {(item: string) => (
-                        <ComboboxItem key={item} value={item}>
-                          {allCategories.includes(item) ||
-                          initialCategories.includes(item as any)
-                            ? item
-                            : `"${item}" үүсгэх`}
-                        </ComboboxItem>
-                      )}
-                    </ComboboxList>
-                  </ComboboxContent>
-                </Combobox>
+                  control={control}
+                  render={({ field }) => (
+                    <Combobox
+                      name="category"
+                      items={categoryItems}
+                      required
+                      value={field.value}
+                      onValueChange={(next: string | null) => {
+                        if (next && !allCategories.includes(next)) {
+                          setAllCategories((prev) => [...prev, next]);
+                        }
+                        setCategoryQuery("");
+                        field.onChange(next ?? "");
+                      }}
+                      itemToStringLabel={(item: string | null) =>
+                        item && allCategories.includes(item)
+                          ? item
+                          : item
+                            ? `"${item}" үүсгэх`
+                            : ""
+                      }
+                      inputValue={categoryQuery}
+                      onInputValueChange={setCategoryQuery}
+                    >
+                      <ComboboxInput
+                        id="category"
+                        placeholder="Түрээс, тээвэр, цалин..."
+                        showTrigger
+                        className="w-full"
+                      />
+                      <ComboboxContent>
+                        <ComboboxEmpty>Ангилал байхгүй</ComboboxEmpty>
+                        <ComboboxList>
+                          {(item: string) => (
+                            <ComboboxItem key={item} value={item}>
+                              {allCategories.includes(item) ||
+                              initialCategories.includes(item)
+                                ? item
+                                : `"${item}" үүсгэх`}
+                            </ComboboxItem>
+                          )}
+                        </ComboboxList>
+                      </ComboboxContent>
+                    </Combobox>
+                  )}
+                />
+                {errors.category && (
+                  <p className="text-xs text-destructive">
+                    {errors.category.message}
+                  </p>
+                )}
               </Field>
               <Field>
                 <FieldLabel htmlFor="amount">Дүн</FieldLabel>
                 <Input
                   id="amount"
-                  name="amount"
                   type="number"
                   min="0"
                   step="0.01"
                   required
+                  {...register("amount", { valueAsNumber: true })}
                 />
+                {errors.amount && (
+                  <p className="text-xs text-destructive">
+                    {errors.amount.message}
+                  </p>
+                )}
               </Field>
               <Field>
                 <FieldLabel htmlFor="expense_date">Огноо</FieldLabel>
                 <Input
                   id="expense_date"
-                  name="expense_date"
                   type="date"
-                  defaultValue={formatRouteDate()}
+                  {...register("expense_date")}
                 />
+                {errors.expense_date && (
+                  <p className="text-xs text-destructive">
+                    {errors.expense_date.message}
+                  </p>
+                )}
               </Field>
               <Field>
                 <FieldLabel htmlFor="payment_method">Төлбөрийн арга</FieldLabel>
-                <Combobox
+                <Controller
                   name="payment_method"
-                  items={paymentItems}
-                  defaultValue="cash"
-                  onValueChange={(next: string | null) => {
-                    if (next && !allPaymentMethods.includes(next)) {
-                      setAllPaymentMethods((prev) => [...prev, next]);
-                    }
-                    setPaymentQuery("");
-                  }}
-                  itemToStringLabel={(item: string) =>
-                    paymentMethodLabels[item] ??
-                    (allPaymentMethods.includes(item)
-                      ? item
-                      : `"${item}" үүсгэх`)
-                  }
-                  inputValue={paymentQuery}
-                  onInputValueChange={setPaymentQuery}
-                >
-                  <ComboboxInput
-                    id="payment_method"
-                    placeholder="Сонгох"
-                    showTrigger
-                    className="w-full"
-                  />
-                  <ComboboxContent>
-                    <ComboboxEmpty>Арга байхгүй</ComboboxEmpty>
-                    <ComboboxList>
-                      {(item: string) => (
-                        <ComboboxItem key={item} value={item}>
-                          {allPaymentMethods.includes(item) ||
-                          initialPaymentMethods.includes(item as any)
-                            ? (paymentMethodLabels[item] ?? item)
-                            : `"${item}" үүсгэх`}
-                        </ComboboxItem>
-                      )}
-                    </ComboboxList>
-                  </ComboboxContent>
-                </Combobox>
+                  control={control}
+                  render={({ field }) => (
+                    <Combobox
+                      name="payment_method"
+                      items={paymentItems}
+                      value={field.value}
+                      onValueChange={(next: string | null) => {
+                        if (next && !allPaymentMethods.includes(next)) {
+                          setAllPaymentMethods((prev) => [...prev, next]);
+                        }
+                        setPaymentQuery("");
+                        field.onChange(next ?? "");
+                      }}
+                      itemToStringLabel={(item: string | null) =>
+                        item
+                          ? (paymentMethodLabels[item] ??
+                            (allPaymentMethods.includes(item)
+                              ? item
+                              : `"${item}" үүсгэх`))
+                          : ""
+                      }
+                      inputValue={paymentQuery}
+                      onInputValueChange={setPaymentQuery}
+                    >
+                      <ComboboxInput
+                        id="payment_method"
+                        placeholder="Сонгох"
+                        showTrigger
+                        className="w-full"
+                      />
+                      <ComboboxContent>
+                        <ComboboxEmpty>Арга байхгүй</ComboboxEmpty>
+                        <ComboboxList>
+                          {(item: string) => (
+                            <ComboboxItem key={item} value={item}>
+                              {allPaymentMethods.includes(item) ||
+                              initialPaymentMethods.includes(item)
+                                ? (paymentMethodLabels[item] ?? item)
+                                : `"${item}" үүсгэх`}
+                            </ComboboxItem>
+                          )}
+                        </ComboboxList>
+                      </ComboboxContent>
+                    </Combobox>
+                  )}
+                />
+                {errors.payment_method && (
+                  <p className="text-xs text-destructive">
+                    {errors.payment_method.message}
+                  </p>
+                )}
               </Field>
               <Field>
                 <FieldLabel htmlFor="description">Тайлбар</FieldLabel>
                 <Input
                   id="description"
-                  name="description"
                   placeholder="Сарын түрээс, хүргэлтийн зардал..."
+                  {...register("description")}
                 />
               </Field>
             </FieldGroup>
