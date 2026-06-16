@@ -222,7 +222,9 @@ export function useRemoveVehicleFromBay(branchId: string | undefined) {
 
 // ─── Assign Mechanic ────────────────────────────────────────────
 
-export function useAssignMechanicToWorkOrder(_branchId: string | undefined) {
+export function useAssignMechanicToWorkOrder(branchId: string | undefined) {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({
       woId,
@@ -243,12 +245,17 @@ export function useAssignMechanicToWorkOrder(_branchId: string | undefined) {
       toast.dismiss();
       toast.success("Mechanic assigned");
     },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: bayViewKeys.data(branchId) });
+    },
   });
 }
 
 // ─── Remove Mechanic ───────────────────────────────────────────
 
-export function useRemoveMechanicFromWorkOrder(_branchId: string | undefined) {
+export function useRemoveMechanicFromWorkOrder(branchId: string | undefined) {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({ woId }: { woId: string }) => {
       const { unassignMechanicFromWorkOrder } = await import(
@@ -263,12 +270,17 @@ export function useRemoveMechanicFromWorkOrder(_branchId: string | undefined) {
       toast.dismiss();
       toast.success("Mechanic removed");
     },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: bayViewKeys.data(branchId) });
+    },
   });
 }
 
 // ─── Add Helper ────────────────────────────────────────────────
 
-export function useAddHelperToWorkOrder(_branchId: string | undefined) {
+export function useAddHelperToWorkOrder(branchId: string | undefined) {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({
       woId,
@@ -289,12 +301,17 @@ export function useAddHelperToWorkOrder(_branchId: string | undefined) {
       toast.dismiss();
       toast.success("Helper added");
     },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: bayViewKeys.data(branchId) });
+    },
   });
 }
 
 // ─── Remove Helper ─────────────────────────────────────────────
 
-export function useRemoveHelperFromWorkOrder(_branchId: string | undefined) {
+export function useRemoveHelperFromWorkOrder(branchId: string | undefined) {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({
       woId,
@@ -314,6 +331,9 @@ export function useRemoveHelperFromWorkOrder(_branchId: string | undefined) {
     onSuccess: () => {
       toast.dismiss();
       toast.success("Helper removed");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: bayViewKeys.data(branchId) });
     },
   });
 }
