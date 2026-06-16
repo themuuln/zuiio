@@ -16,6 +16,8 @@ export const COMPANY_TYPES = [
   { value: "service", label: "Үйлчилгээ" },
   { value: "manufacturing", label: "Үйлдвэрлэл" },
   { value: "restaurant", label: "Ресторан" },
+  { value: "gym", label: "Фитнес / Спорт клуб" },
+  { value: "fitness", label: "Фитнес бараа" },
   { value: "other", label: "Бусад" },
 ] as const;
 
@@ -32,5 +34,7 @@ export const PRESET_CATEGORIES: Record<string, readonly string[]> = {
   service: ["Засвар үйлчилгээ", "Зөвлөгөө", "Сургалт", "Бусад"],
   manufacturing: ["Түүхий эд", "Сав баглаа", "Бэлэн бүтээгдэхүүн", "Бусад"],
   restaurant: ["Хоол", "Ундаа", "Амттан", "Бусад"],
+  gym: ["Protein", "Creatine", "Amino Acids / BCAA", "Vitamins & Minerals", "Omega & Oils", "Wellness & Health", "Хувцас", "Ундаа", "Бусад"],
+  fitness: ["Protein", "Creatine", "Amino Acids / BCAA", "Vitamins & Minerals", "Omega & Oils", "Wellness & Health", "Хувцас", "Ундаа", "Бусад"],
   other: ["Бусад"],
 };

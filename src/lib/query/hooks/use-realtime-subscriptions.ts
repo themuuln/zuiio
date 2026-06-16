@@ -3,6 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import {
+  brandKeys,
   contactKeys,
   expenseKeys,
   inventoryKeys,
@@ -18,8 +19,8 @@ type RealtimeChannelGroup = {
 };
 
 /**
- * Sets up 4 Supabase Realtime channels (products, sales, contacts, expenses)
- * that invalidate the corresponding React Query caches on any
+ * Sets up Supabase Realtime channels for key entities (products, sales, contacts,
+ * expenses, brands) that invalidate the corresponding React Query caches on any
  * INSERT/UPDATE/DELETE.
  *
  * Sales changes also invalidate the inventory/stock cache.
@@ -52,6 +53,11 @@ export function useRealtimeSubscriptions(orgId: string | null | undefined) {
         name: `expenses:${orgId}`,
         table: "expenses",
         keyAll: expenseKeys.all,
+      },
+      {
+        name: `brands:${orgId}`,
+        table: "brands",
+        keyAll: brandKeys.all,
       },
     ];
 

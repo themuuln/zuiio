@@ -1,7 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { ShareNetwork } from "@phosphor-icons/react";
-import { useActionState, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,7 +16,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createShareLink } from "./actions";
+import { createShareLink, type ShareLinkState } from "./actions";
+
+const shareSchema = z.object({
+  date_from: z.string(),
+  date_to: z.string(),
+});
+
+type ShareValues = z.infer<typeof shareSchema>;
 
 export function ShareDialog({
   dateFrom,
@@ -24,16 +34,49 @@ export function ShareDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [shareResult, setShareResult] = useState<ShareLinkState | null>(null);
+  const [pending, setPending] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [state, formAction, isPending] = useActionState(
-    createShareLink,
-    undefined,
-  );
+
+  const { register, handleSubmit, setValue } = useForm<ShareValues>({
+    resolver: zodResolver(shareSchema),
+    defaultValues: {
+      date_from: dateFrom,
+      date_to: dateTo,
+    },
+  });
+
+  // Sync form values when props change (e.g. user navigated to a new date range)
+  useEffect(() => {
+    setValue("date_from", dateFrom);
+    setValue("date_to", dateTo);
+  }, [dateFrom, dateTo, setValue]);
+
+  // Reset share result when dialog opens so user can generate a fresh link
+  useEffect(() => {
+    if (open) {
+      setShareResult(null);
+      setCopied(false);
+      setPending(false);
+    }
+  }, [open]);
 
   const shareUrl =
-    state?.token && !state?.error
-      ? `${window.location.origin}/r/${state.token}`
+    shareResult?.token && !shareResult?.error
+      ? `${window.location.origin}/r/${shareResult.token}`
       : null;
+
+  const onSubmit = async (data: ShareValues) => {
+    setPending(true);
+
+    const formData = new FormData();
+    formData.append("date_from", data.date_from);
+    formData.append("date_to", data.date_to);
+
+    const result = await createShareLink(undefined, formData);
+    setPending(false);
+    setShareResult(result);
+  };
 
   function handleCopy() {
     if (inputRef.current) {
@@ -47,9 +90,11 @@ export function ShareDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>
-        <ShareNetwork data-icon="inline-start" />
-        Хуваалцах
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          <ShareNetwork data-icon="inline-start" />
+          Хуваалцах
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -76,7 +121,6 @@ export function ShareDialog({
                 <Button
                   variant="outline"
                   onClick={handleCopy}
-                  size="sm"
                   className="shrink-0"
                 >
                   {copied ? "Хуулав!" : "Хуулах"}
@@ -88,14 +132,17 @@ export function ShareDialog({
             </p>
           </div>
         ) : (
-          <form action={formAction} className="flex flex-col gap-4">
-            <input type="hidden" name="date_from" value={dateFrom} />
-            <input type="hidden" name="date_to" value={dateTo} />
-            {state?.error ? (
-              <p className="text-sm text-destructive">{state.error}</p>
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="flex flex-col gap-4"
+          >
+            <input type="hidden" {...register("date_from")} />
+            <input type="hidden" {...register("date_to")} />
+            {shareResult?.error ? (
+              <p className="text-sm text-destructive">{shareResult.error}</p>
             ) : null}
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Үүсгэж байна..." : "Холбоос үүсгэх"}
+            <Button type="submit" disabled={pending}>
+              {pending ? "Үүсгэж байна..." : "Холбоос үүсгэх"}
             </Button>
           </form>
         )}

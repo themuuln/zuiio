@@ -1,9 +1,12 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Combobox,
@@ -13,6 +16,7 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Field,
   FieldDescription,
@@ -58,19 +62,59 @@ const statusLabels: Record<string, string> = {
   cancelled: "Цуцлагдсан",
 };
 
+const saleSchema = z.object({
+  product_id: z.string().min(1, "Бүтээгдэхүүн сонгоно уу"),
+  quantity: z.number().positive("Тоо хэмжээ 0-ээс их байх ёстой"),
+  unit_price: z.number().min(0, "Нэгж үнэ 0-ээс багагүй"),
+  paid_amount: z.number().min(0, "Төлсөн дүн 0-ээс багагүй"),
+  payment_method: z.string().min(1, "Төлбөрийн арга сонгоно уу"),
+  status: z.string().min(1, "Төлөв сонгоно уу"),
+  sale_date: z.string().min(1, "Огноо оруулна уу"),
+  customer_name: z.string().optional(),
+  customer_phone: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+type SaleValues = z.infer<typeof saleSchema>;
+
 export function SaleForm({
   products,
   customers,
+  onSuccess,
 }: {
   products: ProductOption[];
   customers: CustomerOption[];
+  onSuccess?: () => void;
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [selectedProduct, setSelectedProduct] = useState<ProductOption | null>(
-    products[0] ?? null,
-  );
-  const [quantity, setQuantity] = useState("1");
+
+  const defaultProduct = products[0] ?? null;
+  const initialQuantity = 1;
+  const initialTotal = initialQuantity * (defaultProduct?.sale_price ?? 0);
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<SaleValues>({
+    resolver: zodResolver(saleSchema),
+    defaultValues: {
+      product_id: defaultProduct?.id ?? "",
+      quantity: initialQuantity,
+      unit_price: defaultProduct?.sale_price ?? 0,
+      paid_amount: initialTotal || 0,
+      payment_method: "cash",
+      status: "completed",
+      sale_date: formatRouteDate(),
+      customer_name: "",
+      customer_phone: "",
+      notes: "",
+    },
+  });
 
   const saleMutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -153,7 +197,11 @@ export function SaleForm({
       return { salesSnapshot, productsSnapshot };
     },
     onSuccess: () => {
-      router.push("/sales");
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.push("/sales");
+      }
     },
     onError: (err, _vars, context) => {
       if (context?.salesSnapshot) {
@@ -174,19 +222,30 @@ export function SaleForm({
     },
   });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const onSubmit = (data: SaleValues) => {
     if (saleMutation.isPending) return;
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData();
+    formData.append("product_id", data.product_id);
+    formData.append("quantity", String(data.quantity));
+    formData.append("unit_price", String(data.unit_price));
+    formData.append("paid_amount", String(data.paid_amount));
+    formData.append("payment_method", data.payment_method);
+    formData.append("status", data.status);
+    formData.append("sale_date", data.sale_date);
+    if (data.customer_name) {
+      formData.append("customer_name", data.customer_name);
+    }
+    if (data.customer_phone) {
+      formData.append("customer_phone", data.customer_phone);
+    }
+    if (data.notes) {
+      formData.append("notes", data.notes);
+    }
     saleMutation.mutate(formData);
   };
 
-  const total =
-    Number(quantity || 0) * Number(selectedProduct?.sale_price ?? 0);
-
   // --- Product combobox (creatable) ---
   const [productQuery, setProductQuery] = useState("");
-  const highlightedProductRef = useRef<ProductOption | null | undefined>(null);
   const trimmedProductQuery = productQuery.trim();
   const loweredProductQuery = trimmedProductQuery.toLowerCase();
   const productExactMatch =
@@ -208,9 +267,20 @@ export function SaleForm({
         ]
       : allProducts;
 
+  const watchedProductId = watch("product_id");
+  const selectedProduct =
+    allProducts.find((p) => p.id === watchedProductId) ?? null;
+  const watchedQuantity = watch("quantity");
+  const total =
+    Number(watchedQuantity || 0) * Number(selectedProduct?.sale_price ?? 0);
+
+  // Reset paid_amount when product or quantity changes
+  useEffect(() => {
+    setValue("paid_amount", total || 0);
+  }, [total, setValue]);
+
   // --- Payment method combobox (creatable) ---
   const [paymentQuery, setPaymentQuery] = useState("");
-  const highlightedPaymentRef = useRef<string | null | undefined>(null);
   const trimmedPaymentQuery = paymentQuery.trim().toLowerCase();
   const [allPaymentMethods, setAllPaymentMethods] = useState<string[]>([
     ...initialPaymentMethods,
@@ -225,7 +295,6 @@ export function SaleForm({
 
   // --- Status combobox (creatable) ---
   const [statusQuery, setStatusQuery] = useState("");
-  const highlightedStatusRef = useRef<string | null | undefined>(null);
   const trimmedStatusQuery = statusQuery.trim().toLowerCase();
   const [allStatuses, setAllStatuses] = useState<string[]>([
     ...initialStatuses,
@@ -239,63 +308,66 @@ export function SaleForm({
       : allStatuses;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       <div className="grid gap-5 md:grid-cols-2">
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="product_id">Бүтээгдэхүүн</FieldLabel>
-            <Combobox
+            <Controller
+              control={control}
               name="product_id"
-              items={productItems}
-              value={selectedProduct}
-              onValueChange={(next) => {
-                if (next?.id.startsWith("__create__")) {
-                  const created: ProductOption = {
-                    id: `new_${Date.now()}`,
-                    name: next.name,
-                    sale_price: null,
-                    current_stock: null,
-                    unit: null,
-                  };
-                  setCreatedProducts((prev) => [...prev, created]);
-                  setSelectedProduct(created);
-                  setProductQuery("");
-                  return;
-                }
-                setSelectedProduct(next);
-                setProductQuery("");
-              }}
-              itemToStringValue={(product: ProductOption | null) =>
-                product?.id ?? ""
-              }
-              itemToStringLabel={(product: ProductOption | null) =>
-                product?.name ?? ""
-              }
-              inputValue={productQuery}
-              onInputValueChange={setProductQuery}
-              onItemHighlighted={(item) => {
-                highlightedProductRef.current = item;
-              }}
-            >
-              <ComboboxInput
-                id="product_id"
-                placeholder="Сонгох"
-                showTrigger
-                className="w-full"
-              />
-              <ComboboxContent>
-                <ComboboxEmpty>Бүтээгдэхүүн байхгүй</ComboboxEmpty>
-                <ComboboxList>
-                  {(product: ProductOption) => (
-                    <ComboboxItem key={product.id} value={product}>
-                      {product.id.startsWith("__create__")
-                        ? `"${product.name}" үүсгэх`
-                        : product.name}
-                    </ComboboxItem>
-                  )}
-                </ComboboxList>
-              </ComboboxContent>
-            </Combobox>
+              render={({ field }) => (
+                <Combobox
+                  name={field.name}
+                  items={productItems}
+                  value={allProducts.find((p) => p.id === field.value) ?? null}
+                  onValueChange={(next) => {
+                    if (next?.id.startsWith("__create__")) {
+                      const created: ProductOption = {
+                        id: `new_${Date.now()}`,
+                        name: next.name,
+                        sale_price: null,
+                        current_stock: null,
+                        unit: null,
+                      };
+                      setCreatedProducts((prev) => [...prev, created]);
+                      field.onChange(created.id);
+                      setProductQuery("");
+                      return;
+                    }
+                    field.onChange(next?.id ?? "");
+                    setProductQuery("");
+                  }}
+                  itemToStringValue={(product: ProductOption | null) =>
+                    product?.id ?? ""
+                  }
+                  itemToStringLabel={(product: ProductOption | null) =>
+                    product?.name ?? ""
+                  }
+                  inputValue={productQuery}
+                  onInputValueChange={setProductQuery}
+                >
+                  <ComboboxInput
+                    id="product_id"
+                    placeholder="Сонгох"
+                    showTrigger
+                    className="w-full"
+                  />
+                  <ComboboxContent>
+                    <ComboboxEmpty>Бүтээгдэхүүн байхгүй</ComboboxEmpty>
+                    <ComboboxList>
+                      {(product: ProductOption) => (
+                        <ComboboxItem key={product.id} value={product}>
+                          {product.id.startsWith("__create__")
+                            ? `"${product.name}" үүсгэх`
+                            : product.name}
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
+              )}
+            />
             <FieldDescription>
               {selectedProduct
                 ? `${formatCurrency(Number(selectedProduct.sale_price ?? 0))} • Үлдэгдэл ${
@@ -303,154 +375,209 @@ export function SaleForm({
                   } ${selectedProduct.unit ?? "ширхэг"}`
                 : "Бүтээгдэхүүн байхгүй байна."}
             </FieldDescription>
+            {errors.product_id && (
+              <p className="text-xs text-destructive">
+                {errors.product_id.message}
+              </p>
+            )}
           </Field>
 
           <Field>
             <FieldLabel htmlFor="quantity">Тоо хэмжээ</FieldLabel>
             <Input
               id="quantity"
-              name="quantity"
               type="number"
               min="1"
               step="0.01"
-              value={quantity}
-              onChange={(event) => setQuantity(event.target.value)}
+              {...register("quantity", { valueAsNumber: true })}
             />
+            {errors.quantity && (
+              <p className="text-xs text-destructive">
+                {errors.quantity.message}
+              </p>
+            )}
           </Field>
 
           <Field>
             <FieldLabel htmlFor="unit_price">Нэгж үнэ</FieldLabel>
             <Input
               id="unit_price"
-              name="unit_price"
               type="number"
               min="0"
               step="0.01"
-              defaultValue={selectedProduct?.sale_price ?? 0}
-              key={selectedProduct?.id ?? "price"}
+              {...register("unit_price", { valueAsNumber: true })}
             />
+            {errors.unit_price && (
+              <p className="text-xs text-destructive">
+                {errors.unit_price.message}
+              </p>
+            )}
           </Field>
 
           <Field>
             <FieldLabel htmlFor="paid_amount">Төлсөн дүн</FieldLabel>
             <Input
               id="paid_amount"
-              name="paid_amount"
               type="number"
               min="0"
               step="0.01"
-              defaultValue={total || 0}
-              key={`${selectedProduct?.id ?? "paid"}-${quantity}`}
+              {...register("paid_amount", { valueAsNumber: true })}
             />
+            {errors.paid_amount && (
+              <p className="text-xs text-destructive">
+                {errors.paid_amount.message}
+              </p>
+            )}
           </Field>
         </FieldGroup>
 
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="payment_method">Төлбөрийн арга</FieldLabel>
-            <Combobox
+            <Controller
+              control={control}
               name="payment_method"
-              items={paymentItems}
-              defaultValue="cash"
-              onValueChange={(next: string | null) => {
-                if (next && !allPaymentMethods.includes(next)) {
-                  setAllPaymentMethods((prev) => [...prev, next]);
-                }
-                setPaymentQuery("");
-              }}
-              itemToStringLabel={(item: string) =>
-                paymentMethodLabels[item] ??
-                (allPaymentMethods.includes(item) ? item : `"${item}" үүсгэх`)
-              }
-              inputValue={paymentQuery}
-              onInputValueChange={setPaymentQuery}
-              onItemHighlighted={(item) => {
-                highlightedPaymentRef.current = item;
-              }}
-            >
-              <ComboboxInput
-                id="payment_method"
-                placeholder="Сонгох"
-                showTrigger
-                className="w-full"
-              />
-              <ComboboxContent>
-                <ComboboxEmpty>Арга байхгүй</ComboboxEmpty>
-                <ComboboxList>
-                  {(item: string) => (
-                    <ComboboxItem key={item} value={item}>
-                      {allPaymentMethods.includes(item) ||
-                      initialPaymentMethods.includes(item as any)
-                        ? (paymentMethodLabels[item] ?? item)
-                        : `"${item}" үүсгэх`}
-                    </ComboboxItem>
-                  )}
-                </ComboboxList>
-              </ComboboxContent>
-            </Combobox>
+              render={({ field }) => (
+                <Combobox
+                  name={field.name}
+                  items={paymentItems}
+                  value={field.value}
+                  onValueChange={(next: string | null) => {
+                    if (next && !allPaymentMethods.includes(next)) {
+                      setAllPaymentMethods((prev) => [...prev, next]);
+                    }
+                    field.onChange(next ?? "cash");
+                    setPaymentQuery("");
+                  }}
+                  itemToStringLabel={(item: string | null) =>
+                    item
+                      ? (paymentMethodLabels[item] ??
+                        (allPaymentMethods.includes(item)
+                          ? item
+                          : `"${item}" үүсгэх`))
+                      : ""
+                  }
+                  inputValue={paymentQuery}
+                  onInputValueChange={setPaymentQuery}
+                >
+                  <ComboboxInput
+                    id="payment_method"
+                    placeholder="Сонгох"
+                    showTrigger
+                    className="w-full"
+                  />
+                  <ComboboxContent>
+                    <ComboboxEmpty>Арга байхгүй</ComboboxEmpty>
+                    <ComboboxList>
+                      {(item: string) => (
+                        <ComboboxItem key={item} value={item}>
+                          {allPaymentMethods.includes(item) ||
+                          initialPaymentMethods.includes(
+                            item as (typeof initialPaymentMethods)[number],
+                          )
+                            ? (paymentMethodLabels[item] ?? item)
+                            : `"${item}" үүсгэх`}
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
+              )}
+            />
+            {errors.payment_method && (
+              <p className="text-xs text-destructive">
+                {errors.payment_method.message}
+              </p>
+            )}
           </Field>
 
           <Field>
             <FieldLabel htmlFor="status">Төлөв</FieldLabel>
-            <Combobox
+            <Controller
+              control={control}
               name="status"
-              items={statusItems}
-              defaultValue="completed"
-              onValueChange={(next: string | null) => {
-                if (next && !allStatuses.includes(next)) {
-                  setAllStatuses((prev) => [...prev, next]);
-                }
-                setStatusQuery("");
-              }}
-              itemToStringLabel={(item: string) =>
-                statusLabels[item] ??
-                (allStatuses.includes(item) ? item : `"${item}" үүсгэх`)
-              }
-              inputValue={statusQuery}
-              onInputValueChange={setStatusQuery}
-              onItemHighlighted={(item) => {
-                highlightedStatusRef.current = item;
-              }}
-            >
-              <ComboboxInput
-                id="status"
-                placeholder="Сонгох"
-                showTrigger
-                className="w-full"
-              />
-              <ComboboxContent>
-                <ComboboxEmpty>Төлөв байхгүй</ComboboxEmpty>
-                <ComboboxList>
-                  {(item: string) => (
-                    <ComboboxItem key={item} value={item}>
-                      {allStatuses.includes(item) ||
-                      initialStatuses.includes(item as any)
-                        ? (statusLabels[item] ?? item)
-                        : `"${item}" үүсгэх`}
-                    </ComboboxItem>
-                  )}
-                </ComboboxList>
-              </ComboboxContent>
-            </Combobox>
+              render={({ field }) => (
+                <Combobox
+                  name={field.name}
+                  items={statusItems}
+                  value={field.value}
+                  onValueChange={(next: string | null) => {
+                    if (next && !allStatuses.includes(next)) {
+                      setAllStatuses((prev) => [...prev, next]);
+                    }
+                    field.onChange(next ?? "completed");
+                    setStatusQuery("");
+                  }}
+                  itemToStringLabel={(item: string | null) =>
+                    item
+                      ? (statusLabels[item] ??
+                        (allStatuses.includes(item)
+                          ? item
+                          : `"${item}" үүсгэх`))
+                      : ""
+                  }
+                  inputValue={statusQuery}
+                  onInputValueChange={setStatusQuery}
+                >
+                  <ComboboxInput
+                    id="status"
+                    placeholder="Сонгох"
+                    showTrigger
+                    className="w-full"
+                  />
+                  <ComboboxContent>
+                    <ComboboxEmpty>Төлөв байхгүй</ComboboxEmpty>
+                    <ComboboxList>
+                      {(item: string) => (
+                        <ComboboxItem key={item} value={item}>
+                          {allStatuses.includes(item) ||
+                          initialStatuses.includes(
+                            item as (typeof initialStatuses)[number],
+                          )
+                            ? (statusLabels[item] ?? item)
+                            : `"${item}" үүсгэх`}
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
+              )}
+            />
+            {errors.status && (
+              <p className="text-xs text-destructive">
+                {errors.status.message}
+              </p>
+            )}
           </Field>
 
           <Field>
             <FieldLabel htmlFor="sale_date">Огноо</FieldLabel>
-            <Input
-              id="sale_date"
+            <Controller
+              control={control}
               name="sale_date"
-              type="date"
-              defaultValue={formatRouteDate()}
+              render={({ field }) => (
+                <DatePicker
+                  value={field.value ? new Date(field.value) : undefined}
+                  onChange={(date) =>
+                    field.onChange(date ? formatRouteDate(date) : "")
+                  }
+                />
+              )}
             />
+            {errors.sale_date && (
+              <p className="text-xs text-destructive">
+                {errors.sale_date.message}
+              </p>
+            )}
           </Field>
 
           <Field>
             <FieldLabel htmlFor="customer_name">Харилцагчийн нэр</FieldLabel>
             <Input
               id="customer_name"
-              name="customer_name"
               list="customers"
               placeholder="Walk-in эсвэл Бат"
+              {...register("customer_name")}
             />
             <datalist id="customers">
               {customers.map((customer) => (
@@ -463,8 +590,8 @@ export function SaleForm({
             <FieldLabel htmlFor="customer_phone">Утас</FieldLabel>
             <Input
               id="customer_phone"
-              name="customer_phone"
               placeholder="9911...."
+              {...register("customer_phone")}
             />
           </Field>
 
@@ -472,8 +599,8 @@ export function SaleForm({
             <FieldLabel htmlFor="notes">Тэмдэглэл</FieldLabel>
             <Input
               id="notes"
-              name="notes"
               placeholder="Хүргэлттэй, хэсэгчлэн төлсөн гэх мэт"
+              {...register("notes")}
             />
           </Field>
         </FieldGroup>

@@ -82,8 +82,7 @@ const columns: ColumnDef<SaleRow>[] = [
   {
     accessorKey: "paid_amount",
     header: "Төлсөн дүн",
-    cell: ({ row }) =>
-      formatCurrency(Number(row.getValue("paid_amount") ?? 0)),
+    cell: ({ row }) => formatCurrency(Number(row.getValue("paid_amount") ?? 0)),
   },
   {
     accessorKey: "status",

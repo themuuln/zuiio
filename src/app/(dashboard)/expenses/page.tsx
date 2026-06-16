@@ -1,13 +1,6 @@
-import { Coins } from "@phosphor-icons/react/dist/ssr";
-import Link from "next/link";
-
-import { ErpEmptyState } from "@/components/erp/empty-state";
-import { ExportButton } from "@/components/erp/export-button";
-import { PageShell } from "@/components/erp/page-shell";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAppContext } from "@/lib/erp";
-import { type ExpenseRow, ExpensesTable } from "./expenses-table";
+import type { ExpenseRow } from "./expenses-table";
+import { ExpensesContent } from "./expenses-content";
 
 export default async function ExpensesPage() {
   const { supabase, organizationId } = await requireAppContext();
@@ -28,43 +21,5 @@ export default async function ExpensesPage() {
       payment_method: expense.payment_method,
     })) ?? [];
 
-  return (
-    <PageShell
-      title="Зарлага"
-      description="Байгууллагын зарлагын жагсаалт, ангилал, төлбөрийн мэдээлэл."
-      actions={
-        <>
-          <ExportButton
-            href="/api/export/expenses"
-            filename={`expenses-${new Date().toISOString().slice(0, 10)}.csv`}
-          />
-          <Button asChild size="sm">
-            <Link href="/expenses/new">Шинэ зарлага</Link>
-          </Button>
-        </>
-      }
-    >
-      {!expenses?.length ? (
-        <ErpEmptyState
-          icon={<Coins className="size-4" />}
-          title="Зарлага бүртгэгдээгүй"
-          description="Шинэ зарлага нэмж, зардлын мэдээллээ хянана уу."
-          action={
-            <Button asChild size="sm">
-              <Link href="/expenses/new">Шинэ зарлага</Link>
-            </Button>
-          }
-        />
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Зарлагын жагсаалт</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ExpensesTable data={tableData} />
-          </CardContent>
-        </Card>
-      )}
-    </PageShell>
-  );
+  return <ExpensesContent expenses={tableData} />;
 }

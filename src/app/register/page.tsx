@@ -1,7 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { EnvelopeSimple, Eye, EyeSlash, LockKey, User } from "@phosphor-icons/react";
+import {
+  EnvelopeSimple,
+  Eye,
+  EyeSlash,
+  LockKey,
+  User,
+} from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -22,9 +28,7 @@ const registerSchema = z
   .object({
     full_name: z.string().min(1, "Нэр шаардлагатай."),
     email: z.string().email("Зөв и-мэйл хаяг оруулна уу"),
-    password: z
-      .string()
-      .min(8, "Нууц үг хамгийн багадаа 8 тэмдэгттэй байна."),
+    password: z.string().min(8, "Нууц үг хамгийн багадаа 8 тэмдэгттэй байна."),
     confirm_password: z.string().min(1, "Нууц үгээ давтан оруулна уу"),
   })
   .refine((data) => data.password === data.confirm_password, {

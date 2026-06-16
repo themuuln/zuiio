@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAppContext } from "@/lib/erp";
+import { createInvoiceFromSale } from "@/lib/invoicing";
 import { getString, normalizePhone } from "@/lib/validation";
 
 type CartItemData = {
@@ -247,6 +248,16 @@ export async function createShopSale(
   }
 
   // --- Success ---
+
+  // Auto-generate invoice as receipt (fire-and-forget)
+  await createInvoiceFromSale(
+    supabase,
+    organizationId,
+    userId,
+    saleId,
+    contactId,
+  );
+
   revalidatePath("/shop");
   revalidatePath("/shop/history");
   return { saleId };

@@ -16,6 +16,8 @@ export type ProductCardProduct = {
   sku: string | null;
   barcode: string | null;
   category_id: string | null;
+  brand_name: string | null;
+  brand_logo_url: string | null;
 };
 
 export function ProductCard({ product }: { product: ProductCardProduct }) {
@@ -65,6 +67,22 @@ export function ProductCard({ product }: { product: ProductCardProduct }) {
       </div>
 
       <CardContent className="flex flex-1 flex-col gap-1.5 px-3 py-3">
+        {/* Brand */}
+        {product.brand_name && (
+          <div className="flex items-center gap-1.5">
+            {product.brand_logo_url ? (
+              <img
+                src={product.brand_logo_url}
+                alt={product.brand_name}
+                className="size-4 rounded object-contain dark:invert"
+              />
+            ) : null}
+            <span className="text-[11px] text-muted-foreground">
+              {product.brand_name}
+            </span>
+          </div>
+        )}
+
         {/* Name */}
         <h3 className="line-clamp-2 text-sm font-medium leading-tight">
           {product.name}

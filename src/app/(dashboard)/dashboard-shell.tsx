@@ -4,22 +4,24 @@ import { Drawer } from "@base-ui/react/drawer";
 import {
   Buildings,
   ChartBar,
+  Clock,
   CreditCard,
   CurrencyDollar,
+  FileText,
   Folder,
   GearSix,
   House,
   Package,
-  SidebarIcon,
   SignOut,
   Users,
   Warehouse,
 } from "@phosphor-icons/react";
+import { PanelLeftIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 import { logout } from "@/app/(dashboard)/actions";
-import { ThemeToggle } from "@/components/erp/theme-toggle";
+import { QuickCreateDropdown } from "@/components/erp/quick-create-dropdown";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -48,9 +50,11 @@ const navItems = [
   { title: "Агуулах", href: "/inventory", icon: Warehouse },
   { title: "Ангилалууд", href: "/inventory/categories", icon: Folder },
   { title: "Борлуулалт", href: "/sales", icon: CurrencyDollar },
+  { title: "Нэхэмжлэл", href: "/invoices", icon: FileText },
   { title: "Зарлага", href: "/expenses", icon: CreditCard },
   { title: "Харилцагчид", href: "/customers", icon: Users },
   { title: "Нийлүүлэгчид", href: "/suppliers", icon: Buildings },
+  { title: "Үйлдлийн түүх", href: "/audit", icon: Clock },
   { title: "Тохиргоо", href: "/settings", icon: GearSix },
 ] as const;
 
@@ -111,7 +115,7 @@ export function DashboardShell({
                     className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                   >
                     <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                      <SidebarIcon className="size-4" />
+                      <PanelLeftIcon className="size-4" />
                     </div>
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-semibold">
@@ -174,14 +178,6 @@ export function DashboardShell({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <div className="flex items-center gap-2 px-3 py-1.5">
-                    <ThemeToggle />
-                    <span className="text-sm text-muted-foreground">
-                      Гэрэлтэй / Харанхуй
-                    </span>
-                  </div>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
                   <form action={logout}>
                     <SidebarMenuButton type="submit">
                       <SignOut />
@@ -198,6 +194,11 @@ export function DashboardShell({
             <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
               <SidebarTrigger className="-ml-1" />
               <Separator orientation="vertical" className="mr-2 h-4" />
+              <div className="ml-auto">
+                {organizationId && (
+                  <QuickCreateDropdown organizationId={organizationId} />
+                )}
+              </div>
             </header>
             <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">
               {children}

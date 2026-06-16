@@ -1,9 +1,15 @@
 import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
 import { ExpenseBreakdown } from "@/components/reports/expense-breakdown";
+import { ExpenseDonutChart } from "@/components/reports/expense-donut-chart";
 import { FinancialSummary } from "@/components/reports/financial-summary";
+import { FinancialSummaryChart } from "@/components/reports/financial-summary-chart";
 import { PendingSales } from "@/components/reports/pending-sales";
+import { PendingSalesChart } from "@/components/reports/pending-sales-chart";
+import { ProductMarginChart } from "@/components/reports/product-margin-chart";
+import { ProductRevenueChart } from "@/components/reports/product-revenue-chart";
 import { ProductSalesTable } from "@/components/reports/product-sales-table";
+import { StockMovementChart } from "@/components/reports/stock-movement-chart";
 import { StockMovements } from "@/components/reports/stock-movements";
 import { requireAppContext } from "@/lib/erp";
 import { formatRouteDate } from "@/lib/format";
@@ -47,13 +53,29 @@ export default async function ReportsPage({
 
       <FinancialSummary data={report.financialSummary} />
 
-      <ProductSalesTable data={report.productSales} />
+      <FinancialSummaryChart data={report.financialSummary} />
 
-      <ExpenseBreakdown data={report.expenseBreakdown} />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <ProductSalesTable data={report.productSales} />
+        <ProductRevenueChart data={report.productSales} />
+      </div>
 
-      <StockMovements data={report.stockMovements} />
+      <ProductMarginChart data={report.productSales} />
 
-      <PendingSales data={report.pendingSales} />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <ExpenseBreakdown data={report.expenseBreakdown} />
+        <ExpenseDonutChart data={report.expenseBreakdown} />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <StockMovements data={report.stockMovements} />
+        <StockMovementChart data={report.stockMovements} />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <PendingSales data={report.pendingSales} />
+        <PendingSalesChart data={report.pendingSales} />
+      </div>
     </PageShell>
   );
 }

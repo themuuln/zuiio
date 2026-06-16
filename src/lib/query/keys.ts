@@ -48,3 +48,9 @@ export const movementKeys = {
   lists: (orgId: string) => ["stock_movements", "list", orgId] as const,
   detail: (id: string) => ["stock_movements", "detail", id] as const,
 };
+
+export const brandKeys = {
+  all: () => ["brands"] as const,
+  lists: (orgId: string) => ["brands", "list", orgId] as const,
+  detail: (id: string) => ["brands", "detail", id] as const,
+};

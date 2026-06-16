@@ -39,14 +39,11 @@ test("createContact server action type correctness", () => {
   // inserts a contact with type="customer". The validation check
   // also includes type matching for duplicate detection.
 
-  const formTypes = ["customer", "supplier"];
-  for (const type of formTypes) {
-    // Validate that the name field is checked regardless of type
-    assert.equal(
-      validateContactInput({ name: "" }),
-      "Харилцагчийн нэр шаардлагатай.",
-    );
-  }
+  // Validate that the name field is checked regardless of type
+  assert.equal(
+    validateContactInput({ name: "" }),
+    "Харилцагчийн нэр шаардлагатай.",
+  );
 });
 
 test("updateContact preserves type during update", () => {

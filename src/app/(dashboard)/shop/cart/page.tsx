@@ -30,8 +30,8 @@ export default function CartPage() {
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button render={<Link href="/shop" />} size="lg">
-            Бараа үзэх
+          <Button asChild size="lg">
+            <Link href="/shop">Бараа үзэх</Link>
           </Button>
         </EmptyContent>
       </Empty>
@@ -109,12 +109,8 @@ export default function CartPage() {
             {totalAmount.toLocaleString()}₮
           </span>
         </div>
-        <Button
-          size="lg"
-          className="mt-3 h-[52px] w-full text-sm"
-          render={<Link href="/shop/checkout" />}
-        >
-          Төлбөр тооцоо
+        <Button asChild size="lg" className="mt-3 h-[52px] w-full text-sm">
+          <Link href="/shop/checkout">Төлбөр тооцоо</Link>
         </Button>
       </div>
     </div>

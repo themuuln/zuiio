@@ -1,4 +1,5 @@
-import { Package } from "@phosphor-icons/react/dist/ssr";
+import { Barcode, Package } from "@phosphor-icons/react/dist/ssr";
+import Link from "next/link";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
@@ -7,6 +8,7 @@ import {
   type ProductRow,
   ProductsTable,
 } from "@/components/products/products-table";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAppContext } from "@/lib/erp";
 
@@ -16,7 +18,7 @@ export default async function ProductsPage() {
   const { data: products } = await supabase
     .from("products")
     .select(
-      "id, name, sku, barcode, unit, sale_price, cost_price, current_stock, min_stock, category_id, categories(name)",
+      "id, name, sku, barcode, unit, sale_price, cost_price, current_stock, min_stock, category_id, categories(name), brand_id, brands(name, logo_url)",
     )
     .eq("organization_id", organizationId)
     .order("created_at", { ascending: false });
@@ -35,6 +37,13 @@ export default async function ProductsPage() {
       category_id: product.category_id,
       category_name:
         (product.categories as { name: string } | null)?.name ?? null,
+      brand_id: product.brand_id,
+      brand_name:
+        (product.brands as { name: string; logo_url: string | null } | null)
+          ?.name ?? null,
+      brand_logo_url:
+        (product.brands as { name: string; logo_url: string | null } | null)
+          ?.logo_url ?? null,
     })) ?? [];
 
   return (
@@ -47,7 +56,7 @@ export default async function ProductsPage() {
             href="/api/export/products"
             filename={`products-${new Date().toISOString().slice(0, 10)}.csv`}
           />
-          <ProductCreateDrawer companyType="" />
+          <ProductCreateDrawer companyType="" organizationId={organizationId} />
         </>
       }
     >
@@ -56,17 +65,32 @@ export default async function ProductsPage() {
           icon={<Package className="size-4" />}
           title="Бүтээгдэхүүн бүртгэгдээгүй"
           description="Шинэ бүтээгдэхүүн нэмж, каталог, үнэ, үлдэгдлээ тохируулна уу."
-          action={<ProductCreateDrawer companyType="" />}
+          action={
+            <ProductCreateDrawer
+              companyType=""
+              organizationId={organizationId}
+            />
+          }
         />
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Бүтээгдэхүүний жагсаалт</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ProductsTable data={tableData} />
-          </CardContent>
-        </Card>
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle>Бүтээгдэхүүний жагсаалт</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ProductsTable data={tableData} organizationId={organizationId} />
+            </CardContent>
+          </Card>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button asChild variant="outline" size="sm">
+              <Link href="/products/bulk">
+                <Barcode className="mr-2 size-4" />
+                Баркод бөөнөөр
+              </Link>
+            </Button>
+          </div>
+        </>
       )}
     </PageShell>
   );

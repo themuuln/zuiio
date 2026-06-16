@@ -41,7 +41,6 @@ export function ExportButton({ href, filename }: ExportButtonProps) {
   return (
     <Button
       variant="outline"
-      size="sm"
       onClick={handleExport}
       disabled={isExporting}
     >

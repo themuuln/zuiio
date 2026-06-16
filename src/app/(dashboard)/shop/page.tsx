@@ -9,7 +9,7 @@ export default async function ShopCatalogPage() {
     supabase
       .from("products")
       .select(
-        "id, name, sku, barcode, unit, sale_price, current_stock, category_id",
+        "id, name, sku, barcode, unit, sale_price, current_stock, category_id, brand_id, brands(name, logo_url)",
       )
       .eq("organization_id", organizationId)
       .order("name", { ascending: true }),
@@ -29,6 +29,12 @@ export default async function ShopCatalogPage() {
     sale_price: p.sale_price,
     current_stock: p.current_stock,
     category_id: p.category_id,
+    brand_name:
+      (p.brands as { name: string; logo_url: string | null } | null)?.name ??
+      null,
+    brand_logo_url:
+      (p.brands as { name: string; logo_url: string | null } | null)
+        ?.logo_url ?? null,
   }));
 
   const categoryList = (categories ?? []).map((c) => ({

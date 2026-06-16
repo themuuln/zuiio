@@ -39,9 +39,11 @@ export default async function InventoryMovementsPage() {
       title="Барааны хөдөлгөөн"
       description="Орлого, зарлага, үлдэгдлийн тохируулгын сүүлийн 50 бүртгэл."
       actions={
-        <Button render={<Link href="/inventory/movements/new" />}>
-          <Plus data-icon="inline-start" />
-          Шинэ хөдөлгөөн
+        <Button asChild>
+          <Link href="/inventory/movements/new">
+            <Plus data-icon="inline-start" />
+            Шинэ хөдөлгөөн
+          </Link>
         </Button>
       }
     >

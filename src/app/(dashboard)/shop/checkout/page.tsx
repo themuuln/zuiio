@@ -276,8 +276,8 @@ export default function CheckoutPage() {
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button render={<Link href="/shop" />} size="lg">
-            Бараа үзэх
+          <Button asChild size="lg">
+            <Link href="/shop">Бараа үзэх</Link>
           </Button>
         </EmptyContent>
       </Empty>

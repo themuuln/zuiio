@@ -25,8 +25,5 @@ test("validateCategoryInput accepts single character name", () => {
 });
 
 test("validateCategoryInput trims whitespace for check", () => {
-  assert.equal(
-    validateCategoryInput({ name: "  Хоол  " }),
-    null,
-  );
+  assert.equal(validateCategoryInput({ name: "  Хоол  " }), null);
 });

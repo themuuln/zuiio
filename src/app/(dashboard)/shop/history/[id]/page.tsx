@@ -188,12 +188,12 @@ function SaleDetailContent({
 
       {/* Back button */}
       <Button
+        asChild
         variant="outline"
         size="lg"
         className="h-[52px] w-full text-sm"
-        render={<Link href="/shop/history" />}
       >
-        Түүх рүү буцах
+        <Link href="/shop/history">Түүх рүү буцах</Link>
       </Button>
     </div>
   );

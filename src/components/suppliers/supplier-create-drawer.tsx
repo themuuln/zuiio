@@ -1,21 +1,52 @@
 "use client";
 
-import { Drawer } from "@base-ui/react/drawer";
-import { Buildings, Plus, X } from "@phosphor-icons/react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Buildings, Plus } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { createSupplier } from "@/app/(dashboard)/suppliers/actions";
 import { buttonVariants } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { contactKeys } from "@/lib/query/keys";
+import { toast } from "sonner";
 
-export function SupplierCreateDrawer() {
-  const [open, setOpen] = useState(false);
+const supplierSchema = z.object({
+  name: z.string().min(1, "Нэр шаардлагатай"),
+  phone: z.string().optional(),
+  email: z.string().optional(),
+  address: z.string().optional(),
+});
+
+type SupplierValues = z.infer<typeof supplierSchema>;
+
+export function SupplierCreateDrawer({
+  open: externalOpen,
+  onOpenChange: externalOnOpenChange,
+}: {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = externalOpen ?? internalOpen;
+  const setOpen = externalOnOpenChange ?? setInternalOpen;
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<SupplierValues>({
+    resolver: zodResolver(supplierSchema),
+    defaultValues: { name: "", phone: "", email: "", address: "" },
+  });
 
   const contactMutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -25,11 +56,9 @@ export function SupplierCreateDrawer() {
     },
     onMutate: async (formData) => {
       await queryClient.cancelQueries({ queryKey: contactKeys.all() });
-      const snapshot = queryClient.getQueriesData({
-        queryKey: contactKeys.all(),
-      });
+      const snapshot = queryClient.getQueriesData({ queryKey: contactKeys.all() });
 
-      const name = formData.get("name")?.toString().trim() ?? "";
+      const name = formData.get("name")?.toString() ?? "";
       const phone = formData.get("phone")?.toString() ?? "";
       const email = formData.get("email")?.toString() ?? "";
       const address = formData.get("address")?.toString() ?? "";
@@ -49,17 +78,16 @@ export function SupplierCreateDrawer() {
       queryClient.setQueriesData(
         { queryKey: contactKeys.all(), type: "active" },
         (oldData: unknown) => {
-          if (Array.isArray(oldData)) {
-            return [optimisticContact, ...oldData];
-          }
+          if (Array.isArray(oldData)) return [optimisticContact, ...oldData];
           return oldData;
         },
       );
-
       return { snapshot };
     },
     onSuccess: () => {
       setOpen(false);
+      setServerError(null);
+      reset();
       router.refresh();
       toast.success("Нийлүүлэгч амжилттай бүртгэгдлээ.");
     },
@@ -69,127 +97,75 @@ export function SupplierCreateDrawer() {
           queryClient.setQueryData(key, data);
         }
       }
-      toast.error(err.message || "Нийлүүлэгч бүртгэхэд алдаа гарлаа.");
+      setServerError(err.message || "Нийлүүлэгч бүртгэхэд алдаа гарлаа.");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: contactKeys.all() });
     },
   });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (contactMutation.isPending) return;
-
-    const formData = new FormData(e.currentTarget);
-    const name = formData.get("name")?.toString().trim() ?? "";
-
-    if (!name) {
-      toast.error("Нийлүүлэгчийн нэр шаардлагатай.");
-      return;
-    }
-
-    // Ensure type is always set
-    formData.set("type", "supplier");
+  const onSubmit = (data: SupplierValues) => {
+    setServerError(null);
+    const formData = new FormData();
+    formData.append("type", "supplier");
+    formData.append("name", data.name);
+    if (data.phone) formData.append("phone", data.phone);
+    if (data.email) formData.append("email", data.email);
+    if (data.address) formData.append("address", data.address);
     contactMutation.mutate(formData);
   };
 
   return (
-    <Drawer.Root swipeDirection="right" open={open} onOpenChange={setOpen}>
-      <Drawer.Trigger className={buttonVariants({ variant: "default" })}>
-        <Plus className="size-4" />
-        Нийлүүлэгч бүртгэх
-      </Drawer.Trigger>
-      <Drawer.Portal>
-        <Drawer.Backdrop className="[--backdrop-opacity:0.2] [--bleed:3rem] dark:[--backdrop-opacity:0.7] fixed inset-0 min-h-dvh bg-black opacity-[calc(var(--backdrop-opacity)*(1-var(--drawer-swipe-progress)))] transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:duration-0 data-ending-style:opacity-0 data-starting-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:absolute" />
-        <Drawer.Viewport className="[--viewport-padding:0px] supports-[-webkit-touch-callout:none]:[--viewport-padding:0.625rem] fixed inset-0 flex items-stretch justify-end p-(--viewport-padding)">
-          <Drawer.Popup className="[--bleed:3rem] supports-[-webkit-touch-callout:none]:[--bleed:0px] h-full w-[calc(28rem+3rem)] max-w-[calc(100vw-3rem+3rem)] -mr-[3rem] border-l border-border bg-white p-6 pr-[calc(1.5rem+3rem)] text-foreground outline-none shadow-lg overflow-y-auto overscroll-contain touch-auto [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:select-none data-ending-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-starting-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:mr-0 supports-[-webkit-touch-callout:none]:w-[28rem] supports-[-webkit-touch-callout:none]:max-w-[calc(100vw-3rem)] supports-[-webkit-touch-callout:none]:border supports-[-webkit-touch-callout:none]:pr-6 dark:bg-neutral-950 dark:text-white dark:shadow-none">
-            <Drawer.Content className="mx-auto w-full">
-              <div className="mb-6 flex items-center justify-between">
-                <div>
-                  <Drawer.Title className="text-lg font-semibold tracking-tight">
-                    Нийлүүлэгч бүртгэх
-                  </Drawer.Title>
-                  <Drawer.Description className="text-sm text-muted-foreground">
-                    Шинэ нийлүүлэгчийн мэдээллийг бүртгэх.
-                  </Drawer.Description>
-                </div>
-                <Drawer.Close className="flex size-8 items-center justify-center rounded-none border-0 bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-foreground">
-                  <X className="size-4" />
-                </Drawer.Close>
-              </div>
+    <SlideInDrawer
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) { setServerError(null); reset(); }
+      }}
+      title="Нийлүүлэгч бүртгэх"
+      description="Шинэ нийлүүлэгчийн мэдээллийг бүртгэх."
+      trigger={
+        <button type="button" className={buttonVariants({ variant: "default" })}>
+          <Plus className="size-4" />
+          Нийлүүлэгч бүртгэх
+        </button>
+      }
+    >
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <FieldGroup>
+          <Field>
+            <FieldLabel>Нэр</FieldLabel>
+            <div className="relative">
+              <Buildings className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input className="pl-9" placeholder="Болд ХХК" {...register("name")} />
+            </div>
+            {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+          </Field>
+          <Field>
+            <FieldLabel>Утас</FieldLabel>
+            <Input type="tel" placeholder="+976 9911-2233" {...register("phone")} />
+          </Field>
+          <Field>
+            <FieldLabel>Имэйл</FieldLabel>
+            <Input type="email" placeholder="info@boldcompany.mn" {...register("email")} />
+          </Field>
+          <Field>
+            <FieldLabel>Хаяг</FieldLabel>
+            <Input placeholder="СБД, 1-р хороо, 2-р байр" {...register("address")} />
+          </Field>
+        </FieldGroup>
 
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <input type="hidden" name="type" value="supplier" />
+        {serverError && (
+          <div className="rounded-md bg-destructive/15 px-3 py-2 text-sm text-destructive">{serverError}</div>
+        )}
 
-                <FieldGroup>
-                  <Field>
-                    <FieldLabel htmlFor="create-name">Нэр</FieldLabel>
-                    <div className="relative">
-                      <Buildings className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        id="create-name"
-                        name="name"
-                        required
-                        className="pl-9"
-                        placeholder="Болд ХХК"
-                      />
-                    </div>
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="create-phone">Утас</FieldLabel>
-                    <Input
-                      id="create-phone"
-                      name="phone"
-                      type="tel"
-                      placeholder="+976 9911-2233"
-                    />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="create-email">Имэйл</FieldLabel>
-                    <Input
-                      id="create-email"
-                      name="email"
-                      type="email"
-                      placeholder="info@boldcompany.mn"
-                    />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="create-address">Хаяг</FieldLabel>
-                    <Input
-                      id="create-address"
-                      name="address"
-                      placeholder="СБД, 1-р хороо, 2-р байр"
-                    />
-                  </Field>
-                </FieldGroup>
-
-                {contactMutation.error ? (
-                  <div className="rounded-none bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                    {contactMutation.error.message}
-                  </div>
-                ) : null}
-
-                <div className="flex items-center justify-end gap-3">
-                  <Drawer.Close
-                    className={buttonVariants({
-                      variant: "outline",
-                    })}
-                  >
-                    Цуцлах
-                  </Drawer.Close>
-                  <button
-                    type="submit"
-                    disabled={contactMutation.isPending}
-                    className={buttonVariants({ variant: "default" })}
-                  >
-                    {contactMutation.isPending ? "Хадгалах..." : "Хадгалах"}
-                  </button>
-                </div>
-              </form>
-            </Drawer.Content>
-          </Drawer.Popup>
-        </Drawer.Viewport>
-      </Drawer.Portal>
-    </Drawer.Root>
+        <div className="flex items-center justify-end gap-3">
+          <button type="button" onClick={() => setOpen(false)} className={buttonVariants({ variant: "outline" })}>Цуцлах</button>
+          <button type="submit" disabled={isSubmitting || contactMutation.isPending} className={buttonVariants({ variant: "default" })}>
+            {contactMutation.isPending ? "Хадгалах..." : "Хадгалах"}
+          </button>
+        </div>
+      </form>
+    </SlideInDrawer>
   );
 }

@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Zer ERP
+
+A Mongolia-first mini ERP for small businesses. Built with **Next.js 16.2.6** (App Router), **Supabase** (PostgreSQL + Auth), **Tailwind CSS v4**, **shadcn/ui**, and **TanStack React Query v5**.
+
+The entire UI is in Mongolian (Монгол хэл).
+
+## Features
+
+- **Authentication** — Login, register, password reset via Supabase SSR with organization-scoped access. First-time users are prompted to create their organization.
+- **Dashboard** — KPI overview with total products, customers, suppliers, today's sales and expenses, low stock alerts, pending sales, recent sales, and a monthly sales chart.
+- **Products & Categories** — Full CRUD with create/edit/detail drawers, category management page with product counts.
+- **Inventory** — Stock level overview with KPIs and stock value, movement history (in/out/adjustment), new stock movement form with atomic stock updates.
+- **Sales** — Sales list with detail page and status badges, sale creation form, plus mobile-first **Shop POS** module (product catalog, cart, checkout with numeric keypad + customer picker, receipt printing, sales history).
+- **Customers & Suppliers** — Full CRUD with create/edit/detail drawers, search, balance tracking, phone/email/address management.
+- **Expenses** — Expense creation with category/amount/date/payment method, list with search and CSV export.
+- **Reports** — 5-section report page (financial summary, product sales, expense breakdown, stock movements, pending sales) with date range filtering, CSV export, and public share links (no login required).
+- **Settings** — Organization info editing, profile form, dark mode toggle, user management page with name/email/role display.
+- **CSV Export** — All list pages and reports support CSV export via secure API routes.
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16.2.6 (App Router) |
+| Database | Supabase (PostgreSQL) |
+| Auth | Supabase SSR (`@supabase/ssr` + `@supabase/supabase-js`) |
+| UI | Tailwind CSS v4, shadcn/ui, Base UI (drawers), Radix UI |
+| State | TanStack React Query v5 with devtools, React 19 Server Components |
+| Icons | Phosphor Icons |
+| Tables | TanStack React Table v8 |
+| Forms | react-hook-form + zod (`@hookform/resolvers`) |
+| Charts | Recharts |
+| Linting | Biome 2.2 (with Next.js + React domain rules) |
+| Testing | Node.js built-in test runner (`node:test` + `node:assert/strict`), tsx runner |
+| Theme | next-themes (dark mode) |
+| Notifications | Sonner (toast) |
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 20+
+- pnpm (recommended) or npm
+
+### Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repo>
+cd zer
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create `.env.local` with Supabase credentials:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```env
+NEXT_PUBLIC_SUPABASE_URL=<your-project-url>
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<your-publishable-key>
+SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Development
 
-## Learn More
+```bash
+pnpm dev -- -p 3101
+```
 
-To learn more about Next.js, take a look at the following resources:
+Open [http://localhost:3101](http://localhost:3101).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Available Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Script | Description |
+|--------|-------------|
+| `pnpm dev` | Start development server (use `-p 3101`) |
+| `pnpm build` | Production build |
+| `pnpm start` | Start production server |
+| `pnpm test` | Run test suite (229 tests across 10 test files) |
+| `pnpm run typecheck` | TypeScript type checking (`tsc --noEmit`) |
+| `pnpm run lint` | Biome lint check |
+| `pnpm run format` | Biome auto-format |
 
-## Deploy on Vercel
+## Testing
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Tests use Node.js built-in `node:test` + `node:assert/strict` with the `tsx` runner:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+pnpm test                          # Run all tests
+pnpm exec tsx --test tests/*.test.ts  # Run specific test file
+```
+
+**10 test files, 229 tests** covering: auth validation, product CRUD validation, inventory calculations, expense grouping, report aggregation, cart reducer logic, and utility formatting.
+
+## Deployment
+
+Vercel-ready. Set these environment variables in production:
+
+```
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+SUPABASE_SERVICE_ROLE_KEY
+CRON_SECRET                    # optional, for daily report cron
+```
+
+## License
+
+Built for Mongolian small businesses. 🇲🇳

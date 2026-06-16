@@ -7,7 +7,7 @@ export async function GET() {
   const { data: products } = await supabase
     .from("products")
     .select(
-      "id, name, sku, unit, cost_price, current_stock, min_stock, categories(name)",
+      "id, name, sku, unit, cost_price, current_stock, min_stock, categories(name), brands(name)",
     )
     .eq("organization_id", organizationId)
     .order("name", { ascending: true });
@@ -25,6 +25,7 @@ export async function GET() {
       stock_value: (p.cost_price ?? 0) * currentStock,
       low_stock: currentStock < minStock ? "Тийм" : "Үгүй",
       category: (p.categories as { name: string } | null)?.name ?? "",
+      brand: (p.brands as { name: string } | null)?.name ?? "",
     };
   });
 
@@ -32,6 +33,7 @@ export async function GET() {
     { header: "Бүтээгдэхүүн", key: "name" },
     { header: "SKU", key: "sku" },
     { header: "Хэмжих нэгж", key: "unit" },
+    { header: "Брэнд", key: "brand" },
     { header: "Өртөг", key: "cost_price" },
     { header: "Одоогийн нөөц", key: "current_stock" },
     { header: "Минимум нөөц", key: "min_stock" },

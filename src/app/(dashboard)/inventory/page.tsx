@@ -1,4 +1,4 @@
-import { Folder, Plus, Warehouse } from "@phosphor-icons/react/dist/ssr";
+import { Folder, MapPin, Plus, Warehouse } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 
 import { ErpEmptyState } from "@/components/erp/empty-state";
@@ -318,6 +318,12 @@ export default async function InventoryOverviewPage() {
               <Link href="/inventory/movements">
                 <Warehouse className="mr-2 size-4" />
                 Барааны хөдөлгөөн
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/inventory/warehouses">
+                <MapPin className="mr-2 size-4" />
+                Агуулахууд
               </Link>
             </Button>
           </div>

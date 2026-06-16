@@ -6,7 +6,7 @@ export function CTA() {
   return (
     <section className="border-t py-20 md:py-28">
       <div className="mx-auto max-w-6xl px-4">
-        <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-primary/5 to-background px-8 py-16 text-center md:px-16">
+        <div className="relative overflow-hidden rounded-2xl border bg-background px-8 py-16 text-center md:px-16">
           <div className="pointer-events-none absolute -right-20 -top-20 opacity-10">
             <Rocket className="size-64 text-primary" />
           </div>

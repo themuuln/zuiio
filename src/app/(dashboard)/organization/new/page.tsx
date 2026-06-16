@@ -1,7 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight, Buildings, Storefront } from "@phosphor-icons/react";
-import { useActionState, useState } from "react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,26 +23,53 @@ import { COMPANY_TYPES } from "@/lib/constants";
 import { slugify } from "@/lib/format";
 import { createOrganization } from "./actions";
 
+const orgSchema = z.object({
+  name: z.string().min(1, "Байгууллагын нэр шаардлагатай."),
+  company_type: z.string(),
+  slug: z.string().min(1, "Холбоос шаардлагатай."),
+});
+
+type OrgValues = z.infer<typeof orgSchema>;
+
 export default function NewOrganizationPage() {
-  const [state, action, pending] = useActionState(
-    createOrganization,
-    undefined,
-  );
-  const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
+  const [serverError, setServerError] = useState<string | null>(null);
   const [slugTouched, setSlugTouched] = useState(false);
 
-  const _handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newName = e.target.value;
-    setName(newName);
-    if (!slugTouched) {
-      setSlug(slugify(newName));
-    }
-  };
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<OrgValues>({
+    resolver: zodResolver(orgSchema),
+    defaultValues: {
+      name: "",
+      company_type: "retail",
+      slug: "",
+    },
+  });
 
-  const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSlug(e.target.value);
-    setSlugTouched(true);
+  const name = watch("name");
+
+  useEffect(() => {
+    if (!slugTouched) {
+      setValue("slug", slugify(name));
+    }
+  }, [name, slugTouched, setValue]);
+
+  const onSubmit = async (data: OrgValues) => {
+    setServerError(null);
+
+    const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("company_type", data.company_type);
+    formData.append("slug", data.slug);
+
+    const result = await createOrganization(undefined, formData);
+    if (result?.error) {
+      setServerError(result.error);
+    }
   };
 
   return (
@@ -52,7 +82,10 @@ export default function NewOrganizationPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={action} className="flex flex-col gap-4">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="flex flex-col gap-4"
+          >
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="name">Байгууллагын нэр</FieldLabel>
@@ -60,14 +93,17 @@ export default function NewOrganizationPage() {
                   <Buildings className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="name"
-                    name="name"
                     placeholder="Жишээ дэлгүүр"
                     required
                     className="pl-9"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    {...register("name")}
                   />
                 </div>
+                {errors.name && (
+                  <p className="text-xs text-destructive">
+                    {errors.name.message}
+                  </p>
+                )}
               </Field>
               <Field>
                 <FieldLabel htmlFor="company_type">
@@ -77,9 +113,8 @@ export default function NewOrganizationPage() {
                   <Storefront className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground z-10" />
                   <NativeSelect
                     id="company_type"
-                    name="company_type"
                     className="w-full pl-9"
-                    defaultValue="retail"
+                    {...register("company_type")}
                   >
                     {COMPANY_TYPES.map((ct) => (
                       <NativeSelectOption key={ct.value} value={ct.value}>
@@ -93,12 +128,12 @@ export default function NewOrganizationPage() {
                 <FieldLabel htmlFor="slug">Холбоос</FieldLabel>
                 <Input
                   id="slug"
-                  name="slug"
                   placeholder="jishee-delguur"
                   required
-                  value={slug}
-                  onChange={handleSlugChange}
                   className="font-mono text-sm"
+                  {...register("slug", {
+                    onChange: () => setSlugTouched(true),
+                  })}
                 />
                 <p className="text-xs text-muted-foreground">
                   Автоматаар үүсэх болно. Хэрэв засварлавал автомат шинэчлэлт
@@ -107,14 +142,14 @@ export default function NewOrganizationPage() {
               </Field>
             </FieldGroup>
 
-            {state?.error && (
+            {serverError && (
               <div className="rounded-md bg-destructive/15 px-3 py-2 text-sm text-destructive">
-                {state.error}
+                {serverError}
               </div>
             )}
 
-            <Button type="submit" disabled={pending}>
-              Байгууллага үүсгэх
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Үүсгэж байна..." : "Байгууллага үүсгэх"}
               <ArrowRight data-icon="inline-end" />
             </Button>
           </form>

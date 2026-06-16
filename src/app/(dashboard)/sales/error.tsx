@@ -24,8 +24,7 @@ export default function SalesError({
         </div>
         <h2 className="mb-2 text-xl font-semibold">Алдаа гарлаа</h2>
         <p className="mb-6 text-sm text-muted-foreground">
-          Борлуулалтын жагсаалтыг ачаалахад алдаа гарлаа. Та дахин оролдоно
-          уу.
+          Борлуулалтын жагсаалтыг ачаалахад алдаа гарлаа. Та дахин оролдоно уу.
         </p>
         <Button onClick={reset} size="sm">
           <ArrowClockwise className="mr-2 size-4" />

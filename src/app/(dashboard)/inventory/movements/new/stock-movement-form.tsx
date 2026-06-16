@@ -1,9 +1,12 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -28,6 +31,34 @@ import { movementKeys, productKeys } from "@/lib/query/keys";
 import { createStockMovement } from "../actions";
 import type { ProductOption } from "./page";
 
+const movementSchema = z
+  .object({
+    product_id: z.string().min(1, "Бүтээгдэхүүн сонгоно уу"),
+    type: z.enum(["in", "adjustment"]),
+    quantity: z.number(),
+    unit_cost: z.number().min(0),
+    reference: z.string().optional(),
+    notes: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.type === "in" && data.quantity <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Орлогын тоо хэмжээ 0-ээс их байх ёстой.",
+        path: ["quantity"],
+      });
+    }
+    if (data.type === "adjustment" && data.quantity === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Тохируулгын тоо хэмжээ 0-ээс ялгаатай байх ёстой.",
+        path: ["quantity"],
+      });
+    }
+  });
+
+type MovementValues = z.infer<typeof movementSchema>;
+
 export function StockMovementForm({ products }: { products: ProductOption[] }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -35,15 +66,28 @@ export function StockMovementForm({ products }: { products: ProductOption[] }) {
   const [selectedProduct, setSelectedProduct] = useState<ProductOption | null>(
     null,
   );
-  const [movementType, setMovementType] = useState("in");
-  const [quantity, setQuantity] = useState("");
   const [productQuery, setProductQuery] = useState("");
 
-  // Client-side validation errors
-  const [clientErrors, setClientErrors] = useState<{
-    productId?: string;
-    quantity?: string;
-  }>({});
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    trigger,
+    formState: { errors },
+  } = useForm<MovementValues>({
+    resolver: zodResolver(movementSchema),
+    defaultValues: {
+      product_id: "",
+      type: "in",
+      quantity: 0,
+      unit_cost: 0,
+      reference: "",
+      notes: "",
+    },
+  });
+
+  const movementType = watch("type");
 
   const movementMutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -118,7 +162,17 @@ export function StockMovementForm({ products }: { products: ProductOption[] }) {
       toast.success("Хөдөлгөөн амжилттай бүртгэгдлээ.");
       router.push("/inventory/movements");
     },
-    onError: (err) => {
+    onError: (err, _vars, context) => {
+      if (context?.movementSnapshot) {
+        for (const [key, data] of context.movementSnapshot) {
+          queryClient.setQueryData(key, data);
+        }
+      }
+      if (context?.productSnapshot) {
+        for (const [key, data] of context.productSnapshot) {
+          queryClient.setQueryData(key, data);
+        }
+      }
       toast.error(err.message || "Хөдөлгөөн бүртгэхэд алдаа гарлаа.");
     },
     onSettled: () => {
@@ -127,31 +181,15 @@ export function StockMovementForm({ products }: { products: ProductOption[] }) {
     },
   });
 
-  const validateForm = (): boolean => {
-    const errors: { productId?: string; quantity?: string } = {};
-    const qty = Number(quantity || 0);
-
-    if (!selectedProduct) {
-      errors.productId = "Бүтээгдэхүүн сонгоно уу.";
-    }
-
-    if (movementType === "in" && qty <= 0) {
-      errors.quantity = "Орлогын тоо хэмжээ 0-ээс их байх ёстой.";
-    } else if (movementType === "adjustment" && qty === 0) {
-      errors.quantity = "Тохируулгын тоо хэмжээ 0-ээс ялгаатай байх ёстой.";
-    }
-
-    setClientErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const onSubmit = (data: MovementValues) => {
     if (movementMutation.isPending) return;
-
-    if (!validateForm()) return;
-
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData();
+    formData.append("product_id", data.product_id);
+    formData.append("type", data.type);
+    formData.append("quantity", String(data.quantity));
+    formData.append("unit_cost", String(data.unit_cost));
+    formData.append("reference", data.reference ?? "");
+    formData.append("notes", data.notes ?? "");
     movementMutation.mutate(formData);
   };
 
@@ -175,82 +213,80 @@ export function StockMovementForm({ products }: { products: ProductOption[] }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="product_id">Бүтээгдэхүүн</FieldLabel>
-              <Combobox
+              <Controller
                 name="product_id"
-                items={productItems}
-                value={selectedProduct}
-                onValueChange={(next: ProductOption | null) => {
-                  setSelectedProduct(next);
-                  setProductQuery("");
-                  if (next) {
-                    setClientErrors((prev) => ({ ...prev, productId: "" }));
-                  }
-                }}
-                itemToStringValue={(product: ProductOption | null) =>
-                  product?.id ?? ""
-                }
-                itemToStringLabel={(product: ProductOption | null) =>
-                  product?.name ?? ""
-                }
-                inputValue={productQuery}
-                onInputValueChange={setProductQuery}
-              >
-                <ComboboxInput
-                  id="product_id"
-                  placeholder="Бүтээгдэхүүн сонгох"
-                  showTrigger
-                  className="w-full"
-                />
-                <ComboboxContent>
-                  <ComboboxEmpty>Бүтээгдэхүүн байхгүй</ComboboxEmpty>
-                  <ComboboxList>
-                    {(product: ProductOption) => (
-                      <ComboboxItem key={product.id} value={product}>
-                        {product.name}
-                      </ComboboxItem>
-                    )}
-                  </ComboboxList>
-                </ComboboxContent>
-              </Combobox>
-              {clientErrors.productId && (
+                control={control}
+                render={({ field }) => (
+                  <Combobox
+                    name="product_id"
+                    items={productItems}
+                    value={selectedProduct}
+                    onValueChange={(next: ProductOption | null) => {
+                      setSelectedProduct(next);
+                      setProductQuery("");
+                      field.onChange(next?.id ?? "");
+                    }}
+                    itemToStringValue={(product: ProductOption | null) =>
+                      product?.id ?? ""
+                    }
+                    itemToStringLabel={(product: ProductOption | null) =>
+                      product?.name ?? ""
+                    }
+                    inputValue={productQuery}
+                    onInputValueChange={setProductQuery}
+                  >
+                    <ComboboxInput
+                      id="product_id"
+                      placeholder="Бүтээгдэхүүн сонгох"
+                      showTrigger
+                      className="w-full"
+                    />
+                    <ComboboxContent>
+                      <ComboboxEmpty>Бүтээгдэхүүн байхгүй</ComboboxEmpty>
+                      <ComboboxList>
+                        {(product: ProductOption) => (
+                          <ComboboxItem key={product.id} value={product}>
+                            {product.name}
+                          </ComboboxItem>
+                        )}
+                      </ComboboxList>
+                    </ComboboxContent>
+                  </Combobox>
+                )}
+              />
+              {errors.product_id && (
                 <p className="text-xs text-destructive">
-                  {clientErrors.productId}
+                  {errors.product_id.message}
                 </p>
               )}
             </Field>
 
             <Field>
               <FieldLabel htmlFor="type">Хөдөлгөөний төрөл</FieldLabel>
-              <NativeSelect
-                id="type"
+              <Controller
                 name="type"
-                value={movementType}
-                onChange={(e) => {
-                  setMovementType(e.target.value);
-                  const qty = Number(quantity || 0);
-                  if (e.target.value === "adjustment" && qty === 0) {
-                    setClientErrors((prev) => ({
-                      ...prev,
-                      quantity:
-                        "Тохируулгын тоо хэмжээ 0-ээс ялгаатай байх ёстой.",
-                    }));
-                  } else if (e.target.value === "in" && qty <= 0) {
-                    setClientErrors((prev) => ({
-                      ...prev,
-                      quantity: "Орлогын тоо хэмжээ 0-ээс их байх ёстой.",
-                    }));
-                  } else {
-                    setClientErrors((prev) => ({ ...prev, quantity: "" }));
-                  }
-                }}
-              >
-                <option value="in">Орлого</option>
-                <option value="adjustment">Тохируулга</option>
-              </NativeSelect>
+                control={control}
+                render={({ field }) => (
+                  <NativeSelect
+                    id="type"
+                    ref={field.ref}
+                    name={field.name}
+                    value={field.value}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      trigger("quantity");
+                    }}
+                    onBlur={field.onBlur}
+                  >
+                    <option value="in">Орлого</option>
+                    <option value="adjustment">Тохируулга</option>
+                  </NativeSelect>
+                )}
+              />
             </Field>
 
             <Field>
@@ -265,22 +301,17 @@ export function StockMovementForm({ products }: { products: ProductOption[] }) {
               </FieldLabel>
               <Input
                 id="quantity"
-                name="quantity"
                 type="number"
                 step={movementType === "adjustment" ? "any" : "0.01"}
                 min={movementType === "in" ? "0.01" : undefined}
                 placeholder={
                   movementType === "adjustment" ? "5 эсвэл -3" : "100"
                 }
-                value={quantity}
-                onChange={(e) => {
-                  setQuantity(e.target.value);
-                  setClientErrors((prev) => ({ ...prev, quantity: "" }));
-                }}
+                {...register("quantity", { valueAsNumber: true })}
               />
-              {clientErrors.quantity && (
+              {errors.quantity && (
                 <p className="text-xs text-destructive">
-                  {clientErrors.quantity}
+                  {errors.quantity.message}
                 </p>
               )}
               {selectedProduct && (
@@ -300,11 +331,11 @@ export function StockMovementForm({ products }: { products: ProductOption[] }) {
               </FieldLabel>
               <Input
                 id="unit_cost"
-                name="unit_cost"
                 type="number"
                 min="0"
                 step="0.01"
                 defaultValue="0"
+                {...register("unit_cost", { valueAsNumber: true })}
               />
             </Field>
 
@@ -317,8 +348,8 @@ export function StockMovementForm({ products }: { products: ProductOption[] }) {
               </FieldLabel>
               <Input
                 id="reference"
-                name="reference"
                 placeholder="Нэхэмжлэлийн дугаар, захиалгын ID..."
+                {...register("reference")}
               />
             </Field>
 
@@ -331,8 +362,8 @@ export function StockMovementForm({ products }: { products: ProductOption[] }) {
               </FieldLabel>
               <Textarea
                 id="notes"
-                name="notes"
                 placeholder="Тэмдэглэл, шалтгаан..."
+                {...register("notes")}
               />
             </Field>
           </FieldGroup>

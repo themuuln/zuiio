@@ -123,17 +123,6 @@
   }
   body {
     @apply bg-background text-foreground;
-    background-image:
-      radial-gradient(
-        circle at top,
-        color-mix(in oklch, var(--accent) 20%, transparent),
-        transparent 34%
-      ),
-      linear-gradient(
-        180deg,
-        color-mix(in oklch, var(--background) 94%, white),
-        var(--background)
-      );
   }
   html {
     @apply font-mono;
