@@ -245,8 +245,10 @@ export function useAssignMechanicToWorkOrder(branchId: string | undefined) {
       toast.dismiss();
       toast.success("Mechanic assigned");
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: bayViewKeys.data(branchId) });
+    onSettled: async () => {
+      await queryClient.refetchQueries({
+        queryKey: bayViewKeys.data(branchId),
+      });
     },
   });
 }
@@ -270,8 +272,10 @@ export function useRemoveMechanicFromWorkOrder(branchId: string | undefined) {
       toast.dismiss();
       toast.success("Mechanic removed");
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: bayViewKeys.data(branchId) });
+    onSettled: async () => {
+      await queryClient.refetchQueries({
+        queryKey: bayViewKeys.data(branchId),
+      });
     },
   });
 }
@@ -301,8 +305,10 @@ export function useAddHelperToWorkOrder(branchId: string | undefined) {
       toast.dismiss();
       toast.success("Helper added");
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: bayViewKeys.data(branchId) });
+    onSettled: async () => {
+      await queryClient.refetchQueries({
+        queryKey: bayViewKeys.data(branchId),
+      });
     },
   });
 }
@@ -332,8 +338,10 @@ export function useRemoveHelperFromWorkOrder(branchId: string | undefined) {
       toast.dismiss();
       toast.success("Helper removed");
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: bayViewKeys.data(branchId) });
+    onSettled: async () => {
+      await queryClient.refetchQueries({
+        queryKey: bayViewKeys.data(branchId),
+      });
     },
   });
 }
