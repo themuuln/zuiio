@@ -122,31 +122,37 @@ export default async function SaleDetailPage({
         <CardHeader>
           <CardTitle>Борлуулалтын мөрүүд</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b text-left text-sm text-muted-foreground">
-                <th className="pb-2 font-medium">Бараа</th>
-                <th className="pb-2 text-right font-medium">Тоо хэмжээ</th>
-                <th className="pb-2 text-right font-medium">Нэгж үнэ</th>
-                <th className="pb-2 text-right font-medium">Нийт үнэ</th>
+                <th className="pb-2 font-medium whitespace-nowrap">Бараа</th>
+                <th className="pb-2 text-right font-medium whitespace-nowrap">
+                  Тоо хэмжээ
+                </th>
+                <th className="pb-2 text-right font-medium whitespace-nowrap">
+                  Нэгж үнэ
+                </th>
+                <th className="pb-2 text-right font-medium whitespace-nowrap">
+                  Нийт үнэ
+                </th>
               </tr>
             </thead>
             <tbody>
               {(items ?? []).map((item) => (
                 <tr key={item.id} className="border-b last:border-0">
-                  <td className="py-3 font-medium">
+                  <td className="py-3 font-medium whitespace-nowrap">
                     {item.products?.name ??
                       `Бүтээгдэхүүн #${(item.product_id ?? "").slice(0, 8)}`}
                   </td>
-                  <td className="py-3 text-right tabular-nums">
+                  <td className="py-3 text-right tabular-nums whitespace-nowrap">
                     {item.quantity}
                     {item.products?.unit ? ` ${item.products.unit}` : ""}
                   </td>
-                  <td className="py-3 text-right tabular-nums text-muted-foreground">
+                  <td className="py-3 text-right tabular-nums text-muted-foreground whitespace-nowrap">
                     {formatCurrency(item.unit_price)}
                   </td>
-                  <td className="py-3 text-right font-semibold tabular-nums">
+                  <td className="py-3 text-right font-semibold tabular-nums whitespace-nowrap">
                     {formatCurrency(item.total_price)}
                   </td>
                 </tr>

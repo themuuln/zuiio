@@ -260,8 +260,8 @@ export function DashboardClient({ data }: { data: DashboardData }) {
               Сүүлийн 30 хоногт борлуулалт хийгдээгүй байна.
             </p>
           ) : (
-            <div className="h-72 w-full">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="h-60 w-full md:h-72">
+              <ResponsiveContainer width="100%" height="100%" minHeight={240}>
                 <BarChart data={data.monthlyTrend}>
                   <CartesianGrid
                     strokeDasharray="3 3"

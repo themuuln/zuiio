@@ -54,7 +54,7 @@ export default async function NotificationsPage() {
               {notifications.map((n) => (
                 <div
                   key={n.id}
-                  className="flex items-start justify-between px-6 py-4 gap-4"
+                  className="flex flex-wrap items-start justify-between px-6 py-4 gap-4"
                 >
                   <div className="min-w-0 flex-1 space-y-1">
                     <div className="flex items-center gap-2">
@@ -87,7 +87,7 @@ export default async function NotificationsPage() {
                     </div>
                   </div>
                   {n.status === "failed" && n.error_message && (
-                    <p className="text-xs text-destructive shrink-0 max-w-[200px] truncate">
+                    <p className="w-full text-xs text-destructive sm:w-auto sm:max-w-[200px]">
                       {n.error_message}
                     </p>
                   )}
