@@ -222,9 +222,7 @@ export function useRemoveVehicleFromBay(branchId: string | undefined) {
 
 // ─── Assign Mechanic ────────────────────────────────────────────
 
-export function useAssignMechanicToWorkOrder(branchId: string | undefined) {
-  const queryClient = useQueryClient();
-
+export function useAssignMechanicToWorkOrder(_branchId: string | undefined) {
   return useMutation({
     mutationFn: async ({
       woId,
@@ -238,55 +236,7 @@ export function useAssignMechanicToWorkOrder(branchId: string | undefined) {
       );
       await assignMechanicToWorkOrder(woId, mechanicId);
     },
-    onMutate: async (vars) => {
-      const key = bayViewKeys.data(branchId);
-      await queryClient.cancelQueries({ queryKey: key });
-      const previous = queryClient.getQueryData<BayViewData>(key);
-      if (previous) {
-        const mechName =
-          previous.mechanics.find((m) => m.id === vars.mechanicId)?.full_name ??
-          null;
-        queryClient.setQueryData<BayViewData>(
-          key,
-          updateBaysInData(previous, (b) => {
-            let bay = b;
-            // If mechanic was assigned elsewhere, clear them from that bay
-            if (bay.workOrder?.mechanic?.id === vars.mechanicId) {
-              bay = {
-                ...bay,
-                workOrder: bay.workOrder
-                  ? {
-                      ...bay.workOrder,
-                      mechanic: null,
-                      mechanic_id: null,
-                    }
-                  : null,
-              };
-            }
-            // Assign mechanic to target work order
-            if (bay.workOrder?.id === vars.woId && bay.workOrder) {
-              bay = {
-                ...bay,
-                workOrder: {
-                  ...bay.workOrder,
-                  mechanic: {
-                    id: vars.mechanicId,
-                    full_name: mechName,
-                    avatar_url: null,
-                  },
-                  mechanic_id: vars.mechanicId,
-                  status: "In Progress" as const,
-                },
-              };
-            }
-            return bay;
-          }),
-        );
-      }
-      return { previous };
-    },
-    onError: (_err, _vars, context) => {
-      rollbackOnError(queryClient, branchId, context);
+    onError: () => {
       toast.error("Failed to assign mechanic");
     },
     onSuccess: () => {
@@ -298,9 +248,7 @@ export function useAssignMechanicToWorkOrder(branchId: string | undefined) {
 
 // ─── Remove Mechanic ───────────────────────────────────────────
 
-export function useRemoveMechanicFromWorkOrder(branchId: string | undefined) {
-  const queryClient = useQueryClient();
-
+export function useRemoveMechanicFromWorkOrder(_branchId: string | undefined) {
   return useMutation({
     mutationFn: async ({ woId }: { woId: string }) => {
       const { unassignMechanicFromWorkOrder } = await import(
@@ -308,31 +256,7 @@ export function useRemoveMechanicFromWorkOrder(branchId: string | undefined) {
       );
       await unassignMechanicFromWorkOrder(woId);
     },
-    onMutate: async (vars) => {
-      const key = bayViewKeys.data(branchId);
-      await queryClient.cancelQueries({ queryKey: key });
-      const previous = queryClient.getQueryData<BayViewData>(key);
-      if (previous) {
-        queryClient.setQueryData<BayViewData>(
-          key,
-          updateBaysInData(previous, (b) =>
-            b.workOrder?.id === vars.woId && b.workOrder
-              ? {
-                  ...b,
-                  workOrder: {
-                    ...b.workOrder,
-                    mechanic: null,
-                    mechanic_id: null,
-                  },
-                }
-              : b,
-          ),
-        );
-      }
-      return { previous };
-    },
-    onError: (_err, _vars, context) => {
-      rollbackOnError(queryClient, branchId, context);
+    onError: () => {
       toast.error("Failed to remove mechanic");
     },
     onSuccess: () => {
@@ -344,9 +268,7 @@ export function useRemoveMechanicFromWorkOrder(branchId: string | undefined) {
 
 // ─── Add Helper ────────────────────────────────────────────────
 
-export function useAddHelperToWorkOrder(branchId: string | undefined) {
-  const queryClient = useQueryClient();
-
+export function useAddHelperToWorkOrder(_branchId: string | undefined) {
   return useMutation({
     mutationFn: async ({
       woId,
@@ -360,44 +282,7 @@ export function useAddHelperToWorkOrder(branchId: string | undefined) {
       );
       await assignHelperToWorkOrder(woId, mechanicId);
     },
-    onMutate: async (vars) => {
-      const key = bayViewKeys.data(branchId);
-      await queryClient.cancelQueries({ queryKey: key });
-      const previous = queryClient.getQueryData<BayViewData>(key);
-      if (previous) {
-        const mechanic = previous.mechanics.find(
-          (m) => m.id === vars.mechanicId,
-        );
-        queryClient.setQueryData<BayViewData>(
-          key,
-          updateBaysInData(previous, (b) => {
-            if (b.workOrder?.id !== vars.woId || !b.workOrder) return b;
-            // No-op if mechanic is already a helper
-            if (b.workOrder.helpers.some((h) => h.id === vars.mechanicId))
-              return b;
-            // No-op if mechanic is the main mechanic
-            if (b.workOrder.mechanic?.id === vars.mechanicId) return b;
-            return {
-              ...b,
-              workOrder: {
-                ...b.workOrder,
-                helpers: [
-                  ...b.workOrder.helpers,
-                  {
-                    id: vars.mechanicId,
-                    full_name: mechanic?.full_name ?? null,
-                    avatar_url: mechanic?.avatar_url ?? null,
-                  },
-                ],
-              },
-            };
-          }),
-        );
-      }
-      return { previous };
-    },
-    onError: (_err, _vars, context) => {
-      rollbackOnError(queryClient, branchId, context);
+    onError: () => {
       toast.error("Failed to add helper");
     },
     onSuccess: () => {
@@ -409,9 +294,7 @@ export function useAddHelperToWorkOrder(branchId: string | undefined) {
 
 // ─── Remove Helper ─────────────────────────────────────────────
 
-export function useRemoveHelperFromWorkOrder(branchId: string | undefined) {
-  const queryClient = useQueryClient();
-
+export function useRemoveHelperFromWorkOrder(_branchId: string | undefined) {
   return useMutation({
     mutationFn: async ({
       woId,
@@ -425,32 +308,7 @@ export function useRemoveHelperFromWorkOrder(branchId: string | undefined) {
       );
       await removeHelperFromWorkOrder(woId, mechanicId);
     },
-    onMutate: async (vars) => {
-      const key = bayViewKeys.data(branchId);
-      await queryClient.cancelQueries({ queryKey: key });
-      const previous = queryClient.getQueryData<BayViewData>(key);
-      if (previous) {
-        queryClient.setQueryData<BayViewData>(
-          key,
-          updateBaysInData(previous, (b) =>
-            b.workOrder?.id === vars.woId && b.workOrder
-              ? {
-                  ...b,
-                  workOrder: {
-                    ...b.workOrder,
-                    helpers: b.workOrder.helpers.filter(
-                      (h) => h.id !== vars.mechanicId,
-                    ),
-                  },
-                }
-              : b,
-          ),
-        );
-      }
-      return { previous };
-    },
-    onError: (_err, _vars, context) => {
-      rollbackOnError(queryClient, branchId, context);
+    onError: () => {
       toast.error("Failed to remove helper");
     },
     onSuccess: () => {

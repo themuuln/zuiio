@@ -7,7 +7,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Building2, GripVertical, List, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -46,7 +46,7 @@ import {
 import { useOrgSettings } from "@/lib/queries/use-org-settings";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useProfile } from "@/lib/queries/use-profile";
-import type { BayViewData, ShiftReport } from "@/lib/services/bay-view-service";
+import type { ShiftReport } from "@/lib/services/bay-view-service";
 import {
   getBayViewDataFresh,
   getShiftReport,
@@ -104,7 +104,6 @@ export function BayViewV2Client() {
   const router = useRouter();
 
   // ── React Query ──────────────────────────────────────────────
-  const queryClient = useQueryClient();
   const [isPollingPaused, setIsPollingPaused] = useState(false);
 
   const bayQuery = useQuery({
@@ -812,54 +811,6 @@ export function BayViewV2Client() {
       const [newLeadId, ...helperIds] = orderedMechanicIds;
       if (!newLeadId) return;
 
-      // Optimistic: update the cache immediately via the bay view cache
-      queryClient.setQueryData<BayViewData>(
-        bayViewKeys.data(branchFilter),
-        (prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            bays: prev.bays.map((bay) => {
-              if (bay.workOrder?.id !== woId) return bay;
-              const mechanics = prev.mechanics;
-              const newLead = mechanics.find((m) => m.id === newLeadId) ?? null;
-              // Build new helpers list preserving profile data
-              const newHelpers = helperIds
-                .map((id) => {
-                  const existing = bay.workOrder?.helpers.find(
-                    (h) => h.id === id,
-                  );
-                  if (existing) return existing;
-                  const profile = mechanics.find((m) => m.id === id);
-                  return profile
-                    ? {
-                        id: profile.id,
-                        full_name: profile.full_name,
-                        avatar_url: profile.avatar_url,
-                      }
-                    : null;
-                })
-                .filter(Boolean) as {
-                id: string;
-                full_name: string | null;
-                avatar_url: string | null;
-              }[];
-
-              return {
-                ...bay,
-                workOrder: bay.workOrder
-                  ? {
-                      ...bay.workOrder,
-                      mechanic: newLead,
-                      helpers: newHelpers,
-                    }
-                  : null,
-              };
-            }),
-          };
-        },
-      );
-
       try {
         // PATCH the work order to update the lead mechanic
         const leadRes = await fetch(
@@ -890,15 +841,11 @@ export function BayViewV2Client() {
         toast.dismiss();
         toast.success("Mechanics reordered");
       } catch {
-        // Rollback on failure — invalidate so fresh data is fetched
-        queryClient.invalidateQueries({
-          queryKey: bayViewKeys.data(branchFilter),
-        });
         toast.dismiss();
         toast.error("Failed to reorder mechanics");
       }
     },
-    [orgInfo?.orgId, branchFilter, queryClient],
+    [orgInfo?.orgId],
   );
 
   // ── Assign mechanic (quick assign from BayCard) ──────────────
