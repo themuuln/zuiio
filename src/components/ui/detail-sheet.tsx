@@ -203,4 +203,3 @@ DetailSheet.Section = function DetailSheetSectionComponent({
     </div>
   );
 };
-

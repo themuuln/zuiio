@@ -4,11 +4,11 @@ import { AlertTriangle, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Separator } from "@/components/ui/separator";
 import { BayCardFooter } from "./_bay-card-footer";
-import { BayCardMechanicsRow } from "./_bay-card-mechanics-row";
 import type { BayCardProps } from "./_bay-card-types";
 import { BayCardVehicleInfo } from "./_bay-card-vehicle-info";
 import { BayNumberLabel } from "./_bay-number-label";
 import { BayStatusBadge } from "./_bay-status-badge";
+import { MechanicsRow } from "./_mechanic-row";
 import { STATUS_TRANSLATION_KEYS } from "./_constants";
 
 /** Elapsed minutes helper */
@@ -107,10 +107,13 @@ export function BayCardOccupied({
           draggable
           draggableDisabled={isPending || isKanbanMode}
         />
-        <BayCardMechanicsRow
-          workOrder={wo}
+        <MechanicsRow
+          woId={wo.id}
+          leadMechanic={wo.mechanic}
+          helpers={wo.helpers}
+          status={wo.status}
+          allMechanics={mechanics}
           isPending={isPending}
-          mechanics={mechanics}
           onRemoveHelper={onRemoveHelper}
           onAssignMechanic={onAssignMechanic}
           onRemoveMechanic={onRemoveMechanic}

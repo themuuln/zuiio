@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback } from "react";
+import { UserPlus } from "lucide-react";
 import { MechanicAvatarChip } from "@/components/mechanic-avatar-chip";
 import type { BayCardMechanic, BayCardWorkOrder } from "./_bay-card-types";
-import { MechanicQuickAssign } from "./_mechanic-quick-assign";
+import { MechanicAssignSheet } from "./_mechanic-assign-sheet";
 import { MechanicBadge } from "./mechanic-badge";
+import { cn } from "@/lib/utils";
 
 interface BayCardMechanicsRowProps {
   workOrder: BayCardWorkOrder;
@@ -30,17 +31,6 @@ export function BayCardMechanicsRow({
   onAddHelper,
 }: BayCardMechanicsRowProps) {
   const isPreview = variant === "preview";
-
-  const handleUnassign = useCallback(
-    async (mechanicId: string) => {
-      if (workOrder.mechanic?.id === mechanicId) {
-        await onRemoveMechanic?.(workOrder.id);
-      } else {
-        onRemoveHelper?.(workOrder.id, mechanicId);
-      }
-    },
-    [workOrder.id, workOrder.mechanic?.id, onRemoveMechanic, onRemoveHelper],
-  );
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -72,32 +62,34 @@ export function BayCardMechanicsRow({
       {!isPreview &&
         (onAssignMechanic || onAddHelper) &&
         mechanics.length > 0 && (
-          <MechanicQuickAssign
-            currentMechanic={workOrder.mechanic}
+          <MechanicAssignSheet
+            trigger={
+              <span
+                className={cn(
+                  "inline-flex size-6 items-center justify-center rounded-full border border-dashed transition-all duration-200",
+                  "text-muted-foreground/40 hover:text-primary hover:border-primary/50 hover:bg-primary/10",
+                  "active:scale-95",
+                )}
+              >
+                <UserPlus className="size-3" />
+              </span>
+            }
             mechanics={mechanics}
-            helperMechanics={workOrder.helpers}
-            hasLeadMechanic={!!workOrder.mechanic}
-            onAssignLead={
-              onAssignMechanic
-                ? async (mechanicId) => {
-                    await onAssignMechanic(workOrder.id, mechanicId);
-                  }
-                : async () => {}
-            }
-            onAssignHelper={
-              onAddHelper
-                ? async (mechanicId) => {
-                    await onAddHelper(workOrder.id, mechanicId);
-                  }
-                : async () => {}
-            }
-            onUnassign={
-              onRemoveHelper || onRemoveMechanic
-                ? async (mechanicId) => {
-                    await handleUnassign(mechanicId);
-                  }
-                : undefined
-            }
+            leadMechanicId={workOrder.mechanic?.id ?? null}
+            helpers={workOrder.helpers}
+            onAssignLead={async (mechanicId) => {
+              await onAssignMechanic?.(workOrder.id, mechanicId);
+            }}
+            onAssignHelper={async (mechanicId) => {
+              await onAddHelper?.(workOrder.id, mechanicId);
+            }}
+            onUnassign={async (mechanicId) => {
+              if (workOrder.mechanic?.id === mechanicId) {
+                await onRemoveMechanic?.(workOrder.id);
+              } else {
+                onRemoveHelper?.(workOrder.id, mechanicId);
+              }
+            }}
             disabled={isPending}
           />
         )}

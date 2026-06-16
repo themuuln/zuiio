@@ -387,16 +387,19 @@ export function VehicleRegistrationDrawer({
         setSaveMode(saveResult.isUpdate ? "updated" : "created");
 
         // Queue and bay assignment are secondary — failures here don't undo vehicle save
+        let queueSucceeded = false;
+        let assignSucceeded = false;
         try {
           const { addVehicleToQueue } = await import(
             "@/lib/services/bay-view-actions"
           );
           const { workOrderId } = await addVehicleToQueue({
             vehicleId: saveResult.vehicle.id,
-            customerId: saveResult.customerId ?? "",
+            customerId: saveResult.customerId ?? undefined,
             complaint: data.complaint?.trim() || undefined,
             branchId,
           });
+          queueSucceeded = true;
 
           // Direct assign to bay if requested
           if (assignBayNumber && workOrderId) {
@@ -405,6 +408,7 @@ export function VehicleRegistrationDrawer({
                 "@/lib/services/bay-view-service.actions"
               );
               await assignVehicleToBay(workOrderId, assignBayNumber);
+              assignSucceeded = true;
             } catch {
               toast.warning(t("saveSuccessBayAssignFailed"));
             }
@@ -415,17 +419,19 @@ export function VehicleRegistrationDrawer({
           );
         }
 
-        // Re-lookup to update timeline
+        // Re-lookup to update timeline (even if queue failed, vehicle may exist now)
         const refreshResult = await lookupVehicleByPlate(
           plate.trim().toUpperCase(),
         );
         setLookupResult(refreshResult);
         setLookupDone(true);
 
-        if (assignBayNumber) {
-          onAssigned?.();
-        } else {
-          onQueued?.();
+        if (queueSucceeded) {
+          if (assignBayNumber && assignSucceeded) {
+            onAssigned?.();
+          } else {
+            onQueued?.();
+          }
         }
       } catch (err) {
         // Only vehicle save failure is fatal
@@ -468,7 +474,7 @@ export function VehicleRegistrationDrawer({
         );
         ({ workOrderId } = await addVehicleToQueue({
           vehicleId: saveResult.vehicle.id,
-          customerId: saveResult.customerId ?? "",
+          customerId: saveResult.customerId ?? undefined,
           complaint: formData.complaint?.trim() || undefined,
           branchId,
         }));
@@ -516,7 +522,7 @@ export function VehicleRegistrationDrawer({
     }
 
     setQueueSaving(false);
-    if (assignBayNumber) {
+    if (assignBayNumber && workOrderId) {
       onAssigned?.();
     } else {
       onQueued?.();

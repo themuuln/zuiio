@@ -10,7 +10,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import type { BayViewData } from "@/lib/services/bay-view-service";
+import type { BaySlotData, BayViewData } from "@/lib/services/bay-view-service";
 import { bayViewKeys } from "./keys";
 
 // ─── Rollback Helper ──────────────────────────────────────────
@@ -23,6 +23,26 @@ function rollbackOnError(
   if (context?.previous) {
     queryClient.setQueryData(bayViewKeys.data(branchId), context.previous);
   }
+}
+
+// ─── Branch Sections Helper ───────────────────────────────────
+/**
+ * Apply `updater` to both `data.bays` and every nested bay inside
+ * `data.branchSections`. This keeps the optimistic cache in sync when
+ * the user is viewing "All" branches (where the UI reads from branchSections).
+ */
+function updateBaysInData(
+  data: BayViewData,
+  updater: (bay: BaySlotData) => BaySlotData,
+): BayViewData {
+  return {
+    ...data,
+    bays: data.bays.map(updater),
+    branchSections: data.branchSections?.map((section) => ({
+      ...section,
+      bays: section.bays.map(updater),
+    })),
+  };
 }
 
 // ─── Status Update ─────────────────────────────────────────────
@@ -54,9 +74,9 @@ export function useUpdateBayViewStatus(branchId: string | undefined) {
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<BayViewData>(key);
       if (previous) {
-        queryClient.setQueryData<BayViewData>(key, {
-          ...previous,
-          bays: previous.bays.map((b) =>
+        queryClient.setQueryData<BayViewData>(
+          key,
+          updateBaysInData(previous, (b) =>
             b.workOrder?.id === vars.woId
               ? {
                   ...b,
@@ -74,7 +94,7 @@ export function useUpdateBayViewStatus(branchId: string | undefined) {
                 }
               : b,
           ),
-        });
+        );
       }
       return { previous };
     },
@@ -85,9 +105,6 @@ export function useUpdateBayViewStatus(branchId: string | undefined) {
     onSuccess: () => {
       toast.dismiss();
       toast.success("Status updated");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: bayViewKeys.data(branchId) });
     },
   });
 }
@@ -117,26 +134,28 @@ export function useAssignVehicleToBay(branchId: string | undefined) {
       if (previous) {
         const wo = previous.waitingQueue.find((w) => w.id === vars.workOrderId);
         if (wo) {
-          queryClient.setQueryData<BayViewData>(key, {
-            ...previous,
-            waitingQueue: previous.waitingQueue.filter(
-              (w) => w.id !== vars.workOrderId,
-            ),
-            bays: previous.bays.map((b) =>
-              b.bayNumber === vars.bayNumber
-                ? {
-                    ...b,
-                    workOrder: {
-                      ...wo,
-                      bay_number: vars.bayNumber,
-                      status: "New" as const,
-                      mechanic: null,
-                      helpers: [],
-                      customer_name: null,
-                    },
-                  }
-                : b,
-            ),
+          queryClient.setQueryData<BayViewData>(key, (prev) => {
+            if (!prev) return prev;
+            return {
+              ...updateBaysInData(prev, (b) =>
+                b.bayNumber === vars.bayNumber
+                  ? {
+                      ...b,
+                      workOrder: {
+                        ...wo,
+                        bay_number: vars.bayNumber,
+                        status: "New" as const,
+                        mechanic: null,
+                        helpers: [],
+                        customer_name: null,
+                      },
+                    }
+                  : b,
+              ),
+              waitingQueue: prev.waitingQueue.filter(
+                (w) => w.id !== vars.workOrderId,
+              ),
+            };
           });
         }
       }
@@ -149,9 +168,6 @@ export function useAssignVehicleToBay(branchId: string | undefined) {
     onSuccess: (_data, vars) => {
       toast.dismiss();
       toast.success(`Assigned to Bay ${vars.bayNumber}`);
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: bayViewKeys.data(branchId) });
     },
   });
 }
@@ -177,15 +193,17 @@ export function useRemoveVehicleFromBay(branchId: string | undefined) {
           (b) => b.workOrder?.id === vars.woId,
         )?.workOrder;
         if (removedWO) {
-          queryClient.setQueryData<BayViewData>(key, {
-            ...previous,
-            bays: previous.bays.map((b) =>
-              b.workOrder?.id === vars.woId ? { ...b, workOrder: null } : b,
-            ),
-            waitingQueue: [
-              ...previous.waitingQueue,
-              { ...removedWO, bay_number: null, status: "New" as const },
-            ],
+          queryClient.setQueryData<BayViewData>(key, (prev) => {
+            if (!prev) return prev;
+            return {
+              ...updateBaysInData(prev, (b) =>
+                b.workOrder?.id === vars.woId ? { ...b, workOrder: null } : b,
+              ),
+              waitingQueue: [
+                ...prev.waitingQueue,
+                { ...removedWO, bay_number: null, status: "New" as const },
+              ],
+            };
           });
         }
       }
@@ -198,9 +216,6 @@ export function useRemoveVehicleFromBay(branchId: string | undefined) {
     onSuccess: () => {
       toast.dismiss();
       toast.success("Removed from bay");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: bayViewKeys.data(branchId) });
     },
   });
 }
@@ -231,9 +246,9 @@ export function useAssignMechanicToWorkOrder(branchId: string | undefined) {
         const mechName =
           previous.mechanics.find((m) => m.id === vars.mechanicId)?.full_name ??
           null;
-        queryClient.setQueryData<BayViewData>(key, {
-          ...previous,
-          bays: previous.bays.map((b) => {
+        queryClient.setQueryData<BayViewData>(
+          key,
+          updateBaysInData(previous, (b) => {
             let bay = b;
             // If mechanic was assigned elsewhere, clear them from that bay
             if (bay.workOrder?.mechanic?.id === vars.mechanicId) {
@@ -266,7 +281,7 @@ export function useAssignMechanicToWorkOrder(branchId: string | undefined) {
             }
             return bay;
           }),
-        });
+        );
       }
       return { previous };
     },
@@ -277,9 +292,6 @@ export function useAssignMechanicToWorkOrder(branchId: string | undefined) {
     onSuccess: () => {
       toast.dismiss();
       toast.success("Mechanic assigned");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: bayViewKeys.data(branchId) });
     },
   });
 }
@@ -301,9 +313,9 @@ export function useRemoveMechanicFromWorkOrder(branchId: string | undefined) {
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<BayViewData>(key);
       if (previous) {
-        queryClient.setQueryData<BayViewData>(key, {
-          ...previous,
-          bays: previous.bays.map((b) =>
+        queryClient.setQueryData<BayViewData>(
+          key,
+          updateBaysInData(previous, (b) =>
             b.workOrder?.id === vars.woId && b.workOrder
               ? {
                   ...b,
@@ -315,7 +327,7 @@ export function useRemoveMechanicFromWorkOrder(branchId: string | undefined) {
                 }
               : b,
           ),
-        });
+        );
       }
       return { previous };
     },
@@ -326,9 +338,6 @@ export function useRemoveMechanicFromWorkOrder(branchId: string | undefined) {
     onSuccess: () => {
       toast.dismiss();
       toast.success("Mechanic removed");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: bayViewKeys.data(branchId) });
     },
   });
 }
@@ -359,9 +368,9 @@ export function useAddHelperToWorkOrder(branchId: string | undefined) {
         const mechanic = previous.mechanics.find(
           (m) => m.id === vars.mechanicId,
         );
-        queryClient.setQueryData<BayViewData>(key, {
-          ...previous,
-          bays: previous.bays.map((b) => {
+        queryClient.setQueryData<BayViewData>(
+          key,
+          updateBaysInData(previous, (b) => {
             if (b.workOrder?.id !== vars.woId || !b.workOrder) return b;
             // No-op if mechanic is already a helper
             if (b.workOrder.helpers.some((h) => h.id === vars.mechanicId))
@@ -383,7 +392,7 @@ export function useAddHelperToWorkOrder(branchId: string | undefined) {
               },
             };
           }),
-        });
+        );
       }
       return { previous };
     },
@@ -394,9 +403,6 @@ export function useAddHelperToWorkOrder(branchId: string | undefined) {
     onSuccess: () => {
       toast.dismiss();
       toast.success("Helper added");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: bayViewKeys.data(branchId) });
     },
   });
 }
@@ -424,9 +430,9 @@ export function useRemoveHelperFromWorkOrder(branchId: string | undefined) {
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<BayViewData>(key);
       if (previous) {
-        queryClient.setQueryData<BayViewData>(key, {
-          ...previous,
-          bays: previous.bays.map((b) =>
+        queryClient.setQueryData<BayViewData>(
+          key,
+          updateBaysInData(previous, (b) =>
             b.workOrder?.id === vars.woId && b.workOrder
               ? {
                   ...b,
@@ -439,7 +445,7 @@ export function useRemoveHelperFromWorkOrder(branchId: string | undefined) {
                 }
               : b,
           ),
-        });
+        );
       }
       return { previous };
     },
@@ -450,9 +456,6 @@ export function useRemoveHelperFromWorkOrder(branchId: string | undefined) {
     onSuccess: () => {
       toast.dismiss();
       toast.success("Helper removed");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: bayViewKeys.data(branchId) });
     },
   });
 }
@@ -493,9 +496,9 @@ export function useAssignCustomerToWorkOrder(
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<BayViewData>(key);
       if (previous) {
-        queryClient.setQueryData<BayViewData>(key, {
-          ...previous,
-          bays: previous.bays.map((b) =>
+        queryClient.setQueryData<BayViewData>(
+          key,
+          updateBaysInData(previous, (b) =>
             b.workOrder?.id === vars.woId && b.workOrder
               ? {
                   ...b,
@@ -506,7 +509,7 @@ export function useAssignCustomerToWorkOrder(
                 }
               : b,
           ),
-        });
+        );
       }
       return { previous };
     },
@@ -519,9 +522,6 @@ export function useAssignCustomerToWorkOrder(
       if (vars.customerId) {
         toast.success("Customer assigned");
       }
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: bayViewKeys.data(branchId) });
     },
   });
 }
@@ -543,13 +543,22 @@ export function useUpdateBayCount(branchId: string | undefined) {
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<BayViewData>(key);
       if (previous) {
+        const newBays = Array.from({ length: vars.count }, (_, i) => {
+          const existing = previous.bays[i];
+          return existing ?? { bayNumber: i + 1, workOrder: null };
+        });
         queryClient.setQueryData<BayViewData>(key, {
           ...previous,
           bayCount: vars.count,
-          bays: Array.from({ length: vars.count }, (_, i) => {
-            const existing = previous.bays[i];
-            return existing ?? { bayNumber: i + 1, workOrder: null };
-          }),
+          bays: newBays,
+          branchSections: previous.branchSections?.map((section) => ({
+            ...section,
+            bayCount: vars.count,
+            bays: Array.from({ length: vars.count }, (_, i) => {
+              const existing = section.bays[i];
+              return existing ?? { bayNumber: i + 1, workOrder: null };
+            }),
+          })),
         });
       }
       return { previous };

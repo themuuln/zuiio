@@ -1,6 +1,6 @@
 "use client";
 
-import { Crown, Search, UserPlus } from "lucide-react";
+import { Crown, Search, UserPlus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { MechanicAvatar } from "@/components/mechanic-avatar";
@@ -111,13 +111,13 @@ export function MechanicQuickAssign({
       />
 
       <PopoverContent
-        className="w-64 p-0"
+        className="w-72 p-0"
         side="bottom"
         align="end"
         sideOffset={4}
       >
         <div className="flex flex-col">
-          {/* Header */}
+          {/* Header with close button */}
           <div className="flex items-center justify-between border-b border-border/50 px-3 py-2">
             <span className="text-xs font-semibold">
               {hasLeadMechanic
@@ -126,6 +126,13 @@ export function MechanicQuickAssign({
                   ? (t("changeMechanic") ?? "Change Mechanic")
                   : (t("assignMechanic") ?? "Assign Mechanic")}
             </span>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="text-muted-foreground/40 hover:text-foreground transition-colors"
+            >
+              <X className="size-3" />
+            </button>
           </div>
 
           {/* Search */}
@@ -137,13 +144,19 @@ export function MechanicQuickAssign({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t("searchMechanics")}
-                className="h-8 pl-7 pr-2 text-xs"
+                className="h-7 pl-7 pr-2 text-xs"
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    setSearch("");
+                    setOpen(false);
+                  }
+                }}
               />
             </div>
           </div>
 
           {/* Mechanic list */}
-          <div className="flex flex-col max-h-72 overflow-y-auto px-1 py-1">
+          <div className="flex flex-col max-h-80 overflow-y-auto px-1 py-1">
             {ordered.length === 0 ? (
               <div className="px-3 py-8 text-center">
                 <span className="text-xs text-muted-foreground">
@@ -164,11 +177,7 @@ export function MechanicQuickAssign({
                       e.stopPropagation();
                       handleToggle(m.id);
                     }}
-                    className={cn(
-                      "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors",
-                      "hover:bg-accent/50",
-                      isAssigned && "bg-accent/20",
-                    )}
+                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2.5 text-left transition-colors hover:bg-accent/50"
                   >
                     <Checkbox
                       checked={isAssigned}
@@ -181,12 +190,26 @@ export function MechanicQuickAssign({
                         {m.full_name}
                       </div>
                     </div>
-                    {isLead && (
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-amber-500/12 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
-                        <Crown className="size-2.5" />
-                        Lead
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1 shrink-0">
+                      {isAssigned && !isLead && hasLeadMechanic && (
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAssignLead(m.id).catch(() => {});
+                          }}
+                          className="flex size-5 items-center justify-center rounded text-muted-foreground/30 hover:text-amber-500 hover:bg-amber-500/10 transition-colors cursor-pointer"
+                          title="Set as lead mechanic"
+                        >
+                          <Crown className="size-3.5" />
+                        </span>
+                      )}
+                      {isLead && (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-amber-500/12 px-2 py-1 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+                          <Crown className="size-3" />
+                          Lead
+                        </span>
+                      )}
+                    </div>
                   </button>
                 );
               })

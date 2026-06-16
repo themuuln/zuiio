@@ -426,7 +426,9 @@ export default function NewEstimatePage() {
 
               <div className="flex flex-wrap gap-2">
                 <Drawer>
-                  <DrawerTrigger render={<Button variant="outline" size="sm" />}>
+                  <DrawerTrigger
+                    render={<Button variant="outline" size="sm" />}
+                  >
                     <Plus className="size-4" />
                     {t("addService")}
                   </DrawerTrigger>
@@ -481,7 +483,9 @@ export default function NewEstimatePage() {
                 </Drawer>
 
                 <Drawer>
-                  <DrawerTrigger render={<Button variant="outline" size="sm" />}>
+                  <DrawerTrigger
+                    render={<Button variant="outline" size="sm" />}
+                  >
                     <Plus className="size-4" />
                     {t("addPart")}
                   </DrawerTrigger>

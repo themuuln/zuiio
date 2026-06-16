@@ -32,7 +32,12 @@ export function MechanicSwitcher() {
   const orgId = orgInfo?.orgId;
 
   const { data: profile } = useProfile();
+  const [mounted, setMounted] = useState(false);
   const [activeMechanicId, setActiveMechanicId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const stored = localStorage.getItem(MECHANIC_STORAGE_KEY);
@@ -60,8 +65,9 @@ export function MechanicSwitcher() {
 
   const activeMechanic =
     mechanics.find((m) => m.id === activeMechanicId) ?? null;
-  const displayName =
-    activeMechanic?.full_name ?? profile?.fullName ?? "Mechanic";
+  const displayName = mounted
+    ? (activeMechanic?.full_name ?? profile?.fullName ?? "Mechanic")
+    : "Mechanic";
 
   const queryClient = useQueryClient();
   const [showAddMechanic, setShowAddMechanic] = useState(false);
@@ -94,9 +100,11 @@ export function MechanicSwitcher() {
           <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
             <span className="truncate text-xs font-medium">{displayName}</span>
             <span className="truncate text-[9px] text-sidebar-foreground/50">
-              {mechanics.length > 0
-                ? `${mechanics.length} mechanics`
-                : "No mechanics"}
+              {!mounted
+                ? "Mechanics"
+                : mechanics.length > 0
+                  ? `${mechanics.length} mechanics`
+                  : "No mechanics"}
             </span>
           </div>
         </DropdownMenuTrigger>

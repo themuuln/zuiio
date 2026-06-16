@@ -2,7 +2,8 @@
 
 import { Crown, Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { MechanicAvatar } from "@/components/mechanic-avatar";
 import { MechanicAvatarGroup } from "@/components/mechanic-avatar-chip";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -38,7 +39,7 @@ interface MechanicMultiSelectProps {
   onHelpersChange: () => void;
 }
 
-function MechanicRow({
+const MechanicRow = memo(function MechanicRow({
   mechanic,
   isAssigned,
   isLead,
@@ -52,12 +53,16 @@ function MechanicRow({
   onSetLead?: (mechanicId: string) => void;
 }) {
   return (
-    <div className="flex items-center gap-2 rounded-lg px-2.5 py-2.5">
+    <button
+      type="button"
+      onClick={() => onToggle?.(mechanic.id)}
+      className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2.5 hover:bg-accent/50 transition-colors text-left"
+    >
       <Checkbox
         checked={isAssigned}
         onCheckedChange={() => onToggle?.(mechanic.id)}
         onClick={(e: React.MouseEvent) => e.stopPropagation()}
-        className="size-4 shrink-0"
+        className="size-4 shrink-0 pointer-events-none"
         aria-label={`Toggle ${mechanic.full_name}`}
       />
       <MechanicAvatar mechanic={mechanic} className="size-7 shrink-0" />
@@ -93,9 +98,9 @@ function MechanicRow({
           </span>
         )}
       </div>
-    </div>
+    </button>
   );
-}
+});
 
 /** Build ordered value: [lead, ...helpers] */
 function buildSelectedValue(
@@ -137,13 +142,16 @@ export function MechanicMultiSelect({
     [leadMechanicId, helpers, mechanics],
   );
 
-  // Pessimistic local state: set AFTER API success, cleared when refetch arrives
+  // Optimistic local state: set BEFORE API call, cleared when server catches up
   const [localValue, setLocalValue] = useState<MechanicOption[] | null>(null);
   const value = localValue ?? serverValue;
 
+  // Track pending API operations to avoid clearing localValue prematurely
+  const pendingOps = useRef(0);
+
   // Sync: when server catches up, drop local
   useEffect(() => {
-    if (!localValue) return;
+    if (!localValue || pendingOps.current > 0) return;
     const localIds = localValue
       .map((m) => m.id)
       .sort()
@@ -172,6 +180,116 @@ export function MechanicMultiSelect({
   const ordered = [...value, ...unassigned];
 
   const CHIP_LIMIT = 3;
+
+  const handleToggle = useCallback(
+    (mechanicId: string) => {
+      const candidate = mechanics.find((m) => m.id === mechanicId);
+      if (!candidate) return;
+
+      const isAssigned = assignedIds.has(mechanicId);
+      let nextValue: MechanicOption[];
+
+      if (isAssigned) {
+        // Unassign
+        nextValue = value.filter((v) => v.id !== mechanicId);
+
+        // Update UI immediately
+        setLocalValue(nextValue);
+        pendingOps.current++;
+
+        if (mechanicId === leadMechanicId) {
+          // Removing lead — promote next helper if any
+          if (nextValue.length > 0) {
+            onLeadChange(nextValue[0].id);
+          }
+          pendingOps.current--;
+        } else {
+          // Removing helper
+          fetch(
+            `/api/organizations/${orgId}/work-orders/${workOrderId}/helpers?mechanicId=${mechanicId}`,
+            { method: "DELETE" },
+          )
+            .then((res) => res.json())
+            .then((json) => {
+              if (json.error) {
+                toast.error(t("failedToRemoveHelper"));
+                // Revert on error
+                setLocalValue(value);
+              } else {
+                onHelpersChange();
+              }
+            })
+            .catch(() => {
+              toast.error(t("failedToRemoveHelper"));
+              setLocalValue(value);
+            })
+            .finally(() => pendingOps.current--);
+        }
+      } else {
+        // Assign
+        if (value.length === 0) {
+          // First mechanic = lead
+          nextValue = [candidate];
+          setLocalValue(nextValue);
+          onLeadChange(mechanicId);
+        } else {
+          // Helper
+          nextValue = [...value, candidate];
+          setLocalValue(nextValue);
+          pendingOps.current++;
+
+          fetch(
+            `/api/organizations/${orgId}/work-orders/${workOrderId}/helpers`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ mechanic_id: mechanicId }),
+            },
+          )
+            .then((res) => res.json())
+            .then((json) => {
+              if (json.error) {
+                toast.error(t("failedToAddHelper"));
+                // Revert on error
+                setLocalValue(value);
+              } else {
+                onHelpersChange();
+              }
+            })
+            .catch(() => {
+              toast.error(t("failedToAddHelper"));
+              setLocalValue(value);
+            })
+            .finally(() => pendingOps.current--);
+        }
+      }
+    },
+    [
+      assignedIds,
+      value,
+      leadMechanicId,
+      mechanics,
+      orgId,
+      workOrderId,
+      onLeadChange,
+      onHelpersChange,
+      t,
+    ],
+  );
+
+  const handleSetLead = useCallback(
+    (mechanicId: string) => {
+      const candidate = mechanics.find((m) => m.id === mechanicId);
+      if (!candidate) return;
+
+      // Optimistic: rebuild with new lead first
+      const updated = value.filter((v) => v.id !== mechanicId);
+      setLocalValue([candidate, ...updated]);
+
+      onLeadChange(mechanicId);
+    },
+    [mechanics, value, onLeadChange],
+  );
 
   return (
     <div className="relative">
@@ -257,78 +375,8 @@ export function MechanicMultiSelect({
                     mechanic={m}
                     isAssigned={assignedIds.has(m.id)}
                     isLead={m.id === leadMechanicId}
-                    onToggle={(mechanicId) => {
-                      if (assignedIds.has(mechanicId)) {
-                        // Unassign — if lead, promote next helper; if helper, remove
-                        if (mechanicId === leadMechanicId) {
-                          const remaining = value.filter(
-                            (v) => v.id !== mechanicId,
-                          );
-                          if (remaining.length > 0) {
-                            onLeadChange(remaining[0].id);
-                          }
-                          setLocalValue(remaining);
-                        } else {
-                          fetch(
-                            `/api/organizations/${orgId}/work-orders/${workOrderId}/helpers?mechanicId=${mechanicId}`,
-                            { method: "DELETE" },
-                          )
-                            .then((res) => res.json())
-                            .then((json) => {
-                              if (!json.error) {
-                                setLocalValue(
-                                  value.filter((v) => v.id !== mechanicId),
-                                );
-                                onHelpersChange();
-                              }
-                            })
-                            .catch(() => {});
-                        }
-                      } else {
-                        // Assign — lead if first, helper otherwise
-                        if (value.length === 0) {
-                          onLeadChange(mechanicId);
-                          const candidate = mechanics.find(
-                            (m) => m.id === mechanicId,
-                          );
-                          if (candidate) setLocalValue([candidate]);
-                        } else {
-                          fetch(
-                            `/api/organizations/${orgId}/work-orders/${workOrderId}/helpers`,
-                            {
-                              method: "POST",
-                              headers: {
-                                "Content-Type": "application/json",
-                              },
-                              body: JSON.stringify({
-                                mechanic_id: mechanicId,
-                              }),
-                            },
-                          )
-                            .then((res) => res.json())
-                            .then((json) => {
-                              if (!json.error) {
-                                const candidate = mechanics.find(
-                                  (m) => m.id === mechanicId,
-                                );
-                                if (candidate)
-                                  setLocalValue([...value, candidate]);
-                                onHelpersChange();
-                              }
-                            })
-                            .catch(() => {});
-                        }
-                      }
-                    }}
-                    onSetLead={(mechanicId) => {
-                      onLeadChange(mechanicId);
-                      // Rebuild local value with new lead first
-                      const updated = value.filter((v) => v.id !== mechanicId);
-                      const candidate = mechanics.find(
-                        (m) => m.id === mechanicId,
-                      );
-                      if (candidate) setLocalValue([candidate, ...updated]);
-                    }}
+                    onToggle={handleToggle}
+                    onSetLead={handleSetLead}
                   />
                 ))
               )}

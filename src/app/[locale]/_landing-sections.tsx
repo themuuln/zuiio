@@ -132,7 +132,9 @@ export function WorkflowSection() {
                   <CardTitle className="text-base">
                     {(t as any)(`${pillar.key}Title`)}
                   </CardTitle>
-                  <CardDescription>{(t as any)(`${pillar.key}Desc`)}</CardDescription>
+                  <CardDescription>
+                    {(t as any)(`${pillar.key}Desc`)}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-3 pt-0">
                   {[1, 2, 3].map((item) => (

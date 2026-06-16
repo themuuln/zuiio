@@ -98,7 +98,9 @@ export default function BlogPage() {
                   size="sm"
                   onClick={() => setActiveCategory(cat)}
                 >
-                  {(t as any)(`category${cat.charAt(0).toUpperCase()}${cat.slice(1)}`)}
+                  {(t as any)(
+                    `category${cat.charAt(0).toUpperCase()}${cat.slice(1)}`,
+                  )}
                 </Button>
               ))}
             </div>

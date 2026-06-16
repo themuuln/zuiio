@@ -310,9 +310,7 @@ export function VehicleModelFormSheet({
   });
 
   const isSaveDisabled =
-    !watchedMake.trim() ||
-    !watchedModel.trim() ||
-    isPending;
+    !watchedMake.trim() || !watchedModel.trim() || isPending;
 
   return (
     <DetailDrawer open={open} onOpenChange={onOpenChange} size="xl">

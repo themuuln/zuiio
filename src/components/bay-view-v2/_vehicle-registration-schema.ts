@@ -11,7 +11,7 @@ export const vehicleRegistrationSchema = z.object({
   vin: z.string().optional(),
   engine: z.string().optional(),
   odometer: z.string().optional(),
-  custFirstName: z.string().min(1, "First name is required"),
+  custFirstName: z.string().optional(),
   custLastName: z.string().optional(),
   custPhone: z
     .string()

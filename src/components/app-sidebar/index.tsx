@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Fragment } from "react";
+import { Fragment, useEffect, useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigation } from "@/hooks/use-navigation";
-import { Link } from "@/lib/i18n/navigation";
+import { useRouter } from "@/lib/i18n/navigation";
 import { getNavStatusDotClass } from "@/lib/nav-feature-status";
 import { onLinkHover } from "@/lib/prefetch";
 import { MechanicSwitcher } from "./_mechanic-switcher";
@@ -65,6 +65,13 @@ function SidebarSkeleton() {
 
 export function AppSidebar() {
   const t = useTranslations();
+  const { push } = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const {
     isActive,
     groups,
@@ -83,7 +90,7 @@ export function AppSidebar() {
         <OrgBranding />
       </SidebarHeader>
       <SidebarContent>
-        {roleLoading ? (
+        {!mounted || roleLoading ? (
           <SidebarSkeleton />
         ) : (
           <>
@@ -94,12 +101,8 @@ export function AppSidebar() {
                   {primaryItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton
-                        render={
-                          <Link
-                            href={item.href}
-                            onMouseEnter={onLinkHover(item.href)}
-                          />
-                        }
+                        onClick={() => push(item.href)}
+                        onMouseEnter={onLinkHover(item.href)}
                         isActive={isActive(item.href)}
                         tooltip={t(item.labelKey)}
                       >
@@ -128,12 +131,8 @@ export function AppSidebar() {
                       {group.children.map((item) => (
                         <SidebarMenuItem key={item.href}>
                           <SidebarMenuButton
-                            render={
-                              <Link
-                                href={item.href}
-                                onMouseEnter={onLinkHover(item.href)}
-                              />
-                            }
+                            onClick={() => push(item.href)}
+                            onMouseEnter={onLinkHover(item.href)}
                             isActive={isActive(item.href)}
                             tooltip={t(item.labelKey)}
                           >
@@ -163,12 +162,8 @@ export function AppSidebar() {
                       {settingsItems.map((item) => (
                         <SidebarMenuItem key={item.href}>
                           <SidebarMenuButton
-                            render={
-                              <Link
-                                href={item.href}
-                                onMouseEnter={onLinkHover(item.href)}
-                              />
-                            }
+                            onClick={() => push(item.href)}
+                            onMouseEnter={onLinkHover(item.href)}
                             isActive={isActive(item.href)}
                             tooltip={t(item.labelKey)}
                           >
@@ -196,12 +191,8 @@ export function AppSidebar() {
                     {utilityItems.map((item) => (
                       <SidebarMenuItem key={item.href}>
                         <SidebarMenuButton
-                          render={
-                            <Link
-                              href={item.href}
-                              onMouseEnter={onLinkHover(item.href)}
-                            />
-                          }
+                          onClick={() => push(item.href)}
+                          onMouseEnter={onLinkHover(item.href)}
                           isActive={isActive(item.href)}
                           tooltip={t(item.labelKey)}
                         >
@@ -226,12 +217,8 @@ export function AppSidebar() {
           {settingsShortcut && (
             <SidebarMenuItem>
               <SidebarMenuButton
-                render={
-                  <Link
-                    href={settingsShortcut.href}
-                    onMouseEnter={onLinkHover(settingsShortcut.href)}
-                  />
-                }
+                onClick={() => push(settingsShortcut.href)}
+                onMouseEnter={onLinkHover(settingsShortcut.href)}
                 isActive={isActive(settingsShortcut.href)}
                 tooltip={t(settingsShortcut.labelKey)}
               >

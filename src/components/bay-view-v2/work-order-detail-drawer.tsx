@@ -543,7 +543,10 @@ export function WorkOrderDetailDrawer({
             isAddingService={isConfirming}
             isFullScreen={isFullScreen}
             onAssignMechanic={assignMechanic}
-            onHelpersChange={() => fetchWo(true)}
+            onHelpersChange={() => {
+              void fetchWo(true);
+              onRefresh();
+            }}
             onToggleFullScreen={() => setIsFullScreen((f) => !f)}
             onClose={() => handleOpenChange(false)}
             showBack={showPostServiceForm}

@@ -415,7 +415,7 @@ export function BayViewV2Client() {
       setDetailDrawerOpen(false);
       setDetailWoId(null);
       setDrawerInitialAction(null);
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(window.location.search);
       params.delete("woId");
       router.replace(`?${params.toString()}`, { scroll: false });
     }
@@ -428,7 +428,7 @@ export function BayViewV2Client() {
     setDetailWoId(woId);
     setDrawerInitialAction(initialAction ?? null);
     setDetailDrawerOpen(true);
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(window.location.search);
     params.set("woId", woId);
     router.replace(`?${params.toString()}`, { scroll: false });
   }
@@ -663,7 +663,7 @@ export function BayViewV2Client() {
 
     // Clean up URL if the currently open drawer WO was completed
     if (detailWoId && succeeded > 0 && readyWos.includes(detailWoId)) {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(window.location.search);
       params.delete("woId");
       router.replace(`?${params.toString()}`, { scroll: false });
     }
@@ -746,27 +746,31 @@ export function BayViewV2Client() {
   }, [data, filteredQueue, pendingWoIds, availableBays, updateTabContent]);
 
   // ── Realtime subscriptions ─────────────────────────────────
-  useRealtimeMulti({
-    enabled: !!orgInfo?.orgId,
-    tables: [
+  const realtimeTables = useMemo(
+    () => [
       {
-        table: "work_orders",
+        table: "work_orders" as const,
         queryKey: bayViewKeys.data(branchFilter),
         filter: branchFilter
           ? `organization_id=eq.${orgInfo?.orgId},branch_id=eq.${branchFilter}`
           : `organization_id=eq.${orgInfo?.orgId}`,
       },
       {
-        table: "work_order_helpers",
+        table: "work_order_helpers" as const,
         queryKey: bayViewKeys.data(branchFilter),
         filter: `organization_id=eq.${orgInfo?.orgId}`,
       },
       {
-        table: "mechanic_assignments",
+        table: "mechanic_assignments" as const,
         queryKey: bayViewKeys.data(branchFilter),
         filter: `organization_id=eq.${orgInfo?.orgId}`,
       },
     ],
+    [branchFilter, orgInfo?.orgId],
+  );
+  useRealtimeMulti({
+    enabled: !!orgInfo?.orgId,
+    tables: realtimeTables,
   });
 
   // ── Polling pause ────────────────────────────────────────────
@@ -1247,7 +1251,7 @@ export function BayViewV2Client() {
             if (!open) {
               setDetailWoId(null);
               setDrawerInitialAction(null);
-              const params = new URLSearchParams(searchParams.toString());
+              const params = new URLSearchParams(window.location.search);
               params.delete("woId");
               router.replace(`?${params.toString()}`, { scroll: false });
             }

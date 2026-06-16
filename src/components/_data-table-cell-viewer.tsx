@@ -53,9 +53,7 @@ export function TableCellViewer({ item }: { item: TableCellViewerItem }) {
       >
         {item.header}
       </DrawerTrigger>
-      <DrawerContent
-        showCloseButton={false}
-      >
+      <DrawerContent showCloseButton={false}>
         <DrawerHeader className="gap-1">
           <DrawerTitle>{item.header}</DrawerTitle>
           <DrawerDescription>

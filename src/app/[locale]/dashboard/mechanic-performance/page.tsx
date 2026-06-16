@@ -706,7 +706,9 @@ export default function MechanicPerformancePage() {
                     </span>
                   )}
                 </DrawerTitle>
-                <DrawerDescription>{t("performanceBreakdown")}</DrawerDescription>
+                <DrawerDescription>
+                  {t("performanceBreakdown")}
+                </DrawerDescription>
               </DrawerHeader>
 
               <div className="flex-1 overflow-y-auto p-6 space-y-6">

@@ -8,7 +8,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import { MechanicMultiSelect } from "@/components/bay-view-v2/_mechanic-multi-select";
+import { MechanicsRow } from "@/components/bay-view-v2/_mechanic-row";
 import { Button } from "@/components/ui/button";
 import {
   DrawerDescription,
@@ -49,7 +49,7 @@ export function DrawerHeaderSection({
   helpers,
   orgId,
   workOrderId,
-  saving,
+  saving: _saving,
   isAddingService,
   isFullScreen,
   onAssignMechanic,
@@ -85,7 +85,7 @@ export function DrawerHeaderSection({
     >
       <DrawerTitle className="sr-only">
         {wo
-          ? `${t("workOrder")} — ${wo.vehicle?.plate_number ?? wo.id.slice(0, 8)}`
+          ? `${t("workOrder")} — ${wo.vehicle?.plate_number ?? wo.id?.slice(0, 8) ?? ""}`
           : t("workOrder")}
       </DrawerTitle>
       <DrawerDescription className="sr-only">
@@ -115,7 +115,7 @@ export function DrawerHeaderSection({
                 )}
                 {wo && (
                   <span className="font-mono text-xs text-muted-foreground/80 font-medium">
-                    WO#{wo.id.slice(0, 8)}
+                    WO#{wo.id?.slice(0, 8) ?? ""}
                   </span>
                 )}
                 {isAddingService && (
@@ -139,16 +139,52 @@ export function DrawerHeaderSection({
 
           <div className="flex items-center gap-3 shrink-0">
             {wo && orgId && workOrderId && (
-              <MechanicMultiSelect
-                leadMechanicId={wo.mechanic_id}
-                leadMechanicName={wo.mechanic?.full_name ?? null}
-                helpers={helpers}
-                mechanics={effectiveMechanics}
-                orgId={orgId}
-                workOrderId={workOrderId}
-                saving={saving}
-                onLeadChange={onAssignMechanic}
-                onHelpersChange={onHelpersChange}
+              <MechanicsRow
+                woId={workOrderId}
+                leadMechanic={wo.mechanic}
+                helpers={helpers as any}
+                status={wo.status}
+                allMechanics={effectiveMechanics as any}
+                onAssignMechanic={async (_woId, mechanicId) => {
+                  await onAssignMechanic(mechanicId);
+                }}
+                onAddHelper={async (_woId, mechanicId) => {
+                  try {
+                    await fetch(
+                      `/api/organizations/${orgId}/work-orders/${workOrderId}/helpers`,
+                      {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ mechanic_id: mechanicId }),
+                      },
+                    );
+                  } catch {
+                    // error handled by caller
+                  }
+                  onHelpersChange?.();
+                }}
+                onRemoveMechanic={async (_woId) => {
+                  try {
+                    await fetch(
+                      `/api/organizations/${orgId}/work-orders/${workOrderId}/helpers?mechanicId=${wo.mechanic?.id ?? ""}`,
+                      { method: "DELETE" },
+                    );
+                  } catch {
+                    // error handled by caller
+                  }
+                  onHelpersChange?.();
+                }}
+                onRemoveHelper={async (_woId, mechanicId) => {
+                  try {
+                    await fetch(
+                      `/api/organizations/${orgId}/work-orders/${workOrderId}/helpers?mechanicId=${mechanicId}`,
+                      { method: "DELETE" },
+                    );
+                  } catch {
+                    // error handled by caller
+                  }
+                  onHelpersChange?.();
+                }}
               />
             )}
             {showBack ? (

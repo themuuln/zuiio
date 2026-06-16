@@ -132,7 +132,11 @@ export function PickupCompleteForm({
         </span>
       </div>
 
-      <form id="pickup-complete-form" onSubmit={onSubmit} className="flex flex-col flex-1 min-h-0">
+      <form
+        id="pickup-complete-form"
+        onSubmit={onSubmit}
+        className="flex flex-col flex-1 min-h-0"
+      >
         {/* Scrollable content */}
         <div className="flex flex-col gap-5 px-4 pb-4 overflow-y-auto flex-1">
           {/* Satisfaction */}
@@ -182,7 +186,9 @@ export function PickupCompleteForm({
                 {...form.register("feedback")}
               />
               {form.formState.errors.feedback && (
-                <FieldError>{form.formState.errors.feedback.message}</FieldError>
+                <FieldError>
+                  {form.formState.errors.feedback.message}
+                </FieldError>
               )}
             </FieldContent>
           </Field>

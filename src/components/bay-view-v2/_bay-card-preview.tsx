@@ -4,10 +4,10 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import type { BaySlotData } from "@/lib/services/bay-view-service";
 import { cn } from "@/lib/utils";
 import { BayCardAccent } from "./_bay-card-accent";
-import { BayCardMechanicsRow } from "./_bay-card-mechanics-row";
 import { BayCardVehicleInfo } from "./_bay-card-vehicle-info";
 import { BayNumberLabel } from "./_bay-number-label";
 import { BayStatusBadge } from "./_bay-status-badge";
+import { MechanicsRow } from "./_mechanic-row";
 
 interface BayCardPreviewProps {
   bay: BaySlotData;
@@ -44,7 +44,14 @@ export function BayCardPreview({ bay, className }: BayCardPreviewProps) {
         />
 
         <div className="flex items-center gap-2 border-t border-border/30 pt-2.5">
-          <BayCardMechanicsRow workOrder={wo} disabled variant="preview" />
+          <MechanicsRow
+            woId={wo.id}
+            leadMechanic={wo.mechanic}
+            helpers={wo.helpers}
+            status={wo.status}
+            disabled
+            variant="preview"
+          />
         </div>
       </CardContent>
     </Card>
