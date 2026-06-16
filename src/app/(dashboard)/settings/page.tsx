@@ -1,5 +1,7 @@
-import { WarningCircle } from "@phosphor-icons/react/dist/ssr";
+import { GearSix, WarningCircle } from "@phosphor-icons/react/dist/ssr";
+import Link from "next/link";
 import { ThemeToggle } from "@/components/erp/theme-toggle";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -18,8 +20,10 @@ const TEMPLATE_TYPES = ["gym", "fitness", "retail"];
 const SUPERADMIN_EMAIL = "zerone.offical@gmail.com";
 
 export default async function SettingsPage() {
-  const { supabase, organizationId, userId, user } = await requireAppContext();
+  const { supabase, organizationId, userId, user, permissions } =
+    await requireAppContext();
   const isSuperAdmin = user.email === SUPERADMIN_EMAIL;
+  const canManageRoles = permissions.includes("roles.manage");
 
   const [orgResult, profileResult] = await Promise.all([
     supabase
@@ -35,14 +39,9 @@ export default async function SettingsPage() {
   const showTemplates =
     org?.company_type && TEMPLATE_TYPES.includes(org.company_type);
 
-  let presets;
-  if (showTemplates) {
-    const { data } = await (supabase as any)
-      .from("product_presets")
-      .select("*")
-      .order("sort_order");
-    presets = data ?? [];
-  }
+  const presetsData = showTemplates
+    ? await supabase.from("product_presets").select("*").order("sort_order")
+    : undefined;
 
   return (
     <div className="flex flex-1 flex-col gap-8">
@@ -70,7 +69,9 @@ export default async function SettingsPage() {
       </Card>
 
       {/* Brand Templates (gym / fitness only) */}
-      {showTemplates && presets ? <BrandPresetsCard presets={presets} /> : null}
+      {showTemplates && presetsData?.data ? (
+        <BrandPresetsCard presets={presetsData.data} />
+      ) : null}
 
       {/* Profile */}
       <Card>
@@ -82,6 +83,29 @@ export default async function SettingsPage() {
           <ProfileForm initialFullName={profile?.full_name ?? ""} />
         </CardContent>
       </Card>
+
+      {/* Roles & Permissions */}
+      {canManageRoles && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <GearSix className="size-5" />
+              Үүрэг, эрхүүд
+            </CardTitle>
+            <CardDescription>
+              Байгууллагын гишүүдийн үүрэг болон эрхүүдийг тохируулах
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link
+              href="/settings/roles"
+              className={buttonVariants({ variant: "outline" })}
+            >
+              Үүрэг, эрхүүд удирдах
+            </Link>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Notifications (superadmin only) */}
       {isSuperAdmin && <NotificationSettings isSuperAdmin />}

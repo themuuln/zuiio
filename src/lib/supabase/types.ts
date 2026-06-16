@@ -7,11 +7,34 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
+      app_config: {
+        Row: {
+          created_at: string | null
+          key: string
+          updated_at: string | null
+          value: Json
+        }
+        Insert: {
+          created_at?: string | null
+          key: string
+          updated_at?: string | null
+          value?: Json
+        }
+        Update: {
+          created_at?: string | null
+          key?: string
+          updated_at?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string
@@ -62,27 +85,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      app_config: {
-        Row: {
-          created_at: string | null
-          key: string
-          updated_at: string | null
-          value: Json
-        }
-        Insert: {
-          created_at?: string | null
-          key: string
-          updated_at?: string | null
-          value?: Json
-        }
-        Update: {
-          created_at?: string | null
-          key?: string
-          updated_at?: string | null
-          value?: Json
-        }
-        Relationships: []
       }
       brands: {
         Row: {
@@ -141,6 +143,103 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_payout_items: {
+        Row: {
+          commission_amount: number
+          created_at: string | null
+          id: string
+          payout_id: string
+          sale_item_id: string
+        }
+        Insert: {
+          commission_amount?: number
+          created_at?: string | null
+          id?: string
+          payout_id: string
+          sale_item_id: string
+        }
+        Update: {
+          commission_amount?: number
+          created_at?: string | null
+          id?: string
+          payout_id?: string
+          sale_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_payout_items_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "commission_payouts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_payout_items_sale_item_id_fkey"
+            columns: ["sale_item_id"]
+            isOneToOne: true
+            referencedRelation: "sale_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_payouts: {
+        Row: {
+          created_at: string | null
+          id: string
+          notes: string | null
+          organization_id: string
+          paid_at: string
+          paid_by: string
+          profile_id: string
+          status: string
+          total_amount: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          organization_id: string
+          paid_at?: string
+          paid_by: string
+          profile_id: string
+          status?: string
+          total_amount?: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          paid_at?: string
+          paid_by?: string
+          profile_id?: string
+          status?: string
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_payouts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_payouts_paid_by_fkey"
+            columns: ["paid_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_payouts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -372,7 +471,7 @@ export type Database = {
           config_data: Json
           created_at: string | null
           enabled: boolean | null
-          event_types: Json
+          event_types: Json | null
           id: string
           organization_id: string
           updated_at: string | null
@@ -383,7 +482,7 @@ export type Database = {
           config_data?: Json
           created_at?: string | null
           enabled?: boolean | null
-          event_types?: Json
+          event_types?: Json | null
           id?: string
           organization_id: string
           updated_at?: string | null
@@ -394,7 +493,7 @@ export type Database = {
           config_data?: Json
           created_at?: string | null
           enabled?: boolean | null
-          event_types?: Json
+          event_types?: Json | null
           id?: string
           organization_id?: string
           updated_at?: string | null
@@ -492,6 +591,51 @@ export type Database = {
         }
         Relationships: []
       }
+      product_presets: {
+        Row: {
+          brand_logo_url: string | null
+          brand_name: string
+          category_name: string | null
+          cost_price: number | null
+          created_at: string | null
+          id: string
+          min_stock: number | null
+          product_name: string
+          product_sku: string | null
+          sale_price: number | null
+          sort_order: number | null
+          unit: string | null
+        }
+        Insert: {
+          brand_logo_url?: string | null
+          brand_name: string
+          category_name?: string | null
+          cost_price?: number | null
+          created_at?: string | null
+          id?: string
+          min_stock?: number | null
+          product_name: string
+          product_sku?: string | null
+          sale_price?: number | null
+          sort_order?: number | null
+          unit?: string | null
+        }
+        Update: {
+          brand_logo_url?: string | null
+          brand_name?: string
+          category_name?: string | null
+          cost_price?: number | null
+          created_at?: string | null
+          id?: string
+          min_stock?: number | null
+          product_name?: string
+          product_sku?: string | null
+          sale_price?: number | null
+          sort_order?: number | null
+          unit?: string | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           barcode: string | null
@@ -575,6 +719,7 @@ export type Database = {
           id: string
           organization_id: string | null
           role: string | null
+          role_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -582,6 +727,7 @@ export type Database = {
           id: string
           organization_id?: string | null
           role?: string | null
+          role_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -589,10 +735,136 @@ export type Database = {
           id?: string
           organization_id?: string | null
           role?: string | null
+          role_id?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_email_log: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          id: string
+          organization_id: string
+          recipient_email: string
+          report_date: string
+          sent_at: string | null
+          smtp_config_id: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          organization_id: string
+          recipient_email: string
+          report_date?: string
+          sent_at?: string | null
+          smtp_config_id?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          organization_id?: string
+          recipient_email?: string
+          report_date?: string
+          sent_at?: string | null
+          smtp_config_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_email_log_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_email_log_smtp_config_id_fkey"
+            columns: ["smtp_config_id"]
+            isOneToOne: false
+            referencedRelation: "smtp_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_permissions: {
+        Row: {
+          created_at: string | null
+          id: string
+          permission: Database["public"]["Enums"]["app_permission"]
+          role_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          permission: Database["public"]["Enums"]["app_permission"]
+          role_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          permission?: Database["public"]["Enums"]["app_permission"]
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roles: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          hierarchy_level: number
+          id: string
+          is_system_role: boolean
+          name: string
+          organization_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          hierarchy_level?: number
+          id?: string
+          is_system_role?: boolean
+          name: string
+          organization_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          hierarchy_level?: number
+          id?: string
+          is_system_role?: boolean
+          name?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roles_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -763,6 +1035,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      smtp_configs: {
+        Row: {
+          created_at: string | null
+          daily_count: number | null
+          from_email: string
+          from_name: string | null
+          host: string
+          id: string
+          is_active: boolean | null
+          last_reset_date: string | null
+          password: string
+          port: number
+          priority: number | null
+          updated_at: string | null
+          username: string
+        }
+        Insert: {
+          created_at?: string | null
+          daily_count?: number | null
+          from_email: string
+          from_name?: string | null
+          host?: string
+          id?: string
+          is_active?: boolean | null
+          last_reset_date?: string | null
+          password: string
+          port?: number
+          priority?: number | null
+          updated_at?: string | null
+          username: string
+        }
+        Update: {
+          created_at?: string | null
+          daily_count?: number | null
+          from_email?: string
+          from_name?: string | null
+          host?: string
+          id?: string
+          is_active?: boolean | null
+          last_reset_date?: string | null
+          password?: string
+          port?: number
+          priority?: number | null
+          updated_at?: string | null
+          username?: string
+        }
+        Relationships: []
       }
       stock_movements: {
         Row: {
@@ -968,18 +1288,265 @@ export type Database = {
       }
       generate_invoice_number: { Args: never; Returns: string }
       get_current_organization: { Args: never; Returns: string }
-      get_public_product: { Args: { p_product_id: string; p_slug: string }; Returns: Json }
+      get_public_product: {
+        Args: { p_product_id: string; p_slug: string }
+        Returns: Json
+      }
       get_public_products: { Args: { p_slug: string }; Returns: Json }
       get_public_report_data: { Args: { p_token: string }; Returns: Json }
+      set_role_permissions: {
+        Args: { p_role_id: string; p_permissions: Database["public"]["Enums"]["app_permission"][] }
+        Returns: Json
+      }
+      get_user_permissions: {
+        Args: never
+        Returns: Database["public"]["Enums"]["app_permission"][]
+      }
+      has_permission: {
+        Args: { p_permission: Database["public"]["Enums"]["app_permission"] }
+        Returns: boolean
+      }
       increment_smtp_count: { Args: { config_id: string }; Returns: undefined }
       schedule_daily_report_cron: { Args: { app_url: string }; Returns: string }
       unschedule_daily_report_cron: { Args: never; Returns: string }
+      user_has_permission: {
+        Args: {
+          p_permission: Database["public"]["Enums"]["app_permission"]
+          p_user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_permission:
+        | "products.create"
+        | "products.read"
+        | "products.update"
+        | "products.delete"
+        | "categories.create"
+        | "categories.read"
+        | "categories.update"
+        | "categories.delete"
+        | "brands.create"
+        | "brands.read"
+        | "brands.update"
+        | "brands.delete"
+        | "contacts.create"
+        | "contacts.read"
+        | "contacts.update"
+        | "contacts.delete"
+        | "sales.create"
+        | "sales.read"
+        | "sales.update"
+        | "sales.delete"
+        | "expenses.create"
+        | "expenses.read"
+        | "expenses.update"
+        | "expenses.delete"
+        | "invoices.create"
+        | "invoices.read"
+        | "invoices.update"
+        | "invoices.delete"
+        | "warehouses.create"
+        | "warehouses.read"
+        | "warehouses.update"
+        | "warehouses.delete"
+        | "stock_movements.create"
+        | "stock_movements.read"
+        | "stock_movements.update"
+        | "stock_movements.delete"
+        | "uom_conversions.create"
+        | "uom_conversions.read"
+        | "uom_conversions.update"
+        | "uom_conversions.delete"
+        | "members.read"
+        | "members.invite"
+        | "members.remove"
+        | "members.manage_role"
+        | "roles.manage"
+        | "settings.manage"
+        | "reports.manage"
+        | "notifications.manage"
+        | "audit_log.read"
     }
     CompositeTypes: {
       [_ in never]: never
     }
   }
 }
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      app_permission: [
+        "products.create",
+        "products.read",
+        "products.update",
+        "products.delete",
+        "categories.create",
+        "categories.read",
+        "categories.update",
+        "categories.delete",
+        "brands.create",
+        "brands.read",
+        "brands.update",
+        "brands.delete",
+        "contacts.create",
+        "contacts.read",
+        "contacts.update",
+        "contacts.delete",
+        "sales.create",
+        "sales.read",
+        "sales.update",
+        "sales.delete",
+        "expenses.create",
+        "expenses.read",
+        "expenses.update",
+        "expenses.delete",
+        "invoices.create",
+        "invoices.read",
+        "invoices.update",
+        "invoices.delete",
+        "warehouses.create",
+        "warehouses.read",
+        "warehouses.update",
+        "warehouses.delete",
+        "stock_movements.create",
+        "stock_movements.read",
+        "stock_movements.update",
+        "stock_movements.delete",
+        "uom_conversions.create",
+        "uom_conversions.read",
+        "uom_conversions.update",
+        "uom_conversions.delete",
+        "members.read",
+        "members.invite",
+        "members.remove",
+        "members.manage_role",
+        "roles.manage",
+        "settings.manage",
+        "reports.manage",
+        "notifications.manage",
+        "audit_log.read",
+      ],
+    },
+  },
+} as const
+

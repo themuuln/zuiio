@@ -36,31 +36,24 @@ export async function createOrganization(
       ? slugRaw.trim()
       : slugify(name);
 
-  // Create organization
-  const { data: org, error: orgError } = await supabase
-    .from("organizations")
-    .insert({
-      name,
-      slug,
-      company_type: companyType,
-    })
-    .select("id")
-    .single();
+  // Use the DB function which handles org creation + role seeding in a transaction
+  const { data: result, error: rpcError } = await supabase.rpc(
+    "create_organization",
+    {
+      org_name: name,
+      org_slug: slug,
+      org_type: companyType,
+    },
+  );
 
-  if (orgError) {
-    return { error: `Байгууллага үүсгэхэд алдаа гарлаа: ${orgError.message}` };
+  if (rpcError) {
+    return {
+      error: `Байгууллага үүсгэхэд алдаа гарлаа: ${rpcError.message}`,
+    };
   }
 
-  // Update user's profile with organization
-  const { error: profileError } = await supabase
-    .from("profiles")
-    .update({ organization_id: org.id })
-    .eq("id", user.id);
-
-  if (profileError) {
-    return {
-      error: `Профайл шинэчлэхэд алдаа гарлаа: ${profileError.message}`,
-    };
+  if (typeof result === "object" && result !== null && "error" in result) {
+    return { error: (result as { error: string }).error };
   }
 
   revalidatePath("/");

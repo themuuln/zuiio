@@ -1,39 +1,50 @@
 import { Users } from "@phosphor-icons/react/dist/ssr";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
-import { Badge } from "@/components/ui/badge";
+import { MembersClient } from "@/components/roles/members-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { requireAppContext } from "@/lib/erp";
 import { createServiceClient } from "@/lib/supabase/server-service";
 
-interface Member {
-  id: string;
-  full_name: string | null;
-  role: string | null;
-  email: string;
-}
-
 export default async function UsersPage() {
-  const { supabase, organizationId, userId } = await requireAppContext();
+  const { supabase, organizationId, userId, permissions } =
+    await requireAppContext();
 
-  const [profilesResult, authResult] = await Promise.allSettled([
+  const [profilesResult, authResult, rolesResult] = await Promise.allSettled([
     supabase
       .from("profiles")
-      .select("id, full_name, role")
+      .select("id, full_name, role, role_id")
       .eq("organization_id", organizationId)
       .order("created_at", { ascending: true }),
     createServiceClient().auth.admin.listUsers(),
+    supabase
+      .from("roles")
+      .select("id, name, is_system_role")
+      .eq("organization_id", organizationId)
+      .order("hierarchy_level", { ascending: true }),
   ]);
 
+  if (profilesResult.status === "rejected") {
+    console.error("Profiles query failed:", profilesResult.reason);
+  }
   const profiles =
     profilesResult.status === "fulfilled"
       ? (profilesResult.value.data ?? [])
       : [];
 
+  if (authResult.status === "rejected") {
+    console.error("Auth users query failed:", authResult.reason);
+  }
   const authUsers =
     authResult.status === "fulfilled"
       ? (authResult.value.data?.users ?? [])
       : [];
+
+  if (rolesResult.status === "rejected") {
+    console.error("Roles query failed:", rolesResult.reason);
+  }
+  const roles =
+    rolesResult.status === "fulfilled" ? (rolesResult.value.data ?? []) : [];
 
   const emailMap = new Map<string, string>();
   for (const authUser of authUsers) {
@@ -42,10 +53,11 @@ export default async function UsersPage() {
     }
   }
 
-  const members: Member[] = profiles.map((profile) => ({
+  const members = profiles.map((profile) => ({
     id: profile.id,
     full_name: profile.full_name,
     role: profile.role,
+    role_id: profile.role_id,
     email: emailMap.get(profile.id) ?? "",
   }));
 
@@ -63,41 +75,12 @@ export default async function UsersPage() {
       ) : (
         <Card>
           <CardContent className="p-0">
-            <div className="divide-y">
-              {members.map((member) => (
-                <div
-                  key={member.id}
-                  className={`flex items-center justify-between px-6 py-4 ${
-                    member.id === userId ? "bg-accent/50" : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-10 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground">
-                      {member.full_name?.charAt(0)?.toUpperCase() ?? "?"}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">
-                          {member.full_name ?? "Нэргүй"}
-                        </span>
-                        {member.id === userId && (
-                          <Badge
-                            variant="secondary"
-                            className="text-[10px] leading-relaxed"
-                          >
-                            Та
-                          </Badge>
-                        )}
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {member.email || "—"}
-                      </span>
-                    </div>
-                  </div>
-                  <Badge variant="outline">{member.role ?? "Гишүүн"}</Badge>
-                </div>
-              ))}
-            </div>
+            <MembersClient
+              members={members}
+              roles={roles}
+              currentUserId={userId}
+              canManageRole={permissions.includes("members.manage_role")}
+            />
           </CardContent>
         </Card>
       )}
