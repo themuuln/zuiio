@@ -340,6 +340,7 @@
     "inventoryAlerts": "Alerts",
     "inventoryValuation": "Valuation",
     "inventoryTransfers": "Transfers",
+    "purchaseOrders": "Purchase Orders",
     "estimates": "Estimates"
   },
   "mechanic": {
@@ -630,6 +631,7 @@
     "engine": "Engine",
     "odometer": "Odometer (km)",
     "ownerInfo": "Owner Info",
+    "addCustomerInfo": "Add customer info",
     "firstName": "First Name",
     "lastName": "Last Name",
     "phone": "Phone",
@@ -638,6 +640,9 @@
     "vehicleUpdated": "Vehicle updated successfully!",
     "vehicleRegistered": "Vehicle registered successfully!",
     "vehicleNotFound": "Vehicle not found. Fill in the details below to register it.",
+    "vehicleFoundSmartcar": "Vehicle found via SmartCar database. Confirm the details below and register.",
+    "saveSuccessBayAssignFailed": "Vehicle saved, but bay assignment failed. You can assign it manually.",
+    "saveSuccessQueueFailed": "Vehicle saved, but could not add to queue. Try again.",
     "serviceTimeline": "Service Timeline",
     "noServiceHistory": "No service history yet",
     "serviceRecordsHere": "Service records will appear here",
@@ -774,6 +779,7 @@
     "removePartLabel": "Remove part",
     "workOrderCompleted": "Work order completed",
     "failedToComplete": "Failed to complete work order",
+    "completionDataSaved": "Completion data saved, but status could not be updated. Try again.",
     "workOrderDrawerDescription": "Review services, parts, notes, and status for this work order.",
     "addServiceDrawerDescription": "Search the service catalog or add a custom service to this work order.",
     "addPartDrawerDescription": "Search the parts catalog or add a custom part to this work order.",
@@ -795,7 +801,11 @@
     "removeServiceAria": "Remove service",
     "removePartAria": "Remove part",
     "allMechanicsAssigned": "All mechanics assigned",
-    "noMechanicsFound": "No mechanics found"
+    "noMechanicsFound": "No mechanics found",
+    "common": {
+      "save": "Save",
+      "somethingWentWrong": "Something went wrong"
+    }
   },
   "portal": {
     "dashboard": "Dashboard",
@@ -1382,7 +1392,11 @@
     "noVariantsFound": "No variants loaded.",
     "addWithoutVariant": "Add Without Variant",
     "addVariant": "Add",
-    "selectAVariant": "Select a Variant"
+    "selectAVariant": "Select a Variant",
+    "variantCount": "{count} variant | {count} variants",
+    "basePriceLabel": "Base price:",
+    "noVariants": "No variants yet",
+    "close": "Close"
   },
   "serviceReminders": {
     "title": "Service Reminders",

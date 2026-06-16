@@ -15,9 +15,9 @@ export const vehicleRegistrationSchema = z.object({
   custLastName: z.string().optional(),
   custPhone: z
     .string()
-    .min(1, "Phone number is required")
+    .optional()
     .refine(
-      (val) => isValidMongolianPhone(val),
+      (val) => !val || isValidMongolianPhone(val),
       "Enter a valid Mongolian phone number (8 digits)",
     ),
   complaint: z.string().optional(),
@@ -64,6 +64,8 @@ export interface ServiceHistoryEntry {
 
 export interface LookupResult {
   exists: boolean;
+  /** True when the plate was not found in DB but was found via SmartCar.mn API. */
+  smartcarFound?: boolean;
   vehicle: LookupVehicle | null;
   customer: LookupCustomer | null;
   serviceHistory: ServiceHistoryEntry[];

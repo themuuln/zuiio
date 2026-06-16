@@ -16,10 +16,6 @@ interface BayCardMechanicsRowProps {
   onAssignMechanic?: (woId: string, mechanicId: string) => Promise<void>;
   onRemoveMechanic?: (woId: string) => Promise<void>;
   onAddHelper?: (woId: string, mechanicId: string) => Promise<void>;
-  onReorderMechanics?: (
-    woId: string,
-    orderedMechanicIds: string[],
-  ) => Promise<void>;
 }
 
 export function BayCardMechanicsRow({
@@ -32,7 +28,6 @@ export function BayCardMechanicsRow({
   onAssignMechanic,
   onRemoveMechanic,
   onAddHelper,
-  onReorderMechanics,
 }: BayCardMechanicsRowProps) {
   const isPreview = variant === "preview";
 
@@ -95,13 +90,6 @@ export function BayCardMechanicsRow({
                     await onAddHelper(workOrder.id, mechanicId);
                   }
                 : async () => {}
-            }
-            onReorder={
-              onReorderMechanics
-                ? async (orderedIds) => {
-                    await onReorderMechanics(workOrder.id, orderedIds);
-                  }
-                : undefined
             }
             onUnassign={
               onRemoveHelper || onRemoveMechanic

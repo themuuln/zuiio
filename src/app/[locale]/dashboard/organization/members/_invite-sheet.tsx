@@ -144,17 +144,10 @@ export function InviteSheet({
       </DetailDrawer.Body>
 
       <DetailDrawer.Footer>
-        <Button
-          variant="outline"
-          onClick={() => onOpenChange(false)}
-        >
+        <Button variant="outline" onClick={() => onOpenChange(false)}>
           {t("cancel")}
         </Button>
-        <Button
-          form="invite-form"
-          type="submit"
-          disabled={sending}
-        >
+        <Button form="invite-form" type="submit" disabled={sending}>
           {sending ? (
             <Loader2 className="mr-2 size-4 animate-spin" />
           ) : (

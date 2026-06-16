@@ -315,6 +315,26 @@ export function createCrudService<
       };
     }
 
+    // Map camelCase params to snake_case DB columns using the fieldMap
+    if (fieldMap?.columns && fieldMap.columns) {
+      for (const [camelKey, snakeKey] of Object.entries(
+        fieldMap.columns as Record<string, string>,
+      )) {
+        if (camelKey in insertParams) {
+          const value = insertParams[camelKey];
+          // Apply transform if one exists for this key
+          const transform = (
+            fieldMap.transforms as
+              | Record<string, (v: unknown) => unknown>
+              | undefined
+          )?.[camelKey];
+          const resolvedValue = transform ? transform(value) : value;
+          insertParams[snakeKey] = resolvedValue;
+          delete insertParams[camelKey];
+        }
+      }
+    }
+
     // Resolve branch ID if the param set includes a branchId
     if ("branchId" in insertParams) {
       const branchId = insertParams.branchId as string | undefined | null;

@@ -82,7 +82,7 @@ export function PaymentMethodField({
             onValueChange={(val) => onChange(val as BayPaymentMethod)}
           >
             <SelectTrigger className="h-10" aria-label={t("paymentMethod")}>
-              <SelectValue placeholder={t(PAYMENT_METHOD_LABEL_KEY[value])} />
+              <SelectValue>{t(PAYMENT_METHOD_LABEL_KEY[value])}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               {PAYMENT_METHODS.map((method) => {

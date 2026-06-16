@@ -12,7 +12,6 @@ import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
-import { DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import {
   Table,
   TableBody,
@@ -160,8 +159,8 @@ export function TransferDetailSheet({
 
   return (
     <DetailDrawer open={open} onOpenChange={onOpenChange} size="2xl">
-      <DrawerHeader className="px-4 py-3 border-b border-border shrink-0">
-        <DrawerTitle className="flex items-center gap-2 text-base">
+      <DetailDrawer.Header>
+        <DetailDrawer.Title className="flex items-center gap-2">
           {t("transferDetail")}
           {statusCfg && (
             <Badge variant="outline" className={`text-xs ${statusCfg.color}`}>
@@ -169,10 +168,10 @@ export function TransferDetailSheet({
               {t(statusCfg.labelKey)}
             </Badge>
           )}
-        </DrawerTitle>
-      </DrawerHeader>
+        </DetailDrawer.Title>
+      </DetailDrawer.Header>
 
-      <div className="flex-1 overflow-y-auto min-h-0 flex flex-col gap-4 p-4">
+      <DetailDrawer.Body>
         {/* Branches */}
         <div className="flex items-center gap-3 text-sm">
           <span className="font-medium">
@@ -271,10 +270,11 @@ export function TransferDetailSheet({
             </TableBody>
           </Table>
         </div>
+      </DetailDrawer.Body>
 
-        {/* Actions */}
-        {actions.length > 0 && (
-          <div className="flex items-center gap-2 pt-2">
+      {actions.length > 0 && (
+        <DetailDrawer.Footer>
+          <div className="flex items-center gap-2">
             {actions.map((action) => (
               <Button
                 key={action.label}
@@ -289,8 +289,8 @@ export function TransferDetailSheet({
               </Button>
             ))}
           </div>
-        )}
-      </div>
+        </DetailDrawer.Footer>
+      )}
     </DetailDrawer>
   );
 }

@@ -19,11 +19,7 @@ function renderDrawer(ui: React.ReactElement) {
   return { ...result, $, $$ };
 }
 
-function TestDrawer({
-  actions,
-}: {
-  actions?: React.ReactNode;
-}) {
+function TestDrawer({ actions }: { actions?: React.ReactNode }) {
   const [open, setOpen] = useState(true);
 
   return (

@@ -55,7 +55,7 @@ import { useSelectedBranchId, useSetSelectedBranchId } from "@/lib/stores";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { formatPlateNumber } from "@/lib/utils";
 import { useBayDragHandlers } from "./_bay-drag-handlers";
-import { EmptyBayActionDialog } from "./_empty-bay-action-dialog";
+import { EmptyBayActionDrawer } from "./_empty-bay-action-drawer";
 import { BayViewErrorState } from "./_error-state";
 import { GridView } from "./_grid-view";
 import { KanbanView } from "./_kanban-view";
@@ -83,7 +83,7 @@ import { PostServiceDialog } from "./post-service-dialog";
 import { QueuePanel } from "./queue-panel";
 import { ShiftReportDialog } from "./shift-report-dialog";
 import { StatusNotesModal } from "./status-notes-modal";
-import { VehicleRegistrationDialog } from "./vehicle-registration-dialog";
+import { VehicleRegistrationDrawer } from "./vehicle-registration-drawer";
 import { WorkOrderDetailDrawer } from "./work-order-detail-drawer";
 
 export function BayViewV2Client() {
@@ -409,6 +409,16 @@ export function BayViewV2Client() {
     });
     updateStatusMutation.mutate({ woId: p.woId, status: p.newStatus });
     pending.clearPending();
+
+    // Clean up URL if this WO is currently open in the drawer
+    if (detailWoId === p.woId) {
+      setDetailDrawerOpen(false);
+      setDetailWoId(null);
+      setDrawerInitialAction(null);
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("woId");
+      router.replace(`?${params.toString()}`, { scroll: false });
+    }
   }
 
   function handleOpenDetail(
@@ -521,19 +531,11 @@ export function BayViewV2Client() {
   });
 
   // ── Empty bay click handler ──────────────────────────────────
-  const handleEmptyBayClick = useCallback(
-    (bayNumber: number) => {
-      const queue = data?.waitingQueue ?? [];
-      if (queue.length === 0) {
-        // No queue items: open registration dialog directly
-        dialogs.set("vehicleReg", true);
-      } else {
-        // Queue has items: show the action chooser dialog
-        setEmptyBayBayNumber(bayNumber);
-      }
-    },
-    [data?.waitingQueue, dialogs],
-  );
+  const handleEmptyBayClick = (bayNumber: number) => {
+    // Always show the action chooser drawer first (register & assign,
+    // register only, or pick from queue)
+    setEmptyBayBayNumber(bayNumber);
+  };
 
   const handleEmptyBayQueueSelect = useCallback(
     (workOrderId: string) => {
@@ -610,7 +612,12 @@ export function BayViewV2Client() {
       }
       dialogs.closeAssign();
     },
-    [dialogs.assignBay, assignMutation, assignMechanicMutation],
+    [
+      dialogs.assignBay,
+      assignMutation,
+      assignMechanicMutation,
+      dialogs.closeAssign,
+    ],
   );
 
   // ── Batch complete ───────────────────────────────────────────
@@ -653,6 +660,13 @@ export function BayViewV2Client() {
     }
     setBatchCompletePending(false);
     await fetchData();
+
+    // Clean up URL if the currently open drawer WO was completed
+    if (detailWoId && succeeded > 0 && readyWos.includes(detailWoId)) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("woId");
+      router.replace(`?${params.toString()}`, { scroll: false });
+    }
   }
 
   // ── Sidebar tabs ─────────────────────────────────────────────
@@ -936,7 +950,7 @@ export function BayViewV2Client() {
       onDragEnd={onDragEnd}
       onDragCancel={onDragCancel}
     >
-      <div className="flex h-full flex-1 flex-col overflow-hidden bg-background rounded-2xl border border-border/30 shadow-sm">
+      <div className="flex h-full flex-1 flex-col overflow-hidden">
         <Toolbar
           viewMode={viewMode}
           setViewMode={setViewMode}
@@ -1193,7 +1207,7 @@ export function BayViewV2Client() {
         branchId={branchFilter}
       />
 
-      <EmptyBayActionDialog
+      <EmptyBayActionDrawer
         open={emptyBayBayNumber !== null}
         onOpenChange={(open) => {
           if (!open) setEmptyBayBayNumber(null);
@@ -1250,7 +1264,7 @@ export function BayViewV2Client() {
         open={dialogs.open.shiftReport}
         onOpenChange={(v) => dialogs.set("shiftReport", v)}
       />
-      <VehicleRegistrationDialog
+      <VehicleRegistrationDrawer
         open={dialogs.open.vehicleReg}
         onOpenChange={(v) => {
           dialogs.set("vehicleReg", v);

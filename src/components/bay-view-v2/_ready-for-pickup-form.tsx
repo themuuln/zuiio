@@ -231,9 +231,9 @@ export function ReadyForPickupForm({
                   }
                 >
                   <SelectTrigger className="h-10">
-                    <SelectValue
-                      placeholder={t(PAYMENT_METHOD_LABEL_KEY[paymentMethod])}
-                    />
+                    <SelectValue>
+                      {t(PAYMENT_METHOD_LABEL_KEY[paymentMethod])}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {PAYMENT_METHODS.map((method) => {

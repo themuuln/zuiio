@@ -1,6 +1,7 @@
 "use server";
 
 import { ValidationError } from "@/lib/errors";
+import { lookupPlate } from "@/lib/smartcar/browser";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { createCustomer } from "./customer-service";
@@ -67,6 +68,8 @@ export async function findCustomerByPlate(plate: string) {
 
 export interface VehicleLookupResult {
   exists: boolean;
+  /** True when the plate was not found in DB but was found via SmartCar.mn API. */
+  smartcarFound?: boolean;
   vehicle: {
     id: string;
     plate_number: string;
@@ -120,6 +123,35 @@ export async function lookupVehicleByPlate(
     .maybeSingle();
 
   if (!vehicle) {
+    // Try SmartCar.mn API to auto-fill vehicle data
+    try {
+      const smartcarResult = await lookupPlate(plate);
+      if (smartcarResult.ok) {
+        const sc = smartcarResult.data;
+        return {
+          exists: false,
+          smartcarFound: true,
+          vehicle: {
+            id: "",
+            plate_number: sc.plateNumber,
+            make: sc.make,
+            model: sc.model,
+            year: sc.year,
+            color: sc.color || null,
+            vin: sc.vin || null,
+            engine: sc.engineCc?.toString() || null,
+            transmission: sc.transmission || null,
+            fuel_type: sc.fuelType || null,
+            odometer: null,
+          },
+          customer: null,
+          serviceHistory: [],
+        };
+      }
+    } catch {
+      // SmartCar lookup failure is non-fatal — just return empty
+    }
+
     return {
       exists: false,
       vehicle: null,

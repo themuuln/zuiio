@@ -9,7 +9,7 @@ import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { createWorkOrder } from "@/lib/services/work-order-service";
 import { withBranchFilter } from "@/lib/supabase/with-branch";
-import type { Profile, Vehicle, WorkOrder } from "@/lib/types";
+import type { Profile } from "@/lib/types";
 import type {
   BaySlotData,
   BayViewData,
@@ -1040,8 +1040,9 @@ export async function getShiftReport(
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
-  const [{ data: completed }, { data: active }, { data: inBay }] =
+  const [{ data: completed }, { data: active }, { count: inBayCount }] =
     await Promise.all([
+      // Completed jobs today — fetch totals + timestamps for revenue & duration
       withBranchFilter(
         db
           .from("work_orders")
@@ -1052,6 +1053,7 @@ export async function getShiftReport(
           .is("deleted_at", null),
         branchId,
       ),
+      // Active jobs — fetch started_at for elapsed-time computation
       withBranchFilter(
         db
           .from("work_orders")
@@ -1061,10 +1063,11 @@ export async function getShiftReport(
           .is("deleted_at", null),
         branchId,
       ),
+      // In-bay jobs — count only (no row data needed)
       withBranchFilter(
         db
           .from("work_orders")
-          .select("id")
+          .select("*", { count: "exact", head: true })
           .eq("organization_id", orgId)
           .not("status", "in", '("Completed","Cancelled")')
           .is("deleted_at", null)
@@ -1077,33 +1080,28 @@ export async function getShiftReport(
   const revenueToday =
     completed?.reduce((sum, wo) => sum + Number(wo.total), 0) ?? 0;
 
-  // Average duration of completed jobs today
+  // Single pass over completed: avg duration + total labor minutes
+  let completedLaborMinutes = 0;
   let avgDurationMinutes = 0;
-  if (completedToday > 0 && completed) {
-    const totalMinutes = completed.reduce((sum, wo) => {
-      if (!wo.started_at || !wo.completed_at) return sum;
-      const start = new Date(wo.started_at).getTime();
-      const end = new Date(wo.completed_at).getTime();
-      return sum + Math.round((end - start) / 60000);
-    }, 0);
-    avgDurationMinutes = Math.round(totalMinutes / completedToday);
+  if (completed && completedToday > 0) {
+    let totalDurationMinutes = 0;
+    for (const wo of completed) {
+      if (!wo.started_at || !wo.completed_at) continue;
+      const diffMs =
+        new Date(wo.completed_at).getTime() - new Date(wo.started_at).getTime();
+      const mins = Math.round(diffMs / 60000);
+      if (Number.isFinite(mins) && mins > 0) {
+        totalDurationMinutes += mins;
+        completedLaborMinutes += mins;
+      }
+    }
+    avgDurationMinutes = Math.round(totalDurationMinutes / completedToday);
   }
 
   const activeJobs = active?.length ?? 0;
 
-  // Total labor hours = completed durations + active jobs elapsed time
-  let totalLaborMinutes = 0;
-  if (completed) {
-    for (const wo of completed) {
-      if (!wo.started_at || !wo.completed_at) continue;
-      const mins = Math.round(
-        (new Date(wo.completed_at).getTime() -
-          new Date(wo.started_at).getTime()) /
-          60000,
-      );
-      if (Number.isFinite(mins) && mins > 0) totalLaborMinutes += mins;
-    }
-  }
+  // Elapsed time for active jobs (elapsed so far today)
+  let activeLaborMinutes = 0;
   if (active) {
     const now = Date.now();
     for (const wo of active) {
@@ -1111,15 +1109,16 @@ export async function getShiftReport(
       const mins = Math.round(
         (now - new Date(wo.started_at).getTime()) / 60000,
       );
-      if (Number.isFinite(mins) && mins > 0) totalLaborMinutes += mins;
+      if (Number.isFinite(mins) && mins > 0) activeLaborMinutes += mins;
     }
   }
-  const totalLaborHours = totalLaborMinutes / 60;
+
+  const totalLaborHours = (completedLaborMinutes + activeLaborMinutes) / 60;
   const revenuePerLaborHour =
     totalLaborHours > 0 ? Math.round(revenueToday / totalLaborHours) : 0;
 
   const bayUtilization =
-    bayCount > 0 ? Math.round(((inBay?.length ?? 0) / bayCount) * 100) : 0;
+    bayCount > 0 ? Math.round(((inBayCount ?? 0) / bayCount) * 100) : 0;
 
   return {
     completedToday,

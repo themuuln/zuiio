@@ -177,7 +177,7 @@ export function WorkOrderDetailDrawer({
 
   const [showCustomerPicker, setShowCustomerPicker] = useState(false);
   const [showReadyForm, setShowReadyForm] = useState(false);
-  const [showPickupForm, setShowPickupForm] = useState(false);
+  const [showCompleteForm, setShowCompleteForm] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
@@ -193,7 +193,6 @@ export function WorkOrderDetailDrawer({
   } | null>(null);
 
   const isFirstRender = useRef(true);
-  const handleCancelPickup = () => setShowPickupForm(false);
 
   // ── Variant-aware service/part selection handlers ──
 
@@ -348,10 +347,11 @@ export function WorkOrderDetailDrawer({
 
   // ── Pickup complete ──
 
-  async function handlePickupSubmit(data: PickupCompleteData) {
+  async function handleCompleteSubmit(data: PickupCompleteData) {
     const orgIdVal = orgIdRef.current;
     if (!orgIdVal || !workOrderId || !wo?.vehicle_id) return;
 
+    // Step 1: Persist completion data (idempotent — safe to retry)
     try {
       await saveCompletionData({
         workOrderId,
@@ -361,7 +361,15 @@ export function WorkOrderDetailDrawer({
         customerFeedback: data.customerFeedback,
         nextAppointmentDate: data.nextAppointmentDate,
       });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("failedToComplete"));
+      return;
+    }
 
+    // Step 2: Update status to Completed — handled separately so a PATCH failure
+    // doesn't lose the already-saved completion data.
+    // saveCompletionData is idempotent, so retrying is safe.
+    try {
       const res = await fetch(
         `/api/organizations/${orgIdVal}/work-orders/${workOrderId}`,
         {
@@ -371,22 +379,28 @@ export function WorkOrderDetailDrawer({
         },
       );
       const json = await res.json();
+
       if (json.error) {
-        toast.error(json.error.message ?? t("failedToComplete"));
-      } else {
-        await fetchWo(true);
-        toast.dismiss();
-        toast.success(t("workOrderCompleted"));
-        setShowPickupForm(false);
-        setShowCelebration(true);
-        setTimeout(() => {
-          setShowCelebration(false);
-          onOpenChange(false);
-        }, 1500);
-        onRefresh();
+        toast.error(
+          `${t("completionDataSaved")} ${json.error.message ?? t("failedToComplete")}`,
+        );
+        return;
       }
+
+      await fetchWo(true);
+      toast.dismiss();
+      toast.success(t("workOrderCompleted"));
+      setShowCompleteForm(false);
+      setShowCelebration(true);
+      setTimeout(() => {
+        setShowCelebration(false);
+        onOpenChange(false);
+      }, 1500);
+      onRefresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("failedToComplete"));
+      toast.error(
+        `${t("completionDataSaved")} ${err instanceof Error ? err.message : t("failedToComplete")}`,
+      );
     }
   }
 
@@ -532,11 +546,9 @@ export function WorkOrderDetailDrawer({
             onHelpersChange={() => fetchWo(true)}
             onToggleFullScreen={() => setIsFullScreen((f) => !f)}
             onClose={() => handleOpenChange(false)}
-            showBack={showPostServiceForm || showPickupForm}
+            showBack={showPostServiceForm}
             setShowCustomerPicker={setShowCustomerPicker}
-            onBack={
-              showPickupForm ? handleCancelPickup : handleCancelPostService
-            }
+            onBack={handleCancelPostService}
             t={t}
           />
 
@@ -574,200 +586,185 @@ export function WorkOrderDetailDrawer({
                 onRetry={() => fetchWo()}
               >
                 {wo ? (
-                  showPickupForm ? (
-                    <PickupCompleteForm
-                      woId={workOrderId ?? ""}
-                      vehiclePlate={
-                        (wo.vehicle as { plate_number?: string })
-                          ?.plate_number ?? ""
-                      }
-                      totalCost={Number(wo.total ?? 0)}
-                      onConfirm={handlePickupSubmit}
-                      onCancel={handleCancelPickup}
-                    />
-                  ) : (
-                    <>
-                      <div className="relative flex-1 overflow-y-auto min-h-0">
-                        <VehicleMakeLogo
-                          make={wo.vehicle?.make}
-                          size="70%"
-                          className="absolute inset-0 m-auto pointer-events-none select-none text-primary/[0.03]"
-                          aria-hidden
-                        />
-                        <div className="relative px-3 py-2">
-                          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-                            <div className="lg:col-span-2">
-                              <div className="flex flex-col gap-3 min-h-0 flex-1 overflow-y-auto">
-                                <ServicesSection
-                                  services={wo.services ?? []}
-                                  catalog={catalog}
-                                  serviceSearch={serviceSearch}
-                                  showAddService={showAddService}
-                                  locale={locale}
-                                  onServiceSearchChange={setServiceSearch}
-                                  onAddServiceOpenChange={
-                                    handleServiceDrawerOpenChange
-                                  }
-                                  onAddService={handleServiceSelect}
-                                  onRemoveService={removeService}
-                                  onEditPriceSave={handleServicePriceSave}
-                                  onEditQtySave={handleServiceQtySave}
-                                  t={t}
-                                />
-
-                                <PartsSection
-                                  parts={wo.parts ?? []}
-                                  partsCatalog={partsCatalog}
-                                  lowStockMap={lowStockMap}
-                                  partSearch={partSearch}
-                                  showAddPart={showAddPart}
-                                  locale={locale}
-                                  onPartSearchChange={setPartSearch}
-                                  onAddPartOpenChange={
-                                    handlePartDrawerOpenChange
-                                  }
-                                  onAddPart={handlePartSelect}
-                                  onRemovePart={removePart}
-                                  onEditPriceSave={handlePartPriceSave}
-                                  onEditQtySave={handlePartQtySave}
-                                  t={t}
-                                />
-
-                                {orgId && workOrderId ? (
-                                  <NotesSection
-                                    complaint={wo.complaint}
-                                    diagnosis={wo.diagnosis}
-                                    notes={wo.notes}
-                                    orgId={orgId}
-                                    workOrderId={workOrderId}
-                                    onUpdated={() => fetchWo(true)}
-                                    t={t}
-                                  />
-                                ) : null}
-                              </div>
-                            </div>
-
-                            <div className="flex flex-col gap-3 lg:sticky lg:top-3 self-start">
-                              <StatusTimeline
-                                statusHistory={wo.status_history ?? []}
-                                serviceHistory={wo.service_history ?? []}
+                  <>
+                    <div className="relative flex-1 overflow-y-auto min-h-0">
+                      <VehicleMakeLogo
+                        make={wo.vehicle?.make}
+                        size="70%"
+                        className="absolute inset-0 m-auto pointer-events-none select-none text-primary/[0.03]"
+                        aria-hidden
+                      />
+                      <div className="relative px-3 py-2">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                          <div className="lg:col-span-2">
+                            <div className="flex flex-col gap-3 min-h-0 flex-1 overflow-y-auto">
+                              <ServicesSection
+                                services={wo.services ?? []}
+                                catalog={catalog}
+                                serviceSearch={serviceSearch}
+                                showAddService={showAddService}
+                                locale={locale}
+                                onServiceSearchChange={setServiceSearch}
+                                onAddServiceOpenChange={
+                                  handleServiceDrawerOpenChange
+                                }
+                                onAddService={handleServiceSelect}
+                                onRemoveService={removeService}
+                                onEditPriceSave={handleServicePriceSave}
+                                onEditQtySave={handleServiceQtySave}
                                 t={t}
                               />
+
+                              <PartsSection
+                                parts={wo.parts ?? []}
+                                partsCatalog={partsCatalog}
+                                lowStockMap={lowStockMap}
+                                partSearch={partSearch}
+                                showAddPart={showAddPart}
+                                locale={locale}
+                                onPartSearchChange={setPartSearch}
+                                onAddPartOpenChange={handlePartDrawerOpenChange}
+                                onAddPart={handlePartSelect}
+                                onRemovePart={removePart}
+                                onEditPriceSave={handlePartPriceSave}
+                                onEditQtySave={handlePartQtySave}
+                                t={t}
+                              />
+
+                              {orgId && workOrderId ? (
+                                <NotesSection
+                                  complaint={wo.complaint}
+                                  diagnosis={wo.diagnosis}
+                                  notes={wo.notes}
+                                  orgId={orgId}
+                                  workOrderId={workOrderId}
+                                  onUpdated={() => fetchWo(true)}
+                                  t={t}
+                                />
+                              ) : null}
                             </div>
                           </div>
-                        </div>
-                      </div>
 
-                      {/* НӨАТ + Totals — floating above drawer footer (same width as lg:col-span-2) */}
-                      <div>
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-                          <div className="lg:col-span-2 flex flex-col gap-3 shrink-0">
-                            <div className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2">
-                              <div className="flex flex-col">
-                                <Label className="text-xs font-medium">
-                                  {orgSettings?.language === "en"
-                                    ? "VAT"
-                                    : "НӨАТ"}
-                                </Label>
-                                <span className="text-[10px] text-muted-foreground">
-                                  {orgSettings?.language === "en"
-                                    ? "Value Added Tax"
-                                    : "Нэмэгдсэн Өртөгт Татвар"}
-                                </span>
-                              </div>
-                              <Switch
-                                checked={
-                                  ((wo as Record<string, unknown>)
-                                    .nuat_enabled as boolean) ?? false
-                                }
-                                onCheckedChange={async (checked) => {
-                                  // Optimistic update immediately
-                                  setWo((prev) =>
-                                    prev
-                                      ? ({
-                                          ...prev,
-                                          nuat_enabled: checked,
-                                        } as WorkOrderDetail)
-                                      : prev,
-                                  );
-
-                                  try {
-                                    const res = await fetch(
-                                      `/api/organizations/${orgId}/work-orders/${workOrderId}`,
-                                      {
-                                        method: "PATCH",
-                                        headers: {
-                                          "Content-Type": "application/json",
-                                        },
-                                        body: JSON.stringify({
-                                          nuat_enabled: checked,
-                                        }),
-                                      },
-                                    );
-                                    if (!res.ok)
-                                      throw new Error("Failed to update");
-                                    toast.success(
-                                      checked
-                                        ? "НӨАТ идэвхижүүлэв"
-                                        : "НӨАТ идэвхигүй болгов",
-                                    );
-                                  } catch {
-                                    // Rollback on error
-                                    setWo((prev) =>
-                                      prev
-                                        ? ({
-                                            ...prev,
-                                            nuat_enabled: !checked,
-                                          } as WorkOrderDetail)
-                                        : prev,
-                                    );
-                                    toast.error(
-                                      "НӨАТ тохиргоо шинэчлэхэд алдаа гарлаа",
-                                    );
-                                  }
-                                }}
-                              />
-                            </div>
-                            <TotalsSummary
-                              servicesTotal={servicesTotal}
-                              partsTotal={partsTotal}
-                              grandTotal={grandTotal}
-                              discountTotal={wo.discount_total ?? 0}
-                              taxRate={orgSettings?.default_tax_rate ?? 0}
-                              nuatEnabled={
-                                ((wo as Record<string, unknown>)
-                                  .nuat_enabled as boolean) ?? false
-                              }
-                              locale={(orgSettings?.language as string) ?? "mn"}
+                          <div className="flex flex-col gap-3 lg:sticky lg:top-3 self-start">
+                            <StatusTimeline
+                              statusHistory={wo.status_history ?? []}
+                              serviceHistory={wo.service_history ?? []}
                               t={t}
                             />
                           </div>
                         </div>
                       </div>
+                    </div>
 
-                      <DrawerFooter
-                        wo={wo}
-                        grandTotal={grandTotal}
-                        invoicePublicToken={invoicePublicToken}
-                        saving={saving}
-                        confirmStatus={confirmStatus}
-                        statusNotes={statusNotes}
-                        creatingInvoice={creatingInvoice}
-                        canCancel={canCancel}
-                        canInvoice={canInvoice}
-                        onChangeStatus={changeStatus}
-                        onConfirmCancel={() => {
-                          setConfirmStatus(null);
-                          setStatusNotes("");
-                        }}
-                        onStatusNotesChange={setStatusNotes}
-                        onMarkReady={handleMarkReady}
-                        onComplete={() => setShowPickupForm(true)}
-                        onCreateInvoice={generateInvoice}
-                        t={t}
-                      />
-                    </>
-                  )
+                    {/* НӨАТ + Totals — floating above drawer footer (same width as lg:col-span-2) */}
+                    <div>
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                        <div className="lg:col-span-2 flex flex-col gap-3 shrink-0">
+                          <div className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2">
+                            <div className="flex flex-col">
+                              <Label className="text-xs font-medium">
+                                {orgSettings?.language === "en"
+                                  ? "VAT"
+                                  : "НӨАТ"}
+                              </Label>
+                              <span className="text-[10px] text-muted-foreground">
+                                {orgSettings?.language === "en"
+                                  ? "Value Added Tax"
+                                  : "Нэмэгдсэн Өртөгт Татвар"}
+                              </span>
+                            </div>
+                            <Switch
+                              checked={
+                                ((wo as Record<string, unknown>)
+                                  .nuat_enabled as boolean) ?? false
+                              }
+                              onCheckedChange={async (checked) => {
+                                // Optimistic update immediately
+                                setWo((prev) =>
+                                  prev
+                                    ? ({
+                                        ...prev,
+                                        nuat_enabled: checked,
+                                      } as WorkOrderDetail)
+                                    : prev,
+                                );
+
+                                try {
+                                  const res = await fetch(
+                                    `/api/organizations/${orgId}/work-orders/${workOrderId}`,
+                                    {
+                                      method: "PATCH",
+                                      headers: {
+                                        "Content-Type": "application/json",
+                                      },
+                                      body: JSON.stringify({
+                                        nuat_enabled: checked,
+                                      }),
+                                    },
+                                  );
+                                  if (!res.ok)
+                                    throw new Error("Failed to update");
+                                  toast.success(
+                                    checked
+                                      ? "НӨАТ идэвхижүүлэв"
+                                      : "НӨАТ идэвхигүй болгов",
+                                  );
+                                } catch {
+                                  // Rollback on error
+                                  setWo((prev) =>
+                                    prev
+                                      ? ({
+                                          ...prev,
+                                          nuat_enabled: !checked,
+                                        } as WorkOrderDetail)
+                                      : prev,
+                                  );
+                                  toast.error(
+                                    "НӨАТ тохиргоо шинэчлэхэд алдаа гарлаа",
+                                  );
+                                }
+                              }}
+                            />
+                          </div>
+                          <TotalsSummary
+                            servicesTotal={servicesTotal}
+                            partsTotal={partsTotal}
+                            grandTotal={grandTotal}
+                            discountTotal={wo.discount_total ?? 0}
+                            taxRate={orgSettings?.default_tax_rate ?? 0}
+                            nuatEnabled={
+                              ((wo as Record<string, unknown>)
+                                .nuat_enabled as boolean) ?? false
+                            }
+                            locale={(orgSettings?.language as string) ?? "mn"}
+                            t={t}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <DrawerFooter
+                      wo={wo}
+                      grandTotal={grandTotal}
+                      invoicePublicToken={invoicePublicToken}
+                      saving={saving}
+                      confirmStatus={confirmStatus}
+                      statusNotes={statusNotes}
+                      creatingInvoice={creatingInvoice}
+                      canCancel={canCancel}
+                      canInvoice={canInvoice}
+                      onChangeStatus={changeStatus}
+                      onConfirmCancel={() => {
+                        setConfirmStatus(null);
+                        setStatusNotes("");
+                      }}
+                      onStatusNotesChange={setStatusNotes}
+                      onMarkReady={handleMarkReady}
+                      onComplete={() => setShowCompleteForm(true)}
+                      onCreateInvoice={generateInvoice}
+                      t={t}
+                    />
+                  </>
                 ) : null}
               </DrawerSkeleton>
             </div>
@@ -812,6 +809,31 @@ export function WorkOrderDetailDrawer({
                 transferBanks={transferBanks}
                 onConfirm={handleReadyForPickupSubmit}
                 onBack={() => setShowReadyForm(false)}
+              />
+            </DrawerContent>
+          </Drawer>
+        )}
+
+        {/* Nested drawer for Complete form */}
+        {wo && (
+          <Drawer
+            open={showCompleteForm}
+            onOpenChange={(next) => {
+              if (!next) setShowCompleteForm(false);
+            }}
+            swipeDirection="right"
+          >
+            <DrawerContent
+              showCloseButton={false}
+              className="sm:max-w-md"
+              contentClassName="flex flex-col gap-0 border-border/80 shadow-2xl"
+            >
+              <PickupCompleteForm
+                vehiclePlate={
+                  (wo.vehicle as { plate_number?: string })?.plate_number ?? ""
+                }
+                onConfirm={handleCompleteSubmit}
+                onBack={() => setShowCompleteForm(false)}
               />
             </DrawerContent>
           </Drawer>

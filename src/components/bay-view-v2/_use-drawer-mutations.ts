@@ -1,5 +1,4 @@
 "use client";
-"use client";
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -126,7 +125,6 @@ export function useDrawerMutations({
   // ── Unsaved changes guard / celebration ──
 
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
-  const [showCelebration, _setShowCelebration] = useState(false);
 
   // ── Status change (optimistic, no confirmation) ──
 
@@ -386,6 +384,18 @@ export function useDrawerMutations({
     const service = wo?.services?.find((s) => s.id === serviceId);
     if (!orgId || !workOrderId || !service) return;
 
+    // Temp services were only optimistically added — remove locally, no API call
+    if (serviceId.startsWith("temp-")) {
+      setWo((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          services: (prev.services ?? []).filter((s) => s.id !== serviceId),
+        };
+      });
+      return;
+    }
+
     const serviceData = {
       service_catalog_id: (service as any).service_catalog_id ?? null,
       service_name: service.service_name,
@@ -586,6 +596,18 @@ export function useDrawerMutations({
     const orgId = orgIdRef.current;
     const part = wo?.parts?.find((p) => p.id === partId);
     if (!orgId || !workOrderId || !part) return;
+
+    // Temp parts were only optimistically added — remove locally, no API call
+    if (partId.startsWith("temp-")) {
+      setWo((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          parts: (prev.parts ?? []).filter((p) => p.id !== partId),
+        };
+      });
+      return;
+    }
 
     const partData = {
       part_name: part.part_name,
@@ -1265,7 +1287,6 @@ export function useDrawerMutations({
     postFormParts,
     showUnsavedWarning,
     setShowUnsavedWarning,
-    showCelebration,
     // Handlers
     assignCustomer,
     addService,

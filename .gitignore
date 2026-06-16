@@ -35,6 +35,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# persisted pino error log (agent-accessible)
+/logs/
+
 # env files (can opt-in for committing if needed)
 .env*
 !.env.local

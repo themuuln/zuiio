@@ -1,13 +1,14 @@
 import { expect, test } from "@playwright/test";
-import { loginViaUI } from "./helpers";
+import { loginViaUI, setEnglishLocale } from "./helpers";
 
-// All customer tests use /en/ locale for stable English text selectors
+// All customer tests use English locale for stable English text selectors
 
 test.describe("Customer Management", () => {
   test.describe("Customer List Page", () => {
     test.beforeEach(async ({ page }) => {
       await loginViaUI(page);
-      await page.goto("/en/dashboard/customers");
+      await setEnglishLocale(page);
+      await page.goto("/dashboard/customers");
       await page
         .locator('h1, [data-slot="empty"]')
         .first()
@@ -50,7 +51,8 @@ test.describe("Customer Management", () => {
   test.describe("Customer Creation Sheet", () => {
     test.beforeEach(async ({ page }) => {
       await loginViaUI(page);
-      await page.goto("/en/dashboard/customers");
+      await setEnglishLocale(page);
+      await page.goto("/dashboard/customers");
       await page
         .locator('h1, [data-slot="empty"]')
         .first()
@@ -125,7 +127,8 @@ test.describe("Customer Management", () => {
   test.describe("Customer List Search", () => {
     test.beforeEach(async ({ page }) => {
       await loginViaUI(page);
-      await page.goto("/en/dashboard/customers");
+      await setEnglishLocale(page);
+      await page.goto("/dashboard/customers");
       await page
         .locator('h1, [data-slot="empty"]')
         .first()
@@ -150,7 +153,8 @@ test.describe("Customer Management", () => {
   test.describe("Customer List Navigation", () => {
     test("can navigate from dashboard to customers", async ({ page }) => {
       await loginViaUI(page);
-      await page.goto("/en/dashboard");
+      await setEnglishLocale(page);
+      await page.goto("/dashboard");
       // Wait for the sidebar link to appear (dashboard is a bay-view page)
       const customersLink = page.getByRole("link", { name: /customers/i });
       await expect(customersLink).toBeVisible({ timeout: 15000 });

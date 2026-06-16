@@ -92,7 +92,7 @@ function DrawerContent({
           <DrawerPrimitive.Content
             data-slot="drawer-content"
             className={cn(
-              "relative flex h-full min-h-0 w-full flex-col overflow-hidden border-l border-border/80 bg-popover text-sm text-popover-foreground shadow-2xl",
+              "relative flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden border-l border-border/80 bg-popover text-sm text-popover-foreground shadow-2xl",
               contentClassName,
             )}
           >

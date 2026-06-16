@@ -1,13 +1,14 @@
 import { expect, test } from "@playwright/test";
-import { loginViaUI } from "./helpers";
+import { loginViaUI, setEnglishLocale } from "./helpers";
 
-// All form tests use /en/ locale for stable English text selectors
+// All form tests use English locale for stable English text selectors
 
 test.describe("Form Consistency", () => {
   test.describe("Expense Form", () => {
     test.beforeEach(async ({ page }) => {
       await loginViaUI(page);
-      await page.goto("/en/dashboard/expenses");
+      await setEnglishLocale(page);
+      await page.goto("/dashboard/expenses");
       await page.getByRole("heading", { level: 1 }).waitFor({ timeout: 15000 });
     });
 
@@ -74,7 +75,8 @@ test.describe("Form Consistency", () => {
   test.describe("Branch Form", () => {
     test.beforeEach(async ({ page }) => {
       await loginViaUI(page);
-      await page.goto("/en/dashboard/settings");
+      await setEnglishLocale(page);
+      await page.goto("/dashboard/settings");
       await page
         .getByRole("heading", { name: /settings/i })
         .waitFor({ timeout: 15000 });
@@ -129,7 +131,8 @@ test.describe("Form Consistency", () => {
   test.describe("Service Page", () => {
     test.beforeEach(async ({ page }) => {
       await loginViaUI(page);
-      await page.goto("/en/dashboard/services");
+      await setEnglishLocale(page);
+      await page.goto("/dashboard/services");
       await page.getByRole("heading", { level: 1 }).waitFor({ timeout: 15000 });
     });
 
@@ -160,7 +163,8 @@ test.describe("Form Consistency", () => {
   test.describe("Work Order Page", () => {
     test.beforeEach(async ({ page }) => {
       await loginViaUI(page);
-      await page.goto("/en/dashboard/work-orders");
+      await setEnglishLocale(page);
+      await page.goto("/dashboard/work-orders");
       await page.getByRole("heading", { level: 1 }).waitFor({ timeout: 15000 });
     });
 

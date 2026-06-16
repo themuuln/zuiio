@@ -316,9 +316,9 @@ export function StatusTimeline({
                           {t("services")}
                         </span>
                         <div className="flex flex-wrap gap-1.5">
-                          {entry.services.map((service) => (
+                          {entry.services.map((service, idx) => (
                             <Tooltip
-                              key={`${entry.work_order_id}-${service.name}`}
+                              key={`${entry.work_order_id}-${service.name}-${idx}`}
                             >
                               <TooltipTrigger>
                                 <span className="inline-flex items-center gap-1.5 rounded-4xl border border-border text-foreground text-xs py-1 pl-1.5 pr-2 font-medium">
@@ -359,9 +359,9 @@ export function StatusTimeline({
                           {t("parts")}
                         </span>
                         <div className="flex flex-wrap gap-1.5">
-                          {entry.parts.map((part) => (
+                          {entry.parts.map((part, idx) => (
                             <Tooltip
-                              key={`${entry.work_order_id}-${part.name}`}
+                              key={`${entry.work_order_id}-${part.name}-${idx}`}
                             >
                               <TooltipTrigger>
                                 <span className="inline-flex items-center gap-1.5 rounded-4xl border border-border/60 bg-muted/30 text-muted-foreground text-xs py-1 pl-1.5 pr-2">

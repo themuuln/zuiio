@@ -18,6 +18,10 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:report": "playwright show-report",
+    "test:e2e:visual": "percy exec -- npx playwright test",
+    "test:e2e:ai:plan": "echo 'Ask Droid to: use playwright-test tools to explore the app and create a test plan in specs/'",
+    "test:e2e:ai:heal": "echo 'Ask Droid to: use playwright-test tools to run failing tests, debug, and fix selectors'",
+    "test:e2e:ai:codegen": "npx playwright codegen --target playwright-test",
     "docs:dev": "vitepress dev docs",
     "docs:screenshots": "node scripts/screenshots/capture.mjs",
     "docs:screenshots:en": "node scripts/screenshots/capture.mjs --locale en",
@@ -96,6 +100,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.16",
+    "@percy/playwright": "^1.1.0",
     "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4.3.1",
     "@tanstack/react-query-devtools": "^5.101.0",

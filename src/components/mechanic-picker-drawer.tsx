@@ -266,7 +266,6 @@ export function MechanicPickerDrawer({
                 onKeyDown={(e) => {
                   if (e.key === "Escape") {
                     setSearch("");
-                    handleOpenChange(false);
                   }
                 }}
               />

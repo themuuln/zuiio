@@ -81,10 +81,6 @@ export async function savePostServiceData(
 
   // 1. Validate
   if (!workOrderId) throw new ValidationError("Work order ID is required");
-  if (!recommendations.length)
-    throw new ValidationError(
-      "At least one service recommendation is required",
-    );
 
   // Delete existing recommendations for this work order to prevent duplicates on retry
   const { error: deleteError } = await supabase
@@ -144,12 +140,14 @@ export async function savePostServiceData(
     },
   );
 
-  const { error: recError } = await supabase
-    .from("service_recommendations")
-    .insert(recommendationRows);
+  if (recommendationRows.length > 0) {
+    const { error: recError } = await supabase
+      .from("service_recommendations")
+      .insert(recommendationRows);
 
-  if (recError)
-    throw new Error(`Failed to save recommendations: ${recError.message}`);
+    if (recError)
+      throw new Error(`Failed to save recommendations: ${recError.message}`);
+  }
 
   // 3. Update work_order.odometer_at_service + notes
   const updateData: {

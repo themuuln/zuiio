@@ -195,6 +195,27 @@ Never skip a layer. See `src/lib/queries/` (hooks), `src/lib/services/` (busines
 
 Both `mn.json` and `en.json` must be updated together. Remove keys from both when deleting UI strings.
 
+### Drawer/Sheet Consistency
+
+All side-panel drawers (create, edit, detail views) follow this structure:
+
+```
+DetailDrawer (root — always @/components/ui/detail-drawer)
+├── DetailDrawer.Header   ← shrink-0, border-b (title + description, optional actions slot)
+├── DetailDrawer.Body     ← flex-1, overflow-y-auto (form/content)
+└── DetailDrawer.Footer   ← shrink-0, border-t (Cancel + Submit buttons, outside <form>)
+```
+
+Rules:
+- **Use `DetailDrawer`** — never raw `Drawer`/`Sheet`/`Dialog` for side panels.
+- **Footer outside `<form>`** — buttons connect to the form via `form="<id>"` + `type="submit"` so the footer stays pinned on scroll.
+- **Header actions** — use the `actions` prop on `DetailDrawer.Header` for buttons alongside the title (e.g. "Manage Variants"). Never build custom header layouts.
+- **Width convention** — simple forms (invite, config) → `size="md"`, standard forms → `size="lg"` (default), complex forms with tables → `size="2xl"`.
+- **`modal={false}`** — only when a nested dialog opens while the drawer stays open (e.g. VariantEditorSheet inside EditServiceSheet).
+- **All widths use `sm:max-w-*`** — full-width on mobile, constrained on desktop.
+
+
+
 ---
 
 ## Testing Requirements
@@ -231,6 +252,31 @@ Load `.agents/skills/optimistic-ui/SKILL.md` before any mutation work. Core rule
 - Use stable keys (sorted IDs, not object refs) for reconciliation
 - Track in-flight fetches with a counter, not a boolean
 - `toast.dismiss()` before `toast.success()` on rapid interactions
+
+### Error Logging & Observability
+
+The project uses pino for structured server-side logging and Sentry for error tracking. Three layers catch errors:
+
+1. **API route errors** — `api-handler.ts` try/catch wraps every route with pino + `toApiErrorResponse`
+2. **React error boundaries** — call `reportError()` from `@/lib/sentry-report` (client) or `reportServerError()` from `@/lib/sentry-report-server` (server)
+3. **Process-wide safety net** — `src/instrumentation.ts` registers `unhandledRejection` and `uncaughtException` handlers that log through pino and send to Sentry
+
+**Supabase errors** are tracked via `logSupabaseResult()` in `@/lib/supabase/logger`, which catches both explicit PostgREST errors and silent RLS null-data failures.
+
+**Agent Error Discovery Protocol** — when you start a session, check for errors autonomously:
+
+1. **SessionStart hook** — `~/.factory/hooks/load-context.sh` prints the last 3 errors from `logs/error.log`
+2. **Sentry MCP** — query recent issues/events with `sentry___search_issues` or `sentry___search_events` for stack traces and context
+3. **Supabase logs** — use `supabase-tolom___get_logs(service)` for API/DB/Auth-level errors
+4. **Raw log file** — read `logs/error.log` directly or use the extraction script:
+
+```bash
+node _scripts/extract-errors.mjs --file logs/error.log --tail 20
+```
+
+Supports `--tail N`, `--json`, `--context N`, and `--watch` flags. Reads from stdin when no `--file` is given.
+
+**Error file persistence**: All non-Edge pino instances (main logger + process logger) write error-level entries to `logs/error.log`. The file is git-ignored and only persists locally. If the user reports an issue, start by reading `logs/error.log` before asking them to copy-paste anything.
 
 ### UI Loading
 

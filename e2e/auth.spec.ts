@@ -1,9 +1,17 @@
 import { expect, test } from "@playwright/test";
+import { setEnglishLocale } from "./helpers";
 
+// Auth form tests need a fresh context without existing auth cookies,
+// otherwise the middleware redirects away from the login page.
+// The global storageState provides an authenticated session; we override
+// it here to start from scratch for login/signup form interaction tests.
 test.describe("Authentication Flows", () => {
   test.describe("Login Page", () => {
+    test.use({ storageState: { cookies: [], origins: [] } });
+
     test.beforeEach(async ({ page }) => {
-      await page.goto("/mn/auth/login");
+      await setEnglishLocale(page);
+      await page.goto("/auth/login");
       // Wait for the login form to be fully rendered
       await expect(
         page.getByRole("heading", { name: /sign in/i }),
@@ -39,8 +47,11 @@ test.describe("Authentication Flows", () => {
   });
 
   test.describe("Signup Page", () => {
+    test.use({ storageState: { cookies: [], origins: [] } });
+
     test.beforeEach(async ({ page }) => {
-      await page.goto("/mn/auth/signup");
+      await setEnglishLocale(page);
+      await page.goto("/auth/signup");
       await expect(
         page.getByRole("heading", { name: /create your/i }),
       ).toBeVisible();
@@ -66,10 +77,13 @@ test.describe("Authentication Flows", () => {
   });
 
   test.describe("Protected Routes", () => {
+    // Use fresh context without auth cookies to test redirect behavior
+    test.use({ storageState: { cookies: [], origins: [] } });
+
     test("redirects unauthenticated users from dashboard to login", async ({
       page,
     }) => {
-      await page.goto("/mn/dashboard");
+      await page.goto("/dashboard");
       await expect(page).toHaveURL(/\/auth\/(login|select-organization)/);
     });
   });

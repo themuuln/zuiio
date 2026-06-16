@@ -78,7 +78,7 @@ export function AppSidebar() {
   );
 
   return (
-    <Sidebar collapsible="icon" variant="sidebar">
+    <Sidebar collapsible="icon" variant="sidebar" suppressHydrationWarning>
       <SidebarHeader>
         <OrgBranding />
       </SidebarHeader>

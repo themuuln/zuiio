@@ -125,8 +125,11 @@ export function CreateTransferSheet({
     onOpenChange(false);
   });
 
+  // The form id connects submit buttons in the footer to this form
+  const formId = "create-transfer-form";
+
   return (
-    <Dialog
+    <DetailDrawer
       open={open}
       onOpenChange={(next) => {
         if (!next) {
@@ -135,13 +138,14 @@ export function CreateTransferSheet({
         }
         onOpenChange(next);
       }}
+      size="2xl"
     >
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{t("newTransfer")}</DialogTitle>
-        </DialogHeader>
+      <DetailDrawer.Header>
+        <DetailDrawer.Title>{t("newTransfer")}</DetailDrawer.Title>
+      </DetailDrawer.Header>
 
-        <form onSubmit={onSubmit} className="flex flex-col gap-4">
+      <DetailDrawer.Body>
+        <form id={formId} onSubmit={onSubmit} className="flex flex-col gap-4">
           {/* Branch selection */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field>
@@ -308,29 +312,26 @@ export function CreateTransferSheet({
               />
             </FieldContent>
           </Field>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              {t("cancel")}
-            </Button>
-            <Button
-              type="submit"
-              disabled={items.length === 0 || createTransfer.isPending}
-            >
-              {createTransfer.isPending ? (
-                <Loader2 className="mr-2 size-4 animate-spin" />
-              ) : (
-                <Plus className="mr-2 size-4" />
-              )}
-              {t("createTransfer")}
-            </Button>
-          </DialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </DetailDrawer.Body>
+
+      <DetailDrawer.Footer>
+        <Button variant="outline" onClick={() => onOpenChange(false)}>
+          {t("cancel")}
+        </Button>
+        <Button
+          form={formId}
+          type="submit"
+          disabled={items.length === 0 || createTransfer.isPending}
+        >
+          {createTransfer.isPending ? (
+            <Loader2 className="mr-2 size-4 animate-spin" />
+          ) : (
+            <Plus className="mr-2 size-4" />
+          )}
+          {t("createTransfer")}
+        </Button>
+      </DetailDrawer.Footer>
+    </DetailDrawer>
   );
 }

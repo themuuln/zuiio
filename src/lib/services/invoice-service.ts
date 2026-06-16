@@ -16,6 +16,51 @@ import type {
 import { buildUpdates, type FieldMap } from "./build-updates";
 import { trimField } from "./trim-field";
 
+const DUPLICATE_INVOICE_NUMBER_ERR = "unique_invoice_number_per_org";
+const MAX_INVOICE_RETRIES = 3;
+
+/**
+ * Retries an insert when the unique_invoice_number_per_org constraint fires,
+ * regenerating the invoice number and trying again. Wraps the common pattern
+ * of "read latest number → increment → insert" which races under concurrency.
+ */
+async function retryInsertInvoice<T>(
+  db: SupabaseClient,
+  orgId: string,
+  insertFn: (
+    invoiceNumber: string,
+  ) => Promise<{ data: T | null; error: unknown } | null>,
+): Promise<T> {
+  for (let attempt = 1; attempt <= MAX_INVOICE_RETRIES; attempt++) {
+    const invoiceNumber = await generateInvoiceNumber(db, orgId);
+    const result = await insertFn(invoiceNumber);
+    if (!result) throw new Error("Failed to create invoice");
+
+    const { data, error } = result as {
+      data: T | null;
+      error: { message?: string } | null;
+    };
+
+    if (data) return data;
+
+    // RLS failures and other errors bubble immediately
+    if (!error?.message?.includes(DUPLICATE_INVOICE_NUMBER_ERR)) {
+      throw new Error(error?.message ?? "Failed to create invoice");
+    }
+
+    // On the last attempt, let the error surface
+    if (attempt === MAX_INVOICE_RETRIES) {
+      throw new Error(
+        `Invoice number collision after ${MAX_INVOICE_RETRIES} attempts. Please try again.`,
+      );
+    }
+
+    // Otherwise loop — generateInvoiceNumber will now see the just-inserted row
+  }
+
+  throw new Error("Failed to create invoice");
+}
+
 const invoiceItemFieldMap: FieldMap<Partial<AddInvoiceItemParams>> = {
   columns: {
     description: "description",
@@ -221,7 +266,7 @@ export async function createInvoiceFromWorkOrder(
   const { data: wo } = await supabase
     .from("work_orders")
     .select(
-      "id, organization_id, status, customer_id, vehicle_id, discount_amount",
+      "id, organization_id, status, customer_id, vehicle_id, discount_amount, nuat_enabled",
     )
     .eq("id", workOrderId)
     .is("deleted_at", null)
@@ -313,9 +358,6 @@ export async function createInvoiceFromWorkOrder(
 
   const total = Math.max(0, subtotal - discountTotal + taxTotal);
 
-  // Generate invoice number
-  const invoiceNumber = await generateInvoiceNumber(db, orgId);
-
   // Customer name
   const customerName = customer
     ? [customer.first_name, customer.last_name].filter(Boolean).join(" ") ||
@@ -333,41 +375,45 @@ export async function createInvoiceFromWorkOrder(
   const dueAt = new Date();
   dueAt.setDate(dueAt.getDate() + dueDays);
 
-  // Create invoice
-  const { data: invoice, error } = await supabase
-    .from("invoices")
-    .insert({
-      organization_id: orgId,
-      work_order_id: workOrderId,
-      customer_id: wo.customer_id,
-      vehicle_id: wo.vehicle_id,
-      invoice_number: invoiceNumber,
-      status: "draft",
-      subtotal,
-      discount_total: discountTotal,
-      tax_total: taxTotal,
-      total,
-      amount_paid: 0,
-      balance_due: total,
-      issued_at: new Date().toISOString(),
-      due_at: dueAt.toISOString(),
-      customer_name: customerName,
-      customer_phone: customer?.phone ?? null,
-      customer_email: customer?.email ?? null,
-      customer_address: customer?.address ?? null,
-      vehicle_plate: vehicle?.plate_number ?? null,
-      vehicle_details: vehicleDetails,
-      notes: options?.notes ?? null,
-      terms: options?.terms ?? "Payment due upon receipt.",
-      created_by: userId,
-      updated_by: userId,
-    })
-    .select("id")
-    .single();
-
-  if (error || !invoice) {
-    throw new Error(error?.message ?? "Failed to create invoice");
-  }
+  // Create invoice (retries on unique_invoice_number_per_org collision)
+  let usedInvoiceNumber = "";
+  const invoice = await retryInsertInvoice<{ id: string }>(
+    db,
+    orgId,
+    async (invoiceNumber) => {
+      usedInvoiceNumber = invoiceNumber;
+      return supabase
+        .from("invoices")
+        .insert({
+          organization_id: orgId,
+          work_order_id: workOrderId,
+          customer_id: wo.customer_id,
+          vehicle_id: wo.vehicle_id,
+          invoice_number: invoiceNumber,
+          status: "draft",
+          subtotal,
+          discount_total: discountTotal,
+          tax_total: taxTotal,
+          total,
+          amount_paid: 0,
+          balance_due: total,
+          issued_at: new Date().toISOString(),
+          due_at: dueAt.toISOString(),
+          customer_name: customerName,
+          customer_phone: customer?.phone ?? null,
+          customer_email: customer?.email ?? null,
+          customer_address: customer?.address ?? null,
+          vehicle_plate: vehicle?.plate_number ?? null,
+          vehicle_details: vehicleDetails,
+          notes: options?.notes ?? null,
+          terms: options?.terms ?? "Payment due upon receipt.",
+          created_by: userId,
+          updated_by: userId,
+        })
+        .select("id")
+        .single();
+    },
+  );
 
   await createAuditLog({
     supabase,
@@ -377,7 +423,7 @@ export async function createInvoiceFromWorkOrder(
     user_id: userId ?? undefined,
     organization_id: orgId,
     new_data: {
-      invoice_number: invoiceNumber,
+      invoice_number: usedInvoiceNumber,
       status: "draft",
       total,
       customer_id: wo.customer_id,
@@ -425,7 +471,7 @@ export async function createInvoiceFromWorkOrder(
     id: invoice.id,
     organization_id: orgId,
     branch_id: null,
-    invoice_number: invoiceNumber,
+    invoice_number: usedInvoiceNumber,
     status: "draft",
     subtotal,
     discount_total: discountTotal,
@@ -457,7 +503,6 @@ export async function createInvoiceFromWorkOrder(
     deleted_at: null,
     items: allItems.map((item, i) => ({
       id: `pending-${i}`,
-      invoice_id: invoice.id,
       ...item,
       created_at: new Date().toISOString(),
     })) as unknown as InvoiceItem[],
@@ -540,46 +585,46 @@ export async function createStandaloneInvoice(
   }
 
   const total = subtotal + computedTaxTotal;
-  const invoiceNumber = await generateInvoiceNumber(db, orgId);
 
   const dueDays = params.dueDays ?? 7;
   const dueAt = new Date();
   dueAt.setDate(dueAt.getDate() + dueDays);
 
-  // Create invoice
-  const { data: invoice, error } = await supabase
-    .from("invoices")
-    .insert({
-      organization_id: orgId,
-      invoice_number: invoiceNumber,
-      status: "draft",
-      customer_id: params.customer_id || null,
-      vehicle_id: params.vehicle_id || null,
-      subtotal,
-      discount_total: totalDiscount,
-      tax_total: computedTaxTotal,
-      total,
-      amount_paid: 0,
-      balance_due: total,
-      issued_at: new Date().toISOString(),
-      due_at: dueAt.toISOString(),
-      customer_name: params.customer_name || null,
-      customer_phone: params.customer_phone || null,
-      customer_email: params.customer_email || null,
-      customer_address: params.customer_address || null,
-      vehicle_plate: params.vehicle_plate || null,
-      vehicle_details: params.vehicle_details || null,
-      notes: params.notes || null,
-      terms: params.terms || "Payment due upon receipt.",
-      created_by: userId,
-      updated_by: userId,
-    })
-    .select("id")
-    .single();
-
-  if (error || !invoice) {
-    throw new Error(error?.message ?? "Failed to create invoice");
-  }
+  // Create invoice (retries on unique_invoice_number_per_org collision)
+  const invoice = await retryInsertInvoice<{ id: string }>(
+    db,
+    orgId,
+    async (invoiceNumber) =>
+      supabase
+        .from("invoices")
+        .insert({
+          organization_id: orgId,
+          invoice_number: invoiceNumber,
+          status: "draft",
+          customer_id: params.customer_id || null,
+          vehicle_id: params.vehicle_id || null,
+          subtotal,
+          discount_total: totalDiscount,
+          tax_total: computedTaxTotal,
+          total,
+          amount_paid: 0,
+          balance_due: total,
+          issued_at: new Date().toISOString(),
+          due_at: dueAt.toISOString(),
+          customer_name: params.customer_name || null,
+          customer_phone: params.customer_phone || null,
+          customer_email: params.customer_email || null,
+          customer_address: params.customer_address || null,
+          vehicle_plate: params.vehicle_plate || null,
+          vehicle_details: params.vehicle_details || null,
+          notes: params.notes || null,
+          terms: params.terms || "Payment due upon receipt.",
+          created_by: userId,
+          updated_by: userId,
+        })
+        .select("id")
+        .single(),
+  );
 
   // Insert line items
   const itemsWithInvoiceId = invoiceItems.map((item) => ({
@@ -621,9 +666,7 @@ export async function updateInvoiceStatus(
 
   if (status === "paid") {
     updateData.paid_at = new Date().toISOString();
-    updateData.amount_paid =
-      (await supabase.from("invoices").select("total").eq("id", id).single())
-        .data?.total ?? 0;
+    updateData.amount_paid = oldInvoice?.total ?? 0;
     updateData.balance_due = 0;
   }
 

@@ -1,13 +1,14 @@
 import { expect, test } from "@playwright/test";
-import { loginViaUI } from "./helpers";
+import { loginViaUI, setEnglishLocale } from "./helpers";
 
-// All vehicle tests use /en/ locale for stable English text selectors
+// All vehicle tests use English locale for stable English text selectors
 
 test.describe("Vehicle Management", () => {
   test.describe("Vehicle List Page", () => {
     test.beforeEach(async ({ page }) => {
       await loginViaUI(page);
-      await page.goto("/en/dashboard/vehicles");
+      await setEnglishLocale(page);
+      await page.goto("/dashboard/vehicles");
       await page
         .locator('h1, [data-slot="empty"]')
         .first()
@@ -37,7 +38,8 @@ test.describe("Vehicle Management", () => {
   test.describe("New Vehicle Form", () => {
     test.beforeEach(async ({ page }) => {
       await loginViaUI(page);
-      await page.goto("/en/dashboard/vehicles/new");
+      await setEnglishLocale(page);
+      await page.goto("/dashboard/vehicles/new");
       await page
         .getByRole("heading", { name: /new vehicle/i })
         .waitFor({ timeout: 15000 });
@@ -125,7 +127,8 @@ test.describe("Vehicle Management", () => {
   test.describe("Vehicle List Navigation", () => {
     test("can navigate from dashboard to vehicles", async ({ page }) => {
       await loginViaUI(page);
-      await page.goto("/en/dashboard");
+      await setEnglishLocale(page);
+      await page.goto("/dashboard");
 
       // Dashboard may show as h2 or sidebar nav — look for the sidebar link
       const vehiclesLink = page.getByRole("link", { name: /vehicles/i });
@@ -139,7 +142,8 @@ test.describe("Vehicle Management", () => {
   test.describe("Vehicle Spec Dropdowns", () => {
     test.beforeEach(async ({ page }) => {
       await loginViaUI(page);
-      await page.goto("/en/dashboard/vehicles/new");
+      await setEnglishLocale(page);
+      await page.goto("/dashboard/vehicles/new");
       await page
         .getByRole("heading", { name: /new vehicle/i })
         .waitFor({ timeout: 15000 });

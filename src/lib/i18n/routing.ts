@@ -10,13 +10,12 @@ import { defineRouting } from "next-intl/routing";
  * 2. Accept-Language header (first visit, no cookie)
  * 3. defaultLocale ("mn")
  *
- * localeDetection is disabled here because we handle it manually in the middleware
- * (auth middleware runs before i18n middleware; passing detection to next-intl
- * would add a second detection pass on top of ours, which is redundant).
+ * localeDetection enables next-intl to read the NEXT_LOCALE cookie.
+ * The proxy also sets the cookie manually for first visits, so the two
+ * detection passes agree on the same locale.
  */
 export const routing = defineRouting({
   locales: ["mn", "en"],
   defaultLocale: "mn",
   localePrefix: "never",
-  localeDetection: false,
 });

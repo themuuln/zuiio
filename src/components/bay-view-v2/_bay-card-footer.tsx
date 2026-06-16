@@ -109,15 +109,18 @@ export function BayCardFooter({
       )}
       <div className="ml-auto flex items-center gap-1">
         <DropdownMenu>
-          <DropdownMenuTrigger onClick={(e) => e.stopPropagation()}>
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              disabled={isPending}
-              className="size-8 rounded-lg text-muted-foreground/60 hover:text-foreground"
-            >
-              <MoreHorizontal className="size-4" />
-            </Button>
+          <DropdownMenuTrigger
+            onClick={(e) => e.stopPropagation()}
+            render={
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                disabled={isPending}
+                className="size-8 rounded-lg text-muted-foreground/60 hover:text-foreground"
+              />
+            }
+          >
+            <MoreHorizontal className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" sideOffset={4} className="w-48">
             <DropdownMenuItem

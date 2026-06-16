@@ -36,7 +36,6 @@ type BayCardOccupiedProps = Pick<
   | "onAssignMechanic"
   | "onRemoveMechanic"
   | "onAddHelper"
-  | "onReorderMechanics"
 >;
 
 export function BayCardOccupied({
@@ -55,7 +54,6 @@ export function BayCardOccupied({
   onAssignMechanic,
   onRemoveMechanic,
   onAddHelper,
-  onReorderMechanics,
 }: BayCardOccupiedProps) {
   const t = useTranslations("bayView");
   const wo = bay.workOrder;
@@ -117,7 +115,6 @@ export function BayCardOccupied({
           onAssignMechanic={onAssignMechanic}
           onRemoveMechanic={onRemoveMechanic}
           onAddHelper={onAddHelper}
-          onReorderMechanics={onReorderMechanics}
         />
       </div>
 

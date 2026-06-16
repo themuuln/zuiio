@@ -1,7 +1,7 @@
 "use client";
 
 import { useDraggable } from "@dnd-kit/core";
-import { UserPlus } from "lucide-react";
+import { GripVertical, UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import React from "react";
 import { MechanicAvatar } from "@/components/mechanic-avatar";
@@ -49,15 +49,21 @@ function MechanicItem({ mechanic }: MechanicItemProps) {
   return (
     <div
       ref={setNodeRef}
-      {...listeners}
-      {...attributes}
       style={style}
       className={cn(
-        "flex items-center gap-2 border border-border/60 bg-card px-3 py-2 cursor-grab select-none transition-colors touch-manipulation",
-        isDragging && "opacity-50 shadow-xl z-50",
+        "flex items-center gap-2 border border-border/60 bg-card px-3 py-2 select-none transition-colors",
+        isDragging && "opacity-50",
         !isDragging && "hover:border-border hover:bg-muted/20",
       )}
     >
+      <button
+        type="button"
+        {...listeners}
+        {...attributes}
+        className="flex size-5 shrink-0 cursor-grab touch-manipulation items-center justify-center rounded hover:bg-muted/60 active:cursor-grabbing"
+      >
+        <GripVertical className="size-3 text-muted-foreground/30" />
+      </button>
       <MechanicAvatar mechanic={mechanic} className="size-6 shrink-0" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">

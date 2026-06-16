@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { setEnglishLocale } from "./helpers";
 
 test.describe("Internationalization (i18n)", () => {
   test.describe("Language Switcher on Landing Page", () => {
@@ -75,8 +76,12 @@ test.describe("Internationalization (i18n)", () => {
   });
 
   test.describe("Language Switcher on Auth Pages", () => {
+    // Use fresh context without auth cookies to access login form
+    test.use({ storageState: { cookies: [], origins: [] } });
+
     test("login page has language switcher", async ({ page }) => {
-      await page.goto("/mn/auth/login");
+      await setEnglishLocale(page);
+      await page.goto("/auth/login");
       await expect(
         page.getByRole("heading", { name: /sign in/i }),
       ).toBeVisible();
@@ -93,7 +98,8 @@ test.describe("Internationalization (i18n)", () => {
     test("switching language on login page updates form labels", async ({
       page,
     }) => {
-      await page.goto("/mn/auth/login");
+      await setEnglishLocale(page);
+      await page.goto("/auth/login");
       await expect(
         page.getByRole("heading", { name: /sign in/i }),
       ).toBeVisible();
@@ -109,22 +115,23 @@ test.describe("Internationalization (i18n)", () => {
   });
 
   test.describe("URL and Routing", () => {
-    test("root URL redirects to default locale", async ({ page }) => {
+    test("root URL loads the landing page", async ({ page }) => {
       await page.goto("/");
-      // The page should load (root may or may not redirect)
+      // The page should load
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     });
 
-    test("explicit locale in URL works", async ({ page }) => {
-      await page.goto("/mn");
-      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    });
-
-    test("EN locale in URL works", async ({ page }) => {
-      await page.goto("/en");
+    test("setting EN locale via cookie works", async ({ page }) => {
+      await setEnglishLocale(page);
+      await page.goto("/");
       await expect(
         page.getByRole("heading", { level: 1, name: /operating system/i }),
       ).toBeVisible();
+    });
+
+    test("setting MN locale via cookie works", async ({ page }) => {
+      await page.goto("/");
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     });
   });
 

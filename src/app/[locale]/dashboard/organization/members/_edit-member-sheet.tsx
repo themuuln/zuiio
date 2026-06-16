@@ -33,10 +33,10 @@ interface Branch {
 }
 
 interface EditMemberValues {
-  fullName: string;
-  phone: string;
+  fullName?: string;
+  phone?: string;
   roleId: string;
-  branchId: string;
+  branchId?: string;
 }
 
 const editMemberSchema = z.object({
@@ -193,7 +193,10 @@ export function EditMemberSheet({
               <Select
                 value={form.watch("branchId")}
                 onValueChange={(val) => {
-                  form.setValue("branchId", val === "__none__" ? "" : val);
+                  form.setValue(
+                    "branchId",
+                    val === "__none__" ? "" : (val ?? ""),
+                  );
                 }}
               >
                 <SelectTrigger className="w-full">
@@ -219,17 +222,10 @@ export function EditMemberSheet({
       </DetailDrawer.Body>
 
       <DetailDrawer.Footer>
-        <Button
-          variant="outline"
-          onClick={() => onOpenChange(false)}
-        >
+        <Button variant="outline" onClick={() => onOpenChange(false)}>
           {t("cancel")}
         </Button>
-        <Button
-          form="edit-member-form"
-          type="submit"
-          disabled={saving}
-        >
+        <Button form="edit-member-form" type="submit" disabled={saving}>
           {saving ? (
             <Loader2 className="mr-2 size-4 animate-spin" />
           ) : (

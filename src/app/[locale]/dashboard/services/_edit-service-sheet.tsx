@@ -206,8 +206,7 @@ export function EditServiceSheet({
             <div className="grid gap-4 sm:grid-cols-2">
               <Field data-invalid={!!form.formState.errors.name}>
                 <FieldLabel>
-                  {t("serviceName")}{" "}
-                  <span className="text-destructive">*</span>
+                  {t("serviceName")} <span className="text-destructive">*</span>
                 </FieldLabel>
                 <FieldContent>
                   <Input

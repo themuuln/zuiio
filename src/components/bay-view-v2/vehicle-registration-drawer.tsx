@@ -4,6 +4,7 @@ import {
   Car,
   CheckCircle2,
   ChevronDown,
+  ChevronRight,
   HistoryIcon,
   Loader2,
   MessageSquarePlus,
@@ -14,19 +15,14 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import {
   Field,
   FieldContent,
@@ -166,7 +162,7 @@ function ServiceTimeline({
 
 // ── Main Component ─────────────────────────────────────────
 
-export function VehicleRegistrationDialog({
+export function VehicleRegistrationDrawer({
   open,
   onOpenChange,
   onQueued,
@@ -205,6 +201,9 @@ export function VehicleRegistrationDialog({
   // ── Collapsible sections ──────────────────────────────────
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
 
+  // ── Customer drawer ───────────────────────────────────────
+  const [customerDrawerOpen, setCustomerDrawerOpen] = useState(false);
+
   const plateRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<VehicleRegistrationFormValues>({
@@ -231,39 +230,39 @@ export function VehicleRegistrationDialog({
   }, [open]);
 
   // Reset on open
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — only reset on open toggle
   useEffect(() => {
-    if (open) {
-      setPlate("");
-      setLookupResult(EMPTY_LOOKUP);
-      setLookupLoading(false);
-      setLookupError(null);
-      setLookupDone(false);
-      setSaving(false);
-      setSaveError(null);
-      setSaveSuccess(false);
-      setSaveMode(null);
-      setQueueSaving(false);
-      setQueueError(null);
-      setSavedVehicleId(null);
-      setSavedCustomerId(null);
-      setSearchResults([]);
-      setShowDropdown(false);
-      setShowTechnicalDetails(false);
-      form.reset({
-        make: "",
-        model: "",
-        year: "",
-        color: "",
-        vin: "",
-        engine: "",
-        odometer: "",
-        custFirstName: "",
-        custLastName: "",
-        custPhone: "",
-        complaint: "",
-      });
-    }
-  }, [open, form]);
+    if (!open) return;
+    setPlate("");
+    setLookupResult(EMPTY_LOOKUP);
+    setLookupLoading(false);
+    setLookupError(null);
+    setLookupDone(false);
+    setSaving(false);
+    setSaveError(null);
+    setSaveSuccess(false);
+    setSaveMode(null);
+    setQueueSaving(false);
+    setQueueError(null);
+    setSavedVehicleId(null);
+    setSavedCustomerId(null);
+    setSearchResults([]);
+    setShowDropdown(false);
+    setShowTechnicalDetails(false);
+    form.reset({
+      make: "",
+      model: "",
+      year: "",
+      color: "",
+      vin: "",
+      engine: "",
+      odometer: "",
+      custFirstName: "",
+      custLastName: "",
+      custPhone: "",
+      complaint: "",
+    });
+  }, [open]);
 
   // Populate form from lookup result
   useEffect(() => {
@@ -387,23 +386,33 @@ export function VehicleRegistrationDialog({
         setSaveSuccess(true);
         setSaveMode(saveResult.isUpdate ? "updated" : "created");
 
-        // Add to queue immediately after saving
-        const { addVehicleToQueue } = await import(
-          "@/lib/services/bay-view-actions"
-        );
-        const { workOrderId } = await addVehicleToQueue({
-          vehicleId: saveResult.vehicle.id,
-          customerId: saveResult.customerId ?? "",
-          complaint: data.complaint?.trim() || undefined,
-          branchId,
-        });
-
-        // Direct assign to bay if requested
-        if (assignBayNumber) {
-          const { assignVehicleToBay } = await import(
-            "@/lib/services/bay-view-service.actions"
+        // Queue and bay assignment are secondary — failures here don't undo vehicle save
+        try {
+          const { addVehicleToQueue } = await import(
+            "@/lib/services/bay-view-actions"
           );
-          await assignVehicleToBay(workOrderId, assignBayNumber);
+          const { workOrderId } = await addVehicleToQueue({
+            vehicleId: saveResult.vehicle.id,
+            customerId: saveResult.customerId ?? "",
+            complaint: data.complaint?.trim() || undefined,
+            branchId,
+          });
+
+          // Direct assign to bay if requested
+          if (assignBayNumber && workOrderId) {
+            try {
+              const { assignVehicleToBay } = await import(
+                "@/lib/services/bay-view-service.actions"
+              );
+              await assignVehicleToBay(workOrderId, assignBayNumber);
+            } catch {
+              toast.warning(t("saveSuccessBayAssignFailed"));
+            }
+          }
+        } catch (err) {
+          toast.error(
+            err instanceof Error ? err.message : t("saveSuccessQueueFailed"),
+          );
         }
 
         // Re-lookup to update timeline
@@ -419,6 +428,7 @@ export function VehicleRegistrationDialog({
           onQueued?.();
         }
       } catch (err) {
+        // Only vehicle save failure is fatal
         setSaveError(
           err instanceof Error ? err.message : t("common.somethingWentWrong"),
         );
@@ -441,7 +451,6 @@ export function VehicleRegistrationDialog({
     let workOrderId: string | undefined;
 
     if (!vehicleId) {
-      // Vehicle hasn't been saved yet — save first
       if (!plate.trim() || !formData.make.trim() || !formData.model.trim()) {
         setQueueError(t("saveVehicleFirst"));
         return;
@@ -470,7 +479,6 @@ export function VehicleRegistrationDialog({
         return;
       }
     } else {
-      // Vehicle exists — queue directly
       setQueueSaving(true);
       setQueueError(null);
       try {
@@ -492,7 +500,6 @@ export function VehicleRegistrationDialog({
       }
     }
 
-    // Direct assign to bay if requested
     if (assignBayNumber && workOrderId) {
       try {
         const { assignVehicleToBay } = await import(
@@ -533,19 +540,30 @@ export function VehicleRegistrationDialog({
   const isExistingVehicle = lookupDone && lookupResult.exists;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-base">
+    <DetailDrawer
+      open={open}
+      onOpenChange={onOpenChange}
+      size="3xl"
+      modal={false}
+    >
+      {/* ── Header ──────────────────────────────────────────── */}
+      <DetailDrawer.Header>
+        <DetailDrawer.Title>
+          <span className="flex items-center gap-2">
             <Car className="size-4 text-blue-500" />
             {t("vehicleRegistration")}
-          </DialogTitle>
-          <DialogDescription>{t("registerSubtitle")}</DialogDescription>
-        </DialogHeader>
+          </span>
+        </DetailDrawer.Title>
+        <DetailDrawer.Description>
+          {t("registerSubtitle")}
+        </DetailDrawer.Description>
+      </DetailDrawer.Header>
 
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* ── Left: Main Content ───────────────────────────── */}
-          <div className="flex-1 flex flex-col gap-4">
+      {/* ── Body ────────────────────────────────────────────── */}
+      <DetailDrawer.Body>
+        <div className="flex flex-col gap-6">
+          {/* ── Main Content ─────────────────────────────────── */}
+          <div className="flex flex-col gap-4">
             {/* ── Plate Input ────────────────────────────────── */}
             <div className="flex gap-2">
               <div className="relative flex-1">
@@ -575,7 +593,7 @@ export function VehicleRegistrationDialog({
                     }
                   }}
                   placeholder={`${t("enterPlate")} — ${t("lookupSubtitle")}`}
-                  className="h-11 pl-10 pr-8 font-mono uppercase"
+                  className="h-9 pl-10 pr-8 font-mono uppercase"
                 />
                 {searchLoading && (
                   <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground animate-spin" />
@@ -585,7 +603,6 @@ export function VehicleRegistrationDialog({
                     <BuuzHint />
                   </div>
                 )}
-                {/* Autocomplete dropdown */}
                 {showDropdown && searchResults.length > 0 && (
                   <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-60 overflow-auto">
                     {searchResults.map((v) => (
@@ -623,6 +640,7 @@ export function VehicleRegistrationDialog({
               </div>
               <Button
                 type="button"
+                size="lg"
                 onClick={handleLookup}
                 disabled={lookupLoading || !plate.trim()}
               >
@@ -658,8 +676,16 @@ export function VehicleRegistrationDialog({
             )}
 
             {lookupDone && !lookupResult.exists && (
-              <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 px-4 py-2 text-xs text-amber-600 dark:text-amber-400">
-                {t("vehicleNotFound")}
+              <div
+                className={`px-4 py-2 text-xs ${
+                  lookupResult.smartcarFound
+                    ? "bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400"
+                    : "bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400"
+                }`}
+              >
+                {lookupResult.smartcarFound
+                  ? t("vehicleFoundSmartcar")
+                  : t("vehicleNotFound")}
               </div>
             )}
 
@@ -836,52 +862,122 @@ export function VehicleRegistrationDialog({
                   </CollapsibleContent>
                 </Collapsible>
 
-                {/* ── Owner Info ──────────────────────────── */}
-                <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-medium text-muted-foreground">
-                    {t("ownerInfo")}
-                  </Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Field data-invalid={!!form.formState.errors.custFirstName}>
-                      <FieldContent>
-                        <Input
-                          placeholder="e.g. Bat"
-                          className="text-xs"
-                          aria-invalid={!!form.formState.errors.custFirstName}
-                          {...form.register("custFirstName")}
-                        />
-                      </FieldContent>
-                    </Field>
-                    <Field data-invalid={!!form.formState.errors.custLastName}>
-                      <FieldContent>
-                        <Input
-                          placeholder="e.g. Erdene"
-                          className="text-xs"
-                          aria-invalid={!!form.formState.errors.custLastName}
-                          {...form.register("custLastName")}
-                        />
-                      </FieldContent>
-                    </Field>
-                  </div>
-                  <Field data-invalid={!!form.formState.errors.custPhone}>
-                    <FieldContent>
-                      <Input
-                        type="tel"
-                        placeholder="e.g. 99112233"
-                        inputMode="tel"
-                        autoComplete="tel"
-                        className="text-xs"
-                        aria-invalid={!!form.formState.errors.custPhone}
-                        {...form.register("custPhone")}
-                      />
-                      {form.formState.errors.custPhone && (
-                        <FieldError>
-                          {form.formState.errors.custPhone.message}
-                        </FieldError>
-                      )}
-                    </FieldContent>
-                  </Field>
+                {/* ── Customer ──────────────────────────────── */}
+                <div className="border-t border-border/50 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setCustomerDrawerOpen(true)}
+                    className="flex items-center justify-between w-full text-left group"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-center size-8 bg-primary/10">
+                        <User className="size-4 text-primary" />
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium">
+                          {t("ownerInfo")}
+                        </span>
+                        {formValues.custFirstName || formValues.custPhone ? (
+                          <p className="text-xs text-muted-foreground">
+                            {[formValues.custFirstName, formValues.custLastName]
+                              .filter(Boolean)
+                              .join(" ") || t("unknown")}
+                            {formValues.custPhone
+                              ? ` · ${formValues.custPhone}`
+                              : ""}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">
+                            {t("addCustomerInfo")}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                  </button>
                 </div>
+
+                {/* ── Customer Nested Drawer ───────────────── */}
+                <DetailDrawer
+                  open={customerDrawerOpen}
+                  onOpenChange={setCustomerDrawerOpen}
+                  size="md"
+                  modal
+                >
+                  <DetailDrawer.Header>
+                    <DetailDrawer.Title>
+                      <span className="flex items-center gap-2">
+                        <User className="size-4 text-primary" />
+                        {t("ownerInfo")}
+                      </span>
+                    </DetailDrawer.Title>
+                    <DetailDrawer.Description>
+                      {t("addCustomerInfo")}
+                    </DetailDrawer.Description>
+                  </DetailDrawer.Header>
+                  <DetailDrawer.Body>
+                    <div className="flex flex-col gap-4">
+                      <div className="grid grid-cols-2 gap-2">
+                        <Field
+                          data-invalid={!!form.formState.errors.custFirstName}
+                        >
+                          <FieldContent>
+                            <Input
+                              placeholder="e.g. Bat"
+                              className="text-xs"
+                              aria-invalid={
+                                !!form.formState.errors.custFirstName
+                              }
+                              {...form.register("custFirstName")}
+                            />
+                          </FieldContent>
+                        </Field>
+                        <Field
+                          data-invalid={!!form.formState.errors.custLastName}
+                        >
+                          <FieldContent>
+                            <Input
+                              placeholder="e.g. Erdene"
+                              className="text-xs"
+                              aria-invalid={
+                                !!form.formState.errors.custLastName
+                              }
+                              {...form.register("custLastName")}
+                            />
+                          </FieldContent>
+                        </Field>
+                      </div>
+                      <Field data-invalid={!!form.formState.errors.custPhone}>
+                        <FieldContent>
+                          <Input
+                            type="tel"
+                            placeholder="e.g. 99112233"
+                            inputMode="tel"
+                            autoComplete="tel"
+                            className="text-xs"
+                            aria-invalid={!!form.formState.errors.custPhone}
+                            {...form.register("custPhone")}
+                          />
+                          {form.formState.errors.custPhone && (
+                            <FieldError>
+                              {form.formState.errors.custPhone.message}
+                            </FieldError>
+                          )}
+                        </FieldContent>
+                      </Field>
+                    </div>
+                  </DetailDrawer.Body>
+                  <DetailDrawer.Footer>
+                    <Button
+                      type="button"
+                      variant="default"
+                      className="w-full"
+                      onClick={() => setCustomerDrawerOpen(false)}
+                    >
+                      {t("common.save") ?? "Save"}
+                    </Button>
+                  </DetailDrawer.Footer>
+                </DetailDrawer>
 
                 {/* ── Complaint ────────────────────────────── */}
                 <div className="border-t border-border/50 pt-4">
@@ -938,8 +1034,8 @@ export function VehicleRegistrationDialog({
             )}
           </div>
 
-          {/* ── Right: Timeline ──────────────────────────────── */}
-          <div className="w-full lg:w-[360px] shrink-0">
+          {/* ── Bottom: Timeline ─────────────────────────────── */}
+          <div className="w-full">
             <div className="flex items-center gap-2 mb-4">
               <div className="flex items-center justify-center size-8 bg-amber-500/10">
                 <HistoryIcon className="size-4 text-amber-500" />
@@ -1011,7 +1107,7 @@ export function VehicleRegistrationDialog({
             )}
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </DetailDrawer.Body>
+    </DetailDrawer>
   );
 }

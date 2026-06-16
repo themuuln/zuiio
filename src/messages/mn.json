@@ -340,6 +340,7 @@
     "inventoryAlerts": "Сануулга",
     "inventoryValuation": "Үнэлгээ",
     "inventoryTransfers": "Шилжүүлэг",
+    "purchaseOrders": "Худалдан авалт",
     "estimates": "Үнийн санал"
   },
   "mechanic": {
@@ -630,6 +631,7 @@
     "engine": "Хөдөлгүүр",
     "odometer": "Одометр (км)",
     "ownerInfo": "Эзэмшигчийн мэдээлэл",
+    "addCustomerInfo": "Харилцагчийн мэдээлэл нэмэх",
     "firstName": "Нэр",
     "lastName": "Овог",
     "phone": "Утас",
@@ -638,6 +640,9 @@
     "vehicleUpdated": "Машины мэдээлэл амжилттай шинэчлэгдлээ!",
     "vehicleRegistered": "Машин амжилттай бүртгэгдлээ!",
     "vehicleNotFound": "Машин олдсонгүй. Доорх мэдээллийг бөглөж бүртгэнэ үү.",
+    "vehicleFoundSmartcar": "Машины мэдээлэл SmartCar сангаас олдлоо. Доорх мэдээллийг баталгаажуулаад бүртгэнэ үү.",
+    "saveSuccessBayAssignFailed": "Машин хадгалагдсан, гэхдээ буланд байршуулж чадсангүй. Гараар байршуулна уу.",
+    "saveSuccessQueueFailed": "Машин хадгалагдсан, гэхдээ хүлээлгийн жагсаалтад нэмж чадсангүй. Дахин оролдоно уу.",
     "serviceTimeline": "Үйлчилгээний түүх",
     "noServiceHistory": "Үйлчилгээний түүх байхгүй",
     "serviceRecordsHere": "Үйлчилгээний түүх энд харагдана",
@@ -774,6 +779,7 @@
     "removePartLabel": "Сэлбэг устгах",
     "workOrderCompleted": "Ажлын захиалга дууслаа",
     "failedToComplete": "Ажлын захиалгыг дуусгахад алдаа гарлаа",
+    "completionDataSaved": "Өгөгдөл хадгалагдсан, гэхдээ төлөв шинэчлэгдэж чадсангүй. Дахин оролдоно уу.",
     "workOrderDrawerDescription": "Энэ ажлын захиалгын үйлчилгээ, сэлбэг, тэмдэглэл, төлөвийг нэг дороос удирдана.",
     "addServiceDrawerDescription": "Үйлчилгээний каталогоос хайх эсвэл энэ ажлын захиалгад шинэ үйлчилгээ нэмнэ үү.",
     "addPartDrawerDescription": "Сэлбэгийн каталогоос хайх эсвэл энэ ажлын захиалгад шинэ сэлбэг нэмнэ үү.",
@@ -795,7 +801,11 @@
     "removeServiceAria": "Үйлчилгээ устгах",
     "removePartAria": "Сэлбэг устгах",
     "allMechanicsAssigned": "Бүх механикч томилогдсон",
-    "noMechanicsFound": "Механикч олдсонгүй"
+    "noMechanicsFound": "Механикч олдсонгүй",
+    "common": {
+      "save": "Хадгалах",
+      "somethingWentWrong": "Ямар нэг алдаа гарлаа"
+    }
   },
   "portal": {
     "dashboard": "Хяналтын самбар",
@@ -1382,7 +1392,11 @@
     "noVariantsFound": "Хувилбар олдсонгүй.",
     "addWithoutVariant": "Хувилбаргүйгээр нэмэх",
     "addVariant": "Нэмэх",
-    "selectAVariant": "Хувилбар сонгох"
+    "selectAVariant": "Хувилбар сонгох",
+    "variantCount": "{count} хувилбар",
+    "basePriceLabel": "Үндсэн үнэ:",
+    "noVariants": "Хувилбар байхгүй",
+    "close": "Хаах"
   },
   "serviceReminders": {
     "title": "Үйлчилгээний сануулга",

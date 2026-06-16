@@ -113,11 +113,11 @@ export function AppointmentDatePicker({
         <ChevronDown className="size-3.5 text-muted-foreground shrink-0" />
       </PopoverTrigger>
       <PopoverContent
-        className="w-auto p-0 flex flex-col md:flex-row"
+        className="w-auto p-0 flex flex-col md:flex-row overflow-hidden"
         align="start"
       >
         {/* Left: Quick presets */}
-        <div className="flex flex-row md:flex-col gap-0.5 p-1.5 border-b md:border-b-0 md:border-r border-border/50 bg-muted/20 md:w-[130px] shrink-0 overflow-x-auto md:overflow-x-visible">
+        <div className="flex flex-row md:flex-col gap-0.5 p-1.5 border-b md:border-b-0 md:border-r border-border/50 bg-muted/20 md:w-[180px] shrink-0 overflow-x-auto">
           {presets.map((preset) => (
             <React.Fragment key={preset.label}>
               {preset.separator && (

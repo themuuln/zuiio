@@ -1,14 +1,20 @@
 import { expect, test } from "@playwright/test";
+import { setEnglishLocale } from "./helpers";
 
 const TEST_EMAIL = `e2e-signup-${Date.now()}@test.example.com`;
-const TEST_PASSWORD = "TestPass123!";
+const TEST_PASSWORD = "***********!";
 const TEST_NAME = "E2E Test User";
 const TEST_ORG = "E2E Auto Shop";
 
+// All registration tests need fresh context without auth cookies so they
+// can interact with the signup form (global storageState would redirect).
 test.describe("Registration Flow", () => {
   test.describe("Form Rendering", () => {
+    test.use({ storageState: { cookies: [], origins: [] } });
+
     test.beforeEach(async ({ page }) => {
-      await page.goto("/mn/auth/signup");
+      await setEnglishLocale(page);
+      await page.goto("/auth/signup");
       await expect(
         page.getByRole("heading", { name: /create your/i }),
       ).toBeVisible();
@@ -44,8 +50,11 @@ test.describe("Registration Flow", () => {
   });
 
   test.describe("Password Visibility Toggle", () => {
+    test.use({ storageState: { cookies: [], origins: [] } });
+
     test.beforeEach(async ({ page }) => {
-      await page.goto("/mn/auth/signup");
+      await setEnglishLocale(page);
+      await page.goto("/auth/signup");
       await expect(
         page.getByRole("heading", { name: /create your/i }),
       ).toBeVisible();
@@ -95,8 +104,11 @@ test.describe("Registration Flow", () => {
   });
 
   test.describe("Form Validation", () => {
+    test.use({ storageState: { cookies: [], origins: [] } });
+
     test.beforeEach(async ({ page }) => {
-      await page.goto("/mn/auth/signup");
+      await setEnglishLocale(page);
+      await page.goto("/auth/signup");
       await expect(
         page.getByRole("heading", { name: /create your/i }),
       ).toBeVisible();
@@ -171,10 +183,13 @@ test.describe("Registration Flow", () => {
   });
 
   test.describe("Successful Registration", () => {
+    test.use({ storageState: { cookies: [], origins: [] } });
+
     test("registers a new user and redirects to confirm-email or select-organization", async ({
       page,
     }) => {
-      await page.goto("/mn/auth/signup");
+      await setEnglishLocale(page);
+      await page.goto("/auth/signup");
       await expect(
         page.getByRole("heading", { name: /create your/i }),
       ).toBeVisible();
@@ -207,10 +222,13 @@ test.describe("Registration Flow", () => {
   });
 
   test.describe("Duplicate Email Handling", () => {
+    test.use({ storageState: { cookies: [], origins: [] } });
+
     test("shows error when registering with already registered email", async ({
       page,
     }) => {
-      await page.goto("/mn/auth/signup");
+      await setEnglishLocale(page);
+      await page.goto("/auth/signup");
       await expect(
         page.getByRole("heading", { name: /create your/i }),
       ).toBeVisible();
