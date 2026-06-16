@@ -33,7 +33,6 @@ function DrawerClose({ ...props }: DrawerPrimitive.Close.Props) {
 
 function DrawerBackdrop({
   className,
-  onClick,
   ...props
 }: DrawerPrimitive.Backdrop.Props) {
   return (
@@ -43,9 +42,11 @@ function DrawerBackdrop({
         "fixed inset-0 z-50 bg-black/20 opacity-[calc(1-var(--drawer-swipe-progress))] transition-opacity duration-[320ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:transition-none data-starting-style:opacity-0 data-ending-style:opacity-0 supports-backdrop-filter:backdrop-blur-xs",
         className,
       )}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+      }}
       onClick={(e) => {
         e.stopPropagation();
-        onClick?.(e);
       }}
       {...props}
     />
@@ -60,7 +61,7 @@ function DrawerViewport({
     <DrawerPrimitive.Viewport
       data-slot="drawer-viewport"
       className={cn(
-        "fixed inset-0 z-50 flex items-stretch justify-end overflow-hidden p-0",
+        "fixed inset-0 z-50 flex items-stretch justify-end overflow-hidden p-0 pointer-events-none",
         className,
       )}
       {...props}
@@ -89,7 +90,7 @@ function DrawerContent({
         <DrawerPrimitive.Popup
           data-slot="drawer-popup"
           className={cn(
-            "relative flex h-full w-full max-w-full [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[320ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:transition-none data-starting-style:translate-x-full data-ending-style:translate-x-full data-ending-style:duration-[calc(var(--drawer-swipe-strength)*320ms)] data-[nested-drawer-open]:-translate-x-3 sm:max-w-lg",
+            "relative flex h-full w-full max-w-full [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[320ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:transition-none data-starting-style:translate-x-full data-ending-style:translate-x-full data-ending-style:duration-[calc(var(--drawer-swipe-strength)*320ms)] data-[nested-drawer-open]:-translate-x-3 sm:max-w-lg pointer-events-auto",
             className,
           )}
           {...props}
