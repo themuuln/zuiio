@@ -792,17 +792,27 @@ export function BayViewV2Client() {
   // ── Remove helper ────────────────────────────────────────────
   const handleRemoveHelper = useCallback(
     async (woId: string, mechId: string) => {
-      removeHelperMutation.mutate({ woId, mechanicId: mechId });
+      markPending(woId);
+      try {
+        await removeHelperMutation.mutateAsync({ woId, mechanicId: mechId });
+      } finally {
+        clearPending(woId);
+      }
     },
-    [removeHelperMutation],
+    [removeHelperMutation, markPending, clearPending],
   );
 
   // ── Add helper ───────────────────────────────────────────────
   const handleAddHelper = useCallback(
     async (woId: string, mechanicId: string) => {
-      addHelperMutation.mutate({ woId, mechanicId });
+      markPending(woId);
+      try {
+        await addHelperMutation.mutateAsync({ woId, mechanicId });
+      } finally {
+        clearPending(woId);
+      }
     },
-    [addHelperMutation],
+    [addHelperMutation, markPending, clearPending],
   );
 
   // ── Reorder mechanics ────────────────────────────────────────
@@ -851,17 +861,27 @@ export function BayViewV2Client() {
   // ── Assign mechanic (quick assign from BayCard) ──────────────
   const handleAssignMechanic = useCallback(
     async (woId: string, mechanicId: string) => {
-      assignMechanicMutation.mutate({ woId, mechanicId });
+      markPending(woId);
+      try {
+        await assignMechanicMutation.mutateAsync({ woId, mechanicId });
+      } finally {
+        clearPending(woId);
+      }
     },
-    [assignMechanicMutation],
+    [assignMechanicMutation, markPending, clearPending],
   );
 
   // ── Remove mechanic (quick remove from BayCard) ──────────────
   const handleRemoveMechanic = useCallback(
     async (woId: string) => {
-      removeMechanicMutation.mutate({ woId });
+      markPending(woId);
+      try {
+        await removeMechanicMutation.mutateAsync({ woId });
+      } finally {
+        clearPending(woId);
+      }
     },
-    [removeMechanicMutation],
+    [removeMechanicMutation, markPending, clearPending],
   );
 
   // ── Loading / error ──────────────────────────────────────────
