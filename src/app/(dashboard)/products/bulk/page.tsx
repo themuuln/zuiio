@@ -34,7 +34,7 @@ const bulkSchema = z.object({
   items: z.array(bulkItemSchema).min(1, "Дор хаяж нэг бараа оруулна уу"),
 });
 
-type BulkValues = z.infer<typeof bulkSchema>;
+type BulkValues = z.input<typeof bulkSchema>;
 
 async function bulkCreateProducts(items: BulkValues["items"]) {
   const supabase = createClient();
@@ -52,7 +52,7 @@ async function bulkCreateProducts(items: BulkValues["items"]) {
   if (!profile?.organization_id) throw new Error("Байгууллага олдсонгүй");
 
   const products = items.map((item) => ({
-    organization_id: profile.organization_id,
+    organization_id: profile.organization_id!,
     barcode: item.barcode,
     name: item.name,
     sale_price: item.sale_price,

@@ -260,8 +260,8 @@ ComboboxContent.displayName = "ComboboxContent";
 // --- ComboboxList ---
 
 const ComboboxList = React.forwardRef<
-  HTMLDivElement,
-  Omit<React.HTMLAttributes<HTMLDivElement>, "children"> & {
+  HTMLUListElement,
+  Omit<React.HTMLAttributes<HTMLUListElement>, "children"> & {
     children?: React.ReactNode | ((item: any) => React.ReactNode);
   }
 >(({ className, children, ...props }, ref) => {
@@ -344,7 +344,7 @@ const ComboboxCreate = React.forwardRef<
       )}
       onMouseDown={(e) => {
         e.preventDefault();
-        ctx.onCreate(ctx.inputValue.trim());
+        ctx.onCreate!(ctx.inputValue.trim());
         ctx.setOpen(false);
       }}
       {...props}

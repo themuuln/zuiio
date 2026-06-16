@@ -37,7 +37,7 @@ export default async function SettingsPage() {
 
   let presets;
   if (showTemplates) {
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("product_presets")
       .select("*")
       .order("sort_order");

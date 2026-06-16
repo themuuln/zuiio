@@ -47,7 +47,7 @@ export async function logAuditEvent(
       action,
       entity_type: entityType,
       entity_id: entityId,
-      field_changes: fieldChanges ?? null,
+      field_changes: (fieldChanges ?? null) as any,
       summary: summary ?? `${action} ${entityType}`,
     });
   } catch {
@@ -81,7 +81,7 @@ export async function logAuditEventWithClient(
       action,
       entity_type: entityType,
       entity_id: entityId,
-      field_changes: fieldChanges ?? null,
+      field_changes: (fieldChanges ?? null) as any,
       summary: summary ?? `${action} ${entityType}`,
     });
   } catch {

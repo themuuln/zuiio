@@ -50,11 +50,12 @@ export async function importBrandPresets(formData: FormData) {
   const brandName = formData.get("brand_name")?.toString();
   if (!brandName) return { error: "Брэндийн нэр шаардлагатай." };
 
-  const { data: presets, error: fetchError } = await supabase
-    .from("product_presets")
-    .select("*")
-    .eq("brand_name", brandName)
-    .order("sort_order");
+  const { data: presets, error: fetchError }: { data: any; error: any } =
+    await (supabase as any)
+      .from("product_presets")
+      .select("*")
+      .eq("brand_name", brandName)
+      .order("sort_order");
 
   if (fetchError) return { error: fetchError.message };
   if (!presets?.length) return { error: "Загварууд олдсонгүй." };
