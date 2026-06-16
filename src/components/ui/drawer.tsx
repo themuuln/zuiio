@@ -33,6 +33,7 @@ function DrawerClose({ ...props }: DrawerPrimitive.Close.Props) {
 
 function DrawerBackdrop({
   className,
+  onClick,
   ...props
 }: DrawerPrimitive.Backdrop.Props) {
   return (
@@ -42,6 +43,10 @@ function DrawerBackdrop({
         "fixed inset-0 z-50 bg-black/20 opacity-[calc(1-var(--drawer-swipe-progress))] transition-opacity duration-[320ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:transition-none data-starting-style:opacity-0 data-ending-style:opacity-0 supports-backdrop-filter:backdrop-blur-xs",
         className,
       )}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.(e);
+      }}
       {...props}
     />
   );
