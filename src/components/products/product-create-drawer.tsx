@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { PRESET_CATEGORIES } from "@/lib/constants";
+import { useBrands } from "@/lib/query/hooks/use-brands";
 import { productKeys } from "@/lib/query/keys";
 
 const initialUnits = [
@@ -52,6 +53,7 @@ const productSchema = z.object({
   barcode: z.string().optional(),
   unit: z.string().min(1, "Нэгж шаардлагатай"),
   category_name: z.string().optional(),
+  brand_id: z.string().optional(),
   cost_price: z.number().min(0),
   sale_price: z.number().min(0),
   current_stock: z.number().min(0),
@@ -60,11 +62,24 @@ const productSchema = z.object({
 
 type ProductValues = z.infer<typeof productSchema>;
 
-export function ProductCreateDrawer({ companyType }: { companyType: string }) {
-  const [open, setOpen] = useState(false);
+export function ProductCreateDrawer({
+  companyType,
+  organizationId,
+  open: externalOpen,
+  onOpenChange: externalOnOpenChange,
+}: {
+  companyType: string;
+  organizationId?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = externalOpen ?? internalOpen;
+  const setOpen = externalOnOpenChange ?? setInternalOpen;
   const router = useRouter();
   const queryClient = useQueryClient();
   const presets = PRESET_CATEGORIES[companyType] ?? [];
+  const { data: brands } = useBrands(organizationId ?? "");
 
   const {
     register,
@@ -79,6 +94,7 @@ export function ProductCreateDrawer({ companyType }: { companyType: string }) {
       barcode: "",
       unit: "ширхэг",
       category_name: "",
+      brand_id: "",
       cost_price: 0,
       sale_price: 0,
       current_stock: 0,
@@ -104,10 +120,13 @@ export function ProductCreateDrawer({ companyType }: { companyType: string }) {
       const barcode = formData.get("barcode")?.toString() ?? "";
       const unit = formData.get("unit")?.toString() ?? "ширхэг";
       const categoryName = formData.get("category_name")?.toString() ?? "";
+      const brandId = formData.get("brand_id")?.toString() ?? "";
       const costPrice = Number(formData.get("cost_price") ?? 0);
       const salePrice = Number(formData.get("sale_price") ?? 0);
       const currentStock = Number(formData.get("current_stock") ?? 0);
       const minStock = Number(formData.get("min_stock") ?? 0);
+
+      const selectedBrand = brands?.find((b) => b.id === brandId);
 
       const optimisticProduct = {
         id: `opt-${Date.now()}`,
@@ -116,6 +135,9 @@ export function ProductCreateDrawer({ companyType }: { companyType: string }) {
         barcode: barcode || null,
         unit,
         category_name: categoryName || null,
+        brand_id: brandId || null,
+        brand_name: selectedBrand?.name ?? null,
+        brand_logo_url: selectedBrand?.logo_url ?? null,
         cost_price: costPrice,
         sale_price: salePrice,
         current_stock: currentStock,
@@ -160,6 +182,7 @@ export function ProductCreateDrawer({ companyType }: { companyType: string }) {
     formData.append("barcode", data.barcode ?? "");
     formData.append("unit", data.unit);
     formData.append("category_name", data.category_name ?? "");
+    formData.append("brand_id", data.brand_id ?? "");
     formData.append("cost_price", String(data.cost_price));
     formData.append("sale_price", String(data.sale_price));
     formData.append("current_stock", String(data.current_stock));
@@ -202,9 +225,9 @@ export function ProductCreateDrawer({ companyType }: { companyType: string }) {
         Шинэ бүтээгдэхүүн
       </Drawer.Trigger>
       <Drawer.Portal>
-        <Drawer.Backdrop className="[--backdrop-opacity:0.2] [--bleed:3rem] dark:[--backdrop-opacity:0.7] fixed inset-0 min-h-dvh bg-black opacity-[calc(var(--backdrop-opacity)*(1-var(--drawer-swipe-progress)))] transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:duration-0 data-ending-style:opacity-0 data-starting-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:absolute" />
-        <Drawer.Viewport className="[--viewport-padding:0px] supports-[-webkit-touch-callout:none]:[--viewport-padding:0.625rem] fixed inset-0 flex items-stretch justify-end p-(--viewport-padding)">
-          <Drawer.Popup className="[--bleed:3rem] supports-[-webkit-touch-callout:none]:[--bleed:0px] h-full w-[calc(28rem+3rem)] max-w-[calc(100vw-3rem+3rem)] -mr-[3rem] border-l border-border bg-white p-6 pr-[calc(1.5rem+3rem)] text-foreground outline-none shadow-lg overflow-y-auto overscroll-contain touch-auto [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:select-none data-ending-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-starting-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:mr-0 supports-[-webkit-touch-callout:none]:w-[28rem] supports-[-webkit-touch-callout:none]:max-w-[calc(100vw-3rem)] supports-[-webkit-touch-callout:none]:border supports-[-webkit-touch-callout:none]:pr-6 dark:bg-neutral-950 dark:text-white dark:shadow-none">
+        <Drawer.Backdrop className="[--backdrop-opacity:0.1] [--bleed:3rem] dark:[--backdrop-opacity:0.4] z-50 fixed inset-0 min-h-dvh bg-black opacity-[calc(var(--backdrop-opacity)*(1-var(--drawer-swipe-progress)))] transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:duration-0 data-ending-style:opacity-0 data-starting-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:absolute" />
+        <Drawer.Viewport className="[--viewport-padding:0px] supports-[-webkit-touch-callout:none]:[--viewport-padding:0.625rem] z-50 fixed inset-0 flex items-stretch justify-end p-(--viewport-padding)">
+          <Drawer.Popup className="[--bleed:3rem] supports-[-webkit-touch-callout:none]:[--bleed:0px] h-full w-[calc(28rem+3rem)] max-w-[calc(100vw-3rem+3rem)] -mr-[3rem] border-l border-border bg-white p-6 pr-[calc(1.5rem+3rem)] text-foreground outline-none shadow-lg overflow-y-auto overscroll-contain touch-auto [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:select-none data-ending-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-starting-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:mr-0 supports-[-webkit-touch-callout:none]:w-[28rem] supports-[-webkit-touch-callout:none]:max-w-[calc(100vw-3rem)] supports-[-webkit-touch-callout:none]:border supports-[-webkit-touch-callout:none]:pr-6 dark:bg-popover dark:text-popover-foreground dark:shadow-none">
             <Drawer.Content className="mx-auto w-full">
               <div className="mb-6 flex items-center justify-between">
                 <div>
@@ -379,6 +402,71 @@ export function ProductCreateDrawer({ companyType }: { companyType: string }) {
                           {errors.category_name.message}
                         </p>
                       )}
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor="brand_id">Брэнд</FieldLabel>
+                      <Controller
+                        name="brand_id"
+                        control={control}
+                        render={({ field }) => {
+                          const brandItems: {
+                            id: string;
+                            name: string;
+                            logo_url: string | null;
+                          }[] = brands ?? [];
+                          const selectedBrand = brandItems.find(
+                            (b) => b.id === field.value,
+                          );
+                          return (
+                            <Combobox
+                              name="brand_id"
+                              items={brandItems}
+                              value={
+                                brandItems.find((b) => b.id === field.value) ??
+                                null
+                              }
+                              onValueChange={(
+                                next: {
+                                  id: string;
+                                  name: string;
+                                  logo_url: string | null;
+                                } | null,
+                              ) => field.onChange(next?.id ?? "")}
+                              itemToStringLabel={(item) => item?.name ?? ""}
+                              inputValue={selectedBrand?.name ?? ""}
+                              onInputValueChange={() => {}}
+                            >
+                              <ComboboxInput
+                                id="brand_id"
+                                placeholder="Брэнд сонгох"
+                                showTrigger
+                                className="w-full"
+                              />
+                              <ComboboxContent>
+                                <ComboboxEmpty>Брэнд байхгүй</ComboboxEmpty>
+                                <ComboboxList>
+                                  {(item: {
+                                    id: string;
+                                    name: string;
+                                    logo_url: string | null;
+                                  }) => (
+                                    <ComboboxItem key={item.id} value={item.id}>
+                                      {item.logo_url ? (
+                                        <img
+                                          src={item.logo_url}
+                                          alt={item.name}
+                                          className="mr-2 inline-block size-4 rounded object-contain dark:invert"
+                                        />
+                                      ) : null}
+                                      {item.name}
+                                    </ComboboxItem>
+                                  )}
+                                </ComboboxList>
+                              </ComboboxContent>
+                            </Combobox>
+                          );
+                        }}
+                      />
                     </Field>
                   </FieldGroup>
 
