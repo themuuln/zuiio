@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { validateStockMovementInput } from "@/lib/domain-rules";
 import { parseAmount, requireAppContext } from "@/lib/erp";
+import { checkLowStockAndNotify } from "@/lib/notification";
 import { getString } from "@/lib/validation";
 
 export async function createStockMovement(
@@ -74,7 +75,7 @@ export async function createStockMovement(
   }
 
   const { data: updatedProduct, error: stockUpdateError } = await updateQuery
-    .select("id")
+    .select("id, current_stock, min_stock, name")
     .maybeSingle();
 
   if (stockUpdateError || (!updatedProduct && quantity < 0)) {
@@ -97,6 +98,16 @@ export async function createStockMovement(
     }
 
     return { error: "Үлдэгдэл хүрэлцэхгүй байна." };
+  }
+
+  // Check low stock and notify
+  if (updatedProduct) {
+    checkLowStockAndNotify(
+      organizationId,
+      updatedProduct.name,
+      updatedProduct.current_stock ?? 0,
+      updatedProduct.min_stock ?? 0,
+    );
   }
 
   revalidatePath("/inventory/movements");

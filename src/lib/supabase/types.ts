@@ -4,489 +4,982 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[];
+  | Json[]
 
 export type Database = {
   __InternalSupabase: {
-    PostgrestVersion: "14.5";
-  };
+    PostgrestVersion: "14.5"
+  }
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          field_changes: Json | null
+          id: string
+          organization_id: string
+          summary: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          field_changes?: Json | null
+          id?: string
+          organization_id: string
+          summary?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          field_changes?: Json | null
+          id?: string
+          organization_id?: string
+          summary?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_log_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      app_config: {
+        Row: {
+          created_at: string | null
+          key: string
+          updated_at: string | null
+          value: Json
+        }
+        Insert: {
+          created_at?: string | null
+          key: string
+          updated_at?: string | null
+          value?: Json
+        }
+        Update: {
+          created_at?: string | null
+          key?: string
+          updated_at?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
+      brands: {
+        Row: {
+          created_at: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          organization_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          organization_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brands_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
-          created_at: string | null;
-          id: string;
-          name: string;
-          organization_id: string;
-        };
+          created_at: string | null
+          id: string
+          name: string
+          organization_id: string
+        }
         Insert: {
-          created_at?: string | null;
-          id?: string;
-          name: string;
-          organization_id: string;
-        };
+          created_at?: string | null
+          id?: string
+          name: string
+          organization_id: string
+        }
         Update: {
-          created_at?: string | null;
-          id?: string;
-          name?: string;
-          organization_id?: string;
-        };
+          created_at?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "categories_organization_id_fkey";
-            columns: ["organization_id"];
-            isOneToOne: false;
-            referencedRelation: "organizations";
-            referencedColumns: ["id"];
+            foreignKeyName: "categories_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
       contacts: {
         Row: {
-          address: string | null;
-          balance: number | null;
-          created_at: string | null;
-          email: string | null;
-          id: string;
-          name: string;
-          organization_id: string;
-          phone: string | null;
-          type: string;
-        };
+          address: string | null
+          balance: number | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string
+          organization_id: string
+          phone: string | null
+          type: string
+        }
         Insert: {
-          address?: string | null;
-          balance?: number | null;
-          created_at?: string | null;
-          email?: string | null;
-          id?: string;
-          name: string;
-          organization_id: string;
-          phone?: string | null;
-          type: string;
-        };
+          address?: string | null
+          balance?: number | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          phone?: string | null
+          type: string
+        }
         Update: {
-          address?: string | null;
-          balance?: number | null;
-          created_at?: string | null;
-          email?: string | null;
-          id?: string;
-          name?: string;
-          organization_id?: string;
-          phone?: string | null;
-          type?: string;
-        };
+          address?: string | null
+          balance?: number | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          phone?: string | null
+          type?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "contacts_organization_id_fkey";
-            columns: ["organization_id"];
-            isOneToOne: false;
-            referencedRelation: "organizations";
-            referencedColumns: ["id"];
+            foreignKeyName: "contacts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
       expenses: {
         Row: {
-          amount: number;
-          category: string;
-          created_at: string | null;
-          created_by: string | null;
-          description: string | null;
-          expense_date: string;
-          id: string;
-          organization_id: string;
-          payment_method: string | null;
-        };
+          amount: number
+          category: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          expense_date: string
+          id: string
+          organization_id: string
+          payment_method: string | null
+        }
         Insert: {
-          amount: number;
-          category: string;
-          created_at?: string | null;
-          created_by?: string | null;
-          description?: string | null;
-          expense_date?: string;
-          id?: string;
-          organization_id: string;
-          payment_method?: string | null;
-        };
+          amount: number
+          category: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          expense_date?: string
+          id?: string
+          organization_id: string
+          payment_method?: string | null
+        }
         Update: {
-          amount?: number;
-          category?: string;
-          created_at?: string | null;
-          created_by?: string | null;
-          description?: string | null;
-          expense_date?: string;
-          id?: string;
-          organization_id?: string;
-          payment_method?: string | null;
-        };
+          amount?: number
+          category?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          expense_date?: string
+          id?: string
+          organization_id?: string
+          payment_method?: string | null
+        }
         Relationships: [
           {
-            foreignKeyName: "expenses_created_by_fkey";
-            columns: ["created_by"];
-            isOneToOne: false;
-            referencedRelation: "profiles";
-            referencedColumns: ["id"];
+            foreignKeyName: "expenses_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "expenses_organization_id_fkey";
-            columns: ["organization_id"];
-            isOneToOne: false;
-            referencedRelation: "organizations";
-            referencedColumns: ["id"];
+            foreignKeyName: "expenses_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
+      invoice_items: {
+        Row: {
+          description: string | null
+          id: string
+          invoice_id: string
+          product_id: string | null
+          quantity: number
+          total_price: number
+          unit_price: number
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          invoice_id: string
+          product_id?: string | null
+          quantity?: number
+          total_price?: number
+          unit_price?: number
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          invoice_id?: string
+          product_id?: string | null
+          quantity?: number
+          total_price?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          contact_id: string | null
+          created_at: string | null
+          created_by: string | null
+          due_date: string | null
+          id: string
+          invoice_number: string
+          issue_date: string
+          notes: string | null
+          organization_id: string
+          paid_amount: number | null
+          sale_id: string | null
+          status: string | null
+          token: string | null
+          total_amount: number | null
+        }
+        Insert: {
+          contact_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          due_date?: string | null
+          id?: string
+          invoice_number: string
+          issue_date?: string
+          notes?: string | null
+          organization_id: string
+          paid_amount?: number | null
+          sale_id?: string | null
+          status?: string | null
+          token?: string | null
+          total_amount?: number | null
+        }
+        Update: {
+          contact_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          due_date?: string | null
+          id?: string
+          invoice_number?: string
+          issue_date?: string
+          notes?: string | null
+          organization_id?: string
+          paid_amount?: number | null
+          sale_id?: string | null
+          status?: string | null
+          token?: string | null
+          total_amount?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_configs: {
+        Row: {
+          channel: string
+          chat_id: string | null
+          config_data: Json
+          created_at: string | null
+          enabled: boolean | null
+          event_types: Json
+          id: string
+          organization_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          channel: string
+          chat_id?: string | null
+          config_data?: Json
+          created_at?: string | null
+          enabled?: boolean | null
+          event_types?: Json
+          id?: string
+          organization_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          channel?: string
+          chat_id?: string | null
+          config_data?: Json
+          created_at?: string | null
+          enabled?: boolean | null
+          event_types?: Json
+          id?: string
+          organization_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_configs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          channel: string
+          created_at: string | null
+          error_message: string | null
+          event_type: string
+          id: string
+          message: string
+          organization_id: string
+          sent_at: string | null
+          status: string | null
+          title: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string | null
+          error_message?: string | null
+          event_type: string
+          id?: string
+          message: string
+          organization_id: string
+          sent_at?: string | null
+          status?: string | null
+          title: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string | null
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          message?: string
+          organization_id?: string
+          sent_at?: string | null
+          status?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
-          company_type: string;
-          created_at: string | null;
-          currency: string | null;
-          id: string;
-          name: string;
-          slug: string;
-        };
+          company_type: string
+          created_at: string | null
+          currency: string | null
+          id: string
+          name: string
+          report_email_enabled: boolean
+          report_email_recipient: string | null
+          report_email_time: string | null
+          slug: string
+        }
         Insert: {
-          company_type?: string;
-          created_at?: string | null;
-          currency?: string | null;
-          id?: string;
-          name: string;
-          slug: string;
-        };
+          company_type?: string
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          name: string
+          report_email_enabled?: boolean
+          report_email_recipient?: string | null
+          report_email_time?: string | null
+          slug: string
+        }
         Update: {
-          company_type?: string;
-          created_at?: string | null;
-          currency?: string | null;
-          id?: string;
-          name?: string;
-          slug?: string;
-        };
-        Relationships: [];
-      };
+          company_type?: string
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          name?: string
+          report_email_enabled?: boolean
+          report_email_recipient?: string | null
+          report_email_time?: string | null
+          slug?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
-          barcode: string | null;
-          category_id: string | null;
-          cost_price: number | null;
-          created_at: string | null;
-          current_stock: number | null;
-          id: string;
-          min_stock: number | null;
-          name: string;
-          organization_id: string;
-          sale_price: number | null;
-          sku: string | null;
-          unit: string | null;
-        };
+          barcode: string | null
+          brand_id: string | null
+          category_id: string | null
+          cost_price: number | null
+          created_at: string | null
+          current_stock: number | null
+          id: string
+          image_url: string | null
+          image_urls: string[] | null
+          min_stock: number | null
+          name: string
+          organization_id: string
+          sale_price: number | null
+          sku: string | null
+          unit: string | null
+        }
         Insert: {
-          barcode?: string | null;
-          category_id?: string | null;
-          cost_price?: number | null;
-          created_at?: string | null;
-          current_stock?: number | null;
-          id?: string;
-          min_stock?: number | null;
-          name: string;
-          organization_id: string;
-          sale_price?: number | null;
-          sku?: string | null;
-          unit?: string | null;
-        };
+          barcode?: string | null
+          brand_id?: string | null
+          category_id?: string | null
+          cost_price?: number | null
+          created_at?: string | null
+          current_stock?: number | null
+          id?: string
+          image_url?: string | null
+          image_urls?: string[] | null
+          min_stock?: number | null
+          name: string
+          organization_id: string
+          sale_price?: number | null
+          sku?: string | null
+          unit?: string | null
+        }
         Update: {
-          barcode?: string | null;
-          category_id?: string | null;
-          cost_price?: number | null;
-          created_at?: string | null;
-          current_stock?: number | null;
-          id?: string;
-          min_stock?: number | null;
-          name?: string;
-          organization_id?: string;
-          sale_price?: number | null;
-          sku?: string | null;
-          unit?: string | null;
-        };
+          barcode?: string | null
+          brand_id?: string | null
+          category_id?: string | null
+          cost_price?: number | null
+          created_at?: string | null
+          current_stock?: number | null
+          id?: string
+          image_url?: string | null
+          image_urls?: string[] | null
+          min_stock?: number | null
+          name?: string
+          organization_id?: string
+          sale_price?: number | null
+          sku?: string | null
+          unit?: string | null
+        }
         Relationships: [
           {
-            foreignKeyName: "products_category_id_fkey";
-            columns: ["category_id"];
-            isOneToOne: false;
-            referencedRelation: "categories";
-            referencedColumns: ["id"];
+            foreignKeyName: "products_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "products_organization_id_fkey";
-            columns: ["organization_id"];
-            isOneToOne: false;
-            referencedRelation: "organizations";
-            referencedColumns: ["id"];
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+          {
+            foreignKeyName: "products_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
-          created_at: string | null;
-          full_name: string | null;
-          id: string;
-          organization_id: string | null;
-          role: string | null;
-        };
+          created_at: string | null
+          full_name: string | null
+          id: string
+          organization_id: string | null
+          role: string | null
+        }
         Insert: {
-          created_at?: string | null;
-          full_name?: string | null;
-          id: string;
-          organization_id?: string | null;
-          role?: string | null;
-        };
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          organization_id?: string | null
+          role?: string | null
+        }
         Update: {
-          created_at?: string | null;
-          full_name?: string | null;
-          id?: string;
-          organization_id?: string | null;
-          role?: string | null;
-        };
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          organization_id?: string | null
+          role?: string | null
+        }
         Relationships: [
           {
-            foreignKeyName: "profiles_organization_id_fkey";
-            columns: ["organization_id"];
-            isOneToOne: false;
-            referencedRelation: "organizations";
-            referencedColumns: ["id"];
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
       sale_items: {
         Row: {
-          id: string;
-          product_id: string | null;
-          quantity: number;
-          sale_id: string;
-          total_price: number;
-          unit_price: number;
-        };
+          commission_amount: number
+          id: string
+          product_id: string | null
+          quantity: number
+          sale_id: string
+          total_price: number
+          unit_price: number
+        }
         Insert: {
-          id?: string;
-          product_id?: string | null;
-          quantity: number;
-          sale_id: string;
-          total_price: number;
-          unit_price: number;
-        };
+          commission_amount?: number
+          id?: string
+          product_id?: string | null
+          quantity: number
+          sale_id: string
+          total_price: number
+          unit_price: number
+        }
         Update: {
-          id?: string;
-          product_id?: string | null;
-          quantity?: number;
-          sale_id?: string;
-          total_price?: number;
-          unit_price?: number;
-        };
+          commission_amount?: number
+          id?: string
+          product_id?: string | null
+          quantity?: number
+          sale_id?: string
+          total_price?: number
+          unit_price?: number
+        }
         Relationships: [
           {
-            foreignKeyName: "sale_items_product_id_fkey";
-            columns: ["product_id"];
-            isOneToOne: false;
-            referencedRelation: "products";
-            referencedColumns: ["id"];
+            foreignKeyName: "sale_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "sale_items_sale_id_fkey";
-            columns: ["sale_id"];
-            isOneToOne: false;
-            referencedRelation: "sales";
-            referencedColumns: ["id"];
+            foreignKeyName: "sale_items_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
       sales: {
         Row: {
-          contact_id: string | null;
-          created_at: string | null;
-          created_by: string | null;
-          id: string;
-          notes: string | null;
-          organization_id: string;
-          paid_amount: number | null;
-          payment_method: string | null;
-          sale_date: string;
-          status: string | null;
-          total_amount: number;
-        };
+          contact_id: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          notes: string | null
+          organization_id: string
+          paid_amount: number | null
+          payment_method: string | null
+          sale_date: string
+          salesperson_id: string | null
+          status: string | null
+          total_amount: number
+        }
         Insert: {
-          contact_id?: string | null;
-          created_at?: string | null;
-          created_by?: string | null;
-          id?: string;
-          notes?: string | null;
-          organization_id: string;
-          paid_amount?: number | null;
-          payment_method?: string | null;
-          sale_date?: string;
-          status?: string | null;
-          total_amount: number;
-        };
+          contact_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          organization_id: string
+          paid_amount?: number | null
+          payment_method?: string | null
+          sale_date?: string
+          salesperson_id?: string | null
+          status?: string | null
+          total_amount: number
+        }
         Update: {
-          contact_id?: string | null;
-          created_at?: string | null;
-          created_by?: string | null;
-          id?: string;
-          notes?: string | null;
-          organization_id?: string;
-          paid_amount?: number | null;
-          payment_method?: string | null;
-          sale_date?: string;
-          status?: string | null;
-          total_amount?: number;
-        };
+          contact_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          paid_amount?: number | null
+          payment_method?: string | null
+          sale_date?: string
+          salesperson_id?: string | null
+          status?: string | null
+          total_amount?: number
+        }
         Relationships: [
           {
-            foreignKeyName: "sales_contact_id_fkey";
-            columns: ["contact_id"];
-            isOneToOne: false;
-            referencedRelation: "contacts";
-            referencedColumns: ["id"];
+            foreignKeyName: "sales_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "sales_created_by_fkey";
-            columns: ["created_by"];
-            isOneToOne: false;
-            referencedRelation: "profiles";
-            referencedColumns: ["id"];
+            foreignKeyName: "sales_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "sales_organization_id_fkey";
-            columns: ["organization_id"];
-            isOneToOne: false;
-            referencedRelation: "organizations";
-            referencedColumns: ["id"];
+            foreignKeyName: "sales_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+          {
+            foreignKeyName: "sales_salesperson_id_fkey"
+            columns: ["salesperson_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shared_reports: {
         Row: {
-          created_at: string | null;
-          created_by: string | null;
-          date_from: string;
-          date_to: string;
-          id: string;
-          organization_id: string;
-          token: string;
-        };
+          created_at: string | null
+          created_by: string | null
+          date_from: string
+          date_to: string
+          id: string
+          organization_id: string
+          token: string
+        }
         Insert: {
-          created_at?: string | null;
-          created_by?: string | null;
-          date_from: string;
-          date_to: string;
-          id?: string;
-          organization_id: string;
-          token: string;
-        };
+          created_at?: string | null
+          created_by?: string | null
+          date_from: string
+          date_to: string
+          id?: string
+          organization_id: string
+          token: string
+        }
         Update: {
-          created_at?: string | null;
-          created_by?: string | null;
-          date_from?: string;
-          date_to?: string;
-          id?: string;
-          organization_id?: string;
-          token?: string;
-        };
+          created_at?: string | null
+          created_by?: string | null
+          date_from?: string
+          date_to?: string
+          id?: string
+          organization_id?: string
+          token?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "shared_reports_created_by_fkey";
-            columns: ["created_by"];
-            isOneToOne: false;
-            referencedRelation: "profiles";
-            referencedColumns: ["id"];
+            foreignKeyName: "shared_reports_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "shared_reports_organization_id_fkey";
-            columns: ["organization_id"];
-            isOneToOne: false;
-            referencedRelation: "organizations";
-            referencedColumns: ["id"];
+            foreignKeyName: "shared_reports_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
-        ];
-      };
+        ]
+      }
       stock_movements: {
         Row: {
-          created_at: string | null;
-          created_by: string | null;
-          id: string;
-          notes: string | null;
-          organization_id: string;
-          product_id: string;
-          quantity: number;
-          reference: string | null;
-          type: string;
-          unit_cost: number | null;
-        };
+          created_at: string | null
+          created_by: string | null
+          id: string
+          notes: string | null
+          organization_id: string
+          product_id: string
+          quantity: number
+          reference: string | null
+          type: string
+          unit_cost: number | null
+          warehouse_id: string | null
+        }
         Insert: {
-          created_at?: string | null;
-          created_by?: string | null;
-          id?: string;
-          notes?: string | null;
-          organization_id: string;
-          product_id: string;
-          quantity: number;
-          reference?: string | null;
-          type: string;
-          unit_cost?: number | null;
-        };
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          organization_id: string
+          product_id: string
+          quantity: number
+          reference?: string | null
+          type: string
+          unit_cost?: number | null
+          warehouse_id?: string | null
+        }
         Update: {
-          created_at?: string | null;
-          created_by?: string | null;
-          id?: string;
-          notes?: string | null;
-          organization_id?: string;
-          product_id?: string;
-          quantity?: number;
-          reference?: string | null;
-          type?: string;
-          unit_cost?: number | null;
-        };
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          product_id?: string
+          quantity?: number
+          reference?: string | null
+          type?: string
+          unit_cost?: number | null
+          warehouse_id?: string | null
+        }
         Relationships: [
           {
-            foreignKeyName: "stock_movements_created_by_fkey";
-            columns: ["created_by"];
-            isOneToOne: false;
-            referencedRelation: "profiles";
-            referencedColumns: ["id"];
+            foreignKeyName: "stock_movements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "stock_movements_organization_id_fkey";
-            columns: ["organization_id"];
-            isOneToOne: false;
-            referencedRelation: "organizations";
-            referencedColumns: ["id"];
+            foreignKeyName: "stock_movements_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "stock_movements_product_id_fkey";
-            columns: ["product_id"];
-            isOneToOne: false;
-            referencedRelation: "products";
-            referencedColumns: ["id"];
+            foreignKeyName: "stock_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
           },
-        ];
-      };
-    };
+          {
+            foreignKeyName: "stock_movements_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      uom_conversions: {
+        Row: {
+          conversion_factor: number
+          created_at: string | null
+          from_unit: string
+          id: string
+          organization_id: string
+          product_id: string | null
+          to_unit: string
+        }
+        Insert: {
+          conversion_factor: number
+          created_at?: string | null
+          from_unit: string
+          id?: string
+          organization_id: string
+          product_id?: string | null
+          to_unit: string
+        }
+        Update: {
+          conversion_factor?: number
+          created_at?: string | null
+          from_unit?: string
+          id?: string
+          organization_id?: string
+          product_id?: string | null
+          to_unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "uom_conversions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "uom_conversions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      warehouse_products: {
+        Row: {
+          current_stock: number | null
+          id: string
+          min_stock: number | null
+          product_id: string
+          updated_at: string | null
+          warehouse_id: string
+        }
+        Insert: {
+          current_stock?: number | null
+          id?: string
+          min_stock?: number | null
+          product_id: string
+          updated_at?: string | null
+          warehouse_id: string
+        }
+        Update: {
+          current_stock?: number | null
+          id?: string
+          min_stock?: number | null
+          product_id?: string
+          updated_at?: string | null
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warehouse_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "warehouse_products_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      warehouses: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          location: string | null
+          name: string
+          organization_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          location?: string | null
+          name: string
+          organization_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          location?: string | null
+          name?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "warehouses_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
     Views: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
     Functions: {
       create_organization: {
-        Args: { org_name: string; org_slug: string; org_type?: string };
-        Returns: Json;
-      };
-      get_current_organization: { Args: never; Returns: string };
-      get_public_report_data: {
-        Args: { p_token: string };
-        Returns: Json;
-      };
-    };
+        Args: { org_name: string; org_slug: string; org_type?: string }
+        Returns: Json
+      }
+      generate_invoice_number: { Args: never; Returns: string }
+      get_current_organization: { Args: never; Returns: string }
+      get_public_product: { Args: { p_product_id: string; p_slug: string }; Returns: Json }
+      get_public_products: { Args: { p_slug: string }; Returns: Json }
+      get_public_report_data: { Args: { p_token: string }; Returns: Json }
+      increment_smtp_count: { Args: { config_id: string }; Returns: undefined }
+      schedule_daily_report_cron: { Args: { app_url: string }; Returns: string }
+      unschedule_daily_report_cron: { Args: never; Returns: string }
+    }
     Enums: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
     CompositeTypes: {
-      [_ in never]: never;
-    };
-  };
-};
+      [_ in never]: never
+    }
+  }
+}

@@ -8,11 +8,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { requireAppContext } from "@/lib/erp";
+import { BrandPresetsCard } from "./brand-presets-card";
+import { NotificationSettings } from "./notification-settings";
 import { OrgInfoForm } from "./org-info-form";
 import { ProfileForm } from "./profile-form";
 
+const TEMPLATE_TYPES = ["gym", "fitness", "retail"];
+
+const SUPERADMIN_EMAIL = "zerone.offical@gmail.com";
+
 export default async function SettingsPage() {
-  const { supabase, organizationId, userId } = await requireAppContext();
+  const { supabase, organizationId, userId, user } = await requireAppContext();
+  const isSuperAdmin = user.email === SUPERADMIN_EMAIL;
 
   const [orgResult, profileResult] = await Promise.all([
     supabase
@@ -25,6 +32,17 @@ export default async function SettingsPage() {
 
   const org = orgResult.data;
   const profile = profileResult.data;
+  const showTemplates =
+    org?.company_type && TEMPLATE_TYPES.includes(org.company_type);
+
+  let presets;
+  if (showTemplates) {
+    const { data } = await supabase
+      .from("product_presets")
+      .select("*")
+      .order("sort_order");
+    presets = data ?? [];
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-8">
@@ -51,6 +69,9 @@ export default async function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Brand Templates (gym / fitness only) */}
+      {showTemplates && presets ? <BrandPresetsCard presets={presets} /> : null}
+
       {/* Profile */}
       <Card>
         <CardHeader>
@@ -61,6 +82,9 @@ export default async function SettingsPage() {
           <ProfileForm initialFullName={profile?.full_name ?? ""} />
         </CardContent>
       </Card>
+
+      {/* Notifications (superadmin only) */}
+      {isSuperAdmin && <NotificationSettings isSuperAdmin />}
 
       {/* Theme */}
       <Card>

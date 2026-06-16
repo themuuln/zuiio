@@ -1,13 +1,19 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { logAuditEventWithClient } from "@/lib/audit";
 import { validateSaleInput } from "@/lib/domain-rules";
 import {
   isValidPositiveNumber,
   parseAmount,
   requireAppContext,
 } from "@/lib/erp";
-import { formatRouteDate } from "@/lib/format";
+import { formatCurrency, formatRouteDate } from "@/lib/format";
+import { createInvoiceFromSale } from "@/lib/invoicing";
+import {
+  checkLowStockAndNotify,
+  sendTelegramNotification,
+} from "@/lib/notification";
 import { getString, normalizePhone } from "@/lib/validation";
 
 export async function createSale(
@@ -208,6 +214,58 @@ export async function createSale(
         await supabase.from("contacts").delete().eq("id", createdContactId);
       }
       return { error: "Үлдэгдэл хүрэлцэхгүй байна." };
+    }
+  }
+
+  // Auto-generate invoice as receipt (fire-and-forget — sale is already committed)
+  if (status !== "cancelled") {
+    await createInvoiceFromSale(
+      supabase,
+      organizationId,
+      userId,
+      sale.id,
+      contactId,
+    );
+  }
+
+  await logAuditEventWithClient(
+    supabase,
+    organizationId,
+    userId,
+    "created",
+    "sale",
+    sale.id,
+    { total_amount: { old: 0, new: totalAmount } },
+    `Борлуулалт ${formatRouteDate()} - ${formatCurrency(totalAmount)}`,
+  );
+
+  // Fire-and-forget notifications
+  if (status !== "cancelled") {
+    // New sale notification
+    sendTelegramNotification(
+      organizationId,
+      "new_sale",
+      `🛒 Шинэ борлуулалт`,
+      `*${product.name}*\n\n` +
+        `Тоо хэмжээ: ${quantity}\n` +
+        `Нийт дүн: ${formatCurrency(totalAmount)}\n` +
+        `Төлөв: Дууссан`,
+    );
+
+    // Check low stock for the sold product
+    const { data: updatedProduct } = await supabase
+      .from("products")
+      .select("current_stock, min_stock, name")
+      .eq("id", productId)
+      .single();
+
+    if (updatedProduct) {
+      checkLowStockAndNotify(
+        organizationId,
+        updatedProduct.name,
+        updatedProduct.current_stock ?? 0,
+        updatedProduct.min_stock ?? 0,
+      );
     }
   }
 
