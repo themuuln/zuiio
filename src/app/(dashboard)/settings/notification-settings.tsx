@@ -4,10 +4,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { EnvelopeSimple, TelegramLogo } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
+import { useCallback } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { useRegisterSave } from "./settings-context";
 import {
   Card,
   CardContent,
@@ -271,11 +273,12 @@ export function NotificationSettings({ isSuperAdmin }: Props) {
 
   const {
     register,
-    handleSubmit,
     setValue,
     watch,
+    getValues,
+    trigger,
     control,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<TelegramValues>({
     resolver: zodResolver(telegramSchema),
     values: {
@@ -301,9 +304,23 @@ export function NotificationSettings({ isSuperAdmin }: Props) {
 
   const enabled = watch("enabled");
 
-  const onSubmit = (data: TelegramValues) => {
-    saveMutation.mutate(data);
-  };
+  const onTelegramSave = useCallback(async () => {
+    const isValid = await trigger();
+    if (!isValid) return { error: "Формын алдааг засах" };
+    try {
+      await saveMutation.mutateAsync(getValues());
+      return undefined;
+    } catch (err) {
+      return { error: (err as Error).message || "Хадгалахад алдаа гарлаа." };
+    }
+  }, [trigger, getValues, saveMutation]);
+
+  useRegisterSave({
+    id: "notif-telegram",
+    label: "Telegram мэдэгдэхүүн",
+    save: onTelegramSave,
+    isDirty: () => isDirty,
+  });
 
   // Email notification config
   const { data: emailConfig } = useQuery({
@@ -313,11 +330,12 @@ export function NotificationSettings({ isSuperAdmin }: Props) {
 
   const {
     register: emailRegister,
-    handleSubmit: emailHandleSubmit,
     setValue: emailSetValue,
     watch: emailWatch,
+    getValues: emailGetValues,
+    trigger: emailTrigger,
     control: emailControl,
-    formState: { errors: emailErrors },
+    formState: { errors: emailErrors, isDirty: emailIsDirty },
   } = useForm<EmailValues>({
     resolver: zodResolver(emailSchema),
     values: {
@@ -342,9 +360,23 @@ export function NotificationSettings({ isSuperAdmin }: Props) {
 
   const emailEnabled = emailWatch("enabled");
 
-  const onEmailSubmit = (data: EmailValues) => {
-    emailSaveMutation.mutate(data);
-  };
+  const onEmailSave = useCallback(async () => {
+    const isValid = await emailTrigger();
+    if (!isValid) return { error: "Формын алдааг засах" };
+    try {
+      await emailSaveMutation.mutateAsync(emailGetValues());
+      return undefined;
+    } catch (err) {
+      return { error: (err as Error).message || "Хадгалахад алдаа гарлаа." };
+    }
+  }, [emailTrigger, emailGetValues, emailSaveMutation]);
+
+  useRegisterSave({
+    id: "notif-email",
+    label: "И-мэйл мэдэгдэхүүн",
+    save: onEmailSave,
+    isDirty: () => emailIsDirty,
+  });
 
   return (
     <>
@@ -359,7 +391,7 @@ export function NotificationSettings({ isSuperAdmin }: Props) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-4">
             <FieldGroup>
               <div className="flex items-center justify-between">
                 <div>
@@ -397,7 +429,8 @@ export function NotificationSettings({ isSuperAdmin }: Props) {
                   {...register("chat_id")}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Telegram-ээр @BotFather-аас бот үүсгээд, chat ID-гээ оруулна уу.
+                  Telegram-ээр @BotFather-аас бот үүсгээд, chat ID-гээ оруулна
+                  уу.
                 </p>
                 {errors.chat_id && (
                   <p className="text-xs text-destructive">
@@ -447,14 +480,11 @@ export function NotificationSettings({ isSuperAdmin }: Props) {
               </Field>
             </FieldGroup>
             <div className="flex items-center gap-2">
-              <Button type="submit" disabled={saveMutation.isPending}>
-                {saveMutation.isPending ? "Хадгалж байна..." : "Хадгалах"}
-              </Button>
               <Button asChild variant="outline" size="sm">
                 <Link href="/settings/notifications">Мэдэгдлийн түүх</Link>
               </Button>
             </div>
-          </form>
+          </div>
         </CardContent>
       </Card>
 
@@ -470,7 +500,7 @@ export function NotificationSettings({ isSuperAdmin }: Props) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={emailHandleSubmit(onEmailSubmit)} className="space-y-4">
+          <div className="space-y-4">
             <FieldGroup>
               <div className="flex items-center justify-between">
                 <div>
@@ -544,13 +574,7 @@ export function NotificationSettings({ isSuperAdmin }: Props) {
                 )}
               </Field>
             </FieldGroup>
-            <Button
-              type="submit"
-              disabled={emailSaveMutation.isPending}
-            >
-              {emailSaveMutation.isPending ? "Хадгалж байна..." : "Хадгалах"}
-            </Button>
-          </form>
+          </div>
         </CardContent>
       </Card>
     </>

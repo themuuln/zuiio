@@ -3,10 +3,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarCheck } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
+import { useRegisterSave } from "./settings-context";
 import {
   Card,
   CardContent,
@@ -21,7 +22,11 @@ import { createClient } from "@/lib/supabase/client";
 
 const reportEmailSchema = z.object({
   enabled: z.boolean(),
-  recipient: z.string().email("Зөв и-мэйл хаяг оруулна уу.").optional().or(z.literal("")),
+  recipient: z
+    .string()
+    .email("Зөв и-мэйл хаяг оруулна уу.")
+    .optional()
+    .or(z.literal("")),
   send_time: z.string().min(1, "Цаг шаардлагатай."),
 });
 
@@ -97,10 +102,11 @@ export function ReportEmailSettings() {
 
   const {
     register,
-    handleSubmit,
     setValue,
     watch,
-    formState: { errors },
+    getValues,
+    trigger,
+    formState: { errors, isDirty },
   } = useForm<ReportEmailValues>({
     resolver: zodResolver(reportEmailSchema),
     values: {
@@ -125,9 +131,24 @@ export function ReportEmailSettings() {
     },
   });
 
-  const onSubmit = (data: ReportEmailValues) => {
-    saveMutation.mutate(data);
-  };
+  const onSave = useCallback(async () => {
+    const isValid = await trigger();
+    if (!isValid) return { error: "Формын алдааг засах" };
+    const data = getValues();
+    try {
+      await saveMutation.mutateAsync(data);
+      return undefined;
+    } catch (err) {
+      return { error: (err as Error).message || "Хадгалахад алдаа гарлаа." };
+    }
+  }, [trigger, getValues, saveMutation]);
+
+  useRegisterSave({
+    id: "report-email",
+    label: "Өдрийн тайлан и-мэйл",
+    save: onSave,
+    isDirty: () => isDirty,
+  });
 
   if (isLoading) {
     return (
@@ -157,7 +178,7 @@ export function ReportEmailSettings() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-4">
           <FieldGroup>
             <div className="flex items-center justify-between">
               <div>
@@ -203,11 +224,7 @@ export function ReportEmailSettings() {
               )}
             </Field>
           </FieldGroup>
-
-          <Button type="submit" disabled={saveMutation.isPending}>
-            {saveMutation.isPending ? "Хадгалж байна..." : "Хадгалах"}
-          </Button>
-        </form>
+        </div>
       </CardContent>
     </Card>
   );

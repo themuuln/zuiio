@@ -3,10 +3,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EnvelopeSimple } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { useRegisterSave } from "./settings-context";
 import {
   Card,
   CardContent,
@@ -55,7 +57,9 @@ async function fetchSmtpConfig(): Promise<SmtpConfigData | null> {
   return data as unknown as SmtpConfigData;
 }
 
-async function saveSmtpConfigClient(values: SmtpValues & { config_id?: string }) {
+async function saveSmtpConfigClient(
+  values: SmtpValues & { config_id?: string },
+) {
   const supabase = createClient();
 
   const {
@@ -135,10 +139,11 @@ export function SmtpSettings({ isSuperAdmin }: Props) {
 
   const {
     register,
-    handleSubmit,
     setValue,
     watch,
-    formState: { errors },
+    getValues,
+    trigger,
+    formState: { errors, isDirty },
   } = useForm<SmtpValues>({
     resolver: zodResolver(smtpSchema),
     values: {
@@ -175,9 +180,24 @@ export function SmtpSettings({ isSuperAdmin }: Props) {
     },
   });
 
-  const onSubmit = (data: SmtpValues) => {
-    saveMutation.mutate(data);
-  };
+  const onSave = useCallback(async () => {
+    const isValid = await trigger();
+    if (!isValid) return { error: "Формын алдааг засах" };
+    const data = getValues();
+    try {
+      await saveMutation.mutateAsync(data);
+      return undefined;
+    } catch (err) {
+      return { error: (err as Error).message || "Хадгалахад алдаа гарлаа." };
+    }
+  }, [trigger, getValues, saveMutation]);
+
+  useRegisterSave({
+    id: "smtp",
+    label: "SMTP тохиргоо",
+    save: onSave,
+    isDirty: () => isDirty,
+  });
 
   if (isLoading) {
     return (
@@ -202,12 +222,10 @@ export function SmtpSettings({ isSuperAdmin }: Props) {
           <EnvelopeSimple className="size-5" />
           И-мэйл тохиргоо
         </CardTitle>
-        <CardDescription>
-          И-мэйл илгээх SMTP тохиргоо
-        </CardDescription>
+        <CardDescription>И-мэйл илгээх SMTP тохиргоо</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-4">
           <FieldGroup>
             <div className="flex items-center justify-between">
               <div>
@@ -322,9 +340,6 @@ export function SmtpSettings({ isSuperAdmin }: Props) {
           </FieldGroup>
 
           <div className="flex items-center gap-2">
-            <Button type="submit" disabled={saveMutation.isPending}>
-              {saveMutation.isPending ? "Хадгалж байна..." : "Хадгалах"}
-            </Button>
             <Button
               type="button"
               variant="outline"
@@ -334,7 +349,7 @@ export function SmtpSettings({ isSuperAdmin }: Props) {
               {testMutation.isPending ? "Илгээж байна..." : "Тест илгээх"}
             </Button>
           </div>
-        </form>
+        </div>
       </CardContent>
     </Card>
   );

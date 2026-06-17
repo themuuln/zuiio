@@ -19,6 +19,7 @@ import { ProfileForm } from "./profile-form";
 import { RolesDrawer } from "./roles-drawer";
 import { SmtpSettings } from "./smtp-settings";
 import { ReportEmailSettings } from "./report-email-settings";
+import { SettingsShell } from "./settings-shell";
 
 const TEMPLATE_TYPES = ["gym", "fitness", "retail"];
 
@@ -93,7 +94,7 @@ export default async function SettingsPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-8">
+    <SettingsShell>
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Тохиргоо</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -224,6 +225,6 @@ export default async function SettingsPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </SettingsShell>
   );
 }
