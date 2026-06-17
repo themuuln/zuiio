@@ -30,6 +30,7 @@ export type SaleDetailData = {
   status: string | null;
   notes: string | null;
   contacts: { name: string } | null;
+  salesperson_name: string | null;
   sale_items: SaleItemDetail[];
 };
 
@@ -107,6 +108,10 @@ export function SaleDetailDrawer({
                   <InfoRow
                     label="Харилцагч"
                     value={sale.contacts?.name ?? "Walk-in"}
+                  />
+                  <InfoRow
+                    label="Борлуулагч"
+                    value={sale.salesperson_name ?? "-"}
                   />
                   <InfoRow
                     label="Төлбөрийн арга"

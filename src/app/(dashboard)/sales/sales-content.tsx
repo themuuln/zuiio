@@ -37,7 +37,7 @@ async function fetchSaleWithItems(
   const supabase = createClient();
   const { data: sale } = await supabase
     .from("sales")
-    .select("*, contacts(name)")
+    .select("*, contacts(name), profiles!sales_salesperson_id_fkey(full_name)")
     .eq("id", saleId)
     .single();
   if (!sale) return null;
@@ -46,6 +46,8 @@ async function fetchSaleWithItems(
     .from("sale_items")
     .select("*, products(name, unit)")
     .eq("sale_id", saleId);
+
+  const profilesData = sale.profiles as { full_name: string | null } | null;
 
   return {
     id: sale.id,
@@ -56,6 +58,7 @@ async function fetchSaleWithItems(
     status: sale.status,
     notes: sale.notes,
     contacts: sale.contacts as { name: string } | null,
+    salesperson_name: profilesData?.full_name ?? null,
     sale_items: (items ?? []).map((item) => ({
       id: item.id,
       quantity: item.quantity,
