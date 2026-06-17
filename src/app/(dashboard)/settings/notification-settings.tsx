@@ -4,12 +4,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { EnvelopeSimple, TelegramLogo } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { useRegisterSave } from "./settings-context";
+import { useRegisterSave, useSettings } from "./settings-context";
 import {
   Card,
   CardContent,
@@ -265,16 +265,22 @@ async function saveEmailConfig(values: EmailValues) {
 
 export function NotificationSettings({ isSuperAdmin }: Props) {
   const queryClient = useQueryClient();
+  const { notify } = useSettings();
+
+  // ── Telegram ────────────────────────────────────────────────────────
 
   const { data: config } = useQuery({
     queryKey: ["notification_config", "telegram"],
     queryFn: fetchTelegramConfig,
   });
 
+  const telegramInitial = useRef(config);
+  if (config && !telegramInitial.current) telegramInitial.current = config;
+
   const {
     register,
     setValue,
-    watch,
+    watch: telegramWatch,
     getValues,
     trigger,
     control,
@@ -289,6 +295,11 @@ export function NotificationSettings({ isSuperAdmin }: Props) {
     },
   });
 
+  const telegramWatched = telegramWatch();
+  useEffect(() => {
+    notify();
+  }, [notify, telegramWatched]);
+
   const saveMutation = useMutation({
     mutationFn: saveTelegramConfig,
     onSuccess: () => {
@@ -302,7 +313,7 @@ export function NotificationSettings({ isSuperAdmin }: Props) {
     },
   });
 
-  const enabled = watch("enabled");
+  const enabled = telegramWatch("enabled");
 
   const onTelegramSave = useCallback(async () => {
     const isValid = await trigger();
@@ -320,13 +331,39 @@ export function NotificationSettings({ isSuperAdmin }: Props) {
     label: "Telegram мэдэгдэхүүн",
     save: onTelegramSave,
     isDirty: () => isDirty,
+    getChanges: () => {
+      const vals = getValues();
+      const init = telegramInitial.current;
+      const c: { field: string; from: string; to: string }[] = [];
+      if (!init) return c;
+      if (vals.bot_token !== init.bot_token)
+        c.push({ field: "Bot Token", from: "••••••••", to: "••••••••" });
+      if (vals.chat_id !== init.chat_id)
+        c.push({ field: "Chat ID", from: init.chat_id, to: vals.chat_id });
+      if (vals.enabled !== init.enabled)
+        c.push({
+          field: "Идэвхтэй эсэх",
+          from: init.enabled ? "Тийм" : "Үгүй",
+          to: vals.enabled ? "Тийм" : "Үгүй",
+        });
+      if (
+        JSON.stringify(vals.event_types.sort()) !==
+        JSON.stringify(init.event_types.sort())
+      )
+        c.push({ field: "Мэдэгдлийн төрлүүд", from: "Хуучнаар", to: "Шинээр" });
+      return c;
+    },
   });
 
-  // Email notification config
+  // ── Email notification ──────────────────────────────────────────────
+
   const { data: emailConfig } = useQuery({
     queryKey: ["notification_config", "email"],
     queryFn: fetchEmailConfig,
   });
+
+  const emailInitial = useRef(emailConfig);
+  if (emailConfig && !emailInitial.current) emailInitial.current = emailConfig;
 
   const {
     register: emailRegister,
@@ -344,6 +381,11 @@ export function NotificationSettings({ isSuperAdmin }: Props) {
       event_types: emailConfig?.event_types ?? ["low_stock"],
     },
   });
+
+  const emailWatched = emailWatch();
+  useEffect(() => {
+    notify();
+  }, [notify, emailWatched]);
 
   const emailSaveMutation = useMutation({
     mutationFn: saveEmailConfig,
@@ -376,6 +418,30 @@ export function NotificationSettings({ isSuperAdmin }: Props) {
     label: "И-мэйл мэдэгдэхүүн",
     save: onEmailSave,
     isDirty: () => emailIsDirty,
+    getChanges: () => {
+      const vals = emailGetValues();
+      const init = emailInitial.current;
+      const c: { field: string; from: string; to: string }[] = [];
+      if (!init) return c;
+      if (vals.recipient_email !== init.recipient_email)
+        c.push({
+          field: "Хүлээн авагч",
+          from: init.recipient_email,
+          to: vals.recipient_email,
+        });
+      if (vals.enabled !== init.enabled)
+        c.push({
+          field: "Идэвхтэй эсэх",
+          from: init.enabled ? "Тийм" : "Үгүй",
+          to: vals.enabled ? "Тийм" : "Үгүй",
+        });
+      if (
+        JSON.stringify(vals.event_types.sort()) !==
+        JSON.stringify(init.event_types.sort())
+      )
+        c.push({ field: "Мэдэгдлийн төрлүүд", from: "Хуучнаар", to: "Шинээр" });
+      return c;
+    },
   });
 
   return (

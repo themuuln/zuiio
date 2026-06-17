@@ -1,13 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { updateProfile } from "./actions";
-import { useRegisterSave } from "./settings-context";
+import { useRegisterSave, useSettings } from "./settings-context";
 
 const profileSchema = z.object({
   full_name: z.string().min(1, "Нэр шаардлагатай."),
@@ -20,9 +20,13 @@ type ProfileFormProps = {
 };
 
 export function ProfileForm({ initialFullName }: ProfileFormProps) {
+  const { notify } = useSettings();
+  const initial = useRef(initialFullName);
+
   const {
     register,
     getValues,
+    watch,
     formState: { errors, isDirty },
   } = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
@@ -30,6 +34,11 @@ export function ProfileForm({ initialFullName }: ProfileFormProps) {
       full_name: initialFullName,
     },
   });
+
+  const watched = watch();
+  useEffect(() => {
+    notify();
+  }, [notify, watched]);
 
   const save = useCallback(async () => {
     const data = getValues();
@@ -44,6 +53,18 @@ export function ProfileForm({ initialFullName }: ProfileFormProps) {
     label: "Хэрэглэгчийн мэдээлэл",
     save,
     isDirty: () => isDirty,
+    getChanges: () => {
+      const data = getValues();
+      if (data.full_name !== initial.current)
+        return [
+          {
+            field: "Нэр",
+            from: initial.current,
+            to: data.full_name,
+          },
+        ];
+      return [];
+    },
   });
 
   return (

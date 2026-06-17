@@ -5,15 +5,23 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
+
+export type Change = {
+  field: string;
+  from: string;
+  to: string;
+};
 
 export type SaveHandler = {
   id: string;
   label: string;
   save: () => Promise<{ error?: string } | undefined>;
   isDirty: () => boolean;
+  getChanges?: () => Change[];
 };
 
 type SettingsContextValue = {
@@ -21,6 +29,9 @@ type SettingsContextValue = {
   unregisterSave: (id: string) => void;
   saveAll: () => Promise<number>;
   saving: boolean;
+  dirtyCount: number;
+  dirtySections: { id: string; label: string; changes: Change[] }[];
+  notify: () => void;
 };
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -28,17 +39,19 @@ const SettingsContext = createContext<SettingsContextValue | null>(null);
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const handlersRef = useRef<Map<string, SaveHandler>>(new Map());
   const [saving, setSaving] = useState(false);
-  const [, forceRender] = useState(0);
+  const [tick, setTick] = useState(0);
 
   const registerSave = useCallback((handler: SaveHandler) => {
     handlersRef.current.set(handler.id, handler);
-    forceRender((n) => n + 1);
+    setTick((n) => n + 1);
   }, []);
 
   const unregisterSave = useCallback((id: string) => {
     handlersRef.current.delete(id);
-    forceRender((n) => n + 1);
+    setTick((n) => n + 1);
   }, []);
+
+  const notify = useCallback(() => setTick((n) => n + 1), []);
 
   const saveAll = useCallback(async () => {
     setSaving(true);
@@ -58,9 +71,34 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     return errorCount;
   }, []);
 
+  const dirtySections = useMemo(() => {
+    const sections: { id: string; label: string; changes: Change[] }[] = [];
+    handlersRef.current.forEach((h) => {
+      if (h.isDirty()) {
+        sections.push({
+          id: h.id,
+          label: h.label,
+          changes: h.getChanges?.() ?? [],
+        });
+      }
+    });
+    return sections;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tick]);
+
+  const dirtyCount = dirtySections.length;
+
   return (
     <SettingsContext.Provider
-      value={{ registerSave, unregisterSave, saveAll, saving }}
+      value={{
+        registerSave,
+        unregisterSave,
+        saveAll,
+        saving,
+        dirtyCount,
+        dirtySections,
+        notify,
+      }}
     >
       {children}
     </SettingsContext.Provider>

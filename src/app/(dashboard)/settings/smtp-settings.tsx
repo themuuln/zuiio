@@ -3,12 +3,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EnvelopeSimple } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { useRegisterSave } from "./settings-context";
+import { useRegisterSave, useSettings } from "./settings-context";
 import {
   Card,
   CardContent,
@@ -131,11 +131,15 @@ interface Props {
 
 export function SmtpSettings({ isSuperAdmin }: Props) {
   const queryClient = useQueryClient();
+  const { notify } = useSettings();
 
   const { data: config, isLoading } = useQuery({
     queryKey: ["smtp_config"],
     queryFn: fetchSmtpConfig,
   });
+
+  const smtpInitial = useRef(config);
+  if (config && !smtpInitial.current) smtpInitial.current = config;
 
   const {
     register,
@@ -155,6 +159,11 @@ export function SmtpSettings({ isSuperAdmin }: Props) {
       from_name: config?.from_name ?? "",
     },
   });
+
+  const smtpWatched = watch();
+  useEffect(() => {
+    notify();
+  }, [notify, smtpWatched]);
 
   const isActive = config?.is_active ?? false;
 
@@ -197,6 +206,35 @@ export function SmtpSettings({ isSuperAdmin }: Props) {
     label: "SMTP тохиргоо",
     save: onSave,
     isDirty: () => isDirty,
+    getChanges: () => {
+      const vals = getValues();
+      const init = smtpInitial.current;
+      const c: { field: string; from: string; to: string }[] = [];
+      if (!init) return c;
+      if (vals.host !== init.host)
+        c.push({ field: "Сервер", from: init.host, to: vals.host });
+      if (vals.port !== init.port)
+        c.push({
+          field: "Порт",
+          from: String(init.port),
+          to: String(vals.port),
+        });
+      if (vals.username !== init.username)
+        c.push({ field: "Хэрэглэгч", from: init.username, to: vals.username });
+      if (vals.from_email !== init.from_email)
+        c.push({
+          field: "Илгээгч хаяг",
+          from: init.from_email,
+          to: vals.from_email,
+        });
+      if ((vals.from_name ?? "") !== (init.from_name ?? ""))
+        c.push({
+          field: "Илгээгч нэр",
+          from: init.from_name ?? "",
+          to: vals.from_name ?? "",
+        });
+      return c;
+    },
   });
 
   if (isLoading) {

@@ -3,11 +3,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarCheck } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { useRegisterSave } from "./settings-context";
+import { useRegisterSave, useSettings } from "./settings-context";
 import {
   Card,
   CardContent,
@@ -94,11 +94,16 @@ async function saveReportEmailSettingsClient(values: ReportEmailValues) {
 
 export function ReportEmailSettings() {
   const queryClient = useQueryClient();
+  const { notify } = useSettings();
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["report_email_settings"],
     queryFn: fetchReportEmailSettings,
   });
+
+  const reportEmailInitial = useRef(settings);
+  if (settings && !reportEmailInitial.current)
+    reportEmailInitial.current = settings;
 
   const {
     register,
@@ -115,6 +120,11 @@ export function ReportEmailSettings() {
       send_time: settings?.report_email_time ?? "09:00",
     },
   });
+
+  const reportWatched = watch();
+  useEffect(() => {
+    notify();
+  }, [notify, reportWatched]);
 
   const enabled = watch("enabled");
 
@@ -148,6 +158,31 @@ export function ReportEmailSettings() {
     label: "Өдрийн тайлан и-мэйл",
     save: onSave,
     isDirty: () => isDirty,
+    getChanges: () => {
+      const vals = getValues();
+      const init = reportEmailInitial.current;
+      const c: { field: string; from: string; to: string }[] = [];
+      if (!init) return c;
+      if (vals.enabled !== init.report_email_enabled)
+        c.push({
+          field: "Идэвхтэй эсэх",
+          from: init.report_email_enabled ? "Тийм" : "Үгүй",
+          to: vals.enabled ? "Тийм" : "Үгүй",
+        });
+      if (vals.recipient !== (init.report_email_recipient ?? ""))
+        c.push({
+          field: "Хүлээн авагч",
+          from: init.report_email_recipient ?? "",
+          to: vals.recipient,
+        });
+      if (vals.send_time !== init.report_email_time)
+        c.push({
+          field: "Илгээх цаг",
+          from: init.report_email_time,
+          to: vals.send_time,
+        });
+      return c;
+    },
   });
 
   if (isLoading) {

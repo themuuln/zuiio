@@ -1,13 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { updateOrganization } from "./actions";
-import { useRegisterSave } from "./settings-context";
+import { useRegisterSave, useSettings } from "./settings-context";
 
 const orgSchema = z.object({
   name: z.string().min(1, "Байгууллагын нэр шаардлагатай."),
@@ -28,9 +28,13 @@ type OrgInfoFormProps = {
 };
 
 export function OrgInfoForm({ initialName, initialSlug }: OrgInfoFormProps) {
+  const { notify } = useSettings();
+  const initial = useRef({ name: initialName, slug: initialSlug });
+
   const {
     register,
     getValues,
+    watch,
     formState: { errors, isDirty },
   } = useForm<OrgValues>({
     resolver: zodResolver(orgSchema),
@@ -39,6 +43,12 @@ export function OrgInfoForm({ initialName, initialSlug }: OrgInfoFormProps) {
       slug: initialSlug,
     },
   });
+
+  // Reactivity: re-notify the context whenever form values change
+  const watched = watch();
+  useEffect(() => {
+    notify();
+  }, [notify, watched]);
 
   const save = useCallback(async () => {
     const data = getValues();
@@ -54,6 +64,23 @@ export function OrgInfoForm({ initialName, initialSlug }: OrgInfoFormProps) {
     label: "Байгууллагын мэдээлэл",
     save,
     isDirty: () => isDirty,
+    getChanges: () => {
+      const data = getValues();
+      const changes: { field: string; from: string; to: string }[] = [];
+      if (data.name !== initial.current.name)
+        changes.push({
+          field: "Нэр",
+          from: initial.current.name,
+          to: data.name,
+        });
+      if (data.slug !== initial.current.slug)
+        changes.push({
+          field: "Холбоос",
+          from: initial.current.slug,
+          to: data.slug,
+        });
+      return changes;
+    },
   });
 
   return (
