@@ -154,8 +154,8 @@ export default async function SettingsPage() {
       {/* Notifications (superadmin only) */}
       {isSuperAdmin && <NotificationSettings isSuperAdmin />}
 
-      {/* SMTP Settings (superadmin or users with emails.manage) */}
-      {canManageEmail && <SmtpSettings isSuperAdmin={isSuperAdmin} />}
+      {/* SMTP Settings (superadmin only — technical config) */}
+      {isSuperAdmin && <SmtpSettings isSuperAdmin={isSuperAdmin} />}
 
       {/* Report Email Settings (org owners with emails.manage) */}
       {canManageEmail && hasSmtpConfig && <ReportEmailSettings />}
