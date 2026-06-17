@@ -15,3 +15,17 @@ export function getString(formData: FormData, key: string): string {
 export function normalizePhone(phone: string): string {
   return phone.replace(/[\s-]/g, "");
 }
+
+export function sanitizeRedirectPath(path: string): string {
+  if (!path || typeof path !== "string") return "/";
+  // Only allow relative paths starting with /
+  if (!path.startsWith("/")) return "/";
+  // Block external URLs and protocol-relative URLs
+  if (path.startsWith("//")) return "/";
+  try {
+    const url = new URL(path, "http://localhost");
+    return url.pathname + url.search + url.hash;
+  } catch {
+    return "/";
+  }
+}

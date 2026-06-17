@@ -1,7 +1,5 @@
 import { GearSix, WarningCircle } from "@phosphor-icons/react/dist/ssr";
-import Link from "next/link";
 import { ThemeToggle } from "@/components/erp/theme-toggle";
-import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,10 +8,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { requireAppContext } from "@/lib/erp";
+import { DEFAULT_BRAND_CONFIG, type BrandConfig } from "@/lib/branding";
+import type { RolePermission } from "@/components/roles/roles-client";
 import { BrandPresetsCard } from "./brand-presets-card";
+import { BrandingDrawer } from "./branding-drawer";
+import { LeaveOrganizationDialog } from "./leave-org-dialog";
 import { NotificationSettings } from "./notification-settings";
 import { OrgInfoForm } from "./org-info-form";
 import { ProfileForm } from "./profile-form";
+import { RolesDrawer } from "./roles-drawer";
 import { SmtpSettings } from "./smtp-settings";
 import { ReportEmailSettings } from "./report-email-settings";
 
@@ -27,17 +30,24 @@ export default async function SettingsPage() {
   const isSuperAdmin = user.email === SUPERADMIN_EMAIL;
   const canManageRoles = permissions.includes("roles.manage");
 
-  const [orgResult, profileResult] = await Promise.all([
+  const [orgResult, profileResult, brandConfigResult] = await Promise.all([
     supabase
       .from("organizations")
       .select("name, slug, company_type, currency")
       .eq("id", organizationId)
       .single(),
     supabase.from("profiles").select("full_name").eq("id", userId).single(),
+    supabase
+      .from("organizations")
+      .select("brand_config")
+      .eq("id", organizationId)
+      .single(),
   ]);
 
   const org = orgResult.data;
   const profile = profileResult.data;
+  const brandConfig = (brandConfigResult.data?.brand_config ??
+    {}) as BrandConfig;
   const showTemplates =
     org?.company_type && TEMPLATE_TYPES.includes(org.company_type);
 
@@ -52,8 +62,35 @@ export default async function SettingsPage() {
 
   const hasSmtpConfig = (smtpCount ?? 0) > 0;
   const canManageEmail =
-    isSuperAdmin ||
-    (permissions as string[]).includes("emails.manage");
+    isSuperAdmin || (permissions as string[]).includes("emails.manage");
+
+  // Fetch roles data for the drawer
+  let roles: Array<{
+    id: string;
+    name: string;
+    description: string | null;
+    hierarchy_level: number;
+    is_system_role: boolean;
+  }> = [];
+  let rolePermissions: RolePermission[] = [];
+  if (canManageRoles) {
+    const { data: r } = await supabase
+      .from("roles")
+      .select("id, name, description, hierarchy_level, is_system_role")
+      .eq("organization_id", organizationId)
+      .order("hierarchy_level", { ascending: true });
+    roles = r ?? [];
+    if (roles.length > 0) {
+      const { data: rp } = await supabase
+        .from("role_permissions")
+        .select("id, role_id, permission")
+        .in(
+          "role_id",
+          roles.map((r) => r.id),
+        );
+      rolePermissions = rp ?? [];
+    }
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-8">
@@ -81,7 +118,7 @@ export default async function SettingsPage() {
       </Card>
 
       {/* Brand Templates (gym / fitness only) */}
-      {showTemplates && presetsData?.data ? (
+      {showTemplates && presetsData?.data?.length ? (
         <BrandPresetsCard presets={presetsData.data} />
       ) : null}
 
@@ -109,12 +146,7 @@ export default async function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Link
-              href="/settings/roles"
-              className={buttonVariants({ variant: "outline" })}
-            >
-              Үүрэг, эрхүүд удирдах
-            </Link>
+            <RolesDrawer roles={roles} rolePermissions={rolePermissions} />
           </CardContent>
         </Card>
       )}
@@ -122,11 +154,33 @@ export default async function SettingsPage() {
       {/* Notifications (superadmin only) */}
       {isSuperAdmin && <NotificationSettings isSuperAdmin />}
 
-      {/* SMTP Settings (superadmin or emails.manage) */}
+      {/* SMTP Settings (superadmin or users with emails.manage) */}
       {canManageEmail && <SmtpSettings isSuperAdmin={isSuperAdmin} />}
 
-      {/* Report Email Settings (visible when SMTP is configured) */}
+      {/* Report Email Settings (org owners with emails.manage) */}
       {canManageEmail && hasSmtpConfig && <ReportEmailSettings />}
+
+      {/* Branding */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Брэндинг</CardTitle>
+          <CardDescription>
+            Байгууллагын өнгө, загвар, лого тохируулах
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <BrandingDrawer
+            initialConfig={{
+              theme: brandConfig.theme ?? DEFAULT_BRAND_CONFIG.theme,
+              radius: brandConfig.radius ?? DEFAULT_BRAND_CONFIG.radius,
+              logo_url: brandConfig.logo_url ?? null,
+              custom_colors: brandConfig.custom_colors,
+              font_body: brandConfig.font_body,
+              font_heading: brandConfig.font_heading,
+            }}
+          />
+        </CardContent>
+      </Card>
 
       {/* Theme */}
       <Card>
@@ -157,10 +211,17 @@ export default async function SettingsPage() {
             Энд хийх үйлдлүүд эргэлт буцалтгүй байж болно
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="mb-4 text-sm text-muted-foreground">
-            Энэ хэсэг удахгүй нэмэгдэх болно.
-          </p>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Байгууллагаас гарах</p>
+              <p className="text-xs text-muted-foreground">
+                Та энэ байгууллагын өгөгдөлд хандах боломжгүй болно. Шинэ
+                байгууллага үүсгэх боломжтой.
+              </p>
+            </div>
+            {org?.name && <LeaveOrganizationDialog orgName={org.name} />}
+          </div>
         </CardContent>
       </Card>
     </div>

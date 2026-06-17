@@ -13,7 +13,7 @@ export default function AuthLayout({
           <p className="text-xs font-medium uppercase tracking-[0.3em] text-muted-foreground">
             {APP_NAME}
           </p>
-          <h1 className="mt-4 max-w-xl text-5xl font-semibold leading-tight tracking-tight">
+          <h1 className="mt-4 max-w-xl text-5xl font-semibold leading-tight tracking-tight text-[oklch(0.22_0.02_55)]">
             Монгол жижиг бизнесийн өдөр тутмын ажиллагааг нэг төвөөс удирдана.
           </h1>
           <p className="mt-4 max-w-lg text-base text-muted-foreground">

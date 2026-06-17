@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireAppContext } from "@/lib/erp";
 
 export async function updateOrganization(
@@ -261,4 +262,51 @@ export async function saveReportEmailSettings(
 
   revalidatePath("/settings");
   return { success: true as const };
+}
+
+// ─── Leave Organization ──────────────────────────────────────────────
+
+export async function leaveOrganization(formData: FormData) {
+  const { supabase, userId } = await requireAppContext();
+
+  const confirmName = formData.get("confirm_name")?.toString().trim();
+  if (!confirmName) {
+    return { error: "Байгууллагын нэрийг бичнэ үү." };
+  }
+
+  // Verify the user knows the org name
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id, organizations(name)")
+    .eq("id", userId)
+    .single();
+
+  if (!profile?.organization_id) {
+    return { error: "Та аль хэдийн байгууллагаас гарсан байна." };
+  }
+
+  const orgName = (profile as any).organizations?.name;
+  if (!orgName) {
+    return { error: "Байгууллагын мэдээлэл олдсонгүй." };
+  }
+
+  if (confirmName !== orgName) {
+    return { error: "Байгууллагын нэр тохирохгүй байна." };
+  }
+
+  // Remove user from org by nullifying organization_id and role_id
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      organization_id: null,
+      role_id: null,
+      role: null,
+    })
+    .eq("id", userId);
+
+  if (error) {
+    return { error: `Алдаа гарлаа: ${error.message}` };
+  }
+
+  redirect("/organization/new");
 }

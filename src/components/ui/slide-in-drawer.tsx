@@ -2,6 +2,7 @@
 
 import { Drawer } from "@base-ui/react/drawer";
 import { X } from "@phosphor-icons/react";
+import { Slot } from "radix-ui";
 import type * as React from "react";
 import { cn } from "@/lib/utils";
 
@@ -63,12 +64,10 @@ export function SlideInDrawer({
   );
 
   return (
-    <Drawer.Root
-      swipeDirection="right"
-      open={open}
-      onOpenChange={onOpenChange}
-    >
-      {trigger && <Drawer.Trigger>{trigger}</Drawer.Trigger>}
+    <Drawer.Root swipeDirection="right" open={open} onOpenChange={onOpenChange}>
+      {trigger && (
+        <Drawer.Trigger render={<Slot.Root />}>{trigger}</Drawer.Trigger>
+      )}
       <Drawer.Portal>{content}</Drawer.Portal>
     </Drawer.Root>
   );

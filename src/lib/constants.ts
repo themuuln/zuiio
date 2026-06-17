@@ -5,7 +5,6 @@ export const PUBLIC_ROUTES = [
   "/landing",
   "/login",
   "/register",
-  "/forgot-password",
   "/update-password",
   "/organization/new",
 ];
@@ -21,6 +20,11 @@ export const COMPANY_TYPES = [
   { value: "other", label: "Бусад" },
 ] as const;
 
+export function getCompanyTypeLabel(type: string): string {
+  const found = COMPANY_TYPES.find((ct) => ct.value === type);
+  return found?.label ?? type;
+}
+
 export const PRESET_CATEGORIES: Record<string, readonly string[]> = {
   retail: ["Хүнс", "Ундаа", "Хувцас", "Гэр ахуй", "Цахилгаан бараа", "Бусад"],
   wholesale: [
@@ -34,7 +38,27 @@ export const PRESET_CATEGORIES: Record<string, readonly string[]> = {
   service: ["Засвар үйлчилгээ", "Зөвлөгөө", "Сургалт", "Бусад"],
   manufacturing: ["Түүхий эд", "Сав баглаа", "Бэлэн бүтээгдэхүүн", "Бусад"],
   restaurant: ["Хоол", "Ундаа", "Амттан", "Бусад"],
-  gym: ["Protein", "Creatine", "Amino Acids / BCAA", "Vitamins & Minerals", "Omega & Oils", "Wellness & Health", "Хувцас", "Ундаа", "Бусад"],
-  fitness: ["Protein", "Creatine", "Amino Acids / BCAA", "Vitamins & Minerals", "Omega & Oils", "Wellness & Health", "Хувцас", "Ундаа", "Бусад"],
+  gym: [
+    "Protein",
+    "Creatine",
+    "Amino Acids / BCAA",
+    "Vitamins & Minerals",
+    "Omega & Oils",
+    "Wellness & Health",
+    "Хувцас",
+    "Ундаа",
+    "Бусад",
+  ],
+  fitness: [
+    "Protein",
+    "Creatine",
+    "Amino Acids / BCAA",
+    "Vitamins & Minerals",
+    "Omega & Oils",
+    "Wellness & Health",
+    "Хувцас",
+    "Ундаа",
+    "Бусад",
+  ],
   other: ["Бусад"],
 };

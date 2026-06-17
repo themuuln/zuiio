@@ -15,8 +15,12 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { login } from "./actions";
 
+const DEV_EMAIL = "themuuln1@gmail.com";
+const DEV_PASSWORD = "Tolom!11";
+
 export function LoginForm({ next }: { next: string }) {
   const [state, action, pending] = useActionState(login, undefined);
+  const isDev = process.env.NODE_ENV === "development";
 
   return (
     <Card className="w-full max-w-sm border-border/70 bg-background/90 backdrop-blur-sm">
@@ -39,6 +43,7 @@ export function LoginForm({ next }: { next: string }) {
                   placeholder="name@example.com"
                   required
                   className="pl-9"
+                  defaultValue={isDev ? DEV_EMAIL : undefined}
                 />
               </div>
             </Field>
@@ -53,6 +58,7 @@ export function LoginForm({ next }: { next: string }) {
                   placeholder="••••••••"
                   required
                   className="pl-9"
+                  defaultValue={isDev ? DEV_PASSWORD : undefined}
                 />
               </div>
             </Field>
@@ -76,14 +82,6 @@ export function LoginForm({ next }: { next: string }) {
               className="font-medium text-foreground underline underline-offset-4 hover:text-primary"
             >
               Бүртгүүлэх
-            </Link>
-          </p>
-          <p className="text-center text-sm text-muted-foreground">
-            <Link
-              href="/forgot-password"
-              className="font-medium text-foreground underline underline-offset-4 hover:text-primary"
-            >
-              Нууц үг мартсан уу?
             </Link>
           </p>
         </form>

@@ -74,6 +74,7 @@ type DashboardShellProps = {
   children: React.ReactNode;
   organizationId: string | null;
   organizationName: string | null;
+  logoUrl: string | null;
   userFullName: string | null;
 };
 
@@ -81,6 +82,7 @@ export function DashboardShell({
   children,
   organizationId,
   organizationName,
+  logoUrl,
   userFullName,
 }: DashboardShellProps) {
   const pathname = usePathname();
@@ -126,8 +128,16 @@ export function DashboardShell({
                     size="lg"
                     className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                   >
-                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                      <PanelLeftIcon className="size-4" />
+                    <div className="flex aspect-square size-8 items-center justify-center overflow-hidden rounded-lg bg-primary text-primary-foreground">
+                      {logoUrl ? (
+                        <img
+                          src={logoUrl}
+                          alt={organizationName ?? APP_NAME}
+                          className="size-full object-contain"
+                        />
+                      ) : (
+                        <PanelLeftIcon className="size-4" />
+                      )}
                     </div>
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-semibold">
