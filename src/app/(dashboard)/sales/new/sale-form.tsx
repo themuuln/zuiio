@@ -1,5 +1,6 @@
 "use client";
 
+import { CheckCircle } from "@phosphor-icons/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -84,11 +85,17 @@ export function SaleForm({
   products,
   customers,
   onSuccess,
+  onOpenDetail,
+  onReopenForm,
 }: {
   products: ProductOption[];
   customers: CustomerOption[];
   /** Called after a successful sale instead of redirecting to /sales. Used by the drawer variant. */
   onSuccess?: () => void;
+  /** Called when the user wants to open the detail drawer for a sale. */
+  onOpenDetail?: (saleId: string) => void;
+  /** Called when the user wants to reopen the create form (e.g., from toast action). */
+  onReopenForm?: () => void;
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -99,6 +106,11 @@ export function SaleForm({
   const [selectedContactId, setSelectedContactId] = useState<string | null>(
     null,
   );
+  const [keepOpen, setKeepOpen] = useState(false);
+  // Combobox query states (for reset)
+  const [productQuery, setProductQuery] = useState("");
+  const [paymentQuery, setPaymentQuery] = useState("");
+  const [statusQuery, setStatusQuery] = useState("");
 
   const {
     register,
@@ -106,6 +118,7 @@ export function SaleForm({
     control,
     watch,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<SaleValues>({
     resolver: zodResolver(saleSchema),
@@ -122,6 +135,14 @@ export function SaleForm({
       notes: "",
     },
   });
+
+  const resetForm = () => {
+    reset(undefined, { keepDefaultValues: false });
+    setSelectedContactId(null);
+    setProductQuery("");
+    setPaymentQuery("");
+    setStatusQuery("");
+  };
 
   const saleMutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -203,8 +224,69 @@ export function SaleForm({
 
       return { salesSnapshot, productsSnapshot };
     },
-    onSuccess: () => {
-      if (onSuccess) {
+    onSuccess: (result) => {
+      const saleResult = result as
+        | {
+            success: true;
+            sale?: {
+              id: string;
+              total_amount: number;
+              customer_name: string | null;
+            };
+          }
+        | undefined;
+      const saleId =
+        saleResult?.success && saleResult.sale ? saleResult.sale.id : "";
+      const totalAmount = saleResult?.success
+        ? (saleResult.sale?.total_amount ?? 0)
+        : 0;
+      const customerName = saleResult?.success
+        ? (saleResult.sale?.customer_name ?? "")
+        : "";
+
+      // Show custom toast with actionable buttons
+      const toastId = toast.custom(
+        (t) => (
+          <div className="flex w-full flex-col gap-3">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <CheckCircle className="size-4 shrink-0 text-green-600" />
+              <span>
+                Борлуулалт амжилттай: {formatCurrency(totalAmount)}
+                {customerName ? ` - ${customerName}` : ""}
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => {
+                  toast.dismiss(t);
+                  onOpenDetail?.(saleId ?? "");
+                }}
+              >
+                Дэлгэрэнгүй
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  toast.dismiss(t);
+                  resetForm();
+                  onReopenForm?.();
+                }}
+              >
+                Дахин бүртгэх
+              </Button>
+            </div>
+          </div>
+        ),
+        { duration: 8000 },
+      );
+
+      if (keepOpen) {
+        resetForm();
+      } else if (onSuccess) {
         onSuccess();
       } else {
         router.push("/sales");
@@ -252,7 +334,6 @@ export function SaleForm({
   };
 
   // --- Product combobox (creatable) ---
-  const [productQuery, setProductQuery] = useState("");
   const trimmedProductQuery = productQuery.trim();
   const loweredProductQuery = trimmedProductQuery.toLowerCase();
   const productLabelMatch =
@@ -333,7 +414,6 @@ export function SaleForm({
   }, [watchedQuantity]);
 
   // --- Payment method combobox (creatable) ---
-  const [paymentQuery, setPaymentQuery] = useState("");
   const trimmedPaymentQuery = paymentQuery.trim().toLowerCase();
   const [allPaymentMethods, setAllPaymentMethods] = useState<string[]>([
     ...initialPaymentMethods,
@@ -350,7 +430,6 @@ export function SaleForm({
       : allPaymentMethods;
 
   // --- Status combobox (creatable) ---
-  const [statusQuery, setStatusQuery] = useState("");
   const trimmedStatusQuery = statusQuery.trim().toLowerCase();
   const [allStatuses, setAllStatuses] = useState<string[]>([
     ...initialStatuses,
@@ -712,12 +791,23 @@ export function SaleForm({
         </div>
       ) : null}
 
-      <Button
-        type="submit"
-        disabled={saleMutation.isPending || !products.length}
-      >
-        {saleMutation.isPending ? "Хадгалах..." : "Борлуулалт хадгалах"}
-      </Button>
+      <div className="flex items-center justify-between">
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={keepOpen}
+            onChange={(e) => setKeepOpen(e.target.checked)}
+            className="size-4 rounded border-border accent-primary"
+          />
+          Хэвээр үлдээх (дахин бүртгэх)
+        </label>
+        <Button
+          type="submit"
+          disabled={saleMutation.isPending || !products.length}
+        >
+          {saleMutation.isPending ? "Хадгалах..." : "Борлуулалт хадгалах"}
+        </Button>
+      </div>
     </form>
   );
 }

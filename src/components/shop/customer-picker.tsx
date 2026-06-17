@@ -54,6 +54,14 @@ export function CustomerPicker({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Reset internal state when customerName is cleared externally (e.g., form reset)
+  useEffect(() => {
+    if (!customerName && !selectedContactId) {
+      setSearchQuery("");
+      setUseWalkIn(false);
+    }
+  }, [customerName, selectedContactId]);
+
   const handleWalkIn = () => {
     setUseWalkIn(true);
     onSelectContact(null);

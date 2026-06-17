@@ -302,5 +302,12 @@ export async function createSale(
   revalidatePath("/sales");
   revalidatePath("/inventory");
   revalidatePath("/products");
-  return { success: true as const };
+  return {
+    success: true as const,
+    sale: {
+      id: sale.id,
+      total_amount: totalAmount,
+      customer_name: customerName ?? null,
+    },
+  };
 }

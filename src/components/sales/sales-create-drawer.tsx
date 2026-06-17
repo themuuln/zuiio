@@ -25,11 +25,13 @@ export function SalesCreateDrawer({
   customers,
   open: externalOpen,
   onOpenChange: externalOnOpenChange,
+  onOpenDetail,
 }: {
   products: ProductOption[];
   customers: CustomerOption[];
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onOpenDetail?: (saleId: string) => void;
 }) {
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen ?? internalOpen;
@@ -56,6 +58,8 @@ export function SalesCreateDrawer({
         products={products}
         customers={customers}
         onSuccess={() => setOpen(false)}
+        onOpenDetail={onOpenDetail}
+        onReopenForm={() => setOpen(true)}
       />
     </SlideInDrawer>
   );

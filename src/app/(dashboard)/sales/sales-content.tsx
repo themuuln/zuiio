@@ -206,6 +206,10 @@ export function SalesContent({
               customers={customers}
               open={createOpen}
               onOpenChange={setCreateOpen}
+              onOpenDetail={(saleId) => {
+                setCreateOpen(false);
+                setSelectedSaleId(saleId);
+              }}
             />
           </>
         }
@@ -221,6 +225,10 @@ export function SalesContent({
                 customers={customers}
                 open={createOpen}
                 onOpenChange={setCreateOpen}
+                onOpenDetail={(saleId) => {
+                  setCreateOpen(false);
+                  setSelectedSaleId(saleId);
+                }}
               />
             }
           />
