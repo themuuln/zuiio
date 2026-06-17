@@ -4,6 +4,17 @@ import { createClient } from "@/lib/supabase/server";
 
 export type AppContext = Awaited<ReturnType<typeof requireAppContext>>;
 
+/**
+ * Returns an error string if the user lacks the required permission.
+ * Returns null if the permission is granted.
+ */
+export function checkPermission(
+  permissions: AppPermission[],
+  required: AppPermission,
+): string | null {
+  return permissions.includes(required) ? null : "Танд эрх байхгүй байна.";
+}
+
 export async function requireAppContext() {
   const supabase = await createClient();
   const {

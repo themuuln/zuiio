@@ -2,14 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { validateProductInput } from "@/lib/domain-rules";
-import { requireAppContext } from "@/lib/erp";
+import { checkPermission, requireAppContext } from "@/lib/erp";
 import { checkLowStockAndNotify } from "@/lib/notification";
 
 export async function updateProduct(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId } = await requireAppContext();
+  const { supabase, organizationId, permissions } = await requireAppContext();
+  const permError = checkPermission(permissions, "products.update");
+  if (permError) return { error: permError };
 
   const id = formData.get("id")?.toString();
   if (!id) {

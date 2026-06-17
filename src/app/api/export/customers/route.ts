@@ -1,8 +1,13 @@
-import { toCsv } from "@/lib/csv";
 import { requireAppContext } from "@/lib/erp";
+import { type ExportFormat, serveEntityExport } from "@/lib/export";
 
-export async function GET() {
+const today = () => new Date().toISOString().slice(0, 10);
+
+export async function GET(request: Request) {
   const { supabase, organizationId } = await requireAppContext();
+
+  const { searchParams } = new URL(request.url);
+  const format = (searchParams.get("format") ?? "csv") as ExportFormat;
 
   const { data: customers } = await supabase
     .from("contacts")
@@ -19,18 +24,19 @@ export async function GET() {
     balance: c.balance ?? 0,
   }));
 
-  const csv = toCsv(rows, [
+  const columns = [
     { header: "Нэр", key: "name" },
     { header: "Утас", key: "phone" },
     { header: "И-мэйл", key: "email" },
     { header: "Хаяг", key: "address" },
     { header: "Үлдэгдэл", key: "balance" },
-  ]);
+  ];
 
-  return new Response(csv, {
-    headers: {
-      "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="customers-export-${new Date().toISOString().slice(0, 10)}.csv"`,
-    },
-  });
+  return serveEntityExport(
+    rows,
+    columns,
+    format,
+    `customers-export-${today()}`,
+    "Харилцагчид",
+  );
 }

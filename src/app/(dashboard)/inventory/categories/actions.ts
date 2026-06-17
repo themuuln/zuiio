@@ -2,14 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { validateCategoryInput } from "@/lib/domain-rules";
-import { requireAppContext } from "@/lib/erp";
+import { checkPermission, requireAppContext } from "@/lib/erp";
 import { getString } from "@/lib/validation";
 
 export async function createCategory(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId } = await requireAppContext();
+  const { supabase, organizationId, permissions } = await requireAppContext();
+  const permError = checkPermission(permissions, "categories.create");
+  if (permError) return { error: permError };
 
   const name = getString(formData, "name");
 
@@ -49,7 +51,9 @@ export async function updateCategory(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId } = await requireAppContext();
+  const { supabase, organizationId, permissions } = await requireAppContext();
+  const permError = checkPermission(permissions, "categories.update");
+  if (permError) return { error: permError };
 
   const id = getString(formData, "id");
   const name = getString(formData, "name");
@@ -96,7 +100,9 @@ export async function deleteCategory(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId } = await requireAppContext();
+  const { supabase, organizationId, permissions } = await requireAppContext();
+  const permError = checkPermission(permissions, "categories.delete");
+  if (permError) return { error: permError };
 
   const id = getString(formData, "id");
 

@@ -1,14 +1,17 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAppContext } from "@/lib/erp";
+import { checkPermission, requireAppContext } from "@/lib/erp";
 import { getString } from "@/lib/validation";
 
 export async function createPurchaseOrder(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId } = await requireAppContext();
+  const { supabase, organizationId, userId, permissions } =
+    await requireAppContext();
+  const permError = checkPermission(permissions, "purchases.create");
+  if (permError) return { error: permError };
 
   const supplierId = getString(formData, "supplier_id");
   const orderDate = getString(formData, "order_date");
@@ -99,10 +102,7 @@ export async function createPurchaseOrder(
 
   if (itemsError) {
     // Rollback: delete the purchase order
-    await supabase
-      .from("purchase_orders")
-      .delete()
-      .eq("id", purchaseOrder.id);
+    await supabase.from("purchase_orders").delete().eq("id", purchaseOrder.id);
     return {
       error: `Барааны мэдээлэл хадгалахад алдаа гарлаа: ${itemsError.message}`,
     };
@@ -117,7 +117,9 @@ export async function updatePurchaseOrderStatus(
   orderId: string,
   status: string,
 ) {
-  const { supabase, organizationId } = await requireAppContext();
+  const { supabase, organizationId, permissions } = await requireAppContext();
+  const permError = checkPermission(permissions, "purchases.update");
+  if (permError) return { error: permError };
 
   const { data: order } = await supabase
     .from("purchase_orders")
@@ -149,7 +151,10 @@ export async function receivePurchaseOrderItems(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId } = await requireAppContext();
+  const { supabase, organizationId, userId, permissions } =
+    await requireAppContext();
+  const permError = checkPermission(permissions, "purchases.update");
+  if (permError) return { error: permError };
 
   const orderId = getString(formData, "order_id");
   const itemsJson = getString(formData, "items");
@@ -203,8 +208,7 @@ export async function receivePurchaseOrderItems(
 
     if (newReceivedQty > Number(existingItem.quantity)) {
       return {
-        error:
-          "Хүлээн авсан тоо хэмжээ захиалсан хэмжээнээс хэтэрсэн байна.",
+        error: "Хүлээн авсан тоо хэмжээ захиалсан хэмжээнээс хэтэрсэн байна.",
       };
     }
 
@@ -270,9 +274,7 @@ export async function receivePurchaseOrderItems(
     ) ?? false;
 
   const anyReceived =
-    allItems.data?.some(
-      (oi) => Number(oi.received_quantity) > 0,
-    ) ?? false;
+    allItems.data?.some((oi) => Number(oi.received_quantity) > 0) ?? false;
 
   let newStatus = "sent";
   if (allFullyReceived) {

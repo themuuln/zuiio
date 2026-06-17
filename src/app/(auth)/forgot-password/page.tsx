@@ -64,9 +64,11 @@ export default function ForgotPasswordPage() {
             <Button type="submit" disabled={pending}>
               Холбоос илгээх
             </Button>
-            <Button variant="outline" render={<Link href="/login" />}>
-              <ArrowLeft data-icon="inline-start" />
-              Нэвтрэх рүү буцах
+            <Button variant="outline" asChild>
+              <Link href="/login">
+                <ArrowLeft data-icon="inline-start" />
+                Нэвтрэх рүү буцах
+              </Link>
             </Button>
           </div>
         </form>

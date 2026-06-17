@@ -8,6 +8,7 @@ import {
   getStockMovementsSummary,
   getPendingSales,
 } from "@/lib/reports";
+import { escapeHtml } from "@/lib/validation";
 
 // ─── Types ─────────────────────────────────────────────────────────────
 
@@ -173,7 +174,7 @@ export async function generateDailyReportHtml(
     .map(
       (p) => `
     <tr>
-      <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${p.productName}</td>
+      <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${escapeHtml(p.productName)}</td>
       <td style="padding:8px;border-bottom:1px solid #e5e7eb;text-align:center;">${p.quantity}</td>
       <td style="padding:8px;border-bottom:1px solid #e5e7eb;text-align:right;">${formatCurrency(p.revenue)}</td>
       <td style="padding:8px;border-bottom:1px solid #e5e7eb;text-align:right;">${p.margin.toFixed(1)}%</td>
@@ -187,7 +188,7 @@ export async function generateDailyReportHtml(
     .map(
       (s) => `
     <tr>
-      <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${s.contactName ?? "Бүртгэлгүй"}</td>
+      <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${escapeHtml(s.contactName ?? "Бүртгэлгүй")}</td>
       <td style="padding:8px;border-bottom:1px solid #e5e7eb;">${new Date(s.saleDate).toLocaleDateString("mn-MN")}</td>
       <td style="padding:8px;border-bottom:1px solid #e5e7eb;text-align:right;">${formatCurrency(s.totalAmount)}</td>
     </tr>`,
@@ -208,7 +209,7 @@ export async function generateDailyReportHtml(
     <!-- Header -->
     <tr>
       <td style="padding:32px 24px 16px;text-align:center;background:linear-gradient(135deg,#2563eb,#1d4ed8);">
-        <h1 style="margin:0;font-size:24px;font-weight:700;color:#ffffff;">${orgName}</h1>
+        <h1 style="margin:0;font-size:24px;font-weight:700;color:#ffffff;">${escapeHtml(orgName)}</h1>
         <p style="margin:8px 0 0;font-size:14px;color:#bfdbfe;">Өдрийн тайлан</p>
         <p style="margin:4px 0 0;font-size:13px;color:#93c5fd;">
           ${new Date(dateFrom).toLocaleDateString("mn-MN")} - ${new Date(dateTo).toLocaleDateString("mn-MN")}
@@ -436,5 +437,3 @@ export async function logEmailResult(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await supabase.from("report_email_log").insert(payload as any);
 }
-
-

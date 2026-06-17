@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { calculateCommission } from "@/lib/commissions";
-import { requireAppContext } from "@/lib/erp";
+import { checkPermission, requireAppContext } from "@/lib/erp";
 import { createInvoiceFromSale } from "@/lib/invoicing";
 import { getString, normalizePhone } from "@/lib/validation";
 
@@ -18,7 +18,10 @@ export async function createShopSale(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId } = await requireAppContext();
+  const { supabase, organizationId, userId, permissions } =
+    await requireAppContext();
+  const permError = checkPermission(permissions, "sales.create");
+  if (permError) return { error: permError };
 
   // Parse items from JSON
   const itemsRaw = formData.get("items");

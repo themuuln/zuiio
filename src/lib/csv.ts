@@ -1,4 +1,15 @@
 /**
+ * Prevents CSV formula injection by prefixing dangerous leading characters
+ * with a single quote, so spreadsheet applications treat the value as text.
+ */
+function sanitizeCsvCell(str: string): string {
+  if (/^[=+\-@]/.test(str)) {
+    return `'${str}`;
+  }
+  return str;
+}
+
+/**
  * Converts an array of objects to a CSV string.
  * @param rows - Array of data objects
  * @param columns - Column definitions with header label and key to extract from each row
@@ -15,7 +26,7 @@ export function toCsv<T extends Record<string, unknown>>(
       .map((c) => {
         const value = row[c.key];
         if (value === null || value === undefined) return "";
-        const str = String(value);
+        const str = sanitizeCsvCell(String(value));
         // Escape quotes and wrap in quotes if the value contains commas, quotes, or newlines
         if (str.includes(",") || str.includes('"') || str.includes("\n")) {
           return `"${str.replace(/"/g, '""')}"`;

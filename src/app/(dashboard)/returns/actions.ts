@@ -1,14 +1,17 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAppContext } from "@/lib/erp";
+import { checkPermission, requireAppContext } from "@/lib/erp";
 import { getString } from "@/lib/validation";
 
 export async function createReturn(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId } = await requireAppContext();
+  const { supabase, organizationId, userId, permissions } =
+    await requireAppContext();
+  const permError = checkPermission(permissions, "returns.create");
+  if (permError) return { error: permError };
 
   const type = getString(formData, "type");
   const referenceType = getString(formData, "reference_type") || null;
@@ -126,7 +129,10 @@ export async function createReturn(
 }
 
 export async function completeReturn(returnId: string) {
-  const { supabase, organizationId, userId } = await requireAppContext();
+  const { supabase, organizationId, userId, permissions } =
+    await requireAppContext();
+  const permError = checkPermission(permissions, "returns.update");
+  if (permError) return { error: permError };
 
   // Fetch the return with items
   const { data: returnRecord, error: returnError } = await supabase
@@ -270,7 +276,9 @@ export async function completeReturn(returnId: string) {
 }
 
 export async function cancelReturn(returnId: string) {
-  const { supabase, organizationId } = await requireAppContext();
+  const { supabase, organizationId, permissions } = await requireAppContext();
+  const permError = checkPermission(permissions, "returns.update");
+  if (permError) return { error: permError };
 
   const { error } = await supabase
     .from("returns")

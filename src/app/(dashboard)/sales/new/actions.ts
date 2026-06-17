@@ -5,6 +5,7 @@ import { logAuditEventWithClient } from "@/lib/audit";
 import { calculateCommission } from "@/lib/commissions";
 import { validateSaleInput } from "@/lib/domain-rules";
 import {
+  checkPermission,
   isValidPositiveNumber,
   parseAmount,
   requireAppContext,
@@ -21,7 +22,10 @@ export async function createSale(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId } = await requireAppContext();
+  const { supabase, organizationId, userId, permissions } =
+    await requireAppContext();
+  const permError = checkPermission(permissions, "sales.create");
+  if (permError) return { error: permError };
 
   // --- Resolve salesperson ---
   const salespersonId = getString(formData, "salesperson_id") || userId;

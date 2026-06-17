@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { validateStockMovementInput } from "@/lib/domain-rules";
-import { parseAmount, requireAppContext } from "@/lib/erp";
+import { checkPermission, parseAmount, requireAppContext } from "@/lib/erp";
 import { checkLowStockAndNotify } from "@/lib/notification";
 import { getString } from "@/lib/validation";
 
@@ -10,7 +10,10 @@ export async function createStockMovement(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId } = await requireAppContext();
+  const { supabase, organizationId, userId, permissions } =
+    await requireAppContext();
+  const permError = checkPermission(permissions, "stock_movements.create");
+  if (permError) return { error: permError };
 
   const productId = getString(formData, "product_id");
   const type = getString(formData, "type");

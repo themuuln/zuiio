@@ -44,7 +44,7 @@ export default async function ReportsPage({
         <>
           <ExportButton
             href={`/api/export/reports?from=${from}&to=${to}`}
-            filename={`report-${from}-to-${to}.csv`}
+            filename={`report-${from}-to-${to}`}
           />
           <ShareDialog dateFrom={from} dateTo={to} />
         </>

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { logAuditEventWithClient } from "@/lib/audit";
-import { requireAppContext } from "@/lib/erp";
+import { checkPermission, requireAppContext } from "@/lib/erp";
 import { createInvoiceFromSale } from "@/lib/invoicing";
 import { getString } from "@/lib/validation";
 
@@ -10,7 +10,10 @@ export async function createQuotation(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId } = await requireAppContext();
+  const { supabase, organizationId, userId, permissions } =
+    await requireAppContext();
+  const permError = checkPermission(permissions, "quotations.create");
+  if (permError) return { error: permError };
 
   const contactId = getString(formData, "contact_id");
   const issueDate = getString(formData, "issue_date");
@@ -105,7 +108,10 @@ export async function updateQuotationStatus(
   quotationId: string,
   status: string,
 ) {
-  const { supabase, organizationId, userId } = await requireAppContext();
+  const { supabase, organizationId, userId, permissions } =
+    await requireAppContext();
+  const permError = checkPermission(permissions, "quotations.update");
+  if (permError) return { error: permError };
 
   const { data: quotation } = await supabase
     .from("quotations")
@@ -146,7 +152,10 @@ export async function updateQuotationStatus(
 }
 
 export async function convertQuotationToSale(quotationId: string) {
-  const { supabase, organizationId, userId } = await requireAppContext();
+  const { supabase, organizationId, userId, permissions } =
+    await requireAppContext();
+  const permError = checkPermission(permissions, "quotations.update");
+  if (permError) return { error: permError };
 
   // Fetch the quotation with items
   const { data: quotation, error: quotationError } = await supabase

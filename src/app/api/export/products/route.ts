@@ -1,8 +1,14 @@
-import { toCsv } from "@/lib/csv";
 import { requireAppContext } from "@/lib/erp";
+import type { ExportFormat } from "@/lib/export";
+import { serveEntityExport } from "@/lib/export";
 
-export async function GET() {
+const today = () => new Date().toISOString().slice(0, 10);
+
+export async function GET(request: Request) {
   const { supabase, organizationId } = await requireAppContext();
+
+  const { searchParams } = new URL(request.url);
+  const format = (searchParams.get("format") ?? "csv") as ExportFormat;
 
   const { data: products } = await supabase
     .from("products")
@@ -13,7 +19,7 @@ export async function GET() {
     .order("created_at", { ascending: false });
 
   const rows = (products ?? []).map((p) => ({
-    name: p.name,
+    name: p.name ?? "",
     sku: p.sku ?? "",
     barcode: p.barcode ?? "",
     unit: p.unit ?? "",
@@ -25,7 +31,7 @@ export async function GET() {
     brand: (p.brands as { name: string } | null)?.name ?? "",
   }));
 
-  const csv = toCsv(rows, [
+  const columns = [
     { header: "Бүтээгдэхүүн", key: "name" },
     { header: "SKU", key: "sku" },
     { header: "Баркод", key: "barcode" },
@@ -36,12 +42,13 @@ export async function GET() {
     { header: "Одоогийн нөөц", key: "current_stock" },
     { header: "Минимум нөөц", key: "min_stock" },
     { header: "Ангилал", key: "category" },
-  ]);
+  ];
 
-  return new Response(csv, {
-    headers: {
-      "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="products-export-${new Date().toISOString().slice(0, 10)}.csv"`,
-    },
-  });
+  return serveEntityExport(
+    rows,
+    columns,
+    format,
+    `products-export-${today()}`,
+    "Бүтээгдэхүүн",
+  );
 }

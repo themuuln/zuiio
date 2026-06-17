@@ -89,10 +89,22 @@ export async function deleteShareLink(shareId: string) {
     redirect("/login");
   }
 
+  // Verify the share link belongs to the user's organization
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.organization_id) {
+    return { error: "Байгууллага олдсонгүй." };
+  }
+
   const { error } = await supabase
     .from("shared_reports")
     .delete()
-    .eq("id", shareId);
+    .eq("id", shareId)
+    .eq("organization_id", profile.organization_id);
 
   if (error) {
     console.error("Failed to delete share link:", error);

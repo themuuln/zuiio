@@ -1,5 +1,3 @@
-import { Users } from "@phosphor-icons/react/dist/ssr";
-import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
 import { MembersClient } from "@/components/roles/members-client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -66,24 +64,18 @@ export default async function UsersPage() {
       title="Хэрэглэгчид"
       description="Байгууллагын гишүүд болон тэдний үүрэг"
     >
-      {members.length === 0 ? (
-        <ErpEmptyState
-          icon={<Users className="size-4" />}
-          title="Гишүүд олдсонгүй"
-          description="Энэ байгууллагад хэрэглэгч бүртгэгдээгүй байна."
-        />
-      ) : (
-        <Card>
-          <CardContent className="p-0">
-            <MembersClient
-              members={members}
-              roles={roles}
-              currentUserId={userId}
-              canManageRole={permissions.includes("members.manage_role")}
-            />
-          </CardContent>
-        </Card>
-      )}
+      <Card>
+        <CardContent className="p-0">
+          <MembersClient
+            members={members}
+            roles={roles}
+            currentUserId={userId}
+            canManageRole={permissions.includes("members.manage_role")}
+            canInvite={permissions.includes("members.invite")}
+            canRemove={permissions.includes("members.remove")}
+          />
+        </CardContent>
+      </Card>
     </PageShell>
   );
 }

@@ -1,0 +1,6 @@
+{
+  "enabledPlugins": {
+    "typescript@factory-plugins": true,
+    "autoresearch@factory-plugins": true
+  }
+}

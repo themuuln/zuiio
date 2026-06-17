@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { validateExpenseInput } from "@/lib/domain-rules";
-import { parseAmount, requireAppContext } from "@/lib/erp";
+import { checkPermission, parseAmount, requireAppContext } from "@/lib/erp";
 import { formatRouteDate } from "@/lib/format";
 import { getString } from "@/lib/validation";
 
@@ -10,7 +10,10 @@ export async function createExpense(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId } = await requireAppContext();
+  const { supabase, organizationId, userId, permissions } =
+    await requireAppContext();
+  const permError = checkPermission(permissions, "expenses.create");
+  if (permError) return { error: permError };
 
   const category = getString(formData, "category");
   const amount = parseAmount(formData.get("amount"));

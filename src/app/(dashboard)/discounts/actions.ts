@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { logAuditEventWithClient } from "@/lib/audit";
-import { requireAppContext } from "@/lib/erp";
+import { checkPermission, requireAppContext } from "@/lib/erp";
 import { getString } from "@/lib/validation";
 
 function parseFloatSafe(value: FormDataEntryValue | null): number {
@@ -21,7 +21,10 @@ export async function createDiscount(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId } = await requireAppContext();
+  const { supabase, organizationId, userId, permissions } =
+    await requireAppContext();
+  const permError = checkPermission(permissions, "discounts.create");
+  if (permError) return { error: permError };
 
   const name = getString(formData, "name");
   const description = getString(formData, "description");
@@ -83,7 +86,8 @@ export async function createDiscount(
 
   // Insert conditions if applies_to is selected_products or selected_categories
   if (
-    (appliesTo === "selected_products" || appliesTo === "selected_categories") &&
+    (appliesTo === "selected_products" ||
+      appliesTo === "selected_categories") &&
     conditionsRaw
   ) {
     let conditions: Array<{
@@ -137,7 +141,10 @@ export async function updateDiscount(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId } = await requireAppContext();
+  const { supabase, organizationId, userId, permissions } =
+    await requireAppContext();
+  const permError = checkPermission(permissions, "discounts.update");
+  if (permError) return { error: permError };
 
   const discountId = getString(formData, "id");
   if (!discountId) {
@@ -197,7 +204,10 @@ export async function updateDiscount(
   }
 
   // Replace conditions
-  if (appliesTo === "selected_products" || appliesTo === "selected_categories") {
+  if (
+    appliesTo === "selected_products" ||
+    appliesTo === "selected_categories"
+  ) {
     // Delete existing conditions
     await supabase
       .from("discount_conditions")
@@ -262,7 +272,10 @@ export async function toggleDiscountActive(
   discountId: string,
   isActive: boolean,
 ) {
-  const { supabase, organizationId, userId } = await requireAppContext();
+  const { supabase, organizationId, userId, permissions } =
+    await requireAppContext();
+  const permError = checkPermission(permissions, "discounts.update");
+  if (permError) return { error: permError };
 
   const { data: discount, error: fetchError } = await supabase
     .from("discounts")

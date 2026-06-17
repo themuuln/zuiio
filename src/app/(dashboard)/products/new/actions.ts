@@ -2,13 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { validateProductInput } from "@/lib/domain-rules";
-import { requireAppContext } from "@/lib/erp";
+import { checkPermission, requireAppContext } from "@/lib/erp";
 
 export async function createProduct(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId } = await requireAppContext();
+  const { supabase, organizationId, permissions } = await requireAppContext();
+  const permError = checkPermission(permissions, "products.create");
+  if (permError) return { error: permError };
 
   const name = formData.get("name")?.toString() ?? "";
   const costPrice = Number(formData.get("cost_price") ?? 0);

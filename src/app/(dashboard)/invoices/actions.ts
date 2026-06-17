@@ -4,7 +4,7 @@ import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { logAuditEventWithClient } from "@/lib/audit";
-import { requireAppContext } from "@/lib/erp";
+import { checkPermission, requireAppContext } from "@/lib/erp";
 import { getString, normalizePhone } from "@/lib/validation";
 
 export type InvoiceShareState = {
@@ -16,7 +16,10 @@ export async function createInvoice(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId } = await requireAppContext();
+  const { supabase, organizationId, userId, permissions } =
+    await requireAppContext();
+  const permError = checkPermission(permissions, "invoices.create");
+  if (permError) return { error: permError };
 
   let contactId = formData.get("contact_id") as string;
   const newContactName = getString(formData, "new_contact_name");
@@ -145,7 +148,10 @@ export async function createInvoiceShareLink(
   _prevState: InvoiceShareState | undefined,
   formData: FormData,
 ): Promise<InvoiceShareState> {
-  const { supabase, organizationId, userId } = await requireAppContext();
+  const { supabase, organizationId, userId, permissions } =
+    await requireAppContext();
+  const permError = checkPermission(permissions, "invoices.update");
+  if (permError) return { error: permError };
 
   const invoiceId = formData.get("invoice_id") as string;
   if (!invoiceId) {
@@ -181,7 +187,10 @@ export async function createInvoiceShareLink(
 }
 
 export async function updateInvoiceStatus(invoiceId: string, status: string) {
-  const { supabase, organizationId, userId } = await requireAppContext();
+  const { supabase, organizationId, userId, permissions } =
+    await requireAppContext();
+  const permError = checkPermission(permissions, "invoices.update");
+  if (permError) return { error: permError };
 
   const { data: invoice } = await supabase
     .from("invoices")

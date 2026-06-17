@@ -6,15 +6,20 @@ import { getFullReport } from "@/lib/reports";
 import { createClient } from "@/lib/supabase/server";
 import { sendDailyReportEmail } from "@/lib/email";
 
-export const dynamic = "force-dynamic";
-
 /**
  * Cron job endpoint called by pg_cron via net.http_post.
  * Sends daily summary Telegram notifications to all orgs that have
  * daily_summary event type enabled, AND sends daily report emails
  * to orgs with report_email_enabled = true.
  */
-export async function POST() {
+export async function POST(request: Request) {
+  // Require CRON_SECRET Bearer token to prevent unauthorized invocation
+  const authHeader = request.headers.get("authorization");
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const supabase = await createClient();
     const today = startOfDay(new Date());

@@ -20,11 +20,12 @@ export async function createInvoiceFromSale(
   contactId?: string | null,
 ) {
   try {
-    // Fetch sale details
+    // Fetch sale details with org-scoped check
     const { data: sale } = await supabase
       .from("sales")
       .select("total_amount, paid_amount")
       .eq("id", saleId)
+      .eq("organization_id", organizationId)
       .single();
 
     if (!sale) {

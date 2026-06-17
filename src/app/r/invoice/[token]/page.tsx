@@ -41,7 +41,9 @@ export default async function PublicInvoicePage({
 
   const { data: invoice, error: lookupError } = await supabase
     .from("invoices")
-    .select("*, contacts(name, phone, email), organizations(name)")
+    .select(
+      "id, invoice_number, issue_date, status, total_amount, paid_amount, notes, contacts(name, phone, email), organizations(name)",
+    )
     .eq("token", token)
     .single();
 
@@ -52,7 +54,9 @@ export default async function PublicInvoicePage({
 
   const { data: items } = await supabase
     .from("invoice_items")
-    .select("*, products(name, unit)")
+    .select(
+      "id, description, quantity, unit_price, total_price, products(name, unit)",
+    )
     .eq("invoice_id", invoice.id);
 
   const contact = invoice.contacts as {

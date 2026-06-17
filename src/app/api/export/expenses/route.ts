@@ -1,8 +1,14 @@
-import { toCsv } from "@/lib/csv";
 import { requireAppContext } from "@/lib/erp";
+import type { ExportFormat } from "@/lib/export";
+import { serveEntityExport } from "@/lib/export";
 
-export async function GET() {
+const today = () => new Date().toISOString().slice(0, 10);
+
+export async function GET(request: Request) {
   const { supabase, organizationId } = await requireAppContext();
+
+  const { searchParams } = new URL(request.url);
+  const format = (searchParams.get("format") ?? "csv") as ExportFormat;
 
   const { data: expenses } = await supabase
     .from("expenses")
@@ -18,18 +24,19 @@ export async function GET() {
     description: e.description ?? "",
   }));
 
-  const csv = toCsv(rows, [
+  const columns = [
     { header: "Огноо", key: "date" },
     { header: "Ангилал", key: "category" },
     { header: "Дүн", key: "amount" },
     { header: "Төлбөрийн хэлбэр", key: "payment_method" },
     { header: "Тайлбар", key: "description" },
-  ]);
+  ];
 
-  return new Response(csv, {
-    headers: {
-      "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="expenses-export-${new Date().toISOString().slice(0, 10)}.csv"`,
-    },
-  });
+  return serveEntityExport(
+    rows,
+    columns,
+    format,
+    `expenses-export-${today()}`,
+    "Зарлага",
+  );
 }

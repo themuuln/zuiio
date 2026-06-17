@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { sendEmail, getActiveSmtpConfig } from "@/lib/email";
 import { createClient } from "@/lib/supabase/server";
 
-export const dynamic = "force-dynamic";
-
 /**
  * Send a test email to the current user using the configured SMTP.
  */
@@ -15,24 +13,23 @@ export async function POST(request: Request) {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user?.email) {
-      return NextResponse.json(
-        { error: "Нэвтрээгүй байна." },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: "Нэвтрээгүй байна." }, { status: 401 });
     }
 
     const body = await request.json();
     const smtpConfigId = body?.smtpConfigId as string | undefined;
 
-    let smtpConfig: {
-      id: string;
-      host: string;
-      port: number;
-      username: string;
-      password: string;
-      from_email: string;
-      from_name: string | null;
-    } | undefined;
+    let smtpConfig:
+      | {
+          id: string;
+          host: string;
+          port: number;
+          username: string;
+          password: string;
+          from_email: string;
+          from_name: string | null;
+        }
+      | undefined;
     if (smtpConfigId) {
       const { data } = await supabase
         .from("smtp_configs")
