@@ -147,6 +147,54 @@ export type Database = {
           },
         ]
       }
+      chart_of_accounts: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: string
+          is_active: boolean
+          name: string
+          organization_id: string
+          parent_id: string | null
+          type: string
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          organization_id: string
+          parent_id?: string | null
+          type: string
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          organization_id?: string
+          parent_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chart_of_accounts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chart_of_accounts_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commission_payout_items: {
         Row: {
           commission_amount: number
@@ -281,6 +329,97 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "contacts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discount_conditions: {
+        Row: {
+          condition_type: string
+          condition_value: string
+          created_at: string | null
+          discount_id: string
+          id: string
+        }
+        Insert: {
+          condition_type: string
+          condition_value: string
+          created_at?: string | null
+          discount_id: string
+          id?: string
+        }
+        Update: {
+          condition_type?: string
+          condition_value?: string
+          created_at?: string | null
+          discount_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_conditions_discount_id_fkey"
+            columns: ["discount_id"]
+            isOneToOne: false
+            referencedRelation: "discounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discounts: {
+        Row: {
+          applies_to: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          min_purchase_amount: number
+          name: string
+          organization_id: string
+          type: string
+          usage_limit: number | null
+          used_count: number
+          valid_from: string
+          valid_until: string | null
+          value: number
+        }
+        Insert: {
+          applies_to?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          min_purchase_amount?: number
+          name: string
+          organization_id: string
+          type: string
+          usage_limit?: number | null
+          used_count?: number
+          valid_from?: string
+          valid_until?: string | null
+          value: number
+        }
+        Update: {
+          applies_to?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          min_purchase_amount?: number
+          name?: string
+          organization_id?: string
+          type?: string
+          usage_limit?: number | null
+          used_count?: number
+          valid_from?: string
+          valid_until?: string | null
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discounts_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -460,6 +599,99 @@ export type Database = {
             columns: ["sale_id"]
             isOneToOne: false
             referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journal_entries: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          entry_date: string
+          entry_number: string
+          id: string
+          organization_id: string
+          reference_id: string | null
+          reference_type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          entry_date?: string
+          entry_number: string
+          id?: string
+          organization_id: string
+          reference_id?: string | null
+          reference_type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          entry_date?: string
+          entry_number?: string
+          id?: string
+          organization_id?: string
+          reference_id?: string | null
+          reference_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entries_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journal_entry_lines: {
+        Row: {
+          account_id: string
+          created_at: string | null
+          credit_amount: number
+          debit_amount: number
+          id: string
+          journal_entry_id: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string | null
+          credit_amount?: number
+          debit_amount?: number
+          id?: string
+          journal_entry_id: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string | null
+          credit_amount?: number
+          debit_amount?: number
+          id?: string
+          journal_entry_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entry_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entry_lines_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
             referencedColumns: ["id"]
           },
         ]
@@ -756,46 +988,39 @@ export type Database = {
       }
       purchase_order_items: {
         Row: {
-          id: string
-          purchase_order_id: string
-          product_id: string | null
-          description: string | null
-          quantity: number
-          unit_cost: number
-          total_cost: number
-          received_quantity: number
           created_at: string | null
+          description: string | null
+          id: string
+          product_id: string | null
+          purchase_order_id: string
+          quantity: number
+          received_quantity: number
+          total_cost: number | null
+          unit_cost: number
         }
         Insert: {
-          id?: string
-          purchase_order_id: string
-          product_id?: string | null
-          description?: string | null
-          quantity?: number
-          unit_cost?: number
-          total_cost?: number
-          received_quantity?: number
           created_at?: string | null
+          description?: string | null
+          id?: string
+          product_id?: string | null
+          purchase_order_id: string
+          quantity?: number
+          received_quantity?: number
+          total_cost?: number | null
+          unit_cost?: number
         }
         Update: {
-          id?: string
-          purchase_order_id?: string
-          product_id?: string | null
-          description?: string | null
-          quantity?: number
-          unit_cost?: number
-          total_cost?: number
-          received_quantity?: number
           created_at?: string | null
+          description?: string | null
+          id?: string
+          product_id?: string | null
+          purchase_order_id?: string
+          quantity?: number
+          received_quantity?: number
+          total_cost?: number | null
+          unit_cost?: number
         }
         Relationships: [
-          {
-            foreignKeyName: "purchase_order_items_purchase_order_id_fkey"
-            columns: ["purchase_order_id"]
-            isOneToOne: false
-            referencedRelation: "purchase_orders"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "purchase_order_items_product_id_fkey"
             columns: ["product_id"]
@@ -803,49 +1028,63 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "purchase_order_items_purchase_order_id_fkey"
+            columns: ["purchase_order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
         ]
       }
       purchase_orders: {
         Row: {
-          id: string
-          organization_id: string
-          supplier_id: string | null
-          order_number: string
-          order_date: string
-          expected_date: string | null
-          status: string
-          total_amount: number
-          notes: string | null
-          created_by: string | null
           created_at: string | null
+          created_by: string | null
+          expected_date: string | null
+          id: string
+          notes: string | null
+          order_date: string
+          order_number: string
+          organization_id: string
+          status: string
+          supplier_id: string | null
+          total_amount: number
         }
         Insert: {
-          id?: string
-          organization_id: string
-          supplier_id?: string | null
-          order_number: string
-          order_date?: string
-          expected_date?: string | null
-          status?: string
-          total_amount?: number
-          notes?: string | null
-          created_by?: string | null
           created_at?: string | null
+          created_by?: string | null
+          expected_date?: string | null
+          id?: string
+          notes?: string | null
+          order_date?: string
+          order_number: string
+          organization_id: string
+          status?: string
+          supplier_id?: string | null
+          total_amount?: number
         }
         Update: {
-          id?: string
-          organization_id?: string
-          supplier_id?: string | null
-          order_number?: string
-          order_date?: string
-          expected_date?: string | null
-          status?: string
-          total_amount?: number
-          notes?: string | null
-          created_by?: string | null
           created_at?: string | null
+          created_by?: string | null
+          expected_date?: string | null
+          id?: string
+          notes?: string | null
+          order_date?: string
+          order_number?: string
+          organization_id?: string
+          status?: string
+          supplier_id?: string | null
+          total_amount?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "purchase_orders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "purchase_orders_organization_id_fkey"
             columns: ["organization_id"]
@@ -860,54 +1099,40 @@ export type Database = {
             referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "purchase_orders_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       quotation_items: {
         Row: {
-          id: string
-          quotation_id: string
-          product_id: string | null
-          description: string | null
-          quantity: number
-          unit_price: number
-          total_price: number
           created_at: string | null
+          description: string | null
+          id: string
+          product_id: string | null
+          quantity: number
+          quotation_id: string
+          total_price: number | null
+          unit_price: number
         }
         Insert: {
-          id?: string
-          quotation_id: string
-          product_id?: string | null
-          description?: string | null
-          quantity?: number
-          unit_price?: number
-          total_price?: number
           created_at?: string | null
+          description?: string | null
+          id?: string
+          product_id?: string | null
+          quantity?: number
+          quotation_id: string
+          total_price?: number | null
+          unit_price?: number
         }
         Update: {
-          id?: string
-          quotation_id?: string
-          product_id?: string | null
-          description?: string | null
-          quantity?: number
-          unit_price?: number
-          total_price?: number
           created_at?: string | null
+          description?: string | null
+          id?: string
+          product_id?: string | null
+          quantity?: number
+          quotation_id?: string
+          total_price?: number | null
+          unit_price?: number
         }
         Relationships: [
-          {
-            foreignKeyName: "quotation_items_quotation_id_fkey"
-            columns: ["quotation_id"]
-            isOneToOne: false
-            referencedRelation: "quotations"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "quotation_items_product_id_fkey"
             columns: ["product_id"]
@@ -915,59 +1140,59 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "quotation_items_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       quotations: {
         Row: {
-          id: string
-          organization_id: string
           contact_id: string | null
-          quote_number: string
-          issue_date: string
+          converted_to_sale_id: string | null
+          created_at: string | null
+          created_by: string | null
           expiry_date: string | null
+          id: string
+          issue_date: string
+          notes: string | null
+          organization_id: string
+          quote_number: string
           status: string
           total_amount: number
-          notes: string | null
-          converted_to_sale_id: string | null
-          created_by: string | null
-          created_at: string | null
         }
         Insert: {
-          id?: string
-          organization_id: string
           contact_id?: string | null
-          quote_number: string
-          issue_date?: string
+          converted_to_sale_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
           expiry_date?: string | null
+          id?: string
+          issue_date?: string
+          notes?: string | null
+          organization_id: string
+          quote_number: string
           status?: string
           total_amount?: number
-          notes?: string | null
-          converted_to_sale_id?: string | null
-          created_by?: string | null
-          created_at?: string | null
         }
         Update: {
-          id?: string
-          organization_id?: string
           contact_id?: string | null
-          quote_number?: string
-          issue_date?: string
+          converted_to_sale_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
           expiry_date?: string | null
+          id?: string
+          issue_date?: string
+          notes?: string | null
+          organization_id?: string
+          quote_number?: string
           status?: string
           total_amount?: number
-          notes?: string | null
-          converted_to_sale_id?: string | null
-          created_by?: string | null
-          created_at?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "quotations_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "quotations_contact_id_fkey"
             columns: ["contact_id"]
@@ -989,122 +1214,11 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      return_items: {
-        Row: {
-          id: string
-          return_id: string
-          product_id: string | null
-          quantity: number
-          unit_price: number
-          total_price: number
-          reason: string | null
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          return_id: string
-          product_id?: string | null
-          quantity: number
-          unit_price?: number
-          total_price?: number
-          reason?: string | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          return_id?: string
-          product_id?: string | null
-          quantity?: number
-          unit_price?: number
-          total_price?: number
-          reason?: string | null
-          created_at?: string | null
-        }
-        Relationships: [
           {
-            foreignKeyName: "return_items_return_id_fkey"
-            columns: ["return_id"]
-            isOneToOne: false
-            referencedRelation: "returns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "return_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      returns: {
-        Row: {
-          id: string
-          organization_id: string
-          return_number: string
-          return_date: string
-          type: string
-          reference_type: string | null
-          reference_id: string | null
-          contact_id: string | null
-          status: string
-          total_amount: number
-          reason: string | null
-          created_by: string | null
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          organization_id: string
-          return_number: string
-          return_date?: string
-          type: string
-          reference_type?: string | null
-          reference_id?: string | null
-          contact_id?: string | null
-          status?: string
-          total_amount?: number
-          reason?: string | null
-          created_by?: string | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          organization_id?: string
-          return_number?: string
-          return_date?: string
-          type?: string
-          reference_type?: string | null
-          reference_id?: string | null
-          contact_id?: string | null
-          status?: string
-          total_amount?: number
-          reason?: string | null
-          created_by?: string | null
-          created_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "returns_organization_id_fkey"
+            foreignKeyName: "quotations_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "returns_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "contacts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "returns_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1156,6 +1270,124 @@ export type Database = {
             columns: ["smtp_config_id"]
             isOneToOne: false
             referencedRelation: "smtp_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      return_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          product_id: string | null
+          quantity: number
+          reason: string | null
+          return_id: string
+          total_price: number | null
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          product_id?: string | null
+          quantity: number
+          reason?: string | null
+          return_id: string
+          total_price?: number | null
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          product_id?: string | null
+          quantity?: number
+          reason?: string | null
+          return_id?: string
+          total_price?: number | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "return_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "return_items_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: false
+            referencedRelation: "returns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      returns: {
+        Row: {
+          contact_id: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          organization_id: string
+          reason: string | null
+          reference_id: string | null
+          reference_type: string | null
+          return_date: string
+          return_number: string
+          status: string
+          total_amount: number
+          type: string
+        }
+        Insert: {
+          contact_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          organization_id: string
+          reason?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          return_date?: string
+          return_number: string
+          status?: string
+          total_amount?: number
+          type: string
+        }
+        Update: {
+          contact_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          organization_id?: string
+          reason?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          return_date?: string
+          return_number?: string
+          status?: string
+          total_amount?: number
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "returns_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "returns_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "returns_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -1632,238 +1864,6 @@ export type Database = {
           },
         ]
       }
-      chart_of_accounts: {
-        Row: {
-          id: string
-          organization_id: string
-          code: string
-          name: string
-          type: string
-          parent_id: string | null
-          is_active: boolean
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          organization_id: string
-          code: string
-          name: string
-          type: string
-          parent_id?: string | null
-          is_active?: boolean
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          organization_id?: string
-          code?: string
-          name?: string
-          type?: string
-          parent_id?: string | null
-          is_active?: boolean
-          created_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "chart_of_accounts_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "chart_of_accounts_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "chart_of_accounts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      discounts: {
-        Row: {
-          id: string
-          organization_id: string
-          name: string
-          description: string | null
-          type: string
-          value: number
-          applies_to: string
-          min_purchase_amount: number
-          valid_from: string
-          valid_until: string | null
-          is_active: boolean
-          usage_limit: number | null
-          used_count: number
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          organization_id: string
-          name: string
-          description?: string | null
-          type: string
-          value: number
-          applies_to?: string
-          min_purchase_amount?: number
-          valid_from?: string
-          valid_until?: string | null
-          is_active?: boolean
-          usage_limit?: number | null
-          used_count?: number
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          organization_id?: string
-          name?: string
-          description?: string | null
-          type?: string
-          value?: number
-          applies_to?: string
-          min_purchase_amount?: number
-          valid_from?: string
-          valid_until?: string | null
-          is_active?: boolean
-          usage_limit?: number | null
-          used_count?: number
-          created_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "discounts_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      discount_conditions: {
-        Row: {
-          id: string
-          discount_id: string
-          condition_type: string
-          condition_value: string
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          discount_id: string
-          condition_type: string
-          condition_value: string
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          discount_id?: string
-          condition_type?: string
-          condition_value?: string
-          created_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "discount_conditions_discount_id_fkey"
-            columns: ["discount_id"]
-            isOneToOne: false
-            referencedRelation: "discounts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      journal_entries: {
-        Row: {
-          id: string
-          organization_id: string
-          entry_date: string
-          entry_number: string
-          reference_type: string | null
-          reference_id: string | null
-          description: string | null
-          created_by: string | null
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          organization_id: string
-          entry_date?: string
-          entry_number: string
-          reference_type?: string | null
-          reference_id?: string | null
-          description?: string | null
-          created_by?: string | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          organization_id?: string
-          entry_date?: string
-          entry_number?: string
-          reference_type?: string | null
-          reference_id?: string | null
-          description?: string | null
-          created_by?: string | null
-          created_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "journal_entries_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "journal_entries_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      journal_entry_lines: {
-        Row: {
-          id: string
-          journal_entry_id: string
-          account_id: string
-          debit_amount: number
-          credit_amount: number
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          journal_entry_id: string
-          account_id: string
-          debit_amount?: number
-          credit_amount?: number
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          journal_entry_id?: string
-          account_id?: string
-          debit_amount?: number
-          credit_amount?: number
-          created_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "journal_entry_lines_journal_entry_id_fkey"
-            columns: ["journal_entry_id"]
-            isOneToOne: false
-            referencedRelation: "journal_entries"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "journal_entry_lines_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: false
-            referencedRelation: "chart_of_accounts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
@@ -1885,9 +1885,16 @@ export type Database = {
       }
       get_public_products: { Args: { p_slug: string }; Returns: Json }
       get_public_report_data: { Args: { p_token: string }; Returns: Json }
-      set_role_permissions: {
-        Args: { p_role_id: string; p_permissions: Database["public"]["Enums"]["app_permission"][] }
-        Returns: Json
+      get_trial_balance: {
+        Args: { p_as_of_date?: string; p_organization_id: string }
+        Returns: {
+          account_code: string
+          account_id: string
+          account_name: string
+          account_type: string
+          credit_balance: number
+          debit_balance: number
+        }[]
       }
       get_user_permissions: {
         Args: never
@@ -1897,20 +1904,19 @@ export type Database = {
         Args: { p_permission: Database["public"]["Enums"]["app_permission"] }
         Returns: boolean
       }
-      get_trial_balance: {
-        Args: { p_organization_id: string; p_as_of_date?: string }
-        Returns: {
-          account_id: string
-          account_code: string
-          account_name: string
-          account_type: string
-          debit_balance: number
-          credit_balance: number
-        }[]
-      }
       increment_smtp_count: { Args: { config_id: string }; Returns: undefined }
       schedule_daily_report_cron: { Args: { app_url: string }; Returns: string }
-      seed_default_chart_of_accounts: { Args: { p_organization_id: string }; Returns: undefined }
+      seed_default_chart_of_accounts: {
+        Args: { p_organization_id: string }
+        Returns: undefined
+      }
+      set_role_permissions: {
+        Args: {
+          p_permissions: Database["public"]["Enums"]["app_permission"][]
+          p_role_id: string
+        }
+        Returns: Json
+      }
       unschedule_daily_report_cron: { Args: never; Returns: string }
       user_has_permission: {
         Args: {
@@ -2188,4 +2194,3 @@ export const Constants = {
     },
   },
 } as const
-

@@ -361,7 +361,7 @@ export function QuotationDetailDrawer({
                                 {formatCurrency(item.unit_price)}
                               </TableCell>
                               <TableCell className="text-right font-medium">
-                                {formatCurrency(item.total_price)}
+                                {formatCurrency(item.total_price ?? 0)}
                               </TableCell>
                             </TableRow>
                           );

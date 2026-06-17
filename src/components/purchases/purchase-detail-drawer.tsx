@@ -93,7 +93,7 @@ async function fetchPurchaseOrder(id: string): Promise<PurchaseDetailData | null
       description: item.description,
       quantity: item.quantity,
       unit_cost: item.unit_cost,
-      total_cost: item.total_cost,
+      total_cost: item.total_cost ?? 0,
       received_quantity: item.received_quantity,
       products: item.products as { name: string; unit: string | null } | null,
     })),

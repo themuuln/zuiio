@@ -349,8 +349,14 @@ AS $$
     c.code,
     c.name,
     c.type,
-    COALESCE(SUM(jl.debit_amount), 0) - COALESCE(SUM(jl.credit_amount), 0) FILTER (WHERE c.type IN ('asset', 'expense')) AS debit_balance,
-    COALESCE(SUM(jl.credit_amount), 0) - COALESCE(SUM(jl.debit_amount), 0) FILTER (WHERE c.type IN ('liability', 'equity', 'income')) AS credit_balance
+    CASE WHEN c.type IN ('asset', 'expense')
+      THEN COALESCE(SUM(jl.debit_amount), 0) - COALESCE(SUM(jl.credit_amount), 0)
+      ELSE 0
+    END AS debit_balance,
+    CASE WHEN c.type IN ('liability', 'equity', 'income')
+      THEN COALESCE(SUM(jl.credit_amount), 0) - COALESCE(SUM(jl.debit_amount), 0)
+      ELSE 0
+    END AS credit_balance
   FROM public.chart_of_accounts c
   LEFT JOIN public.journal_entry_lines jl ON jl.account_id = c.id
   LEFT JOIN public.journal_entries je ON je.id = jl.journal_entry_id AND je.entry_date <= p_as_of_date AND je.organization_id = p_organization_id
@@ -720,7 +726,7 @@ BEGIN
   -- For each owner role in every org, grant all new permissions
   FOR r IN SELECT id, organization_id FROM public.roles WHERE name = 'owner' AND is_system_role = true LOOP
     FOR perm IN
-      SELECT unnest(enum_range(NULL::public.app_permission)) AS p
+      SELECT p FROM unnest(enum_range(NULL::public.app_permission)) AS p
       WHERE p::TEXT IN (
         'purchases.create', 'purchases.read', 'purchases.update', 'purchases.delete',
         'quotations.create', 'quotations.read', 'quotations.update', 'quotations.delete',
@@ -739,7 +745,7 @@ BEGIN
   -- For each admin role, grant all new permissions except accounting.manage and emails.manage
   FOR r IN SELECT id, organization_id FROM public.roles WHERE name = 'admin' AND is_system_role = true LOOP
     FOR perm IN
-      SELECT unnest(enum_range(NULL::public.app_permission)) AS p
+      SELECT p FROM unnest(enum_range(NULL::public.app_permission)) AS p
       WHERE p::TEXT IN (
         'purchases.create', 'purchases.read', 'purchases.update', 'purchases.delete',
         'quotations.create', 'quotations.read', 'quotations.update', 'quotations.delete',

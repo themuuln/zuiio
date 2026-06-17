@@ -44,11 +44,11 @@ export default async function SaleDetailPage({
   const { id } = await params;
   const { supabase, organizationId } = await requireAppContext();
 
-  // Fetch sale with contact info
+  // Fetch sale with contact and salesperson info
   const { data: sale } = await supabase
     .from("sales")
     .select(
-      "id, total_amount, paid_amount, sale_date, status, payment_method, contacts(name)",
+      "id, total_amount, paid_amount, sale_date, status, payment_method, contacts(name), salesperson_id, profiles!sales_salesperson_id_fkey(full_name)",
     )
     .eq("organization_id", organizationId)
     .eq("id", id)
@@ -58,16 +58,18 @@ export default async function SaleDetailPage({
     notFound();
   }
 
-  // Fetch sale items with product info
+  // Fetch sale items with product info and commission
   const { data: items } = await supabase
     .from("sale_items")
     .select(
-      "id, quantity, unit_price, total_price, product_id, products(name, unit)",
+      "id, quantity, unit_price, total_price, commission_amount, product_id, products(name, unit)",
     )
     .eq("sale_id", id)
     .order("id", { ascending: true });
 
   const contactName = (sale.contacts as { name: string } | null)?.name ?? null;
+  const salespersonData = sale.profiles as { full_name: string | null } | null;
+  const salespersonName = salespersonData?.full_name ?? null;
 
   return (
     <PageShell
@@ -88,6 +90,10 @@ export default async function SaleDetailPage({
             <div>
               <p className="text-sm text-muted-foreground">Харилцагч</p>
               <p className="font-medium">{contactName ?? "-"}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Борлуулагч</p>
+              <p className="font-medium">{salespersonName ?? "-"}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Статус</p>
@@ -136,6 +142,9 @@ export default async function SaleDetailPage({
                 <th className="pb-2 text-right font-medium whitespace-nowrap">
                   Нийт үнэ
                 </th>
+                <th className="pb-2 text-right font-medium whitespace-nowrap">
+                  Комисс
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -155,12 +164,21 @@ export default async function SaleDetailPage({
                   <td className="py-3 text-right font-semibold tabular-nums whitespace-nowrap">
                     {formatCurrency(item.total_price)}
                   </td>
+                  <td className="py-3 text-right tabular-nums text-muted-foreground whitespace-nowrap">
+                    {(item as { commission_amount?: number | null })
+                      .commission_amount
+                      ? formatCurrency(
+                          (item as { commission_amount: number })
+                            .commission_amount,
+                        )
+                      : "-"}
+                  </td>
                 </tr>
               ))}
               {(items ?? []).length === 0 && (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="py-6 text-center text-sm text-muted-foreground"
                   >
                     Борлуулалтын мөрүүд олдсонгүй
