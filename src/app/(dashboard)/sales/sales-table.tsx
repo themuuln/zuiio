@@ -85,6 +85,37 @@ const columns: ColumnDef<SaleRow>[] = [
     cell: ({ row }) => formatCurrency(Number(row.getValue("paid_amount") ?? 0)),
   },
   {
+    id: "balance",
+    header: "Үлдэгдэл",
+    accessorFn: (row) => (row.total_amount ?? 0) - (row.paid_amount ?? 0),
+    cell: ({ row }) => {
+      const total = row.original.total_amount ?? 0;
+      const paid = row.original.paid_amount ?? 0;
+      return formatCurrency(total - paid);
+    },
+  },
+  {
+    id: "payment_state",
+    header: "Төлбөрийн төлөв",
+    cell: ({ row }) => {
+      const total = row.original.total_amount ?? 0;
+      const paid = row.original.paid_amount ?? 0;
+      let label: string;
+      let variant: "default" | "secondary" | "destructive" | "outline";
+      if (paid >= total) {
+        label = "Төлөгдсөн";
+        variant = "default";
+      } else if (paid > 0) {
+        label = "Хэсэгчлэн";
+        variant = "secondary";
+      } else {
+        label = "Төлөөгүй";
+        variant = "destructive";
+      }
+      return <Badge variant={variant}>{label}</Badge>;
+    },
+  },
+  {
     accessorKey: "status",
     header: "Статус",
     cell: ({ row }) => {
@@ -106,7 +137,13 @@ const columns: ColumnDef<SaleRow>[] = [
   },
 ];
 
-export function SalesTable({ data }: { data: SaleRow[] }) {
+export function SalesTable({
+  data,
+  onRowClick,
+}: {
+  data: SaleRow[];
+  onRowClick?: (row: SaleRow) => void;
+}) {
   return (
     <DataTable
       columns={columns}
@@ -115,6 +152,7 @@ export function SalesTable({ data }: { data: SaleRow[] }) {
       searchPlaceholder="Огноо, харилцагч, дүнгээр хайх..."
       pageSize={10}
       totalLabel="борлуулалт"
+      onRowClick={onRowClick}
     />
   );
 }
