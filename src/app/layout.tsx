@@ -23,9 +23,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const viewport: Viewport = {
-  viewTransition: true,
-};
+export const viewport: Viewport = {};
 
 export const metadata: Metadata = {
   metadataBase: new URL(

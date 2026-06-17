@@ -65,7 +65,7 @@ function simulateUpdateOnMutate(
 
 function simulateRollback(
   queryClient: QueryClient,
-  snapshot: readonly (readonly [readonly string[], unknown])[],
+  snapshot: readonly (readonly [readonly unknown[], unknown])[],
 ) {
   for (const [qk, data] of snapshot) {
     queryClient.setQueryData(qk, data);

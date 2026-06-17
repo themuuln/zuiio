@@ -38,7 +38,7 @@ export function CustomerCreateDrawer({
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<CustomerValues>({
     resolver: zodResolver(customerSchema),
     defaultValues: { name: "", phone: "", email: "", address: "" },

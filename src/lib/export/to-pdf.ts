@@ -1,6 +1,6 @@
 import fontkit from "@pdf-lib/fontkit";
 import type { PDFFont } from "pdf-lib";
-import { PDFDocument, rgb } from "pdf-lib";
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import type { ExportColumn } from "./types";
 
 // ── Font loading (lazy — node:fs is not available in browser) ──────
@@ -56,7 +56,7 @@ async function buildPdf(sections: PdfTableSection[]): Promise<Buffer> {
     font = await doc.embedFont(fontBytes, { subset: false });
   } else {
     // Fall back to built-in Helvetica (Latin-only, but won't crash)
-    font = await doc.embedFont();
+    font = await doc.embedFont(StandardFonts.Helvetica);
   }
 
   let page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);

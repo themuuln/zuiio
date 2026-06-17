@@ -6,7 +6,14 @@ import { requireAppContext } from "@/lib/erp";
 import { getSuperadminEmail } from "@/lib/superadmin";
 
 export default async function OrganizationSettingsPage() {
-  const { supabase, profile, organizationId } = await requireAppContext();
+  const { supabase, organizationId, userId } = await requireAppContext();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, role, organizations(name, company_type, currency)")
+    .eq("id", userId)
+    .single();
+
+  if (!profile) return null;
   const isSuperadmin = await getSuperadminEmail();
 
   let reportEmailEnabled = false;

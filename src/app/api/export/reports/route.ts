@@ -8,7 +8,15 @@ import {
   toPdfMultiSectionAsync,
   toXlsxMultiSheet,
 } from "@/lib/export";
-import { getFullReport } from "@/lib/reports";
+import {
+  getFullReport,
+  type CommissionStaffRow,
+  type ExpenseCategoryRow,
+  type FinancialSummary,
+  type PendingSaleRow,
+  type ProductSalesRow,
+  type StockMovementsSummary,
+} from "@/lib/reports";
 
 // ── Column definitions per section ───────────────────────────────────
 
@@ -96,31 +104,62 @@ function serveCsv(
   const sections: string[] = [];
 
   sections.push("### Санхүүгийн хураангуй ###");
-  sections.push(toCsv([report.financialSummary], financialCols));
+  sections.push(
+    toCsv(
+      [report.financialSummary],
+      financialCols as { header: string; key: keyof FinancialSummary }[],
+    ),
+  );
 
   if (report.productSales.length > 0) {
     sections.push("### Бүтээгдэхүүний борлуулалт ###");
-    sections.push(toCsv(report.productSales, productSalesCols));
+    sections.push(
+      toCsv(
+        report.productSales,
+        productSalesCols as { header: string; key: keyof ProductSalesRow }[],
+      ),
+    );
   }
 
   if (report.expenseBreakdown.length > 0) {
     sections.push("### Зарлагын ангилал ###");
-    sections.push(toCsv(report.expenseBreakdown, expenseCols));
+    sections.push(
+      toCsv(
+        report.expenseBreakdown,
+        expenseCols as { header: string; key: keyof ExpenseCategoryRow }[],
+      ),
+    );
   }
 
   sections.push("### Барааны хөдөлгөөн ###");
-  sections.push(toCsv([report.stockMovements], stockCols));
+  sections.push(
+    toCsv(
+      [report.stockMovements],
+      stockCols as { header: string; key: keyof StockMovementsSummary }[],
+    ),
+  );
 
   if (report.pendingSales.length > 0) {
     sections.push("### Хүлээгдэж буй борлуулалт ###");
-    sections.push(toCsv(report.pendingSales, pendingSalesCols));
+    sections.push(
+      toCsv(
+        report.pendingSales,
+        pendingSalesCols as { header: string; key: keyof PendingSaleRow }[],
+      ),
+    );
   }
 
   // ── Commission Breakdown ──
   if (report.commissionSummary.staffBreakdown.length > 0) {
     sections.push("### Шагналын дэлгэрэнгүй ###");
     sections.push(
-      toCsv(report.commissionSummary.staffBreakdown, commissionStaffCols),
+      toCsv(
+        report.commissionSummary.staffBreakdown,
+        commissionStaffCols as {
+          header: string;
+          key: keyof CommissionStaffRow;
+        }[],
+      ),
     );
   }
 
@@ -179,7 +218,7 @@ async function serveXlsx(
 
   const buffer = await toXlsxMultiSheet(sheets);
 
-  return new Response(buffer, {
+  return new Response(new Uint8Array(buffer), {
     headers: {
       "Content-Type": formatMimeTypes.xlsx,
       "Content-Disposition": `attachment; filename="${filename}${formatExtensions.xlsx}"`,
@@ -234,7 +273,7 @@ async function serveDocx(
 
   const buffer = await toDocxMultiSection(sections);
 
-  return new Response(buffer, {
+  return new Response(new Uint8Array(buffer), {
     headers: {
       "Content-Type": formatMimeTypes.docx,
       "Content-Disposition": `attachment; filename="${filename}${formatExtensions.docx}"`,
@@ -289,7 +328,7 @@ async function servePdf(
 
   const buffer = await toPdfMultiSectionAsync(sections);
 
-  return new Response(buffer, {
+  return new Response(new Uint8Array(buffer), {
     headers: {
       "Content-Type": formatMimeTypes.pdf,
       "Content-Disposition": `attachment; filename="${filename}${formatExtensions.pdf}"`,

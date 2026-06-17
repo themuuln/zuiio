@@ -62,7 +62,7 @@ export default async function SmtpSettingsPage() {
                       <TableCell>
                         <ToggleButton
                           configId={config.id}
-                          isActive={config.is_active}
+                          isActive={config.is_active ?? false}
                         />
                       </TableCell>
                       <TableCell>

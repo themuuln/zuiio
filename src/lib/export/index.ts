@@ -2,12 +2,15 @@ export { toDocx, toDocxMultiSection } from "./to-docx";
 export { toPdfAsync, toPdfMultiSectionAsync } from "./to-pdf";
 export { toXlsx, toXlsxMultiSheet } from "./to-xlsx";
 export type { ExportColumn, ExportFormat } from "./types";
+export { formatExtensions, formatMimeTypes } from "./types";
 
 // Local imports for serveEntityExport
 import { formatExtensions, formatMimeTypes } from "./types";
-// Re-export for consumers (export-button.tsx etc.)
-export { formatExtensions, formatMimeTypes };
 import { toCsv } from "@/lib/csv";
+import { toDocx } from "./to-docx";
+import { toPdfAsync } from "./to-pdf";
+import { toXlsx } from "./to-xlsx";
+import type { ExportColumn, ExportFormat } from "./types";
 
 /**
  * Generates the appropriate Response for a simple tabular entity export
@@ -32,7 +35,7 @@ export async function serveEntityExport(
     }
     case "xlsx": {
       const buffer = await toXlsx(rows, columns, title);
-      return new Response(buffer, {
+      return new Response(new Uint8Array(buffer), {
         headers: {
           "Content-Type": formatMimeTypes.xlsx,
           "Content-Disposition": `attachment; filename="${filename}${formatExtensions.xlsx}"`,
@@ -41,7 +44,7 @@ export async function serveEntityExport(
     }
     case "docx": {
       const buffer = await toDocx(rows, columns, title);
-      return new Response(buffer, {
+      return new Response(new Uint8Array(buffer), {
         headers: {
           "Content-Type": formatMimeTypes.docx,
           "Content-Disposition": `attachment; filename="${filename}${formatExtensions.docx}"`,
@@ -50,7 +53,7 @@ export async function serveEntityExport(
     }
     case "pdf": {
       const buffer = await toPdfAsync(rows, columns, title);
-      return new Response(buffer, {
+      return new Response(new Uint8Array(buffer), {
         headers: {
           "Content-Type": formatMimeTypes.pdf,
           "Content-Disposition": `attachment; filename="${filename}${formatExtensions.pdf}"`,

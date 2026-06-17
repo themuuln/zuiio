@@ -429,7 +429,7 @@ export function NotificationSettings({ isSuperAdmin }: Props) {
         c.push({
           field: "Хүлээн авагч",
           from: init.recipient_email,
-          to: vals.recipient_email,
+          to: vals.recipient_email ?? "",
         });
       if (vals.enabled !== init.enabled)
         c.push({

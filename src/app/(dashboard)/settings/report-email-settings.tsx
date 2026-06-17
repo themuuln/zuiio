@@ -174,7 +174,7 @@ export function ReportEmailSettings() {
         c.push({
           field: "Хүлээн авагч",
           from: init.report_email_recipient ?? "",
-          to: vals.recipient,
+          to: vals.recipient ?? "",
         });
       if (vals.send_time !== init.report_email_time)
         c.push({
