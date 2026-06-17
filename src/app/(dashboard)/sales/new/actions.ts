@@ -3,13 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { logAuditEventWithClient } from "@/lib/audit";
 import { calculateCommission } from "@/lib/commissions";
-import { validateSaleInput } from "@/lib/domain-rules";
-import {
-  checkPermission,
-  isValidPositiveNumber,
-  parseAmount,
-  requireAppContext,
-} from "@/lib/erp";
+import { checkPermission, parseAmount, requireAppContext } from "@/lib/erp";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
 import { createInvoiceFromSale } from "@/lib/invoicing";
 import {
@@ -17,6 +11,12 @@ import {
   sendTelegramNotification,
 } from "@/lib/notification";
 import { getString, normalizePhone } from "@/lib/validation";
+
+type LineItemData = {
+  productId: string;
+  quantity: number;
+  unitPrice: number;
+};
 
 export async function createSale(
   _prevState: { error?: string } | undefined,
@@ -46,52 +46,83 @@ export async function createSale(
     }
   }
 
-  const productId = getString(formData, "product_id");
-  const quantity = parseAmount(formData.get("quantity"));
-  const unitPrice = parseAmount(formData.get("unit_price"));
   const paymentMethod = getString(formData, "payment_method") || "cash";
   const status = getString(formData, "status") || "completed";
 
-  if (
-    !productId ||
-    !isValidPositiveNumber(quantity) ||
-    !isValidPositiveNumber(unitPrice) ||
-    quantity <= 0
-  ) {
-    return { error: "Бүтээгдэхүүн, тоо хэмжээ, үнэ зөв бөглөгдөх ёстой." };
+  // --- Parse items from JSON ---
+  const itemsRaw = formData.get("items");
+  if (!itemsRaw) {
+    return { error: "Бүтээгдэхүүн сонгоно уу." };
   }
 
-  const { data: product, error: productError } = await supabase
+  let items: LineItemData[];
+  try {
+    items = JSON.parse(itemsRaw.toString()) as LineItemData[];
+  } catch {
+    return { error: "Бүтээгдэхүүний мэдээлэл буруу байна." };
+  }
+
+  if (!Array.isArray(items) || items.length === 0) {
+    return { error: "Дор хаяж нэг мөр оруулна уу." };
+  }
+
+  // Validate each item
+  for (const item of items) {
+    if (!item.productId || item.quantity <= 0 || item.unitPrice < 0) {
+      return {
+        error: "Бүтээгдэхүүн, тоо хэмжээ, үнэ зөв бөглөгдөх ёстой.",
+      };
+    }
+  }
+
+  // --- Aggregate quantities by productId for duplicate products ---
+  const productQuantities = new Map<string, number>();
+  for (const item of items) {
+    productQuantities.set(
+      item.productId,
+      (productQuantities.get(item.productId) ?? 0) + item.quantity,
+    );
+  }
+  const uniqueProductIds = [...productQuantities.keys()];
+
+  // --- Step 1: Validate stock for all unique products ---
+  const { data: products, error: productsError } = await supabase
     .from("products")
-    .select("id, current_stock, name")
+    .select("id, name, current_stock, unit")
     .eq("organization_id", organizationId)
-    .eq("id", productId)
-    .single();
+    .in("id", uniqueProductIds);
 
-  if (productError || !product) {
-    return { error: "Сонгосон бүтээгдэхүүн олдсонгүй." };
+  if (productsError) {
+    return { error: "Бүтээгдэхүүний мэдээлэл уншихад алдаа гарлаа." };
   }
 
-  if (Number(product.current_stock ?? 0) < quantity && status !== "cancelled") {
-    return { error: "Үлдэгдэл хүрэлцэхгүй байна." };
+  const productMap = new Map((products ?? []).map((p) => [p.id, p]));
+
+  if (status !== "cancelled") {
+    for (const [productId, totalQty] of productQuantities) {
+      const product = productMap.get(productId);
+      if (!product) {
+        return { error: "Сонгосон бүтээгдэхүүн олдсонгүй." };
+      }
+      const currentStock = Number(product.current_stock ?? 0);
+      if (currentStock < totalQty) {
+        return {
+          error: `"${product.name}" бүтээгдэхүүний үлдэгдэл хүрэлцэхгүй байна. (Үлдэгдэл: ${currentStock}, хэрэгтэй: ${totalQty})`,
+        };
+      }
+    }
   }
 
-  const totalAmount = quantity * unitPrice;
+  // --- Calculate total amount ---
+  const totalAmount = items.reduce(
+    (sum, item) => sum + item.quantity * item.unitPrice,
+    0,
+  );
   const paidAmount = parseAmount(formData.get("paid_amount")) || totalAmount;
   const customerName = getString(formData, "customer_name");
   let createdContactId: string | null = null;
 
-  const validationError = validateSaleInput({
-    productId,
-    quantity,
-    unitPrice,
-    paidAmount,
-    totalAmount,
-  });
-  if (validationError) {
-    return { error: validationError };
-  }
-
+  // --- Step 2: Handle customer ---
   let contactId: string | null = null;
   if (customerName) {
     const phone = normalizePhone(getString(formData, "customer_phone"));
@@ -130,6 +161,7 @@ export async function createSale(
     }
   }
 
+  // --- Step 3: Insert sale ---
   const { data: sale, error: saleError } = await supabase
     .from("sales")
     .insert({
@@ -154,99 +186,113 @@ export async function createSale(
     return { error: saleError.message };
   }
 
-  const commissionAmount =
-    status === "cancelled" ? 0 : calculateCommission(totalAmount);
-
-  const { error: itemError } = await supabase.from("sale_items").insert({
-    sale_id: sale.id,
-    product_id: productId,
-    quantity,
-    unit_price: unitPrice,
-    total_price: totalAmount,
-    commission_amount: commissionAmount,
+  // --- Step 4: Insert sale_items ---
+  const saleItems = items.map((item) => {
+    const totalPrice = item.quantity * item.unitPrice;
+    return {
+      sale_id: sale.id,
+      product_id: item.productId,
+      quantity: item.quantity,
+      unit_price: item.unitPrice,
+      total_price: totalPrice,
+      commission_amount:
+        status === "cancelled" ? 0 : calculateCommission(totalPrice),
+    };
   });
 
-  if (itemError) {
+  const { error: itemsError } = await supabase
+    .from("sale_items")
+    .insert(saleItems);
+
+  if (itemsError) {
     await supabase.from("sales").delete().eq("id", sale.id);
     if (createdContactId) {
       await supabase.from("contacts").delete().eq("id", createdContactId);
     }
-    return { error: itemError.message };
+    return { error: itemsError.message };
   }
 
-  const movementPayload =
-    status === "cancelled"
-      ? null
-      : {
-          organization_id: organizationId,
-          product_id: productId,
-          type: "out",
-          quantity,
-          unit_cost: unitPrice,
-          reference: `sale:${sale.id}`,
-          created_by: userId,
-        };
-
-  const { error: movementError } = movementPayload
-    ? await supabase.from("stock_movements").insert(movementPayload)
-    : { error: null };
-
-  if (movementError) {
-    await supabase.from("sale_items").delete().eq("sale_id", sale.id);
-    await supabase.from("sales").delete().eq("id", sale.id);
-    if (createdContactId) {
-      await supabase.from("contacts").delete().eq("id", createdContactId);
-    }
-    return { error: movementError.message };
-  }
-
+  // --- Step 5: Insert stock_movements ---
   if (status !== "cancelled") {
-    // Atomic stock decrement: .gte("current_stock", quantity) ensures the
-    // UPDATE only affects rows with sufficient stock at statement execution
-    // time, preventing lost updates from concurrent requests. This matches
-    // the pattern already used in createShopSale (shop/actions.ts).
-    const { data: updatedProduct, error: stockUpdateError } = await supabase
-      .from("products")
-      .update({
-        current_stock: Number(product.current_stock ?? 0) - quantity,
-      })
-      .eq("organization_id", organizationId)
-      .eq("id", productId)
-      .gte("current_stock", quantity)
-      .select("id")
-      .maybeSingle();
+    const stockMovements = items.map((item) => ({
+      organization_id: organizationId,
+      product_id: item.productId,
+      type: "out",
+      quantity: item.quantity,
+      unit_cost: item.unitPrice,
+      reference: `sale:${sale.id}`,
+      created_by: userId,
+    }));
 
-    if (stockUpdateError) {
-      // Actual error (network, permission, etc.) — full rollback
-      await supabase
-        .from("stock_movements")
-        .delete()
-        .eq("reference", `sale:${sale.id}`);
+    const { error: movementError } = await supabase
+      .from("stock_movements")
+      .insert(stockMovements);
+
+    if (movementError) {
       await supabase.from("sale_items").delete().eq("sale_id", sale.id);
       await supabase.from("sales").delete().eq("id", sale.id);
       if (createdContactId) {
         await supabase.from("contacts").delete().eq("id", createdContactId);
       }
-      return { error: stockUpdateError.message };
-    }
-
-    if (!updatedProduct) {
-      // .gte() condition failed: stock was consumed between the initial
-      // stock check and this atomic UPDATE by a concurrent request.
-      await supabase
-        .from("stock_movements")
-        .delete()
-        .eq("reference", `sale:${sale.id}`);
-      await supabase.from("sale_items").delete().eq("sale_id", sale.id);
-      await supabase.from("sales").delete().eq("id", sale.id);
-      if (createdContactId) {
-        await supabase.from("contacts").delete().eq("id", createdContactId);
-      }
-      return { error: "Үлдэгдэл хүрэлцэхгүй байна." };
+      return { error: movementError.message };
     }
   }
 
-  // Auto-generate invoice as receipt (fire-and-forget — sale is already committed)
+  // --- Step 6: Atomic stock decrement per unique product ---
+  // Uses .gte("current_stock", totalQty) so the UPDATE only affects rows
+  // with sufficient stock at execution time. Aggregate quantities for duplicate
+  // products so one UPDATE handles all quantity for that product.
+  if (status !== "cancelled") {
+    for (const [productId, totalQty] of productQuantities) {
+      const product = productMap.get(productId);
+      if (!product) continue;
+
+      const { data: updatedProduct, error: stockUpdateError } = await supabase
+        .from("products")
+        .update({
+          current_stock: Number(product.current_stock ?? 0) - totalQty,
+        })
+        .eq("organization_id", organizationId)
+        .eq("id", productId)
+        .gte("current_stock", totalQty)
+        .select("id")
+        .maybeSingle();
+
+      if (stockUpdateError) {
+        // Actual error — full rollback
+        await supabase
+          .from("stock_movements")
+          .delete()
+          .eq("reference", `sale:${sale.id}`);
+        await supabase.from("sale_items").delete().eq("sale_id", sale.id);
+        await supabase.from("sales").delete().eq("id", sale.id);
+        if (createdContactId) {
+          await supabase.from("contacts").delete().eq("id", createdContactId);
+        }
+        return { error: stockUpdateError.message };
+      }
+
+      if (!updatedProduct) {
+        // .gte() condition failed — stock was consumed concurrently
+        await supabase
+          .from("stock_movements")
+          .delete()
+          .eq("reference", `sale:${sale.id}`);
+        await supabase.from("sale_items").delete().eq("sale_id", sale.id);
+        await supabase.from("sales").delete().eq("id", sale.id);
+        if (createdContactId) {
+          await supabase.from("contacts").delete().eq("id", createdContactId);
+        }
+        return {
+          error: `"${product.name}" бүтээгдэхүүний үлдэгдэл хүрэлцэхгүй байна.`,
+        };
+      }
+    }
+  }
+
+  // --- Success: side effects ---
+
+  // Auto-generate invoice as receipt (fire-and-forget)
   if (status !== "cancelled") {
     await createInvoiceFromSale(
       supabase,
@@ -270,31 +316,38 @@ export async function createSale(
 
   // Fire-and-forget notifications
   if (status !== "cancelled") {
-    // New sale notification
+    const productNames = items
+      .map((item) => {
+        const product = productMap.get(item.productId);
+        return product?.name ?? "Бүтээгдэхүүн";
+      })
+      .join(", ");
+
     sendTelegramNotification(
       organizationId,
       "new_sale",
       `🛒 Шинэ борлуулалт`,
-      `*${product.name}*\n\n` +
-        `Тоо хэмжээ: ${quantity}\n` +
+      `*${productNames}*\n\n` +
         `Нийт дүн: ${formatCurrency(totalAmount)}\n` +
         `Төлөв: Дууссан`,
     );
 
-    // Check low stock for the sold product
-    const { data: updatedProduct } = await supabase
-      .from("products")
-      .select("current_stock, min_stock, name")
-      .eq("id", productId)
-      .single();
+    // Check low stock for each unique product
+    for (const productId of uniqueProductIds) {
+      const { data: updatedProduct } = await supabase
+        .from("products")
+        .select("current_stock, min_stock, name")
+        .eq("id", productId)
+        .single();
 
-    if (updatedProduct) {
-      checkLowStockAndNotify(
-        organizationId,
-        updatedProduct.name,
-        updatedProduct.current_stock ?? 0,
-        updatedProduct.min_stock ?? 0,
-      );
+      if (updatedProduct) {
+        checkLowStockAndNotify(
+          organizationId,
+          updatedProduct.name,
+          updatedProduct.current_stock ?? 0,
+          updatedProduct.min_stock ?? 0,
+        );
+      }
     }
   }
 

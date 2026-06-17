@@ -1,11 +1,11 @@
 "use client";
 
-import { CheckCircle } from "@phosphor-icons/react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { CheckCircle, Plus, Trash } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { CustomerPicker } from "@/components/shop/customer-picker";
@@ -21,12 +21,7 @@ import {
   ComboboxList,
 } from "@/components/ui/combobox";
 import { DatePicker } from "@/components/ui/date-picker";
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
 import { productKeys, saleKeys } from "@/lib/query/keys";
@@ -66,10 +61,14 @@ const statusLabels: Record<string, string> = {
   cancelled: "Цуцлагдсан",
 };
 
-const saleSchema = z.object({
+const lineItemSchema = z.object({
   product_id: z.string().min(1, "Бүтээгдэхүүн сонгоно уу"),
   quantity: z.number().positive("Тоо хэмжээ 0-ээс их байх ёстой"),
   unit_price: z.number().min(0, "Нэгж үнэ 0-ээс багагүй"),
+});
+
+const saleSchema = z.object({
+  items: z.array(lineItemSchema).min(1, "Дор хаяж нэг мөр оруулна уу"),
   paid_amount: z.number().min(0, "Төлсөн дүн 0-ээс багагүй"),
   payment_method: z.string().min(1, "Төлбөрийн арга сонгоно уу"),
   status: z.string().min(1, "Төлөв сонгоно уу"),
@@ -90,27 +89,27 @@ export function SaleForm({
 }: {
   products: ProductOption[];
   customers: CustomerOption[];
-  /** Called after a successful sale instead of redirecting to /sales. Used by the drawer variant. */
   onSuccess?: () => void;
-  /** Called when the user wants to open the detail drawer for a sale. */
   onOpenDetail?: (saleId: string) => void;
-  /** Called when the user wants to reopen the create form (e.g., from toast action). */
   onReopenForm?: () => void;
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const defaultProduct = products[0] ?? null;
-  const initialQuantity = 1;
-  const initialTotal = initialQuantity * (defaultProduct?.sale_price ?? 0);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(
     null,
   );
   const [keepOpen, setKeepOpen] = useState(false);
-  // Combobox query states (for reset)
-  const [productQuery, setProductQuery] = useState("");
   const [paymentQuery, setPaymentQuery] = useState("");
   const [statusQuery, setStatusQuery] = useState("");
+
+  // Per-row product combobox query states
+  const [productQueries, setProductQueries] = useState<string[]>([""]);
+  const [createdProducts, setCreatedProducts] = useState<ProductOption[]>([]);
+  const allProducts = useMemo(
+    () => [...products, ...createdProducts],
+    [products, createdProducts],
+  );
 
   const {
     register,
@@ -123,10 +122,8 @@ export function SaleForm({
   } = useForm<SaleValues>({
     resolver: zodResolver(saleSchema),
     defaultValues: {
-      product_id: defaultProduct?.id ?? "",
-      quantity: initialQuantity,
-      unit_price: defaultProduct?.sale_price ?? 0,
-      paid_amount: initialTotal || 0,
+      items: [{ product_id: "", quantity: 1, unit_price: 0 }],
+      paid_amount: 0,
       payment_method: "cash",
       status: "completed",
       sale_date: formatRouteDate(),
@@ -136,13 +133,98 @@ export function SaleForm({
     },
   });
 
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "items",
+  });
+
+  const appendRow = useCallback(() => {
+    append({ product_id: "", quantity: 1, unit_price: 0 });
+    setProductQueries((prev) => [...prev, ""]);
+  }, [append]);
+
+  const removeRow = useCallback(
+    (index: number) => {
+      remove(index);
+      setProductQueries((prev) => prev.filter((_, i) => i !== index));
+    },
+    [remove],
+  );
+
   const resetForm = () => {
     reset(undefined, { keepDefaultValues: false });
     setSelectedContactId(null);
-    setProductQuery("");
+    setProductQueries([""]);
     setPaymentQuery("");
     setStatusQuery("");
   };
+
+  // Watched values
+  const watchedItems = watch("items");
+  const watchedStatus = watch("status");
+  const watchedPaidAmount = watch("paid_amount");
+
+  // Compute subtotals per row and grand total
+  const subtotals = useMemo(() => {
+    return (watchedItems ?? []).map(
+      (item) => Number(item.quantity || 0) * Number(item.unit_price || 0),
+    );
+  }, [watchedItems]);
+
+  const grandTotal = useMemo(
+    () => subtotals.reduce((sum, s) => sum + s, 0),
+    [subtotals],
+  );
+
+  const isManualEditRef = useRef(false);
+
+  // Derive payment state based on grand total
+  const paymentState =
+    watchedPaidAmount === 0
+      ? "Төлөөгүй"
+      : (watchedPaidAmount ?? 0) >= grandTotal
+        ? "Төлөгдсөн"
+        : "Хэсэгчлэн";
+
+  const paymentBadgeVariant: "default" | "secondary" | "outline" =
+    paymentState === "Төлөгдсөн"
+      ? "default"
+      : paymentState === "Хэсэгчлэн"
+        ? "secondary"
+        : "outline";
+
+  const remaining = Math.max(0, grandTotal - (watchedPaidAmount || 0));
+
+  // Quick action handler for payment amounts
+  const handleQuickAction = (action: "all" | "half" | "zero") => {
+    isManualEditRef.current = true;
+    if (action === "all") {
+      setValue("paid_amount", grandTotal || 0);
+    } else if (action === "half") {
+      setValue("paid_amount", (grandTotal || 0) / 2);
+    } else if (action === "zero") {
+      setValue("paid_amount", 0);
+    }
+  };
+
+  // Stock warnings per row
+  const stockWarnings = useMemo(() => {
+    return (watchedItems ?? []).map((item) => {
+      if (watchedStatus === "cancelled") return null;
+      const product = allProducts.find((p) => p.id === item.product_id);
+      if (!product || product.current_stock === null) return null;
+      if (Number(item.quantity || 0) > product.current_stock) {
+        return `Үлдэгдэл хүрэлцэхгүй байна. (Үлдэгдэл: ${product.current_stock} ${product.unit ?? "ширхэг"})`;
+      }
+      return null;
+    });
+  }, [watchedItems, allProducts, watchedStatus]);
+
+  // Any stock insufficient across all rows
+  const anyStockInsufficient = useMemo(
+    () => stockWarnings.some((w) => w !== null),
+    [stockWarnings],
+  );
 
   const saleMutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -161,11 +243,23 @@ export function SaleForm({
         queryKey: productKeys.all(),
       });
 
-      // Parse form data for optimistic updates
-      const productId = formData.get("product_id")?.toString() ?? "";
-      const quantityVal = Number(formData.get("quantity") ?? 0);
-      const unitPrice = Number(formData.get("unit_price") ?? 0);
-      const totalAmount = quantityVal * unitPrice;
+      // Parse items from form data for optimistic updates
+      const itemsRaw = formData.get("items")?.toString() ?? "[]";
+      let optimisticItems: {
+        productId: string;
+        quantity: number;
+        unitPrice: number;
+      }[] = [];
+      try {
+        optimisticItems = JSON.parse(itemsRaw);
+      } catch {
+        // Ignore parse errors in optimistic update
+      }
+
+      const totalAmount = optimisticItems.reduce(
+        (sum: number, item) => sum + item.quantity * item.unitPrice,
+        0,
+      );
       const paidAmount = Number(formData.get("paid_amount") ?? totalAmount);
       const paymentMethod =
         formData.get("payment_method")?.toString() ?? "cash";
@@ -174,12 +268,9 @@ export function SaleForm({
         formData.get("sale_date")?.toString() ?? formatRouteDate();
       const customerName = formData.get("customer_name")?.toString() ?? "";
 
-      // Build optimistic sale entry
+      // Build optimistic sale entry with combined total
       const optimisticSale = {
         id: `opt-${Date.now()}`,
-        product_id: productId,
-        quantity: quantityVal,
-        unit_price: unitPrice,
         total_amount: totalAmount,
         paid_amount: paidAmount,
         payment_method: paymentMethod,
@@ -200,18 +291,28 @@ export function SaleForm({
         },
       );
 
-      // Optimistically decrement stock in products caches
+      // Aggregate quantities by productId for stock decrement
+      const productQuantities = new Map<string, number>();
+      for (const item of optimisticItems) {
+        productQuantities.set(
+          item.productId,
+          (productQuantities.get(item.productId) ?? 0) + item.quantity,
+        );
+      }
+
+      // Optimistically decrement stock per product
       queryClient.setQueriesData(
         { queryKey: productKeys.all(), type: "active" },
         (oldData: unknown) => {
           if (Array.isArray(oldData)) {
             return oldData.map((product: Record<string, unknown>) => {
-              if (product.id === productId) {
+              const qty = productQuantities.get(product.id as string);
+              if (qty) {
                 return {
                   ...product,
                   current_stock: Math.max(
                     0,
-                    Number(product.current_stock ?? 0) - quantityVal,
+                    Number(product.current_stock ?? 0) - qty,
                   ),
                 };
               }
@@ -244,8 +345,7 @@ export function SaleForm({
         ? (saleResult.sale?.customer_name ?? "")
         : "";
 
-      // Show custom toast with actionable buttons
-      const toastId = toast.custom(
+      toast.custom(
         (t) => (
           <div className="flex w-full flex-col gap-3">
             <div className="flex items-center gap-2 text-sm font-medium">
@@ -314,9 +414,15 @@ export function SaleForm({
   const onSubmit = (data: SaleValues) => {
     if (saleMutation.isPending) return;
     const formData = new FormData();
-    formData.append("product_id", data.product_id);
-    formData.append("quantity", String(data.quantity));
-    formData.append("unit_price", String(data.unit_price));
+
+    // Build items JSON array
+    const itemsPayload = data.items.map((item) => ({
+      productId: item.product_id,
+      quantity: item.quantity,
+      unitPrice: item.unit_price,
+    }));
+    formData.append("items", JSON.stringify(itemsPayload));
+
     formData.append("paid_amount", String(data.paid_amount));
     formData.append("payment_method", data.payment_method);
     formData.append("status", data.status);
@@ -332,93 +438,6 @@ export function SaleForm({
     }
     saleMutation.mutate(formData);
   };
-
-  // --- Product combobox (creatable) ---
-  const trimmedProductQuery = productQuery.trim();
-  const loweredProductQuery = trimmedProductQuery.toLowerCase();
-  const productLabelMatch =
-    loweredProductQuery === "" ||
-    products.some((p) => p.name.toLowerCase().includes(loweredProductQuery));
-  const [createdProducts, setCreatedProducts] = useState<ProductOption[]>([]);
-  const allProducts = [...products, ...createdProducts];
-  const productItems: ProductOption[] =
-    trimmedProductQuery !== "" && !productLabelMatch
-      ? [
-          ...allProducts,
-          {
-            id: `__create__${loweredProductQuery}`,
-            name: trimmedProductQuery,
-            sale_price: null,
-            current_stock: null,
-            unit: null,
-          },
-        ]
-      : allProducts;
-
-  const watchedProductId = watch("product_id");
-  const selectedProduct =
-    allProducts.find((p) => p.id === watchedProductId) ?? null;
-  const watchedQuantity = watch("quantity");
-  const watchedStatus = watch("status");
-
-  const isStockInsufficient =
-    !!selectedProduct &&
-    selectedProduct.current_stock !== null &&
-    watchedQuantity > selectedProduct.current_stock &&
-    watchedStatus !== "cancelled";
-  const total =
-    Number(watchedQuantity || 0) * Number(selectedProduct?.sale_price ?? 0);
-  const watchedPaidAmount = watch("paid_amount");
-  const isManualEditRef = useRef(false);
-
-  // Derive payment state
-  const paymentState =
-    watchedPaidAmount === 0
-      ? "Төлөөгүй"
-      : watchedPaidAmount >= total
-        ? "Төлөгдсөн"
-        : "Хэсэгчлэн";
-
-  const paymentBadgeVariant: "default" | "secondary" | "outline" =
-    paymentState === "Төлөгдсөн"
-      ? "default"
-      : paymentState === "Хэсэгчлэн"
-        ? "secondary"
-        : "outline";
-
-  const remaining = Math.max(0, total - (watchedPaidAmount || 0));
-
-  // Quick action handler for payment amounts
-  const handleQuickAction = (action: "all" | "half" | "zero") => {
-    isManualEditRef.current = true;
-    if (action === "all") {
-      setValue("paid_amount", total || 0);
-    } else if (action === "half") {
-      setValue("paid_amount", (total || 0) / 2);
-    } else if (action === "zero") {
-      setValue("paid_amount", 0);
-    }
-  };
-
-  // When product changes: always reset paid_amount to new total
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional - watchedQuantity excluded to avoid infinite loop (quantity change would reset paid_amount, defeating manual edit tracking)
-  useEffect(() => {
-    isManualEditRef.current = false;
-    const newTotal =
-      Number(watchedQuantity || 0) * Number(selectedProduct?.sale_price ?? 0);
-    setValue("paid_amount", newTotal || 0);
-  }, [watchedProductId]);
-
-  // When quantity changes: only auto-fill if not manually edited
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional - allProducts.find and watchedProductId excluded to keep quantity auto-fill logic separate; setValue is excluded as it is stable
-  useEffect(() => {
-    if (isManualEditRef.current) return;
-    const product = allProducts.find((p) => p.id === watchedProductId);
-    const qty = Number(watchedQuantity || 0);
-    const price = Number(product?.sale_price ?? 0);
-    const newTotal = qty * price;
-    setValue("paid_amount", newTotal || 0);
-  }, [watchedQuantity]);
 
   // --- Payment method combobox (creatable) ---
   const trimmedPaymentQuery = paymentQuery.trim().toLowerCase();
@@ -452,171 +471,307 @@ export function SaleForm({
       ? [...allStatuses, statusQuery.trim()]
       : allStatuses;
 
+  // Helper to get product items for a given row's query
+  const getProductItems = useCallback(
+    (query: string) => {
+      const trimmed = query.trim();
+      const lowered = trimmed.toLowerCase();
+      const labelMatch =
+        lowered === "" ||
+        products.some((p) => p.name.toLowerCase().includes(lowered));
+      if (trimmed !== "" && !labelMatch) {
+        return [
+          ...allProducts,
+          {
+            id: `__create__${lowered}`,
+            name: trimmed,
+            sale_price: null as number | null,
+            current_stock: null as number | null,
+            unit: null as string | null,
+          },
+        ];
+      }
+      return allProducts;
+    },
+    [allProducts, products],
+  );
+
+  const updateProductQuery = useCallback((index: number, value: string) => {
+    setProductQueries((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+  }, []);
+
+  const handleProductSelect = useCallback(
+    (index: number, product: ProductOption | null) => {
+      if (!product) {
+        setValue(`items.${index}.product_id`, "");
+        setValue(`items.${index}.unit_price`, 0);
+        return;
+      }
+      if (product.id.startsWith("__create__")) {
+        const created: ProductOption = {
+          id: `new_${Date.now()}`,
+          name: product.name,
+          sale_price: null,
+          current_stock: null,
+          unit: null,
+        };
+        setCreatedProducts((prev) => [...prev, created]);
+        setValue(`items.${index}.product_id`, created.id);
+        setValue(`items.${index}.unit_price`, 0);
+        updateProductQuery(index, "");
+        return;
+      }
+      setValue(`items.${index}.product_id`, product.id);
+      setValue(`items.${index}.unit_price`, product.sale_price ?? 0);
+      updateProductQuery(index, "");
+    },
+    [setValue, updateProductQuery],
+  );
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      <div className="grid gap-5 md:grid-cols-2">
-        <FieldGroup>
-          <Field>
-            <FieldLabel htmlFor="product_id">Бүтээгдэхүүн</FieldLabel>
-            <Controller
-              control={control}
-              name="product_id"
-              render={({ field }) => (
-                <Combobox
-                  name={field.name}
-                  items={productItems}
-                  value={allProducts.find((p) => p.id === field.value) ?? null}
-                  onValueChange={(next) => {
-                    if (next?.id.startsWith("__create__")) {
-                      const created: ProductOption = {
-                        id: `new_${Date.now()}`,
-                        name: next.name,
-                        sale_price: null,
-                        current_stock: null,
-                        unit: null,
-                      };
-                      setCreatedProducts((prev) => [...prev, created]);
-                      field.onChange(created.id);
-                      setProductQuery("");
-                      return;
-                    }
-                    field.onChange(next?.id ?? "");
-                    setProductQuery("");
-                  }}
-                  itemToStringValue={(product: ProductOption | null) =>
-                    product?.id ?? ""
-                  }
-                  itemToStringLabel={(product: ProductOption | null) =>
-                    product?.name ?? ""
-                  }
-                  inputValue={productQuery}
-                  onInputValueChange={setProductQuery}
-                >
-                  <ComboboxInput
-                    id="product_id"
-                    placeholder="Сонгох"
-                    showTrigger
-                    className="w-full"
+      {/* Line Items Section */}
+      <div className="space-y-2">
+        <span className="text-sm font-medium text-muted-foreground">
+          Бүтээгдэхүүнүүд
+        </span>
+
+        {/* Header row */}
+        <div className="flex gap-2 text-xs text-muted-foreground px-1">
+          <div className="flex-1">Бүтээгдэхүүн</div>
+          <div className="w-20">Тоо хэмжээ</div>
+          <div className="w-24">Нэгж үнэ</div>
+          <div className="w-28 text-right">Дүн</div>
+          <div className="w-10" />
+        </div>
+
+        {/* Line item rows */}
+        {fields.map((field, index) => {
+          const productForRow = allProducts.find(
+            (p) => p.id === watchedItems?.[index]?.product_id,
+          );
+          const rowQuery = productQueries[index] ?? "";
+          const rowItems = getProductItems(rowQuery);
+
+          return (
+            <div key={field.id}>
+              <div className="flex gap-2 items-start">
+                {/* Product combobox */}
+                <div className="flex-1 min-w-0">
+                  <Controller
+                    control={control}
+                    name={`items.${index}.product_id`}
+                    render={({ field: controllerField }) => (
+                      <Combobox
+                        name={controllerField.name}
+                        items={rowItems}
+                        value={
+                          allProducts.find(
+                            (p) => p.id === controllerField.value,
+                          ) ?? null
+                        }
+                        onValueChange={(next) =>
+                          handleProductSelect(index, next)
+                        }
+                        itemToStringValue={(product: ProductOption | null) =>
+                          product?.id ?? ""
+                        }
+                        itemToStringLabel={(product: ProductOption | null) =>
+                          product?.name ?? ""
+                        }
+                        inputValue={rowQuery}
+                        onInputValueChange={(val) =>
+                          updateProductQuery(index, val)
+                        }
+                      >
+                        <ComboboxInput
+                          placeholder="Сонгох"
+                          showTrigger
+                          className="w-full"
+                        />
+                        <ComboboxContent>
+                          <ComboboxEmpty>Бүтээгдэхүүн байхгүй</ComboboxEmpty>
+                          <ComboboxList>
+                            {(product: ProductOption) => (
+                              <ComboboxItem key={product.id} value={product}>
+                                {product.id.startsWith("__create__")
+                                  ? `"${product.name}" үүсгэх`
+                                  : product.name}
+                              </ComboboxItem>
+                            )}
+                          </ComboboxList>
+                        </ComboboxContent>
+                      </Combobox>
+                    )}
                   />
-                  <ComboboxContent>
-                    <ComboboxEmpty>Бүтээгдэхүүн байхгүй</ComboboxEmpty>
-                    <ComboboxList>
-                      {(product: ProductOption) => (
-                        <ComboboxItem key={product.id} value={product}>
-                          {product.id.startsWith("__create__")
-                            ? `"${product.name}" үүсгэх`
-                            : product.name}
-                        </ComboboxItem>
-                      )}
-                    </ComboboxList>
-                  </ComboboxContent>
-                </Combobox>
-              )}
-            />
-            <FieldDescription>
-              {selectedProduct
-                ? `${formatCurrency(Number(selectedProduct.sale_price ?? 0))} • Үлдэгдэл ${
-                    selectedProduct.current_stock ?? 0
-                  } ${selectedProduct.unit ?? "ширхэг"}`
-                : "Бүтээгдэхүүн байхгүй байна."}
-            </FieldDescription>
-            {errors.product_id && (
-              <p className="text-xs text-destructive">
-                {errors.product_id.message}
-              </p>
-            )}
-          </Field>
+                  {/* Product info and stock warning */}
+                  {productForRow ? (
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {formatCurrency(Number(productForRow.sale_price ?? 0))} •
+                      Үлдэгдэл {productForRow.current_stock ?? 0}{" "}
+                      {productForRow.unit ?? "ширхэг"}
+                    </p>
+                  ) : null}
+                  {errors.items?.[index]?.product_id && (
+                    <p className="text-xs text-destructive mt-0.5">
+                      {errors.items[index]?.product_id?.message}
+                    </p>
+                  )}
+                  {stockWarnings[index] && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                      {stockWarnings[index]}
+                    </p>
+                  )}
+                </div>
 
-          <Field>
-            <FieldLabel htmlFor="quantity">Тоо хэмжээ</FieldLabel>
-            <Input
-              id="quantity"
-              type="number"
-              min="1"
-              step="0.01"
-              {...register("quantity", { valueAsNumber: true })}
-            />
-            {errors.quantity && (
-              <p className="text-xs text-destructive">
-                {errors.quantity.message}
-              </p>
-            )}
-            {isStockInsufficient && (
-              <p className="text-xs text-amber-600 dark:text-amber-400">
-                Үлдэгдэл хүрэлцэхгүй байна. (Үлдэгдэл:{" "}
-                {selectedProduct.current_stock}{" "}
-                {selectedProduct.unit ?? "ширхэг"})
-              </p>
-            )}
-          </Field>
+                {/* Quantity */}
+                <div className="w-20">
+                  <Input
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    {...register(`items.${index}.quantity`, {
+                      valueAsNumber: true,
+                    })}
+                  />
+                  {errors.items?.[index]?.quantity && (
+                    <p className="text-xs text-destructive mt-0.5">
+                      {errors.items[index]?.quantity?.message}
+                    </p>
+                  )}
+                </div>
 
-          <Field>
-            <FieldLabel htmlFor="unit_price">Нэгж үнэ</FieldLabel>
-            <Input
-              id="unit_price"
-              type="number"
-              min="0"
-              step="0.01"
-              {...register("unit_price", { valueAsNumber: true })}
-            />
-            {errors.unit_price && (
-              <p className="text-xs text-destructive">
-                {errors.unit_price.message}
-              </p>
-            )}
-          </Field>
+                {/* Unit price */}
+                <div className="w-24">
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    {...register(`items.${index}.unit_price`, {
+                      valueAsNumber: true,
+                    })}
+                  />
+                  {errors.items?.[index]?.unit_price && (
+                    <p className="text-xs text-destructive mt-0.5">
+                      {errors.items[index]?.unit_price?.message}
+                    </p>
+                  )}
+                </div>
 
-          <Field>
-            <FieldLabel htmlFor="paid_amount">Төлсөн дүн</FieldLabel>
-            <Input
-              id="paid_amount"
-              type="number"
-              min="0"
-              step="0.01"
-              {...register("paid_amount", {
-                valueAsNumber: true,
-                onChange: () => {
-                  isManualEditRef.current = true;
-                },
-              })}
-            />
-            <div className="mt-1 flex gap-1.5">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-7 px-2 text-xs"
-                onClick={() => handleQuickAction("all")}
-              >
-                Бүгд
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-7 px-2 text-xs"
-                onClick={() => handleQuickAction("half")}
-              >
-                50%
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-7 px-2 text-xs"
-                onClick={() => handleQuickAction("zero")}
-              >
-                0
-              </Button>
+                {/* Subtotal */}
+                <div className="w-28 pt-2 text-right text-sm font-medium">
+                  {formatCurrency(subtotals[index] ?? 0)}
+                </div>
+
+                {/* Remove button */}
+                <div className="w-10 pt-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 text-muted-foreground hover:text-destructive"
+                    onClick={() => removeRow(index)}
+                    disabled={fields.length <= 1}
+                    aria-label="Мөр устгах"
+                  >
+                    <Trash className="size-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
-            {errors.paid_amount && (
-              <p className="text-xs text-destructive">
-                {errors.paid_amount.message}
-              </p>
-            )}
-          </Field>
-        </FieldGroup>
+          );
+        })}
 
+        {/* Add row button */}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={appendRow}
+          className="mt-1"
+        >
+          <Plus className="size-4" />
+          Мөр нэмэх
+        </Button>
+
+        {errors.items && !Array.isArray(errors.items) && (
+          <p className="text-xs text-destructive">{errors.items.message}</p>
+        )}
+      </div>
+
+      {/* Grand Total & Payment Summary */}
+      <div className="rounded-none border border-border bg-muted/40 px-4 py-3 text-sm">
+        <div className="flex items-center justify-between">
+          <span>
+            Нийт дүн:{" "}
+            <span className="font-semibold">{formatCurrency(grandTotal)}</span>
+          </span>
+          <Badge variant={paymentBadgeVariant}>{paymentState}</Badge>
+        </div>
+        <div className="mt-1 text-muted-foreground">
+          Үлдэгдэл: {formatCurrency(remaining)}
+        </div>
+      </div>
+
+      {/* Paid Amount with quick actions */}
+      <div>
+        <Field>
+          <FieldLabel htmlFor="paid_amount">Төлсөн дүн</FieldLabel>
+          <Input
+            id="paid_amount"
+            type="number"
+            min="0"
+            step="0.01"
+            {...register("paid_amount", {
+              valueAsNumber: true,
+              onChange: () => {
+                isManualEditRef.current = true;
+              },
+            })}
+          />
+          <div className="mt-1 flex gap-1.5">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-7 px-2 text-xs"
+              onClick={() => handleQuickAction("all")}
+            >
+              Бүгд
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-7 px-2 text-xs"
+              onClick={() => handleQuickAction("half")}
+            >
+              50%
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-7 px-2 text-xs"
+              onClick={() => handleQuickAction("zero")}
+            >
+              0
+            </Button>
+          </div>
+          {errors.paid_amount && (
+            <p className="text-xs text-destructive">
+              {errors.paid_amount.message}
+            </p>
+          )}
+        </Field>
+      </div>
+
+      {/* Right column fields */}
+      <div className="grid gap-5 md:grid-cols-2">
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="payment_method">Төлбөрийн арга</FieldLabel>
@@ -786,25 +941,14 @@ export function SaleForm({
         </FieldGroup>
       </div>
 
-      <div className="rounded-none border border-border bg-muted/40 px-4 py-3 text-sm">
-        <div className="flex items-center justify-between">
-          <span>
-            Нийт дүн:{" "}
-            <span className="font-semibold">{formatCurrency(total)}</span>
-          </span>
-          <Badge variant={paymentBadgeVariant}>{paymentState}</Badge>
-        </div>
-        <div className="mt-1 text-muted-foreground">
-          Үлдэгдэл: {formatCurrency(remaining)}
-        </div>
-      </div>
-
+      {/* Error display */}
       {saleMutation.error ? (
         <div className="rounded-none bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {saleMutation.error.message}
         </div>
       ) : null}
 
+      {/* Footer */}
       <div className="flex items-center justify-between">
         <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
           <input
@@ -818,7 +962,7 @@ export function SaleForm({
         <Button
           type="submit"
           disabled={
-            saleMutation.isPending || !products.length || isStockInsufficient
+            saleMutation.isPending || !products.length || anyStockInsufficient
           }
         >
           {saleMutation.isPending ? "Хадгалах..." : "Борлуулалт хадгалах"}
