@@ -121,10 +121,11 @@ export function ReportEmailSettings() {
     },
   });
 
-  const reportWatched = watch();
   useEffect(() => {
-    notify();
-  }, [notify, reportWatched]);
+    const { unsubscribe } = watch(() => notify());
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const enabled = watch("enabled");
 

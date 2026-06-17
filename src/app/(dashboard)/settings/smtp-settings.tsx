@@ -160,10 +160,11 @@ export function SmtpSettings({ isSuperAdmin }: Props) {
     },
   });
 
-  const smtpWatched = watch();
   useEffect(() => {
-    notify();
-  }, [notify, smtpWatched]);
+    const { unsubscribe } = watch(() => notify());
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const isActive = config?.is_active ?? false;
 

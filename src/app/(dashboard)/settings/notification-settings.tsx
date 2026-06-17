@@ -295,10 +295,11 @@ export function NotificationSettings({ isSuperAdmin }: Props) {
     },
   });
 
-  const telegramWatched = telegramWatch();
   useEffect(() => {
-    notify();
-  }, [notify, telegramWatched]);
+    const { unsubscribe } = telegramWatch(() => notify());
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const saveMutation = useMutation({
     mutationFn: saveTelegramConfig,
@@ -382,10 +383,11 @@ export function NotificationSettings({ isSuperAdmin }: Props) {
     },
   });
 
-  const emailWatched = emailWatch();
   useEffect(() => {
-    notify();
-  }, [notify, emailWatched]);
+    const { unsubscribe } = emailWatch(() => notify());
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const emailSaveMutation = useMutation({
     mutationFn: saveEmailConfig,

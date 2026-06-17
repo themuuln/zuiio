@@ -44,11 +44,12 @@ export function OrgInfoForm({ initialName, initialSlug }: OrgInfoFormProps) {
     },
   });
 
-  // Reactivity: re-notify the context whenever form values change
-  const watched = watch();
+  // Reactivity: subscribe to form changes without creating render-loop
   useEffect(() => {
-    notify();
-  }, [notify, watched]);
+    const { unsubscribe } = watch(() => notify());
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const save = useCallback(async () => {
     const data = getValues();

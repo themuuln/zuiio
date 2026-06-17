@@ -35,10 +35,11 @@ export function ProfileForm({ initialFullName }: ProfileFormProps) {
     },
   });
 
-  const watched = watch();
   useEffect(() => {
-    notify();
-  }, [notify, watched]);
+    const { unsubscribe } = watch(() => notify());
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const save = useCallback(async () => {
     const data = getValues();
