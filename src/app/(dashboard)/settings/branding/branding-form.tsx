@@ -2,7 +2,6 @@
 
 import { Check, Spinner, UploadSimple } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -35,7 +34,6 @@ type BrandingFormProps = {
 };
 
 export function BrandingForm({ initialConfig }: BrandingFormProps) {
-  const router = useRouter();
   const [selectedTheme, setSelectedTheme] = useState(initialConfig.theme);
   const [radius, setRadius] = useState(initialConfig.radius);
   const [logoUrl, setLogoUrl] = useState<string | null>(initialConfig.logo_url);
@@ -94,7 +92,6 @@ export function BrandingForm({ initialConfig }: BrandingFormProps) {
       } else {
         setSaveSuccess(true);
         toast.success("Брэндинг амжилттай хадгалагдлаа.");
-        router.refresh();
       }
     },
     onError: () => {

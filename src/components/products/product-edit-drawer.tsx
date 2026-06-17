@@ -3,7 +3,6 @@
 import { Drawer } from "@base-ui/react/drawer";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Barcode, NotePencil, Package, Tag, X } from "@phosphor-icons/react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -26,6 +25,8 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { PRESET_CATEGORIES } from "@/lib/constants";
+import { productKeys } from "@/lib/query/keys";
+import { useOptimisticUpdate } from "@/lib/query/use-optimistic";
 
 export interface ProductEditData {
   id: string;
@@ -86,8 +87,6 @@ export function ProductEditDrawer({
   children?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
-  const router = useRouter();
 
   // --- Unit combobox (creatable) ---
   const [unitQuery, setUnitQuery] = useState("");
@@ -131,7 +130,7 @@ export function ProductEditDrawer({
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<ProductEditValues>({
     resolver: zodResolver(productEditSchema),
     defaultValues: {
@@ -144,9 +143,28 @@ export function ProductEditDrawer({
     },
   });
 
-  const onSubmit = async (data: ProductEditValues) => {
-    setServerError(null);
+  const editMutation = useOptimisticUpdate({
+    mutationFn: async (formData: FormData) => {
+      const result = await updateProduct(undefined, formData);
+      if (result?.error) throw new Error(result.error);
+      return result;
+    },
+    queryKey: productKeys.all,
+    getId: (formData) => formData.get("id")?.toString() ?? "",
+    buildOptimistic: (formData) => ({
+      name: formData.get("name")?.toString() ?? "",
+      sku: formData.get("sku")?.toString() || null,
+      barcode: formData.get("barcode")?.toString() || null,
+      unit: formData.get("unit")?.toString() ?? "ширхэг",
+      category_name: formData.get("category_name")?.toString() || null,
+      brand_id: formData.get("brand_id")?.toString() || null,
+      cost_price: Number(formData.get("cost_price") ?? 0),
+      sale_price: Number(formData.get("sale_price") ?? 0),
+      min_stock: Number(formData.get("min_stock") ?? 0),
+    }),
+  });
 
+  const onSubmit = (data: ProductEditValues) => {
     const formData = new FormData();
     formData.append("id", product.id);
     formData.append("name", data.name);
@@ -158,16 +176,12 @@ export function ProductEditDrawer({
     formData.append("cost_price", String(data.cost_price));
     formData.append("sale_price", String(data.sale_price));
     formData.append("min_stock", String(data.min_stock));
-
-    const result = await updateProduct(undefined, formData);
-
-    if (result?.error) {
-      setServerError(result.error);
-    } else if (result && "success" in result) {
-      setOpen(false);
-      router.refresh();
-      toast.success("Бүтээгдэхүүн амжилттай шинэчлэгдлээ.");
-    }
+    editMutation.mutate(formData, {
+      onSuccess: () => {
+        setOpen(false);
+        toast.success("Бүтээгдэхүүн амжилттай шинэчлэгдлээ.");
+      },
+    });
   };
 
   return (
@@ -434,9 +448,9 @@ export function ProductEditDrawer({
                   </FieldGroup>
                 </div>
 
-                {serverError ? (
+                {editMutation.error ? (
                   <div className="rounded-none bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                    {serverError}
+                    {editMutation.error.message}
                   </div>
                 ) : null}
 
@@ -450,7 +464,7 @@ export function ProductEditDrawer({
                   </Drawer.Close>
                   <button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={editMutation.isPending}
                     className={buttonVariants({ variant: "default" })}
                   >
                     Хадгалах

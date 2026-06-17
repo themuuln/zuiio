@@ -1,9 +1,7 @@
 "use client";
 
 import { NotePencil, Trash } from "@phosphor-icons/react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { deleteCategory } from "@/app/(dashboard)/inventory/categories/actions";
 import type { CategoryRow } from "@/app/(dashboard)/inventory/categories/page";
@@ -14,6 +12,7 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { categoryKeys } from "@/lib/query/keys";
+import { useOptimisticDelete } from "@/lib/query/use-optimistic";
 
 function toEditData(category: CategoryRow): CategoryEditData {
   return {
@@ -24,28 +23,15 @@ function toEditData(category: CategoryRow): CategoryEditData {
 
 function ActionsCell({ row }: { row: { original: CategoryRow } }) {
   const category = row.original;
-  const router = useRouter();
-  const queryClient = useQueryClient();
 
-  const deleteMutation = useMutation({
+  const deleteMutation = useOptimisticDelete({
     mutationFn: async (formData: FormData) => {
       const result = await deleteCategory(undefined, formData);
       if (result?.error) throw new Error(result.error);
       return result;
     },
-    onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: categoryKeys.all() });
-    },
-    onSuccess: () => {
-      router.refresh();
-      toast.success("Ангилал амжилттай устгагдлаа.");
-    },
-    onError: (err) => {
-      toast.error(err.message || "Ангилал устгахад алдаа гарлаа.");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: categoryKeys.all() });
-    },
+    queryKey: categoryKeys.all,
+    getId: (formData) => formData.get("id")?.toString() ?? "",
   });
 
   const handleDelete = () => {
@@ -56,7 +42,9 @@ function ActionsCell({ row }: { row: { original: CategoryRow } }) {
     if (!confirmed) return;
     const formData = new FormData();
     formData.set("id", category.id);
-    deleteMutation.mutate(formData);
+    deleteMutation.mutate(formData, {
+      onSuccess: () => toast.success("Ангилал амжилттай устгагдлаа."),
+    });
   };
 
   return (

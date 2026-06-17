@@ -2,7 +2,6 @@
 
 import { Drawer } from "@base-ui/react/drawer";
 import { CurrencyDollar, Plus, X } from "@phosphor-icons/react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
@@ -89,7 +88,6 @@ export function SalesPageClient({
   const [open, setOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedSale, setSelectedSale] = useState<SaleDetailData | null>(null);
-  const router = useRouter();
 
   const openDetail = (sale: SaleRow) => {
     setSelectedSale(sale as SaleDetailData);
@@ -250,7 +248,6 @@ export function SalesPageClient({
                   customers={customers}
                   onSuccess={() => {
                     setOpen(false);
-                    router.refresh();
                   }}
                 />
               </Drawer.Content>

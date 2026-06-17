@@ -1,8 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -63,8 +61,6 @@ export function DiscountCreateDrawer({
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen ?? internalOpen;
   const setOpen = externalOnOpenChange ?? setInternalOpen;
-  const router = useRouter();
-  const queryClient = useQueryClient();
   const [serverError, setServerError] = useState<string | null>(null);
 
   // Conditions for selected_products / selected_categories
@@ -75,10 +71,14 @@ export function DiscountCreateDrawer({
   const [categoryQuery, setCategoryQuery] = useState("");
 
   // Locally fetched products/categories if not provided
-  const [localProducts, setLocalProducts] = useState<
-    Array<{ id: string; name: string }> | null>(null);
-  const [localCategories, setLocalCategories] = useState<
-    Array<{ id: string; name: string }> | null>(null);
+  const [localProducts, setLocalProducts] = useState<Array<{
+    id: string;
+    name: string;
+  }> | null>(null);
+  const [localCategories, setLocalCategories] = useState<Array<{
+    id: string;
+    name: string;
+  }> | null>(null);
 
   const {
     register,
@@ -204,25 +204,30 @@ export function DiscountCreateDrawer({
     .filter((c) => c.condition_type === "category")
     .map((c) => c.condition_value);
 
-  const productMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
+  const [mutationPending, setMutationPending] = useState(false);
+  const [mutationError, setMutationError] = useState<string | null>(null);
+
+  const handleCreate = async (formData: FormData) => {
+    setMutationPending(true);
+    setMutationError(null);
+    try {
       const result = await createDiscount(undefined, formData);
       if (result?.error) throw new Error(result.error);
-      return result;
-    },
-    onSuccess: () => {
       setOpen(false);
       setConditions([]);
-      router.refresh();
       toast.success("Хямдрал амжилттай үүсгэгдсэн.");
-    },
-    onError: (err) => {
-      toast.error(err.message || "Хямдрал үүсгэхэд алдаа гарлаа.");
-    },
-  });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Хямдрал үүсгэхэд алдаа гарлаа.";
+      setMutationError(message);
+      toast.error(message);
+    } finally {
+      setMutationPending(false);
+    }
+  };
 
   const onSubmit = (data: DiscountValues) => {
-    if (productMutation.isPending) return;
+    if (mutationPending) return;
     setServerError(null);
 
     if (
@@ -268,7 +273,7 @@ export function DiscountCreateDrawer({
       );
     }
 
-    productMutation.mutate(formData);
+    handleCreate(formData);
   };
 
   return (
@@ -294,14 +299,9 @@ export function DiscountCreateDrawer({
         <FieldGroup>
           <Field>
             <FieldLabel>Нэр</FieldLabel>
-            <Input
-              placeholder="Жишээ: Зуны хямдрал"
-              {...register("name")}
-            />
+            <Input placeholder="Жишээ: Зуны хямдрал" {...register("name")} />
             {errors.name && (
-              <p className="text-xs text-destructive">
-                {errors.name.message}
-              </p>
+              <p className="text-xs text-destructive">{errors.name.message}</p>
             )}
           </Field>
 
@@ -359,9 +359,7 @@ export function DiscountCreateDrawer({
               )}
             </div>
             {errors.value && (
-              <p className="text-xs text-destructive">
-                {errors.value.message}
-              </p>
+              <p className="text-xs text-destructive">{errors.value.message}</p>
             )}
           </Field>
 
@@ -382,7 +380,9 @@ export function DiscountCreateDrawer({
                   }}
                 >
                   <option value="all">Бүх бүтээгдэхүүн</option>
-                  <option value="selected_products">Сонгосон бүтээгдэхүүн</option>
+                  <option value="selected_products">
+                    Сонгосон бүтээгдэхүүн
+                  </option>
                   <option value="selected_categories">Сонгосон ангилал</option>
                 </NativeSelect>
               )}
@@ -399,9 +399,9 @@ export function DiscountCreateDrawer({
                 onValueChange={(item: { id: string; name: string } | null) => {
                   if (item) addProductCondition(item);
                 }}
-                itemToStringLabel={(item: { id: string; name: string } | null) =>
-                  item?.name ?? ""
-                }
+                itemToStringLabel={(
+                  item: { id: string; name: string } | null,
+                ) => item?.name ?? ""}
                 inputValue={productQuery}
                 onInputValueChange={setProductQuery}
               >
@@ -466,9 +466,9 @@ export function DiscountCreateDrawer({
                 onValueChange={(item: { id: string; name: string } | null) => {
                   if (item) addCategoryCondition(item);
                 }}
-                itemToStringLabel={(item: { id: string; name: string } | null) =>
-                  item?.name ?? ""
-                }
+                itemToStringLabel={(
+                  item: { id: string; name: string } | null,
+                ) => item?.name ?? ""}
                 inputValue={categoryQuery}
                 onInputValueChange={setCategoryQuery}
               >
@@ -533,9 +533,7 @@ export function DiscountCreateDrawer({
                   <DatePicker
                     value={field.value ? new Date(field.value) : undefined}
                     onChange={(date) =>
-                      field.onChange(
-                        date ? formatRouteDate(date) : "",
-                      )
+                      field.onChange(date ? formatRouteDate(date) : "")
                     }
                   />
                 )}
@@ -560,9 +558,7 @@ export function DiscountCreateDrawer({
                   <DatePicker
                     value={field.value ? new Date(field.value) : undefined}
                     onChange={(date) =>
-                      field.onChange(
-                        date ? formatRouteDate(date) : "",
-                      )
+                      field.onChange(date ? formatRouteDate(date) : "")
                     }
                     placeholder="Дуусах огноо"
                   />
@@ -627,9 +623,9 @@ export function DiscountCreateDrawer({
           </div>
         )}
 
-        {productMutation.error && (
+        {mutationError && (
           <div className="rounded-md bg-destructive/15 px-3 py-2 text-sm text-destructive">
-            {productMutation.error.message}
+            {mutationError}
           </div>
         )}
 
@@ -646,10 +642,10 @@ export function DiscountCreateDrawer({
           </button>
           <button
             type="submit"
-            disabled={productMutation.isPending}
+            disabled={mutationPending}
             className={buttonVariants({ variant: "default" })}
           >
-            {productMutation.isPending ? "Хадгалах..." : "Хадгалах"}
+            {mutationPending ? "Хадгалах..." : "Хадгалах"}
           </button>
         </div>
       </form>

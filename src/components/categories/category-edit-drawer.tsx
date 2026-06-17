@@ -3,7 +3,6 @@
 import { Drawer } from "@base-ui/react/drawer";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Folder, NotePencil, X } from "@phosphor-icons/react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -12,6 +11,8 @@ import { updateCategory } from "@/app/(dashboard)/inventory/categories/actions";
 import { buttonVariants } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { categoryKeys } from "@/lib/query/keys";
+import { useOptimisticUpdate } from "@/lib/query/use-optimistic";
 
 export interface CategoryEditData {
   id: string;
@@ -32,13 +33,11 @@ export function CategoryEditDrawer({
   children?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
-  const router = useRouter();
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<CategoryEditValues>({
     resolver: zodResolver(categoryEditSchema),
     defaultValues: {
@@ -46,22 +45,29 @@ export function CategoryEditDrawer({
     },
   });
 
-  const onSubmit = async (data: CategoryEditValues) => {
-    setServerError(null);
+  const editMutation = useOptimisticUpdate({
+    mutationFn: async (formData: FormData) => {
+      const result = await updateCategory(undefined, formData);
+      if (result?.error) throw new Error(result.error);
+      return result;
+    },
+    queryKey: categoryKeys.all,
+    getId: (formData) => formData.get("id")?.toString() ?? "",
+    buildOptimistic: (formData) => ({
+      name: formData.get("name")?.toString() ?? "",
+    }),
+  });
 
+  const onSubmit = (data: CategoryEditValues) => {
     const formData = new FormData();
     formData.append("id", category.id);
     formData.append("name", data.name);
-
-    const result = await updateCategory(undefined, formData);
-
-    if (result?.error) {
-      setServerError(result.error);
-    } else if (result && "success" in result) {
-      setOpen(false);
-      router.refresh();
-      toast.success("Ангилал амжилттай шинэчлэгдлээ.");
-    }
+    editMutation.mutate(formData, {
+      onSuccess: () => {
+        setOpen(false);
+        toast.success("Ангилал амжилттай шинэчлэгдлээ.");
+      },
+    });
   };
 
   return (
@@ -115,9 +121,9 @@ export function CategoryEditDrawer({
                   </Field>
                 </FieldGroup>
 
-                {serverError ? (
+                {editMutation.error ? (
                   <div className="rounded-none bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                    {serverError}
+                    {editMutation.error.message}
                   </div>
                 ) : null}
 
@@ -131,7 +137,7 @@ export function CategoryEditDrawer({
                   </Drawer.Close>
                   <button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={editMutation.isPending}
                     className={buttonVariants({ variant: "default" })}
                   >
                     Хадгалах

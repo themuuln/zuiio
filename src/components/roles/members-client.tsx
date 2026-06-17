@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { updateUserRole } from "@/app/(dashboard)/settings/roles/actions";
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +32,6 @@ export function MembersClient({
   currentUserId,
   canManageRole,
 }: MembersClientProps) {
-  const router = useRouter();
   const [changing, setChanging] = useState<string | null>(null);
 
   const handleRoleChange = async (profileId: string, roleId: string | null) => {
@@ -43,7 +41,6 @@ export function MembersClient({
     if (result?.error) {
       alert(result.error);
     }
-    router.refresh();
   };
 
   return (

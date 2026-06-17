@@ -3,11 +3,8 @@
 import { Drawer } from "@base-ui/react/drawer";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Barcode, Package, Plus, Tag, X } from "@phosphor-icons/react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { z } from "zod";
 import { createProduct } from "@/app/(dashboard)/products/new/actions";
 import { buttonVariants } from "@/components/ui/button";
@@ -29,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { PRESET_CATEGORIES } from "@/lib/constants";
 import { useBrands } from "@/lib/query/hooks/use-brands";
 import { productKeys } from "@/lib/query/keys";
+import { useOptimisticCreate } from "@/lib/query/use-optimistic";
 
 const initialUnits = [
   "ширхэг",
@@ -76,8 +74,6 @@ export function ProductCreateDrawer({
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen ?? internalOpen;
   const setOpen = externalOnOpenChange ?? setInternalOpen;
-  const router = useRouter();
-  const queryClient = useQueryClient();
   const presets = PRESET_CATEGORIES[companyType] ?? [];
   const { data: brands } = useBrands(organizationId ?? "");
 
@@ -102,75 +98,32 @@ export function ProductCreateDrawer({
     },
   });
 
-  const productMutation = useMutation({
+  const productMutation = useOptimisticCreate({
     mutationFn: async (formData: FormData) => {
       const result = await createProduct(undefined, formData);
       if (result?.error) throw new Error(result.error);
       return result;
     },
-    onMutate: async (formData) => {
-      await queryClient.cancelQueries({ queryKey: productKeys.all() });
-      const snapshot = queryClient.getQueriesData({
-        queryKey: productKeys.all(),
-      });
-
-      // Build optimistic product from form data
-      const name = formData.get("name")?.toString() ?? "";
-      const sku = formData.get("sku")?.toString() ?? "";
-      const barcode = formData.get("barcode")?.toString() ?? "";
-      const unit = formData.get("unit")?.toString() ?? "ширхэг";
-      const categoryName = formData.get("category_name")?.toString() ?? "";
+    queryKey: productKeys.all,
+    buildOptimistic: (formData) => {
       const brandId = formData.get("brand_id")?.toString() ?? "";
-      const costPrice = Number(formData.get("cost_price") ?? 0);
-      const salePrice = Number(formData.get("sale_price") ?? 0);
-      const currentStock = Number(formData.get("current_stock") ?? 0);
-      const minStock = Number(formData.get("min_stock") ?? 0);
-
       const selectedBrand = brands?.find((b) => b.id === brandId);
-
-      const optimisticProduct = {
+      return {
         id: `opt-${Date.now()}`,
-        name,
-        sku: sku || null,
-        barcode: barcode || null,
-        unit,
-        category_name: categoryName || null,
+        name: formData.get("name")?.toString() ?? "",
+        sku: formData.get("sku")?.toString() || null,
+        barcode: formData.get("barcode")?.toString() || null,
+        unit: formData.get("unit")?.toString() ?? "ширхэг",
+        category_name: formData.get("category_name")?.toString() || null,
         brand_id: brandId || null,
         brand_name: selectedBrand?.name ?? null,
         brand_logo_url: selectedBrand?.logo_url ?? null,
-        cost_price: costPrice,
-        sale_price: salePrice,
-        current_stock: currentStock,
-        min_stock: minStock,
+        cost_price: Number(formData.get("cost_price") ?? 0),
+        sale_price: Number(formData.get("sale_price") ?? 0),
+        current_stock: Number(formData.get("current_stock") ?? 0),
+        min_stock: Number(formData.get("min_stock") ?? 0),
         created_at: new Date().toISOString(),
       };
-
-      queryClient.setQueriesData(
-        { queryKey: productKeys.all(), type: "active" },
-        (oldData: unknown) => {
-          if (Array.isArray(oldData)) {
-            return [optimisticProduct, ...oldData];
-          }
-          return oldData;
-        },
-      );
-
-      return { snapshot };
-    },
-    onSuccess: () => {
-      setOpen(false);
-      router.refresh();
-    },
-    onError: (err, _vars, context) => {
-      if (context?.snapshot) {
-        for (const [key, data] of context.snapshot) {
-          queryClient.setQueryData(key, data);
-        }
-      }
-      toast.error(err.message || "Бүтээгдэхүүн үүсгэхэд алдаа гарлаа.");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: productKeys.all() });
     },
   });
 
@@ -187,7 +140,7 @@ export function ProductCreateDrawer({
     formData.append("sale_price", String(data.sale_price));
     formData.append("current_stock", String(data.current_stock));
     formData.append("min_stock", String(data.min_stock));
-    productMutation.mutate(formData);
+    productMutation.mutate(formData, { onSuccess: () => setOpen(false) });
   };
 
   // --- Unit combobox (creatable) ---

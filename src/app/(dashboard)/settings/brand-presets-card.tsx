@@ -2,7 +2,6 @@
 
 import { Check, Spinner, Cube } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -52,7 +51,6 @@ function groupByBrand(presets: Preset[]) {
 }
 
 export function BrandPresetsCard({ presets }: { presets: Preset[] }) {
-  const router = useRouter();
   const brands = groupByBrand(presets);
 
   return (
@@ -69,7 +67,7 @@ export function BrandPresetsCard({ presets }: { presets: Preset[] }) {
       </CardHeader>
       <CardContent className="space-y-8">
         {brands.map((brand) => (
-          <BrandSection key={brand.brandName} brand={brand} router={router} />
+          <BrandSection key={brand.brandName} brand={brand} />
         ))}
       </CardContent>
     </Card>
@@ -78,10 +76,13 @@ export function BrandPresetsCard({ presets }: { presets: Preset[] }) {
 
 function BrandSection({
   brand,
-  router,
 }: {
-  brand: { brandName: string; logoUrl: string | null; products: Preset[]; count: number };
-  router: ReturnType<typeof useRouter>;
+  brand: {
+    brandName: string;
+    logoUrl: string | null;
+    products: Preset[];
+    count: number;
+  };
 }) {
   const [imported, setImported] = useState(false);
 
@@ -99,7 +100,6 @@ function BrandSection({
         toast.success(
           `${brand.brandName} брэндийн ${result?.count ?? brand.count} бүтээгдэхүүн амжилттай импортлогдлоо.`,
         );
-        router.refresh();
       }
     },
     onError: () => {

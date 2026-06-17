@@ -1,7 +1,6 @@
 "use client";
 
 import { Plus, Trash, Users } from "@phosphor-icons/react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { deleteRole } from "@/app/(dashboard)/settings/roles/actions";
 import { PermissionEditor } from "@/components/roles/permission-editor";
@@ -38,7 +37,6 @@ interface RolesClientProps {
 }
 
 export function RolesClient({ roles, rolePermissions }: RolesClientProps) {
-  const router = useRouter();
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -60,7 +58,6 @@ export function RolesClient({ roles, rolePermissions }: RolesClientProps) {
     if (result?.error) {
       alert(result.error);
     }
-    router.refresh();
   };
 
   return (

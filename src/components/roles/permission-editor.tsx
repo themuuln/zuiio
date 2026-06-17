@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { setRolePermissions } from "@/app/(dashboard)/settings/roles/actions";
 import { Button } from "@/components/ui/button";
@@ -16,7 +15,6 @@ export function PermissionEditor({
   roleId,
   selectedPermissions: initialPermissions,
 }: PermissionEditorProps) {
-  const router = useRouter();
   const [selectedPerms, setSelectedPerms] =
     useState<Set<string>>(initialPermissions);
   const [saving, setSaving] = useState(false);
@@ -57,7 +55,6 @@ export function PermissionEditor({
     if (result?.error) {
       alert(result.error);
     }
-    router.refresh();
   };
 
   const totalCount = PERMISSION_GROUPS.reduce(

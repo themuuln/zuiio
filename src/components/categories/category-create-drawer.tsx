@@ -2,8 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Folder, Plus } from "@phosphor-icons/react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -23,6 +21,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { PRESET_CATEGORIES } from "@/lib/constants";
 import { categoryKeys } from "@/lib/query/keys";
+import { useOptimisticCreate } from "@/lib/query/use-optimistic";
 
 const allPresetCategories = [
   ...new Set(Object.values(PRESET_CATEGORIES).flat()),
@@ -44,8 +43,6 @@ export function CategoryCreateDrawer({
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen ?? internalOpen;
   const setOpen = externalOnOpenChange ?? setInternalOpen;
-  const router = useRouter();
-  const queryClient = useQueryClient();
   const [categoryQuery, setCategoryQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [allCategories, setAllCategories] = useState<string[]>([
@@ -71,63 +68,33 @@ export function CategoryCreateDrawer({
     [allCategories, trimmedQuery],
   );
 
-  const categoryMutation = useMutation({
+  const categoryMutation = useOptimisticCreate({
     mutationFn: async (formData: FormData) => {
       const result = await createCategory(undefined, formData);
       if (result?.error) throw new Error(result.error);
       return result;
     },
-    onMutate: async (formData) => {
-      await queryClient.cancelQueries({ queryKey: categoryKeys.all() });
-      const snapshot = queryClient.getQueriesData({
-        queryKey: categoryKeys.all(),
-      });
-
-      const name = formData.get("name")?.toString() ?? "";
-      const optimisticCategory = {
-        id: `opt-${Date.now()}`,
-        name,
-        product_count: 0,
-      };
-
-      queryClient.setQueriesData(
-        { queryKey: categoryKeys.all(), type: "active" },
-        (oldData: unknown) => {
-          if (Array.isArray(oldData)) {
-            return [optimisticCategory, ...oldData];
-          }
-          return oldData;
-        },
-      );
-
-      return { snapshot };
-    },
-    onSuccess: () => {
-      setOpen(false);
-      setSelectedCategory(null);
-      setCategoryQuery("");
-      reset();
-      router.refresh();
-      toast.success("Ангилал амжилттай үүсгэгдлээ.");
-    },
-    onError: (err, _vars, context) => {
-      if (context?.snapshot) {
-        for (const [key, data] of context.snapshot) {
-          queryClient.setQueryData(key, data);
-        }
-      }
-      toast.error(err.message || "Ангилал үүсгэхэд алдаа гарлаа.");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: categoryKeys.all() });
-    },
+    queryKey: categoryKeys.all,
+    buildOptimistic: (formData) => ({
+      id: `opt-${Date.now()}`,
+      name: formData.get("name")?.toString() ?? "",
+      product_count: 0,
+    }),
   });
 
   const onSubmit = (data: CategoryValues) => {
     if (categoryMutation.isPending) return;
     const formData = new FormData();
     formData.append("name", data.name);
-    categoryMutation.mutate(formData);
+    categoryMutation.mutate(formData, {
+      onSuccess: () => {
+        setOpen(false);
+        setSelectedCategory(null);
+        setCategoryQuery("");
+        reset();
+        toast.success("Ангилал амжилттай үүсгэгдлээ.");
+      },
+    });
   };
 
   return (
@@ -144,7 +111,10 @@ export function CategoryCreateDrawer({
       title="Ангилал нэмэх"
       description="Бүтээгдэхүүний шинэ ангилал үүсгэх."
       trigger={
-        <button type="button" className={buttonVariants({ variant: "default" })}>
+        <button
+          type="button"
+          className={buttonVariants({ variant: "default" })}
+        >
           <Plus className="size-4" />
           Ангилал нэмэх
         </button>
@@ -187,7 +157,9 @@ export function CategoryCreateDrawer({
                 </ComboboxContent>
               </Combobox>
             </div>
-            {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+            {errors.name && (
+              <p className="text-xs text-destructive">{errors.name.message}</p>
+            )}
           </Field>
         </FieldGroup>
 

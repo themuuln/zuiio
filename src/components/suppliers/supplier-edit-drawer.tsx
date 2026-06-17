@@ -3,7 +3,6 @@
 import { Drawer } from "@base-ui/react/drawer";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Buildings, NotePencil, X } from "@phosphor-icons/react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -12,6 +11,8 @@ import { updateSupplier } from "@/app/(dashboard)/suppliers/actions";
 import { buttonVariants } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { contactKeys } from "@/lib/query/keys";
+import { useOptimisticUpdate } from "@/lib/query/use-optimistic";
 
 export interface SupplierEditData {
   id: string;
@@ -38,13 +39,11 @@ export function SupplierEditDrawer({
   children?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
-  const router = useRouter();
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<SupplierEditValues>({
     resolver: zodResolver(supplierEditSchema),
     defaultValues: {
@@ -55,25 +54,35 @@ export function SupplierEditDrawer({
     },
   });
 
-  const onSubmit = async (data: SupplierEditValues) => {
-    setServerError(null);
+  const editMutation = useOptimisticUpdate({
+    mutationFn: async (formData: FormData) => {
+      const result = await updateSupplier(undefined, formData);
+      if (result?.error) throw new Error(result.error);
+      return result;
+    },
+    queryKey: contactKeys.all,
+    getId: (formData) => formData.get("id")?.toString() ?? "",
+    buildOptimistic: (formData) => ({
+      name: formData.get("name")?.toString() ?? "",
+      phone: formData.get("phone")?.toString() || null,
+      email: formData.get("email")?.toString() || null,
+      address: formData.get("address")?.toString() || null,
+    }),
+  });
 
+  const onSubmit = (data: SupplierEditValues) => {
     const formData = new FormData();
     formData.append("id", supplier.id);
     formData.append("name", data.name);
     formData.append("phone", data.phone);
     formData.append("email", data.email);
     formData.append("address", data.address);
-
-    const result = await updateSupplier(undefined, formData);
-
-    if (result?.error) {
-      setServerError(result.error);
-    } else if (result && "success" in result) {
-      setOpen(false);
-      router.refresh();
-      toast.success("Нийлүүлэгч амжилттай шинэчлэгдлээ.");
-    }
+    editMutation.mutate(formData, {
+      onSuccess: () => {
+        setOpen(false);
+        toast.success("Нийлүүлэгч амжилттай шинэчлэгдлээ.");
+      },
+    });
   };
 
   return (
@@ -153,9 +162,9 @@ export function SupplierEditDrawer({
                   </Field>
                 </FieldGroup>
 
-                {serverError ? (
+                {editMutation.error ? (
                   <div className="rounded-none bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                    {serverError}
+                    {editMutation.error.message}
                   </div>
                 ) : null}
 
@@ -169,7 +178,7 @@ export function SupplierEditDrawer({
                   </Drawer.Close>
                   <button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={editMutation.isPending}
                     className={buttonVariants({ variant: "default" })}
                   >
                     Хадгалах

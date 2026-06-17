@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import { ThemeProvider } from "next-themes";
@@ -22,6 +22,10 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+export const viewport: Viewport = {
+  viewTransition: true,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(

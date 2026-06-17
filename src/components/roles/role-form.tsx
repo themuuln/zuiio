@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -23,7 +22,6 @@ interface RoleFormProps {
 }
 
 export function RoleForm({ onSuccess }: RoleFormProps) {
-  const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const {
     register,
@@ -40,7 +38,6 @@ export function RoleForm({ onSuccess }: RoleFormProps) {
     if (result?.error) {
       setServerError(result.error);
     } else {
-      router.refresh();
       onSuccess?.();
     }
   };
