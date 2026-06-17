@@ -42,7 +42,10 @@ export function SalesCreateDrawer({
       title="Борлуулалт нэмэх"
       description="Бүтээгдэхүүн, тоо хэмжээ, үнийг оруулан борлуулалт үүсгэнэ."
       trigger={
-        <button type="button" className={buttonVariants({ variant: "default" })}>
+        <button
+          type="button"
+          className={buttonVariants({ variant: "default" })}
+        >
           <Receipt className="size-4" />
           Шинэ борлуулалт
         </button>

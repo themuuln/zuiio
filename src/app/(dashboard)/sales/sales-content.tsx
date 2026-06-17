@@ -11,8 +11,8 @@ import {
   type SaleDetailData,
   SaleDetailDrawer,
 } from "@/components/sales/sale-detail-drawer";
-import { Card } from "@/components/ui/card";
 import { SalesCreateDrawer } from "@/components/sales/sales-create-drawer";
+import { Card } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
 import type { SaleRow } from "./sales-table";
 import { SalesTable } from "./sales-table";

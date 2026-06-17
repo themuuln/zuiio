@@ -6,11 +6,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 import { CustomerPicker } from "@/components/shop/customer-picker";
 import { StaffPicker } from "@/components/shop/staff-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { z } from "zod";
 import {
   Combobox,
   ComboboxContent,
@@ -313,15 +313,16 @@ export function SaleForm({
   };
 
   // When product changes: always reset paid_amount to new total
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional - watchedQuantity excluded to avoid infinite loop (quantity change would reset paid_amount, defeating manual edit tracking)
   useEffect(() => {
     isManualEditRef.current = false;
     const newTotal =
       Number(watchedQuantity || 0) * Number(selectedProduct?.sale_price ?? 0);
     setValue("paid_amount", newTotal || 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchedProductId]);
 
   // When quantity changes: only auto-fill if not manually edited
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional - allProducts.find and watchedProductId excluded to keep quantity auto-fill logic separate; setValue is excluded as it is stable
   useEffect(() => {
     if (isManualEditRef.current) return;
     const product = allProducts.find((p) => p.id === watchedProductId);
@@ -329,7 +330,6 @@ export function SaleForm({
     const price = Number(product?.sale_price ?? 0);
     const newTotal = qty * price;
     setValue("paid_amount", newTotal || 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchedQuantity]);
 
   // --- Payment method combobox (creatable) ---
