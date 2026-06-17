@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { CustomerPicker } from "@/components/shop/customer-picker";
 import { StaffPicker } from "@/components/shop/staff-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -95,6 +96,9 @@ export function SaleForm({
   const defaultProduct = products[0] ?? null;
   const initialQuantity = 1;
   const initialTotal = initialQuantity * (defaultProduct?.sale_price ?? 0);
+  const [selectedContactId, setSelectedContactId] = useState<string | null>(
+    null,
+  );
 
   const {
     register,
@@ -662,29 +666,21 @@ export function SaleForm({
             )}
           </Field>
 
-          <Field>
-            <FieldLabel htmlFor="customer_name">Харилцагчийн нэр</FieldLabel>
-            <Input
-              id="customer_name"
-              list="customers"
-              placeholder="Walk-in эсвэл Бат"
-              {...register("customer_name")}
-            />
-            <datalist id="customers">
-              {customers.map((customer) => (
-                <option key={customer.id} value={customer.name} />
-              ))}
-            </datalist>
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="customer_phone">Утас</FieldLabel>
-            <Input
-              id="customer_phone"
-              placeholder="9911...."
-              {...register("customer_phone")}
-            />
-          </Field>
+          <CustomerPicker
+            contacts={customers}
+            selectedContactId={selectedContactId}
+            customerName={watch("customer_name") ?? ""}
+            customerPhone={watch("customer_phone") ?? ""}
+            onSelectContact={(contact) => {
+              setSelectedContactId(contact?.id ?? null);
+            }}
+            onNameChange={(name) => {
+              setValue("customer_name", name);
+            }}
+            onPhoneChange={(phone) => {
+              setValue("customer_phone", phone);
+            }}
+          />
 
           <Field>
             <FieldLabel htmlFor="notes">Тэмдэглэл</FieldLabel>
