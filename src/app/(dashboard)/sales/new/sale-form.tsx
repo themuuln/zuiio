@@ -359,6 +359,13 @@ export function SaleForm({
   const selectedProduct =
     allProducts.find((p) => p.id === watchedProductId) ?? null;
   const watchedQuantity = watch("quantity");
+  const watchedStatus = watch("status");
+
+  const isStockInsufficient =
+    !!selectedProduct &&
+    selectedProduct.current_stock !== null &&
+    watchedQuantity > selectedProduct.current_stock &&
+    watchedStatus !== "cancelled";
   const total =
     Number(watchedQuantity || 0) * Number(selectedProduct?.sale_price ?? 0);
   const watchedPaidAmount = watch("paid_amount");
@@ -532,6 +539,13 @@ export function SaleForm({
             {errors.quantity && (
               <p className="text-xs text-destructive">
                 {errors.quantity.message}
+              </p>
+            )}
+            {isStockInsufficient && (
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                Үлдэгдэл хүрэлцэхгүй байна. (Үлдэгдэл:{" "}
+                {selectedProduct.current_stock}{" "}
+                {selectedProduct.unit ?? "ширхэг"})
               </p>
             )}
           </Field>
@@ -803,7 +817,9 @@ export function SaleForm({
         </label>
         <Button
           type="submit"
-          disabled={saleMutation.isPending || !products.length}
+          disabled={
+            saleMutation.isPending || !products.length || isStockInsufficient
+          }
         >
           {saleMutation.isPending ? "Хадгалах..." : "Борлуулалт хадгалах"}
         </Button>
