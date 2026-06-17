@@ -1,4 +1,9 @@
-import { Folder, MapPin, Plus, Warehouse } from "@phosphor-icons/react/dist/ssr";
+import {
+  Folder,
+  MapPin,
+  Plus,
+  Warehouse,
+} from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 
 import { ErpEmptyState } from "@/components/erp/empty-state";
@@ -19,6 +24,8 @@ import {
 } from "@/components/ui/table";
 import { requireAppContext } from "@/lib/erp";
 import { formatCurrency, formatDate } from "@/lib/format";
+
+export const unstable_instant = { prefetch: "static" };
 
 const MOVEMENT_LABELS: Record<string, string> = {
   in: "Орлого",

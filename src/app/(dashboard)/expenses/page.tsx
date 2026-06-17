@@ -2,6 +2,8 @@ import { requireAppContext } from "@/lib/erp";
 import type { ExpenseRow } from "./expenses-table";
 import { ExpensesContent } from "./expenses-content";
 
+export const unstable_instant = { prefetch: "static" };
+
 export default async function ExpensesPage() {
   const { supabase, organizationId } = await requireAppContext();
 

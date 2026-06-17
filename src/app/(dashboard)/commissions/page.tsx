@@ -2,6 +2,8 @@ import { PageShell } from "@/components/erp/page-shell";
 import { requireAppContext } from "@/lib/erp";
 import { CommissionContent } from "./commission-content";
 
+export const unstable_instant = { prefetch: "static" };
+
 export default async function CommissionsPage() {
   const { organizationId } = await requireAppContext();
 

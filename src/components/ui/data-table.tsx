@@ -29,6 +29,8 @@ interface DataTableProps<TData, TValue> {
   searchPlaceholder?: string;
   pageSize?: number;
   totalLabel?: string;
+  /** Callback when a row is clicked. When provided, rows get a cursor-pointer style. */
+  onRowClick?: (row: TData) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -38,6 +40,7 @@ export function DataTable<TData, TValue>({
   searchPlaceholder = "Хайх...",
   pageSize = 10,
   totalLabel = "мөр",
+  onRowClick,
 }: DataTableProps<TData, TValue>) {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
@@ -95,7 +98,13 @@ export function DataTable<TData, TValue>({
         <TableBody>
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id}>
+              <TableRow
+                key={row.id}
+                className={cn(onRowClick && "cursor-pointer")}
+                onClick={
+                  onRowClick ? () => onRowClick(row.original) : undefined
+                }
+              >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

@@ -2,6 +2,8 @@ import { requireAppContext } from "@/lib/erp";
 import { PurchasesContent } from "./purchases-content";
 import type { PurchaseRow } from "./purchases-table";
 
+export const unstable_instant = { prefetch: "static" };
+
 export default async function PurchasesPage() {
   const { supabase, organizationId } = await requireAppContext();
 
@@ -36,8 +38,7 @@ export default async function PurchasesPage() {
       total_amount: order.total_amount,
       notes: order.notes,
       created_at: order.created_at,
-      supplier_name:
-        (order.contacts as { name: string } | null)?.name ?? null,
+      supplier_name: (order.contacts as { name: string } | null)?.name ?? null,
       created_by_name:
         (order.profiles as { name: string } | null)?.name ?? null,
     })) ?? [];

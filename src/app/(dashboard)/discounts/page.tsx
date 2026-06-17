@@ -1,6 +1,8 @@
 import { requireAppContext } from "@/lib/erp";
 import { DiscountsContent } from "./discounts-content";
 
+export const unstable_instant = { prefetch: "static" };
+
 export type DiscountRow = {
   id: string;
   name: string;
@@ -34,7 +36,10 @@ export default async function DiscountsPage() {
 
   // Fetch conditions for each discount
   const discountIds = (discounts ?? []).map((d) => d.id);
-  let conditionsMap: Record<string, Array<{ condition_type: string; condition_value: string }>> = {};
+  let conditionsMap: Record<
+    string,
+    Array<{ condition_type: string; condition_value: string }>
+  > = {};
 
   if (discountIds.length > 0) {
     const { data: conditions } = await supabase
@@ -59,7 +64,10 @@ export default async function DiscountsPage() {
     description: d.description,
     type: d.type as "percentage" | "fixed_amount",
     value: d.value,
-    applies_to: d.applies_to as "all" | "selected_products" | "selected_categories",
+    applies_to: d.applies_to as
+      | "all"
+      | "selected_products"
+      | "selected_categories",
     min_purchase_amount: d.min_purchase_amount,
     valid_from: d.valid_from,
     valid_until: d.valid_until,

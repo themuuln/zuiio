@@ -1,7 +1,12 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+import { useState } from "react";
 
+import {
+  type ExpenseDetailData,
+  ExpenseDetailDrawer,
+} from "@/components/expenses/expense-detail-drawer";
 import { DataTable } from "@/components/ui/data-table";
 import { formatCurrency, formatDate } from "@/lib/format";
 
@@ -13,6 +18,17 @@ export type ExpenseRow = {
   description: string | null;
   payment_method: string | null;
 };
+
+function toDetailData(expense: ExpenseRow): ExpenseDetailData {
+  return {
+    id: expense.id,
+    expense_date: expense.expense_date,
+    category: expense.category,
+    amount: expense.amount,
+    description: expense.description,
+    payment_method: expense.payment_method,
+  };
+}
 
 const paymentMethodLabels: Record<string, string> = {
   cash: "Бэлэн",
@@ -60,14 +76,30 @@ const columns: ColumnDef<ExpenseRow>[] = [
 ];
 
 export function ExpensesTable({ data }: { data: ExpenseRow[] }) {
+  const [selectedExpense, setSelectedExpense] = useState<ExpenseRow | null>(
+    null,
+  );
+
   return (
-    <DataTable
-      columns={columns}
-      data={data}
-      searchColumn="category"
-      searchPlaceholder="Ангилал, тайлбараар хайх..."
-      pageSize={10}
-      totalLabel="зарлага"
-    />
+    <>
+      <DataTable
+        columns={columns}
+        data={data}
+        searchColumn="category"
+        searchPlaceholder="Ангилал, тайлбараар хайх..."
+        pageSize={10}
+        totalLabel="зарлага"
+        onRowClick={(row) => setSelectedExpense(row)}
+      />
+      {selectedExpense && (
+        <ExpenseDetailDrawer
+          expense={toDetailData(selectedExpense)}
+          open={!!selectedExpense}
+          onOpenChange={(open) => {
+            if (!open) setSelectedExpense(null);
+          }}
+        />
+      )}
+    </>
   );
 }

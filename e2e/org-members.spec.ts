@@ -6,24 +6,13 @@ import { expect, test } from "@playwright/test";
  * Prerequisites:
  *   - App must be running (npm run dev)
  *   - PLAYWRIGHT_BASE_URL env var or default http://localhost:3000
- *   - A valid test user session (uses dev login credentials)
+ *   - Auth setup must have run (saves storage to .auth/user.json)
  *   - The test user must have members.invite and members.remove permissions
  *
  * Run: npm run test:e2e
  */
 
-const DEV_EMAIL = "themuuln1@gmail.com";
-const DEV_PASSWORD = "Tolom!11";
-
 test.describe("Org Members Management", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto("/login");
-    await page.fill('input[name="email"]', DEV_EMAIL);
-    await page.fill('input[name="password"]', DEV_PASSWORD);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/$/);
-  });
-
   test("shows members list on /settings/users", async ({ page }) => {
     await page.goto("/settings/users");
 
@@ -128,19 +117,19 @@ test.describe("Org Members Management", () => {
     const memberRows = page.locator(".divide-y > div");
     const count = await memberRows.count();
 
-    if (count > 1) {
-      // Click the first non-self member's trash button (svg icon inside button)
-      const removeButton = memberRows.nth(1).locator("button:has(svg)");
-      await removeButton.click();
+    test.skip(count <= 1, "need at least 2 members to test removal dialog");
 
-      // Remove confirmation dialog should appear
-      await expect(
-        page.getByRole("heading", { name: /Гишүүн хасах/i }),
-      ).toBeVisible();
+    // Click the first non-self member's trash button (svg icon inside button)
+    const removeButton = memberRows.nth(1).locator("button:has(svg)");
+    await removeButton.click();
 
-      // Should have cancel and confirm buttons
-      await expect(page.getByRole("button", { name: /Буцах/i })).toBeVisible();
-      await expect(page.getByRole("button", { name: /Хасах/i })).toBeVisible();
-    }
+    // Remove confirmation dialog should appear
+    await expect(
+      page.getByRole("heading", { name: /Гишүүн хасах/i }),
+    ).toBeVisible();
+
+    // Should have cancel and confirm buttons
+    await expect(page.getByRole("button", { name: /Буцах/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Хасах/i })).toBeVisible();
   });
 });

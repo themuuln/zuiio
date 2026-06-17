@@ -21,6 +21,8 @@ import { SmtpSettings } from "./smtp-settings";
 import { ReportEmailSettings } from "./report-email-settings";
 import { SettingsShell } from "./settings-shell";
 
+export const unstable_instant = { prefetch: "static" };
+
 const TEMPLATE_TYPES = ["gym", "fitness", "retail"];
 
 const SUPERADMIN_EMAIL = "zerone.offical@gmail.com";

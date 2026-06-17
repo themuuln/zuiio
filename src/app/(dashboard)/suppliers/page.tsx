@@ -10,6 +10,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAppContext } from "@/lib/erp";
 
+export const unstable_instant = { prefetch: "static" };
+
 export default async function SuppliersPage() {
   const { supabase, organizationId } = await requireAppContext();
   const { data: suppliers } = await supabase

@@ -34,11 +34,17 @@ export type ProductDetailData = {
 export function ProductDetailDrawer({
   product,
   children,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: {
   product: ProductDetailData;
   children?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = controlledOnOpenChange ?? setInternalOpen;
   const isLow =
     Number(product.current_stock ?? 0) <= Number(product.min_stock ?? 0);
   const images = product.image_urls?.length
@@ -52,13 +58,7 @@ export function ProductDetailDrawer({
     <Drawer.Root swipeDirection="right" open={open} onOpenChange={setOpen}>
       {children ? (
         <Drawer.Trigger className="w-full">{children}</Drawer.Trigger>
-      ) : (
-        <Drawer.Trigger
-          className={buttonVariants({ variant: "ghost", size: "icon-xs" })}
-        >
-          <Eye className="size-3.5" />
-        </Drawer.Trigger>
-      )}
+      ) : null}
       <Drawer.Portal>
         <Drawer.Backdrop className="[--backdrop-opacity:0.2] [--bleed:3rem] dark:[--backdrop-opacity:0.7] fixed inset-0 min-h-dvh bg-black opacity-[calc(var(--backdrop-opacity)*(1-var(--drawer-swipe-progress)))] transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:duration-0 data-ending-style:opacity-0 data-starting-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:absolute" />
         <Drawer.Viewport className="[--viewport-padding:0px] supports-[-webkit-touch-callout:none]:[--viewport-padding:0.625rem] fixed inset-0 flex items-stretch justify-end p-(--viewport-padding)">

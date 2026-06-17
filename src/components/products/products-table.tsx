@@ -2,8 +2,12 @@
 
 import { NotePencil } from "@phosphor-icons/react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
+import {
+  type ProductDetailData,
+  ProductDetailDrawer,
+} from "@/components/products/product-detail-drawer";
 import {
   type ProductEditData,
   ProductEditDrawer,
@@ -28,6 +32,21 @@ export type ProductRow = {
   brand_name: string | null;
   brand_logo_url: string | null;
 };
+
+function toDetailData(product: ProductRow): ProductDetailData {
+  return {
+    id: product.id,
+    name: product.name,
+    sku: product.sku,
+    barcode: product.barcode,
+    unit: product.unit,
+    category_name: product.category_name,
+    cost_price: product.cost_price,
+    sale_price: product.sale_price,
+    current_stock: product.current_stock,
+    min_stock: product.min_stock,
+  };
+}
 
 function toEditData(product: ProductRow): ProductEditData {
   return {
@@ -55,6 +74,9 @@ export function ProductsTable({
   organizationId: string;
 }) {
   const { data: brands } = useBrands(organizationId);
+  const [selectedProduct, setSelectedProduct] = useState<ProductRow | null>(
+    null,
+  );
 
   const columns: ColumnDef<ProductRow>[] = useMemo(
     () => [
@@ -131,7 +153,10 @@ export function ProductsTable({
         cell: ({ row }) => {
           const product = row.original;
           return (
-            <div className="flex items-center gap-1">
+            <div
+              className="flex items-center gap-1"
+              onClick={(e) => e.stopPropagation()}
+            >
               <ProductEditDrawer
                 product={toEditData(product)}
                 brands={brands ?? []}
@@ -154,13 +179,25 @@ export function ProductsTable({
   );
 
   return (
-    <DataTable
-      columns={columns}
-      data={data}
-      searchColumn="name"
-      searchPlaceholder="Нэр эсвэл SKU-аар хайх..."
-      pageSize={10}
-      totalLabel="бүтээгдэхүүн"
-    />
+    <>
+      <DataTable
+        columns={columns}
+        data={data}
+        searchColumn="name"
+        searchPlaceholder="Нэр эсвэл SKU-аар хайх..."
+        pageSize={10}
+        totalLabel="бүтээгдэхүүн"
+        onRowClick={(row) => setSelectedProduct(row)}
+      />
+      {selectedProduct && (
+        <ProductDetailDrawer
+          product={toDetailData(selectedProduct)}
+          open={!!selectedProduct}
+          onOpenChange={(open) => {
+            if (!open) setSelectedProduct(null);
+          }}
+        />
+      )}
+    </>
   );
 }

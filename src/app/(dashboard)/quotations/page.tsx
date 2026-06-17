@@ -1,6 +1,8 @@
 import { requireAppContext } from "@/lib/erp";
 import { QuotationsContent } from "./quotations-content";
 
+export const unstable_instant = { prefetch: "static" };
+
 export type QuotationRow = {
   id: string;
   quote_number: string;
@@ -15,8 +17,8 @@ export type QuotationRow = {
 export default async function QuotationsPage() {
   const { supabase, organizationId } = await requireAppContext();
 
-  const [quotationsResult, productsResult, customersResult] =
-    await Promise.all([
+  const [quotationsResult, productsResult, customersResult] = await Promise.all(
+    [
       supabase
         .from("quotations")
         .select(
@@ -35,7 +37,8 @@ export default async function QuotationsPage() {
         .eq("organization_id", organizationId)
         .eq("type", "customer")
         .order("name"),
-    ]);
+    ],
+  );
 
   const quotations: QuotationRow[] =
     (quotationsResult.data ?? []).map((q) => ({

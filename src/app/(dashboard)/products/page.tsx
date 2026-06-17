@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAppContext } from "@/lib/erp";
 
+export const unstable_instant = { prefetch: "static" };
+
 export default async function ProductsPage() {
   const { supabase, organizationId } = await requireAppContext();
 

@@ -3,10 +3,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { StaffPicker } from "@/components/shop/staff-picker";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { z } from "zod";
 import {
@@ -275,11 +276,57 @@ export function SaleForm({
   const watchedQuantity = watch("quantity");
   const total =
     Number(watchedQuantity || 0) * Number(selectedProduct?.sale_price ?? 0);
+  const watchedPaidAmount = watch("paid_amount");
+  const isManualEditRef = useRef(false);
 
-  // Reset paid_amount when product or quantity changes
+  // Derive payment state
+  const paymentState =
+    watchedPaidAmount === 0
+      ? "Төлөөгүй"
+      : watchedPaidAmount >= total
+        ? "Төлөгдсөн"
+        : "Хэсэгчлэн";
+
+  const paymentBadgeVariant: "default" | "secondary" | "outline" =
+    paymentState === "Төлөгдсөн"
+      ? "default"
+      : paymentState === "Хэсэгчлэн"
+        ? "secondary"
+        : "outline";
+
+  const remaining = Math.max(0, total - (watchedPaidAmount || 0));
+
+  // Quick action handler for payment amounts
+  const handleQuickAction = (action: "all" | "half" | "zero") => {
+    isManualEditRef.current = true;
+    if (action === "all") {
+      setValue("paid_amount", total || 0);
+    } else if (action === "half") {
+      setValue("paid_amount", (total || 0) / 2);
+    } else if (action === "zero") {
+      setValue("paid_amount", 0);
+    }
+  };
+
+  // When product changes: always reset paid_amount to new total
   useEffect(() => {
-    setValue("paid_amount", total || 0);
-  }, [total, setValue]);
+    isManualEditRef.current = false;
+    const newTotal =
+      Number(watchedQuantity || 0) * Number(selectedProduct?.sale_price ?? 0);
+    setValue("paid_amount", newTotal || 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchedProductId]);
+
+  // When quantity changes: only auto-fill if not manually edited
+  useEffect(() => {
+    if (isManualEditRef.current) return;
+    const product = allProducts.find((p) => p.id === watchedProductId);
+    const qty = Number(watchedQuantity || 0);
+    const price = Number(product?.sale_price ?? 0);
+    const newTotal = qty * price;
+    setValue("paid_amount", newTotal || 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchedQuantity]);
 
   // --- Payment method combobox (creatable) ---
   const [paymentQuery, setPaymentQuery] = useState("");
@@ -429,8 +476,42 @@ export function SaleForm({
               type="number"
               min="0"
               step="0.01"
-              {...register("paid_amount", { valueAsNumber: true })}
+              {...register("paid_amount", {
+                valueAsNumber: true,
+                onChange: () => {
+                  isManualEditRef.current = true;
+                },
+              })}
             />
+            <div className="mt-1 flex gap-1.5">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                onClick={() => handleQuickAction("all")}
+              >
+                Бүгд
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                onClick={() => handleQuickAction("half")}
+              >
+                50%
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                onClick={() => handleQuickAction("zero")}
+              >
+                0
+              </Button>
+            </div>
             {errors.paid_amount && (
               <p className="text-xs text-destructive">
                 {errors.paid_amount.message}
@@ -617,7 +698,16 @@ export function SaleForm({
       </div>
 
       <div className="rounded-none border border-border bg-muted/40 px-4 py-3 text-sm">
-        Нийт дүн: <span className="font-semibold">{formatCurrency(total)}</span>
+        <div className="flex items-center justify-between">
+          <span>
+            Нийт дүн:{" "}
+            <span className="font-semibold">{formatCurrency(total)}</span>
+          </span>
+          <Badge variant={paymentBadgeVariant}>{paymentState}</Badge>
+        </div>
+        <div className="mt-1 text-muted-foreground">
+          Үлдэгдэл: {formatCurrency(remaining)}
+        </div>
       </div>
 
       {saleMutation.error ? (

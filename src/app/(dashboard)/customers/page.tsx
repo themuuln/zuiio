@@ -10,6 +10,8 @@ import { PageShell } from "@/components/erp/page-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAppContext } from "@/lib/erp";
 
+export const unstable_instant = { prefetch: "static" };
+
 export default async function CustomersPage() {
   const { supabase, organizationId } = await requireAppContext();
   const { data: customers } = await supabase

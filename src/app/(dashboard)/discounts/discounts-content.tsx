@@ -3,6 +3,10 @@
 import { Percent } from "@phosphor-icons/react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import {
+  type DiscountDetailData,
+  DiscountDetailDrawer,
+} from "@/components/discounts/discount-detail-drawer";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
 import { DiscountCreateDrawer } from "@/components/discounts/discount-create-drawer";
@@ -30,14 +34,13 @@ const APPLIES_TO_LABELS: Record<string, string> = {
   selected_categories: "Сонгосон ангилал",
 };
 
-export function DiscountsContent({
-  discounts,
-}: {
-  discounts: DiscountRow[];
-}) {
+export function DiscountsContent({ discounts }: { discounts: DiscountRow[] }) {
   const searchParams = useSearchParams();
   const [createOpen, setCreateOpen] = useState(
     searchParams.get("create") === "true",
+  );
+  const [selectedDiscount, setSelectedDiscount] = useState<DiscountRow | null>(
+    null,
   );
   const initialCreateRef = useRef(createOpen);
 
@@ -46,6 +49,24 @@ export function DiscountsContent({
       window.history.replaceState({}, "", "/discounts");
     }
   }, []);
+
+  function toDetailData(d: DiscountRow): DiscountDetailData {
+    return {
+      id: d.id,
+      name: d.name,
+      description: d.description,
+      type: d.type,
+      value: d.value,
+      applies_to: d.applies_to,
+      min_purchase_amount: d.min_purchase_amount,
+      valid_from: d.valid_from,
+      valid_until: d.valid_until,
+      is_active: d.is_active,
+      usage_limit: d.usage_limit,
+      used_count: d.used_count,
+      created_at: d.created_at,
+    };
+  }
 
   return (
     <>
@@ -92,7 +113,11 @@ export function DiscountsContent({
                 </TableHeader>
                 <TableBody>
                   {discounts.map((discount) => (
-                    <TableRow key={discount.id}>
+                    <TableRow
+                      key={discount.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => setSelectedDiscount(discount)}
+                    >
                       <TableCell className="font-medium">
                         {discount.name}
                       </TableCell>
@@ -108,9 +133,7 @@ export function DiscountsContent({
                         {APPLIES_TO_LABELS[discount.applies_to] ??
                           discount.applies_to}
                       </TableCell>
-                      <TableCell>
-                        {formatDate(discount.valid_from)}
-                      </TableCell>
+                      <TableCell>{formatDate(discount.valid_from)}</TableCell>
                       <TableCell>
                         {discount.valid_until
                           ? formatDate(discount.valid_until)
@@ -137,6 +160,15 @@ export function DiscountsContent({
           </Card>
         )}
       </PageShell>
+      {selectedDiscount && (
+        <DiscountDetailDrawer
+          discount={toDetailData(selectedDiscount)}
+          open={!!selectedDiscount}
+          onOpenChange={(open) => {
+            if (!open) setSelectedDiscount(null);
+          }}
+        />
+      )}
     </>
   );
 }

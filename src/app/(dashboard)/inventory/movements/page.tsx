@@ -16,6 +16,8 @@ import {
 import { requireAppContext } from "@/lib/erp";
 import { formatCurrency, formatDate } from "@/lib/format";
 
+export const unstable_instant = { prefetch: "static" };
+
 const MOVEMENT_LABELS: Record<string, string> = {
   in: "Орлого",
   out: "Зарлага",

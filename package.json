@@ -10,7 +10,9 @@
     "format": "biome format --write",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/**/*.test.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:ai": "codeceptjs run --ai",
+    "prepare": "husky"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
@@ -53,6 +55,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.0",
+    "@codeceptjs/configure": "^4.0.0-beta.4",
+    "@midscene/web": "^1.9.7",
     "@playwright/test": "^1.61.0",
     "@tailwindcss/postcss": "^4.3.1",
     "@types/node": "^20.19.43",
@@ -60,9 +64,12 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "babel-plugin-react-compiler": "1.0.0",
+    "codeceptjs": "^4.0.7",
+    "husky": "^9.1.7",
     "react-grab": "^0.1.44",
     "tailwindcss": "^4.3.1",
     "tsx": "^4.22.4",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "wait-on": "^9.0.10"
   }
 }

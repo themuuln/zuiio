@@ -1,6 +1,8 @@
 import { requireAppContext } from "@/lib/erp";
 import { ReturnsContent } from "./returns-content";
 
+export const unstable_instant = { prefetch: "static" };
+
 export type ReturnRow = {
   id: string;
   return_number: string;

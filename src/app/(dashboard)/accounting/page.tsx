@@ -1,6 +1,8 @@
 import { requireAppContext } from "@/lib/erp";
 import { AccountingContent } from "./accounting-content";
 
+export const unstable_instant = { prefetch: "static" };
+
 export default async function AccountingPage() {
   const ctx = await requireAppContext();
   const { organizationId } = ctx;

@@ -2,6 +2,8 @@ import { requireAppContext } from "@/lib/erp";
 import type { SaleRow } from "./sales-table";
 import { SalesContent } from "./sales-content";
 
+export const unstable_instant = { prefetch: "static" };
+
 export default async function SalesPage() {
   const { supabase, organizationId } = await requireAppContext();
 

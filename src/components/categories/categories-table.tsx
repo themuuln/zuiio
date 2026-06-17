@@ -2,9 +2,14 @@
 
 import { NotePencil, Trash } from "@phosphor-icons/react";
 import type { ColumnDef } from "@tanstack/react-table";
+import { useState } from "react";
 import { toast } from "sonner";
 import { deleteCategory } from "@/app/(dashboard)/inventory/categories/actions";
 import type { CategoryRow } from "@/app/(dashboard)/inventory/categories/page";
+import {
+  type CategoryDetailData,
+  CategoryDetailDrawer,
+} from "@/components/categories/category-detail-drawer";
 import {
   type CategoryEditData,
   CategoryEditDrawer,
@@ -13,6 +18,14 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { categoryKeys } from "@/lib/query/keys";
 import { useOptimisticDelete } from "@/lib/query/use-optimistic";
+
+function toDetailData(category: CategoryRow): CategoryDetailData {
+  return {
+    id: category.id,
+    name: category.name,
+    product_count: category.product_count,
+  };
+}
 
 function toEditData(category: CategoryRow): CategoryEditData {
   return {
@@ -48,7 +61,10 @@ function ActionsCell({ row }: { row: { original: CategoryRow } }) {
   };
 
   return (
-    <div className="flex items-center gap-1">
+    <div
+      className="flex items-center gap-1"
+      onClick={(e) => e.stopPropagation()}
+    >
       <CategoryEditDrawer category={toEditData(category)}>
         <Button variant="ghost" size="icon-xs">
           <NotePencil className="size-3.5" />
@@ -93,14 +109,30 @@ const defaultColumns: ColumnDef<CategoryRow>[] = [
 ];
 
 export function CategoriesTable({ data }: { data: CategoryRow[] }) {
+  const [selectedCategory, setSelectedCategory] = useState<CategoryRow | null>(
+    null,
+  );
+
   return (
-    <DataTable
-      columns={defaultColumns}
-      data={data}
-      searchColumn="name"
-      searchPlaceholder="Ангиллаар хайх..."
-      pageSize={10}
-      totalLabel="ангилал"
-    />
+    <>
+      <DataTable
+        columns={defaultColumns}
+        data={data}
+        searchColumn="name"
+        searchPlaceholder="Ангиллаар хайх..."
+        pageSize={10}
+        totalLabel="ангилал"
+        onRowClick={(row) => setSelectedCategory(row)}
+      />
+      {selectedCategory && (
+        <CategoryDetailDrawer
+          category={toDetailData(selectedCategory)}
+          open={!!selectedCategory}
+          onOpenChange={(open) => {
+            if (!open) setSelectedCategory(null);
+          }}
+        />
+      )}
+    </>
   );
 }

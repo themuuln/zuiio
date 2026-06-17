@@ -170,7 +170,7 @@ export function DashboardShell({
                             isActive={isActive}
                             tooltip={item.title}
                           >
-                            <Link href={item.href} prefetch={false}>
+                            <Link href={item.href}>
                               <Icon />
                               <span>{item.title}</span>
                             </Link>
@@ -187,7 +187,7 @@ export function DashboardShell({
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
-                    <Link href="/settings" prefetch={false}>
+                    <Link href="/settings">
                       <Avatar className="size-6">
                         <AvatarFallback className="text-xs">
                           {initials}

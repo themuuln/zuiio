@@ -4,6 +4,8 @@ import { requireAppContext } from "@/lib/erp";
 import type { DashboardData } from "./dashboard-client";
 import { DashboardClient } from "./dashboard-client";
 
+export const unstable_instant = { prefetch: "static" };
+
 export default async function DashboardPage() {
   const { supabase, organizationId } = await requireAppContext();
 

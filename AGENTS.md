@@ -1,10 +1,13 @@
 <!-- BEGIN:nextjs-agent-rules -->
+
 # This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+
 <!-- END:nextjs-agent-rules -->
 
 <!-- BEGIN:form-packages -->
+
 # Form handling: react-hook-form + zod
 
 All forms in this project use **react-hook-form** + **zod** for validation.
@@ -47,9 +50,13 @@ export default function MyForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <input {...register("field")} />
-      {errors.field && <p className="text-xs text-destructive">{errors.field.message}</p>}
+      {errors.field && (
+        <p className="text-xs text-destructive">{errors.field.message}</p>
+      )}
       {serverError && <p className="text-sm text-destructive">{serverError}</p>}
-      <button type="submit" disabled={isSubmitting}>Submit</button>
+      <button type="submit" disabled={isSubmitting}>
+        Submit
+      </button>
     </form>
   );
 }
@@ -73,9 +80,11 @@ export default function MyForm() {
 ## For useMutation forms (TanStack Query)
 
 Keep the existing `useMutation` for submission, but add `useForm` + `zod` on top for form state, validation, and Enter key support. Build FormData from validated values in onSubmit.
+
 <!-- END:form-packages -->
 
 <!-- BEGIN:drawer-pattern -->
+
 # Create/Edit/Detail: Use Slide-in Drawers, Not Full Pages
 
 All **create**, **edit**, and **detail** views must use slide-in drawers (`@base-ui/react/drawer`) instead of full-page routes.
@@ -107,7 +116,7 @@ import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
   }
 >
   {/* drawer content — form, detail view, etc. */}
-</SlideInDrawer>
+</SlideInDrawer>;
 ```
 
 Props: `open`, `onOpenChange`, `title`, `description` (optional), `trigger` (optional, for create drawers), `panelWidth` (optional, default `"28rem"`).
@@ -143,3 +152,20 @@ src/app/(dashboard)/invoices/
 6. **Create drawer** supports controlled `open`/`onOpenChange` props for the `?create=true` flow
 7. **Combobox** dropdowns use `ComboboxCreate` for creating new items inline (e.g., creating a contact while creating an invoice)
 <!-- END:drawer-pattern -->
+
+<!-- BEGIN:docs-workflow -->
+
+# Documentation — must be synced before every PR
+
+Docs live in `docs/` (VitePress). The agent writes them, not auto-generated changelogs.
+
+## Project-specific commands
+
+- **Check what changed**: `./scripts/documentize.sh sync`
+- **Read commits since last sync**: `git log $(jq -r '.lastCodeSyncCommit' .documentizer/sync.json)..HEAD --oneline`
+- **Stamp after writing**: `./scripts/documentize.sh sync --commit`
+
+## Enforcement
+
+- CI (`.github/workflows/docs.yml`) on every PR to `main` — fails if `sync --check` doesn't pass.
+<!-- END:docs-workflow -->

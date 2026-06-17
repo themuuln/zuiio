@@ -1,6 +1,8 @@
 import { requireAppContext } from "@/lib/erp";
 import { InvoicesContent } from "./invoices-content";
 
+export const unstable_instant = { prefetch: "static" };
+
 export default async function InvoicesPage() {
   const { supabase, organizationId } = await requireAppContext();
 

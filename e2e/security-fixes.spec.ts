@@ -6,29 +6,19 @@ import { expect, test } from "@playwright/test";
  * Prerequisites:
  *   - App must be running (npm run dev)
  *   - PLAYWRIGHT_BASE_URL env var or default http://localhost:3000
+ *   - Auth setup must have run (saves storage to .auth/user.json)
  *
  * Run: npm run test:e2e
  */
 
-const DEV_EMAIL = "themuuln1@gmail.com";
-const DEV_PASSWORD = "Tolom!11";
-
-// ── Helper: fetch export CSV from browser context (carries auth cookies) ──
+// ── Helper: fetch export CSV using browser context (carries auth cookies) ──
 
 async function fetchExportCsv(
   page: import("@playwright/test").Page,
   url: string,
 ): Promise<{ ok: boolean; text: string }> {
-  return page.evaluate(async (fetchUrl: string) => {
-    try {
-      const res = await fetch(fetchUrl);
-      if (!res.ok) return { ok: false, text: `HTTP ${res.status}` };
-      const text = await res.text();
-      return { ok: true, text };
-    } catch (err) {
-      return { ok: false, text: String(err) };
-    }
-  }, url);
+  const response = await page.request.get(url);
+  return { ok: response.ok(), text: await response.text() };
 }
 
 // ── P0: Cron Endpoint Authentication (no auth needed) ─────────────
@@ -105,15 +95,6 @@ test.describe("P1: Public share pages show not-found", () => {
 // ── Auth-dependent tests ──────────────────────────────────────────
 
 test.describe("Security fixes (authenticated)", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto("/login", { waitUntil: "networkidle" });
-    await page.waitForSelector('input[name="email"]', { timeout: 30000 });
-    await page.fill('input[name="email"]', DEV_EMAIL);
-    await page.fill('input[name="password"]', DEV_PASSWORD);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/\/$/, { timeout: 30000 });
-  });
-
   // ── P1: Share link creation ─────────────────────────────────
 
   test.describe("P1: Share link creation", () => {
