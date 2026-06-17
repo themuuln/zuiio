@@ -1,0 +1,7 @@
+{
+  "current": "v1.0.0",
+  "versions": [
+    { "label": "v1.0.0 (latest)", "tag": "v1.0.0", "path": "/v1.0.0/" },
+    { "label": "dev (main)", "tag": "main", "path": "/dev/" }
+  ]
+}

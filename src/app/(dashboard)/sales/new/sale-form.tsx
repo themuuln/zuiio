@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
+import { StaffPicker } from "@/components/shop/staff-picker";
 import { Button } from "@/components/ui/button";
+import { z } from "zod";
 import {
   Combobox,
   ComboboxContent,
@@ -84,6 +85,7 @@ export function SaleForm({
 }: {
   products: ProductOption[];
   customers: CustomerOption[];
+  /** Called after a successful sale instead of redirecting to /sales. Used by the drawer variant. */
   onSuccess?: () => void;
 }) {
   const router = useRouter();
@@ -248,13 +250,13 @@ export function SaleForm({
   const [productQuery, setProductQuery] = useState("");
   const trimmedProductQuery = productQuery.trim();
   const loweredProductQuery = trimmedProductQuery.toLowerCase();
-  const productExactMatch =
+  const productLabelMatch =
     loweredProductQuery === "" ||
-    products.some((p) => p.name.toLowerCase() === loweredProductQuery);
+    products.some((p) => p.name.toLowerCase().includes(loweredProductQuery));
   const [createdProducts, setCreatedProducts] = useState<ProductOption[]>([]);
   const allProducts = [...products, ...createdProducts];
   const productItems: ProductOption[] =
-    trimmedProductQuery !== "" && !productExactMatch
+    trimmedProductQuery !== "" && !productLabelMatch
       ? [
           ...allProducts,
           {
@@ -285,11 +287,14 @@ export function SaleForm({
   const [allPaymentMethods, setAllPaymentMethods] = useState<string[]>([
     ...initialPaymentMethods,
   ]);
-  const paymentExactMatch =
+  const paymentLabelMatch =
     trimmedPaymentQuery === "" ||
-    allPaymentMethods.some((m) => m.toLowerCase() === trimmedPaymentQuery);
+    allPaymentMethods.some((m) => {
+      const label = paymentMethodLabels[m] ?? m;
+      return label.toLowerCase().includes(trimmedPaymentQuery);
+    });
   const paymentItems: string[] =
-    trimmedPaymentQuery !== "" && !paymentExactMatch
+    trimmedPaymentQuery !== "" && !paymentLabelMatch
       ? [...allPaymentMethods, paymentQuery.trim()]
       : allPaymentMethods;
 
@@ -299,11 +304,14 @@ export function SaleForm({
   const [allStatuses, setAllStatuses] = useState<string[]>([
     ...initialStatuses,
   ]);
-  const statusExactMatch =
+  const statusLabelMatch =
     trimmedStatusQuery === "" ||
-    allStatuses.some((s) => s.toLowerCase() === trimmedStatusQuery);
+    allStatuses.some((s) => {
+      const label = statusLabels[s] ?? s;
+      return label.toLowerCase().includes(trimmedStatusQuery);
+    });
   const statusItems: string[] =
-    trimmedStatusQuery !== "" && !statusExactMatch
+    trimmedStatusQuery !== "" && !statusLabelMatch
       ? [...allStatuses, statusQuery.trim()]
       : allStatuses;
 
@@ -490,6 +498,8 @@ export function SaleForm({
               </p>
             )}
           </Field>
+
+          <StaffPicker />
 
           <Field>
             <FieldLabel htmlFor="status">Төлөв</FieldLabel>

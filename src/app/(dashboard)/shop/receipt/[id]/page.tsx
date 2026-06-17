@@ -54,6 +54,8 @@ type SaleData = {
   created_at: string | null;
   contact_id: string | null;
   contacts: { name: string } | null;
+  salesperson_id: string | null;
+  profiles: { full_name: string | null } | null;
 };
 
 type ReceiptContentProps = {
@@ -252,6 +254,14 @@ function ReceiptContent({
         </div>
       )}
 
+      {/* Salesperson name */}
+      {sale.profiles?.full_name && (
+        <div className="rounded-xl border border-border bg-card px-4 py-3">
+          <p className="text-xs text-muted-foreground">Борлуулагч</p>
+          <p className="text-sm font-medium">{sale.profiles.full_name}</p>
+        </div>
+      )}
+
       {/* Items */}
       <div className="flex flex-col gap-1">
         <p className="text-xs font-medium text-muted-foreground">
@@ -358,11 +368,11 @@ export default async function ReceiptPage({
     .eq("id", organizationId)
     .single();
 
-  // Fetch sale with contact info
+  // Fetch sale with contact info and salesperson info
   const { data: sale } = await supabase
     .from("sales")
     .select(
-      "id, total_amount, paid_amount, payment_method, status, sale_date, created_at, contact_id, contacts(name)",
+      "id, total_amount, paid_amount, payment_method, status, sale_date, created_at, contact_id, contacts(name), salesperson_id, profiles!sales_salesperson_id_fkey(full_name)",
     )
     .eq("organization_id", organizationId)
     .eq("id", id)

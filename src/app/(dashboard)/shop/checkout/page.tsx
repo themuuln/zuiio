@@ -16,6 +16,7 @@ import { createShopSale } from "@/app/(dashboard)/shop/actions";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
 import { CustomerPicker } from "@/components/shop/customer-picker";
 import { NumericKeypad } from "@/components/shop/numeric-keypad";
+import { StaffPicker } from "@/components/shop/staff-picker";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -310,6 +311,11 @@ export default function CheckoutPage() {
           onNameChange={handleNameChange}
           onPhoneChange={handlePhoneChange}
         />
+      </section>
+
+      {/* Staff/salesperson picker */}
+      <section className="flex flex-col gap-3">
+        <StaffPicker />
       </section>
 
       {/* Order summary */}

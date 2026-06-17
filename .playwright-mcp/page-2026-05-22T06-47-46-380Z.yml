@@ -1,0 +1,28 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: Нэвтрэх
+      - generic [ref=e6]: Имэйл хаяг, нууц үгээ оруулна уу
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - group [ref=e10]:
+          - generic [ref=e11]: Имэйл
+          - generic [ref=e12]:
+            - img
+            - textbox "Имэйл" [ref=e13]:
+              - /placeholder: name@example.com
+        - group [ref=e14]:
+          - generic [ref=e15]: Нууц үг
+          - generic [ref=e16]:
+            - img
+            - textbox "Нууц үг" [ref=e17]:
+              - /placeholder: ••••••••
+      - button "Нэвтрэх" [ref=e18]:
+        - text: Нэвтрэх
+        - img
+      - paragraph [ref=e19]:
+        - text: Бүртгэлгүй юу?
+        - link "Бүртгүүлэх" [ref=e20] [cursor=pointer]:
+          - /url: /register
+  - button "Open Next.js Dev Tools" [ref=e26] [cursor=pointer]:
+    - img [ref=e27]

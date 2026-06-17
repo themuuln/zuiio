@@ -39,7 +39,22 @@ export async function updateSession(request: NextRequest) {
   // The /r/[token] page handles data access via the get_public_report_data RPC function.
   const isShareRoute = request.nextUrl.pathname.startsWith("/r/");
 
-  if (!user && !isPublicRoute && !isShareRoute) {
+  // Allow public org product pages (/{slug}/products) without auth.
+  // Data access is handled by the get_public_products SECURITY DEFINER function.
+  const isPublicProductsRoute = /^\/[^/]+\/products(\/|$)/.test(
+    request.nextUrl.pathname,
+  );
+
+  // Allow cron API routes without auth (they use CRON_SECRET Bearer token instead).
+  const isCronRoute = request.nextUrl.pathname.startsWith("/api/cron/");
+
+  if (
+    !user &&
+    !isPublicRoute &&
+    !isShareRoute &&
+    !isPublicProductsRoute &&
+    !isCronRoute
+  ) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set(

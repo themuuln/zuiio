@@ -1,5 +1,6 @@
 import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
+import { CommissionSummary } from "@/components/reports/commission-summary";
 import { ExpenseBreakdown } from "@/components/reports/expense-breakdown";
 import { ExpenseDonutChart } from "@/components/reports/expense-donut-chart";
 import { FinancialSummary } from "@/components/reports/financial-summary";
@@ -76,6 +77,8 @@ export default async function ReportsPage({
         <PendingSales data={report.pendingSales} />
         <PendingSalesChart data={report.pendingSales} />
       </div>
+
+      <CommissionSummary data={report.commissionSummary} />
     </PageShell>
   );
 }

@@ -54,3 +54,11 @@ export const brandKeys = {
   lists: (orgId: string) => ["brands", "list", orgId] as const,
   detail: (id: string) => ["brands", "detail", id] as const,
 };
+
+export const commissionKeys = {
+  all: () => ["commissions"] as const,
+  summary: (orgId: string) => ["commissions", "summary", orgId] as const,
+  unpaidItems: (orgId: string, profileId: string) =>
+    ["commissions", "unpaid", orgId, profileId] as const,
+  history: (orgId: string) => ["commissions", "history", orgId] as const,
+};

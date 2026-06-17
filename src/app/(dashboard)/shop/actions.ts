@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { calculateCommission } from "@/lib/commissions";
 import { requireAppContext } from "@/lib/erp";
 import { createInvoiceFromSale } from "@/lib/invoicing";
 import { getString, normalizePhone } from "@/lib/validation";
@@ -34,6 +35,25 @@ export async function createShopSale(
 
   if (!Array.isArray(items) || items.length === 0) {
     return { error: "Сагсанд бүтээгдэхүүн байхгүй байна." };
+  }
+
+  // --- Resolve salesperson ---
+  const salespersonId = getString(formData, "salesperson_id") || userId;
+
+  // Validate cross-org salesperson override
+  if (salespersonId !== userId) {
+    const { data: salesperson } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", salespersonId)
+      .eq("organization_id", organizationId)
+      .maybeSingle();
+
+    if (!salesperson) {
+      return {
+        error: "Сонгосон борлуулагч танай байгууллагад хамаарахгүй байна.",
+      };
+    }
   }
 
   const paymentMethod = getString(formData, "payment_method") || "cash";
@@ -125,6 +145,7 @@ export async function createShopSale(
       payment_method: paymentMethod,
       status: "completed",
       created_by: userId,
+      salesperson_id: salespersonId,
     })
     .select("id")
     .single();
@@ -142,13 +163,17 @@ export async function createShopSale(
   const saleId = sale.id;
 
   // --- Step 4: Insert sale_items ---
-  const saleItems = items.map((item) => ({
-    sale_id: saleId,
-    product_id: item.productId,
-    quantity: item.quantity,
-    unit_price: item.unitPrice,
-    total_price: item.unitPrice * item.quantity,
-  }));
+  const saleItems = items.map((item) => {
+    const totalPrice = item.unitPrice * item.quantity;
+    return {
+      sale_id: saleId,
+      product_id: item.productId,
+      quantity: item.quantity,
+      unit_price: item.unitPrice,
+      total_price: totalPrice,
+      commission_amount: calculateCommission(totalPrice),
+    };
+  });
 
   const { error: itemsError } = await supabase
     .from("sale_items")
@@ -261,4 +286,24 @@ export async function createShopSale(
   revalidatePath("/shop");
   revalidatePath("/shop/history");
   return { saleId };
+}
+
+/**
+ * Returns all profiles in the current organization and the current user's ID.
+ * Used by the StaffPicker component for salesperson selection.
+ */
+export async function getStaffList() {
+  const { supabase, organizationId, userId } = await requireAppContext();
+
+  const { data: profiles, error } = await supabase
+    .from("profiles")
+    .select("id, full_name, role")
+    .eq("organization_id", organizationId)
+    .order("full_name");
+
+  if (error) {
+    return { error: "Борлуулагчдын жагсаалт авахад алдаа гарлаа." };
+  }
+
+  return { profiles: profiles ?? [], currentUserId: userId };
 }
