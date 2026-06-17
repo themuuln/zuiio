@@ -83,8 +83,41 @@ export const PERMISSION_GROUPS: {
         "reports.manage",
         "notifications.manage",
         "audit_log.read",
+        "emails.manage",
       ].includes(p),
     ),
+  },
+  {
+    label: "И-мэйл",
+    key: "emails",
+    permissions: APP_PERMISSIONS.filter((p) => p.startsWith("emails.")),
+  },
+  {
+    label: "Худалдан авалт",
+    key: "purchases",
+    permissions: APP_PERMISSIONS.filter((p) => p.startsWith("purchases.")),
+  },
+  {
+    label: "Үнийн санал",
+    key: "quotations",
+    permissions: APP_PERMISSIONS.filter((p) => p.startsWith("quotations.")),
+  },
+  {
+    label: "Буцаалт",
+    key: "returns",
+    permissions: APP_PERMISSIONS.filter((p) => p.startsWith("returns.")),
+  },
+  {
+    label: "Нягтлан бодох бүртгэл",
+    key: "accounting",
+    permissions: APP_PERMISSIONS.filter((p) =>
+      ["accounting.manage"].includes(p),
+    ),
+  },
+  {
+    label: "Хямдрал",
+    key: "discounts",
+    permissions: APP_PERMISSIONS.filter((p) => p.startsWith("discounts.")),
   },
 ];
 
@@ -139,4 +172,22 @@ export const PERMISSION_LABELS: Record<AppPermission, string> = {
   "reports.manage": "Тайлан удирдах",
   "notifications.manage": "Мэдэгдэл удирдах",
   "audit_log.read": "Үйлдлийн түүх харах",
-};
+  "emails.manage": "И-мэйл тохиргоо удирдах",
+  "purchases.create": "Худалдан авалт үүсгэх",
+  "purchases.read": "Худалдан авалт харах",
+  "purchases.update": "Худалдан авалт засах",
+  "purchases.delete": "Худалдан авалт устгах",
+  "quotations.create": "Үнийн санал үүсгэх",
+  "quotations.read": "Үнийн санал харах",
+  "quotations.update": "Үнийн санал засах",
+  "quotations.delete": "Үнийн санал устгах",
+  "returns.create": "Буцаалт үүсгэх",
+  "returns.read": "Буцаалт харах",
+  "returns.update": "Буцаалт засах",
+  "returns.delete": "Буцаалт устгах",
+  "accounting.manage": "Нягтлан бодох бүртгэл удирдах",
+  "discounts.create": "Хямдрал үүсгэх",
+  "discounts.read": "Хямдрал харах",
+  "discounts.update": "Хямдрал засах",
+  "discounts.delete": "Хямдрал устгах",
+} as Record<AppPermission, string>;

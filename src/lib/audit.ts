@@ -9,7 +9,9 @@ type AuditAction =
   | "deleted"
   | "status_changed"
   | "shared"
-  | "payment_received";
+  | "payment_received"
+  | "activated"
+  | "deactivated";
 
 type EntityType =
   | "product"
@@ -20,7 +22,13 @@ type EntityType =
   | "category"
   | "stock_movement"
   | "warehouse"
-  | "brand";
+  | "brand"
+  | "purchase_order"
+  | "quotation"
+  | "return"
+  | "discount"
+  | "journal_entry"
+  | "account";
 
 type FieldChange = {
   old: unknown;

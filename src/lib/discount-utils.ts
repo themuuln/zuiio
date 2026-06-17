@@ -1,0 +1,178 @@
+/**
+ * Discount calculation utilities — pure functions for applying discounts.
+ */
+
+export interface DiscountCondition {
+  condition_type: "product" | "category";
+  condition_value: string;
+}
+
+export interface DiscountParams {
+  discountType: "percentage" | "fixed_amount";
+  discountValue: number;
+  cartTotal: number;
+  appliesTo: string;
+  items: Array<{
+    productId: string;
+    categoryId?: string;
+    price: number;
+    quantity: number;
+  }>;
+  conditions?: DiscountCondition[];
+}
+
+export interface DiscountResult {
+  discountAmount: number;
+  totalAfterDiscount: number;
+  description: string;
+}
+
+/**
+ * Check if a discount with "selected_products" applies to any item in the cart.
+ */
+function matchesSelectedProducts(
+  items: DiscountParams["items"],
+  conditions: DiscountCondition[],
+): boolean {
+  const productConditionValues = new Set(
+    conditions
+      .filter((c) => c.condition_type === "product")
+      .map((c) => c.condition_value),
+  );
+  return items.some((item) => productConditionValues.has(item.productId));
+}
+
+/**
+ * Check if a discount with "selected_categories" applies to any item in the cart.
+ */
+function matchesSelectedCategories(
+  items: DiscountParams["items"],
+  conditions: DiscountCondition[],
+): boolean {
+  const categoryConditionValues = new Set(
+    conditions
+      .filter((c) => c.condition_type === "category")
+      .map((c) => c.condition_value),
+  );
+  return items.some(
+    (item) => item.categoryId && categoryConditionValues.has(item.categoryId),
+  );
+}
+
+/**
+ * Calculate the applicable items total for "selected_products" or "selected_categories".
+ * Returns the subtotal of matching items only.
+ */
+function getApplicableSubtotal(
+  items: DiscountParams["items"],
+  appliesTo: string,
+  conditions: DiscountCondition[],
+): number {
+  if (appliesTo === "all") {
+    return items.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0,
+    );
+  }
+
+  if (appliesTo === "selected_products") {
+    const productIds = new Set(
+      conditions
+        .filter((c) => c.condition_type === "product")
+        .map((c) => c.condition_value),
+    );
+    return items
+      .filter((item) => productIds.has(item.productId))
+      .reduce((sum, item) => sum + item.price * item.quantity, 0);
+  }
+
+  if (appliesTo === "selected_categories") {
+    const categoryIds = new Set(
+      conditions
+        .filter((c) => c.condition_type === "category")
+        .map((c) => c.condition_value),
+    );
+    return items
+      .filter(
+        (item) => item.categoryId && categoryIds.has(item.categoryId),
+      )
+      .reduce((sum, item) => sum + item.price * item.quantity, 0);
+  }
+
+  return 0;
+}
+
+/**
+ * Pure function to calculate discount amount and total after discount.
+ *
+ * - For "percentage": discount = applicableSubtotal * (value / 100)
+ * - For "fixed_amount": discount = min(value, applicableSubtotal)
+ * - If appliesTo is "selected_products" or "selected_categories", discount
+ *   applies only to matching items. If no items match, discount is 0.
+ */
+export function calculateDiscount(
+  params: DiscountParams,
+): DiscountResult {
+  const { discountType, discountValue, cartTotal, items, appliesTo, conditions } =
+    params;
+
+  // Validate inputs
+  if (discountValue <= 0 || cartTotal <= 0) {
+    return { discountAmount: 0, totalAfterDiscount: cartTotal, description: "" };
+  }
+
+  // Determine applicable subtotal
+  let applicableSubtotal: number;
+  let description: string;
+
+  if (appliesTo === "all") {
+    applicableSubtotal = cartTotal;
+    description =
+      discountType === "percentage"
+        ? `Бүх бараанд ${discountValue}% хямдрал`
+        : `Бүх бараанд ${discountValue.toLocaleString()}₮ хямдрал`;
+  } else if (
+    (appliesTo === "selected_products" || appliesTo === "selected_categories") &&
+    conditions &&
+    conditions.length > 0
+  ) {
+    applicableSubtotal = getApplicableSubtotal(items, appliesTo, conditions);
+
+    if (applicableSubtotal <= 0) {
+      return {
+        discountAmount: 0,
+        totalAfterDiscount: cartTotal,
+        description: "Хямдрал тохирох бараа байхгүй",
+      };
+    }
+
+    const matchLabel =
+      appliesTo === "selected_products"
+        ? "сонгосон бараанд"
+        : "сонгосон ангилалд";
+    description =
+      discountType === "percentage"
+        ? `${matchLabel} ${discountValue}% хямдрал`
+        : `${matchLabel} ${discountValue.toLocaleString()}₮ хямдрал`;
+  } else {
+    // appliesTo is selected but no conditions — no applicable items
+    return {
+      discountAmount: 0,
+      totalAfterDiscount: cartTotal,
+      description: "Хямдралын нөхцөл тодорхойгүй",
+    };
+  }
+
+  // Calculate discount
+  let discountAmount: number;
+  if (discountType === "percentage") {
+    discountAmount = applicableSubtotal * (discountValue / 100);
+  } else {
+    // fixed_amount — cannot exceed the applicable subtotal
+    discountAmount = Math.min(discountValue, applicableSubtotal);
+  }
+
+  const totalAfterDiscount = Math.max(0, cartTotal - discountAmount);
+
+  return { discountAmount, totalAfterDiscount, description };
+}

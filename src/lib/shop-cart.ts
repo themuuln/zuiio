@@ -7,8 +7,15 @@ export type CartItem = {
   maxStock: number;
 };
 
+export type DiscountInfo = {
+  discountId: string;
+  discountName: string;
+  discountAmount: number;
+};
+
 export type CartState = {
   items: CartItem[];
+  discount: DiscountInfo | null;
 };
 
 export type CartAction =
@@ -19,7 +26,9 @@ export type CartAction =
       payload: { productId: string; quantity: number };
     }
   | { type: "CLEAR_CART" }
-  | { type: "LOAD_FROM_STORAGE"; payload: CartItem[] };
+  | { type: "LOAD_FROM_STORAGE"; payload: CartItem[] }
+  | { type: "APPLY_DISCOUNT"; payload: DiscountInfo }
+  | { type: "REMOVE_DISCOUNT" };
 
 export function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
@@ -30,6 +39,7 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
       if (existing) {
         const newQty = Math.min(existing.quantity + 1, existing.maxStock);
         return {
+          ...state,
           items: state.items.map((item) =>
             item.productId === action.payload.productId
               ? { ...item, quantity: newQty }
@@ -38,11 +48,13 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
         };
       }
       return {
+        ...state,
         items: [...state.items, { ...action.payload, quantity: 1 }],
       };
     }
     case "REMOVE_ITEM":
       return {
+        ...state,
         items: state.items.filter(
           (item) => item.productId !== action.payload.productId,
         ),
@@ -50,12 +62,14 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
     case "UPDATE_QUANTITY": {
       if (action.payload.quantity <= 0) {
         return {
+          ...state,
           items: state.items.filter(
             (item) => item.productId !== action.payload.productId,
           ),
         };
       }
       return {
+        ...state,
         items: state.items.map((item) =>
           item.productId === action.payload.productId
             ? {
@@ -67,9 +81,13 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
       };
     }
     case "LOAD_FROM_STORAGE":
-      return { items: action.payload };
+      return { ...state, items: action.payload };
     case "CLEAR_CART":
-      return { items: [] };
+      return { items: [], discount: null };
+    case "APPLY_DISCOUNT":
+      return { ...state, discount: action.payload };
+    case "REMOVE_DISCOUNT":
+      return { ...state, discount: null };
     default:
       return state;
   }
@@ -135,4 +153,15 @@ export function computeTotalAmount(items: CartItem[]): number {
  */
 export function computeItemCount(items: CartItem[]): number {
   return items.reduce((sum, item) => sum + item.quantity, 0);
+}
+
+/**
+ * Compute discounted total from subtotal and discount amount.
+ * Returns max(0, subtotal - discountAmount).
+ */
+export function computeDiscountedTotal(
+  subtotal: number,
+  discountAmount: number,
+): number {
+  return Math.max(0, subtotal - discountAmount);
 }

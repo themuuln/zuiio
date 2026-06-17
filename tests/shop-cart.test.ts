@@ -22,7 +22,7 @@ function makeItem(overrides: Partial<CartItem> = {}): CartItem {
 }
 
 function makeState(items: CartItem[] = []): CartState {
-  return { items };
+  return { items, discount: null };
 }
 
 test("ADD_ITEM adds new item with quantity 1", () => {

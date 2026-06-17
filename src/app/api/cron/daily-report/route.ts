@@ -4,13 +4,15 @@ import { formatCurrency } from "@/lib/format";
 import { sendTelegramNotification } from "@/lib/notification";
 import { getFullReport } from "@/lib/reports";
 import { createClient } from "@/lib/supabase/server";
+import { sendDailyReportEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
 /**
  * Cron job endpoint called by pg_cron via net.http_post.
  * Sends daily summary Telegram notifications to all orgs that have
- * daily_summary event type enabled.
+ * daily_summary event type enabled, AND sends daily report emails
+ * to orgs with report_email_enabled = true.
  */
 export async function POST() {
   try {
@@ -21,6 +23,10 @@ export async function POST() {
     const dateFrom = yesterday.toISOString();
     const dateTo = today.toISOString();
 
+    // ─── Telegram Notifications ─────────────────────────────────────
+
+    let telegramSent = 0;
+
     // Fetch all telegram notification configs with daily_summary enabled
     const { data: configs } = await supabase
       .from("notification_configs")
@@ -28,45 +34,75 @@ export async function POST() {
       .eq("channel", "telegram")
       .eq("enabled", true);
 
-    if (!configs || configs.length === 0) {
-      return NextResponse.json({ ok: true, sent: 0 });
-    }
+    if (configs && configs.length > 0) {
+      for (const config of configs) {
+        const eventTypes = config.event_types as string[];
+        if (
+          !Array.isArray(eventTypes) ||
+          !eventTypes.includes("daily_summary")
+        ) {
+          continue;
+        }
 
-    let sentCount = 0;
+        const orgId = config.organization_id;
+        const orgName = (
+          config as unknown as { organizations: { name: string } }
+        ).organizations.name;
 
-    for (const config of configs) {
-      const eventTypes = config.event_types as string[];
-      if (!Array.isArray(eventTypes) || !eventTypes.includes("daily_summary")) {
-        continue;
+        // Get report data for this org
+        const report = await getFullReport(supabase, orgId, dateFrom, dateTo);
+
+        const message =
+          `*${orgName}* — Өдрийн тойм\n\n` +
+          `📊 *Борлуулалт:* ${formatCurrency(report.financialSummary.totalSales)}\n` +
+          `💵 *Орлого:* ${formatCurrency(report.financialSummary.totalPaid)}\n` +
+          `📉 *Зарлага:* ${formatCurrency(report.financialSummary.totalExpenses)}\n` +
+          `📦 *Борлуулсан бүтээгдэхүүн:* ${report.productSales.length}\n` +
+          `⏳ *Хүлээгдэж буй:* ${report.pendingSales.length} борлуулалт (${formatCurrency(report.financialSummary.netCash < 0 ? 0 : report.financialSummary.netCash)})\n` +
+          `📋 *Хөдөлгөөн:* +${report.stockMovements.in} / -${report.stockMovements.out}`;
+
+        const result = await sendTelegramNotification(
+          orgId,
+          "daily_summary",
+          `📋 Өдрийн тойм — ${orgName}`,
+          message,
+        );
+
+        if (result.success) telegramSent++;
       }
-
-      const orgId = config.organization_id;
-      const orgName = (config as unknown as { organizations: { name: string } })
-        .organizations.name;
-
-      // Get report data for this org
-      const report = await getFullReport(supabase, orgId, dateFrom, dateTo);
-
-      const message =
-        `*${orgName}* — Өдрийн тойм\n\n` +
-        `📊 *Борлуулалт:* ${formatCurrency(report.financialSummary.totalSales)}\n` +
-        `💵 *Орлого:* ${formatCurrency(report.financialSummary.totalPaid)}\n` +
-        `📉 *Зарлага:* ${formatCurrency(report.financialSummary.totalExpenses)}\n` +
-        `📦 *Борлуулсан бүтээгдэхүүн:* ${report.productSales.length}\n` +
-        `⏳ *Хүлээгдэж буй:* ${report.pendingSales.length} борлуулалт (${formatCurrency(report.financialSummary.netCash < 0 ? 0 : report.financialSummary.netCash)})\n` +
-        `📋 *Хөдөлгөөн:* +${report.stockMovements.in} / -${report.stockMovements.out}`;
-
-      const result = await sendTelegramNotification(
-        orgId,
-        "daily_summary",
-        `📋 Өдрийн тойм — ${orgName}`,
-        message,
-      );
-
-      if (result.success) sentCount++;
     }
 
-    return NextResponse.json({ ok: true, sent: sentCount });
+    // ─── Email Reports ──────────────────────────────────────────────
+
+    let emailSent = 0;
+
+    // Fetch all orgs with report_email_enabled and a recipient configured
+    const { data: emailOrgs } = await supabase
+      .from("organizations")
+      .select("id, name, report_email_recipient")
+      .eq("report_email_enabled", true)
+      .not("report_email_recipient", "is", null);
+
+    if (emailOrgs && emailOrgs.length > 0) {
+      for (const org of emailOrgs) {
+        if (!org.report_email_recipient) continue;
+
+        const result = await sendDailyReportEmail(
+          supabase,
+          org.id,
+          org.name,
+          org.report_email_recipient,
+        );
+
+        if (result.success) emailSent++;
+      }
+    }
+
+    return NextResponse.json({
+      ok: true,
+      telegramSent,
+      emailSent,
+    });
   } catch (err) {
     console.error("Daily report cron error:", err);
     return NextResponse.json(

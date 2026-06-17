@@ -2,8 +2,11 @@
 
 import { Drawer } from "@base-ui/react/drawer";
 import {
+  ArrowCounterClockwise,
   Buildings,
+  Calculator,
   ChartBar,
+  ClipboardText,
   Clock,
   CreditCard,
   CurrencyDollar,
@@ -12,7 +15,9 @@ import {
   GearSix,
   House,
   Package,
+  Percent,
   SignOut,
+  Trolley,
   Users,
   Warehouse,
 } from "@phosphor-icons/react";
@@ -50,8 +55,13 @@ const navItems = [
   { title: "Агуулах", href: "/inventory", icon: Warehouse },
   { title: "Ангилалууд", href: "/inventory/categories", icon: Folder },
   { title: "Борлуулалт", href: "/sales", icon: CurrencyDollar },
+  { title: "Худалдан авалт", href: "/purchases", icon: Trolley },
+  { title: "Үнийн санал", href: "/quotations", icon: ClipboardText },
+  { title: "Буцаалт", href: "/returns", icon: ArrowCounterClockwise },
   { title: "Нэхэмжлэл", href: "/invoices", icon: FileText },
+  { title: "Хямдрал", href: "/discounts", icon: Percent },
   { title: "Зарлага", href: "/expenses", icon: CreditCard },
+  { title: "Нягтлан бодох бүртгэл", href: "/accounting", icon: Calculator },
   { title: "Харилцагчид", href: "/customers", icon: Users },
   { title: "Нийлүүлэгчид", href: "/suppliers", icon: Buildings },
   { title: "Үйлдлийн түүх", href: "/audit", icon: Clock },

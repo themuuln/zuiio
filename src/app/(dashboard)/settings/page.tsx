@@ -14,6 +14,8 @@ import { BrandPresetsCard } from "./brand-presets-card";
 import { NotificationSettings } from "./notification-settings";
 import { OrgInfoForm } from "./org-info-form";
 import { ProfileForm } from "./profile-form";
+import { SmtpSettings } from "./smtp-settings";
+import { ReportEmailSettings } from "./report-email-settings";
 
 const TEMPLATE_TYPES = ["gym", "fitness", "retail"];
 
@@ -42,6 +44,16 @@ export default async function SettingsPage() {
   const presetsData = showTemplates
     ? await supabase.from("product_presets").select("*").order("sort_order")
     : undefined;
+
+  // Check if SMTP is configured (for conditional rendering)
+  const { count: smtpCount } = await supabase
+    .from("smtp_configs")
+    .select("*", { count: "exact", head: true });
+
+  const hasSmtpConfig = (smtpCount ?? 0) > 0;
+  const canManageEmail =
+    isSuperAdmin ||
+    (permissions as string[]).includes("emails.manage");
 
   return (
     <div className="flex flex-1 flex-col gap-8">
@@ -109,6 +121,12 @@ export default async function SettingsPage() {
 
       {/* Notifications (superadmin only) */}
       {isSuperAdmin && <NotificationSettings isSuperAdmin />}
+
+      {/* SMTP Settings (superadmin or emails.manage) */}
+      {canManageEmail && <SmtpSettings isSuperAdmin={isSuperAdmin} />}
+
+      {/* Report Email Settings (visible when SMTP is configured) */}
+      {canManageEmail && hasSmtpConfig && <ReportEmailSettings />}
 
       {/* Theme */}
       <Card>

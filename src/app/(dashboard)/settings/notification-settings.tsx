@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { TelegramLogo } from "@phosphor-icons/react";
+import { EnvelopeSimple, TelegramLogo } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
@@ -36,6 +36,18 @@ const telegramSchema = z.object({
 });
 
 type TelegramValues = z.infer<typeof telegramSchema>;
+
+const emailSchema = z.object({
+  enabled: z.boolean(),
+  recipient_email: z
+    .string()
+    .email("Зөв и-мэйл хаяг оруулна уу.")
+    .optional()
+    .or(z.literal("")),
+  event_types: z.array(z.string()).min(1, "Дор хаяж нэг төрөл сонгоно уу"),
+});
+
+type EmailValues = z.infer<typeof emailSchema>;
 
 async function fetchTelegramConfig() {
   const supabase = createClient();
@@ -155,6 +167,100 @@ interface Props {
   isSuperAdmin: boolean;
 }
 
+async function fetchEmailConfig() {
+  const supabase = createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", user.id)
+    .single();
+  const orgId = profile?.organization_id;
+
+  let recipientEmail = "";
+  let enabled = true;
+  let eventTypes: string[] = ["low_stock"];
+
+  if (orgId) {
+    const { data: orgConfig } = await supabase
+      .from("notification_configs")
+      .select("*")
+      .eq("organization_id", orgId)
+      .eq("channel", "email")
+      .maybeSingle();
+
+    if (orgConfig) {
+      recipientEmail =
+        orgConfig.chat_id ??
+        (orgConfig.config_data as { recipient_email?: string })
+          ?.recipient_email ??
+        "";
+      enabled = orgConfig.enabled ?? true;
+      const et = orgConfig.event_types as string[];
+      if (Array.isArray(et) && et.length > 0) {
+        eventTypes = et;
+      }
+    }
+  }
+
+  return {
+    recipient_email: recipientEmail,
+    enabled,
+    event_types: eventTypes,
+  };
+}
+
+async function saveEmailConfig(values: EmailValues) {
+  const supabase = createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Нэвтрээгүй");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", user.id)
+    .single();
+  const orgId = profile?.organization_id;
+  if (!orgId) throw new Error("Байгууллага олдсонгүй");
+
+  const { data: existing } = await supabase
+    .from("notification_configs")
+    .select("id")
+    .eq("organization_id", orgId)
+    .eq("channel", "email")
+    .maybeSingle();
+
+  const payload = {
+    organization_id: orgId,
+    channel: "email",
+    chat_id: values.recipient_email,
+    enabled: values.enabled,
+    event_types: values.event_types,
+    config_data: { recipient_email: values.recipient_email },
+  };
+
+  if (existing) {
+    const { error } = await supabase
+      .from("notification_configs")
+      .update(payload)
+      .eq("id", existing.id);
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase
+      .from("notification_configs")
+      .insert(payload);
+    if (error) throw new Error(error.message);
+  }
+}
+
 export function NotificationSettings({ isSuperAdmin }: Props) {
   const queryClient = useQueryClient();
 
@@ -199,115 +305,254 @@ export function NotificationSettings({ isSuperAdmin }: Props) {
     saveMutation.mutate(data);
   };
 
+  // Email notification config
+  const { data: emailConfig } = useQuery({
+    queryKey: ["notification_config", "email"],
+    queryFn: fetchEmailConfig,
+  });
+
+  const {
+    register: emailRegister,
+    handleSubmit: emailHandleSubmit,
+    setValue: emailSetValue,
+    watch: emailWatch,
+    control: emailControl,
+    formState: { errors: emailErrors },
+  } = useForm<EmailValues>({
+    resolver: zodResolver(emailSchema),
+    values: {
+      recipient_email: emailConfig?.recipient_email ?? "",
+      enabled: emailConfig?.enabled ?? true,
+      event_types: emailConfig?.event_types ?? ["low_stock"],
+    },
+  });
+
+  const emailSaveMutation = useMutation({
+    mutationFn: saveEmailConfig,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["notification_config", "email"],
+      });
+      toast.success("И-мэйл мэдэгдэхүүний тохиргоо хадгалагдлаа.");
+    },
+    onError: (err) => {
+      toast.error(err.message || "Хадгалахад алдаа гарлаа.");
+    },
+  });
+
+  const emailEnabled = emailWatch("enabled");
+
+  const onEmailSubmit = (data: EmailValues) => {
+    emailSaveMutation.mutate(data);
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <TelegramLogo className="size-5" />
-          Telegram мэдэгдэхүүн
-        </CardTitle>
-        <CardDescription>
-          Бага нөөц, борлуулалт зэрэг мэдэгдлийг Telegram руу илгээх
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <FieldGroup>
-            <div className="flex items-center justify-between">
-              <div>
-                <FieldLabel>Мэдэгдэхүүн идэвхжүүлэх</FieldLabel>
-                <p className="text-sm text-muted-foreground">
-                  Telegram-ээр мэдэгдэл хүлээн авах
-                </p>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TelegramLogo className="size-5" />
+            Telegram мэдэгдэхүүн
+          </CardTitle>
+          <CardDescription>
+            Бага нөөц, борлуулалт зэрэг мэдэгдлийг Telegram руу илгээх
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <FieldGroup>
+              <div className="flex items-center justify-between">
+                <div>
+                  <FieldLabel>Мэдэгдэхүүн идэвхжүүлэх</FieldLabel>
+                  <p className="text-sm text-muted-foreground">
+                    Telegram-ээр мэдэгдэл хүлээн авах
+                  </p>
+                </div>
+                <Switch
+                  checked={enabled}
+                  onCheckedChange={(checked) => setValue("enabled", checked)}
+                />
               </div>
-              <Switch
-                checked={enabled}
-                onCheckedChange={(checked) => setValue("enabled", checked)}
-              />
+
+              <Field>
+                <FieldLabel htmlFor="bot_token">Bot Token</FieldLabel>
+                <Input
+                  id="bot_token"
+                  type="password"
+                  placeholder="8063505423:AA..."
+                  {...register("bot_token")}
+                />
+                {errors.bot_token && (
+                  <p className="text-xs text-destructive">
+                    {errors.bot_token.message}
+                  </p>
+                )}
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="chat_id">Chat ID</FieldLabel>
+                <Input
+                  id="chat_id"
+                  placeholder="-1001234567890"
+                  {...register("chat_id")}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Telegram-ээр @BotFather-аас бот үүсгээд, chat ID-гээ оруулна уу.
+                </p>
+                {errors.chat_id && (
+                  <p className="text-xs text-destructive">
+                    {errors.chat_id.message}
+                  </p>
+                )}
+              </Field>
+
+              <Field>
+                <FieldLabel>Мэдэгдлийн төрлүүд</FieldLabel>
+                <div className="space-y-2 mt-1">
+                  {EVENT_OPTIONS.map((opt) => (
+                    <div key={opt.value} className="flex items-center gap-2">
+                      <Controller
+                        control={control}
+                        name="event_types"
+                        render={({ field }) => (
+                          <Checkbox
+                            id={`event-${opt.value}`}
+                            checked={field.value.includes(opt.value)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                field.onChange([...field.value, opt.value]);
+                              } else {
+                                field.onChange(
+                                  field.value.filter((v) => v !== opt.value),
+                                );
+                              }
+                            }}
+                          />
+                        )}
+                      />
+                      <Label
+                        htmlFor={`event-${opt.value}`}
+                        className="text-sm font-normal cursor-pointer"
+                      >
+                        {opt.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+                {errors.event_types && (
+                  <p className="text-xs text-destructive mt-1">
+                    {errors.event_types.message}
+                  </p>
+                )}
+              </Field>
+            </FieldGroup>
+            <div className="flex items-center gap-2">
+              <Button type="submit" disabled={saveMutation.isPending}>
+                {saveMutation.isPending ? "Хадгалж байна..." : "Хадгалах"}
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/settings/notifications">Мэдэгдлийн түүх</Link>
+              </Button>
             </div>
+          </form>
+        </CardContent>
+      </Card>
 
-            <Field>
-              <FieldLabel htmlFor="bot_token">Bot Token</FieldLabel>
-              <Input
-                id="bot_token"
-                type="password"
-                placeholder="8063505423:AA..."
-                {...register("bot_token")}
-              />
-              {errors.bot_token && (
-                <p className="text-xs text-destructive">
-                  {errors.bot_token.message}
-                </p>
-              )}
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="chat_id">Chat ID</FieldLabel>
-              <Input
-                id="chat_id"
-                placeholder="-1001234567890"
-                {...register("chat_id")}
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Telegram-ээр @BotFather-аас бот үүсгээд, chat ID-гээ оруулна уу.
-              </p>
-              {errors.chat_id && (
-                <p className="text-xs text-destructive">
-                  {errors.chat_id.message}
-                </p>
-              )}
-            </Field>
-
-            <Field>
-              <FieldLabel>Мэдэгдлийн төрлүүд</FieldLabel>
-              <div className="space-y-2 mt-1">
-                {EVENT_OPTIONS.map((opt) => (
-                  <div key={opt.value} className="flex items-center gap-2">
-                    <Controller
-                      control={control}
-                      name="event_types"
-                      render={({ field }) => (
-                        <Checkbox
-                          id={`event-${opt.value}`}
-                          checked={field.value.includes(opt.value)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              field.onChange([...field.value, opt.value]);
-                            } else {
-                              field.onChange(
-                                field.value.filter((v) => v !== opt.value),
-                              );
-                            }
-                          }}
-                        />
-                      )}
-                    />
-                    <Label
-                      htmlFor={`event-${opt.value}`}
-                      className="text-sm font-normal cursor-pointer"
-                    >
-                      {opt.label}
-                    </Label>
-                  </div>
-                ))}
+      {/* Email Notification Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <EnvelopeSimple className="size-5" />
+            И-мэйл мэдэгдэхүүн
+          </CardTitle>
+          <CardDescription>
+            Чухал үйл явдлуудын талаар и-мэйлээр мэдэгдэх
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={emailHandleSubmit(onEmailSubmit)} className="space-y-4">
+            <FieldGroup>
+              <div className="flex items-center justify-between">
+                <div>
+                  <FieldLabel>Мэдэгдэхүүн идэвхжүүлэх</FieldLabel>
+                  <p className="text-sm text-muted-foreground">
+                    И-мэйлээр мэдэгдэл хүлээн авах
+                  </p>
+                </div>
+                <Switch
+                  checked={emailEnabled}
+                  onCheckedChange={(checked) =>
+                    emailSetValue("enabled", checked)
+                  }
+                />
               </div>
-              {errors.event_types && (
-                <p className="text-xs text-destructive mt-1">
-                  {errors.event_types.message}
-                </p>
-              )}
-            </Field>
-          </FieldGroup>
-          <div className="flex items-center gap-2">
-            <Button type="submit" disabled={saveMutation.isPending}>
-              {saveMutation.isPending ? "Хадгалж байна..." : "Хадгалах"}
+
+              <Field>
+                <FieldLabel htmlFor="email_recipient">
+                  Хүлээн авагч и-мэйл
+                </FieldLabel>
+                <Input
+                  id="email_recipient"
+                  type="email"
+                  placeholder="email@example.com"
+                  {...emailRegister("recipient_email")}
+                />
+                {emailErrors.recipient_email && (
+                  <p className="text-xs text-destructive">
+                    {emailErrors.recipient_email.message}
+                  </p>
+                )}
+              </Field>
+
+              <Field>
+                <FieldLabel>Мэдэгдлийн төрлүүд</FieldLabel>
+                <div className="space-y-2 mt-1">
+                  {EVENT_OPTIONS.map((opt) => (
+                    <div key={opt.value} className="flex items-center gap-2">
+                      <Controller
+                        control={emailControl}
+                        name="event_types"
+                        render={({ field }) => (
+                          <Checkbox
+                            id={`email-event-${opt.value}`}
+                            checked={field.value.includes(opt.value)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                field.onChange([...field.value, opt.value]);
+                              } else {
+                                field.onChange(
+                                  field.value.filter((v) => v !== opt.value),
+                                );
+                              }
+                            }}
+                          />
+                        )}
+                      />
+                      <Label
+                        htmlFor={`email-event-${opt.value}`}
+                        className="text-sm font-normal cursor-pointer"
+                      >
+                        {opt.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+                {emailErrors.event_types && (
+                  <p className="text-xs text-destructive mt-1">
+                    {emailErrors.event_types.message}
+                  </p>
+                )}
+              </Field>
+            </FieldGroup>
+            <Button
+              type="submit"
+              disabled={emailSaveMutation.isPending}
+            >
+              {emailSaveMutation.isPending ? "Хадгалж байна..." : "Хадгалах"}
             </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/settings/notifications">Мэдэгдлийн түүх</Link>
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+          </form>
+        </CardContent>
+      </Card>
+    </>
   );
 }
