@@ -17,6 +17,7 @@ type LineItemData = {
   productId: string;
   quantity: number;
   unitPrice: number;
+  variantId?: string;
 };
 
 export async function createSale(
@@ -99,8 +100,52 @@ export async function createSale(
 
   const productMap = new Map((products ?? []).map((p) => [p.id, p]));
 
+  // --- Pre-compute variant data for use in both validation and decrement ---
+  const variantItems = items.filter((i) => i.variantId);
+  let variantStockMap = new Map<string, { current_stock: number | null }>();
+
+  if (variantItems.length > 0) {
+    const variantIds = [...new Set(variantItems.map((i) => i.variantId!))];
+    const { data: variants, error: variantsError } = await supabase
+      .from("product_variants")
+      .select("id, current_stock")
+      .in("id", variantIds);
+
+    if (variantsError) {
+      return { error: "Вариантын мэдээлэл уншихад алдаа гарлаа." };
+    }
+
+    variantStockMap = new Map((variants ?? []).map((v) => [v.id, v]));
+  }
+
+  // --- Validate variant stock ---
   if (status !== "cancelled") {
-    for (const [productId, totalQty] of productQuantities) {
+    for (const item of variantItems) {
+      const variant = variantStockMap.get(item.variantId!);
+      if (!variant) {
+        return { error: "Сонгосон вариант олдсонгүй." };
+      }
+      const currentStock = Number(variant.current_stock ?? 0);
+      if (currentStock < item.quantity) {
+        return {
+          error: `Вариантын үлдэгдэл хүрэлцэхгүй байна. (Үлдэгдэл: ${currentStock}, хэрэгтэй: ${item.quantity})`,
+        };
+      }
+    }
+  }
+
+  // --- Validate product stock for non-variant items ---
+  if (status !== "cancelled") {
+    const nonVariantProductQuantities = new Map<string, number>();
+    for (const item of items) {
+      if (!item.variantId) {
+        nonVariantProductQuantities.set(
+          item.productId,
+          (nonVariantProductQuantities.get(item.productId) ?? 0) + item.quantity,
+        );
+      }
+    }
+    for (const [productId, totalQty] of nonVariantProductQuantities) {
       const product = productMap.get(productId);
       if (!product) {
         return { error: "Сонгосон бүтээгдэхүүн олдсонгүй." };
@@ -198,6 +243,7 @@ export async function createSale(
       total_price: totalPrice,
       commission_amount:
         status === "cancelled" ? 0 : calculateCommission(totalPrice),
+      variant_id: item.variantId ?? null,
     };
   });
 
@@ -223,6 +269,7 @@ export async function createSale(
       unit_cost: item.unitPrice,
       reference: `sale:${sale.id}`,
       created_by: userId,
+      variant_id: item.variantId ?? null,
     }));
 
     const { error: movementError } = await supabase
@@ -239,12 +286,18 @@ export async function createSale(
     }
   }
 
-  // --- Step 6: Atomic stock decrement per unique product ---
-  // Uses .gte("current_stock", totalQty) so the UPDATE only affects rows
-  // with sufficient stock at execution time. Aggregate quantities for duplicate
-  // products so one UPDATE handles all quantity for that product.
+  // --- Step 6a: Atomic product stock decrement for non-variant items ---
   if (status !== "cancelled") {
-    for (const [productId, totalQty] of productQuantities) {
+    const nonVariantProductQuantities = new Map<string, number>();
+    for (const item of items) {
+      if (!item.variantId) {
+        nonVariantProductQuantities.set(
+          item.productId,
+          (nonVariantProductQuantities.get(item.productId) ?? 0) + item.quantity,
+        );
+      }
+    }
+    for (const [productId, totalQty] of nonVariantProductQuantities) {
       const product = productMap.get(productId);
       if (!product) continue;
 
@@ -291,6 +344,52 @@ export async function createSale(
     }
   }
 
+  // --- Step 6b: Atomic variant stock decrement for variant items ---
+  if (status !== "cancelled") {
+    for (const item of variantItems) {
+      const variant = variantStockMap.get(item.variantId!);
+      const { data: updatedVariant, error: stockUpdateError } = await supabase
+        .from("product_variants")
+        .update({
+          current_stock: Number(variant?.current_stock ?? 0) - item.quantity,
+        })
+        .eq("id", item.variantId)
+        .gte("current_stock", item.quantity)
+        .select("id")
+        .maybeSingle();
+
+      if (stockUpdateError) {
+        // Actual error — full rollback
+        await supabase
+          .from("stock_movements")
+          .delete()
+          .eq("reference", `sale:${sale.id}`);
+        await supabase.from("sale_items").delete().eq("sale_id", sale.id);
+        await supabase.from("sales").delete().eq("id", sale.id);
+        if (createdContactId) {
+          await supabase.from("contacts").delete().eq("id", createdContactId);
+        }
+        return { error: stockUpdateError.message };
+      }
+
+      if (!updatedVariant) {
+        // .gte() condition failed — stock was consumed concurrently
+        await supabase
+          .from("stock_movements")
+          .delete()
+          .eq("reference", `sale:${sale.id}`);
+        await supabase.from("sale_items").delete().eq("sale_id", sale.id);
+        await supabase.from("sales").delete().eq("id", sale.id);
+        if (createdContactId) {
+          await supabase.from("contacts").delete().eq("id", createdContactId);
+        }
+        return {
+          error: "Вариантын үлдэгдэл хүрэлцэхгүй байна.",
+        };
+      }
+    }
+  }
+
   // --- Success: side effects ---
 
   // Auto-generate invoice as receipt (fire-and-forget)
@@ -320,6 +419,7 @@ export async function createSale(
         product_id: item.productId,
         quantity: item.quantity,
         unit_price: item.unitPrice,
+        variant_id: item.variantId ?? null,
       })),
     ).catch(console.error);
   }

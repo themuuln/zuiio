@@ -10,6 +10,10 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { CustomerPicker } from "@/components/shop/customer-picker";
 import { StaffPicker } from "@/components/shop/staff-picker";
+import {
+  VariantPicker,
+  type SelectedVariant,
+} from "@/components/products/variant-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -65,6 +69,7 @@ const lineItemSchema = z.object({
   product_id: z.string().min(1, "Бүтээгдэхүүн сонгоно уу"),
   quantity: z.number().positive("Тоо хэмжээ 0-ээс их байх ёстой"),
   unit_price: z.number().min(0, "Нэгж үнэ 0-ээс багагүй"),
+  variant_id: z.string().optional(),
 });
 
 const saleSchema = z.object({
@@ -102,6 +107,9 @@ export function SaleForm({
   const [keepOpen, setKeepOpen] = useState(false);
   const [paymentQuery, setPaymentQuery] = useState("");
   const [statusQuery, setStatusQuery] = useState("");
+  const [variantSelections, setVariantSelections] = useState<
+    Record<number, SelectedVariant | null>
+  >({});
 
   // Per-row product combobox query states
   const [productQueries, setProductQueries] = useState<string[]>([""]);
@@ -122,7 +130,7 @@ export function SaleForm({
   } = useForm<SaleValues>({
     resolver: zodResolver(saleSchema),
     defaultValues: {
-      items: [{ product_id: "", quantity: 1, unit_price: 0 }],
+      items: [{ product_id: "", quantity: 1, unit_price: 0, variant_id: undefined }],
       paid_amount: 0,
       payment_method: "cash",
       status: "completed",
@@ -139,7 +147,7 @@ export function SaleForm({
   });
 
   const appendRow = useCallback(() => {
-    append({ product_id: "", quantity: 1, unit_price: 0 });
+    append({ product_id: "", quantity: 1, unit_price: 0, variant_id: undefined });
     setProductQueries((prev) => [...prev, ""]);
   }, [append]);
 
@@ -147,6 +155,17 @@ export function SaleForm({
     (index: number) => {
       remove(index);
       setProductQueries((prev) => prev.filter((_, i) => i !== index));
+      setVariantSelections((prev) => {
+        const next = { ...prev };
+        delete next[index];
+        // Shift remaining keys above the removed index
+        const shifted: Record<number, SelectedVariant | null> = {};
+        for (const [key, value] of Object.entries(next)) {
+          const k = Number(key);
+          shifted[k > index ? k - 1 : k] = value;
+        }
+        return shifted;
+      });
     },
     [remove],
   );
@@ -154,6 +173,7 @@ export function SaleForm({
   const resetForm = () => {
     reset(undefined, { keepDefaultValues: false });
     setSelectedContactId(null);
+    setVariantSelections({});
     setProductQueries([""]);
     setPaymentQuery("");
     setStatusQuery("");
@@ -209,8 +229,16 @@ export function SaleForm({
 
   // Stock warnings per row
   const stockWarnings = useMemo(() => {
-    return (watchedItems ?? []).map((item) => {
+    return (watchedItems ?? []).map((item, index) => {
       if (watchedStatus === "cancelled") return null;
+      // Check variant stock if a variant is selected
+      const variant = variantSelections[index];
+      if (variant) {
+        if (Number(item.quantity || 0) > Number(variant.current_stock ?? 0)) {
+          return `Үлдэгдэл хүрэлцэхгүй байна. (Үлдэгдэл: ${variant.current_stock ?? 0} ширхэг)`;
+        }
+        return null;
+      }
       const product = allProducts.find((p) => p.id === item.product_id);
       if (!product || product.current_stock === null) return null;
       if (Number(item.quantity || 0) > product.current_stock) {
@@ -218,7 +246,7 @@ export function SaleForm({
       }
       return null;
     });
-  }, [watchedItems, allProducts, watchedStatus]);
+  }, [watchedItems, allProducts, watchedStatus, variantSelections]);
 
   // Any stock insufficient across all rows
   const anyStockInsufficient = useMemo(
@@ -249,6 +277,7 @@ export function SaleForm({
         productId: string;
         quantity: number;
         unitPrice: number;
+        variantId?: string | null;
       }[] = [];
       try {
         optimisticItems = JSON.parse(itemsRaw);
@@ -420,6 +449,7 @@ export function SaleForm({
       productId: item.product_id,
       quantity: item.quantity,
       unitPrice: item.unit_price,
+      variantId: item.variant_id ?? null,
     }));
     formData.append("items", JSON.stringify(itemsPayload));
 
@@ -506,9 +536,12 @@ export function SaleForm({
 
   const handleProductSelect = useCallback(
     (index: number, product: ProductOption | null) => {
+      // Clear variant selection when product changes
+      setVariantSelections((prev) => ({ ...prev, [index]: null }));
       if (!product) {
         setValue(`items.${index}.product_id`, "");
         setValue(`items.${index}.unit_price`, 0);
+        setValue(`items.${index}.variant_id`, undefined);
         return;
       }
       if (product.id.startsWith("__create__")) {
@@ -522,14 +555,34 @@ export function SaleForm({
         setCreatedProducts((prev) => [...prev, created]);
         setValue(`items.${index}.product_id`, created.id);
         setValue(`items.${index}.unit_price`, 0);
+        setValue(`items.${index}.variant_id`, undefined);
         updateProductQuery(index, "");
         return;
       }
       setValue(`items.${index}.product_id`, product.id);
       setValue(`items.${index}.unit_price`, product.sale_price ?? 0);
+      setValue(`items.${index}.variant_id`, undefined);
       updateProductQuery(index, "");
     },
     [setValue, updateProductQuery],
+  );
+
+  const handleVariantSelect = useCallback(
+    (index: number, variant: SelectedVariant | null) => {
+      setVariantSelections((prev) => ({ ...prev, [index]: variant }));
+      if (variant) {
+        setValue(`items.${index}.unit_price`, variant.sale_price ?? 0);
+        setValue(`items.${index}.variant_id`, variant.variant_id);
+      } else {
+        // Revert to parent product's sale_price when variant is deselected
+        const product = allProducts.find(
+          (p) => p.id === watchedItems?.[index]?.product_id,
+        );
+        setValue(`items.${index}.unit_price`, product?.sale_price ?? 0);
+        setValue(`items.${index}.variant_id`, undefined);
+      }
+    },
+    [allProducts, watchedItems, setValue],
   );
 
   return (
@@ -616,6 +669,16 @@ export function SaleForm({
                       {productForRow.unit ?? "ширхэг"}
                     </p>
                   ) : null}
+                  {productForRow && (
+                    <div className="mt-1">
+                      <VariantPicker
+                        productId={productForRow.id}
+                        onSelect={(variant) =>
+                          handleVariantSelect(index, variant)
+                        }
+                      />
+                    </div>
+                  )}
                   {errors.items?.[index]?.product_id && (
                     <p className="text-xs text-destructive mt-0.5">
                       {errors.items[index]?.product_id?.message}
