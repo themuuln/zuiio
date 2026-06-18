@@ -49,26 +49,69 @@ import {
 import { APP_NAME } from "@/lib/constants";
 import { RealtimeSubscriptions } from "@/lib/query/realtime-subscriptions";
 
-const navItems = [
-  { title: "Хяналтын самбар", href: "/", icon: House },
-  { title: "Тайлан", href: "/reports", icon: ChartBar },
-  { title: "Бүтээгдэхүүн", href: "/products", icon: Package },
-  { title: "Агуулах", href: "/inventory", icon: Warehouse },
-  { title: "Ангилалууд", href: "/inventory/categories", icon: Folder },
-  { title: "Борлуулалт", href: "/sales", icon: CurrencyDollar },
-  { title: "Худалдан авалт", href: "/purchases", icon: Trolley },
-  { title: "Үнийн санал", href: "/quotations", icon: ClipboardText },
-  { title: "Буцаалт", href: "/returns", icon: ArrowCounterClockwise },
-  { title: "Нэхэмжлэл", href: "/invoices", icon: FileText },
-  { title: "Хямдрал", href: "/discounts", icon: Percent },
-  { title: "Комисс", href: "/commissions", icon: Coin },
-  { title: "Зарлага", href: "/expenses", icon: CreditCard },
-  { title: "Нягтлан бодох бүртгэл", href: "/accounting", icon: Calculator },
-  { title: "Харилцагчид", href: "/customers", icon: Users },
-  { title: "Нийлүүлэгчид", href: "/suppliers", icon: Buildings },
-  { title: "Үйлдлийн түүх", href: "/audit", icon: Clock },
-  { title: "Тохиргоо", href: "/settings", icon: GearSix },
-] as const;
+type NavItem = {
+  title: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+};
+
+type NavGroup = {
+  label: string;
+  items: NavItem[];
+};
+
+const navGroups: NavGroup[] = [
+  {
+    label: "Үндсэн",
+    items: [{ title: "Хяналтын самбар", href: "/", icon: House }],
+  },
+  {
+    label: "Үйл ажиллагаа",
+    items: [
+      { title: "Борлуулалт", href: "/sales", icon: CurrencyDollar },
+      { title: "Зарлага", href: "/expenses", icon: CreditCard },
+      { title: "Худалдан авалт", href: "/purchases", icon: Trolley },
+      { title: "Буцаалт", href: "/returns", icon: ArrowCounterClockwise },
+    ],
+  },
+  {
+    label: "Бүртгэл",
+    items: [
+      { title: "Бүтээгдэхүүн", href: "/products", icon: Package },
+      { title: "Ангилалууд", href: "/inventory/categories", icon: Folder },
+      { title: "Агуулах", href: "/inventory", icon: Warehouse },
+      { title: "Харилцагчид", href: "/customers", icon: Users },
+      { title: "Нийлүүлэгчид", href: "/suppliers", icon: Buildings },
+    ],
+  },
+  {
+    label: "Баримт бичиг",
+    items: [
+      { title: "Нэхэмжлэл", href: "/invoices", icon: FileText },
+      { title: "Үнийн санал", href: "/quotations", icon: ClipboardText },
+      { title: "Хямдрал", href: "/discounts", icon: Percent },
+    ],
+  },
+  {
+    label: "Шинжилгээ",
+    items: [
+      { title: "Тайлан", href: "/reports", icon: ChartBar },
+      { title: "Комисс", href: "/commissions", icon: Coin },
+      {
+        title: "Нягтлан бодох бүртгэл",
+        href: "/accounting",
+        icon: Calculator,
+      },
+    ],
+  },
+  {
+    label: "Систем",
+    items: [
+      { title: "Үйлдлийн түүх", href: "/audit", icon: Clock },
+      { title: "Тохиргоо", href: "/settings", icon: GearSix },
+    ],
+  },
+];
 
 type DashboardShellProps = {
   children: React.ReactNode;
@@ -153,34 +196,39 @@ export function DashboardShell({
             </SidebarHeader>
 
             <SidebarContent>
-              <SidebarGroup>
-                <SidebarGroupLabel>Цэс</SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {navItems.map((item) => {
-                      const Icon = item.icon;
-                      const isActive =
-                        pathname === item.href ||
-                        (item.href !== "/" && pathname.startsWith(item.href));
+              {navGroups.map((group) => {
+                return (
+                  <SidebarGroup key={group.label}>
+                    <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        {group.items.map((item) => {
+                          const Icon = item.icon;
+                          const isActive =
+                            pathname === item.href ||
+                            (item.href !== "/" &&
+                              pathname.startsWith(item.href));
 
-                      return (
-                        <SidebarMenuItem key={item.href}>
-                          <SidebarMenuButton
-                            asChild
-                            isActive={isActive}
-                            tooltip={item.title}
-                          >
-                            <Link href={item.href}>
-                              <Icon />
-                              <span>{item.title}</span>
-                            </Link>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      );
-                    })}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
+                          return (
+                            <SidebarMenuItem key={item.href}>
+                              <SidebarMenuButton
+                                asChild
+                                isActive={isActive}
+                                tooltip={item.title}
+                              >
+                                <Link href={item.href}>
+                                  <Icon />
+                                  <span>{item.title}</span>
+                                </Link>
+                              </SidebarMenuButton>
+                            </SidebarMenuItem>
+                          );
+                        })}
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </SidebarGroup>
+                );
+              })}
             </SidebarContent>
 
             <SidebarFooter>
