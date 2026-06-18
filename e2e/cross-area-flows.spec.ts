@@ -457,6 +457,8 @@ test.describe("Cross-Area Flows", () => {
 
     // Path 2: Create a new sale, then click Дэлгэрэнгүй in the toast
     const productName = await getProductWithStock(page);
+    await page.goto("/sales", { waitUntil: "networkidle" });
+    await page.waitForTimeout(2000);
     await openCreateDrawer(page);
     await selectProductByName(page, productName, 0);
     const uniqueName = `Detail Test ${Date.now()}`;
