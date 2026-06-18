@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { PageShell } from "@/components/erp/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { notFound } from "next/navigation";
 import { enforceBranchAccess } from "@/lib/branches";
 import { requireAppContext } from "@/lib/erp";
 import { formatCurrency, formatDate } from "@/lib/format";

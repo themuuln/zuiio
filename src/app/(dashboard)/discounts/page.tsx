@@ -1,5 +1,5 @@
-import { requireAppContext } from "@/lib/erp";
 import { withBranchFilter } from "@/lib/branches";
+import { requireAppContext } from "@/lib/erp";
 import { DiscountsContent } from "./discounts-content";
 
 export const unstable_instant = { prefetch: "static" };
@@ -48,7 +48,7 @@ export default async function DiscountsPage({
 
   // Fetch conditions for each discount
   const discountIds = (discounts ?? []).map((d) => d.id);
-  let conditionsMap: Record<
+  const conditionsMap: Record<
     string,
     Array<{ condition_type: string; condition_value: string }>
   > = {};

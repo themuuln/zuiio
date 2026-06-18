@@ -12,7 +12,7 @@ Before(({ I }) => {
   I.fillField('input[name="email"]', "themuuln1@gmail.com");
   I.fillField('input[name="password"]', "Tolom!11");
   I.click('button[type="submit"]');
-  I.waitForURL(/\/$/);
+  I.waitForURL(/\/$/, {});
 });
 
 Scenario("Dashboard shows KPIs", ({ I }) => {
