@@ -50,8 +50,8 @@ export async function updateProduct(
       brand_id: brandId || null,
       cost_price: costPrice,
       sale_price: salePrice,
-      current_stock: currentStock,
       min_stock: minStock,
+      ...(formData.has("current_stock") ? { current_stock: currentStock } : {}),
     })
     .eq("id", id);
 
@@ -193,7 +193,10 @@ export async function updateProduct(
       }
     } catch (parseError) {
       console.error("Failed to parse variant data:", parseError);
-      // Non-fatal: product was updated, variants failed
+      return {
+        error:
+          "Бүтээгдэхүүн шинэчлэгдсэн боловч вариантуудыг хадгалахад алдаа гарлаа.",
+      };
     }
   }
 

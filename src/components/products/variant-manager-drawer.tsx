@@ -46,6 +46,11 @@ export function VariantManagerDrawer({
     [groups],
   );
 
+  const combinationCount = useMemo(
+    () => computeCombinations(groups).length,
+    [groups],
+  );
+
   return (
     <DrawerLayout
       open={open}
@@ -59,7 +64,16 @@ export function VariantManagerDrawer({
           })}
         >
           <Sliders className="size-4" />
-          {hasVariants ? `${totalOptions} сонголт` : "Вариант тохируулах"}
+          {hasVariants ? (
+            <span>
+              {totalOptions} сонголт
+              <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">
+                {combinationCount} вар.
+              </span>
+            </span>
+          ) : (
+            "Вариант тохируулах"
+          )}
         </button>
       }
     >

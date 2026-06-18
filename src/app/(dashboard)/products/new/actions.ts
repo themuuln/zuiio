@@ -150,7 +150,10 @@ export async function createProduct(
       }
     } catch (parseError) {
       console.error("Failed to parse variant data:", parseError);
-      // Non-fatal: product was created, variants failed
+      return {
+        error:
+          "Бүтээгдэхүүн хадгалагдсан боловч вариантуудыг хадгалахад алдаа гарлаа.",
+      };
     }
   }
 

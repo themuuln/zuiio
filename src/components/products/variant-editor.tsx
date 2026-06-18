@@ -319,10 +319,10 @@ export function VariantEditor({
           <p className="text-xs font-medium text-muted-foreground">
             Нийт {combinations.length} вариант
           </p>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
             <table className="w-full min-w-[400px] text-xs">
               <thead>
-                <tr className="border-b text-left text-muted-foreground">
+                <tr className="sticky top-0 z-10 border-b bg-white text-left text-muted-foreground dark:bg-popover">
                   <th className="py-1.5 pr-2 font-medium">Вариант</th>
                   <th className="w-20 py-1.5 px-1 font-medium">SKU</th>
                   <th className="w-20 py-1.5 px-1 font-medium">Өртөг</th>
