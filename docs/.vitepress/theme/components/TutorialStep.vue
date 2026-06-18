@@ -37,28 +37,28 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed } from "vue";
 
 const props = defineProps({
   step: { type: [Number, String], required: true },
-  title: { type: String, default: '' },
+  title: { type: String, default: "" },
   image: { type: String, required: true },
   markers: {
     type: Array,
     default: () => [],
     // Each marker: { id, x (percent), y (percent), label?, color?, arrow? (degrees) }
   },
-})
+});
 
 // VitePress base path (e.g. "/guide/") — prepend to image paths from public/
-const baseUrl = import.meta.env.BASE_URL || '/'
+const baseUrl = import.meta.env.BASE_URL || "/";
 const resolvedImage = computed(() => {
-  const img = props.image
+  const img = props.image;
   // If image already starts with http or the base path, use as-is
-  if (img.startsWith('http') || img.startsWith(baseUrl)) return img
+  if (img.startsWith("http") || img.startsWith(baseUrl)) return img;
   // Otherwise prepend the base path
-  return baseUrl + img.replace(/^\//, '')
-})
+  return baseUrl + img.replace(/^\//, "");
+});
 </script>
 
 <style scoped>

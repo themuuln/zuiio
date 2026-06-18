@@ -9,7 +9,10 @@ export default function postcssFixParent() {
     OnceExit(root) {
       root.walkRules((rule) => {
         if (rule.selector && rule.selector.includes(":parent")) {
-          rule.selector = rule.selector.replace(/:parent(?=[\s>~+:[#.])/g, ":has(*)");
+          rule.selector = rule.selector.replace(
+            /:parent(?=[\s>~+:[#.])/g,
+            ":has(*)",
+          );
         }
       });
     },

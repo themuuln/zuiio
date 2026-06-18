@@ -11,11 +11,17 @@ fi
 
 # Only format relevant file types
 case "$file_path" in
-  *.ts|*.tsx|*.js|*.jsx|*.json|*.css|*.md|*.mdx)
-    echo "Formatting: $file_path"
-    cd "$FACTORY_PROJECT_DIR"
-    npm run format -- "$file_path" 2>&1 && echo "✓ Formatted $file_path"
-    ;;
+  *.ts|*.tsx|*.js|*.jsx|*.json|*.css|*.md|*.mdx) ;;
+  *) exit 0 ;;
 esac
+
+# Skip files in .factory/ — not included in Biome's config scope
+case "$file_path" in
+  .factory/*) exit 0 ;;
+esac
+
+echo "Formatting: $file_path"
+cd "$FACTORY_PROJECT_DIR"
+npm run format -- "$file_path" 2>&1 && echo "✓ Formatted $file_path"
 
 exit 0

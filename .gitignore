@@ -51,7 +51,6 @@ next-env.d.ts
 
 # agent tooling configs
 .agents/
-.factory/
 .mcp.json
 .playwright-mcp/
 opencode/

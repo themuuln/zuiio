@@ -1,0 +1,52 @@
+{
+  "mcpServers": {
+    "shadcn": {
+      "command": "npx",
+      "args": ["shadcn@latest", "mcp"]
+    },
+    "supabase-tolom": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=fhzuolncswccxkcqzclg&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage"
+    },
+    "next-devtools": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"]
+    },
+    "context-mode": {
+      "command": "npx",
+      "args": ["-y", "context-mode-mcp-server"],
+      "env": {
+        "CONTEXT_DIR": "/Users/themuuln/.commandcode/context-data",
+        "FTS5_DB_PATH": "/Users/themuuln/.commandcode/context-data/fts5.db"
+      }
+    },
+    "context7": {
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp"]
+    },
+    "playwright-test": {
+      "command": "npx",
+      "args": ["playwright", "run-test-mcp-server", "--config", "playwright.config.ts"],
+      "env": {
+        "PW_TEST_MCP_ENABLE_AGENTS": "1"
+      }
+    },
+    "stitch": {
+      "command": "npx",
+      "args": ["@_davideast/stitch-mcp", "proxy"],
+      "env": {
+        "STITCH_API_KEY": "*****************************************************"
+      }
+    },
+    "sentry": {
+      "type": "http",
+      "url": "https://mcp.sentry.dev/mcp",
+      "env": {
+        "SENTRY_AUTH_TOKEN": "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"
+      }
+    }
+  }
+}

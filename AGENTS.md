@@ -152,6 +152,7 @@ For CI/production readiness, add `&& npm run build`.
 - TypeScript strict. No `any` without a comment explaining why.
 - **Always import types from `@/lib/types`**, never from `@/lib/database.types` (auto-generated, changes on regeneration).
 - 2-space indent, single quotes, trailing semicolons (Biome defaults).
+- **Always use `npm run format -- <path>` to format files.** Never run `npx biome` commands directly — use the scripts in `package.json` instead (`npm run format` for formatting, `npm run lint` for checking, `npm run validate:lint` for CI lint).
 
 ### API Routes
 

@@ -15,6 +15,11 @@ case "$file_path" in
   *) exit 0 ;;
 esac
 
+# Skip files in .factory/ — not included in Biome's config scope
+case "$file_path" in
+  .factory/*) exit 0 ;;
+esac
+
 cd "$FACTORY_PROJECT_DIR"
 
 # Run Biome check and use its exit code directly
