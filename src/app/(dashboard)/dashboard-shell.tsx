@@ -24,7 +24,7 @@ import {
 } from "@phosphor-icons/react";
 import { PanelLeftIcon } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { logout } from "@/app/(dashboard)/actions";
 import { QuickCreateDropdown } from "@/components/erp/quick-create-dropdown";
@@ -132,12 +132,30 @@ type DashboardShellProps = {
 // ─── Branch Selector Inner ─────────────────────────────────────────────
 
 function BranchSelector({ branches }: { branches: BranchOption[] }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const {
     selectedBranchId,
     setSelectedBranchId,
     isBranchScoped,
     userBranchId,
   } = useBranchContext();
+
+  // On mount, if URL has a ?branch= param, sync it into the context
+  // so the server page fetching uses the URL-specified branch.
+  React.useEffect(() => {
+    if (isBranchScoped) return;
+    const urlBranch = searchParams.get("branch");
+    if (urlBranch) {
+      const isValid = branches.some((b) => b.id === urlBranch);
+      if (isValid && urlBranch !== selectedBranchId) {
+        setSelectedBranchId(urlBranch);
+      }
+    }
+    // Only run once on mount to sync URL → context.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (isBranchScoped) {
     const currentBranch = branches.find((b) => b.id === userBranchId);
@@ -157,7 +175,18 @@ function BranchSelector({ branches }: { branches: BranchOption[] }) {
       <div className="relative mt-0.5">
         <NativeSelect
           value={selectedBranchId ?? ""}
-          onChange={(e) => setSelectedBranchId(e.target.value || null)}
+          onChange={(e) => {
+            const newId = e.target.value || null;
+            setSelectedBranchId(newId);
+            // Sync into URL so server-side pages can read ?branch=
+            const params = new URLSearchParams(searchParams.toString());
+            if (newId) {
+              params.set("branch", newId);
+            } else {
+              params.delete("branch");
+            }
+            router.replace(`${pathname}?${params.toString()}`);
+          }}
           className="w-full text-sm"
         >
           <option value="">Бүх салбар</option>

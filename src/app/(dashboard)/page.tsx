@@ -1,13 +1,15 @@
 import { addDays, startOfDay, subDays } from "date-fns";
 
 import { requireAppContext } from "@/lib/erp";
+import { withBranchFilter } from "@/lib/branches";
 import type { DashboardData } from "./dashboard-client";
 import { DashboardClient } from "./dashboard-client";
 
 export const unstable_instant = { prefetch: "static" };
 
 export default async function DashboardPage() {
-  const { supabase, organizationId } = await requireAppContext();
+  const { supabase, organizationId, branchId, isBranchScoped } =
+    await requireAppContext();
 
   const today = startOfDay(new Date());
   const tomorrow = addDays(today, 1);
@@ -26,20 +28,20 @@ export default async function DashboardPage() {
     inventoryProducts,
     monthlySalesResult,
   ] = await Promise.all([
-    // 1. Total products
+    // 1. Total products (shared master data - no branch filter)
     supabase
       .from("products")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", organizationId),
 
-    // 2. Total customers
+    // 2. Total customers (shared master data - no branch filter)
     supabase
       .from("contacts")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", organizationId)
       .eq("type", "customer"),
 
-    // 3. Total suppliers
+    // 3. Total suppliers (shared master data - no branch filter)
     supabase
       .from("contacts")
       .select("id", { count: "exact", head: true })
@@ -47,55 +49,75 @@ export default async function DashboardPage() {
       .eq("type", "supplier"),
 
     // 4. Today's sales
-    supabase
-      .from("sales")
-      .select("total_amount")
-      .eq("organization_id", organizationId)
-      .gte("sale_date", today.toISOString())
-      .lt("sale_date", tomorrow.toISOString()),
+    withBranchFilter(
+      supabase
+        .from("sales")
+        .select("total_amount")
+        .eq("organization_id", organizationId)
+        .gte("sale_date", today.toISOString())
+        .lt("sale_date", tomorrow.toISOString()),
+      branchId,
+      isBranchScoped,
+    ),
 
     // 5. Today's expenses
-    supabase
-      .from("expenses")
-      .select("amount")
-      .eq("organization_id", organizationId)
-      .gte("expense_date", today.toISOString())
-      .lt("expense_date", tomorrow.toISOString()),
+    withBranchFilter(
+      supabase
+        .from("expenses")
+        .select("amount")
+        .eq("organization_id", organizationId)
+        .gte("expense_date", today.toISOString())
+        .lt("expense_date", tomorrow.toISOString()),
+      branchId,
+      isBranchScoped,
+    ),
 
-    // 6. Low stock products (fetch all to compare column-to-column)
+    // 6. Low stock products (shared master data - no branch filter)
     supabase
       .from("products")
       .select("current_stock, min_stock")
       .eq("organization_id", organizationId),
 
     // 7. Pending sales
-    supabase
-      .from("sales")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", organizationId)
-      .eq("status", "pending"),
+    withBranchFilter(
+      supabase
+        .from("sales")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", organizationId)
+        .eq("status", "pending"),
+      branchId,
+      isBranchScoped,
+    ),
 
     // 8. Recent 5 sales
-    supabase
-      .from("sales")
-      .select("id, total_amount, sale_date, status, contacts(name)")
-      .eq("organization_id", organizationId)
-      .order("created_at", { ascending: false })
-      .limit(5),
+    withBranchFilter(
+      supabase
+        .from("sales")
+        .select("id, total_amount, sale_date, status, contacts(name)")
+        .eq("organization_id", organizationId)
+        .order("created_at", { ascending: false })
+        .limit(5),
+      branchId,
+      isBranchScoped,
+    ),
 
-    // 9. Inventory value
+    // 9. Inventory value (shared master data - no branch filter)
     supabase
       .from("products")
       .select("cost_price, current_stock")
       .eq("organization_id", organizationId),
 
     // 10. Monthly trend
-    supabase
-      .from("sales")
-      .select("total_amount, sale_date")
-      .eq("organization_id", organizationId)
-      .gte("sale_date", thirtyDaysAgo.toISOString())
-      .lt("sale_date", tomorrow.toISOString()),
+    withBranchFilter(
+      supabase
+        .from("sales")
+        .select("total_amount, sale_date")
+        .eq("organization_id", organizationId)
+        .gte("sale_date", thirtyDaysAgo.toISOString())
+        .lt("sale_date", tomorrow.toISOString()),
+      branchId,
+      isBranchScoped,
+    ),
   ]);
 
   // Compute KPIs

@@ -1,17 +1,29 @@
 import { requireAppContext } from "@/lib/erp";
+import { withBranchFilter } from "@/lib/branches";
 import type { ExpenseRow } from "./expenses-table";
 import { ExpensesContent } from "./expenses-content";
 
 export const unstable_instant = { prefetch: "static" };
 
-export default async function ExpensesPage() {
-  const { supabase, organizationId } = await requireAppContext();
+export default async function ExpensesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ branch?: string }>;
+}) {
+  const { branch: urlBranch } = await searchParams;
+  const { supabase, organizationId, branchId, isBranchScoped } =
+    await requireAppContext();
 
-  const { data: expenses } = await supabase
-    .from("expenses")
-    .select("id, category, amount, description, payment_method, expense_date")
-    .eq("organization_id", organizationId)
-    .order("expense_date", { ascending: false });
+  const { data: expenses } = await withBranchFilter(
+    supabase
+      .from("expenses")
+      .select("id, category, amount, description, payment_method, expense_date")
+      .eq("organization_id", organizationId)
+      .order("expense_date", { ascending: false }),
+    branchId,
+    isBranchScoped,
+    urlBranch,
+  );
 
   const tableData: ExpenseRow[] =
     expenses?.map((expense) => ({

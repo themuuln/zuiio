@@ -8,6 +8,8 @@ import {
   getAlreadyPaidIds,
   validatePayoutRequest,
 } from "@/lib/commissions";
+import { withBranchFilter } from "@/lib/branches";
+import { requireAppContext } from "@/lib/erp";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
@@ -50,7 +52,7 @@ export type PayoutRecord = {
 export async function getCommissionSummary(
   orgId: string,
 ): Promise<StaffCommissionSummary[]> {
-  const supabase = await createClient();
+  const { supabase, branchId, isBranchScoped } = await requireAppContext();
 
   const { data: profiles } = await supabase
     .from("profiles")
@@ -65,12 +67,16 @@ export async function getCommissionSummary(
 
   for (const profile of profiles) {
     // Get total earned: sum of commission_amount from non-cancelled sales
-    const { data: profileSales } = await supabase
+    let salesQuery = supabase
       .from("sales")
       .select("id")
       .eq("organization_id", orgId)
       .eq("salesperson_id", profile.id)
       .not("status", "eq", "cancelled");
+
+    salesQuery = withBranchFilter(salesQuery, branchId, isBranchScoped);
+
+    const { data: profileSales } = await salesQuery;
 
     let totalEarned = 0;
     if (profileSales && profileSales.length > 0) {
@@ -132,15 +138,19 @@ export async function getUnpaidItems(
   orgId: string,
   profileId: string,
 ): Promise<UnpaidSaleItem[]> {
-  const supabase = await createClient();
+  const { supabase, branchId, isBranchScoped } = await requireAppContext();
 
   // First, get all sale IDs for this profile's non-cancelled sales
-  const { data: profileSales } = await supabase
+  let salesQuery = supabase
     .from("sales")
     .select("id, sale_date, status")
     .eq("organization_id", orgId)
     .eq("salesperson_id", profileId)
     .not("status", "eq", "cancelled");
+
+  salesQuery = withBranchFilter(salesQuery, branchId, isBranchScoped);
+
+  const { data: profileSales } = await salesQuery;
 
   if (!profileSales || profileSales.length === 0) {
     return [];
@@ -199,9 +209,9 @@ export async function getUnpaidItems(
  * Get payout history for an organization.
  */
 export async function getPayoutHistory(orgId: string): Promise<PayoutRecord[]> {
-  const supabase = await createClient();
+  const { supabase, branchId, isBranchScoped } = await requireAppContext();
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("commission_payouts")
     .select(
       `
@@ -219,6 +229,10 @@ export async function getPayoutHistory(orgId: string): Promise<PayoutRecord[]> {
     )
     .eq("organization_id", orgId)
     .order("paid_at", { ascending: false });
+
+  query = withBranchFilter(query, branchId, isBranchScoped);
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Error fetching payout history:", error);
@@ -402,7 +416,7 @@ export async function createPayout(
       notes: notes || null,
       status: "completed",
       paid_at: new Date().toISOString(),
-      branch_id: payoutBranchId!,
+      branch_id: payoutBranchId as string,
     })
     .select("id")
     .single();

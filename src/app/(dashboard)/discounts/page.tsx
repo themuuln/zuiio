@@ -1,4 +1,5 @@
 import { requireAppContext } from "@/lib/erp";
+import { withBranchFilter } from "@/lib/branches";
 import { DiscountsContent } from "./discounts-content";
 
 export const unstable_instant = { prefetch: "static" };
@@ -23,16 +24,27 @@ export type DiscountRow = {
   }>;
 };
 
-export default async function DiscountsPage() {
-  const { supabase, organizationId } = await requireAppContext();
+export default async function DiscountsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ branch?: string }>;
+}) {
+  const { branch: urlBranch } = await searchParams;
+  const { supabase, organizationId, branchId, isBranchScoped } =
+    await requireAppContext();
 
-  const { data: discounts } = await supabase
-    .from("discounts")
-    .select(
-      "id, name, description, type, value, applies_to, min_purchase_amount, valid_from, valid_until, is_active, usage_limit, used_count, created_at",
-    )
-    .eq("organization_id", organizationId)
-    .order("created_at", { ascending: false });
+  const { data: discounts } = await withBranchFilter(
+    supabase
+      .from("discounts")
+      .select(
+        "id, name, description, type, value, applies_to, min_purchase_amount, valid_from, valid_until, is_active, usage_limit, used_count, created_at",
+      )
+      .eq("organization_id", organizationId)
+      .order("created_at", { ascending: false }),
+    branchId,
+    isBranchScoped,
+    urlBranch,
+  );
 
   // Fetch conditions for each discount
   const discountIds = (discounts ?? []).map((d) => d.id);

@@ -1,4 +1,5 @@
 import { requireAppContext } from "@/lib/erp";
+import { withBranchFilter } from "@/lib/branches";
 import { QuotationsContent } from "./quotations-content";
 
 export const unstable_instant = { prefetch: "static" };
@@ -14,18 +15,29 @@ export type QuotationRow = {
   created_at: string | null;
 };
 
-export default async function QuotationsPage() {
-  const { supabase, organizationId } = await requireAppContext();
+export default async function QuotationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ branch?: string }>;
+}) {
+  const { branch: urlBranch } = await searchParams;
+  const { supabase, organizationId, branchId, isBranchScoped } =
+    await requireAppContext();
 
   const [quotationsResult, productsResult, customersResult] = await Promise.all(
     [
-      supabase
-        .from("quotations")
-        .select(
-          "id, quote_number, issue_date, expiry_date, total_amount, status, created_at, contacts(name)",
-        )
-        .eq("organization_id", organizationId)
-        .order("created_at", { ascending: false }),
+      withBranchFilter(
+        supabase
+          .from("quotations")
+          .select(
+            "id, quote_number, issue_date, expiry_date, total_amount, status, created_at, contacts(name)",
+          )
+          .eq("organization_id", organizationId)
+          .order("created_at", { ascending: false }),
+        branchId,
+        isBranchScoped,
+        urlBranch,
+      ),
       supabase
         .from("products")
         .select("id, name, sale_price, current_stock, unit")

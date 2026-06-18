@@ -37,19 +37,27 @@ export function BranchProvider({
 }) {
   const isBranchScoped = userBranchId !== null;
 
+  // During SSR, always start with null (or userBranchId for scoped users).
+  // After hydration, useEffect syncs from localStorage for admin users.
   const [selectedBranchId, setSelectedBranchIdState] = React.useState<
     string | null
   >(() => {
     if (isBranchScoped) return userBranchId;
-
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored && branches.some((b) => b.id === stored)) {
-        return stored;
-      }
-    }
     return null;
   });
+
+  // Read localStorage after hydration to restore persisted selection.
+  // This fixes VAL-USER-006: context lost on full page reloads.
+  React.useEffect(() => {
+    if (!isBranchScoped && typeof window !== "undefined") {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored && branches.some((b) => b.id === stored)) {
+        setSelectedBranchIdState(stored);
+      }
+    }
+    // Only run once after hydration.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const setSelectedBranchId = React.useCallback(
     (id: string | null) => {

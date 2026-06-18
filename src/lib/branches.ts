@@ -97,19 +97,50 @@ export async function getAccessibleBranches(
 }
 
 /**
- * Apply a branch filter to a Supabase query when the user is branch-scoped.
+ * Resolve the effective branch ID to use for filtering.
+ *
+ * - Scoped users: always use their assigned branch (context.branchId)
+ * - Admin users (isBranchScoped=false): use the URL-selected branch if set,
+ *   otherwise return null (show all branches)
+ */
+export function getEffectiveBranchId(
+  contextBranchId: string | null,
+  isBranchScoped: boolean,
+  selectedBranchId: string | null,
+): string | null {
+  if (isBranchScoped) return contextBranchId;
+  return selectedBranchId ?? null;
+}
+
+/**
+ * Apply a branch filter to a Supabase query.
+ *
+ * - Scoped users: always filtered by their assigned branch.
+ * - Admin users: filtered by the optional `selectedBranchId` (e.g., from URL search params).
  *
  * Usage:
  * ```ts
  * let query = supabase.from("sales").select("*");
- * query = withBranchFilter(query, branchId, isBranchScoped);
+ * query = withBranchFilter(query, branchId, isBranchScoped, searchParamsBranch);
  * ```
  */
-export function withBranchFilter<
-  T extends { eq: (k: string, v: unknown) => T },
->(query: T, branchId: string | null, isBranchScoped: boolean): T {
-  if (isBranchScoped && branchId) {
-    return query.eq("branch_id", branchId);
+export function withBranchFilter<T>(
+  query: T,
+  branchId: string | null,
+  isBranchScoped: boolean,
+  /** Optional override from URL search params (admin branch selector). */
+  selectedBranchId?: string | null,
+): T {
+  const effectiveBranchId = getEffectiveBranchId(
+    branchId,
+    isBranchScoped,
+    selectedBranchId ?? null,
+  );
+  if (effectiveBranchId) {
+    return (query as { eq: (k: string, v: unknown) => T }).eq(
+      "branch_id",
+      effectiveBranchId,
+    );
   }
   return query;
 }

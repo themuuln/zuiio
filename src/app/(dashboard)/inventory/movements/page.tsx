@@ -3,21 +3,33 @@ import Link from "next/link";
 import { PageShell } from "@/components/erp/page-shell";
 import { Button } from "@/components/ui/button";
 import { requireAppContext } from "@/lib/erp";
+import { withBranchFilter } from "@/lib/branches";
 import { type MovementRow, MovementsContent } from "./movements-content";
 
 export const unstable_instant = { prefetch: "static" };
 
-export default async function InventoryMovementsPage() {
-  const { supabase, organizationId } = await requireAppContext();
+export default async function InventoryMovementsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ branch?: string }>;
+}) {
+  const { branch: urlBranch } = await searchParams;
+  const { supabase, organizationId, branchId, isBranchScoped } =
+    await requireAppContext();
 
-  const { data: movements } = await supabase
-    .from("stock_movements")
-    .select(
-      "id, type, quantity, unit_cost, reference, notes, created_at, products(name, unit, sku)",
-    )
-    .eq("organization_id", organizationId)
-    .order("created_at", { ascending: false })
-    .limit(50);
+  const { data: movements } = await withBranchFilter(
+    supabase
+      .from("stock_movements")
+      .select(
+        "id, type, quantity, unit_cost, reference, notes, created_at, products(name, unit, sku)",
+      )
+      .eq("organization_id", organizationId)
+      .order("created_at", { ascending: false })
+      .limit(50),
+    branchId,
+    isBranchScoped,
+    urlBranch,
+  );
 
   const tableData: MovementRow[] =
     (movements ?? []).map((m) => {

@@ -1,31 +1,44 @@
 import { requireAppContext } from "@/lib/erp";
+import { withBranchFilter } from "@/lib/branches";
 import { InvoicesContent } from "./invoices-content";
 
 export const unstable_instant = { prefetch: "static" };
 
-export default async function InvoicesPage() {
-  const { supabase, organizationId } = await requireAppContext();
+export default async function InvoicesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ branch?: string }>;
+}) {
+  const { branch: urlBranch } = await searchParams;
+  const { supabase, organizationId, branchId, isBranchScoped } =
+    await requireAppContext();
 
-  const [{ data: invoices }, { data: contacts }, { data: products }] = await Promise.all([
-    supabase
-      .from("invoices")
-      .select(
-        "id, invoice_number, issue_date, due_date, total_amount, paid_amount, status, contacts(name)",
-      )
-      .eq("organization_id", organizationId)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("contacts")
-      .select("id, name")
-      .eq("organization_id", organizationId)
-      .eq("type", "customer")
-      .order("name"),
-    supabase
-      .from("products")
-      .select("id, name, sale_price, current_stock, unit")
-      .eq("organization_id", organizationId)
-      .order("name"),
-  ]);
+  const [{ data: invoices }, { data: contacts }, { data: products }] =
+    await Promise.all([
+      withBranchFilter(
+        supabase
+          .from("invoices")
+          .select(
+            "id, invoice_number, issue_date, due_date, total_amount, paid_amount, status, contacts(name)",
+          )
+          .eq("organization_id", organizationId)
+          .order("created_at", { ascending: false }),
+        branchId,
+        isBranchScoped,
+        urlBranch,
+      ),
+      supabase
+        .from("contacts")
+        .select("id, name")
+        .eq("organization_id", organizationId)
+        .eq("type", "customer")
+        .order("name"),
+      supabase
+        .from("products")
+        .select("id, name, sale_price, current_stock, unit")
+        .eq("organization_id", organizationId)
+        .order("name"),
+    ]);
 
   const invoiceRows = (invoices ?? []).map((inv) => ({
     id: inv.id,

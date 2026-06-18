@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { logAuditEventWithClient } from "@/lib/audit";
+import { withBranchFilter } from "@/lib/branches";
 import { checkPermission, requireAppContext } from "@/lib/erp";
 import { createInvoiceFromSale } from "@/lib/invoicing";
 import { getString } from "@/lib/validation";
@@ -122,27 +123,40 @@ export async function updateQuotationStatus(
   quotationId: string,
   status: string,
 ) {
-  const { supabase, organizationId, userId, permissions } =
-    await requireAppContext();
+  const {
+    supabase,
+    organizationId,
+    userId,
+    branchId,
+    isBranchScoped,
+    permissions,
+  } = await requireAppContext();
   const permError = checkPermission(permissions, "quotations.update");
   if (permError) return { error: permError };
 
-  const { data: quotation } = await supabase
+  let fetchQuery = supabase
     .from("quotations")
     .select("status, quote_number")
     .eq("id", quotationId)
-    .eq("organization_id", organizationId)
-    .single();
+    .eq("organization_id", organizationId);
+
+  fetchQuery = withBranchFilter(fetchQuery, branchId, isBranchScoped);
+
+  const { data: quotation } = await fetchQuery.single();
 
   if (!quotation) {
     return { error: "Үнийн санал олдсонгүй." };
   }
 
-  const { error } = await supabase
+  let updateQuery = supabase
     .from("quotations")
     .update({ status })
     .eq("id", quotationId)
     .eq("organization_id", organizationId);
+
+  updateQuery = withBranchFilter(updateQuery, branchId, isBranchScoped);
+
+  const { error } = await updateQuery;
 
   if (error) {
     return {
@@ -166,18 +180,27 @@ export async function updateQuotationStatus(
 }
 
 export async function convertQuotationToSale(quotationId: string) {
-  const { supabase, organizationId, userId, branchId, permissions } =
-    await requireAppContext();
+  const {
+    supabase,
+    organizationId,
+    userId,
+    branchId,
+    isBranchScoped,
+    permissions,
+  } = await requireAppContext();
   const permError = checkPermission(permissions, "quotations.update");
   if (permError) return { error: permError };
 
   // Fetch the quotation with items
-  const { data: quotation, error: quotationError } = await supabase
+  let fetchQuery = supabase
     .from("quotations")
     .select("*")
     .eq("id", quotationId)
-    .eq("organization_id", organizationId)
-    .single();
+    .eq("organization_id", organizationId);
+
+  fetchQuery = withBranchFilter(fetchQuery, branchId, isBranchScoped);
+
+  const { data: quotation, error: quotationError } = await fetchQuery.single();
 
   if (quotationError || !quotation) {
     return { error: "Үнийн санал олдсонгүй." };

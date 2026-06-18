@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { enforceBranchAccess } from "@/lib/branches";
 import { requireAppContext } from "@/lib/erp";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { InvoiceDetailClient } from "./invoice-detail-client";
@@ -39,7 +40,8 @@ export default async function InvoiceDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { supabase, organizationId } = await requireAppContext();
+  const { supabase, organizationId, branchId, isBranchScoped } =
+    await requireAppContext();
 
   const { data: invoice } = await supabase
     .from("invoices")
@@ -48,6 +50,10 @@ export default async function InvoiceDetailPage({
     .eq("organization_id", organizationId)
     .single();
 
+  // Enforce branch access for scoped users (redirects to 404 if not allowed)
+  enforceBranchAccess(invoice, branchId, isBranchScoped);
+
+  // Narrow type after the branch guard
   if (!invoice) notFound();
 
   const { data: items } = await supabase

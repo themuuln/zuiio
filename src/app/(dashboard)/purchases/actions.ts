@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { postPurchaseToJournal } from "@/lib/accounting";
+import { withBranchFilter } from "@/lib/branches";
 import { checkPermission, requireAppContext } from "@/lib/erp";
 import { getString } from "@/lib/validation";
 
@@ -139,26 +140,34 @@ export async function updatePurchaseOrderStatus(
   orderId: string,
   status: string,
 ) {
-  const { supabase, organizationId, permissions } = await requireAppContext();
+  const { supabase, organizationId, branchId, isBranchScoped, permissions } =
+    await requireAppContext();
   const permError = checkPermission(permissions, "purchases.update");
   if (permError) return { error: permError };
 
-  const { data: order } = await supabase
+  let fetchQuery = supabase
     .from("purchase_orders")
     .select("status")
     .eq("id", orderId)
-    .eq("organization_id", organizationId)
-    .single();
+    .eq("organization_id", organizationId);
+
+  fetchQuery = withBranchFilter(fetchQuery, branchId, isBranchScoped);
+
+  const { data: order } = await fetchQuery.single();
 
   if (!order) {
     return { error: "Захиалга олдсонгүй." };
   }
 
-  const { error } = await supabase
+  let updateQuery = supabase
     .from("purchase_orders")
     .update({ status })
     .eq("id", orderId)
     .eq("organization_id", organizationId);
+
+  updateQuery = withBranchFilter(updateQuery, branchId, isBranchScoped);
+
+  const { error } = await updateQuery;
 
   if (error) {
     return { error: `Төлөв шинэчлэхэд алдаа гарлаа: ${error.message}` };
@@ -173,8 +182,14 @@ export async function receivePurchaseOrderItems(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId, branchId, permissions } =
-    await requireAppContext();
+  const {
+    supabase,
+    organizationId,
+    userId,
+    branchId,
+    isBranchScoped,
+    permissions,
+  } = await requireAppContext();
   const permError = checkPermission(permissions, "purchases.update");
   if (permError) return { error: permError };
 
@@ -197,12 +212,15 @@ export async function receivePurchaseOrderItems(
   }
 
   // Verify the order belongs to this organization
-  const { data: order, error: orderError } = await supabase
+  let fetchQuery = supabase
     .from("purchase_orders")
     .select("id, status, organization_id")
     .eq("id", orderId)
-    .eq("organization_id", organizationId)
-    .single();
+    .eq("organization_id", organizationId);
+
+  fetchQuery = withBranchFilter(fetchQuery, branchId, isBranchScoped);
+
+  const { data: order, error: orderError } = await fetchQuery.single();
 
   if (orderError || !order) {
     return { error: "Захиалга олдсонгүй." };

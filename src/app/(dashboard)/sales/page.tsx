@@ -1,20 +1,32 @@
 import { requireAppContext } from "@/lib/erp";
+import { withBranchFilter } from "@/lib/branches";
 import { SalesContent } from "./sales-content";
 import type { SaleRow } from "./sales-table";
 
 export const unstable_instant = { prefetch: "static" };
 
-export default async function SalesPage() {
-  const { supabase, organizationId } = await requireAppContext();
+export default async function SalesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ branch?: string }>;
+}) {
+  const { branch: urlBranch } = await searchParams;
+  const { supabase, organizationId, branchId, isBranchScoped } =
+    await requireAppContext();
 
   const [salesResult, productsResult, customersResult] = await Promise.all([
-    supabase
-      .from("sales")
-      .select(
-        "id, total_amount, paid_amount, sale_date, status, payment_method, contacts(name)",
-      )
-      .eq("organization_id", organizationId)
-      .order("sale_date", { ascending: false }),
+    withBranchFilter(
+      supabase
+        .from("sales")
+        .select(
+          "id, total_amount, paid_amount, sale_date, status, payment_method, contacts(name)",
+        )
+        .eq("organization_id", organizationId)
+        .order("sale_date", { ascending: false }),
+      branchId,
+      isBranchScoped,
+      urlBranch,
+    ),
     supabase
       .from("products")
       .select("id, name, sale_price, current_stock, unit")

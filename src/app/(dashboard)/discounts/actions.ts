@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { logAuditEventWithClient } from "@/lib/audit";
+import { withBranchFilter } from "@/lib/branches";
 import { checkPermission, requireAppContext } from "@/lib/erp";
 import { getString } from "@/lib/validation";
 
@@ -365,7 +366,8 @@ export async function toggleDiscountActive(
 }
 
 export async function applyDiscount(formData: FormData) {
-  const { supabase, organizationId } = await requireAppContext();
+  const { supabase, organizationId, branchId, isBranchScoped } =
+    await requireAppContext();
 
   const discountId = getString(formData, "discount_id");
   const cartTotal = parseFloatSafe(formData.get("cart_total"));
@@ -379,12 +381,15 @@ export async function applyDiscount(formData: FormData) {
   }
 
   // Fetch discount
-  const { data: discount, error: discountError } = await supabase
+  let fetchQuery = supabase
     .from("discounts")
     .select("*")
     .eq("id", discountId)
-    .eq("organization_id", organizationId)
-    .single();
+    .eq("organization_id", organizationId);
+
+  fetchQuery = withBranchFilter(fetchQuery, branchId, isBranchScoped);
+
+  const { data: discount, error: discountError } = await fetchQuery.single();
 
   if (discountError || !discount) {
     return { error: "Хямдрал олдсонгүй." };

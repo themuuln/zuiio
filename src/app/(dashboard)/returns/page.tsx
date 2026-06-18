@@ -1,4 +1,5 @@
 import { requireAppContext } from "@/lib/erp";
+import { withBranchFilter } from "@/lib/branches";
 import { ReturnsContent } from "./returns-content";
 
 export const unstable_instant = { prefetch: "static" };
@@ -16,8 +17,14 @@ export type ReturnRow = {
   reason: string | null;
 };
 
-export default async function ReturnsPage() {
-  const { supabase, organizationId } = await requireAppContext();
+export default async function ReturnsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ branch?: string }>;
+}) {
+  const { branch: urlBranch } = await searchParams;
+  const { supabase, organizationId, branchId, isBranchScoped } =
+    await requireAppContext();
 
   const [
     returnsResult,
@@ -26,13 +33,18 @@ export default async function ReturnsPage() {
     salesResult,
     purchaseOrdersResult,
   ] = await Promise.all([
-    supabase
-      .from("returns")
-      .select(
-        "id, return_number, return_date, type, reference_type, reference_id, contact_id, status, total_amount, reason, contacts(name)",
-      )
-      .eq("organization_id", organizationId)
-      .order("created_at", { ascending: false }),
+    withBranchFilter(
+      supabase
+        .from("returns")
+        .select(
+          "id, return_number, return_date, type, reference_type, reference_id, contact_id, status, total_amount, reason, contacts(name)",
+        )
+        .eq("organization_id", organizationId)
+        .order("created_at", { ascending: false }),
+      branchId,
+      isBranchScoped,
+      urlBranch,
+    ),
     supabase
       .from("contacts")
       .select("id, name")
@@ -43,20 +55,30 @@ export default async function ReturnsPage() {
       .select("id, name, sale_price, current_stock, unit")
       .eq("organization_id", organizationId)
       .order("name"),
-    supabase
-      .from("sales")
-      .select("id, sale_date, total_amount, contacts(name)")
-      .eq("organization_id", organizationId)
-      .order("sale_date", { ascending: false })
-      .limit(100),
-    supabase
-      .from("purchase_orders")
-      .select(
-        "id, order_number, order_date, total_amount, contacts!purchase_orders_supplier_id_fkey(name)",
-      )
-      .eq("organization_id", organizationId)
-      .order("order_date", { ascending: false })
-      .limit(100),
+    withBranchFilter(
+      supabase
+        .from("sales")
+        .select("id, sale_date, total_amount, contacts(name)")
+        .eq("organization_id", organizationId)
+        .order("sale_date", { ascending: false })
+        .limit(100),
+      branchId,
+      isBranchScoped,
+      urlBranch,
+    ),
+    withBranchFilter(
+      supabase
+        .from("purchase_orders")
+        .select(
+          "id, order_number, order_date, total_amount, contacts!purchase_orders_supplier_id_fkey(name)",
+        )
+        .eq("organization_id", organizationId)
+        .order("order_date", { ascending: false })
+        .limit(100),
+      branchId,
+      isBranchScoped,
+      urlBranch,
+    ),
   ]);
 
   const returns: ReturnRow[] =

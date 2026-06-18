@@ -4,6 +4,7 @@ import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { logAuditEventWithClient } from "@/lib/audit";
+import { withBranchFilter } from "@/lib/branches";
 import { checkPermission, requireAppContext } from "@/lib/erp";
 import { getString, normalizePhone } from "@/lib/validation";
 
@@ -162,8 +163,14 @@ export async function createInvoiceShareLink(
   _prevState: InvoiceShareState | undefined,
   formData: FormData,
 ): Promise<InvoiceShareState> {
-  const { supabase, organizationId, userId, permissions } =
-    await requireAppContext();
+  const {
+    supabase,
+    organizationId,
+    userId,
+    branchId,
+    isBranchScoped,
+    permissions,
+  } = await requireAppContext();
   const permError = checkPermission(permissions, "invoices.update");
   if (permError) return { error: permError };
 
@@ -174,11 +181,15 @@ export async function createInvoiceShareLink(
 
   const token = randomBytes(32).toString("hex");
 
-  const { error: updateError } = await supabase
+  let updateQuery = supabase
     .from("invoices")
     .update({ token, created_by: userId })
     .eq("id", invoiceId)
     .eq("organization_id", organizationId);
+
+  updateQuery = withBranchFilter(updateQuery, branchId, isBranchScoped);
+
+  const { error: updateError } = await updateQuery;
 
   if (updateError) {
     return {
@@ -201,27 +212,40 @@ export async function createInvoiceShareLink(
 }
 
 export async function updateInvoiceStatus(invoiceId: string, status: string) {
-  const { supabase, organizationId, userId, permissions } =
-    await requireAppContext();
+  const {
+    supabase,
+    organizationId,
+    userId,
+    branchId,
+    isBranchScoped,
+    permissions,
+  } = await requireAppContext();
   const permError = checkPermission(permissions, "invoices.update");
   if (permError) return { error: permError };
 
-  const { data: invoice } = await supabase
+  let fetchQuery = supabase
     .from("invoices")
     .select("status")
     .eq("id", invoiceId)
-    .eq("organization_id", organizationId)
-    .single();
+    .eq("organization_id", organizationId);
+
+  fetchQuery = withBranchFilter(fetchQuery, branchId, isBranchScoped);
+
+  const { data: invoice } = await fetchQuery.single();
 
   if (!invoice) {
     return { error: "Нэхэмжлэл олдсонгүй." };
   }
 
-  const { error } = await supabase
+  let updateQuery = supabase
     .from("invoices")
     .update({ status })
     .eq("id", invoiceId)
     .eq("organization_id", organizationId);
+
+  updateQuery = withBranchFilter(updateQuery, branchId, isBranchScoped);
+
+  const { error } = await updateQuery;
 
   if (error) {
     return { error: `Төлөв шинэчлэхэд алдаа гарлаа: ${error.message}` };

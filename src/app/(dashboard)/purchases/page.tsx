@@ -1,20 +1,32 @@
 import { requireAppContext } from "@/lib/erp";
+import { withBranchFilter } from "@/lib/branches";
 import { PurchasesContent } from "./purchases-content";
 import type { PurchaseRow } from "./purchases-table";
 
 export const unstable_instant = { prefetch: "static" };
 
-export default async function PurchasesPage() {
-  const { supabase, organizationId } = await requireAppContext();
+export default async function PurchasesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ branch?: string }>;
+}) {
+  const { branch: urlBranch } = await searchParams;
+  const { supabase, organizationId, branchId, isBranchScoped } =
+    await requireAppContext();
 
   const [ordersResult, suppliersResult, productsResult] = await Promise.all([
-    supabase
-      .from("purchase_orders")
-      .select(
-        "id, order_number, order_date, expected_date, status, total_amount, notes, created_at, contacts!purchase_orders_supplier_id_fkey(name), profiles!purchase_orders_created_by_fkey(name)",
-      )
-      .eq("organization_id", organizationId)
-      .order("created_at", { ascending: false }),
+    withBranchFilter(
+      supabase
+        .from("purchase_orders")
+        .select(
+          "id, order_number, order_date, expected_date, status, total_amount, notes, created_at, contacts!purchase_orders_supplier_id_fkey(name), profiles!purchase_orders_created_by_fkey(name)",
+        )
+        .eq("organization_id", organizationId)
+        .order("created_at", { ascending: false }),
+      branchId,
+      isBranchScoped,
+      urlBranch,
+    ),
     supabase
       .from("contacts")
       .select("id, name, phone")

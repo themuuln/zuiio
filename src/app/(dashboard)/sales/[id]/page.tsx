@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { PageShell } from "@/components/erp/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { notFound } from "next/navigation";
+import { enforceBranchAccess } from "@/lib/branches";
 import { requireAppContext } from "@/lib/erp";
 import { formatCurrency, formatDate } from "@/lib/format";
 
@@ -42,17 +44,21 @@ export default async function SaleDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { supabase, organizationId } = await requireAppContext();
+  const { supabase, organizationId, branchId, isBranchScoped } =
+    await requireAppContext();
 
   // Fetch sale with contact and salesperson info
   const { data: sale } = await supabase
     .from("sales")
     .select(
-      "id, total_amount, paid_amount, sale_date, status, payment_method, contacts(name), salesperson_id, profiles!sales_salesperson_id_fkey(full_name)",
+      "id, total_amount, paid_amount, sale_date, status, payment_method, branch_id, contacts(name), salesperson_id, profiles!sales_salesperson_id_fkey(full_name)",
     )
     .eq("organization_id", organizationId)
     .eq("id", id)
     .single();
+
+  // Enforce branch access for scoped users
+  enforceBranchAccess(sale, branchId, isBranchScoped);
 
   if (!sale) {
     notFound();
