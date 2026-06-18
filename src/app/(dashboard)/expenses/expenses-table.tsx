@@ -89,6 +89,8 @@ export function ExpensesTable({ data }: { data: ExpenseRow[] }) {
         searchPlaceholder="Ангилал, тайлбараар хайх..."
         pageSize={10}
         totalLabel="зарлага"
+        enableSorting
+        enableColumnVisibility
         onRowClick={(row) => setSelectedExpense(row)}
       />
       {selectedExpense && (

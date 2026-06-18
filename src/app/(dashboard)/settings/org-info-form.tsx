@@ -4,8 +4,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { COMPANY_TYPES } from "@/lib/constants";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { updateOrganization } from "./actions";
 import { useRegisterSave, useSettings } from "./settings-context";
 
@@ -18,6 +20,7 @@ const orgSchema = z.object({
       /^[a-z0-9-]+$/,
       "Холбоос зөвхөн англи үсэг, тоо, зураас агуулсан байна.",
     ),
+  company_type: z.string().min(1, "Төрөл сонгоно уу."),
 });
 
 type OrgValues = z.infer<typeof orgSchema>;
@@ -25,11 +28,20 @@ type OrgValues = z.infer<typeof orgSchema>;
 type OrgInfoFormProps = {
   initialName: string;
   initialSlug: string;
+  initialCompanyType?: string;
 };
 
-export function OrgInfoForm({ initialName, initialSlug }: OrgInfoFormProps) {
+export function OrgInfoForm({
+  initialName,
+  initialSlug,
+  initialCompanyType,
+}: OrgInfoFormProps) {
   const { notify } = useSettings();
-  const initial = useRef({ name: initialName, slug: initialSlug });
+  const initial = useRef({
+    name: initialName,
+    slug: initialSlug,
+    company_type: initialCompanyType ?? "other",
+  });
 
   const {
     register,
@@ -41,6 +53,7 @@ export function OrgInfoForm({ initialName, initialSlug }: OrgInfoFormProps) {
     defaultValues: {
       name: initialName,
       slug: initialSlug,
+      company_type: initialCompanyType ?? "other",
     },
   });
 
@@ -56,6 +69,7 @@ export function OrgInfoForm({ initialName, initialSlug }: OrgInfoFormProps) {
     const formData = new FormData();
     formData.append("name", data.name);
     formData.append("slug", data.slug);
+    formData.append("company_type", data.company_type);
     const result = await updateOrganization(undefined, formData);
     return result?.error ? { error: result.error } : undefined;
   }, [getValues]);
@@ -79,6 +93,12 @@ export function OrgInfoForm({ initialName, initialSlug }: OrgInfoFormProps) {
           field: "Холбоос",
           from: initial.current.slug,
           to: data.slug,
+        });
+      if (data.company_type !== initial.current.company_type)
+        changes.push({
+          field: "Төрөл",
+          from: initial.current.company_type,
+          to: data.company_type,
         });
       return changes;
     },
@@ -109,6 +129,23 @@ export function OrgInfoForm({ initialName, initialSlug }: OrgInfoFormProps) {
           />
           {errors.slug && (
             <p className="text-xs text-destructive">{errors.slug.message}</p>
+          )}
+        </Field>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field>
+          <FieldLabel htmlFor="org-type">Байгууллагын төрөл</FieldLabel>
+          <NativeSelect id="org-type" {...register("company_type")}>
+            {COMPANY_TYPES.map((ct) => (
+              <NativeSelectOption key={ct.value} value={ct.value}>
+                {ct.label}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+          {errors.company_type && (
+            <p className="text-xs text-destructive">
+              {errors.company_type.message}
+            </p>
           )}
         </Field>
       </div>

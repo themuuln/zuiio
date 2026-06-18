@@ -129,6 +129,15 @@
   }
 }
 
+/* Hide sidebar scrollbar */
+[data-slot="sidebar-content"] {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+[data-slot="sidebar-content"]::-webkit-scrollbar {
+  display: none;
+}
+
 /* Mobile responsiveness */
 @media (max-width: 767px) {
   /* Prevent horizontal overflow at the page level */

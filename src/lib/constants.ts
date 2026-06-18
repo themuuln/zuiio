@@ -16,7 +16,6 @@ export const COMPANY_TYPES = [
   { value: "manufacturing", label: "Үйлдвэрлэл" },
   { value: "restaurant", label: "Ресторан" },
   { value: "gym", label: "Фитнес / Спорт клуб" },
-  { value: "fitness", label: "Фитнес бараа" },
   { value: "other", label: "Бусад" },
 ] as const;
 

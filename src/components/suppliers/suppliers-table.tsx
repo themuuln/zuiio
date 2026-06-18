@@ -106,6 +106,8 @@ export function SuppliersTable({ data }: { data: SupplierRow[] }) {
       searchPlaceholder="Нийлүүлэгчээр хайх..."
       pageSize={10}
       totalLabel="нийлүүлэгч"
+      enableSorting
+      enableColumnVisibility
     />
   );
 }

@@ -3,11 +3,13 @@
 import { Drawer } from "@base-ui/react/drawer";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Barcode, Package, Plus, Tag, X } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { createProduct } from "@/app/(dashboard)/products/new/actions";
 import { buttonVariants } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { VariantEditor, type LocalVariantGroup } from "@/components/products/variant-editor";
 import {
   Combobox,
   ComboboxContent,
@@ -98,6 +100,9 @@ export function ProductCreateDrawer({
     },
   });
 
+  const [variantGroups, setVariantGroups] = useState<LocalVariantGroup[]>([]);
+  const hasVariants = variantGroups.length > 0;
+
   const productMutation = useOptimisticCreate({
     mutationFn: async (formData: FormData) => {
       const result = await createProduct(undefined, formData);
@@ -140,6 +145,24 @@ export function ProductCreateDrawer({
     formData.append("sale_price", String(data.sale_price));
     formData.append("current_stock", String(data.current_stock));
     formData.append("min_stock", String(data.min_stock));
+
+    // Attach variant data if present
+    if (hasVariants) {
+      const combinations = computeVariantCombinations(variantGroups);
+      const variants = combinations.map((combo) => {
+        const key = combo.option_ids.join("-");
+        return {
+          sku: (formData.get(`v_sku_${key}`) as string) ?? "",
+          cost_price: Number(formData.get(`v_cost_${key}`) ?? 0),
+          sale_price: Number(formData.get(`v_price_${key}`) ?? 0),
+          current_stock: Number(formData.get(`v_stock_${key}`) ?? 0),
+          option_ids: combo.option_ids,
+        };
+      });
+      formData.append("variant_groups", JSON.stringify(variantGroups));
+      formData.append("variant_data", JSON.stringify(variants));
+    }
+
     productMutation.mutate(formData, { onSuccess: () => setOpen(false) });
   };
 
@@ -157,6 +180,32 @@ export function ProductCreateDrawer({
       : allUnits;
 
   // --- Category combobox (creatable) ---
+function computeVariantCombinations(
+  groups: LocalVariantGroup[],
+): { option_ids: string[]; option_labels: string }[] {
+  if (groups.length === 0) return [];
+  const optionLists = groups.map((g) =>
+    g.options.map((o) => ({ id: o.id, value: o.value })),
+  );
+  function cartesian(
+    lists: { id: string; value: string }[][],
+  ): { option_ids: string[]; option_labels: string }[] {
+    if (lists.length === 0) return [{ option_ids: [], option_labels: "" }];
+    const [first, ...rest] = lists;
+    const restCombos = cartesian(rest);
+    return first.flatMap((item) =>
+      restCombos.map((combo) => ({
+        option_ids: [item.id, ...combo.option_ids],
+        option_labels:
+          [item.value, ...(combo.option_labels ? [combo.option_labels] : [])].join(
+            " / ",
+          ),
+      })),
+    );
+  }
+  return cartesian(optionLists);
+}
+
   const [categoryQuery, setCategoryQuery] = useState("");
   const trimmedCategoryQuery = categoryQuery.trim();
   const loweredCategoryQuery = trimmedCategoryQuery.toLowerCase();
@@ -180,8 +229,8 @@ export function ProductCreateDrawer({
         Шинэ бүтээгдэхүүн
       </Drawer.Trigger>
       <Drawer.Portal>
-        <Drawer.Backdrop className="[--backdrop-opacity:0.1] [--bleed:3rem] dark:[--backdrop-opacity:0.4] z-50 fixed inset-0 min-h-dvh bg-black opacity-[calc(var(--backdrop-opacity)*(1-var(--drawer-swipe-progress)))] transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:duration-0 data-ending-style:opacity-0 data-starting-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:absolute" />
-        <Drawer.Viewport className="[--viewport-padding:0px] supports-[-webkit-touch-callout:none]:[--viewport-padding:0.625rem] z-50 fixed inset-0 flex items-stretch justify-end p-(--viewport-padding)">
+        <Drawer.Backdrop className="[--backdrop-opacity:0.1] z-40 [--bleed:3rem] dark:[--backdrop-opacity:0.4] fixed inset-0 min-h-dvh bg-black opacity-[calc(var(--backdrop-opacity)*(1-var(--drawer-swipe-progress)))] transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:duration-0 data-ending-style:opacity-0 data-starting-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:absolute" />
+        <Drawer.Viewport className="[--viewport-padding:0px] z-50 supports-[-webkit-touch-callout:none]:[--viewport-padding:0.625rem] fixed inset-0 flex items-stretch justify-end p-(--viewport-padding)">
           <Drawer.Popup className="[--bleed:3rem] supports-[-webkit-touch-callout:none]:[--bleed:0px] h-full w-[calc(28rem+3rem)] max-w-[calc(100vw-3rem+3rem)] -mr-[3rem] border-l border-border bg-white p-6 pr-[calc(1.5rem+3rem)] text-foreground outline-none shadow-lg overflow-y-auto overscroll-contain touch-auto [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:select-none data-ending-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-starting-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:mr-0 supports-[-webkit-touch-callout:none]:w-[28rem] supports-[-webkit-touch-callout:none]:max-w-[calc(100vw-3rem)] supports-[-webkit-touch-callout:none]:border supports-[-webkit-touch-callout:none]:pr-6 dark:bg-popover dark:text-popover-foreground dark:shadow-none">
             <Drawer.Content className="mx-auto w-full">
               <div className="mb-6 flex items-center justify-between">
@@ -474,6 +523,13 @@ export function ProductCreateDrawer({
                     </Field>
                   </FieldGroup>
                 </div>
+
+                <Separator />
+
+                <VariantEditor
+                  groups={variantGroups}
+                  onGroupsChange={setVariantGroups}
+                />
 
                 {productMutation.error ? (
                   <div className="rounded-none bg-destructive/10 px-3 py-2 text-sm text-destructive">

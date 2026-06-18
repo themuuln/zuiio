@@ -118,6 +118,8 @@ export function CategoriesTable({ data }: { data: CategoryRow[] }) {
         searchPlaceholder="Ангиллаар хайх..."
         pageSize={10}
         totalLabel="ангилал"
+        enableSorting
+        enableColumnVisibility
         onRowClick={(row) => setSelectedCategory(row)}
       />
       {selectedCategory && (

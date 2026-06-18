@@ -23,8 +23,6 @@ import { SettingsShell } from "./settings-shell";
 
 export const unstable_instant = { prefetch: "static" };
 
-const TEMPLATE_TYPES = ["gym", "fitness", "retail"];
-
 const SUPERADMIN_EMAIL = "zerone.offical@gmail.com";
 
 export default async function SettingsPage() {
@@ -51,12 +49,25 @@ export default async function SettingsPage() {
   const profile = profileResult.data;
   const brandConfig = (brandConfigResult.data?.brand_config ??
     {}) as BrandConfig;
-  const showTemplates =
-    org?.company_type && TEMPLATE_TYPES.includes(org.company_type);
 
-  const presetsData = showTemplates
-    ? await supabase.from("product_presets").select("*").order("sort_order")
-    : undefined;
+  const presetsData = await supabase
+    .from("product_presets")
+    .select("*")
+    .order("sort_order");
+
+  // Fetch brands already imported by this org
+  const { data: existingBrands } = await supabase
+    .from("brands")
+    .select("name")
+    .eq("organization_id", organizationId);
+  const importedBrandNames = existingBrands?.map((b) => b.name) ?? [];
+
+  // Read disabled brands from brand_config
+  const disabledBrandNames = Array.isArray(
+    (brandConfig as Record<string, unknown>)?.disabled_brand_names,
+  )
+    ? ((brandConfig as Record<string, unknown>).disabled_brand_names as string[])
+    : [];
 
   // Check if SMTP is configured (for conditional rendering)
   const { count: smtpCount } = await supabase
@@ -116,13 +127,14 @@ export default async function SettingsPage() {
           <OrgInfoForm
             initialName={org?.name ?? ""}
             initialSlug={org?.slug ?? ""}
+            initialCompanyType={org?.company_type}
           />
         </CardContent>
       </Card>
 
-      {/* Brand Templates (gym / fitness only) */}
-      {showTemplates && presetsData?.data?.length ? (
-        <BrandPresetsCard presets={presetsData.data} />
+      {/* Product Brand Presets — available brands with products to import */}
+      {presetsData?.data?.length ? (
+        <BrandPresetsCard presets={presetsData.data} orgCompanyType={org?.company_type ?? "other"} importedBrandNames={importedBrandNames} disabledBrandNames={disabledBrandNames} />
       ) : null}
 
       {/* Profile */}

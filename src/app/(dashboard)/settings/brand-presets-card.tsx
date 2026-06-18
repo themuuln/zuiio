@@ -1,7 +1,8 @@
 "use client";
 
-import { Check, Spinner, Cube } from "@phosphor-icons/react";
+import { Check, Spinner, Cube, Storefront } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -20,7 +22,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { importBrandPresets } from "./actions";
+import { getCompanyTypeLabel } from "@/lib/constants";
+import { importBrandPresets, toggleBrandPreset } from "./actions";
 
 interface Preset {
   id: string;
@@ -34,6 +37,14 @@ interface Preset {
   sale_price: number | null;
   min_stock: number | null;
 }
+
+/**
+ * Maps company types to brand names that are relevant for that type.
+ * Brands not listed here won't appear in the picker for that org type.
+ */
+const BRANDS_BY_COMPANY_TYPE: Record<string, string[]> = {
+  gym: ["Myprotein", "Thorne", "HiTec Nutrition", "Real Pharm"],
+};
 
 function groupByBrand(presets: Preset[]) {
   const map = new Map<string, Preset[]>();
@@ -50,25 +61,56 @@ function groupByBrand(presets: Preset[]) {
   }));
 }
 
-export function BrandPresetsCard({ presets }: { presets: Preset[] }) {
-  const brands = groupByBrand(presets);
+export function BrandPresetsCard({
+  presets,
+  orgCompanyType,
+  importedBrandNames,
+  disabledBrandNames = [],
+}: {
+  presets: Preset[];
+  orgCompanyType: string;
+  importedBrandNames: string[];
+  disabledBrandNames?: string[];
+}) {
+  const allowedBrands = BRANDS_BY_COMPANY_TYPE[orgCompanyType];
+  const importedSet = new Set(importedBrandNames);
+  const disabledSet = new Set(disabledBrandNames);
+  let filtered = groupByBrand(presets);
+
+  if (allowedBrands) {
+    filtered = filtered.filter((b) => allowedBrands.includes(b.brandName));
+  }
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Cube className="size-5" />
-          Брэнд загварууд
+          Брэнд, бүтээгдэхүүний сан
         </CardTitle>
         <CardDescription>
-          Фитнес спорт клубт тохирсон бэлэн брэнд, бүтээгдэхүүний загваруудыг
-          нэг дор импортлох
+          <span className="flex items-center gap-1.5">
+            <Storefront className="size-3.5" />
+            {getCompanyTypeLabel(orgCompanyType)} төрөлд тохирсон брэнд,
+            бүтээгдэхүүний загварууд
+          </span>
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
-        {brands.map((brand) => (
-          <BrandSection key={brand.brandName} brand={brand} />
-        ))}
+        {filtered.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Энэ төрлийн байгууллагад тохирсон брэнд загварууд тун удахгүй...
+          </p>
+        ) : (
+          filtered.map((brand) => (
+            <BrandSection
+              key={brand.brandName}
+              brand={brand}
+              initiallyImported={importedSet.has(brand.brandName)}
+              initiallyDisabled={disabledSet.has(brand.brandName)}
+            />
+          ))
+        )}
       </CardContent>
     </Card>
   );
@@ -76,6 +118,8 @@ export function BrandPresetsCard({ presets }: { presets: Preset[] }) {
 
 function BrandSection({
   brand,
+  initiallyImported,
+  initiallyDisabled,
 }: {
   brand: {
     brandName: string;
@@ -83,10 +127,14 @@ function BrandSection({
     products: Preset[];
     count: number;
   };
+  initiallyImported?: boolean;
+  initiallyDisabled?: boolean;
 }) {
-  const [imported, setImported] = useState(false);
+  const router = useRouter();
+  const [imported, setImported] = useState(initiallyImported ?? false);
+  const [disabled, setDisabled] = useState(initiallyDisabled ?? false);
 
-  const mutation = useMutation({
+  const importMutation = useMutation({
     mutationFn: async () => {
       const formData = new FormData();
       formData.append("brand_name", brand.brandName);
@@ -107,6 +155,26 @@ function BrandSection({
     },
   });
 
+  const toggleMutation = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const fd = new FormData();
+      fd.append("brand_name", brand.brandName);
+      fd.append("enabled", String(enabled));
+      return toggleBrandPreset(undefined, fd);
+    },
+    onSuccess: (result) => {
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        setDisabled(!disabled);
+        router.refresh();
+      }
+    },
+    onError: () => {
+      toast.error("Тохиргоог хадгалахад алдаа гарлаа.");
+    },
+  });
+
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
@@ -115,10 +183,10 @@ function BrandSection({
             <img
               src={brand.logoUrl}
               alt={brand.brandName}
-              className="size-8 rounded object-contain"
+              className={`size-8 rounded object-contain ${disabled ? "opacity-50" : ""}`}
             />
           ) : (
-            <div className="flex size-8 items-center justify-center rounded bg-muted text-xs font-bold text-muted-foreground">
+            <div className={`flex size-8 items-center justify-center rounded text-xs font-bold ${disabled ? "bg-muted/50 text-muted-foreground/50" : "bg-muted text-muted-foreground"}`}>
               {brand.brandName.charAt(0)}
             </div>
           )}
@@ -129,65 +197,77 @@ function BrandSection({
             </p>
           </div>
         </div>
-        {imported ? (
-          <span className="flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-500">
-            <Check className="size-4" />
-            Импортлосон
-          </span>
-        ) : (
-          <Button
-            size="sm"
-            onClick={() => mutation.mutate()}
-            disabled={mutation.isPending}
-          >
-            {mutation.isPending ? (
-              <>
-                <Spinner className="size-4 animate-spin" />
-                Импортлож байна...
-              </>
-            ) : (
-              "Бүгдийг импортлох"
-            )}
-          </Button>
-        )}
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+            <Switch
+              checked={!disabled}
+              onCheckedChange={(checked) => toggleMutation.mutate(checked)}
+              disabled={toggleMutation.isPending}
+            />
+            {disabled ? "Нуусан" : "Харагдах"}
+          </label>
+          {imported ? (
+            <span className="flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-500">
+              <Check className="size-4" />
+              Импортлосон
+            </span>
+          ) : (
+            <Button
+              size="sm"
+              onClick={() => importMutation.mutate()}
+              disabled={importMutation.isPending || disabled}
+            >
+              {importMutation.isPending ? (
+                <>
+                  <Spinner className="size-4 animate-spin" />
+                  Импортлож байна...
+                </>
+              ) : (
+                "Бүгдийг импортлох"
+              )}
+            </Button>
+          )}
+        </div>
       </div>
 
-      <div className="rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Бүтээгдэхүүн</TableHead>
-              <TableHead>SKU</TableHead>
-              <TableHead>Ангилал</TableHead>
-              <TableHead>Өртөг ₮</TableHead>
-              <TableHead>Зарах ₮</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {brand.products.map((p) => (
-              <TableRow key={p.id}>
-                <TableCell className="font-medium">{p.product_name}</TableCell>
-                <TableCell className="font-mono text-xs text-muted-foreground">
-                  {p.product_sku ?? "-"}
-                </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {p.category_name ?? "-"}
-                </TableCell>
-                <TableCell>
-                  {p.cost_price && p.cost_price > 0
-                    ? p.cost_price.toLocaleString()
-                    : "-"}
-                </TableCell>
-                <TableCell>
-                  {p.sale_price && p.sale_price > 0
-                    ? p.sale_price.toLocaleString()
-                    : "-"}
-                </TableCell>
+      {!disabled && (
+        <div className="rounded-lg border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Бүтээгдэхүүн</TableHead>
+                <TableHead>SKU</TableHead>
+                <TableHead>Ангилал</TableHead>
+                <TableHead>Өртөг ₮</TableHead>
+                <TableHead>Зарах ₮</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {brand.products.map((p) => (
+                <TableRow key={p.id}>
+                  <TableCell className="font-medium">{p.product_name}</TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {p.product_sku ?? "-"}
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {p.category_name ?? "-"}
+                  </TableCell>
+                  <TableCell>
+                    {p.cost_price && p.cost_price > 0
+                      ? p.cost_price.toLocaleString()
+                      : "-"}
+                  </TableCell>
+                  <TableCell>
+                    {p.sale_price && p.sale_price > 0
+                      ? p.sale_price.toLocaleString()
+                      : "-"}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 }

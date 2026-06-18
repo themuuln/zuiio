@@ -204,10 +204,29 @@ export function DashboardShell({
                       <SidebarMenu>
                         {group.items.map((item) => {
                           const Icon = item.icon;
-                          const isActive =
-                            pathname === item.href ||
-                            (item.href !== "/" &&
-                              pathname.startsWith(item.href));
+                          const isActive = (() => {
+                            if (pathname === item.href) return true;
+                            if (item.href === "/") return false;
+
+                            // Prefix match with segment boundary — ensures
+                            // /inventory doesn't match /inventory/categories
+                            // but /sales still matches /sales/abc-123
+                            if (!pathname.startsWith(item.href + "/"))
+                              return false;
+
+                            // If a more specific nav item also matches
+                            // this pathname, defer to it instead
+                            return !navGroups.some((g) =>
+                              g.items.some(
+                                (other) =>
+                                  other.href !== item.href &&
+                                  other.href.length > item.href.length &&
+                                  other.href.startsWith(item.href) &&
+                                  (pathname === other.href ||
+                                    pathname.startsWith(other.href + "/")),
+                              ),
+                            );
+                          })();
 
                           return (
                             <SidebarMenuItem key={item.href}>

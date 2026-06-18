@@ -184,6 +184,8 @@ export function ProductsTable({
         searchPlaceholder="Нэр эсвэл SKU-аар хайх..."
         pageSize={10}
         totalLabel="бүтээгдэхүүн"
+        enableSorting
+        enableColumnVisibility
         onRowClick={(row) => setSelectedProduct(row)}
       />
       {selectedProduct && (

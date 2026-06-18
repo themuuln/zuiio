@@ -106,6 +106,8 @@ export function CustomersTable({ data }: { data: CustomerRow[] }) {
       searchPlaceholder="Харилцагчаар хайх..."
       pageSize={10}
       totalLabel="харилцагч"
+      enableSorting
+      enableColumnVisibility
     />
   );
 }

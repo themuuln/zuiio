@@ -7,7 +7,6 @@ import { ErpEmptyState } from "@/components/erp/empty-state";
 import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
 import { ExpensesCreateDrawer } from "@/components/expenses/expenses-create-drawer";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type ExpenseRow, ExpensesTable } from "./expenses-table";
 
 export function ExpensesContent({ expenses }: { expenses: ExpenseRow[] }) {
@@ -45,14 +44,7 @@ export function ExpensesContent({ expenses }: { expenses: ExpenseRow[] }) {
           action={<ExpensesCreateDrawer open={createOpen} onOpenChange={setCreateOpen} />}
         />
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Зарлагын жагсаалт</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ExpensesTable data={expenses} />
-          </CardContent>
-        </Card>
+        <ExpensesTable data={expenses} />
       )}
     </PageShell>
   );

@@ -12,6 +12,7 @@ export async function updateOrganization(
 
   const name = formData.get("name");
   const slug = formData.get("slug");
+  const companyType = formData.get("company_type");
 
   if (typeof name !== "string" || !name.trim()) {
     return { error: "Байгууллагын нэр шаардлагатай." };
@@ -29,17 +30,69 @@ export async function updateOrganization(
     return { error: "Холбоос зөвхөн англи үсэг, тоо, зураас агуулсан байна." };
   }
 
+  const updates: Record<string, string> = {
+    name: name.trim(),
+    slug: slug.trim(),
+  };
+  if (typeof companyType === "string" && companyType.trim()) {
+    updates.company_type = companyType.trim();
+  }
+
   const { error } = await supabase
     .from("organizations")
-    .update({
-      name: name.trim(),
-      slug: slug.trim(),
-    })
+    .update(updates)
     .eq("id", organizationId);
 
   if (error) {
     return { error: `Шинэчлэхэд алдаа гарлаа: ${error.message}` };
   }
+
+  revalidatePath("/settings");
+  return { success: true as const };
+}
+
+export async function toggleBrandPreset(
+  _prevState: { error?: string } | undefined,
+  formData: FormData,
+) {
+  const { supabase, organizationId } = await requireAppContext();
+
+  const brandName = formData.get("brand_name")?.toString();
+  const enabled = formData.get("enabled") === "true";
+
+  if (!brandName) return { error: "Брэндийн нэр шаардлагатай." };
+
+  // Get current brand_config
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("brand_config")
+    .eq("id", organizationId)
+    .single();
+
+  const brandConfig = (org?.brand_config ?? {}) as Record<string, unknown>;
+  const disabledBrandNames = new Set<string>(
+    Array.isArray(brandConfig.disabled_brand_names)
+      ? (brandConfig.disabled_brand_names as string[])
+      : [],
+  );
+
+  if (enabled) {
+    disabledBrandNames.delete(brandName);
+  } else {
+    disabledBrandNames.add(brandName);
+  }
+
+  const { error } = await supabase
+    .from("organizations")
+    .update({
+      brand_config: {
+        ...brandConfig,
+        disabled_brand_names: Array.from(disabledBrandNames),
+      },
+    })
+    .eq("id", organizationId);
+
+  if (error) return { error: error.message };
 
   revalidatePath("/settings");
   return { success: true as const };

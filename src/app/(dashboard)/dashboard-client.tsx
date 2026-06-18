@@ -303,7 +303,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
         <h2 className="mb-3 text-sm font-medium text-muted-foreground">
           Түргэн цэс
         </h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <ShortcutCard
             href="/products"
             icon={<Package className="size-5" />}
@@ -408,7 +408,12 @@ export function DashboardClient({ data }: { data: DashboardData }) {
             </p>
           ) : (
             <div className="h-60 w-full md:h-72">
-              <ResponsiveContainer width="100%" height="100%" minHeight={240}>
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+                minHeight={240}
+                initialDimension={{ width: 640, height: 240 }}
+              >
                 <BarChart data={data.monthlyTrend}>
                   <CartesianGrid
                     strokeDasharray="3 3"

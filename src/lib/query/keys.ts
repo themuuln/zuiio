@@ -49,6 +49,12 @@ export const movementKeys = {
   detail: (id: string) => ["stock_movements", "detail", id] as const,
 };
 
+export const variantKeys = {
+  all: () => ["product_variants"] as const,
+  byProduct: (productId: string) =>
+    ["product_variants", "by_product", productId] as const,
+};
+
 export const brandKeys = {
   all: () => ["brands"] as const,
   lists: (orgId: string) => ["brands", "list", orgId] as const,

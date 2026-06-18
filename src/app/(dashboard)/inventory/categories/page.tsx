@@ -3,7 +3,6 @@ import { CategoriesTable } from "@/components/categories/categories-table";
 import { CategoryCreateDrawer } from "@/components/categories/category-create-drawer";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAppContext } from "@/lib/erp";
 
 export const unstable_instant = { prefetch: "static" };
@@ -66,14 +65,7 @@ export default async function CategoriesPage() {
           action={<CategoryCreateDrawer />}
         />
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Ангиллын жагсаалт</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CategoriesTable data={tableData} />
-          </CardContent>
-        </Card>
+        <CategoriesTable data={tableData} />
       )}
     </PageShell>
   );

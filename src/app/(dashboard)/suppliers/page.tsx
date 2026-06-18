@@ -7,7 +7,6 @@ import {
   type SupplierRow,
   SuppliersTable,
 } from "@/components/suppliers/suppliers-table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAppContext } from "@/lib/erp";
 
 export const unstable_instant = { prefetch: "static" };
@@ -53,14 +52,7 @@ export default async function SuppliersPage() {
           action={<SupplierCreateDrawer />}
         />
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Нийлүүлэгчийн жагсаалт</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <SuppliersTable data={tableData} />
-          </CardContent>
-        </Card>
+        <SuppliersTable data={tableData} />
       )}
     </PageShell>
   );

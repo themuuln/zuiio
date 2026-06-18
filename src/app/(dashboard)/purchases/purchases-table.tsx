@@ -138,6 +138,8 @@ export function PurchasesTable({ data }: { data: PurchaseRow[] }) {
       searchPlaceholder="Захиалгын дугаар, нийлүүлэгч, дүнгээр хайх..."
       pageSize={10}
       totalLabel="захиалга"
+      enableSorting
+      enableColumnVisibility
     />
   );
 }

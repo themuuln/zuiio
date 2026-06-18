@@ -12,7 +12,6 @@ import {
   SaleDetailDrawer,
 } from "@/components/sales/sale-detail-drawer";
 import { SalesCreateDrawer } from "@/components/sales/sales-create-drawer";
-import { Card } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
 import type { SaleRow } from "./sales-table";
 import { SalesTable } from "./sales-table";
@@ -254,12 +253,10 @@ export function SalesContent({
                 );
               })}
             </div>
-            <Card>
-              <SalesTable
-                data={filteredSales}
-                onRowClick={(row) => setSelectedSaleId(row.id)}
-              />
-            </Card>
+            <SalesTable
+              data={filteredSales}
+              onRowClick={(row) => setSelectedSaleId(row.id)}
+            />
           </div>
         )}
       </PageShell>

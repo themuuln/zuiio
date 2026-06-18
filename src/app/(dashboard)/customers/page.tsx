@@ -7,7 +7,6 @@ import {
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAppContext } from "@/lib/erp";
 
 export const unstable_instant = { prefetch: "static" };
@@ -53,14 +52,7 @@ export default async function CustomersPage() {
           action={<CustomerCreateDrawer />}
         />
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Харилцагчийн жагсаалт</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CustomersTable data={tableData} />
-          </CardContent>
-        </Card>
+        <CustomersTable data={tableData} />
       )}
     </PageShell>
   );

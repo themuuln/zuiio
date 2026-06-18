@@ -152,6 +152,8 @@ export function SalesTable({
       searchPlaceholder="Огноо, харилцагч, дүнгээр хайх..."
       pageSize={10}
       totalLabel="борлуулалт"
+      enableSorting
+      enableColumnVisibility
       onRowClick={onRowClick}
     />
   );

@@ -9,7 +9,6 @@ import {
   ProductsTable,
 } from "@/components/products/products-table";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAppContext } from "@/lib/erp";
 
 export const unstable_instant = { prefetch: "static" };
@@ -75,15 +74,8 @@ export default async function ProductsPage() {
           }
         />
       ) : (
-        <>
-          <Card>
-            <CardHeader>
-              <CardTitle>Бүтээгдэхүүний жагсаалт</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ProductsTable data={tableData} organizationId={organizationId} />
-            </CardContent>
-          </Card>
+        <div className="flex flex-col gap-4">
+          <ProductsTable data={tableData} organizationId={organizationId} />
           <div className="flex flex-wrap items-center gap-3">
             <Button asChild variant="outline" size="sm">
               <Link href="/products/bulk">
@@ -92,7 +84,7 @@ export default async function ProductsPage() {
               </Link>
             </Button>
           </div>
-        </>
+        </div>
       )}
     </PageShell>
   );
