@@ -64,45 +64,6 @@ export async function updateProduct(
   const variantDataRaw = formData.get("variant_data")?.toString();
 
   if (variantGroupsRaw && variantDataRaw) {
-    // Delete existing variant data (cascade: assignments → options → variants → groups)
-    const { data: existingVariants } = await supabase
-      .from("product_variants")
-      .select("id")
-      .eq("product_id", id);
-    const existingVariantIds = (existingVariants ?? []).map((v) => v.id);
-
-    const { data: existingGroups } = await supabase
-      .from("product_variant_groups")
-      .select("id")
-      .eq("product_id", id);
-    const existingGroupIds = (existingGroups ?? []).map((g) => g.id);
-
-    if (existingVariantIds.length > 0) {
-      await supabase
-        .from("product_variant_assignments")
-        .delete()
-        .in("variant_id", existingVariantIds);
-    }
-    if (existingGroupIds.length > 0) {
-      await supabase
-        .from("product_variant_options")
-        .delete()
-        .in("group_id", existingGroupIds);
-    }
-    if (existingVariantIds.length > 0) {
-      await supabase
-        .from("product_variants")
-        .delete()
-        .in("id", existingVariantIds);
-    }
-    if (existingGroupIds.length > 0) {
-      await supabase
-        .from("product_variant_groups")
-        .delete()
-        .in("id", existingGroupIds);
-    }
-
-    // Re-create from submitted data
     try {
       const groups: {
         id: string;
@@ -116,6 +77,45 @@ export async function updateProduct(
         current_stock: number;
         option_ids: string[];
       }[] = JSON.parse(variantDataRaw);
+
+      // Delete existing variant data (cascade: assignments → options → variants → groups)
+      // Only after JSON parsing succeeds, to preserve old data if parsing fails
+      const { data: existingVariants } = await supabase
+        .from("product_variants")
+        .select("id")
+        .eq("product_id", id);
+      const existingVariantIds = (existingVariants ?? []).map((v) => v.id);
+
+      const { data: existingGroups } = await supabase
+        .from("product_variant_groups")
+        .select("id")
+        .eq("product_id", id);
+      const existingGroupIds = (existingGroups ?? []).map((g) => g.id);
+
+      if (existingVariantIds.length > 0) {
+        await supabase
+          .from("product_variant_assignments")
+          .delete()
+          .in("variant_id", existingVariantIds);
+      }
+      if (existingGroupIds.length > 0) {
+        await supabase
+          .from("product_variant_options")
+          .delete()
+          .in("group_id", existingGroupIds);
+      }
+      if (existingVariantIds.length > 0) {
+        await supabase
+          .from("product_variants")
+          .delete()
+          .in("id", existingVariantIds);
+      }
+      if (existingGroupIds.length > 0) {
+        await supabase
+          .from("product_variant_groups")
+          .delete()
+          .in("id", existingGroupIds);
+      }
 
       if (groups.length > 0) {
         // 1. Create groups and options, mapping temp IDs to real IDs
