@@ -14,7 +14,7 @@ import {
   type CategoryEditData,
   CategoryEditDrawer,
 } from "@/components/categories/category-edit-drawer";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { categoryKeys } from "@/lib/query/keys";
 import { useOptimisticDelete } from "@/lib/query/use-optimistic";
@@ -65,11 +65,7 @@ function ActionsCell({ row }: { row: { original: CategoryRow } }) {
       className="flex items-center gap-1"
       onClick={(e) => e.stopPropagation()}
     >
-      <CategoryEditDrawer category={toEditData(category)}>
-        <Button variant="ghost" size="icon-xs">
-          <NotePencil className="size-3.5" />
-        </Button>
-      </CategoryEditDrawer>
+      <CategoryEditDrawer category={toEditData(category)} />
       <button
         type="button"
         onClick={handleDelete}

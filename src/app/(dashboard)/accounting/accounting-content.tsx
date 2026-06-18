@@ -3,7 +3,10 @@
 import { Calculator } from "@phosphor-icons/react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { AccountCreateDrawer } from "@/components/accounting/account-create-drawer";
+import type { JournalEntryDetailData } from "@/components/accounting/journal-entry-detail-drawer";
+import { JournalEntryDetailDrawer } from "@/components/accounting/journal-entry-detail-drawer";
 import { JournalEntryCreateDrawer } from "@/components/accounting/journal-entry-create-drawer";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
@@ -19,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { toggleAccountActive } from "./actions";
 
 type TrialBalanceRow = {
   account_id: string;
@@ -84,27 +88,14 @@ export function AccountingContent({
   const [createAccountOpen, setCreateAccountOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("trial-balance");
   const initialRef = useRef(createOpen);
-  const [expandedEntries, setExpandedEntries] = useState<Set<string>>(
-    new Set(),
-  );
+  const [selectedEntry, setSelectedEntry] =
+    useState<JournalEntryDetailData | null>(null);
 
   useEffect(() => {
     if (initialRef.current) {
       window.history.replaceState({}, "", "/accounting");
     }
   }, []);
-
-  const toggleEntryExpanded = (entryId: string) => {
-    setExpandedEntries((prev) => {
-      const next = new Set(prev);
-      if (next.has(entryId)) {
-        next.delete(entryId);
-      } else {
-        next.add(entryId);
-      }
-      return next;
-    });
-  };
 
   const hasContent =
     trialBalance.length > 0 || journalEntries.length > 0 || accounts.length > 0;
@@ -155,8 +146,9 @@ export function AccountingContent({
                         <TableCell>
                           <Badge
                             variant={
-                              (ACCOUNT_TYPE_VARIANTS[row.account_type] as any) ??
-                              "outline"
+                              (ACCOUNT_TYPE_VARIANTS[
+                                row.account_type
+                              ] as any) ?? "outline"
                             }
                           >
                             {ACCOUNT_TYPE_LABELS[row.account_type] ??
@@ -231,87 +223,32 @@ export function AccountingContent({
                         (s, l) => s + l.credit_amount,
                         0,
                       );
-                      const isExpanded = expandedEntries.has(entry.id);
 
                       return (
-                        <>
-                          <TableRow
-                            key={entry.id}
-                            className="cursor-pointer hover:bg-muted/50"
-                            onClick={() => toggleEntryExpanded(entry.id)}
-                          >
-                            <TableCell>
-                              {formatDate(entry.entry_date)}
-                            </TableCell>
-                            <TableCell className="font-mono text-xs">
-                              {entry.entry_number}
-                            </TableCell>
-                            <TableCell className="max-w-[200px] truncate">
-                              {entry.description ?? "-"}
-                            </TableCell>
-                            <TableCell className="text-right font-mono">
-                              {formatCurrency(totalDebit)}
-                            </TableCell>
-                            <TableCell className="text-right font-mono">
-                              {formatCurrency(totalCredit)}
-                            </TableCell>
-                            <TableCell>
-                              <span className="text-xs text-muted-foreground">
-                                {isExpanded ? "Хураах" : "Дэлгэрэнгүй"}
-                              </span>
-                            </TableCell>
-                          </TableRow>
-                          {isExpanded && (
-                            <TableRow key={`${entry.id}-lines`}>
-                              <TableCell colSpan={6} className="bg-muted/30 p-0">
-                                <div className="px-6 py-3">
-                                  <Table>
-                                    <TableHeader>
-                                      <TableRow>
-                                        <TableHead>Дансны код</TableHead>
-                                        <TableHead>Дансны нэр</TableHead>
-                                        <TableHead className="text-right">
-                                          Дебет
-                                        </TableHead>
-                                        <TableHead className="text-right">
-                                          Кредит
-                                        </TableHead>
-                                      </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                      {entry.journal_entry_lines.map(
-                                        (line) => (
-                                          <TableRow key={line.id}>
-                                            <TableCell className="font-mono text-xs">
-                                              {line.account?.code ?? "-"}
-                                            </TableCell>
-                                            <TableCell>
-                                              {line.account?.name ?? "-"}
-                                            </TableCell>
-                                            <TableCell className="text-right font-mono">
-                                              {line.debit_amount > 0
-                                                ? formatCurrency(
-                                                    line.debit_amount,
-                                                  )
-                                                : "-"}
-                                            </TableCell>
-                                            <TableCell className="text-right font-mono">
-                                              {line.credit_amount > 0
-                                                ? formatCurrency(
-                                                    line.credit_amount,
-                                                  )
-                                                : "-"}
-                                            </TableCell>
-                                          </TableRow>
-                                        ),
-                                      )}
-                                    </TableBody>
-                                  </Table>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          )}
-                        </>
+                        <TableRow
+                          key={entry.id}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => setSelectedEntry(entry)}
+                        >
+                          <TableCell>{formatDate(entry.entry_date)}</TableCell>
+                          <TableCell className="font-mono text-xs">
+                            {entry.entry_number}
+                          </TableCell>
+                          <TableCell className="max-w-[200px] truncate">
+                            {entry.description ?? "-"}
+                          </TableCell>
+                          <TableCell className="text-right font-mono">
+                            {formatCurrency(totalDebit)}
+                          </TableCell>
+                          <TableCell className="text-right font-mono">
+                            {formatCurrency(totalCredit)}
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-xs text-muted-foreground">
+                              Дэлгэрэнгүй
+                            </span>
+                          </TableCell>
+                        </TableRow>
                       );
                     })}
                   </TableBody>
@@ -362,8 +299,8 @@ export function AccountingContent({
                   <TableBody>
                     {accounts.map((account) => {
                       const parentName = account.parent_id
-                        ? accounts.find((a) => a.id === account.parent_id)
-                            ?.name ?? "-"
+                        ? (accounts.find((a) => a.id === account.parent_id)
+                            ?.name ?? "-")
                         : "-";
 
                       return (
@@ -387,15 +324,29 @@ export function AccountingContent({
                             {parentName}
                           </TableCell>
                           <TableCell>
-                            <Badge
-                              variant={
-                                account.is_active ? "default" : "outline"
-                              }
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                const result =
+                                  await toggleAccountActive(
+                                    account.id,
+                                    !account.is_active,
+                                  );
+                                if (result?.error) {
+                                  toast.error(result.error);
+                                }
+                              }}
+                              className="cursor-pointer"
                             >
-                              {account.is_active
-                                ? "Идэвхтэй"
-                                : "Идэвхгүй"}
-                            </Badge>
+                              <Badge
+                                variant={
+                                  account.is_active ? "default" : "outline"
+                                }
+                                className="cursor-pointer hover:opacity-80"
+                              >
+                                {account.is_active ? "Идэвхтэй" : "Идэвхгүй"}
+                              </Badge>
+                            </button>
                           </TableCell>
                         </TableRow>
                       );
@@ -407,6 +358,17 @@ export function AccountingContent({
           )}
         </TabsContent>
       </Tabs>
+
+      {selectedEntry && (
+        <JournalEntryDetailDrawer
+          entry={selectedEntry}
+          accounts={accounts}
+          open={!!selectedEntry}
+          onOpenChange={(open) => {
+            if (!open) setSelectedEntry(null);
+          }}
+        />
+      )}
     </PageShell>
   );
 }

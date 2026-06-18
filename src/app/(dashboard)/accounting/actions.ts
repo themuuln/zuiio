@@ -52,7 +52,9 @@ export async function createJournalEntry(
       return { error: `Мөр ${i + 1}: Данс сонгоно уу.` };
     }
     if (line.debit_amount < 0 || line.credit_amount < 0) {
-      return { error: `Мөр ${i + 1}: Дебет ба кредит дүн сөрөг байж болохгүй.` };
+      return {
+        error: `Мөр ${i + 1}: Дебет ба кредит дүн сөрөг байж болохгүй.`,
+      };
     }
     if (line.debit_amount === 0 && line.credit_amount === 0) {
       return { error: `Мөр ${i + 1}: Дебет эсвэл кредит дүн оруулна уу.` };
@@ -70,8 +72,9 @@ export async function createJournalEntry(
   }
 
   // Generate entry number
-  const { data: entryNumberData, error: numError } = await db
-    .rpc("generate_journal_entry_number");
+  const { data: entryNumberData, error: numError } = await db.rpc(
+    "generate_journal_entry_number",
+  );
 
   if (numError) {
     return { error: `Дугаар үүсгэхэд алдаа гарлаа: ${numError.message}` };
@@ -93,20 +96,20 @@ export async function createJournalEntry(
     .single();
 
   if (entryError) {
-    return { error: `Журналын бичилт үүсгэхэд алдаа гарлаа: ${entryError.message}` };
+    return {
+      error: `Журналын бичилт үүсгэхэд алдаа гарлаа: ${entryError.message}`,
+    };
   }
 
   // Insert lines
-  const { error: linesError } = await db
-    .from("journal_entry_lines")
-    .insert(
-      lines.map((line) => ({
-        journal_entry_id: journalEntry.id,
-        account_id: line.account_id,
-        debit_amount: line.debit_amount,
-        credit_amount: line.credit_amount,
-      })),
-    );
+  const { error: linesError } = await db.from("journal_entry_lines").insert(
+    lines.map((line) => ({
+      journal_entry_id: journalEntry.id,
+      account_id: line.account_id,
+      debit_amount: line.debit_amount,
+      credit_amount: line.credit_amount,
+    })),
+  );
 
   if (linesError) {
     return { error: `Мөрүүд хадгалахад алдаа гарлаа: ${linesError.message}` };
@@ -166,16 +169,14 @@ export async function createAccount(
     return { error: `"${code}" кодтой данс бүртгэгдсэн байна.` };
   }
 
-  const { error: insertError } = await db
-    .from("chart_of_accounts")
-    .insert({
-      organization_id: organizationId,
-      code,
-      name,
-      type,
-      parent_id: parentId || null,
-      is_active: isActive,
-    });
+  const { error: insertError } = await db.from("chart_of_accounts").insert({
+    organization_id: organizationId,
+    code,
+    name,
+    type,
+    parent_id: parentId || null,
+    is_active: isActive,
+  });
 
   if (insertError) {
     return { error: `Данс үүсгэхэд алдаа гарлаа: ${insertError.message}` };
@@ -191,6 +192,168 @@ export async function createAccount(
     undefined,
     `Данс "${code} - ${name}" үүсгэсэн`,
   );
+
+  revalidatePath("/accounting");
+  return { success: true as const };
+}
+
+export async function updateJournalEntry(
+  _prevState: { error?: string } | undefined,
+  formData: FormData,
+) {
+  const ctx = await requireAppContext();
+  const { organizationId, userId } = ctx;
+  const db = ctx.supabase as any;
+
+  const entryId = getString(formData, "id");
+  const entryDate = getString(formData, "entry_date");
+  const description = getString(formData, "description");
+  const linesJson = formData.get("lines") as string;
+
+  if (!entryId) {
+    return { error: "Бичилтийн ID шаардлагатай." };
+  }
+
+  if (!entryDate) {
+    return { error: "Огноо шаардлагатай." };
+  }
+
+  if (!description) {
+    return { error: "Тайлбар шаардлагатай." };
+  }
+
+  if (!linesJson) {
+    return { error: "Журналын мөрүүд шаардлагатай." };
+  }
+
+  let lines: Array<{
+    account_id: string;
+    debit_amount: number;
+    credit_amount: number;
+  }>;
+
+  try {
+    lines = JSON.parse(linesJson);
+  } catch {
+    return { error: "Журналын мөрүүдийн өгөгдөл буруу байна." };
+  }
+
+  if (!Array.isArray(lines) || lines.length === 0) {
+    return { error: "Дор хаяж нэг мөр оруулна уу." };
+  }
+
+  // Validate lines
+  for (const [i, line] of lines.entries()) {
+    if (!line.account_id) {
+      return { error: `Мөр ${i + 1}: Данс сонгоно уу.` };
+    }
+    if (line.debit_amount < 0 || line.credit_amount < 0) {
+      return {
+        error: `Мөр ${i + 1}: Дебет ба кредит дүн сөрөг байж болохгүй.`,
+      };
+    }
+    if (line.debit_amount === 0 && line.credit_amount === 0) {
+      return { error: `Мөр ${i + 1}: Дебет эсвэл кредит дүн оруулна уу.` };
+    }
+  }
+
+  // Validate debits = credits
+  const totalDebits = lines.reduce((sum, l) => sum + l.debit_amount, 0);
+  const totalCredits = lines.reduce((sum, l) => sum + l.credit_amount, 0);
+
+  if (Math.abs(totalDebits - totalCredits) > 0.01) {
+    return {
+      error: `Дебет ба кредит дүн тэнцүү байх ёстой. Дебет: ${totalDebits.toFixed(2)}, Кредит: ${totalCredits.toFixed(2)}`,
+    };
+  }
+
+  // Update journal entry
+  const { error: entryError } = await db
+    .from("journal_entries")
+    .update({
+      entry_date: entryDate,
+      description,
+    })
+    .eq("id", entryId)
+    .eq("organization_id", organizationId);
+
+  if (entryError) {
+    return {
+      error: `Журналын бичилт шинэчлэхэд алдаа гарлаа: ${entryError.message}`,
+    };
+  }
+
+  // Save old lines for potential rollback, then delete
+  const { data: oldLines } = await db
+    .from("journal_entry_lines")
+    .select("account_id, debit_amount, credit_amount")
+    .eq("journal_entry_id", entryId);
+
+  const { error: deleteLinesError } = await db
+    .from("journal_entry_lines")
+    .delete()
+    .eq("journal_entry_id", entryId);
+
+  if (deleteLinesError) {
+    return {
+      error: `Мөрүүд устгахад алдаа гарлаа: ${deleteLinesError.message}`,
+    };
+  }
+
+  const { error: linesError } = await db.from("journal_entry_lines").insert(
+    lines.map((line) => ({
+      journal_entry_id: entryId,
+      account_id: line.account_id,
+      debit_amount: line.debit_amount,
+      credit_amount: line.credit_amount,
+    })),
+  );
+
+  if (linesError) {
+    // Rollback: restore old lines
+    if (oldLines && oldLines.length > 0) {
+      await db.from("journal_entry_lines").insert(
+        oldLines.map((line: any) => ({
+          journal_entry_id: entryId,
+          account_id: line.account_id,
+          debit_amount: line.debit_amount,
+          credit_amount: line.credit_amount,
+        })),
+      );
+    }
+    return { error: `Мөрүүд хадгалахад алдаа гарлаа: ${linesError.message}` };
+  }
+
+  await logAuditEventWithClient(
+    ctx.supabase,
+    organizationId,
+    userId,
+    "updated" as any,
+    "product" as any,
+    entryId,
+    undefined,
+    `Журналын бичилт шинэчлэгдсэн`,
+  );
+
+  revalidatePath("/accounting");
+  return { success: true as const };
+}
+
+export async function deleteJournalEntry(entryId: string) {
+  const ctx = await requireAppContext();
+  const { organizationId } = ctx;
+  const db = ctx.supabase as any;
+
+  // Lines are cascade-deleted by the FK constraint
+  const { error } = await db
+    .from("journal_entries")
+    .delete()
+    .eq("id", entryId)
+    .eq("organization_id", organizationId);
+
+  if (error) {
+    return { error: `Журналын бичилт устгахад алдаа гарлаа: ${error.message}` };
+  }
 
   revalidatePath("/accounting");
   return { success: true as const };

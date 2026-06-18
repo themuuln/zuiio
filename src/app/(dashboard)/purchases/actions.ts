@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { postPurchaseToJournal } from "@/lib/accounting";
 import { checkPermission, requireAppContext } from "@/lib/erp";
 import { getString } from "@/lib/validation";
 
@@ -107,6 +108,19 @@ export async function createPurchaseOrder(
       error: `Барааны мэдээлэл хадгалахад алдаа гарлаа: ${itemsError.message}`,
     };
   }
+
+  // Post to general ledger (fire-and-forget)
+  postPurchaseToJournal(
+    supabase,
+    organizationId,
+    userId,
+    purchaseOrder.id,
+    {
+      total_amount: totalAmount,
+      order_date: orderDate || new Date().toISOString().slice(0, 10),
+      status: "draft",
+    },
+  ).catch(console.error);
 
   revalidatePath("/purchases");
   revalidatePath("/");

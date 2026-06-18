@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { logAuditEventWithClient } from "@/lib/audit";
+import { postSaleToJournal } from "@/lib/accounting";
 import { calculateCommission } from "@/lib/commissions";
 import { checkPermission, parseAmount, requireAppContext } from "@/lib/erp";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
@@ -301,6 +302,26 @@ export async function createSale(
       sale.id,
       contactId,
     );
+  }
+
+  // Post to general ledger (fire-and-forget)
+  if (status !== "cancelled") {
+    postSaleToJournal(
+      supabase,
+      organizationId,
+      userId,
+      sale.id,
+      {
+        total_amount: totalAmount,
+        paid_amount: paidAmount,
+        sale_date: getString(formData, "sale_date") || formatRouteDate(),
+      },
+      items.map((item) => ({
+        product_id: item.productId,
+        quantity: item.quantity,
+        unit_price: item.unitPrice,
+      })),
+    ).catch(console.error);
   }
 
   await logAuditEventWithClient(

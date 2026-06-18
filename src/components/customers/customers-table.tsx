@@ -11,7 +11,7 @@ import {
   CustomerEditDrawer,
 } from "@/components/customers/customer-edit-drawer";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+
 import { DataTable } from "@/components/ui/data-table";
 import { formatCurrency } from "@/lib/format";
 
@@ -87,16 +87,8 @@ const defaultColumns: ColumnDef<CustomerRow>[] = [
       const customer = row.original;
       return (
         <div className="flex items-center gap-1">
-          <CustomerDetailDrawer customer={toDetailData(customer)}>
-            <Button variant="ghost" size="icon-xs">
-              <Eye className="size-3.5" />
-            </Button>
-          </CustomerDetailDrawer>
-          <CustomerEditDrawer customer={toEditData(customer)}>
-            <Button variant="ghost" size="icon-xs">
-              <NotePencil className="size-3.5" />
-            </Button>
-          </CustomerEditDrawer>
+          <CustomerDetailDrawer customer={toDetailData(customer)} />
+          <CustomerEditDrawer customer={toEditData(customer)} />
         </div>
       );
     },

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { postExpenseToJournal } from "@/lib/accounting";
 import { validateExpenseInput } from "@/lib/domain-rules";
 import { checkPermission, parseAmount, requireAppContext } from "@/lib/erp";
 import { formatRouteDate } from "@/lib/format";
@@ -17,24 +18,38 @@ export async function createExpense(
 
   const category = getString(formData, "category");
   const amount = parseAmount(formData.get("amount"));
+  const expenseDate = getString(formData, "expense_date") || formatRouteDate();
+  const description = getString(formData, "description") || null;
   const validationError = validateExpenseInput({ category, amount });
   if (validationError) {
     return { error: validationError };
   }
 
-  const { error } = await supabase.from("expenses").insert({
-    organization_id: organizationId,
-    category,
-    amount,
-    expense_date: getString(formData, "expense_date") || formatRouteDate(),
-    description: getString(formData, "description") || null,
-    payment_method: getString(formData, "payment_method") || "cash",
-    created_by: userId,
-  });
+  const { data: expense, error } = await supabase
+    .from("expenses")
+    .insert({
+      organization_id: organizationId,
+      category,
+      amount,
+      expense_date: expenseDate,
+      description,
+      payment_method: getString(formData, "payment_method") || "cash",
+      created_by: userId,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     return { error: error.message };
   }
+
+  // Post to general ledger (fire-and-forget)
+  postExpenseToJournal(supabase, organizationId, userId, expense.id, {
+    amount,
+    expense_date: expenseDate,
+    category,
+    description,
+  }).catch(console.error);
 
   revalidatePath("/");
   revalidatePath("/expenses");

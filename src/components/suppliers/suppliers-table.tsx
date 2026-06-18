@@ -11,7 +11,7 @@ import {
   SupplierEditDrawer,
 } from "@/components/suppliers/supplier-edit-drawer";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+
 import { DataTable } from "@/components/ui/data-table";
 import { formatCurrency } from "@/lib/format";
 
@@ -87,16 +87,8 @@ const defaultColumns: ColumnDef<SupplierRow>[] = [
       const supplier = row.original;
       return (
         <div className="flex items-center gap-1">
-          <SupplierDetailDrawer supplier={toDetailData(supplier)}>
-            <Button variant="ghost" size="icon-xs">
-              <Eye className="size-3.5" />
-            </Button>
-          </SupplierDetailDrawer>
-          <SupplierEditDrawer supplier={toEditData(supplier)}>
-            <Button variant="ghost" size="icon-xs">
-              <NotePencil className="size-3.5" />
-            </Button>
-          </SupplierEditDrawer>
+          <SupplierDetailDrawer supplier={toDetailData(supplier)} />
+          <SupplierEditDrawer supplier={toEditData(supplier)} />
         </div>
       );
     },

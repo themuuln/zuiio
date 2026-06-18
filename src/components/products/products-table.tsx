@@ -161,12 +161,9 @@ export function ProductsTable({
                 product={toEditData(product)}
                 brands={brands ?? []}
               >
-                <button
-                  type="button"
-                  className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                >
+                <span className="flex size-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground">
                   <NotePencil className="size-3.5" />
-                </button>
+                </span>
               </ProductEditDrawer>
             </div>
           );
