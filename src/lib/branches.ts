@@ -119,13 +119,6 @@ export function withBranchFilter<
  * leaking about the existence of records in other branches.
  *
  * Returns the validated record if access is allowed.
- *
- * Usage:
- * ```ts
- * const { supabase, branchId, isBranchScoped, organizationId } = await requireAppContext();
- * const record = await fetchRecord(...);
- * enforceBranchAccess(record, branchId, isBranchScoped);
- * ```
  */
 export function enforceBranchAccess<T extends { branch_id?: string | null }>(
   record: T | null,
