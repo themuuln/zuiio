@@ -12,7 +12,7 @@ if (!m) { console.error('mimo-v2.5 model not found in settings'); process.exit(1
 console.log('export MIDSCENE_MODEL_BASE_URL=' + m.baseUrl);
 console.log('export MIDSCENE_MODEL_API_KEY=' + m.apiKey);
 console.log('export MIDSCENE_MODEL_NAME=' + m.model);
-console.log('export MIDSCENE_MODEL_FAMILY=openai');
+console.log('export MIDSCENE_MODEL_FAMILY=xiaomi-mimo');
 ")"
 
 pnpm exec playwright test "$@"
