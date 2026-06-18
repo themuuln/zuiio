@@ -95,7 +95,7 @@ ALTER TABLE public.journal_entries ADD COLUMN IF NOT EXISTS branch_id UUID REFER
 
 -- --- Warehouses (UNIQUE - 1:1 branch-to-warehouse) ---
 ALTER TABLE public.warehouses ADD COLUMN IF NOT EXISTS branch_id UUID REFERENCES public.branches(id) ON DELETE SET NULL;
-ALTER TABLE public.warehouses ADD CONSTRAINT IF NOT EXISTS warehouses_branch_id_key UNIQUE (branch_id);
+ALTER TABLE public.warehouses ADD CONSTRAINT warehouses_branch_id_key UNIQUE (branch_id);
 
 -- =============================================
 -- 3. Add branch_id to profiles (nullable)
@@ -751,6 +751,7 @@ CREATE POLICY "shared_reports_delete_own_org" ON public.shared_reports
   );
 
 -- Keep the anon select for shared reports (public access via link)
+DROP POLICY IF EXISTS "anon_select_shared_reports" ON public.shared_reports;
 CREATE POLICY "anon_select_shared_reports" ON public.shared_reports
   FOR SELECT TO anon USING (true);
 
