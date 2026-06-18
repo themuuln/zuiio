@@ -4,6 +4,7 @@ import { Receipt } from "@phosphor-icons/react";
 import { useState } from "react";
 import { SaleForm } from "@/app/(dashboard)/sales/new/sale-form";
 import { buttonVariants } from "@/components/ui/button";
+import { DrawerFooter, DrawerCancel, DrawerSubmit } from "@/components/ui/drawer-footer";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 
 type ProductOption = {
@@ -53,8 +54,15 @@ export function SalesCreateDrawer({
         </button>
       }
       panelWidth="32rem"
+      footer={
+        <DrawerFooter>
+          <DrawerCancel onClick={() => setOpen(false)} />
+          <DrawerSubmit form="sale-form" label="Борлуулалт хадгалах" />
+        </DrawerFooter>
+      }
     >
       <SaleForm
+        formId="sale-form"
         products={products}
         customers={customers}
         onSuccess={() => setOpen(false)}

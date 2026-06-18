@@ -30,6 +30,8 @@ import { Input } from "@/components/ui/input";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
 import { productKeys, saleKeys } from "@/lib/query/keys";
 import { createSale } from "./actions";
+import { ErrorBanner } from "@/components/ui/error-banner";
+import { useVariantLineItemRemove } from "@/lib/use-variant-line-items";
 
 type ProductOption = {
   id: string;
@@ -91,12 +93,14 @@ export function SaleForm({
   onSuccess,
   onOpenDetail,
   onReopenForm,
+  formId,
 }: {
   products: ProductOption[];
   customers: CustomerOption[];
   onSuccess?: () => void;
   onOpenDetail?: (saleId: string) => void;
   onReopenForm?: () => void;
+  formId?: string;
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -151,24 +155,7 @@ export function SaleForm({
     setProductQueries((prev) => [...prev, ""]);
   }, [append]);
 
-  const removeRow = useCallback(
-    (index: number) => {
-      remove(index);
-      setProductQueries((prev) => prev.filter((_, i) => i !== index));
-      setVariantSelections((prev) => {
-        const next = { ...prev };
-        delete next[index];
-        // Shift remaining keys above the removed index
-        const shifted: Record<number, SelectedVariant | null> = {};
-        for (const [key, value] of Object.entries(next)) {
-          const k = Number(key);
-          shifted[k > index ? k - 1 : k] = value;
-        }
-        return shifted;
-      });
-    },
-    [remove],
-  );
+  const removeRow = useVariantLineItemRemove(remove, setVariantSelections, setProductQueries);
 
   const resetForm = () => {
     reset(undefined, { keepDefaultValues: false });
@@ -586,7 +573,7 @@ export function SaleForm({
   );
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" id={formId}>
       {/* Line Items Section */}
       <div className="space-y-2">
         <span className="text-sm font-medium text-muted-foreground">
@@ -1005,32 +992,30 @@ export function SaleForm({
       </div>
 
       {/* Error display */}
-      {saleMutation.error ? (
-        <div className="rounded-none bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {saleMutation.error.message}
-        </div>
-      ) : null}
+      <ErrorBanner error={saleMutation.error} />
 
       {/* Footer */}
-      <div className="flex items-center justify-between">
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
-          <input
-            type="checkbox"
-            checked={keepOpen}
-            onChange={(e) => setKeepOpen(e.target.checked)}
-            className="size-4 rounded border-border accent-primary"
-          />
-          Хэвээр үлдээх (дахин бүртгэх)
-        </label>
-        <Button
-          type="submit"
-          disabled={
-            saleMutation.isPending || !products.length || anyStockInsufficient
-          }
-        >
-          {saleMutation.isPending ? "Хадгалах..." : "Борлуулалт хадгалах"}
-        </Button>
-      </div>
+      {!formId && (
+        <div className="flex items-center justify-between">
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={keepOpen}
+              onChange={(e) => setKeepOpen(e.target.checked)}
+              className="size-4 rounded border-border accent-primary"
+            />
+            Хэвээр үлдээх (дахин бүртгэх)
+          </label>
+          <Button
+            type="submit"
+            disabled={
+              saleMutation.isPending || !products.length || anyStockInsufficient
+            }
+          >
+            {saleMutation.isPending ? "Хадгалах..." : "Борлуулалт хадгалах"}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { createPurchaseOrder } from "@/app/(dashboard)/purchases/actions";
 import { buttonVariants } from "@/components/ui/button";
+import { DrawerFooter, DrawerCancel, DrawerSubmit } from "@/components/ui/drawer-footer";
 import {
   Combobox,
   ComboboxContent,
@@ -30,6 +31,8 @@ import {
   type SelectedVariant,
 } from "@/components/products/variant-picker";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
+import { ErrorBanner } from "@/components/ui/error-banner";
+import { useVariantLineItemRemove } from "@/lib/use-variant-line-items";
 
 type SupplierOption = {
   id: string;
@@ -106,6 +109,8 @@ export function PurchaseCreateDrawer({
     control,
     name: "items",
   });
+
+  const removeRow = useVariantLineItemRemove(remove, setVariantSelections);
 
   const items = watch("items");
   const totalAmount =
@@ -185,8 +190,18 @@ export function PurchaseCreateDrawer({
         </button>
       }
       panelWidth="32rem"
+      footer={
+        <DrawerFooter>
+          <DrawerCancel onClick={() => { setOpen(false); reset(); }} />
+          <DrawerSubmit form="purchase-form" isPending={isSubmitting} label="Захиалга үүсгэх" loadingLabel="Үүсгэж байна..." />
+        </DrawerFooter>
+      }
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-5"
+        id="purchase-form"
+      >
         <FieldGroup>
           <Field>
             <FieldLabel>Нийлүүлэгч</FieldLabel>
@@ -442,19 +457,7 @@ export function PurchaseCreateDrawer({
                   {fields.length > 1 && (
                     <button
                       type="button"
-                      onClick={() => {
-                        remove(index);
-                        setVariantSelections((prev) => {
-                          const next = { ...prev };
-                          delete next[index];
-                          const shifted: Record<number, SelectedVariant | null> = {};
-                          for (const [key, value] of Object.entries(next)) {
-                            const k = Number(key);
-                            shifted[k > index ? k - 1 : k] = value;
-                          }
-                          return shifted;
-                        });
-                      }}
+                      onClick={() => removeRow(index)}
                       className="size-8 flex items-center justify-center text-destructive hover:bg-muted rounded"
                     >
                       <Trash className="size-4" />
@@ -490,31 +493,7 @@ export function PurchaseCreateDrawer({
           />
         </Field>
 
-        {serverError && (
-          <div className="rounded-md bg-destructive/15 px-3 py-2 text-sm text-destructive">
-            {serverError}
-          </div>
-        )}
-
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              setOpen(false);
-              reset();
-            }}
-            className={buttonVariants({ variant: "outline" })}
-          >
-            Цуцлах
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={buttonVariants({ variant: "default" })}
-          >
-            {isSubmitting ? "Үүсгэж байна..." : "Захиалга үүсгэх"}
-          </button>
-        </div>
+        <ErrorBanner error={serverError} />
       </form>
     </SlideInDrawer>
   );

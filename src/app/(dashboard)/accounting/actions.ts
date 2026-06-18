@@ -10,9 +10,14 @@ export async function createJournalEntry(
   formData: FormData,
 ) {
   const ctx = await requireAppContext();
-  const { organizationId, userId } = ctx;
+  const { organizationId, userId, branchId, isBranchScoped } = ctx;
   // New tables/RPCs not yet in generated types — cast as needed
   const db = ctx.supabase as any;
+
+  // Scoped users must have a branch
+  if (isBranchScoped && !branchId) {
+    return { error: "Салбар тодорхойгүй байна." };
+  }
 
   const entryDate = getString(formData, "entry_date");
   const description = getString(formData, "description");
@@ -87,6 +92,7 @@ export async function createJournalEntry(
     .from("journal_entries")
     .insert({
       organization_id: organizationId,
+      branch_id: branchId ?? undefined,
       entry_date: entryDate,
       entry_number: entryNumber,
       description,
@@ -135,8 +141,13 @@ export async function createAccount(
   formData: FormData,
 ) {
   const ctx = await requireAppContext();
-  const { organizationId, userId } = ctx;
+  const { organizationId, userId, branchId, isBranchScoped } = ctx;
   const db = ctx.supabase as any;
+
+  // Scoped users must have a branch
+  if (isBranchScoped && !branchId) {
+    return { error: "Салбар тодорхойгүй байна." };
+  }
 
   const code = getString(formData, "code");
   const name = getString(formData, "name");
@@ -171,6 +182,7 @@ export async function createAccount(
 
   const { error: insertError } = await db.from("chart_of_accounts").insert({
     organization_id: organizationId,
+    branch_id: branchId ?? undefined,
     code,
     name,
     type,
@@ -202,7 +214,7 @@ export async function updateJournalEntry(
   formData: FormData,
 ) {
   const ctx = await requireAppContext();
-  const { organizationId, userId } = ctx;
+  const { organizationId, userId, branchId, isBranchScoped } = ctx;
   const db = ctx.supabase as any;
 
   const entryId = getString(formData, "id");
@@ -267,8 +279,8 @@ export async function updateJournalEntry(
     };
   }
 
-  // Update journal entry
-  const { error: entryError } = await db
+  // Update journal entry — enforce branch access if scoped
+  let updateQuery = db
     .from("journal_entries")
     .update({
       entry_date: entryDate,
@@ -276,6 +288,12 @@ export async function updateJournalEntry(
     })
     .eq("id", entryId)
     .eq("organization_id", organizationId);
+
+  if (isBranchScoped && branchId) {
+    updateQuery = updateQuery.eq("branch_id", branchId);
+  }
+
+  const { error: entryError } = await updateQuery;
 
   if (entryError) {
     return {
@@ -341,15 +359,21 @@ export async function updateJournalEntry(
 
 export async function deleteJournalEntry(entryId: string) {
   const ctx = await requireAppContext();
-  const { organizationId } = ctx;
+  const { organizationId, branchId, isBranchScoped } = ctx;
   const db = ctx.supabase as any;
 
-  // Lines are cascade-deleted by the FK constraint
-  const { error } = await db
+  // Lines are cascade-deleted by the FK constraint — enforce branch access if scoped
+  let deleteQuery = db
     .from("journal_entries")
     .delete()
     .eq("id", entryId)
     .eq("organization_id", organizationId);
+
+  if (isBranchScoped && branchId) {
+    deleteQuery = deleteQuery.eq("branch_id", branchId);
+  }
+
+  const { error } = await deleteQuery;
 
   if (error) {
     return { error: `Журналын бичилт устгахад алдаа гарлаа: ${error.message}` };
@@ -364,14 +388,20 @@ export async function toggleAccountActive(
   isActive: boolean,
 ) {
   const ctx = await requireAppContext();
-  const { organizationId } = ctx;
+  const { organizationId, branchId, isBranchScoped } = ctx;
   const db = ctx.supabase as any;
 
-  const { error } = await db
+  let updateQuery = db
     .from("chart_of_accounts")
     .update({ is_active: isActive })
     .eq("id", accountId)
     .eq("organization_id", organizationId);
+
+  if (isBranchScoped && branchId) {
+    updateQuery = updateQuery.eq("branch_id", branchId);
+  }
+
+  const { error } = await updateQuery;
 
   if (error) {
     return { error: `Төлөв шинэчлэхэд алдаа гарлаа: ${error.message}` };

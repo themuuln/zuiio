@@ -10,10 +10,15 @@ export async function createQuotation(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId, permissions } =
+  const { supabase, organizationId, userId, branchId, isBranchScoped, permissions } =
     await requireAppContext();
   const permError = checkPermission(permissions, "quotations.create");
   if (permError) return { error: permError };
+
+  // Scoped users must have a branch
+  if (isBranchScoped && !branchId) {
+    return { error: "Салбар тодорхойгүй байна." };
+  }
 
   const contactId = getString(formData, "contact_id");
   const issueDate = getString(formData, "issue_date");
@@ -51,6 +56,7 @@ export async function createQuotation(
     .from("quotations")
     .insert({
       organization_id: organizationId,
+      branch_id: branchId ?? undefined,
       contact_id: contactId || null,
       quote_number: quoteNumber,
       issue_date: issueDate || new Date().toISOString().slice(0, 10),

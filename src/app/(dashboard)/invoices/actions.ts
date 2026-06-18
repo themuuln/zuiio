@@ -16,10 +16,21 @@ export async function createInvoice(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId, permissions } =
-    await requireAppContext();
+  const {
+    supabase,
+    organizationId,
+    userId,
+    branchId,
+    isBranchScoped,
+    permissions,
+  } = await requireAppContext();
   const permError = checkPermission(permissions, "invoices.create");
   if (permError) return { error: permError };
+
+  // Scoped users must have a branch
+  if (isBranchScoped && !branchId) {
+    return { error: "Салбар тодорхойгүй байна." };
+  }
 
   let contactId = formData.get("contact_id") as string;
   const newContactName = getString(formData, "new_contact_name");
@@ -91,6 +102,7 @@ export async function createInvoice(
     .from("invoices")
     .insert({
       organization_id: organizationId,
+      branch_id: branchId ?? undefined,
       invoice_number: invoiceNumber,
       contact_id: contactId || null,
       issue_date: issueDate || new Date().toISOString().slice(0, 10),

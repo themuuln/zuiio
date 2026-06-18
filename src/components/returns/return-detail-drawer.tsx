@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { ErrorBanner } from "@/components/ui/error-banner";
 
 const typeLabels: Record<string, string> = {
   sales_return: "Борлуулалтын буцаалт",
@@ -87,7 +88,7 @@ export function ReturnDetailDrawer({
       {!returnData ? (
         <p className="text-sm text-muted-foreground">Буцаалт олдсонгүй.</p>
       ) : (
-        <div className="space-y-5">
+        <div className="flex-1 overflow-y-auto min-h-0 space-y-5">
           {/* Header info */}
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
@@ -134,11 +135,7 @@ export function ReturnDetailDrawer({
           </div>
 
           {/* Action error */}
-          {actionError && (
-            <div className="rounded-md bg-destructive/15 px-3 py-2 text-sm text-destructive">
-              {actionError}
-            </div>
-          )}
+          <ErrorBanner error={actionError} />
 
           {/* Actions */}
           {isDraft && (

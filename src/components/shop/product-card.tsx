@@ -19,19 +19,19 @@ export type ProductCardProduct = {
   sku: string | null;
   barcode: string | null;
   category_id: string | null;
+  image_url: string | null;
   brand_name: string | null;
   brand_logo_url: string | null;
 };
 
 export function ProductCard({ product }: { product: ProductCardProduct }) {
   const { addItem } = useCart();
-  const [selectedVariant, setSelectedVariant] = useState<SelectedVariant | null>(null);
+  const [selectedVariant, setSelectedVariant] =
+    useState<SelectedVariant | null>(null);
   const [hasVariants, setHasVariants] = useState(false);
 
   // Use variant-specific price/stock when a variant is selected
-  const price = Number(
-    selectedVariant?.sale_price ?? product.sale_price ?? 0,
-  );
+  const price = Number(selectedVariant?.sale_price ?? product.sale_price ?? 0);
   const stock = Number(
     selectedVariant?.current_stock ?? product.current_stock ?? 0,
   );
@@ -61,24 +61,34 @@ export function ProductCard({ product }: { product: ProductCardProduct }) {
         isOutOfStock && "opacity-60",
       )}
     >
-      {/* Top section: placeholder image area */}
+      {/* Top section: product image or placeholder */}
       <div
         className={cn(
-          "flex aspect-square items-center justify-center bg-muted/30",
+          "relative flex aspect-square items-center justify-center overflow-hidden bg-muted/30",
           isOutOfStock && "bg-muted/10",
         )}
       >
-        {isOutOfStock ? (
-          <Badge
-            variant="outline"
-            className="border-destructive/40 text-destructive"
-          >
-            Дууссан
-          </Badge>
+        {product.image_url ? (
+          <img
+            src={product.image_url}
+            alt={product.name}
+            className={cn(
+              "h-full w-full object-cover",
+              isOutOfStock && "opacity-50",
+            )}
+          />
         ) : (
           <span className="text-3xl text-muted-foreground/30">
             {product.name.charAt(0)}
           </span>
+        )}
+        {isOutOfStock && (
+          <Badge
+            variant="outline"
+            className="absolute left-2 top-2 border-destructive/40 text-destructive"
+          >
+            Дууссан
+          </Badge>
         )}
       </div>
 

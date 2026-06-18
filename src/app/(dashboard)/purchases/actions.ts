@@ -9,10 +9,21 @@ export async function createPurchaseOrder(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId, permissions } =
-    await requireAppContext();
+  const {
+    supabase,
+    organizationId,
+    userId,
+    branchId,
+    isBranchScoped,
+    permissions,
+  } = await requireAppContext();
   const permError = checkPermission(permissions, "purchases.create");
   if (permError) return { error: permError };
+
+  // Scoped users must have a branch
+  if (isBranchScoped && !branchId) {
+    return { error: "Салбар тодорхойгүй байна." };
+  }
 
   const supplierId = getString(formData, "supplier_id");
   const orderDate = getString(formData, "order_date");
@@ -71,6 +82,7 @@ export async function createPurchaseOrder(
     .from("purchase_orders")
     .insert({
       organization_id: organizationId,
+      branch_id: branchId ?? undefined,
       supplier_id: supplierId,
       order_number: orderNumber,
       order_date: orderDate || new Date().toISOString().slice(0, 10),

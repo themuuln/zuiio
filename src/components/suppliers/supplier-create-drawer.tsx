@@ -8,11 +8,13 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { createSupplier } from "@/app/(dashboard)/suppliers/actions";
 import { buttonVariants } from "@/components/ui/button";
+import { DrawerFooter, DrawerCancel, DrawerSubmit } from "@/components/ui/drawer-footer";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { contactKeys } from "@/lib/query/keys";
 import { useOptimisticCreate } from "@/lib/query/use-optimistic";
+import { ErrorBanner } from "@/components/ui/error-banner";
 
 const supplierSchema = z.object({
   name: z.string().min(1, "Нэр шаардлагатай"),
@@ -100,8 +102,18 @@ export function SupplierCreateDrawer({
           Нийлүүлэгч бүртгэх
         </button>
       }
+      footer={
+        <DrawerFooter>
+          <DrawerCancel onClick={() => setOpen(false)} />
+          <DrawerSubmit form="supplier-form" isPending={isSubmitting || contactMutation.isPending} />
+        </DrawerFooter>
+      }
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-5"
+        id="supplier-form"
+      >
         <FieldGroup>
           <Field>
             <FieldLabel>Нэр</FieldLabel>
@@ -142,28 +154,7 @@ export function SupplierCreateDrawer({
           </Field>
         </FieldGroup>
 
-        {contactMutation.error ? (
-          <div className="rounded-md bg-destructive/15 px-3 py-2 text-sm text-destructive">
-            {contactMutation.error.message}
-          </div>
-        ) : null}
-
-        <div className="flex items-center justify-end gap-3">
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className={buttonVariants({ variant: "outline" })}
-          >
-            Цуцлах
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting || contactMutation.isPending}
-            className={buttonVariants({ variant: "default" })}
-          >
-            {contactMutation.isPending ? "Хадгалах..." : "Хадгалах"}
-          </button>
-        </div>
+        <ErrorBanner error={contactMutation.error} />
       </form>
     </SlideInDrawer>
   );

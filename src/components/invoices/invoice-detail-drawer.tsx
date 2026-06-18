@@ -1,7 +1,7 @@
 "use client";
 
-import { Drawer } from "@base-ui/react/drawer";
-import { ShareNetwork, X } from "@phosphor-icons/react";
+import { DrawerLayout } from "@/components/ui/drawer-layout";
+import {ShareNetwork} from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/table";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
+import { DrawerHeader } from "@/components/ui/drawer-header";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Хүлээгдэж буй",
@@ -129,26 +130,15 @@ export function InvoiceDetailDrawer({
   }
 
   return (
-    <Drawer.Root
-      swipeDirection="right"
+    <DrawerLayout
       open={!!invoiceId}
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
+      panelWidth="32rem"
     >
-      <Drawer.Portal>
-        <Drawer.Backdrop className="[--backdrop-opacity:0.1] z-40 [--bleed:3rem] dark:[--backdrop-opacity:0.4] fixed inset-0 min-h-dvh bg-black opacity-[calc(var(--backdrop-opacity)*(1-var(--drawer-swipe-progress)))] transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:duration-0 data-ending-style:opacity-0 data-starting-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:absolute" />
-        <Drawer.Viewport className="[--viewport-padding:0px] z-50 supports-[-webkit-touch-callout:none]:[--viewport-padding:0.625rem] fixed inset-0 flex items-stretch justify-end p-(--viewport-padding)">
-          <Drawer.Popup className="[--bleed:3rem] supports-[-webkit-touch-callout:none]:[--bleed:0px] h-full w-[calc(32rem+3rem)] max-w-[calc(100vw-3rem+3rem)] -mr-[3rem] border-l border-border bg-white p-6 pr-[calc(1.5rem+3rem)] text-foreground outline-none shadow-lg overflow-y-auto overscroll-contain touch-auto [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:select-none data-ending-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-starting-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:mr-0 supports-[-webkit-touch-callout:none]:w-[32rem] supports-[-webkit-touch-callout:none]:max-w-[calc(100vw-3rem)] supports-[-webkit-touch-callout:none]:border supports-[-webkit-touch-callout:none]:pr-6 dark:bg-popover dark:text-popover-foreground dark:shadow-none">
-            <Drawer.Content className="mx-auto w-full">
-              <div className="mb-6 flex items-center justify-between">
-                <Drawer.Title className="text-lg font-semibold tracking-tight">
-                  {data ? `#${data.invoice.invoice_number}` : "Нэхэмжлэл"}
-                </Drawer.Title>
-                <Drawer.Close className="flex size-8 items-center justify-center rounded-none border-0 bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-foreground">
-                  <X className="size-4" />
-                </Drawer.Close>
-              </div>
+              <DrawerHeader title={data ? `#${data.invoice.invoice_number}` : "Нэхэмжлэл"} />
+
 
               {isLoading ? (
                 <p className="text-sm text-muted-foreground">Уншиж байна...</p>
@@ -157,7 +147,7 @@ export function InvoiceDetailDrawer({
                   Нэхэмжлэл олдсонгүй.
                 </p>
               ) : (
-                <div className="space-y-6">
+                <div className="flex-1 overflow-y-auto min-h-0 space-y-6">
                   {/* Status & Actions */}
                   <div className="flex items-center gap-2">
                     <NativeSelect
@@ -354,10 +344,6 @@ export function InvoiceDetailDrawer({
                   )}
                 </div>
               )}
-            </Drawer.Content>
-          </Drawer.Popup>
-        </Drawer.Viewport>
-      </Drawer.Portal>
-    </Drawer.Root>
+    </DrawerLayout>
   );
 }

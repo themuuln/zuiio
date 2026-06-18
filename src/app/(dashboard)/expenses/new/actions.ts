@@ -11,10 +11,15 @@ export async function createExpense(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId, permissions } =
+  const { supabase, organizationId, userId, branchId, isBranchScoped, permissions } =
     await requireAppContext();
   const permError = checkPermission(permissions, "expenses.create");
   if (permError) return { error: permError };
+
+  // Scoped users must have a branch
+  if (isBranchScoped && !branchId) {
+    return { error: "Салбар тодорхойгүй байна." };
+  }
 
   const category = getString(formData, "category");
   const amount = parseAmount(formData.get("amount"));
@@ -29,6 +34,7 @@ export async function createExpense(
     .from("expenses")
     .insert({
       organization_id: organizationId,
+      branch_id: branchId ?? undefined,
       category,
       amount,
       expense_date: expenseDate,

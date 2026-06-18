@@ -21,10 +21,21 @@ export async function createDiscount(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId, permissions } =
-    await requireAppContext();
+  const {
+    supabase,
+    organizationId,
+    userId,
+    branchId,
+    isBranchScoped,
+    permissions,
+  } = await requireAppContext();
   const permError = checkPermission(permissions, "discounts.create");
   if (permError) return { error: permError };
+
+  // Scoped users must have a branch
+  if (isBranchScoped && !branchId) {
+    return { error: "Салбар тодорхойгүй байна." };
+  }
 
   const name = getString(formData, "name");
   const description = getString(formData, "description");
@@ -63,6 +74,7 @@ export async function createDiscount(
     .from("discounts")
     .insert({
       organization_id: organizationId,
+      branch_id: branchId ?? undefined,
       name,
       description: description || null,
       type,
@@ -141,8 +153,14 @@ export async function updateDiscount(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId, permissions } =
-    await requireAppContext();
+  const {
+    supabase,
+    organizationId,
+    userId,
+    branchId,
+    isBranchScoped,
+    permissions,
+  } = await requireAppContext();
   const permError = checkPermission(permissions, "discounts.update");
   if (permError) return { error: permError };
 
@@ -179,8 +197,8 @@ export async function updateDiscount(
     return { error: "Хүчинтэй эхлэх огноо шаардлагатай." };
   }
 
-  // Update discount
-  const { error: discountError } = await supabase
+  // Update discount — enforce branch access if scoped
+  let query = supabase
     .from("discounts")
     .update({
       name,
@@ -196,6 +214,12 @@ export async function updateDiscount(
     })
     .eq("id", discountId)
     .eq("organization_id", organizationId);
+
+  if (isBranchScoped && branchId) {
+    query = query.eq("branch_id", branchId);
+  }
+
+  const { error: discountError } = await query;
 
   if (discountError) {
     return {
@@ -272,27 +296,45 @@ export async function toggleDiscountActive(
   discountId: string,
   isActive: boolean,
 ) {
-  const { supabase, organizationId, userId, permissions } =
-    await requireAppContext();
+  const {
+    supabase,
+    organizationId,
+    userId,
+    branchId,
+    isBranchScoped,
+    permissions,
+  } = await requireAppContext();
   const permError = checkPermission(permissions, "discounts.update");
   if (permError) return { error: permError };
 
-  const { data: discount, error: fetchError } = await supabase
+  // Enforce branch access when fetching the record
+  let fetchQuery = supabase
     .from("discounts")
-    .select("name")
+    .select("name, branch_id")
     .eq("id", discountId)
-    .eq("organization_id", organizationId)
-    .single();
+    .eq("organization_id", organizationId);
+
+  if (isBranchScoped && branchId) {
+    fetchQuery = fetchQuery.eq("branch_id", branchId);
+  }
+
+  const { data: discount, error: fetchError } = await fetchQuery.single();
 
   if (fetchError || !discount) {
     return { error: "Хямдрал олдсонгүй." };
   }
 
-  const { error } = await supabase
+  let updateQuery = supabase
     .from("discounts")
     .update({ is_active: isActive })
     .eq("id", discountId)
     .eq("organization_id", organizationId);
+
+  if (isBranchScoped && branchId) {
+    updateQuery = updateQuery.eq("branch_id", branchId);
+  }
+
+  const { error } = await updateQuery;
 
   if (error) {
     return {

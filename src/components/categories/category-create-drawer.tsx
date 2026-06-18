@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { createCategory } from "@/app/(dashboard)/inventory/categories/actions";
 import { buttonVariants } from "@/components/ui/button";
+import { DrawerFooter, DrawerCancel, DrawerSubmit } from "@/components/ui/drawer-footer";
 import {
   Combobox,
   ComboboxContent,
@@ -22,6 +23,7 @@ import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { PRESET_CATEGORIES } from "@/lib/constants";
 import { categoryKeys } from "@/lib/query/keys";
 import { useOptimisticCreate } from "@/lib/query/use-optimistic";
+import { ErrorBanner } from "@/components/ui/error-banner";
 
 const allPresetCategories = [
   ...new Set(Object.values(PRESET_CATEGORIES).flat()),
@@ -119,8 +121,18 @@ export function CategoryCreateDrawer({
           Ангилал нэмэх
         </button>
       }
+      footer={
+        <DrawerFooter>
+          <DrawerCancel onClick={() => setOpen(false)} />
+          <DrawerSubmit form="category-form" isPending={isSubmitting || categoryMutation.isPending} />
+        </DrawerFooter>
+      }
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-5"
+        id="category-form"
+      >
         <FieldGroup>
           <Field>
             <FieldLabel>Нэр</FieldLabel>
@@ -163,28 +175,7 @@ export function CategoryCreateDrawer({
           </Field>
         </FieldGroup>
 
-        {categoryMutation.error ? (
-          <div className="rounded-none bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {categoryMutation.error.message}
-          </div>
-        ) : null}
-
-        <div className="flex items-center justify-end gap-3">
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className={buttonVariants({ variant: "outline" })}
-          >
-            Цуцлах
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting || categoryMutation.isPending}
-            className={buttonVariants({ variant: "default" })}
-          >
-            {categoryMutation.isPending ? "Хадгалах..." : "Хадгалах"}
-          </button>
-        </div>
+        <ErrorBanner error={categoryMutation.error} />
       </form>
     </SlideInDrawer>
   );

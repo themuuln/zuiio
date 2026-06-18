@@ -4,6 +4,7 @@ import { Coins } from "@phosphor-icons/react";
 import { useState } from "react";
 import { ExpenseForm } from "@/app/(dashboard)/expenses/new/expense-form";
 import { buttonVariants } from "@/components/ui/button";
+import { DrawerFooter, DrawerCancel, DrawerSubmit } from "@/components/ui/drawer-footer";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 
 export function ExpensesCreateDrawer({
@@ -29,8 +30,14 @@ export function ExpensesCreateDrawer({
           Шинэ зарлага
         </button>
       }
+      footer={
+        <DrawerFooter>
+          <DrawerCancel onClick={() => setOpen(false)} />
+          <DrawerSubmit form="expense-form" label="Зарлага хадгалах" />
+        </DrawerFooter>
+      }
     >
-      <ExpenseForm onSuccess={() => setOpen(false)} />
+      <ExpenseForm formId="expense-form" onSuccess={() => setOpen(false)} />
     </SlideInDrawer>
   );
 }

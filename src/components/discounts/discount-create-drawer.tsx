@@ -8,6 +8,7 @@ import { z } from "zod";
 import { createDiscount } from "@/app/(dashboard)/discounts/actions";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { DrawerFooter, DrawerCancel, DrawerSubmit } from "@/components/ui/drawer-footer";
 import {
   Combobox,
   ComboboxContent,
@@ -25,6 +26,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { formatRouteDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
+import { ErrorBanner } from "@/components/ui/error-banner";
 
 const discountSchema = z.object({
   name: z.string().min(1, "Нэр шаардлагатай"),
@@ -294,8 +296,18 @@ export function DiscountCreateDrawer({
           Шинэ хямдрал
         </Button>
       }
+      footer={
+        <DrawerFooter>
+          <DrawerCancel onClick={() => { setOpen(false); setConditions([]); }} />
+          <DrawerSubmit form="discount-form" isPending={mutationPending} />
+        </DrawerFooter>
+      }
     >
-      <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-5">
+      <form
+        onSubmit={handleSubmit(onSubmit as any)}
+        className="space-y-5"
+        id="discount-form"
+      >
         <FieldGroup>
           <Field>
             <FieldLabel>Нэр</FieldLabel>
@@ -617,37 +629,9 @@ export function DiscountCreateDrawer({
           </Field>
         </FieldGroup>
 
-        {serverError && (
-          <div className="rounded-md bg-destructive/15 px-3 py-2 text-sm text-destructive">
-            {serverError}
-          </div>
-        )}
+        <ErrorBanner error={serverError} />
 
-        {mutationError && (
-          <div className="rounded-md bg-destructive/15 px-3 py-2 text-sm text-destructive">
-            {mutationError}
-          </div>
-        )}
-
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              setOpen(false);
-              setConditions([]);
-            }}
-            className={buttonVariants({ variant: "outline" })}
-          >
-            Цуцлах
-          </button>
-          <button
-            type="submit"
-            disabled={mutationPending}
-            className={buttonVariants({ variant: "default" })}
-          >
-            {mutationPending ? "Хадгалах..." : "Хадгалах"}
-          </button>
-        </div>
+        <ErrorBanner error={mutationError} />
       </form>
     </SlideInDrawer>
   );

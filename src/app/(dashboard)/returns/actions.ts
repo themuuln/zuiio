@@ -8,10 +8,21 @@ export async function createReturn(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId, permissions } =
-    await requireAppContext();
+  const {
+    supabase,
+    organizationId,
+    userId,
+    branchId,
+    isBranchScoped,
+    permissions,
+  } = await requireAppContext();
   const permError = checkPermission(permissions, "returns.create");
   if (permError) return { error: permError };
+
+  // Scoped users must have a branch
+  if (isBranchScoped && !branchId) {
+    return { error: "Салбар тодорхойгүй байна." };
+  }
 
   const type = getString(formData, "type");
   const referenceType = getString(formData, "reference_type") || null;
@@ -85,6 +96,7 @@ export async function createReturn(
     .from("returns")
     .insert({
       organization_id: organizationId,
+      branch_id: branchId ?? undefined,
       return_number: returnNumber,
       return_date: returnDate || new Date().toISOString().slice(0, 10),
       type,
@@ -131,18 +143,29 @@ export async function createReturn(
 }
 
 export async function completeReturn(returnId: string) {
-  const { supabase, organizationId, userId, permissions } =
-    await requireAppContext();
+  const {
+    supabase,
+    organizationId,
+    userId,
+    branchId,
+    isBranchScoped,
+    permissions,
+  } = await requireAppContext();
   const permError = checkPermission(permissions, "returns.update");
   if (permError) return { error: permError };
 
-  // Fetch the return with items
-  const { data: returnRecord, error: returnError } = await supabase
+  // Fetch the return with items — enforce branch access if scoped
+  let fetchQuery = supabase
     .from("returns")
     .select("*, return_items(*)")
     .eq("organization_id", organizationId)
-    .eq("id", returnId)
-    .single();
+    .eq("id", returnId);
+
+  if (isBranchScoped && branchId) {
+    fetchQuery = fetchQuery.eq("branch_id", branchId);
+  }
+
+  const { data: returnRecord, error: returnError } = await fetchQuery.single();
 
   if (returnError || !returnRecord) {
     return { error: "Буцаалт олдсонгүй." };
@@ -179,6 +202,7 @@ export async function completeReturn(returnId: string) {
       .from("stock_movements")
       .insert({
         organization_id: organizationId,
+        branch_id: branchId ?? undefined,
         product_id: item.product_id,
         type: movementType,
         quantity: movementQuantity,
@@ -260,12 +284,18 @@ export async function completeReturn(returnId: string) {
     return { error: errors.join("; ") };
   }
 
-  // Update return status to completed
-  const { error: updateError } = await supabase
+  // Update return status to completed — enforce branch access if scoped
+  let completeQuery = supabase
     .from("returns")
     .update({ status: "completed" })
     .eq("id", returnId)
     .eq("organization_id", organizationId);
+
+  if (isBranchScoped && branchId) {
+    completeQuery = completeQuery.eq("branch_id", branchId);
+  }
+
+  const { error: updateError } = await completeQuery;
 
   if (updateError) {
     return { error: `Төлөв шинэчлэхэд алдаа гарлаа: ${updateError.message}` };
@@ -278,15 +308,21 @@ export async function completeReturn(returnId: string) {
 }
 
 export async function cancelReturn(returnId: string) {
-  const { supabase, organizationId, permissions } = await requireAppContext();
+  const { supabase, organizationId, branchId, isBranchScoped, permissions } = await requireAppContext();
   const permError = checkPermission(permissions, "returns.update");
   if (permError) return { error: permError };
 
-  const { error } = await supabase
+  let query = supabase
     .from("returns")
     .update({ status: "cancelled" })
     .eq("organization_id", organizationId)
     .eq("id", returnId);
+
+  if (isBranchScoped && branchId) {
+    query = query.eq("branch_id", branchId);
+  }
+
+  const { error } = await query;
 
   if (error) {
     return { error: `Цуцлахад алдаа гарлаа: ${error.message}` };

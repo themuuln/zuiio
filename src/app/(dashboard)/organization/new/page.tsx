@@ -22,6 +22,7 @@ import {
 import { COMPANY_TYPES } from "@/lib/constants";
 import { slugify } from "@/lib/format";
 import { createOrganization } from "./actions";
+import { ErrorBanner } from "@/components/ui/error-banner";
 
 const orgSchema = z.object({
   name: z.string().min(1, "Байгууллагын нэр шаардлагатай."),
@@ -142,11 +143,7 @@ export default function NewOrganizationPage() {
               </Field>
             </FieldGroup>
 
-            {serverError && (
-              <div className="rounded-md bg-destructive/15 px-3 py-2 text-sm text-destructive">
-                {serverError}
-              </div>
-            )}
+            <ErrorBanner error={serverError} />
 
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Үүсгэж байна..." : "Байгууллага үүсгэх"}

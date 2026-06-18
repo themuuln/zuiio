@@ -7,6 +7,7 @@ import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { updateJournalEntry } from "@/app/(dashboard)/accounting/actions";
 import { buttonVariants } from "@/components/ui/button";
+import { DrawerFooter, DrawerCancel, DrawerSubmit } from "@/components/ui/drawer-footer";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ import {
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
+import { ErrorBanner } from "@/components/ui/error-banner";
 
 const lineSchema = z
   .object({
@@ -178,8 +180,18 @@ export function JournalEntryEditDrawer({
       title="Журналын бичилт засах"
       description="Бичилтийн мэдээллийг шинэчлэх"
       panelWidth="36rem"
+      footer={
+        <DrawerFooter>
+          <DrawerCancel onClick={() => onOpenChange(false)} />
+          <DrawerSubmit form="journal-edit-form" isPending={isSubmitting} loadingLabel="Хадгалаж байна..." />
+        </DrawerFooter>
+      }
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-5"
+        id="journal-edit-form"
+      >
         <FieldGroup>
           <Field>
             <FieldLabel>Огноо</FieldLabel>
@@ -361,28 +373,7 @@ export function JournalEntryEditDrawer({
           </p>
         )}
 
-        {serverError && (
-          <div className="rounded-md bg-destructive/15 px-3 py-2 text-sm text-destructive">
-            {serverError}
-          </div>
-        )}
-
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            className={buttonVariants({ variant: "outline" })}
-          >
-            Цуцлах
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={buttonVariants({ variant: "default" })}
-          >
-            {isSubmitting ? "Хадгалаж байна..." : "Хадгалах"}
-          </button>
-        </div>
+        <ErrorBanner error={serverError} />
       </form>
     </SlideInDrawer>
   );

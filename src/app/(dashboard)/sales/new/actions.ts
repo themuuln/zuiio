@@ -24,10 +24,15 @@ export async function createSale(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId, permissions } =
+  const { supabase, organizationId, userId, branchId, isBranchScoped, permissions } =
     await requireAppContext();
   const permError = checkPermission(permissions, "sales.create");
   if (permError) return { error: permError };
+
+  // Scoped users must have a branch
+  if (isBranchScoped && !branchId) {
+    return { error: "Салбар тодорхойгүй байна." };
+  }
 
   // --- Resolve salesperson ---
   const salespersonId = getString(formData, "salesperson_id") || userId;
@@ -212,6 +217,7 @@ export async function createSale(
     .from("sales")
     .insert({
       organization_id: organizationId,
+      branch_id: branchId ?? undefined,
       contact_id: contactId,
       sale_date: getString(formData, "sale_date") || formatRouteDate(),
       total_amount: totalAmount,

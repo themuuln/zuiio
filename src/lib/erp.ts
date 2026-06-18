@@ -27,7 +27,7 @@ export async function requireAppContext() {
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("organization_id, role_id")
+    .select("organization_id, role_id, branch_id")
     .eq("id", user.id)
     .single();
 
@@ -41,6 +41,8 @@ export async function requireAppContext() {
   // Load user permissions
   const { data: permissions } = await supabase.rpc("get_user_permissions");
 
+  const branchId = profile.branch_id ?? null;
+
   return {
     supabase,
     organizationId: profile.organization_id,
@@ -48,6 +50,10 @@ export async function requireAppContext() {
     userId: user.id,
     roleId: profile.role_id,
     permissions: (permissions ?? []) as AppPermission[],
+    /** The user's assigned branch ID, or null for org-wide access. */
+    branchId,
+    /** True when the user is scoped to a single branch (branchId !== null). */
+    isBranchScoped: branchId !== null,
   };
 }
 

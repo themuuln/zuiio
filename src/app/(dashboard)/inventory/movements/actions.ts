@@ -10,10 +10,21 @@ export async function createStockMovement(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId, permissions } =
-    await requireAppContext();
+  const {
+    supabase,
+    organizationId,
+    userId,
+    branchId,
+    isBranchScoped,
+    permissions,
+  } = await requireAppContext();
   const permError = checkPermission(permissions, "stock_movements.create");
   if (permError) return { error: permError };
+
+  // Scoped users must have a branch
+  if (isBranchScoped && !branchId) {
+    return { error: "Салбар тодорхойгүй байна." };
+  }
 
   const productId = getString(formData, "product_id");
   const type = getString(formData, "type");
@@ -48,6 +59,7 @@ export async function createStockMovement(
     .from("stock_movements")
     .insert({
       organization_id: organizationId,
+      branch_id: branchId ?? undefined,
       product_id: productId,
       type,
       quantity,

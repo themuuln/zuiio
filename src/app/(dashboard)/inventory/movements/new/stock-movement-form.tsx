@@ -30,6 +30,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { movementKeys, productKeys } from "@/lib/query/keys";
 import { createStockMovement } from "../actions";
 import type { ProductOption } from "./page";
+import { ErrorBanner } from "@/components/ui/error-banner";
 
 const movementSchema = z
   .object({
@@ -368,11 +369,7 @@ export function StockMovementForm({ products }: { products: ProductOption[] }) {
             </Field>
           </FieldGroup>
 
-          {movementMutation.error ? (
-            <div className="rounded-none bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              {movementMutation.error.message}
-            </div>
-          ) : null}
+          <ErrorBanner error={movementMutation.error} />
 
           <button
             type="submit"

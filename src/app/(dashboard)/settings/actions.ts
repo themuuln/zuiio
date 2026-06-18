@@ -98,6 +98,37 @@ export async function toggleBrandPreset(
   return { success: true as const };
 }
 
+// High-quality product images sourced from official manufacturer websites.
+// Used when importing presets to give products real images.
+const PRESET_IMAGE_MAP: Record<string, string> = {
+  // ── Real Pharm ──
+  "RP-MON-2270":
+    "https://realpharm.eu/hpeciai/6dcaa99e728653d397a73530e7086548/eng_pl_REAL-WHEY-100-2KG-1284_1.jpg",
+  "RP-CM-500":
+    "https://realpharm.eu/hpeciai/eecec708ff50a25f7ba0722e08f1a3cc/eng_pl_Real-Pharm-Kreatyna-Creatine-500g-1022_3.png",
+  "RP-AAL-400":
+    "https://realpharm.eu/hpeciai/2b58caf2639603bf3fbab6077e5d487b/eng_pl_ProActive-Aminokwasy-BCAA-400g-GRAPE-2639_7.png",
+  "RP-OM3-90":
+    "https://realpharm.eu/hpeciai/b2c5738f29afd5986deef127210876bd/eng_pm_Real-Pharm-Omega-3-60-caps-2336_1.png",
+  // FIXME: RP-FW-600 and RP-FIN-500 had copy-pasted image URLs (whey/creatine).
+  // Remove these comments and provide correct image URLs when available.
+  // "RP-FW-600": "<correct-image-url>",
+  // "RP-FIN-500": "<correct-image-url>",
+  // ── HiTec Nutrition ──
+  "HTN-HTP-2250":
+    "https://hitec.pl/hpeciai/5230f82c115505af7b67a0e153fa90c4/pol_pm_WPC-80-2000g-1037_8.jpg",
+  "HTN-WMG-6000":
+    "https://hitec.pl/hpeciai/8043008f7df03720559e419c57313dc6/pol_pm_100-Whey-Mass-3000g-944_1.jpg",
+  "HTN-CR-500":
+    "https://hitec.pl/hpeciai/fb392bcfa52f943d4d7485444389d321/pol_pm_Creatine-Powder-500g-39_1.jpg",
+  "HTN-BCAA-500":
+    "https://hitec.pl/hpeciai/7e51c58890d0f04b816fa467fa877d13/pol_pl_BCAA-Powder-500g-26_1.jpg",
+  "HTN-P80-2000":
+    "https://hitec.pl/hpeciai/5230f82c115505af7b67a0e153fa90c4/pol_pm_WPC-80-2000g-1037_8.jpg",
+  "HTN-WP-1800":
+    "https://hitec.pl/hpeciai/5230f82c115505af7b67a0e153fa90c4/pol_pm_WPC-80-2000g-1037_8.jpg",
+};
+
 export async function importBrandPresets(formData: FormData) {
   const { supabase, organizationId } = await requireAppContext();
 
@@ -174,6 +205,10 @@ export async function importBrandPresets(formData: FormData) {
       }
     }
 
+    const imageUrl =
+      (preset.product_sku ? PRESET_IMAGE_MAP[preset.product_sku] : null) ??
+      null;
+
     const { error: prodErr } = await supabase.from("products").insert({
       organization_id: organizationId,
       name: preset.product_name,
@@ -185,6 +220,8 @@ export async function importBrandPresets(formData: FormData) {
       sale_price: preset.sale_price,
       min_stock: preset.min_stock,
       current_stock: 0,
+      image_url: imageUrl,
+      image_urls: imageUrl ? [imageUrl] : [],
     });
 
     if (!prodErr) importedCount++;

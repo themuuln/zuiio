@@ -18,6 +18,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 import { updatePassword } from "./actions";
+import { ErrorBanner } from "@/components/ui/error-banner";
 
 const schema = z
   .object({
@@ -234,11 +235,7 @@ export default function UpdatePasswordPage() {
               </Field>
             </FieldGroup>
 
-            {serverError && (
-              <div className="rounded-md bg-destructive/15 px-3 py-2 text-sm text-destructive">
-                {serverError}
-              </div>
-            )}
+            <ErrorBanner error={serverError} />
 
             <Button type="submit" disabled={pending}>
               {pending ? "Шинэчилж байна..." : "Нууц үг шинэчлэх"}

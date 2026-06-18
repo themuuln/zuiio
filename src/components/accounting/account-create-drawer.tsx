@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { createAccount } from "@/app/(dashboard)/accounting/actions";
 import { buttonVariants } from "@/components/ui/button";
+import { DrawerFooter, DrawerCancel, DrawerSubmit } from "@/components/ui/drawer-footer";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Switch } from "@/components/ui/switch";
+import { ErrorBanner } from "@/components/ui/error-banner";
 
 const accountSchema = z.object({
   code: z.string().min(1, "Код шаардлагатай"),
@@ -120,8 +122,18 @@ export function AccountCreateDrawer({
           Шинэ данс
         </button>
       }
+      footer={
+        <DrawerFooter>
+          <DrawerCancel onClick={() => { setOpen(false); reset(); }} />
+          <DrawerSubmit form="account-form" isPending={isSubmitting} label="Данс үүсгэх" loadingLabel="Үүсгэж байна..." />
+        </DrawerFooter>
+      }
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-5"
+        id="account-form"
+      >
         <FieldGroup>
           <Field>
             <FieldLabel>Код</FieldLabel>
@@ -218,31 +230,7 @@ export function AccountCreateDrawer({
           </Field>
         </FieldGroup>
 
-        {serverError && (
-          <div className="rounded-md bg-destructive/15 px-3 py-2 text-sm text-destructive">
-            {serverError}
-          </div>
-        )}
-
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              setOpen(false);
-              reset();
-            }}
-            className={buttonVariants({ variant: "outline" })}
-          >
-            Цуцлах
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={buttonVariants({ variant: "default" })}
-          >
-            {isSubmitting ? "Үүсгэж байна..." : "Данс үүсгэх"}
-          </button>
-        </div>
+        <ErrorBanner error={serverError} />
       </form>
     </SlideInDrawer>
   );

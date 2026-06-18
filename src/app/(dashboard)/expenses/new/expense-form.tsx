@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { formatRouteDate } from "@/lib/format";
 import { expenseKeys } from "@/lib/query/keys";
 import { createExpense } from "./actions";
+import { ErrorBanner } from "@/components/ui/error-banner";
 
 const initialPaymentMethods: string[] = ["cash", "bank_transfer", "card"];
 const paymentMethodLabels: Record<string, string> = {
@@ -56,8 +57,10 @@ type ExpenseValues = z.infer<typeof expenseSchema>;
 
 export function ExpenseForm({
   onSuccess,
+  formId,
 }: {
   onSuccess?: () => void;
+  formId?: string;
 }) {
   const queryClient = useQueryClient();
 
@@ -175,7 +178,7 @@ export function ExpenseForm({
       : filteredPaymentMethods;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" id={formId}>
       <FieldGroup>
         <Field>
           <FieldLabel>Ангилал</FieldLabel>
@@ -314,15 +317,13 @@ export function ExpenseForm({
         </Field>
       </FieldGroup>
 
-      {expenseMutation.error ? (
-        <div className="rounded-none bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {expenseMutation.error.message}
-        </div>
-      ) : null}
+      <ErrorBanner error={expenseMutation.error} />
 
-      <button type="submit" disabled={expenseMutation.isPending} className={buttonVariants({ variant: "default" })}>
-        {expenseMutation.isPending ? "Хадгалах..." : "Зарлага хадгалах"}
-      </button>
+      {!formId && (
+        <button type="submit" disabled={expenseMutation.isPending} className={buttonVariants({ variant: "default" })}>
+          {expenseMutation.isPending ? "Хадгалах..." : "Зарлага хадгалах"}
+        </button>
+      )}
     </form>
   );
 }

@@ -9,7 +9,7 @@ export default async function ShopCatalogPage() {
     supabase
       .from("products")
       .select(
-        "id, name, sku, barcode, unit, sale_price, current_stock, category_id, brand_id, brands(name, logo_url)",
+        "id, name, sku, barcode, unit, sale_price, current_stock, category_id, brand_id, image_url, brands(name, logo_url)",
       )
       .eq("organization_id", organizationId)
       .order("name", { ascending: true }),
@@ -29,6 +29,7 @@ export default async function ShopCatalogPage() {
     sale_price: p.sale_price,
     current_stock: p.current_stock,
     category_id: p.category_id,
+    image_url: p.image_url,
     brand_name:
       (p.brands as { name: string; logo_url: string | null } | null)?.name ??
       null,
