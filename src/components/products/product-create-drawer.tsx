@@ -8,7 +8,10 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { createProduct } from "@/app/(dashboard)/products/new/actions";
 import { buttonVariants } from "@/components/ui/button";
-import { type LocalVariantGroup, VariantManagerDrawer } from "@/components/products/variant-manager-drawer";
+import {
+  type LocalVariantGroup,
+  VariantManagerDrawer,
+} from "@/components/products/variant-manager-drawer";
 import {
   Combobox,
   ComboboxContent,
@@ -306,7 +309,7 @@ export function ProductCreateDrawer({
                               if (next && !allUnits.includes(next)) {
                                 setAllUnits((prev) => [...prev, next]);
                               }
-                              setUnitQuery("");
+                              setUnitQuery(next ?? "");
                               field.onChange(next ?? "");
                             }}
                             itemToStringLabel={(item: string | null) =>
@@ -361,7 +364,7 @@ export function ProductCreateDrawer({
                               if (next && !allCategoryNames.includes(next)) {
                                 setAllCategoryNames((prev) => [...prev, next]);
                               }
-                              setCategoryQuery("");
+                              setCategoryQuery(next ?? "");
                               field.onChange(next ?? "");
                             }}
                             itemToStringLabel={(item: string | null) =>

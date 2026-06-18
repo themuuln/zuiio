@@ -3,12 +3,16 @@
 import { Drawer } from "@base-ui/react/drawer";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Barcode, NotePencil, Package, Tag, X } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { updateProduct } from "@/app/(dashboard)/products/actions";
 import { buttonVariants } from "@/components/ui/button";
+import {
+  type LocalVariantGroup,
+  VariantManagerDrawer,
+} from "@/components/products/variant-manager-drawer";
 import {
   Combobox,
   ComboboxContent,
@@ -25,6 +29,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { PRESET_CATEGORIES } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/client";
 import { productKeys } from "@/lib/query/keys";
 import { useOptimisticUpdate } from "@/lib/query/use-optimistic";
 
@@ -77,6 +82,32 @@ const productEditSchema = z.object({
 
 type ProductEditValues = z.infer<typeof productEditSchema>;
 
+function computeVariantCombinations(
+  groups: LocalVariantGroup[],
+): { option_ids: string[]; option_labels: string }[] {
+  if (groups.length === 0) return [];
+  const optionLists = groups.map((g) =>
+    g.options.map((o) => ({ id: o.id, value: o.value })),
+  );
+  function cartesian(
+    lists: { id: string; value: string }[][],
+  ): { option_ids: string[]; option_labels: string }[] {
+    if (lists.length === 0) return [{ option_ids: [], option_labels: "" }];
+    const [first, ...rest] = lists;
+    const restCombos = cartesian(rest);
+    return first.flatMap((item) =>
+      restCombos.map((combo) => ({
+        option_ids: [item.id, ...combo.option_ids],
+        option_labels: [
+          item.value,
+          ...(combo.option_labels ? [combo.option_labels] : []),
+        ].join(" / "),
+      })),
+    );
+  }
+  return cartesian(optionLists);
+}
+
 export function ProductEditDrawer({
   product,
   brands,
@@ -89,7 +120,7 @@ export function ProductEditDrawer({
   const [open, setOpen] = useState(false);
 
   // --- Unit combobox (creatable) ---
-  const [unitQuery, setUnitQuery] = useState("");
+  const [unitQuery, setUnitQuery] = useState(product.unit ?? "ширхэг");
   const trimmedUnitQuery = unitQuery.trim();
   const loweredUnitQuery = trimmedUnitQuery.toLowerCase();
   const [allUnits, setAllUnits] = useState<string[]>([...initialUnits]);
@@ -105,7 +136,9 @@ export function ProductEditDrawer({
   );
 
   // --- Category combobox (creatable) ---
-  const [categoryQuery, setCategoryQuery] = useState("");
+  const [categoryQuery, setCategoryQuery] = useState(
+    product.category_name ?? "",
+  );
   const trimmedCategoryQuery = categoryQuery.trim();
   const loweredCategoryQuery = trimmedCategoryQuery.toLowerCase();
   const [allCategoryNames, setAllCategoryNames] = useState<string[]>([
@@ -126,6 +159,8 @@ export function ProductEditDrawer({
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(
     product.brand_id ?? "",
   );
+
+  const [variantGroups, setVariantGroups] = useState<LocalVariantGroup[]>([]);
 
   const {
     register,
@@ -164,6 +199,43 @@ export function ProductEditDrawer({
     }),
   });
 
+  // Load existing variant data when drawer opens
+  useEffect(() => {
+    if (!open) return;
+    const loadExistingVariants = async () => {
+      const supabase = createClient();
+      const { data: groups } = await supabase
+        .from("product_variant_groups")
+        .select("id, name, sort_order")
+        .eq("product_id", product.id)
+        .order("sort_order");
+
+      if (!groups || groups.length === 0) {
+        setVariantGroups([]);
+        return;
+      }
+
+      const loadedGroups: LocalVariantGroup[] = [];
+      for (const group of groups) {
+        const { data: options } = await supabase
+          .from("product_variant_options")
+          .select("id, value")
+          .eq("group_id", group.id)
+          .order("sort_order");
+
+        loadedGroups.push({
+          id: group.id,
+          name: group.name,
+          options: (options ?? []).map((o) => ({ id: o.id, value: o.value })),
+        });
+      }
+      setVariantGroups(loadedGroups);
+    };
+    loadExistingVariants();
+  }, [open, product.id]);
+
+  const hasVariants = variantGroups.length > 0;
+
   const onSubmit = (data: ProductEditValues) => {
     const formData = new FormData();
     formData.append("id", product.id);
@@ -176,6 +248,24 @@ export function ProductEditDrawer({
     formData.append("cost_price", String(data.cost_price));
     formData.append("sale_price", String(data.sale_price));
     formData.append("min_stock", String(data.min_stock));
+
+    // Attach variant data if present
+    if (hasVariants) {
+      const combinations = computeVariantCombinations(variantGroups);
+      const variants = combinations.map((combo) => {
+        const key = combo.option_ids.join("-");
+        return {
+          sku: (formData.get(`v_sku_${key}`) as string) ?? "",
+          cost_price: Number(formData.get(`v_cost_${key}`) ?? 0),
+          sale_price: Number(formData.get(`v_price_${key}`) ?? 0),
+          current_stock: Number(formData.get(`v_stock_${key}`) ?? 0),
+          option_ids: combo.option_ids,
+        };
+      });
+      formData.append("variant_groups", JSON.stringify(variantGroups));
+      formData.append("variant_data", JSON.stringify(variants));
+    }
+
     editMutation.mutate(formData, {
       onSuccess: () => {
         setOpen(false);
@@ -268,7 +358,7 @@ export function ProductEditDrawer({
                           if (next && !allUnits.includes(next)) {
                             setAllUnits((prev) => [...prev, next]);
                           }
-                          setUnitQuery("");
+                          setUnitQuery(next ?? "");
                           setSelectedUnit(next);
                         }}
                         itemToStringLabel={(item: string | null) =>
@@ -314,7 +404,7 @@ export function ProductEditDrawer({
                           if (next && !allCategoryNames.includes(next)) {
                             setAllCategoryNames((prev) => [...prev, next]);
                           }
-                          setCategoryQuery("");
+                          setCategoryQuery(next ?? "");
                           setSelectedCategory(next);
                         }}
                         itemToStringLabel={(item: string | null) =>
@@ -447,6 +537,11 @@ export function ProductEditDrawer({
                     </Field>
                   </FieldGroup>
                 </div>
+
+                <VariantManagerDrawer
+                  groups={variantGroups}
+                  onGroupsChange={setVariantGroups}
+                />
 
                 {editMutation.error ? (
                   <div className="rounded-none bg-destructive/10 px-3 py-2 text-sm text-destructive">
