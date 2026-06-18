@@ -1,28 +1,11 @@
-import { ArrowsClockwise, Plus } from "@phosphor-icons/react/dist/ssr";
+import { Plus } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { requireAppContext } from "@/lib/erp";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { type MovementRow, MovementsContent } from "./movements-content";
 
 export const unstable_instant = { prefetch: "static" };
-
-const MOVEMENT_LABELS: Record<string, string> = {
-  in: "Орлого",
-  out: "Зарлага",
-  adjustment: "Тохируулга",
-};
 
 export default async function InventoryMovementsPage() {
   const { supabase, organizationId } = await requireAppContext();
@@ -35,6 +18,27 @@ export default async function InventoryMovementsPage() {
     .eq("organization_id", organizationId)
     .order("created_at", { ascending: false })
     .limit(50);
+
+  const tableData: MovementRow[] =
+    (movements ?? []).map((m) => {
+      const product = m.products as {
+        name: string;
+        unit: string | null;
+        sku: string | null;
+      } | null;
+      return {
+        id: m.id,
+        type: m.type,
+        quantity: m.quantity,
+        unit_cost: m.unit_cost,
+        reference: m.reference,
+        notes: m.notes,
+        created_at: m.created_at ?? new Date().toISOString(),
+        product_name: product?.name ?? "Устсан бүтээгдэхүүн",
+        product_unit: product?.unit ?? null,
+        product_sku: product?.sku ?? null,
+      };
+    }) ?? [];
 
   return (
     <PageShell
@@ -49,65 +53,7 @@ export default async function InventoryMovementsPage() {
         </Button>
       }
     >
-      {!movements?.length ? (
-        <ErpEmptyState
-          icon={<ArrowsClockwise className="size-4" />}
-          title="Хөдөлгөөн бүртгэгдээгүй байна"
-          description="Шинэ худалдан авалт, борлуулалт эсвэл тооллогын дараах тохируулга энд харагдана."
-        />
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Сүүлийн бүртгэлүүд</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Огноо</TableHead>
-                  <TableHead>Бүтээгдэхүүн</TableHead>
-                  <TableHead>Төрөл</TableHead>
-                  <TableHead>Тоо хэмжээ</TableHead>
-                  <TableHead>Өртөг</TableHead>
-                  <TableHead>Лавлагаа</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {movements.map((movement) => (
-                  <TableRow key={movement.id}>
-                    <TableCell>
-                      {formatDate(
-                        movement.created_at ?? new Date().toISOString(),
-                      )}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {movement.products?.name ?? "Устсан бүтээгдэхүүн"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          movement.type === "out" ? "destructive" : "secondary"
-                        }
-                      >
-                        {MOVEMENT_LABELS[movement.type] ?? movement.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {movement.quantity} {movement.products?.unit ?? "ширхэг"}
-                    </TableCell>
-                    <TableCell>
-                      {formatCurrency(Number(movement.unit_cost ?? 0))}
-                    </TableCell>
-                    <TableCell>
-                      {movement.reference ?? movement.notes ?? "-"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
+      <MovementsContent movements={tableData} />
     </PageShell>
   );
 }

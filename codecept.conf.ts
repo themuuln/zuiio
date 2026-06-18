@@ -29,7 +29,7 @@ heal.addRecipe("reloadOnClickFail", {
     return ({ I }: { I: CodeceptJS.I }) => {
       I.refreshPage();
       I.wait(1);
-      (I as unknown as Record<string, unknown>)[step.name](...step.args);
+      (I as any)[step.name](...step.args);
     };
   },
 });

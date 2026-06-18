@@ -5,14 +5,12 @@ import {
   Barcode,
   CaretLeft,
   CaretRight,
-  Eye,
   Package,
   Tag,
   X,
 } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
