@@ -8,8 +8,7 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { createProduct } from "@/app/(dashboard)/products/new/actions";
 import { buttonVariants } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { VariantEditor, type LocalVariantGroup } from "@/components/products/variant-editor";
+import { type LocalVariantGroup, VariantManagerDrawer } from "@/components/products/variant-manager-drawer";
 import {
   Combobox,
   ComboboxContent,
@@ -180,31 +179,31 @@ export function ProductCreateDrawer({
       : allUnits;
 
   // --- Category combobox (creatable) ---
-function computeVariantCombinations(
-  groups: LocalVariantGroup[],
-): { option_ids: string[]; option_labels: string }[] {
-  if (groups.length === 0) return [];
-  const optionLists = groups.map((g) =>
-    g.options.map((o) => ({ id: o.id, value: o.value })),
-  );
-  function cartesian(
-    lists: { id: string; value: string }[][],
+  function computeVariantCombinations(
+    groups: LocalVariantGroup[],
   ): { option_ids: string[]; option_labels: string }[] {
-    if (lists.length === 0) return [{ option_ids: [], option_labels: "" }];
-    const [first, ...rest] = lists;
-    const restCombos = cartesian(rest);
-    return first.flatMap((item) =>
-      restCombos.map((combo) => ({
-        option_ids: [item.id, ...combo.option_ids],
-        option_labels:
-          [item.value, ...(combo.option_labels ? [combo.option_labels] : [])].join(
-            " / ",
-          ),
-      })),
+    if (groups.length === 0) return [];
+    const optionLists = groups.map((g) =>
+      g.options.map((o) => ({ id: o.id, value: o.value })),
     );
+    function cartesian(
+      lists: { id: string; value: string }[][],
+    ): { option_ids: string[]; option_labels: string }[] {
+      if (lists.length === 0) return [{ option_ids: [], option_labels: "" }];
+      const [first, ...rest] = lists;
+      const restCombos = cartesian(rest);
+      return first.flatMap((item) =>
+        restCombos.map((combo) => ({
+          option_ids: [item.id, ...combo.option_ids],
+          option_labels: [
+            item.value,
+            ...(combo.option_labels ? [combo.option_labels] : []),
+          ].join(" / "),
+        })),
+      );
+    }
+    return cartesian(optionLists);
   }
-  return cartesian(optionLists);
-}
 
   const [categoryQuery, setCategoryQuery] = useState("");
   const trimmedCategoryQuery = categoryQuery.trim();
@@ -524,9 +523,7 @@ function computeVariantCombinations(
                   </FieldGroup>
                 </div>
 
-                <Separator />
-
-                <VariantEditor
+                <VariantManagerDrawer
                   groups={variantGroups}
                   onGroupsChange={setVariantGroups}
                 />
