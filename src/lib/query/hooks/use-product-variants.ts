@@ -30,6 +30,7 @@ export type ProductVariant = {
   is_active: boolean | null;
   created_at: string | null;
   option_labels: string;
+  option_ids: string[];
 };
 
 export type ProductVariantDetail = ProductVariant & {
@@ -109,6 +110,7 @@ async function fetchVariants(productId: string) {
     enriched.push({
       ...v,
       option_labels: optionLabels,
+      option_ids: optionIds,
     });
   }
 

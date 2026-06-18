@@ -487,6 +487,7 @@ export type Database = {
           quantity: number
           total_price: number
           unit_price: number
+          variant_id: string | null
         }
         Insert: {
           description?: string | null
@@ -496,6 +497,7 @@ export type Database = {
           quantity?: number
           total_price?: number
           unit_price?: number
+          variant_id?: string | null
         }
         Update: {
           description?: string | null
@@ -505,6 +507,7 @@ export type Database = {
           quantity?: number
           total_price?: number
           unit_price?: number
+          variant_id?: string | null
         }
         Relationships: [
           {
@@ -519,6 +522,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
         ]
@@ -1147,6 +1157,7 @@ export type Database = {
           received_quantity: number
           total_cost: number | null
           unit_cost: number
+          variant_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -1158,6 +1169,7 @@ export type Database = {
           received_quantity?: number
           total_cost?: number | null
           unit_cost?: number
+          variant_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -1169,6 +1181,7 @@ export type Database = {
           received_quantity?: number
           total_cost?: number | null
           unit_cost?: number
+          variant_id?: string | null
         }
         Relationships: [
           {
@@ -1183,6 +1196,13 @@ export type Database = {
             columns: ["purchase_order_id"]
             isOneToOne: false
             referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_order_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
         ]
@@ -1261,6 +1281,7 @@ export type Database = {
           quotation_id: string
           total_price: number | null
           unit_price: number
+          variant_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -1271,6 +1292,7 @@ export type Database = {
           quotation_id: string
           total_price?: number | null
           unit_price?: number
+          variant_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -1281,6 +1303,7 @@ export type Database = {
           quotation_id?: string
           total_price?: number | null
           unit_price?: number
+          variant_id?: string | null
         }
         Relationships: [
           {
@@ -1295,6 +1318,13 @@ export type Database = {
             columns: ["quotation_id"]
             isOneToOne: false
             referencedRelation: "quotations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotation_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
         ]
@@ -1434,6 +1464,7 @@ export type Database = {
           return_id: string
           total_price: number | null
           unit_price: number
+          variant_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -1444,6 +1475,7 @@ export type Database = {
           return_id: string
           total_price?: number | null
           unit_price?: number
+          variant_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -1454,6 +1486,7 @@ export type Database = {
           return_id?: string
           total_price?: number | null
           unit_price?: number
+          variant_id?: string | null
         }
         Relationships: [
           {
@@ -1468,6 +1501,13 @@ export type Database = {
             columns: ["return_id"]
             isOneToOne: false
             referencedRelation: "returns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "return_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
         ]
@@ -1618,6 +1658,7 @@ export type Database = {
           sale_id: string
           total_price: number
           unit_price: number
+          variant_id: string | null
         }
         Insert: {
           commission_amount?: number
@@ -1627,6 +1668,7 @@ export type Database = {
           sale_id: string
           total_price: number
           unit_price: number
+          variant_id?: string | null
         }
         Update: {
           commission_amount?: number
@@ -1636,6 +1678,7 @@ export type Database = {
           sale_id?: string
           total_price?: number
           unit_price?: number
+          variant_id?: string | null
         }
         Relationships: [
           {
@@ -1650,6 +1693,13 @@ export type Database = {
             columns: ["sale_id"]
             isOneToOne: false
             referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
         ]
@@ -1833,6 +1883,7 @@ export type Database = {
           reference: string | null
           type: string
           unit_cost: number | null
+          variant_id: string | null
           warehouse_id: string | null
         }
         Insert: {
@@ -1846,6 +1897,7 @@ export type Database = {
           reference?: string | null
           type: string
           unit_cost?: number | null
+          variant_id?: string | null
           warehouse_id?: string | null
         }
         Update: {
@@ -1859,6 +1911,7 @@ export type Database = {
           reference?: string | null
           type?: string
           unit_cost?: number | null
+          variant_id?: string | null
           warehouse_id?: string | null
         }
         Relationships: [
@@ -1881,6 +1934,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
           {
