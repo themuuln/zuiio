@@ -8,16 +8,18 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { updateProduct } from "@/app/(dashboard)/products/actions";
-import { buttonVariants } from "@/components/ui/button";
 import {
   DrawerFooter,
   DrawerCancel,
   DrawerSubmit,
 } from "@/components/ui/drawer-footer";
 import {
+  computeCombinations,
+  type LocalVariantData,
   type LocalVariantGroup,
   VariantManagerDrawer,
 } from "@/components/products/variant-manager-drawer";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Combobox,
   ComboboxContent,
@@ -35,11 +37,11 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { PRESET_CATEGORIES } from "@/lib/constants";
-import { createClient } from "@/lib/supabase/client";
 import { productKeys } from "@/lib/query/keys";
 import { useOptimisticUpdate } from "@/lib/query/use-optimistic";
 import { DrawerHeader } from "@/components/ui/drawer-header";
 import { ErrorBanner } from "@/components/ui/error-banner";
+import { createClient } from "@/lib/supabase/client";
 
 export interface ProductEditData {
   id: string;
@@ -90,32 +92,6 @@ const productEditSchema = z.object({
 
 type ProductEditValues = z.infer<typeof productEditSchema>;
 
-function computeVariantCombinations(
-  groups: LocalVariantGroup[],
-): { option_ids: string[]; option_labels: string }[] {
-  if (groups.length === 0) return [];
-  const optionLists = groups.map((g) =>
-    g.options.map((o) => ({ id: o.id, value: o.value })),
-  );
-  function cartesian(
-    lists: { id: string; value: string }[][],
-  ): { option_ids: string[]; option_labels: string }[] {
-    if (lists.length === 0) return [{ option_ids: [], option_labels: "" }];
-    const [first, ...rest] = lists;
-    const restCombos = cartesian(rest);
-    return first.flatMap((item) =>
-      restCombos.map((combo) => ({
-        option_ids: [item.id, ...combo.option_ids],
-        option_labels: [
-          item.value,
-          ...(combo.option_labels ? [combo.option_labels] : []),
-        ].join(" / "),
-      })),
-    );
-  }
-  return cartesian(optionLists);
-}
-
 export function ProductEditDrawer({
   product,
   brands,
@@ -139,10 +115,12 @@ export function ProductEditDrawer({
   );
 
   const [variantGroups, setVariantGroups] = useState<LocalVariantGroup[]>([]);
+  const [variantData, setVariantData] = useState<LocalVariantData[]>([]);
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<ProductEditValues>({
     resolver: zodResolver(productEditSchema),
@@ -177,7 +155,7 @@ export function ProductEditDrawer({
     }),
   });
 
-  // Load existing variant data when drawer opens
+  // Load existing variant groups and variant data when drawer opens
   useEffect(() => {
     if (!open) return;
     const loadExistingVariants = async () => {
@@ -190,6 +168,7 @@ export function ProductEditDrawer({
 
       if (!groups || groups.length === 0) {
         setVariantGroups([]);
+        setVariantData([]);
         return;
       }
 
@@ -208,9 +187,59 @@ export function ProductEditDrawer({
         });
       }
       setVariantGroups(loadedGroups);
+
+      // Load existing variant data (SKU, prices, stock)
+      const { data: variants } = await supabase
+        .from("product_variants")
+        .select("id, sku, cost_price, sale_price, current_stock")
+        .eq("product_id", product.id);
+
+      if (variants && variants.length > 0) {
+        const loadedVariantData: LocalVariantData[] = [];
+        for (const v of variants) {
+          const { data: assigns } = await supabase
+            .from("product_variant_assignments")
+            .select("option_id")
+            .eq("variant_id", v.id);
+
+          const optionIds = assigns?.map((a) => a.option_id) ?? [];
+          loadedVariantData.push({
+            option_ids: optionIds,
+            sku: v.sku ?? "",
+            cost_price: v.cost_price ?? 0,
+            sale_price: v.sale_price ?? 0,
+            current_stock: v.current_stock ?? 0,
+          });
+        }
+        setVariantData(loadedVariantData);
+      }
     };
     loadExistingVariants();
   }, [open, product.id]);
+
+  const watchedCostPrice = watch("cost_price");
+  const watchedSalePrice = watch("sale_price");
+
+  // Initialize variant data for any new combinations when groups change
+  useEffect(() => {
+    if (variantGroups.length === 0) return;
+    const combos = computeCombinations(variantGroups);
+    setVariantData((prev) => {
+      const prevMap = new Map(prev.map((d) => [d.option_ids.join("-"), d]));
+      return combos.map((combo) => {
+        const key = combo.option_ids.join("-");
+        const existing = prevMap.get(key);
+        if (existing) return existing;
+        return {
+          option_ids: combo.option_ids,
+          sku: "",
+          cost_price: watchedCostPrice ?? 0,
+          sale_price: watchedSalePrice ?? 0,
+          current_stock: 0,
+        };
+      });
+    });
+  }, [variantGroups, watchedCostPrice, watchedSalePrice]);
 
   const hasVariants = variantGroups.length > 0;
 
@@ -227,21 +256,10 @@ export function ProductEditDrawer({
     formData.append("sale_price", String(data.sale_price));
     formData.append("min_stock", String(data.min_stock));
 
-    // Attach variant data if present
+    // Attach variant data from state
     if (hasVariants) {
-      const combinations = computeVariantCombinations(variantGroups);
-      const variants = combinations.map((combo) => {
-        const key = combo.option_ids.join("-");
-        return {
-          sku: (formData.get(`v_sku_${key}`) as string) ?? "",
-          cost_price: Number(formData.get(`v_cost_${key}`) ?? 0),
-          sale_price: Number(formData.get(`v_price_${key}`) ?? 0),
-          current_stock: Number(formData.get(`v_stock_${key}`) ?? 0),
-          option_ids: combo.option_ids,
-        };
-      });
       formData.append("variant_groups", JSON.stringify(variantGroups));
-      formData.append("variant_data", JSON.stringify(variants));
+      formData.append("variant_data", JSON.stringify(variantData));
     }
 
     editMutation.mutate(formData, {
@@ -437,6 +455,13 @@ export function ProductEditDrawer({
           <VariantManagerDrawer
             groups={variantGroups}
             onGroupsChange={setVariantGroups}
+            defaultValues={{
+              cost_price: watchedCostPrice ?? 0,
+              sale_price: watchedSalePrice ?? 0,
+              current_stock: 0,
+            }}
+            variantData={variantData}
+            onVariantsChange={setVariantData}
           />
         </div>
 

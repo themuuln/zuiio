@@ -152,20 +152,3 @@ src/app/(dashboard)/invoices/
 6. **Create drawer** supports controlled `open`/`onOpenChange` props for the `?create=true` flow
 7. **Combobox** dropdowns use `ComboboxCreate` for creating new items inline (e.g., creating a contact while creating an invoice)
 <!-- END:drawer-pattern -->
-
-<!-- BEGIN:docs-workflow -->
-
-# Documentation — must be synced before every PR
-
-Docs live in `docs/` (VitePress). The agent writes them, not auto-generated changelogs.
-
-## Project-specific commands
-
-- **Check what changed**: `./scripts/documentize.sh sync`
-- **Read commits since last sync**: `git log $(jq -r '.lastCodeSyncCommit' .documentizer/sync.json)..HEAD --oneline`
-- **Stamp after writing**: `./scripts/documentize.sh sync --commit`
-
-## Enforcement
-
-- CI (`.github/workflows/docs.yml`) on every PR to `main` — fails if `sync --check` doesn't pass.
-<!-- END:docs-workflow -->

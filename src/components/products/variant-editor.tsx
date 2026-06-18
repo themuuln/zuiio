@@ -12,10 +12,8 @@ export type LocalVariantGroup = {
   options: { id: string; value: string }[];
 };
 
-export type LocalVariant = {
-  id: string;
+export type LocalVariantData = {
   option_ids: string[];
-  option_labels: string;
   sku: string;
   cost_price: number;
   sale_price: number;
@@ -30,7 +28,6 @@ const PRESET_GROUP_SUGGESTIONS = [
 
 let groupIdCounter = 0;
 let optionIdCounter = 0;
-let variantIdCounter = 0;
 
 function genGroupId() {
   return `g_${++groupIdCounter}`;
@@ -38,11 +35,8 @@ function genGroupId() {
 function genOptionId() {
   return `o_${++optionIdCounter}`;
 }
-function genVariantId() {
-  return `v_${++variantIdCounter}`;
-}
 
-function computeCombinations(
+export function computeCombinations(
   groups: LocalVariantGroup[],
 ): { option_ids: string[]; option_labels: string }[] {
   if (groups.length === 0) return [];
@@ -60,7 +54,10 @@ function computeCombinations(
     return first.flatMap((item) =>
       restCombos.map((combo) => ({
         option_ids: [item.id, ...combo.option_ids],
-        option_labels: [item.value, ...(combo.option_labels ? [combo.option_labels] : [])].join(" / "),
+        option_labels: [
+          item.value,
+          ...(combo.option_labels ? [combo.option_labels] : []),
+        ].join(" / "),
       })),
     );
   }
@@ -68,29 +65,22 @@ function computeCombinations(
   return cartesian(optionLists);
 }
 
-export function buildVariantFormData(
-  formData: FormData,
-  groups: LocalVariantGroup[],
-  variants: LocalVariant[],
-) {
-  formData.append("variant_groups", JSON.stringify(groups));
-
-  const variantsPayload = variants.map((v) => ({
-    sku: v.sku,
-    cost_price: v.cost_price,
-    sale_price: v.sale_price,
-    current_stock: v.current_stock,
-    option_ids: v.option_ids,
-  }));
-  formData.append("variant_data", JSON.stringify(variantsPayload));
-}
-
 export function VariantEditor({
   groups,
   onGroupsChange,
+  defaultValues,
+  variantData,
+  onVariantsChange,
 }: {
   groups: LocalVariantGroup[];
   onGroupsChange: (groups: LocalVariantGroup[]) => void;
+  defaultValues?: {
+    cost_price: number;
+    sale_price: number;
+    current_stock: number;
+  };
+  variantData: LocalVariantData[];
+  onVariantsChange: (data: LocalVariantData[]) => void;
 }) {
   const addGroup = useCallback(() => {
     const newGroup: LocalVariantGroup = {
@@ -122,7 +112,10 @@ export function VariantEditor({
       onGroupsChange(
         groups.map((g) =>
           g.id === groupId
-            ? { ...g, options: [...g.options, { id: genOptionId(), value: "" }] }
+            ? {
+                ...g,
+                options: [...g.options, { id: genOptionId(), value: "" }],
+              }
             : g,
         ),
       );
@@ -176,8 +169,62 @@ export function VariantEditor({
     [groups, onGroupsChange],
   );
 
-  // build combinations and initial variants
   const combinations = useMemo(() => computeCombinations(groups), [groups]);
+
+  const variantDataMap = useMemo(() => {
+    const map = new Map<string, LocalVariantData>();
+    for (const d of variantData) {
+      map.set(d.option_ids.join("-"), d);
+    }
+    return map;
+  }, [variantData]);
+
+  const handleVariantFieldChange = useCallback(
+    (
+      optionIds: string[],
+      field: keyof Omit<LocalVariantData, "option_ids">,
+      value: string | number,
+    ) => {
+      const key = optionIds.join("-");
+      const existing = variantDataMap.get(key);
+      const updated: LocalVariantData = {
+        ...(existing ?? {
+          option_ids: optionIds,
+          sku: "",
+          cost_price: defaultValues?.cost_price ?? 0,
+          sale_price: defaultValues?.sale_price ?? 0,
+          current_stock: defaultValues?.current_stock ?? 0,
+        }),
+        [field]: value,
+      };
+      const newData = variantData.filter((d) => d.option_ids.join("-") !== key);
+      newData.push(updated);
+      onVariantsChange(newData);
+    },
+    [variantDataMap, variantData, onVariantsChange, defaultValues],
+  );
+
+  const getVariantValue = useCallback(
+    (optionIds: string[], field: keyof LocalVariantData): string | number => {
+      const key = optionIds.join("-");
+      const existing = variantDataMap.get(key);
+      if (existing) {
+        const val = existing[field];
+        return typeof val === "string" || typeof val === "number" ? val : "";
+      }
+      switch (field) {
+        case "cost_price":
+          return defaultValues?.cost_price ?? 0;
+        case "sale_price":
+          return defaultValues?.sale_price ?? 0;
+        case "current_stock":
+          return defaultValues?.current_stock ?? 0;
+        default:
+          return "";
+      }
+    },
+    [variantDataMap, defaultValues],
+  );
 
   const hasAllOptionsNamed = groups.every((g) =>
     g.options.every((o) => o.value.trim() !== ""),
@@ -188,12 +235,7 @@ export function VariantEditor({
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">Вариантууд</span>
         <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addGroup}
-          >
+          <Button type="button" variant="outline" size="sm" onClick={addGroup}>
             <Plus className="mr-1 size-3.5" />
             Бүлэг нэмэх
           </Button>
@@ -299,27 +341,82 @@ export function VariantEditor({
                         </Badge>
                       </td>
                       <td className="py-1.5 px-1">
-                        <VariantCellInput name={`v_sku_${key}`} />
-                      </td>
-                      <td className="py-1.5 px-1">
-                        <VariantCellInput
-                          name={`v_cost_${key}`}
-                          type="number"
-                          defaultValue="0"
+                        <Input
+                          type="text"
+                          value={
+                            getVariantValue(combo.option_ids, "sku") as string
+                          }
+                          onChange={(e) =>
+                            handleVariantFieldChange(
+                              combo.option_ids,
+                              "sku",
+                              e.target.value,
+                            )
+                          }
+                          className="h-7 w-full text-xs"
                         />
                       </td>
                       <td className="py-1.5 px-1">
-                        <VariantCellInput
-                          name={`v_price_${key}`}
+                        <Input
                           type="number"
-                          defaultValue="0"
+                          min="0"
+                          step="0.01"
+                          value={
+                            getVariantValue(
+                              combo.option_ids,
+                              "cost_price",
+                            ) as number
+                          }
+                          onChange={(e) =>
+                            handleVariantFieldChange(
+                              combo.option_ids,
+                              "cost_price",
+                              Number(e.target.value),
+                            )
+                          }
+                          className="h-7 w-full text-xs"
                         />
                       </td>
                       <td className="py-1.5 px-1">
-                        <VariantCellInput
-                          name={`v_stock_${key}`}
+                        <Input
                           type="number"
-                          defaultValue="0"
+                          min="0"
+                          step="0.01"
+                          value={
+                            getVariantValue(
+                              combo.option_ids,
+                              "sale_price",
+                            ) as number
+                          }
+                          onChange={(e) =>
+                            handleVariantFieldChange(
+                              combo.option_ids,
+                              "sale_price",
+                              Number(e.target.value),
+                            )
+                          }
+                          className="h-7 w-full text-xs"
+                        />
+                      </td>
+                      <td className="py-1.5 px-1">
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={
+                            getVariantValue(
+                              combo.option_ids,
+                              "current_stock",
+                            ) as number
+                          }
+                          onChange={(e) =>
+                            handleVariantFieldChange(
+                              combo.option_ids,
+                              "current_stock",
+                              Number(e.target.value),
+                            )
+                          }
+                          className="h-7 w-full text-xs"
                         />
                       </td>
                     </tr>
@@ -334,26 +431,5 @@ export function VariantEditor({
         </div>
       )}
     </div>
-  );
-}
-
-function VariantCellInput({
-  name,
-  type = "text",
-  defaultValue,
-}: {
-  name: string;
-  type?: string;
-  defaultValue?: string;
-}) {
-  return (
-    <Input
-      name={name}
-      type={type}
-      min={type === "number" ? "0" : undefined}
-      step={type === "number" ? "0.01" : undefined}
-      defaultValue={defaultValue}
-      className="h-7 w-full text-xs"
-    />
   );
 }

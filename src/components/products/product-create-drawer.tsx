@@ -3,20 +3,22 @@
 import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Barcode, Package, Plus, Tag } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { createProduct } from "@/app/(dashboard)/products/new/actions";
-import { buttonVariants } from "@/components/ui/button";
 import {
   DrawerFooter,
   DrawerCancel,
   DrawerSubmit,
 } from "@/components/ui/drawer-footer";
 import {
+  computeCombinations,
+  type LocalVariantData,
   type LocalVariantGroup,
   VariantManagerDrawer,
 } from "@/components/products/variant-manager-drawer";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Combobox,
   ComboboxContent,
@@ -96,6 +98,7 @@ export function ProductCreateDrawer({
     register,
     handleSubmit,
     control,
+    watch,
     formState: { errors },
   } = useForm<ProductValues>({
     resolver: zodResolver(productSchema),
@@ -114,7 +117,36 @@ export function ProductCreateDrawer({
   });
 
   const [variantGroups, setVariantGroups] = useState<LocalVariantGroup[]>([]);
+  const [variantData, setVariantData] = useState<LocalVariantData[]>([]);
   const hasVariants = variantGroups.length > 0;
+
+  const watchedCostPrice = watch("cost_price");
+  const watchedSalePrice = watch("sale_price");
+  const watchedCurrentStock = watch("current_stock");
+
+  // Initialize variant data when groups change
+  useEffect(() => {
+    if (variantGroups.length === 0) {
+      setVariantData([]);
+      return;
+    }
+    const combos = computeCombinations(variantGroups);
+    setVariantData((prev) => {
+      const prevMap = new Map(prev.map((d) => [d.option_ids.join("-"), d]));
+      return combos.map((combo) => {
+        const key = combo.option_ids.join("-");
+        const existing = prevMap.get(key);
+        if (existing) return existing;
+        return {
+          option_ids: combo.option_ids,
+          sku: "",
+          cost_price: watchedCostPrice ?? 0,
+          sale_price: watchedSalePrice ?? 0,
+          current_stock: watchedCurrentStock ?? 0,
+        };
+      });
+    });
+  }, [variantGroups, watchedCostPrice, watchedSalePrice, watchedCurrentStock]);
 
   const productMutation = useOptimisticCreate({
     mutationFn: async (formData: FormData) => {
@@ -159,53 +191,16 @@ export function ProductCreateDrawer({
     formData.append("current_stock", String(data.current_stock));
     formData.append("min_stock", String(data.min_stock));
 
-    // Attach variant data if present
+    // Attach variant data from state
     if (hasVariants) {
-      const combinations = computeVariantCombinations(variantGroups);
-      const variants = combinations.map((combo) => {
-        const key = combo.option_ids.join("-");
-        return {
-          sku: (formData.get(`v_sku_${key}`) as string) ?? "",
-          cost_price: Number(formData.get(`v_cost_${key}`) ?? 0),
-          sale_price: Number(formData.get(`v_price_${key}`) ?? 0),
-          current_stock: Number(formData.get(`v_stock_${key}`) ?? 0),
-          option_ids: combo.option_ids,
-        };
-      });
       formData.append("variant_groups", JSON.stringify(variantGroups));
-      formData.append("variant_data", JSON.stringify(variants));
+      formData.append("variant_data", JSON.stringify(variantData));
     }
 
     productMutation.mutate(formData, { onSuccess: () => setOpen(false) });
   };
 
   // --- Category combobox (creatable) ---
-  function computeVariantCombinations(
-    groups: LocalVariantGroup[],
-  ): { option_ids: string[]; option_labels: string }[] {
-    if (groups.length === 0) return [];
-    const optionLists = groups.map((g) =>
-      g.options.map((o) => ({ id: o.id, value: o.value })),
-    );
-    function cartesian(
-      lists: { id: string; value: string }[][],
-    ): { option_ids: string[]; option_labels: string }[] {
-      if (lists.length === 0) return [{ option_ids: [], option_labels: "" }];
-      const [first, ...rest] = lists;
-      const restCombos = cartesian(rest);
-      return first.flatMap((item) =>
-        restCombos.map((combo) => ({
-          option_ids: [item.id, ...combo.option_ids],
-          option_labels: [
-            item.value,
-            ...(combo.option_labels ? [combo.option_labels] : []),
-          ].join(" / "),
-        })),
-      );
-    }
-    return cartesian(optionLists);
-  }
-
 
   return (
     <DrawerLayout
@@ -444,6 +439,13 @@ export function ProductCreateDrawer({
           <VariantManagerDrawer
             groups={variantGroups}
             onGroupsChange={setVariantGroups}
+            defaultValues={{
+              cost_price: watchedCostPrice ?? 0,
+              sale_price: watchedSalePrice ?? 0,
+              current_stock: watchedCurrentStock ?? 0,
+            }}
+            variantData={variantData}
+            onVariantsChange={setVariantData}
           />
         </div>
 
