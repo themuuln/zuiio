@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
+import type { BranchOption } from "@/lib/branch-context";
+import { type BrandConfig, generateBrandCSS } from "@/lib/branding";
 import { createClient } from "@/lib/supabase/server";
-import { BrandConfig, generateBrandCSS } from "@/lib/branding";
 import { DashboardShell } from "./dashboard-shell";
 
 export default async function DashboardLayout({
@@ -19,7 +20,9 @@ export default async function DashboardLayout({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, organization_id, organizations(name, brand_config)")
+    .select(
+      "full_name, organization_id, branch_id, organizations(name, brand_config)",
+    )
     .eq("id", user.id)
     .single();
 
@@ -30,6 +33,20 @@ export default async function DashboardLayout({
   if (!profile.organization_id) {
     redirect("/organization/new");
   }
+
+  // Fetch branches for the sidebar selector
+  const { data: branchRows } = await supabase
+    .from("branches")
+    .select("id, name, slug, is_default")
+    .eq("organization_id", profile.organization_id)
+    .order("name");
+
+  const branches: BranchOption[] = (branchRows ?? []).map((b) => ({
+    id: b.id,
+    name: b.name,
+    slug: b.slug,
+    is_default: b.is_default,
+  }));
 
   const brandConfig = (profile.organizations?.brand_config ??
     {}) as BrandConfig;
@@ -48,6 +65,8 @@ export default async function DashboardLayout({
         organizationName={profile.organizations?.name ?? null}
         logoUrl={brandConfig.logo_url ?? null}
         userFullName={profile.full_name}
+        branches={branches}
+        userBranchId={profile.branch_id}
       >
         {children}
       </DashboardShell>

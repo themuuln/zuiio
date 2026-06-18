@@ -8,19 +8,25 @@ export default async function UsersPage() {
   const { supabase, organizationId, userId, permissions } =
     await requireAppContext();
 
-  const [profilesResult, authResult, rolesResult] = await Promise.allSettled([
-    supabase
-      .from("profiles")
-      .select("id, full_name, role, role_id")
-      .eq("organization_id", organizationId)
-      .order("created_at", { ascending: true }),
-    createServiceClient().auth.admin.listUsers(),
-    supabase
-      .from("roles")
-      .select("id, name, is_system_role")
-      .eq("organization_id", organizationId)
-      .order("hierarchy_level", { ascending: true }),
-  ]);
+  const [profilesResult, authResult, rolesResult, branchesResult] =
+    await Promise.allSettled([
+      supabase
+        .from("profiles")
+        .select("id, full_name, role, role_id, branch_id")
+        .eq("organization_id", organizationId)
+        .order("created_at", { ascending: true }),
+      createServiceClient().auth.admin.listUsers(),
+      supabase
+        .from("roles")
+        .select("id, name, is_system_role")
+        .eq("organization_id", organizationId)
+        .order("hierarchy_level", { ascending: true }),
+      supabase
+        .from("branches")
+        .select("id, name")
+        .eq("organization_id", organizationId)
+        .order("name"),
+    ]);
 
   if (profilesResult.status === "rejected") {
     console.error("Profiles query failed:", profilesResult.reason);
@@ -44,6 +50,11 @@ export default async function UsersPage() {
   const roles =
     rolesResult.status === "fulfilled" ? (rolesResult.value.data ?? []) : [];
 
+  const branches =
+    branchesResult.status === "fulfilled"
+      ? (branchesResult.value.data ?? [])
+      : [];
+
   const emailMap = new Map<string, string>();
   for (const authUser of authUsers) {
     if (authUser.email) {
@@ -56,21 +67,26 @@ export default async function UsersPage() {
     full_name: profile.full_name,
     role: profile.role,
     role_id: profile.role_id,
+    branch_id: profile.branch_id,
     email: emailMap.get(profile.id) ?? "",
   }));
+
+  const canManageBranches = permissions.includes("settings.manage");
 
   return (
     <PageShell
       title="Хэрэглэгчид"
-      description="Байгууллагын гишүүд болон тэдний үүрэг"
+      description="Байгууллагын гишүүд болон тэдний үүрэг, салбарын хандалт"
     >
       <Card>
         <CardContent className="p-0">
           <MembersClient
             members={members}
             roles={roles}
+            branches={branches}
             currentUserId={userId}
             canManageRole={permissions.includes("members.manage_role")}
+            canManageBranches={canManageBranches}
             canInvite={permissions.includes("members.invite")}
             canRemove={permissions.includes("members.remove")}
           />

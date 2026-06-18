@@ -3,6 +3,12 @@
 import { Envelope, Trash, UserPlus, Users } from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { assignUserBranch } from "@/app/(dashboard)/settings/branches/actions";
+import { updateUserRole } from "@/app/(dashboard)/settings/roles/actions";
+import {
+  inviteMember,
+  removeMember,
+} from "@/app/(dashboard)/settings/users/actions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,17 +33,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
-import {
-  inviteMember,
-  removeMember,
-} from "@/app/(dashboard)/settings/users/actions";
-import { updateUserRole } from "@/app/(dashboard)/settings/roles/actions";
 
 interface Member {
   id: string;
   full_name: string | null;
   role: string | null;
   role_id: string | null;
+  branch_id: string | null;
   email: string;
 }
 
@@ -47,11 +49,18 @@ interface Role {
   is_system_role: boolean;
 }
 
+interface BranchOption {
+  id: string;
+  name: string;
+}
+
 interface MembersClientProps {
   members: Member[];
   roles: Role[];
+  branches: BranchOption[];
   currentUserId: string;
   canManageRole: boolean;
+  canManageBranches: boolean;
   canInvite: boolean;
   canRemove: boolean;
 }
@@ -59,8 +68,10 @@ interface MembersClientProps {
 export function MembersClient({
   members,
   roles,
+  branches,
   currentUserId,
   canManageRole,
+  canManageBranches,
   canInvite,
   canRemove,
 }: MembersClientProps) {
@@ -73,6 +84,18 @@ export function MembersClient({
   const handleRoleChange = async (profileId: string, roleId: string | null) => {
     setChanging(profileId);
     const result = await updateUserRole(profileId, roleId);
+    setChanging(null);
+    if (result?.error) {
+      toast.error(result.error);
+    }
+  };
+
+  const handleBranchChange = async (
+    profileId: string,
+    branchId: string | null,
+  ) => {
+    setChanging(profileId);
+    const result = await assignUserBranch(profileId, branchId);
     setChanging(null);
     if (result?.error) {
       toast.error(result.error);
@@ -231,6 +254,25 @@ export function MembersClient({
                     </NativeSelect>
                   ) : (
                     <Badge variant="outline">{roleName ?? "Гишүүн"}</Badge>
+                  )}
+
+                  {/* Branch assignment */}
+                  {canManageBranches && member.id !== currentUserId && (
+                    <NativeSelect
+                      value={member.branch_id ?? ""}
+                      onChange={(e) =>
+                        handleBranchChange(member.id, e.target.value || null)
+                      }
+                      disabled={changing === member.id}
+                      className="w-40"
+                    >
+                      <option value="">Бүх салбар</option>
+                      {branches.map((br) => (
+                        <option key={br.id} value={br.id}>
+                          {br.name}
+                        </option>
+                      ))}
+                    </NativeSelect>
                   )}
 
                   {canRemove && member.id !== currentUserId && (

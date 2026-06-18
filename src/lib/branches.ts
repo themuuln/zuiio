@@ -1,5 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/supabase/types";
+
+export type BranchRow = Database["public"]["Tables"]["branches"]["Row"];
 
 /**
  * Represents a branch with readable fields.
