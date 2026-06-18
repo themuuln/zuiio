@@ -1,14 +1,17 @@
 "use client";
 
 import {
-  ArrowRight,
-  CalendarBlank,
   ChartLineUp,
+  ClockCountdown,
   Coin,
   Package,
+  Plus,
   ShoppingCart,
   Star,
+  TrendDown,
+  TrendUp,
   Users,
+  Warehouse,
   Warning,
 } from "@phosphor-icons/react";
 import Link from "next/link";
@@ -24,13 +27,10 @@ import {
 } from "recharts";
 import { toast } from "sonner";
 
-import { ErpEmptyState } from "@/components/erp/empty-state";
-import { KpiGrid } from "@/components/erp/kpi-grid";
-import { StatCard } from "@/components/erp/stat-card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 // Module-level flag to prevent duplicate toasts on same-session navigation.
 // Resets on full page reload (module re-evaluation).
@@ -86,6 +86,126 @@ function statusLabel(status: string | null): string {
   }
 }
 
+// ─── Sub-components ────────────────────────────────────────────────────
+
+function PulseCard({
+  icon,
+  label,
+  value,
+  color,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  color: "emerald" | "red" | "blue" | "amber";
+}) {
+  const colorClasses: Record<string, string> = {
+    emerald:
+      "border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/50",
+    red: "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/50",
+    blue: "border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/50",
+    amber:
+      "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/50",
+  };
+  const iconClasses: Record<string, string> = {
+    emerald:
+      "bg-emerald-100 text-emerald-600 dark:bg-emerald-900 dark:text-emerald-400",
+    red: "bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400",
+    blue: "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400",
+    amber: "bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-400",
+  };
+
+  return (
+    <Card size="sm" className={cn(colorClasses[color])}>
+      <div className="flex items-center gap-3 px-4">
+        <div
+          className={cn(
+            "flex size-9 shrink-0 items-center justify-center rounded-lg",
+            iconClasses[color],
+          )}
+        >
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-xs text-muted-foreground">{label}</p>
+          <p className="text-base font-bold tabular-nums tracking-tight">
+            {value}
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function ShortcutCard({
+  href,
+  icon,
+  label,
+  count,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  count: string;
+}) {
+  return (
+    <Link href={href} className="group block">
+      <Card
+        size="sm"
+        className="transition-colors hover:bg-accent/50 [&_svg]:transition-transform [&_svg]:group-hover:scale-110"
+      >
+        <div className="flex items-center gap-3 px-4">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            {icon}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">{label}</p>
+            <p className="text-lg font-bold tabular-nums tracking-tight">
+              {count}
+            </p>
+          </div>
+        </div>
+      </Card>
+    </Link>
+  );
+}
+
+function HeroActionCard({
+  href,
+  icon,
+  title,
+  description,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
+  return (
+    <Link href={href} className="group block">
+      <Card className="h-full transition-all hover:border-primary/50 hover:shadow-md">
+        <CardContent className="flex h-full items-center gap-4 py-5">
+          <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary [&>svg]:transition-transform [&>svg]:group-hover:scale-110">
+            {icon}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">{title}</p>
+            <p className="truncate text-sm text-muted-foreground">
+              {description}
+            </p>
+          </div>
+          <Plus
+            weight="bold"
+            className="size-5 shrink-0 text-muted-foreground/40 transition-all group-hover:text-primary group-hover:rotate-45"
+          />
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
+
+// ─── Main Component ────────────────────────────────────────────────────
+
 export function DashboardClient({ data }: { data: DashboardData }) {
   // Show low-stock toast notification on mount
   const hasShownToast = useRef(false);
@@ -105,42 +225,13 @@ export function DashboardClient({ data }: { data: DashboardData }) {
     }
   }, [data.lowStockCount]);
 
-  const hasAnyData =
-    data.todaySalesTotal > 0 ||
-    data.todayExpensesTotal > 0 ||
-    data.totalProducts > 0 ||
-    data.totalCustomers > 0 ||
-    data.totalSuppliers > 0;
-
   const hasSalesData = data.monthlyTrend.some((d) => d.total > 0);
 
-  if (!hasAnyData) {
-    return (
-      <div className="flex flex-1 flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Хяналтын самбар
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Байгууллагын үндсэн үзүүлэлтүүд
-          </p>
-        </div>
-        <ErpEmptyState
-          icon={<ChartLineUp className="size-4" />}
-          title="Мэдээлэл байхгүй"
-          description="Хяналтын самбарт харуулах мэдээлэл одоогоор байхгүй байна. Бүтээгдэхүүн, борлуулалт, зарлага нэмэн үзүүлэлтүүдийг харна уу."
-          action={
-            <Button asChild size="sm">
-              <Link href="/products">Бүтээгдэхүүн нэмэх</Link>
-            </Button>
-          }
-        />
-      </div>
-    );
-  }
+  const netProfit = data.todaySalesTotal - data.todayExpensesTotal;
 
   return (
     <div className="flex flex-1 flex-col gap-6">
+      {/* Page Header */}
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold tracking-tight">
@@ -152,51 +243,107 @@ export function DashboardClient({ data }: { data: DashboardData }) {
         </div>
       </div>
 
-      {/* KPI Grid */}
-      <KpiGrid>
-        <StatCard
-          icon={<Coin className="size-5" />}
-          label="Өнөөдрийн борлуулалт"
-          value={formatCurrency(data.todaySalesTotal)}
+      {/* ─── 1. Hero Quick Action Cards ─────────────────────────────── */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <HeroActionCard
+          href="/sales?create=true"
+          icon={<ShoppingCart className="size-6" />}
+          title="Шинэ борлуулалт"
+          description="Борлуулалт бүртгэх"
         />
-        <StatCard
-          icon={<CalendarBlank className="size-5" />}
-          label="Өнөөдрийн зарлага"
-          value={formatCurrency(data.todayExpensesTotal)}
+        <HeroActionCard
+          href="/expenses?create=true"
+          icon={<Coin className="size-6" />}
+          title="Шинэ зарлага"
+          description="Зарлагын бүртгэл"
         />
-        <StatCard
-          icon={<Package className="size-5" />}
-          label="Нийт бүтээгдэхүүн"
-          value={data.totalProducts.toLocaleString()}
+        <HeroActionCard
+          href="/products"
+          icon={<Package className="size-6" />}
+          title="Шинэ бүтээгдэхүүн"
+          description="Бүтээгдэхүүн нэмэх"
         />
-        <StatCard
-          icon={<Users className="size-5" />}
-          label="Нийт харилцагчид"
-          value={data.totalCustomers.toLocaleString()}
-        />
-        <StatCard
-          icon={<Star className="size-5" />}
-          label="Нийт нийлүүлэгчид"
-          value={data.totalSuppliers.toLocaleString()}
-        />
-        <StatCard
-          icon={<Warning className="size-5" />}
-          label="Бага нөөцтэй бүтээгдэхүүн"
-          value={data.lowStockCount.toLocaleString()}
-        />
-        <StatCard
-          icon={<ShoppingCart className="size-5" />}
-          label="Хүлээгдэж буй борлуулалт"
-          value={data.pendingSalesCount.toLocaleString()}
-        />
-        <StatCard
-          icon={<Coin className="size-5" />}
-          label="Агуулахын үнэ цэнэ"
-          value={formatCurrency(data.inventoryValue)}
-        />
-      </KpiGrid>
+      </div>
 
-      {/* Recent Sales */}
+      {/* ─── 2. Today's Pulse Strip ─────────────────────────────────── */}
+      <div>
+        <h2 className="mb-3 text-sm font-medium text-muted-foreground">
+          Өнөөдрийн байдал
+        </h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <PulseCard
+            icon={<TrendUp className="size-5" />}
+            label="Өнөөдрийн борлуулалт"
+            value={formatCurrency(data.todaySalesTotal)}
+            color="emerald"
+          />
+          <PulseCard
+            icon={<TrendDown className="size-5" />}
+            label="Өнөөдрийн зарлага"
+            value={formatCurrency(data.todayExpensesTotal)}
+            color="red"
+          />
+          <PulseCard
+            icon={<ChartLineUp className="size-5" />}
+            label="Цэвэр ашиг"
+            value={formatCurrency(netProfit)}
+            color="blue"
+          />
+          <PulseCard
+            icon={<ClockCountdown className="size-5" />}
+            label="Хүлээгдэж буй"
+            value={data.pendingSalesCount.toLocaleString()}
+            color="amber"
+          />
+        </div>
+      </div>
+
+      {/* ─── 3. Quick Shortcuts Grid ────────────────────────────────── */}
+      <div>
+        <h2 className="mb-3 text-sm font-medium text-muted-foreground">
+          Түргэн цэс
+        </h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <ShortcutCard
+            href="/products"
+            icon={<Package className="size-5" />}
+            label="Бүтээгдэхүүн"
+            count={data.totalProducts.toLocaleString()}
+          />
+          <ShortcutCard
+            href="/customers"
+            icon={<Users className="size-5" />}
+            label="Харилцагчид"
+            count={data.totalCustomers.toLocaleString()}
+          />
+          <ShortcutCard
+            href="/suppliers"
+            icon={<Star className="size-5" />}
+            label="Нийлүүлэгчид"
+            count={data.totalSuppliers.toLocaleString()}
+          />
+          <ShortcutCard
+            href="/inventory"
+            icon={<Warehouse className="size-5" />}
+            label="Агуулах"
+            count={formatCurrency(data.inventoryValue)}
+          />
+          <ShortcutCard
+            href="/products"
+            icon={<Warning className="size-5" />}
+            label="Бага нөөц"
+            count={data.lowStockCount.toLocaleString()}
+          />
+          <ShortcutCard
+            href="/sales"
+            icon={<ShoppingCart className="size-5" />}
+            label="Хүлээгдэж буй"
+            count={data.pendingSalesCount.toLocaleString()}
+          />
+        </div>
+      </div>
+
+      {/* ─── 4. Existing: Recent Sales Table ────────────────────────── */}
       <Card>
         <CardHeader>
           <CardTitle>Сүүлийн борлуулалтууд</CardTitle>
@@ -249,7 +396,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
         </CardContent>
       </Card>
 
-      {/* Monthly Trend Chart */}
+      {/* ─── 5. Existing: Monthly Trend Chart ───────────────────────── */}
       <Card>
         <CardHeader>
           <CardTitle>Сүүлийн 30 хоногийн борлуулалт</CardTitle>
@@ -307,28 +454,6 @@ export function DashboardClient({ data }: { data: DashboardData }) {
           )}
         </CardContent>
       </Card>
-
-      {/* Quick Links */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Button asChild variant="outline" size="sm">
-          <Link href="/sales/new">
-            Шинэ борлуулалт
-            <ArrowRight className="ml-1 size-4" />
-          </Link>
-        </Button>
-        <Button asChild variant="outline" size="sm">
-          <Link href="/expenses/new">
-            Шинэ зарлага
-            <ArrowRight className="ml-1 size-4" />
-          </Link>
-        </Button>
-        <Button asChild variant="outline" size="sm">
-          <Link href="/products">
-            Бүтээгдэхүүн
-            <ArrowRight className="ml-1 size-4" />
-          </Link>
-        </Button>
-      </div>
     </div>
   );
 }
