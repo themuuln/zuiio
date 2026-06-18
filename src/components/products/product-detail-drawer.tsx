@@ -27,13 +27,15 @@ export type ProductDetailData = {
   min_stock: number | null;
   image_url?: string | null;
   image_urls?: string[] | null;
-  variants?: {
-    id: string;
-    sku: string | null;
-    sale_price: number | null;
-    current_stock: number | null;
-    option_labels: string;
-  }[] | null;
+  variants?:
+    | {
+        id: string;
+        sku: string | null;
+        sale_price: number | null;
+        current_stock: number | null;
+        option_labels: string;
+      }[]
+    | null;
 };
 
 export function ProductDetailDrawer({
@@ -180,6 +182,42 @@ export function ProductDetailDrawer({
                     value={`${product.min_stock ?? 0} ${product.unit ?? "ширхэг"}`}
                   />
                 </div>
+
+                {/* Variants section */}
+                {product.variants && product.variants.length > 0 && (
+                  <div>
+                    <h4 className="mb-2 text-sm font-medium">
+                      Вариантууд ({product.variants.length})
+                    </h4>
+                    <div className="divide-y rounded-lg border text-sm">
+                      {product.variants.map((v) => (
+                        <div
+                          key={v.id}
+                          className="flex items-center justify-between px-3 py-2"
+                        >
+                          <div className="flex flex-col">
+                            <span className="text-xs font-medium">
+                              {v.option_labels}
+                            </span>
+                            {v.sku && (
+                              <span className="text-[11px] text-muted-foreground">
+                                SKU: {v.sku}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <span className="text-sm font-semibold">
+                              {formatCurrency(Number(v.sale_price ?? 0))}
+                            </span>
+                            <span className="ml-2 text-xs text-muted-foreground">
+                              {v.current_stock ?? 0} ширхэг
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </Drawer.Content>
           </Drawer.Popup>

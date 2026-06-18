@@ -15,6 +15,7 @@ import {
 import { DataTable } from "@/components/ui/data-table";
 import { formatCurrency } from "@/lib/format";
 import { useBrands } from "@/lib/query/hooks/use-brands";
+import { useProductVariants } from "@/lib/query/hooks/use-product-variants";
 
 export type ProductRow = {
   id: string;
@@ -32,21 +33,6 @@ export type ProductRow = {
   brand_name: string | null;
   brand_logo_url: string | null;
 };
-
-function toDetailData(product: ProductRow): ProductDetailData {
-  return {
-    id: product.id,
-    name: product.name,
-    sku: product.sku,
-    barcode: product.barcode,
-    unit: product.unit,
-    category_name: product.category_name,
-    cost_price: product.cost_price,
-    sale_price: product.sale_price,
-    current_stock: product.current_stock,
-    min_stock: product.min_stock,
-  };
-}
 
 function toEditData(product: ProductRow): ProductEditData {
   return {
@@ -77,6 +63,28 @@ export function ProductsTable({
   const [selectedProduct, setSelectedProduct] = useState<ProductRow | null>(
     null,
   );
+  const { data: selectedVariants } = useProductVariants(selectedProduct?.id);
+
+  const toDetailData = (product: ProductRow): ProductDetailData => ({
+    id: product.id,
+    name: product.name,
+    sku: product.sku,
+    barcode: product.barcode,
+    unit: product.unit,
+    category_name: product.category_name,
+    cost_price: product.cost_price,
+    sale_price: product.sale_price,
+    current_stock: product.current_stock,
+    min_stock: product.min_stock,
+    variants:
+      selectedVariants?.map((v) => ({
+        id: v.id,
+        sku: v.sku,
+        sale_price: v.sale_price,
+        current_stock: v.current_stock,
+        option_labels: v.option_labels,
+      })) ?? null,
+  });
 
   const columns: ColumnDef<ProductRow>[] = useMemo(
     () => [
