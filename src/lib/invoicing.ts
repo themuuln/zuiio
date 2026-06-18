@@ -18,6 +18,7 @@ export async function createInvoiceFromSale(
   userId: string,
   saleId: string,
   contactId?: string | null,
+  branchId?: string,
 ) {
   try {
     // Fetch sale details with org-scoped check
@@ -56,6 +57,7 @@ export async function createInvoiceFromSale(
       .from("invoices")
       .insert({
         organization_id: organizationId,
+        branch_id: branchId!,
         invoice_number: invoiceNumber,
         contact_id: contactId || null,
         sale_id: saleId,

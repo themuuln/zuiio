@@ -201,6 +201,31 @@ export function ProductCreateDrawer({
   };
 
   // --- Category combobox (creatable) ---
+  function computeVariantCombinations(
+    groups: LocalVariantGroup[],
+  ): { option_ids: string[]; option_labels: string }[] {
+    if (groups.length === 0) return [];
+    const optionLists = groups.map((g) =>
+      g.options.map((o) => ({ id: o.id, value: o.value })),
+    );
+    function cartesian(
+      lists: { id: string; value: string }[][],
+    ): { option_ids: string[]; option_labels: string }[] {
+      if (lists.length === 0) return [{ option_ids: [], option_labels: "" }];
+      const [first, ...rest] = lists;
+      const restCombos = cartesian(rest);
+      return first.flatMap((item) =>
+        restCombos.map((combo) => ({
+          option_ids: [item.id, ...combo.option_ids],
+          option_labels: [
+            item.value,
+            ...(combo.option_labels ? [combo.option_labels] : []),
+          ].join(" / "),
+        })),
+      );
+    }
+    return cartesian(optionLists);
+  }
 
   return (
     <DrawerLayout
@@ -281,7 +306,7 @@ export function ProductCreateDrawer({
                       id="unit"
                       placeholder="ширхэг"
                       initialItems={initialUnits}
-                      value={field.value}
+                      value={field.value ?? ""}
                       onChange={(next) => field.onChange(next)}
                       emptyLabel="Нэгж байхгүй"
                     />
@@ -304,7 +329,7 @@ export function ProductCreateDrawer({
                       id="category_name"
                       placeholder="Ангилал сонгох эсвэл бичих"
                       initialItems={allPresetCategories}
-                      value={field.value}
+                      value={field.value ?? ""}
                       onChange={(next) => field.onChange(next)}
                       emptyLabel="Ангилал байхгүй"
                     />

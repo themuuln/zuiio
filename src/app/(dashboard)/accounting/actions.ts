@@ -92,7 +92,7 @@ export async function createJournalEntry(
     .from("journal_entries")
     .insert({
       organization_id: organizationId,
-      branch_id: branchId ?? undefined,
+      branch_id: branchId!,
       entry_date: entryDate,
       entry_number: entryNumber,
       description,
@@ -182,7 +182,7 @@ export async function createAccount(
 
   const { error: insertError } = await db.from("chart_of_accounts").insert({
     organization_id: organizationId,
-    branch_id: branchId ?? undefined,
+    branch_id: branchId!,
     code,
     name,
     type,

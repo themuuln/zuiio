@@ -59,7 +59,7 @@ export async function createStockMovement(
     .from("stock_movements")
     .insert({
       organization_id: organizationId,
-      branch_id: branchId ?? undefined,
+      branch_id: branchId!,
       product_id: productId,
       type,
       quantity,

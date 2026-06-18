@@ -102,7 +102,7 @@ export async function createInvoice(
     .from("invoices")
     .insert({
       organization_id: organizationId,
-      branch_id: branchId ?? undefined,
+      branch_id: branchId!,
       invoice_number: invoiceNumber,
       contact_id: contactId || null,
       issue_date: issueDate || new Date().toISOString().slice(0, 10),

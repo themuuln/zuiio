@@ -96,7 +96,7 @@ export async function createReturn(
     .from("returns")
     .insert({
       organization_id: organizationId,
-      branch_id: branchId ?? undefined,
+      branch_id: branchId!,
       return_number: returnNumber,
       return_date: returnDate || new Date().toISOString().slice(0, 10),
       type,
@@ -202,7 +202,7 @@ export async function completeReturn(returnId: string) {
       .from("stock_movements")
       .insert({
         organization_id: organizationId,
-        branch_id: branchId ?? undefined,
+        branch_id: branchId!,
         product_id: item.product_id,
         type: movementType,
         quantity: movementQuantity,
@@ -308,7 +308,8 @@ export async function completeReturn(returnId: string) {
 }
 
 export async function cancelReturn(returnId: string) {
-  const { supabase, organizationId, branchId, isBranchScoped, permissions } = await requireAppContext();
+  const { supabase, organizationId, branchId, isBranchScoped, permissions } =
+    await requireAppContext();
   const permError = checkPermission(permissions, "returns.update");
   if (permError) return { error: permError };
 

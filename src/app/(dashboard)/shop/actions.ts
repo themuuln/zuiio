@@ -5,6 +5,7 @@ import { calculateCommission } from "@/lib/commissions";
 import { checkPermission, requireAppContext } from "@/lib/erp";
 import { createInvoiceFromSale } from "@/lib/invoicing";
 import { getString, normalizePhone } from "@/lib/validation";
+import type { Database } from "@/lib/supabase/types";
 
 type CartItemData = {
   productId: string;
@@ -19,7 +20,7 @@ export async function createShopSale(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId, permissions } =
+  const { supabase, organizationId, userId, branchId, permissions } =
     await requireAppContext();
   const permError = checkPermission(permissions, "sales.create");
   if (permError) return { error: permError };
@@ -179,6 +180,7 @@ export async function createShopSale(
     .from("sales")
     .insert({
       organization_id: organizationId,
+      branch_id: branchId!,
       contact_id: contactId,
       total_amount: totalAmount,
       paid_amount: paidAmount,
@@ -205,18 +207,15 @@ export async function createShopSale(
   // --- Step 4: Insert sale_items ---
   const saleItems = items.map((item) => {
     const totalPrice = item.unitPrice * item.quantity;
-    const saleItem: Record<string, unknown> = {
+    return {
       sale_id: saleId,
       product_id: item.productId,
       quantity: item.quantity,
       unit_price: item.unitPrice,
       total_price: totalPrice,
       commission_amount: calculateCommission(totalPrice),
-    };
-    if (item.variantId) {
-      saleItem.variant_id = item.variantId;
-    }
-    return saleItem;
+      variant_id: item.variantId ?? null,
+    } satisfies Database["public"]["Tables"]["sale_items"]["Insert"];
   });
 
   const { error: itemsError } = await supabase
@@ -236,8 +235,19 @@ export async function createShopSale(
 
   // --- Step 5: Insert stock_movements ---
   const stockMovements = items.map((item) => {
-    const movement: Record<string, unknown> = {
+    const movement: {
+      organization_id: string;
+      branch_id: string;
+      product_id: string;
+      type: string;
+      quantity: number;
+      unit_cost: number;
+      reference: string;
+      created_by: string;
+      variant_id?: string;
+    } = {
       organization_id: organizationId,
+      branch_id: branchId!,
       product_id: item.productId,
       type: "out",
       quantity: item.quantity,
@@ -379,6 +389,7 @@ export async function createShopSale(
     userId,
     saleId,
     contactId,
+    branchId!,
   );
 
   revalidatePath("/shop");

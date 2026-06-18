@@ -11,8 +11,14 @@ export async function createExpense(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId, branchId, isBranchScoped, permissions } =
-    await requireAppContext();
+  const {
+    supabase,
+    organizationId,
+    userId,
+    branchId,
+    isBranchScoped,
+    permissions,
+  } = await requireAppContext();
   const permError = checkPermission(permissions, "expenses.create");
   if (permError) return { error: permError };
 
@@ -30,11 +36,15 @@ export async function createExpense(
     return { error: validationError };
   }
 
+  if (!branchId) {
+    return { error: "Салбар тодорхойгүй байна." };
+  }
+
   const { data: expense, error } = await supabase
     .from("expenses")
     .insert({
       organization_id: organizationId,
-      branch_id: branchId ?? undefined,
+      branch_id: branchId,
       category,
       amount,
       expense_date: expenseDate,

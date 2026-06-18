@@ -82,7 +82,7 @@ export async function createPurchaseOrder(
     .from("purchase_orders")
     .insert({
       organization_id: organizationId,
-      branch_id: branchId ?? undefined,
+      branch_id: branchId!,
       supplier_id: supplierId,
       order_number: orderNumber,
       order_date: orderDate || new Date().toISOString().slice(0, 10),
@@ -173,7 +173,7 @@ export async function receivePurchaseOrderItems(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId, permissions } =
+  const { supabase, organizationId, userId, branchId, permissions } =
     await requireAppContext();
   const permError = checkPermission(permissions, "purchases.update");
   if (permError) return { error: permError };
@@ -251,6 +251,7 @@ export async function receivePurchaseOrderItems(
       .insert({
         organization_id: organizationId,
         product_id: existingItem.product_id!,
+        branch_id: branchId!,
         type: "in",
         quantity: item.received_quantity,
         reference: `PO-${orderId}`,

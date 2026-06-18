@@ -24,8 +24,14 @@ export async function createSale(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId, branchId, isBranchScoped, permissions } =
-    await requireAppContext();
+  const {
+    supabase,
+    organizationId,
+    userId,
+    branchId,
+    isBranchScoped,
+    permissions,
+  } = await requireAppContext();
   const permError = checkPermission(permissions, "sales.create");
   if (permError) return { error: permError };
 
@@ -146,7 +152,8 @@ export async function createSale(
       if (!item.variantId) {
         nonVariantProductQuantities.set(
           item.productId,
-          (nonVariantProductQuantities.get(item.productId) ?? 0) + item.quantity,
+          (nonVariantProductQuantities.get(item.productId) ?? 0) +
+            item.quantity,
         );
       }
     }
@@ -217,7 +224,7 @@ export async function createSale(
     .from("sales")
     .insert({
       organization_id: organizationId,
-      branch_id: branchId ?? undefined,
+      branch_id: branchId!,
       contact_id: contactId,
       sale_date: getString(formData, "sale_date") || formatRouteDate(),
       total_amount: totalAmount,
@@ -269,6 +276,7 @@ export async function createSale(
   if (status !== "cancelled") {
     const stockMovements = items.map((item) => ({
       organization_id: organizationId,
+      branch_id: branchId!,
       product_id: item.productId,
       type: "out",
       quantity: item.quantity,
@@ -299,7 +307,8 @@ export async function createSale(
       if (!item.variantId) {
         nonVariantProductQuantities.set(
           item.productId,
-          (nonVariantProductQuantities.get(item.productId) ?? 0) + item.quantity,
+          (nonVariantProductQuantities.get(item.productId) ?? 0) +
+            item.quantity,
         );
       }
     }
@@ -359,7 +368,7 @@ export async function createSale(
         .update({
           current_stock: Number(variant?.current_stock ?? 0) - item.quantity,
         })
-        .eq("id", item.variantId)
+        .eq("id", item.variantId!)
         .gte("current_stock", item.quantity)
         .select("id")
         .maybeSingle();
@@ -406,6 +415,7 @@ export async function createSale(
       userId,
       sale.id,
       contactId,
+      branchId!,
     );
   }
 

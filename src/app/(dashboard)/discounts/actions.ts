@@ -69,12 +69,16 @@ export async function createDiscount(
     return { error: "Хүчинтэй эхлэх огноо шаардлагатай." };
   }
 
+  if (!branchId) {
+    return { error: "Салбар олдсонгүй." };
+  }
+
   // Insert discount
   const { data: discount, error: discountError } = await supabase
     .from("discounts")
     .insert({
       organization_id: organizationId,
-      branch_id: branchId ?? undefined,
+      branch_id: branchId,
       name,
       description: description || null,
       type,

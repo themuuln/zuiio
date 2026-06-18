@@ -286,7 +286,7 @@ export async function createPayout(
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("organization_id")
+    .select("organization_id, branch_id")
     .eq("id", user.id)
     .single();
 
@@ -366,6 +366,31 @@ export async function createPayout(
   // Calculate total amount
   const totalAmount = calculatePayoutTotal(items);
 
+  // Determine branch for the payout
+  const { data: targetProfile } = await supabase
+    .from("profiles")
+    .select("branch_id")
+    .eq("id", profileId)
+    .single();
+
+  let payoutBranchId: string | null =
+    targetProfile?.branch_id ?? profile.branch_id;
+
+  if (!payoutBranchId) {
+    const { data: fallbackBranch } = await supabase
+      .from("branches")
+      .select("id")
+      .eq("organization_id", orgId)
+      .order("name")
+      .limit(1)
+      .maybeSingle();
+    payoutBranchId = fallbackBranch?.id ?? null;
+  }
+
+  if (!payoutBranchId) {
+    return { error: "Салбар олдсонгүй. Эхлээд салбар үүсгэнэ үү." };
+  }
+
   // Create payout record
   const { data: payout, error: payoutError } = await supabase
     .from("commission_payouts")
@@ -377,6 +402,7 @@ export async function createPayout(
       notes: notes || null,
       status: "completed",
       paid_at: new Date().toISOString(),
+      branch_id: payoutBranchId!,
     })
     .select("id")
     .single();

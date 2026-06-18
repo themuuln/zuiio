@@ -7,7 +7,11 @@ import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { createQuotation } from "@/app/(dashboard)/quotations/actions";
 import { buttonVariants } from "@/components/ui/button";
-import { DrawerFooter, DrawerCancel, DrawerSubmit } from "@/components/ui/drawer-footer";
+import {
+  DrawerFooter,
+  DrawerCancel,
+  DrawerSubmit,
+} from "@/components/ui/drawer-footer";
 import {
   Combobox,
   ComboboxContent,
@@ -104,6 +108,10 @@ export function QuotationCreateDrawer({
     name: "items",
   });
 
+  const [variantSelections, setVariantSelections] = useState<
+    Record<number, SelectedVariant | null>
+  >({});
+
   const removeRow = useVariantLineItemRemove(remove, setVariantSelections);
 
   const items = watch("items");
@@ -147,12 +155,9 @@ export function QuotationCreateDrawer({
     : customers;
 
   // Product combobox helpers for items
-  const [productQueries, setProductQueries] = useState<
-    Record<number, string>
-  >({});
-  const [variantSelections, setVariantSelections] = useState<
-    Record<number, SelectedVariant | null>
-  >({});
+  const [productQueries, setProductQueries] = useState<Record<number, string>>(
+    {},
+  );
 
   const setProductQuery = (index: number, query: string) => {
     setProductQueries((prev) => ({ ...prev, [index]: query }));
@@ -183,7 +188,12 @@ export function QuotationCreateDrawer({
       footer={
         <DrawerFooter>
           <DrawerCancel onClick={() => setOpen(false)} />
-          <DrawerSubmit form="quotation-form" isPending={isSubmitting} label="Үнийн санал үүсгэх" loadingLabel="Үүсгэж байна..." />
+          <DrawerSubmit
+            form="quotation-form"
+            isPending={isSubmitting}
+            label="Үнийн санал үүсгэх"
+            loadingLabel="Үүсгэж байна..."
+          />
         </DrawerFooter>
       }
     >
@@ -205,9 +215,7 @@ export function QuotationCreateDrawer({
             <Combobox
               items={filteredContacts}
               value={selectedContact}
-              onValueChange={(
-                next: { id: string; name: string } | null,
-              ) => {
+              onValueChange={(next: { id: string; name: string } | null) => {
                 setSelectedContact(next);
                 setContactQuery("");
               }}
@@ -287,7 +295,12 @@ export function QuotationCreateDrawer({
             <button
               type="button"
               onClick={() =>
-                append({ description: "", quantity: 1, unit_price: 0, variant_id: undefined })
+                append({
+                  description: "",
+                  quantity: 1,
+                  unit_price: 0,
+                  variant_id: undefined,
+                })
               }
               className={buttonVariants({
                 variant: "outline",
@@ -316,19 +329,14 @@ export function QuotationCreateDrawer({
                         products.find((p) => p.id === productField.value) ??
                         null
                       }
-                      onValueChange={(
-                        next: ProductOption | null,
-                      ) => {
+                      onValueChange={(next: ProductOption | null) => {
                         productField.onChange(next?.id ?? null);
                         // Clear variant selection when product changes
                         setVariantSelections((prev) => ({
                           ...prev,
                           [index]: null,
                         }));
-                        setValue(
-                          `items.${index}.variant_id`,
-                          undefined,
-                        );
+                        setValue(`items.${index}.variant_id`, undefined);
                         // Auto-fill unit_price from product
                         if (next) {
                           setValue(
@@ -345,9 +353,7 @@ export function QuotationCreateDrawer({
                         p?.name ?? ""
                       }
                       inputValue={productQueries[index] ?? ""}
-                      onInputValueChange={(v) =>
-                        setProductQuery(index, v)
-                      }
+                      onInputValueChange={(v) => setProductQuery(index, v)}
                     >
                       <ComboboxInput
                         placeholder="Сонгох"
@@ -358,9 +364,7 @@ export function QuotationCreateDrawer({
                         <ComboboxEmpty>Бараа байхгүй</ComboboxEmpty>
                         <ComboboxList>
                           {(p: ProductOption) => (
-                            <ComboboxItem key={p.id}>
-                              {p.name}
-                            </ComboboxItem>
+                            <ComboboxItem key={p.id}>{p.name}</ComboboxItem>
                           )}
                         </ComboboxList>
                       </ComboboxContent>
@@ -395,10 +399,7 @@ export function QuotationCreateDrawer({
                             `items.${index}.unit_price`,
                             product?.sale_price ?? 0,
                           );
-                          setValue(
-                            `items.${index}.variant_id`,
-                            undefined,
-                          );
+                          setValue(`items.${index}.variant_id`, undefined);
                         }
                       }}
                     />
@@ -474,14 +475,9 @@ export function QuotationCreateDrawer({
         <Field>
           <FieldLabel>
             Тэмдэглэл{" "}
-            <span className="text-xs text-muted-foreground">
-              (заавал биш)
-            </span>
+            <span className="text-xs text-muted-foreground">(заавал биш)</span>
           </FieldLabel>
-          <Textarea
-            placeholder="Нэмэлт тэмдэглэл..."
-            {...register("notes")}
-          />
+          <Textarea placeholder="Нэмэлт тэмдэглэл..." {...register("notes")} />
         </Field>
 
         <ErrorBanner error={serverError} />

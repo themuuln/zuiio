@@ -10,8 +10,14 @@ export async function createQuotation(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, userId, branchId, isBranchScoped, permissions } =
-    await requireAppContext();
+  const {
+    supabase,
+    organizationId,
+    userId,
+    branchId,
+    isBranchScoped,
+    permissions,
+  } = await requireAppContext();
   const permError = checkPermission(permissions, "quotations.create");
   if (permError) return { error: permError };
 
@@ -56,7 +62,7 @@ export async function createQuotation(
     .from("quotations")
     .insert({
       organization_id: organizationId,
-      branch_id: branchId ?? undefined,
+      branch_id: branchId!,
       contact_id: contactId || null,
       quote_number: quoteNumber,
       issue_date: issueDate || new Date().toISOString().slice(0, 10),
@@ -160,7 +166,7 @@ export async function updateQuotationStatus(
 }
 
 export async function convertQuotationToSale(quotationId: string) {
-  const { supabase, organizationId, userId, permissions } =
+  const { supabase, organizationId, userId, branchId, permissions } =
     await requireAppContext();
   const permError = checkPermission(permissions, "quotations.update");
   if (permError) return { error: permError };
@@ -197,6 +203,7 @@ export async function convertQuotationToSale(quotationId: string) {
     .from("sales")
     .insert({
       organization_id: organizationId,
+      branch_id: branchId!,
       contact_id: quotation.contact_id,
       sale_date: new Date().toISOString().slice(0, 10),
       total_amount: totalAmount,
@@ -249,6 +256,7 @@ export async function convertQuotationToSale(quotationId: string) {
       .from("stock_movements")
       .insert({
         organization_id: organizationId,
+        branch_id: branchId!,
         product_id: item.product_id,
         type: "out",
         quantity: item.quantity,
@@ -305,6 +313,7 @@ export async function convertQuotationToSale(quotationId: string) {
     userId,
     saleId,
     quotation.contact_id,
+    branchId!,
   );
 
   await logAuditEventWithClient(

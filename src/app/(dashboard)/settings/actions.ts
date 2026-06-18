@@ -30,17 +30,15 @@ export async function updateOrganization(
     return { error: "Холбоос зөвхөн англи үсэг, тоо, зураас агуулсан байна." };
   }
 
-  const updates: Record<string, string> = {
-    name: name.trim(),
-    slug: slug.trim(),
-  };
-  if (typeof companyType === "string" && companyType.trim()) {
-    updates.company_type = companyType.trim();
-  }
-
   const { error } = await supabase
     .from("organizations")
-    .update(updates)
+    .update({
+      name: name.trim(),
+      slug: slug.trim(),
+      ...(typeof companyType === "string" && companyType.trim()
+        ? { company_type: companyType.trim() }
+        : {}),
+    })
     .eq("id", organizationId);
 
   if (error) {

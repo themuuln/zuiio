@@ -218,14 +218,8 @@ export async function updateBranch(branchId: string, formData: FormData) {
     return { error: "Салбар олдсонгүй." };
   }
 
-  const updates: Record<string, string | null> = {
-    name: name.trim(),
-    address,
-    phone,
-    email,
-  };
-
   // Only update slug if name changed
+  let slugOverride: string | undefined;
   if (currentBranch.name !== name.trim()) {
     const newSlug = slugify(name.trim());
 
@@ -241,12 +235,18 @@ export async function updateBranch(branchId: string, formData: FormData) {
       return { error: "Энэ нэртэй салбар бүртгэгдсэн байна." };
     }
 
-    updates.slug = newSlug;
+    slugOverride = newSlug;
   }
 
   const { error } = await ctx.supabase
     .from("branches")
-    .update(updates)
+    .update({
+      name: name.trim(),
+      address,
+      phone,
+      email,
+      ...(slugOverride ? { slug: slugOverride } : {}),
+    })
     .eq("id", branchId)
     .eq("organization_id", ctx.organizationId);
 
