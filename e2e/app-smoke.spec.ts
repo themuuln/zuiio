@@ -7,7 +7,7 @@ import { expect, test } from "@playwright/test";
  * Run: pnpm run test:e2e
  */
 
-const pages: [string, string][] = [
+const pages: [string, string, string?][] = [
   ["Dashboard", "/"],
   ["Products", "/products"],
   ["Sales", "/sales"],
@@ -32,16 +32,22 @@ const pages: [string, string][] = [
   ["Accounting", "/accounting"],
   ["Discounts", "/discounts"],
   ["Commissions", "/commissions"],
-  ["Shop", "/shop"],
-  ["Shop Cart", "/shop/cart"],
+  ["Shop", "/shop", "Дэлгүүр"],
+  ["Shop Cart", "/shop/cart", "Сагс"],
   ["Shop History", "/shop/history"],
 ];
 
-for (const [name, url] of pages) {
+for (const [name, url, altText] of pages) {
   test(`${name} page loads`, async ({ page }) => {
     await page.goto(url, { waitUntil: "domcontentloaded" });
-    // The dashboard shell has sidebar + main region
-    // For the dashboard ("/"), the server redirects or renders KPIs
-    await expect(page.locator("main")).toBeVisible({ timeout: 15000 });
+    if (altText) {
+      await expect(page.getByText(altText).first()).toBeVisible({
+        timeout: 15000,
+      });
+    } else {
+      await expect(page.locator("main").first()).toBeVisible({
+        timeout: 15000,
+      });
+    }
   });
 }

@@ -9,11 +9,20 @@ import { test, expect } from "./fixture";
  * Each test uses natural language for actions (ai) and assertions (aiAssert),
  * driven by the MiMo V2.5 vision model from your Factory settings.
  *
+ * Requires MIDSCENE_MODEL_NAME env var to be set.
  * Run: ./e2e/run-midscene.sh e2e/seed.spec.ts
  */
 
+const hasModelConfig = !!(
+  process.env.MIDSCENE_MODEL_NAME || process.env.MIDSCENE_MODEL_API_KEY
+);
+
 test.describe("Dashboard — AI Driven", () => {
   test("ai can see dashboard KPIs after login", async ({ page, aiAssert }) => {
+    test.skip(
+      !hasModelConfig,
+      "Set MIDSCENE_MODEL_NAME env var to run AI tests",
+    );
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
@@ -22,6 +31,10 @@ test.describe("Dashboard — AI Driven", () => {
   });
 
   test("ai can see recent sales on dashboard", async ({ page, aiQuery }) => {
+    test.skip(
+      !hasModelConfig,
+      "Set MIDSCENE_MODEL_NAME env var to run AI tests",
+    );
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
@@ -31,7 +44,6 @@ test.describe("Dashboard — AI Driven", () => {
       "List the recent sales displayed on the dashboard with contact name and amount",
     );
     console.log("Recent sales from dashboard:", recentSales);
-    // Should be an array (possibly empty if no sales)
     expect(Array.isArray(recentSales)).toBe(true);
   });
 });
@@ -42,6 +54,10 @@ test.describe("Products — AI Driven", () => {
     ai,
     aiAssert,
   }) => {
+    test.skip(
+      !hasModelConfig,
+      "Set MIDSCENE_MODEL_NAME env var to run AI tests",
+    );
     await page.goto("/products");
     await page.waitForLoadState("networkidle");
 
@@ -54,6 +70,10 @@ test.describe("Products — AI Driven", () => {
     ai,
     aiAssert,
   }) => {
+    test.skip(
+      !hasModelConfig,
+      "Set MIDSCENE_MODEL_NAME env var to run AI tests",
+    );
     await page.goto("/products");
     await page.waitForLoadState("networkidle");
 
@@ -70,19 +90,25 @@ test.describe("Navigation — AI Driven", () => {
     ai,
     aiAssert,
   }) => {
+    test.skip(
+      !hasModelConfig,
+      "Set MIDSCENE_MODEL_NAME env var to run AI tests",
+    );
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    // Navigate to sales
     await ai('Click on "Борлуулалт" or sales navigation link');
     await aiAssert("The sales page with a list of sales is visible");
 
-    // Navigate to products
     await ai('Click on "Бүтээгдэхүүн" or products navigation link');
     await aiAssert("The products page with a product list is visible");
   });
 
   test("ai can navigate to settings", async ({ page, ai, aiAssert }) => {
+    test.skip(
+      !hasModelConfig,
+      "Set MIDSCENE_MODEL_NAME env var to run AI tests",
+    );
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
@@ -95,6 +121,10 @@ test.describe("Navigation — AI Driven", () => {
 
 test.describe("Reports — AI Driven", () => {
   test("ai can view the reports page", async ({ page, aiAssert, ai }) => {
+    test.skip(
+      !hasModelConfig,
+      "Set MIDSCENE_MODEL_NAME env var to run AI tests",
+    );
     await page.goto("/reports");
     await page.waitForLoadState("networkidle");
 

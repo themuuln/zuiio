@@ -7,10 +7,15 @@ import {
   Warehouse as WarehouseIcon,
 } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { ErpEmptyState } from "@/components/erp/empty-state";
+import {
+  type WarehouseDetailData,
+  WarehouseDetailDrawer,
+} from "@/components/inventory/warehouse-detail-drawer";
 import { PageShell } from "@/components/erp/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -83,6 +88,9 @@ async function createWarehouseAction(values: WarehouseValues) {
 
 export default function WarehousesPage() {
   const queryClient = useQueryClient();
+  const [selectedWarehouse, setSelectedWarehouse] = useState<Warehouse | null>(
+    null,
+  );
 
   const { data: warehouses = [], isLoading } = useQuery({
     queryKey: ["warehouses"],
@@ -113,6 +121,16 @@ export default function WarehousesPage() {
   const onSubmit = (data: WarehouseValues) => {
     createMutation.mutate(data);
   };
+
+  function toDetailData(wh: Warehouse): WarehouseDetailData {
+    return {
+      id: wh.id,
+      name: wh.name,
+      location: wh.location,
+      is_default: wh.is_default,
+      created_at: wh.created_at,
+    };
+  }
 
   return (
     <PageShell
@@ -191,7 +209,11 @@ export default function WarehousesPage() {
               </TableHeader>
               <TableBody>
                 {warehouses.map((wh) => (
-                  <TableRow key={wh.id}>
+                  <TableRow
+                    key={wh.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => setSelectedWarehouse(wh)}
+                  >
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         <WarehouseIcon className="size-4 text-muted-foreground" />
@@ -224,6 +246,15 @@ export default function WarehousesPage() {
             </Table>
           </CardContent>
         </Card>
+      )}
+      {selectedWarehouse && (
+        <WarehouseDetailDrawer
+          warehouse={toDetailData(selectedWarehouse)}
+          open={!!selectedWarehouse}
+          onOpenChange={(open) => {
+            if (!open) setSelectedWarehouse(null);
+          }}
+        />
       )}
     </PageShell>
   );
