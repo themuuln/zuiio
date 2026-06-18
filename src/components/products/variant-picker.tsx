@@ -21,15 +21,22 @@ export type SelectedVariant = {
 export function VariantPicker({
   productId,
   onSelect,
+  onHasVariants,
 }: {
   productId: string;
   onSelect: (variant: SelectedVariant | null) => void;
+  onHasVariants?: (hasVariants: boolean) => void;
 }) {
   const { data: groups } = useVariantGroups(productId);
   const { data: variants } = useProductVariants(productId);
 
   // Build selection state: group_id -> option_id
   const [selections, setSelections] = useState<Record<string, string>>({});
+
+  // Notify parent whether this product has variants
+  useEffect(() => {
+    onHasVariants?.(!!groups && groups.length > 0);
+  }, [groups, onHasVariants]);
 
   // Find matching variant by comparing selected option IDs to each variant's option_ids
   const matchedVariant = useMemo(() => {

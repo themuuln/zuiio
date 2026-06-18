@@ -25,6 +25,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  VariantPicker,
+  type SelectedVariant,
+} from "@/components/products/variant-picker";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
 
 type SupplierOption = {
@@ -46,6 +50,7 @@ const lineItemSchema = z.object({
   product_id: z.string().min(1, "Бүтээгдэхүүн сонгоно уу"),
   quantity: z.number().min(0.01, "Тоо хэмжээ 0-ээс их байх ёстой"),
   unit_cost: z.number().min(0, "Өртөг 0-ээс багагүй"),
+  variant_id: z.string().optional(),
 });
 
 const purchaseSchema = z.object({
@@ -74,6 +79,9 @@ export function PurchaseCreateDrawer({
   const setOpen = externalOnOpenChange ?? setInternalOpen;
   const [serverError, setServerError] = useState<string | null>(null);
   const [supplierQuery, setSupplierQuery] = useState("");
+  const [variantSelections, setVariantSelections] = useState<
+    Record<number, SelectedVariant | null>
+  >({});
 
   const {
     register,
@@ -90,7 +98,7 @@ export function PurchaseCreateDrawer({
       order_date: new Date().toISOString().slice(0, 10),
       expected_date: "",
       notes: "",
-      items: [{ product_id: "", quantity: 1, unit_cost: 0 }],
+      items: [{ product_id: "", quantity: 1, unit_cost: 0, variant_id: undefined }],
     },
   });
 
@@ -131,6 +139,7 @@ export function PurchaseCreateDrawer({
           product_id: item.product_id,
           quantity: item.quantity,
           unit_cost: item.unit_cost,
+          variant_id: item.variant_id ?? null,
         })),
       ),
     );
@@ -161,6 +170,7 @@ export function PurchaseCreateDrawer({
         if (!next) {
           setServerError(null);
           reset();
+          setVariantSelections({});
         }
       }}
       title="Шинэ захиалга"
@@ -281,7 +291,7 @@ export function PurchaseCreateDrawer({
             <button
               type="button"
               onClick={() =>
-                append({ product_id: "", quantity: 1, unit_cost: 0 })
+                append({ product_id: "", quantity: 1, unit_cost: 0, variant_id: undefined })
               }
               className={buttonVariants({
                 variant: "outline",
@@ -320,11 +330,25 @@ export function PurchaseCreateDrawer({
                         }
                         onValueChange={(next: ProductOption | null) => {
                           productField.onChange(next?.id ?? "");
+                          // Clear variant selection when product changes
+                          setVariantSelections((prev) => ({
+                            ...prev,
+                            [index]: null,
+                          }));
+                          setValue(
+                            `items.${index}.variant_id`,
+                            undefined,
+                          );
                           // Auto-fill unit_cost from product cost_price
                           if (next?.cost_price) {
                             setValue(
                               `items.${index}.unit_cost`,
                               next.cost_price,
+                            );
+                          } else {
+                            setValue(
+                              `items.${index}.unit_cost`,
+                              0,
                             );
                           }
                         }}
@@ -359,6 +383,30 @@ export function PurchaseCreateDrawer({
                       </Combobox>
                     )}
                   />
+                  {selectedProduct && (
+                    <div className="mt-1">
+                      <VariantPicker
+                        productId={selectedProduct.id}
+                        onSelect={(variant) => {
+                          setVariantSelections((prev) => ({
+                            ...prev,
+                            [index]: variant,
+                          }));
+                          if (variant) {
+                            setValue(
+                              `items.${index}.variant_id`,
+                              variant.variant_id,
+                            );
+                          } else {
+                            setValue(
+                              `items.${index}.variant_id`,
+                              undefined,
+                            );
+                          }
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
                 <div className="w-20">
                   <FieldLabel className="mb-1 text-xs">
@@ -394,7 +442,19 @@ export function PurchaseCreateDrawer({
                   {fields.length > 1 && (
                     <button
                       type="button"
-                      onClick={() => remove(index)}
+                      onClick={() => {
+                        remove(index);
+                        setVariantSelections((prev) => {
+                          const next = { ...prev };
+                          delete next[index];
+                          const shifted: Record<number, SelectedVariant | null> = {};
+                          for (const [key, value] of Object.entries(next)) {
+                            const k = Number(key);
+                            shifted[k > index ? k - 1 : k] = value;
+                          }
+                          return shifted;
+                        });
+                      }}
                       className="size-8 flex items-center justify-center text-destructive hover:bg-muted rounded"
                     >
                       <Trash className="size-4" />

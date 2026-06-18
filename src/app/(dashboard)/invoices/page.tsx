@@ -6,7 +6,7 @@ export const unstable_instant = { prefetch: "static" };
 export default async function InvoicesPage() {
   const { supabase, organizationId } = await requireAppContext();
 
-  const [{ data: invoices }, { data: contacts }] = await Promise.all([
+  const [{ data: invoices }, { data: contacts }, { data: products }] = await Promise.all([
     supabase
       .from("invoices")
       .select(
@@ -19,6 +19,11 @@ export default async function InvoicesPage() {
       .select("id, name")
       .eq("organization_id", organizationId)
       .eq("type", "customer")
+      .order("name"),
+    supabase
+      .from("products")
+      .select("id, name, sale_price, current_stock, unit")
+      .eq("organization_id", organizationId)
       .order("name"),
   ]);
 
@@ -34,6 +39,10 @@ export default async function InvoicesPage() {
   }));
 
   return (
-    <InvoicesContent invoiceRows={invoiceRows} contacts={contacts ?? []} />
+    <InvoicesContent
+      invoiceRows={invoiceRows}
+      contacts={contacts ?? []}
+      products={products ?? []}
+    />
   );
 }

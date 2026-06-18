@@ -34,6 +34,7 @@ export async function createReturn(
     quantity: number;
     unit_price: number;
     reason?: string;
+    variant_id?: string;
   }>;
 
   if (!items.length) {
@@ -110,6 +111,7 @@ export async function createReturn(
     unit_price: item.unit_price,
     total_price: item.quantity * item.unit_price,
     reason: item.reason || null,
+    variant_id: item.variant_id ?? null,
   }));
 
   const { error: itemsError } = await supabase

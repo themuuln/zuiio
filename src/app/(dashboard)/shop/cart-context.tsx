@@ -26,8 +26,8 @@ type CartContextValue = {
   discountedTotal: number;
   discount: DiscountInfo | null;
   addItem: (item: Omit<CartItem, "quantity">) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  removeItem: (cartItemKey: string) => void;
+  updateQuantity: (cartItemKey: string, quantity: number) => void;
   applyDiscount: (discount: DiscountInfo) => void;
   removeDiscount: () => void;
   clearCart: () => void;
@@ -125,14 +125,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const removeItem = useCallback((productId: string) => {
-    dispatch({ type: "REMOVE_ITEM", payload: { productId } });
+  const removeItem = useCallback((cartItemKey: string) => {
+    dispatch({ type: "REMOVE_ITEM", payload: { cartItemKey } });
   }, []);
 
-  const updateQuantity = useCallback((productId: string, quantity: number) => {
+  const updateQuantity = useCallback((cartItemKey: string, quantity: number) => {
     dispatch({
       type: "UPDATE_QUANTITY",
-      payload: { productId, quantity },
+      payload: { cartItemKey, quantity },
     });
   }, []);
 

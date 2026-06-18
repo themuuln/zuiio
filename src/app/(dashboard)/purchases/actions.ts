@@ -33,6 +33,7 @@ export async function createPurchaseOrder(
     description?: string;
     quantity: number;
     unit_cost: number;
+    variant_id?: string;
   }>;
 
   try {
@@ -95,6 +96,7 @@ export async function createPurchaseOrder(
     description: item.description || null,
     quantity: item.quantity,
     unit_cost: item.unit_cost,
+    variant_id: item.variant_id ?? null,
   }));
 
   const { error: itemsError } = await supabase
@@ -110,17 +112,11 @@ export async function createPurchaseOrder(
   }
 
   // Post to general ledger (fire-and-forget)
-  postPurchaseToJournal(
-    supabase,
-    organizationId,
-    userId,
-    purchaseOrder.id,
-    {
-      total_amount: totalAmount,
-      order_date: orderDate || new Date().toISOString().slice(0, 10),
-      status: "draft",
-    },
-  ).catch(console.error);
+  postPurchaseToJournal(supabase, organizationId, userId, purchaseOrder.id, {
+    total_amount: totalAmount,
+    order_date: orderDate || new Date().toISOString().slice(0, 10),
+    status: "draft",
+  }).catch(console.error);
 
   revalidatePath("/purchases");
   revalidatePath("/");

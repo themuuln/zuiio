@@ -71,6 +71,7 @@ export async function createInvoice(
     description: string;
     quantity: number;
     unit_price: number;
+    variant_id?: string;
   }>;
 
   if (items.length === 0) {
@@ -117,6 +118,7 @@ export async function createInvoice(
     quantity: item.quantity,
     unit_price: item.unit_price,
     total_price: item.quantity * item.unit_price,
+    variant_id: item.variant_id ?? null,
   }));
 
   const { error: itemsError } = await supabase

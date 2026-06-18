@@ -5,7 +5,21 @@ export type CartItem = {
   quantity: number;
   unit: string;
   maxStock: number;
+  variantId?: string;
+  variantLabels?: string;
+  variantOptionIds?: string[];
 };
+
+/**
+ * Get a unique cart item key that distinguishes items by both productId and variantId.
+ * Items without a variant are keyed by productId alone.
+ */
+export function getCartItemKey(item: {
+  productId: string;
+  variantId?: string;
+}): string {
+  return item.variantId ? `${item.productId}::${item.variantId}` : item.productId;
+}
 
 export type DiscountInfo = {
   discountId: string;
@@ -20,10 +34,10 @@ export type CartState = {
 
 export type CartAction =
   | { type: "ADD_ITEM"; payload: CartItem }
-  | { type: "REMOVE_ITEM"; payload: { productId: string } }
+  | { type: "REMOVE_ITEM"; payload: { cartItemKey: string } }
   | {
       type: "UPDATE_QUANTITY";
-      payload: { productId: string; quantity: number };
+      payload: { cartItemKey: string; quantity: number };
     }
   | { type: "CLEAR_CART" }
   | { type: "LOAD_FROM_STORAGE"; payload: CartItem[] }
@@ -33,15 +47,16 @@ export type CartAction =
 export function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case "ADD_ITEM": {
+      const key = getCartItemKey(action.payload);
       const existing = state.items.find(
-        (item) => item.productId === action.payload.productId,
+        (item) => getCartItemKey(item) === key,
       );
       if (existing) {
         const newQty = Math.min(existing.quantity + 1, existing.maxStock);
         return {
           ...state,
           items: state.items.map((item) =>
-            item.productId === action.payload.productId
+            getCartItemKey(item) === key
               ? { ...item, quantity: newQty }
               : item,
           ),
@@ -56,7 +71,7 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
       return {
         ...state,
         items: state.items.filter(
-          (item) => item.productId !== action.payload.productId,
+          (item) => getCartItemKey(item) !== action.payload.cartItemKey,
         ),
       };
     case "UPDATE_QUANTITY": {
@@ -64,14 +79,14 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
         return {
           ...state,
           items: state.items.filter(
-            (item) => item.productId !== action.payload.productId,
+            (item) => getCartItemKey(item) !== action.payload.cartItemKey,
           ),
         };
       }
       return {
         ...state,
         items: state.items.map((item) =>
-          item.productId === action.payload.productId
+          getCartItemKey(item) === action.payload.cartItemKey
             ? {
                 ...item,
                 quantity: Math.min(action.payload.quantity, item.maxStock),

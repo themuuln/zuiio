@@ -207,7 +207,7 @@ function SaleDrawerWrapper({
   );
 }
 
-/* Wrapper that fetches contacts for InvoiceCreateDrawer */
+/* Wrapper that fetches contacts + products for InvoiceCreateDrawer */
 function InvoiceDrawerWrapper({
   organizationId,
   onClose,
@@ -230,11 +230,24 @@ function InvoiceDrawerWrapper({
     },
   });
 
-  if (!contacts) return null;
+  const { data: products } = useQuery({
+    queryKey: ["quick-create", "products", organizationId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("id, name, sale_price, current_stock, unit")
+        .eq("organization_id", organizationId)
+        .order("name");
+      return data ?? [];
+    },
+  });
+
+  if (!contacts || !products) return null;
 
   return (
     <InvoiceCreateDrawer
       contacts={contacts}
+      products={products}
       open={true}
       onOpenChange={(open) => {
         if (!open) onClose();

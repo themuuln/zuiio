@@ -12,6 +12,10 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
+import {
+  VariantPicker,
+  type SelectedVariant,
+} from "@/components/products/variant-picker";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
 
 const lineItemSchema = z.object({
@@ -19,6 +23,7 @@ const lineItemSchema = z.object({
   quantity: z.number().min(0.01, "Тоо хэмжээ 0-ээс их байх ёстой"),
   unit_price: z.number().min(0, "Үнэ 0-ээс багагүй"),
   reason: z.string().optional(),
+  variant_id: z.string().optional(),
 });
 
 const returnSchema = z.object({
@@ -80,12 +85,16 @@ export function ReturnCreateDrawer({
   const open = externalOpen ?? internalOpen;
   const setOpen = externalOnOpenChange ?? setInternalOpen;
   const [serverError, setServerError] = useState<string | null>(null);
+  const [variantSelections, setVariantSelections] = useState<
+    Record<number, SelectedVariant | null>
+  >({});
 
   const {
     register,
     handleSubmit,
     control,
     watch,
+    setValue,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<ReturnValues>({
@@ -97,7 +106,7 @@ export function ReturnCreateDrawer({
       contact_id: "",
       return_date: new Date().toISOString().slice(0, 10),
       reason: "",
-      items: [{ product_id: "", quantity: 1, unit_price: 0, reason: "" }],
+      items: [{ product_id: "", quantity: 1, unit_price: 0, reason: "", variant_id: undefined }],
     },
   });
 
@@ -136,6 +145,7 @@ export function ReturnCreateDrawer({
           quantity: item.quantity,
           unit_price: item.unit_price,
           reason: item.reason || null,
+          variant_id: item.variant_id ?? null,
         })),
       ),
     );
@@ -156,6 +166,7 @@ export function ReturnCreateDrawer({
         if (!next) {
           setServerError(null);
           reset();
+          setVariantSelections({});
         }
       }}
       title="Шинэ буцаалт"
@@ -294,6 +305,7 @@ export function ReturnCreateDrawer({
                   quantity: 1,
                   unit_price: 0,
                   reason: "",
+                  variant_id: undefined,
                 })
               }
               className={buttonVariants({ variant: "outline", size: "sm" })}
@@ -318,6 +330,41 @@ export function ReturnCreateDrawer({
                     </option>
                   ))}
                 </NativeSelect>
+                {watch(`items.${index}.product_id`) && (
+                  <div className="mt-1">
+                    <VariantPicker
+                      productId={watch(`items.${index}.product_id`)!}
+                      onSelect={(variant) => {
+                        setVariantSelections((prev) => ({
+                          ...prev,
+                          [index]: variant,
+                        }));
+                        if (variant) {
+                          setValue(
+                            `items.${index}.unit_price`,
+                            variant.sale_price ?? 0,
+                          );
+                          setValue(
+                            `items.${index}.variant_id`,
+                            variant.variant_id,
+                          );
+                        } else {
+                          const product = products.find(
+                            (p) => p.id === watch(`items.${index}.product_id`),
+                          );
+                          setValue(
+                            `items.${index}.unit_price`,
+                            product?.sale_price ?? 0,
+                          );
+                          setValue(
+                            `items.${index}.variant_id`,
+                            undefined,
+                          );
+                        }
+                      }}
+                    />
+                  </div>
+                )}
               </div>
               <div className="w-20">
                 <FieldLabel className="mb-1 text-xs">Тоо</FieldLabel>
@@ -353,7 +400,19 @@ export function ReturnCreateDrawer({
                 {fields.length > 1 && (
                   <button
                     type="button"
-                    onClick={() => remove(index)}
+                    onClick={() => {
+                      remove(index);
+                      setVariantSelections((prev) => {
+                        const next = { ...prev };
+                        delete next[index];
+                        const shifted: Record<number, SelectedVariant | null> = {};
+                        for (const [key, value] of Object.entries(next)) {
+                          const k = Number(key);
+                          shifted[k > index ? k - 1 : k] = value;
+                        }
+                        return shifted;
+                      });
+                    }}
                     className="size-8 flex items-center justify-center text-destructive hover:bg-muted rounded"
                   >
                     <Trash className="size-4" />

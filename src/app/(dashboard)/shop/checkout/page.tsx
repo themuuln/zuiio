@@ -120,6 +120,7 @@ export default function CheckoutPage() {
           unitPrice: i.unitPrice,
           quantity: i.quantity,
           unit: i.unit,
+          variantId: i.variantId,
         })),
       ),
     );

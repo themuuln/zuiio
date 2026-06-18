@@ -20,6 +20,10 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  VariantPicker,
+  type SelectedVariant,
+} from "@/components/products/variant-picker";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
 
 const lineItemSchema = z.object({
@@ -27,6 +31,7 @@ const lineItemSchema = z.object({
   description: z.string().min(1, "Тайлбар шаардлагатай"),
   quantity: z.number().min(0.01, "Тоо хэмжээ 0-ээс их байх ёстой"),
   unit_price: z.number().min(0, "Үнэ 0-ээс багагүй"),
+  variant_id: z.string().optional(),
 });
 
 const quotationSchema = z.object({
@@ -78,6 +83,7 @@ export function QuotationCreateDrawer({
     handleSubmit,
     control,
     watch,
+    setValue,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<QuotationValues>({
@@ -117,6 +123,7 @@ export function QuotationCreateDrawer({
           description: item.description,
           quantity: item.quantity,
           unit_price: item.unit_price,
+          variant_id: item.variant_id ?? null,
         })),
       ),
     );
@@ -138,6 +145,9 @@ export function QuotationCreateDrawer({
   const [productQueries, setProductQueries] = useState<
     Record<number, string>
   >({});
+  const [variantSelections, setVariantSelections] = useState<
+    Record<number, SelectedVariant | null>
+  >({});
 
   const setProductQuery = (index: number, query: string) => {
     setProductQueries((prev) => ({ ...prev, [index]: query }));
@@ -151,6 +161,7 @@ export function QuotationCreateDrawer({
         if (!next) {
           setServerError(null);
           reset();
+          setVariantSelections({});
         }
       }}
       title="Шинэ үнийн санал"
@@ -261,7 +272,7 @@ export function QuotationCreateDrawer({
             <button
               type="button"
               onClick={() =>
-                append({ description: "", quantity: 1, unit_price: 0 })
+                append({ description: "", quantity: 1, unit_price: 0, variant_id: undefined })
               }
               className={buttonVariants({
                 variant: "outline",
@@ -294,19 +305,21 @@ export function QuotationCreateDrawer({
                         next: ProductOption | null,
                       ) => {
                         productField.onChange(next?.id ?? null);
-                        // Auto-fill description and unit_price from product
+                        // Clear variant selection when product changes
+                        setVariantSelections((prev) => ({
+                          ...prev,
+                          [index]: null,
+                        }));
+                        setValue(
+                          `items.${index}.variant_id`,
+                          undefined,
+                        );
+                        // Auto-fill unit_price from product
                         if (next) {
-                          const descField = `items.${index}.description` as const;
-                          const priceField = `items.${index}.unit_price` as const;
-                          if (
-                            !watch(descField) ||
-                            watch(descField) ===
-                              products.find(
-                                (p) => p.id === productField.value,
-                              )?.name
-                          ) {
-                            // Only auto-fill if empty or previous product name
-                          }
+                          setValue(
+                            `items.${index}.unit_price`,
+                            next.sale_price ?? 0,
+                          );
                         }
                         setProductQuery(index, "");
                       }}
@@ -339,6 +352,43 @@ export function QuotationCreateDrawer({
                     </Combobox>
                   )}
                 />
+                {products.find(
+                  (p) => p.id === watch(`items.${index}.product_id`),
+                ) && (
+                  <div className="mt-1">
+                    <VariantPicker
+                      productId={watch(`items.${index}.product_id`)!}
+                      onSelect={(variant) => {
+                        setVariantSelections((prev) => ({
+                          ...prev,
+                          [index]: variant,
+                        }));
+                        if (variant) {
+                          setValue(
+                            `items.${index}.unit_price`,
+                            variant.sale_price ?? 0,
+                          );
+                          setValue(
+                            `items.${index}.variant_id`,
+                            variant.variant_id,
+                          );
+                        } else {
+                          const product = products.find(
+                            (p) => p.id === watch(`items.${index}.product_id`),
+                          );
+                          setValue(
+                            `items.${index}.unit_price`,
+                            product?.sale_price ?? 0,
+                          );
+                          setValue(
+                            `items.${index}.variant_id`,
+                            undefined,
+                          );
+                        }
+                      }}
+                    />
+                  </div>
+                )}
               </div>
               <div className="flex-1 min-w-[140px]">
                 <FieldLabel className="mb-1 text-xs">Тайлбар</FieldLabel>
@@ -384,7 +434,19 @@ export function QuotationCreateDrawer({
                 {fields.length > 1 && (
                   <button
                     type="button"
-                    onClick={() => remove(index)}
+                    onClick={() => {
+                      remove(index);
+                      setVariantSelections((prev) => {
+                        const next = { ...prev };
+                        delete next[index];
+                        const shifted: Record<number, SelectedVariant | null> = {};
+                        for (const [key, value] of Object.entries(next)) {
+                          const k = Number(key);
+                          shifted[k > index ? k - 1 : k] = value;
+                        }
+                        return shifted;
+                      });
+                    }}
                     className="size-8 flex items-center justify-center text-destructive hover:bg-muted rounded"
                   >
                     <Trash className="size-4" />

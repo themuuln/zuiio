@@ -3,6 +3,7 @@
 import { Minus, Plus, ShoppingCart, Trash } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
+import { getCartItemKey } from "@/lib/shop-cart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -48,57 +49,65 @@ export default function CartPage() {
       </div>
 
       <div className="flex flex-col gap-3">
-        {items.map((item) => (
-          <Card key={item.productId} size="sm">
-            <CardContent className="flex items-start gap-3 px-3 py-3">
-              <div className="flex flex-1 flex-col gap-0.5">
-                <h3 className="text-sm font-medium leading-tight">
-                  {item.name}
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  {item.unitPrice.toLocaleString()}₮ × {item.quantity}
-                </p>
-                <p className="mt-1 text-sm font-semibold">
-                  {(item.unitPrice * item.quantity).toLocaleString()}₮
-                </p>
-              </div>
+        {items.map((item) => {
+          const itemKey = getCartItemKey(item);
+          return (
+            <Card key={itemKey} size="sm">
+              <CardContent className="flex items-start gap-3 px-3 py-3">
+                <div className="flex flex-1 flex-col gap-0.5">
+                  <h3 className="text-sm font-medium leading-tight">
+                    {item.name}
+                  </h3>
+                  {item.variantLabels && (
+                    <p className="text-xs text-muted-foreground">
+                      {item.variantLabels}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    {item.unitPrice.toLocaleString()}₮ × {item.quantity}
+                  </p>
+                  <p className="mt-1 text-sm font-semibold">
+                    {(item.unitPrice * item.quantity).toLocaleString()}₮
+                  </p>
+                </div>
 
-              <div className="flex items-center gap-1">
-                <Button
-                  size="icon-xs"
-                  variant="outline"
-                  onClick={() =>
-                    updateQuantity(item.productId, item.quantity - 1)
-                  }
-                  disabled={item.quantity <= 1}
-                >
-                  <Minus className="size-3" />
-                </Button>
-                <span className="flex h-[44px] w-[44px] items-center justify-center text-sm font-medium tabular-nums">
-                  {item.quantity}
-                </span>
-                <Button
-                  size="icon-xs"
-                  variant="outline"
-                  onClick={() =>
-                    updateQuantity(item.productId, item.quantity + 1)
-                  }
-                  disabled={item.quantity >= item.maxStock}
-                >
-                  <Plus className="size-3" />
-                </Button>
-                <Button
-                  size="icon-xs"
-                  variant="ghost"
-                  className="ml-1 text-destructive hover:text-destructive"
-                  onClick={() => removeItem(item.productId)}
-                >
-                  <Trash className="size-3" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="icon-xs"
+                    variant="outline"
+                    onClick={() =>
+                      updateQuantity(itemKey, item.quantity - 1)
+                    }
+                    disabled={item.quantity <= 1}
+                  >
+                    <Minus className="size-3" />
+                  </Button>
+                  <span className="flex h-[44px] w-[44px] items-center justify-center text-sm font-medium tabular-nums">
+                    {item.quantity}
+                  </span>
+                  <Button
+                    size="icon-xs"
+                    variant="outline"
+                    onClick={() =>
+                      updateQuantity(itemKey, item.quantity + 1)
+                    }
+                    disabled={item.quantity >= item.maxStock}
+                  >
+                    <Plus className="size-3" />
+                  </Button>
+                  <Button
+                    size="icon-xs"
+                    variant="ghost"
+                    className="ml-1 text-destructive hover:text-destructive"
+                    onClick={() => removeItem(itemKey)}
+                  >
+                    <Trash className="size-3" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Total + Checkout */}

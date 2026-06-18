@@ -65,14 +65,14 @@ test("ADD_ITEM adds multiple different items", () => {
   assert.equal(next.items.length, 2);
 });
 
-test("REMOVE_ITEM removes item by productId", () => {
+test("REMOVE_ITEM removes item by cartItemKey", () => {
   const state = makeState([
     makeItem(),
     makeItem({ productId: "product-2", name: "Тест 2" }),
   ]);
   const next = cartReducer(state, {
     type: "REMOVE_ITEM",
-    payload: { productId: "product-1" },
+    payload: { cartItemKey: "product-1" },
   });
   assert.equal(next.items.length, 1);
   assert.equal(next.items[0].productId, "product-2");
@@ -82,7 +82,7 @@ test("REMOVE_ITEM on non-existent item does nothing", () => {
   const state = makeState([makeItem()]);
   const next = cartReducer(state, {
     type: "REMOVE_ITEM",
-    payload: { productId: "nonexistent" },
+    payload: { cartItemKey: "nonexistent" },
   });
   assert.equal(next.items.length, 1);
 });
@@ -91,7 +91,7 @@ test("UPDATE_QUANTITY updates quantity", () => {
   const state = makeState([makeItem()]);
   const next = cartReducer(state, {
     type: "UPDATE_QUANTITY",
-    payload: { productId: "product-1", quantity: 5 },
+    payload: { cartItemKey: "product-1", quantity: 5 },
   });
   assert.equal(next.items[0].quantity, 5);
 });
@@ -100,7 +100,7 @@ test("UPDATE_QUANTITY caps at maxStock", () => {
   const state = makeState([makeItem({ maxStock: 5 })]);
   const next = cartReducer(state, {
     type: "UPDATE_QUANTITY",
-    payload: { productId: "product-1", quantity: 10 },
+    payload: { cartItemKey: "product-1", quantity: 10 },
   });
   assert.equal(next.items[0].quantity, 5);
 });
@@ -109,7 +109,7 @@ test("UPDATE_QUANTITY removes item when quantity <= 0", () => {
   const state = makeState([makeItem()]);
   const next = cartReducer(state, {
     type: "UPDATE_QUANTITY",
-    payload: { productId: "product-1", quantity: 0 },
+    payload: { cartItemKey: "product-1", quantity: 0 },
   });
   assert.equal(next.items.length, 0);
 });
@@ -276,7 +276,7 @@ test("remove item and verify empty state (VAL-SHOP-017)", () => {
   const state = makeState([makeItem()]);
   const afterRemove = cartReducer(state, {
     type: "REMOVE_ITEM",
-    payload: { productId: "product-1" },
+    payload: { cartItemKey: "product-1" },
   });
   assert.equal(afterRemove.items.length, 0);
 });

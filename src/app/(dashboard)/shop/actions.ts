@@ -12,6 +12,7 @@ type CartItemData = {
   unitPrice: number;
   quantity: number;
   unit: string;
+  variantId?: string;
 };
 
 export async function createShopSale(
@@ -80,19 +81,55 @@ export async function createShopSale(
 
   const productMap = new Map((products ?? []).map((p) => [p.id, p]));
 
+  // Collect variant IDs and validate variant stock
+  const variantIds = items
+    .filter((i) => i.variantId)
+    .map((i) => i.variantId!);
+
+  let variantMap = new Map<string, { id: string; current_stock: number | null; product_id: string }>();
+  if (variantIds.length > 0) {
+    const { data: variants, error: variantsError } = await supabase
+      .from("product_variants")
+      .select("id, current_stock, product_id")
+      .in("id", variantIds);
+
+    if (variantsError) {
+      return { error: "Вариантын мэдээлэл уншихад алдаа гарлаа." };
+    }
+
+    variantMap = new Map((variants ?? []).map((v) => [v.id, v]));
+  }
+
   // Check each item's stock
   for (const item of items) {
-    const product = productMap.get(item.productId);
-    if (!product) {
-      return {
-        error: `Бүтээгдэхүүн "${item.name}" олдсонгүй.`,
-      };
-    }
-    const currentStock = Number(product.current_stock ?? 0);
-    if (currentStock < item.quantity) {
-      return {
-        error: `"${product.name}" бүтээгдэхүүний үлдэгдэл хүрэлцэхгүй байна. (Үлдэгдэл: ${currentStock}, хэрэгтэй: ${item.quantity})`,
-      };
+    if (item.variantId) {
+      // Stock check against variant
+      const variant = variantMap.get(item.variantId);
+      if (!variant) {
+        return {
+          error: `Вариант олдсонгүй: "${item.name}".`,
+        };
+      }
+      const currentStock = Number(variant.current_stock ?? 0);
+      if (currentStock < item.quantity) {
+        return {
+          error: `"${item.name}" вариантын үлдэгдэл хүрэлцэхгүй байна. (Үлдэгдэл: ${currentStock}, хэрэгтэй: ${item.quantity})`,
+        };
+      }
+    } else {
+      // Stock check against product
+      const product = productMap.get(item.productId);
+      if (!product) {
+        return {
+          error: `Бүтээгдэхүүн "${item.name}" олдсонгүй.`,
+        };
+      }
+      const currentStock = Number(product.current_stock ?? 0);
+      if (currentStock < item.quantity) {
+        return {
+          error: `"${product.name}" бүтээгдэхүүний үлдэгдэл хүрэлцэхгүй байна. (Үлдэгдэл: ${currentStock}, хэрэгтэй: ${item.quantity})`,
+        };
+      }
     }
   }
 
@@ -168,7 +205,7 @@ export async function createShopSale(
   // --- Step 4: Insert sale_items ---
   const saleItems = items.map((item) => {
     const totalPrice = item.unitPrice * item.quantity;
-    return {
+    const saleItem: Record<string, unknown> = {
       sale_id: saleId,
       product_id: item.productId,
       quantity: item.quantity,
@@ -176,6 +213,10 @@ export async function createShopSale(
       total_price: totalPrice,
       commission_amount: calculateCommission(totalPrice),
     };
+    if (item.variantId) {
+      saleItem.variant_id = item.variantId;
+    }
+    return saleItem;
   });
 
   const { error: itemsError } = await supabase
@@ -194,15 +235,21 @@ export async function createShopSale(
   }
 
   // --- Step 5: Insert stock_movements ---
-  const stockMovements = items.map((item) => ({
-    organization_id: organizationId,
-    product_id: item.productId,
-    type: "out",
-    quantity: item.quantity,
-    unit_cost: item.unitPrice,
-    reference: `sale:${saleId}`,
-    created_by: userId,
-  }));
+  const stockMovements = items.map((item) => {
+    const movement: Record<string, unknown> = {
+      organization_id: organizationId,
+      product_id: item.productId,
+      type: "out",
+      quantity: item.quantity,
+      unit_cost: item.unitPrice,
+      reference: `sale:${saleId}`,
+      created_by: userId,
+    };
+    if (item.variantId) {
+      movement.variant_id = item.variantId;
+    }
+    return movement;
+  });
 
   const { error: movementError } = await supabase
     .from("stock_movements")
@@ -220,58 +267,106 @@ export async function createShopSale(
     };
   }
 
-  // --- Step 6: Atomic decrement of current_stock for each product ---
+  // --- Step 6: Atomic decrement of current_stock ---
+  // For variant items, decrement variant stock. For non-variant items, decrement product stock.
   // Uses .gte("current_stock", item.quantity) filter so the UPDATE only affects
   // rows that still have sufficient stock at statement execution time, eliminating
   // the read-then-write race window. Checks affected row count via .maybeSingle()
   // to detect insufficient stock.
   for (const item of items) {
-    const product = productMap.get(item.productId);
-    if (!product) continue;
+    if (item.variantId) {
+      // Decrement variant stock
+      const variant = variantMap.get(item.variantId);
+      if (!variant) continue;
 
-    const { data: updatedProduct, error: stockUpdateError } = await supabase
-      .from("products")
-      .update({
-        current_stock: Number(product.current_stock ?? 0) - item.quantity,
-      })
-      .eq("organization_id", organizationId)
-      .eq("id", item.productId)
-      .gte("current_stock", item.quantity)
-      .select("id")
-      .maybeSingle();
+      const { data: updatedVariant, error: stockUpdateError } = await supabase
+        .from("product_variants")
+        .update({
+          current_stock: Number(variant.current_stock ?? 0) - item.quantity,
+        })
+        .eq("id", item.variantId)
+        .gte("current_stock", item.quantity)
+        .select("id")
+        .maybeSingle();
 
-    if (stockUpdateError) {
-      // Actual error (network, permission, etc.) — full rollback
-      await supabase
-        .from("stock_movements")
-        .delete()
-        .eq("reference", `sale:${saleId}`);
-      await supabase.from("sale_items").delete().eq("sale_id", saleId);
-      await supabase.from("sales").delete().eq("id", saleId);
-      if (createdContact && contactId) {
-        await supabase.from("contacts").delete().eq("id", contactId);
+      if (stockUpdateError) {
+        // Actual error (network, permission, etc.) — full rollback
+        await supabase
+          .from("stock_movements")
+          .delete()
+          .eq("reference", `sale:${saleId}`);
+        await supabase.from("sale_items").delete().eq("sale_id", saleId);
+        await supabase.from("sales").delete().eq("id", saleId);
+        if (createdContact && contactId) {
+          await supabase.from("contacts").delete().eq("id", contactId);
+        }
+        return {
+          error: `Үлдэгдэл хасахад алдаа гарлаа: ${stockUpdateError.message}`,
+        };
       }
-      return {
-        error: `Үлдэгдэл хасахад алдаа гарлаа: ${stockUpdateError.message}`,
-      };
-    }
 
-    if (!updatedProduct) {
-      // No row matched — stock was consumed between Step 1 check and this UPDATE
-      // (or stock was already insufficient at Step 1 — but .gte() catches any
-      // interleaving sale that consumed stock in the meantime)
-      await supabase
-        .from("stock_movements")
-        .delete()
-        .eq("reference", `sale:${saleId}`);
-      await supabase.from("sale_items").delete().eq("sale_id", saleId);
-      await supabase.from("sales").delete().eq("id", saleId);
-      if (createdContact && contactId) {
-        await supabase.from("contacts").delete().eq("id", contactId);
+      if (!updatedVariant) {
+        // No row matched — stock was consumed between Step 1 check and this UPDATE
+        await supabase
+          .from("stock_movements")
+          .delete()
+          .eq("reference", `sale:${saleId}`);
+        await supabase.from("sale_items").delete().eq("sale_id", saleId);
+        await supabase.from("sales").delete().eq("id", saleId);
+        if (createdContact && contactId) {
+          await supabase.from("contacts").delete().eq("id", contactId);
+        }
+        return {
+          error: `"${item.name}" вариантын үлдэгдэл хүрэлцэхгүй байна.`,
+        };
       }
-      return {
-        error: `"${item.name}" бүтээгдэхүүний үлдэгдэл хүрэлцэхгүй байна.`,
-      };
+    } else {
+      // Decrement product stock
+      const product = productMap.get(item.productId);
+      if (!product) continue;
+
+      const { data: updatedProduct, error: stockUpdateError } = await supabase
+        .from("products")
+        .update({
+          current_stock: Number(product.current_stock ?? 0) - item.quantity,
+        })
+        .eq("organization_id", organizationId)
+        .eq("id", item.productId)
+        .gte("current_stock", item.quantity)
+        .select("id")
+        .maybeSingle();
+
+      if (stockUpdateError) {
+        // Actual error (network, permission, etc.) — full rollback
+        await supabase
+          .from("stock_movements")
+          .delete()
+          .eq("reference", `sale:${saleId}`);
+        await supabase.from("sale_items").delete().eq("sale_id", saleId);
+        await supabase.from("sales").delete().eq("id", saleId);
+        if (createdContact && contactId) {
+          await supabase.from("contacts").delete().eq("id", contactId);
+        }
+        return {
+          error: `Үлдэгдэл хасахад алдаа гарлаа: ${stockUpdateError.message}`,
+        };
+      }
+
+      if (!updatedProduct) {
+        // No row matched — stock was consumed between Step 1 check and this UPDATE
+        await supabase
+          .from("stock_movements")
+          .delete()
+          .eq("reference", `sale:${saleId}`);
+        await supabase.from("sale_items").delete().eq("sale_id", saleId);
+        await supabase.from("sales").delete().eq("id", saleId);
+        if (createdContact && contactId) {
+          await supabase.from("contacts").delete().eq("id", contactId);
+        }
+        return {
+          error: `"${item.name}" бүтээгдэхүүний үлдэгдэл хүрэлцэхгүй байна.`,
+        };
+      }
     }
   }
 

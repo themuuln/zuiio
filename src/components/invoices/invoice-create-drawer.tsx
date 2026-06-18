@@ -21,14 +21,27 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  VariantPicker,
+  type SelectedVariant,
+} from "@/components/products/variant-picker";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
+
+type ProductOption = {
+  id: string;
+  name: string;
+  sale_price: number | null;
+  current_stock: number | null;
+  unit: string | null;
+};
 
 const lineItemSchema = z.object({
   product_id: z.string().nullable().optional(),
   description: z.string().min(1, "Тайлбар шаардлагатай"),
   quantity: z.number().min(0.01, "Тоо хэмжээ 0-ээс их байх ёстой"),
   unit_price: z.number().min(0, "Үнэ 0-ээс багагүй"),
+  variant_id: z.string().optional(),
 });
 
 const invoiceSchema = z.object({
@@ -44,10 +57,12 @@ type InvoiceValues = z.infer<typeof invoiceSchema>;
 
 export function InvoiceCreateDrawer({
   contacts: initialContacts,
+  products,
   open: externalOpen,
   onOpenChange: externalOnOpenChange,
 }: {
   contacts: Array<{ id: string; name: string }>;
+  products: ProductOption[];
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
@@ -60,6 +75,10 @@ export function InvoiceCreateDrawer({
     name: string;
   } | null>(null);
   const [contactQuery, setContactQuery] = useState("");
+  const [variantSelections, setVariantSelections] = useState<
+    Record<number, SelectedVariant | null>
+  >({});
+  const [productQueries, setProductQueries] = useState<string[]>([""]);
   const [contacts, setContacts] = useState(initialContacts);
 
   const {
@@ -67,6 +86,7 @@ export function InvoiceCreateDrawer({
     handleSubmit,
     control,
     watch,
+    setValue,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<InvoiceValues>({
@@ -106,6 +126,7 @@ export function InvoiceCreateDrawer({
           description: item.description,
           quantity: item.quantity,
           unit_price: item.unit_price,
+          variant_id: item.variant_id ?? null,
         })),
       ),
     );
@@ -129,6 +150,8 @@ export function InvoiceCreateDrawer({
         if (!next) {
           setServerError(null);
           reset();
+          setVariantSelections({});
+          setProductQueries([""]);
         }
       }}
     >
@@ -286,7 +309,7 @@ export function InvoiceCreateDrawer({
                     <button
                       type="button"
                       onClick={() =>
-                        append({ description: "", quantity: 1, unit_price: 0 })
+                        append({ description: "", quantity: 1, unit_price: 0, variant_id: undefined })
                       }
                       className={buttonVariants({
                         variant: "outline",
@@ -305,12 +328,131 @@ export function InvoiceCreateDrawer({
                     >
                       <div className="flex-1 min-w-[140px]">
                         <FieldLabel className="mb-1 text-xs">
+                          Бүтээгдэхүүн
+                        </FieldLabel>
+                        <Controller
+                          control={control}
+                          name={`items.${index}.product_id`}
+                          render={({ field: productField }) => (
+                            <Combobox
+                              items={products}
+                              value={
+                                products.find(
+                                  (p) => p.id === productField.value,
+                                ) ?? null
+                              }
+                              onValueChange={(
+                                next: ProductOption | null,
+                              ) => {
+                                productField.onChange(next?.id ?? null);
+                                setVariantSelections((prev) => ({
+                                  ...prev,
+                                  [index]: null,
+                                }));
+                                setValue(
+                                  `items.${index}.variant_id`,
+                                  undefined,
+                                );
+                                if (next) {
+                                  setValue(
+                                    `items.${index}.description`,
+                                    next.name,
+                                  );
+                                  setValue(
+                                    `items.${index}.unit_price`,
+                                    next.sale_price ?? 0,
+                                  );
+                                }
+                                setProductQueries((prev) => {
+                                  const next_q = [...prev];
+                                  next_q[index] = "";
+                                  return next_q;
+                                });
+                              }}
+                              itemToStringValue={(p: ProductOption | null) =>
+                                p?.id ?? ""
+                              }
+                              itemToStringLabel={(p: ProductOption | null) =>
+                                p?.name ?? ""
+                              }
+                              inputValue={productQueries[index] ?? ""}
+                              onInputValueChange={(v) =>
+                                setProductQueries((prev) => {
+                                  const next_q = [...prev];
+                                  next_q[index] = v;
+                                  return next_q;
+                                })
+                              }
+                            >
+                              <ComboboxInput
+                                placeholder="Сонгох"
+                                showTrigger
+                                className="w-full"
+                              />
+                              <ComboboxContent>
+                                <ComboboxEmpty>Бараа байхгүй</ComboboxEmpty>
+                                <ComboboxList>
+                                  {(p: ProductOption) => (
+                                    <ComboboxItem key={p.id}>
+                                      {p.name}
+                                    </ComboboxItem>
+                                  )}
+                                </ComboboxList>
+                              </ComboboxContent>
+                            </Combobox>
+                          )}
+                        />
+                        {products.find(
+                          (p) => p.id === watch(`items.${index}.product_id`),
+                        ) && (
+                          <div className="mt-1">
+                            <VariantPicker
+                              productId={watch(`items.${index}.product_id`)!}
+                              onSelect={(variant) => {
+                                setVariantSelections((prev) => ({
+                                  ...prev,
+                                  [index]: variant,
+                                }));
+                                if (variant) {
+                                  setValue(
+                                    `items.${index}.unit_price`,
+                                    variant.sale_price ?? 0,
+                                  );
+                                  setValue(
+                                    `items.${index}.variant_id`,
+                                    variant.variant_id,
+                                  );
+                                } else {
+                                  const prod = products.find(
+                                    (p) => p.id === watch(`items.${index}.product_id`),
+                                  );
+                                  setValue(
+                                    `items.${index}.unit_price`,
+                                    prod?.sale_price ?? 0,
+                                  );
+                                  setValue(
+                                    `items.${index}.variant_id`,
+                                    undefined,
+                                  );
+                                }
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-[140px]">
+                        <FieldLabel className="mb-1 text-xs">
                           Тайлбар
                         </FieldLabel>
                         <Input
                           placeholder="Бүтээгдэхүүний нэр"
                           {...register(`items.${index}.description`)}
                         />
+                        {errors.items?.[index]?.description && (
+                          <p className="text-xs text-destructive">
+                            {errors.items[index]?.description?.message}
+                          </p>
+                        )}
                       </div>
                       <div className="w-20">
                         <FieldLabel className="mb-1 text-xs">Тоо</FieldLabel>
@@ -346,7 +488,20 @@ export function InvoiceCreateDrawer({
                         {fields.length > 1 && (
                           <button
                             type="button"
-                            onClick={() => remove(index)}
+                            onClick={() => {
+                              remove(index);
+                              setVariantSelections((prev) => {
+                                const next = { ...prev };
+                                delete next[index];
+                                const shifted: Record<number, SelectedVariant | null> = {};
+                                for (const [key, value] of Object.entries(next)) {
+                                  const k = Number(key);
+                                  shifted[k > index ? k - 1 : k] = value;
+                                }
+                                return shifted;
+                              });
+                              setProductQueries((prev) => prev.filter((_, i) => i !== index));
+                            }}
                             className="size-8 flex items-center justify-center text-destructive hover:bg-muted rounded"
                           >
                             <Trash className="size-4" />

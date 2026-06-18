@@ -1,10 +1,13 @@
 "use client";
 
 import { ShoppingCart } from "@phosphor-icons/react";
+import { useState } from "react";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import type { SelectedVariant } from "@/components/products/variant-picker";
+import { VariantPicker } from "@/components/products/variant-picker";
 import { cn } from "@/lib/utils";
 
 export type ProductCardProduct = {
@@ -22,19 +25,32 @@ export type ProductCardProduct = {
 
 export function ProductCard({ product }: { product: ProductCardProduct }) {
   const { addItem } = useCart();
-  const price = Number(product.sale_price ?? 0);
-  const stock = Number(product.current_stock ?? 0);
+  const [selectedVariant, setSelectedVariant] = useState<SelectedVariant | null>(null);
+  const [hasVariants, setHasVariants] = useState(false);
+
+  // Use variant-specific price/stock when a variant is selected
+  const price = Number(
+    selectedVariant?.sale_price ?? product.sale_price ?? 0,
+  );
+  const stock = Number(
+    selectedVariant?.current_stock ?? product.current_stock ?? 0,
+  );
   const unit = product.unit ?? "ш";
   const isOutOfStock = stock <= 0;
 
   const handleAddToCart = () => {
     if (isOutOfStock) return;
+    if (hasVariants && !selectedVariant) return;
+
     addItem({
       productId: product.id,
       name: product.name,
       unitPrice: price,
       unit,
       maxStock: stock,
+      variantId: selectedVariant?.variant_id,
+      variantLabels: selectedVariant?.option_labels,
+      variantOptionIds: selectedVariant?.option_ids,
     });
   };
 
@@ -109,6 +125,13 @@ export function ProductCard({ product }: { product: ProductCardProduct }) {
           )}
         </div>
 
+        {/* Variant picker — only renders when product has variant groups */}
+        <VariantPicker
+          productId={product.id}
+          onSelect={setSelectedVariant}
+          onHasVariants={setHasVariants}
+        />
+
         {/* Add to cart button */}
         <Button
           size="sm"
@@ -116,11 +139,15 @@ export function ProductCard({ product }: { product: ProductCardProduct }) {
             "mt-2 h-[44px] w-full gap-2 text-sm",
             isOutOfStock && "pointer-events-none opacity-50",
           )}
-          disabled={isOutOfStock}
+          disabled={isOutOfStock || (hasVariants && !selectedVariant)}
           onClick={handleAddToCart}
         >
           <ShoppingCart className="size-4" weight="bold" />
-          {isOutOfStock ? "Дууссан" : "Нэмэх"}
+          {isOutOfStock
+            ? "Дууссан"
+            : hasVariants && !selectedVariant
+              ? "Вариант сонго"
+              : "Нэмэх"}
         </Button>
       </CardContent>
     </Card>

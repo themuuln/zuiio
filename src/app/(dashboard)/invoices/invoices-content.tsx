@@ -19,6 +19,14 @@ import {
 } from "@/components/ui/table";
 import { formatCurrency, formatDate } from "@/lib/format";
 
+type ProductOption = {
+  id: string;
+  name: string;
+  sale_price: number | null;
+  current_stock: number | null;
+  unit: string | null;
+};
+
 const STATUS_LABELS: Record<string, string> = {
   pending: "Хүлээгдэж буй",
   paid: "Төлөгдсөн",
@@ -52,9 +60,11 @@ export type InvoiceRow = {
 export function InvoicesContent({
   invoiceRows,
   contacts,
+  products,
 }: {
   invoiceRows: InvoiceRow[];
   contacts: Array<{ id: string; name: string }>;
+  products: ProductOption[];
 }) {
   const searchParams = useSearchParams();
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(
@@ -80,6 +90,7 @@ export function InvoicesContent({
         actions={
           <InvoiceCreateDrawer
             contacts={contacts}
+            products={products}
             open={createOpen}
             onOpenChange={setCreateOpen}
           />
@@ -93,6 +104,7 @@ export function InvoicesContent({
             action={
               <InvoiceCreateDrawer
                 contacts={contacts}
+                products={products}
                 open={createOpen}
                 onOpenChange={setCreateOpen}
               />
