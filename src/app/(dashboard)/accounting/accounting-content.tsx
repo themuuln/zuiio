@@ -1,8 +1,8 @@
 "use client";
 
-import { Calculator } from "@phosphor-icons/react";
-import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { Calculator, StackSimple } from "@phosphor-icons/react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AccountCreateDrawer } from "@/components/accounting/account-create-drawer";
 import type { JournalEntryDetailData } from "@/components/accounting/journal-entry-detail-drawer";
@@ -12,6 +12,7 @@ import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -76,11 +77,16 @@ export function AccountingContent({
   trialBalance,
   accounts,
   journalEntries,
+  isBranchScoped,
+  showConsolidated: initialConsolidated,
 }: {
   trialBalance: TrialBalanceRow[];
   accounts: AccountRow[];
   journalEntries: JournalEntryRow[];
+  isBranchScoped: boolean;
+  showConsolidated: boolean;
 }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [createOpen, setCreateOpen] = useState(
     searchParams.get("create") === "true",
@@ -90,6 +96,20 @@ export function AccountingContent({
   const initialRef = useRef(createOpen);
   const [selectedEntry, setSelectedEntry] =
     useState<JournalEntryDetailData | null>(null);
+  const [consolidated, setConsolidated] = useState(initialConsolidated);
+
+  // Sync consolidated state with URL on toggle
+  const toggleConsolidated = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (consolidated) {
+      params.delete("consolidated");
+    } else {
+      params.set("consolidated", "true");
+    }
+    const qs = params.toString();
+    router.replace(`/accounting${qs ? `?${qs}` : ""}`);
+    setConsolidated(!consolidated);
+  }, [consolidated, router, searchParams]);
 
   useEffect(() => {
     if (initialRef.current) {
@@ -105,6 +125,16 @@ export function AccountingContent({
       title="Нягтлан бодох бүртгэл"
       description="Давхар бичилтийн нягтлан бодох бүртгэлийн систем"
     >
+      {/* Consolidated view toggle - only for admin users */}
+      {!isBranchScoped && (
+        <div className="mb-4 flex items-center justify-end gap-2">
+          <span className="text-sm text-muted-foreground">
+            <StackSimple className="mr-1 inline size-4" />
+            Бүх салбарын мэдээлэл
+          </span>
+          <Switch checked={consolidated} onCheckedChange={toggleConsolidated} />
+        </div>
+      )}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="trial-balance">Туршилтын баланс</TabsTrigger>
@@ -327,11 +357,10 @@ export function AccountingContent({
                             <button
                               type="button"
                               onClick={async () => {
-                                const result =
-                                  await toggleAccountActive(
-                                    account.id,
-                                    !account.is_active,
-                                  );
+                                const result = await toggleAccountActive(
+                                  account.id,
+                                  !account.is_active,
+                                );
                                 if (result?.error) {
                                   toast.error(result.error);
                                 }

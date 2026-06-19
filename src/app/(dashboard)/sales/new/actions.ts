@@ -425,6 +425,7 @@ export async function createSale(
       supabase,
       organizationId,
       userId,
+      branchId!,
       sale.id,
       {
         total_amount: totalAmount,

@@ -125,11 +125,18 @@ export async function createPurchaseOrder(
   }
 
   // Post to general ledger (fire-and-forget)
-  postPurchaseToJournal(supabase, organizationId, userId, purchaseOrder.id, {
-    total_amount: totalAmount,
-    order_date: orderDate || new Date().toISOString().slice(0, 10),
-    status: "draft",
-  }).catch(console.error);
+  postPurchaseToJournal(
+    supabase,
+    organizationId,
+    userId,
+    branchId!,
+    purchaseOrder.id,
+    {
+      total_amount: totalAmount,
+      order_date: orderDate || new Date().toISOString().slice(0, 10),
+      status: "draft",
+    },
+  ).catch(console.error);
 
   revalidatePath("/purchases");
   revalidatePath("/");

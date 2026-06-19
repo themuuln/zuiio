@@ -60,7 +60,7 @@ export async function createExpense(
   }
 
   // Post to general ledger (fire-and-forget)
-  postExpenseToJournal(supabase, organizationId, userId, expense.id, {
+  postExpenseToJournal(supabase, organizationId, userId, branchId, expense.id, {
     amount,
     expense_date: expenseDate,
     category,

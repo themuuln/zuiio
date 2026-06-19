@@ -9,6 +9,7 @@ export async function postSaleToJournal(
   supabase: any,
   organizationId: string,
   userId: string,
+  branchId: string,
   saleId: string,
   saleData: {
     total_amount: number;
@@ -30,7 +31,10 @@ export async function postSaleToJournal(
       .in("code", ["1200", "1300", "4100", "5100"]);
 
     if (!accounts || accounts.length < 2) {
-      return { success: false, error: "Дансны бүртгэл олдсонгүй. Эхлээд дансны бүртгэлээ оруулна уу." };
+      return {
+        success: false,
+        error: "Дансны бүртгэл олдсонгүй. Эхлээд дансны бүртгэлээ оруулна уу.",
+      };
     }
 
     const accountMap = new Map(accounts.map((a: any) => [a.code, a.id]));
@@ -39,21 +43,31 @@ export async function postSaleToJournal(
     const cogsAccountId = accountMap.get("5100");
 
     if (!bankAccountId || !revenueAccountId) {
-      return { success: false, error: "Шаардлагатай данс олдсонгүй (Банкны данс эсвэл Борлуулалтын орлого)." };
+      return {
+        success: false,
+        error:
+          "Шаардлагатай данс олдсонгүй (Банкны данс эсвэл Борлуулалтын орлого).",
+      };
     }
 
-    const { data: jeData, error: jeError } = await supabase
-      .rpc("generate_journal_entry_number");
+    const { data: jeData, error: jeError } = await supabase.rpc(
+      "generate_journal_entry_number",
+    );
 
     if (jeError) return { success: false, error: jeError.message };
     const entryNumber = jeData as string;
 
-    const totalDebit = saleData.paid_amount > 0 ? saleData.paid_amount : saleData.total_amount;
+    const totalDebit =
+      saleData.paid_amount > 0 ? saleData.paid_amount : saleData.total_amount;
 
     // Build lines: debit cash/bank, credit revenue
     const lines = [
       { account_id: bankAccountId, debit_amount: totalDebit, credit_amount: 0 },
-      { account_id: revenueAccountId, debit_amount: 0, credit_amount: totalDebit },
+      {
+        account_id: revenueAccountId,
+        debit_amount: 0,
+        credit_amount: totalDebit,
+      },
     ];
 
     // If sale has COGS items, debit COGS and credit Inventory
@@ -66,8 +80,16 @@ export async function postSaleToJournal(
         const inventoryAccountId = accountMap.get("1400");
         if (inventoryAccountId) {
           lines.push(
-            { account_id: cogsAccountId, debit_amount: totalCost, credit_amount: 0 },
-            { account_id: inventoryAccountId, debit_amount: 0, credit_amount: totalCost },
+            {
+              account_id: cogsAccountId,
+              debit_amount: totalCost,
+              credit_amount: 0,
+            },
+            {
+              account_id: inventoryAccountId,
+              debit_amount: 0,
+              credit_amount: totalCost,
+            },
           );
         }
       }
@@ -84,6 +106,7 @@ export async function postSaleToJournal(
       .from("journal_entries")
       .insert({
         organization_id: organizationId,
+        branch_id: branchId,
         entry_date: saleData.sale_date,
         entry_number: entryNumber,
         reference_type: "sale",
@@ -128,6 +151,7 @@ export async function postExpenseToJournal(
   supabase: any,
   organizationId: string,
   userId: string,
+  branchId: string,
   expenseId: string,
   expenseData: {
     amount: number;
@@ -152,29 +176,44 @@ export async function postExpenseToJournal(
     const expenseAccountId = accountMap.get("5200");
 
     if (!bankAccountId || !expenseAccountId) {
-      return { success: false, error: "Шаардлагатай данс олдсонгүй (Банкны данс эсвэл Зарлагын данс)." };
+      return {
+        success: false,
+        error: "Шаардлагатай данс олдсонгүй (Банкны данс эсвэл Зарлагын данс).",
+      };
     }
 
-    const { data: jeData, error: jeError } = await supabase
-      .rpc("generate_journal_entry_number");
+    const { data: jeData, error: jeError } = await supabase.rpc(
+      "generate_journal_entry_number",
+    );
 
     if (jeError) return { success: false, error: jeError.message };
     const entryNumber = jeData as string;
 
     const lines = [
-      { account_id: expenseAccountId, debit_amount: expenseData.amount, credit_amount: 0 },
-      { account_id: bankAccountId, debit_amount: 0, credit_amount: expenseData.amount },
+      {
+        account_id: expenseAccountId,
+        debit_amount: expenseData.amount,
+        credit_amount: 0,
+      },
+      {
+        account_id: bankAccountId,
+        debit_amount: 0,
+        credit_amount: expenseData.amount,
+      },
     ];
 
     const { data: journalEntry, error: entryError } = await supabase
       .from("journal_entries")
       .insert({
         organization_id: organizationId,
+        branch_id: branchId,
         entry_date: expenseData.expense_date,
         entry_number: entryNumber,
         reference_type: "expense",
         reference_id: expenseId,
-        description: expenseData.description || `Зарлагын журналын бичилт - ${expenseData.expense_date}`,
+        description:
+          expenseData.description ||
+          `Зарлагын журналын бичилт - ${expenseData.expense_date}`,
         created_by: userId,
       })
       .select("id")
@@ -214,6 +253,7 @@ export async function postPurchaseToJournal(
   supabase: any,
   organizationId: string,
   userId: string,
+  branchId: string,
   purchaseId: string,
   purchaseData: {
     total_amount: number;
@@ -238,11 +278,15 @@ export async function postPurchaseToJournal(
     const bankAccountId = accountMap.get("1200");
 
     if (!inventoryAccountId || !payablesAccountId) {
-      return { success: false, error: "Шаардлагатай данс олдсонгүй (Бараа материал эсвэл Өглөг)." };
+      return {
+        success: false,
+        error: "Шаардлагатай данс олдсонгүй (Бараа материал эсвэл Өглөг).",
+      };
     }
 
-    const { data: jeData, error: jeError } = await supabase
-      .rpc("generate_journal_entry_number");
+    const { data: jeData, error: jeError } = await supabase.rpc(
+      "generate_journal_entry_number",
+    );
 
     if (jeError) return { success: false, error: jeError.message };
     const entryNumber = jeData as string;
@@ -254,14 +298,23 @@ export async function postPurchaseToJournal(
         : payablesAccountId;
 
     const lines = [
-      { account_id: inventoryAccountId, debit_amount: purchaseData.total_amount, credit_amount: 0 },
-      { account_id: creditAccountId, debit_amount: 0, credit_amount: purchaseData.total_amount },
+      {
+        account_id: inventoryAccountId,
+        debit_amount: purchaseData.total_amount,
+        credit_amount: 0,
+      },
+      {
+        account_id: creditAccountId,
+        debit_amount: 0,
+        credit_amount: purchaseData.total_amount,
+      },
     ];
 
     const { data: journalEntry, error: entryError } = await supabase
       .from("journal_entries")
       .insert({
         organization_id: organizationId,
+        branch_id: branchId,
         entry_date: purchaseData.order_date,
         entry_number: entryNumber,
         reference_type: "purchase_order",
