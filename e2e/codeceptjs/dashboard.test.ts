@@ -16,11 +16,11 @@ Before(({ I }) => {
 });
 
 Scenario("Dashboard shows KPIs", ({ I }) => {
-  I.see("Борлуулалт");
-  I.see("Зарлага");
+  I.see("Өнөөдрийн борлуулалт");
+  I.see("Өнөөдрийн зарлага");
   I.seeElement("main");
 });
 
 Scenario("Dashboard has recent sales section", ({ I }) => {
-  I.see("Сүүлийн үеийн борлуулалтууд");
+  I.see("Сүүлийн борлуулалтууд");
 });

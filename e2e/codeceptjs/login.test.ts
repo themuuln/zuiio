@@ -21,7 +21,10 @@ Scenario("Login with valid credentials", ({ I }) => {
   I.seeInCurrentUrl("/");
 });
 
-Scenario("Shows validation error with empty fields", ({ I }) => {
+Scenario("Shows validation error with invalid credentials", async ({ I }) => {
+  I.fillField('input[name="email"]', "wrong@test.com");
+  I.fillField('input[name="password"]', "wrong1234");
   I.click('button[type="submit"]');
-  I.see("шаардлагатай");
+  I.waitForText("Invalid login credentials", 10);
+  I.see("Invalid login credentials");
 });

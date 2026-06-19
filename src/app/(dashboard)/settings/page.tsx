@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { requireAppContext } from "@/lib/erp";
+import { createServiceClient } from "@/lib/supabase/server-service";
 import { DEFAULT_BRAND_CONFIG, type BrandConfig } from "@/lib/branding";
 import type { RolePermission } from "@/components/roles/roles-client";
 import { BrandingDrawer } from "./branding-drawer";
@@ -54,7 +55,8 @@ export default async function SettingsPage() {
   const brandConfig = (brandConfigResult.data?.brand_config ??
     {}) as BrandConfig;
 
-  const presetsData = await supabase
+  const serviceSupabase = createServiceClient();
+  const presetsData = await serviceSupabase
     .from("product_presets")
     .select("*", { count: "exact", head: true });
 
