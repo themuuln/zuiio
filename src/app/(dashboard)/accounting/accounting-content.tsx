@@ -5,9 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AccountCreateDrawer } from "@/components/accounting/account-create-drawer";
+import { JournalEntryCreateDrawer } from "@/components/accounting/journal-entry-create-drawer";
 import type { JournalEntryDetailData } from "@/components/accounting/journal-entry-detail-drawer";
 import { JournalEntryDetailDrawer } from "@/components/accounting/journal-entry-detail-drawer";
-import { JournalEntryCreateDrawer } from "@/components/accounting/journal-entry-create-drawer";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
 import { Badge } from "@/components/ui/badge";
@@ -72,6 +72,9 @@ const ACCOUNT_TYPE_VARIANTS: Record<string, string> = {
   income: "default",
   expense: "destructive",
 };
+// Typed record for Badge.variant access without any cast
+const ACCOUNT_TYPE_VARIANTS_RECORD: Record<string, string> =
+  ACCOUNT_TYPE_VARIANTS;
 
 export function AccountingContent({
   trialBalance,
@@ -117,7 +120,7 @@ export function AccountingContent({
     }
   }, []);
 
-  const hasContent =
+  const _hasContent =
     trialBalance.length > 0 || journalEntries.length > 0 || accounts.length > 0;
 
   return (
@@ -176,9 +179,8 @@ export function AccountingContent({
                         <TableCell>
                           <Badge
                             variant={
-                              (ACCOUNT_TYPE_VARIANTS[
-                                row.account_type
-                              ] as any) ?? "outline"
+                              ACCOUNT_TYPE_VARIANTS_RECORD[row.account_type] ??
+                              "outline"
                             }
                           >
                             {ACCOUNT_TYPE_LABELS[row.account_type] ??
@@ -342,7 +344,7 @@ export function AccountingContent({
                           <TableCell>
                             <Badge
                               variant={
-                                (ACCOUNT_TYPE_VARIANTS[account.type] as any) ??
+                                ACCOUNT_TYPE_VARIANTS_RECORD[account.type] ??
                                 "outline"
                               }
                             >

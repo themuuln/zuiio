@@ -12,6 +12,7 @@ export default async function AccountingPage({
     await searchParams;
   const { supabase, organizationId, branchId, isBranchScoped } =
     await requireAppContext();
+  // biome-ignore lint/suspicious/noExplicitAny: generated types don't include new accounting tables/RPCs
   const db = supabase as any;
 
   // If consolidated=true is specified, show all branches data (admin only)
@@ -28,6 +29,7 @@ export default async function AccountingPage({
   }
 
   // Helper to add branch filter conditionally
+  // biome-ignore lint/suspicious/noExplicitAny: query builder type not available in generated types
   const maybeFilter = (q: any) =>
     effectiveBranchId ? q.eq("branch_id", effectiveBranchId) : q;
 
