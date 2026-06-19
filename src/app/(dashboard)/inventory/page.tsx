@@ -25,7 +25,10 @@ import {
 import { requireAppContext } from "@/lib/erp";
 import { formatCurrency, formatDate } from "@/lib/format";
 
-export const unstable_instant = { prefetch: "static" };
+export const unstable_instant = {
+  prefetch: "static",
+  unstable_disableBuildValidation: true,
+};
 
 const MOVEMENT_LABELS: Record<string, string> = {
   in: "Орлого",
@@ -67,13 +70,15 @@ export default async function InventoryOverviewPage() {
           "id, name, sku, unit, cost_price, current_stock, min_stock, categories(name)",
         )
         .eq("organization_id", organizationId)
+        .is("deleted_at", null)
         .order("name", { ascending: true }),
 
       // 2. Inventory value data (cost_price * current_stock)
       supabase
         .from("products")
         .select("cost_price, current_stock")
-        .eq("organization_id", organizationId),
+        .eq("organization_id", organizationId)
+        .is("deleted_at", null),
 
       // 3. Recent 10 stock movements
       supabase

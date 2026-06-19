@@ -10,14 +10,17 @@ import {
   Clock,
   Coin,
   CreditCard,
+  Cube,
   CurrencyDollar,
   FileText,
   Folder,
   GearSix,
   House,
+  MapPin,
   Package,
   Percent,
   SignOut,
+  Storefront,
   Trolley,
   Users,
   Warehouse,
@@ -29,7 +32,12 @@ import * as React from "react";
 import { logout } from "@/app/(dashboard)/actions";
 import { QuickCreateDropdown } from "@/components/erp/quick-create-dropdown";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { NativeSelect } from "@/components/ui/native-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import {
   Sidebar,
@@ -47,13 +55,10 @@ import {
   SidebarRail,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import {
-  type BranchOption,
-  BranchProvider,
-  useBranchContext,
-} from "@/lib/branch-context";
+import { useBranchContext } from "@/lib/branch-context";
 import { APP_NAME } from "@/lib/constants";
 import { RealtimeSubscriptions } from "@/lib/query/realtime-subscriptions";
+import { cn } from "@/lib/utils";
 
 type NavItem = {
   title: string;
@@ -75,6 +80,7 @@ const navGroups: NavGroup[] = [
     label: "Үйл ажиллагаа",
     items: [
       { title: "Борлуулалт", href: "/sales", icon: CurrencyDollar },
+      { title: "Дэлгүүр", href: "/shop", icon: Storefront },
       { title: "Зарлага", href: "/expenses", icon: CreditCard },
       { title: "Худалдан авалт", href: "/purchases", icon: Trolley },
       { title: "Буцаалт", href: "/returns", icon: ArrowCounterClockwise },
@@ -84,8 +90,14 @@ const navGroups: NavGroup[] = [
     label: "Бүртгэл",
     items: [
       { title: "Бүтээгдэхүүн", href: "/products", icon: Package },
+      { title: "Бөөн импорт", href: "/products/bulk", icon: Cube },
       { title: "Ангилалууд", href: "/inventory/categories", icon: Folder },
-      { title: "Агуулах", href: "/inventory", icon: Warehouse },
+      { title: "Агуулах", href: "/inventory/warehouses", icon: Warehouse },
+      {
+        title: "Үлдэгдэл хөдөлгөөн",
+        href: "/inventory/movements",
+        icon: MapPin,
+      },
       { title: "Харилцагчид", href: "/customers", icon: Users },
       { title: "Нийлүүлэгчид", href: "/suppliers", icon: Buildings },
     ],
@@ -113,6 +125,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Систем",
     items: [
+      { title: "Брэнд сан", href: "/settings/presets", icon: Cube },
       { title: "Үйлдлийн түүх", href: "/audit", icon: Clock },
       { title: "Тохиргоо", href: "/settings", icon: GearSix },
     ],
@@ -125,81 +138,7 @@ type DashboardShellProps = {
   organizationName: string | null;
   logoUrl: string | null;
   userFullName: string | null;
-  branches: BranchOption[];
-  userBranchId: string | null;
 };
-
-// ─── Branch Selector Inner ─────────────────────────────────────────────
-
-function BranchSelector({ branches }: { branches: BranchOption[] }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const {
-    selectedBranchId,
-    setSelectedBranchId,
-    isBranchScoped,
-    userBranchId,
-  } = useBranchContext();
-
-  // On mount, if URL has a ?branch= param, sync it into the context
-  // so the server page fetching uses the URL-specified branch.
-  React.useEffect(() => {
-    if (isBranchScoped) return;
-    const urlBranch = searchParams.get("branch");
-    if (urlBranch) {
-      const isValid = branches.some((b) => b.id === urlBranch);
-      if (isValid && urlBranch !== selectedBranchId) {
-        setSelectedBranchId(urlBranch);
-      }
-    }
-    // Only run once on mount to sync URL → context.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  if (isBranchScoped) {
-    const currentBranch = branches.find((b) => b.id === userBranchId);
-    return (
-      <div className="px-3 py-2">
-        <p className="text-xs text-muted-foreground">Салбар</p>
-        <p className="truncate text-sm font-medium">
-          {currentBranch?.name ?? "—"}
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="px-3 py-2">
-      <p className="text-xs text-muted-foreground">Салбар</p>
-      <div className="relative mt-0.5">
-        <NativeSelect
-          value={selectedBranchId ?? ""}
-          onChange={(e) => {
-            const newId = e.target.value || null;
-            setSelectedBranchId(newId);
-            // Sync into URL so server-side pages can read ?branch=
-            const params = new URLSearchParams(searchParams.toString());
-            if (newId) {
-              params.set("branch", newId);
-            } else {
-              params.delete("branch");
-            }
-            router.replace(`${pathname}?${params.toString()}`);
-          }}
-          className="w-full text-sm"
-        >
-          <option value="">Бүх салбар</option>
-          {branches.map((b) => (
-            <option key={b.id} value={b.id}>
-              {b.name}
-            </option>
-          ))}
-        </NativeSelect>
-      </div>
-    </div>
-  );
-}
 
 // ─── Main Shell ────────────────────────────────────────────────────────
 
@@ -209,14 +148,50 @@ export function DashboardShell({
   organizationName,
   logoUrl,
   userFullName,
-  branches,
-  userBranchId,
 }: DashboardShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const {
+    selectedBranchId,
+    setSelectedBranchId,
+    isBranchScoped,
+    userBranchId,
+    branches,
+  } = useBranchContext();
+  const currentBranch = branches.find(
+    (b) => b.id === (isBranchScoped ? userBranchId : selectedBranchId),
+  );
+
   const [sidebarOpen, setSidebarOpen] = React.useState(
     !pathname.startsWith("/shop"),
   );
   const prevPathRef = React.useRef(pathname);
+
+  // Sync ?branch= URL param into context on mount
+  React.useEffect(() => {
+    if (isBranchScoped) return;
+    const urlBranch = searchParams.get("branch");
+    if (urlBranch) {
+      const isValid = branches.some((b) => b.id === urlBranch);
+      if (isValid && urlBranch !== selectedBranchId) {
+        setSelectedBranchId(urlBranch);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleBranchChange = (newId: string) => {
+    const branchId = newId || null;
+    setSelectedBranchId(branchId);
+    const params = new URLSearchParams(searchParams.toString());
+    if (branchId) {
+      params.set("branch", newId);
+    } else {
+      params.delete("branch");
+    }
+    router.replace(`${pathname}?${params.toString()}`);
+  };
 
   React.useEffect(() => {
     const wasShop = prevPathRef.current.startsWith("/shop");
@@ -241,7 +216,7 @@ export function DashboardShell({
     : "??";
 
   return (
-    <BranchProvider branches={branches} userBranchId={userBranchId}>
+    <>
       <Drawer.Provider>
         <RealtimeSubscriptions orgId={organizationId} />
         <Drawer.IndentBackground className="pointer-events-none fixed inset-0 z-10 bg-black/10 opacity-0 transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-active:opacity-100 dark:bg-black/40" />
@@ -249,13 +224,47 @@ export function DashboardShell({
           <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <Sidebar collapsible="icon">
               <SidebarHeader>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      size="lg"
-                      className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                {isBranchScoped ? (
+                  <div className="flex items-center gap-2 overflow-hidden rounded-md border border-sidebar-border/40 bg-sidebar-accent/30 p-2 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0">
+                    <div className="flex aspect-square size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary text-primary-foreground">
+                      {logoUrl ? (
+                        <img
+                          src={logoUrl}
+                          alt={organizationName ?? APP_NAME}
+                          className="size-full object-contain"
+                        />
+                      ) : (
+                        <PanelLeftIcon className="size-4" />
+                      )}
+                    </div>
+                    <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+                      <span className="truncate font-semibold">
+                        {organizationName || APP_NAME}
+                      </span>
+                      <span className="flex items-center gap-1 truncate text-xs text-muted-foreground">
+                        <MapPin className="size-3 shrink-0" weight="fill" />
+                        {currentBranch?.name ?? "—"}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <Select
+                    value={selectedBranchId ?? ""}
+                    onValueChange={handleBranchChange}
+                  >
+                    <SelectTrigger
+                      className={cn(
+                        "flex w-full items-center gap-3 overflow-hidden rounded-md p-3 text-left text-sm",
+                        "ring-sidebar-ring outline-hidden transition-[width,height,padding]",
+                        "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                        "active:bg-sidebar-accent active:text-sidebar-accent-foreground",
+                        "group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! group-data-[collapsible=icon]:justify-center",
+                        "border border-sidebar-border/40 bg-sidebar-accent/30 shadow-none",
+                        "h-auto",
+                        "data-[placeholder]:text-inherit",
+                      )}
                     >
-                      <div className="flex aspect-square size-8 items-center justify-center overflow-hidden rounded-lg bg-primary text-primary-foreground">
+                      <div className="flex aspect-square size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary text-primary-foreground group-data-[collapsible=icon]:size-6">
                         {logoUrl ? (
                           <img
                             src={logoUrl}
@@ -266,18 +275,41 @@ export function DashboardShell({
                           <PanelLeftIcon className="size-4" />
                         )}
                       </div>
-                      <div className="grid flex-1 text-left text-sm leading-tight">
+                      <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                         <span className="truncate font-semibold">
                           {organizationName || APP_NAME}
                         </span>
-                        <span className="truncate text-xs text-muted-foreground">
-                          Mini ERP
+                        <span className="flex items-center gap-1 truncate text-xs text-muted-foreground">
+                          {currentBranch ? (
+                            <MapPin className="size-3 shrink-0" weight="fill" />
+                          ) : (
+                            <Storefront className="size-3 shrink-0" />
+                          )}
+                          {currentBranch?.name ?? "Бүх салбар"}
                         </span>
                       </div>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-                <BranchSelector branches={branches} />
+                    </SelectTrigger>
+                    <SelectContent
+                      align="start"
+                      side="bottom"
+                      sideOffset={4}
+                      position="popper"
+                      className="max-h-[50vh] min-w-[14rem]"
+                      avoidCollisions={true}
+                    >
+                      <SelectItem value="">
+                        <Storefront className="size-4" />
+                        Бүх салбар
+                      </SelectItem>
+                      {branches.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>
+                          <MapPin className="size-4" weight="fill" />
+                          {b.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </SidebarHeader>
 
               <SidebarContent>
@@ -372,6 +404,6 @@ export function DashboardShell({
           </SidebarProvider>
         </Drawer.Indent>
       </Drawer.Provider>
-    </BranchProvider>
+    </>
   );
 }

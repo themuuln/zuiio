@@ -3,7 +3,14 @@ import { withBranchFilter } from "@/lib/branches";
 import { PurchasesContent } from "./purchases-content";
 import type { PurchaseRow } from "./purchases-table";
 
-export const unstable_instant = { prefetch: "static" };
+export const unstable_instant = {
+  prefetch: "static",
+  samples: [
+    { searchParams: { branch: null } },
+    { searchParams: { branch: "sample" } },
+  ],
+  unstable_disableBuildValidation: true,
+};
 
 export default async function PurchasesPage({
   searchParams,
@@ -37,6 +44,7 @@ export default async function PurchasesPage({
       .from("products")
       .select("id, name, cost_price, sale_price, current_stock, unit")
       .eq("organization_id", organizationId)
+      .is("deleted_at", null)
       .order("name"),
   ]);
 

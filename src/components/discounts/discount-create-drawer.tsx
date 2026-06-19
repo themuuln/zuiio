@@ -8,7 +8,11 @@ import { z } from "zod";
 import { createDiscount } from "@/app/(dashboard)/discounts/actions";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { DrawerFooter, DrawerCancel, DrawerSubmit } from "@/components/ui/drawer-footer";
+import {
+  DrawerFooter,
+  DrawerCancel,
+  DrawerSubmit,
+} from "@/components/ui/drawer-footer";
 import {
   Combobox,
   ComboboxContent,
@@ -130,6 +134,7 @@ export function DiscountCreateDrawer({
           .from("products")
           .select("id, name")
           .eq("organization_id", profile.organization_id)
+          .is("deleted_at", null)
           .order("name"),
         supabase
           .from("categories")
@@ -298,7 +303,12 @@ export function DiscountCreateDrawer({
       }
       footer={
         <DrawerFooter>
-          <DrawerCancel onClick={() => { setOpen(false); setConditions([]); }} />
+          <DrawerCancel
+            onClick={() => {
+              setOpen(false);
+              setConditions([]);
+            }}
+          />
           <DrawerSubmit form="discount-form" isPending={mutationPending} />
         </DrawerFooter>
       }

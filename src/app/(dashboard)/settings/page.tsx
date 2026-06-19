@@ -1,5 +1,7 @@
-import { GearSix, WarningCircle } from "@phosphor-icons/react/dist/ssr";
+import { Cube, GearSix, WarningCircle } from "@phosphor-icons/react/dist/ssr";
+import Link from "next/link";
 import { ThemeToggle } from "@/components/erp/theme-toggle";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,7 +12,6 @@ import {
 import { requireAppContext } from "@/lib/erp";
 import { DEFAULT_BRAND_CONFIG, type BrandConfig } from "@/lib/branding";
 import type { RolePermission } from "@/components/roles/roles-client";
-import { BrandPresetsCard } from "./brand-presets-card";
 import { BrandingDrawer } from "./branding-drawer";
 import { LeaveOrganizationDialog } from "./leave-org-dialog";
 import { NotificationSettings } from "./notification-settings";
@@ -21,7 +22,10 @@ import { SmtpSettings } from "./smtp-settings";
 import { ReportEmailSettings } from "./report-email-settings";
 import { SettingsShell } from "./settings-shell";
 
-export const unstable_instant = { prefetch: "static" };
+export const unstable_instant = {
+  prefetch: "static",
+  unstable_disableBuildValidation: true,
+};
 
 const SUPERADMIN_EMAIL = "zerone.offical@gmail.com";
 
@@ -52,22 +56,9 @@ export default async function SettingsPage() {
 
   const presetsData = await supabase
     .from("product_presets")
-    .select("*")
-    .order("sort_order");
+    .select("*", { count: "exact", head: true });
 
-  // Fetch brands already imported by this org
-  const { data: existingBrands } = await supabase
-    .from("brands")
-    .select("name")
-    .eq("organization_id", organizationId);
-  const importedBrandNames = existingBrands?.map((b) => b.name) ?? [];
-
-  // Read disabled brands from brand_config
-  const disabledBrandNames = Array.isArray(
-    (brandConfig as Record<string, unknown>)?.disabled_brand_names,
-  )
-    ? ((brandConfig as Record<string, unknown>).disabled_brand_names as string[])
-    : [];
+  const hasPresets = (presetsData.count ?? 0) > 0;
 
   // Check if SMTP is configured (for conditional rendering)
   const { count: smtpCount } = await supabase
@@ -133,8 +124,26 @@ export default async function SettingsPage() {
       </Card>
 
       {/* Product Brand Presets — available brands with products to import */}
-      {presetsData?.data?.length ? (
-        <BrandPresetsCard presets={presetsData.data} orgCompanyType={org?.company_type ?? "other"} importedBrandNames={importedBrandNames} disabledBrandNames={disabledBrandNames} />
+      {hasPresets ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Cube className="size-5" />
+              Брэнд, бүтээгдэхүүний сан
+            </CardTitle>
+            <CardDescription>
+              Бэлэн брэнд, бүтээгдэхүүний загваруудаас сонгон импортлох
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline">
+              <Link href="/settings/presets">
+                <Cube className="size-4" />
+                Брэнд сан нээх
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
       ) : null}
 
       {/* Profile */}

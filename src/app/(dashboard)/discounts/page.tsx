@@ -2,7 +2,14 @@ import { withBranchFilter } from "@/lib/branches";
 import { requireAppContext } from "@/lib/erp";
 import { DiscountsContent } from "./discounts-content";
 
-export const unstable_instant = { prefetch: "static" };
+export const unstable_instant = {
+  prefetch: "static",
+  samples: [
+    { searchParams: { branch: null } },
+    { searchParams: { branch: "sample" } },
+  ],
+  unstable_disableBuildValidation: true,
+};
 
 export type DiscountRow = {
   id: string;

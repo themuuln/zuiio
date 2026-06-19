@@ -11,7 +11,10 @@ import {
 import { requireAppContext } from "@/lib/erp";
 import { formatDate } from "@/lib/format";
 
-export const unstable_instant = { prefetch: "static" };
+export const unstable_instant = {
+  prefetch: "static",
+  unstable_disableBuildValidation: true,
+};
 
 const ACTION_LABELS: Record<string, string> = {
   created: "Үүсгэсэн",

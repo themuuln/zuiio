@@ -64,6 +64,8 @@ interface DataTableProps<TData, TValue> {
   enableRowSelection?: boolean;
   /** Callback when a row is clicked. When provided, rows get a cursor-pointer style. */
   onRowClick?: (row: TData) => void;
+  /** Callback fired when row selection changes. Receives an array of selected row data objects. */
+  onRowSelectionChange?: (selectedRows: TData[]) => void;
   /** Extra toolbar content rendered after search, before column toggle */
   toolbar?: React.ReactNode;
 }
@@ -101,6 +103,7 @@ export function DataTable<TData, TValue>({
   enableColumnVisibility = false,
   enableRowSelection = false,
   onRowClick,
+  onRowSelectionChange,
   toolbar,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -109,7 +112,9 @@ export function DataTable<TData, TValue>({
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
+  const [rowSelection, setRowSelection] = React.useState<
+    Record<string, boolean>
+  >({});
   const [pageSize, setPageSize] = React.useState(initialPageSize);
 
   const selectionColumn = React.useMemo(
@@ -178,6 +183,16 @@ export function DataTable<TData, TValue>({
     state: { sorting, columnFilters, columnVisibility, rowSelection },
     initialState: { pagination: { pageSize } },
   });
+
+  // Notify parent of selected rows
+  React.useEffect(() => {
+    if (!onRowSelectionChange) return;
+    const selectedRows = table
+      .getSelectedRowModel()
+      .rows.map((r) => r.original) as TData[];
+    onRowSelectionChange(selectedRows);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rowSelection, onRowSelectionChange]);
 
   React.useEffect(() => {
     table.setPageSize(pageSize);
@@ -251,7 +266,10 @@ export function DataTable<TData, TValue>({
         <Table>
           <TableHeader className="sticky top-0 z-10 bg-muted/50">
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="border-b border-border/50">
+              <TableRow
+                key={headerGroup.id}
+                className="border-b border-border/50"
+              >
                 {headerGroup.headers.map((header) => {
                   const canSort = enableSorting && header.column.getCanSort();
                   return (
@@ -321,9 +339,7 @@ export function DataTable<TData, TValue>({
                           isSelectCell && "w-10",
                         )}
                         onClick={
-                          isSelectCell
-                            ? (e) => e.stopPropagation()
-                            : undefined
+                          isSelectCell ? (e) => e.stopPropagation() : undefined
                         }
                       >
                         {flexRender(
@@ -342,9 +358,7 @@ export function DataTable<TData, TValue>({
                   className="h-40 text-center"
                 >
                   <div className="flex flex-col items-center gap-1.5">
-                    <p className="text-sm text-muted-foreground">
-                      No results.
-                    </p>
+                    <p className="text-sm text-muted-foreground">No results.</p>
                   </div>
                 </TableCell>
               </TableRow>
@@ -398,28 +412,25 @@ export function DataTable<TData, TValue>({
 
             {/* Page numbers: hidden on mobile */}
             <div className="hidden items-center gap-1 sm:flex">
-              {getPageNumbers(pageIndex + 1, pageCount).map(
-                (page, idx) =>
-                  page === "ellipsis" ? (
-                    <span
-                      key={`ellipsis-${idx}`}
-                      className="flex size-7 items-center justify-center text-xs text-muted-foreground"
-                    >
-                      ...
-                    </span>
-                  ) : (
-                    <Button
-                      key={page}
-                      variant={
-                        page === pageIndex + 1 ? "default" : "outline"
-                      }
-                      size="xs"
-                      onClick={() => table.setPageIndex(page - 1)}
-                      className="min-w-7"
-                    >
-                      {page}
-                    </Button>
-                  ),
+              {getPageNumbers(pageIndex + 1, pageCount).map((page, idx) =>
+                page === "ellipsis" ? (
+                  <span
+                    key={`ellipsis-${idx}`}
+                    className="flex size-7 items-center justify-center text-xs text-muted-foreground"
+                  >
+                    ...
+                  </span>
+                ) : (
+                  <Button
+                    key={page}
+                    variant={page === pageIndex + 1 ? "default" : "outline"}
+                    size="xs"
+                    onClick={() => table.setPageIndex(page - 1)}
+                    className="min-w-7"
+                  >
+                    {page}
+                  </Button>
+                ),
               )}
             </div>
 

@@ -3,6 +3,7 @@
 import { Drawer } from "@base-ui/react/drawer";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Barcode, NotePencil, Package, Tag, X } from "@phosphor-icons/react";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -13,6 +14,7 @@ import {
   type LocalVariantData,
   type LocalVariantGroup,
   VariantManagerDrawer,
+  VariantSummaryCard,
 } from "@/components/products/variant-manager-drawer";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -101,13 +103,13 @@ export function ProductEditDrawer({
   const trimmedUnitQuery = unitQuery.trim();
   const loweredUnitQuery = trimmedUnitQuery.toLowerCase();
   const [allUnits, setAllUnits] = useState<string[]>([...initialUnits]);
-  const unitLabelMatch =
-    loweredUnitQuery === "" ||
-    allUnits.some((u) => u.toLowerCase().includes(loweredUnitQuery));
+  const filteredUnits = loweredUnitQuery
+    ? allUnits.filter((u) => u.toLowerCase().includes(loweredUnitQuery))
+    : allUnits;
   const unitItems: string[] =
-    trimmedUnitQuery !== "" && !unitLabelMatch
-      ? [...allUnits, unitQuery.trim()]
-      : allUnits;
+    trimmedUnitQuery !== "" && filteredUnits.length === 0
+      ? [unitQuery.trim()]
+      : filteredUnits;
   const [selectedUnit, setSelectedUnit] = useState<string | null>(
     product.unit ?? "ширхэг",
   );
@@ -121,20 +123,23 @@ export function ProductEditDrawer({
   const [allCategoryNames, setAllCategoryNames] = useState<string[]>([
     ...initialCategoryNames,
   ]);
-  const categoryLabelMatch =
-    loweredCategoryQuery === "" ||
-    allCategoryNames.some((c) =>
-      c.toLowerCase().includes(loweredCategoryQuery),
-    );
+  const filteredCategories = loweredCategoryQuery
+    ? allCategoryNames.filter((c) =>
+        c.toLowerCase().includes(loweredCategoryQuery),
+      )
+    : allCategoryNames;
   const categoryItems: string[] =
-    trimmedCategoryQuery !== "" && !categoryLabelMatch
-      ? [...allCategoryNames, categoryQuery.trim()]
-      : allCategoryNames;
+    trimmedCategoryQuery !== "" && filteredCategories.length === 0
+      ? [categoryQuery.trim()]
+      : filteredCategories;
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
     product.category_name ?? "",
   );
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(
     product.brand_id ?? "",
+  );
+  const [brandQuery, setBrandQuery] = useState(
+    (brands ?? []).find((b) => b.id === product.brand_id)?.name ?? "",
   );
 
   const [variantGroups, setVariantGroups] = useState<LocalVariantGroup[]>([]);
@@ -144,6 +149,7 @@ export function ProductEditDrawer({
     register,
     handleSubmit,
     watch,
+    reset,
     formState: { errors },
   } = useForm<ProductEditValues>({
     resolver: zodResolver(productEditSchema),
@@ -158,6 +164,39 @@ export function ProductEditDrawer({
     },
   });
 
+  // Reset form when product changes
+  useEffect(() => {
+    reset({
+      name: product.name,
+      sku: product.sku ?? "",
+      barcode: product.barcode ?? "",
+      cost_price: product.cost_price ?? 0,
+      sale_price: product.sale_price ?? 0,
+      current_stock: product.current_stock ?? 0,
+      min_stock: product.min_stock ?? 0,
+    });
+  }, [
+    reset,
+    product.name,
+    product.sku,
+    product.barcode,
+    product.cost_price,
+    product.sale_price,
+    product.current_stock,
+    product.min_stock,
+  ]);
+
+  // Sync combobox state when product changes
+  useEffect(() => {
+    setUnitQuery(product.unit ?? "ширхэг");
+    setSelectedUnit(product.unit ?? "ширхэг");
+    setCategoryQuery(product.category_name ?? "");
+    setSelectedCategory(product.category_name ?? "");
+    setSelectedBrandId(product.brand_id ?? "");
+    setBrandQuery(
+      (brands ?? []).find((b) => b.id === product.brand_id)?.name ?? "",
+    );
+  }, [product.unit, product.category_name, product.brand_id, brands]);
   const editMutation = useOptimisticUpdate({
     mutationFn: async (formData: FormData) => {
       const result = await updateProduct(undefined, formData);
@@ -473,20 +512,24 @@ export function ProductEditDrawer({
                             logo_url: string | null;
                           }[]
                         }
-                        defaultValue={product.brand_id ?? ""}
+                        value={
+                          (brands ?? []).find(
+                            (b) => b.id === selectedBrandId,
+                          ) ?? null
+                        }
                         onValueChange={(
                           next: {
                             id: string;
                             name: string;
                             logo_url: string | null;
                           } | null,
-                        ) => setSelectedBrandId(next?.id ?? "")}
+                        ) => {
+                          setSelectedBrandId(next?.id ?? "");
+                          setBrandQuery(next?.name ?? "");
+                        }}
                         itemToStringLabel={(item) => item?.name ?? ""}
-                        inputValue={
-                          brands?.find((b) => b.id === selectedBrandId)?.name ??
-                          ""
-                        }
-                        onInputValueChange={() => {}}
+                        inputValue={brandQuery}
+                        onInputValueChange={setBrandQuery}
                       >
                         <ComboboxInput
                           id="edit-brand_id"
@@ -504,9 +547,12 @@ export function ProductEditDrawer({
                             }) => (
                               <ComboboxItem key={item.id} value={item.id}>
                                 {item.logo_url ? (
-                                  <img
+                                  <Image
                                     src={item.logo_url}
                                     alt={item.name}
+                                    width={16}
+                                    height={16}
+                                    unoptimized
                                     className="mr-2 inline-block size-4 rounded object-contain dark:invert"
                                   />
                                 ) : null}
@@ -581,6 +627,12 @@ export function ProductEditDrawer({
                   }}
                   variantData={variantData}
                   onVariantsChange={setVariantData}
+                  parentTitle="Бүтээгдэхүүн засах"
+                />
+
+                <VariantSummaryCard
+                  groups={variantGroups}
+                  variantData={variantData}
                 />
 
                 {editMutation.error ? (

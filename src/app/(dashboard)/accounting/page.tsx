@@ -1,7 +1,15 @@
 import { requireAppContext } from "@/lib/erp";
 import { AccountingContent } from "./accounting-content";
 
-export const unstable_instant = { prefetch: "static" };
+export const unstable_instant = {
+  prefetch: "static",
+  samples: [
+    { searchParams: { branch: null, consolidated: null } },
+    { searchParams: { branch: "sample", consolidated: null } },
+    { searchParams: { branch: null, consolidated: "true" } },
+  ],
+  unstable_disableBuildValidation: true,
+};
 
 export default async function AccountingPage({
   searchParams,

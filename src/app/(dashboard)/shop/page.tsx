@@ -12,6 +12,7 @@ export default async function ShopCatalogPage() {
         "id, name, sku, barcode, unit, sale_price, current_stock, category_id, brand_id, image_url, brands(name, logo_url)",
       )
       .eq("organization_id", organizationId)
+      .is("deleted_at", null)
       .order("name", { ascending: true }),
     supabase
       .from("categories")

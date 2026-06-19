@@ -1,6 +1,39 @@
 import { defineConfig } from "vitepress";
 import { withMermaid } from "vitepress-mermaid-viewer";
-const sidebar = [
+const guideSidebar = {
+  text: "Гарын авлага",
+  collapsed: false,
+  items: [
+    {
+      text: "Эхлэх",
+      items: [
+        { text: "Танилцуулга", link: "/guide/index.html" },
+        { text: "Эхлэх заавар", link: "/guide/getting-started.html" },
+        { text: "Түгээмэл асуултууд", link: "/guide/faq.html" },
+      ],
+    },
+    {
+      text: "Модулиуд",
+      items: [
+        { text: "Борлуулалт", link: "/guide/features/sales.html" },
+        { text: "Худалдан авалт", link: "/guide/features/purchases.html" },
+        { text: "Бараа материал", link: "/guide/features/inventory.html" },
+        { text: "Санхүүгийн бүртгэл", link: "/guide/features/accounting.html" },
+        { text: "Зарлага", link: "/guide/features/expenses.html" },
+        { text: "Буцаалт", link: "/guide/features/returns.html" },
+        { text: "Нэхэмжлэх", link: "/guide/features/invoices.html" },
+        { text: "Үнийн санал", link: "/guide/features/quotations.html" },
+        { text: "Хямдрал", link: "/guide/features/discounts.html" },
+        { text: "Шимтгэл", link: "/guide/features/commissions.html" },
+        { text: "Тайлан", link: "/guide/features/reports.html" },
+        { text: "Дэлгүүр (POS)", link: "/guide/features/shop.html" },
+        { text: "Тохиргоо", link: "/guide/features/settings.html" },
+      ],
+    },
+  ],
+};
+
+const devSidebar = [
   {
     text: "Getting Started",
     items: [
@@ -42,9 +75,13 @@ export default withMermaid(
     themeConfig: {
       nav: [
         { text: "Home", link: "/" },
+        { text: "Гарын авлага", link: "/guide/" },
         { text: "Getting Started", link: "/getting-started.html" },
       ],
-      sidebar: { "/": sidebar },
+      sidebar: {
+        "/": devSidebar,
+        "/guide/": [guideSidebar],
+      },
       socialLinks: [{ icon: "github", link: "#" }],
       footer: {
         message: "Generated with Documentizer",

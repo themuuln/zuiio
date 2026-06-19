@@ -1,22 +1,18 @@
 "use client";
 
-import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Barcode, Package, Plus, Tag } from "@phosphor-icons/react";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { createProduct } from "@/app/(dashboard)/products/new/actions";
 import {
-  DrawerFooter,
-  DrawerCancel,
-  DrawerSubmit,
-} from "@/components/ui/drawer-footer";
-import {
   computeCombinations,
   type LocalVariantData,
   type LocalVariantGroup,
   VariantManagerDrawer,
+  VariantSummaryCard,
 } from "@/components/products/variant-manager-drawer";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -29,6 +25,14 @@ import {
 } from "@/components/ui/combobox";
 import { CreatableCombobox } from "@/components/ui/creatable-combobox";
 import {
+  DrawerCancel,
+  DrawerFooter,
+  DrawerSubmit,
+} from "@/components/ui/drawer-footer";
+import { DrawerHeader } from "@/components/ui/drawer-header";
+import { DrawerLayout } from "@/components/ui/drawer-layout";
+import { ErrorBanner } from "@/components/ui/error-banner";
+import {
   Field,
   FieldDescription,
   FieldGroup,
@@ -39,8 +43,6 @@ import { PRESET_CATEGORIES } from "@/lib/constants";
 import { useBrands } from "@/lib/query/hooks/use-brands";
 import { productKeys } from "@/lib/query/keys";
 import { useOptimisticCreate } from "@/lib/query/use-optimistic";
-import { DrawerHeader } from "@/components/ui/drawer-header";
-import { ErrorBanner } from "@/components/ui/error-banner";
 
 const initialUnits = [
   "ширхэг",
@@ -55,11 +57,6 @@ const initialUnits = [
   "багц",
   "хос",
   "ш",
-];
-
-// Collect all preset categories across all company types
-const allPresetCategories = [
-  ...new Set(Object.values(PRESET_CATEGORIES).flat()),
 ];
 
 const productSchema = z.object({
@@ -91,7 +88,9 @@ export function ProductCreateDrawer({
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen ?? internalOpen;
   const setOpen = externalOnOpenChange ?? setInternalOpen;
-  const presets = PRESET_CATEGORIES[companyType] ?? [];
+  const presets = companyType
+    ? (PRESET_CATEGORIES[companyType] ?? [])
+    : [...new Set(Object.values(PRESET_CATEGORIES).flat())];
   const { data: brands } = useBrands(organizationId ?? "");
 
   const {
@@ -200,33 +199,6 @@ export function ProductCreateDrawer({
     productMutation.mutate(formData, { onSuccess: () => setOpen(false) });
   };
 
-  // --- Category combobox (creatable) ---
-  function computeVariantCombinations(
-    groups: LocalVariantGroup[],
-  ): { option_ids: string[]; option_labels: string }[] {
-    if (groups.length === 0) return [];
-    const optionLists = groups.map((g) =>
-      g.options.map((o) => ({ id: o.id, value: o.value })),
-    );
-    function cartesian(
-      lists: { id: string; value: string }[][],
-    ): { option_ids: string[]; option_labels: string }[] {
-      if (lists.length === 0) return [{ option_ids: [], option_labels: "" }];
-      const [first, ...rest] = lists;
-      const restCombos = cartesian(rest);
-      return first.flatMap((item) =>
-        restCombos.map((combo) => ({
-          option_ids: [item.id, ...combo.option_ids],
-          option_labels: [
-            item.value,
-            ...(combo.option_labels ? [combo.option_labels] : []),
-          ].join(" / "),
-        })),
-      );
-    }
-    return cartesian(optionLists);
-  }
-
   return (
     <DrawerLayout
       open={open}
@@ -328,7 +300,7 @@ export function ProductCreateDrawer({
                       name="category_name"
                       id="category_name"
                       placeholder="Ангилал сонгох эсвэл бичих"
-                      initialItems={allPresetCategories}
+                      initialItems={presets}
                       value={field.value ?? ""}
                       onChange={(next) => field.onChange(next)}
                       emptyLabel="Ангилал байхгүй"
@@ -393,9 +365,12 @@ export function ProductCreateDrawer({
                             }) => (
                               <ComboboxItem key={item.id} value={item.id}>
                                 {item.logo_url ? (
-                                  <img
+                                  <Image
                                     src={item.logo_url}
                                     alt={item.name}
+                                    width={16}
+                                    height={16}
+                                    unoptimized
                                     className="mr-2 inline-block size-4 rounded object-contain dark:invert"
                                   />
                                 ) : null}
@@ -419,7 +394,6 @@ export function ProductCreateDrawer({
                   type="number"
                   min="0"
                   step="0.01"
-                  defaultValue="0"
                   {...register("cost_price", { valueAsNumber: true })}
                 />
               </Field>
@@ -430,7 +404,6 @@ export function ProductCreateDrawer({
                   type="number"
                   min="0"
                   step="0.01"
-                  defaultValue="0"
                   {...register("sale_price", { valueAsNumber: true })}
                 />
               </Field>
@@ -441,7 +414,6 @@ export function ProductCreateDrawer({
                   type="number"
                   min="0"
                   step="0.01"
-                  defaultValue="0"
                   {...register("current_stock", {
                     valueAsNumber: true,
                   })}
@@ -454,7 +426,6 @@ export function ProductCreateDrawer({
                   type="number"
                   min="0"
                   step="0.01"
-                  defaultValue="0"
                   {...register("min_stock", { valueAsNumber: true })}
                 />
               </Field>
@@ -471,6 +442,12 @@ export function ProductCreateDrawer({
             }}
             variantData={variantData}
             onVariantsChange={setVariantData}
+            parentTitle="Шинэ бүтээгдэхүүн"
+          />
+
+          <VariantSummaryCard
+            groups={variantGroups}
+            variantData={variantData}
           />
         </div>
 

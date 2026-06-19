@@ -6,7 +6,14 @@ import { requireAppContext } from "@/lib/erp";
 import { withBranchFilter } from "@/lib/branches";
 import { type MovementRow, MovementsContent } from "./movements-content";
 
-export const unstable_instant = { prefetch: "static" };
+export const unstable_instant = {
+  prefetch: "static",
+  samples: [
+    { searchParams: { branch: null } },
+    { searchParams: { branch: "sample" } },
+  ],
+  unstable_disableBuildValidation: true,
+};
 
 export default async function InventoryMovementsPage({
   searchParams,

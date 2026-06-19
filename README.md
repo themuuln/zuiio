@@ -6,6 +6,7 @@ The entire UI is in Mongolian (Монгол хэл).
 
 ## Features
 
+- **Multi-Branch Support** — Physical location management (e.g., gym branches). Each branch has isolated transactions (sales, expenses, purchases, returns, invoices, quotations, discounts, stock movements, commissions), its own chart of accounts with per-branch trial balance, and a consolidated accounting view that merges all branches. Users can be org-wide (access all branches) or branch-scoped. Creating a branch auto-creates a linked warehouse (1:1) and seeds a default chart of accounts. Master data (products, customers, suppliers, categories, brands) is shared across all branches.
 - **Authentication** — Login, register, password reset via Supabase SSR with organization-scoped access. First-time users are prompted to create their organization.
 - **Dashboard** — KPI overview with total products, customers, suppliers, today's sales and expenses, low stock alerts, pending sales, recent sales, and a monthly sales chart.
 - **Products & Variants** — Full CRUD with create/edit/detail drawers, category management page with product counts. **Product Variants** — Multi-group variant system supporting arbitrary combinations (e.g., Size × Color, Material × Size × Finish). Each variant has its own SKU, barcode, cost/sale price, and stock. Variants are configured via a dedicated slide-in drawer with preset group suggestions, matrix-style bulk editing for prices/stock/SKU, and auto-fill from product defaults.
@@ -19,21 +20,21 @@ The entire UI is in Mongolian (Монгол хэл).
 
 ## Tech Stack
 
-| Layer         | Technology                                                                    |
-| ------------- | ----------------------------------------------------------------------------- |
-| Framework     | Next.js 16.2.6 (App Router)                                                   |
-| Database      | Supabase (PostgreSQL)                                                         |
-| Auth          | Supabase SSR (`@supabase/ssr` + `@supabase/supabase-js`)                      |
-| UI            | Tailwind CSS v4, shadcn/ui, Base UI (drawers), Radix UI                       |
-| State         | TanStack React Query v5 with devtools, React 19 Server Components             |
-| Icons         | Phosphor Icons                                                                |
-| Tables        | TanStack React Table v8                                                       |
-| Forms         | react-hook-form + zod (`@hookform/resolvers`)                                 |
-| Charts        | Recharts                                                                      |
-| Linting       | Biome 2.2 (with Next.js + React domain rules)                                 |
-| Testing       | Node.js built-in test runner (`node:test` + `node:assert/strict`), tsx runner |
-| Theme         | next-themes (dark mode)                                                       |
-| Notifications | Sonner (toast)                                                                |
+| Layer         | Technology                                                                                           |
+| ------------- | ---------------------------------------------------------------------------------------------------- |
+| Framework     | Next.js 16.2.6 (App Router)                                                                          |
+| Database      | Supabase (PostgreSQL)                                                                                |
+| Auth          | Supabase SSR (`@supabase/ssr` + `@supabase/supabase-js`)                                             |
+| UI            | Tailwind CSS v4, shadcn/ui, Base UI (drawers), Radix UI                                              |
+| State         | TanStack React Query v5 with devtools, React 19 Server Components                                    |
+| Icons         | Phosphor Icons                                                                                       |
+| Tables        | TanStack React Table v8                                                                              |
+| Forms         | react-hook-form + zod (`@hookform/resolvers`)                                                        |
+| Charts        | Recharts                                                                                             |
+| Linting       | Biome 2.2 (with Next.js + React domain rules)                                                        |
+| Testing       | Node.js built-in test runner (`node:test` + `node:assert/strict`), tsx runner, Playwright 1.61 (E2E) |
+| Theme         | next-themes (dark mode)                                                                              |
+| Notifications | Sonner (toast)                                                                                       |
 
 ## Getting Started
 
@@ -73,10 +74,11 @@ Open [http://localhost:3101](http://localhost:3101).
 | `pnpm dev`           | Start development server (use `-p 3101`)        |
 | `pnpm build`         | Production build                                |
 | `pnpm start`         | Start production server                         |
-| `pnpm test`          | Run test suite (229 tests across 10 test files) |
+| `pnpm test`          | Run test suite (331 tests across 13 test files) |
 | `pnpm run typecheck` | TypeScript type checking (`tsc --noEmit`)       |
 | `pnpm run lint`      | Biome lint check                                |
 | `pnpm run format`    | Biome auto-format                               |
+| `pnpm run test:e2e`  | Playwright E2E tests                            |
 
 ## Testing
 

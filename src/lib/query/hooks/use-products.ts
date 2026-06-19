@@ -14,6 +14,7 @@ export function useProducts(orgId: string) {
         .from("products")
         .select("*")
         .eq("organization_id", orgId)
+        .is("deleted_at", null)
         .order("name");
 
       if (error) throw error;

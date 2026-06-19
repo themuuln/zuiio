@@ -5,7 +5,10 @@ import { withBranchFilter } from "@/lib/branches";
 import type { DashboardData } from "./dashboard-client";
 import { DashboardClient } from "./dashboard-client";
 
-export const unstable_instant = { prefetch: "static" };
+export const unstable_instant = {
+  prefetch: "static",
+  unstable_disableBuildValidation: true,
+};
 
 export default async function DashboardPage() {
   const { supabase, organizationId, branchId, isBranchScoped } =
@@ -32,7 +35,8 @@ export default async function DashboardPage() {
     supabase
       .from("products")
       .select("id", { count: "exact", head: true })
-      .eq("organization_id", organizationId),
+      .eq("organization_id", organizationId)
+      .is("deleted_at", null),
 
     // 2. Total customers (shared master data - no branch filter)
     supabase
@@ -76,7 +80,8 @@ export default async function DashboardPage() {
     supabase
       .from("products")
       .select("current_stock, min_stock")
-      .eq("organization_id", organizationId),
+      .eq("organization_id", organizationId)
+      .is("deleted_at", null),
 
     // 7. Pending sales
     withBranchFilter(
@@ -105,7 +110,8 @@ export default async function DashboardPage() {
     supabase
       .from("products")
       .select("cost_price, current_stock")
-      .eq("organization_id", organizationId),
+      .eq("organization_id", organizationId)
+      .is("deleted_at", null),
 
     // 10. Monthly trend
     withBranchFilter(

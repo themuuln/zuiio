@@ -5,7 +5,10 @@ import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
 import { requireAppContext } from "@/lib/erp";
 
-export const unstable_instant = { prefetch: "static" };
+export const unstable_instant = {
+  prefetch: "static",
+  unstable_disableBuildValidation: true,
+};
 
 export type CategoryRow = {
   id: string;
@@ -27,7 +30,8 @@ export default async function CategoriesPage() {
     supabase
       .from("products")
       .select("id, category_id")
-      .eq("organization_id", organizationId),
+      .eq("organization_id", organizationId)
+      .is("deleted_at", null),
   ]);
 
   const categories = categoriesResult.data;

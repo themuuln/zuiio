@@ -175,6 +175,7 @@ function SaleDrawerWrapper({
         .from("products")
         .select("id, name, sale_price, current_stock, unit")
         .eq("organization_id", organizationId)
+        .is("deleted_at", null)
         .order("name");
       return data ?? [];
     },
@@ -237,6 +238,7 @@ function InvoiceDrawerWrapper({
         .from("products")
         .select("id, name, sale_price, current_stock, unit")
         .eq("organization_id", organizationId)
+        .is("deleted_at", null)
         .order("name");
       return data ?? [];
     },

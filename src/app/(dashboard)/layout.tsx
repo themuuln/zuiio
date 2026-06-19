@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import type { BranchOption } from "@/lib/branch-context";
+import { BranchProvider, type BranchOption } from "@/lib/branch-context";
 import { type BrandConfig, generateBrandCSS } from "@/lib/branding";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardShell } from "./dashboard-shell";
@@ -60,16 +60,16 @@ export default async function DashboardLayout({
           dangerouslySetInnerHTML={{ __html: brandCSS }}
         />
       )}
-      <DashboardShell
-        organizationId={profile.organization_id}
-        organizationName={profile.organizations?.name ?? null}
-        logoUrl={brandConfig.logo_url ?? null}
-        userFullName={profile.full_name}
-        branches={branches}
-        userBranchId={profile.branch_id}
-      >
-        {children}
-      </DashboardShell>
+      <BranchProvider branches={branches} userBranchId={profile.branch_id}>
+        <DashboardShell
+          organizationId={profile.organization_id}
+          organizationName={profile.organizations?.name ?? null}
+          logoUrl={brandConfig.logo_url ?? null}
+          userFullName={profile.full_name}
+        >
+          {children}
+        </DashboardShell>
+      </BranchProvider>
     </>
   );
 }

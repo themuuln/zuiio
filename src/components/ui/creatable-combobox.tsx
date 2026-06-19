@@ -14,7 +14,7 @@ interface CreatableComboboxProps {
   name: string;
   id: string;
   placeholder: string;
-  initialItems: string[];
+  initialItems: readonly string[];
   value: string;
   onChange: (value: string) => void;
   emptyLabel?: string;
@@ -33,13 +33,11 @@ export function CreatableCombobox({
   const trimmedQuery = query.trim();
   const loweredQuery = trimmedQuery.toLowerCase();
   const [allItems, setAllItems] = useState<string[]>([...initialItems]);
-  const labelMatch =
-    loweredQuery === "" ||
-    allItems.some((i) => i.toLowerCase().includes(loweredQuery));
+  const filtered = loweredQuery
+    ? allItems.filter((i) => i.toLowerCase().includes(loweredQuery))
+    : allItems;
   const items: string[] =
-    trimmedQuery !== "" && !labelMatch
-      ? [...allItems, query.trim()]
-      : allItems;
+    trimmedQuery !== "" && filtered.length === 0 ? [query.trim()] : filtered;
 
   return (
     <Combobox
@@ -59,7 +57,12 @@ export function CreatableCombobox({
       inputValue={query}
       onInputValueChange={setQuery}
     >
-      <ComboboxInput id={id} placeholder={placeholder} showTrigger className="w-full" />
+      <ComboboxInput
+        id={id}
+        placeholder={placeholder}
+        showTrigger
+        className="w-full"
+      />
       <ComboboxContent>
         <ComboboxEmpty>{emptyLabel}</ComboboxEmpty>
         <ComboboxList>

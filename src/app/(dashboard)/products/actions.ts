@@ -27,6 +27,7 @@ export async function updateProduct(
   const barcode = formData.get("barcode")?.toString() ?? null;
   const unit = formData.get("unit")?.toString() ?? "ширхэг";
   const brandId = formData.get("brand_id")?.toString() || null;
+  const categoryName = formData.get("category_name")?.toString() || null;
 
   const validationError = validateProductInput({
     name,
@@ -40,6 +41,29 @@ export async function updateProduct(
     return { error: validationError };
   }
 
+  // Resolve category_name to category_id
+  let categoryId: string | null = null;
+  if (categoryName) {
+    const { data: existing } = await supabase
+      .from("categories")
+      .select("id")
+      .eq("organization_id", organizationId)
+      .eq("name", categoryName.trim())
+      .maybeSingle();
+
+    if (existing) {
+      categoryId = existing.id;
+    } else {
+      const { data: created } = await supabase
+        .from("categories")
+        .insert({ name: categoryName.trim(), organization_id: organizationId })
+        .select("id")
+        .single();
+
+      if (created) categoryId = created.id;
+    }
+  }
+
   const { error } = await supabase
     .from("products")
     .update({
@@ -48,6 +72,7 @@ export async function updateProduct(
       barcode: barcode?.trim() || null,
       unit,
       brand_id: brandId || null,
+      category_id: categoryId,
       cost_price: costPrice,
       sale_price: salePrice,
       min_stock: minStock,
@@ -204,5 +229,35 @@ export async function updateProduct(
   checkLowStockAndNotify(organizationId, name, currentStock, minStock);
 
   revalidatePath("/products");
+  return { success: true as const };
+}
+
+export async function deleteProduct(
+  _prevState: { error?: string } | undefined,
+  formData: FormData,
+) {
+  const { supabase, organizationId, permissions } = await requireAppContext();
+  const permError = checkPermission(permissions, "products.delete");
+  if (permError) return { error: permError };
+
+  const id = formData.get("id")?.toString();
+  if (!id) {
+    return { error: "Бүтээгдэхүүний ID олдсонгүй." };
+  }
+
+  // Soft-delete: set deleted_at instead of hard-deleting, so historical
+  // references (stock movements, invoices, sales) remain valid.
+  const { error } = await supabase
+    .from("products")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("organization_id", organizationId);
+
+  if (error) {
+    return { error: error.message ?? "Бүтээгдэхүүн устгахад алдаа гарлаа." };
+  }
+
+  revalidatePath("/products");
+  revalidatePath("/inventory");
   return { success: true as const };
 }

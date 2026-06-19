@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAppContext } from "@/lib/erp";
+import { createServiceClient } from "@/lib/supabase/server-service";
 
 export async function updateOrganization(
   _prevState: { error?: string } | undefined,
@@ -108,10 +109,7 @@ const PRESET_IMAGE_MAP: Record<string, string> = {
     "https://realpharm.eu/hpeciai/2b58caf2639603bf3fbab6077e5d487b/eng_pl_ProActive-Aminokwasy-BCAA-400g-GRAPE-2639_7.png",
   "RP-OM3-90":
     "https://realpharm.eu/hpeciai/b2c5738f29afd5986deef127210876bd/eng_pm_Real-Pharm-Omega-3-60-caps-2336_1.png",
-  // FIXME: RP-FW-600 and RP-FIN-500 had copy-pasted image URLs (whey/creatine).
-  // Remove these comments and provide correct image URLs when available.
-  // "RP-FW-600": "<correct-image-url>",
-  // "RP-FIN-500": "<correct-image-url>",
+  // FIXME: RP-FW-600 and RP-FIN-500 need correct image URLs.
   // ── HiTec Nutrition ──
   "HTN-HTP-2250":
     "https://hitec.pl/hpeciai/5230f82c115505af7b67a0e153fa90c4/pol_pm_WPC-80-2000g-1037_8.jpg",
@@ -129,16 +127,16 @@ const PRESET_IMAGE_MAP: Record<string, string> = {
 
 export async function importBrandPresets(formData: FormData) {
   const { supabase, organizationId } = await requireAppContext();
+  const serviceSupabase = createServiceClient();
 
   const brandName = formData.get("brand_name")?.toString();
   if (!brandName) return { error: "Брэндийн нэр шаардлагатай." };
 
-  const { data: presets, error: fetchError }: { data: any; error: any } =
-    await (supabase as any)
-      .from("product_presets")
-      .select("*")
-      .eq("brand_name", brandName)
-      .order("sort_order");
+  const { data: presets, error: fetchError } = await serviceSupabase
+    .from("product_presets")
+    .select("*")
+    .eq("brand_name", brandName)
+    .order("sort_order");
 
   if (fetchError) return { error: fetchError.message };
   if (!presets?.length) return { error: "Загварууд олдсонгүй." };
@@ -228,6 +226,227 @@ export async function importBrandPresets(formData: FormData) {
   revalidatePath("/products");
   revalidatePath("/settings");
   return { success: true as const, count: importedCount };
+}
+
+export async function importProductPreset(formData: FormData) {
+  const { supabase, organizationId } = await requireAppContext();
+  const serviceSupabase = createServiceClient();
+
+  const presetId = formData.get("preset_id")?.toString();
+  if (!presetId) return { error: "Загварын ID шаардлагатай." };
+
+  const { data: preset, error: fetchError } = await serviceSupabase
+    .from("product_presets")
+    .select("*")
+    .eq("id", presetId)
+    .single();
+
+  if (fetchError || !preset) return { error: "Загвар олдсонгүй." };
+
+  // Check if product with same SKU already exists in this org
+  if (preset.product_sku) {
+    const { data: existing } = await supabase
+      .from("products")
+      .select("id")
+      .eq("organization_id", organizationId)
+      .eq("sku", preset.product_sku)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (existing)
+      return {
+        error: `"${preset.product_sku}" SKU-тай бүтээгдэхүүн аль хэдийн бүртгэгдсэн байна.`,
+      };
+  }
+
+  // Upsert brand in user's org
+  const { data: existingBrand } = await supabase
+    .from("brands")
+    .select("id")
+    .eq("organization_id", organizationId)
+    .eq("name", preset.brand_name)
+    .maybeSingle();
+
+  let brandId: string | null = null;
+  if (existingBrand) {
+    brandId = existingBrand.id;
+  } else {
+    const { data: newBrand, error: brandErr } = await supabase
+      .from("brands")
+      .insert({
+        name: preset.brand_name,
+        logo_url: preset.brand_logo_url,
+        organization_id: organizationId,
+      })
+      .select("id")
+      .single();
+    if (!brandErr && newBrand) brandId = newBrand.id;
+  }
+
+  // Find or create category
+  let categoryId: string | null = null;
+  if (preset.category_name) {
+    const { data: cat } = await supabase
+      .from("categories")
+      .select("id")
+      .eq("organization_id", organizationId)
+      .eq("name", preset.category_name)
+      .maybeSingle();
+
+    if (cat) {
+      categoryId = cat.id;
+    } else {
+      const { data: newCat, error: catErr } = await supabase
+        .from("categories")
+        .insert({
+          name: preset.category_name,
+          organization_id: organizationId,
+        })
+        .select("id")
+        .single();
+      if (!catErr && newCat) categoryId = newCat.id;
+    }
+  }
+
+  const imageUrl =
+    (preset.product_sku ? PRESET_IMAGE_MAP[preset.product_sku] : null) ??
+    preset.image_url ??
+    null;
+
+  const { error: prodErr } = await supabase.from("products").insert({
+    organization_id: organizationId,
+    name: preset.product_name,
+    sku: preset.product_sku || null,
+    unit: preset.unit,
+    brand_id: brandId,
+    category_id: categoryId,
+    cost_price: preset.cost_price,
+    sale_price: preset.sale_price,
+    min_stock: preset.min_stock,
+    current_stock: 0,
+    image_url: imageUrl,
+    image_urls: imageUrl ? [imageUrl] : [],
+  });
+
+  if (prodErr) return { error: prodErr.message };
+
+  revalidatePath("/products");
+  revalidatePath("/settings");
+  return { success: true as const, name: preset.product_name };
+}
+
+export async function importProductPresetsByIds(presetIds: string[]) {
+  const { supabase, organizationId } = await requireAppContext();
+  const serviceSupabase = createServiceClient();
+
+  if (!presetIds.length) return { error: "Бүтээгдэхүүн сонгоогүй байна." };
+
+  const { data: presets, error: fetchError } = await serviceSupabase
+    .from("product_presets")
+    .select("*")
+    .in("id", presetIds);
+
+  if (fetchError || !presets?.length) return { error: "Загварууд олдсонгүй." };
+
+  // Group by brand — brand/category finding is per brand
+  let count = 0;
+  const brandCache = new Map<string, string | null>();
+  const categoryCache = new Map<string, string | null>();
+
+  for (const preset of presets) {
+    // Upsert brand
+    let brandId = brandCache.get(preset.brand_name) ?? null;
+    if (!brandId) {
+      const { data: existingBrand } = await supabase
+        .from("brands")
+        .select("id")
+        .eq("organization_id", organizationId)
+        .eq("name", preset.brand_name)
+        .maybeSingle();
+
+      if (existingBrand) {
+        brandId = existingBrand.id;
+      } else {
+        const { data: newBrand } = await supabase
+          .from("brands")
+          .insert({
+            name: preset.brand_name,
+            logo_url: preset.brand_logo_url,
+            organization_id: organizationId,
+          })
+          .select("id")
+          .single();
+        brandId = newBrand?.id ?? null;
+      }
+      brandCache.set(preset.brand_name, brandId);
+    }
+
+    // Find or create category
+    let categoryId = preset.category_name
+      ? (categoryCache.get(preset.category_name) ?? null)
+      : null;
+    if (preset.category_name && !categoryId) {
+      const { data: cat } = await supabase
+        .from("categories")
+        .select("id")
+        .eq("organization_id", organizationId)
+        .eq("name", preset.category_name)
+        .maybeSingle();
+
+      if (cat) {
+        categoryId = cat.id;
+      } else {
+        const { data: newCat } = await supabase
+          .from("categories")
+          .insert({
+            name: preset.category_name,
+            organization_id: organizationId,
+          })
+          .select("id")
+          .single();
+        categoryId = newCat?.id ?? null;
+      }
+      categoryCache.set(preset.category_name, categoryId);
+    }
+
+    // Check SKU duplicate
+    if (preset.product_sku) {
+      const { data: existing } = await supabase
+        .from("products")
+        .select("id")
+        .eq("organization_id", organizationId)
+        .eq("sku", preset.product_sku)
+        .maybeSingle();
+
+      if (existing) continue; // skip duplicates
+    }
+
+    const imageUrl =
+      (preset.product_sku ? PRESET_IMAGE_MAP[preset.product_sku] : null) ??
+      preset.image_url ??
+      null;
+
+    const { error: prodErr } = await supabase.from("products").insert({
+      organization_id: organizationId,
+      name: preset.product_name,
+      sku: preset.product_sku || null,
+      unit: preset.unit,
+      brand_id: brandId,
+      category_id: categoryId,
+      cost_price: preset.cost_price,
+      sale_price: preset.sale_price,
+      min_stock: preset.min_stock,
+      current_stock: 0,
+      image_url: imageUrl,
+      image_urls: imageUrl ? [imageUrl] : [],
+    });
+
+    if (!prodErr) count++;
+  }
+
+  revalidatePath("/products");
+  revalidatePath("/settings");
+  return { success: true as const, count };
 }
 
 export async function updateProfile(

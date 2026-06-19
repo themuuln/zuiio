@@ -66,8 +66,8 @@ importers:
         specifier: ^5.0.8
         version: 5.0.8(jspdf@4.2.1)
       lucide-react:
-        specifier: ^1.20.0
-        version: 1.20.0(react@19.2.4)
+        specifier: ^1.21.0
+        version: 1.21.0(react@19.2.4)
       next:
         specifier: 16.2.6
         version: 16.2.6(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -125,7 +125,7 @@ importers:
         version: 2.2.0
       '@codeceptjs/configure':
         specifier: 4.0.0-beta.4
-        version: 4.0.0-beta.4(codeceptjs@4.0.7(@types/node@20.19.43)(tsx@4.22.4))
+        version: 4.0.0-beta.4(codeceptjs@4.0.8(@types/node@20.19.43)(tsx@4.22.4))
       '@midscene/web':
         specifier: ^1.9.7
         version: 1.9.7(@playwright/test@1.61.0)(playwright@1.61.0)
@@ -151,8 +151,8 @@ importers:
         specifier: 1.0.0
         version: 1.0.0
       codeceptjs:
-        specifier: ^4.0.7
-        version: 4.0.7(@types/node@20.19.43)(tsx@4.22.4)
+        specifier: ^4.0.8
+        version: 4.0.8(@types/node@20.19.43)(tsx@4.22.4)
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
@@ -166,8 +166,8 @@ importers:
         specifier: ^11.15.0
         version: 11.15.0
       react-grab:
-        specifier: ^0.1.46
-        version: 0.1.46(react@19.2.4)
+        specifier: ^0.1.47
+        version: 0.1.47(react@19.2.4)
       tailwindcss:
         specifier: ^4.3.1
         version: 4.3.1
@@ -1961,8 +1961,8 @@ packages:
   '@radix-ui/rect@1.1.2':
     resolution: {integrity: sha512-xnXE7wG13PI+cxieVssYXlQJuYVRhH9NBoxt3KNwzghDIA69GMm7d4wXRouHIYjE+KvS6U/MsMO73NdS2MH9ZA==}
 
-  '@react-grab/cli@0.1.46':
-    resolution: {integrity: sha512-rNjGKeRY3HROku1J/a7y8RGHRGFR6ZnllSPqNLfFI5cUu6FCdjjxHvXf1TEXxW7I5REq8iKoLuzM9iYboXCRdg==}
+  '@react-grab/cli@0.1.47':
+    resolution: {integrity: sha512-Cc7d8mSwvoV8gpeTQbE8dMPdeXIyO6w+yIhzgi3jY06i03WLNhb/6jIxNBNF1cVRI7ujnFQXZA66BbnBNTpBSw==}
     hasBin: true
 
   '@reduxjs/toolkit@2.12.0':
@@ -2649,8 +2649,8 @@ packages:
     resolution: {integrity: sha512-7NRMZ/ZDz2vHevQTgJsocBFpakB1/Wx5ip19YSJuj4VOXpraWztTerViNtdSyARKZT9e2yVwUUB5JXXCE7mNrA==}
     hasBin: true
 
-  ai@6.0.207:
-    resolution: {integrity: sha512-9rAHnqU+AvxyqO6WgiWj7hQENX6AprHXZWZEdBWwgnA854D2Mje/PiTmbcFqO+2Cck1lII0NLRQJY9lmdSorMw==}
+  ai@6.0.208:
+    resolution: {integrity: sha512-STz+AaZqJ4ZjH7UkpXkbHx+bjgIDOsE8fIUoZjkZ2whoZcfVmG9K/TqEKouJZ03SuZuD7lagntlU3zBhAEkRpQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -2833,8 +2833,8 @@ packages:
     resolution: {integrity: sha512-lGe34o6EHj9y3Kts9R4ZYs/Gr+6N7MCaMlIFA3F1R2O5/m7K06AxfSeO5530PEERE6/WyEg3lsuyw4GHlPZHog==}
     engines: {node: ^4.5.0 || >= 5.9}
 
-  baseline-browser-mapping@2.10.37:
-    resolution: {integrity: sha512-girxaJ7WZssDOFhzCGZTDKoTa1gk6A1TbflaYTpykLJ4UU9Fz9kx1aREM8JCuoVHbL8X8T/mJg7w2oYSq72Oig==}
+  baseline-browser-mapping@2.10.38:
+    resolution: {integrity: sha512-31/02mVB4yuQU6adKk5SlY6m+mxDwUq5KZkyYgnLrrKl7TEm1+3PyDtDBz2kOv/wxZz41GHsvV1A/u6RmiyBvw==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
@@ -3062,8 +3062,8 @@ packages:
   code-block-writer@13.0.3:
     resolution: {integrity: sha512-Oofo0pq3IKnsFtuHqSF7TqBfr71aeyZDVJ0HpmqB7FBM2qEigL0iPONSCZSO9pE9dZTAxANe5XHG9Uy0YMv8cg==}
 
-  codeceptjs@4.0.7:
-    resolution: {integrity: sha512-gAQZ8VE53WJ3maMYrm+LuSs5T4BOYrgHQioCUqCq8Yn/WrwkK7HvRozKKGHRpY2wVrI6CF8CvisfaKRTklDR1Q==}
+  codeceptjs@4.0.8:
+    resolution: {integrity: sha512-ol1geoAVK3aUeYWYqhn7eWBOhUQZaWDw2zV3ZN4mVOD3yWLw2OgI4Q6m8B9hhm26jJwkh59Xc5YyyT5i5mgy2g==}
     engines: {node: '>=16.0', npm: '>=5.6.0'}
     hasBin: true
     peerDependencies:
@@ -4079,8 +4079,8 @@ packages:
     resolution: {integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==}
     hasBin: true
 
-  hono@4.12.25:
-    resolution: {integrity: sha512-2NFaIyNVgJmBs/ecmtGzlmluTFs5cHEWGTdu0t1HBwYzoGXOL5nUQBRMXsXWla5i4KkG//QMzVP88m1+I3fdAQ==}
+  hono@4.12.26:
+    resolution: {integrity: sha512-uyZtpnYxM9CmQ7QsQknM4zN8EftNqhON1qYeIKM0Se67CCEe2c44xyGURwB0axX2fBDu1dqHrHAc1hmNT8ITkw==}
     engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
@@ -4380,8 +4380,8 @@ packages:
     resolution: {integrity: sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==}
     hasBin: true
 
-  joi@18.2.2:
-    resolution: {integrity: sha512-STrV933NPLPME2nfPo+lFIfgCff9T/vhObpoRtFb/vNlLQynrUJPBCS3OePJ4Lunu/Egw9lqtNms72xbPbxrxw==}
+  joi@18.2.3:
+    resolution: {integrity: sha512-N5A3KTWQpPWT4ExxxPlUx7WmykGXRzhNidWhV41d6Abu9YfI2NyWCJuxdPnslJCPWtbRpSVOWSnSS6GakLM/Rg==}
     engines: {node: '>= 20'}
 
   jose@6.2.3:
@@ -4685,8 +4685,8 @@ packages:
     resolution: {integrity: sha512-jumlc0BIUrS3qJGgIkWZsyfAM7NCWiBcCDhnd+3NNM5KbBmLTgHVfWBcg6W+rLUsIpzpERPsvwUP7CckAQSOoA==}
     engines: {node: '>=12'}
 
-  lucide-react@1.20.0:
-    resolution: {integrity: sha512-jhXLeC/7m0/tjL1nzMdKk6x256zWA6AtbhTVreHOiKPoeX2d6MK4FbyIQPpVq0E6iPWBisyy1TW+pEge/uMEuQ==}
+  lucide-react@1.21.0:
+    resolution: {integrity: sha512-reEZMXq8Qdd5jg5XYkQ5TR1fB/GiQ7ih4vcrthYDtgjSDwh0i6/YLiGjsWsIwgN49gpAnd4J2elSNzncMEEUUQ==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
@@ -4986,8 +4986,8 @@ packages:
     resolution: {integrity: sha512-dRB78srN/l6gqWulah9SrxeYnxeddIG30+GOqK/9OlLVyLg3HPnr6SqOWTWOXKRwC2eGYCkZ59NNuSgvSrpgOA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
-  node-releases@2.0.47:
-    resolution: {integrity: sha512-Uzmd6LXpouKo8EUK68IjH4+E01w/hXyV3R3g/geCJo+rXLNfh1xucB+LOzYEOQPSiUK3h/xZf0cQGcSsmyL2Og==}
+  node-releases@2.0.48:
+    resolution: {integrity: sha512-1uz8041X6LoI6ZSdZacM9lVY28vuzDlSKitnpbSNK0RfKoIJkX29NBPVEFXhnuSuEOA9Ww0xnPJ+ILWbGAv8DA==}
     engines: {node: '>=18'}
 
   nodemailer@9.0.1:
@@ -5386,8 +5386,8 @@ packages:
     peerDependencies:
       react: ^19.2.4
 
-  react-grab@0.1.46:
-    resolution: {integrity: sha512-i6sSSBGqW1yxZ5TZL9wX2m9qNMKOydpou5IMaXrK1iylJAJyr/npoqv4mhq3cO7480FBhmlEZbf5VF8KOCBlMQ==}
+  react-grab@0.1.47:
+    resolution: {integrity: sha512-1GNy24KMJ4CY1IxorYO9mydItGi0L1HkQB19uYU3t0BMsJB0K+D/QYiaBz+rugRynyY8LzmXIuOcon1TykLlCg==}
     hasBin: true
     peerDependencies:
       react: '>=17.0.0'
@@ -6744,12 +6744,12 @@ snapshots:
 
   '@chevrotain/types@11.1.2': {}
 
-  '@codeceptjs/configure@4.0.0-beta.4(codeceptjs@4.0.7(@types/node@20.19.43)(tsx@4.22.4))':
+  '@codeceptjs/configure@4.0.0-beta.4(codeceptjs@4.0.8(@types/node@20.19.43)(tsx@4.22.4))':
     dependencies:
       lodash.merge: 4.6.2
       lodash.mergewith: 4.6.2
     optionalDependencies:
-      codeceptjs: 4.0.7(@types/node@20.19.43)(tsx@4.22.4)
+      codeceptjs: 4.0.8(@types/node@20.19.43)(tsx@4.22.4)
 
   '@codeceptjs/helper@2.0.4':
     dependencies:
@@ -7024,9 +7024,9 @@ snapshots:
     dependencies:
       '@hapi/hoek': 11.0.7
 
-  '@hono/node-server@1.19.14(hono@4.12.25)':
+  '@hono/node-server@1.19.14(hono@4.12.26)':
     dependencies:
-      hono: 4.12.25
+      hono: 4.12.26
 
   '@hookform/resolvers@5.4.0(react-hook-form@7.79.0(react@19.2.4))':
     dependencies:
@@ -7277,7 +7277,7 @@ snapshots:
 
   '@modelcontextprotocol/sdk@1.29.0(zod@3.25.76)':
     dependencies:
-      '@hono/node-server': 1.19.14(hono@4.12.25)
+      '@hono/node-server': 1.19.14(hono@4.12.26)
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
       content-type: 1.0.5
@@ -7287,7 +7287,7 @@ snapshots:
       eventsource-parser: 3.1.0
       express: 5.2.1
       express-rate-limit: 8.5.2(express@5.2.1)
-      hono: 4.12.25
+      hono: 4.12.26
       jose: 6.2.3
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
@@ -7299,7 +7299,7 @@ snapshots:
 
   '@modelcontextprotocol/sdk@1.29.0(zod@4.4.3)':
     dependencies:
-      '@hono/node-server': 1.19.14(hono@4.12.25)
+      '@hono/node-server': 1.19.14(hono@4.12.26)
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
       content-type: 1.0.5
@@ -7309,7 +7309,7 @@ snapshots:
       eventsource-parser: 3.1.0
       express: 5.2.1
       express-rate-limit: 8.5.2(express@5.2.1)
-      hono: 4.12.25
+      hono: 4.12.26
       jose: 6.2.3
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
@@ -8152,7 +8152,7 @@ snapshots:
 
   '@radix-ui/rect@1.1.2': {}
 
-  '@react-grab/cli@0.1.46':
+  '@react-grab/cli@0.1.47':
     dependencies:
       agent-install: 0.0.6
       commander: 14.0.3
@@ -8805,7 +8805,7 @@ snapshots:
       prompts: 2.4.2
       yaml: 2.9.0
 
-  ai@6.0.207(zod@4.4.3):
+  ai@6.0.208(zod@4.4.3):
     dependencies:
       '@ai-sdk/gateway': 3.0.133(zod@4.4.3)
       '@ai-sdk/provider': 3.0.10
@@ -8999,7 +8999,7 @@ snapshots:
 
   base64id@2.0.0: {}
 
-  baseline-browser-mapping@2.10.37: {}
+  baseline-browser-mapping@2.10.38: {}
 
   basic-auth@2.0.1:
     dependencies:
@@ -9084,10 +9084,10 @@ snapshots:
 
   browserslist@4.28.2:
     dependencies:
-      baseline-browser-mapping: 2.10.37
+      baseline-browser-mapping: 2.10.38
       caniuse-lite: 1.0.30001799
       electron-to-chromium: 1.5.375
-      node-releases: 2.0.47
+      node-releases: 2.0.48
       update-browserslist-db: 1.2.3(browserslist@4.28.2)
 
   buffer-crc32@0.2.13: {}
@@ -9259,9 +9259,9 @@ snapshots:
 
   code-block-writer@13.0.3: {}
 
-  codeceptjs@4.0.7(@types/node@20.19.43)(tsx@4.22.4):
+  codeceptjs@4.0.8(@types/node@20.19.43)(tsx@4.22.4):
     dependencies:
-      '@codeceptjs/configure': 4.0.0-beta.4(codeceptjs@4.0.7(@types/node@20.19.43)(tsx@4.22.4))
+      '@codeceptjs/configure': 4.0.0-beta.4(codeceptjs@4.0.8(@types/node@20.19.43)(tsx@4.22.4))
       '@codeceptjs/helper': 2.0.4
       '@cucumber/cucumber-expressions': 18.1.0
       '@cucumber/gherkin': 38.0.0
@@ -9269,7 +9269,7 @@ snapshots:
       '@modelcontextprotocol/sdk': 1.29.0(zod@4.4.3)
       '@xmldom/xmldom': 0.9.8
       acorn: 8.15.0
-      ai: 6.0.207(zod@4.4.3)
+      ai: 6.0.208(zod@4.4.3)
       arrify: 3.0.0
       axios: 1.16.1
       chalk: 4.1.2
@@ -10449,7 +10449,7 @@ snapshots:
 
   he@1.2.0: {}
 
-  hono@4.12.25: {}
+  hono@4.12.26: {}
 
   hookable@5.5.3: {}
 
@@ -10722,7 +10722,7 @@ snapshots:
 
   jiti@2.7.0: {}
 
-  joi@18.2.2:
+  joi@18.2.3:
     dependencies:
       '@hapi/address': 5.1.1
       '@hapi/formula': 3.0.2
@@ -10995,7 +10995,7 @@ snapshots:
 
   lru-cache@7.18.3: {}
 
-  lucide-react@1.20.0(react@19.2.4):
+  lucide-react@1.21.0(react@19.2.4):
     dependencies:
       react: 19.2.4
 
@@ -11368,7 +11368,7 @@ snapshots:
     dependencies:
       '@next/env': 16.2.6
       '@swc/helpers': 0.5.15
-      baseline-browser-mapping: 2.10.37
+      baseline-browser-mapping: 2.10.38
       caniuse-lite: 1.0.30001799
       postcss: 8.4.31
       react: 19.2.4
@@ -11404,7 +11404,7 @@ snapshots:
       fetch-blob: 3.2.0
       formdata-polyfill: 4.0.10
 
-  node-releases@2.0.47: {}
+  node-releases@2.0.48: {}
 
   nodemailer@9.0.1: {}
 
@@ -11897,9 +11897,9 @@ snapshots:
       react: 19.2.4
       scheduler: 0.27.0
 
-  react-grab@0.1.46(react@19.2.4):
+  react-grab@0.1.47(react@19.2.4):
     dependencies:
-      '@react-grab/cli': 0.1.46
+      '@react-grab/cli': 0.1.47
       bippy: 0.5.41(react@19.2.4)
     optionalDependencies:
       react: 19.2.4
@@ -12879,7 +12879,7 @@ snapshots:
   wait-on@9.0.10:
     dependencies:
       axios: 1.18.0
-      joi: 18.2.2
+      joi: 18.2.3
       lodash: 4.18.1
       minimist: 1.2.8
       rxjs: 7.8.2

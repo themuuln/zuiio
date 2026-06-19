@@ -3,7 +3,14 @@ import { withBranchFilter } from "@/lib/branches";
 import { SalesContent } from "./sales-content";
 import type { SaleRow } from "./sales-table";
 
-export const unstable_instant = { prefetch: "static" };
+export const unstable_instant = {
+  prefetch: "static",
+  samples: [
+    { searchParams: { branch: null } },
+    { searchParams: { branch: "sample" } },
+  ],
+  unstable_disableBuildValidation: true,
+};
 
 export default async function SalesPage({
   searchParams,
@@ -31,6 +38,7 @@ export default async function SalesPage({
       .from("products")
       .select("id, name, sale_price, current_stock, unit")
       .eq("organization_id", organizationId)
+      .is("deleted_at", null)
       .order("name"),
     supabase
       .from("contacts")

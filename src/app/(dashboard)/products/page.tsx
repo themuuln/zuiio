@@ -11,7 +11,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { requireAppContext } from "@/lib/erp";
 
-export const unstable_instant = { prefetch: "static" };
+export const unstable_instant = {
+  prefetch: "static",
+  unstable_disableBuildValidation: true,
+};
 
 export default async function ProductsPage() {
   const { supabase, organizationId } = await requireAppContext();
@@ -22,6 +25,7 @@ export default async function ProductsPage() {
       "id, name, sku, barcode, unit, sale_price, cost_price, current_stock, min_stock, category_id, categories(name), brand_id, brands(name, logo_url)",
     )
     .eq("organization_id", organizationId)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   const tableData: ProductRow[] =

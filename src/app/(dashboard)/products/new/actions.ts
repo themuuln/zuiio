@@ -21,6 +21,7 @@ export async function createProduct(
   const barcode = formData.get("barcode")?.toString() ?? null;
   const unit = formData.get("unit")?.toString() ?? "ширхэг";
   const brandId = formData.get("brand_id")?.toString() || null;
+  const categoryName = formData.get("category_name")?.toString() || null;
 
   const validationError = validateProductInput({
     name,
@@ -34,6 +35,29 @@ export async function createProduct(
     return { error: validationError };
   }
 
+  // Resolve category_name to category_id
+  let categoryId: string | null = null;
+  if (categoryName) {
+    const { data: existing } = await supabase
+      .from("categories")
+      .select("id")
+      .eq("organization_id", organizationId)
+      .eq("name", categoryName.trim())
+      .maybeSingle();
+
+    if (existing) {
+      categoryId = existing.id;
+    } else {
+      const { data: created } = await supabase
+        .from("categories")
+        .insert({ name: categoryName.trim(), organization_id: organizationId })
+        .select("id")
+        .single();
+
+      if (created) categoryId = created.id;
+    }
+  }
+
   const { data: product, error } = await supabase
     .from("products")
     .insert({
@@ -43,6 +67,7 @@ export async function createProduct(
       barcode: barcode?.trim() || null,
       unit,
       brand_id: brandId || null,
+      category_id: categoryId,
       cost_price: costPrice,
       sale_price: salePrice,
       current_stock: currentStock,

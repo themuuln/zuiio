@@ -65,16 +65,18 @@ const ACCOUNT_TYPE_LABELS: Record<string, string> = {
   expense: "Зарлага",
 };
 
-const ACCOUNT_TYPE_VARIANTS: Record<string, string> = {
+const ACCOUNT_TYPE_VARIANTS = {
   asset: "default",
   liability: "secondary",
   equity: "outline",
   income: "default",
   expense: "destructive",
-};
+} as const;
 // Typed record for Badge.variant access without any cast
-const ACCOUNT_TYPE_VARIANTS_RECORD: Record<string, string> =
-  ACCOUNT_TYPE_VARIANTS;
+const ACCOUNT_TYPE_VARIANTS_RECORD: Record<
+  string,
+  (typeof ACCOUNT_TYPE_VARIANTS)[keyof typeof ACCOUNT_TYPE_VARIANTS]
+> = ACCOUNT_TYPE_VARIANTS;
 
 export function AccountingContent({
   trialBalance,

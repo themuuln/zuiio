@@ -1,4 +1,3 @@
-import { setHeadlessWhen, setWindowSize } from "@codeceptjs/configure";
 import { heal, ai } from "codeceptjs";
 
 // Register AI healing recipes
@@ -34,19 +33,18 @@ heal.addRecipe("reloadOnClickFail", {
   },
 });
 
-setHeadlessWhen(process.env.CI);
-
 export const config: CodeceptJS.Config = {
   name: "zer-e2e",
   noGlobals: true,
   tests: "./e2e/codeceptjs/**/*.test.ts",
+  require: ["tsx/cjs"],
   output: "./e2e/codeceptjs/_output",
   timeout: 30000,
   helpers: {
     Playwright: {
       browser: "chromium",
       url: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000",
-      show: !process.env.CI,
+      show: process.env.SHOW_BROWSER === "true",
       waitForTimeout: 10000,
       waitForAction: 500,
       waitForNavigation: "networkidle0",

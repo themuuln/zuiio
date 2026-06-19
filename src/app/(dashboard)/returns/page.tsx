@@ -2,7 +2,14 @@ import { requireAppContext } from "@/lib/erp";
 import { withBranchFilter } from "@/lib/branches";
 import { ReturnsContent } from "./returns-content";
 
-export const unstable_instant = { prefetch: "static" };
+export const unstable_instant = {
+  prefetch: "static",
+  samples: [
+    { searchParams: { branch: null } },
+    { searchParams: { branch: "sample" } },
+  ],
+  unstable_disableBuildValidation: true,
+};
 
 export type ReturnRow = {
   id: string;
@@ -54,6 +61,7 @@ export default async function ReturnsPage({
       .from("products")
       .select("id, name, sale_price, current_stock, unit")
       .eq("organization_id", organizationId)
+      .is("deleted_at", null)
       .order("name"),
     withBranchFilter(
       supabase

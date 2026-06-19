@@ -9,7 +9,10 @@ import {
 } from "@/components/suppliers/suppliers-table";
 import { requireAppContext } from "@/lib/erp";
 
-export const unstable_instant = { prefetch: "static" };
+export const unstable_instant = {
+  prefetch: "static",
+  unstable_disableBuildValidation: true,
+};
 
 export default async function SuppliersPage() {
   const { supabase, organizationId } = await requireAppContext();

@@ -3,7 +3,14 @@ import { withBranchFilter } from "@/lib/branches";
 import type { ExpenseRow } from "./expenses-table";
 import { ExpensesContent } from "./expenses-content";
 
-export const unstable_instant = { prefetch: "static" };
+export const unstable_instant = {
+  prefetch: "static",
+  samples: [
+    { searchParams: { branch: null } },
+    { searchParams: { branch: "sample" } },
+  ],
+  unstable_disableBuildValidation: true,
+};
 
 export default async function ExpensesPage({
   searchParams,

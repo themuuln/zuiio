@@ -15,6 +15,7 @@ export default async function NewStockMovementPage() {
     .from("products")
     .select("id, name, current_stock, unit")
     .eq("organization_id", organizationId)
+    .is("deleted_at", null)
     .order("name", { ascending: true });
 
   const productOptions: ProductOption[] =

@@ -16,6 +16,7 @@ export async function GET(request: Request) {
       "id, name, sku, unit, cost_price, current_stock, min_stock, categories(name), brands(name)",
     )
     .eq("organization_id", organizationId)
+    .is("deleted_at", null)
     .order("name", { ascending: true });
 
   const rows = (products ?? []).map((p) => {

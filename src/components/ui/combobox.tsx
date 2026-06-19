@@ -69,6 +69,15 @@ function ComboboxInner<T>(
   const [highlightedIndex, setHighlightedIndex] = React.useState(-1);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
+  // Reset highlighted index when items change (keep it valid)
+  const prevItemsLength = React.useRef(items.length);
+  React.useEffect(() => {
+    if (items.length !== prevItemsLength.current) {
+      prevItemsLength.current = items.length;
+      setHighlightedIndex(items.length > 0 ? 0 : -1);
+    }
+  }, [items]);
+
   React.useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
@@ -172,11 +181,10 @@ const Combobox = React.forwardRef(ComboboxInner) as <T>(
 
 // --- ComboboxInput ---
 
-interface ComboboxInputProps
-  extends Omit<
-    React.InputHTMLAttributes<HTMLInputElement>,
-    "value" | "onChange"
-  > {
+interface ComboboxInputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  "value" | "onChange"
+> {
   showTrigger?: boolean;
 }
 
