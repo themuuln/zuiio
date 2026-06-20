@@ -145,6 +145,13 @@
     overflow-x: hidden;
   }
 
+  /* Prevent iOS auto-zoom on input focus (needs font-size >= 16px) */
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+
   /* Increase touch targets for form elements to minimum 44px */
   [data-slot="input"] {
     min-height: 44px;

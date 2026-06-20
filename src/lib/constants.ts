@@ -24,6 +24,59 @@ export function getCompanyTypeLabel(type: string): string {
   return found?.label ?? type;
 }
 
+// ─── Feature definitions for onboarding & sidebar gating ───
+
+export interface FeatureDef {
+  key: string;
+  label: string;
+  description: string;
+}
+
+export const FEATURES: FeatureDef[] = [
+  {
+    key: "sales",
+    label: "Борлуулалт",
+    description: "Борлуулалтын бүртгэл, касс",
+  },
+  { key: "shop", label: "Дэлгүүр", description: "Дэлгүүрийн интерфейс" },
+  { key: "expenses", label: "Зарлага", description: "Зарлагын бүртгэл" },
+  {
+    key: "purchases",
+    label: "Худалдан авалт",
+    description: "Худалдан авалтын бүртгэл",
+  },
+  { key: "returns", label: "Буцаалт", description: "Буцаалтын бүртгэл" },
+  {
+    key: "invoices",
+    label: "Нэхэмжлэх",
+    description: "Нэхэмжлэх үүсгэх, илгээх",
+  },
+  {
+    key: "quotations",
+    label: "Үнийн санал",
+    description: "Үнийн санал бэлтгэх",
+  },
+  { key: "discounts", label: "Хямдрал", description: "Хямдрал, урамшуулал" },
+  { key: "reports", label: "Тайлан", description: "Тайлан, шинжилгээ" },
+  { key: "commissions", label: "Комисс", description: "Комиссын тооцоо" },
+  { key: "accounting", label: "Нягтлан", description: "Нягтлан бодох бүртгэл" },
+];
+
+// Map nav item href → feature key for sidebar gating
+export const NAV_FEATURE_MAP: Record<string, string> = {
+  "/sales": "sales",
+  "/shop": "shop",
+  "/expenses": "expenses",
+  "/purchases": "purchases",
+  "/returns": "returns",
+  "/invoices": "invoices",
+  "/quotations": "quotations",
+  "/discounts": "discounts",
+  "/reports": "reports",
+  "/commissions": "commissions",
+  "/accounting": "accounting",
+};
+
 export const PRESET_CATEGORIES: Record<string, readonly string[]> = {
   retail: ["Хүнс", "Ундаа", "Хувцас", "Гэр ахуй", "Цахилгаан бараа", "Бусад"],
   wholesale: [
