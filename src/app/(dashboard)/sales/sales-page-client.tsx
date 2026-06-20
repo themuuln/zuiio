@@ -27,6 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { SaleForm } from "./new/sale-form";
 
 type ProductOption = {
@@ -101,41 +102,52 @@ export function SalesPageClient({
           title="Борлуулалт"
           description="Нэхэмжлэл, бэлэн ба дансны төлбөр, үлдэгдэл авлагын хяналт."
           actions={
-            <Drawer.Trigger className={buttonVariants({ variant: "default" })}>
+            <Drawer.Trigger
+              className={cn(
+                buttonVariants({ variant: "default" }),
+                "w-full sm:w-auto",
+              )}
+            >
               <Plus data-icon="inline-start" />
               Шинэ борлуулалт
             </Drawer.Trigger>
           }
         >
-          <div className="grid gap-4 sm:grid-cols-3">
-            <Card className="rounded-3xl border-border/80 bg-card/90 shadow-sm">
-              <CardHeader>
-                <CardTitle>Сүүлийн 50 борлуулалт</CardTitle>
-                <CardDescription>Сүүлийн бүртгэлүүдийн тоо</CardDescription>
+          <div className="grid gap-3 sm:gap-4 sm:grid-cols-3">
+            <Card className="rounded-2xl border-border/80 bg-card/90 shadow-sm sm:rounded-3xl">
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-sm sm:text-base">
+                  Сүүлийн 50 борлуулалт
+                </CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
+                  Сүүлийн бүртгэлүүдийн тоо
+                </CardDescription>
               </CardHeader>
-              <CardContent className="text-2xl font-semibold">
+              <CardContent className="px-4 pb-4 text-xl font-semibold sm:px-6 sm:pb-6 sm:text-2xl">
                 {sales.length}
               </CardContent>
             </Card>
-            <Card className="rounded-3xl border-border/80 bg-card/90 shadow-sm">
-              <CardHeader>
-                <CardTitle>Нийт дүн</CardTitle>
-                <CardDescription>
+            <Card className="rounded-2xl border-border/80 bg-card/90 shadow-sm sm:rounded-3xl">
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-sm sm:text-base">Нийт дүн</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
                   Бүх бүртгэлийн борлуулалтын хэмжээ
                 </CardDescription>
               </CardHeader>
-              <CardContent className="text-2xl font-semibold">
+              <CardContent className="px-4 pb-4 text-xl font-semibold sm:px-6 sm:pb-6 sm:text-2xl">
                 {formatCurrency(completedAmount)}
               </CardContent>
             </Card>
-            <Card className="rounded-3xl border-border/80 bg-card/90 shadow-sm">
-              <CardHeader>
-                <CardTitle>Төлөгдөөгүй</CardTitle>
-                <CardDescription>
+            <Card className="rounded-2xl border-border/80 bg-card/90 shadow-sm sm:rounded-3xl">
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-sm sm:text-base">
+                  Төлөгдөөгүй
+                </CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
                   {pendingCount} хүлээгдэж буй, {invoiceCount} нэхэмжлэлтэй
                 </CardDescription>
               </CardHeader>
-              <CardContent className="text-2xl font-semibold text-amber-600">
+              <CardContent className="px-4 pb-4 text-xl font-semibold text-amber-600 sm:px-6 sm:pb-6 sm:text-2xl">
                 {formatCurrency(
                   sales.reduce(
                     (sum, sale) =>

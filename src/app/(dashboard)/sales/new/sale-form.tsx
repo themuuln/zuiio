@@ -134,7 +134,9 @@ export function SaleForm({
   } = useForm<SaleValues>({
     resolver: zodResolver(saleSchema),
     defaultValues: {
-      items: [{ product_id: "", quantity: 1, unit_price: 0, variant_id: undefined }],
+      items: [
+        { product_id: "", quantity: 1, unit_price: 0, variant_id: undefined },
+      ],
       paid_amount: 0,
       payment_method: "cash",
       status: "completed",
@@ -151,11 +153,20 @@ export function SaleForm({
   });
 
   const appendRow = useCallback(() => {
-    append({ product_id: "", quantity: 1, unit_price: 0, variant_id: undefined });
+    append({
+      product_id: "",
+      quantity: 1,
+      unit_price: 0,
+      variant_id: undefined,
+    });
     setProductQueries((prev) => [...prev, ""]);
   }, [append]);
 
-  const removeRow = useVariantLineItemRemove(remove, setVariantSelections, setProductQueries);
+  const removeRow = useVariantLineItemRemove(
+    remove,
+    setVariantSelections,
+    setProductQueries,
+  );
 
   const resetForm = () => {
     reset(undefined, { keepDefaultValues: false });
@@ -580,8 +591,8 @@ export function SaleForm({
           Бүтээгдэхүүнүүд
         </span>
 
-        {/* Header row */}
-        <div className="flex gap-2 text-xs text-muted-foreground px-1">
+        {/* Header row — hidden on mobile */}
+        <div className="hidden sm:flex gap-2 text-xs text-muted-foreground px-1">
           <div className="flex-1">Бүтээгдэхүүн</div>
           <div className="w-20">Тоо хэмжээ</div>
           <div className="w-24">Нэгж үнэ</div>
@@ -599,7 +610,144 @@ export function SaleForm({
 
           return (
             <div key={field.id}>
-              <div className="flex gap-2 items-start">
+              {/* Mobile stacked card layout */}
+              <div className="rounded-xl border border-border/80 bg-muted/20 p-3 space-y-3 sm:hidden">
+                <div className="flex items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <Controller
+                      control={control}
+                      name={`items.${index}.product_id`}
+                      render={({ field: controllerField }) => (
+                        <Combobox
+                          name={controllerField.name}
+                          items={rowItems}
+                          value={
+                            allProducts.find(
+                              (p) => p.id === controllerField.value,
+                            ) ?? null
+                          }
+                          onValueChange={(next) =>
+                            handleProductSelect(index, next)
+                          }
+                          itemToStringValue={(product: ProductOption | null) =>
+                            product?.id ?? ""
+                          }
+                          itemToStringLabel={(product: ProductOption | null) =>
+                            product?.name ?? ""
+                          }
+                          inputValue={rowQuery}
+                          onInputValueChange={(val) =>
+                            updateProductQuery(index, val)
+                          }
+                        >
+                          <ComboboxInput
+                            placeholder="Сонгох"
+                            showTrigger
+                            className="w-full"
+                          />
+                          <ComboboxContent>
+                            <ComboboxEmpty>Бүтээгдэхүүн байхгүй</ComboboxEmpty>
+                            <ComboboxList>
+                              {(product: ProductOption) => (
+                                <ComboboxItem key={product.id} value={product}>
+                                  {product.id.startsWith("__create__")
+                                    ? `"${product.name}" үүсгэх`
+                                    : product.name}
+                                </ComboboxItem>
+                              )}
+                            </ComboboxList>
+                          </ComboboxContent>
+                        </Combobox>
+                      )}
+                    />
+                    {errors.items?.[index]?.product_id && (
+                      <p className="text-xs text-destructive mt-0.5">
+                        {errors.items[index]?.product_id?.message}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 shrink-0 text-muted-foreground hover:text-destructive"
+                    onClick={() => removeRow(index)}
+                    disabled={fields.length <= 1}
+                    aria-label="Мөр устгах"
+                  >
+                    <Trash className="size-4" />
+                  </Button>
+                </div>
+
+                {productForRow ? (
+                  <p className="text-xs text-muted-foreground">
+                    {formatCurrency(Number(productForRow.sale_price ?? 0))} •
+                    Үлдэгдэл {productForRow.current_stock ?? 0}{" "}
+                    {productForRow.unit ?? "ширхэг"}
+                  </p>
+                ) : null}
+
+                {productForRow && (
+                  <VariantPicker
+                    productId={productForRow.id}
+                    onSelect={(variant) => handleVariantSelect(index, variant)}
+                  />
+                )}
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">
+                      Тоо хэмжээ
+                    </label>
+                    <Input
+                      type="number"
+                      min="1"
+                      step="0.01"
+                      {...register(`items.${index}.quantity`, {
+                        valueAsNumber: true,
+                      })}
+                    />
+                    {errors.items?.[index]?.quantity && (
+                      <p className="text-xs text-destructive mt-0.5">
+                        {errors.items[index]?.quantity?.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">
+                      Нэгж үнэ
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      {...register(`items.${index}.unit_price`, {
+                        valueAsNumber: true,
+                      })}
+                    />
+                    {errors.items?.[index]?.unit_price && (
+                      <p className="text-xs text-destructive mt-0.5">
+                        {errors.items[index]?.unit_price?.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex flex-col justify-end pb-2">
+                    <span className="text-xs text-muted-foreground">Дүн</span>
+                    <span className="text-sm font-semibold">
+                      {formatCurrency(subtotals[index] ?? 0)}
+                    </span>
+                  </div>
+                </div>
+
+                {stockWarnings[index] && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400">
+                    {stockWarnings[index]}
+                  </p>
+                )}
+              </div>
+
+              {/* Desktop horizontal row layout */}
+              <div className="hidden sm:flex gap-2 items-start">
                 {/* Product combobox */}
                 <div className="flex-1 min-w-0">
                   <Controller

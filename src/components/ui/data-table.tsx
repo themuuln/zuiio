@@ -272,12 +272,16 @@ export function DataTable<TData, TValue>({
               >
                 {headerGroup.headers.map((header) => {
                   const canSort = enableSorting && header.column.getCanSort();
+                  const columnMeta = header.column.columnDef.meta as
+                    | { className?: string }
+                    | undefined;
                   return (
                     <TableHead
                       key={header.id}
                       className={cn(
                         "h-9 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground sm:h-10 sm:px-3 sm:text-xs",
                         canSort && "select-none",
+                        columnMeta?.className,
                       )}
                     >
                       {header.isPlaceholder ? null : (
@@ -331,12 +335,16 @@ export function DataTable<TData, TValue>({
                 >
                   {row.getVisibleCells().map((cell) => {
                     const isSelectCell = cell.column.id === "select";
+                    const columnMeta = cell.column.columnDef.meta as
+                      | { className?: string }
+                      | undefined;
                     return (
                       <TableCell
                         key={cell.id}
                         className={cn(
                           "px-2 py-2.5 text-xs sm:px-3 sm:py-3 sm:text-sm",
                           isSelectCell && "w-10",
+                          columnMeta?.className,
                         )}
                         onClick={
                           isSelectCell ? (e) => e.stopPropagation() : undefined

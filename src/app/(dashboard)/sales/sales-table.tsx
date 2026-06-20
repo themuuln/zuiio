@@ -82,11 +82,13 @@ const columns: ColumnDef<SaleRow>[] = [
   {
     accessorKey: "paid_amount",
     header: "Төлсөн дүн",
+    meta: { className: "hidden md:table-cell" },
     cell: ({ row }) => formatCurrency(Number(row.getValue("paid_amount") ?? 0)),
   },
   {
     id: "balance",
     header: "Үлдэгдэл",
+    meta: { className: "hidden md:table-cell" },
     accessorFn: (row) => (row.total_amount ?? 0) - (row.paid_amount ?? 0),
     cell: ({ row }) => {
       const total = row.original.total_amount ?? 0;
@@ -97,6 +99,7 @@ const columns: ColumnDef<SaleRow>[] = [
   {
     id: "payment_state",
     header: "Төлбөрийн төлөв",
+    meta: { className: "hidden md:table-cell" },
     cell: ({ row }) => {
       const total = row.original.total_amount ?? 0;
       const paid = row.original.paid_amount ?? 0;
@@ -130,6 +133,7 @@ const columns: ColumnDef<SaleRow>[] = [
   {
     accessorKey: "payment_method",
     header: "Төлбөрийн арга",
+    meta: { className: "hidden md:table-cell" },
     cell: ({ row }) => {
       const method = row.getValue("payment_method") as string | null;
       return paymentMethodLabels[method ?? ""] ?? method ?? "-";
