@@ -72,7 +72,7 @@ zer/
 │   │   ├── email/                  # Email service (Nodemailer)
 │   │   ├── pdf/                    # PDF generation (pdf-lib, jsPDF)
 │   │   ├── notification/           # Telegram notification service
-│   │   ├── branding.ts             # Brand CSS generation
+│   │   ├── branding.ts             # Theme CSS generation
 │   │   ├── constants.ts            # App constants
 │   │   └── utils.ts                # Utility functions
 │   └── middleware.ts               # Next.js middleware (auth, routing)

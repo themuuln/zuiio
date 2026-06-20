@@ -95,7 +95,7 @@ Barcode-aware POS interface with:
 
 ### Organization
 
-Profile editing, branding customization (logo, colors, fonts).
+Profile editing, theme customization (logo, colors, fonts).
 
 ### User Management
 
@@ -109,7 +109,7 @@ Role-based access control with granular permission editor, role CRUD, and `<Perm
 
 Configure Telegram bot notifications and email (SMTP) reporting.
 
-### Branding
+### Theme
 
 Custom theme configuration with CSS variable injection — logo, primary colors, font family.
 

@@ -85,7 +85,7 @@ desc: Application routing structure
 | `/settings/organization`  | Org profile                             |
 | `/settings/users`         | User management                         |
 | `/settings/roles`         | Roles & permissions                     |
-| `/settings/branding`      | Branding/themes configuration           |
+| `/settings/branding`      | Theme configuration (colors, fonts, logo) |
 | `/settings/notifications` | Notification config (Telegram, email)   |
 | `/settings/smtp`          | SMTP technical config (superadmin only) |
 

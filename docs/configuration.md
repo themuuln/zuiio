@@ -20,9 +20,9 @@ desc: Project configuration files
 
 See [Getting Started](/getting-started.html) for the full list of environment variables.
 
-## Branding
+## Theme
 
-Organization branding is configured via `brand_config` JSON in the Supabase `organizations` table. Supports:
+Organization theme is configured via `brand_config` JSON in the Supabase `organizations` table. Supports:
 
 - Logo URL
 - Primary color scheme
