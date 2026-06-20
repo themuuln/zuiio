@@ -12,13 +12,8 @@ import {
 } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { Controller, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-
-const CameraScanner = dynamic(
-  () => import("@/components/shop/camera-scanner").then((m) => m.CameraScanner),
-  { ssr: false },
-);
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { updateProduct } from "@/app/(dashboard)/products/actions";
@@ -38,18 +33,23 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   Field,
   FieldDescription,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { CurrencyInput } from "@/components/ui/currency-input";
 import { Input } from "@/components/ui/input";
 import { PRESET_CATEGORIES } from "@/lib/constants";
 import { productKeys } from "@/lib/query/keys";
 import { useOptimisticUpdate } from "@/lib/query/use-optimistic";
 import { createClient } from "@/lib/supabase/client";
+
+const CameraScanner = dynamic(
+  () => import("@/components/shop/camera-scanner").then((m) => m.CameraScanner),
+  { ssr: false },
+);
 
 export interface ProductEditData {
   id: string;
@@ -163,6 +163,7 @@ export function ProductEditDrawer({
     watch,
     reset,
     setValue,
+    control,
     formState: { errors },
   } = useForm<ProductEditValues>({
     resolver: zodResolver(productEditSchema),

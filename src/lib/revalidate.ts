@@ -81,5 +81,5 @@ export function revalidateEntities(entities: EntityKey[]): void {
  */
 export function revalidateEntityTag(entity: EntityKey, orgId?: string): void {
   const tag = orgId ? `${entity}:${orgId}` : entity;
-  revalidateTag(tag);
+  revalidateTag(tag, "max");
 }

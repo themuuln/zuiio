@@ -1,12 +1,12 @@
 "use client";
 
-import { useQuery, type UseQueryResult } from "@tanstack/react-query";
+import { type UseQueryResult, useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 
 /**
  * Configuration for creating a simple list query hook.
  */
-interface SimpleQueryConfig<T> {
+interface SimpleQueryConfig<_T> {
   /** Query key factory with `lists(orgId)` method */
   keys: {
     lists: (orgId: string) => readonly unknown[];
@@ -79,7 +79,8 @@ export function createSimpleQuery<TData>(config: SimpleQueryConfig<TData>) {
       queryKey: keys.lists(orgId) as unknown as readonly unknown[],
       queryFn: async () => {
         let query = supabase
-          .from(table)
+          // biome-ignore lint/suspicious/noExplicitAny: generic table name
+          .from(table as any)
           .select(select)
           .eq("organization_id", orgId);
 
@@ -88,6 +89,7 @@ export function createSimpleQuery<TData>(config: SimpleQueryConfig<TData>) {
         }
 
         for (const filter of filters) {
+          // biome-ignore lint/suspicious/noExplicitAny: dynamic filter operator
           query = (query as any)[filter.operator](filter.column, filter.value);
         }
 

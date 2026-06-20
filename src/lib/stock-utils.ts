@@ -88,7 +88,7 @@ export async function decrementProductStock(
     .maybeSingle();
 
   if (error || !updated) return null;
-  return updated;
+  return updated as { id: string; current_stock: number; name: string };
 }
 
 /**
