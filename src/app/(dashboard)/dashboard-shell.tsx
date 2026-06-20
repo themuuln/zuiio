@@ -19,6 +19,7 @@ import {
   MapPin,
   Package,
   Percent,
+  Plus,
   SignOut,
   Storefront,
   Trolley,
@@ -98,6 +99,7 @@ const navGroups: NavGroup[] = [
         href: "/inventory/movements",
         icon: MapPin,
       },
+      { title: "Салбарууд", href: "/settings/branches", icon: Buildings },
       { title: "Харилцагчид", href: "/customers", icon: Users },
       { title: "Нийлүүлэгчид", href: "/suppliers", icon: Buildings },
     ],
@@ -182,6 +184,10 @@ export function DashboardShell({
   }, []);
 
   const handleBranchChange = (newId: string) => {
+    if (newId === "__create") {
+      router.push("/settings/branches");
+      return;
+    }
     const branchId = newId || null;
     setSelectedBranchId(branchId);
     const params = new URLSearchParams(searchParams.toString());
@@ -307,6 +313,11 @@ export function DashboardShell({
                           {b.name}
                         </SelectItem>
                       ))}
+                      <Separator className="my-1" />
+                      <SelectItem value="__create">
+                        <Plus className="size-4" />
+                        Шинэ салбар
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 )}

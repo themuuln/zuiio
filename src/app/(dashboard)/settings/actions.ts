@@ -126,7 +126,7 @@ const PRESET_IMAGE_MAP: Record<string, string> = {
 };
 
 export async function importBrandPresets(formData: FormData) {
-  const { supabase, organizationId } = await requireAppContext();
+  const { organizationId } = await requireAppContext();
   const serviceSupabase = createServiceClient();
 
   const brandName = formData.get("brand_name")?.toString();
@@ -141,8 +141,9 @@ export async function importBrandPresets(formData: FormData) {
   if (fetchError) return { error: fetchError.message };
   if (!presets?.length) return { error: "Загварууд олдсонгүй." };
 
-  // Upsert brand in user's org
-  const { data: existingBrand } = await supabase
+  // Upsert brand in user's org (use service client to bypass RLS —
+  // this is a trusted server-side bulk import operation)
+  const { data: existingBrand } = await serviceSupabase
     .from("brands")
     .select("id")
     .eq("organization_id", organizationId)
@@ -153,7 +154,7 @@ export async function importBrandPresets(formData: FormData) {
   if (existingBrand) {
     brandId = existingBrand.id;
   } else {
-    const { data: newBrand, error: brandErr } = await supabase
+    const { data: newBrand, error: brandErr } = await serviceSupabase
       .from("brands")
       .insert({
         name: brandName,
@@ -177,7 +178,7 @@ export async function importBrandPresets(formData: FormData) {
       if (preset.category_name in categoryCache) {
         categoryId = categoryCache[preset.category_name];
       } else {
-        const { data: cat } = await supabase
+        const { data: cat } = await serviceSupabase
           .from("categories")
           .select("id")
           .eq("organization_id", organizationId)
@@ -187,7 +188,7 @@ export async function importBrandPresets(formData: FormData) {
         if (cat) {
           categoryId = cat.id;
         } else {
-          const { data: newCat, error: catErr } = await supabase
+          const { data: newCat, error: catErr } = await serviceSupabase
             .from("categories")
             .insert({
               name: preset.category_name,
@@ -205,7 +206,7 @@ export async function importBrandPresets(formData: FormData) {
       (preset.product_sku ? PRESET_IMAGE_MAP[preset.product_sku] : null) ??
       null;
 
-    const { error: prodErr } = await supabase.from("products").insert({
+    const { error: prodErr } = await serviceSupabase.from("products").insert({
       organization_id: organizationId,
       name: preset.product_name,
       sku: preset.product_sku || null,
@@ -229,7 +230,7 @@ export async function importBrandPresets(formData: FormData) {
 }
 
 export async function importProductPreset(formData: FormData) {
-  const { supabase, organizationId } = await requireAppContext();
+  const { organizationId } = await requireAppContext();
   const serviceSupabase = createServiceClient();
 
   const presetId = formData.get("preset_id")?.toString();
@@ -245,7 +246,7 @@ export async function importProductPreset(formData: FormData) {
 
   // Check if product with same SKU already exists in this org
   if (preset.product_sku) {
-    const { data: existing } = await supabase
+    const { data: existing } = await serviceSupabase
       .from("products")
       .select("id")
       .eq("organization_id", organizationId)
@@ -259,8 +260,9 @@ export async function importProductPreset(formData: FormData) {
       };
   }
 
-  // Upsert brand in user's org
-  const { data: existingBrand } = await supabase
+  // Upsert brand in user's org (use service client to bypass RLS —
+  // this is a trusted server-side bulk import operation)
+  const { data: existingBrand } = await serviceSupabase
     .from("brands")
     .select("id")
     .eq("organization_id", organizationId)
@@ -271,7 +273,7 @@ export async function importProductPreset(formData: FormData) {
   if (existingBrand) {
     brandId = existingBrand.id;
   } else {
-    const { data: newBrand, error: brandErr } = await supabase
+    const { data: newBrand, error: brandErr } = await serviceSupabase
       .from("brands")
       .insert({
         name: preset.brand_name,
@@ -288,7 +290,7 @@ export async function importProductPreset(formData: FormData) {
   // Find or create category
   let categoryId: string | null = null;
   if (preset.category_name) {
-    const { data: cat } = await supabase
+    const { data: cat } = await serviceSupabase
       .from("categories")
       .select("id")
       .eq("organization_id", organizationId)
@@ -298,7 +300,7 @@ export async function importProductPreset(formData: FormData) {
     if (cat) {
       categoryId = cat.id;
     } else {
-      const { data: newCat, error: catErr } = await supabase
+      const { data: newCat, error: catErr } = await serviceSupabase
         .from("categories")
         .insert({
           name: preset.category_name,
@@ -317,7 +319,7 @@ export async function importProductPreset(formData: FormData) {
     preset.image_url ??
     null;
 
-  const { error: prodErr } = await supabase.from("products").insert({
+  const { error: prodErr } = await serviceSupabase.from("products").insert({
     organization_id: organizationId,
     name: preset.product_name,
     sku: preset.product_sku || null,
@@ -340,7 +342,7 @@ export async function importProductPreset(formData: FormData) {
 }
 
 export async function importProductPresetsByIds(presetIds: string[]) {
-  const { supabase, organizationId } = await requireAppContext();
+  const { organizationId } = await requireAppContext();
   const serviceSupabase = createServiceClient();
 
   if (!presetIds.length) return { error: "Бүтээгдэхүүн сонгоогүй байна." };
@@ -358,10 +360,11 @@ export async function importProductPresetsByIds(presetIds: string[]) {
   const categoryCache = new Map<string, string | null>();
 
   for (const preset of presets) {
-    // Upsert brand
+    // Upsert brand (use service client to bypass RLS —
+    // this is a trusted server-side bulk import operation)
     let brandId = brandCache.get(preset.brand_name) ?? null;
     if (!brandId) {
-      const { data: existingBrand } = await supabase
+      const { data: existingBrand } = await serviceSupabase
         .from("brands")
         .select("id")
         .eq("organization_id", organizationId)
@@ -371,7 +374,7 @@ export async function importProductPresetsByIds(presetIds: string[]) {
       if (existingBrand) {
         brandId = existingBrand.id;
       } else {
-        const { data: newBrand, error: brandErr } = await supabase
+        const { data: newBrand, error: brandErr } = await serviceSupabase
           .from("brands")
           .insert({
             name: preset.brand_name,
@@ -394,7 +397,7 @@ export async function importProductPresetsByIds(presetIds: string[]) {
       ? (categoryCache.get(preset.category_name) ?? null)
       : null;
     if (preset.category_name && !categoryId) {
-      const { data: cat } = await supabase
+      const { data: cat } = await serviceSupabase
         .from("categories")
         .select("id")
         .eq("organization_id", organizationId)
@@ -404,7 +407,7 @@ export async function importProductPresetsByIds(presetIds: string[]) {
       if (cat) {
         categoryId = cat.id;
       } else {
-        const { data: newCat, error: catErr } = await supabase
+        const { data: newCat, error: catErr } = await serviceSupabase
           .from("categories")
           .insert({
             name: preset.category_name,
@@ -423,7 +426,7 @@ export async function importProductPresetsByIds(presetIds: string[]) {
 
     // Check SKU duplicate
     if (preset.product_sku) {
-      const { data: existing } = await supabase
+      const { data: existing } = await serviceSupabase
         .from("products")
         .select("id")
         .eq("organization_id", organizationId)
@@ -439,7 +442,7 @@ export async function importProductPresetsByIds(presetIds: string[]) {
       preset.image_url ??
       null;
 
-    const { error: prodErr } = await supabase.from("products").insert({
+    const { error: prodErr } = await serviceSupabase.from("products").insert({
       organization_id: organizationId,
       name: preset.product_name,
       sku: preset.product_sku || null,

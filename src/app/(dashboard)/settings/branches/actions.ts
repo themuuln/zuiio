@@ -151,8 +151,10 @@ export async function createBranch(formData: FormData) {
 
   revalidatePath("/settings/branches");
   revalidatePath("/inventory/warehouses");
+  revalidatePath("/", "layout");
   return { success: true, branch };
 }
+
 async function seedChartOfAccounts(
   serviceClient: ReturnType<typeof createServiceClient>,
   organizationId: string,
@@ -255,6 +257,7 @@ export async function updateBranch(branchId: string, formData: FormData) {
   }
 
   revalidatePath("/settings/branches");
+  revalidatePath("/", "layout");
   return { success: true };
 }
 
@@ -309,6 +312,7 @@ export async function setDefaultBranch(branchId: string) {
   }
 
   revalidatePath("/settings/branches");
+  revalidatePath("/", "layout");
   return { success: true };
 }
 

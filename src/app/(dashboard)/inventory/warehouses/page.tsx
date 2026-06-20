@@ -11,7 +11,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { ErpEmptyState } from "@/components/erp/empty-state";
+import { ErpDataTable } from "@/components/erp/data-table";
 import {
   type WarehouseDetailData,
   WarehouseDetailDrawer,
@@ -19,7 +19,6 @@ import {
 import { PageShell } from "@/components/erp/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -30,14 +29,6 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
 
@@ -91,6 +82,7 @@ export default function WarehousesPage() {
   const [selectedWarehouse, setSelectedWarehouse] = useState<Warehouse | null>(
     null,
   );
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const { data: warehouses = [], isLoading } = useQuery({
     queryKey: ["warehouses"],
@@ -111,6 +103,7 @@ export default function WarehousesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["warehouses"] });
       reset();
+      setDialogOpen(false);
       toast.success("Агуулах амжилттай нэмэгдлээ.");
     },
     onError: (err) => {
@@ -137,7 +130,7 @@ export default function WarehousesPage() {
       title="Агуулахууд"
       description="Олон агуулахын бүртгэл, удирдлага"
       actions={
-        <Dialog>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm">
               <Plus data-icon="inline-start" />
@@ -186,67 +179,58 @@ export default function WarehousesPage() {
         </Dialog>
       }
     >
-      {warehouses.length === 0 && !isLoading ? (
-        <ErpEmptyState
-          icon={<WarehouseIcon className="size-4" />}
-          title="Агуулах бүртгэгдээгүй"
-          description="Шинэ агуулах нэмж, барааны байршлыг тодорхойлох."
-        />
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Агуулахын жагсаалт</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Нэр</TableHead>
-                  <TableHead>Байршил</TableHead>
-                  <TableHead>Төлөв</TableHead>
-                  <TableHead>Үүсгэсэн</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {warehouses.map((wh) => (
-                  <TableRow
-                    key={wh.id}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => setSelectedWarehouse(wh)}
-                  >
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <WarehouseIcon className="size-4 text-muted-foreground" />
-                        {wh.name}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {wh.location ? (
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <MapPin className="size-3.5" />
-                          {wh.location}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {wh.is_default ? (
-                        <Badge variant="default">Үндсэн</Badge>
-                      ) : (
-                        <Badge variant="outline">Энгийн</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {wh.created_at ? formatDate(wh.created_at) : "-"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
+      <ErpDataTable
+        title="Агуулахын жагсаалт"
+        columns={[
+          {
+            header: "Нэр",
+            accessor: (wh: Warehouse) => (
+              <div className="flex items-center gap-2">
+                <WarehouseIcon className="size-4 text-muted-foreground" />
+                {wh.name}
+              </div>
+            ),
+          },
+          {
+            header: "Байршил",
+            accessor: (wh: Warehouse) =>
+              wh.location ? (
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <MapPin className="size-3.5" />
+                  {wh.location}
+                </div>
+              ) : (
+                <span className="text-muted-foreground">-</span>
+              ),
+          },
+          {
+            header: "Төлөв",
+            accessor: (wh: Warehouse) =>
+              wh.is_default ? (
+                <Badge variant="default">Үндсэн</Badge>
+              ) : (
+                <Badge variant="outline">Энгийн</Badge>
+              ),
+          },
+          {
+            header: "Үүсгэсэн",
+            accessor: (wh: Warehouse) => (
+              <span className="text-muted-foreground">
+                {wh.created_at ? formatDate(wh.created_at) : "-"}
+              </span>
+            ),
+          },
+        ]}
+        data={warehouses}
+        onRowClick={(wh) => setSelectedWarehouse(wh)}
+        loading={isLoading}
+        keyExtractor={(wh) => wh.id}
+        emptyState={{
+          icon: <WarehouseIcon className="size-4" />,
+          title: "Агуулах бүртгэгдээгүй",
+          description: "Шинэ агуулах нэмж, барааны байршлыг тодорхойлох.",
+        }}
+      />
       {selectedWarehouse && (
         <WarehouseDetailDrawer
           warehouse={toDetailData(selectedWarehouse)}
