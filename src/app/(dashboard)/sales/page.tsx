@@ -36,7 +36,7 @@ export default async function SalesPage({
     ),
     supabase
       .from("products")
-      .select("id, name, sale_price, current_stock, unit")
+      .select("id, name, sale_price, current_stock, unit, barcode")
       .eq("organization_id", organizationId)
       .is("deleted_at", null)
       .order("name"),
