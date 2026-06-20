@@ -21,6 +21,7 @@ import {
   ComboboxList,
 } from "@/components/ui/combobox";
 import { DatePicker } from "@/components/ui/date-picker";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
@@ -431,13 +432,15 @@ export function QuotationCreateDrawer({
               </div>
               <div className="w-28">
                 <FieldLabel className="mb-1 text-xs">Нэгж үнэ</FieldLabel>
-                <Input
-                  type="number"
-                  min="0"
-                  step="any"
-                  {...register(`items.${index}.unit_price`, {
-                    valueAsNumber: true,
-                  })}
+                <Controller
+                  control={control}
+                  name={`items.${index}.unit_price`}
+                  render={({ field }) => (
+                    <CurrencyInput
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
               </div>
               <div className="flex items-center gap-1 pb-1">

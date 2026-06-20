@@ -8,6 +8,7 @@ import { PageShell } from "@/components/erp/page-shell";
 import { InvoiceCreateDrawer } from "@/components/invoices/invoice-create-drawer";
 import { InvoiceDetailDrawer } from "@/components/invoices/invoice-detail-drawer";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -102,12 +103,14 @@ export function InvoicesContent({
             title="Нэхэмжлэл байхгүй"
             description="Шинэ нэхэмжлэл үүсгэж, харилцагчдад хуваалцах холбоос илгээнэ үү."
             action={
-              <InvoiceCreateDrawer
-                contacts={contacts}
-                products={products}
-                open={createOpen}
-                onOpenChange={setCreateOpen}
-              />
+              <button
+                type="button"
+                className={buttonVariants({ variant: "default" })}
+                onClick={() => setCreateOpen(true)}
+              >
+                <FileText className="size-4" />
+                Шинэ нэхэмжлэл
+              </button>
             }
           />
         ) : (

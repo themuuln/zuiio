@@ -1,9 +1,9 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { requireAppContext, requireWriteAction } from "@/lib/action-utils";
 import { logAuditEventWithClient } from "@/lib/audit";
 import { withBranchFilter } from "@/lib/branches";
-import { checkPermission, requireAppContext } from "@/lib/erp";
+import { revalidateEntities } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
 
 function parseFloatSafe(value: FormDataEntryValue | null): number {
@@ -22,21 +22,9 @@ export async function createDiscount(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const {
-    supabase,
-    organizationId,
-    userId,
-    branchId,
-    isBranchScoped,
-    permissions,
-  } = await requireAppContext();
-  const permError = checkPermission(permissions, "discounts.create");
-  if (permError) return { error: permError };
-
-  // Scoped users must have a branch
-  if (isBranchScoped && !branchId) {
-    return { error: "Салбар тодорхойгүй байна." };
-  }
+  const ctx = await requireWriteAction("discounts.create");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId, userId, branchId } = ctx;
 
   const name = getString(formData, "name");
   const description = getString(formData, "description");
@@ -149,25 +137,17 @@ export async function createDiscount(
     `Хямдрал "${name}" үүсгэсэн`,
   );
 
-  revalidatePath("/discounts");
-  revalidatePath("/");
-  return { success: true as const };
+  revalidateEntities(["discounts"]);
+  return { success: true as const, error: undefined, error: undefined };
 }
 
 export async function updateDiscount(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const {
-    supabase,
-    organizationId,
-    userId,
-    branchId,
-    isBranchScoped,
-    permissions,
-  } = await requireAppContext();
-  const permError = checkPermission(permissions, "discounts.update");
-  if (permError) return { error: permError };
+  const ctx = await requireWriteAction("discounts.update");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId, userId, branchId, isBranchScoped } = ctx;
 
   const discountId = getString(formData, "id");
   if (!discountId) {
@@ -292,25 +272,17 @@ export async function updateDiscount(
     `Хямдрал "${name}" шинэчилсэн`,
   );
 
-  revalidatePath("/discounts");
-  revalidatePath("/");
-  return { success: true as const };
+  revalidateEntities(["discounts"]);
+  return { success: true as const, error: undefined, error: undefined };
 }
 
 export async function toggleDiscountActive(
   discountId: string,
   isActive: boolean,
 ) {
-  const {
-    supabase,
-    organizationId,
-    userId,
-    branchId,
-    isBranchScoped,
-    permissions,
-  } = await requireAppContext();
-  const permError = checkPermission(permissions, "discounts.update");
-  if (permError) return { error: permError };
+  const ctx = await requireWriteAction("discounts.update");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId, userId, branchId, isBranchScoped } = ctx;
 
   // Enforce branch access when fetching the record
   let fetchQuery = supabase
@@ -360,9 +332,8 @@ export async function toggleDiscountActive(
     `Хямдрал "${discount.name}" ${action}`,
   );
 
-  revalidatePath("/discounts");
-  revalidatePath("/");
-  return { success: true as const };
+  revalidateEntities(["discounts"]);
+  return { success: true as const, error: undefined, error: undefined };
 }
 
 export async function applyDiscount(formData: FormData) {

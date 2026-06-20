@@ -1,24 +1,12 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { createSimpleQuery } from "@/lib/query/factory";
 import { inventoryKeys } from "@/lib/query/keys";
-import { createClient } from "@/lib/supabase/client";
 
-export function useInventory(orgId: string) {
-  const supabase = createClient();
-
-  return useQuery({
-    queryKey: inventoryKeys.lists(orgId),
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("stock_movements")
-        .select("*, products(name, sku, unit)")
-        .eq("organization_id", orgId)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!orgId,
-  });
-}
+export const useInventory = createSimpleQuery({
+  keys: inventoryKeys,
+  table: "stock_movements",
+  select: "*, products(name, sku, unit)",
+  orderBy: "created_at",
+  orderDirection: "desc",
+});

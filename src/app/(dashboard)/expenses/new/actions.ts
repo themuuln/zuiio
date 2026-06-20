@@ -1,31 +1,20 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { postExpenseToJournal } from "@/lib/accounting";
+import { requireWriteAction } from "@/lib/action-utils";
 import { validateExpenseInput } from "@/lib/domain-rules";
-import { checkPermission, parseAmount, requireAppContext } from "@/lib/erp";
+import { parseAmount } from "@/lib/erp";
 import { formatRouteDate } from "@/lib/format";
+import { revalidateEntities } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
 
 export async function createExpense(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const {
-    supabase,
-    organizationId,
-    userId,
-    branchId,
-    isBranchScoped,
-    permissions,
-  } = await requireAppContext();
-  const permError = checkPermission(permissions, "expenses.create");
-  if (permError) return { error: permError };
-
-  // Scoped users must have a branch
-  if (isBranchScoped && !branchId) {
-    return { error: "Салбар тодорхойгүй байна." };
-  }
+  const ctx = await requireWriteAction("expenses.create");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId, userId, branchId } = ctx;
 
   const category = getString(formData, "category");
   const amount = parseAmount(formData.get("amount"));
@@ -67,7 +56,6 @@ export async function createExpense(
     description,
   }).catch(console.error);
 
-  revalidatePath("/");
-  revalidatePath("/expenses");
-  return { success: true as const };
+  revalidateEntities(["expenses"]);
+  return { success: true as const, error: undefined, error: undefined };
 }

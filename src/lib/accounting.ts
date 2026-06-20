@@ -1,4 +1,4 @@
-import { logAuditEventWithClient } from "@/lib/audit";
+import { createJournalEntry } from "@/lib/accounting-utils";
 
 /**
  * Post a sale to the general ledger.
@@ -6,6 +6,7 @@ import { logAuditEventWithClient } from "@/lib/audit";
  * Credits: Sales Revenue (account code "4100")
  */
 export async function postSaleToJournal(
+  // biome-ignore lint/suspicious/noExplicitAny: Supabase client is untyped in this accounting context
   supabase: any,
   organizationId: string,
   userId: string,
@@ -23,122 +24,58 @@ export async function postSaleToJournal(
   }>,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Look up accounts by code
-    const { data: accounts } = await supabase
-      .from("chart_of_accounts")
-      .select("id, code")
-      .eq("organization_id", organizationId)
-      .in("code", ["1200", "1300", "4100", "5100"]);
-
-    if (!accounts || accounts.length < 2) {
-      return {
-        success: false,
-        error: "Дансны бүртгэл олдсонгүй. Эхлээд дансны бүртгэлээ оруулна уу.",
-      };
-    }
-
-    const accountMap = new Map(accounts.map((a: any) => [a.code, a.id]));
-    const bankAccountId = accountMap.get("1200") ?? accountMap.get("1300");
-    const revenueAccountId = accountMap.get("4100");
-    const cogsAccountId = accountMap.get("5100");
-
-    if (!bankAccountId || !revenueAccountId) {
-      return {
-        success: false,
-        error:
-          "Шаардлагатай данс олдсонгүй (Банкны данс эсвэл Борлуулалтын орлого).",
-      };
-    }
-
-    const { data: jeData, error: jeError } = await supabase.rpc(
-      "generate_journal_entry_number",
-    );
-
-    if (jeError) return { success: false, error: jeError.message };
-    const entryNumber = jeData as string;
-
     const totalDebit =
       saleData.paid_amount > 0 ? saleData.paid_amount : saleData.total_amount;
 
-    // Build lines: debit cash/bank, credit revenue
-    const lines = [
-      { account_id: bankAccountId, debit_amount: totalDebit, credit_amount: 0 },
+    const lines: Array<{
+      account_id: string;
+      debit_amount: number;
+      credit_amount: number;
+    }> = [
+      { account_id: "1200", debit_amount: totalDebit, credit_amount: 0 },
       {
-        account_id: revenueAccountId,
+        account_id: "4100",
         debit_amount: 0,
         credit_amount: totalDebit,
       },
     ];
 
-    // If sale has COGS items, debit COGS and credit Inventory
-    if (cogsAccountId && _items && _items.length > 0) {
+    // If sale has items, debit COGS and credit Inventory
+    if (_items && _items.length > 0) {
       const totalCost = _items.reduce(
         (sum, item) => sum + item.quantity * item.unit_price,
         0,
       );
       if (totalCost > 0) {
-        const inventoryAccountId = accountMap.get("1400");
-        if (inventoryAccountId) {
-          lines.push(
-            {
-              account_id: cogsAccountId,
-              debit_amount: totalCost,
-              credit_amount: 0,
-            },
-            {
-              account_id: inventoryAccountId,
-              debit_amount: 0,
-              credit_amount: totalCost,
-            },
-          );
-        }
+        lines.push(
+          {
+            account_id: "5100",
+            debit_amount: totalCost,
+            credit_amount: 0,
+          },
+          {
+            account_id: "1400",
+            debit_amount: 0,
+            credit_amount: totalCost,
+          },
+        );
       }
     }
 
-    // Check debits = credits
-    const totalDebits = lines.reduce((s, l) => s + l.debit_amount, 0);
-    const totalCredits = lines.reduce((s, l) => s + l.credit_amount, 0);
-    if (Math.abs(totalDebits - totalCredits) > 0.01) {
-      return { success: false, error: "Дебет ба кредит дүн тэнцүү биш байна." };
-    }
-
-    const { data: journalEntry, error: entryError } = await supabase
-      .from("journal_entries")
-      .insert({
-        organization_id: organizationId,
-        branch_id: branchId,
-        entry_date: saleData.sale_date,
-        entry_number: entryNumber,
-        reference_type: "sale",
-        reference_id: saleId,
-        description: `Борлуулалтын журналын бичилт - ${saleData.sale_date}`,
-        created_by: userId,
-      })
-      .select("id")
-      .single();
-
-    if (entryError) return { success: false, error: entryError.message };
-
-    const { error: linesError } = await supabase
-      .from("journal_entry_lines")
-      .insert(lines.map((l) => ({ ...l, journal_entry_id: journalEntry.id })));
-
-    if (linesError) return { success: false, error: linesError.message };
-
-    await logAuditEventWithClient(
-      supabase,
+    return await createJournalEntry(supabase, {
       organizationId,
       userId,
-      "created",
-      "sale" as any,
-      saleId,
-      undefined,
-      `Борлуулалтын журналын бичилт ${entryNumber} үүсгэсэн`,
-    );
-
-    return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err?.message ?? "Алдаа гарлаа" };
+      branchId,
+      referenceType: "sale",
+      referenceId: saleId,
+      entryDate: saleData.sale_date,
+      description: `Борлуулалтын журналын бичилт - ${saleData.sale_date}`,
+      accountCodes: ["1200", "1300", "4100", "5100", "1400"],
+      lines,
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Алдаа гарлаа";
+    return { success: false, error: message };
   }
 }
 
@@ -148,6 +85,7 @@ export async function postSaleToJournal(
  * Credits: Cash/Bank
  */
 export async function postExpenseToJournal(
+  // biome-ignore lint/suspicious/noExplicitAny: Supabase client is untyped in this accounting context
   supabase: any,
   organizationId: string,
   userId: string,
@@ -161,86 +99,33 @@ export async function postExpenseToJournal(
   },
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { data: accounts } = await supabase
-      .from("chart_of_accounts")
-      .select("id, code")
-      .eq("organization_id", organizationId)
-      .in("code", ["1200", "5200"]);
-
-    if (!accounts || accounts.length < 2) {
-      return { success: false, error: "Дансны бүртгэл олдсонгүй." };
-    }
-
-    const accountMap = new Map(accounts.map((a: any) => [a.code, a.id]));
-    const bankAccountId = accountMap.get("1200") ?? accountMap.get("1300");
-    const expenseAccountId = accountMap.get("5200");
-
-    if (!bankAccountId || !expenseAccountId) {
-      return {
-        success: false,
-        error: "Шаардлагатай данс олдсонгүй (Банкны данс эсвэл Зарлагын данс).",
-      };
-    }
-
-    const { data: jeData, error: jeError } = await supabase.rpc(
-      "generate_journal_entry_number",
-    );
-
-    if (jeError) return { success: false, error: jeError.message };
-    const entryNumber = jeData as string;
-
-    const lines = [
-      {
-        account_id: expenseAccountId,
-        debit_amount: expenseData.amount,
-        credit_amount: 0,
-      },
-      {
-        account_id: bankAccountId,
-        debit_amount: 0,
-        credit_amount: expenseData.amount,
-      },
-    ];
-
-    const { data: journalEntry, error: entryError } = await supabase
-      .from("journal_entries")
-      .insert({
-        organization_id: organizationId,
-        branch_id: branchId,
-        entry_date: expenseData.expense_date,
-        entry_number: entryNumber,
-        reference_type: "expense",
-        reference_id: expenseId,
-        description:
-          expenseData.description ||
-          `Зарлагын журналын бичилт - ${expenseData.expense_date}`,
-        created_by: userId,
-      })
-      .select("id")
-      .single();
-
-    if (entryError) return { success: false, error: entryError.message };
-
-    const { error: linesError } = await supabase
-      .from("journal_entry_lines")
-      .insert(lines.map((l) => ({ ...l, journal_entry_id: journalEntry.id })));
-
-    if (linesError) return { success: false, error: linesError.message };
-
-    await logAuditEventWithClient(
-      supabase,
+    return await createJournalEntry(supabase, {
       organizationId,
       userId,
-      "created",
-      "expense" as any,
-      expenseId,
-      undefined,
-      `Зарлагын журналын бичилт ${entryNumber} үүсгэсэн`,
-    );
-
-    return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err?.message ?? "Алдаа гарлаа" };
+      branchId,
+      referenceType: "expense",
+      referenceId: expenseId,
+      entryDate: expenseData.expense_date,
+      description:
+        expenseData.description ||
+        `Зарлагын журналын бичилт - ${expenseData.expense_date}`,
+      accountCodes: ["1200", "5200"],
+      lines: [
+        {
+          account_id: "5200",
+          debit_amount: expenseData.amount,
+          credit_amount: 0,
+        },
+        {
+          account_id: "1200",
+          debit_amount: 0,
+          credit_amount: expenseData.amount,
+        },
+      ],
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Алдаа гарлаа";
+    return { success: false, error: message };
   }
 }
 
@@ -250,6 +135,7 @@ export async function postExpenseToJournal(
  * Credits: Accounts Payable or Cash/Bank
  */
 export async function postPurchaseToJournal(
+  // biome-ignore lint/suspicious/noExplicitAny: Supabase client is untyped in this accounting context
   supabase: any,
   organizationId: string,
   userId: string,
@@ -262,90 +148,33 @@ export async function postPurchaseToJournal(
   },
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { data: accounts } = await supabase
-      .from("chart_of_accounts")
-      .select("id, code")
-      .eq("organization_id", organizationId)
-      .in("code", ["1400", "2100", "1200"]);
-
-    if (!accounts || accounts.length < 2) {
-      return { success: false, error: "Дансны бүртгэл олдсонгүй." };
-    }
-
-    const accountMap = new Map(accounts.map((a: any) => [a.code, a.id]));
-    const inventoryAccountId = accountMap.get("1400");
-    const payablesAccountId = accountMap.get("2100");
-    const bankAccountId = accountMap.get("1200");
-
-    if (!inventoryAccountId || !payablesAccountId) {
-      return {
-        success: false,
-        error: "Шаардлагатай данс олдсонгүй (Бараа материал эсвэл Өглөг).",
-      };
-    }
-
-    const { data: jeData, error: jeError } = await supabase.rpc(
-      "generate_journal_entry_number",
-    );
-
-    if (jeError) return { success: false, error: jeError.message };
-    const entryNumber = jeData as string;
-
-    // Debit Inventory, Credit Accounts Payable (or Cash if already paid)
     const creditAccountId =
-      purchaseData.status === "received" && bankAccountId
-        ? bankAccountId
-        : payablesAccountId;
+      purchaseData.status === "received" ? "1200" : "2100";
 
-    const lines = [
-      {
-        account_id: inventoryAccountId,
-        debit_amount: purchaseData.total_amount,
-        credit_amount: 0,
-      },
-      {
-        account_id: creditAccountId,
-        debit_amount: 0,
-        credit_amount: purchaseData.total_amount,
-      },
-    ];
-
-    const { data: journalEntry, error: entryError } = await supabase
-      .from("journal_entries")
-      .insert({
-        organization_id: organizationId,
-        branch_id: branchId,
-        entry_date: purchaseData.order_date,
-        entry_number: entryNumber,
-        reference_type: "purchase_order",
-        reference_id: purchaseId,
-        description: `Худалдан авалтын журналын бичилт - ${purchaseData.order_date}`,
-        created_by: userId,
-      })
-      .select("id")
-      .single();
-
-    if (entryError) return { success: false, error: entryError.message };
-
-    const { error: linesError } = await supabase
-      .from("journal_entry_lines")
-      .insert(lines.map((l) => ({ ...l, journal_entry_id: journalEntry.id })));
-
-    if (linesError) return { success: false, error: linesError.message };
-
-    await logAuditEventWithClient(
-      supabase,
+    return await createJournalEntry(supabase, {
       organizationId,
       userId,
-      "created",
-      "stock_movement" as any,
-      purchaseId,
-      undefined,
-      `Худалдан авалтын журналын бичилт ${entryNumber} үүсгэсэн`,
-    );
-
-    return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err?.message ?? "Алдаа гарлаа" };
+      branchId,
+      referenceType: "purchase_order",
+      referenceId: purchaseId,
+      entryDate: purchaseData.order_date,
+      description: `Худалдан авалтын журналын бичилт - ${purchaseData.order_date}`,
+      accountCodes: ["1400", "2100", "1200"],
+      lines: [
+        {
+          account_id: "1400",
+          debit_amount: purchaseData.total_amount,
+          credit_amount: 0,
+        },
+        {
+          account_id: creditAccountId,
+          debit_amount: 0,
+          credit_amount: purchaseData.total_amount,
+        },
+      ],
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Алдаа гарлаа";
+    return { success: false, error: message };
   }
 }

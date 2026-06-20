@@ -8,7 +8,11 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { createPurchaseOrder } from "@/app/(dashboard)/purchases/actions";
 import { buttonVariants } from "@/components/ui/button";
-import { DrawerFooter, DrawerCancel, DrawerSubmit } from "@/components/ui/drawer-footer";
+import {
+  DrawerFooter,
+  DrawerCancel,
+  DrawerSubmit,
+} from "@/components/ui/drawer-footer";
 import {
   Combobox,
   ComboboxContent,
@@ -18,11 +22,8 @@ import {
   ComboboxList,
 } from "@/components/ui/combobox";
 import { DatePicker } from "@/components/ui/date-picker";
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Textarea } from "@/components/ui/textarea";
@@ -101,7 +102,9 @@ export function PurchaseCreateDrawer({
       order_date: new Date().toISOString().slice(0, 10),
       expected_date: "",
       notes: "",
-      items: [{ product_id: "", quantity: 1, unit_cost: 0, variant_id: undefined }],
+      items: [
+        { product_id: "", quantity: 1, unit_cost: 0, variant_id: undefined },
+      ],
     },
   });
 
@@ -160,9 +163,7 @@ export function PurchaseCreateDrawer({
       }
     } catch (err) {
       setServerError(
-        err instanceof Error
-          ? err.message
-          : "Захиалга үүсгэхэд алдаа гарлаа.",
+        err instanceof Error ? err.message : "Захиалга үүсгэхэд алдаа гарлаа.",
       );
     }
   };
@@ -192,8 +193,18 @@ export function PurchaseCreateDrawer({
       panelWidth="32rem"
       footer={
         <DrawerFooter>
-          <DrawerCancel onClick={() => { setOpen(false); reset(); }} />
-          <DrawerSubmit form="purchase-form" isPending={isSubmitting} label="Захиалга үүсгэх" loadingLabel="Үүсгэж байна..." />
+          <DrawerCancel
+            onClick={() => {
+              setOpen(false);
+              reset();
+            }}
+          />
+          <DrawerSubmit
+            form="purchase-form"
+            isPending={isSubmitting}
+            label="Захиалга үүсгэх"
+            loadingLabel="Үүсгэж байна..."
+          />
         </DrawerFooter>
       }
     >
@@ -218,12 +229,12 @@ export function PurchaseCreateDrawer({
                     field.onChange(next?.id ?? "");
                     setSupplierQuery("");
                   }}
-                  itemToStringValue={(
-                    c: { id: string; name: string } | null,
-                  ) => c?.id ?? ""}
-                  itemToStringLabel={(
-                    c: { id: string; name: string } | null,
-                  ) => c?.name ?? ""}
+                  itemToStringValue={(c: { id: string; name: string } | null) =>
+                    c?.id ?? ""
+                  }
+                  itemToStringLabel={(c: { id: string; name: string } | null) =>
+                    c?.name ?? ""
+                  }
                   inputValue={supplierQuery}
                   onInputValueChange={setSupplierQuery}
                 >
@@ -258,9 +269,7 @@ export function PurchaseCreateDrawer({
                 name="order_date"
                 render={({ field }) => (
                   <DatePicker
-                    value={
-                      field.value ? new Date(field.value) : undefined
-                    }
+                    value={field.value ? new Date(field.value) : undefined}
                     onChange={(date) =>
                       field.onChange(date ? formatRouteDate(date) : "")
                     }
@@ -286,9 +295,7 @@ export function PurchaseCreateDrawer({
                 name="expected_date"
                 render={({ field }) => (
                   <DatePicker
-                    value={
-                      field.value ? new Date(field.value) : undefined
-                    }
+                    value={field.value ? new Date(field.value) : undefined}
                     onChange={(date) =>
                       field.onChange(date ? formatRouteDate(date) : "")
                     }
@@ -306,7 +313,12 @@ export function PurchaseCreateDrawer({
             <button
               type="button"
               onClick={() =>
-                append({ product_id: "", quantity: 1, unit_cost: 0, variant_id: undefined })
+                append({
+                  product_id: "",
+                  quantity: 1,
+                  unit_cost: 0,
+                  variant_id: undefined,
+                })
               }
               className={buttonVariants({
                 variant: "outline",
@@ -329,9 +341,7 @@ export function PurchaseCreateDrawer({
                 className="flex flex-wrap items-end gap-2 rounded-lg border p-3"
               >
                 <div className="flex-1 min-w-[140px]">
-                  <FieldLabel className="mb-1 text-xs">
-                    Бүтээгдэхүүн
-                  </FieldLabel>
+                  <FieldLabel className="mb-1 text-xs">Бүтээгдэхүүн</FieldLabel>
                   <Controller
                     control={control}
                     name={`items.${index}.product_id` as const}
@@ -339,9 +349,8 @@ export function PurchaseCreateDrawer({
                       <Combobox
                         items={products}
                         value={
-                          products.find(
-                            (p) => p.id === productField.value,
-                          ) ?? null
+                          products.find((p) => p.id === productField.value) ??
+                          null
                         }
                         onValueChange={(next: ProductOption | null) => {
                           productField.onChange(next?.id ?? "");
@@ -350,10 +359,7 @@ export function PurchaseCreateDrawer({
                             ...prev,
                             [index]: null,
                           }));
-                          setValue(
-                            `items.${index}.variant_id`,
-                            undefined,
-                          );
+                          setValue(`items.${index}.variant_id`, undefined);
                           // Auto-fill unit_cost from product cost_price
                           if (next?.cost_price) {
                             setValue(
@@ -361,10 +367,7 @@ export function PurchaseCreateDrawer({
                               next.cost_price,
                             );
                           } else {
-                            setValue(
-                              `items.${index}.unit_cost`,
-                              0,
-                            );
+                            setValue(`items.${index}.unit_cost`, 0);
                           }
                         }}
                         itemToStringValue={(p: ProductOption | null) =>
@@ -382,9 +385,7 @@ export function PurchaseCreateDrawer({
                           className="w-full"
                         />
                         <ComboboxContent>
-                          <ComboboxEmpty>
-                            Бүтээгдэхүүн байхгүй
-                          </ComboboxEmpty>
+                          <ComboboxEmpty>Бүтээгдэхүүн байхгүй</ComboboxEmpty>
                           <ComboboxList>
                             {(p: ProductOption) => (
                               <ComboboxItem key={p.id} value={p}>
@@ -413,10 +414,7 @@ export function PurchaseCreateDrawer({
                               variant.variant_id,
                             );
                           } else {
-                            setValue(
-                              `items.${index}.variant_id`,
-                              undefined,
-                            );
+                            setValue(`items.${index}.variant_id`, undefined);
                           }
                         }}
                       />
@@ -424,9 +422,7 @@ export function PurchaseCreateDrawer({
                   )}
                 </div>
                 <div className="w-20">
-                  <FieldLabel className="mb-1 text-xs">
-                    Тоо хэмжээ
-                  </FieldLabel>
+                  <FieldLabel className="mb-1 text-xs">Тоо хэмжээ</FieldLabel>
                   <Input
                     type="number"
                     min="0.01"
@@ -438,13 +434,15 @@ export function PurchaseCreateDrawer({
                 </div>
                 <div className="w-28">
                   <FieldLabel className="mb-1 text-xs">Өртөг</FieldLabel>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="any"
-                    {...register(`items.${index}.unit_cost`, {
-                      valueAsNumber: true,
-                    })}
+                  <Controller
+                    control={control}
+                    name={`items.${index}.unit_cost`}
+                    render={({ field }) => (
+                      <CurrencyInput
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    )}
                   />
                 </div>
                 <div className="flex items-center gap-1 pb-1">
@@ -471,9 +469,7 @@ export function PurchaseCreateDrawer({
 
         <div className="flex justify-end border-t pt-3">
           <div className="text-right">
-            <span className="text-sm text-muted-foreground">
-              Нийт дүн:
-            </span>
+            <span className="text-sm text-muted-foreground">Нийт дүн:</span>
             <span className="ml-2 text-lg font-semibold">
               {formatCurrency(totalAmount)}
             </span>
@@ -483,14 +479,9 @@ export function PurchaseCreateDrawer({
         <Field>
           <FieldLabel>
             Тэмдэглэл{" "}
-            <span className="text-xs text-muted-foreground">
-              (заавал биш)
-            </span>
+            <span className="text-xs text-muted-foreground">(заавал биш)</span>
           </FieldLabel>
-          <Textarea
-            placeholder="Нэмэлт тэмдэглэл..."
-            {...register("notes")}
-          />
+          <Textarea placeholder="Нэмэлт тэмдэглэл..." {...register("notes")} />
         </Field>
 
         <ErrorBanner error={serverError} />

@@ -3,12 +3,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash } from "@phosphor-icons/react";
 import { useState } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { updateJournalEntry } from "@/app/(dashboard)/accounting/actions";
 import { buttonVariants } from "@/components/ui/button";
-import { DrawerFooter, DrawerCancel, DrawerSubmit } from "@/components/ui/drawer-footer";
+import {
+  DrawerFooter,
+  DrawerCancel,
+  DrawerSubmit,
+} from "@/components/ui/drawer-footer";
 import { DatePicker } from "@/components/ui/date-picker";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
@@ -183,7 +188,11 @@ export function JournalEntryEditDrawer({
       footer={
         <DrawerFooter>
           <DrawerCancel onClick={() => onOpenChange(false)} />
-          <DrawerSubmit form="journal-edit-form" isPending={isSubmitting} loadingLabel="Хадгалаж байна..." />
+          <DrawerSubmit
+            form="journal-edit-form"
+            isPending={isSubmitting}
+            loadingLabel="Хадгалаж байна..."
+          />
         </DrawerFooter>
       }
     >
@@ -290,27 +299,29 @@ export function JournalEntryEditDrawer({
 
               <div className="w-28">
                 <FieldLabel className="mb-1 text-xs">Дебет</FieldLabel>
-                <Input
-                  type="number"
-                  min="0"
-                  step="any"
-                  placeholder="0.00"
-                  {...register(`lines.${index}.debit_amount`, {
-                    valueAsNumber: true,
-                  })}
+                <Controller
+                  control={control}
+                  name={`lines.${index}.debit_amount`}
+                  render={({ field }) => (
+                    <CurrencyInput
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
               </div>
 
               <div className="w-28">
                 <FieldLabel className="mb-1 text-xs">Кредит</FieldLabel>
-                <Input
-                  type="number"
-                  min="0"
-                  step="any"
-                  placeholder="0.00"
-                  {...register(`lines.${index}.credit_amount`, {
-                    valueAsNumber: true,
-                  })}
+                <Controller
+                  control={control}
+                  name={`lines.${index}.credit_amount`}
+                  render={({ field }) => (
+                    <CurrencyInput
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
               </div>
 

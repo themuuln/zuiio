@@ -22,6 +22,7 @@ import {
   ComboboxList,
 } from "@/components/ui/combobox";
 import { DatePicker } from "@/components/ui/date-picker";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -596,13 +597,12 @@ export function DiscountCreateDrawer({
                 (заавал биш)
               </span>
             </FieldLabel>
-            <Input
-              type="number"
-              min="0"
-              step="any"
-              defaultValue="0"
-              placeholder="0"
-              {...register("min_purchase_amount", { valueAsNumber: true })}
+            <Controller
+              control={control}
+              name="min_purchase_amount"
+              render={({ field }) => (
+                <CurrencyInput value={field.value} onChange={field.onChange} />
+              )}
             />
           </Field>
 

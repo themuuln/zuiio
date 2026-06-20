@@ -1,30 +1,18 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { postPurchaseToJournal } from "@/lib/accounting";
+import { requireWriteAction } from "@/lib/action-utils";
 import { withBranchFilter } from "@/lib/branches";
-import { checkPermission, requireAppContext } from "@/lib/erp";
+import { revalidateEntities } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
 
 export async function createPurchaseOrder(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const {
-    supabase,
-    organizationId,
-    userId,
-    branchId,
-    isBranchScoped,
-    permissions,
-  } = await requireAppContext();
-  const permError = checkPermission(permissions, "purchases.create");
-  if (permError) return { error: permError };
-
-  // Scoped users must have a branch
-  if (isBranchScoped && !branchId) {
-    return { error: "Салбар тодорхойгүй байна." };
-  }
+  const ctx = await requireWriteAction("purchases.create");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId, userId, branchId } = ctx;
 
   const supplierId = getString(formData, "supplier_id");
   const orderDate = getString(formData, "order_date");
@@ -138,19 +126,17 @@ export async function createPurchaseOrder(
     },
   ).catch(console.error);
 
-  revalidatePath("/purchases");
-  revalidatePath("/");
-  return { success: true as const };
+  revalidateEntities(["purchases"]);
+  return { success: true as const, error: undefined, error: undefined };
 }
 
 export async function updatePurchaseOrderStatus(
   orderId: string,
   status: string,
 ) {
-  const { supabase, organizationId, branchId, isBranchScoped, permissions } =
-    await requireAppContext();
-  const permError = checkPermission(permissions, "purchases.update");
-  if (permError) return { error: permError };
+  const ctx = await requireWriteAction("purchases.update");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId, branchId, isBranchScoped } = ctx;
 
   let fetchQuery = supabase
     .from("purchase_orders")
@@ -180,25 +166,17 @@ export async function updatePurchaseOrderStatus(
     return { error: `Төлөв шинэчлэхэд алдаа гарлаа: ${error.message}` };
   }
 
-  revalidatePath("/purchases");
-  revalidatePath("/");
-  return { success: true as const };
+  revalidateEntities(["purchases"]);
+  return { success: true as const, error: undefined, error: undefined };
 }
 
 export async function receivePurchaseOrderItems(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const {
-    supabase,
-    organizationId,
-    userId,
-    branchId,
-    isBranchScoped,
-    permissions,
-  } = await requireAppContext();
-  const permError = checkPermission(permissions, "purchases.update");
-  if (permError) return { error: permError };
+  const ctx = await requireWriteAction("purchases.update");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId, userId, branchId, isBranchScoped } = ctx;
 
   const orderId = getString(formData, "order_id");
   const itemsJson = getString(formData, "items");
@@ -336,7 +314,6 @@ export async function receivePurchaseOrderItems(
     .update({ status: newStatus })
     .eq("id", orderId);
 
-  revalidatePath("/purchases");
-  revalidatePath("/");
-  return { success: true as const };
+  revalidateEntities(["purchases"]);
+  return { success: true as const, error: undefined, error: undefined };
 }

@@ -23,6 +23,8 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -30,7 +32,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { movementKeys, productKeys } from "@/lib/query/keys";
 import { createStockMovement } from "../actions";
 import type { ProductOption } from "./page";
-import { ErrorBanner } from "@/components/ui/error-banner";
 
 const movementSchema = z
   .object({
@@ -93,7 +94,7 @@ export function StockMovementForm({ products }: { products: ProductOption[] }) {
   const movementMutation = useMutation({
     mutationFn: async (formData: FormData) => {
       const result = await createStockMovement(undefined, formData);
-      if (result?.error) throw new Error(result.error);
+      if (result && "error" in result) throw new Error(result.error);
       return { success: true as const };
     },
     onMutate: async (formData) => {
@@ -330,13 +331,16 @@ export function StockMovementForm({ products }: { products: ProductOption[] }) {
                   (заавал биш)
                 </span>
               </FieldLabel>
-              <Input
-                id="unit_cost"
-                type="number"
-                min="0"
-                step="0.01"
-                defaultValue="0"
-                {...register("unit_cost", { valueAsNumber: true })}
+              <Controller
+                control={control}
+                name="unit_cost"
+                render={({ field }) => (
+                  <CurrencyInput
+                    id="unit_cost"
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
             </Field>
 

@@ -1,30 +1,19 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { requireWriteAction } from "@/lib/action-utils";
 import { validateStockMovementInput } from "@/lib/domain-rules";
-import { checkPermission, parseAmount, requireAppContext } from "@/lib/erp";
+import { parseAmount } from "@/lib/erp";
 import { checkLowStockAndNotify } from "@/lib/notification";
+import { revalidateEntities } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
 
 export async function createStockMovement(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const {
-    supabase,
-    organizationId,
-    userId,
-    branchId,
-    isBranchScoped,
-    permissions,
-  } = await requireAppContext();
-  const permError = checkPermission(permissions, "stock_movements.create");
-  if (permError) return { error: permError };
-
-  // Scoped users must have a branch
-  if (isBranchScoped && !branchId) {
-    return { error: "Салбар тодорхойгүй байна." };
-  }
+  const ctx = await requireWriteAction("stock_movements.create");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId, userId, branchId } = ctx;
 
   const productId = getString(formData, "product_id");
   const type = getString(formData, "type");
@@ -125,8 +114,6 @@ export async function createStockMovement(
     );
   }
 
-  revalidatePath("/inventory/movements");
-  revalidatePath("/inventory");
-  revalidatePath("/products");
-  return { success: true as const };
+  revalidateEntities(["inventory"]);
+  return { success: true as const, error: undefined, error: undefined };
 }

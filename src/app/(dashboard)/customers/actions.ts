@@ -1,17 +1,17 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { requireWriteAction } from "@/lib/action-utils";
 import { validateContactInput } from "@/lib/domain-rules";
-import { checkPermission, requireAppContext } from "@/lib/erp";
+import { revalidateEntities } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
 
 export async function createContact(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, permissions } = await requireAppContext();
-  const permError = checkPermission(permissions, "contacts.create");
-  if (permError) return { error: permError };
+  const ctx = await requireWriteAction("contacts.create");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
 
   const name = getString(formData, "name");
   const phone = getString(formData, "phone");
@@ -54,19 +54,17 @@ export async function createContact(
     };
   }
 
-  revalidatePath("/customers");
-  revalidatePath("/suppliers");
-  revalidatePath("/sales/new");
-  return { success: true as const };
+  revalidateEntities(["customers"]);
+  return { success: true as const, error: undefined, error: undefined };
 }
 
 export async function updateContact(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, permissions } = await requireAppContext();
-  const permError = checkPermission(permissions, "contacts.update");
-  if (permError) return { error: permError };
+  const ctx = await requireWriteAction("contacts.update");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
 
   const id = getString(formData, "id");
   const name = getString(formData, "name");
@@ -128,8 +126,6 @@ export async function updateContact(
     };
   }
 
-  revalidatePath("/customers");
-  revalidatePath("/suppliers");
-  revalidatePath("/sales/new");
-  return { success: true as const };
+  revalidateEntities(["customers"]);
+  return { success: true as const, error: undefined, error: undefined };
 }

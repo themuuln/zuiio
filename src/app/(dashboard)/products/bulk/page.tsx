@@ -1,10 +1,22 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Barcode, DownloadSimple, UploadSimple } from "@phosphor-icons/react";
+import {
+  Barcode,
+  Camera,
+  DownloadSimple,
+  UploadSimple,
+} from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 import { useRef, useState } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
+
+const CameraScanner = dynamic(
+  () => import("@/components/shop/camera-scanner").then((m) => m.CameraScanner),
+  { ssr: false },
+);
+
 import { toast } from "sonner";
 import { z } from "zod";
 import { PageShell } from "@/components/erp/page-shell";
@@ -16,6 +28,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { productKeys } from "@/lib/query/keys";
@@ -69,12 +82,14 @@ export default function BulkProductsPage() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [csvError, setCsvError] = useState<string | null>(null);
+  const [scanTargetIndex, setScanTargetIndex] = useState<number | null>(null);
 
   const {
     register,
     handleSubmit,
     control,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<BulkValues>({
     resolver: zodResolver(bulkSchema),
@@ -93,6 +108,14 @@ export default function BulkProductsPage() {
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: "items" });
+
+  const handleBarcodeScan = (barcode: string) => {
+    if (scanTargetIndex !== null) {
+      setValue(`items.${scanTargetIndex}.barcode`, barcode);
+    }
+    setScanTargetIndex(null);
+    return { found: true } as const;
+  };
 
   const submitMutation = useMutation({
     mutationFn: (data: BulkValues) => bulkCreateProducts(data.items),
@@ -169,219 +192,243 @@ export default function BulkProductsPage() {
   }
 
   return (
-    <PageShell
-      title="Баркод бөөнөөр"
-      description="Баркод ашиглан бүтээгдэхүүнийг бөөнөөр нэмэх, импортлох"
-    >
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Бүтээгдэхүүнүүд</CardTitle>
-            <CardDescription>
-              Баркод, нэр, үнийг оруулан бөөнөөр нэмэх
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              {fields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="flex flex-wrap items-end gap-2 rounded-lg border p-3"
-                >
-                  <div className="w-36">
-                    <FieldLabel
-                      htmlFor={`items.${index}.barcode`}
-                      className="mb-1"
-                    >
-                      Баркод
-                    </FieldLabel>
-                    <Input
-                      id={`items.${index}.barcode`}
-                      placeholder="8801234567890"
-                      {...register(`items.${index}.barcode`)}
-                    />
-                  </div>
-                  <div className="flex-1 min-w-[150px]">
-                    <FieldLabel
-                      htmlFor={`items.${index}.name`}
-                      className="mb-1"
-                    >
-                      Нэр
-                    </FieldLabel>
-                    <Input
-                      id={`items.${index}.name`}
-                      placeholder="Бүтээгдэхүүний нэр"
-                      {...register(`items.${index}.name`)}
-                    />
-                  </div>
-                  <div className="w-24">
-                    <FieldLabel
-                      htmlFor={`items.${index}.sale_price`}
-                      className="mb-1"
-                    >
-                      Борлуулах үнэ
-                    </FieldLabel>
-                    <Input
-                      id={`items.${index}.sale_price`}
-                      type="number"
-                      min="0"
-                      step="any"
-                      {...register(`items.${index}.sale_price`, {
-                        valueAsNumber: true,
-                      })}
-                    />
-                  </div>
-                  <div className="w-24">
-                    <FieldLabel
-                      htmlFor={`items.${index}.cost_price`}
-                      className="mb-1"
-                    >
-                      Өртөг
-                    </FieldLabel>
-                    <Input
-                      id={`items.${index}.cost_price`}
-                      type="number"
-                      min="0"
-                      step="any"
-                      {...register(`items.${index}.cost_price`, {
-                        valueAsNumber: true,
-                      })}
-                    />
-                  </div>
-                  <div className="w-20">
-                    <FieldLabel
-                      htmlFor={`items.${index}.current_stock`}
-                      className="mb-1"
-                    >
-                      Нөөц
-                    </FieldLabel>
-                    <Input
-                      id={`items.${index}.current_stock`}
-                      type="number"
-                      min="0"
-                      step="any"
-                      {...register(`items.${index}.current_stock`, {
-                        valueAsNumber: true,
-                      })}
-                    />
-                  </div>
-                  {fields.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive mb-0.5"
-                      onClick={() => remove(index)}
-                    >
-                      Хасах
-                    </Button>
-                  )}
-                </div>
-              ))}
-
-              {errors.items && (
-                <p className="text-xs text-destructive">
-                  {typeof errors.items === "object" && "message" in errors.items
-                    ? errors.items.message
-                    : ""}
-                  {"root" in (errors.items ?? {})
-                    ? (errors.items as { root: { message?: string } }).root
-                        ?.message
-                    : ""}
-                </p>
-              )}
-
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    append({
-                      barcode: "",
-                      name: "",
-                      sale_price: 0,
-                      cost_price: 0,
-                      current_stock: 0,
-                      unit: "ширхэг",
-                    })
-                  }
-                >
-                  <Barcode data-icon="inline-start" />
-                  Мөр нэмэх
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={submitMutation.isPending}
-                  size="sm"
-                >
-                  {submitMutation.isPending
-                    ? "Хадгалж байна..."
-                    : `${fields.length} бүтээгдэхүүн хадгалах`}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-
-        <div className="space-y-4">
-          <Card>
+    <>
+      <PageShell
+        title="Баркод бөөнөөр"
+        description="Баркод ашиглан бүтээгдэхүүнийг бөөнөөр нэмэх, импортлох"
+      >
+        <div className="grid gap-6 lg:grid-cols-3">
+          <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle>CSV импорт</CardTitle>
+              <CardTitle>Бүтээгдэхүүнүүд</CardTitle>
               <CardDescription>
-                Баркод, нэр, үнийг CSV-оос оруулах
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv"
-                className="hidden"
-                onChange={handleCSVImport}
-              />
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <UploadSimple data-icon="inline-start" />
-                CSV файл сонгох
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={downloadCSVTemplate}
-              >
-                <DownloadSimple data-icon="inline-start" />
-                Загвар татах
-              </Button>
-              {csvError && (
-                <p className="text-xs text-destructive">{csvError}</p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                CSV формат: barcode, name, sale_price, cost_price,
-                current_stock, unit
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Баркод уншигч</CardTitle>
-              <CardDescription>
-                Баркод сканнер ашиглан хурдан бүртгэх
+                Баркод, нэр, үнийг оруулан бөөнөөр нэмэх
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Баркод сканнераар унших үед курсор автоматаар дараагийн мөрөнд
-                шилжиж, хурдан бүртгэх боломжтой.
-              </p>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                {fields.map((field, index) => (
+                  <div
+                    key={field.id}
+                    className="flex flex-wrap items-end gap-2 rounded-lg border p-3"
+                  >
+                    <div className="w-44">
+                      <FieldLabel
+                        htmlFor={`items.${index}.barcode`}
+                        className="mb-1"
+                      >
+                        Баркод
+                      </FieldLabel>
+                      <div className="flex items-center gap-1">
+                        <Input
+                          id={`items.${index}.barcode`}
+                          placeholder="8801234567890"
+                          className="flex-1 min-w-0"
+                          {...register(`items.${index}.barcode`)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setScanTargetIndex(index)}
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border-2 border-dashed bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                          title="Камераар скан хийх"
+                        >
+                          <Camera className="size-4" weight="bold" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-[150px]">
+                      <FieldLabel
+                        htmlFor={`items.${index}.name`}
+                        className="mb-1"
+                      >
+                        Нэр
+                      </FieldLabel>
+                      <Input
+                        id={`items.${index}.name`}
+                        placeholder="Бүтээгдэхүүний нэр"
+                        {...register(`items.${index}.name`)}
+                      />
+                    </div>
+                    <div className="w-24">
+                      <FieldLabel
+                        htmlFor={`items.${index}.sale_price`}
+                        className="mb-1"
+                      >
+                        Борлуулах үнэ
+                      </FieldLabel>
+                      <Controller
+                        control={control}
+                        name={`items.${index}.sale_price`}
+                        render={({ field }) => (
+                          <CurrencyInput
+                            id={`items.${index}.sale_price`}
+                            value={field.value}
+                            onChange={field.onChange}
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className="w-24">
+                      <FieldLabel
+                        htmlFor={`items.${index}.cost_price`}
+                        className="mb-1"
+                      >
+                        Өртөг
+                      </FieldLabel>
+                      <Controller
+                        control={control}
+                        name={`items.${index}.cost_price`}
+                        render={({ field }) => (
+                          <CurrencyInput
+                            id={`items.${index}.cost_price`}
+                            value={field.value}
+                            onChange={field.onChange}
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className="w-20">
+                      <FieldLabel
+                        htmlFor={`items.${index}.current_stock`}
+                        className="mb-1"
+                      >
+                        Нөөц
+                      </FieldLabel>
+                      <Input
+                        id={`items.${index}.current_stock`}
+                        type="number"
+                        min="0"
+                        step="any"
+                        {...register(`items.${index}.current_stock`, {
+                          valueAsNumber: true,
+                        })}
+                      />
+                    </div>
+                    {fields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive mb-0.5"
+                        onClick={() => remove(index)}
+                      >
+                        Хасах
+                      </Button>
+                    )}
+                  </div>
+                ))}
+
+                {errors.items && (
+                  <p className="text-xs text-destructive">
+                    {typeof errors.items === "object" &&
+                    "message" in errors.items
+                      ? errors.items.message
+                      : ""}
+                    {"root" in (errors.items ?? {})
+                      ? (errors.items as { root: { message?: string } }).root
+                          ?.message
+                      : ""}
+                  </p>
+                )}
+
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      append({
+                        barcode: "",
+                        name: "",
+                        sale_price: 0,
+                        cost_price: 0,
+                        current_stock: 0,
+                        unit: "ширхэг",
+                      })
+                    }
+                  >
+                    <Barcode data-icon="inline-start" />
+                    Мөр нэмэх
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={submitMutation.isPending}
+                    size="sm"
+                  >
+                    {submitMutation.isPending
+                      ? "Хадгалж байна..."
+                      : `${fields.length} бүтээгдэхүүн хадгалах`}
+                  </Button>
+                </div>
+              </form>
             </CardContent>
           </Card>
+
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>CSV импорт</CardTitle>
+                <CardDescription>
+                  Баркод, нэр, үнийг CSV-оос оруулах
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  onChange={handleCSVImport}
+                />
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <UploadSimple data-icon="inline-start" />
+                  CSV файл сонгох
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={downloadCSVTemplate}
+                >
+                  <DownloadSimple data-icon="inline-start" />
+                  Загвар татах
+                </Button>
+                {csvError && (
+                  <p className="text-xs text-destructive">{csvError}</p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  CSV формат: barcode, name, sale_price, cost_price,
+                  current_stock, unit
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Баркод уншигч</CardTitle>
+                <CardDescription>
+                  Баркод сканнер ашиглан хурдан бүртгэх
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Баркод сканнераар унших үед курсор автоматаар дараагийн мөрөнд
+                  шилжиж, хурдан бүртгэх боломжтой.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
-    </PageShell>
+      </PageShell>
+      {scanTargetIndex !== null && (
+        <CameraScanner
+          onScan={handleBarcodeScan}
+          onClose={() => setScanTargetIndex(null)}
+        />
+      )}
+    </>
   );
 }

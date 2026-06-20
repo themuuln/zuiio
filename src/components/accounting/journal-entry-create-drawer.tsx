@@ -3,12 +3,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash } from "@phosphor-icons/react";
 import { useState } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { createJournalEntry } from "@/app/(dashboard)/accounting/actions";
 import { buttonVariants } from "@/components/ui/button";
-import { DrawerFooter, DrawerCancel, DrawerSubmit } from "@/components/ui/drawer-footer";
+import {
+  DrawerFooter,
+  DrawerCancel,
+  DrawerSubmit,
+} from "@/components/ui/drawer-footer";
 import { DatePicker } from "@/components/ui/date-picker";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
@@ -23,14 +28,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
 import { ErrorBanner } from "@/components/ui/error-banner";
 
-const lineSchema = z.object({
-  account_id: z.string().min(1, "Данс сонгоно уу"),
-  debit_amount: z.number().min(0, "Дебет 0-ээс багагүй"),
-  credit_amount: z.number().min(0, "Кредит 0-ээс багагүй"),
-}).refine(
-  (data) => data.debit_amount > 0 || data.credit_amount > 0,
-  { message: "Дебет эсвэл кредит дүн оруулна уу" },
-);
+const lineSchema = z
+  .object({
+    account_id: z.string().min(1, "Данс сонгоно уу"),
+    debit_amount: z.number().min(0, "Дебет 0-ээс багагүй"),
+    credit_amount: z.number().min(0, "Кредит 0-ээс багагүй"),
+  })
+  .refine((data) => data.debit_amount > 0 || data.credit_amount > 0, {
+    message: "Дебет эсвэл кредит дүн оруулна уу",
+  });
 
 const journalEntrySchema = z.object({
   entry_date: z.string().min(1, "Огноо шаардлагатай"),
@@ -167,7 +173,10 @@ export function JournalEntryCreateDrawer({
       title="Шинэ журналын бичилт"
       description="Огноо, тайлбар, дансны мөрүүдийг оруулан шинэ бичилт үүсгэнэ."
       trigger={
-        <button type="button" className={buttonVariants({ variant: "default" })}>
+        <button
+          type="button"
+          className={buttonVariants({ variant: "default" })}
+        >
           <Plus className="size-4" />
           Шинэ бичилт
         </button>
@@ -175,8 +184,18 @@ export function JournalEntryCreateDrawer({
       panelWidth="36rem"
       footer={
         <DrawerFooter>
-          <DrawerCancel onClick={() => { setOpen(false); reset(); }} />
-          <DrawerSubmit form="journal-form" isPending={isSubmitting} label="Бичилт үүсгэх" loadingLabel="Үүсгэж байна..." />
+          <DrawerCancel
+            onClick={() => {
+              setOpen(false);
+              reset();
+            }}
+          />
+          <DrawerSubmit
+            form="journal-form"
+            isPending={isSubmitting}
+            label="Бичилт үүсгэх"
+            loadingLabel="Үүсгэж байна..."
+          />
         </DrawerFooter>
       }
     >
@@ -190,14 +209,14 @@ export function JournalEntryCreateDrawer({
             <FieldLabel>Огноо</FieldLabel>
             <DatePicker
               value={
-                watch("entry_date")
-                  ? new Date(watch("entry_date"))
-                  : undefined
+                watch("entry_date") ? new Date(watch("entry_date")) : undefined
               }
               onChange={(date) =>
                 setValue(
                   "entry_date",
-                  date ? formatRouteDate(date) : new Date().toISOString().slice(0, 10),
+                  date
+                    ? formatRouteDate(date)
+                    : new Date().toISOString().slice(0, 10),
                 )
               }
             />
@@ -253,9 +272,7 @@ export function JournalEntryCreateDrawer({
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Данс сонгох">
                       {watch(`lines.${index}.account_id`)
-                        ? getAccountLabel(
-                            watch(`lines.${index}.account_id`),
-                          )
+                        ? getAccountLabel(watch(`lines.${index}.account_id`))
                         : "Данс сонгох"}
                     </SelectValue>
                   </SelectTrigger>
@@ -268,7 +285,8 @@ export function JournalEntryCreateDrawer({
                           </span>
                           <span>{account.name}</span>
                           <span className="text-xs text-muted-foreground">
-                            ({ACCOUNT_TYPE_LABELS[account.type] ?? account.type})
+                            ({ACCOUNT_TYPE_LABELS[account.type] ?? account.type}
+                            )
                           </span>
                         </span>
                       </SelectItem>
@@ -284,27 +302,29 @@ export function JournalEntryCreateDrawer({
 
               <div className="w-28">
                 <FieldLabel className="mb-1 text-xs">Дебет</FieldLabel>
-                <Input
-                  type="number"
-                  min="0"
-                  step="any"
-                  placeholder="0.00"
-                  {...register(`lines.${index}.debit_amount`, {
-                    valueAsNumber: true,
-                  })}
+                <Controller
+                  control={control}
+                  name={`lines.${index}.debit_amount`}
+                  render={({ field }) => (
+                    <CurrencyInput
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
               </div>
 
               <div className="w-28">
                 <FieldLabel className="mb-1 text-xs">Кредит</FieldLabel>
-                <Input
-                  type="number"
-                  min="0"
-                  step="any"
-                  placeholder="0.00"
-                  {...register(`lines.${index}.credit_amount`, {
-                    valueAsNumber: true,
-                  })}
+                <Controller
+                  control={control}
+                  name={`lines.${index}.credit_amount`}
+                  render={({ field }) => (
+                    <CurrencyInput
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
               </div>
 
@@ -327,9 +347,7 @@ export function JournalEntryCreateDrawer({
         <div className="rounded-lg border bg-muted/30 p-3">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <span className="text-sm text-muted-foreground">
-                Нийт дебет:
-              </span>
+              <span className="text-sm text-muted-foreground">Нийт дебет:</span>
               <span
                 className={`ml-2 text-base font-semibold ${
                   !isBalanced ? "text-destructive" : ""

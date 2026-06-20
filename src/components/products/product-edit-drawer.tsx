@@ -2,10 +2,23 @@
 
 import { Drawer } from "@base-ui/react/drawer";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Barcode, NotePencil, Package, Tag, X } from "@phosphor-icons/react";
+import {
+  Barcode,
+  Camera,
+  NotePencil,
+  Package,
+  Tag,
+  X,
+} from "@phosphor-icons/react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { Controller, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+
+const CameraScanner = dynamic(
+  () => import("@/components/shop/camera-scanner").then((m) => m.CameraScanner),
+  { ssr: false },
+);
 import { toast } from "sonner";
 import { z } from "zod";
 import { updateProduct } from "@/app/(dashboard)/products/actions";
@@ -31,6 +44,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Input } from "@/components/ui/input";
 import { PRESET_CATEGORIES } from "@/lib/constants";
 import { productKeys } from "@/lib/query/keys";
@@ -94,6 +108,7 @@ export function ProductEditDrawer({
   children?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
 
   // --- Unit combobox (creatable) ---
   const [unitQuery, setUnitQuery] = useState(product.unit ?? "ширхэг");
@@ -147,6 +162,7 @@ export function ProductEditDrawer({
     handleSubmit,
     watch,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<ProductEditValues>({
     resolver: zodResolver(productEditSchema),
@@ -194,6 +210,13 @@ export function ProductEditDrawer({
       (brands ?? []).find((b) => b.id === product.brand_id)?.name ?? "",
     );
   }, [product.unit, product.category_name, product.brand_id, brands]);
+
+  const handleBarcodeScan = (barcode: string) => {
+    setValue("barcode", barcode);
+    setIsBarcodeScannerOpen(false);
+    return { found: true } as const;
+  };
+
   const editMutation = useOptimisticUpdate({
     mutationFn: async (formData: FormData) => {
       const result = await updateProduct(undefined, formData);
@@ -395,14 +418,24 @@ export function ProductEditDrawer({
                     </Field>
                     <Field>
                       <FieldLabel htmlFor="edit-barcode">Barcode</FieldLabel>
-                      <div className="relative">
-                        <Barcode className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                          id="edit-barcode"
-                          className="pl-9"
-                          placeholder="8654..."
-                          {...register("barcode")}
-                        />
+                      <div className="relative flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <Barcode className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            id="edit-barcode"
+                            className="pl-9"
+                            placeholder="8654..."
+                            {...register("barcode")}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setIsBarcodeScannerOpen(true)}
+                          className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-lg border-2 border-dashed bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                          title="Камераар скан хийх"
+                        >
+                          <Camera className="size-5" weight="bold" />
+                        </button>
                       </div>
                     </Field>
                     <Field>
@@ -569,24 +602,32 @@ export function ProductEditDrawer({
                       <FieldLabel htmlFor="edit-cost_price">
                         Өртөг үнэ
                       </FieldLabel>
-                      <Input
-                        id="edit-cost_price"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        {...register("cost_price", { valueAsNumber: true })}
+                      <Controller
+                        control={control}
+                        name="cost_price"
+                        render={({ field }) => (
+                          <CurrencyInput
+                            id="edit-cost_price"
+                            value={field.value}
+                            onChange={field.onChange}
+                          />
+                        )}
                       />
                     </Field>
                     <Field>
                       <FieldLabel htmlFor="edit-sale_price">
                         Зарах үнэ
                       </FieldLabel>
-                      <Input
-                        id="edit-sale_price"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        {...register("sale_price", { valueAsNumber: true })}
+                      <Controller
+                        control={control}
+                        name="sale_price"
+                        render={({ field }) => (
+                          <CurrencyInput
+                            id="edit-sale_price"
+                            value={field.value}
+                            onChange={field.onChange}
+                          />
+                        )}
                       />
                     </Field>
                     <Field>
@@ -657,6 +698,13 @@ export function ProductEditDrawer({
                   </button>
                 </div>
               </form>
+
+              {isBarcodeScannerOpen && (
+                <CameraScanner
+                  onScan={handleBarcodeScan}
+                  onClose={() => setIsBarcodeScannerOpen(false)}
+                />
+              )}
             </Drawer.Content>
           </Drawer.Popup>
         </Drawer.Viewport>

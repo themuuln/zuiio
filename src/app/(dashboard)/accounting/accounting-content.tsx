@@ -11,6 +11,7 @@ import { JournalEntryDetailDrawer } from "@/components/accounting/journal-entry-
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -223,11 +224,14 @@ export function AccountingContent({
               title="Журналын бичилт байхгүй"
               description="Шинэ журналын бичилт үүсгэнэ үү."
               action={
-                <JournalEntryCreateDrawer
-                  accounts={accounts}
-                  open={createOpen}
-                  onOpenChange={setCreateOpen}
-                />
+                <button
+                  type="button"
+                  className={buttonVariants({ variant: "default" })}
+                  onClick={() => setCreateOpen(true)}
+                >
+                  <Calculator className="size-4" />
+                  Шинэ бичилт
+                </button>
               }
             />
           ) : (
@@ -307,11 +311,14 @@ export function AccountingContent({
               title="Данс бүртгэгдээгүй"
               description="Шинэ данс нэмж, дансны бүртгэлээ тохируулна уу."
               action={
-                <AccountCreateDrawer
-                  accounts={accounts}
-                  open={createAccountOpen}
-                  onOpenChange={setCreateAccountOpen}
-                />
+                <button
+                  type="button"
+                  className={buttonVariants({ variant: "default" })}
+                  onClick={() => setCreateAccountOpen(true)}
+                >
+                  <Calculator className="size-4" />
+                  Шинэ данс
+                </button>
               }
             />
           ) : (
@@ -365,7 +372,7 @@ export function AccountingContent({
                                   account.id,
                                   !account.is_active,
                                 );
-                                if (result?.error) {
+                                if (result && "error" in result) {
                                   toast.error(result.error);
                                 }
                               }}

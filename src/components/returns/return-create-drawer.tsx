@@ -7,8 +7,13 @@ import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { createReturn } from "@/app/(dashboard)/returns/actions";
 import { buttonVariants } from "@/components/ui/button";
-import { DrawerFooter, DrawerCancel, DrawerSubmit } from "@/components/ui/drawer-footer";
+import {
+  DrawerFooter,
+  DrawerCancel,
+  DrawerSubmit,
+} from "@/components/ui/drawer-footer";
 import { DatePicker } from "@/components/ui/date-picker";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -109,7 +114,15 @@ export function ReturnCreateDrawer({
       contact_id: "",
       return_date: new Date().toISOString().slice(0, 10),
       reason: "",
-      items: [{ product_id: "", quantity: 1, unit_price: 0, reason: "", variant_id: undefined }],
+      items: [
+        {
+          product_id: "",
+          quantity: 1,
+          unit_price: 0,
+          reason: "",
+          variant_id: undefined,
+        },
+      ],
     },
   });
 
@@ -188,8 +201,19 @@ export function ReturnCreateDrawer({
       panelWidth="32rem"
       footer={
         <DrawerFooter>
-          <DrawerCancel onClick={() => { setOpen(false); setServerError(null); reset(); }} />
-          <DrawerSubmit form="return-form" isPending={isSubmitting} label="Буцаалт үүсгэх" loadingLabel="Үүсгэж байна..." />
+          <DrawerCancel
+            onClick={() => {
+              setOpen(false);
+              setServerError(null);
+              reset();
+            }}
+          />
+          <DrawerSubmit
+            form="return-form"
+            isPending={isSubmitting}
+            label="Буцаалт үүсгэх"
+            loadingLabel="Үүсгэж байна..."
+          />
         </DrawerFooter>
       }
     >
@@ -371,10 +395,7 @@ export function ReturnCreateDrawer({
                             `items.${index}.unit_price`,
                             product?.sale_price ?? 0,
                           );
-                          setValue(
-                            `items.${index}.variant_id`,
-                            undefined,
-                          );
+                          setValue(`items.${index}.variant_id`, undefined);
                         }
                       }}
                     />
@@ -395,14 +416,15 @@ export function ReturnCreateDrawer({
               </div>
               <div className="w-28">
                 <FieldLabel className="mb-1 text-xs">Нэгж үнэ</FieldLabel>
-                <Input
-                  type="number"
-                  min="0"
-                  step="any"
-                  placeholder="0"
-                  {...register(`items.${index}.unit_price`, {
-                    valueAsNumber: true,
-                  })}
+                <Controller
+                  control={control}
+                  name={`items.${index}.unit_price`}
+                  render={({ field }) => (
+                    <CurrencyInput
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
               </div>
               <div className="flex items-center gap-1 pb-1">

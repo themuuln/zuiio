@@ -8,12 +8,12 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import {
+  type SelectedVariant,
+  VariantPicker,
+} from "@/components/products/variant-picker";
 import { CustomerPicker } from "@/components/shop/customer-picker";
 import { StaffPicker } from "@/components/shop/staff-picker";
-import {
-  VariantPicker,
-  type SelectedVariant,
-} from "@/components/products/variant-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,14 +24,15 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { DatePicker } from "@/components/ui/date-picker";
+import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
 import { productKeys, saleKeys } from "@/lib/query/keys";
-import { createSale } from "./actions";
-import { ErrorBanner } from "@/components/ui/error-banner";
 import { useVariantLineItemRemove } from "@/lib/use-variant-line-items";
+import { createSale } from "./actions";
 
 type ProductOption = {
   id: string;
@@ -717,13 +718,15 @@ export function SaleForm({
                     <label className="mb-1 block text-xs text-muted-foreground">
                       Нэгж үнэ
                     </label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      {...register(`items.${index}.unit_price`, {
-                        valueAsNumber: true,
-                      })}
+                    <Controller
+                      control={control}
+                      name={`items.${index}.unit_price`}
+                      render={({ field }) => (
+                        <CurrencyInput
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      )}
                     />
                     {errors.items?.[index]?.unit_price && (
                       <p className="text-xs text-destructive mt-0.5">
@@ -845,13 +848,15 @@ export function SaleForm({
 
                 {/* Unit price */}
                 <div className="w-24">
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    {...register(`items.${index}.unit_price`, {
-                      valueAsNumber: true,
-                    })}
+                  <Controller
+                    control={control}
+                    name={`items.${index}.unit_price`}
+                    render={({ field }) => (
+                      <CurrencyInput
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    )}
                   />
                   {errors.items?.[index]?.unit_price && (
                     <p className="text-xs text-destructive mt-0.5">
@@ -919,17 +924,19 @@ export function SaleForm({
       <div>
         <Field>
           <FieldLabel htmlFor="paid_amount">Төлсөн дүн</FieldLabel>
-          <Input
-            id="paid_amount"
-            type="number"
-            min="0"
-            step="0.01"
-            {...register("paid_amount", {
-              valueAsNumber: true,
-              onChange: () => {
-                isManualEditRef.current = true;
-              },
-            })}
+          <Controller
+            control={control}
+            name="paid_amount"
+            render={({ field }) => (
+              <CurrencyInput
+                id="paid_amount"
+                value={field.value}
+                onChange={(value) => {
+                  isManualEditRef.current = true;
+                  field.onChange(value);
+                }}
+              />
+            )}
           />
           <div className="mt-1 flex gap-1.5">
             <Button

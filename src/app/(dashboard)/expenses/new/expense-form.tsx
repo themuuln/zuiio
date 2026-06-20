@@ -15,13 +15,14 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { DatePicker } from "@/components/ui/date-picker";
+import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { formatRouteDate } from "@/lib/format";
 import { expenseKeys } from "@/lib/query/keys";
 import { createExpense } from "./actions";
-import { ErrorBanner } from "@/components/ui/error-banner";
 
 const initialPaymentMethods: string[] = ["cash", "bank_transfer", "card"];
 const paymentMethodLabels: Record<string, string> = {
@@ -83,7 +84,7 @@ export function ExpenseForm({
   const expenseMutation = useMutation({
     mutationFn: async (formData: FormData) => {
       const result = await createExpense(undefined, formData);
-      if (result?.error) throw new Error(result.error);
+      if (result && "error" in result) throw new Error(result.error);
       return result;
     },
     onMutate: async (formData) => {
@@ -94,9 +95,11 @@ export function ExpenseForm({
 
       const category = formData.get("category")?.toString() ?? "";
       const amount = Number(formData.get("amount") ?? 0);
-      const expenseDate = formData.get("expense_date")?.toString() ?? formatRouteDate();
+      const expenseDate =
+        formData.get("expense_date")?.toString() ?? formatRouteDate();
       const description = formData.get("description")?.toString() ?? "";
-      const paymentMethod = formData.get("payment_method")?.toString() ?? "cash";
+      const paymentMethod =
+        formData.get("payment_method")?.toString() ?? "cash";
 
       const optimisticExpense = {
         id: `opt-${Date.now()}`,
@@ -151,9 +154,13 @@ export function ExpenseForm({
 
   const [categoryQuery, setCategoryQuery] = useState("");
   const loweredCategoryQuery = categoryQuery.trim().toLowerCase();
-  const [allCategories, setAllCategories] = useState<string[]>([...initialCategories]);
+  const [allCategories, setAllCategories] = useState<string[]>([
+    ...initialCategories,
+  ]);
   const filteredCategories = loweredCategoryQuery
-    ? allCategories.filter((c) => c.toLowerCase().includes(loweredCategoryQuery))
+    ? allCategories.filter((c) =>
+        c.toLowerCase().includes(loweredCategoryQuery),
+      )
     : allCategories;
   const categoryExactMatch =
     loweredCategoryQuery === "" ||
@@ -165,9 +172,13 @@ export function ExpenseForm({
 
   const [paymentQuery, setPaymentQuery] = useState("");
   const loweredPaymentQuery = paymentQuery.trim().toLowerCase();
-  const [allPaymentMethods, setAllPaymentMethods] = useState<string[]>([...initialPaymentMethods]);
+  const [allPaymentMethods, setAllPaymentMethods] = useState<string[]>([
+    ...initialPaymentMethods,
+  ]);
   const filteredPaymentMethods = loweredPaymentQuery
-    ? allPaymentMethods.filter((m) => m.toLowerCase().includes(loweredPaymentQuery))
+    ? allPaymentMethods.filter((m) =>
+        m.toLowerCase().includes(loweredPaymentQuery),
+      )
     : allPaymentMethods;
   const paymentExactMatch =
     loweredPaymentQuery === "" ||
@@ -218,7 +229,8 @@ export function ExpenseForm({
                   <ComboboxList>
                     {(item: string) => (
                       <ComboboxItem key={item} value={item}>
-                        {allCategories.includes(item) || initialCategories.includes(item)
+                        {allCategories.includes(item) ||
+                        initialCategories.includes(item)
                           ? item
                           : `"${item}" үүсгэх`}
                       </ComboboxItem>
@@ -229,17 +241,19 @@ export function ExpenseForm({
             )}
           />
           {errors.category && (
-            <p className="text-xs text-destructive">{errors.category.message}</p>
+            <p className="text-xs text-destructive">
+              {errors.category.message}
+            </p>
           )}
         </Field>
         <Field>
           <FieldLabel>Дүн</FieldLabel>
-          <Input
-            type="number"
-            min="0"
-            step="0.01"
-            required
-            {...register("amount", { valueAsNumber: true })}
+          <Controller
+            control={control}
+            name="amount"
+            render={({ field }) => (
+              <CurrencyInput value={field.value} onChange={field.onChange} />
+            )}
           />
           {errors.amount && (
             <p className="text-xs text-destructive">{errors.amount.message}</p>
@@ -253,12 +267,16 @@ export function ExpenseForm({
             render={({ field }) => (
               <DatePicker
                 value={field.value ? new Date(field.value) : undefined}
-                onChange={(date) => field.onChange(date ? formatRouteDate(date) : "")}
+                onChange={(date) =>
+                  field.onChange(date ? formatRouteDate(date) : "")
+                }
               />
             )}
           />
           {errors.expense_date && (
-            <p className="text-xs text-destructive">{errors.expense_date.message}</p>
+            <p className="text-xs text-destructive">
+              {errors.expense_date.message}
+            </p>
           )}
         </Field>
         <Field>
@@ -281,7 +299,9 @@ export function ExpenseForm({
                 itemToStringLabel={(item: string | null) =>
                   item
                     ? (paymentMethodLabels[item] ??
-                      (allPaymentMethods.includes(item) ? item : `"${item}" үүсгэх`))
+                      (allPaymentMethods.includes(item)
+                        ? item
+                        : `"${item}" үүсгэх`))
                     : ""
                 }
                 inputValue={paymentQuery}
@@ -297,7 +317,8 @@ export function ExpenseForm({
                   <ComboboxList>
                     {(item: string) => (
                       <ComboboxItem key={item} value={item}>
-                        {allPaymentMethods.includes(item) || initialPaymentMethods.includes(item)
+                        {allPaymentMethods.includes(item) ||
+                        initialPaymentMethods.includes(item)
                           ? (paymentMethodLabels[item] ?? item)
                           : `"${item}" үүсгэх`}
                       </ComboboxItem>
@@ -308,19 +329,28 @@ export function ExpenseForm({
             )}
           />
           {errors.payment_method && (
-            <p className="text-xs text-destructive">{errors.payment_method.message}</p>
+            <p className="text-xs text-destructive">
+              {errors.payment_method.message}
+            </p>
           )}
         </Field>
         <Field>
           <FieldLabel>Тайлбар</FieldLabel>
-          <Input placeholder="Сарын түрээс, хүргэлтийн зардал..." {...register("description")} />
+          <Input
+            placeholder="Сарын түрээс, хүргэлтийн зардал..."
+            {...register("description")}
+          />
         </Field>
       </FieldGroup>
 
       <ErrorBanner error={expenseMutation.error} />
 
       {!formId && (
-        <button type="submit" disabled={expenseMutation.isPending} className={buttonVariants({ variant: "default" })}>
+        <button
+          type="submit"
+          disabled={expenseMutation.isPending}
+          className={buttonVariants({ variant: "default" })}
+        >
           {expenseMutation.isPending ? "Хадгалах..." : "Зарлага хадгалах"}
         </button>
       )}

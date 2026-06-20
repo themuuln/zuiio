@@ -1,28 +1,16 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { checkPermission, requireAppContext } from "@/lib/erp";
+import { requireWriteAction } from "@/lib/action-utils";
+import { revalidateEntities } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
 
 export async function createReturn(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const {
-    supabase,
-    organizationId,
-    userId,
-    branchId,
-    isBranchScoped,
-    permissions,
-  } = await requireAppContext();
-  const permError = checkPermission(permissions, "returns.create");
-  if (permError) return { error: permError };
-
-  // Scoped users must have a branch
-  if (isBranchScoped && !branchId) {
-    return { error: "Салбар тодорхойгүй байна." };
-  }
+  const ctx = await requireWriteAction("returns.create");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId, userId, branchId } = ctx;
 
   const type = getString(formData, "type");
   const referenceType = getString(formData, "reference_type") || null;
@@ -138,21 +126,14 @@ export async function createReturn(
     };
   }
 
-  revalidatePath("/returns");
-  return { success: true as const };
+  revalidateEntities(["returns"]);
+  return { success: true as const, error: undefined, error: undefined };
 }
 
 export async function completeReturn(returnId: string) {
-  const {
-    supabase,
-    organizationId,
-    userId,
-    branchId,
-    isBranchScoped,
-    permissions,
-  } = await requireAppContext();
-  const permError = checkPermission(permissions, "returns.update");
-  if (permError) return { error: permError };
+  const ctx = await requireWriteAction("returns.update");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId, userId, branchId, isBranchScoped } = ctx;
 
   // Fetch the return with items — enforce branch access if scoped
   let fetchQuery = supabase
@@ -193,10 +174,7 @@ export async function completeReturn(returnId: string) {
     // sales_return → stock in (add stock back)
     // purchase_return → stock out (return to supplier)
     const movementType = returnRecord.type === "sales_return" ? "in" : "out";
-    const movementQuantity =
-      returnRecord.type === "sales_return"
-        ? item.quantity
-        : -Math.abs(item.quantity);
+    const movementQuantity = item.quantity;
 
     const { error: movementError } = await supabase
       .from("stock_movements")
@@ -223,27 +201,32 @@ export async function completeReturn(returnId: string) {
     }
 
     // Update product current_stock
-    if (returnRecord.type === "sales_return") {
-      // Add stock back (sales return)
-      const { data: product } = await supabase
+    const { data: product } = await supabase
+      .from("products")
+      .select("current_stock")
+      .eq("organization_id", organizationId)
+      .eq("id", item.product_id)
+      .single();
+
+    if (product) {
+      const stockDelta =
+        returnRecord.type === "sales_return"
+          ? item.quantity // add stock back
+          : -item.quantity; // remove stock (return to supplier)
+
+      const { error: stockError } = await supabase
         .from("products")
-        .select("current_stock")
+        .update({
+          current_stock: Math.max(
+            0,
+            Number(product.current_stock ?? 0) + stockDelta,
+          ),
+        })
         .eq("organization_id", organizationId)
-        .eq("id", item.product_id)
-        .single();
+        .eq("id", item.product_id);
 
-      if (product) {
-        const { error: stockError } = await supabase
-          .from("products")
-          .update({
-            current_stock: Number(product.current_stock ?? 0) + item.quantity,
-          })
-          .eq("organization_id", organizationId)
-          .eq("id", item.product_id);
-
-        if (stockError) {
-          errors.push(`Үлдэгдэл шинэчлэхэд алдаа: ${stockError.message}`);
-        }
+      if (stockError) {
+        errors.push(`Үлдэгдэл шинэчлэхэд алдаа: ${stockError.message}`);
       }
     }
 
@@ -301,17 +284,14 @@ export async function completeReturn(returnId: string) {
     return { error: `Төлөв шинэчлэхэд алдаа гарлаа: ${updateError.message}` };
   }
 
-  revalidatePath("/returns");
-  revalidatePath("/inventory");
-  revalidatePath("/products");
-  return { success: true as const };
+  revalidateEntities(["returns", "inventory", "products"]);
+  return { success: true as const, error: undefined, error: undefined };
 }
 
 export async function cancelReturn(returnId: string) {
-  const { supabase, organizationId, branchId, isBranchScoped, permissions } =
-    await requireAppContext();
-  const permError = checkPermission(permissions, "returns.update");
-  if (permError) return { error: permError };
+  const ctx = await requireWriteAction("returns.update");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId, branchId, isBranchScoped } = ctx;
 
   let query = supabase
     .from("returns")
@@ -329,6 +309,6 @@ export async function cancelReturn(returnId: string) {
     return { error: `Цуцлахад алдаа гарлаа: ${error.message}` };
   }
 
-  revalidatePath("/returns");
-  return { success: true as const };
+  revalidateEntities(["returns"]);
+  return { success: true as const, error: undefined, error: undefined };
 }

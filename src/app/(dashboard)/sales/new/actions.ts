@@ -1,17 +1,26 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { logAuditEventWithClient } from "@/lib/audit";
 import { postSaleToJournal } from "@/lib/accounting";
+import { requireWriteAction } from "@/lib/action-utils";
+import { logAuditEventWithClient } from "@/lib/audit";
 import { calculateCommission } from "@/lib/commissions";
-import { checkPermission, parseAmount, requireAppContext } from "@/lib/erp";
+import { findOrCreateContact } from "@/lib/contact-utils";
+import { parseAmount } from "@/lib/erp";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
 import { createInvoiceFromSale } from "@/lib/invoicing";
 import {
   checkLowStockAndNotify,
   sendTelegramNotification,
 } from "@/lib/notification";
-import { getString, normalizePhone } from "@/lib/validation";
+import { revalidateEntities } from "@/lib/revalidate";
+import {
+  createStockMovements,
+  decrementProductStock,
+  decrementVariantStock,
+  fetchProductsForStock,
+  fetchVariantsForStock,
+} from "@/lib/stock-utils";
+import { getString } from "@/lib/validation";
 
 type LineItemData = {
   productId: string;
@@ -24,21 +33,9 @@ export async function createSale(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const {
-    supabase,
-    organizationId,
-    userId,
-    branchId,
-    isBranchScoped,
-    permissions,
-  } = await requireAppContext();
-  const permError = checkPermission(permissions, "sales.create");
-  if (permError) return { error: permError };
-
-  // Scoped users must have a branch
-  if (isBranchScoped && !branchId) {
-    return { error: "Салбар тодорхойгүй байна." };
-  }
+  const ctx = await requireWriteAction("sales.create");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId, userId, branchId } = ctx;
 
   // --- Resolve salesperson ---
   const salespersonId = getString(formData, "salesperson_id") || userId;
@@ -99,17 +96,15 @@ export async function createSale(
   const uniqueProductIds = [...productQuantities.keys()];
 
   // --- Step 1: Validate stock for all unique products ---
-  const { data: products, error: productsError } = await supabase
-    .from("products")
-    .select("id, name, current_stock, unit")
-    .eq("organization_id", organizationId)
-    .in("id", uniqueProductIds);
+  const productMap = await fetchProductsForStock(
+    supabase as any,
+    organizationId,
+    uniqueProductIds,
+  );
 
-  if (productsError) {
+  if (productMap.size === 0 && uniqueProductIds.length > 0) {
     return { error: "Бүтээгдэхүүний мэдээлэл уншихад алдаа гарлаа." };
   }
-
-  const productMap = new Map((products ?? []).map((p) => [p.id, p]));
 
   // --- Pre-compute variant data for use in both validation and decrement ---
   const variantItems = items.filter((i) => i.variantId);
@@ -117,16 +112,8 @@ export async function createSale(
 
   if (variantItems.length > 0) {
     const variantIds = [...new Set(variantItems.map((i) => i.variantId!))];
-    const { data: variants, error: variantsError } = await supabase
-      .from("product_variants")
-      .select("id, current_stock")
-      .in("id", variantIds);
-
-    if (variantsError) {
-      return { error: "Вариантын мэдээлэл уншихад алдаа гарлаа." };
-    }
-
-    variantStockMap = new Map((variants ?? []).map((v) => [v.id, v]));
+    const variants = await fetchVariantsForStock(supabase as any, variantIds);
+    variantStockMap = variants as Map<string, { current_stock: number | null }>;
   }
 
   // --- Validate variant stock ---
@@ -178,45 +165,22 @@ export async function createSale(
   );
   const paidAmount = parseAmount(formData.get("paid_amount")) || totalAmount;
   const customerName = getString(formData, "customer_name");
-  let createdContactId: string | null = null;
 
   // --- Step 2: Handle customer ---
   let contactId: string | null = null;
+  let createdContactId: string | null = null;
   if (customerName) {
-    const phone = normalizePhone(getString(formData, "customer_phone"));
-    const { data: existingContact, error: existingContactError } =
-      await supabase
-        .from("contacts")
-        .select("id")
-        .eq("organization_id", organizationId)
-        .eq("type", "customer")
-        .eq("name", customerName)
-        .maybeSingle();
-
-    if (existingContactError) {
-      return { error: existingContactError.message };
-    }
-
-    if (existingContact) {
-      contactId = existingContact.id;
-    } else {
-      const { data: contact, error: contactError } = await supabase
-        .from("contacts")
-        .insert({
-          organization_id: organizationId,
-          type: "customer",
-          name: customerName,
-          phone,
-        })
-        .select("id")
-        .single();
-
-      if (contactError) {
-        return { error: contactError.message };
-      }
-      contactId = contact.id;
-      createdContactId = contact.id;
-    }
+    const phone = getString(formData, "customer_phone");
+    const result = await findOrCreateContact(
+      supabase as any,
+      organizationId,
+      "customer",
+      customerName,
+      phone,
+    );
+    if ("error" in result) return result;
+    contactId = result.id;
+    createdContactId = result.id;
   }
 
   // --- Step 3: Insert sale ---
@@ -272,36 +236,32 @@ export async function createSale(
     return { error: itemsError.message };
   }
 
-  // --- Step 5: Insert stock_movements ---
+  // --- Step 5: Insert stock_movements and decrement stock ---
   if (status !== "cancelled") {
-    const stockMovements = items.map((item) => ({
-      organization_id: organizationId,
-      branch_id: branchId!,
-      product_id: item.productId,
+    const stockResult = await createStockMovements(supabase as any, {
+      organizationId,
+      branchId,
       type: "out",
-      quantity: item.quantity,
-      unit_cost: item.unitPrice,
       reference: `sale:${sale.id}`,
-      created_by: userId,
-      variant_id: item.variantId ?? null,
-    }));
+      createdBy: userId,
+      items: items.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        unitCost: item.unitPrice,
+        variantId: item.variantId,
+      })),
+    });
 
-    const { error: movementError } = await supabase
-      .from("stock_movements")
-      .insert(stockMovements);
-
-    if (movementError) {
+    if (stockResult.error) {
       await supabase.from("sale_items").delete().eq("sale_id", sale.id);
       await supabase.from("sales").delete().eq("id", sale.id);
       if (createdContactId) {
         await supabase.from("contacts").delete().eq("id", createdContactId);
       }
-      return { error: movementError.message };
+      return { error: stockResult.error };
     }
-  }
 
-  // --- Step 6a: Atomic product stock decrement for non-variant items ---
-  if (status !== "cancelled") {
+    // --- Atomic product stock decrement for non-variant items ---
     const nonVariantProductQuantities = new Map<string, number>();
     for (const item of items) {
       if (!item.variantId) {
@@ -316,33 +276,15 @@ export async function createSale(
       const product = productMap.get(productId);
       if (!product) continue;
 
-      const { data: updatedProduct, error: stockUpdateError } = await supabase
-        .from("products")
-        .update({
-          current_stock: Number(product.current_stock ?? 0) - totalQty,
-        })
-        .eq("organization_id", organizationId)
-        .eq("id", productId)
-        .gte("current_stock", totalQty)
-        .select("id")
-        .maybeSingle();
-
-      if (stockUpdateError) {
-        // Actual error — full rollback
-        await supabase
-          .from("stock_movements")
-          .delete()
-          .eq("reference", `sale:${sale.id}`);
-        await supabase.from("sale_items").delete().eq("sale_id", sale.id);
-        await supabase.from("sales").delete().eq("id", sale.id);
-        if (createdContactId) {
-          await supabase.from("contacts").delete().eq("id", createdContactId);
-        }
-        return { error: stockUpdateError.message };
-      }
+      const updatedProduct = await decrementProductStock(
+        supabase as any,
+        organizationId,
+        productId,
+        totalQty,
+      );
 
       if (!updatedProduct) {
-        // .gte() condition failed — stock was consumed concurrently
+        // Rollback
         await supabase
           .from("stock_movements")
           .delete()
@@ -357,38 +299,17 @@ export async function createSale(
         };
       }
     }
-  }
 
-  // --- Step 6b: Atomic variant stock decrement for variant items ---
-  if (status !== "cancelled") {
+    // --- Atomic variant stock decrement for variant items ---
     for (const item of variantItems) {
-      const variant = variantStockMap.get(item.variantId!);
-      const { data: updatedVariant, error: stockUpdateError } = await supabase
-        .from("product_variants")
-        .update({
-          current_stock: Number(variant?.current_stock ?? 0) - item.quantity,
-        })
-        .eq("id", item.variantId!)
-        .gte("current_stock", item.quantity)
-        .select("id")
-        .maybeSingle();
+      const success = await decrementVariantStock(
+        supabase as any,
+        item.variantId!,
+        item.quantity,
+      );
 
-      if (stockUpdateError) {
-        // Actual error — full rollback
-        await supabase
-          .from("stock_movements")
-          .delete()
-          .eq("reference", `sale:${sale.id}`);
-        await supabase.from("sale_items").delete().eq("sale_id", sale.id);
-        await supabase.from("sales").delete().eq("id", sale.id);
-        if (createdContactId) {
-          await supabase.from("contacts").delete().eq("id", createdContactId);
-        }
-        return { error: stockUpdateError.message };
-      }
-
-      if (!updatedVariant) {
-        // .gte() condition failed — stock was consumed concurrently
+      if (!success) {
+        // Rollback
         await supabase
           .from("stock_movements")
           .delete()
@@ -489,12 +410,9 @@ export async function createSale(
     }
   }
 
-  revalidatePath("/");
-  revalidatePath("/sales");
-  revalidatePath("/inventory");
-  revalidatePath("/products");
+  revalidateEntities(["sales", "inventory", "products"]);
   return {
-    success: true as const,
+    success: true as const, error: undefined,
     sale: {
       id: sale.id,
       total_amount: totalAmount,

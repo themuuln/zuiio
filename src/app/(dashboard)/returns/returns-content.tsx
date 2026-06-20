@@ -8,6 +8,7 @@ import { PageShell } from "@/components/erp/page-shell";
 import { ReturnCreateDrawer } from "@/components/returns/return-create-drawer";
 import { ReturnDetailDrawer } from "@/components/returns/return-detail-drawer";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -125,14 +126,14 @@ export function ReturnsContent({
           title="Буцаалт байхгүй"
           description="Шинэ буцаалт үүсгэнэ үү."
           action={
-            <ReturnCreateDrawer
-              contacts={contacts}
-              products={products}
-              sales={sales}
-              purchaseOrders={purchaseOrders}
-              open={createOpen}
-              onOpenChange={setCreateOpen}
-            />
+            <button
+              type="button"
+              className={buttonVariants({ variant: "default" })}
+              onClick={() => setCreateOpen(true)}
+            >
+              <ArrowUUpLeft className="size-4" />
+              Шинэ буцаалт
+            </button>
           }
         />
       ) : (

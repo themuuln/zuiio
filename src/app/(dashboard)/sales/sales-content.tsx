@@ -12,6 +12,7 @@ import {
   SaleDetailDrawer,
 } from "@/components/sales/sale-detail-drawer";
 import { SalesCreateDrawer } from "@/components/sales/sales-create-drawer";
+import { buttonVariants } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import type { SaleRow } from "./sales-table";
 import { SalesTable } from "./sales-table";
@@ -219,16 +220,14 @@ export function SalesContent({
             title="Борлуулалт бүртгэгдээгүй"
             description="Шинэ борлуулалт үүсгэж, борлуулалтын мэдээллээ хянана уу."
             action={
-              <SalesCreateDrawer
-                products={products}
-                customers={customers}
-                open={createOpen}
-                onOpenChange={setCreateOpen}
-                onOpenDetail={(saleId) => {
-                  setCreateOpen(false);
-                  setSelectedSaleId(saleId);
-                }}
-              />
+              <button
+                type="button"
+                className={buttonVariants({ variant: "default" })}
+                onClick={() => setCreateOpen(true)}
+              >
+                <Receipt className="size-4" />
+                Шинэ борлуулалт
+              </button>
             }
           />
         ) : (

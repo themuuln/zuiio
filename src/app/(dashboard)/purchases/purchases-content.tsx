@@ -9,6 +9,7 @@ import { PageShell } from "@/components/erp/page-shell";
 import { PurchaseCreateDrawer } from "@/components/purchases/purchase-create-drawer";
 import { PurchaseDetailDrawer } from "@/components/purchases/purchase-detail-drawer";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -105,12 +106,14 @@ export function PurchasesContent({
             title="Худалдан авалтын захиалга байхгүй"
             description="Шинэ захиалга үүсгэж, нийлүүлэгчээс бараа захиалах."
             action={
-              <PurchaseCreateDrawer
-                suppliers={suppliers}
-                products={products}
-                open={createOpen}
-                onOpenChange={setCreateOpen}
-              />
+              <button
+                type="button"
+                className={buttonVariants({ variant: "default" })}
+                onClick={() => setCreateOpen(true)}
+              >
+                <ShoppingCart className="size-4" />
+                Шинэ захиалга
+              </button>
             }
           />
         ) : (
@@ -152,9 +155,7 @@ export function PurchasesContent({
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={
-                            STATUS_VARIANTS[order.status] ?? "outline"
-                          }
+                          variant={STATUS_VARIANTS[order.status] ?? "outline"}
                         >
                           {STATUS_LABELS[order.status] ?? order.status}
                         </Badge>

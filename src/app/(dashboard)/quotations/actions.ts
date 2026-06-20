@@ -1,31 +1,19 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { requireWriteAction } from "@/lib/action-utils";
 import { logAuditEventWithClient } from "@/lib/audit";
 import { withBranchFilter } from "@/lib/branches";
-import { checkPermission, requireAppContext } from "@/lib/erp";
 import { createInvoiceFromSale } from "@/lib/invoicing";
+import { revalidateEntities } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
 
 export async function createQuotation(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const {
-    supabase,
-    organizationId,
-    userId,
-    branchId,
-    isBranchScoped,
-    permissions,
-  } = await requireAppContext();
-  const permError = checkPermission(permissions, "quotations.create");
-  if (permError) return { error: permError };
-
-  // Scoped users must have a branch
-  if (isBranchScoped && !branchId) {
-    return { error: "Салбар тодорхойгүй байна." };
-  }
+  const ctx = await requireWriteAction("quotations.create");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId, userId, branchId } = ctx;
 
   const contactId = getString(formData, "contact_id");
   const issueDate = getString(formData, "issue_date");
@@ -114,25 +102,17 @@ export async function createQuotation(
     `Үнийн санал ${quoteNumber} үүсгэсэн`,
   );
 
-  revalidatePath("/quotations");
-  revalidatePath("/");
-  return { success: true as const };
+  revalidateEntities(["quotations"]);
+  return { success: true as const, error: undefined, error: undefined };
 }
 
 export async function updateQuotationStatus(
   quotationId: string,
   status: string,
 ) {
-  const {
-    supabase,
-    organizationId,
-    userId,
-    branchId,
-    isBranchScoped,
-    permissions,
-  } = await requireAppContext();
-  const permError = checkPermission(permissions, "quotations.update");
-  if (permError) return { error: permError };
+  const ctx = await requireWriteAction("quotations.update");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId, userId, branchId, isBranchScoped } = ctx;
 
   let fetchQuery = supabase
     .from("quotations")
@@ -175,21 +155,14 @@ export async function updateQuotationStatus(
     `Үнийн саналын төлөв "${quotation.status}" → "${status}" болж өөрчлөгдсөн`,
   );
 
-  revalidatePath("/quotations");
-  return { success: true as const };
+  revalidateEntities(["quotations"]);
+  return { success: true as const, error: undefined, error: undefined };
 }
 
 export async function convertQuotationToSale(quotationId: string) {
-  const {
-    supabase,
-    organizationId,
-    userId,
-    branchId,
-    isBranchScoped,
-    permissions,
-  } = await requireAppContext();
-  const permError = checkPermission(permissions, "quotations.update");
-  if (permError) return { error: permError };
+  const ctx = await requireWriteAction("quotations.update");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId, userId, branchId, isBranchScoped } = ctx;
 
   // Fetch the quotation with items
   let fetchQuery = supabase
@@ -350,10 +323,6 @@ export async function convertQuotationToSale(quotationId: string) {
     `Үнийн саналаас (${quotation.quote_number}) борлуулалт үүсгэсэн`,
   );
 
-  revalidatePath("/quotations");
-  revalidatePath("/sales");
-  revalidatePath("/invoices");
-  revalidatePath("/inventory");
-  revalidatePath("/");
-  return { success: true as const, saleId };
+  revalidateEntities(["quotations", "sales", "invoices", "inventory"]);
+  return { success: true as const, error: undefined, saleId };
 }

@@ -1,12 +1,13 @@
 "use server";
 
 import { randomBytes } from "node:crypto";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { requireWriteAction } from "@/lib/action-utils";
 import { logAuditEventWithClient } from "@/lib/audit";
 import { withBranchFilter } from "@/lib/branches";
-import { checkPermission, requireAppContext } from "@/lib/erp";
-import { getString, normalizePhone } from "@/lib/validation";
+import { findOrCreateContact } from "@/lib/contact-utils";
+import { revalidateEntities } from "@/lib/revalidate";
+import { getString } from "@/lib/validation";
 
 export type InvoiceShareState = {
   token?: string;
@@ -17,21 +18,9 @@ export async function createInvoice(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const {
-    supabase,
-    organizationId,
-    userId,
-    branchId,
-    isBranchScoped,
-    permissions,
-  } = await requireAppContext();
-  const permError = checkPermission(permissions, "invoices.create");
-  if (permError) return { error: permError };
-
-  // Scoped users must have a branch
-  if (isBranchScoped && !branchId) {
-    return { error: "Салбар тодорхойгүй байна." };
-  }
+  const ctx = await requireWriteAction("invoices.create");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId, userId, branchId } = ctx;
 
   let contactId = formData.get("contact_id") as string;
   const newContactName = getString(formData, "new_contact_name");
@@ -42,36 +31,16 @@ export async function createInvoice(
 
   // Create contact on-the-fly if new_contact_name is provided
   if (newContactName && !contactId) {
-    const { data: existing } = await supabase
-      .from("contacts")
-      .select("id")
-      .eq("organization_id", organizationId)
-      .eq("type", "customer")
-      .eq("name", newContactName)
-      .maybeSingle();
-
-    if (existing) {
-      contactId = existing.id;
-    } else {
-      const phone = normalizePhone(getString(formData, "new_contact_phone"));
-      const { data: newContact, error: contactError } = await supabase
-        .from("contacts")
-        .insert({
-          organization_id: organizationId,
-          type: "customer",
-          name: newContactName,
-          phone: phone || null,
-        })
-        .select("id")
-        .single();
-
-      if (contactError) {
-        return {
-          error: `Харилцагч үүсгэхэд алдаа гарлаа: ${contactError.message}`,
-        };
-      }
-      contactId = newContact.id;
-    }
+    const phone = getString(formData, "new_contact_phone");
+    const result = await findOrCreateContact(
+      supabase as any,
+      organizationId,
+      "customer",
+      newContactName,
+      phone,
+    );
+    if ("error" in result) return result;
+    contactId = result.id;
   }
 
   if (!itemsJson) {
@@ -155,7 +124,7 @@ export async function createInvoice(
     `Нэхэмжлэл ${invoiceNumber} үүсгэсэн`,
   );
 
-  revalidatePath("/invoices");
+  revalidateEntities(["invoices"]);
   redirect(`/invoices/${invoice.id}`);
 }
 
@@ -163,16 +132,9 @@ export async function createInvoiceShareLink(
   _prevState: InvoiceShareState | undefined,
   formData: FormData,
 ): Promise<InvoiceShareState> {
-  const {
-    supabase,
-    organizationId,
-    userId,
-    branchId,
-    isBranchScoped,
-    permissions,
-  } = await requireAppContext();
-  const permError = checkPermission(permissions, "invoices.update");
-  if (permError) return { error: permError };
+  const ctx = await requireWriteAction("invoices.update");
+  if ("error" in ctx) return { error: ctx.error };
+  const { supabase, organizationId, userId, branchId, isBranchScoped } = ctx;
 
   const invoiceId = formData.get("invoice_id") as string;
   if (!invoiceId) {
@@ -212,16 +174,9 @@ export async function createInvoiceShareLink(
 }
 
 export async function updateInvoiceStatus(invoiceId: string, status: string) {
-  const {
-    supabase,
-    organizationId,
-    userId,
-    branchId,
-    isBranchScoped,
-    permissions,
-  } = await requireAppContext();
-  const permError = checkPermission(permissions, "invoices.update");
-  if (permError) return { error: permError };
+  const ctx = await requireWriteAction("invoices.update");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId, userId, branchId, isBranchScoped } = ctx;
 
   let fetchQuery = supabase
     .from("invoices")
@@ -262,7 +217,6 @@ export async function updateInvoiceStatus(invoiceId: string, status: string) {
     `Нэхэмжлэлийн төлөв "${invoice.status}" → "${status}" болж өөрчлөгдсөн`,
   );
 
-  revalidatePath(`/invoices/${invoiceId}`);
-  revalidatePath("/invoices");
-  return { success: true as const };
+  revalidateEntities(["invoices"]);
+  return { success: true as const, error: undefined, error: undefined };
 }

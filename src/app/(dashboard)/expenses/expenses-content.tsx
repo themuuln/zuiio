@@ -7,6 +7,7 @@ import { ErpEmptyState } from "@/components/erp/empty-state";
 import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
 import { ExpensesCreateDrawer } from "@/components/expenses/expenses-create-drawer";
+import { buttonVariants } from "@/components/ui/button";
 import { type ExpenseRow, ExpensesTable } from "./expenses-table";
 
 export function ExpensesContent({ expenses }: { expenses: ExpenseRow[] }) {
@@ -32,7 +33,10 @@ export function ExpensesContent({ expenses }: { expenses: ExpenseRow[] }) {
             href="/api/export/expenses"
             filename={`expenses-${new Date().toISOString().slice(0, 10)}.csv`}
           />
-          <ExpensesCreateDrawer open={createOpen} onOpenChange={setCreateOpen} />
+          <ExpensesCreateDrawer
+            open={createOpen}
+            onOpenChange={setCreateOpen}
+          />
         </>
       }
     >
@@ -41,7 +45,16 @@ export function ExpensesContent({ expenses }: { expenses: ExpenseRow[] }) {
           icon={<Coins className="size-4" />}
           title="Зарлага бүртгэгдээгүй"
           description="Шинэ зарлага нэмж, зардлын мэдээллээ хянана уу."
-          action={<ExpensesCreateDrawer open={createOpen} onOpenChange={setCreateOpen} />}
+          action={
+            <button
+              type="button"
+              className={buttonVariants({ variant: "default" })}
+              onClick={() => setCreateOpen(true)}
+            >
+              <Coins className="size-4" />
+              Шинэ зарлага
+            </button>
+          }
         />
       ) : (
         <ExpensesTable data={expenses} />

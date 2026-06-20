@@ -1,24 +1,20 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { requireWriteAction } from "@/lib/action-utils";
 import { logAuditEventWithClient } from "@/lib/audit";
-import { requireAppContext } from "@/lib/erp";
+import { revalidateEntities } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
 
 export async function createJournalEntry(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const ctx = await requireAppContext();
-  const { organizationId, userId, branchId, isBranchScoped } = ctx;
+  const ctx = await requireWriteAction("accounting.manage");
+  if ("error" in ctx) return ctx;
+  const { organizationId, userId, branchId } = ctx;
   // New tables/RPCs not yet in generated types — cast as needed
   // biome-ignore lint/suspicious/noExplicitAny: generated types don't include new accounting tables
   const db = ctx.supabase as any;
-
-  // Scoped users must have a branch
-  if (isBranchScoped && !branchId) {
-    return { error: "Салбар тодорхойгүй байна." };
-  }
 
   const entryDate = getString(formData, "entry_date");
   const description = getString(formData, "description");
@@ -136,23 +132,19 @@ export async function createJournalEntry(
     `Журналын бичилт ${entryNumber} үүсгэсэн`,
   );
 
-  revalidatePath("/accounting");
-  return { success: true as const };
+  revalidateEntities(["accounting"]);
+  return { success: true as const, error: undefined, error: undefined };
 }
 
 export async function createAccount(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const ctx = await requireAppContext();
-  const { organizationId, userId, branchId, isBranchScoped } = ctx;
+  const ctx = await requireWriteAction("accounting.manage");
+  if ("error" in ctx) return ctx;
+  const { organizationId, userId, branchId } = ctx;
   // biome-ignore lint/suspicious/noExplicitAny: generated types don't include new accounting tables
   const db = ctx.supabase as any;
-
-  // Scoped users must have a branch
-  if (isBranchScoped && !branchId) {
-    return { error: "Салбар тодорхойгүй байна." };
-  }
 
   const code = getString(formData, "code");
   const name = getString(formData, "name");
@@ -213,15 +205,16 @@ export async function createAccount(
     `Данс "${code} - ${name}" үүсгэсэн`,
   );
 
-  revalidatePath("/accounting");
-  return { success: true as const };
+  revalidateEntities(["accounting"]);
+  return { success: true as const, error: undefined, error: undefined };
 }
 
 export async function updateJournalEntry(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const ctx = await requireAppContext();
+  const ctx = await requireWriteAction("accounting.manage");
+  if ("error" in ctx) return ctx;
   const { organizationId, userId, branchId, isBranchScoped } = ctx;
   // biome-ignore lint/suspicious/noExplicitAny: generated types don't include new accounting tables
   const db = ctx.supabase as any;
@@ -370,12 +363,13 @@ export async function updateJournalEntry(
     `Журналын бичилт шинэчлэгдсэн`,
   );
 
-  revalidatePath("/accounting");
-  return { success: true as const };
+  revalidateEntities(["accounting"]);
+  return { success: true as const, error: undefined, error: undefined };
 }
 
 export async function deleteJournalEntry(entryId: string) {
-  const ctx = await requireAppContext();
+  const ctx = await requireWriteAction("accounting.manage");
+  if ("error" in ctx) return ctx;
   const { organizationId, branchId, isBranchScoped } = ctx;
   // biome-ignore lint/suspicious/noExplicitAny: generated types don't include new accounting tables
   const db = ctx.supabase as any;
@@ -397,15 +391,16 @@ export async function deleteJournalEntry(entryId: string) {
     return { error: `Журналын бичилт устгахад алдаа гарлаа: ${error.message}` };
   }
 
-  revalidatePath("/accounting");
-  return { success: true as const };
+  revalidateEntities(["accounting"]);
+  return { success: true as const, error: undefined, error: undefined };
 }
 
 export async function toggleAccountActive(
   accountId: string,
   isActive: boolean,
 ) {
-  const ctx = await requireAppContext();
+  const ctx = await requireWriteAction("accounting.manage");
+  if ("error" in ctx) return ctx;
   const { organizationId, branchId, isBranchScoped } = ctx;
   // biome-ignore lint/suspicious/noExplicitAny: generated types don't include new accounting tables
   const db = ctx.supabase as any;
@@ -426,6 +421,6 @@ export async function toggleAccountActive(
     return { error: `Төлөв шинэчлэхэд алдаа гарлаа: ${error.message}` };
   }
 
-  revalidatePath("/accounting");
-  return { success: true as const };
+  revalidateEntities(["accounting"]);
+  return { success: true as const, error: undefined, error: undefined };
 }

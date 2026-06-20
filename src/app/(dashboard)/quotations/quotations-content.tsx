@@ -8,6 +8,7 @@ import { PageShell } from "@/components/erp/page-shell";
 import { QuotationCreateDrawer } from "@/components/quotations/quotation-create-drawer";
 import { QuotationDetailDrawer } from "@/components/quotations/quotation-detail-drawer";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -64,9 +65,9 @@ export function QuotationsContent({
   customers: CustomerOption[];
 }) {
   const searchParams = useSearchParams();
-  const [selectedQuotationId, setSelectedQuotationId] = useState<
-    string | null
-  >(null);
+  const [selectedQuotationId, setSelectedQuotationId] = useState<string | null>(
+    null,
+  );
   const [createOpen, setCreateOpen] = useState(
     searchParams.get("create") === "true",
   );
@@ -98,12 +99,14 @@ export function QuotationsContent({
             title="Үнийн санал байхгүй"
             description="Шинэ үнийн санал үүсгэж, үйлчлүүлэгчдэд илгээнэ үү."
             action={
-              <QuotationCreateDrawer
-                customers={customers}
-                products={products}
-                open={createOpen}
-                onOpenChange={setCreateOpen}
-              />
+              <button
+                type="button"
+                className={buttonVariants({ variant: "default" })}
+                onClick={() => setCreateOpen(true)}
+              >
+                <FileText className="size-4" />
+                Шинэ үнийн санал
+              </button>
             }
           />
         ) : (
@@ -139,11 +142,7 @@ export function QuotationsContent({
                         {formatCurrency(q.total_amount)}
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          variant={
-                            STATUS_VARIANTS[q.status] ?? "outline"
-                          }
-                        >
+                        <Badge variant={STATUS_VARIANTS[q.status] ?? "outline"}>
                           {STATUS_LABELS[q.status] ?? q.status}
                         </Badge>
                       </TableCell>
