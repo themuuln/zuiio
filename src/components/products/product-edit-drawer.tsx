@@ -437,14 +437,12 @@ export function ProductEditDrawer({
                         <ComboboxContent>
                           <ComboboxEmpty>Нэгж байхгүй</ComboboxEmpty>
                           <ComboboxList
-                            groups={
-                              loweredUnitQuery ? undefined : unitGroups
-                            }
+                            groups={loweredUnitQuery ? undefined : unitGroups}
                           >
                             {(item: string) => (
                               <ComboboxItem key={item} value={item}>
                                 {allUnits.includes(item) ||
-                                initialUnits.includes(item)
+                                (initialUnits as string[]).includes(item)
                                   ? item
                                   : `"${item}" үүсгэх`}
                               </ComboboxItem>

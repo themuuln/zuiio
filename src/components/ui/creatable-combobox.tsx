@@ -37,10 +37,10 @@ function flattenItems(
 
 function getGroups(
   initialItems: readonly string[] | readonly ItemGroup[],
-): readonly ItemGroup[] | undefined {
+): ItemGroup[] | undefined {
   if (initialItems.length === 0) return undefined;
   if (typeof initialItems[0] === "string") return undefined;
-  return initialItems as ItemGroup[];
+  return [...(initialItems as ItemGroup[])];
 }
 
 export function CreatableCombobox({

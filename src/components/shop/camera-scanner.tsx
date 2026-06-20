@@ -1,9 +1,9 @@
 "use client";
 
 import { Camera, CheckCircle, X } from "@phosphor-icons/react";
-import { useCallback, useRef, useState } from "react";
-import { Scanner } from "@yudiel/react-qr-scanner";
 import type { IDetectedBarcode } from "@yudiel/react-qr-scanner";
+import { Scanner } from "@yudiel/react-qr-scanner";
+import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 type ScanResult = { found: true } | { found: false; error?: string };
@@ -93,7 +93,7 @@ export function CameraScanner({ onScan, onClose }: CameraScannerProps) {
         <Scanner
           onScan={handleDetect}
           onError={handleError}
-          formats={RETAIL_FORMATS}
+          formats={[...RETAIL_FORMATS]}
           constraints={{ facingMode: "environment" }}
           sound
           components={{ finder: true, torch: true }}
