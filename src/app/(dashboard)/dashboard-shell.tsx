@@ -65,6 +65,7 @@ type NavItem = {
   title: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
+  featureKey?: string;
 };
 
 type NavGroup = {
@@ -80,11 +81,31 @@ const navGroups: NavGroup[] = [
   {
     label: "Үйл ажиллагаа",
     items: [
-      { title: "Борлуулалт", href: "/sales", icon: CurrencyDollar },
-      { title: "Дэлгүүр", href: "/shop", icon: Storefront },
-      { title: "Зарлага", href: "/expenses", icon: CreditCard },
-      { title: "Худалдан авалт", href: "/purchases", icon: Trolley },
-      { title: "Буцаалт", href: "/returns", icon: ArrowCounterClockwise },
+      {
+        title: "Борлуулалт",
+        href: "/sales",
+        icon: CurrencyDollar,
+        featureKey: "sales",
+      },
+      { title: "Дэлгүүр", href: "/shop", icon: Storefront, featureKey: "shop" },
+      {
+        title: "Зарлага",
+        href: "/expenses",
+        icon: CreditCard,
+        featureKey: "expenses",
+      },
+      {
+        title: "Худалдан авалт",
+        href: "/purchases",
+        icon: Trolley,
+        featureKey: "purchases",
+      },
+      {
+        title: "Буцаалт",
+        href: "/returns",
+        icon: ArrowCounterClockwise,
+        featureKey: "returns",
+      },
     ],
   },
   {
@@ -107,20 +128,46 @@ const navGroups: NavGroup[] = [
   {
     label: "Баримт бичиг",
     items: [
-      { title: "Нэхэмжлэл", href: "/invoices", icon: FileText },
-      { title: "Үнийн санал", href: "/quotations", icon: ClipboardText },
-      { title: "Хямдрал", href: "/discounts", icon: Percent },
+      {
+        title: "Нэхэмжлэл",
+        href: "/invoices",
+        icon: FileText,
+        featureKey: "invoices",
+      },
+      {
+        title: "Үнийн санал",
+        href: "/quotations",
+        icon: ClipboardText,
+        featureKey: "quotations",
+      },
+      {
+        title: "Хямдрал",
+        href: "/discounts",
+        icon: Percent,
+        featureKey: "discounts",
+      },
     ],
   },
   {
     label: "Шинжилгээ",
     items: [
-      { title: "Тайлан", href: "/reports", icon: ChartBar },
-      { title: "Комисс", href: "/commissions", icon: Coin },
+      {
+        title: "Тайлан",
+        href: "/reports",
+        icon: ChartBar,
+        featureKey: "reports",
+      },
+      {
+        title: "Комисс",
+        href: "/commissions",
+        icon: Coin,
+        featureKey: "commissions",
+      },
       {
         title: "Нягтлан бодох бүртгэл",
         href: "/accounting",
         icon: Calculator,
+        featureKey: "accounting",
       },
     ],
   },
@@ -140,7 +187,25 @@ type DashboardShellProps = {
   organizationName: string | null;
   logoUrl: string | null;
   userFullName: string | null;
+  enabledFeatures: string[];
 };
+
+function filterNavGroups(
+  groups: NavGroup[],
+  enabledFeatures: string[],
+): NavGroup[] {
+  // If no features explicitly enabled, show everything (backwards compat)
+  if (!enabledFeatures || enabledFeatures.length === 0) return groups;
+  const featureSet = new Set(enabledFeatures);
+  return groups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter(
+        (item) => !item.featureKey || featureSet.has(item.featureKey),
+      ),
+    }))
+    .filter((group) => group.items.length > 0);
+}
 
 // ─── Main Shell ────────────────────────────────────────────────────────
 
@@ -150,7 +215,12 @@ export function DashboardShell({
   organizationName,
   logoUrl,
   userFullName,
+  enabledFeatures,
 }: DashboardShellProps) {
+  const visibleGroups = React.useMemo(
+    () => filterNavGroups(navGroups, enabledFeatures),
+    [enabledFeatures],
+  );
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -324,7 +394,7 @@ export function DashboardShell({
               </SidebarHeader>
 
               <SidebarContent>
-                {navGroups.map((group) => (
+                {visibleGroups.map((group) => (
                   <SidebarGroup key={group.label}>
                     <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
                     <SidebarGroupContent>

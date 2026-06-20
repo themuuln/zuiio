@@ -34,6 +34,24 @@ export default async function DashboardLayout({
     redirect("/organization/new");
   }
 
+  // Fetch onboarding status and enabled features from organizations table
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("onboarding_completed, enabled_features")
+    .eq("id", profile.organization_id)
+    .single();
+
+  const orgRow = org as {
+    onboarding_completed: boolean;
+    enabled_features: string[];
+  } | null;
+
+  if (orgRow && !orgRow.onboarding_completed) {
+    redirect("/onboarding");
+  }
+
+  const enabledFeatures = orgRow?.enabled_features ?? [];
+
   // Fetch branches for the sidebar selector
   const { data: branchRows } = await supabase
     .from("branches")
@@ -60,12 +78,20 @@ export default async function DashboardLayout({
           dangerouslySetInnerHTML={{ __html: brandCSS }}
         />
       )}
+      {brandConfig.logo_url && (
+        <link
+          rel="apple-touch-icon"
+          href={brandConfig.logo_url}
+          id="dynamic-apple-touch-icon"
+        />
+      )}
       <BranchProvider branches={branches} userBranchId={profile.branch_id}>
         <DashboardShell
           organizationId={profile.organization_id}
           organizationName={profile.organizations?.name ?? null}
           logoUrl={brandConfig.logo_url ?? null}
           userFullName={profile.full_name}
+          enabledFeatures={enabledFeatures}
         >
           {children}
         </DashboardShell>

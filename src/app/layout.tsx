@@ -23,7 +23,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const viewport: Viewport = {};
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#09090b" },
+  ],
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -35,7 +40,11 @@ export const metadata: Metadata = {
   },
   description: APP_DESCRIPTION,
   applicationName: APP_NAME,
+  manifest: "/manifest.json",
   keywords: ["ERP", "Mongolia", "inventory", "sales", "small business"],
+  icons: {
+    apple: "/pwa/icon-192.svg",
+  },
   openGraph: {
     title: APP_NAME,
     description: APP_DESCRIPTION,
@@ -63,6 +72,13 @@ export default function RootLayout({
       )}
     >
       <head>
+        <link rel="apple-touch-icon" href="/pwa/icon-192.svg" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        />
+        <meta name="mobile-web-app-capable" content="yes" />
         {process.env.NODE_ENV === "development" && (
           <Script
             src="//unpkg.com/react-grab/dist/index.global.js"
@@ -78,6 +94,17 @@ export default function RootLayout({
             <Toaster />
           </QueryProvider>
         </ThemeProvider>
+        <Script
+          id="register-sw"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ("serviceWorker" in navigator) {
+                navigator.serviceWorker.register("/sw.js");
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );
