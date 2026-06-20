@@ -1,7 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle, Plus, Trash } from "@phosphor-icons/react";
+import { Camera, CheckCircle, Plus, Trash } from "@phosphor-icons/react";
+import dynamic from "next/dynamic";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useRef, useState } from "react";
@@ -16,6 +17,11 @@ import { CustomerPicker } from "@/components/shop/customer-picker";
 import { StaffPicker } from "@/components/shop/staff-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+
+const CameraScanner = dynamic(
+  () => import("@/components/shop/camera-scanner").then((m) => m.CameraScanner),
+  { ssr: false },
+);
 import {
   Combobox,
   ComboboxContent,
@@ -40,6 +46,7 @@ type ProductOption = {
   sale_price: number | null;
   current_stock: number | null;
   unit: string | null;
+  barcode: string | null;
 };
 
 type CustomerOption = {
@@ -110,6 +117,9 @@ export function SaleForm({
     null,
   );
   const [keepOpen, setKeepOpen] = useState(false);
+  const [barcodeScannerIndex, setBarcodeScannerIndex] = useState<number | null>(
+    null,
+  );
   const [paymentQuery, setPaymentQuery] = useState("");
   const [statusQuery, setStatusQuery] = useState("");
   const [variantSelections, setVariantSelections] = useState<
@@ -550,6 +560,7 @@ export function SaleForm({
           sale_price: null,
           current_stock: null,
           unit: null,
+          barcode: null,
         };
         setCreatedProducts((prev) => [...prev, created]);
         setValue(`items.${index}.product_id`, created.id);
@@ -584,6 +595,48 @@ export function SaleForm({
     [allProducts, watchedItems, setValue],
   );
 
+  const handleBarcodeScan = useCallback(
+    (barcode: string): { found: true } | { found: false; error?: string } => {
+      const product = allProducts.find(
+        (p) => p.barcode && p.barcode.toLowerCase() === barcode.toLowerCase(),
+      );
+
+      if (!product) {
+        return { found: false };
+      }
+
+      const stock = Number(product.current_stock ?? 0);
+      if (stock <= 0) {
+        return {
+          found: false,
+          error: `"${product.name}" дууссан байна.`,
+        };
+      }
+
+      // Find which row is currently showing this scanner to select the product
+      const currentIndex = barcodeScannerIndex;
+      if (currentIndex !== null) {
+        setValue(`items.${currentIndex}.product_id`, product.id);
+        setValue(`items.${currentIndex}.unit_price`, product.sale_price ?? 0);
+        setValue(`items.${currentIndex}.variant_id`, undefined);
+        setValue(`items.${currentIndex}.quantity`, 1);
+        setProductQueries((prev) => {
+          const next = [...prev];
+          next[currentIndex] = "";
+          return next;
+        });
+
+        // Auto-close camera after brief delay
+        setTimeout(() => {
+          setBarcodeScannerIndex(null);
+        }, 1200);
+      }
+
+      return { found: true };
+    },
+    [allProducts, barcodeScannerIndex, setValue],
+  );
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" id={formId}>
       {/* Line Items Section */}
@@ -613,7 +666,7 @@ export function SaleForm({
             <div key={field.id}>
               {/* Mobile stacked card layout */}
               <div className="rounded-xl border border-border/80 bg-muted/20 p-3 space-y-3 sm:hidden">
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-1">
                   <div className="flex-1 min-w-0">
                     <Controller
                       control={control}
@@ -667,6 +720,17 @@ export function SaleForm({
                       </p>
                     )}
                   </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setBarcodeScannerIndex(index)}
+                    className="size-8 shrink-0 rounded-md border-dashed"
+                    title="Баркод скан хийх"
+                    aria-label="Баркод скан хийх"
+                  >
+                    <Camera className="size-4" />
+                  </Button>
                   <Button
                     type="button"
                     variant="ghost"
@@ -753,52 +817,72 @@ export function SaleForm({
               <div className="hidden sm:flex gap-2 items-start">
                 {/* Product combobox */}
                 <div className="flex-1 min-w-0">
-                  <Controller
-                    control={control}
-                    name={`items.${index}.product_id`}
-                    render={({ field: controllerField }) => (
-                      <Combobox
-                        name={controllerField.name}
-                        items={rowItems}
-                        value={
-                          allProducts.find(
-                            (p) => p.id === controllerField.value,
-                          ) ?? null
-                        }
-                        onValueChange={(next) =>
-                          handleProductSelect(index, next)
-                        }
-                        itemToStringValue={(product: ProductOption | null) =>
-                          product?.id ?? ""
-                        }
-                        itemToStringLabel={(product: ProductOption | null) =>
-                          product?.name ?? ""
-                        }
-                        inputValue={rowQuery}
-                        onInputValueChange={(val) =>
-                          updateProductQuery(index, val)
-                        }
-                      >
-                        <ComboboxInput
-                          placeholder="Сонгох"
-                          showTrigger
-                          className="w-full"
-                        />
-                        <ComboboxContent>
-                          <ComboboxEmpty>Бүтээгдэхүүн байхгүй</ComboboxEmpty>
-                          <ComboboxList>
-                            {(product: ProductOption) => (
-                              <ComboboxItem key={product.id} value={product}>
-                                {product.id.startsWith("__create__")
-                                  ? `"${product.name}" үүсгэх`
-                                  : product.name}
-                              </ComboboxItem>
-                            )}
-                          </ComboboxList>
-                        </ComboboxContent>
-                      </Combobox>
-                    )}
-                  />
+                  <div className="flex gap-1">
+                    <div className="flex-1 min-w-0">
+                      <Controller
+                        control={control}
+                        name={`items.${index}.product_id`}
+                        render={({ field: controllerField }) => (
+                          <Combobox
+                            name={controllerField.name}
+                            items={rowItems}
+                            value={
+                              allProducts.find(
+                                (p) => p.id === controllerField.value,
+                              ) ?? null
+                            }
+                            onValueChange={(next) =>
+                              handleProductSelect(index, next)
+                            }
+                            itemToStringValue={(
+                              product: ProductOption | null,
+                            ) => product?.id ?? ""}
+                            itemToStringLabel={(
+                              product: ProductOption | null,
+                            ) => product?.name ?? ""}
+                            inputValue={rowQuery}
+                            onInputValueChange={(val) =>
+                              updateProductQuery(index, val)
+                            }
+                          >
+                            <ComboboxInput
+                              placeholder="Сонгох"
+                              showTrigger
+                              className="w-full"
+                            />
+                            <ComboboxContent>
+                              <ComboboxEmpty>
+                                Бүтээгдэхүүн байхгүй
+                              </ComboboxEmpty>
+                              <ComboboxList>
+                                {(product: ProductOption) => (
+                                  <ComboboxItem
+                                    key={product.id}
+                                    value={product}
+                                  >
+                                    {product.id.startsWith("__create__")
+                                      ? `"${product.name}" үүсгэх`
+                                      : product.name}
+                                  </ComboboxItem>
+                                )}
+                              </ComboboxList>
+                            </ComboboxContent>
+                          </Combobox>
+                        )}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setBarcodeScannerIndex(index)}
+                      className="size-8 shrink-0 rounded-md border-dashed"
+                      title="Баркод скан хийх"
+                      aria-label="Баркод скан хийх"
+                    >
+                      <Camera className="size-4" />
+                    </Button>
+                  </div>
                   {/* Product info and stock warning */}
                   {productForRow ? (
                     <p className="text-xs text-muted-foreground mt-0.5">
@@ -1170,6 +1254,14 @@ export function SaleForm({
             {saleMutation.isPending ? "Хадгалах..." : "Борлуулалт хадгалах"}
           </Button>
         </div>
+      )}
+
+      {/* Camera scanner overlay */}
+      {barcodeScannerIndex !== null && (
+        <CameraScanner
+          onScan={handleBarcodeScan}
+          onClose={() => setBarcodeScannerIndex(null)}
+        />
       )}
     </form>
   );

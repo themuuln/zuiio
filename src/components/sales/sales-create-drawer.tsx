@@ -4,7 +4,11 @@ import { Receipt } from "@phosphor-icons/react";
 import { useState } from "react";
 import { SaleForm } from "@/app/(dashboard)/sales/new/sale-form";
 import { buttonVariants } from "@/components/ui/button";
-import { DrawerFooter, DrawerCancel, DrawerSubmit } from "@/components/ui/drawer-footer";
+import {
+  DrawerFooter,
+  DrawerCancel,
+  DrawerSubmit,
+} from "@/components/ui/drawer-footer";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 
 type ProductOption = {
@@ -13,6 +17,7 @@ type ProductOption = {
   sale_price: number | null;
   current_stock: number | null;
   unit: string | null;
+  barcode: string | null;
 };
 
 type CustomerOption = {

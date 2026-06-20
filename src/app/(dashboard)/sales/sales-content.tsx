@@ -23,6 +23,7 @@ type ProductOption = {
   sale_price: number | null;
   current_stock: number | null;
   unit: string | null;
+  barcode: string | null;
 };
 
 type CustomerOption = {
