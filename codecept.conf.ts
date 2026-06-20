@@ -1,4 +1,4 @@
-import { heal, ai } from "codeceptjs";
+import { ai, heal } from "codeceptjs";
 
 // Register AI healing recipes
 heal.addRecipe("ai", {
@@ -28,6 +28,7 @@ heal.addRecipe("reloadOnClickFail", {
     return ({ I }: { I: CodeceptJS.I }) => {
       I.refreshPage();
       I.wait(1);
+      // biome-ignore lint/suspicious/noExplicitAny: dynamic step execution
       (I as any)[step.name](...step.args);
     };
   },
@@ -45,7 +46,7 @@ export const config: CodeceptJS.Config = {
       browser: "chromium",
       url: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000",
       show: process.env.SHOW_BROWSER === "true",
-      waitForTimeout: 10000,
+      waitForTimeout: 15000,
       waitForAction: 500,
       waitForNavigation: "networkidle0",
       restart: "session",

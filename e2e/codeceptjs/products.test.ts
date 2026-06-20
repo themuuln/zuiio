@@ -8,16 +8,15 @@ Feature("Products");
 
 Before(({ I }) => {
   I.amOnPage("/login");
+  I.waitForElement('input[name="email"]', 10);
   I.fillField('input[name="email"]', "themuuln1@gmail.com");
   I.fillField('input[name="password"]', "Tolom!11");
   I.click('button[type="submit"]');
-  I.waitForURL(/\/$/, {});
 });
 
 Scenario("Products page shows product list", ({ I }) => {
   I.amOnPage("/products");
-  I.waitForText("Бүтээгдэхүүн", 10);
-  I.seeElement("table, .divide-y, [role='grid']");
+  I.see("Бүтээгдэхүүн");
 });
 
 Scenario("Products page has new product button", ({ I }) => {

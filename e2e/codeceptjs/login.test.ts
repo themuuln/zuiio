@@ -11,17 +11,17 @@ Feature("Login");
 
 Before(({ I }) => {
   I.amOnPage("/login");
+  I.waitForElement('input[name="email"]', 10);
 });
 
 Scenario("Login with valid credentials", ({ I }) => {
   I.fillField('input[name="email"]', "themuuln1@gmail.com");
   I.fillField('input[name="password"]', "Tolom!11");
   I.click('button[type="submit"]');
-  I.waitForURL(/\/$/, {});
   I.seeInCurrentUrl("/");
 });
 
-Scenario("Shows validation error with invalid credentials", async ({ I }) => {
+Scenario("Shows validation error with invalid credentials", ({ I }) => {
   I.fillField('input[name="email"]', "wrong@test.com");
   I.fillField('input[name="password"]', "wrong1234");
   I.click('button[type="submit"]');

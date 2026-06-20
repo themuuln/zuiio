@@ -280,7 +280,9 @@ export async function importProductPreset(formData: FormData) {
       })
       .select("id")
       .single();
-    if (!brandErr && newBrand) brandId = newBrand.id;
+    if (brandErr)
+      return { error: `Брэнд үүсгэхэд алдаа гарлаа: ${brandErr.message}` };
+    if (newBrand) brandId = newBrand.id;
   }
 
   // Find or create category
@@ -304,7 +306,9 @@ export async function importProductPreset(formData: FormData) {
         })
         .select("id")
         .single();
-      if (!catErr && newCat) categoryId = newCat.id;
+      if (catErr)
+        return { error: `Ангилал үүсгэхэд алдаа гарлаа: ${catErr.message}` };
+      if (newCat) categoryId = newCat.id;
     }
   }
 
@@ -367,7 +371,7 @@ export async function importProductPresetsByIds(presetIds: string[]) {
       if (existingBrand) {
         brandId = existingBrand.id;
       } else {
-        const { data: newBrand } = await supabase
+        const { data: newBrand, error: brandErr } = await supabase
           .from("brands")
           .insert({
             name: preset.brand_name,
@@ -376,6 +380,10 @@ export async function importProductPresetsByIds(presetIds: string[]) {
           })
           .select("id")
           .single();
+        if (brandErr) {
+          console.error("Failed to create brand:", brandErr);
+          continue;
+        }
         brandId = newBrand?.id ?? null;
       }
       brandCache.set(preset.brand_name, brandId);
@@ -396,7 +404,7 @@ export async function importProductPresetsByIds(presetIds: string[]) {
       if (cat) {
         categoryId = cat.id;
       } else {
-        const { data: newCat } = await supabase
+        const { data: newCat, error: catErr } = await supabase
           .from("categories")
           .insert({
             name: preset.category_name,
@@ -404,6 +412,10 @@ export async function importProductPresetsByIds(presetIds: string[]) {
           })
           .select("id")
           .single();
+        if (catErr) {
+          console.error("Failed to create category:", catErr);
+          continue;
+        }
         categoryId = newCat?.id ?? null;
       }
       categoryCache.set(preset.category_name, categoryId);
@@ -416,6 +428,7 @@ export async function importProductPresetsByIds(presetIds: string[]) {
         .select("id")
         .eq("organization_id", organizationId)
         .eq("sku", preset.product_sku)
+        .is("deleted_at", null)
         .maybeSingle();
 
       if (existing) continue; // skip duplicates
@@ -592,7 +605,9 @@ export async function leaveOrganization(formData: FormData) {
     return { error: "Та аль хэдийн байгууллагаас гарсан байна." };
   }
 
-  const orgName = (profile as any).organizations?.name;
+  const orgName = (
+    profile as unknown as { organizations: { name: string } | null }
+  ).organizations?.name;
   if (!orgName) {
     return { error: "Байгууллагын мэдээлэл олдсонгүй." };
   }

@@ -44,19 +44,15 @@ import { useBrands } from "@/lib/query/hooks/use-brands";
 import { productKeys } from "@/lib/query/keys";
 import { useOptimisticCreate } from "@/lib/query/use-optimistic";
 
-const initialUnits = [
-  "ширхэг",
-  "кг",
-  "гр",
-  "л",
-  "мл",
-  "м",
-  "см",
-  "уут",
-  "хайрцаг",
-  "багц",
-  "хос",
-  "ш",
+const unitGroups = [
+  {
+    label: "Нийтлэг",
+    items: ["ширхэг", "кг", "гр", "л", "мл"] as const,
+  },
+  {
+    label: "Бусад",
+    items: ["м", "см", "уут", "хайрцаг", "багц", "хос", "ш"] as const,
+  },
 ];
 
 const productSchema = z.object({
@@ -219,6 +215,7 @@ export function ProductCreateDrawer({
       />
 
       <form
+        id="product-form"
         onSubmit={handleSubmit(onSubmit)}
         className="flex flex-col flex-1 min-h-0"
       >
@@ -277,7 +274,7 @@ export function ProductCreateDrawer({
                       name="unit"
                       id="unit"
                       placeholder="ширхэг"
-                      initialItems={initialUnits}
+                      initialItems={unitGroups}
                       value={field.value ?? ""}
                       onChange={(next) => field.onChange(next)}
                       emptyLabel="Нэгж байхгүй"
@@ -455,7 +452,11 @@ export function ProductCreateDrawer({
 
         <DrawerFooter>
           <DrawerCancel onClick={() => setOpen(false)} />
-          <DrawerSubmit isPending={productMutation.isPending} />
+          <DrawerSubmit
+            form="product-form"
+            isPending={productMutation.isPending}
+            data-testid="create-product-submit"
+          />
         </DrawerFooter>
       </form>
     </DrawerLayout>

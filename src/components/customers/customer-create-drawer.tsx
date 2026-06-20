@@ -8,13 +8,17 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { createContact } from "@/app/(dashboard)/customers/actions";
 import { buttonVariants } from "@/components/ui/button";
-import { DrawerFooter, DrawerCancel, DrawerSubmit } from "@/components/ui/drawer-footer";
+import {
+  DrawerCancel,
+  DrawerFooter,
+  DrawerSubmit,
+} from "@/components/ui/drawer-footer";
+import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { contactKeys } from "@/lib/query/keys";
 import { useOptimisticCreate } from "@/lib/query/use-optimistic";
-import { ErrorBanner } from "@/components/ui/error-banner";
 
 const customerSchema = z.object({
   name: z.string().min(1, "Нэр шаардлагатай"),
@@ -105,7 +109,11 @@ export function CustomerCreateDrawer({
       footer={
         <DrawerFooter>
           <DrawerCancel onClick={() => setOpen(false)} />
-          <DrawerSubmit form="customer-form" isPending={isSubmitting || contactMutation.isPending} />
+          <DrawerSubmit
+            form="customer-form"
+            isPending={isSubmitting || contactMutation.isPending}
+            data-testid="create-customer-submit"
+          />
         </DrawerFooter>
       }
     >

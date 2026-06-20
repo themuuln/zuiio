@@ -54,17 +54,20 @@ export function DrawerSubmit({
   isPending = false,
   label = "Хадгалах",
   loadingLabel = "Хадгалах...",
+  "data-testid": dataTestId,
 }: {
   form?: string;
   isPending?: boolean;
   label?: string;
   loadingLabel?: string;
+  "data-testid"?: string;
 }) {
   return (
     <button
       type="submit"
       form={form}
       disabled={isPending}
+      data-testid={dataTestId}
       className={buttonVariants({ variant: "default" })}
     >
       {isPending ? loadingLabel : label}

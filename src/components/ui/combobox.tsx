@@ -181,10 +181,11 @@ const Combobox = React.forwardRef(ComboboxInner) as <T>(
 
 // --- ComboboxInput ---
 
-interface ComboboxInputProps extends Omit<
-  React.InputHTMLAttributes<HTMLInputElement>,
-  "value" | "onChange"
-> {
+interface ComboboxInputProps
+  extends Omit<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    "value" | "onChange"
+  > {
   showTrigger?: boolean;
 }
 
@@ -265,14 +266,48 @@ const ComboboxContent = React.forwardRef<
 });
 ComboboxContent.displayName = "ComboboxContent";
 
+// --- ComboboxSeparator ---
+
+const ComboboxSeparator = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    role="separator"
+    aria-valuenow={0}
+    className={cn("my-1 h-px bg-border", className)}
+    {...props}
+  />
+));
+ComboboxSeparator.displayName = "ComboboxSeparator";
+
+// --- ComboboxGroupLabel ---
+
+const ComboboxGroupLabel = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "px-2 py-1.5 text-xs font-medium text-muted-foreground",
+      className,
+    )}
+    {...props}
+  />
+));
+ComboboxGroupLabel.displayName = "ComboboxGroupLabel";
+
 // --- ComboboxList ---
 
 const ComboboxList = React.forwardRef<
   HTMLUListElement,
   Omit<React.HTMLAttributes<HTMLUListElement>, "children"> & {
     children?: React.ReactNode | ((item: any) => React.ReactNode);
+    groups?: { label?: string; items: readonly any[] }[];
   }
->(({ className, children, ...props }, ref) => {
+>(({ className, children, groups, ...props }, ref) => {
   const ctx = useComboboxContext();
 
   if (!ctx.open) return null;
@@ -283,27 +318,62 @@ const ComboboxList = React.forwardRef<
       className={cn("max-h-[300px] overflow-y-auto py-1", className)}
       {...props}
     >
-      {typeof children === "function"
-        ? ctx.items.map((item, index) => (
-            <li
-              key={index}
-              aria-selected={index === ctx.highlightedIndex}
-              className={cn(
-                "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none",
-                index === ctx.highlightedIndex &&
-                  "bg-accent text-accent-foreground",
-              )}
-              onMouseEnter={() => ctx.setHighlightedIndex(index)}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                ctx.onValueChange(item);
-                ctx.setOpen(false);
-              }}
-            >
-              {(children as (item: any) => React.ReactNode)(item)}
-            </li>
-          ))
-        : children}
+      {typeof children === "function" && groups
+        ? (() => {
+            let flatIndex = 0;
+            return groups.map((group, gi) => (
+              <React.Fragment key={gi}>
+                {gi > 0 && <ComboboxSeparator />}
+                {group.label && (
+                  <ComboboxGroupLabel>{group.label}</ComboboxGroupLabel>
+                )}
+                {group.items.map((item) => {
+                  const idx = flatIndex++;
+                  const renderFn = children as (item: any) => React.ReactNode;
+                  return (
+                    <li
+                      key={idx}
+                      aria-selected={idx === ctx.highlightedIndex}
+                      className={cn(
+                        "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none",
+                        idx === ctx.highlightedIndex &&
+                          "bg-accent text-accent-foreground",
+                      )}
+                      onMouseEnter={() => ctx.setHighlightedIndex(idx)}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        ctx.onValueChange(item);
+                        ctx.setOpen(false);
+                      }}
+                    >
+                      {renderFn(item)}
+                    </li>
+                  );
+                })}
+              </React.Fragment>
+            ));
+          })()
+        : typeof children === "function"
+          ? ctx.items.map((item, index) => (
+              <li
+                key={index}
+                aria-selected={index === ctx.highlightedIndex}
+                className={cn(
+                  "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none",
+                  index === ctx.highlightedIndex &&
+                    "bg-accent text-accent-foreground",
+                )}
+                onMouseEnter={() => ctx.setHighlightedIndex(index)}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  ctx.onValueChange(item);
+                  ctx.setOpen(false);
+                }}
+              >
+                {(children as (item: any) => React.ReactNode)(item)}
+              </li>
+            ))
+          : children}
     </ul>
   );
 });
@@ -352,7 +422,7 @@ const ComboboxCreate = React.forwardRef<
       )}
       onMouseDown={(e) => {
         e.preventDefault();
-        ctx.onCreate!(ctx.inputValue.trim());
+        ctx.onCreate?.(ctx.inputValue.trim());
         ctx.setOpen(false);
       }}
       {...props}
@@ -412,4 +482,6 @@ export {
   ComboboxContent,
   ComboboxItem,
   ComboboxCreate,
+  ComboboxSeparator,
+  ComboboxGroupLabel,
 };

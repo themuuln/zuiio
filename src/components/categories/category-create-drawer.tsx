@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { createCategory } from "@/app/(dashboard)/inventory/categories/actions";
 import { buttonVariants } from "@/components/ui/button";
-import { DrawerFooter, DrawerCancel, DrawerSubmit } from "@/components/ui/drawer-footer";
 import {
   Combobox,
   ComboboxContent,
@@ -18,12 +17,17 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
+import {
+  DrawerCancel,
+  DrawerFooter,
+  DrawerSubmit,
+} from "@/components/ui/drawer-footer";
+import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { PRESET_CATEGORIES } from "@/lib/constants";
 import { categoryKeys } from "@/lib/query/keys";
 import { useOptimisticCreate } from "@/lib/query/use-optimistic";
-import { ErrorBanner } from "@/components/ui/error-banner";
 
 const allPresetCategories = [
   ...new Set(Object.values(PRESET_CATEGORIES).flat()),
@@ -124,7 +128,11 @@ export function CategoryCreateDrawer({
       footer={
         <DrawerFooter>
           <DrawerCancel onClick={() => setOpen(false)} />
-          <DrawerSubmit form="category-form" isPending={isSubmitting || categoryMutation.isPending} />
+          <DrawerSubmit
+            form="category-form"
+            isPending={isSubmitting || categoryMutation.isPending}
+            data-testid="create-category-submit"
+          />
         </DrawerFooter>
       }
     >
