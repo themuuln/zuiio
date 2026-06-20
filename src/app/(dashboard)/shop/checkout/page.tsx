@@ -138,8 +138,8 @@ export default function CheckoutPage() {
   const mutation = useMutation({
     mutationFn: async (formData: FormData) => {
       const result = await createShopSale(undefined, formData);
-      if (result?.error) throw new Error(result.error);
-      return result as { saleId: string };
+      if ("error" in result) throw new Error(result.error);
+      return result;
     },
     onMutate: async (formData) => {
       // Cancel any in-flight queries so they don't overwrite our optimistic update
