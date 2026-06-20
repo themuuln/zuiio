@@ -1,13 +1,5 @@
+import { ErpDataTable } from "@/components/erp/data-table";
 import { PageShell } from "@/components/erp/page-shell";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { requireAppContext } from "@/lib/erp";
 import { formatDate } from "@/lib/format";
 
@@ -72,51 +64,45 @@ export default async function AuditLogPage() {
       title="Үйлдлийн түүх"
       description="Систем дэх бүх үйлдлийн бүртгэл"
     >
-      <Card>
-        <CardHeader>
-          <CardTitle>Сүүлийн 100 үйлдэл</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {rows.length === 0 ? (
-            <div className="px-6 pb-6 pt-2">
-              <p className="text-sm text-muted-foreground">
-                Үйлдлийн түүх байхгүй байна.
-              </p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Огноо</TableHead>
-                  <TableHead>Хэрэглэгч</TableHead>
-                  <TableHead>Үйлдэл</TableHead>
-                  <TableHead>Төрөл</TableHead>
-                  <TableHead>Тайлбар</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((row) => (
-                  <TableRow key={row.id}>
-                    <TableCell className="whitespace-nowrap">
-                      {row.created_at ? formatDate(row.created_at) : "-"}
-                    </TableCell>
-                    <TableCell>{row.actor_name}</TableCell>
-                    <TableCell>
-                      {ACTION_LABELS[row.action] ?? row.action}
-                    </TableCell>
-                    <TableCell>
-                      {ENTITY_TYPE_LABELS[row.entity_type] ?? row.entity_type}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {row.summary ?? "-"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <ErpDataTable
+        title="Сүүлийн 100 үйлдэл"
+        columns={[
+          {
+            header: "Огноо",
+            accessor: (row: AuditLogRow) =>
+              row.created_at ? formatDate(row.created_at) : "-",
+            cellClassName: "whitespace-nowrap",
+          },
+          {
+            header: "Хэрэглэгч",
+            accessor: (row: AuditLogRow) => row.actor_name,
+          },
+          {
+            header: "Үйлдэл",
+            accessor: (row: AuditLogRow) =>
+              ACTION_LABELS[row.action] ?? row.action,
+          },
+          {
+            header: "Төрөл",
+            accessor: (row: AuditLogRow) =>
+              ENTITY_TYPE_LABELS[row.entity_type] ?? row.entity_type,
+          },
+          {
+            header: "Тайлбар",
+            accessor: (row: AuditLogRow) => (
+              <span className="text-muted-foreground">
+                {row.summary ?? "-"}
+              </span>
+            ),
+          },
+        ]}
+        data={rows}
+        keyExtractor={(row) => row.id}
+        emptyState={{
+          title: "Үйлдлийн түүх байхгүй",
+          description: "Системд одоогоор бүртгэгдсэн үйлдэл байхгүй байна.",
+        }}
+      />
     </PageShell>
   );
 }

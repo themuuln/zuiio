@@ -2,21 +2,12 @@
 
 import { ArrowsClockwise } from "@phosphor-icons/react";
 import { useState } from "react";
-import { ErpEmptyState } from "@/components/erp/empty-state";
+import { ErpDataTable } from "@/components/erp/data-table";
 import {
   type MovementDetailData,
   MovementDetailDrawer,
 } from "@/components/inventory/movement-detail-drawer";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { formatCurrency, formatDate } from "@/lib/format";
 
 const MOVEMENT_LABELS: Record<string, string> = {
@@ -58,69 +49,56 @@ export function MovementsContent({ movements }: { movements: MovementRow[] }) {
     };
   }
 
-  if (!movements.length) {
-    return (
-      <ErpEmptyState
-        icon={<ArrowsClockwise className="size-4" />}
-        title="Хөдөлгөөн бүртгэгдээгүй байна"
-        description="Шинэ худалдан авалт, борлуулалт эсвэл тооллогын дараах тохируулга энд харагдана."
-      />
-    );
-  }
-
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Сүүлийн бүртгэлүүд</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Огноо</TableHead>
-                <TableHead>Бүтээгдэхүүн</TableHead>
-                <TableHead>Төрөл</TableHead>
-                <TableHead>Тоо хэмжээ</TableHead>
-                <TableHead>Өртөг</TableHead>
-                <TableHead>Лавлагаа</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {movements.map((movement) => (
-                <TableRow
-                  key={movement.id}
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => setSelectedMovement(movement)}
-                >
-                  <TableCell>{formatDate(movement.created_at)}</TableCell>
-                  <TableCell className="font-medium">
-                    {movement.product_name}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        movement.type === "out" ? "destructive" : "secondary"
-                      }
-                    >
-                      {MOVEMENT_LABELS[movement.type] ?? movement.type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {movement.quantity} {movement.product_unit ?? "ширхэг"}
-                  </TableCell>
-                  <TableCell>
-                    {formatCurrency(Number(movement.unit_cost ?? 0))}
-                  </TableCell>
-                  <TableCell>
-                    {movement.reference ?? movement.notes ?? "-"}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <ErpDataTable
+        title="Сүүлийн бүртгэлүүд"
+        columns={[
+          {
+            header: "Огноо",
+            accessor: (m: MovementRow) => formatDate(m.created_at),
+          },
+          {
+            header: "Бүтээгдэхүүн",
+            accessor: (m: MovementRow) => (
+              <span className="font-medium">{m.product_name}</span>
+            ),
+          },
+          {
+            header: "Төрөл",
+            accessor: (m: MovementRow) => (
+              <Badge variant={m.type === "out" ? "destructive" : "secondary"}>
+                {MOVEMENT_LABELS[m.type] ?? m.type}
+              </Badge>
+            ),
+          },
+          {
+            header: "Тоо хэмжээ",
+            accessor: (m: MovementRow) =>
+              `${m.quantity} ${m.product_unit ?? "ширхэг"}`,
+          },
+          {
+            header: "Өртөг",
+            accessor: (m: MovementRow) =>
+              formatCurrency(Number(m.unit_cost ?? 0)),
+          },
+          {
+            header: "Лавлагаа",
+            accessor: (m: MovementRow) =>
+              m.reference ??
+              m.notes ?? <span className="text-muted-foreground">-</span>,
+          },
+        ]}
+        data={movements}
+        onRowClick={(m) => setSelectedMovement(m)}
+        keyExtractor={(m) => m.id}
+        emptyState={{
+          icon: <ArrowsClockwise className="size-4" />,
+          title: "Хөдөлгөөн бүртгэгдээгүй байна",
+          description:
+            "Шинэ худалдан авалт, борлуулалт эсвэл тооллогын дараах тохируулга энд харагдана.",
+        }}
+      />
       {selectedMovement && (
         <MovementDetailDrawer
           movement={toDetailData(selectedMovement)}

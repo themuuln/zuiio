@@ -58,20 +58,17 @@ const allPresetCategories = [
   ...new Set(Object.values(PRESET_CATEGORIES).flat()),
 ];
 
-const initialUnits = [
-  "ширхэг",
-  "кг",
-  "гр",
-  "л",
-  "мл",
-  "м",
-  "см",
-  "уут",
-  "хайрцаг",
-  "багц",
-  "хос",
-  "ш",
+const unitGroups = [
+  {
+    label: "Нийтлэг",
+    items: ["ширхэг", "кг", "гр", "л", "мл"] as const,
+  },
+  {
+    label: "Бусад",
+    items: ["м", "см", "уут", "хайрцаг", "багц", "хос", "ш"] as const,
+  },
 ];
+const initialUnits = unitGroups.flatMap((g) => g.items);
 
 const initialCategoryNames = allPresetCategories;
 
@@ -439,7 +436,11 @@ export function ProductEditDrawer({
                         />
                         <ComboboxContent>
                           <ComboboxEmpty>Нэгж байхгүй</ComboboxEmpty>
-                          <ComboboxList>
+                          <ComboboxList
+                            groups={
+                              loweredUnitQuery ? undefined : unitGroups
+                            }
+                          >
                             {(item: string) => (
                               <ComboboxItem key={item} value={item}>
                                 {allUnits.includes(item) ||

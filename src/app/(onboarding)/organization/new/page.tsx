@@ -46,7 +46,7 @@ export default function NewOrganizationPage() {
     resolver: zodResolver(orgSchema),
     defaultValues: {
       name: "",
-      company_type: "retail",
+      company_type: "gym",
       slug: "",
     },
   });

@@ -7,19 +7,10 @@ import {
   type DiscountDetailData,
   DiscountDetailDrawer,
 } from "@/components/discounts/discount-detail-drawer";
-import { ErpEmptyState } from "@/components/erp/empty-state";
+import { ErpDataTable } from "@/components/erp/data-table";
 import { PageShell } from "@/components/erp/page-shell";
 import { DiscountCreateDrawer } from "@/components/discounts/discount-create-drawer";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { formatCurrency, formatDate } from "@/lib/format";
 import type { DiscountRow } from "./page";
 
@@ -80,85 +71,67 @@ export function DiscountsContent({ discounts }: { discounts: DiscountRow[] }) {
           />
         }
       >
-        {!discounts.length ? (
-          <ErpEmptyState
-            icon={<Percent className="size-4" />}
-            title="Хямдрал байхгүй"
-            description="Шинэ хямдрал үүсгэж, үнийн урамшууллыг тохируулна уу."
-            action={
+        <ErpDataTable
+          title="Хямдралын жагсаалт"
+          columns={[
+            { header: "Нэр", accessor: (d: DiscountRow) => d.name },
+            {
+              header: "Төрөл",
+              accessor: (d: DiscountRow) => TYPE_LABELS[d.type] ?? d.type,
+            },
+            {
+              header: "Утга",
+              accessor: (d: DiscountRow) =>
+                d.type === "percentage"
+                  ? `${d.value}%`
+                  : formatCurrency(d.value),
+            },
+            {
+              header: "Хамаарах хүрээ",
+              accessor: (d: DiscountRow) =>
+                APPLIES_TO_LABELS[d.applies_to] ?? d.applies_to,
+            },
+            {
+              header: "Хүчинтэй эхлэх",
+              accessor: (d: DiscountRow) => formatDate(d.valid_from),
+            },
+            {
+              header: "Хүчинтэй дуусах",
+              accessor: (d: DiscountRow) =>
+                d.valid_until ? formatDate(d.valid_until) : "Тодорхойгүй",
+            },
+            {
+              header: "Ашигласан",
+              accessor: (d: DiscountRow) =>
+                d.usage_limit !== null
+                  ? `${d.used_count} / ${d.usage_limit}`
+                  : String(d.used_count),
+            },
+            {
+              header: "Идэвхтэй",
+              accessor: (d: DiscountRow) => (
+                <Badge variant={d.is_active ? "default" : "secondary"}>
+                  {d.is_active ? "Тийм" : "Үгүй"}
+                </Badge>
+              ),
+            },
+          ]}
+          data={discounts}
+          onRowClick={(d) => setSelectedDiscount(d)}
+          keyExtractor={(d) => d.id}
+          emptyState={{
+            icon: <Percent className="size-4" />,
+            title: "Хямдрал байхгүй",
+            description:
+              "Шинэ хямдрал үүсгэж, үнийн урамшууллыг тохируулна уу.",
+            action: (
               <DiscountCreateDrawer
                 open={createOpen}
                 onOpenChange={setCreateOpen}
               />
-            }
-          />
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>Хямдралын жагсаалт</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Нэр</TableHead>
-                    <TableHead>Төрөл</TableHead>
-                    <TableHead>Утга</TableHead>
-                    <TableHead>Хамаарах хүрээ</TableHead>
-                    <TableHead>Хүчинтэй эхлэх</TableHead>
-                    <TableHead>Хүчинтэй дуусах</TableHead>
-                    <TableHead>Ашигласан</TableHead>
-                    <TableHead>Идэвхтэй</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {discounts.map((discount) => (
-                    <TableRow
-                      key={discount.id}
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => setSelectedDiscount(discount)}
-                    >
-                      <TableCell className="font-medium">
-                        {discount.name}
-                      </TableCell>
-                      <TableCell>
-                        {TYPE_LABELS[discount.type] ?? discount.type}
-                      </TableCell>
-                      <TableCell>
-                        {discount.type === "percentage"
-                          ? `${discount.value}%`
-                          : formatCurrency(discount.value)}
-                      </TableCell>
-                      <TableCell>
-                        {APPLIES_TO_LABELS[discount.applies_to] ??
-                          discount.applies_to}
-                      </TableCell>
-                      <TableCell>{formatDate(discount.valid_from)}</TableCell>
-                      <TableCell>
-                        {discount.valid_until
-                          ? formatDate(discount.valid_until)
-                          : "Тодорхойгүй"}
-                      </TableCell>
-                      <TableCell>
-                        {discount.used_count}
-                        {discount.usage_limit !== null
-                          ? ` / ${discount.usage_limit}`
-                          : ""}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={discount.is_active ? "default" : "secondary"}
-                        >
-                          {discount.is_active ? "Тийм" : "Үгүй"}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        )}
+            ),
+          }}
+        />
       </PageShell>
       {selectedDiscount && (
         <DiscountDetailDrawer
