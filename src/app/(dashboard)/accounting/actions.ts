@@ -133,7 +133,7 @@ export async function createJournalEntry(
   );
 
   revalidateEntities(["accounting"]);
-  return { success: true as const, error: undefined, error: undefined };
+  return { success: true as const, error: undefined };
 }
 
 export async function createAccount(
@@ -206,7 +206,7 @@ export async function createAccount(
   );
 
   revalidateEntities(["accounting"]);
-  return { success: true as const, error: undefined, error: undefined };
+  return { success: true as const, error: undefined };
 }
 
 export async function updateJournalEntry(
@@ -364,7 +364,7 @@ export async function updateJournalEntry(
   );
 
   revalidateEntities(["accounting"]);
-  return { success: true as const, error: undefined, error: undefined };
+  return { success: true as const, error: undefined };
 }
 
 export async function deleteJournalEntry(entryId: string) {
@@ -392,7 +392,7 @@ export async function deleteJournalEntry(entryId: string) {
   }
 
   revalidateEntities(["accounting"]);
-  return { success: true as const, error: undefined, error: undefined };
+  return { success: true as const, error: undefined };
 }
 
 export async function toggleAccountActive(
@@ -422,5 +422,5 @@ export async function toggleAccountActive(
   }
 
   revalidateEntities(["accounting"]);
-  return { success: true as const, error: undefined, error: undefined };
+  return { success: true as const, error: undefined };
 }

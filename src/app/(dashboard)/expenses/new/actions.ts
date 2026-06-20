@@ -57,5 +57,5 @@ export async function createExpense(
   }).catch(console.error);
 
   revalidateEntities(["expenses"]);
-  return { success: true as const, error: undefined, error: undefined };
+  return { success: true as const, error: undefined };
 }

@@ -138,7 +138,7 @@ export async function createDiscount(
   );
 
   revalidateEntities(["discounts"]);
-  return { success: true as const, error: undefined, error: undefined };
+  return { success: true as const, error: undefined };
 }
 
 export async function updateDiscount(
@@ -273,7 +273,7 @@ export async function updateDiscount(
   );
 
   revalidateEntities(["discounts"]);
-  return { success: true as const, error: undefined, error: undefined };
+  return { success: true as const, error: undefined };
 }
 
 export async function toggleDiscountActive(
@@ -333,7 +333,7 @@ export async function toggleDiscountActive(
   );
 
   revalidateEntities(["discounts"]);
-  return { success: true as const, error: undefined, error: undefined };
+  return { success: true as const, error: undefined };
 }
 
 export async function applyDiscount(formData: FormData) {

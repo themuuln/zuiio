@@ -103,7 +103,7 @@ export async function createQuotation(
   );
 
   revalidateEntities(["quotations"]);
-  return { success: true as const, error: undefined, error: undefined };
+  return { success: true as const, error: undefined };
 }
 
 export async function updateQuotationStatus(
@@ -156,7 +156,7 @@ export async function updateQuotationStatus(
   );
 
   revalidateEntities(["quotations"]);
-  return { success: true as const, error: undefined, error: undefined };
+  return { success: true as const, error: undefined };
 }
 
 export async function convertQuotationToSale(quotationId: string) {

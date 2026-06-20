@@ -127,7 +127,7 @@ export async function createReturn(
   }
 
   revalidateEntities(["returns"]);
-  return { success: true as const, error: undefined, error: undefined };
+  return { success: true as const, error: undefined };
 }
 
 export async function completeReturn(returnId: string) {
@@ -285,7 +285,7 @@ export async function completeReturn(returnId: string) {
   }
 
   revalidateEntities(["returns", "inventory", "products"]);
-  return { success: true as const, error: undefined, error: undefined };
+  return { success: true as const, error: undefined };
 }
 
 export async function cancelReturn(returnId: string) {
@@ -310,5 +310,5 @@ export async function cancelReturn(returnId: string) {
   }
 
   revalidateEntities(["returns"]);
-  return { success: true as const, error: undefined, error: undefined };
+  return { success: true as const, error: undefined };
 }

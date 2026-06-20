@@ -115,5 +115,5 @@ export async function createStockMovement(
   }
 
   revalidateEntities(["inventory"]);
-  return { success: true as const, error: undefined, error: undefined };
+  return { success: true as const, error: undefined };
 }

@@ -55,7 +55,7 @@ export async function createContact(
   }
 
   revalidateEntities(["customers"]);
-  return { success: true as const, error: undefined, error: undefined };
+  return { success: true as const, error: undefined };
 }
 
 export async function updateContact(
@@ -127,5 +127,5 @@ export async function updateContact(
   }
 
   revalidateEntities(["customers"]);
-  return { success: true as const, error: undefined, error: undefined };
+  return { success: true as const, error: undefined };
 }

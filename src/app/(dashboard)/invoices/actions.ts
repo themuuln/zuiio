@@ -218,5 +218,5 @@ export async function updateInvoiceStatus(invoiceId: string, status: string) {
   );
 
   revalidateEntities(["invoices"]);
-  return { success: true as const, error: undefined, error: undefined };
+  return { success: true as const, error: undefined };
 }

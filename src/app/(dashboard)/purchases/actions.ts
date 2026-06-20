@@ -127,7 +127,7 @@ export async function createPurchaseOrder(
   ).catch(console.error);
 
   revalidateEntities(["purchases"]);
-  return { success: true as const, error: undefined, error: undefined };
+  return { success: true as const, error: undefined };
 }
 
 export async function updatePurchaseOrderStatus(
@@ -167,7 +167,7 @@ export async function updatePurchaseOrderStatus(
   }
 
   revalidateEntities(["purchases"]);
-  return { success: true as const, error: undefined, error: undefined };
+  return { success: true as const, error: undefined };
 }
 
 export async function receivePurchaseOrderItems(
@@ -315,5 +315,5 @@ export async function receivePurchaseOrderItems(
     .eq("id", orderId);
 
   revalidateEntities(["purchases"]);
-  return { success: true as const, error: undefined, error: undefined };
+  return { success: true as const, error: undefined };
 }
