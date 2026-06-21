@@ -2,17 +2,16 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ShoppingCart, Trash } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { createPurchaseOrder } from "@/app/(dashboard)/purchases/actions";
-import { buttonVariants } from "@/components/ui/button";
 import {
-  DrawerFooter,
-  DrawerCancel,
-  DrawerSubmit,
-} from "@/components/ui/drawer-footer";
+  type SelectedVariant,
+  VariantPicker,
+} from "@/components/products/variant-picker";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Combobox,
   ComboboxContent,
@@ -21,18 +20,19 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-import { DatePicker } from "@/components/ui/date-picker";
 import { CurrencyInput } from "@/components/ui/currency-input";
+import { DatePicker } from "@/components/ui/date-picker";
+import {
+  DrawerCancel,
+  DrawerFooter,
+  DrawerSubmit,
+} from "@/components/ui/drawer-footer";
+import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  VariantPicker,
-  type SelectedVariant,
-} from "@/components/products/variant-picker";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
-import { ErrorBanner } from "@/components/ui/error-banner";
 import { useVariantLineItemRemove } from "@/lib/use-variant-line-items";
 
 type SupplierOption = {
@@ -83,7 +83,7 @@ export function PurchaseCreateDrawer({
   const setOpen = externalOnOpenChange ?? setInternalOpen;
   const [serverError, setServerError] = useState<string | null>(null);
   const [supplierQuery, setSupplierQuery] = useState("");
-  const [variantSelections, setVariantSelections] = useState<
+  const [_variantSelections, setVariantSelections] = useState<
     Record<number, SelectedVariant | null>
   >({});
 
@@ -130,8 +130,16 @@ export function PurchaseCreateDrawer({
     : suppliers;
 
   const watchedSupplierId = watch("supplier_id");
-  const selectedSupplier =
+  const _selectedSupplier =
     suppliers.find((s) => s.id === watchedSupplierId) ?? null;
+
+  // Auto-select supplier when only one is available
+  useEffect(() => {
+    if (filteredSuppliers.length === 1 && !watchedSupplierId) {
+      setValue("supplier_id", filteredSuppliers[0].id);
+      setSupplierQuery("");
+    }
+  }, [filteredSuppliers, watchedSupplierId, setValue]);
 
   const onSubmit = async (data: PurchaseValues) => {
     setServerError(null);
@@ -219,40 +227,50 @@ export function PurchaseCreateDrawer({
             <Controller
               control={control}
               name="supplier_id"
-              render={({ field }) => (
-                <Combobox
-                  items={filteredSuppliers}
-                  value={suppliers.find((s) => s.id === field.value) ?? null}
-                  onValueChange={(
-                    next: { id: string; name: string } | null,
-                  ) => {
-                    field.onChange(next?.id ?? "");
-                    setSupplierQuery("");
-                  }}
-                  itemToStringValue={(c: { id: string; name: string } | null) =>
-                    c?.id ?? ""
-                  }
-                  itemToStringLabel={(c: { id: string; name: string } | null) =>
-                    c?.name ?? ""
-                  }
-                  inputValue={supplierQuery}
-                  onInputValueChange={setSupplierQuery}
-                >
-                  <ComboboxInput
-                    placeholder="Нийлүүлэгч сонгох"
-                    showTrigger
-                    className="w-full"
-                  />
-                  <ComboboxContent>
-                    <ComboboxEmpty>Нийлүүлэгч байхгүй</ComboboxEmpty>
-                    <ComboboxList>
-                      {(s: { id: string; name: string }) => (
-                        <ComboboxItem key={s.id}>{s.name}</ComboboxItem>
-                      )}
-                    </ComboboxList>
-                  </ComboboxContent>
-                </Combobox>
-              )}
+              render={({ field }) => {
+                const selectedSupplier = suppliers.find(
+                  (s) => s.id === field.value,
+                );
+                // Ensure selected supplier is always in items list
+                const itemsWithSelected =
+                  selectedSupplier &&
+                  !filteredSuppliers.some((s) => s.id === selectedSupplier.id)
+                    ? [selectedSupplier, ...filteredSuppliers]
+                    : filteredSuppliers;
+
+                return (
+                  <Combobox
+                    items={itemsWithSelected}
+                    value={selectedSupplier ?? null}
+                    onValueChange={(next: SupplierOption | null) => {
+                      field.onChange(next?.id ?? "");
+                      setSupplierQuery("");
+                    }}
+                    itemToStringValue={(c: SupplierOption | null) =>
+                      c?.id ?? ""
+                    }
+                    itemToStringLabel={(c: SupplierOption | null) =>
+                      c?.name ?? ""
+                    }
+                    inputValue={supplierQuery}
+                    onInputValueChange={setSupplierQuery}
+                  >
+                    <ComboboxInput
+                      placeholder="Нийлүүлэгч сонгох"
+                      showTrigger
+                      className="w-full"
+                    />
+                    <ComboboxContent>
+                      <ComboboxEmpty>Нийлүүлэгч байхгүй</ComboboxEmpty>
+                      <ComboboxList>
+                        {(s: SupplierOption) => (
+                          <ComboboxItem key={s.id}>{s.name}</ComboboxItem>
+                        )}
+                      </ComboboxList>
+                    </ComboboxContent>
+                  </Combobox>
+                );
+              }}
             />
             {errors.supplier_id && (
               <p className="text-xs text-destructive">
