@@ -1,7 +1,7 @@
 "use client";
 
 import { ShoppingCart } from "@phosphor-icons/react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { ExportButton } from "@/components/erp/export-button";
@@ -66,6 +66,7 @@ export function PurchasesContent({
   products: ProductOption[];
 }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [selectedPurchaseId, setSelectedPurchaseId] = useState<string | null>(
     null,
   );
@@ -79,6 +80,10 @@ export function PurchasesContent({
       window.history.replaceState({}, "", "/purchases");
     }
   }, []);
+
+  const handleCreateSuccess = () => {
+    router.refresh();
+  };
 
   return (
     <>
@@ -96,6 +101,7 @@ export function PurchasesContent({
               products={products}
               open={createOpen}
               onOpenChange={setCreateOpen}
+              onSuccess={handleCreateSuccess}
             />
           </>
         }

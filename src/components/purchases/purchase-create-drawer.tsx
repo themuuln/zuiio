@@ -72,11 +72,13 @@ export function PurchaseCreateDrawer({
   products,
   open: externalOpen,
   onOpenChange: externalOnOpenChange,
+  onSuccess,
 }: {
   suppliers: SupplierOption[];
   products: ProductOption[];
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onSuccess?: () => void;
 }) {
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen ?? internalOpen;
@@ -167,6 +169,7 @@ export function PurchaseCreateDrawer({
       } else if (result && "success" in result) {
         setOpen(false);
         reset();
+        onSuccess?.();
         toast.success("Худалдан авалтын захиалга амжилттай үүсгэгдлээ.");
       }
     } catch (err) {
