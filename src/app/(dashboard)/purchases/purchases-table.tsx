@@ -73,9 +73,7 @@ const columns: ColumnDef<PurchaseRow>[] = [
     accessorKey: "order_number",
     header: "Захиалгын дугаар",
     filterFn: (row, _columnId, filterValue: string) => {
-      const orderNum = String(
-        row.getValue("order_number") ?? "",
-      ).toLowerCase();
+      const orderNum = String(row.getValue("order_number") ?? "").toLowerCase();
       const supplier = String(
         row.getValue("supplier_name") ?? "",
       ).toLowerCase();
@@ -123,7 +121,9 @@ const columns: ColumnDef<PurchaseRow>[] = [
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
       return (
-        <Badge variant={statusBadgeVariant(status)}>{statusLabel(status)}</Badge>
+        <Badge variant={statusBadgeVariant(status)}>
+          {statusLabel(status)}
+        </Badge>
       );
     },
   },

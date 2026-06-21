@@ -1,6 +1,6 @@
 "use client";
 
-import { DrawerLayout } from "@/components/ui/drawer-layout";
+import { Drawer } from "@base-ui/react/drawer";
 import { CaretLeft, Sliders } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import {
@@ -12,7 +12,7 @@ import {
   VariantSummaryCard,
 } from "@/components/products/variant-editor";
 import { buttonVariants } from "@/components/ui/button";
-import { Drawer } from "@base-ui/react/drawer";
+import { DrawerLayout } from "@/components/ui/drawer-layout";
 
 export {
   computeCombinations,

@@ -1,11 +1,13 @@
+import { redirect } from "next/navigation";
 import { ErpDataTable } from "@/components/erp/data-table";
 import { PageShell } from "@/components/erp/page-shell";
 import { requireAppContext } from "@/lib/erp";
 import { formatDate } from "@/lib/format";
+import { checkOrgSetting } from "@/lib/org-settings";
 
 export const unstable_instant = {
   prefetch: "static",
-  unstable_disableBuildValidation: true,
+  unstable_disableValidation: true,
 };
 
 const ACTION_LABELS: Record<string, string> = {
@@ -40,6 +42,8 @@ export type AuditLogRow = {
 
 export default async function AuditLogPage() {
   const { supabase, organizationId } = await requireAppContext();
+  if (!(await checkOrgSetting(supabase, organizationId, "has_audit_log")))
+    redirect("/");
 
   const { data: logs } = await supabase
     .from("audit_log")

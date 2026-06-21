@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,7 +23,6 @@ import {
 import { COMPANY_TYPES } from "@/lib/constants";
 import { slugify } from "@/lib/format";
 import { createOrganization } from "./actions";
-import { ErrorBanner } from "@/components/ui/error-banner";
 
 const orgSchema = z.object({
   name: z.string().min(1, "Байгууллагын нэр шаардлагатай."),

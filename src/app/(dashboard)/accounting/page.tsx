@@ -8,7 +8,7 @@ export const unstable_instant = {
     { searchParams: { branch: "sample", consolidated: null } },
     { searchParams: { branch: null, consolidated: "true" } },
   ],
-  unstable_disableBuildValidation: true,
+  unstable_disableValidation: true,
 };
 
 export default async function AccountingPage({

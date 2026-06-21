@@ -1,5 +1,5 @@
-import { X } from "@phosphor-icons/react";
 import { Drawer } from "@base-ui/react/drawer";
+import { X } from "@phosphor-icons/react";
 import type * as React from "react";
 
 /**

@@ -1,0 +1,26 @@
+# Supabase project configuration
+# Generated for local development — https://supabase.com/docs/guides/cli/config
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+
+[db]
+port = 54322
+
+[auth]
+enabled = true
+
+# Email auth settings
+[auth.email]
+enable_confirmations = true
+
+# Storage
+[storage]
+enabled = true
+file_size_limit = 52428800
+
+# Multi-tenant brand assets bucket
+[storage.buckets]
+brand_assets = { public = true, file_size_limit = 2097152, allowed_mime_types = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"] }

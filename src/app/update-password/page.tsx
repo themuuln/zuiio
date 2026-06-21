@@ -14,11 +14,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 import { updatePassword } from "./actions";
-import { ErrorBanner } from "@/components/ui/error-banner";
 
 const schema = z
   .object({

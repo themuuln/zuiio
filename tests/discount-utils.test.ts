@@ -26,9 +26,7 @@ test("fixed amount discount on all items", () => {
     discountValue: 5000,
     cartTotal: 100000,
     appliesTo: "all",
-    items: [
-      { productId: "p1", price: 50000, quantity: 2 },
-    ],
+    items: [{ productId: "p1", price: 50000, quantity: 2 }],
   };
   const result = calculateDiscount(params);
   assert.equal(result.discountAmount, 5000);
@@ -41,9 +39,7 @@ test("fixed amount discount capped at cart total", () => {
     discountValue: 200000,
     cartTotal: 100000,
     appliesTo: "all",
-    items: [
-      { productId: "p1", price: 100000, quantity: 1 },
-    ],
+    items: [{ productId: "p1", price: 100000, quantity: 1 }],
   };
   const result = calculateDiscount(params);
   assert.equal(result.discountAmount, 100000);
@@ -60,9 +56,7 @@ test("percentage discount on selected products", () => {
       { productId: "p1", categoryId: "c1", price: 30000, quantity: 1 },
       { productId: "p2", categoryId: "c2", price: 70000, quantity: 1 },
     ],
-    conditions: [
-      { condition_type: "product", condition_value: "p1" },
-    ],
+    conditions: [{ condition_type: "product", condition_value: "p1" }],
   };
   const result = calculateDiscount(params);
   // Discount applies only to p1: 30000 * 20% = 6000
@@ -80,9 +74,7 @@ test("percentage discount on selected categories", () => {
       { productId: "p1", categoryId: "c1", price: 80000, quantity: 1 },
       { productId: "p2", categoryId: "c2", price: 120000, quantity: 1 },
     ],
-    conditions: [
-      { condition_type: "category", condition_value: "c1" },
-    ],
+    conditions: [{ condition_type: "category", condition_value: "c1" }],
   };
   const result = calculateDiscount(params);
   // Discount applies only to c1 items: 80000 * 15% = 12000
@@ -96,12 +88,8 @@ test("no discount when no items match selected products", () => {
     discountValue: 10,
     cartTotal: 50000,
     appliesTo: "selected_products",
-    items: [
-      { productId: "p1", price: 50000, quantity: 1 },
-    ],
-    conditions: [
-      { condition_type: "product", condition_value: "p2" },
-    ],
+    items: [{ productId: "p1", price: 50000, quantity: 1 }],
+    conditions: [{ condition_type: "product", condition_value: "p2" }],
   };
   const result = calculateDiscount(params);
   assert.equal(result.discountAmount, 0);
@@ -160,9 +148,7 @@ test("percentage discount on multiple items in selected category", () => {
       { productId: "p2", categoryId: "c1", price: 60000, quantity: 1 },
       { productId: "p3", categoryId: "c2", price: 100000, quantity: 1 },
     ],
-    conditions: [
-      { condition_type: "category", condition_value: "c1" },
-    ],
+    conditions: [{ condition_type: "category", condition_value: "c1" }],
   };
   // Applicable subtotal: p1(80000) + p2(60000) = 140000
   // Discount: 140000 * 25% = 35000

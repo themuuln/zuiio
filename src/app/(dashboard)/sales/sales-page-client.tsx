@@ -37,12 +37,7 @@ type ProductOption = {
   current_stock: number | null;
   unit: string | null;
   barcode: string | null;
-};
-
-type CustomerOption = {
-  id: string;
-  name: string;
-  phone: string | null;
+  image_url: string | null;
 };
 
 type SaleRow = {
@@ -75,14 +70,12 @@ const STATUS_MAP: Record<
 export function SalesPageClient({
   sales,
   products,
-  customers,
   completedAmount,
   pendingCount,
   invoiceCount,
 }: {
   sales: SaleRow[];
   products: ProductOption[];
-  customers: CustomerOption[];
   completedAmount: number;
   pendingCount: number;
   invoiceCount: number;
@@ -258,7 +251,6 @@ export function SalesPageClient({
 
                 <SaleForm
                   products={products}
-                  customers={customers}
                   onSuccess={() => {
                     setOpen(false);
                   }}

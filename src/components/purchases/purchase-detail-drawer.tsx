@@ -1,7 +1,6 @@
 "use client";
 
-import { DrawerLayout } from "@/components/ui/drawer-layout";
-import {ArrowFatDown} from "@phosphor-icons/react";
+import { ArrowFatDown } from "@phosphor-icons/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -11,6 +10,8 @@ import {
 } from "@/app/(dashboard)/purchases/actions";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { DrawerHeader } from "@/components/ui/drawer-header";
+import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { NativeSelect } from "@/components/ui/native-select";
 import {
   Table,
@@ -22,7 +23,6 @@ import {
 } from "@/components/ui/table";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
-import { DrawerHeader } from "@/components/ui/drawer-header";
 
 const STATUS_LABELS: Record<string, string> = {
   draft: "Ноорог",
@@ -70,12 +70,16 @@ type PurchaseDetailData = {
   createdBy: { name: string } | null;
 };
 
-async function fetchPurchaseOrder(id: string): Promise<PurchaseDetailData | null> {
+async function fetchPurchaseOrder(
+  id: string,
+): Promise<PurchaseDetailData | null> {
   const supabase = createClient();
 
   const { data: order } = await supabase
     .from("purchase_orders")
-    .select("*, contacts!purchase_orders_supplier_id_fkey(name, phone), profiles!purchase_orders_created_by_fkey(name)")
+    .select(
+      "*, contacts!purchase_orders_supplier_id_fkey(name, phone), profiles!purchase_orders_created_by_fkey(name)",
+    )
     .eq("id", id)
     .single();
 
@@ -126,9 +130,7 @@ export function PurchaseDetailDrawer({
     enabled: !!purchaseOrderId,
   });
 
-  async function handleStatusChange(
-    e: React.ChangeEvent<HTMLSelectElement>,
-  ) {
+  async function handleStatusChange(e: React.ChangeEvent<HTMLSelectElement>) {
     if (!purchaseOrderId) return;
     const result = await updatePurchaseOrderStatus(
       purchaseOrderId,
@@ -183,9 +185,7 @@ export function PurchaseDetailDrawer({
       }
     } catch (err) {
       toast.error(
-        err instanceof Error
-          ? err.message
-          : "Хүлээн авахад алдаа гарлаа.",
+        err instanceof Error ? err.message : "Хүлээн авахад алдаа гарлаа.",
       );
     } finally {
       setReceiving(false);
@@ -193,8 +193,7 @@ export function PurchaseDetailDrawer({
   }
 
   const status = (data?.order?.status as string) ?? "";
-  const canReceive =
-    status === "sent" || status === "partially_received";
+  const canReceive = status === "sent" || status === "partially_received";
 
   return (
     <DrawerLayout
@@ -208,276 +207,216 @@ export function PurchaseDetailDrawer({
       }}
       panelWidth="32rem"
     >
-              <DrawerHeader title={data ? `#${data.order.order_number}` : "Худалдан авалтын захиалга"} />
+      <DrawerHeader
+        title={
+          data ? `#${data.order.order_number}` : "Худалдан авалтын захиалга"
+        }
+      />
 
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground">Уншиж байна...</p>
+      ) : !data ? (
+        <p className="text-sm text-muted-foreground">Захиалга олдсонгүй.</p>
+      ) : (
+        <div className="flex-1 overflow-y-auto min-h-0 space-y-6">
+          {/* Status & Actions */}
+          <div className="flex items-center gap-2">
+            <NativeSelect
+              value={status}
+              onChange={handleStatusChange}
+              className="w-auto"
+            >
+              <option value="draft">Ноорог</option>
+              <option value="sent">Илгээсэн</option>
+              <option value="received">Хүлээн авсан</option>
+              <option value="cancelled">Цуцлагдсан</option>
+            </NativeSelect>
 
-              {isLoading ? (
+            {canReceive && (
+              <button
+                type="button"
+                onClick={() => setReceiveMode(!receiveMode)}
+                className={buttonVariants({
+                  variant: receiveMode ? "default" : "outline",
+                  size: "sm",
+                })}
+              >
+                <ArrowFatDown data-icon="inline-start" />
+                {receiveMode ? "Цуцлах" : "Бараа хүлээн авах"}
+              </button>
+            )}
+          </div>
+
+          {/* Order metadata */}
+          <div className="space-y-2 rounded-lg border p-4">
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">
+                Захиалгын дугаар
+              </span>
+              <span className="text-sm font-medium font-mono">
+                {data.order.order_number as string}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Нийлүүлэгч</span>
+              <span className="text-sm">{data.supplier?.name ?? "-"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Огноо</span>
+              <span className="text-sm">
+                {formatDate(data.order.order_date as string)}
+              </span>
+            </div>
+            {data.order.expected_date && (
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">
+                  Хүлээгдэж буй огноо
+                </span>
+                <span className="text-sm">
+                  {formatDate(data.order.expected_date as string)}
+                </span>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <span className="text-sm text-muted-foreground">Төлөв</span>
+              <Badge variant={STATUS_VARIANTS[status] ?? "outline"}>
+                {STATUS_LABELS[status] ?? status}
+              </Badge>
+            </div>
+            <div className="flex justify-between border-t pt-2">
+              <span className="font-semibold">Нийт дүн</span>
+              <span className="text-lg font-bold">
+                {formatCurrency(Number(data.order.total_amount ?? 0))}
+              </span>
+            </div>
+            {data.createdBy && (
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Үүсгэсэн</span>
+                <span className="text-sm">{data.createdBy.name}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Supplier info */}
+          {data.supplier && (
+            <div className="rounded-lg border p-4">
+              <h4 className="text-sm font-medium mb-2">Нийлүүлэгч</h4>
+              <p className="text-sm">{data.supplier.name}</p>
+              {data.supplier.phone && (
                 <p className="text-sm text-muted-foreground">
-                  Уншиж байна...
+                  {data.supplier.phone}
                 </p>
-              ) : !data ? (
-                <p className="text-sm text-muted-foreground">
-                  Захиалга олдсонгүй.
-                </p>
-              ) : (
-                <div className="flex-1 overflow-y-auto min-h-0 space-y-6">
-                  {/* Status & Actions */}
-                  <div className="flex items-center gap-2">
-                    <NativeSelect
-                      value={status}
-                      onChange={handleStatusChange}
-                      className="w-auto"
-                    >
-                      <option value="draft">Ноорог</option>
-                      <option value="sent">Илгээсэн</option>
-                      <option value="received">Хүлээн авсан</option>
-                      <option value="cancelled">Цуцлагдсан</option>
-                    </NativeSelect>
-
-                    {canReceive && (
-                      <button
-                        type="button"
-                        onClick={() => setReceiveMode(!receiveMode)}
-                        className={buttonVariants({
-                          variant: receiveMode ? "default" : "outline",
-                          size: "sm",
-                        })}
-                      >
-                        <ArrowFatDown data-icon="inline-start" />
-                        {receiveMode ? "Цуцлах" : "Бараа хүлээн авах"}
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Order metadata */}
-                  <div className="space-y-2 rounded-lg border p-4">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        Захиалгын дугаар
-                      </span>
-                      <span className="text-sm font-medium font-mono">
-                        {data.order.order_number as string}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        Нийлүүлэгч
-                      </span>
-                      <span className="text-sm">
-                        {data.supplier?.name ?? "-"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        Огноо
-                      </span>
-                      <span className="text-sm">
-                        {formatDate(data.order.order_date as string)}
-                      </span>
-                    </div>
-                    {data.order.expected_date && (
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">
-                          Хүлээгдэж буй огноо
-                        </span>
-                        <span className="text-sm">
-                          {formatDate(
-                            data.order.expected_date as string,
-                          )}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        Төлөв
-                      </span>
-                      <Badge
-                        variant={
-                          STATUS_VARIANTS[status] ?? "outline"
-                        }
-                      >
-                        {STATUS_LABELS[status] ?? status}
-                      </Badge>
-                    </div>
-                    <div className="flex justify-between border-t pt-2">
-                      <span className="font-semibold">Нийт дүн</span>
-                      <span className="text-lg font-bold">
-                        {formatCurrency(
-                          Number(data.order.total_amount ?? 0),
-                        )}
-                      </span>
-                    </div>
-                    {data.createdBy && (
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">
-                          Үүсгэсэн
-                        </span>
-                        <span className="text-sm">
-                          {data.createdBy.name}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Supplier info */}
-                  {data.supplier && (
-                    <div className="rounded-lg border p-4">
-                      <h4 className="text-sm font-medium mb-2">
-                        Нийлүүлэгч
-                      </h4>
-                      <p className="text-sm">{data.supplier.name}</p>
-                      {data.supplier.phone && (
-                        <p className="text-sm text-muted-foreground">
-                          {data.supplier.phone}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Items */}
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">
-                      Бараанууд
-                    </h4>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Бараа</TableHead>
-                          <TableHead className="text-right">
-                            Тоо
-                          </TableHead>
-                          <TableHead className="text-right">
-                            Өртөг
-                          </TableHead>
-                          <TableHead className="text-right">
-                            Дүн
-                          </TableHead>
-                          {(status === "received" ||
-                            status === "partially_received" ||
-                            receiveMode) && (
-                            <TableHead className="text-right">
-                              Хүлээн авсан
-                            </TableHead>
-                          )}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {data.items.map((item) => {
-                          const productName =
-                            item.description ||
-                            item.products?.name ||
-                            "Бүтээгдэхүүн";
-                          const remaining =
-                            Number(item.quantity) -
-                            Number(item.received_quantity);
-
-                          return (
-                            <TableRow key={item.id}>
-                              <TableCell>
-                                {productName}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                {item.quantity}{" "}
-                                {item.products?.unit ?? ""}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                {formatCurrency(item.unit_cost)}
-                              </TableCell>
-                              <TableCell className="text-right font-medium">
-                                {formatCurrency(item.total_cost)}
-                              </TableCell>
-                              {(status === "received" ||
-                                status ===
-                                  "partially_received" ||
-                                receiveMode) && (
-                                <TableCell className="text-right">
-                                  {receiveMode ? (
-                                    <div className="flex items-center gap-1 justify-end">
-                                      <span className="text-xs text-muted-foreground">
-                                        {Number(
-                                          item.received_quantity,
-                                        ) > 0
-                                          ? `${item.received_quantity}/`
-                                          : ""}
-                                      </span>
-                                      <input
-                                        type="number"
-                                        min="0"
-                                        max={Math.max(
-                                          0,
-                                          remaining,
-                                        )}
-                                        step="any"
-                                        className="w-16 rounded border border-border bg-transparent px-1 py-0.5 text-right text-xs"
-                                        placeholder="0"
-                                        value={
-                                          receiveQuantities[
-                                            item.id
-                                          ] ?? ""
-                                        }
-                                        onChange={(e) => {
-                                          const val = e.target
-                                            .value;
-                                          setReceiveQuantities(
-                                            (prev) => ({
-                                              ...prev,
-                                              [item.id]:
-                                                val === ""
-                                                  ? 0
-                                                  : Number(
-                                                      val,
-                                                    ),
-                                            }),
-                                          );
-                                        }}
-                                      />
-                                    </div>
-                                  ) : (
-                                    <span className="text-sm">
-                                      {item.received_quantity} /{" "}
-                                      {item.quantity}
-                                    </span>
-                                  )}
-                                </TableCell>
-                              )}
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
-
-                  {/* Receive confirmation */}
-                  {receiveMode && (
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        onClick={handleReceive}
-                        disabled={receiving}
-                        className={buttonVariants({
-                          variant: "default",
-                        })}
-                      >
-                        {receiving
-                          ? "Хүлээн авч байна..."
-                          : "Хүлээн авсан баталгаажуулах"}
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Notes */}
-                  {data.order.notes && (
-                    <div className="rounded-lg border p-4">
-                      <h4 className="text-sm font-medium mb-1">
-                        Тэмдэглэл
-                      </h4>
-                      <p className="text-sm text-muted-foreground">
-                        {data.order.notes as string}
-                      </p>
-                    </div>
-                  )}
-                </div>
               )}
+            </div>
+          )}
+
+          {/* Items */}
+          <div>
+            <h4 className="text-sm font-medium mb-2">Бараанууд</h4>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Бараа</TableHead>
+                  <TableHead className="text-right">Тоо</TableHead>
+                  <TableHead className="text-right">Өртөг</TableHead>
+                  <TableHead className="text-right">Дүн</TableHead>
+                  {(status === "received" ||
+                    status === "partially_received" ||
+                    receiveMode) && (
+                    <TableHead className="text-right">Хүлээн авсан</TableHead>
+                  )}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.items.map((item) => {
+                  const productName =
+                    item.description || item.products?.name || "Бүтээгдэхүүн";
+                  const remaining =
+                    Number(item.quantity) - Number(item.received_quantity);
+
+                  return (
+                    <TableRow key={item.id}>
+                      <TableCell>{productName}</TableCell>
+                      <TableCell className="text-right">
+                        {item.quantity} {item.products?.unit ?? ""}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(item.unit_cost)}
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {formatCurrency(item.total_cost)}
+                      </TableCell>
+                      {(status === "received" ||
+                        status === "partially_received" ||
+                        receiveMode) && (
+                        <TableCell className="text-right">
+                          {receiveMode ? (
+                            <div className="flex items-center gap-1 justify-end">
+                              <span className="text-xs text-muted-foreground">
+                                {Number(item.received_quantity) > 0
+                                  ? `${item.received_quantity}/`
+                                  : ""}
+                              </span>
+                              <input
+                                type="number"
+                                min="0"
+                                max={Math.max(0, remaining)}
+                                step="any"
+                                className="w-16 rounded border border-border bg-transparent px-1 py-0.5 text-right text-xs"
+                                placeholder="0"
+                                value={receiveQuantities[item.id] ?? ""}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setReceiveQuantities((prev) => ({
+                                    ...prev,
+                                    [item.id]: val === "" ? 0 : Number(val),
+                                  }));
+                                }}
+                              />
+                            </div>
+                          ) : (
+                            <span className="text-sm">
+                              {item.received_quantity} / {item.quantity}
+                            </span>
+                          )}
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Receive confirmation */}
+          {receiveMode && (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={handleReceive}
+                disabled={receiving}
+                className={buttonVariants({
+                  variant: "default",
+                })}
+              >
+                {receiving
+                  ? "Хүлээн авч байна..."
+                  : "Хүлээн авсан баталгаажуулах"}
+              </button>
+            </div>
+          )}
+
+          {/* Notes */}
+          {data.order.notes && (
+            <div className="rounded-lg border p-4">
+              <h4 className="text-sm font-medium mb-1">Тэмдэглэл</h4>
+              <p className="text-sm text-muted-foreground">
+                {data.order.notes as string}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </DrawerLayout>
   );
 }

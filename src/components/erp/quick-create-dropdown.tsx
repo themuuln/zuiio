@@ -1,15 +1,14 @@
 "use client";
 
 import {
-  Buildings,
-  Coins,
-  CurrencyDollar,
-  FileText,
-  Folder,
-  Package,
-  Plus,
-  Receipt,
-  Users,
+  BuildingsIcon,
+  CoinsIcon,
+  FileTextIcon,
+  FolderIcon,
+  PackageIcon,
+  PlusIcon,
+  ReceiptIcon,
+  UsersIcon,
 } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -55,7 +54,7 @@ export function QuickCreateDropdown({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="default" size="sm" className="h-8 gap-1">
-            <Plus className="size-4" />
+            <PlusIcon className="size-4" />
             <span className="hidden sm:inline">Шинэ</span>
           </Button>
         </DropdownMenuTrigger>
@@ -63,32 +62,32 @@ export function QuickCreateDropdown({
           <DropdownMenuLabel>Бүртгэл нэмэх</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => setActiveDrawer("product")}>
-            <Package className="size-4" />
+            <PackageIcon className="size-4" />
             Бүтээгдэхүүн
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setActiveDrawer("sale")}>
-            <Receipt className="size-4" />
+            <ReceiptIcon className="size-4" />
             Борлуулалт
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setActiveDrawer("invoice")}>
-            <FileText className="size-4" />
+            <FileTextIcon className="size-4" />
             Нэхэмжлэл
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setActiveDrawer("expense")}>
-            <Coins className="size-4" />
+            <CoinsIcon className="size-4" />
             Зарлага
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => setActiveDrawer("customer")}>
-            <Users className="size-4" />
+            <UsersIcon className="size-4" />
             Харилцагч
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setActiveDrawer("supplier")}>
-            <Buildings className="size-4" />
+            <BuildingsIcon className="size-4" />
             Нийлүүлэгч
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setActiveDrawer("category")}>
-            <Folder className="size-4" />
+            <FolderIcon className="size-4" />
             Ангилал
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -158,7 +157,7 @@ export function QuickCreateDropdown({
   );
 }
 
-/* Wrapper that fetches products + customers for SalesCreateDrawer */
+/* Wrapper that fetches products for SalesCreateDrawer */
 function SaleDrawerWrapper({
   organizationId,
   onClose,
@@ -173,7 +172,7 @@ function SaleDrawerWrapper({
     queryFn: async () => {
       const { data } = await supabase
         .from("products")
-        .select("id, name, sale_price, current_stock, unit, barcode")
+        .select("id, name, sale_price, current_stock, unit, barcode, image_url")
         .eq("organization_id", organizationId)
         .is("deleted_at", null)
         .order("name");
@@ -181,27 +180,13 @@ function SaleDrawerWrapper({
     },
   });
 
-  const { data: customers } = useQuery({
-    queryKey: ["quick-create", "customers", organizationId],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("contacts")
-        .select("id, name, phone")
-        .eq("organization_id", organizationId)
-        .eq("type", "customer")
-        .order("name");
-      return data ?? [];
-    },
-  });
-
-  if (!products || !customers) return null;
+  if (!products) return null;
 
   return (
     <SalesCreateDrawer
       products={products}
-      customers={customers}
       open={true}
-      onOpenChange={(open) => {
+      onOpenChangeAction={(open) => {
         if (!open) onClose();
       }}
     />

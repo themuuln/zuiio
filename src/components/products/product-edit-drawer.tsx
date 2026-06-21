@@ -275,7 +275,7 @@ export function ProductEditDrawer({
       // Load existing variant data (SKU, prices, stock)
       const { data: variants } = await supabase
         .from("product_variants")
-        .select("id, sku, cost_price, sale_price, current_stock")
+        .select("id, sku, cost_price, sale_price, current_stock, image_urls")
         .eq("product_id", product.id);
 
       if (variants && variants.length > 0) {
@@ -293,6 +293,7 @@ export function ProductEditDrawer({
             cost_price: v.cost_price ?? 0,
             sale_price: v.sale_price ?? 0,
             current_stock: v.current_stock ?? 0,
+            image_url: v.image_urls?.[0] ?? null,
           });
         }
         setVariantData(loadedVariantData);
@@ -320,6 +321,7 @@ export function ProductEditDrawer({
           cost_price: watchedCostPrice ?? 0,
           sale_price: watchedSalePrice ?? 0,
           current_stock: 0,
+          image_url: null,
         };
       });
     });

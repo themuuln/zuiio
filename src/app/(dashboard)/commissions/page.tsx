@@ -4,7 +4,7 @@ import { CommissionContent } from "./commission-content";
 
 export const unstable_instant = {
   prefetch: "static",
-  unstable_disableBuildValidation: true,
+  unstable_disableValidation: true,
 };
 
 export default async function CommissionsPage() {

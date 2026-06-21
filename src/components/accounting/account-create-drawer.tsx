@@ -7,7 +7,12 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { createAccount } from "@/app/(dashboard)/accounting/actions";
 import { buttonVariants } from "@/components/ui/button";
-import { DrawerFooter, DrawerCancel, DrawerSubmit } from "@/components/ui/drawer-footer";
+import {
+  DrawerCancel,
+  DrawerFooter,
+  DrawerSubmit,
+} from "@/components/ui/drawer-footer";
+import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,7 +24,6 @@ import {
 } from "@/components/ui/select";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Switch } from "@/components/ui/switch";
-import { ErrorBanner } from "@/components/ui/error-banner";
 
 const accountSchema = z.object({
   code: z.string().min(1, "Код шаардлагатай"),
@@ -117,15 +121,28 @@ export function AccountCreateDrawer({
       title="Шинэ данс"
       description="Дансны код, нэр, төрлийг оруулан шинэ данс үүсгэнэ."
       trigger={
-        <button type="button" className={buttonVariants({ variant: "default" })}>
+        <button
+          type="button"
+          className={buttonVariants({ variant: "default" })}
+        >
           <Plus className="size-4" />
           Шинэ данс
         </button>
       }
       footer={
         <DrawerFooter>
-          <DrawerCancel onClick={() => { setOpen(false); reset(); }} />
-          <DrawerSubmit form="account-form" isPending={isSubmitting} label="Данс үүсгэх" loadingLabel="Үүсгэж байна..." />
+          <DrawerCancel
+            onClick={() => {
+              setOpen(false);
+              reset();
+            }}
+          />
+          <DrawerSubmit
+            form="account-form"
+            isPending={isSubmitting}
+            label="Данс үүсгэх"
+            loadingLabel="Үүсгэж байна..."
+          />
         </DrawerFooter>
       }
     >
@@ -137,27 +154,17 @@ export function AccountCreateDrawer({
         <FieldGroup>
           <Field>
             <FieldLabel>Код</FieldLabel>
-            <Input
-              placeholder="e.g. 1100"
-              {...register("code")}
-            />
+            <Input placeholder="e.g. 1100" {...register("code")} />
             {errors.code && (
-              <p className="text-xs text-destructive">
-                {errors.code.message}
-              </p>
+              <p className="text-xs text-destructive">{errors.code.message}</p>
             )}
           </Field>
 
           <Field>
             <FieldLabel>Нэр</FieldLabel>
-            <Input
-              placeholder="Дансны нэр"
-              {...register("name")}
-            />
+            <Input placeholder="Дансны нэр" {...register("name")} />
             {errors.name && (
-              <p className="text-xs text-destructive">
-                {errors.name.message}
-              </p>
+              <p className="text-xs text-destructive">{errors.name.message}</p>
             )}
           </Field>
 
@@ -181,9 +188,7 @@ export function AccountCreateDrawer({
               </SelectContent>
             </Select>
             {errors.type && (
-              <p className="text-xs text-destructive">
-                {errors.type.message}
-              </p>
+              <p className="text-xs text-destructive">{errors.type.message}</p>
             )}
           </Field>
 

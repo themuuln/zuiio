@@ -1,5 +1,5 @@
-import { requireAppContext } from "@/lib/erp";
 import { withBranchFilter } from "@/lib/branches";
+import { requireAppContext } from "@/lib/erp";
 import { PurchasesContent } from "./purchases-content";
 import type { PurchaseRow } from "./purchases-table";
 
@@ -9,7 +9,7 @@ export const unstable_instant = {
     { searchParams: { branch: null } },
     { searchParams: { branch: "sample" } },
   ],
-  unstable_disableBuildValidation: true,
+  unstable_disableValidation: true,
 };
 
 export default async function PurchasesPage({

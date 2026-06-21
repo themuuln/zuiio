@@ -1,5 +1,6 @@
 import { defineConfig } from "vitepress";
 import { withMermaid } from "vitepress-mermaid-viewer";
+
 const guideSidebar = {
   text: "Гарын авлага",
   collapsed: false,
@@ -31,16 +32,31 @@ const guideSidebar = {
         { text: "Баркод шошго", link: "/guide/features/barcode-label.html" },
         { text: "Үнийн жагсаалт", link: "/guide/features/price-lists.html" },
         { text: "Файл хавсаргах", link: "/guide/features/attachments.html" },
-        { text: "Төсөв vs бодит", link: "/guide/features/budget-vs-actual.html" },
-        { text: "Мэдэгдэл (харилцагч)", link: "/guide/features/customer-notifications.html" },
+        {
+          text: "Төсөв vs бодит",
+          link: "/guide/features/budget-vs-actual.html",
+        },
+        {
+          text: "Мэдэгдэл (харилцагч)",
+          link: "/guide/features/customer-notifications.html",
+        },
         { text: "Батлуулах урсгал", link: "/guide/features/approvals.html" },
-        { text: "Санхүүгийн тайлан", link: "/guide/features/financial-statements.html" },
+        {
+          text: "Санхүүгийн тайлан",
+          link: "/guide/features/financial-statements.html",
+        },
         { text: "Цалин / ХН", link: "/guide/features/payroll.html" },
         { text: "Үндсэн хөрөнгө", link: "/guide/features/fixed-assets.html" },
-        { text: "Харилцагчийн портал", link: "/guide/features/customer-portal.html" },
+        {
+          text: "Харилцагчийн портал",
+          link: "/guide/features/customer-portal.html",
+        },
         { text: "API / Webhooks", link: "/guide/features/api-webhooks.html" },
         { text: "Loyalty", link: "/guide/features/loyalty.html" },
-        { text: "Үйлдвэрлэл / BOM", link: "/guide/features/manufacturing-bom.html" },
+        {
+          text: "Үйлдвэрлэл / BOM",
+          link: "/guide/features/manufacturing-bom.html",
+        },
       ],
     },
     {

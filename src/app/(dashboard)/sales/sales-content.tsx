@@ -24,12 +24,7 @@ type ProductOption = {
   current_stock: number | null;
   unit: string | null;
   barcode: string | null;
-};
-
-type CustomerOption = {
-  id: string;
-  name: string;
-  phone: string | null;
+  image_url: string | null;
 };
 
 async function fetchSaleWithItems(
@@ -116,11 +111,9 @@ function isWithinWeek(dateStr: string): boolean {
 export function SalesContent({
   sales,
   products,
-  customers,
 }: {
   sales: SaleRow[];
   products: ProductOption[];
-  customers: CustomerOption[];
 }) {
   const searchParams = useSearchParams();
   const [createOpen, setCreateOpen] = useState(
@@ -204,10 +197,9 @@ export function SalesContent({
             />
             <SalesCreateDrawer
               products={products}
-              customers={customers}
               open={createOpen}
-              onOpenChange={setCreateOpen}
-              onOpenDetail={(saleId) => {
+              onOpenChangeAction={setCreateOpen}
+              onOpenDetailAction={(saleId) => {
                 setCreateOpen(false);
                 setSelectedSaleId(saleId);
               }}

@@ -16,6 +16,24 @@ interface DrawerLayoutProps {
   className?: string;
   /** Whether this drawer is nested inside another drawer. Reduces backdrop and adds visual hierarchy. */
   nested?: boolean;
+  /**
+   * Handle for detached triggers created via `Drawer.createHandle()`.
+   * Lets you control the drawer from a trigger placed outside `<DrawerLayout>`.
+   */
+  handle?: Drawer.Handle<unknown>;
+  /**
+   * Determines if the drawer enters a modal state when open.
+   * `true`: focus trapped, scroll locked, pointer interactions disabled outside.
+   * `false`: user can interact with the rest of the document.
+   * `'trap-focus'`: focus trapped but scroll/pointer remain enabled.
+   * @default true
+   */
+  modal?: boolean | "trap-focus";
+  /**
+   * Prevent the drawer from closing on outside presses.
+   * @default false
+   */
+  disablePointerDismissal?: boolean;
 }
 
 export function DrawerLayout({
@@ -26,9 +44,19 @@ export function DrawerLayout({
   trigger,
   className,
   nested = false,
+  handle,
+  modal = true,
+  disablePointerDismissal = false,
 }: DrawerLayoutProps) {
   return (
-    <Drawer.Root swipeDirection="right" open={open} onOpenChange={onOpenChange}>
+    <Drawer.Root
+      swipeDirection="right"
+      open={open}
+      onOpenChange={onOpenChange}
+      handle={handle}
+      modal={modal}
+      disablePointerDismissal={disablePointerDismissal}
+    >
       {trigger && (
         <Drawer.Trigger render={<Slot.Root />}>{trigger}</Drawer.Trigger>
       )}

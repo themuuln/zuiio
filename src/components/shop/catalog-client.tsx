@@ -1,14 +1,20 @@
 "use client";
 
-import { MagnifyingGlass, Package } from "@phosphor-icons/react";
+import {
+  Barcode,
+  CheckCircle,
+  MagnifyingGlass,
+  Package,
+  XCircle,
+} from "@phosphor-icons/react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { BarcodeInput } from "@/components/shop/barcode-input";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useCart } from "@/app/(dashboard)/shop/cart-context";
 import type { CategoryChip } from "@/components/shop/category-chips";
 import { CategoryChips } from "@/components/shop/category-chips";
 import type { ProductCardProduct } from "@/components/shop/product-card";
 import { ProductCard } from "@/components/shop/product-card";
-import { SearchBar } from "@/components/shop/search-bar";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -18,7 +24,20 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+
+const CameraScanner = dynamic(
+  () => import("./camera-scanner").then((m) => m.CameraScanner),
+  { ssr: false },
+);
+
+type BarcodeStatus =
+  | { type: "idle" }
+  | { type: "found"; productName: string }
+  | { type: "not-found"; barcode: string }
+  | { type: "error"; message: string };
 
 const SKELETON_IDS = [
   "skeleton-0",
@@ -35,10 +54,99 @@ type CatalogClientProps = {
 };
 
 export function CatalogClient({ products, categories }: CatalogClientProps) {
+  const { addItem } = useCart();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null,
   );
+  const [barcodeStatus, setBarcodeStatus] = useState<BarcodeStatus>({
+    type: "idle",
+  });
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+
+  // Auto-focus on mount
+  useEffect(() => {
+    const t = setTimeout(() => inputRef.current?.focus(), 100);
+    return () => clearTimeout(t);
+  }, []);
+
+  const clearStatusAfterDelay = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      setBarcodeStatus({ type: "idle" });
+    }, 2000);
+  };
+
+  const handleBarcodeMatch = (barcode: string) => {
+    const trimmed = barcode.trim();
+    if (!trimmed) return false;
+
+    const product = products.find(
+      (p) => p.barcode && p.barcode.toLowerCase() === trimmed.toLowerCase(),
+    );
+
+    if (product) {
+      const stock = Number(product.current_stock ?? 0);
+      if (stock <= 0) {
+        setBarcodeStatus({
+          type: "error",
+          message: `"${product.name}" дууссан байна.`,
+        });
+        clearStatusAfterDelay();
+        return true;
+      }
+
+      addItem({
+        productId: product.id,
+        name: product.name,
+        unitPrice: Number(product.sale_price ?? 0),
+        unit: product.unit ?? "ш",
+        maxStock: stock,
+      });
+
+      setBarcodeStatus({ type: "found", productName: product.name });
+      clearStatusAfterDelay();
+      return true;
+    }
+
+    setBarcodeStatus({ type: "not-found", barcode: trimmed });
+    clearStatusAfterDelay();
+    return false;
+  };
+
+  const handleCameraScan = (barcode: string) => {
+    const product = products.find(
+      (p) => p.barcode && p.barcode.toLowerCase() === barcode.toLowerCase(),
+    );
+
+    if (!product) return { found: false } as const;
+
+    const stock = Number(product.current_stock ?? 0);
+    if (stock <= 0) {
+      return {
+        found: false,
+        error: `"${product.name}" дууссан байна.`,
+      } as const;
+    }
+
+    addItem({
+      productId: product.id,
+      name: product.name,
+      unitPrice: Number(product.sale_price ?? 0),
+      unit: product.unit ?? "ш",
+      maxStock: stock,
+    });
+
+    setBarcodeStatus({ type: "found", productName: product.name });
+    setTimeout(() => {
+      setIsCameraOpen(false);
+      setBarcodeStatus({ type: "idle" });
+    }, 1200);
+
+    return { found: true } as const;
+  };
 
   const filteredProducts = useMemo(() => {
     let result = products;
@@ -50,13 +158,14 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
       );
     }
 
-    // Search filter by name or SKU (case-insensitive)
+    // Search filter by name, SKU, or barcode (case-insensitive)
     const query = searchQuery.toLowerCase().trim();
     if (query) {
       result = result.filter(
         (product) =>
           product.name.toLowerCase().includes(query) ||
-          product.sku?.toLowerCase().includes(query),
+          product.sku?.toLowerCase().includes(query) ||
+          product.barcode?.toLowerCase().includes(query),
       );
     }
 
@@ -66,13 +175,122 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
   const isEmpty = products.length === 0;
   const hasNoResults = !isEmpty && filteredProducts.length === 0;
 
+  const showStatus = barcodeStatus.type !== "idle";
+
   return (
     <div className="flex flex-col gap-4 pb-20">
-      {/* Search bar */}
-      <SearchBar value={searchQuery} onChange={setSearchQuery} />
+      {/* Unified search + barcode input */}
+      <div className="sticky top-[52px] z-20 bg-background pb-2 pt-4">
+        <div className="relative flex items-center gap-2">
+          <div className="relative flex-1">
+            <MagnifyingGlass className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              ref={inputRef}
+              type="search"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                if (barcodeStatus.type !== "idle") {
+                  setBarcodeStatus({ type: "idle" });
+                  if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (searchQuery.trim()) {
+                    handleBarcodeMatch(searchQuery);
+                  }
+                }
+              }}
+              onPaste={(e) => {
+                const pastedText = e.clipboardData.getData("text");
+                if (pastedText) {
+                  setTimeout(() => {
+                    handleBarcodeMatch(pastedText);
+                    setSearchQuery("");
+                  }, 0);
+                }
+              }}
+              placeholder="Бүтээгдэхүүн, баркод, SKU-аар хайх..."
+              autoComplete="off"
+              className={cn(
+                "h-[44px] w-full rounded-lg pl-9 pr-4 text-sm",
+                "focus-visible:ring-2 focus-visible:ring-primary/20",
+                showStatus &&
+                  barcodeStatus.type === "found" &&
+                  "border-emerald-500 bg-emerald-50 dark:border-emerald-400 dark:bg-emerald-950/30",
+                showStatus &&
+                  barcodeStatus.type === "not-found" &&
+                  "border-amber-500 bg-amber-50 dark:border-amber-400 dark:bg-amber-950/30",
+                showStatus &&
+                  barcodeStatus.type === "error" &&
+                  "border-destructive bg-destructive/10",
+              )}
+            />
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => setIsCameraOpen(true)}
+            className={cn(
+              "h-[44px] w-[44px] shrink-0 rounded-lg",
+              "border-2 border-dashed",
+              isCameraOpen && "ring-2 ring-primary/30",
+            )}
+            title="Баркод скан хийх"
+          >
+            <Barcode className="size-5" weight="bold" />
+          </Button>
+        </div>
 
-      {/* Barcode scanner input */}
-      <BarcodeInput products={products} />
+        {/* Status feedback */}
+        {showStatus && (
+          <div className="mt-2 flex items-center gap-2 text-sm">
+            {barcodeStatus.type === "found" && (
+              <>
+                <CheckCircle
+                  className="size-4 text-emerald-600 dark:text-emerald-400"
+                  weight="fill"
+                />
+                <span className="text-emerald-700 dark:text-emerald-300">
+                  <strong>{barcodeStatus.productName}</strong> сагсанд
+                  нэмэгдлээ.
+                </span>
+              </>
+            )}
+            {barcodeStatus.type === "not-found" && (
+              <>
+                <XCircle
+                  className="size-4 text-amber-600 dark:text-amber-400"
+                  weight="fill"
+                />
+                <span className="text-amber-700 dark:text-amber-300">
+                  &ldquo;{barcodeStatus.barcode}&rdquo; баркодтой бүтээгдэхүүн
+                  олдсонгүй.
+                </span>
+              </>
+            )}
+            {barcodeStatus.type === "error" && (
+              <>
+                <XCircle className="size-4 text-destructive" weight="fill" />
+                <span className="text-destructive">
+                  {barcodeStatus.message}
+                </span>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Camera scanner overlay */}
+      {isCameraOpen && (
+        <CameraScanner
+          onScan={handleCameraScan}
+          onClose={() => setIsCameraOpen(false)}
+        />
+      )}
 
       {/* Category chips */}
       <CategoryChips

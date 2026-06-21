@@ -2,10 +2,10 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { RolesClient } from "@/components/roles/roles-client";
-import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import type { RolePermission } from "@/components/roles/roles-client";
+import { RolesClient } from "@/components/roles/roles-client";
+import { Button } from "@/components/ui/button";
+import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 
 interface Role {
   id: string;

@@ -97,6 +97,7 @@ export async function createProduct(
         sale_price: number;
         current_stock: number;
         option_ids: string[];
+        image_url: string | null;
       }[] = JSON.parse(variantDataRaw);
 
       if (groups.length > 0) {
@@ -151,6 +152,7 @@ export async function createProduct(
               cost_price: v.cost_price,
               sale_price: v.sale_price,
               current_stock: v.current_stock,
+              image_urls: v.image_url ? [v.image_url] : null,
               is_active: true,
             })
             .select("id")

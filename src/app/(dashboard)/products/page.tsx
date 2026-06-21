@@ -1,4 +1,7 @@
-import { Barcode, Package } from "@phosphor-icons/react/dist/ssr";
+import {
+  Barcode,
+  Package as PackageIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { ExportButton } from "@/components/erp/export-button";
@@ -17,7 +20,7 @@ export default async function ProductsPage() {
   const { data: products } = await supabase
     .from("products")
     .select(
-      "id, name, sku, barcode, unit, sale_price, cost_price, current_stock, min_stock, category_id, categories(name), brand_id, brands(name, logo_url)",
+      "id, name, sku, barcode, unit, sale_price, cost_price, current_stock, min_stock, category_id, categories(name), brand_id, brands(name, logo_url), image_url",
     )
     .eq("organization_id", organizationId)
     .is("deleted_at", null)
@@ -44,6 +47,7 @@ export default async function ProductsPage() {
       brand_logo_url:
         (product.brands as { name: string; logo_url: string | null } | null)
           ?.logo_url ?? null,
+      image_url: product.image_url,
     })) ?? [];
 
   return (
@@ -62,7 +66,7 @@ export default async function ProductsPage() {
     >
       {!products?.length ? (
         <ErpEmptyState
-          icon={<Package className="size-4" />}
+          icon={<PackageIcon className="size-4" />}
           title="Бүтээгдэхүүн бүртгэгдээгүй"
           description="Шинэ бүтээгдэхүүн нэмж, каталог, үнэ, үлдэгдлээ тохируулна уу."
           action={
@@ -80,6 +84,12 @@ export default async function ProductsPage() {
               <Link href="/products/bulk">
                 <Barcode className="mr-2 size-4" />
                 Баркод бөөнөөр
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/products/bundles">
+                <PackageIcon className="mr-2 size-4" />
+                Багц
               </Link>
             </Button>
           </div>

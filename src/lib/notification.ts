@@ -1,4 +1,6 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/supabase/types";
 
 type EventType = "low_stock" | "daily_summary" | "new_sale";
 
@@ -21,29 +23,34 @@ function isEventEnabled(
  * Send a Telegram notification for an organization.
  * Looks up config from notification_configs, reads bot token from app_config.
  * Logs result to notifications table.
+ *
+ * @param supabase - Optional pre-configured client (e.g., admin client for cron jobs).
+ *                   If omitted, creates a server-side client with the user session.
  */
 export async function sendTelegramNotification(
   orgId: string,
   eventType: EventType,
   title: string,
   message: string,
+  supabase?: SupabaseClient<Database>,
 ): Promise<SendResult> {
-  const supabase = await createClient();
+  const client = supabase ?? (await createClient());
 
   // Fetch bot token from app_config (system-wide)
-  const { data: botTokenRow } = await supabase
+  const { data: botTokenRow } = await client
     .from("app_config")
     .select("value")
     .eq("key", "telegram_bot_token")
     .maybeSingle();
 
   const botToken = (botTokenRow?.value as { token?: string })?.token;
+
   if (!botToken) {
     return { success: false, error: "Бот токен тохируулаагүй байна." };
   }
 
   // Fetch org's telegram config
-  const { data: config } = await supabase
+  const { data: config } = await client
     .from("notification_configs")
     .select("*")
     .eq("organization_id", orgId)
@@ -88,7 +95,7 @@ export async function sendTelegramNotification(
     }
 
     // Log success
-    await supabase.from("notifications").insert({
+    await client.from("notifications").insert({
       organization_id: orgId,
       channel: "telegram",
       event_type: eventType,
@@ -104,7 +111,7 @@ export async function sendTelegramNotification(
       err instanceof Error ? err.message : "Тодорхойгүй алдаа";
 
     // Log failure
-    await supabase.from("notifications").insert({
+    await client.from("notifications").insert({
       organization_id: orgId,
       channel: "telegram",
       event_type: eventType,

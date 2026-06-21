@@ -11,6 +11,7 @@ import { ExportButton } from "@/components/erp/export-button";
 import { KpiGrid } from "@/components/erp/kpi-grid";
 import { PageShell } from "@/components/erp/page-shell";
 import { StatCard } from "@/components/erp/stat-card";
+import { LowStockSection } from "@/components/inventory/low-stock-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,7 +28,7 @@ import { formatCurrency, formatDate } from "@/lib/format";
 
 export const unstable_instant = {
   prefetch: "static",
-  unstable_disableBuildValidation: true,
+  unstable_disableValidation: true,
 };
 
 const MOVEMENT_LABELS: Record<string, string> = {
@@ -44,6 +45,7 @@ export type LowStockProduct = {
   current_stock: number | null;
   min_stock: number | null;
   category_name: string | null;
+  cost_price: number | null;
 };
 
 export type RecentMovement = {
@@ -61,38 +63,51 @@ export type RecentMovement = {
 export default async function InventoryOverviewPage() {
   const { supabase, organizationId } = await requireAppContext();
 
-  const [productsResult, inventoryProductsResult, movementsResult] =
-    await Promise.all([
-      // 1. All products with stock info for low stock detection
-      supabase
-        .from("products")
-        .select(
-          "id, name, sku, unit, cost_price, current_stock, min_stock, categories(name)",
-        )
-        .eq("organization_id", organizationId)
-        .is("deleted_at", null)
-        .order("name", { ascending: true }),
+  const [
+    productsResult,
+    inventoryProductsResult,
+    movementsResult,
+    suppliersResult,
+  ] = await Promise.all([
+    // 1. All products with stock info for low stock detection
+    supabase
+      .from("products")
+      .select(
+        "id, name, sku, unit, cost_price, current_stock, min_stock, categories(name)",
+      )
+      .eq("organization_id", organizationId)
+      .is("deleted_at", null)
+      .order("name", { ascending: true }),
 
-      // 2. Inventory value data (cost_price * current_stock)
-      supabase
-        .from("products")
-        .select("cost_price, current_stock")
-        .eq("organization_id", organizationId)
-        .is("deleted_at", null),
+    // 2. Inventory value data (cost_price * current_stock)
+    supabase
+      .from("products")
+      .select("cost_price, current_stock")
+      .eq("organization_id", organizationId)
+      .is("deleted_at", null),
 
-      // 3. Recent 10 stock movements
-      supabase
-        .from("stock_movements")
-        .select(
-          "id, type, quantity, unit_cost, reference, notes, created_at, products(name, unit)",
-        )
-        .eq("organization_id", organizationId)
-        .order("created_at", { ascending: false })
-        .limit(10),
-    ]);
+    // 3. Recent 10 stock movements
+    supabase
+      .from("stock_movements")
+      .select(
+        "id, type, quantity, unit_cost, reference, notes, created_at, products(name, unit)",
+      )
+      .eq("organization_id", organizationId)
+      .order("created_at", { ascending: false })
+      .limit(10),
+
+    // 4. Suppliers for restock drawer
+    supabase
+      .from("contacts")
+      .select("id, name, phone")
+      .eq("organization_id", organizationId)
+      .eq("type", "supplier")
+      .order("name"),
+  ]);
 
   const products = productsResult.data ?? [];
   const totalProducts = products.length;
+  const suppliers = suppliersResult.data ?? [];
 
   // Compute inventory value
   const inventoryValue = (inventoryProductsResult.data ?? []).reduce(
@@ -117,6 +132,7 @@ export default async function InventoryOverviewPage() {
       min_stock: product.min_stock,
       category_name:
         (product.categories as { name: string } | null)?.name ?? null,
+      cost_price: product.cost_price,
     }));
 
   const movements: RecentMovement[] = (movementsResult.data ?? []).map(
@@ -202,61 +218,16 @@ export default async function InventoryOverviewPage() {
           </KpiGrid>
 
           {/* Low Stock Products */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Бага нөөцтэй бүтээгдэхүүн</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              {lowStockProducts.length === 0 ? (
-                <div className="px-6 pb-6 pt-2">
-                  <p className="text-sm text-muted-foreground">
-                    Бүх бүтээгдэхүүний нөөц хангалттай байна.
-                  </p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Бүтээгдэхүүн</TableHead>
-                      <TableHead>SKU</TableHead>
-                      <TableHead>Ангилал</TableHead>
-                      <TableHead className="text-right">
-                        Одоогийн нөөц
-                      </TableHead>
-                      <TableHead className="text-right">Минимум нөөц</TableHead>
-                      <TableHead>Төлөв</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {lowStockProducts.map((product) => (
-                      <TableRow key={product.id}>
-                        <TableCell className="font-medium">
-                          {product.name}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {product.sku ?? "-"}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {product.category_name ?? "-"}
-                        </TableCell>
-                        <TableCell className="text-right font-medium text-destructive">
-                          {product.current_stock?.toLocaleString() ?? 0}{" "}
-                          {product.unit ?? "ширхэг"}
-                        </TableCell>
-                        <TableCell className="text-right text-muted-foreground">
-                          {product.min_stock?.toLocaleString() ?? 0}{" "}
-                          {product.unit ?? "ширхэг"}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="destructive">Бага нөөц</Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+          <LowStockSection
+            products={lowStockProducts}
+            suppliers={suppliers.map(
+              (s: { id: string; name: string; phone: string | null }) => ({
+                id: s.id,
+                name: s.name,
+                phone: s.phone,
+              }),
+            )}
+          />
 
           {/* Recent Stock Movements */}
           <Card>

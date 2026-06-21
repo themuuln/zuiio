@@ -8,6 +8,15 @@ import { createServiceClient } from "@/lib/supabase/server-service";
 export async function completeOnboarding(
   enabledFeatures: string[],
   brandNamesToImport?: string[],
+  hasSuppliers?: boolean,
+  hasInventory?: boolean,
+  hasCustomerCredit?: boolean,
+  hasMultiBranch?: boolean,
+  hasVariants?: boolean,
+  hasBrands?: boolean,
+  hasCategories?: boolean,
+  hasEmailReports?: boolean,
+  hasAuditLog?: boolean,
 ): Promise<{ error?: string }> {
   const supabase = await createClient();
 
@@ -29,12 +38,21 @@ export async function completeOnboarding(
     return { error: "Байгууллага олдсонгүй." };
   }
 
-  // Update organization with enabled features and mark onboarding complete
+  // Update organization with enabled features, supplier setting, and mark onboarding complete
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error: updateError } = await supabase
     .from("organizations")
     .update({
       enabled_features: enabledFeatures,
+      has_suppliers: hasSuppliers ?? true,
+      has_inventory: hasInventory ?? true,
+      has_customer_credit: hasCustomerCredit ?? true,
+      has_multi_branch: hasMultiBranch ?? false,
+      has_variants: hasVariants ?? true,
+      has_brands: hasBrands ?? true,
+      has_categories: hasCategories ?? true,
+      has_email_reports: hasEmailReports ?? false,
+      has_audit_log: hasAuditLog ?? true,
       onboarding_completed: true,
     } as any)
     .eq("id", profile.organization_id);

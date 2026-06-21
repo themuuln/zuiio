@@ -30,9 +30,7 @@
         "name": "setup",
         "testDir": "/Users/themuuln/coding/personal/zer/e2e",
         "testIgnore": [],
-        "testMatch": [
-          "/auth\\.setup\\.ts/"
-        ],
+        "testMatch": ["/auth\\.setup\\.ts/"],
         "timeout": 90000
       },
       {
@@ -43,21 +41,13 @@
         "id": "chromium",
         "name": "chromium",
         "testDir": "/Users/themuuln/coding/personal/zer/e2e",
-        "testIgnore": [
-          "/auth\\.setup\\.ts/"
-        ],
-        "testMatch": [
-          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
-        ],
+        "testIgnore": ["/auth\\.setup\\.ts/"],
+        "testMatch": ["**/*.@(spec|test).?(c|m)[jt]s?(x)"],
         "timeout": 90000
       }
     ],
     "quiet": false,
-    "reporter": [
-      [
-        "json"
-      ]
-    ],
+    "reporter": [["json"]],
     "reportSlowTests": {
       "max": 5,
       "threshold": 300000

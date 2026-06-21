@@ -18,7 +18,9 @@ export function getCartItemKey(item: {
   productId: string;
   variantId?: string;
 }): string {
-  return item.variantId ? `${item.productId}::${item.variantId}` : item.productId;
+  return item.variantId
+    ? `${item.productId}::${item.variantId}`
+    : item.productId;
 }
 
 export type DiscountInfo = {
@@ -48,17 +50,13 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case "ADD_ITEM": {
       const key = getCartItemKey(action.payload);
-      const existing = state.items.find(
-        (item) => getCartItemKey(item) === key,
-      );
+      const existing = state.items.find((item) => getCartItemKey(item) === key);
       if (existing) {
         const newQty = Math.min(existing.quantity + 1, existing.maxStock);
         return {
           ...state,
           items: state.items.map((item) =>
-            getCartItemKey(item) === key
-              ? { ...item, quantity: newQty }
-              : item,
+            getCartItemKey(item) === key ? { ...item, quantity: newQty } : item,
           ),
         };
       }

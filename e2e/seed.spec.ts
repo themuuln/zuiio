@@ -1,4 +1,4 @@
-import { test, expect } from "./fixture";
+import { expect, test } from "./fixture";
 
 /**
  * Midscene AI-powered e2e tests.

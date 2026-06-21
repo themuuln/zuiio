@@ -6,11 +6,13 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { useOrgSettings } from "@/lib/org-settings-context";
 
 const CameraScanner = dynamic(
   () => import("@/components/shop/camera-scanner").then((m) => m.CameraScanner),
   { ssr: false },
 );
+
 import { z } from "zod";
 import { createProduct } from "@/app/(dashboard)/products/new/actions";
 import {
@@ -96,6 +98,7 @@ export function ProductCreateDrawer({
     ? (PRESET_CATEGORIES[companyType] ?? [])
     : [...new Set(Object.values(PRESET_CATEGORIES).flat())];
   const { data: brands } = useBrands(organizationId ?? "");
+  const { hasVariants, hasBrands, hasCategories } = useOrgSettings();
 
   const {
     register,
@@ -128,7 +131,6 @@ export function ProductCreateDrawer({
 
   const [variantGroups, setVariantGroups] = useState<LocalVariantGroup[]>([]);
   const [variantData, setVariantData] = useState<LocalVariantData[]>([]);
-  const hasVariants = variantGroups.length > 0;
 
   const watchedCostPrice = watch("cost_price");
   const watchedSalePrice = watch("sale_price");
@@ -153,6 +155,7 @@ export function ProductCreateDrawer({
           cost_price: watchedCostPrice ?? 0,
           sale_price: watchedSalePrice ?? 0,
           current_stock: watchedCurrentStock ?? 0,
+          image_url: null,
         };
       });
     });
@@ -312,100 +315,104 @@ export function ProductCreateDrawer({
                   </p>
                 )}
               </Field>
-              <Field>
-                <FieldLabel htmlFor="category_name">Ангилал</FieldLabel>
-                <Controller
-                  name="category_name"
-                  control={control}
-                  render={({ field }) => (
-                    <CreatableCombobox
-                      name="category_name"
-                      id="category_name"
-                      placeholder="Ангилал сонгох эсвэл бичих"
-                      initialItems={presets}
-                      value={field.value ?? ""}
-                      onChange={(next) => field.onChange(next)}
-                      emptyLabel="Ангилал байхгүй"
-                    />
+              {hasCategories && (
+                <Field>
+                  <FieldLabel htmlFor="category_name">Ангилал</FieldLabel>
+                  <Controller
+                    name="category_name"
+                    control={control}
+                    render={({ field }) => (
+                      <CreatableCombobox
+                        name="category_name"
+                        id="category_name"
+                        placeholder="Ангилал сонгох эсвэл бичих"
+                        initialItems={presets}
+                        value={field.value ?? ""}
+                        onChange={(next) => field.onChange(next)}
+                        emptyLabel="Ангилал байхгүй"
+                      />
+                    )}
+                  />
+                  <FieldDescription>
+                    Байгууллагын төрөлд тохирсон ангиллууд санал болгогдоно.
+                    Шинэ нэр оруулбал автоматаар үүсгэнэ.
+                  </FieldDescription>
+                  {errors.category_name && (
+                    <p className="text-xs text-destructive">
+                      {errors.category_name.message}
+                    </p>
                   )}
-                />
-                <FieldDescription>
-                  Байгууллагын төрөлд тохирсон ангиллууд санал болгогдоно. Шинэ
-                  нэр оруулбал автоматаар үүсгэнэ.
-                </FieldDescription>
-                {errors.category_name && (
-                  <p className="text-xs text-destructive">
-                    {errors.category_name.message}
-                  </p>
-                )}
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="brand_id">Брэнд</FieldLabel>
-                <Controller
-                  name="brand_id"
-                  control={control}
-                  render={({ field }) => {
-                    const brandItems: {
-                      id: string;
-                      name: string;
-                      logo_url: string | null;
-                    }[] = brands ?? [];
-                    const selectedBrand = brandItems.find(
-                      (b) => b.id === field.value,
-                    );
-                    return (
-                      <Combobox
-                        name="brand_id"
-                        items={brandItems}
-                        value={
-                          brandItems.find((b) => b.id === field.value) ?? null
-                        }
-                        onValueChange={(
-                          next: {
-                            id: string;
-                            name: string;
-                            logo_url: string | null;
-                          } | null,
-                        ) => field.onChange(next?.id ?? "")}
-                        itemToStringLabel={(item) => item?.name ?? ""}
-                        inputValue={selectedBrand?.name ?? ""}
-                        onInputValueChange={() => {}}
-                      >
-                        <ComboboxInput
-                          id="brand_id"
-                          placeholder="Брэнд сонгох"
-                          showTrigger
-                          className="w-full"
-                        />
-                        <ComboboxContent>
-                          <ComboboxEmpty>Брэнд байхгүй</ComboboxEmpty>
-                          <ComboboxList>
-                            {(item: {
+                </Field>
+              )}
+              {hasBrands && (
+                <Field>
+                  <FieldLabel htmlFor="brand_id">Брэнд</FieldLabel>
+                  <Controller
+                    name="brand_id"
+                    control={control}
+                    render={({ field }) => {
+                      const brandItems: {
+                        id: string;
+                        name: string;
+                        logo_url: string | null;
+                      }[] = brands ?? [];
+                      const selectedBrand = brandItems.find(
+                        (b) => b.id === field.value,
+                      );
+                      return (
+                        <Combobox
+                          name="brand_id"
+                          items={brandItems}
+                          value={
+                            brandItems.find((b) => b.id === field.value) ?? null
+                          }
+                          onValueChange={(
+                            next: {
                               id: string;
                               name: string;
                               logo_url: string | null;
-                            }) => (
-                              <ComboboxItem key={item.id} value={item.id}>
-                                {item.logo_url ? (
-                                  <Image
-                                    src={item.logo_url}
-                                    alt={item.name}
-                                    width={16}
-                                    height={16}
-                                    unoptimized
-                                    className="mr-2 inline-block size-4 rounded object-contain dark:invert"
-                                  />
-                                ) : null}
-                                {item.name}
-                              </ComboboxItem>
-                            )}
-                          </ComboboxList>
-                        </ComboboxContent>
-                      </Combobox>
-                    );
-                  }}
-                />
-              </Field>
+                            } | null,
+                          ) => field.onChange(next?.id ?? "")}
+                          itemToStringLabel={(item) => item?.name ?? ""}
+                          inputValue={selectedBrand?.name ?? ""}
+                          onInputValueChange={() => {}}
+                        >
+                          <ComboboxInput
+                            id="brand_id"
+                            placeholder="Брэнд сонгох"
+                            showTrigger
+                            className="w-full"
+                          />
+                          <ComboboxContent>
+                            <ComboboxEmpty>Брэнд байхгүй</ComboboxEmpty>
+                            <ComboboxList>
+                              {(item: {
+                                id: string;
+                                name: string;
+                                logo_url: string | null;
+                              }) => (
+                                <ComboboxItem key={item.id} value={item.id}>
+                                  {item.logo_url ? (
+                                    <Image
+                                      src={item.logo_url}
+                                      alt={item.name}
+                                      width={16}
+                                      height={16}
+                                      unoptimized
+                                      className="mr-2 inline-block size-4 rounded object-contain dark:invert"
+                                    />
+                                  ) : null}
+                                  {item.name}
+                                </ComboboxItem>
+                              )}
+                            </ComboboxList>
+                          </ComboboxContent>
+                        </Combobox>
+                      );
+                    }}
+                  />
+                </Field>
+              )}
             </FieldGroup>
 
             <FieldGroup>
@@ -462,23 +469,27 @@ export function ProductCreateDrawer({
             </FieldGroup>
           </div>
 
-          <VariantManagerDrawer
-            groups={variantGroups}
-            onGroupsChange={setVariantGroups}
-            defaultValues={{
-              cost_price: watchedCostPrice ?? 0,
-              sale_price: watchedSalePrice ?? 0,
-              current_stock: watchedCurrentStock ?? 0,
-            }}
-            variantData={variantData}
-            onVariantsChange={setVariantData}
-            parentTitle="Шинэ бүтээгдэхүүн"
-          />
+          {hasVariants && (
+            <>
+              <VariantManagerDrawer
+                groups={variantGroups}
+                onGroupsChange={setVariantGroups}
+                defaultValues={{
+                  cost_price: watchedCostPrice ?? 0,
+                  sale_price: watchedSalePrice ?? 0,
+                  current_stock: watchedCurrentStock ?? 0,
+                }}
+                variantData={variantData}
+                onVariantsChange={setVariantData}
+                parentTitle="Шинэ бүтээгдэхүүн"
+              />
 
-          <VariantSummaryCard
-            groups={variantGroups}
-            variantData={variantData}
-          />
+              <VariantSummaryCard
+                groups={variantGroups}
+                variantData={variantData}
+              />
+            </>
+          )}
         </div>
 
         <ErrorBanner error={productMutation.error} />

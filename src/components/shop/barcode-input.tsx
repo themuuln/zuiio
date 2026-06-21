@@ -1,6 +1,6 @@
 "use client";
 
-import { Barcode, Camera, CheckCircle, XCircle } from "@phosphor-icons/react";
+import { Barcode, CheckCircle, XCircle } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
@@ -194,9 +194,9 @@ export function BarcodeInput({ products }: BarcodeInputProps) {
               "border-2 border-dashed",
               isCameraOpen && "ring-2 ring-primary/30",
             )}
-            title="Камераар скан хийх"
+            title="Баркод скан хийх"
           >
-            <Camera className="size-5" weight="bold" />
+            <Barcode className="size-5" weight="bold" />
           </Button>
         </div>
 

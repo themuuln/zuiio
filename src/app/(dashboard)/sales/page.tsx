@@ -1,5 +1,5 @@
-import { requireAppContext } from "@/lib/erp";
 import { withBranchFilter } from "@/lib/branches";
+import { requireAppContext } from "@/lib/erp";
 import { SalesContent } from "./sales-content";
 import type { SaleRow } from "./sales-table";
 
@@ -9,7 +9,7 @@ export const unstable_instant = {
     { searchParams: { branch: null } },
     { searchParams: { branch: "sample" } },
   ],
-  unstable_disableBuildValidation: true,
+  unstable_disableValidation: true,
 };
 
 export default async function SalesPage({
@@ -21,7 +21,7 @@ export default async function SalesPage({
   const { supabase, organizationId, branchId, isBranchScoped } =
     await requireAppContext();
 
-  const [salesResult, productsResult, customersResult] = await Promise.all([
+  const [salesResult, productsResult] = await Promise.all([
     withBranchFilter(
       supabase
         .from("sales")
@@ -36,15 +36,9 @@ export default async function SalesPage({
     ),
     supabase
       .from("products")
-      .select("id, name, sale_price, current_stock, unit, barcode")
+      .select("id, name, sale_price, current_stock, unit, barcode, image_url")
       .eq("organization_id", organizationId)
       .is("deleted_at", null)
-      .order("name"),
-    supabase
-      .from("contacts")
-      .select("id, name, phone")
-      .eq("organization_id", organizationId)
-      .eq("type", "customer")
       .order("name"),
   ]);
 
@@ -59,11 +53,5 @@ export default async function SalesPage({
       payment_method: sale.payment_method,
     })) ?? [];
 
-  return (
-    <SalesContent
-      sales={sales}
-      products={productsResult.data ?? []}
-      customers={customersResult.data ?? []}
-    />
-  );
+  return <SalesContent sales={sales} products={productsResult.data ?? []} />;
 }

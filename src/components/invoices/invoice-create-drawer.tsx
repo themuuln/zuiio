@@ -1,18 +1,16 @@
 "use client";
 
-import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FileText, Plus, Trash } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { createInvoice } from "@/app/(dashboard)/invoices/actions";
-import { buttonVariants } from "@/components/ui/button";
 import {
-  DrawerFooter,
-  DrawerCancel,
-  DrawerSubmit,
-} from "@/components/ui/drawer-footer";
+  type SelectedVariant,
+  VariantPicker,
+} from "@/components/products/variant-picker";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Combobox,
   ComboboxContent,
@@ -22,19 +20,21 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-import { DatePicker } from "@/components/ui/date-picker";
 import { CurrencyInput } from "@/components/ui/currency-input";
+import { DatePicker } from "@/components/ui/date-picker";
+import {
+  DrawerCancel,
+  DrawerFooter,
+  DrawerSubmit,
+} from "@/components/ui/drawer-footer";
+import { DrawerHeader } from "@/components/ui/drawer-header";
+import { DrawerLayout } from "@/components/ui/drawer-layout";
+import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  VariantPicker,
-  type SelectedVariant,
-} from "@/components/products/variant-picker";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
-import { DrawerHeader } from "@/components/ui/drawer-header";
-import { ErrorBanner } from "@/components/ui/error-banner";
 import { useVariantLineItemRemove } from "@/lib/use-variant-line-items";
 
 type ProductOption = {

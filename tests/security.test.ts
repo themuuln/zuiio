@@ -28,7 +28,10 @@ test("checkPermission returns error for empty permissions", () => {
 
 test("checkPermission is case-sensitive", () => {
   assert.equal(
-    checkPermission(["Products.Create" as "products.create"], "products.create"),
+    checkPermission(
+      ["Products.Create" as "products.create"],
+      "products.create",
+    ),
     "Танд эрх байхгүй байна.",
   );
 });

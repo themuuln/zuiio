@@ -4,7 +4,11 @@ import { Coins } from "@phosphor-icons/react";
 import { useState } from "react";
 import { ExpenseForm } from "@/app/(dashboard)/expenses/new/expense-form";
 import { buttonVariants } from "@/components/ui/button";
-import { DrawerFooter, DrawerCancel, DrawerSubmit } from "@/components/ui/drawer-footer";
+import {
+  DrawerCancel,
+  DrawerFooter,
+  DrawerSubmit,
+} from "@/components/ui/drawer-footer";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 
 export function ExpensesCreateDrawer({
@@ -25,7 +29,10 @@ export function ExpensesCreateDrawer({
       title="Зарлага нэмэх"
       description="Өдөр тутмын үйл ажиллагааны зардлыг мөнгөн урсгалтай нь хамт бүртгэнэ."
       trigger={
-        <button type="button" className={buttonVariants({ variant: "default" })}>
+        <button
+          type="button"
+          className={buttonVariants({ variant: "default" })}
+        >
           <Coins className="size-4" />
           Шинэ зарлага
         </button>

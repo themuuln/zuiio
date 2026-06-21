@@ -3,10 +3,8 @@
 import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
-interface CurrencyInputProps extends Omit<
-  React.ComponentProps<"input">,
-  "value" | "onChange" | "type"
-> {
+interface CurrencyInputProps
+  extends Omit<React.ComponentProps<"input">, "value" | "onChange" | "type"> {
   value?: number;
   onChange?: (value: number) => void;
 }

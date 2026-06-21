@@ -6,13 +6,11 @@ import {
   CaretDown,
   CaretUp,
   CheckCircle,
-  MagnifyingGlass,
   Plus,
   Trash,
 } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
@@ -23,7 +21,6 @@ import {
   VariantPicker,
 } from "@/components/products/variant-picker";
 import { ProductBrowserDrawer } from "@/components/sales/product-browser-drawer";
-import { CustomerPicker } from "@/components/shop/customer-picker";
 import { StaffPicker } from "@/components/shop/staff-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,12 +57,6 @@ type ProductOption = {
   unit: string | null;
   barcode: string | null;
   image_url: string | null;
-};
-
-type CustomerOption = {
-  id: string;
-  name: string;
-  phone: string | null;
 };
 
 const initialPaymentMethods = [
@@ -111,31 +102,25 @@ type SaleValues = z.infer<typeof saleSchema>;
 function SaleFormSection({
   title,
   description,
-  action,
   children,
   className,
 }: {
   title: string;
-  description: string;
-  action?: ReactNode;
+  description?: string;
   children: ReactNode;
   className?: string;
 }) {
   return (
     <section
-      className={cn(
-        "rounded-2xl border border-border/80 bg-card p-4 shadow-xs sm:p-5",
-        className,
-      )}
+      className={cn("space-y-4 border-b border-border/60 pb-6", className)}
     >
-      <div className="mb-4 flex flex-col gap-3 border-b border-border/70 pb-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-1">
-          <h2 className="text-base font-semibold tracking-tight">{title}</h2>
+      <div className="space-y-1">
+        <h2 className="text-base font-semibold tracking-tight">{title}</h2>
+        {description && (
           <p className="max-w-2xl text-sm text-muted-foreground">
             {description}
           </p>
-        </div>
-        {action}
+        )}
       </div>
       {children}
     </section>
@@ -144,14 +129,12 @@ function SaleFormSection({
 
 export function SaleForm({
   products,
-  customers,
   onSuccess,
   onOpenDetail,
   onReopenForm,
   formId,
 }: {
   products: ProductOption[];
-  customers: CustomerOption[];
   onSuccess?: () => void;
   onOpenDetail?: (saleId: string) => void;
   onReopenForm?: () => void;
@@ -160,9 +143,6 @@ export function SaleForm({
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const [selectedContactId, setSelectedContactId] = useState<string | null>(
-    null,
-  );
   const [keepOpen, setKeepOpen] = useState(false);
   const [barcodeScannerIndex, setBarcodeScannerIndex] = useState<number | null>(
     null,
@@ -179,14 +159,6 @@ export function SaleForm({
   const [variantSelections, setVariantSelections] = useState<
     Record<number, SelectedVariant | null>
   >({});
-
-  // Per-row product combobox query states
-  const [productQueries, setProductQueries] = useState<string[]>([""]);
-  const [createdProducts, setCreatedProducts] = useState<ProductOption[]>([]);
-  const allProducts = useMemo(
-    () => [...products, ...createdProducts],
-    [products, createdProducts],
-  );
 
   const {
     register,
@@ -224,20 +196,13 @@ export function SaleForm({
       unit_price: 0,
       variant_id: undefined,
     });
-    setProductQueries((prev) => [...prev, ""]);
   }, [append]);
 
-  const removeRow = useVariantLineItemRemove(
-    remove,
-    setVariantSelections,
-    setProductQueries,
-  );
+  const removeRow = useVariantLineItemRemove(remove, setVariantSelections);
 
   const resetForm = () => {
     reset(undefined, { keepDefaultValues: false });
-    setSelectedContactId(null);
     setVariantSelections({});
-    setProductQueries([""]);
     setPaymentQuery("");
     setStatusQuery("");
   };
@@ -302,14 +267,14 @@ export function SaleForm({
         }
         return null;
       }
-      const product = allProducts.find((p) => p.id === item.product_id);
+      const product = products.find((p) => p.id === item.product_id);
       if (!product || product.current_stock === null) return null;
       if (Number(item.quantity || 0) > product.current_stock) {
         return `Үлдэгдэл хүрэлцэхгүй байна. (Үлдэгдэл: ${product.current_stock} ${product.unit ?? "ширхэг"})`;
       }
       return null;
     });
-  }, [watchedItems, allProducts, watchedStatus, variantSelections]);
+  }, [watchedItems, products, watchedStatus, variantSelections]);
 
   // Any stock insufficient across all rows
   const anyStockInsufficient = useMemo(
@@ -564,41 +529,6 @@ export function SaleForm({
       ? [...allStatuses, statusQuery.trim()]
       : allStatuses;
 
-  // Helper to get product items for a given row's query
-  const getProductItems = useCallback(
-    (query: string) => {
-      const trimmed = query.trim();
-      const lowered = trimmed.toLowerCase();
-      const labelMatch =
-        lowered === "" ||
-        products.some((p) => p.name.toLowerCase().includes(lowered));
-      if (trimmed !== "" && !labelMatch) {
-        return [
-          ...allProducts,
-          {
-            id: `__create__${lowered}`,
-            name: trimmed,
-            sale_price: null as number | null,
-            current_stock: null as number | null,
-            unit: null as string | null,
-            barcode: null as string | null,
-            image_url: null as string | null,
-          },
-        ];
-      }
-      return allProducts;
-    },
-    [allProducts, products],
-  );
-
-  const updateProductQuery = useCallback((index: number, value: string) => {
-    setProductQueries((prev) => {
-      const next = [...prev];
-      next[index] = value;
-      return next;
-    });
-  }, []);
-
   const handleProductSelect = useCallback(
     (index: number, product: ProductOption | null) => {
       // Clear variant selection when product changes
@@ -609,29 +539,11 @@ export function SaleForm({
         setValue(`items.${index}.variant_id`, undefined);
         return;
       }
-      if (product.id.startsWith("__create__")) {
-        const created: ProductOption = {
-          id: `new_${Date.now()}`,
-          name: product.name,
-          sale_price: null,
-          current_stock: null,
-          unit: null,
-          barcode: null,
-          image_url: null,
-        };
-        setCreatedProducts((prev) => [...prev, created]);
-        setValue(`items.${index}.product_id`, created.id);
-        setValue(`items.${index}.unit_price`, 0);
-        setValue(`items.${index}.variant_id`, undefined);
-        updateProductQuery(index, "");
-        return;
-      }
       setValue(`items.${index}.product_id`, product.id);
       setValue(`items.${index}.unit_price`, product.sale_price ?? 0);
       setValue(`items.${index}.variant_id`, undefined);
-      updateProductQuery(index, "");
     },
-    [setValue, updateProductQuery],
+    [setValue],
   );
 
   const handleVariantSelect = useCallback(
@@ -642,19 +554,19 @@ export function SaleForm({
         setValue(`items.${index}.variant_id`, variant.variant_id);
       } else {
         // Revert to parent product's sale_price when variant is deselected
-        const product = allProducts.find(
+        const product = products.find(
           (p) => p.id === watchedItems?.[index]?.product_id,
         );
         setValue(`items.${index}.unit_price`, product?.sale_price ?? 0);
         setValue(`items.${index}.variant_id`, undefined);
       }
     },
-    [allProducts, watchedItems, setValue],
+    [products, watchedItems, setValue],
   );
 
   const handleBarcodeScan = useCallback(
     (barcode: string): { found: true } | { found: false; error?: string } => {
-      const product = allProducts.find(
+      const product = products.find(
         (p) => p.barcode && p.barcode.toLowerCase() === barcode.toLowerCase(),
       );
 
@@ -676,11 +588,6 @@ export function SaleForm({
         setValue(`items.${currentIndex}.unit_price`, product.sale_price ?? 0);
         setValue(`items.${currentIndex}.variant_id`, undefined);
         setValue(`items.${currentIndex}.quantity`, 1);
-        setProductQueries((prev) => {
-          const next = [...prev];
-          next[currentIndex] = "";
-          return next;
-        });
 
         // Rapid scan: append next row and point scanner at it
         const nextIndex = scannerNextRef.current;
@@ -691,14 +598,13 @@ export function SaleForm({
           unit_price: 0,
           variant_id: undefined,
         });
-        setProductQueries((prev) => [...prev, ""]);
         scannerIndexRef.current = nextIndex;
         setBarcodeScannerIndex(nextIndex);
       }
 
       return { found: true };
     },
-    [allProducts, setValue, append],
+    [products, setValue, append],
   );
 
   return (
@@ -709,365 +615,127 @@ export function SaleForm({
     >
       <ErrorBanner error={saleMutation.error} />
 
-      <SaleFormSection
-        title="Бүтээгдэхүүний мөрүүд"
-        description="Бараагаа сонгож, тоо хэмжээ болон нэгж үнийг шалгаад борлуулалтаа бүрдүүлнэ."
-        action={
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs font-medium text-muted-foreground">
-              {fields.length} мөр
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={appendRow}
-            >
-              <Plus className="size-4" />
-              Мөр нэмэх
-            </Button>
-          </div>
-        }
-      >
+      <SaleFormSection title="Бүтээгдэхүүний мөрүүд">
         <div className="space-y-4">
-          <div className="rounded-xl border border-dashed border-border/80 bg-muted/30 px-3.5 py-3 text-xs leading-5 text-muted-foreground">
-            Хайлт эсвэл баркод ашиглан бараа сонгоно. Нийт дүн автоматаар
-            шинэчлэгдэнэ, үлдэгдэл хүрэлцэхгүй мөрүүдийг доор анхааруулна.
-          </div>
-
-          <div className="hidden gap-3 px-4 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground md:grid md:grid-cols-[minmax(0,1.8fr)_5.5rem_7rem_6rem_2.5rem]">
-            <span>Бүтээгдэхүүн</span>
-            <span>Тоо</span>
-            <span>Нэгж үнэ</span>
-            <span className="text-right">Дүн</span>
-            <span />
-          </div>
-
-          <div className="space-y-3">
+          <div className="space-y-1">
             {fields.map((field, index) => {
-              const productForRow = allProducts.find(
+              const productForRow = products.find(
                 (p) => p.id === watchedItems?.[index]?.product_id,
               );
-              const rowQuery = productQueries[index] ?? "";
-              const rowItems = getProductItems(rowQuery);
 
               return (
                 <div
                   key={field.id}
-                  className="rounded-2xl border border-border/80 bg-background/90 p-3 shadow-xs sm:p-4"
+                  className="border-b border-border/40 pb-2 last:border-b-0"
                 >
-                  <div className="mb-3 flex items-center justify-between gap-3 border-b border-border/70 pb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-semibold tracking-[0.08em] text-muted-foreground">
-                        МӨР {index + 1}
-                      </div>
+                  <div className="flex items-center gap-1.5">
+                    {/* Row number */}
+                    <span className="w-5 shrink-0 text-center text-xs font-medium text-muted-foreground tabular-nums">
+                      {index + 1}
+                    </span>
+
+                    {/* Product selector */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProductPickerIndex(index);
+                        setProductPickerOpen(true);
+                      }}
+                      className={cn(
+                        "flex h-8 min-w-0 flex-1 items-center truncate rounded-md border border-input bg-background px-2 text-xs transition-colors hover:bg-muted/40",
+                        !productForRow && "text-muted-foreground",
+                      )}
+                    >
                       {productForRow ? (
-                        <span className="truncate text-sm font-medium">
+                        <span className="truncate font-medium">
                           {productForRow.name}
                         </span>
                       ) : (
-                        <span className="text-sm text-muted-foreground">
-                          Бүтээгдэхүүн сонгоогүй
-                        </span>
+                        "Бараа сонгох"
                       )}
+                    </button>
+
+                    {/* Quantity */}
+                    <Input
+                      type="number"
+                      min="1"
+                      step="0.01"
+                      className="h-8 w-16 text-xs [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                      {...register(`items.${index}.quantity`, {
+                        valueAsNumber: true,
+                      })}
+                    />
+
+                    {/* Unit Price */}
+                    <Controller
+                      control={control}
+                      name={`items.${index}.unit_price`}
+                      render={({ field }) => (
+                        <CurrencyInput
+                          value={field.value}
+                          onChange={field.onChange}
+                          className="h-8 w-20 text-xs"
+                        />
+                      )}
+                    />
+
+                    {/* Total */}
+                    <div className="w-14 shrink-0 text-right text-xs font-semibold tabular-nums text-primary">
+                      {formatCurrency(subtotals[index] ?? 0)}
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <Button
+
+                    {/* Actions */}
+                    <div className="flex shrink-0 items-center gap-0.5">
+                      <button
                         type="button"
-                        variant="outline"
-                        size="icon-sm"
                         onClick={() => {
                           scannerIndexRef.current = index;
                           scannerNextRef.current = fields.length;
                           setBarcodeScannerIndex(index);
                         }}
-                        className="border-dashed"
+                        className="rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
                         title="Баркод скан хийх"
-                        aria-label="Баркод скан хийх"
                       >
-                        <Camera className="size-4" />
-                      </Button>
-                      <Button
+                        <Camera className="size-3.5" />
+                      </button>
+                      <button
                         type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        className="text-muted-foreground hover:text-destructive"
                         onClick={() => removeRow(index)}
                         disabled={fields.length <= 1}
-                        aria-label="Мөр устгах"
+                        className="rounded p-1 text-muted-foreground transition-colors hover:text-destructive disabled:opacity-30"
                       >
-                        <Trash className="size-4" />
-                      </Button>
+                        <Trash className="size-3.5" />
+                      </button>
                     </div>
                   </div>
 
-                  <div className="space-y-3 md:hidden">
-                    <div className="min-w-0">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setProductPickerIndex(index);
-                          setProductPickerOpen(true);
-                        }}
-                        className="flex w-full items-center gap-2 rounded-xl border border-input bg-card px-3 py-3 text-left text-sm transition-colors hover:bg-muted/40"
-                      >
-                        {(() => {
-                          const selected = allProducts.find(
-                            (p) => p.id === watchedItems?.[index]?.product_id,
-                          );
-                          return selected ? (
-                            <>
-                              {selected.image_url ? (
-                                <Image
-                                  src={selected.image_url}
-                                  alt=""
-                                  width={32}
-                                  height={32}
-                                  className="size-8 shrink-0 rounded-md object-cover"
-                                />
-                              ) : null}
-                              <div className="min-w-0 flex-1">
-                                <span className="block truncate font-medium">
-                                  {selected.name}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  {formatCurrency(
-                                    Number(selected.sale_price ?? 0),
-                                  )}
-                                </span>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <span className="flex-1 text-muted-foreground">
-                                Бүтээгдэхүүн сонгох
-                              </span>
-                              <MagnifyingGlass className="size-4 shrink-0 text-muted-foreground" />
-                            </>
-                          );
-                        })()}
-                      </button>
-                      {errors.items?.[index]?.product_id && (
-                        <p className="mt-1 text-xs text-destructive">
-                          {errors.items[index]?.product_id?.message}
-                        </p>
-                      )}
-                    </div>
-
-                    {productForRow ? (
-                      <div className="rounded-xl bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-                        Үндсэн үнэ{" "}
-                        {formatCurrency(Number(productForRow.sale_price ?? 0))}{" "}
-                        • Үлдэгдэл {productForRow.current_stock ?? 0}{" "}
-                        {productForRow.unit ?? "ширхэг"}
-                      </div>
-                    ) : null}
-
-                    {productForRow ? (
+                  {/* Variant picker */}
+                  {productForRow && (
+                    <div className="mt-1.5">
                       <VariantPicker
                         productId={productForRow.id}
                         onSelect={(variant) =>
                           handleVariantSelect(index, variant)
                         }
                       />
-                    ) : null}
-
-                    <div className="grid grid-cols-3 gap-2">
-                      <div>
-                        <label
-                          htmlFor={`sale-item-quantity-mobile-${field.id}`}
-                          className="mb-1 block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground"
-                        >
-                          Тоо
-                        </label>
-                        <Input
-                          id={`sale-item-quantity-mobile-${field.id}`}
-                          type="number"
-                          min="1"
-                          step="0.01"
-                          className="h-10"
-                          {...register(`items.${index}.quantity`, {
-                            valueAsNumber: true,
-                          })}
-                        />
-                        {errors.items?.[index]?.quantity && (
-                          <p className="mt-1 text-xs text-destructive">
-                            {errors.items[index]?.quantity?.message}
-                          </p>
-                        )}
-                      </div>
-                      <div>
-                        <label
-                          htmlFor={`sale-item-price-mobile-${field.id}`}
-                          className="mb-1 block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground"
-                        >
-                          Нэгж үнэ
-                        </label>
-                        <Controller
-                          control={control}
-                          name={`items.${index}.unit_price`}
-                          render={({ field: controllerField }) => (
-                            <CurrencyInput
-                              id={`sale-item-price-mobile-${controllerField.name}`}
-                              value={controllerField.value}
-                              onChange={controllerField.onChange}
-                              className="h-10"
-                            />
-                          )}
-                        />
-                        {errors.items?.[index]?.unit_price && (
-                          <p className="mt-1 text-xs text-destructive">
-                            {errors.items[index]?.unit_price?.message}
-                          </p>
-                        )}
-                      </div>
-                      <div className="rounded-xl bg-muted/40 px-3 py-2">
-                        <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                          Дүн
-                        </span>
-                        <span className="mt-1 block text-sm font-semibold">
-                          {formatCurrency(subtotals[index] ?? 0)}
-                        </span>
-                      </div>
                     </div>
+                  )}
 
-                    {stockWarnings[index] && (
-                      <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-                        {stockWarnings[index]}
-                      </p>
-                    )}
-                  </div>
+                  {/* Stock warning */}
+                  {stockWarnings[index] && (
+                    <p className="mt-1 text-[11px] text-amber-700 dark:text-amber-300">
+                      {stockWarnings[index]}
+                    </p>
+                  )}
 
-                  <div className="hidden md:grid md:grid-cols-[minmax(0,1.8fr)_5.5rem_7rem_6rem_2.5rem] md:gap-3">
-                    <div className="min-w-0 space-y-2">
-                      <Controller
-                        control={control}
-                        name={`items.${index}.product_id`}
-                        render={({ field: controllerField }) => (
-                          <Combobox
-                            name={controllerField.name}
-                            items={rowItems}
-                            value={
-                              allProducts.find(
-                                (p) => p.id === controllerField.value,
-                              ) ?? null
-                            }
-                            onValueChange={(next) =>
-                              handleProductSelect(index, next)
-                            }
-                            itemToStringValue={(
-                              product: ProductOption | null,
-                            ) => product?.id ?? ""}
-                            itemToStringLabel={(
-                              product: ProductOption | null,
-                            ) => product?.name ?? ""}
-                            inputValue={rowQuery}
-                            onInputValueChange={(val) =>
-                              updateProductQuery(index, val)
-                            }
-                          >
-                            <ComboboxInput
-                              placeholder="Сонгох"
-                              showTrigger
-                              className="w-full"
-                            />
-                            <ComboboxContent>
-                              <ComboboxEmpty>
-                                Бүтээгдэхүүн байхгүй
-                              </ComboboxEmpty>
-                              <ComboboxList>
-                                {(product: ProductOption) => (
-                                  <ComboboxItem
-                                    key={product.id}
-                                    value={product}
-                                  >
-                                    {product.id.startsWith("__create__")
-                                      ? `"${product.name}" үүсгэх`
-                                      : product.name}
-                                  </ComboboxItem>
-                                )}
-                              </ComboboxList>
-                            </ComboboxContent>
-                          </Combobox>
-                        )}
-                      />
-                      {productForRow ? (
-                        <div className="rounded-xl bg-muted/35 px-3 py-2 text-xs text-muted-foreground">
-                          Үндсэн үнэ{" "}
-                          {formatCurrency(
-                            Number(productForRow.sale_price ?? 0),
-                          )}{" "}
-                          • Үлдэгдэл {productForRow.current_stock ?? 0}{" "}
-                          {productForRow.unit ?? "ширхэг"}
-                        </div>
-                      ) : null}
-                      {productForRow ? (
-                        <VariantPicker
-                          productId={productForRow.id}
-                          onSelect={(variant) =>
-                            handleVariantSelect(index, variant)
-                          }
-                        />
-                      ) : null}
-                      {errors.items?.[index]?.product_id && (
-                        <p className="text-xs text-destructive">
-                          {errors.items[index]?.product_id?.message}
-                        </p>
-                      )}
-                      {stockWarnings[index] && (
-                        <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-                          {stockWarnings[index]}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Input
-                        type="number"
-                        min="1"
-                        step="0.01"
-                        className="h-10"
-                        {...register(`items.${index}.quantity`, {
-                          valueAsNumber: true,
-                        })}
-                      />
-                      {errors.items?.[index]?.quantity && (
-                        <p className="mt-1 text-xs text-destructive">
-                          {errors.items[index]?.quantity?.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Controller
-                        control={control}
-                        name={`items.${index}.unit_price`}
-                        render={({ field }) => (
-                          <CurrencyInput
-                            value={field.value}
-                            onChange={field.onChange}
-                            className="h-10"
-                          />
-                        )}
-                      />
-                      {errors.items?.[index]?.unit_price && (
-                        <p className="mt-1 text-xs text-destructive">
-                          {errors.items[index]?.unit_price?.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="rounded-xl bg-muted/35 px-3 py-2 text-right">
-                      <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                        Дүн
-                      </span>
-                      <span className="mt-1 block text-sm font-semibold">
-                        {formatCurrency(subtotals[index] ?? 0)}
-                      </span>
-                    </div>
-
-                    <div />
-                  </div>
+                  {/* Field errors */}
+                  {errors.items?.[index] && (
+                    <p className="mt-1 text-[11px] text-destructive">
+                      {errors.items[index]?.product_id?.message ||
+                        errors.items[index]?.quantity?.message ||
+                        errors.items[index]?.unit_price?.message}
+                    </p>
+                  )}
                 </div>
               );
             })}
@@ -1077,14 +745,20 @@ export function SaleForm({
             <p className="text-xs text-destructive">{errors.items.message}</p>
           )}
         </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={appendRow}
+          className="w-full h-11"
+        >
+          <Plus className="size-4" />
+          Мөр нэмэх
+        </Button>
       </SaleFormSection>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <div className="space-y-4">
-          <SaleFormSection
-            title="Төлбөр"
-            description="Төлсөн дүн болон төлбөрийн аргаа сонгож, борлуулалтын төлөвийг даруй харна."
-          >
+          <SaleFormSection title="Төлбөр">
             <FieldGroup className="gap-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <Field>
@@ -1121,7 +795,7 @@ export function SaleForm({
                       className="h-8 px-2.5 text-xs"
                       onClick={() => handleQuickAction("half")}
                     >
-                      50%
+                      Хагас
                     </Button>
                     <Button
                       type="button"
@@ -1130,7 +804,7 @@ export function SaleForm({
                       className="h-8 px-2.5 text-xs"
                       onClick={() => handleQuickAction("zero")}
                     >
-                      0
+                      Төлөөгүй
                     </Button>
                   </div>
                   {errors.paid_amount && (
@@ -1203,119 +877,68 @@ export function SaleForm({
               </div>
             </FieldGroup>
           </SaleFormSection>
-
-          <SaleFormSection
-            title="Харилцагч"
-            description="Байгаа харилцагчаас хайх эсвэл walk-in борлуулалтаар үргэлжлүүлж болно."
-          >
-            <CustomerPicker
-              contacts={customers}
-              selectedContactId={selectedContactId}
-              customerName={watch("customer_name") ?? ""}
-              customerPhone={watch("customer_phone") ?? ""}
-              onSelectContact={(contact) => {
-                setSelectedContactId(contact?.id ?? null);
-              }}
-              onNameChange={(name) => {
-                setValue("customer_name", name);
-              }}
-              onPhoneChange={(phone) => {
-                setValue("customer_phone", phone);
-              }}
-            />
-          </SaleFormSection>
         </div>
 
-        <aside className="rounded-2xl border border-border/80 bg-muted/35 p-4 shadow-xs sm:p-5 lg:sticky lg:top-0">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-base font-semibold tracking-tight">Тооцоо</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Нийт дүн, үлдэгдэл, төлөлтийн төлөв.
-              </p>
-            </div>
+        <aside className="lg:sticky lg:top-0">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-base font-semibold tracking-tight">Тооцоо</h2>
             <Badge variant={paymentBadgeVariant}>{paymentState}</Badge>
           </div>
 
-          <div className="mt-4 grid gap-3">
-            <div className="rounded-xl border border-border/70 bg-card px-3.5 py-3">
-              <span className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            <div className="px-3 py-2.5">
+              <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
                 Нийт дүн
               </span>
-              <p className="mt-1 text-xl font-semibold tracking-tight">
+              <p className="mt-0.5 text-base font-semibold">
                 {formatCurrency(grandTotal)}
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-border/70 bg-card px-3.5 py-3">
-                <span className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                  Төлсөн
-                </span>
-                <p className="mt-1 text-sm font-semibold">
-                  {formatCurrency(watchedPaidAmount ?? 0)}
-                </p>
-              </div>
-              <div className="rounded-xl border border-border/70 bg-card px-3.5 py-3">
-                <span className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                  Үлдэгдэл
-                </span>
-                <p className="mt-1 text-sm font-semibold">
-                  {formatCurrency(remaining)}
-                </p>
-              </div>
+            <div className="px-3 py-2.5">
+              <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                Төлсөн
+              </span>
+              <p className="mt-0.5 text-base font-semibold">
+                {formatCurrency(watchedPaidAmount ?? 0)}
+              </p>
             </div>
-            <div className="rounded-xl border border-border/70 bg-card px-3.5 py-3 text-sm text-muted-foreground">
-              <div className="flex items-center justify-between">
-                <span>Нийт мөр</span>
-                <span className="font-medium text-foreground">
-                  {fields.length}
-                </span>
-              </div>
-              {anyStockInsufficient ? (
-                <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
-                  Зарим мөрийн үлдэгдэл хүрэлцэхгүй байна. Хадгалахаас өмнө
-                  шалгана уу.
-                </p>
-              ) : (
-                <p className="mt-2 text-xs">Мөрүүдийн тооцоо хэвийн байна.</p>
-              )}
+            <div className="px-3 py-2.5">
+              <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                Үлдэгдэл
+              </span>
+              <p className="mt-0.5 text-base font-semibold">
+                {formatCurrency(remaining)}
+              </p>
             </div>
           </div>
 
-          <label className="mt-4 flex cursor-pointer items-start gap-2 rounded-xl border border-border/70 bg-card px-3.5 py-3 text-sm text-muted-foreground">
-            <input
-              type="checkbox"
-              checked={keepOpen}
-              onChange={(e) => setKeepOpen(e.target.checked)}
-              className="mt-0.5 size-4 rounded border-border accent-primary"
-            />
-            <span>
-              <span className="block font-medium text-foreground">
-                Хэвээр үлдээх
-              </span>
-              <span className="text-xs text-muted-foreground">
-                Хадгалсны дараа формыг нээлттэй үлдээн дараагийн борлуулалтыг
-                бүртгэнэ.
-              </span>
-            </span>
-          </label>
+          <div className="mt-3 px-3.5 py-2.5 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Нийт мөр</span>
+              <span className="font-medium">{fields.length}</span>
+            </div>
+            {anyStockInsufficient ? (
+              <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                Зарим мөрийн үлдэгдэл хүрэлцэхгүй байна.
+              </p>
+            ) : (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Мөрүүдийн тооцоо хэвийн байна.
+              </p>
+            )}
+          </div>
         </aside>
       </div>
 
-      <section className="rounded-2xl border border-border/80 bg-card shadow-xs">
+      <section>
         <button
           type="button"
           onClick={() => setShowAdvanced((prev) => !prev)}
-          className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors hover:bg-muted/25 sm:px-5"
+          className="flex w-full items-center justify-between gap-3 pb-4 text-left"
         >
-          <div>
-            <span className="block text-base font-semibold tracking-tight">
-              Нэмэлт тохиргоо
-            </span>
-            <span className="mt-1 block text-sm text-muted-foreground">
-              Борлуулагч, төлөв, огноо, дотоод тэмдэглэл.
-            </span>
-          </div>
+          <span className="text-base font-semibold tracking-tight">
+            Нэмэлт тохиргоо
+          </span>
           {showAdvanced ? (
             <CaretUp className="size-4 text-muted-foreground" />
           ) : (
@@ -1324,9 +947,31 @@ export function SaleForm({
         </button>
 
         {showAdvanced && (
-          <div className="border-t border-border/70 px-4 py-4 sm:px-5">
+          <div className="border-t border-border/60 pt-4">
             <div className="grid gap-4 md:grid-cols-2">
               <FieldGroup className="gap-4">
+                <Field>
+                  <FieldLabel htmlFor="customer_name">
+                    Харилцагчийн нэр
+                  </FieldLabel>
+                  <Input
+                    id="customer_name"
+                    placeholder="Нэр оруулах"
+                    className="h-10"
+                    {...register("customer_name")}
+                  />
+                </Field>
+
+                <Field>
+                  <FieldLabel htmlFor="customer_phone">Утас</FieldLabel>
+                  <Input
+                    id="customer_phone"
+                    placeholder="Утасны дугаар"
+                    className="h-10"
+                    {...register("customer_phone")}
+                  />
+                </Field>
+
                 <StaffPicker />
 
                 <Field>
@@ -1427,7 +1072,16 @@ export function SaleForm({
       </section>
 
       {!formId && (
-        <div className="flex justify-end">
+        <div className="flex items-center justify-end gap-4">
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={keepOpen}
+              onChange={(e) => setKeepOpen(e.target.checked)}
+              className="size-4 rounded border-border accent-primary"
+            />
+            Хэвээр үлдээх
+          </label>
           <Button
             type="submit"
             disabled={
@@ -1457,7 +1111,7 @@ export function SaleForm({
           setProductPickerOpen(next);
           if (!next) setProductPickerIndex(null);
         }}
-        products={allProducts}
+        products={products}
         onSelect={(product) => {
           if (productPickerIndex !== null) {
             handleProductSelect(productPickerIndex, product);

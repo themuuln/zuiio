@@ -5,10 +5,10 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { AuthCard } from "@/components/ui/auth-card";
 import { Button } from "@/components/ui/button";
+import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { requestPasswordReset } from "./actions";
-import { ErrorBanner } from "@/components/ui/error-banner";
 
 export default function ForgotPasswordPage() {
   const [state, action, pending] = useActionState(
@@ -17,7 +17,10 @@ export default function ForgotPasswordPage() {
   );
 
   return (
-    <AuthCard title="Нууц үг сэргээх" description="Бүртгэлтэй имэйл хаягаа оруулбал нууц үг сэргээх холбоос илгээнэ.">
+    <AuthCard
+      title="Нууц үг сэргээх"
+      description="Бүртгэлтэй имэйл хаягаа оруулбал нууц үг сэргээх холбоос илгээнэ."
+    >
       <form action={action} className="space-y-4">
         <FieldGroup>
           <Field>

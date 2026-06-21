@@ -51,6 +51,7 @@ export type LocalVariantData = {
   cost_price: number | string;
   sale_price: number | string;
   current_stock: number | string;
+  image_url: string | null;
 };
 
 const PRESET_GROUP_SUGGESTIONS = [
@@ -207,6 +208,7 @@ function BulkActionBar({
             cost_price: defaultValues?.cost_price ?? 0,
             sale_price: defaultValues?.sale_price ?? 0,
             current_stock: defaultValues?.current_stock ?? 0,
+            image_url: null,
             [field]: value,
           });
         }
@@ -235,6 +237,7 @@ function BulkActionBar({
           cost_price: defaultValues.cost_price,
           sale_price: defaultValues.sale_price,
           current_stock: defaultValues.current_stock,
+          image_url: null,
         });
       }
     }
@@ -260,6 +263,7 @@ function BulkActionBar({
             cost_price: defaultValues?.cost_price ?? 0,
             sale_price: defaultValues?.sale_price ?? 0,
             current_stock: defaultValues?.current_stock ?? 0,
+            image_url: null,
             [field]: defaultValues?.[field] ?? 0,
           });
         }
@@ -608,6 +612,7 @@ export function VariantEditor({
           cost_price: defaultValues?.cost_price ?? 0,
           sale_price: defaultValues?.sale_price ?? 0,
           current_stock: defaultValues?.current_stock ?? 0,
+          image_url: null,
         }),
         [field]: value,
       };
@@ -639,6 +644,82 @@ export function VariantEditor({
     },
     [variantDataMap, defaultValues],
   );
+
+  function VariantImageCell({
+    imageUrl,
+    onChange,
+  }: {
+    imageUrl: string | null;
+    onChange: (url: string | null) => void;
+  }) {
+    const [uploading, setUploading] = useState(false);
+
+    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) return;
+
+      setUploading(true);
+      try {
+        const { compressImage } = await import("@/lib/compress-image");
+        const compressed = await compressImage(file);
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        const ext = compressed.name.split(".").pop();
+        const filePath = `variants/${crypto.randomUUID()}.${ext}`;
+
+        const { error } = await supabase.storage
+          .from("brand_assets")
+          .upload(filePath, compressed);
+        if (error) throw error;
+
+        const { data } = supabase.storage
+          .from("brand_assets")
+          .getPublicUrl(filePath);
+        onChange(data.publicUrl);
+      } catch (err) {
+        console.error("Variant image upload failed:", err);
+      } finally {
+        setUploading(false);
+      }
+    };
+
+    return (
+      <div className="relative flex items-center">
+        {imageUrl ? (
+          <div className="group relative">
+            <img
+              src={imageUrl}
+              alt=""
+              className="size-8 rounded border object-cover"
+            />
+            <button
+              type="button"
+              onClick={() => onChange(null)}
+              className="absolute -right-1 -top-1 hidden size-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground group-hover:flex"
+            >
+              <X className="size-2.5" />
+            </button>
+          </div>
+        ) : (
+          <label className="flex size-8 cursor-pointer items-center justify-center rounded border border-dashed bg-muted/50 text-muted-foreground hover:bg-muted">
+            {uploading ? (
+              <span className="size-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            ) : (
+              <Plus className="size-3" />
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleUpload}
+              disabled={uploading}
+            />
+          </label>
+        )}
+      </div>
+    );
+  }
 
   const hasAllOptionsNamed = groups.every((g) =>
     g.options.every((o) => o.value.trim() !== ""),
@@ -807,6 +888,7 @@ export function VariantEditor({
               <thead>
                 <tr className="sticky top-0 z-10 border-b bg-muted/50 text-left text-muted-foreground">
                   <th className="py-2 pr-2 pl-3 font-medium">Вариант</th>
+                  <th className="w-14 py-2 px-1 font-medium">Зураг</th>
                   <th className="w-20 py-2 px-1 font-medium">SKU</th>
                   <th className="w-20 py-2 px-1 font-medium">Өртөг</th>
                   <th className="w-20 py-2 px-1 font-medium">Зарах үнэ</th>
@@ -836,6 +918,22 @@ export function VariantEditor({
                         >
                           {combo.option_labels}
                         </Badge>
+                      </td>
+                      <td className="py-1.5 px-1">
+                        <VariantImageCell
+                          imageUrl={
+                            (getVariantValue(combo.option_ids, "image_url") as
+                              | string
+                              | null) ?? null
+                          }
+                          onChange={(url) =>
+                            handleVariantFieldChange(
+                              combo.option_ids,
+                              "image_url",
+                              url as string | number,
+                            )
+                          }
+                        />
                       </td>
                       <td className="py-1.5 px-1">
                         <Input

@@ -1,5 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
 import { APP_DESCRIPTION, APP_NAME } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
   const icons: {

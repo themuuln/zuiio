@@ -69,10 +69,7 @@ function getApplicableSubtotal(
   conditions: DiscountCondition[],
 ): number {
   if (appliesTo === "all") {
-    return items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0,
-    );
+    return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   }
 
   if (appliesTo === "selected_products") {
@@ -93,9 +90,7 @@ function getApplicableSubtotal(
         .map((c) => c.condition_value),
     );
     return items
-      .filter(
-        (item) => item.categoryId && categoryIds.has(item.categoryId),
-      )
+      .filter((item) => item.categoryId && categoryIds.has(item.categoryId))
       .reduce((sum, item) => sum + item.price * item.quantity, 0);
   }
 
@@ -110,15 +105,23 @@ function getApplicableSubtotal(
  * - If appliesTo is "selected_products" or "selected_categories", discount
  *   applies only to matching items. If no items match, discount is 0.
  */
-export function calculateDiscount(
-  params: DiscountParams,
-): DiscountResult {
-  const { discountType, discountValue, cartTotal, items, appliesTo, conditions } =
-    params;
+export function calculateDiscount(params: DiscountParams): DiscountResult {
+  const {
+    discountType,
+    discountValue,
+    cartTotal,
+    items,
+    appliesTo,
+    conditions,
+  } = params;
 
   // Validate inputs
   if (discountValue <= 0 || cartTotal <= 0) {
-    return { discountAmount: 0, totalAfterDiscount: cartTotal, description: "" };
+    return {
+      discountAmount: 0,
+      totalAfterDiscount: cartTotal,
+      description: "",
+    };
   }
 
   // Determine applicable subtotal
@@ -132,7 +135,8 @@ export function calculateDiscount(
         ? `Бүх бараанд ${discountValue}% хямдрал`
         : `Бүх бараанд ${discountValue.toLocaleString()}₮ хямдрал`;
   } else if (
-    (appliesTo === "selected_products" || appliesTo === "selected_categories") &&
+    (appliesTo === "selected_products" ||
+      appliesTo === "selected_categories") &&
     conditions &&
     conditions.length > 0
   ) {

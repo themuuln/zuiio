@@ -101,6 +101,7 @@ export async function updateProduct(
         sale_price: number;
         current_stock: number;
         option_ids: string[];
+        image_url: string | null;
       }[] = JSON.parse(variantDataRaw);
 
       // Delete existing variant data (cascade: assignments → options → variants → groups)
@@ -194,6 +195,7 @@ export async function updateProduct(
               cost_price: v.cost_price,
               sale_price: v.sale_price,
               current_stock: v.current_stock,
+              image_urls: v.image_url ? [v.image_url] : null,
               is_active: true,
             })
             .select("id")

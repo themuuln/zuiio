@@ -4,10 +4,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { COMPANY_TYPES } from "@/lib/constants";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
+import { COMPANY_TYPES } from "@/lib/constants";
 import { updateOrganization } from "./actions";
 import { useRegisterSave, useSettings } from "./settings-context";
 

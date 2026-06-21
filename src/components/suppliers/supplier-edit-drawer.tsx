@@ -1,21 +1,25 @@
 "use client";
 
-import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {Buildings, NotePencil} from "@phosphor-icons/react";
+import { Buildings, NotePencil } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { updateSupplier } from "@/app/(dashboard)/suppliers/actions";
 import { buttonVariants } from "@/components/ui/button";
-import { DrawerFooter, DrawerCancel, DrawerSubmit } from "@/components/ui/drawer-footer";
+import {
+  DrawerCancel,
+  DrawerFooter,
+  DrawerSubmit,
+} from "@/components/ui/drawer-footer";
+import { DrawerHeader } from "@/components/ui/drawer-header";
+import { DrawerLayout } from "@/components/ui/drawer-layout";
+import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { contactKeys } from "@/lib/query/keys";
 import { useOptimisticUpdate } from "@/lib/query/use-optimistic";
-import { DrawerHeader } from "@/components/ui/drawer-header";
-import { ErrorBanner } from "@/components/ui/error-banner";
 
 export interface SupplierEditData {
   id: string;
@@ -92,70 +96,78 @@ export function SupplierEditDrawer({
     <DrawerLayout
       open={open}
       onOpenChange={setOpen}
-      trigger={children ?? <button type="button" className={buttonVariants({ variant: "ghost", size: "icon-xs" })}><NotePencil className="size-3.5" /></button>}
+      trigger={
+        children ?? (
+          <button
+            type="button"
+            className={buttonVariants({ variant: "ghost", size: "icon-xs" })}
+          >
+            <NotePencil className="size-3.5" />
+          </button>
+        )
+      }
     >
-              <DrawerHeader title="Нийлүүлэгч засах" description={supplier.name} />
+      <DrawerHeader title="Нийлүүлэгч засах" description={supplier.name} />
 
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex flex-col flex-1 min-h-0"
+      >
+        <div className="flex-1 overflow-y-auto space-y-5">
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="edit-name">Нэр</FieldLabel>
+              <div className="relative">
+                <Buildings className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="edit-name"
+                  className="pl-9"
+                  placeholder="Болд ХХК"
+                  {...register("name")}
+                />
+              </div>
+              {errors.name && (
+                <p className="text-xs text-destructive">
+                  {errors.name.message}
+                </p>
+              )}
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="edit-phone">Утас</FieldLabel>
+              <Input
+                id="edit-phone"
+                type="tel"
+                placeholder="+976 9911-2233"
+                {...register("phone")}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="edit-email">Имэйл</FieldLabel>
+              <Input
+                id="edit-email"
+                type="email"
+                placeholder="info@boldcompany.mn"
+                {...register("email")}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="edit-address">Хаяг</FieldLabel>
+              <Input
+                id="edit-address"
+                placeholder="СБД, 1-р хороо, 2-р байр"
+                {...register("address")}
+              />
+            </Field>
+          </FieldGroup>
+        </div>
 
-              <form
-                onSubmit={handleSubmit(onSubmit)}
-                className="flex flex-col flex-1 min-h-0"
-              >
-                <div className="flex-1 overflow-y-auto space-y-5">
-                  <FieldGroup>
-                    <Field>
-                      <FieldLabel htmlFor="edit-name">Нэр</FieldLabel>
-                      <div className="relative">
-                        <Buildings className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                          id="edit-name"
-                          className="pl-9"
-                          placeholder="Болд ХХК"
-                          {...register("name")}
-                        />
-                      </div>
-                      {errors.name && (
-                        <p className="text-xs text-destructive">
-                          {errors.name.message}
-                        </p>
-                      )}
-                    </Field>
-                    <Field>
-                      <FieldLabel htmlFor="edit-phone">Утас</FieldLabel>
-                      <Input
-                        id="edit-phone"
-                        type="tel"
-                        placeholder="+976 9911-2233"
-                        {...register("phone")}
-                      />
-                    </Field>
-                    <Field>
-                      <FieldLabel htmlFor="edit-email">Имэйл</FieldLabel>
-                      <Input
-                        id="edit-email"
-                        type="email"
-                        placeholder="info@boldcompany.mn"
-                        {...register("email")}
-                      />
-                    </Field>
-                    <Field>
-                      <FieldLabel htmlFor="edit-address">Хаяг</FieldLabel>
-                      <Input
-                        id="edit-address"
-                        placeholder="СБД, 1-р хороо, 2-р байр"
-                        {...register("address")}
-                      />
-                    </Field>
-                  </FieldGroup>
-                </div>
+        <ErrorBanner error={editMutation.error} />
 
-                <ErrorBanner error={editMutation.error} />
-
-                <DrawerFooter>
-                  <DrawerCancel onClick={() => setOpen(false)} />
-                  <DrawerSubmit isPending={editMutation.isPending} label="Хадгалах" />
-                </DrawerFooter>
-              </form>
+        <DrawerFooter>
+          <DrawerCancel onClick={() => setOpen(false)} />
+          <DrawerSubmit isPending={editMutation.isPending} label="Хадгалах" />
+        </DrawerFooter>
+      </form>
     </DrawerLayout>
   );
 }

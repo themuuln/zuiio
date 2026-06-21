@@ -1,6 +1,7 @@
 "use client";
 
 import type * as React from "react";
+import { ErpEmptyState } from "@/components/erp/empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -10,7 +11,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ErpEmptyState } from "@/components/erp/empty-state";
 import { cn } from "@/lib/utils";
 
 export interface Column<T> {

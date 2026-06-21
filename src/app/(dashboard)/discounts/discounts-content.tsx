@@ -3,13 +3,13 @@
 import { Percent } from "@phosphor-icons/react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { DiscountCreateDrawer } from "@/components/discounts/discount-create-drawer";
 import {
   type DiscountDetailData,
   DiscountDetailDrawer,
 } from "@/components/discounts/discount-detail-drawer";
 import { ErpDataTable } from "@/components/erp/data-table";
 import { PageShell } from "@/components/erp/page-shell";
-import { DiscountCreateDrawer } from "@/components/discounts/discount-create-drawer";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/format";
 import type { DiscountRow } from "./page";

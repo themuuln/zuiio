@@ -1,6 +1,5 @@
 "use client";
 
-import { Eye, NotePencil } from "@phosphor-icons/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   type CustomerDetailData,
@@ -45,62 +44,75 @@ function toEditData(customer: CustomerRow): CustomerEditData {
   };
 }
 
-const defaultColumns: ColumnDef<CustomerRow>[] = [
-  {
-    accessorKey: "name",
-    header: "Нэр",
-    cell: ({ row }) => {
-      const customer = row.original;
-      return (
-        <CustomerDetailDrawer customer={toDetailData(customer)}>
-          <div className="flex items-center gap-2 cursor-pointer">
-            <Avatar className="size-7">
-              <AvatarFallback>
-                {customer.name.slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <span className="font-medium">{customer.name}</span>
+function buildColumns(showBalance: boolean): ColumnDef<CustomerRow>[] {
+  return [
+    {
+      accessorKey: "name",
+      header: "Нэр",
+      cell: ({ row }) => {
+        const customer = row.original;
+        return (
+          <CustomerDetailDrawer customer={toDetailData(customer)}>
+            <div className="flex items-center gap-2 cursor-pointer">
+              <Avatar className="size-7">
+                <AvatarFallback>
+                  {customer.name.slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span className="font-medium">{customer.name}</span>
+            </div>
+          </CustomerDetailDrawer>
+        );
+      },
+    },
+    {
+      accessorKey: "phone",
+      header: "Утас",
+      cell: ({ row }) => row.getValue("phone") ?? "-",
+    },
+    {
+      accessorKey: "email",
+      header: "Имэйл",
+      cell: ({ row }) => row.getValue("email") ?? "-",
+    },
+    ...(showBalance
+      ? [
+          {
+            accessorKey: "balance" as const,
+            header: "Авлага",
+            cell: ({ row }: { row: { getValue: (key: string) => unknown } }) =>
+              formatCurrency(Number(row.getValue("balance") ?? 0)),
+          },
+        ]
+      : []),
+    {
+      id: "actions",
+      header: "",
+      cell: ({ row }) => {
+        const customer = row.original;
+        return (
+          <div className="flex items-center gap-1">
+            <CustomerDetailDrawer customer={toDetailData(customer)} />
+            <CustomerEditDrawer customer={toEditData(customer)} />
           </div>
-        </CustomerDetailDrawer>
-      );
+        );
+      },
+      enableSorting: false,
+      enableHiding: false,
     },
-  },
-  {
-    accessorKey: "phone",
-    header: "Утас",
-    cell: ({ row }) => row.getValue("phone") ?? "-",
-  },
-  {
-    accessorKey: "email",
-    header: "Имэйл",
-    cell: ({ row }) => row.getValue("email") ?? "-",
-  },
-  {
-    accessorKey: "balance",
-    header: "Авлага",
-    cell: ({ row }) => formatCurrency(Number(row.getValue("balance") ?? 0)),
-  },
-  {
-    id: "actions",
-    header: "",
-    cell: ({ row }) => {
-      const customer = row.original;
-      return (
-        <div className="flex items-center gap-1">
-          <CustomerDetailDrawer customer={toDetailData(customer)} />
-          <CustomerEditDrawer customer={toEditData(customer)} />
-        </div>
-      );
-    },
-    enableSorting: false,
-    enableHiding: false,
-  },
-];
+  ];
+}
 
-export function CustomersTable({ data }: { data: CustomerRow[] }) {
+export function CustomersTable({
+  data,
+  showBalance = true,
+}: {
+  data: CustomerRow[];
+  showBalance?: boolean;
+}) {
   return (
     <DataTable
-      columns={defaultColumns}
+      columns={buildColumns(showBalance)}
       data={data}
       searchColumn="name"
       searchPlaceholder="Харилцагчаар хайх..."

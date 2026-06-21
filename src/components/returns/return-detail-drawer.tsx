@@ -8,9 +8,9 @@ import {
 import type { ReturnRow } from "@/app/(dashboard)/returns/page";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { ErrorBanner } from "@/components/ui/error-banner";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { ErrorBanner } from "@/components/ui/error-banner";
 
 const typeLabels: Record<string, string> = {
   sales_return: "Борлуулалтын буцаалт",

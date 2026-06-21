@@ -1,15 +1,19 @@
+import { redirect } from "next/navigation";
 import { PageShell } from "@/components/erp/page-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAppContext } from "@/lib/erp";
+import { checkOrgSetting } from "@/lib/org-settings";
 import { BranchesContent } from "./branches-content";
 
 export const unstable_instant = {
   prefetch: "static",
-  unstable_disableBuildValidation: true,
+  unstable_disableValidation: true,
 };
 
 export default async function BranchesPage() {
   const { supabase, organizationId, permissions } = await requireAppContext();
+  if (!(await checkOrgSetting(supabase, organizationId, "has_multi_branch")))
+    redirect("/");
 
   const canManage = permissions.includes("settings.manage");
 

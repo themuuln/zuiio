@@ -10,7 +10,7 @@
  *   await healer.fill(page, "input#email", "test@example.com");
  */
 
-import type { Page, Locator } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 type SelectorStrategy = {
   name: string;

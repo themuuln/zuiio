@@ -5,11 +5,21 @@ CREATE OR REPLACE FUNCTION public.set_role_permissions(
 ) RETURNS JSON
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = ''
 AS $$
 BEGIN
+  -- Must have roles.manage permission to change any role's permissions
+  IF NOT public.has_permission('roles.manage') THEN
+    RETURN json_build_object('error', 'Permission denied');
+  END IF;
+
   DELETE FROM public.role_permissions WHERE role_id = p_role_id;
-  INSERT INTO public.role_permissions (role_id, permission)
-  SELECT p_role_id, unnest(p_permissions);
+
+  IF array_length(p_permissions, 1) > 0 THEN
+    INSERT INTO public.role_permissions (role_id, permission)
+    SELECT p_role_id, unnest(p_permissions);
+  END IF;
+
   RETURN json_build_object('success', true);
 END;
 $$;

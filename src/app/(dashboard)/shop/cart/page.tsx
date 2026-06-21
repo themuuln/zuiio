@@ -3,7 +3,6 @@
 import { Minus, Plus, ShoppingCart, Trash } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
-import { getCartItemKey } from "@/lib/shop-cart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -14,6 +13,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { getCartItemKey } from "@/lib/shop-cart";
 
 export default function CartPage() {
   const { items, totalAmount, updateQuantity, removeItem } = useCart();
@@ -75,9 +75,7 @@ export default function CartPage() {
                   <Button
                     size="icon-xs"
                     variant="outline"
-                    onClick={() =>
-                      updateQuantity(itemKey, item.quantity - 1)
-                    }
+                    onClick={() => updateQuantity(itemKey, item.quantity - 1)}
                     disabled={item.quantity <= 1}
                   >
                     <Minus className="size-3" />
@@ -88,9 +86,7 @@ export default function CartPage() {
                   <Button
                     size="icon-xs"
                     variant="outline"
-                    onClick={() =>
-                      updateQuantity(itemKey, item.quantity + 1)
-                    }
+                    onClick={() => updateQuantity(itemKey, item.quantity + 1)}
                     disabled={item.quantity >= item.maxStock}
                   >
                     <Plus className="size-3" />

@@ -2,7 +2,6 @@
 
 import { ShareNetwork } from "@phosphor-icons/react";
 import { useRef, useState } from "react";
-import { createInvoiceShareLink } from "../actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { createInvoiceShareLink } from "../actions";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Хүлээгдэж буй",
@@ -87,8 +87,7 @@ export function InvoiceDetailClient({
         open={shareOpen}
         onOpenChange={(next) => {
           setShareOpen(next);
-          if (next && token && !shareResult)
-            setShareResult({ token });
+          if (next && token && !shareResult) setShareResult({ token });
         }}
       >
         <DialogTrigger asChild>
@@ -123,9 +122,7 @@ export function InvoiceDetailClient({
           ) : (
             <div className="flex flex-col gap-4">
               {shareResult?.error && (
-                <p className="text-sm text-destructive">
-                  {shareResult.error}
-                </p>
+                <p className="text-sm text-destructive">{shareResult.error}</p>
               )}
               <Button onClick={handleGenerateShareLink} disabled={pending}>
                 {pending ? "Үүсгэж байна..." : "Холбоос үүсгэх"}

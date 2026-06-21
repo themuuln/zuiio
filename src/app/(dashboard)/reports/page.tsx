@@ -24,7 +24,7 @@ export const unstable_instant = {
     { searchParams: { from: null, to: null } },
     { searchParams: { from: "2026-01-01", to: "2026-06-19" } },
   ],
-  unstable_disableBuildValidation: true,
+  unstable_disableValidation: true,
 };
 
 export default async function ReportsPage({

@@ -26,24 +26,18 @@ export default withMermaid(
           },
           {
             text: "Architecture",
-            items: [
-              { text: "Overview", link: "/architecture.html" },
-            ],
+            items: [{ text: "Overview", link: "/architecture.html" }],
           },
           {
             text: "Features",
-            items: [
-              { text: "Overview", link: "/features/" },
-            ],
+            items: [{ text: "Overview", link: "/features/" }],
           },
           {
             text: "API Reference",
-            items: [
-              { text: "Overview", link: "/api/" },
-            ],
+            items: [{ text: "Overview", link: "/api/" }],
           },
         ],
       },
     },
-  })
+  }),
 );

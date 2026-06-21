@@ -1,4 +1,4 @@
-import { heal, ai } from "codeceptjs";
+import { ai, heal } from "codeceptjs";
 
 /**
  * AI-powered healing recipe for CodeceptJS tests.

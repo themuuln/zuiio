@@ -73,6 +73,15 @@ export function OnboardingWizard({
     new Set(),
   );
   const [skipPresets, setSkipPresets] = useState(false);
+  const [hasSuppliers, setHasSuppliers] = useState(true);
+  const [hasInventory, setHasInventory] = useState(true);
+  const [hasCustomerCredit, setHasCustomerCredit] = useState(true);
+  const [hasMultiBranch, setHasMultiBranch] = useState(false);
+  const [hasVariants, setHasVariants] = useState(true);
+  const [hasAuditLog, setHasAuditLog] = useState(true);
+  const [hasBrands, setHasBrands] = useState(true);
+  const [hasCategories, setHasCategories] = useState(true);
+  const [hasEmailReports, setHasEmailReports] = useState(false);
 
   const brands = useMemo(
     () =>
@@ -86,7 +95,19 @@ export function OnboardingWizard({
     mutationFn: async () => {
       const brandList = skipPresets ? [] : Array.from(selectedBrands);
       const features = Array.from(selectedFeatures);
-      return completeOnboarding(features, brandList);
+      return completeOnboarding(
+        features,
+        brandList,
+        hasSuppliers,
+        hasInventory,
+        hasCustomerCredit,
+        hasMultiBranch,
+        hasVariants,
+        hasBrands,
+        hasCategories,
+        hasEmailReports,
+        hasAuditLog,
+      );
     },
   });
 
@@ -306,6 +327,167 @@ export function OnboardingWizard({
               })}
             </div>
 
+            {/* Business settings toggles */}
+            <div className="space-y-2 rounded-lg border p-4">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Нэмэлт тохиргоо
+              </p>
+              <div className="flex items-center gap-3 rounded-lg border p-3">
+                <Checkbox
+                  checked={hasSuppliers}
+                  onCheckedChange={(checked) =>
+                    setHasSuppliers(checked === true)
+                  }
+                />
+                <div>
+                  <p className="text-sm font-medium">Танд нийлүүлэгч бий юу?</p>
+                  <p className="text-xs text-muted-foreground">
+                    {hasSuppliers
+                      ? "Нийлүүлэгчтэй — худалдан авалт, нөөц дүүргэлтэд нийлүүлэгч сонгох шаардлагатай"
+                      : "Нийлүүлэгчгүй — худалдан авалт, нөөц дүүргэлтэд нийлүүлэгч шаардахгүй"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-lg border p-3">
+                <Checkbox
+                  checked={hasInventory}
+                  onCheckedChange={(checked) =>
+                    setHasInventory(checked === true)
+                  }
+                />
+                <div>
+                  <p className="text-sm font-medium">
+                    Барааны үлдэгдэл хянах шаардлагатай юу?
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {hasInventory
+                      ? "Үлдэгдэл хянах — агуулах, үлдэгдэл хөдөлгөөн, тохируулга, нөөц дүүргэлт харагдана"
+                      : "Үлдэгдэл хянахгүй — агуулах, үлдэгдэл хөдөлгөөн, тохируулга, нөөц дүүргэлт нуугдана"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-lg border p-3">
+                <Checkbox
+                  checked={hasCustomerCredit}
+                  onCheckedChange={(checked) =>
+                    setHasCustomerCredit(checked === true)
+                  }
+                />
+                <div>
+                  <p className="text-sm font-medium">
+                    Харилцагчийн өр/авлага хянах шаардлагатай юу?
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {hasCustomerCredit
+                      ? "Өр/авлага хянах — харилцагчийн үлдэгдэл харагдана"
+                      : "Өр/авлага хянахгүй — зөвхөн бэлэн мөнгөөр ажиллана"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-lg border p-3">
+                <Checkbox
+                  checked={hasMultiBranch}
+                  onCheckedChange={(checked) =>
+                    setHasMultiBranch(checked === true)
+                  }
+                />
+                <div>
+                  <p className="text-sm font-medium">Олон салбартай юу?</p>
+                  <p className="text-xs text-muted-foreground">
+                    {hasMultiBranch
+                      ? "Олон салбартай — салбар сонгогч, салбарын тохиргоо харагдана"
+                      : "Нэг салбартай — салбар сонгогч, салбарын тохиргоо нуугдана"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-lg border p-3">
+                <Checkbox
+                  checked={hasVariants}
+                  onCheckedChange={(checked) =>
+                    setHasVariants(checked === true)
+                  }
+                />
+                <div>
+                  <p className="text-sm font-medium">
+                    Бүтээгдэхүүн варианттай юу?
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {hasVariants
+                      ? "Варианттай — хэмжээ, өнгө, амт гэх мэт вариант бүртгэх боломжтой"
+                      : "Вариантгүй — вариант сонгогч, засварлагч нуугдана"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-lg border p-3">
+                <Checkbox
+                  checked={hasBrands}
+                  onCheckedChange={(checked) => setHasBrands(checked === true)}
+                />
+                <div>
+                  <p className="text-sm font-medium">
+                    Брэндээр ялгах шаардлагатай юу?
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {hasBrands
+                      ? "Брэндтэй — брэнд сонголт, брэнд сан, шүүлт харагдана"
+                      : "Брэндгүй — брэнд талбар, сан нуугдана"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-lg border p-3">
+                <Checkbox
+                  checked={hasCategories}
+                  onCheckedChange={(checked) =>
+                    setHasCategories(checked === true)
+                  }
+                />
+                <div>
+                  <p className="text-sm font-medium">Ангилал хэрэглэх үү?</p>
+                  <p className="text-xs text-muted-foreground">
+                    {hasCategories
+                      ? "Ангилалтай — ангилалын хуудас, шүүлт харагдана"
+                      : "Ангилалгүй — ангилалын хуудас нуугдана"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-lg border p-3">
+                <Checkbox
+                  checked={hasEmailReports}
+                  onCheckedChange={(checked) =>
+                    setHasEmailReports(checked === true)
+                  }
+                />
+                <div>
+                  <p className="text-sm font-medium">
+                    И-мэйл тайлан ашиглах уу?
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {hasEmailReports
+                      ? "И-мэйл тайлан — өдөр тутмын тайлан, SMTP тохиргоо харагдана"
+                      : "И-мэйл тайлангүй — SMTP тохиргоо нуугдана"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-lg border p-3">
+                <Checkbox
+                  checked={hasAuditLog}
+                  onCheckedChange={(checked) =>
+                    setHasAuditLog(checked === true)
+                  }
+                />
+                <div>
+                  <p className="text-sm font-medium">
+                    Үйлдлийн түүх хадгалах уу?
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {hasAuditLog
+                      ? "Түүхтэй — үйлдлийн түүх хажуугийн цэсэнд харагдана"
+                      : "Түүхгүй — үйлдлийн түүх нуугдана"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="flex items-center justify-between pt-2">
               <p className="text-xs text-muted-foreground">
                 {selectedFeatures.size} / {FEATURES.length} модуль сонгосон
@@ -377,6 +559,87 @@ export function OnboardingWizard({
                     {selectedFeatures.size > 0
                       ? `${selectedFeatures.size} модуль идэвхжсэн`
                       : "Бүх модуль идэвхжсэн"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <SealCheck
+                    className="size-4 text-emerald-600"
+                    weight="fill"
+                  />
+                  <span>
+                    {hasSuppliers
+                      ? "Нийлүүлэгчтэй ажиллах"
+                      : "Нийлүүлэгчгүй ажиллах"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <SealCheck
+                    className="size-4 text-emerald-600"
+                    weight="fill"
+                  />
+                  <span>
+                    {hasInventory
+                      ? "Барааны үлдэгдэл хянах"
+                      : "Үлдэгдэл хянахгүй"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <SealCheck
+                    className="size-4 text-emerald-600"
+                    weight="fill"
+                  />
+                  <span>
+                    {hasCustomerCredit
+                      ? "Харилцагчийн өр/авлага хянах"
+                      : "Өр/авлага хянахгүй"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <SealCheck
+                    className="size-4 text-emerald-600"
+                    weight="fill"
+                  />
+                  <span>
+                    {hasMultiBranch ? "Олон салбартай" : "Нэг салбартай"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <SealCheck
+                    className="size-4 text-emerald-600"
+                    weight="fill"
+                  />
+                  <span>{hasVariants ? "Варианттай" : "Вариантгүй"}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <SealCheck
+                    className="size-4 text-emerald-600"
+                    weight="fill"
+                  />
+                  <span>{hasBrands ? "Брэндтэй" : "Брэндгүй"}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <SealCheck
+                    className="size-4 text-emerald-600"
+                    weight="fill"
+                  />
+                  <span>{hasCategories ? "Ангилалтай" : "Ангилалгүй"}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <SealCheck
+                    className="size-4 text-emerald-600"
+                    weight="fill"
+                  />
+                  <span>
+                    {hasEmailReports ? "И-мэйл тайлантай" : "И-мэйл тайлангүй"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <SealCheck
+                    className="size-4 text-emerald-600"
+                    weight="fill"
+                  />
+                  <span>
+                    {hasAuditLog ? "Үйлдлийн түүхтэй" : "Үйлдлийн түүхгүй"}
                   </span>
                 </div>
               </div>

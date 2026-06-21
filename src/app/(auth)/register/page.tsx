@@ -5,10 +5,10 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { AuthCard } from "@/components/ui/auth-card";
 import { Button } from "@/components/ui/button";
+import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { register } from "./actions";
-import { ErrorBanner } from "@/components/ui/error-banner";
 
 export default function RegisterPage() {
   const [state, action, pending] = useActionState(register, undefined);

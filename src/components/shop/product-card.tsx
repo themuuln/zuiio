@@ -3,11 +3,11 @@
 import { ShoppingCart } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
+import type { SelectedVariant } from "@/components/products/variant-picker";
+import { VariantPicker } from "@/components/products/variant-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import type { SelectedVariant } from "@/components/products/variant-picker";
-import { VariantPicker } from "@/components/products/variant-picker";
 import { cn } from "@/lib/utils";
 
 export type ProductCardProduct = {
@@ -37,6 +37,7 @@ export function ProductCard({ product }: { product: ProductCardProduct }) {
   );
   const unit = product.unit ?? "ш";
   const isOutOfStock = stock <= 0;
+  const displayImage = selectedVariant?.image_url ?? product.image_url;
 
   const handleAddToCart = () => {
     if (isOutOfStock) return;
@@ -68,10 +69,12 @@ export function ProductCard({ product }: { product: ProductCardProduct }) {
           isOutOfStock && "bg-muted/10",
         )}
       >
-        {product.image_url ? (
+        {displayImage ? (
           <img
-            src={product.image_url}
+            src={displayImage}
             alt={product.name}
+            loading="lazy"
+            decoding="async"
             className={cn(
               "h-full w-full object-cover",
               isOutOfStock && "opacity-50",

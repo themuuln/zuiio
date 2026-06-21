@@ -9,7 +9,6 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { useRegisterSave, useSettings } from "./settings-context";
 import {
   Card,
   CardContent,
@@ -23,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { createClient } from "@/lib/supabase/client";
+import { useRegisterSave, useSettings } from "./settings-context";
 
 const EVENT_OPTIONS = [
   { value: "low_stock", label: "Бага нөөц" },

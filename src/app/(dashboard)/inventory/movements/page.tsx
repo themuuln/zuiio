@@ -1,9 +1,11 @@
 import { Plus } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { PageShell } from "@/components/erp/page-shell";
 import { Button } from "@/components/ui/button";
-import { requireAppContext } from "@/lib/erp";
 import { withBranchFilter } from "@/lib/branches";
+import { requireAppContext } from "@/lib/erp";
+import { checkOrgSetting } from "@/lib/org-settings";
 import { type MovementRow, MovementsContent } from "./movements-content";
 
 export const unstable_instant = {
@@ -12,7 +14,7 @@ export const unstable_instant = {
     { searchParams: { branch: null } },
     { searchParams: { branch: "sample" } },
   ],
-  unstable_disableBuildValidation: true,
+  unstable_disableValidation: true,
 };
 
 export default async function InventoryMovementsPage({
@@ -23,6 +25,8 @@ export default async function InventoryMovementsPage({
   const { branch: urlBranch } = await searchParams;
   const { supabase, organizationId, branchId, isBranchScoped } =
     await requireAppContext();
+  if (!(await checkOrgSetting(supabase, organizationId, "has_inventory")))
+    redirect("/");
 
   const { data: movements } = await withBranchFilter(
     supabase

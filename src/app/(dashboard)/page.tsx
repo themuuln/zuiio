@@ -1,16 +1,10 @@
 import { addDays, startOfDay, subDays } from "date-fns";
 import Link from "next/link";
-
-import { requireAppContext } from "@/lib/erp";
 import { withBranchFilter } from "@/lib/branches";
+import { requireAppContext } from "@/lib/erp";
 import { cn } from "@/lib/utils";
 import type { DashboardData } from "./dashboard-client";
 import { DashboardClient } from "./dashboard-client";
-
-export const unstable_instant = {
-  prefetch: "static",
-  unstable_disableBuildValidation: true,
-};
 
 export default async function DashboardPage() {
   const { supabase, organizationId, branchId, isBranchScoped } =

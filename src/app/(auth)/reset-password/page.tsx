@@ -4,16 +4,19 @@ import { Lock, Password } from "@phosphor-icons/react";
 import { useActionState } from "react";
 import { AuthCard } from "@/components/ui/auth-card";
 import { Button } from "@/components/ui/button";
+import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { updatePassword } from "./actions";
-import { ErrorBanner } from "@/components/ui/error-banner";
 
 export default function ResetPasswordPage() {
   const [state, action, pending] = useActionState(updatePassword, undefined);
 
   return (
-    <AuthCard title="Шинэ нууц үг" description="Аюулгүй шинэ нууц үгээ оруулаад бүртгэлдээ буцаж нэвтэрнэ үү.">
+    <AuthCard
+      title="Шинэ нууц үг"
+      description="Аюулгүй шинэ нууц үгээ оруулаад бүртгэлдээ буцаж нэвтэрнэ үү."
+    >
       <form action={action} className="space-y-4">
         <FieldGroup>
           <Field>

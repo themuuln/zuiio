@@ -20,7 +20,7 @@ export function CategoryChips({
 }: CategoryChipsProps) {
   return (
     <div
-      className="w-full overflow-x-auto"
+      className="sticky top-[112px] z-10 w-full overflow-x-auto bg-background pt-2 pb-1"
       style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
     >
       <div className="flex gap-2 px-1 pb-1" style={{ minWidth: "max-content" }}>

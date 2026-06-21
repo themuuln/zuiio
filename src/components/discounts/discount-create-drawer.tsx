@@ -6,13 +6,7 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { createDiscount } from "@/app/(dashboard)/discounts/actions";
-import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Button, buttonVariants } from "@/components/ui/button";
-import {
-  DrawerFooter,
-  DrawerCancel,
-  DrawerSubmit,
-} from "@/components/ui/drawer-footer";
 import {
   Combobox,
   ComboboxContent,
@@ -21,17 +15,23 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-import { DatePicker } from "@/components/ui/date-picker";
 import { CurrencyInput } from "@/components/ui/currency-input";
+import { DatePicker } from "@/components/ui/date-picker";
+import {
+  DrawerCancel,
+  DrawerFooter,
+  DrawerSubmit,
+} from "@/components/ui/drawer-footer";
+import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { formatRouteDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
-import { ErrorBanner } from "@/components/ui/error-banner";
 
 const discountSchema = z.object({
   name: z.string().min(1, "Нэр шаардлагатай"),

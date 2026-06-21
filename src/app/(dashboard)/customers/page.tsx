@@ -11,11 +11,23 @@ import { requireAppContext } from "@/lib/erp";
 
 export const unstable_instant = {
   prefetch: "static",
-  unstable_disableBuildValidation: true,
+  unstable_disableValidation: true,
 };
 
 export default async function CustomersPage() {
   const { supabase, organizationId } = await requireAppContext();
+
+  // Check org setting — hide balance column if credit tracking disabled
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("has_customer_credit")
+    .eq("id", organizationId)
+    .single();
+
+  const showBalance =
+    (org as { has_customer_credit: boolean } | null)?.has_customer_credit !==
+    false;
+
   const { data: customers } = await supabase
     .from("contacts")
     .select("id, name, phone, email, address, balance")
@@ -55,7 +67,7 @@ export default async function CustomersPage() {
           action={<CustomerCreateDrawer />}
         />
       ) : (
-        <CustomersTable data={tableData} />
+        <CustomersTable data={tableData} showBalance={showBalance} />
       )}
     </PageShell>
   );

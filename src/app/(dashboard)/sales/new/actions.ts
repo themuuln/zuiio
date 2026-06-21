@@ -412,7 +412,8 @@ export async function createSale(
 
   revalidateEntities(["sales", "inventory", "products"]);
   return {
-    success: true as const, error: undefined,
+    success: true as const,
+    error: undefined,
     sale: {
       id: sale.id,
       total_amount: totalAmount,

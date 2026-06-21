@@ -7,7 +7,6 @@ import { useCallback, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { useRegisterSave, useSettings } from "./settings-context";
 import {
   Card,
   CardContent,
@@ -19,6 +18,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { createClient } from "@/lib/supabase/client";
+import { useRegisterSave, useSettings } from "./settings-context";
 
 const reportEmailSchema = z.object({
   enabled: z.boolean(),

@@ -1,10 +1,10 @@
 import { startOfDay, subDays } from "date-fns";
 import { NextResponse } from "next/server";
+import { sendDailyReportEmail } from "@/lib/email";
 import { formatCurrency } from "@/lib/format";
 import { sendTelegramNotification } from "@/lib/notification";
 import { getFullReport } from "@/lib/reports";
-import { createClient } from "@/lib/supabase/server";
-import { sendDailyReportEmail } from "@/lib/email";
+import { createServiceClient } from "@/lib/supabase/server-service";
 
 /**
  * Cron job endpoint called by pg_cron via net.http_post.
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const supabase = await createClient();
+    const supabase = createServiceClient();
     const today = startOfDay(new Date());
     const yesterday = subDays(today, 1);
 
@@ -71,6 +71,7 @@ export async function POST(request: Request) {
           "daily_summary",
           `📋 Өдрийн тойм — ${orgName}`,
           message,
+          supabase,
         );
 
         if (result.success) telegramSent++;

@@ -1,9 +1,13 @@
+import { redirect } from "next/navigation";
 import { requireAppContext } from "@/lib/erp";
+import { checkOrgSetting } from "@/lib/org-settings";
 import { createServiceClient } from "@/lib/supabase/server-service";
 import { BrandPresetsClient } from "./presets-client";
 
 export default async function PresetsPage() {
   const { supabase, organizationId } = await requireAppContext();
+  if (!(await checkOrgSetting(supabase, organizationId, "has_brands")))
+    redirect("/");
   const serviceSupabase = createServiceClient();
 
   const presetsData = await serviceSupabase

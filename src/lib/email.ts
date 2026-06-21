@@ -1,13 +1,13 @@
-import nodemailer from "nodemailer";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/lib/supabase/types";
+import nodemailer from "nodemailer";
 import { formatCurrency } from "@/lib/format";
 import {
   getFinancialSummary,
+  getPendingSales,
   getProductSalesBreakdown,
   getStockMovementsSummary,
-  getPendingSales,
 } from "@/lib/reports";
+import type { Database } from "@/lib/supabase/types";
 import { escapeHtml } from "@/lib/validation";
 
 // ─── Types ─────────────────────────────────────────────────────────────

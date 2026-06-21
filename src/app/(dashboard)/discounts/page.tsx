@@ -8,7 +8,7 @@ export const unstable_instant = {
     { searchParams: { branch: null } },
     { searchParams: { branch: "sample" } },
   ],
-  unstable_disableBuildValidation: true,
+  unstable_disableValidation: true,
 };
 
 export type DiscountRow = {

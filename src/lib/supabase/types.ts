@@ -907,8 +907,20 @@ export type Database = {
           company_type: string;
           created_at: string | null;
           currency: string | null;
+          enabled_features: string[] | null;
+          has_customer_credit: boolean | null;
+          has_inventory: boolean | null;
+          has_multi_branch: boolean | null;
+          has_suppliers: boolean | null;
+          has_variants: boolean | null;
+          has_uom: boolean | null;
+          has_brands: boolean | null;
+          has_categories: boolean | null;
+          has_email_reports: boolean | null;
+          has_audit_log: boolean | null;
           id: string;
           name: string;
+          onboarding_completed: boolean | null;
           report_email_enabled: boolean;
           report_email_recipient: string | null;
           report_email_time: string | null;
@@ -919,8 +931,20 @@ export type Database = {
           company_type?: string;
           created_at?: string | null;
           currency?: string | null;
+          enabled_features?: string[] | null;
+          has_customer_credit?: boolean | null;
+          has_inventory?: boolean | null;
+          has_multi_branch?: boolean | null;
+          has_suppliers?: boolean | null;
+          has_variants?: boolean | null;
+          has_uom?: boolean | null;
+          has_brands?: boolean | null;
+          has_categories?: boolean | null;
+          has_email_reports?: boolean | null;
+          has_audit_log?: boolean | null;
           id?: string;
           name: string;
+          onboarding_completed?: boolean | null;
           report_email_enabled?: boolean;
           report_email_recipient?: string | null;
           report_email_time?: string | null;
@@ -931,8 +955,20 @@ export type Database = {
           company_type?: string;
           created_at?: string | null;
           currency?: string | null;
+          enabled_features?: string[] | null;
+          has_customer_credit?: boolean | null;
+          has_inventory?: boolean | null;
+          has_multi_branch?: boolean | null;
+          has_suppliers?: boolean | null;
+          has_variants?: boolean | null;
+          has_uom?: boolean | null;
+          has_brands?: boolean | null;
+          has_categories?: boolean | null;
+          has_email_reports?: boolean | null;
+          has_audit_log?: boolean | null;
           id?: string;
           name?: string;
+          onboarding_completed?: boolean | null;
           report_email_enabled?: boolean;
           report_email_recipient?: string | null;
           report_email_time?: string | null;
@@ -990,6 +1026,99 @@ export type Database = {
           unit?: string | null;
         };
         Relationships: [];
+      };
+      product_bundle_items: {
+        Row: {
+          bundle_id: string;
+          id: string;
+          product_id: string | null;
+          quantity: number;
+          variant_id: string | null;
+        };
+        Insert: {
+          bundle_id: string;
+          id?: string;
+          product_id?: string | null;
+          quantity?: number;
+          variant_id?: string | null;
+        };
+        Update: {
+          bundle_id?: string;
+          id?: string;
+          product_id?: string | null;
+          quantity?: number;
+          variant_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "product_bundle_items_bundle_id_fkey";
+            columns: ["bundle_id"];
+            isOneToOne: false;
+            referencedRelation: "product_bundles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "product_bundle_items_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "product_bundle_items_variant_id_fkey";
+            columns: ["variant_id"];
+            isOneToOne: false;
+            referencedRelation: "product_variants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      product_bundles: {
+        Row: {
+          cost_price: number | null;
+          created_at: string | null;
+          description: string | null;
+          id: string;
+          is_active: boolean | null;
+          name: string;
+          organization_id: string;
+          sale_price: number | null;
+          sku: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          cost_price?: number | null;
+          created_at?: string | null;
+          description?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          name: string;
+          organization_id: string;
+          sale_price?: number | null;
+          sku?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          cost_price?: number | null;
+          created_at?: string | null;
+          description?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          name?: string;
+          organization_id?: string;
+          sale_price?: number | null;
+          sku?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "product_bundles_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       product_variant_assignments: {
         Row: {

@@ -1,6 +1,5 @@
 "use client";
 
-import { DrawerLayout } from "@/components/ui/drawer-layout";
 import {
   Barcode,
   CaretLeft,
@@ -11,11 +10,11 @@ import {
 } from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "sonner";
-
 import { deleteProduct } from "@/app/(dashboard)/products/actions";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { DrawerHeader } from "@/components/ui/drawer-header";
+import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { InfoRow } from "@/components/ui/info-row";
 import { formatCurrency } from "@/lib/format";
 import { productKeys } from "@/lib/query/keys";

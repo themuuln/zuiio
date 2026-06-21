@@ -1,5 +1,13 @@
 {
-  "ignore": ["node_modules", "*.test.*", "*.spec.*", "__tests__", "dist", ".git", "*.lock"],
+  "ignore": [
+    "node_modules",
+    "*.test.*",
+    "*.spec.*",
+    "__tests__",
+    "dist",
+    ".git",
+    "*.lock"
+  ],
   "fileMapping": {
     "lib/**": "website/docs/features/",
     "src/**": "docs/features/",

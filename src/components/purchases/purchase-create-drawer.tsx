@@ -200,20 +200,30 @@ export function PurchaseCreateDrawer({
       }
       panelWidth="32rem"
       footer={
-        <DrawerFooter>
-          <DrawerCancel
-            onClick={() => {
-              setOpen(false);
-              reset();
-            }}
-          />
-          <DrawerSubmit
-            form="purchase-form"
-            isPending={isSubmitting}
-            label="Захиалга үүсгэх"
-            loadingLabel="Үүсгэж байна..."
-          />
-        </DrawerFooter>
+        <>
+          <div className="flex justify-end px-0 pb-2">
+            <div className="text-right">
+              <span className="text-sm text-muted-foreground">Нийт дүн:</span>
+              <span className="ml-2 text-lg font-semibold">
+                {formatCurrency(totalAmount)}
+              </span>
+            </div>
+          </div>
+          <DrawerFooter className="border-0 pt-0 mt-0">
+            <DrawerCancel
+              onClick={() => {
+                setOpen(false);
+                reset();
+              }}
+            />
+            <DrawerSubmit
+              form="purchase-form"
+              isPending={isSubmitting}
+              label="Захиалга үүсгэх"
+              loadingLabel="Үүсгэж байна..."
+            />
+          </DrawerFooter>
+        </>
       }
     >
       <form
@@ -299,28 +309,6 @@ export function PurchaseCreateDrawer({
                   {errors.order_date.message}
                 </p>
               )}
-            </Field>
-            <Field>
-              <FieldLabel>
-                Хүлээгдэж буй огноо
-                <span className="text-xs text-muted-foreground">
-                  {" "}
-                  (заавал биш)
-                </span>
-              </FieldLabel>
-              <Controller
-                control={control}
-                name="expected_date"
-                render={({ field }) => (
-                  <DatePicker
-                    value={field.value ? new Date(field.value) : undefined}
-                    onChange={(date) =>
-                      field.onChange(date ? formatRouteDate(date) : "")
-                    }
-                    placeholder="Хүлээгдэж буй өдөр"
-                  />
-                )}
-              />
             </Field>
           </div>
         </FieldGroup>
@@ -483,15 +471,6 @@ export function PurchaseCreateDrawer({
               </div>
             );
           })}
-        </div>
-
-        <div className="flex justify-end border-t pt-3">
-          <div className="text-right">
-            <span className="text-sm text-muted-foreground">Нийт дүн:</span>
-            <span className="ml-2 text-lg font-semibold">
-              {formatCurrency(totalAmount)}
-            </span>
-          </div>
         </div>
 
         <Field>

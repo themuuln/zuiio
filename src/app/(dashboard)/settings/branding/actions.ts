@@ -1,14 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAppContext } from "@/lib/erp";
 import {
-  BrandConfig,
+  type BrandConfig,
   DEFAULT_BRAND_CONFIG,
-  getTheme,
   getFont,
+  getTheme,
   isValidColorValue,
 } from "@/lib/branding";
+import { requireAppContext } from "@/lib/erp";
 
 export type BrandingState = {
   error?: string;

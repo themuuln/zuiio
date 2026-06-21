@@ -1,4 +1,5 @@
 import { Buildings } from "@phosphor-icons/react/dist/ssr";
+import { redirect } from "next/navigation";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
@@ -11,11 +12,23 @@ import { requireAppContext } from "@/lib/erp";
 
 export const unstable_instant = {
   prefetch: "static",
-  unstable_disableBuildValidation: true,
+  unstable_disableValidation: true,
 };
 
 export default async function SuppliersPage() {
   const { supabase, organizationId } = await requireAppContext();
+
+  // Check org setting — redirect if suppliers are not used
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("has_suppliers")
+    .eq("id", organizationId)
+    .single();
+
+  const hasSuppliers =
+    (org as { has_suppliers: boolean } | null)?.has_suppliers !== false;
+  if (!hasSuppliers) redirect("/");
+
   const { data: suppliers } = await supabase
     .from("contacts")
     .select("id, name, phone, email, address, balance")

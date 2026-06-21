@@ -6,24 +6,24 @@ import { useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { createReturn } from "@/app/(dashboard)/returns/actions";
-import { buttonVariants } from "@/components/ui/button";
 import {
-  DrawerFooter,
+  type SelectedVariant,
+  VariantPicker,
+} from "@/components/products/variant-picker";
+import { buttonVariants } from "@/components/ui/button";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { DatePicker } from "@/components/ui/date-picker";
+import {
   DrawerCancel,
+  DrawerFooter,
   DrawerSubmit,
 } from "@/components/ui/drawer-footer";
-import { DatePicker } from "@/components/ui/date-picker";
-import { CurrencyInput } from "@/components/ui/currency-input";
+import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
-import {
-  VariantPicker,
-  type SelectedVariant,
-} from "@/components/products/variant-picker";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
-import { ErrorBanner } from "@/components/ui/error-banner";
 import { useVariantLineItemRemove } from "@/lib/use-variant-line-items";
 
 const lineItemSchema = z.object({

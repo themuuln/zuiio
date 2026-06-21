@@ -37,6 +37,7 @@ export type ProductRow = {
   brand_id: string | null;
   brand_name: string | null;
   brand_logo_url: string | null;
+  image_url: string | null;
 };
 
 function toEditData(product: ProductRow): ProductEditData {
@@ -136,6 +137,7 @@ export function ProductsTable({
     sale_price: product.sale_price,
     current_stock: product.current_stock,
     min_stock: product.min_stock,
+    image_url: product.image_url,
     variants:
       selectedVariants?.map((v) => ({
         id: v.id,
@@ -148,6 +150,32 @@ export function ProductsTable({
 
   const columns: ColumnDef<ProductRow>[] = useMemo(
     () => [
+      {
+        accessorKey: "image_url",
+        header: "Зураг",
+        cell: ({ row }) => {
+          const url = row.original.image_url;
+          return (
+            <div className="flex size-9 items-center justify-center overflow-hidden rounded-md border bg-muted/30">
+              {url ? (
+                <img
+                  src={url}
+                  alt={row.original.name}
+                  loading="lazy"
+                  decoding="async"
+                  className="size-full object-cover"
+                />
+              ) : (
+                <span className="text-xs text-muted-foreground/40">
+                  {row.original.name.charAt(0)}
+                </span>
+              )}
+            </div>
+          );
+        },
+        enableSorting: false,
+        enableHiding: false,
+      },
       {
         accessorKey: "name",
         header: "Нэр",

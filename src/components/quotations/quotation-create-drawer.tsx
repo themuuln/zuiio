@@ -6,12 +6,11 @@ import { useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { createQuotation } from "@/app/(dashboard)/quotations/actions";
-import { buttonVariants } from "@/components/ui/button";
 import {
-  DrawerFooter,
-  DrawerCancel,
-  DrawerSubmit,
-} from "@/components/ui/drawer-footer";
+  type SelectedVariant,
+  VariantPicker,
+} from "@/components/products/variant-picker";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Combobox,
   ComboboxContent,
@@ -20,18 +19,19 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-import { DatePicker } from "@/components/ui/date-picker";
 import { CurrencyInput } from "@/components/ui/currency-input";
+import { DatePicker } from "@/components/ui/date-picker";
+import {
+  DrawerCancel,
+  DrawerFooter,
+  DrawerSubmit,
+} from "@/components/ui/drawer-footer";
+import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  VariantPicker,
-  type SelectedVariant,
-} from "@/components/products/variant-picker";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
-import { ErrorBanner } from "@/components/ui/error-banner";
 import { useVariantLineItemRemove } from "@/lib/use-variant-line-items";
 
 const lineItemSchema = z.object({

@@ -14,7 +14,12 @@ export function InfoRow({
   className?: string;
 }) {
   return (
-    <div className={cn("flex items-center justify-between py-3 text-sm", className)}>
+    <div
+      className={cn(
+        "flex items-center justify-between py-3 text-sm",
+        className,
+      )}
+    >
       <span className="flex items-center gap-2 text-muted-foreground">
         {icon}
         {label}

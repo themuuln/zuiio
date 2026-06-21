@@ -8,7 +8,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { useRegisterSave, useSettings } from "./settings-context";
 import {
   Card,
   CardContent,
@@ -20,6 +19,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { createClient } from "@/lib/supabase/client";
+import { useRegisterSave, useSettings } from "./settings-context";
 
 const smtpSchema = z.object({
   host: z.string().min(1, "Сервер шаардлагатай."),

@@ -111,7 +111,7 @@ export function AppointmentDatePicker({
         align="start"
       >
         {/* Left: Quick presets */}
-        <div className="flex flex-row md:flex-col gap-0.5 p-1.5 border-b md:border-b-0 md:border-r border-border/50 bg-muted/20 md:w-[180px] shrink-0 overflow-x-auto">
+        <div className="flex flex-row flex-wrap md:flex-col gap-0.5 p-1.5 border-b md:border-b-0 md:border-r border-border/50 bg-muted/20 md:w-[180px] shrink-0 overflow-x-auto">
           {presets.map((preset) => (
             <React.Fragment key={preset.label}>
               {preset.separator && (
@@ -122,7 +122,7 @@ export function AppointmentDatePicker({
               <Button
                 variant="ghost"
                 className={cn(
-                  "h-8 text-xs font-normal justify-center md:justify-start px-2.5 py-1.5 rounded-md w-full shrink-0",
+                  "h-8 text-xs font-normal justify-center md:justify-start px-2.5 py-1.5 rounded-md md:w-full shrink-0",
                   value &&
                     preset.getValue() instanceof Date &&
                     isSameDay(value, preset.getValue() as Date) &&

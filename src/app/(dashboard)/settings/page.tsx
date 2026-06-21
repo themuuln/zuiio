@@ -1,6 +1,7 @@
 import { Cube, GearSix, WarningCircle } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/erp/theme-toggle";
+import type { RolePermission } from "@/components/roles/roles-client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,23 +10,24 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { type BrandConfig, DEFAULT_BRAND_CONFIG } from "@/lib/branding";
 import { requireAppContext } from "@/lib/erp";
 import { createServiceClient } from "@/lib/supabase/server-service";
-import { DEFAULT_BRAND_CONFIG, type BrandConfig } from "@/lib/branding";
-import type { RolePermission } from "@/components/roles/roles-client";
 import { BrandingDrawer } from "./branding-drawer";
 import { LeaveOrganizationDialog } from "./leave-org-dialog";
 import { NotificationSettings } from "./notification-settings";
 import { OrgInfoForm } from "./org-info-form";
+import { OrgLogoUploader } from "./org-logo-uploader";
 import { ProfileForm } from "./profile-form";
-import { RolesDrawer } from "./roles-drawer";
-import { SmtpSettings } from "./smtp-settings";
 import { ReportEmailSettings } from "./report-email-settings";
+import { RolesDrawer } from "./roles-drawer";
 import { SettingsShell } from "./settings-shell";
+import { SmtpSettings } from "./smtp-settings";
 
 export const unstable_instant = {
   prefetch: "static",
-  unstable_disableBuildValidation: true,
+  unstable_disableValidation: true,
 };
 
 const SUPERADMIN_EMAIL = "zerone.offical@gmail.com";
@@ -39,7 +41,9 @@ export default async function SettingsPage() {
   const [orgResult, profileResult, brandConfigResult] = await Promise.all([
     supabase
       .from("organizations")
-      .select("name, slug, company_type, currency")
+      .select(
+        "name, slug, company_type, currency, has_email_reports, has_brands",
+      )
       .eq("id", organizationId)
       .single(),
     supabase.from("profiles").select("full_name").eq("id", userId).single(),
@@ -54,6 +58,10 @@ export default async function SettingsPage() {
   const profile = profileResult.data;
   const brandConfig = (brandConfigResult.data?.brand_config ??
     {}) as BrandConfig;
+  const hasEmailReports =
+    (org as { has_email_reports: boolean } | null)?.has_email_reports !== false;
+  const hasBrands =
+    (org as { has_brands: boolean } | null)?.has_brands !== false;
 
   const serviceSupabase = createServiceClient();
   const presetsData = await serviceSupabase
@@ -116,17 +124,22 @@ export default async function SettingsPage() {
             Байгууллагын нэр болон холбоосыг өөрчлөх
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           <OrgInfoForm
             initialName={org?.name ?? ""}
             initialSlug={org?.slug ?? ""}
             initialCompanyType={org?.company_type}
           />
+          <Separator />
+          <OrgLogoUploader
+            logoUrl={brandConfig.logo_url ?? null}
+            organizationName={org?.name ?? ""}
+          />
         </CardContent>
       </Card>
 
       {/* Product Brand Presets — available brands with products to import */}
-      {hasPresets ? (
+      {hasBrands && hasPresets ? (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -181,10 +194,14 @@ export default async function SettingsPage() {
       {isSuperAdmin && <NotificationSettings isSuperAdmin />}
 
       {/* SMTP Settings (superadmin only — technical config) */}
-      {isSuperAdmin && <SmtpSettings isSuperAdmin={isSuperAdmin} />}
+      {isSuperAdmin && hasEmailReports && (
+        <SmtpSettings isSuperAdmin={isSuperAdmin} />
+      )}
 
       {/* Report Email Settings (org owners with emails.manage) */}
-      {canManageEmail && hasSmtpConfig && <ReportEmailSettings />}
+      {hasEmailReports && canManageEmail && hasSmtpConfig && (
+        <ReportEmailSettings />
+      )}
 
       {/* Branding */}
       <Card>

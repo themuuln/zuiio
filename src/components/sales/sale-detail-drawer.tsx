@@ -1,8 +1,10 @@
 "use client";
 
-import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { X } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
+import { DrawerHeader } from "@/components/ui/drawer-header";
+import { DrawerLayout } from "@/components/ui/drawer-layout";
+import { InfoRow } from "@/components/ui/info-row";
 import {
   Table,
   TableBody,
@@ -12,8 +14,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { DrawerHeader } from "@/components/ui/drawer-header";
-import { InfoRow } from "@/components/ui/info-row";
 
 type SaleItemDetail = {
   id: string;

@@ -129,12 +129,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "REMOVE_ITEM", payload: { cartItemKey } });
   }, []);
 
-  const updateQuantity = useCallback((cartItemKey: string, quantity: number) => {
-    dispatch({
-      type: "UPDATE_QUANTITY",
-      payload: { cartItemKey, quantity },
-    });
-  }, []);
+  const updateQuantity = useCallback(
+    (cartItemKey: string, quantity: number) => {
+      dispatch({
+        type: "UPDATE_QUANTITY",
+        payload: { cartItemKey, quantity },
+      });
+    },
+    [],
+  );
 
   const applyDiscount = useCallback((discount: DiscountInfo) => {
     dispatch({ type: "APPLY_DISCOUNT", payload: discount });
@@ -153,7 +156,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [state.items],
   );
   const discountedTotal = useMemo(
-    () => computeDiscountedTotal(totalAmount, state.discount?.discountAmount ?? 0),
+    () =>
+      computeDiscountedTotal(totalAmount, state.discount?.discountAmount ?? 0),
     [totalAmount, state.discount],
   );
   const itemCount = useMemo(() => computeItemCount(state.items), [state.items]);
@@ -172,7 +176,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       removeDiscount,
       clearCart,
     }),
-    [state.items, state.discount, itemCount, totalAmount, discountedTotal, addItem, removeItem, updateQuantity, applyDiscount, removeDiscount, clearCart],
+    [
+      state.items,
+      state.discount,
+      itemCount,
+      totalAmount,
+      discountedTotal,
+      addItem,
+      removeItem,
+      updateQuantity,
+      applyDiscount,
+      removeDiscount,
+      clearCart,
+    ],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

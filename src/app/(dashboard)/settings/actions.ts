@@ -635,3 +635,40 @@ export async function leaveOrganization(formData: FormData) {
 
   redirect("/organization/new");
 }
+
+// ─── Org Logo ─────────────────────────────────────────────────────────
+
+export async function updateOrgLogo(logoUrl: string | null) {
+  const { supabase, organizationId } = await requireAppContext();
+
+  // Fetch current brand_config to preserve other fields
+  const { data: org, error: fetchError } = await supabase
+    .from("organizations")
+    .select("brand_config")
+    .eq("id", organizationId)
+    .single();
+
+  if (fetchError || !org) {
+    return { error: "Байгууллагын мэдээлэл олдсонгүй." };
+  }
+
+  const brandConfig = (org.brand_config ?? {}) as Record<string, unknown>;
+
+  const updatedConfig = {
+    ...brandConfig,
+    logo_url: logoUrl,
+  };
+
+  const { error: updateError } = await supabase
+    .from("organizations")
+    .update({ brand_config: updatedConfig })
+    .eq("id", organizationId);
+
+  if (updateError) {
+    return { error: `Хадгалахад алдаа гарлаа: ${updateError.message}` };
+  }
+
+  revalidatePath("/settings");
+  revalidatePath("/");
+  return { success: true as const };
+}

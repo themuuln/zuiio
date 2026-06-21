@@ -1,13 +1,15 @@
 import { Folder } from "@phosphor-icons/react/dist/ssr";
+import { redirect } from "next/navigation";
 import { CategoriesTable } from "@/components/categories/categories-table";
 import { CategoryCreateDrawer } from "@/components/categories/category-create-drawer";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
 import { requireAppContext } from "@/lib/erp";
+import { checkOrgSetting } from "@/lib/org-settings";
 
 export const unstable_instant = {
   prefetch: "static",
-  unstable_disableBuildValidation: true,
+  unstable_disableValidation: true,
 };
 
 export type CategoryRow = {
@@ -18,6 +20,9 @@ export type CategoryRow = {
 
 export default async function CategoriesPage() {
   const { supabase, organizationId } = await requireAppContext();
+
+  if (!(await checkOrgSetting(supabase, organizationId, "has_categories")))
+    redirect("/");
 
   // Fetch categories and products separately to avoid RLS issues with
   // Supabase FK subqueries (products(count) doesn't resolve through RLS).

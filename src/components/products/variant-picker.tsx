@@ -1,7 +1,7 @@
 "use client";
 
 import { Check } from "@phosphor-icons/react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/format";
 import {
@@ -16,6 +16,7 @@ export type SelectedVariant = {
   option_ids: string[];
   sale_price: number | null;
   current_stock: number | null;
+  image_url: string | null;
 };
 
 export function VariantPicker({
@@ -27,8 +28,35 @@ export function VariantPicker({
   onSelect: (variant: SelectedVariant | null) => void;
   onHasVariants?: (hasVariants: boolean) => void;
 }) {
-  const { data: groups } = useVariantGroups(productId);
-  const { data: variants } = useProductVariants(productId);
+  const [enabled, setEnabled] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Lazy-load: only fetch variant data when the picker is visible
+  const observe = useCallback(() => {
+    if (enabled) return;
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setEnabled(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [enabled]);
+
+  useEffect(() => {
+    return observe();
+  }, [observe]);
+
+  const { data: groups } = useVariantGroups(enabled ? productId : undefined);
+  const { data: variants } = useProductVariants(
+    enabled ? productId : undefined,
+  );
 
   // Build selection state: group_id -> option_id
   const [selections, setSelections] = useState<Record<string, string>>({});
@@ -66,11 +94,15 @@ export function VariantPicker({
         option_ids: matchedVariant.option_ids,
         sale_price: matchedVariant.sale_price,
         current_stock: matchedVariant.current_stock,
+        image_url: matchedVariant.image_urls?.[0] ?? null,
       });
     } else if (Object.values(selections).some(Boolean)) {
       onSelect(null);
     }
   }, [matchedVariant, onSelect, selections]);
+
+  // Don't render anything until near viewport
+  if (!enabled) return <div ref={ref} className="h-0" />;
 
   if (!groups || groups.length === 0) return null;
 
