@@ -10,6 +10,7 @@ type ComboboxContextValue<T> = {
   inputValue: string;
   open: boolean;
   highlightedIndex: number;
+  value: T | null;
   itemToStringLabel: (item: T | null) => string;
   onValueChange: (value: T | null) => void;
   onInputValueChange: (value: string) => void;
@@ -143,6 +144,7 @@ function ComboboxInner<T>(
         inputValue,
         open,
         highlightedIndex,
+        value: value ?? null,
         itemToStringLabel,
         onValueChange,
         onInputValueChange,
@@ -205,7 +207,10 @@ const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputProps>(
             showTrigger && "pr-8",
             className,
           )}
-          value={ctx.inputValue}
+          value={
+            ctx.inputValue ||
+            (ctx.value ? ctx.itemToStringLabel(ctx.value) : "")
+          }
           onChange={(e) => {
             ctx.onInputValueChange(e.target.value);
             ctx.setOpen(true);
