@@ -209,7 +209,7 @@ export function PurchaseCreateDrawer({
               </span>
             </div>
           </div>
-          <DrawerFooter className="border-0 pt-0 mt-0">
+          <DrawerFooter>
             <DrawerCancel
               onClick={() => {
                 setOpen(false);

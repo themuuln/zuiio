@@ -29,11 +29,11 @@ async function getProductWithStock(page: any): Promise<string> {
 
   for (let i = 0; i < count; i++) {
     const row = rows.nth(i);
-    const stockCell = row.locator("td").nth(5);
+    const stockCell = row.locator("td").nth(6);
     const stockText = await stockCell.textContent();
     const stock = Number.parseFloat(stockText?.trim() ?? "0");
     if (stock > 0) {
-      const nameCell = row.locator("td").first();
+      const nameCell = row.locator("td").nth(1);
       const name = (await nameCell.textContent())?.trim() ?? "";
       if (name) {
         cachedProductWithStock = name;
@@ -45,7 +45,7 @@ async function getProductWithStock(page: any): Promise<string> {
 
   // Fallback: try first row regardless of stock
   const fallbackName =
-    (await rows.first().locator("td").first().textContent())?.trim() ?? "";
+    (await rows.first().locator("td").nth(1).textContent())?.trim() ?? "";
   console.log(
     `No product with stock found, falling back to: "${fallbackName}"`,
   );
@@ -54,28 +54,34 @@ async function getProductWithStock(page: any): Promise<string> {
 }
 
 /**
- * Select a specific product in the line-item combobox by name.
+ * Select a specific product in the sale form's ProductBrowserDrawer.
+ * Clicks "Бараа сонгох" for the given row, searches in the drawer,
+ * then clicks the matching product card.
  */
 async function selectProductByName(
   page: any,
   productName: string,
   rowIndex = 0,
 ) {
-  const comboboxInput = page.getByPlaceholder("Сонгох").nth(rowIndex);
-  await comboboxInput.click();
-  await page.waitForTimeout(400);
-  // Type the first few characters to filter
-  const searchTerm = productName.slice(0, 4);
-  await comboboxInput.fill(searchTerm);
+  // Click the "Бараа сонгох" button for this line item row
+  const productButtons = page.getByRole("button", { name: "Бараа сонгох" });
+  await productButtons.nth(rowIndex).click();
+  await page.waitForTimeout(800);
+
+  // The ProductBrowserDrawer opens — type in the search field
+  const searchInput = page.getByPlaceholder("Бүтээгдэхүүн хайх...");
+  await expect(searchInput).toBeVisible({ timeout: 3000 });
+  await searchInput.fill(productName);
   await page.waitForTimeout(600);
-  // Find and click the matching <li> inside the combobox dropdown
-  const option = page
-    .locator('[class*="z-50"] li')
+
+  // Find and click the product card button in the drawer
+  const productCard = page
+    .locator('button[type="button"]')
     .filter({ hasText: productName })
     .first();
-  await option.waitFor({ state: "visible", timeout: 3000 });
-  await option.click();
-  await page.waitForTimeout(400);
+  await productCard.waitFor({ state: "visible", timeout: 5000 });
+  await productCard.click();
+  await page.waitForTimeout(600);
 }
 
 /**
@@ -89,23 +95,21 @@ async function selectProductWithStock(page: any, rowIndex = 0) {
 }
 
 /**
- * Create a customer in the CustomerPicker by typing a name and clicking the
- * "Шинэ харилцагч" option.
+ * Fill in a customer name in the sale form's text inputs.
+ * The new sale form uses simple text fields inside an expandable
+ * "Нэмэлт тохиргоо" section — expand it first.
  */
 async function createCustomerInPicker(page: any, customerName: string) {
-  const searchInput = page.getByPlaceholder("Харилцагч хайх...");
-  await searchInput.fill(customerName);
-  await page.waitForTimeout(600);
-  // Find the button that contains both the customer name and "Шинэ харилцагч"
-  const createOptionBtn = page
-    .locator("button")
-    .filter({ hasText: customerName })
-    .and(page.locator("button").filter({ hasText: "Шинэ харилцагч" }))
-    .first();
-  await createOptionBtn.scrollIntoViewIfNeeded();
-  await expect(createOptionBtn).toBeVisible({ timeout: 3000 });
-  await createOptionBtn.click();
+  // Expand the "Нэмэлт тохиргоо" section first
+  const advancedBtn = page.getByRole("button", { name: "Нэмэлт тохиргоо" });
+  await expect(advancedBtn).toBeVisible({ timeout: 3000 });
+  await advancedBtn.click();
   await page.waitForTimeout(400);
+
+  const nameInput = page.locator("#customer_name");
+  await expect(nameInput).toBeVisible({ timeout: 3000 });
+  await nameInput.fill(customerName);
+  await page.waitForTimeout(300);
 }
 
 /**
@@ -187,7 +191,7 @@ async function getProductStock(
     .first();
   await expect(row).toBeVisible({ timeout: 5000 });
 
-  const stockCell = row.locator("td").nth(5);
+  const stockCell = row.locator("td").nth(6);
   const stockText = await stockCell.textContent();
   console.log(`Stock cell for "${productName}":`, stockText);
   return Number.parseFloat(stockText?.trim() ?? "0");
