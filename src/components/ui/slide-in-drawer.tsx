@@ -19,6 +19,24 @@ interface SlideInDrawerProps {
   trigger?: React.ReactNode;
   /** Fixed footer slot — buttons rendered sticky at the bottom of the drawer. */
   footer?: React.ReactNode;
+  /**
+   * Handle for detached triggers created via `Drawer.createHandle()`.
+   * Lets you control the drawer from a trigger placed outside `<SlideInDrawer>`.
+   */
+  handle?: Drawer.Handle<unknown>;
+  /**
+   * Determines if the drawer enters a modal state when open.
+   * `true`: focus trapped, scroll locked, pointer interactions disabled outside.
+   * `false`: user can interact with the rest of the document.
+   * `'trap-focus'`: focus trapped but scroll/pointer remain enabled.
+   * @default true
+   */
+  modal?: boolean | "trap-focus";
+  /**
+   * Prevent the drawer from closing on outside presses.
+   * @default false
+   */
+  disablePointerDismissal?: boolean;
 }
 
 export function SlideInDrawer({
@@ -31,6 +49,9 @@ export function SlideInDrawer({
   panelWidth = "28rem",
   trigger,
   footer,
+  handle,
+  modal = true,
+  disablePointerDismissal = false,
 }: SlideInDrawerProps) {
   const content = (
     <>
@@ -39,13 +60,16 @@ export function SlideInDrawer({
         <Drawer.Popup
           className={cn(
             `[--bleed:3rem] supports-[-webkit-touch-callout:none]:[--bleed:0px] h-full -mr-[3rem] border-l border-border bg-white p-6 pr-[calc(1.5rem+3rem)] text-foreground outline-none shadow-lg overscroll-contain touch-auto [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:select-none data-ending-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-starting-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:mr-0 supports-[-webkit-touch-callout:none]:border supports-[-webkit-touch-callout:none]:pr-6 dark:bg-popover dark:text-popover-foreground dark:shadow-none`,
-            `w-[calc(${panelWidth}+3rem)] max-w-[calc(100vw-3rem+3rem)] supports-[-webkit-touch-callout:none]:w-[${panelWidth}] supports-[-webkit-touch-callout:none]:max-w-[calc(100vw-3rem)]`,
+            `w-[calc(var(--panel-width)+var(--bleed))] max-w-[calc(100vw-3rem+3rem)] supports-[-webkit-touch-callout:none]:max-w-[calc(100vw-3rem)]`,
             className,
           )}
+          style={{ "--panel-width": panelWidth } as React.CSSProperties}
         >
-          <Drawer.Content className="mx-auto w-full flex flex-col h-full">
+          <Drawer.Content className="mx-auto w-full flex flex-col h-full min-w-0 overflow-x-hidden">
             <DrawerHeader title={title} description={description} />
-            <div className="flex-1 overflow-y-auto min-h-0">{children}</div>
+            <div className="flex-1 overflow-y-auto min-h-0 min-w-0">
+              {children}
+            </div>
             {footer && (
               <div className="shrink-0 border-t pt-4 mt-4">{footer}</div>
             )}
@@ -56,7 +80,14 @@ export function SlideInDrawer({
   );
 
   return (
-    <Drawer.Root swipeDirection="right" open={open} onOpenChange={onOpenChange}>
+    <Drawer.Root
+      swipeDirection="right"
+      open={open}
+      onOpenChange={onOpenChange}
+      handle={handle}
+      modal={modal}
+      disablePointerDismissal={disablePointerDismissal}
+    >
       {trigger && (
         <Drawer.Trigger render={<Slot.Root />}>{trigger}</Drawer.Trigger>
       )}
