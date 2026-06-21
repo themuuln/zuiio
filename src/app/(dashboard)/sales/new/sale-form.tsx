@@ -1,11 +1,20 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Camera, CheckCircle, Plus, Trash } from "@phosphor-icons/react";
-import dynamic from "next/dynamic";
+import {
+  Camera,
+  CaretDown,
+  CaretUp,
+  CheckCircle,
+  MagnifyingGlass,
+  Plus,
+  Trash,
+} from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -13,15 +22,11 @@ import {
   type SelectedVariant,
   VariantPicker,
 } from "@/components/products/variant-picker";
+import { ProductBrowserDrawer } from "@/components/sales/product-browser-drawer";
 import { CustomerPicker } from "@/components/shop/customer-picker";
 import { StaffPicker } from "@/components/shop/staff-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
-const CameraScanner = dynamic(
-  () => import("@/components/shop/camera-scanner").then((m) => m.CameraScanner),
-  { ssr: false },
-);
 import {
   Combobox,
   ComboboxContent,
@@ -35,10 +40,17 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
 import { productKeys, saleKeys } from "@/lib/query/keys";
 import { useVariantLineItemRemove } from "@/lib/use-variant-line-items";
+import { cn } from "@/lib/utils";
 import { createSale } from "./actions";
+
+const CameraScanner = dynamic(
+  () => import("@/components/shop/camera-scanner").then((m) => m.CameraScanner),
+  { ssr: false },
+);
 
 type ProductOption = {
   id: string;
@@ -47,6 +59,7 @@ type ProductOption = {
   current_stock: number | null;
   unit: string | null;
   barcode: string | null;
+  image_url: string | null;
 };
 
 type CustomerOption = {
@@ -95,6 +108,40 @@ const saleSchema = z.object({
 
 type SaleValues = z.infer<typeof saleSchema>;
 
+function SaleFormSection({
+  title,
+  description,
+  action,
+  children,
+  className,
+}: {
+  title: string;
+  description: string;
+  action?: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <section
+      className={cn(
+        "rounded-2xl border border-border/80 bg-card p-4 shadow-xs sm:p-5",
+        className,
+      )}
+    >
+      <div className="mb-4 flex flex-col gap-3 border-b border-border/70 pb-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-1">
+          <h2 className="text-base font-semibold tracking-tight">{title}</h2>
+          <p className="max-w-2xl text-sm text-muted-foreground">
+            {description}
+          </p>
+        </div>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
 export function SaleForm({
   products,
   customers,
@@ -120,8 +167,15 @@ export function SaleForm({
   const [barcodeScannerIndex, setBarcodeScannerIndex] = useState<number | null>(
     null,
   );
+  const scannerIndexRef = useRef<number | null>(null);
+  const scannerNextRef = useRef<number>(0);
+  const [productPickerOpen, setProductPickerOpen] = useState(false);
+  const [productPickerIndex, setProductPickerIndex] = useState<number | null>(
+    null,
+  );
   const [paymentQuery, setPaymentQuery] = useState("");
   const [statusQuery, setStatusQuery] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [variantSelections, setVariantSelections] = useState<
     Record<number, SelectedVariant | null>
   >({});
@@ -527,6 +581,8 @@ export function SaleForm({
             sale_price: null as number | null,
             current_stock: null as number | null,
             unit: null as string | null,
+            barcode: null as string | null,
+            image_url: null as string | null,
           },
         ];
       }
@@ -561,6 +617,7 @@ export function SaleForm({
           current_stock: null,
           unit: null,
           barcode: null,
+          image_url: null,
         };
         setCreatedProducts((prev) => [...prev, created]);
         setValue(`items.${index}.product_id`, created.id);
@@ -613,8 +670,7 @@ export function SaleForm({
         };
       }
 
-      // Find which row is currently showing this scanner to select the product
-      const currentIndex = barcodeScannerIndex;
+      const currentIndex = scannerIndexRef.current;
       if (currentIndex !== null) {
         setValue(`items.${currentIndex}.product_id`, product.id);
         setValue(`items.${currentIndex}.unit_price`, product.sale_price ?? 0);
@@ -626,199 +682,264 @@ export function SaleForm({
           return next;
         });
 
-        // Auto-close camera after brief delay
-        setTimeout(() => {
-          setBarcodeScannerIndex(null);
-        }, 1200);
+        // Rapid scan: append next row and point scanner at it
+        const nextIndex = scannerNextRef.current;
+        scannerNextRef.current = nextIndex + 1;
+        append({
+          product_id: "",
+          quantity: 1,
+          unit_price: 0,
+          variant_id: undefined,
+        });
+        setProductQueries((prev) => [...prev, ""]);
+        scannerIndexRef.current = nextIndex;
+        setBarcodeScannerIndex(nextIndex);
       }
 
       return { found: true };
     },
-    [allProducts, barcodeScannerIndex, setValue],
+    [allProducts, setValue, append],
   );
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" id={formId}>
-      {/* Line Items Section */}
-      <div className="space-y-2">
-        <span className="text-sm font-medium text-muted-foreground">
-          Бүтээгдэхүүнүүд
-        </span>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-6 pb-1"
+      id={formId}
+    >
+      <ErrorBanner error={saleMutation.error} />
 
-        {/* Header row — hidden on mobile */}
-        <div className="hidden sm:flex gap-2 text-xs text-muted-foreground px-1">
-          <div className="flex-1">Бүтээгдэхүүн</div>
-          <div className="w-20">Тоо хэмжээ</div>
-          <div className="w-24">Нэгж үнэ</div>
-          <div className="w-28 text-right">Дүн</div>
-          <div className="w-10" />
-        </div>
+      <SaleFormSection
+        title="Бүтээгдэхүүний мөрүүд"
+        description="Бараагаа сонгож, тоо хэмжээ болон нэгж үнийг шалгаад борлуулалтаа бүрдүүлнэ."
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs font-medium text-muted-foreground">
+              {fields.length} мөр
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={appendRow}
+            >
+              <Plus className="size-4" />
+              Мөр нэмэх
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <div className="rounded-xl border border-dashed border-border/80 bg-muted/30 px-3.5 py-3 text-xs leading-5 text-muted-foreground">
+            Хайлт эсвэл баркод ашиглан бараа сонгоно. Нийт дүн автоматаар
+            шинэчлэгдэнэ, үлдэгдэл хүрэлцэхгүй мөрүүдийг доор анхааруулна.
+          </div>
 
-        {/* Line item rows */}
-        {fields.map((field, index) => {
-          const productForRow = allProducts.find(
-            (p) => p.id === watchedItems?.[index]?.product_id,
-          );
-          const rowQuery = productQueries[index] ?? "";
-          const rowItems = getProductItems(rowQuery);
+          <div className="hidden gap-3 px-4 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground md:grid md:grid-cols-[minmax(0,1.8fr)_5.5rem_7rem_6rem_2.5rem]">
+            <span>Бүтээгдэхүүн</span>
+            <span>Тоо</span>
+            <span>Нэгж үнэ</span>
+            <span className="text-right">Дүн</span>
+            <span />
+          </div>
 
-          return (
-            <div key={field.id}>
-              {/* Mobile stacked card layout */}
-              <div className="rounded-xl border border-border/80 bg-muted/20 p-3 space-y-3 sm:hidden">
-                <div className="flex items-start gap-1">
-                  <div className="flex-1 min-w-0">
-                    <Controller
-                      control={control}
-                      name={`items.${index}.product_id`}
-                      render={({ field: controllerField }) => (
-                        <Combobox
-                          name={controllerField.name}
-                          items={rowItems}
-                          value={
-                            allProducts.find(
-                              (p) => p.id === controllerField.value,
-                            ) ?? null
-                          }
-                          onValueChange={(next) =>
-                            handleProductSelect(index, next)
-                          }
-                          itemToStringValue={(product: ProductOption | null) =>
-                            product?.id ?? ""
-                          }
-                          itemToStringLabel={(product: ProductOption | null) =>
-                            product?.name ?? ""
-                          }
-                          inputValue={rowQuery}
-                          onInputValueChange={(val) =>
-                            updateProductQuery(index, val)
-                          }
+          <div className="space-y-3">
+            {fields.map((field, index) => {
+              const productForRow = allProducts.find(
+                (p) => p.id === watchedItems?.[index]?.product_id,
+              );
+              const rowQuery = productQueries[index] ?? "";
+              const rowItems = getProductItems(rowQuery);
+
+              return (
+                <div
+                  key={field.id}
+                  className="rounded-2xl border border-border/80 bg-background/90 p-3 shadow-xs sm:p-4"
+                >
+                  <div className="mb-3 flex items-center justify-between gap-3 border-b border-border/70 pb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-semibold tracking-[0.08em] text-muted-foreground">
+                        МӨР {index + 1}
+                      </div>
+                      {productForRow ? (
+                        <span className="truncate text-sm font-medium">
+                          {productForRow.name}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">
+                          Бүтээгдэхүүн сонгоогүй
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        onClick={() => {
+                          scannerIndexRef.current = index;
+                          scannerNextRef.current = fields.length;
+                          setBarcodeScannerIndex(index);
+                        }}
+                        className="border-dashed"
+                        title="Баркод скан хийх"
+                        aria-label="Баркод скан хийх"
+                      >
+                        <Camera className="size-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="text-muted-foreground hover:text-destructive"
+                        onClick={() => removeRow(index)}
+                        disabled={fields.length <= 1}
+                        aria-label="Мөр устгах"
+                      >
+                        <Trash className="size-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 md:hidden">
+                    <div className="min-w-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProductPickerIndex(index);
+                          setProductPickerOpen(true);
+                        }}
+                        className="flex w-full items-center gap-2 rounded-xl border border-input bg-card px-3 py-3 text-left text-sm transition-colors hover:bg-muted/40"
+                      >
+                        {(() => {
+                          const selected = allProducts.find(
+                            (p) => p.id === watchedItems?.[index]?.product_id,
+                          );
+                          return selected ? (
+                            <>
+                              {selected.image_url ? (
+                                <Image
+                                  src={selected.image_url}
+                                  alt=""
+                                  width={32}
+                                  height={32}
+                                  className="size-8 shrink-0 rounded-md object-cover"
+                                />
+                              ) : null}
+                              <div className="min-w-0 flex-1">
+                                <span className="block truncate font-medium">
+                                  {selected.name}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {formatCurrency(
+                                    Number(selected.sale_price ?? 0),
+                                  )}
+                                </span>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <span className="flex-1 text-muted-foreground">
+                                Бүтээгдэхүүн сонгох
+                              </span>
+                              <MagnifyingGlass className="size-4 shrink-0 text-muted-foreground" />
+                            </>
+                          );
+                        })()}
+                      </button>
+                      {errors.items?.[index]?.product_id && (
+                        <p className="mt-1 text-xs text-destructive">
+                          {errors.items[index]?.product_id?.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {productForRow ? (
+                      <div className="rounded-xl bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                        Үндсэн үнэ{" "}
+                        {formatCurrency(Number(productForRow.sale_price ?? 0))}{" "}
+                        • Үлдэгдэл {productForRow.current_stock ?? 0}{" "}
+                        {productForRow.unit ?? "ширхэг"}
+                      </div>
+                    ) : null}
+
+                    {productForRow ? (
+                      <VariantPicker
+                        productId={productForRow.id}
+                        onSelect={(variant) =>
+                          handleVariantSelect(index, variant)
+                        }
+                      />
+                    ) : null}
+
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label
+                          htmlFor={`sale-item-quantity-mobile-${field.id}`}
+                          className="mb-1 block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground"
                         >
-                          <ComboboxInput
-                            placeholder="Сонгох"
-                            showTrigger
-                            className="w-full"
-                          />
-                          <ComboboxContent>
-                            <ComboboxEmpty>Бүтээгдэхүүн байхгүй</ComboboxEmpty>
-                            <ComboboxList>
-                              {(product: ProductOption) => (
-                                <ComboboxItem key={product.id} value={product}>
-                                  {product.id.startsWith("__create__")
-                                    ? `"${product.name}" үүсгэх`
-                                    : product.name}
-                                </ComboboxItem>
-                              )}
-                            </ComboboxList>
-                          </ComboboxContent>
-                        </Combobox>
-                      )}
-                    />
-                    {errors.items?.[index]?.product_id && (
-                      <p className="text-xs text-destructive mt-0.5">
-                        {errors.items[index]?.product_id?.message}
-                      </p>
-                    )}
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setBarcodeScannerIndex(index)}
-                    className="size-8 shrink-0 rounded-md border-dashed"
-                    title="Баркод скан хийх"
-                    aria-label="Баркод скан хийх"
-                  >
-                    <Camera className="size-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 shrink-0 text-muted-foreground hover:text-destructive"
-                    onClick={() => removeRow(index)}
-                    disabled={fields.length <= 1}
-                    aria-label="Мөр устгах"
-                  >
-                    <Trash className="size-4" />
-                  </Button>
-                </div>
-
-                {productForRow ? (
-                  <p className="text-xs text-muted-foreground">
-                    {formatCurrency(Number(productForRow.sale_price ?? 0))} •
-                    Үлдэгдэл {productForRow.current_stock ?? 0}{" "}
-                    {productForRow.unit ?? "ширхэг"}
-                  </p>
-                ) : null}
-
-                {productForRow && (
-                  <VariantPicker
-                    productId={productForRow.id}
-                    onSelect={(variant) => handleVariantSelect(index, variant)}
-                  />
-                )}
-
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="mb-1 block text-xs text-muted-foreground">
-                      Тоо хэмжээ
-                    </label>
-                    <Input
-                      type="number"
-                      min="1"
-                      step="0.01"
-                      {...register(`items.${index}.quantity`, {
-                        valueAsNumber: true,
-                      })}
-                    />
-                    {errors.items?.[index]?.quantity && (
-                      <p className="text-xs text-destructive mt-0.5">
-                        {errors.items[index]?.quantity?.message}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs text-muted-foreground">
-                      Нэгж үнэ
-                    </label>
-                    <Controller
-                      control={control}
-                      name={`items.${index}.unit_price`}
-                      render={({ field }) => (
-                        <CurrencyInput
-                          value={field.value}
-                          onChange={field.onChange}
+                          Тоо
+                        </label>
+                        <Input
+                          id={`sale-item-quantity-mobile-${field.id}`}
+                          type="number"
+                          min="1"
+                          step="0.01"
+                          className="h-10"
+                          {...register(`items.${index}.quantity`, {
+                            valueAsNumber: true,
+                          })}
                         />
-                      )}
-                    />
-                    {errors.items?.[index]?.unit_price && (
-                      <p className="text-xs text-destructive mt-0.5">
-                        {errors.items[index]?.unit_price?.message}
+                        {errors.items?.[index]?.quantity && (
+                          <p className="mt-1 text-xs text-destructive">
+                            {errors.items[index]?.quantity?.message}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label
+                          htmlFor={`sale-item-price-mobile-${field.id}`}
+                          className="mb-1 block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground"
+                        >
+                          Нэгж үнэ
+                        </label>
+                        <Controller
+                          control={control}
+                          name={`items.${index}.unit_price`}
+                          render={({ field: controllerField }) => (
+                            <CurrencyInput
+                              id={`sale-item-price-mobile-${controllerField.name}`}
+                              value={controllerField.value}
+                              onChange={controllerField.onChange}
+                              className="h-10"
+                            />
+                          )}
+                        />
+                        {errors.items?.[index]?.unit_price && (
+                          <p className="mt-1 text-xs text-destructive">
+                            {errors.items[index]?.unit_price?.message}
+                          </p>
+                        )}
+                      </div>
+                      <div className="rounded-xl bg-muted/40 px-3 py-2">
+                        <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                          Дүн
+                        </span>
+                        <span className="mt-1 block text-sm font-semibold">
+                          {formatCurrency(subtotals[index] ?? 0)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {stockWarnings[index] && (
+                      <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                        {stockWarnings[index]}
                       </p>
                     )}
                   </div>
-                  <div className="flex flex-col justify-end pb-2">
-                    <span className="text-xs text-muted-foreground">Дүн</span>
-                    <span className="text-sm font-semibold">
-                      {formatCurrency(subtotals[index] ?? 0)}
-                    </span>
-                  </div>
-                </div>
 
-                {stockWarnings[index] && (
-                  <p className="text-xs text-amber-600 dark:text-amber-400">
-                    {stockWarnings[index]}
-                  </p>
-                )}
-              </div>
-
-              {/* Desktop horizontal row layout */}
-              <div className="hidden sm:flex gap-2 items-start">
-                {/* Product combobox */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex gap-1">
-                    <div className="flex-1 min-w-0">
+                  <div className="hidden md:grid md:grid-cols-[minmax(0,1.8fr)_5.5rem_7rem_6rem_2.5rem] md:gap-3">
+                    <div className="min-w-0 space-y-2">
                       <Controller
                         control={control}
                         name={`items.${index}.product_id`}
@@ -870,381 +991,443 @@ export function SaleForm({
                           </Combobox>
                         )}
                       />
+                      {productForRow ? (
+                        <div className="rounded-xl bg-muted/35 px-3 py-2 text-xs text-muted-foreground">
+                          Үндсэн үнэ{" "}
+                          {formatCurrency(
+                            Number(productForRow.sale_price ?? 0),
+                          )}{" "}
+                          • Үлдэгдэл {productForRow.current_stock ?? 0}{" "}
+                          {productForRow.unit ?? "ширхэг"}
+                        </div>
+                      ) : null}
+                      {productForRow ? (
+                        <VariantPicker
+                          productId={productForRow.id}
+                          onSelect={(variant) =>
+                            handleVariantSelect(index, variant)
+                          }
+                        />
+                      ) : null}
+                      {errors.items?.[index]?.product_id && (
+                        <p className="text-xs text-destructive">
+                          {errors.items[index]?.product_id?.message}
+                        </p>
+                      )}
+                      {stockWarnings[index] && (
+                        <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                          {stockWarnings[index]}
+                        </p>
+                      )}
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setBarcodeScannerIndex(index)}
-                      className="size-8 shrink-0 rounded-md border-dashed"
-                      title="Баркод скан хийх"
-                      aria-label="Баркод скан хийх"
-                    >
-                      <Camera className="size-4" />
-                    </Button>
-                  </div>
-                  {/* Product info and stock warning */}
-                  {productForRow ? (
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {formatCurrency(Number(productForRow.sale_price ?? 0))} •
-                      Үлдэгдэл {productForRow.current_stock ?? 0}{" "}
-                      {productForRow.unit ?? "ширхэг"}
-                    </p>
-                  ) : null}
-                  {productForRow && (
-                    <div className="mt-1">
-                      <VariantPicker
-                        productId={productForRow.id}
-                        onSelect={(variant) =>
-                          handleVariantSelect(index, variant)
-                        }
+
+                    <div>
+                      <Input
+                        type="number"
+                        min="1"
+                        step="0.01"
+                        className="h-10"
+                        {...register(`items.${index}.quantity`, {
+                          valueAsNumber: true,
+                        })}
                       />
+                      {errors.items?.[index]?.quantity && (
+                        <p className="mt-1 text-xs text-destructive">
+                          {errors.items[index]?.quantity?.message}
+                        </p>
+                      )}
                     </div>
-                  )}
-                  {errors.items?.[index]?.product_id && (
-                    <p className="text-xs text-destructive mt-0.5">
-                      {errors.items[index]?.product_id?.message}
-                    </p>
-                  )}
-                  {stockWarnings[index] && (
-                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
-                      {stockWarnings[index]}
-                    </p>
-                  )}
-                </div>
 
-                {/* Quantity */}
-                <div className="w-20">
-                  <Input
-                    type="number"
-                    min="1"
-                    step="0.01"
-                    {...register(`items.${index}.quantity`, {
-                      valueAsNumber: true,
-                    })}
-                  />
-                  {errors.items?.[index]?.quantity && (
-                    <p className="text-xs text-destructive mt-0.5">
-                      {errors.items[index]?.quantity?.message}
-                    </p>
-                  )}
-                </div>
+                    <div>
+                      <Controller
+                        control={control}
+                        name={`items.${index}.unit_price`}
+                        render={({ field }) => (
+                          <CurrencyInput
+                            value={field.value}
+                            onChange={field.onChange}
+                            className="h-10"
+                          />
+                        )}
+                      />
+                      {errors.items?.[index]?.unit_price && (
+                        <p className="mt-1 text-xs text-destructive">
+                          {errors.items[index]?.unit_price?.message}
+                        </p>
+                      )}
+                    </div>
 
-                {/* Unit price */}
-                <div className="w-24">
+                    <div className="rounded-xl bg-muted/35 px-3 py-2 text-right">
+                      <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                        Дүн
+                      </span>
+                      <span className="mt-1 block text-sm font-semibold">
+                        {formatCurrency(subtotals[index] ?? 0)}
+                      </span>
+                    </div>
+
+                    <div />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {errors.items && !Array.isArray(errors.items) && (
+            <p className="text-xs text-destructive">{errors.items.message}</p>
+          )}
+        </div>
+      </SaleFormSection>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
+        <div className="space-y-4">
+          <SaleFormSection
+            title="Төлбөр"
+            description="Төлсөн дүн болон төлбөрийн аргаа сонгож, борлуулалтын төлөвийг даруй харна."
+          >
+            <FieldGroup className="gap-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field>
+                  <FieldLabel htmlFor="paid_amount">Төлсөн дүн</FieldLabel>
                   <Controller
                     control={control}
-                    name={`items.${index}.unit_price`}
+                    name="paid_amount"
                     render={({ field }) => (
                       <CurrencyInput
+                        id="paid_amount"
                         value={field.value}
-                        onChange={field.onChange}
+                        onChange={(value) => {
+                          isManualEditRef.current = true;
+                          field.onChange(value);
+                        }}
+                        className="h-10"
                       />
                     )}
                   />
-                  {errors.items?.[index]?.unit_price && (
-                    <p className="text-xs text-destructive mt-0.5">
-                      {errors.items[index]?.unit_price?.message}
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-2.5 text-xs"
+                      onClick={() => handleQuickAction("all")}
+                    >
+                      Бүгд
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-2.5 text-xs"
+                      onClick={() => handleQuickAction("half")}
+                    >
+                      50%
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-2.5 text-xs"
+                      onClick={() => handleQuickAction("zero")}
+                    >
+                      0
+                    </Button>
+                  </div>
+                  {errors.paid_amount && (
+                    <p className="text-xs text-destructive">
+                      {errors.paid_amount.message}
                     </p>
                   )}
-                </div>
+                </Field>
 
-                {/* Subtotal */}
-                <div className="w-28 pt-2 text-right text-sm font-medium">
-                  {formatCurrency(subtotals[index] ?? 0)}
-                </div>
+                <Field>
+                  <FieldLabel htmlFor="payment_method">
+                    Төлбөрийн арга
+                  </FieldLabel>
+                  <Controller
+                    control={control}
+                    name="payment_method"
+                    render={({ field }) => (
+                      <Combobox
+                        name={field.name}
+                        items={paymentItems}
+                        value={field.value}
+                        onValueChange={(next: string | null) => {
+                          if (next && !allPaymentMethods.includes(next)) {
+                            setAllPaymentMethods((prev) => [...prev, next]);
+                          }
+                          field.onChange(next ?? "cash");
+                          setPaymentQuery("");
+                        }}
+                        itemToStringLabel={(item: string | null) =>
+                          item
+                            ? (paymentMethodLabels[item] ??
+                              (allPaymentMethods.includes(item)
+                                ? item
+                                : `"${item}" үүсгэх`))
+                            : ""
+                        }
+                        inputValue={paymentQuery}
+                        onInputValueChange={setPaymentQuery}
+                      >
+                        <ComboboxInput
+                          id="payment_method"
+                          placeholder="Сонгох"
+                          showTrigger
+                          className="w-full"
+                        />
+                        <ComboboxContent>
+                          <ComboboxEmpty>Арга байхгүй</ComboboxEmpty>
+                          <ComboboxList>
+                            {(item: string) => (
+                              <ComboboxItem key={item} value={item}>
+                                {allPaymentMethods.includes(item) ||
+                                initialPaymentMethods.includes(
+                                  item as (typeof initialPaymentMethods)[number],
+                                )
+                                  ? (paymentMethodLabels[item] ?? item)
+                                  : `"${item}" үүсгэх`}
+                              </ComboboxItem>
+                            )}
+                          </ComboboxList>
+                        </ComboboxContent>
+                      </Combobox>
+                    )}
+                  />
+                  {errors.payment_method && (
+                    <p className="text-xs text-destructive">
+                      {errors.payment_method.message}
+                    </p>
+                  )}
+                </Field>
+              </div>
+            </FieldGroup>
+          </SaleFormSection>
 
-                {/* Remove button */}
-                <div className="w-10 pt-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 text-muted-foreground hover:text-destructive"
-                    onClick={() => removeRow(index)}
-                    disabled={fields.length <= 1}
-                    aria-label="Мөр устгах"
-                  >
-                    <Trash className="size-4" />
-                  </Button>
-                </div>
+          <SaleFormSection
+            title="Харилцагч"
+            description="Байгаа харилцагчаас хайх эсвэл walk-in борлуулалтаар үргэлжлүүлж болно."
+          >
+            <CustomerPicker
+              contacts={customers}
+              selectedContactId={selectedContactId}
+              customerName={watch("customer_name") ?? ""}
+              customerPhone={watch("customer_phone") ?? ""}
+              onSelectContact={(contact) => {
+                setSelectedContactId(contact?.id ?? null);
+              }}
+              onNameChange={(name) => {
+                setValue("customer_name", name);
+              }}
+              onPhoneChange={(phone) => {
+                setValue("customer_phone", phone);
+              }}
+            />
+          </SaleFormSection>
+        </div>
+
+        <aside className="rounded-2xl border border-border/80 bg-muted/35 p-4 shadow-xs sm:p-5 lg:sticky lg:top-0">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold tracking-tight">Тооцоо</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Нийт дүн, үлдэгдэл, төлөлтийн төлөв.
+              </p>
+            </div>
+            <Badge variant={paymentBadgeVariant}>{paymentState}</Badge>
+          </div>
+
+          <div className="mt-4 grid gap-3">
+            <div className="rounded-xl border border-border/70 bg-card px-3.5 py-3">
+              <span className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                Нийт дүн
+              </span>
+              <p className="mt-1 text-xl font-semibold tracking-tight">
+                {formatCurrency(grandTotal)}
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl border border-border/70 bg-card px-3.5 py-3">
+                <span className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                  Төлсөн
+                </span>
+                <p className="mt-1 text-sm font-semibold">
+                  {formatCurrency(watchedPaidAmount ?? 0)}
+                </p>
+              </div>
+              <div className="rounded-xl border border-border/70 bg-card px-3.5 py-3">
+                <span className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                  Үлдэгдэл
+                </span>
+                <p className="mt-1 text-sm font-semibold">
+                  {formatCurrency(remaining)}
+                </p>
               </div>
             </div>
-          );
-        })}
-
-        {/* Add row button */}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={appendRow}
-          className="mt-1"
-        >
-          <Plus className="size-4" />
-          Мөр нэмэх
-        </Button>
-
-        {errors.items && !Array.isArray(errors.items) && (
-          <p className="text-xs text-destructive">{errors.items.message}</p>
-        )}
-      </div>
-
-      {/* Grand Total & Payment Summary */}
-      <div className="rounded-none border border-border bg-muted/40 px-4 py-3 text-sm">
-        <div className="flex items-center justify-between">
-          <span>
-            Нийт дүн:{" "}
-            <span className="font-semibold">{formatCurrency(grandTotal)}</span>
-          </span>
-          <Badge variant={paymentBadgeVariant}>{paymentState}</Badge>
-        </div>
-        <div className="mt-1 text-muted-foreground">
-          Үлдэгдэл: {formatCurrency(remaining)}
-        </div>
-      </div>
-
-      {/* Paid Amount with quick actions */}
-      <div>
-        <Field>
-          <FieldLabel htmlFor="paid_amount">Төлсөн дүн</FieldLabel>
-          <Controller
-            control={control}
-            name="paid_amount"
-            render={({ field }) => (
-              <CurrencyInput
-                id="paid_amount"
-                value={field.value}
-                onChange={(value) => {
-                  isManualEditRef.current = true;
-                  field.onChange(value);
-                }}
-              />
-            )}
-          />
-          <div className="mt-1 flex gap-1.5">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="h-7 px-2 text-xs"
-              onClick={() => handleQuickAction("all")}
-            >
-              Бүгд
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="h-7 px-2 text-xs"
-              onClick={() => handleQuickAction("half")}
-            >
-              50%
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="h-7 px-2 text-xs"
-              onClick={() => handleQuickAction("zero")}
-            >
-              0
-            </Button>
+            <div className="rounded-xl border border-border/70 bg-card px-3.5 py-3 text-sm text-muted-foreground">
+              <div className="flex items-center justify-between">
+                <span>Нийт мөр</span>
+                <span className="font-medium text-foreground">
+                  {fields.length}
+                </span>
+              </div>
+              {anyStockInsufficient ? (
+                <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
+                  Зарим мөрийн үлдэгдэл хүрэлцэхгүй байна. Хадгалахаас өмнө
+                  шалгана уу.
+                </p>
+              ) : (
+                <p className="mt-2 text-xs">Мөрүүдийн тооцоо хэвийн байна.</p>
+              )}
+            </div>
           </div>
-          {errors.paid_amount && (
-            <p className="text-xs text-destructive">
-              {errors.paid_amount.message}
-            </p>
-          )}
-        </Field>
-      </div>
 
-      {/* Right column fields */}
-      <div className="grid gap-5 md:grid-cols-2">
-        <FieldGroup>
-          <Field>
-            <FieldLabel htmlFor="payment_method">Төлбөрийн арга</FieldLabel>
-            <Controller
-              control={control}
-              name="payment_method"
-              render={({ field }) => (
-                <Combobox
-                  name={field.name}
-                  items={paymentItems}
-                  value={field.value}
-                  onValueChange={(next: string | null) => {
-                    if (next && !allPaymentMethods.includes(next)) {
-                      setAllPaymentMethods((prev) => [...prev, next]);
-                    }
-                    field.onChange(next ?? "cash");
-                    setPaymentQuery("");
-                  }}
-                  itemToStringLabel={(item: string | null) =>
-                    item
-                      ? (paymentMethodLabels[item] ??
-                        (allPaymentMethods.includes(item)
-                          ? item
-                          : `"${item}" үүсгэх`))
-                      : ""
-                  }
-                  inputValue={paymentQuery}
-                  onInputValueChange={setPaymentQuery}
-                >
-                  <ComboboxInput
-                    id="payment_method"
-                    placeholder="Сонгох"
-                    showTrigger
-                    className="w-full"
-                  />
-                  <ComboboxContent>
-                    <ComboboxEmpty>Арга байхгүй</ComboboxEmpty>
-                    <ComboboxList>
-                      {(item: string) => (
-                        <ComboboxItem key={item} value={item}>
-                          {allPaymentMethods.includes(item) ||
-                          initialPaymentMethods.includes(
-                            item as (typeof initialPaymentMethods)[number],
-                          )
-                            ? (paymentMethodLabels[item] ?? item)
-                            : `"${item}" үүсгэх`}
-                        </ComboboxItem>
-                      )}
-                    </ComboboxList>
-                  </ComboboxContent>
-                </Combobox>
-              )}
-            />
-            {errors.payment_method && (
-              <p className="text-xs text-destructive">
-                {errors.payment_method.message}
-              </p>
-            )}
-          </Field>
-
-          <StaffPicker />
-
-          <Field>
-            <FieldLabel htmlFor="status">Төлөв</FieldLabel>
-            <Controller
-              control={control}
-              name="status"
-              render={({ field }) => (
-                <Combobox
-                  name={field.name}
-                  items={statusItems}
-                  value={field.value}
-                  onValueChange={(next: string | null) => {
-                    if (next && !allStatuses.includes(next)) {
-                      setAllStatuses((prev) => [...prev, next]);
-                    }
-                    field.onChange(next ?? "completed");
-                    setStatusQuery("");
-                  }}
-                  itemToStringLabel={(item: string | null) =>
-                    item
-                      ? (statusLabels[item] ??
-                        (allStatuses.includes(item)
-                          ? item
-                          : `"${item}" үүсгэх`))
-                      : ""
-                  }
-                  inputValue={statusQuery}
-                  onInputValueChange={setStatusQuery}
-                >
-                  <ComboboxInput
-                    id="status"
-                    placeholder="Сонгох"
-                    showTrigger
-                    className="w-full"
-                  />
-                  <ComboboxContent>
-                    <ComboboxEmpty>Төлөв байхгүй</ComboboxEmpty>
-                    <ComboboxList>
-                      {(item: string) => (
-                        <ComboboxItem key={item} value={item}>
-                          {allStatuses.includes(item) ||
-                          initialStatuses.includes(
-                            item as (typeof initialStatuses)[number],
-                          )
-                            ? (statusLabels[item] ?? item)
-                            : `"${item}" үүсгэх`}
-                        </ComboboxItem>
-                      )}
-                    </ComboboxList>
-                  </ComboboxContent>
-                </Combobox>
-              )}
-            />
-            {errors.status && (
-              <p className="text-xs text-destructive">
-                {errors.status.message}
-              </p>
-            )}
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="sale_date">Огноо</FieldLabel>
-            <Controller
-              control={control}
-              name="sale_date"
-              render={({ field }) => (
-                <DatePicker
-                  value={field.value ? new Date(field.value) : undefined}
-                  onChange={(date) =>
-                    field.onChange(date ? formatRouteDate(date) : "")
-                  }
-                />
-              )}
-            />
-            {errors.sale_date && (
-              <p className="text-xs text-destructive">
-                {errors.sale_date.message}
-              </p>
-            )}
-          </Field>
-
-          <CustomerPicker
-            contacts={customers}
-            selectedContactId={selectedContactId}
-            customerName={watch("customer_name") ?? ""}
-            customerPhone={watch("customer_phone") ?? ""}
-            onSelectContact={(contact) => {
-              setSelectedContactId(contact?.id ?? null);
-            }}
-            onNameChange={(name) => {
-              setValue("customer_name", name);
-            }}
-            onPhoneChange={(phone) => {
-              setValue("customer_phone", phone);
-            }}
-          />
-
-          <Field>
-            <FieldLabel htmlFor="notes">Тэмдэглэл</FieldLabel>
-            <Input
-              id="notes"
-              placeholder="Хүргэлттэй, хэсэгчлэн төлсөн гэх мэт"
-              {...register("notes")}
-            />
-          </Field>
-        </FieldGroup>
-      </div>
-
-      {/* Error display */}
-      <ErrorBanner error={saleMutation.error} />
-
-      {/* Footer */}
-      {!formId && (
-        <div className="flex items-center justify-between">
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+          <label className="mt-4 flex cursor-pointer items-start gap-2 rounded-xl border border-border/70 bg-card px-3.5 py-3 text-sm text-muted-foreground">
             <input
               type="checkbox"
               checked={keepOpen}
               onChange={(e) => setKeepOpen(e.target.checked)}
-              className="size-4 rounded border-border accent-primary"
+              className="mt-0.5 size-4 rounded border-border accent-primary"
             />
-            Хэвээр үлдээх (дахин бүртгэх)
+            <span>
+              <span className="block font-medium text-foreground">
+                Хэвээр үлдээх
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Хадгалсны дараа формыг нээлттэй үлдээн дараагийн борлуулалтыг
+                бүртгэнэ.
+              </span>
+            </span>
           </label>
+        </aside>
+      </div>
+
+      <section className="rounded-2xl border border-border/80 bg-card shadow-xs">
+        <button
+          type="button"
+          onClick={() => setShowAdvanced((prev) => !prev)}
+          className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors hover:bg-muted/25 sm:px-5"
+        >
+          <div>
+            <span className="block text-base font-semibold tracking-tight">
+              Нэмэлт тохиргоо
+            </span>
+            <span className="mt-1 block text-sm text-muted-foreground">
+              Борлуулагч, төлөв, огноо, дотоод тэмдэглэл.
+            </span>
+          </div>
+          {showAdvanced ? (
+            <CaretUp className="size-4 text-muted-foreground" />
+          ) : (
+            <CaretDown className="size-4 text-muted-foreground" />
+          )}
+        </button>
+
+        {showAdvanced && (
+          <div className="border-t border-border/70 px-4 py-4 sm:px-5">
+            <div className="grid gap-4 md:grid-cols-2">
+              <FieldGroup className="gap-4">
+                <StaffPicker />
+
+                <Field>
+                  <FieldLabel htmlFor="status">Төлөв</FieldLabel>
+                  <Controller
+                    control={control}
+                    name="status"
+                    render={({ field }) => (
+                      <Combobox
+                        name={field.name}
+                        items={statusItems}
+                        value={field.value}
+                        onValueChange={(next: string | null) => {
+                          if (next && !allStatuses.includes(next)) {
+                            setAllStatuses((prev) => [...prev, next]);
+                          }
+                          field.onChange(next ?? "completed");
+                          setStatusQuery("");
+                        }}
+                        itemToStringLabel={(item: string | null) =>
+                          item
+                            ? (statusLabels[item] ??
+                              (allStatuses.includes(item)
+                                ? item
+                                : `"${item}" үүсгэх`))
+                            : ""
+                        }
+                        inputValue={statusQuery}
+                        onInputValueChange={setStatusQuery}
+                      >
+                        <ComboboxInput
+                          id="status"
+                          placeholder="Сонгох"
+                          showTrigger
+                          className="w-full"
+                        />
+                        <ComboboxContent>
+                          <ComboboxEmpty>Төлөв байхгүй</ComboboxEmpty>
+                          <ComboboxList>
+                            {(item: string) => (
+                              <ComboboxItem key={item} value={item}>
+                                {allStatuses.includes(item) ||
+                                initialStatuses.includes(
+                                  item as (typeof initialStatuses)[number],
+                                )
+                                  ? (statusLabels[item] ?? item)
+                                  : `"${item}" үүсгэх`}
+                              </ComboboxItem>
+                            )}
+                          </ComboboxList>
+                        </ComboboxContent>
+                      </Combobox>
+                    )}
+                  />
+                  {errors.status && (
+                    <p className="text-xs text-destructive">
+                      {errors.status.message}
+                    </p>
+                  )}
+                </Field>
+              </FieldGroup>
+
+              <FieldGroup className="gap-4">
+                <Field>
+                  <FieldLabel htmlFor="sale_date">Огноо</FieldLabel>
+                  <Controller
+                    control={control}
+                    name="sale_date"
+                    render={({ field }) => (
+                      <DatePicker
+                        value={field.value ? new Date(field.value) : undefined}
+                        onChange={(date) =>
+                          field.onChange(date ? formatRouteDate(date) : "")
+                        }
+                      />
+                    )}
+                  />
+                  {errors.sale_date && (
+                    <p className="text-xs text-destructive">
+                      {errors.sale_date.message}
+                    </p>
+                  )}
+                </Field>
+
+                <Field>
+                  <FieldLabel htmlFor="notes">Тэмдэглэл</FieldLabel>
+                  <Textarea
+                    id="notes"
+                    placeholder="Хүргэлттэй, хэсэгчлэн төлсөн гэх мэт"
+                    className="min-h-24"
+                    {...register("notes")}
+                  />
+                </Field>
+              </FieldGroup>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {!formId && (
+        <div className="flex justify-end">
           <Button
             type="submit"
             disabled={
@@ -1260,9 +1443,27 @@ export function SaleForm({
       {barcodeScannerIndex !== null && (
         <CameraScanner
           onScan={handleBarcodeScan}
-          onClose={() => setBarcodeScannerIndex(null)}
+          onClose={() => {
+            scannerIndexRef.current = null;
+            setBarcodeScannerIndex(null);
+          }}
         />
       )}
+
+      {/* Product browser drawer */}
+      <ProductBrowserDrawer
+        open={productPickerOpen}
+        onOpenChange={(next) => {
+          setProductPickerOpen(next);
+          if (!next) setProductPickerIndex(null);
+        }}
+        products={allProducts}
+        onSelect={(product) => {
+          if (productPickerIndex !== null) {
+            handleProductSelect(productPickerIndex, product);
+          }
+        }}
+      />
     </form>
   );
 }
