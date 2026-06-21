@@ -14,13 +14,23 @@ export async function createPurchaseOrder(
   if ("error" in ctx) return ctx;
   const { supabase, organizationId, userId, branchId } = ctx;
 
-  const supplierId = getString(formData, "supplier_id");
+  // Check if org uses suppliers
+  const { data: orgSettings } = await supabase
+    .from("organizations")
+    .select("has_suppliers")
+    .eq("id", organizationId)
+    .single();
+
+  const hasSuppliers =
+    (orgSettings as { has_suppliers: boolean } | null)?.has_suppliers ?? true;
+
+  const supplierId = getString(formData, "supplier_id") || null;
   const orderDate = getString(formData, "order_date");
   const expectedDate = getString(formData, "expected_date") || null;
   const notes = getString(formData, "notes") || null;
   const itemsJson = getString(formData, "items");
 
-  if (!supplierId) {
+  if (hasSuppliers && !supplierId) {
     return { error: "Нийлүүлэгч сонгоно уу." };
   }
 
@@ -71,7 +81,7 @@ export async function createPurchaseOrder(
     .from("purchase_orders")
     .insert({
       organization_id: organizationId,
-      branch_id: branchId!,
+      branch_id: branchId,
       supplier_id: supplierId,
       order_number: orderNumber,
       order_date: orderDate || new Date().toISOString().slice(0, 10),
@@ -117,7 +127,7 @@ export async function createPurchaseOrder(
     supabase,
     organizationId,
     userId,
-    branchId!,
+    branchId,
     purchaseOrder.id,
     {
       total_amount: totalAmount,
@@ -254,7 +264,7 @@ export async function receivePurchaseOrderItems(
       .insert({
         organization_id: organizationId,
         product_id: existingItem.product_id!,
-        branch_id: branchId!,
+        branch_id: branchId,
         type: "in",
         quantity: item.received_quantity,
         reference: `PO-${orderId}`,

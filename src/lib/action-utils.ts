@@ -45,12 +45,14 @@ export function requireBranchScope(ctx: ActionContext): ActionError | null {
 /**
  * Wraps requireAppContext + checkPermission + branch scope guard
  * in a single call. Convenience for write actions that need all three.
+ * For non-branch-scoped users without an assigned branch, resolves
+ * the organization's first (default) branch automatically.
  *
  * Usage:
  * ```ts
  * const ctx = await requireWriteAction("sales.create");
  * if ("error" in ctx) return ctx;
- * // ctx.branchId is guaranteed non-null for scoped users
+ * // ctx.branchId is always a non-null string
  * ```
  */
 export async function requireWriteAction(
@@ -62,6 +64,24 @@ export async function requireWriteAction(
 
   if (ctx.isBranchScoped && !ctx.branchId) {
     return { error: "Салбар тодорхойгүй байна." };
+  }
+
+  // For non-scoped users (admins, org-wide access) without an assigned
+  // branch, resolve the first branch in the organization as fallback.
+  if (!ctx.branchId) {
+    const { data: branch } = await ctx.supabase
+      .from("branches")
+      .select("id")
+      .eq("organization_id", ctx.organizationId)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .single();
+
+    if (!branch) {
+      return { error: "Байгууллагад салбар байхгүй байна." };
+    }
+
+    return { ...ctx, branchId: branch.id };
   }
 
   return ctx as ActionContext & { branchId: string };
