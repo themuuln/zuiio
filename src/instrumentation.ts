@@ -5,42 +5,12 @@ export async function register() {
     process.setMaxListeners?.(20);
     await import("../sentry.server.config");
 
-    // Setup process-wide error handlers (Node.js only).
-    // Dynamic imports prevent Edge bundler warnings for node:path/pino.
-    const path = await import("node:path");
-    const pino = (await import("pino")).default;
-
-    const errorLogPath = path.resolve(process.cwd(), "logs", "error.log");
-
-    const processLogger = pino(
-      { level: "error" },
-      pino.transport({
-        targets: [
-          {
-            target: "pino/file",
-            level: "error",
-            options: { destination: errorLogPath, mkdir: true },
-          },
-          ...(process.env.NODE_ENV === "production"
-            ? [{ target: "pino/file", level: "error" }]
-            : [
-                {
-                  target: "pino-pretty",
-                  level: "error",
-                  options: {
-                    colorize: true,
-                    translateTime: "HH:MM:ss",
-                    ignore: "pid,hostname",
-                    singleLine: true,
-                  },
-                },
-              ]),
-        ],
-      }),
-    );
+    // Use the existing logger singleton to avoid duplicating pino/file
+    // WriteStreams, which caused MaxListenersExceededWarning.
+    const { logger } = await import("./lib/logger");
 
     function handleProcessError(type: string, reason: unknown): void {
-      processLogger.error({ err: reason }, `Process ${type}`);
+      logger.error({ err: reason }, `Process ${type}`);
       Sentry.withScope((scope) => {
         scope.setTag("source", "process");
         scope.setExtra("type", type);

@@ -12,6 +12,22 @@ export function formatCurrency(amount: number): string {
 /** Alias for `formatCurrency` — formats as Mongolian Tugrik (₮) */
 export const formatMNT = formatCurrency;
 
+/**
+ * Deterministic JSON.stringify that sorts object keys.
+ * Prevents cache key mismatches when the same object has different key ordering.
+ */
+export function stableStringify(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (typeof value !== "object" || Array.isArray(value)) {
+    return JSON.stringify(value);
+  }
+  const sorted: Record<string, unknown> = {};
+  for (const key of Object.keys(value as Record<string, unknown>).sort()) {
+    sorted[key] = (value as Record<string, unknown>)[key];
+  }
+  return JSON.stringify(sorted);
+}
+
 export function getInitials(name: string | null | undefined): string {
   if (!name) return "?";
   const parts = name.trim().split(/\s+/);

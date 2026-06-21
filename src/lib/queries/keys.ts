@@ -1,5 +1,7 @@
 /** Query key factory — single source of truth for cache keys */
 
+import { stableStringify } from "@/lib/utils";
+
 export const profileKeys = {
   current: () => ["profile", "current"] as const,
 };
@@ -417,7 +419,11 @@ export const publicStatsKeys = {
 export const expenseKeys = {
   all: (orgId: string) => ["organizations", orgId, "expenses"] as const,
   list: (orgId: string, filters?: Record<string, string>) =>
-    [...expenseKeys.all(orgId), "list", JSON.stringify(filters ?? {})] as const,
+    [
+      ...expenseKeys.all(orgId),
+      "list",
+      stableStringify(filters ?? {}),
+    ] as const,
   detail: (orgId: string, id: string) =>
     [...expenseKeys.all(orgId), "detail", id] as const,
   stats: (orgId: string, period?: string) =>
@@ -465,6 +471,6 @@ export const cashRegisterKeys = {
     [
       ...cashRegisterKeys.all(orgId),
       "list",
-      JSON.stringify(filters ?? {}),
+      stableStringify(filters ?? {}),
     ] as const,
 };

@@ -50,6 +50,20 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "TOLOM",
+    statusBarStyle: "black-translucent",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
+    "apple-touch-icon": "/apple-touch-icon.png",
+    "apple-touch-icon-precomposed": "/apple-touch-icon.png",
+    "msapplication-TileColor": "#000000",
+    "msapplication-TileImage": "/icon-512.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

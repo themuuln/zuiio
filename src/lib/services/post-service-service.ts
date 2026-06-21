@@ -6,7 +6,7 @@ import type {
   ServiceCompletionDatumInsert,
   ServiceRecommendationInsert,
 } from "@/lib/database-extras.types";
-import { UnauthorizedError, ValidationError } from "@/lib/errors";
+import { AppError, UnauthorizedError, ValidationError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 
 // ── Helper: resolve org from session ────────────────────────────
@@ -90,8 +90,10 @@ export async function savePostServiceData(
     .eq("organization_id", orgId);
 
   if (deleteError) {
-    throw new Error(
+    throw new AppError(
       `Failed to clear old recommendations: ${deleteError.message}`,
+      "DATABASE_ERROR",
+      500,
     );
   }
 
@@ -146,7 +148,11 @@ export async function savePostServiceData(
       .insert(recommendationRows);
 
     if (recError)
-      throw new Error(`Failed to save recommendations: ${recError.message}`);
+      throw new AppError(
+        `Failed to save recommendations: ${recError.message}`,
+        "DATABASE_ERROR",
+        500,
+      );
   }
 
   // 3. Update work_order.odometer_at_service + notes
@@ -169,7 +175,11 @@ export async function savePostServiceData(
     .eq("organization_id", orgId);
 
   if (woError)
-    throw new Error(`Failed to update work order: ${woError.message}`);
+    throw new AppError(
+      `Failed to update work order: ${woError.message}`,
+      "DATABASE_ERROR",
+      500,
+    );
 
   // 4. Update vehicle odometer if newer
   if (odometerReading) {
@@ -336,13 +346,21 @@ export async function saveCompletionData(
       })
       .eq("id", existing.id);
     if (error)
-      throw new Error(`Failed to update completion data: ${error.message}`);
+      throw new AppError(
+        `Failed to update completion data: ${error.message}`,
+        "DATABASE_ERROR",
+        500,
+      );
   } else {
     const { error } = await supabase
       .from("service_completion_data")
       .insert(row);
     if (error)
-      throw new Error(`Failed to save completion data: ${error.message}`);
+      throw new AppError(
+        `Failed to save completion data: ${error.message}`,
+        "DATABASE_ERROR",
+        500,
+      );
   }
 
   // 2. Update vehicle last_visit_at
@@ -436,7 +454,12 @@ export async function getWorkOrderServicesWithIntervals(
     .eq("organization_id", orgId)
     .order("created_at");
 
-  if (error) throw new Error(`Failed to fetch services: ${error.message}`);
+  if (error)
+    throw new AppError(
+      `Failed to fetch services: ${error.message}`,
+      "DATABASE_ERROR",
+      500,
+    );
 
   return (data ?? []).map((svc: Record<string, unknown>) => {
     const catalog = Array.isArray(svc.service_catalog)
@@ -490,7 +513,12 @@ export async function getWorkOrderParts(
     .eq("organization_id", orgId)
     .order("created_at");
 
-  if (error) throw new Error(`Failed to fetch parts: ${error.message}`);
+  if (error)
+    throw new AppError(
+      `Failed to fetch parts: ${error.message}`,
+      "DATABASE_ERROR",
+      500,
+    );
 
   return (data ?? []).map((part) => ({
     id: part.id,
@@ -517,7 +545,11 @@ export async function getRecommendations(workOrderId: string) {
     .order("priority", { ascending: true });
 
   if (error)
-    throw new Error(`Failed to fetch recommendations: ${error.message}`);
+    throw new AppError(
+      `Failed to fetch recommendations: ${error.message}`,
+      "DATABASE_ERROR",
+      500,
+    );
   return data ?? [];
 }
 
@@ -535,7 +567,11 @@ export async function getCompletionData(workOrderId: string) {
     .maybeSingle();
 
   if (error) {
-    throw new Error(`Failed to fetch completion data: ${error.message}`);
+    throw new AppError(
+      `Failed to fetch completion data: ${error.message}`,
+      "DATABASE_ERROR",
+      500,
+    );
   }
   return data ?? null;
 }

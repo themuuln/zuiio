@@ -9,10 +9,10 @@ const nextConfig: NextConfig = {
   // Allow Tailscale IP for phone testing from mobile devices
   allowedDevOrigins: ["100.102.22.106", "192.168.1.121"],
 
-  // TypeScript + Biome validation is handled by `pnpm validate` before build,
-  // so skip redundant checks during the production bundle.
+  // TypeScript validation is handled by `pnpm validate` before build.
+  // Enable build-time type checking to catch issues that slip through.
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   reactCompiler: true,
   serverExternalPackages: ["playwright-core"],
@@ -74,6 +74,53 @@ const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   register: true,
+  scope: "/",
+  sw: "sw.js",
+  cacheOnFrontendNav: true,
+  cacheStartUrl: true,
+  reloadOnOnline: true,
+  fallbacks: {
+    document: "/offline",
+    image: "/icon-512.png",
+  },
+  workboxOptions: {
+    runtimeCaching: [
+      {
+        urlPattern: /^https?.*\/api\/(?!auth|trpc).*/,
+        handler: "NetworkFirst",
+        options: {
+          cacheName: "api-cache",
+          expiration: {
+            maxEntries: 100,
+            maxAgeSeconds: 60 * 60 * 24, // 24 hours
+          },
+          networkTimeoutSeconds: 5,
+        },
+      },
+      {
+        urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|avif|ico)$/,
+        handler: "CacheFirst",
+        options: {
+          cacheName: "image-cache",
+          expiration: {
+            maxEntries: 200,
+            maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+          },
+        },
+      },
+      {
+        urlPattern: /\.(?:woff|woff2|ttf|eot)$/,
+        handler: "CacheFirst",
+        options: {
+          cacheName: "font-cache",
+          expiration: {
+            maxEntries: 50,
+            maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+          },
+        },
+      },
+    ],
+  },
 });
 
 export default withPWA(
