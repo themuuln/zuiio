@@ -42,7 +42,8 @@ export default defineConfig({
     // Main test project: reuses saved auth state
     {
       name: "chromium",
-      testIgnore: /auth\.setup\.ts|auth-flows\.spec\.ts|codeceptjs|a11y\//,
+      testIgnore:
+        /auth\.setup\.ts|auth-flows\.spec\.ts|auth-org-flow\.spec\.ts|codeceptjs|a11y\//,
       use: {
         ...devices["Desktop Chrome"],
         storageState: AUTH_FILE,
@@ -52,7 +53,7 @@ export default defineConfig({
     // Auth tests: start logged out, no storageState
     {
       name: "auth-test",
-      testMatch: /auth-flows\.spec\.ts/,
+      testMatch: /auth-flows\.spec\.ts|auth-org-flow\.spec\.ts/,
       use: {
         ...devices["Desktop Chrome"],
       },
