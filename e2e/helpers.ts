@@ -5,6 +5,18 @@ import type { Page } from "@playwright/test";
  * Uses page.evaluate for reliable DOM click through Base UI + Radix Slot.
  */
 export async function openDrawerByText(page: Page, text: string) {
+  // Wait for React hydration by polling for React-fiber attributes on buttons
+  await page.waitForFunction(
+    () => {
+      const buttons = document.querySelectorAll("button");
+      return Array.from(buttons).some((btn) => {
+        const keys = Object.getOwnPropertyNames(btn);
+        return keys.some((k) => k.startsWith("__reactFiber$"));
+      });
+    },
+    { timeout: 15000 },
+  );
+
   const result = await page.evaluate((btnText) => {
     const buttons = document.querySelectorAll("button");
     for (const btn of buttons) {
@@ -18,7 +30,8 @@ export async function openDrawerByText(page: Page, text: string) {
   if (result === "not found") {
     console.log(`[openDrawerByText] Button "${text}" not found`);
   }
-  await page.waitForTimeout(1000);
+  // Wait for Base UI drawer animation (450ms) + React content render
+  await page.waitForTimeout(1200);
 }
 
 /**
@@ -29,7 +42,7 @@ export async function openDrawerByText(page: Page, text: string) {
  * @param formId The `id` attribute of the form element to submit
  */
 export async function submitDrawerForm(page: Page, formId: string) {
-  await page.waitForTimeout(1500); // Wait for drawer animation
+  await page.waitForTimeout(500); // Wait for drawer animation
   const result = await page.evaluate((fid) => {
     const form = document.getElementById(fid) as HTMLFormElement | null;
     if (!form) return { ok: false, error: `form #${fid} not found` };
@@ -38,7 +51,7 @@ export async function submitDrawerForm(page: Page, formId: string) {
     return { ok: true, prevented };
   }, formId);
   if (!result.ok) console.log(`[submitDrawerForm] ${result.error}`);
-  await page.waitForTimeout(3000);
+  await page.waitForTimeout(1500);
 }
 
 /**
