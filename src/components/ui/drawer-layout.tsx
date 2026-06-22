@@ -3,6 +3,7 @@
 import { Drawer } from "@base-ui/react/drawer";
 import { Slot } from "radix-ui";
 import type * as React from "react";
+import { DrawerHeader } from "@/components/ui/drawer-header";
 import { cn } from "@/lib/utils";
 
 interface DrawerLayoutProps {
@@ -34,6 +35,12 @@ interface DrawerLayoutProps {
    * @default false
    */
   disablePointerDismissal?: boolean;
+  /** When provided, renders a full-width header strip with bg-card and border-b. */
+  title?: string;
+  /** Optional description for the header. Only used when `title` is set. */
+  description?: string;
+  /** When provided, renders a full-width footer strip with bg-card and border-t. */
+  footer?: React.ReactNode;
 }
 
 export function DrawerLayout({
@@ -47,7 +54,14 @@ export function DrawerLayout({
   handle,
   modal = true,
   disablePointerDismissal = false,
+  title,
+  description,
+  footer,
 }: DrawerLayoutProps) {
+  const hasStructuredLayout = !!(title || footer);
+  const bleedPadding =
+    "pr-[calc(1.5rem+3rem)] supports-[-webkit-touch-callout:none]:pr-6";
+
   return (
     <Drawer.Root
       swipeDirection="right"
@@ -79,16 +93,53 @@ export function DrawerLayout({
         >
           <Drawer.Popup
             className={cn(
-              "[--bleed:3rem] supports-[-webkit-touch-callout:none]:[--bleed:0px] h-full -mr-[3rem] border-l border-border bg-white p-6 pr-[calc(1.5rem+3rem)] text-foreground outline-none overscroll-contain touch-auto [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:select-none data-ending-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-starting-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:mr-0 supports-[-webkit-touch-callout:none]:border supports-[-webkit-touch-callout:none]:pr-6 dark:bg-popover dark:text-popover-foreground dark:shadow-none",
+              "[--bleed:3rem] supports-[-webkit-touch-callout:none]:[--bleed:0px] h-full -mr-[3rem] border-l border-border bg-white text-foreground outline-none overscroll-contain touch-auto [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:select-none data-ending-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-starting-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:mr-0 supports-[-webkit-touch-callout:none]:border supports-[-webkit-touch-callout:none]:pr-6 dark:bg-popover dark:text-popover-foreground dark:shadow-none",
               `w-[calc(${panelWidth}+3rem)] max-w-[calc(100vw-3rem+3rem)] supports-[-webkit-touch-callout:none]:w-[${panelWidth}] supports-[-webkit-touch-callout:none]:max-w-[calc(100vw-3rem)]`,
               nested
                 ? "shadow-2xl dark:shadow-2xl dark:shadow-black/50"
                 : "shadow-lg",
+              hasStructuredLayout && "pb-0",
               className,
             )}
           >
-            <Drawer.Content className="mx-auto w-full flex flex-col h-full">
-              {children}
+            <Drawer.Content className="mx-auto w-full flex flex-col h-full min-w-0 overflow-x-hidden">
+              {hasStructuredLayout ? (
+                <>
+                  {title && (
+                    <div
+                      className={cn(
+                        "shrink-0 bg-card border-b border-border px-6",
+                        bleedPadding,
+                        "py-4",
+                      )}
+                    >
+                      <DrawerHeader title={title} description={description} />
+                    </div>
+                  )}
+                  <div
+                    className={cn(
+                      "flex-1 overflow-y-auto min-h-0 px-6",
+                      bleedPadding,
+                      "py-6",
+                    )}
+                  >
+                    {children}
+                  </div>
+                  {footer && (
+                    <div
+                      className={cn(
+                        "shrink-0 bg-card border-t border-border px-6",
+                        bleedPadding,
+                        "py-4",
+                      )}
+                    >
+                      {footer}
+                    </div>
+                  )}
+                </>
+              ) : (
+                children
+              )}
             </Drawer.Content>
           </Drawer.Popup>
         </Drawer.Viewport>

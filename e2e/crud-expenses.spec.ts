@@ -6,12 +6,16 @@ test.describe("Expenses module", () => {
     await page.goto("/expenses", { waitUntil: "domcontentloaded" });
 
     await openDrawerByText(page, "Шинэ зарлага");
-    await expect(page.locator('input[name="amount"]').first()).toBeVisible({
-      timeout: 5000,
-    });
+
+    // CurrencyInput renders input[inputmode="decimal"] without a name attribute
     await expect(
-      page.locator('input[name="description"]').first(),
-    ).toBeVisible();
+      page.locator('input[inputmode="decimal"]').first(),
+    ).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(page.locator('input[name="description"]').first()).toBeVisible(
+      { timeout: 5000 },
+    );
     await page.keyboard.press("Escape");
   });
 

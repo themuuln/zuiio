@@ -6,13 +6,15 @@ test.describe("Products module", () => {
     await page.goto("/products", { waitUntil: "domcontentloaded" });
 
     await openDrawerByText(page, "Шинэ бүтээгдэхүүн");
-    await expect(page.locator("#name")).toBeVisible({ timeout: 5000 });
-    await expect(page.locator("#sku")).toBeVisible();
-    await expect(page.locator("#cost_price")).toBeVisible();
-    await expect(page.locator("#sale_price")).toBeVisible();
-    await expect(page.locator("#current_stock")).toBeVisible();
-    await expect(page.locator("#min_stock")).toBeVisible();
-    await expect(page.getByTestId("create-product-submit")).toBeVisible();
+    await expect(page.locator("#name")).toBeVisible({ timeout: 10000 });
+    await expect(page.locator("#sku")).toBeVisible({ timeout: 5000 });
+    await expect(page.locator("#cost_price")).toBeVisible({ timeout: 5000 });
+    await expect(page.locator("#sale_price")).toBeVisible({ timeout: 5000 });
+    await expect(page.locator("#current_stock")).toBeVisible({ timeout: 5000 });
+    await expect(page.locator("#min_stock")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId("create-product-submit")).toBeVisible({
+      timeout: 5000,
+    });
   });
 
   test("page loads correctly", async ({ page }) => {

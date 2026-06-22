@@ -235,7 +235,7 @@ export function ProductCreateDrawer({
       <form
         id="product-form"
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col flex-1 min-h-0"
+        className="relative flex flex-col flex-1 min-h-0"
       >
         <div className="flex-1 overflow-y-auto space-y-5">
           <div className="grid gap-5">
@@ -482,6 +482,7 @@ export function ProductCreateDrawer({
                 variantData={variantData}
                 onVariantsChange={setVariantData}
                 parentTitle="Шинэ бүтээгдэхүүн"
+                inline
               />
 
               <VariantSummaryCard

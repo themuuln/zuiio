@@ -53,30 +53,54 @@ export function SlideInDrawer({
   modal = true,
   disablePointerDismissal = false,
 }: SlideInDrawerProps) {
+  const bleedPadding =
+    "pr-[calc(1.5rem+3rem)] supports-[-webkit-touch-callout:none]:pr-6";
+
   const content = (
     <>
       <Drawer.Backdrop className="[--backdrop-opacity:0.1] z-40 [--bleed:3rem] dark:[--backdrop-opacity:0.4] fixed inset-0 min-h-dvh bg-black opacity-[calc(var(--backdrop-opacity)*(1-var(--drawer-swipe-progress)))] transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:duration-0 data-ending-style:opacity-0 data-starting-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:absolute" />
       <Drawer.Viewport className="[--viewport-padding:0px] z-50 supports-[-webkit-touch-callout:none]:[--viewport-padding:0.625rem] fixed inset-0 flex items-stretch justify-end p-(--viewport-padding)">
         <Drawer.Popup
           className={cn(
-            `[--bleed:3rem] supports-[-webkit-touch-callout:none]:[--bleed:0px] h-full -mr-[3rem] border-l border-border bg-white pt-6 pb-6 text-foreground outline-none shadow-lg overscroll-contain touch-auto [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:select-none data-ending-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-starting-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:mr-0 supports-[-webkit-touch-callout:none]:border dark:bg-popover dark:text-popover-foreground dark:shadow-none`,
+            `[--bleed:3rem] supports-[-webkit-touch-callout:none]:[--bleed:0px] h-full -mr-[3rem] border-l border-border bg-white text-foreground outline-none shadow-lg overscroll-contain touch-auto [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:select-none data-ending-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-starting-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:mr-0 supports-[-webkit-touch-callout:none]:border dark:bg-popover dark:text-popover-foreground dark:shadow-none`,
             `w-[calc(var(--panel-width)+var(--bleed))] max-w-[calc(100vw-3rem+3rem)] supports-[-webkit-touch-callout:none]:max-w-[calc(100vw-3rem)]`,
             className,
           )}
           style={{ "--panel-width": panelWidth } as React.CSSProperties}
         >
           <Drawer.Content className="mx-auto w-full flex flex-col h-full min-w-0 overflow-x-hidden">
-            <div className="flex-1 flex flex-col overflow-hidden px-6 pr-[calc(1.5rem+3rem)] supports-[-webkit-touch-callout:none]:pr-6">
+            {/* Full-width header */}
+            <div
+              className={cn(
+                "shrink-0 bg-card border-b border-border px-6",
+                bleedPadding,
+                "py-4",
+              )}
+            >
               <DrawerHeader title={title} description={description} />
-              <div className="flex-1 overflow-y-auto min-h-0 min-w-0">
-                {children}
-              </div>
             </div>
+
+            {/* Scrollable content area */}
+            <div
+              className={cn(
+                "flex-1 overflow-y-auto min-h-0 px-6",
+                bleedPadding,
+                "py-6",
+              )}
+            >
+              {children}
+            </div>
+
+            {/* Full-width footer */}
             {footer && (
-              <div className="shrink-0 border-t mt-6">
-                <div className="px-6 pr-[calc(1.5rem+3rem)] supports-[-webkit-touch-callout:none]:pr-6 pt-4 pb-1">
-                  {footer}
-                </div>
+              <div
+                className={cn(
+                  "shrink-0 bg-card border-t border-border px-6",
+                  bleedPadding,
+                  "py-4",
+                )}
+              >
+                {footer}
               </div>
             )}
           </Drawer.Content>

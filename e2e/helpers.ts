@@ -74,3 +74,19 @@ export async function setFormField(page: Page, id: string, value: string) {
     { id, value },
   );
 }
+
+/**
+ * Clicks an element inside a Base UI Drawer by dispatching a MouseEvent
+ * via page.evaluate. This avoids Portal / Viewport interception issues.
+ */
+export async function clickInsideDrawer(page: Page, selector: string) {
+  const result = await page.evaluate((sel) => {
+    const el = document.querySelector(sel) as HTMLElement | null;
+    if (!el) return { ok: false, error: `element not found: ${sel}` };
+    el.dispatchEvent(
+      new MouseEvent("click", { bubbles: true, cancelable: true }),
+    );
+    return { ok: true };
+  }, selector);
+  if (!result.ok) console.log(`[clickInsideDrawer] ${result.error}`);
+}

@@ -387,7 +387,10 @@ export function ProductEditDrawer({
                 </Drawer.Close>
               </div>
 
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="relative space-y-5"
+              >
                 <div className="grid gap-5">
                   <FieldGroup>
                     <Field>
@@ -671,6 +674,7 @@ export function ProductEditDrawer({
                   variantData={variantData}
                   onVariantsChange={setVariantData}
                   parentTitle="Бүтээгдэхүүн засах"
+                  inline
                 />
 
                 <VariantSummaryCard

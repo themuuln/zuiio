@@ -14,7 +14,7 @@ export function DrawerHeader({
   description?: React.ReactNode;
 }) {
   return (
-    <div className="mb-6 flex items-start justify-between gap-4 shrink-0">
+    <div className="flex items-start justify-between gap-4 shrink-0">
       <div className="min-w-0">
         <Drawer.Title className="text-lg font-semibold tracking-tight">
           {title}
@@ -25,7 +25,7 @@ export function DrawerHeader({
           </Drawer.Description>
         )}
       </div>
-      <Drawer.Close className="flex size-8 shrink-0 items-center justify-center rounded-none border-0 bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-foreground">
+      <Drawer.Close className="flex size-8 shrink-0 items-center justify-center rounded-md border-0 bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-foreground">
         <X className="size-4" />
       </Drawer.Close>
     </div>

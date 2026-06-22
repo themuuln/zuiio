@@ -100,8 +100,15 @@ All **create**, **edit**, and **detail** views must use slide-in drawers (`@base
 
 All drawers must use `SlideInDrawer` from `@/components/ui/slide-in-drawer` instead of manually writing Base UI Drawer boilerplate. This eliminates 15+ lines of duplicated class strings per file.
 
+### Standard drawer
+
 ```tsx
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
+import {
+  DrawerCancel,
+  DrawerFooter,
+  DrawerSubmit,
+} from "@/components/ui/drawer-footer";
 
 <SlideInDrawer
   open={open}
@@ -114,12 +121,63 @@ import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
       Шинэ ...
     </button>
   }
+  footer={
+    <DrawerFooter>
+      <DrawerCancel onClick={() => setOpen(false)} />
+      <DrawerSubmit form="my-form" label="Хадгалах" />
+    </DrawerFooter>
+  }
 >
-  {/* drawer content — form, detail view, etc. */}
+  {/* drawer content — scrollable body */}
 </SlideInDrawer>;
 ```
 
-Props: `open`, `onOpenChange`, `title`, `description` (optional), `trigger` (optional, for create drawers), `panelWidth` (optional, default `"28rem"`).
+Props: `open`, `onOpenChange`, `title`, `description` (optional), `trigger` (optional), `panelWidth` (optional, default `"28rem"`), `footer` (optional).
+
+### When using `DrawerLayout` directly
+
+Pass `title`, `description`, and `footer` as props for the full-width header/footer treatment:
+
+```tsx
+<DrawerLayout
+  open={open}
+  onOpenChange={setOpen}
+  title="Шинэ бүтээгдэхүүн"
+  description="Description"
+  footer={
+    <DrawerFooter>
+      <DrawerCancel onClick={() => setOpen(false)} />
+      <DrawerSubmit form="my-form" />
+    </DrawerFooter>
+  }
+>
+  {/* scrollable content */}
+</DrawerLayout>
+```
+
+**Never** render `DrawerHeader` or `DrawerFooter` inside children when using these props — the header/footer are rendered as full-width `bg-card` strips with `border-b`/`border-t` outside the scrollable area.
+
+### Nested drawer panels
+
+For drawers that open inside another drawer (e.g., variant manager inside product create), use `NestedDrawerPanel` instead of a separate portal-based drawer. This keeps the parent drawer visible and creates a true nested feel.
+
+```tsx
+import { NestedDrawerPanel } from "@/components/ui/nested-drawer-panel";
+
+// In parent drawer content, with `relative` on the scroll container:
+<div className="relative">
+  <button onClick={() => setNestedOpen(true)}>Open nested</button>
+  <NestedDrawerPanel
+    open={nestedOpen}
+    onClose={() => setNestedOpen(false)}
+    title="Nested panel title"
+    parentTitle="Parent drawer title"
+    footer={<DrawerFooter>...</DrawerFooter>}
+  >
+    {/* nested panel content */}
+  </NestedDrawerPanel>
+</div>;
+```
 
 ## Reference Structure
 

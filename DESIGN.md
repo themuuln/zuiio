@@ -8,20 +8,20 @@ Zer should feel like a calm, practical operations desk for Mongolian small-busin
 
 ### Palette
 
-| Role | Token | Light | Dark | Usage |
-|------|-------|-------|------|-------|
-| Surface/primary | `--background` | `oklch(0.98 0.01 95)` | `oklch(0.145 0 0)` | App background |
-| Surface/secondary | `--muted` | `oklch(0.955 0.015 95)` | `oklch(0.269 0 0)` | Muted panels, section fills |
-| Surface/elevated | `--card` | `oklch(0.995 0.01 95)` | `oklch(0.205 0 0)` | Cards, drawers, popovers |
-| Text/primary | `--foreground` | `oklch(0.22 0.02 55)` | `oklch(0.985 0 0)` | Headings, primary content |
-| Text/secondary | `--muted-foreground` | `oklch(0.49 0.03 60)` | `oklch(0.708 0 0)` | Helper copy, metadata |
-| Text/on-accent | `--primary-foreground` | `oklch(0.98 0.01 95)` | `oklch(0.205 0 0)` | Text on primary actions |
-| Border/default | `--border` | `oklch(0.89 0.02 85)` | `oklch(1 0 0 / 10%)` | Panel borders, dividers |
-| Border/input | `--input` | `oklch(0.9 0.02 85)` | `oklch(1 0 0 / 15%)` | Inputs and controls |
-| Accent/primary | `--primary` | `oklch(0.43 0.11 215)` | `oklch(0.922 0 0)` | Primary buttons, links, focus states |
-| Accent/secondary | `--accent` | `oklch(0.92 0.04 175)` | `oklch(0.269 0 0)` | Hover surfaces, selected rows |
-| Status/error | `--destructive` | `oklch(0.577 0.245 27.325)` | `oklch(0.704 0.191 22.216)` | Errors, destructive actions |
-| Focus/ring | `--ring` | `oklch(0.57 0.11 215)` | `oklch(0.556 0 0)` | Focus rings and keyboard highlights |
+| Role              | Token                  | Light                       | Dark                        | Usage                                |
+| ----------------- | ---------------------- | --------------------------- | --------------------------- | ------------------------------------ |
+| Surface/primary   | `--background`         | `oklch(0.98 0.01 95)`       | `oklch(0.145 0 0)`          | App background                       |
+| Surface/secondary | `--muted`              | `oklch(0.955 0.015 95)`     | `oklch(0.269 0 0)`          | Muted panels, section fills          |
+| Surface/elevated  | `--card`               | `oklch(0.995 0.01 95)`      | `oklch(0.205 0 0)`          | Cards, drawers, popovers             |
+| Text/primary      | `--foreground`         | `oklch(0.22 0.02 55)`       | `oklch(0.985 0 0)`          | Headings, primary content            |
+| Text/secondary    | `--muted-foreground`   | `oklch(0.49 0.03 60)`       | `oklch(0.708 0 0)`          | Helper copy, metadata                |
+| Text/on-accent    | `--primary-foreground` | `oklch(0.98 0.01 95)`       | `oklch(0.205 0 0)`          | Text on primary actions              |
+| Border/default    | `--border`             | `oklch(0.89 0.02 85)`       | `oklch(1 0 0 / 10%)`        | Panel borders, dividers              |
+| Border/input      | `--input`              | `oklch(0.9 0.02 85)`        | `oklch(1 0 0 / 15%)`        | Inputs and controls                  |
+| Accent/primary    | `--primary`            | `oklch(0.43 0.11 215)`      | `oklch(0.922 0 0)`          | Primary buttons, links, focus states |
+| Accent/secondary  | `--accent`             | `oklch(0.92 0.04 175)`      | `oklch(0.269 0 0)`          | Hover surfaces, selected rows        |
+| Status/error      | `--destructive`        | `oklch(0.577 0.245 27.325)` | `oklch(0.704 0.191 22.216)` | Errors, destructive actions          |
+| Focus/ring        | `--ring`               | `oklch(0.57 0.11 215)`      | `oklch(0.556 0 0)`          | Focus rings and keyboard highlights  |
 
 ### Rules
 
@@ -34,16 +34,16 @@ Zer should feel like a calm, practical operations desk for Mongolian small-busin
 
 ### Scale
 
-| Level | Size | Weight | Line Height | Tracking | Usage |
-|-------|------|--------|-------------|----------|-------|
-| Display | `2rem` | 600 | 1.15 | `-0.02em` | Large page statements |
-| H1 | `1.5rem` | 600 | 1.2 | `-0.015em` | Drawer and page titles |
-| H2 | `1.125rem` | 600 | 1.3 | `-0.01em` | Section titles |
-| H3 | `1rem` | 600 | 1.35 | `0` | Card titles |
-| Body | `0.875rem` | 400 | 1.6 | `0` | Default body text |
-| Body/sm | `0.8125rem` | 400 | 1.5 | `0` | Supportive text |
-| Caption | `0.75rem` | 500 | 1.4 | `0.02em` | Labels, metadata |
-| Overline | `0.6875rem` | 600 | 1.3 | `0.08em` | Dense table headers |
+| Level    | Size        | Weight | Line Height | Tracking   | Usage                  |
+| -------- | ----------- | ------ | ----------- | ---------- | ---------------------- |
+| Display  | `2rem`      | 600    | 1.15        | `-0.02em`  | Large page statements  |
+| H1       | `1.5rem`    | 600    | 1.2         | `-0.015em` | Drawer and page titles |
+| H2       | `1.125rem`  | 600    | 1.3         | `-0.01em`  | Section titles         |
+| H3       | `1rem`      | 600    | 1.35        | `0`        | Card titles            |
+| Body     | `0.875rem`  | 400    | 1.6         | `0`        | Default body text      |
+| Body/sm  | `0.8125rem` | 400    | 1.5         | `0`        | Supportive text        |
+| Caption  | `0.75rem`   | 500    | 1.4         | `0.02em`   | Labels, metadata       |
+| Overline | `0.6875rem` | 600    | 1.3         | `0.08em`   | Dense table headers    |
 
 ### Font Stack
 
@@ -63,16 +63,16 @@ Zer should feel like a calm, practical operations desk for Mongolian small-busin
 
 All spacing derives from a 4px base.
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--space-1` | 4px | Tight icon gaps |
-| `--space-2` | 8px | Compact inline groups |
-| `--space-3` | 12px | Dense control spacing |
-| `--space-4` | 16px | Default card padding edge |
-| `--space-5` | 20px | Comfortable section padding |
-| `--space-6` | 24px | Large card padding |
-| `--space-8` | 32px | Separation between sections |
-| `--space-10` | 40px | Page section rhythm |
+| Token        | Value | Usage                       |
+| ------------ | ----- | --------------------------- |
+| `--space-1`  | 4px   | Tight icon gaps             |
+| `--space-2`  | 8px   | Compact inline groups       |
+| `--space-3`  | 12px  | Dense control spacing       |
+| `--space-4`  | 16px  | Default card padding edge   |
+| `--space-5`  | 20px  | Comfortable section padding |
+| `--space-6`  | 24px  | Large card padding          |
+| `--space-8`  | 32px  | Separation between sections |
+| `--space-10` | 40px  | Page section rhythm         |
 
 ### Grid
 
@@ -97,6 +97,34 @@ All spacing derives from a 4px base.
 - Accessibility: visible close control, focus management via Base UI drawer
 - Motion: transform-based slide in from the right
 
+#### Standard drawer (SlideInDrawer / DrawerLayout with title+footer)
+
+- Header is a full-width strip with `bg-card` surface and `border-b` bottom border.
+  Includes title, optional description, and close button (right-aligned).
+- Scrollable content fills the space between header and footer.
+- Footer is a full-width strip with `bg-card` surface and `border-t` top border.
+  Contains action buttons (Cancel + Submit), right-aligned via `DrawerFooter`.
+- Never put header or footer inside the scrollable content area.
+  Use the `title`/`description`/`footer` props on `SlideInDrawer` or `DrawerLayout`.
+
+#### Nested drawer
+
+- Nested drawers must use `NestedDrawerPanel` (inline inside the parent drawer content area),
+  NOT a separate portal-based `DrawerLayout` or `SlideInDrawer`.
+- `NestedDrawerPanel` renders with `absolute` positioning inside a `relative` parent container.
+- It slides in from the right with the same `450ms` cubic-bezier animation.
+- The parent drawer's header and footer remain visible, creating a stacked paper feel.
+- Includes a breadcrumb back button showing the parent title.
+- The close button dismisses the nested panel and returns to parent content.
+
+#### Mobile behavior
+
+- Drawer panel defaults to `28rem` width, capped at `calc(100vw - 3rem)` on mobile (leaves 1.5rem peek of the main page).
+- All touch targets must be at least `44px` height for mobile accessibility.
+- Drawer supports swipe-to-close via the right-side bleed area (`--bleed: 3rem`).
+- Content padding is `--space-6` (24px) on all breakpoints, with appropriate bleed compensation.
+- On iOS, the `supports-[-webkit-touch-callout:none]` overrides handle the safe-area adjustments.
+
 ### Form section card
 
 - Structure: title, short description, grouped controls inside a bordered card
@@ -119,11 +147,11 @@ All spacing derives from a 4px base.
 
 ### Timing
 
-| Type | Duration | Easing | Usage |
-|------|----------|--------|-------|
-| Micro | `120ms` | `ease-out` | Button press, icon feedback |
-| Standard | `200ms` | `ease-in-out` | Hover and selection states |
-| Emphasis | `450ms` | `cubic-bezier(0.32, 0.72, 0, 1)` | Drawer open and close |
+| Type     | Duration | Easing                           | Usage                       |
+| -------- | -------- | -------------------------------- | --------------------------- |
+| Micro    | `120ms`  | `ease-out`                       | Button press, icon feedback |
+| Standard | `200ms`  | `ease-in-out`                    | Hover and selection states  |
+| Emphasis | `450ms`  | `cubic-bezier(0.32, 0.72, 0, 1)` | Drawer open and close       |
 
 ### Rules
 
@@ -137,11 +165,11 @@ All spacing derives from a 4px base.
 
 `mixed`
 
-| Layer | Treatment | Usage |
-|------|-----------|-------|
-| Base surface | Tonal shift | Page and app backgrounds |
-| Standard panels | 1px border + tonal fill | Forms, cards, drawers |
-| Elevated overlays | Border + shadow | Drawers, dropdowns, nested pickers |
+| Layer             | Treatment               | Usage                              |
+| ----------------- | ----------------------- | ---------------------------------- |
+| Base surface      | Tonal shift             | Page and app backgrounds           |
+| Standard panels   | 1px border + tonal fill | Forms, cards, drawers              |
+| Elevated overlays | Border + shadow         | Drawers, dropdowns, nested pickers |
 
 ### Rules
 
