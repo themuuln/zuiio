@@ -42,12 +42,20 @@ export default defineConfig({
     // Main test project: reuses saved auth state
     {
       name: "chromium",
-      testIgnore: /auth\.setup\.ts|codeceptjs|a11y\//,
+      testIgnore: /auth\.setup\.ts|auth-flows\.spec\.ts|codeceptjs|a11y\//,
       use: {
         ...devices["Desktop Chrome"],
         storageState: AUTH_FILE,
       },
       dependencies: ["setup"],
+    },
+    // Auth tests: start logged out, no storageState
+    {
+      name: "auth-test",
+      testMatch: /auth-flows\.spec\.ts/,
+      use: {
+        ...devices["Desktop Chrome"],
+      },
     },
     // A11y tests for public pages (no auth needed)
     {
