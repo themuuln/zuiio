@@ -10,8 +10,7 @@ test.describe("Returns module", () => {
   });
 
   test("return create drawer opens", async ({ page }) => {
-    await page.goto("/returns", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/returns", { waitUntil: "domcontentloaded" });
 
     await openDrawerByText(page, "Шинэ буцаалт");
     await page.waitForTimeout(1000);
@@ -22,8 +21,7 @@ test.describe("Returns module", () => {
   });
 
   test("return create form can be filled and submitted", async ({ page }) => {
-    await page.goto("/returns", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/returns", { waitUntil: "domcontentloaded" });
 
     // Open create drawer
     await openDrawerByText(page, "Шинэ буцаалт");

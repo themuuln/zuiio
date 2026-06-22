@@ -3,8 +3,7 @@ import { openDrawerByText } from "./helpers";
 
 test.describe("Purchases module", () => {
   test("create purchase drawer renders form fields", async ({ page }) => {
-    await page.goto("/purchases", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/purchases", { waitUntil: "domcontentloaded" });
 
     // Check page title
     await expect(page.getByText("Худалдан авалт").first()).toBeVisible({
@@ -31,8 +30,7 @@ test.describe("Purchases module", () => {
   });
 
   test("create purchase with supplier and items", async ({ page }) => {
-    await page.goto("/purchases", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/purchases", { waitUntil: "domcontentloaded" });
 
     // Open create drawer
     await openDrawerByText(page, "Шинэ захиалга");

@@ -3,8 +3,8 @@ import { openDrawerByText } from "./helpers";
 
 test.describe("Expenses module", () => {
   test("create drawer opens and shows form", async ({ page }) => {
-    await page.goto("/expenses", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/expenses", { waitUntil: "domcontentloaded" });
+
     await openDrawerByText(page, "Шинэ зарлага");
     await expect(page.locator('input[name="amount"]').first()).toBeVisible({
       timeout: 5000,

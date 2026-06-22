@@ -10,8 +10,7 @@ test.describe("Quotations module", () => {
   });
 
   test("quotation create drawer opens", async ({ page }) => {
-    await page.goto("/quotations", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/quotations", { waitUntil: "domcontentloaded" });
 
     await openDrawerByText(page, "Шинэ үнийн санал");
     await page.waitForTimeout(1000);
@@ -24,8 +23,7 @@ test.describe("Quotations module", () => {
   test("quotation create form can be filled and submitted", async ({
     page,
   }) => {
-    await page.goto("/quotations", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/quotations", { waitUntil: "domcontentloaded" });
 
     // Open create drawer
     await openDrawerByText(page, "Шинэ үнийн санал");

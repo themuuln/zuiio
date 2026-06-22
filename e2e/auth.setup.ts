@@ -6,7 +6,7 @@ const DEV_EMAIL = process.env.E2E_EMAIL ?? "themuuln1@gmail.com";
 const DEV_PASSWORD = process.env.E2E_PASSWORD ?? "Tolom!11";
 
 setup("authenticate via login form", async ({ page }) => {
-  await page.goto("/login", { waitUntil: "networkidle" });
+  await page.goto("/login", { waitUntil: "domcontentloaded" });
   await page.fill('input[name="email"]', DEV_EMAIL);
   await page.fill('input[name="password"]', DEV_PASSWORD);
 

@@ -10,8 +10,7 @@ test.describe("Invoices module", () => {
   });
 
   test("invoice create drawer opens", async ({ page }) => {
-    await page.goto("/invoices", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/invoices", { waitUntil: "domcontentloaded" });
 
     await openDrawerByText(page, "Шинэ нэхэмжлэл");
     await page.waitForTimeout(1000);
@@ -22,8 +21,7 @@ test.describe("Invoices module", () => {
   });
 
   test("invoice create form can be filled and submitted", async ({ page }) => {
-    await page.goto("/invoices", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/invoices", { waitUntil: "domcontentloaded" });
 
     // Open create drawer
     await openDrawerByText(page, "Шинэ нэхэмжлэл");

@@ -72,7 +72,7 @@ test.describe("P1: Public share pages show not-found", () => {
   }) => {
     await page.goto(
       "/r/invoice/0000000000000000000000000000000000000000000000000000000000000000",
-      { waitUntil: "networkidle" },
+      { waitUntil: "domcontentloaded" },
     );
     expect(page.url()).toContain("/r/invoice/");
     await expect(
@@ -83,7 +83,7 @@ test.describe("P1: Public share pages show not-found", () => {
   test("/r/[token] shows not-found for invalid token", async ({ page }) => {
     await page.goto(
       "/r/0000000000000000000000000000000000000000000000000000000000000000",
-      { waitUntil: "networkidle" },
+      { waitUntil: "domcontentloaded" },
     );
     expect(page.url()).toContain("/r/");
     await expect(
@@ -99,7 +99,7 @@ test.describe("Security fixes (authenticated)", () => {
 
   test.describe("P1: Share link creation", () => {
     test("can create a report share link", async ({ page }) => {
-      await page.goto("/reports", { waitUntil: "networkidle" });
+      await page.goto("/reports", { waitUntil: "domcontentloaded" });
       await page.getByRole("button", { name: /Хуваалцах/i }).click();
       const dialog = page.getByRole("dialog");
       await expect(dialog).toBeVisible({ timeout: 10000 });
@@ -114,12 +114,14 @@ test.describe("Security fixes (authenticated)", () => {
 
   test.describe("P2: Permission enforcement", () => {
     test("settings page shows roles card for org owner", async ({ page }) => {
-      await page.goto("/settings", { waitUntil: "networkidle" });
+      await page.goto("/settings", { waitUntil: "domcontentloaded" });
       await expect(page.getByText("Үүрэг, эрхүүд").first()).toBeVisible();
     });
 
     test("roles drawer shows permission groups", async ({ page }) => {
-      await page.goto("/settings?roles=true", { waitUntil: "networkidle" });
+      await page.goto("/settings?roles=true", {
+        waitUntil: "domcontentloaded",
+      });
       await expect(
         page.getByRole("heading", { name: /Үүрэг, эрхүүд/i }),
       ).toBeVisible({ timeout: 15000 });
@@ -181,7 +183,7 @@ test.describe("Security fixes (authenticated)", () => {
 
   test.describe("P2: Invoice page loads", () => {
     test("invoice page loads without error for org owner", async ({ page }) => {
-      await page.goto("/invoices", { waitUntil: "networkidle" });
+      await page.goto("/invoices", { waitUntil: "domcontentloaded" });
       await expect(page.getByText(/Нэхэмжлэл/u).first()).toBeVisible({
         timeout: 15000,
       });

@@ -5,8 +5,8 @@ const NAME = `SUP-${Date.now()}`;
 
 test.describe("Suppliers CRUD", () => {
   test("create supplier via drawer", async ({ page }) => {
-    await page.goto("/suppliers", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/suppliers", { waitUntil: "domcontentloaded" });
+
     await openDrawerByText(page, "Нийлүүлэгч бүртгэх");
     await expect(page.locator('input[name="name"]')).toBeVisible({
       timeout: 5000,

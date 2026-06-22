@@ -5,8 +5,7 @@ test.describe("Restock feature", () => {
   test("quick restock drawer opens from low-stock inventory", async ({
     page,
   }) => {
-    await page.goto("/inventory", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/inventory", { waitUntil: "domcontentloaded" });
 
     // Check the page loaded
     await expect(page.getByText("Агуулах").first()).toBeVisible({
@@ -34,8 +33,7 @@ test.describe("Restock feature", () => {
   });
 
   test("restock page loads and shows product table", async ({ page }) => {
-    await page.goto("/inventory/restock", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/inventory/restock", { waitUntil: "domcontentloaded" });
 
     // The page should have loaded - title present
     await expect(page.getByText("Дахин захиалах").first()).toBeVisible({
@@ -59,8 +57,9 @@ test.describe("Restock feature", () => {
 
 test.describe("Batch stock adjustments", () => {
   test("adjustments page loads", async ({ page }) => {
-    await page.goto("/inventory/adjustments", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/inventory/adjustments", {
+      waitUntil: "domcontentloaded",
+    });
 
     await expect(page.getByText("Барааны тохируулга").first()).toBeVisible({
       timeout: 10000,
@@ -78,9 +77,8 @@ test.describe("Batch stock adjustments", () => {
 
   test("new adjustment form loads with product selector", async ({ page }) => {
     await page.goto("/inventory/adjustments/new", {
-      waitUntil: "networkidle",
+      waitUntil: "domcontentloaded",
     });
-    await page.waitForTimeout(2000);
 
     await expect(page.getByText("Бөөнөөр тохируулга").first()).toBeVisible({
       timeout: 10000,
@@ -95,8 +93,7 @@ test.describe("Batch stock adjustments", () => {
 
 test.describe("Product bundles", () => {
   test("bundles page loads", async ({ page }) => {
-    await page.goto("/products/bundles", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/products/bundles", { waitUntil: "domcontentloaded" });
 
     await expect(page.getByText("Багц бүтээгдэхүүн").first()).toBeVisible({
       timeout: 10000,
@@ -114,8 +111,7 @@ test.describe("Product bundles", () => {
   });
 
   test("bundle create drawer opens", async ({ page }) => {
-    await page.goto("/products/bundles", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/products/bundles", { waitUntil: "domcontentloaded" });
 
     // Click "Шинэ багц" button
     await openDrawerByText(page, "Шинэ багц");
@@ -130,8 +126,7 @@ test.describe("Product bundles", () => {
 
 test.describe("Sidebar navigation", () => {
   test("sidebar has links to new pages", async ({ page }) => {
-    await page.goto("/", { waitUntil: "networkidle" });
-    await page.waitForTimeout(3000);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     // Look for the sidebar navigation links by href
     await expect(page.locator('a[href="/inventory/adjustments"]')).toBeVisible({

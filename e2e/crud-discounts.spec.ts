@@ -10,8 +10,7 @@ test.describe("Discounts module", () => {
   });
 
   test("create discount drawer opens with form fields", async ({ page }) => {
-    await page.goto("/discounts", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/discounts", { waitUntil: "domcontentloaded" });
 
     await openDrawerByText(page, "Шинэ хямдрал");
     await page.waitForTimeout(1500);
@@ -26,8 +25,7 @@ test.describe("Discounts module", () => {
   });
 
   test("create discount form can be filled and submitted", async ({ page }) => {
-    await page.goto("/discounts", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/discounts", { waitUntil: "domcontentloaded" });
 
     await openDrawerByText(page, "Шинэ хямдрал");
     await page.waitForTimeout(1500);

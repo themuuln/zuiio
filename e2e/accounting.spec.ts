@@ -21,8 +21,7 @@ import { expect, test } from "@playwright/test";
 
 test.describe("Accounting — Page Structure", () => {
   test("ACC-001: Page loads with all 3 tabs visible", async ({ page }) => {
-    await page.goto("/accounting", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
     await expect(
       page.getByRole("heading", { name: "Нягтлан бодох бүртгэл" }),
@@ -43,8 +42,7 @@ test.describe("Accounting — Page Structure", () => {
   test("ACC-002: Trial Balance tab shows content or empty state", async ({
     page,
   }) => {
-    await page.goto("/accounting", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
     // Trial Balance is the default active tab
     // CardTitle renders <div data-slot="card-title"> (not <h>), or empty state <h3> when no data
@@ -62,8 +60,7 @@ test.describe("Accounting — Chart of Accounts", () => {
   test("ACC-010: Chart of Accounts tab shows seeded accounts", async ({
     page,
   }) => {
-    await page.goto("/accounting", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
     // Switch to chart of accounts tab
     await page.getByRole("tab", { name: "Дансны бүртгэл" }).click();
@@ -83,8 +80,7 @@ test.describe("Accounting — Chart of Accounts", () => {
   });
 
   test("ACC-011: Account table has correct columns", async ({ page }) => {
-    await page.goto("/accounting", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
     await page.getByRole("tab", { name: "Дансны бүртгэл" }).click();
     await page.waitForTimeout(500);
@@ -98,8 +94,7 @@ test.describe("Accounting — Chart of Accounts", () => {
   });
 
   test("ACC-012: Can open account create drawer", async ({ page }) => {
-    await page.goto("/accounting", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
     await page.getByRole("tab", { name: "Дансны бүртгэл" }).click();
     await page.waitForTimeout(500);
@@ -122,8 +117,7 @@ test.describe("Accounting — Chart of Accounts", () => {
   });
 
   test("ACC-013: Can create a new account", async ({ page }) => {
-    await page.goto("/accounting", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
     await page.getByRole("tab", { name: "Дансны бүртгэл" }).click();
     await page.waitForTimeout(500);
@@ -173,8 +167,7 @@ test.describe("Accounting — Chart of Accounts", () => {
   test("ACC-014: Account create validates required fields", async ({
     page,
   }) => {
-    await page.goto("/accounting", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
     await page.getByRole("tab", { name: "Дансны бүртгэл" }).click();
     await page.waitForTimeout(500);
@@ -193,8 +186,7 @@ test.describe("Accounting — Chart of Accounts", () => {
   });
 
   test("ACC-015: Account create drawer closes on cancel", async ({ page }) => {
-    await page.goto("/accounting", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
     await page.getByRole("tab", { name: "Дансны бүртгэл" }).click();
     await page.waitForTimeout(500);
@@ -221,8 +213,7 @@ test.describe("Accounting — Journal Entries", () => {
   test("ACC-020: Journal entries tab shows empty state or content", async ({
     page,
   }) => {
-    await page.goto("/accounting", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
     await page.getByRole("tab", { name: "Журналын бичилт" }).click();
     await page.waitForTimeout(500);
@@ -243,8 +234,7 @@ test.describe("Accounting — Journal Entries", () => {
   });
 
   test("ACC-021: Journal entry table has correct columns", async ({ page }) => {
-    await page.goto("/accounting", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
     await page.getByRole("tab", { name: "Журналын бичилт" }).click();
     await page.waitForTimeout(500);
@@ -256,8 +246,7 @@ test.describe("Accounting — Journal Entries", () => {
   });
 
   test("ACC-022: Can open journal entry create drawer", async ({ page }) => {
-    await page.goto("/accounting", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
     await page.getByRole("tab", { name: "Журналын бичилт" }).click();
     await page.waitForTimeout(500);
@@ -281,8 +270,7 @@ test.describe("Accounting — Journal Entries", () => {
   test("ACC-023: Journal entry form can add and remove lines", async ({
     page,
   }) => {
-    await page.goto("/accounting", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
     await page.getByRole("tab", { name: "Журналын бичилт" }).click();
     await page.waitForTimeout(500);
@@ -317,8 +305,7 @@ test.describe("Accounting — Journal Entries", () => {
     page,
   }) => {
     // First, get a valid account ID from the chart of accounts
-    await page.goto("/accounting", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
     // Switch to chart of accounts to find accounts
     await page.getByRole("tab", { name: "Дансны бүртгэл" }).click();
@@ -436,8 +423,7 @@ test.describe("Accounting — Journal Entries", () => {
   test("ACC-025: Journal entry row click opens detail drawer", async ({
     page,
   }) => {
-    await page.goto("/accounting", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
     await page.getByRole("tab", { name: "Журналын бичилт" }).click();
     await page.waitForTimeout(1000);
@@ -491,8 +477,7 @@ test.describe("Accounting — Journal Entries", () => {
   test("ACC-026: Detail drawer shows entry lines and totals", async ({
     page,
   }) => {
-    await page.goto("/accounting", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
     await page.getByRole("tab", { name: "Журналын бичилт" }).click();
     await page.waitForTimeout(1000);
@@ -538,8 +523,7 @@ test.describe("Accounting — Journal Entries", () => {
   test("ACC-027: Detail drawer edit button opens edit drawer", async ({
     page,
   }) => {
-    await page.goto("/accounting", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
     await page.getByRole("tab", { name: "Журналын бичилт" }).click();
     await page.waitForTimeout(1000);
@@ -587,8 +571,7 @@ test.describe("Accounting — Journal Entries", () => {
 
 test.describe("Accounting — Trial Balance", () => {
   test("ACC-030: Trial balance shows data or empty state", async ({ page }) => {
-    await page.goto("/accounting", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/accounting", { waitUntil: "domcontentloaded" });
 
     // Trial balance tab should be active by default
     const emptyState = page.getByText("Туршилтын баланс хоосон");
@@ -611,8 +594,7 @@ test.describe("Accounting — Navigation & URL-driven", () => {
   test("ACC-040: /accounting/new redirects to /accounting?create=true", async ({
     page,
   }) => {
-    await page.goto("/accounting/new", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/accounting/new", { waitUntil: "domcontentloaded" });
 
     // Should redirect to /accounting
     expect(page.url()).not.toContain("/accounting/new");
@@ -621,8 +603,9 @@ test.describe("Accounting — Navigation & URL-driven", () => {
   test("ACC-041: ?create=true auto-opens journal entry drawer", async ({
     page,
   }) => {
-    await page.goto("/accounting?create=true", { waitUntil: "networkidle" });
-    await page.waitForTimeout(3000);
+    await page.goto("/accounting?create=true", {
+      waitUntil: "domcontentloaded",
+    });
 
     // The drawer should auto-open on the journal entries tab
     const drawerHeading = page

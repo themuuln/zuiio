@@ -2,8 +2,9 @@ import { expect, test } from "@playwright/test";
 
 test.describe("Organization settings", () => {
   test("page loads and shows organization info", async ({ page }) => {
-    await page.goto("/settings/organization", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/settings/organization", {
+      waitUntil: "domcontentloaded",
+    });
 
     // Should show the settings title
     await expect(page.getByText("Ерөнхий мэдээлэл").first()).toBeVisible({

@@ -21,8 +21,7 @@ let cachedProductWithStock: string | null = null;
 async function getProductWithStock(page: any): Promise<string> {
   if (cachedProductWithStock) return cachedProductWithStock;
 
-  await page.goto("/products", { waitUntil: "networkidle" });
-  await page.waitForTimeout(2000);
+  await page.goto("/products", { waitUntil: "domcontentloaded" });
 
   const rows = page.locator("table tbody tr");
   const count = await rows.count();
@@ -182,8 +181,7 @@ async function getProductStock(
   page: any,
   productName: string,
 ): Promise<number> {
-  await page.goto("/products", { waitUntil: "networkidle" });
-  await page.waitForTimeout(2000);
+  await page.goto("/products", { waitUntil: "domcontentloaded" });
 
   const row = page
     .locator("table tbody tr")
@@ -207,8 +205,7 @@ test.describe("Cross-Area Flows", () => {
     const productName = await getProductWithStock(page);
 
     // Navigate to sales page
-    await page.goto("/sales", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/sales", { waitUntil: "domcontentloaded" });
 
     // Open create drawer
     await openCreateDrawer(page);
@@ -228,8 +225,7 @@ test.describe("Cross-Area Flows", () => {
     expect(toastText).toContain("амжилттай");
 
     // Navigate to /sales to see fresh data
-    await page.goto("/sales", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/sales", { waitUntil: "domcontentloaded" });
 
     // Verify the customer name appears in the table
     await expect(page.getByText(customerName).first()).toBeVisible({
@@ -237,8 +233,8 @@ test.describe("Cross-Area Flows", () => {
     });
 
     // Navigate to /products to verify stock page loads
-    await page.goto("/products", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/products", { waitUntil: "domcontentloaded" });
+
     await expect(page.locator("table").first()).toBeVisible({ timeout: 5000 });
   });
 
@@ -254,8 +250,8 @@ test.describe("Cross-Area Flows", () => {
     expect(initialStock).toBeGreaterThan(0);
 
     // Create first sale
-    await page.goto("/sales", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/sales", { waitUntil: "domcontentloaded" });
+
     await openCreateDrawer(page);
     await selectProductByName(page, productName, 0);
     await createCustomerInPicker(page, `Multi Sale 1 ${Date.now()}`);
@@ -269,8 +265,8 @@ test.describe("Cross-Area Flows", () => {
     expect(stockAfterFirst).toBeLessThan(initialStock);
 
     // Create second sale for the same product
-    await page.goto("/sales", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/sales", { waitUntil: "domcontentloaded" });
+
     await openCreateDrawer(page);
     await selectProductByName(page, productName, 0);
     await createCustomerInPicker(page, `Multi Sale 2 ${Date.now()}`);
@@ -291,8 +287,8 @@ test.describe("Cross-Area Flows", () => {
     const productName = await getProductWithStock(page);
 
     // Create a sale with a unique customer name
-    await page.goto("/sales", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/sales", { waitUntil: "domcontentloaded" });
+
     await openCreateDrawer(page);
     await selectProductByName(page, productName, 0);
     await createCustomerInPicker(page, uniqueCustomerName);
@@ -301,8 +297,7 @@ test.describe("Cross-Area Flows", () => {
     expect(toastText).toContain("амжилттай");
 
     // Navigate to /customers
-    await page.goto("/customers", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/customers", { waitUntil: "domcontentloaded" });
 
     // Verify the customer appears in the customers table
     await expect(page.getByText(uniqueCustomerName).first()).toBeVisible({
@@ -313,8 +308,7 @@ test.describe("Cross-Area Flows", () => {
   test("VAL-CROSS-004: Filter chips and text search coexist", async ({
     page,
   }) => {
-    await page.goto("/sales", { waitUntil: "networkidle" });
-    await page.waitForTimeout(3000);
+    await page.goto("/sales", { waitUntil: "domcontentloaded" });
 
     // Check that data exists
     const table = page.locator("table");
@@ -362,8 +356,7 @@ test.describe("Cross-Area Flows", () => {
   });
 
   test("VAL-CROSS-005: Empty to populated transition", async ({ page }) => {
-    await page.goto("/sales", { waitUntil: "networkidle" });
-    await page.waitForTimeout(3000);
+    await page.goto("/sales", { waitUntil: "domcontentloaded" });
 
     const table = page.locator("table");
     const hasData = await table.isVisible().catch(() => false);
@@ -390,8 +383,8 @@ test.describe("Cross-Area Flows", () => {
       await page.waitForTimeout(2000);
 
       // Table should appear after creating first sale
-      await page.goto("/sales", { waitUntil: "networkidle" });
-      await page.waitForTimeout(2000);
+      await page.goto("/sales", { waitUntil: "domcontentloaded" });
+
       await expect(page.locator("table")).toBeVisible({ timeout: 5000 });
       console.log("Table appeared after first sale");
     }
@@ -401,8 +394,7 @@ test.describe("Cross-Area Flows", () => {
     page,
   }) => {
     // Path 1: Click "Шинэ борлуулалт" button
-    await page.goto("/sales", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/sales", { waitUntil: "domcontentloaded" });
 
     await page.getByRole("button", { name: "Шинэ борлуулалт" }).click();
     await page.waitForTimeout(1500);
@@ -417,8 +409,7 @@ test.describe("Cross-Area Flows", () => {
     ).not.toBeVisible({ timeout: 3000 });
 
     // Path 2: Navigate to /sales?create=true
-    await page.goto("/sales?create=true", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/sales?create=true", { waitUntil: "domcontentloaded" });
 
     // Verify drawer auto-opens
     await expect(
@@ -434,8 +425,7 @@ test.describe("Cross-Area Flows", () => {
   test("VAL-CROSS-007: Sale detail accessible from both row click and post-save toast Дэлгэрэнгүй", async ({
     page,
   }) => {
-    await page.goto("/sales", { waitUntil: "networkidle" });
-    await page.waitForTimeout(3000);
+    await page.goto("/sales", { waitUntil: "domcontentloaded" });
 
     // Check if we have sales data
     const rows = page.locator("table tbody tr");
@@ -461,8 +451,8 @@ test.describe("Cross-Area Flows", () => {
 
     // Path 2: Create a new sale, then click Дэлгэрэнгүй in the toast
     const productName = await getProductWithStock(page);
-    await page.goto("/sales", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/sales", { waitUntil: "domcontentloaded" });
+
     await openCreateDrawer(page);
     await selectProductByName(page, productName, 0);
     const uniqueName = `Detail Test ${Date.now()}`;

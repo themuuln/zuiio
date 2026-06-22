@@ -3,8 +3,8 @@ import { openDrawerByText } from "./helpers";
 
 test.describe("Products module", () => {
   test("create drawer renders all form fields", async ({ page }) => {
-    await page.goto("/products", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/products", { waitUntil: "domcontentloaded" });
+
     await openDrawerByText(page, "Шинэ бүтээгдэхүүн");
     await expect(page.locator("#name")).toBeVisible({ timeout: 5000 });
     await expect(page.locator("#sku")).toBeVisible();

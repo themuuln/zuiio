@@ -5,8 +5,7 @@ test.describe("Feature gating — redirects", () => {
     page,
   }) => {
     // This test verifies the page loads normally (since our org has suppliers enabled)
-    await page.goto("/suppliers", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/suppliers", { waitUntil: "domcontentloaded" });
 
     // Should show the suppliers page, not redirect
     const pageContent = page.locator("main");
@@ -14,8 +13,7 @@ test.describe("Feature gating — redirects", () => {
   });
 
   test("audit log page loads normally", async ({ page }) => {
-    await page.goto("/audit", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/audit", { waitUntil: "domcontentloaded" });
 
     await expect(page.getByText("Үйлдлийн түүх").first()).toBeVisible({
       timeout: 10000,
@@ -23,8 +21,7 @@ test.describe("Feature gating — redirects", () => {
   });
 
   test("inventory movements page loads normally", async ({ page }) => {
-    await page.goto("/inventory/movements", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/inventory/movements", { waitUntil: "domcontentloaded" });
 
     await expect(page.getByText("Үлдэгдэл хөдөлгөөн").first()).toBeVisible({
       timeout: 10000,
@@ -32,8 +29,9 @@ test.describe("Feature gating — redirects", () => {
   });
 
   test("inventory adjustments page loads normally", async ({ page }) => {
-    await page.goto("/inventory/adjustments", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/inventory/adjustments", {
+      waitUntil: "domcontentloaded",
+    });
 
     await expect(page.getByText("Барааны тохируулга").first()).toBeVisible({
       timeout: 10000,
@@ -41,8 +39,7 @@ test.describe("Feature gating — redirects", () => {
   });
 
   test("inventory restock page loads normally", async ({ page }) => {
-    await page.goto("/inventory/restock", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/inventory/restock", { waitUntil: "domcontentloaded" });
 
     // Should either show empty state or product table
     const emptyState = page.getByText("Захиалах зүйл байхгүй");
@@ -51,8 +48,7 @@ test.describe("Feature gating — redirects", () => {
   });
 
   test("categories page loads normally", async ({ page }) => {
-    await page.goto("/inventory/categories", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/inventory/categories", { waitUntil: "domcontentloaded" });
 
     await expect(page.getByText("Ангилалууд").first()).toBeVisible({
       timeout: 10000,
@@ -60,8 +56,7 @@ test.describe("Feature gating — redirects", () => {
   });
 
   test("branches settings page loads normally", async ({ page }) => {
-    await page.goto("/settings/branches", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/settings/branches", { waitUntil: "domcontentloaded" });
 
     await expect(page.getByText("Салбарууд").first()).toBeVisible({
       timeout: 10000,
@@ -69,8 +64,7 @@ test.describe("Feature gating — redirects", () => {
   });
 
   test("brand presets page loads normally", async ({ page }) => {
-    await page.goto("/settings/presets", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/settings/presets", { waitUntil: "domcontentloaded" });
 
     await expect(page.getByText("Брэнд сан").first()).toBeVisible({
       timeout: 10000,
@@ -78,8 +72,7 @@ test.describe("Feature gating — redirects", () => {
   });
 
   test("warehouses page loads normally", async ({ page }) => {
-    await page.goto("/inventory/warehouses", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/inventory/warehouses", { waitUntil: "domcontentloaded" });
 
     await expect(page.getByText("Агуулахууд").first()).toBeVisible({
       timeout: 10000,
@@ -91,8 +84,7 @@ test.describe("Feature gating — sidebar visibility", () => {
   test("all gated sidebar items are visible (org has all features)", async ({
     page,
   }) => {
-    await page.goto("/", { waitUntil: "networkidle" });
-    await page.waitForTimeout(3000);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     // These should all be visible since the test org has all features enabled
     await expect(page.locator('a[href="/inventory/adjustments"]')).toBeVisible({
@@ -120,8 +112,7 @@ test.describe("Feature gating — customer balance", () => {
   test("customers page shows balance column (org has credit tracking)", async ({
     page,
   }) => {
-    await page.goto("/customers", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/customers", { waitUntil: "domcontentloaded" });
 
     // The "Авлага" (balance) column header should be visible
     await expect(page.locator("th:has-text('Авлага')")).toBeVisible({
@@ -134,8 +125,7 @@ test.describe("Feature gating — product form fields", () => {
   test("product create drawer shows brand, category, and variant sections", async ({
     page,
   }) => {
-    await page.goto("/products", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/products", { waitUntil: "domcontentloaded" });
 
     // Open the product create drawer
     const createBtn = page

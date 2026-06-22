@@ -80,7 +80,7 @@ test.describe("Roles & Permissions", () => {
     page,
   }) => {
     // The page redirects to /settings?roles=true which opens the roles drawer
-    await page.goto("/settings/roles", { waitUntil: "networkidle" });
+    await page.goto("/settings/roles", { waitUntil: "domcontentloaded" });
 
     // Verify the drawer content is visible
     await expect(

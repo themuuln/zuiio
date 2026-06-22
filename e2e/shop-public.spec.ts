@@ -2,8 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test.describe("Shop (public storefront)", () => {
   test("shop page loads and shows products", async ({ page }) => {
-    await page.goto("/shop", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/shop", { waitUntil: "domcontentloaded" });
 
     // Shop should load — either show products or empty state
     const title = page.getByText("Зарах").first();
@@ -22,8 +21,7 @@ test.describe("Shop (public storefront)", () => {
   });
 
   test("shop has category chips and product cards", async ({ page }) => {
-    await page.goto("/shop", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/shop", { waitUntil: "domcontentloaded" });
 
     // Check for category chips
     const chips = page.locator('[class*="category"]').first();

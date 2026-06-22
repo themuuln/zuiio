@@ -2,8 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test.describe("Shop checkout flow", () => {
   test("add product to cart from catalog", async ({ page }) => {
-    await page.goto("/shop", { waitUntil: "networkidle" });
-    await page.waitForTimeout(3000);
+    await page.goto("/shop", { waitUntil: "domcontentloaded" });
 
     // Check if there are products to add
     const addBtn = page.getByText("Нэмэх").first();
@@ -21,8 +20,7 @@ test.describe("Shop checkout flow", () => {
     await page.waitForTimeout(1000);
 
     // Navigate to cart to verify product was added
-    await page.goto("/shop/cart", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/shop/cart", { waitUntil: "domcontentloaded" });
 
     // Cart should have items — check for quantity controls or total
     const total = page.locator("text=Нийт дүн").first();
@@ -36,8 +34,7 @@ test.describe("Shop checkout flow", () => {
 
   test("cart page shows empty state when no items", async ({ page }) => {
     // Clear cookies/storage to ensure empty cart
-    await page.goto("/shop/cart", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/shop/cart", { waitUntil: "domcontentloaded" });
 
     // Should show empty state or cart with items
     const emptyState = page.locator("text=Сагс хоосон").first();
@@ -56,8 +53,7 @@ test.describe("Shop checkout flow", () => {
   });
 
   test("checkout page renders with payment options", async ({ page }) => {
-    await page.goto("/shop/checkout", { waitUntil: "networkidle" });
-    await page.waitForTimeout(3000);
+    await page.goto("/shop/checkout", { waitUntil: "domcontentloaded" });
 
     // Checkout page could show either the form or empty cart state
     const checkoutTitle = page.locator("h1:has-text('Төлбөр тооцоо')").first();
@@ -87,7 +83,6 @@ test.describe("Shop checkout flow", () => {
 
   test("shop history page loads", async ({ page }) => {
     await page.goto("/shop/history", { waitUntil: "domcontentloaded" });
-    await page.waitForTimeout(2000);
 
     const title = page.locator("text=Борлуулалтын түүх").first();
     await expect(title).toBeVisible({ timeout: 10000 });

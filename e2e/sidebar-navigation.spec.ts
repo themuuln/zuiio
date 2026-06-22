@@ -99,7 +99,6 @@ test.describe("Sidebar navigation", () => {
 
     for (const item of sampleItems) {
       await page.goto("/", { waitUntil: "domcontentloaded" });
-      await page.waitForTimeout(500);
 
       // Click the nav item
       await page
@@ -116,7 +115,6 @@ test.describe("Sidebar navigation", () => {
   test("highlights active nav item", async ({ page }) => {
     // Navigate to a specific page
     await page.goto("/sales", { waitUntil: "domcontentloaded" });
-    await page.waitForTimeout(1000);
 
     // The active link should have data-active="true"
     const activeLink = page.locator(

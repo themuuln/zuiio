@@ -5,8 +5,7 @@ const BUNDLE_NAME = `BNDL-TEST-${Date.now()}`;
 
 test.describe("Restock — deep flow tests", () => {
   test("full restock drawer → purchase order flow", async ({ page }) => {
-    await page.goto("/inventory", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/inventory", { waitUntil: "domcontentloaded" });
 
     const restockBtn = page.locator("button:has-text('Захиалах')").first();
     const hasRestockBtn = (await restockBtn.count()) > 0;
@@ -47,8 +46,7 @@ test.describe("Restock — deep flow tests", () => {
     await page.waitForTimeout(3000);
 
     // 6. Navigate to purchases page
-    await page.goto("/purchases", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/purchases", { waitUntil: "domcontentloaded" });
 
     await expect(page.getByText("Худалдан авалт").first()).toBeVisible({
       timeout: 10000,
@@ -58,8 +56,7 @@ test.describe("Restock — deep flow tests", () => {
   test("restock page — select products and batch create POs", async ({
     page,
   }) => {
-    await page.goto("/inventory/restock", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2500);
+    await page.goto("/inventory/restock", { waitUntil: "domcontentloaded" });
 
     const emptyMsg = page.getByText("Захиалах зүйл байхгүй");
     if (await emptyMsg.isVisible().catch(() => false)) {
@@ -95,8 +92,7 @@ test.describe("Restock — deep flow tests", () => {
   test("restock page — shows correct content when no low stock", async ({
     page,
   }) => {
-    await page.goto("/inventory/restock", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/inventory/restock", { waitUntil: "domcontentloaded" });
 
     const emptyState = page.getByText("Захиалах зүйл байхгүй");
     const table = page.locator("table");
@@ -120,9 +116,8 @@ test.describe("Batch stock adjustments — deep flow tests", () => {
     page,
   }) => {
     await page.goto("/inventory/adjustments/new", {
-      waitUntil: "networkidle",
+      waitUntil: "domcontentloaded",
     });
-    await page.waitForTimeout(2000);
 
     await expect(page.getByText("Бөөнөөр тохируулга").first()).toBeVisible({
       timeout: 10000,
@@ -169,8 +164,9 @@ test.describe("Batch stock adjustments — deep flow tests", () => {
   });
 
   test("adjustments history page — renders correctly", async ({ page }) => {
-    await page.goto("/inventory/adjustments", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/inventory/adjustments", {
+      waitUntil: "domcontentloaded",
+    });
 
     await expect(page.getByText("Барааны тохируулга").first()).toBeVisible({
       timeout: 10000,
@@ -191,8 +187,7 @@ test.describe("Product bundles — deep flow tests", () => {
   test("bundle create drawer — fill form and verify fields", async ({
     page,
   }) => {
-    await page.goto("/products/bundles", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/products/bundles", { waitUntil: "domcontentloaded" });
 
     // Open create drawer
     await openDrawerByText(page, "Шинэ багц");
@@ -228,8 +223,7 @@ test.describe("Product bundles — deep flow tests", () => {
   test("bundle create drawer — can add and remove product rows", async ({
     page,
   }) => {
-    await page.goto("/products/bundles", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/products/bundles", { waitUntil: "domcontentloaded" });
 
     await openDrawerByText(page, "Шинэ багц");
     await page.waitForTimeout(1500);
@@ -256,8 +250,7 @@ test.describe("Product bundles — deep flow tests", () => {
   });
 
   test("bundles page — empty state renders correctly", async ({ page }) => {
-    await page.goto("/products/bundles", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/products/bundles", { waitUntil: "domcontentloaded" });
 
     const emptyState = page.getByText("Багц бүртгэгдээгүй");
     if (await emptyState.isVisible().catch(() => false)) {
@@ -273,8 +266,7 @@ test.describe("Product bundles — deep flow tests", () => {
 
 test.describe("Cross-feature integration", () => {
   test("inventory page quick links include restock", async ({ page }) => {
-    await page.goto("/inventory", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/inventory", { waitUntil: "domcontentloaded" });
 
     const restockLink = page.locator('a[href="/inventory/restock"]');
     const restockBtn = page.locator("button:has-text('Захиалах')").first();
@@ -286,8 +278,7 @@ test.describe("Cross-feature integration", () => {
 
   test("sidebar navigates to all new pages", async ({ page }) => {
     // 1. Adjustments
-    await page.goto("/", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     await page.locator('a[href="/inventory/adjustments"]').click();
     await page.waitForTimeout(2000);
@@ -296,8 +287,7 @@ test.describe("Cross-feature integration", () => {
     });
 
     // 2. Restock
-    await page.goto("/", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     await page.locator('a[href="/inventory/restock"]').click();
     await page.waitForTimeout(2000);
@@ -306,8 +296,7 @@ test.describe("Cross-feature integration", () => {
     });
 
     // 3. Bundles
-    await page.goto("/", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
 
     await page.locator('a[href="/products/bundles"]').click();
     await page.waitForTimeout(2000);

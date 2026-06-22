@@ -5,8 +5,8 @@ const NAME = `CUS-${Date.now()}`;
 
 test.describe("Customers CRUD", () => {
   test("create customer via drawer", async ({ page }) => {
-    await page.goto("/customers", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/customers", { waitUntil: "domcontentloaded" });
+
     await openDrawerByText(page, "Харилцагч бүртгэх");
     await expect(page.locator('input[name="name"]')).toBeVisible({
       timeout: 5000,

@@ -29,7 +29,7 @@ test.describe("Auth pages render correctly", () => {
   test("forgot-password redirects to login when not authenticated", async ({
     page,
   }) => {
-    await page.goto("/forgot-password", { waitUntil: "networkidle" });
+    await page.goto("/forgot-password", { waitUntil: "domcontentloaded" });
     // Should redirect to /login?next=/forgot-password
     expect(page.url()).toContain("/login");
     expect(page.url()).toContain("next=");
@@ -41,7 +41,7 @@ test.describe("Auth pages render correctly", () => {
 test.describe("Register flow", () => {
   test("register with new email succeeds", async ({ page }) => {
     const email = `themuuln${Date.now()}@gmail.com`;
-    await page.goto("/register", { waitUntil: "networkidle" });
+    await page.goto("/register", { waitUntil: "domcontentloaded" });
     await page.fill("#full_name", "E2E Test User");
     await page.fill("#email", email);
     await page.fill("#password", PASSWORD);
@@ -61,7 +61,7 @@ test.describe("Register flow", () => {
   });
 
   test("register with empty fields shows validation", async ({ page }) => {
-    await page.goto("/register", { waitUntil: "networkidle" });
+    await page.goto("/register", { waitUntil: "domcontentloaded" });
     await page.click('button[type="submit"]');
     await page.waitForTimeout(1000);
 
@@ -79,7 +79,7 @@ test.describe("Register flow", () => {
 test.describe("Login flow", () => {
   test("login with wrong credentials shows error", async ({ page }) => {
     test.setTimeout(120000); // Supabase free tier can be slow on auth
-    await page.goto("/login", { waitUntil: "networkidle" });
+    await page.goto("/login", { waitUntil: "domcontentloaded" });
     await page.fill('input[name="email"]', "wrong@example.com");
     await page.fill('input[name="password"]', "WrongPass1");
     await page.click('button[type="submit"]');

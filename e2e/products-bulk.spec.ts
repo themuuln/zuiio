@@ -2,8 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test.describe("Bulk products page", () => {
   test("page loads and shows form elements", async ({ page }) => {
-    await page.goto("/products/bulk", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/products/bulk", { waitUntil: "domcontentloaded" });
 
     // Check for page title
     await expect(page.getByText("Баркод бөөнөөр").first()).toBeVisible({
@@ -20,8 +19,7 @@ test.describe("Bulk products page", () => {
   });
 
   test("add row button works", async ({ page }) => {
-    await page.goto("/products/bulk", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/products/bulk", { waitUntil: "domcontentloaded" });
 
     // Click "Мөр нэмэх" button
     const addRowBtn = page.getByText("Мөр нэмэх").first();
@@ -37,8 +35,7 @@ test.describe("Bulk products page", () => {
   });
 
   test("download template CSV button works", async ({ page }) => {
-    await page.goto("/products/bulk", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/products/bulk", { waitUntil: "domcontentloaded" });
 
     const downloadBtn = page.getByText("Загвар татах").first();
     if (await downloadBtn.isVisible().catch(() => false)) {

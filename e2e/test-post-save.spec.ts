@@ -30,8 +30,7 @@ async function selectFirstProduct(page: any, rowIndex = 0) {
 
 test.describe("Post-save workflow", () => {
   test("sale form submit shows toast with actions", async ({ page }) => {
-    await page.goto("/sales", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/sales", { waitUntil: "domcontentloaded" });
 
     // Click "Шинэ борлуулалт" button
     await page.getByRole("button", { name: "Шинэ борлуулалт" }).click();
@@ -83,8 +82,7 @@ test.describe("Post-save workflow", () => {
   });
 
   test("keepOpen toggle keeps form open after save", async ({ page }) => {
-    await page.goto("/sales", { waitUntil: "networkidle" });
-    await page.waitForTimeout(2000);
+    await page.goto("/sales", { waitUntil: "domcontentloaded" });
 
     // Click "Шинэ борлуулалт" button
     await page.getByRole("button", { name: "Шинэ борлуулалт" }).click();
