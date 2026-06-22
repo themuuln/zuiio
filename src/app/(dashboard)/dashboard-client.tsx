@@ -13,24 +13,36 @@ import {
   Users,
   Warehouse,
   Warning,
-} from "@phosphor-icons/react";
+} from "@phosphor-icons/react/dist/ssr";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
+
+const MonthlyTrendChart = dynamic(
+  () =>
+    import("@/components/dashboard/monthly-trend-chart").then(
+      (m) => m.MonthlyTrendChart,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <Card>
+        <CardHeader>
+          <CardTitle>Сүүлийн 30 хоногийн борлуулалт</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-60 w-full animate-pulse rounded-lg bg-muted md:h-72" />
+        </CardContent>
+      </Card>
+    ),
+  },
+);
 
 // Module-level flag to prevent duplicate toasts on same-session navigation.
 // Resets on full page reload (module re-evaluation).
@@ -225,8 +237,6 @@ export function DashboardClient({ data }: { data: DashboardData }) {
     }
   }, [data.lowStockCount]);
 
-  const hasSalesData = data.monthlyTrend.some((d) => d.total > 0);
-
   const netProfit = data.todaySalesTotal - data.todayExpensesTotal;
 
   return (
@@ -396,69 +406,8 @@ export function DashboardClient({ data }: { data: DashboardData }) {
         </CardContent>
       </Card>
 
-      {/* ─── 5. Existing: Monthly Trend Chart ───────────────────────── */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Сүүлийн 30 хоногийн борлуулалт</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {!hasSalesData ? (
-            <p className="text-sm text-muted-foreground">
-              Сүүлийн 30 хоногт борлуулалт хийгдээгүй байна.
-            </p>
-          ) : (
-            <div className="h-60 w-full md:h-72">
-              <ResponsiveContainer
-                width="100%"
-                height="100%"
-                minHeight={240}
-                initialDimension={{ width: 640, height: 240 }}
-              >
-                <BarChart data={data.monthlyTrend}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    className="stroke-border/50"
-                  />
-                  <XAxis
-                    dataKey="date"
-                    tick={{ fontSize: 12 }}
-                    className="text-muted-foreground"
-                    tickFormatter={(val) => {
-                      const d = new Date(val);
-                      return `${d.getDate()}/${d.getMonth() + 1}`;
-                    }}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 12 }}
-                    className="text-muted-foreground"
-                    tickFormatter={(val) =>
-                      val >= 1000000
-                        ? `${(val / 1000000).toFixed(1)}M`
-                        : val >= 1000
-                          ? `${(val / 1000).toFixed(0)}к`
-                          : String(val)
-                    }
-                  />
-                  <Tooltip
-                    formatter={(value) => {
-                      if (typeof value === "number") {
-                        return [formatCurrency(value), "Борлуулалт"];
-                      }
-                      return [String(value ?? ""), "Борлуулалт"];
-                    }}
-                    labelFormatter={(label) => formatDate(label)}
-                  />
-                  <Bar
-                    dataKey="total"
-                    fill="var(--color-primary, hsl(221.2 83.2% 53.3%))"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* ─── 5. Monthly Trend Chart (dynamically loaded) ──────────── */}
+      <MonthlyTrendChart data={data.monthlyTrend} />
     </div>
   );
 }

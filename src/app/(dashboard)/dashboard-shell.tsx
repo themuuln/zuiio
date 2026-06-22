@@ -25,7 +25,7 @@ import {
   Trolley,
   Users,
   Warehouse,
-} from "@phosphor-icons/react";
+} from "@phosphor-icons/react/dist/ssr";
 import { PanelLeftIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -274,6 +274,7 @@ function SidebarNav({
           <div className="flex items-center gap-2 overflow-hidden rounded-md border border-sidebar-border/40 bg-sidebar-accent/30 p-2 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0">
             <div className="flex aspect-square size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary text-primary-foreground">
               {logoUrl ? (
+                // biome-ignore lint/performance/noImgElement: dynamic URL from brand config
                 <img
                   src={logoUrl}
                   alt={organizationName ?? APP_NAME}
@@ -313,6 +314,7 @@ function SidebarNav({
             >
               <div className="flex aspect-square size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary text-primary-foreground group-data-[collapsible=icon]:size-6">
                 {logoUrl ? (
+                  // biome-ignore lint/performance/noImgElement: dynamic URL from brand config
                   <img
                     src={logoUrl}
                     alt={organizationName ?? APP_NAME}
@@ -529,6 +531,7 @@ export function DashboardShell({
   const prevPathRef = React.useRef(pathname);
 
   // Sync ?branch= URL param into context on mount
+  // biome-ignore lint/correctness/useExhaustiveDependencies: mount-only sync
   React.useEffect(() => {
     if (isBranchScoped) return;
     const urlBranch = searchParams.get("branch");
@@ -538,7 +541,6 @@ export function DashboardShell({
         setSelectedBranchId(urlBranch);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleBranchChange = (newId: string) => {

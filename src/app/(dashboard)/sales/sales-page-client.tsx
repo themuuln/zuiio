@@ -1,14 +1,12 @@
 "use client";
 
 import { Drawer } from "@base-ui/react/drawer";
-import { CurrencyDollar, Plus, X } from "@phosphor-icons/react";
+import { CurrencyDollar, Plus, X } from "@phosphor-icons/react/dist/ssr";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
-import {
-  type SaleDetailData,
-  SaleDetailDrawer,
-} from "@/components/sales/sale-detail-drawer";
+import type { SaleDetailData } from "@/components/sales/sale-detail-drawer";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -28,7 +26,24 @@ import {
 } from "@/components/ui/table";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { SaleForm } from "./new/sale-form";
+
+const SaleDetailDrawer = dynamic(
+  () =>
+    import("@/components/sales/sale-detail-drawer").then(
+      (m) => m.SaleDetailDrawer,
+    ),
+  { ssr: false },
+);
+
+const SaleForm = dynamic(
+  () => import("./new/sale-form").then((m) => m.SaleForm),
+  {
+    ssr: false,
+    loading: () => (
+      <p className="text-sm text-muted-foreground">Уншиж байна...</p>
+    ),
+  },
+);
 
 type ProductOption = {
   id: string;
