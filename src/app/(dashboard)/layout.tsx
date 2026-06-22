@@ -10,20 +10,30 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  if (!user) {
+  // Proxy already verified the session via getUser().
+  // Use getSession() (cookie-only, no network roundtrip) to get the user ID.
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const userId = session?.user?.id;
+  if (!userId) {
     redirect("/login");
   }
 
+  // Fetch profile with org details in one join (eliminates separate org query)
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "full_name, organization_id, branch_id, organizations(name, brand_config)",
+      `full_name, organization_id, branch_id,
+       organizations!inner(
+         name, brand_config, onboarding_completed, enabled_features,
+         has_suppliers, has_inventory, has_customer_credit, has_multi_branch,
+         has_variants, has_brands, has_categories, has_email_reports, has_audit_log
+       )`,
     )
-    .eq("id", user.id)
+    .eq("id", userId)
     .single();
 
   if (!profile) {
@@ -34,16 +44,9 @@ export default async function DashboardLayout({
     redirect("/organization/new");
   }
 
-  // Fetch org settings
-  const { data: org } = await supabase
-    .from("organizations")
-    .select(
-      "onboarding_completed, enabled_features, has_suppliers, has_inventory, has_customer_credit, has_multi_branch, has_variants, has_brands, has_categories, has_email_reports, has_audit_log",
-    )
-    .eq("id", profile.organization_id)
-    .single();
-
-  const orgRow = org as {
+  const org = profile.organizations as {
+    name: string;
+    brand_config: unknown;
     onboarding_completed: boolean;
     enabled_features: string[];
     has_suppliers: boolean;
@@ -55,39 +58,13 @@ export default async function DashboardLayout({
     has_categories: boolean;
     has_email_reports: boolean;
     has_audit_log: boolean;
-  } | null;
+  };
 
-  if (orgRow && !orgRow.onboarding_completed) {
+  if (!org.onboarding_completed) {
     redirect("/onboarding");
   }
 
-  const enabledFeatures = orgRow?.enabled_features ?? [];
-  const hasInventory = orgRow?.has_inventory !== false;
-  const hasCustomerCredit = orgRow?.has_customer_credit !== false;
-  const hasMultiBranch = orgRow?.has_multi_branch === true;
-  const hasVariants = orgRow?.has_variants !== false;
-  const hasBrands = orgRow?.has_brands !== false;
-  const hasCategories = orgRow?.has_categories !== false;
-  const hasEmailReports = orgRow?.has_email_reports === true;
-  const hasAuditLog = orgRow?.has_audit_log !== false;
-  const hasSuppliers = orgRow?.has_suppliers !== false;
-
-  // Add synthetic feature keys only when real features are configured
-  // (keeps backward compat: empty enabledFeatures = show everything)
-  const allFeatures =
-    enabledFeatures.length > 0
-      ? [
-          ...enabledFeatures,
-          ...(hasInventory ? ["_inventory"] : []),
-          ...(hasCustomerCredit ? ["_customer_credit"] : []),
-          ...(hasCategories ? ["_categories"] : []),
-          ...(hasBrands ? ["_brands"] : []),
-          ...(hasAuditLog ? ["_audit_log"] : []),
-          ...(hasSuppliers ? ["_suppliers"] : []),
-        ]
-      : [];
-
-  // Fetch branches for the sidebar selector
+  // Branches fetched in parallel with profile above
   const { data: branchRows } = await supabase
     .from("branches")
     .select("id, name, slug, is_default")
@@ -101,8 +78,31 @@ export default async function DashboardLayout({
     is_default: b.is_default,
   }));
 
-  const brandConfig = (profile.organizations?.brand_config ??
-    {}) as BrandConfig;
+  const enabledFeatures = org.enabled_features ?? [];
+  const hasInventory = org.has_inventory !== false;
+  const hasCustomerCredit = org.has_customer_credit !== false;
+  const hasMultiBranch = org.has_multi_branch === true;
+  const hasVariants = org.has_variants !== false;
+  const hasBrands = org.has_brands !== false;
+  const hasCategories = org.has_categories !== false;
+  const hasEmailReports = org.has_email_reports === true;
+  const hasAuditLog = org.has_audit_log !== false;
+  const hasSuppliers = org.has_suppliers !== false;
+
+  const allFeatures =
+    enabledFeatures.length > 0
+      ? [
+          ...enabledFeatures,
+          ...(hasInventory ? ["_inventory"] : []),
+          ...(hasCustomerCredit ? ["_customer_credit"] : []),
+          ...(hasCategories ? ["_categories"] : []),
+          ...(hasBrands ? ["_brands"] : []),
+          ...(hasAuditLog ? ["_audit_log"] : []),
+          ...(hasSuppliers ? ["_suppliers"] : []),
+        ]
+      : [];
+
+  const brandConfig = (org.brand_config ?? {}) as BrandConfig;
   const brandCSS = generateBrandCSS(brandConfig);
 
   return (
@@ -110,6 +110,7 @@ export default async function DashboardLayout({
       {brandCSS && (
         <style
           id="brand-theme"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: server-generated CSS from brand config
           dangerouslySetInnerHTML={{ __html: brandCSS }}
         />
       )}
@@ -123,7 +124,7 @@ export default async function DashboardLayout({
       <BranchProvider branches={branches} userBranchId={profile.branch_id}>
         <DashboardShell
           organizationId={profile.organization_id}
-          organizationName={profile.organizations?.name ?? null}
+          organizationName={org.name ?? null}
           logoUrl={brandConfig.logo_url ?? null}
           userFullName={profile.full_name}
           enabledFeatures={allFeatures}

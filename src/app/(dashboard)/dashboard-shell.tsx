@@ -2,29 +2,10 @@
 
 import { Drawer } from "@base-ui/react/drawer";
 import {
-  ArrowCounterClockwise,
-  Buildings,
-  Calculator,
-  ChartBar,
-  ClipboardText,
-  Clock,
-  Coin,
-  CreditCard,
-  Cube,
-  CurrencyDollar,
-  FileText,
-  Folder,
-  GearSix,
-  House,
   MapPin,
-  Package,
-  Percent,
   Plus,
   SignOut,
   Storefront,
-  Trolley,
-  Users,
-  Warehouse,
 } from "@phosphor-icons/react/dist/ssr";
 import { PanelLeftIcon } from "lucide-react";
 import Link from "next/link";
@@ -58,176 +39,13 @@ import {
 } from "@/components/ui/sidebar";
 import { type BranchOption, useBranchContext } from "@/lib/branch-context";
 import { APP_NAME } from "@/lib/constants";
+import { filterNavGroups, type NavGroup, navGroups } from "@/lib/navigation";
 import {
   type OrgSettings,
   OrgSettingsProvider,
 } from "@/lib/org-settings-context";
 import { RealtimeSubscriptions } from "@/lib/query/realtime-subscriptions";
 import { cn } from "@/lib/utils";
-
-type NavItem = {
-  title: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  featureKey?: string;
-};
-
-type NavGroup = {
-  label: string;
-  items: NavItem[];
-};
-
-const navGroups: NavGroup[] = [
-  {
-    label: "Үндсэн",
-    items: [{ title: "Хяналтын самбар", href: "/", icon: House }],
-  },
-  {
-    label: "Үйл ажиллагаа",
-    items: [
-      {
-        title: "Борлуулалт",
-        href: "/sales",
-        icon: CurrencyDollar,
-        featureKey: "sales",
-      },
-      { title: "Дэлгүүр", href: "/shop", icon: Storefront, featureKey: "shop" },
-      {
-        title: "Зарлага",
-        href: "/expenses",
-        icon: CreditCard,
-        featureKey: "expenses",
-      },
-      {
-        title: "Худалдан авалт",
-        href: "/purchases",
-        icon: Trolley,
-        featureKey: "purchases",
-      },
-      {
-        title: "Буцаалт",
-        href: "/returns",
-        icon: ArrowCounterClockwise,
-        featureKey: "returns",
-      },
-    ],
-  },
-  {
-    label: "Бүртгэл",
-    items: [
-      { title: "Бүтээгдэхүүн", href: "/products", icon: Package },
-      { title: "Багц", href: "/products/bundles", icon: Cube },
-      { title: "Бөөн импорт", href: "/products/bulk", icon: Cube },
-      {
-        title: "Ангилалууд",
-        href: "/inventory/categories",
-        icon: Folder,
-        featureKey: "_categories",
-      },
-      {
-        title: "Агуулах",
-        href: "/inventory/warehouses",
-        icon: Warehouse,
-        featureKey: "_inventory",
-      },
-      {
-        title: "Үлдэгдэл хөдөлгөөн",
-        href: "/inventory/movements",
-        icon: MapPin,
-        featureKey: "_inventory",
-      },
-      {
-        title: "Тохируулга",
-        href: "/inventory/adjustments",
-        icon: MapPin,
-        featureKey: "_inventory",
-      },
-      {
-        title: "Дахин захиалга",
-        href: "/inventory/restock",
-        icon: Clock,
-        featureKey: "_inventory",
-      },
-      {
-        title: "Салбарууд",
-        href: "/settings/branches",
-        icon: Buildings,
-        featureKey: "_multi_branch",
-      },
-      { title: "Харилцагчид", href: "/customers", icon: Users },
-      {
-        title: "Нийлүүлэгчид",
-        href: "/suppliers",
-        icon: Buildings,
-        featureKey: "_suppliers",
-      },
-    ],
-  },
-  {
-    label: "Баримт бичиг",
-    items: [
-      {
-        title: "Нэхэмжлэл",
-        href: "/invoices",
-        icon: FileText,
-        featureKey: "invoices",
-      },
-      {
-        title: "Үнийн санал",
-        href: "/quotations",
-        icon: ClipboardText,
-        featureKey: "quotations",
-      },
-      {
-        title: "Хямдрал",
-        href: "/discounts",
-        icon: Percent,
-        featureKey: "discounts",
-      },
-    ],
-  },
-  {
-    label: "Шинжилгээ",
-    items: [
-      {
-        title: "Тайлан",
-        href: "/reports",
-        icon: ChartBar,
-        featureKey: "reports",
-      },
-      {
-        title: "Комисс",
-        href: "/commissions",
-        icon: Coin,
-        featureKey: "commissions",
-      },
-      {
-        title: "Нягтлан бодох бүртгэл",
-        href: "/accounting",
-        icon: Calculator,
-        featureKey: "accounting",
-      },
-    ],
-  },
-  {
-    label: "Систем",
-    items: [
-      {
-        title: "Брэнд сан",
-        href: "/settings/presets",
-        icon: Cube,
-        featureKey: "_brands",
-      },
-      {
-        title: "Үйлдлийн түүх",
-        href: "/audit",
-        icon: Clock,
-        featureKey: "_audit_log",
-      },
-      { title: "Тохиргоо", href: "/settings", icon: GearSix },
-    ],
-  },
-];
 
 type DashboardShellProps = {
   children: React.ReactNode;
@@ -278,6 +96,8 @@ function SidebarNav({
                 <img
                   src={logoUrl}
                   alt={organizationName ?? APP_NAME}
+                  width={32}
+                  height={32}
                   className="size-full object-contain"
                 />
               ) : (
@@ -438,47 +258,6 @@ function SidebarNav({
       <SidebarRail />
     </>
   );
-}
-
-function filterNavGroups(
-  groups: NavGroup[],
-  enabledFeatures: string[],
-  hasMultiBranch: boolean,
-): NavGroup[] {
-  // If no features explicitly enabled, show everything (backwards compat)
-  if (!enabledFeatures || enabledFeatures.length === 0) return groups;
-  const featureSet = new Set(enabledFeatures);
-  return groups
-    .map((group) => ({
-      ...group,
-      items: group.items.filter((item) => {
-        // Synthetic feature keys (prefixed with _) are controlled by org settings
-        if (item.featureKey === "_multi_branch") {
-          return hasMultiBranch;
-        }
-        if (item.featureKey === "_inventory") {
-          return featureSet.has("_inventory");
-        }
-        if (item.featureKey === "_customer_credit") {
-          return featureSet.has("_customer_credit");
-        }
-        if (item.featureKey === "_categories") {
-          return featureSet.has("_categories");
-        }
-        if (item.featureKey === "_brands") {
-          return featureSet.has("_brands");
-        }
-        if (item.featureKey === "_audit_log") {
-          return featureSet.has("_audit_log");
-        }
-        if (item.featureKey === "_suppliers") {
-          return featureSet.has("_suppliers");
-        }
-        // Standard feature keys
-        return !item.featureKey || featureSet.has(item.featureKey);
-      }),
-    }))
-    .filter((group) => group.items.length > 0);
 }
 
 // ─── Sidebar state context (shared between shop & non-shop branches) ────

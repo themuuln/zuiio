@@ -17,10 +17,14 @@ export function checkPermission(
 
 export async function requireAppContext() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
+  // Use getSession() instead of getUser() to avoid a Supabase Auth API roundtrip.
+  // The proxy already verified the session via getUser() and set cookies.
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const user = session?.user;
   if (!user) {
     redirect("/login");
   }

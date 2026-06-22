@@ -1,274 +1,157 @@
-import { addDays, startOfDay, subDays } from "date-fns";
-import Link from "next/link";
-import { withBranchFilter } from "@/lib/branches";
+import { Coin, Package, ShoppingCart } from "@phosphor-icons/react/dist/ssr";
+import { Suspense } from "react";
+import { HeroActionCard } from "@/components/dashboard/dashboard-cards";
+import { LowStockToast } from "@/components/dashboard/low-stock-toast";
 import { requireAppContext } from "@/lib/erp";
-import { cn } from "@/lib/utils";
-import type { DashboardData } from "./dashboard-client";
-import { DashboardClient } from "./dashboard-client";
+import { MonthlyTrendSection } from "./_sections/monthly-trend-section";
+import { OnboardingChecklist } from "./_sections/onboarding-checklist";
+import { QuickShortcuts } from "./_sections/quick-shortcuts";
+import { RecentSales } from "./_sections/recent-sales";
+import { TodayPulse } from "./_sections/today-pulse";
 
 export default async function DashboardPage() {
   const { supabase, organizationId, branchId, isBranchScoped } =
     await requireAppContext();
 
-  const today = startOfDay(new Date());
-  const tomorrow = addDays(today, 1);
-  const thirtyDaysAgo = subDays(today, 30);
-
-  // Run all queries in parallel
-  const [
-    productsResult,
-    customersResult,
-    suppliersResult,
-    salesTodayResult,
-    expensesTodayResult,
-    lowStockProducts,
-    pendingSalesResult,
-    recentSalesResult,
-    inventoryProducts,
-    monthlySalesResult,
-  ] = await Promise.all([
-    // 1. Total products (shared master data - no branch filter)
-    supabase
-      .from("products")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", organizationId)
-      .is("deleted_at", null),
-
-    // 2. Total customers (shared master data - no branch filter)
-    supabase
-      .from("contacts")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", organizationId)
-      .eq("type", "customer"),
-
-    // 3. Total suppliers (shared master data - no branch filter)
-    supabase
-      .from("contacts")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", organizationId)
-      .eq("type", "supplier"),
-
-    // 4. Today's sales
-    withBranchFilter(
-      supabase
-        .from("sales")
-        .select("total_amount")
-        .eq("organization_id", organizationId)
-        .gte("sale_date", today.toISOString())
-        .lt("sale_date", tomorrow.toISOString()),
-      branchId,
-      isBranchScoped,
-    ),
-
-    // 5. Today's expenses
-    withBranchFilter(
-      supabase
-        .from("expenses")
-        .select("amount")
-        .eq("organization_id", organizationId)
-        .gte("expense_date", today.toISOString())
-        .lt("expense_date", tomorrow.toISOString()),
-      branchId,
-      isBranchScoped,
-    ),
-
-    // 6. Low stock products (shared master data - no branch filter)
-    supabase
-      .from("products")
-      .select("current_stock, min_stock")
-      .eq("organization_id", organizationId)
-      .is("deleted_at", null),
-
-    // 7. Pending sales
-    withBranchFilter(
-      supabase
-        .from("sales")
-        .select("id", { count: "exact", head: true })
-        .eq("organization_id", organizationId)
-        .eq("status", "pending"),
-      branchId,
-      isBranchScoped,
-    ),
-
-    // 8. Recent 5 sales
-    withBranchFilter(
-      supabase
-        .from("sales")
-        .select("id, total_amount, sale_date, status, contacts(name)")
-        .eq("organization_id", organizationId)
-        .order("created_at", { ascending: false })
-        .limit(5),
-      branchId,
-      isBranchScoped,
-    ),
-
-    // 9. Inventory value (shared master data - no branch filter)
-    supabase
-      .from("products")
-      .select("cost_price, current_stock")
-      .eq("organization_id", organizationId)
-      .is("deleted_at", null),
-
-    // 10. Monthly trend
-    withBranchFilter(
-      supabase
-        .from("sales")
-        .select("total_amount, sale_date")
-        .eq("organization_id", organizationId)
-        .gte("sale_date", thirtyDaysAgo.toISOString())
-        .lt("sale_date", tomorrow.toISOString()),
-      branchId,
-      isBranchScoped,
-    ),
-  ]);
-
-  // Compute KPIs
-  const totalProducts = productsResult.count ?? 0;
-  const totalCustomers = customersResult.count ?? 0;
-  const totalSuppliers = suppliersResult.count ?? 0;
-
-  const todaySalesTotal = (salesTodayResult.data ?? []).reduce(
-    (sum, sale) => sum + (sale.total_amount ?? 0),
-    0,
-  );
-
-  const todayExpensesTotal = (expensesTodayResult.data ?? []).reduce(
-    (sum, exp) => sum + (exp.amount ?? 0),
-    0,
-  );
-
-  const lowStockCount = (lowStockProducts.data ?? []).filter((product) => {
-    const currentStock = product.current_stock ?? 0;
-    const minStock = product.min_stock ?? 0;
-    return currentStock < minStock;
-  }).length;
-
-  const pendingSalesCount = pendingSalesResult.count ?? 0;
-
-  const recentSales = (recentSalesResult.data ?? []).map((sale) => ({
-    id: sale.id,
-    sale_date: sale.sale_date,
-    contact_name: (sale.contacts as { name: string } | null)?.name ?? null,
-    total_amount: sale.total_amount,
-    status: sale.status,
-  }));
-
-  const inventoryValue = (inventoryProducts.data ?? []).reduce(
-    (sum, product) =>
-      sum + (product.cost_price ?? 0) * (product.current_stock ?? 0),
-    0,
-  );
-
-  // Aggregate monthly trend by day
-  const trendMap = new Map<string, number>();
-  for (const sale of monthlySalesResult.data ?? []) {
-    const day = sale.sale_date.slice(0, 10); // YYYY-MM-DD
-    trendMap.set(day, (trendMap.get(day) ?? 0) + (sale.total_amount ?? 0));
-  }
-  const monthlyTrend: DashboardData["monthlyTrend"] = [];
-  for (let i = 29; i >= 0; i--) {
-    const date = subDays(today, i);
-    const key = date.toISOString().slice(0, 10);
-    monthlyTrend.push({
-      date: key,
-      total: trendMap.get(key) ?? 0,
-    });
-  }
-
-  const dashboardData: DashboardData = {
-    todaySalesTotal,
-    todayExpensesTotal,
-    totalProducts,
-    totalCustomers,
-    totalSuppliers,
-    lowStockCount,
-    pendingSalesCount,
-    inventoryValue,
-    recentSales,
-    monthlyTrend,
-  };
-
-  // ─── Onboarding checklist ────────────────────────────────────────────
-  const [salesCountResult, profilesCountResult] = await Promise.all([
-    supabase
-      .from("sales")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", organizationId),
-    supabase
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", organizationId),
-  ]);
-
-  const hasProducts = totalProducts > 0;
-  const hasSales = (salesCountResult.count ?? 0) > 0;
-  const hasTeam = (profilesCountResult.count ?? 0) > 1;
-
-  const checklistItems = [
-    { label: "Бүтээгдэхүүн нэмэх", done: hasProducts, href: "/products" },
-    {
-      label: "Анхны борлуулалт хийх",
-      done: hasSales,
-      href: "/sales?create=true",
-    },
-    { label: "Хамтрагчдаа урих", done: hasTeam, href: "/settings/users" },
-  ];
-
-  const completedCount = checklistItems.filter((i) => i.done).length;
-  const allDone = completedCount === checklistItems.length;
+  // Lightweight query for the toast — runs in parallel with sections
+  const { count: lowStockCount } = await supabase
+    .from("products")
+    .select("id", { count: "exact", head: true })
+    .eq("organization_id", organizationId)
+    .is("deleted_at", null)
+    .lt("current_stock", 1)
+    .limit(1)
+    .maybeSingle();
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-      <div className="flex-1">
-        <DashboardClient data={dashboardData} />
-      </div>
-      {!allDone && (
-        <aside className="w-full shrink-0 lg:w-64">
-          <div className="rounded-lg border bg-card p-4 text-card-foreground shadow-xs">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-semibold">Эхлэх алхамууд</h3>
-              <span className="text-xs text-muted-foreground">
-                {completedCount}/{checklistItems.length}
-              </span>
-            </div>
-            <div className="mb-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-primary transition-all"
-                style={{
-                  width: `${(completedCount / checklistItems.length) * 100}%`,
-                }}
+    <>
+      <LowStockToast count={lowStockCount ?? 0} />
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+        <div className="flex-1">
+          <div className="flex flex-1 flex-col gap-6">
+            {/* Page Header — static, no data */}
+            <PageHeader />
+
+            {/* Hero Action Cards — static, no data */}
+            <HeroActions />
+
+            {/* Today's Pulse — fetches KPIs */}
+            <Suspense
+              fallback={
+                <div>
+                  <h2 className="mb-3 text-sm font-medium text-muted-foreground">
+                    Өнөөдрийн байдал
+                  </h2>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                    <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                    <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                    <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                  </div>
+                </div>
+              }
+            >
+              <TodayPulse
+                orgId={organizationId}
+                branchId={branchId}
+                isBranchScoped={isBranchScoped}
               />
-            </div>
-            <div className="space-y-1">
-              {checklistItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent",
-                    item.done && "text-muted-foreground",
-                  )}
-                >
-                  {item.done ? (
-                    <svg
-                      className="size-4 shrink-0 text-emerald-600"
-                      viewBox="0 0 256 256"
-                      fill="currentColor"
-                    >
-                      <path d="M128 24a104 104 0 1 0 104 104A104.11 104.11 0 0 0 128 24Zm45.66 85.66-56 56a8 8 0 0 1-11.32 0l-24-24a8 8 0 0 1 11.32-11.32L112 148.69l50.34-50.35a8 8 0 0 1 11.32 11.32Z" />
-                    </svg>
-                  ) : (
-                    <span className="block size-4 shrink-0 rounded-full border-2 border-muted-foreground" />
-                  )}
-                  <span className={cn(item.done && "line-through")}>
-                    {item.label}
-                  </span>
-                </Link>
-              ))}
-            </div>
+            </Suspense>
+
+            {/* Quick Shortcuts — fetches aggregate counts */}
+            <Suspense
+              fallback={
+                <div>
+                  <h2 className="mb-3 text-sm font-medium text-muted-foreground">
+                    Түргэн цэс
+                  </h2>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                    <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                    <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                    <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                    <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                    <div className="h-[72px] animate-pulse rounded-xl bg-muted" />
+                  </div>
+                </div>
+              }
+            >
+              <QuickShortcuts orgId={organizationId} />
+            </Suspense>
+
+            {/* Recent Sales Table — fetches last 5 sales */}
+            <Suspense
+              fallback={
+                <div className="h-48 animate-pulse rounded-xl bg-muted" />
+              }
+            >
+              <RecentSales
+                orgId={organizationId}
+                branchId={branchId}
+                isBranchScoped={isBranchScoped}
+              />
+            </Suspense>
+
+            {/* Monthly Trend Chart — fetches 30-day trend */}
+            <Suspense
+              fallback={
+                <div className="h-80 animate-pulse rounded-xl bg-muted" />
+              }
+            >
+              <MonthlyTrendSection
+                orgId={organizationId}
+                branchId={branchId}
+                isBranchScoped={isBranchScoped}
+              />
+            </Suspense>
           </div>
-        </aside>
-      )}
+        </div>
+
+        {/* Onboarding Checklist sidebar */}
+        <Suspense fallback={null}>
+          <OnboardingChecklist orgId={organizationId} totalProducts={0} />
+        </Suspense>
+      </div>
+    </>
+  );
+}
+
+function PageHeader() {
+  return (
+    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Хяналтын самбар
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Байгууллагын үндсэн үзүүлэлтүүд
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function HeroActions() {
+  return (
+    <div className="grid gap-4 sm:grid-cols-3">
+      <HeroActionCard
+        href="/sales?create=true"
+        icon={<ShoppingCart className="size-6" />}
+        title="Шинэ борлуулалт"
+        description="Борлуулалт бүртгэх"
+      />
+      <HeroActionCard
+        href="/expenses?create=true"
+        icon={<Coin className="size-6" />}
+        title="Шинэ зарлага"
+        description="Зарлагын бүртгэл"
+      />
+      <HeroActionCard
+        href="/products"
+        icon={<Package className="size-6" />}
+        title="Шинэ бүтээгдэхүүн"
+        description="Бүтээгдэхүүн нэмэх"
+      />
     </div>
   );
 }

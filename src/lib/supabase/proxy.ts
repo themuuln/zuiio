@@ -75,5 +75,11 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Pass user ID as a header so layouts/pages can skip duplicate getUser() calls.
+  // Proxy already verified the session — layouts can read this header + getSession().
+  if (user) {
+    supabaseResponse.headers.set("x-authed-user-id", user.id);
+  }
+
   return supabaseResponse;
 }

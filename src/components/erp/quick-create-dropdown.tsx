@@ -10,15 +10,8 @@ import {
   ReceiptIcon,
   UsersIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import { useQuery } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 import { useState } from "react";
-import { CategoryCreateDrawer } from "@/components/categories/category-create-drawer";
-import { CustomerCreateDrawer } from "@/components/customers/customer-create-drawer";
-import { ExpensesCreateDrawer } from "@/components/expenses/expenses-create-drawer";
-import { InvoiceCreateDrawer } from "@/components/invoices/invoice-create-drawer";
-import { ProductCreateDrawer } from "@/components/products/product-create-drawer";
-import { SalesCreateDrawer } from "@/components/sales/sales-create-drawer";
-import { SupplierCreateDrawer } from "@/components/suppliers/supplier-create-drawer";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -28,7 +21,62 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { createClient } from "@/lib/supabase/client";
+
+const ProductCreateDrawer = dynamic(
+  () =>
+    import("@/components/products/product-create-drawer").then(
+      (m) => m.ProductCreateDrawer,
+    ),
+  { ssr: false },
+);
+
+const SaleDrawer = dynamic(
+  () =>
+    import("@/components/erp/quick-create-sale-wrapper").then(
+      (m) => m.QuickCreateSaleWrapper,
+    ),
+  { ssr: false },
+);
+
+const InvoiceDrawer = dynamic(
+  () =>
+    import("@/components/erp/quick-create-invoice-wrapper").then(
+      (m) => m.QuickCreateInvoiceWrapper,
+    ),
+  { ssr: false },
+);
+
+const ExpensesCreateDrawer = dynamic(
+  () =>
+    import("@/components/expenses/expenses-create-drawer").then(
+      (m) => m.ExpensesCreateDrawer,
+    ),
+  { ssr: false },
+);
+
+const CustomerCreateDrawer = dynamic(
+  () =>
+    import("@/components/customers/customer-create-drawer").then(
+      (m) => m.CustomerCreateDrawer,
+    ),
+  { ssr: false },
+);
+
+const SupplierCreateDrawer = dynamic(
+  () =>
+    import("@/components/suppliers/supplier-create-drawer").then(
+      (m) => m.SupplierCreateDrawer,
+    ),
+  { ssr: false },
+);
+
+const CategoryCreateDrawer = dynamic(
+  () =>
+    import("@/components/categories/category-create-drawer").then(
+      (m) => m.CategoryCreateDrawer,
+    ),
+  { ssr: false },
+);
 
 type ActiveDrawer =
   | "product"
@@ -105,17 +153,11 @@ export function QuickCreateDropdown({
       )}
 
       {activeDrawer === "sale" && (
-        <SaleDrawerWrapper
-          organizationId={organizationId}
-          onClose={handleClose}
-        />
+        <SaleDrawer organizationId={organizationId} onClose={handleClose} />
       )}
 
       {activeDrawer === "invoice" && (
-        <InvoiceDrawerWrapper
-          organizationId={organizationId}
-          onClose={handleClose}
-        />
+        <InvoiceDrawer organizationId={organizationId} onClose={handleClose} />
       )}
 
       {activeDrawer === "expense" && (
@@ -154,91 +196,5 @@ export function QuickCreateDropdown({
         />
       )}
     </>
-  );
-}
-
-/* Wrapper that fetches products for SalesCreateDrawer */
-function SaleDrawerWrapper({
-  organizationId,
-  onClose,
-}: {
-  organizationId: string;
-  onClose: () => void;
-}) {
-  const supabase = createClient();
-
-  const { data: products } = useQuery({
-    queryKey: ["quick-create", "products", organizationId],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("products")
-        .select("id, name, sale_price, current_stock, unit, barcode, image_url")
-        .eq("organization_id", organizationId)
-        .is("deleted_at", null)
-        .order("name");
-      return data ?? [];
-    },
-  });
-
-  if (!products) return null;
-
-  return (
-    <SalesCreateDrawer
-      products={products}
-      open={true}
-      onOpenChangeAction={(open) => {
-        if (!open) onClose();
-      }}
-    />
-  );
-}
-
-/* Wrapper that fetches contacts + products for InvoiceCreateDrawer */
-function InvoiceDrawerWrapper({
-  organizationId,
-  onClose,
-}: {
-  organizationId: string;
-  onClose: () => void;
-}) {
-  const supabase = createClient();
-
-  const { data: contacts } = useQuery({
-    queryKey: ["quick-create", "contacts", organizationId],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("contacts")
-        .select("id, name")
-        .eq("organization_id", organizationId)
-        .eq("type", "customer")
-        .order("name");
-      return data ?? [];
-    },
-  });
-
-  const { data: products } = useQuery({
-    queryKey: ["quick-create", "products", organizationId],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("products")
-        .select("id, name, sale_price, current_stock, unit")
-        .eq("organization_id", organizationId)
-        .is("deleted_at", null)
-        .order("name");
-      return data ?? [];
-    },
-  });
-
-  if (!contacts || !products) return null;
-
-  return (
-    <InvoiceCreateDrawer
-      contacts={contacts}
-      products={products}
-      open={true}
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
-    />
   );
 }

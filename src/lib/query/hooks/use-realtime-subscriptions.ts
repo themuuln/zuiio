@@ -15,7 +15,7 @@ import { createClient } from "@/lib/supabase/client";
 type RealtimeChannelGroup = {
   name: string;
   table: string;
-  keyAll: () => readonly string[];
+  keyLists: (orgId: string) => readonly string[];
 };
 
 /**
@@ -38,34 +38,40 @@ export function useRealtimeSubscriptions(orgId: string | null | undefined) {
     const supabase = createClient();
 
     const channels: RealtimeChannelGroup[] = [
-      { name: `products:${orgId}`, table: "products", keyAll: productKeys.all },
+      {
+        name: `products:${orgId}`,
+        table: "products",
+        keyLists: (id) => productKeys.lists(id),
+      },
       {
         name: `sales:${orgId}`,
         table: "sales",
-        keyAll: saleKeys.all,
+        keyLists: (id) => saleKeys.lists(id),
       },
       {
         name: `contacts:${orgId}`,
         table: "contacts",
-        keyAll: contactKeys.all,
+        keyLists: (id) => contactKeys.lists(id),
       },
       {
         name: `expenses:${orgId}`,
         table: "expenses",
-        keyAll: expenseKeys.all,
+        keyLists: (id) => expenseKeys.lists(id),
       },
       {
         name: `brands:${orgId}`,
         table: "brands",
-        keyAll: brandKeys.all,
+        keyLists: (id) => brandKeys.lists(id),
       },
     ];
 
-    const subscribedChannels = channels.map(({ name, table, keyAll }) => {
+    const subscribedChannels = channels.map(({ name, table, keyLists }) => {
       const channel = supabase.channel(name);
 
       const keyFactories =
-        table === "sales" ? [keyAll, inventoryKeys.all] : [keyAll];
+        table === "sales"
+          ? [keyLists(orgId), inventoryKeys.lists(orgId)]
+          : [keyLists(orgId)];
 
       channel.on(
         "postgres_changes",
@@ -76,8 +82,8 @@ export function useRealtimeSubscriptions(orgId: string | null | undefined) {
           filter: `organization_id=eq.${orgId}`,
         },
         () => {
-          for (const keyFactory of keyFactories) {
-            queryClient.invalidateQueries({ queryKey: keyFactory() });
+          for (const queryKey of keyFactories) {
+            queryClient.invalidateQueries({ queryKey });
           }
         },
       );

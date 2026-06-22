@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
@@ -8,18 +8,13 @@ import { QueryProvider } from "@/lib/query/provider";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-});
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+  variable: "--font-mono",
   subsets: ["latin"],
 });
 
@@ -68,7 +63,6 @@ export default function RootLayout({
         geistSans.variable,
         geistMono.variable,
         "font-mono",
-        jetbrainsMono.variable,
       )}
     >
       <head>
@@ -97,6 +91,7 @@ export default function RootLayout({
         <Script
           id="register-sw"
           strategy="afterInteractive"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: static service worker registration string
           dangerouslySetInnerHTML={{
             __html: `
               if ("serviceWorker" in navigator) {
