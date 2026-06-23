@@ -1,0 +1,18 @@
+{
+  "name": "@zer/export",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "exceljs": "^4"
+  },
+  "devDependencies": {
+    "@zer/config": "workspace:*",
+    "@types/node": "^20",
+    "exceljs": "^4",
+    "typescript": "^5"
+  }
+}
