@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 import { updateJournalEntry } from "@/app/(dashboard)/accounting/actions";
 import { buttonVariants } from "@/components/ui/button";
@@ -27,6 +28,8 @@ import {
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
+import { journalEntryKeys } from "@/lib/query/keys";
+import { useOptimisticUpdate } from "@/lib/query/use-optimistic";
 
 const lineSchema = z
   .object({
@@ -86,9 +89,21 @@ export function JournalEntryEditDrawer({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [serverError, setServerError] = useState<string | null>(null);
-
   const activeAccounts = accounts.filter((a) => a.is_active);
+
+  const editMutation = useOptimisticUpdate({
+    mutationFn: async (formData: FormData) => {
+      const result = await updateJournalEntry(undefined, formData);
+      if (result?.error) throw new Error(result.error);
+      return result;
+    },
+    queryKey: journalEntryKeys.all,
+    getId: (formData) => formData.get("id")?.toString() ?? "",
+    buildOptimistic: (formData) => ({
+      entry_date: formData.get("entry_date")?.toString() ?? "",
+      description: formData.get("description")?.toString() ?? "",
+    }),
+  });
 
   const {
     register,
@@ -123,23 +138,23 @@ export function JournalEntryEditDrawer({
     lines?.reduce((sum, line) => sum + (line.credit_amount || 0), 0) ?? 0;
   const isBalanced = Math.abs(totalDebits - totalCredits) < 0.01;
 
-  const onSubmit = async (data: JournalEntryValues) => {
-    setServerError(null);
+  const onSubmit = (data: JournalEntryValues) => {
+    if (editMutation.isPending) return;
 
     const debits = data.lines.reduce((s, l) => s + (l.debit_amount || 0), 0);
     const credits = data.lines.reduce((s, l) => s + (l.credit_amount || 0), 0);
     if (Math.abs(debits - credits) > 0.01) {
-      setServerError("Дебет ба кредит дүн тэнцүү байх ёстой");
+      toast.error("Дебет ба кредит дүн тэнцүү байх ёстой");
       return;
     }
 
     for (const [i, line] of data.lines.entries()) {
       if (!line.account_id) {
-        setServerError(`Мөр ${i + 1}: Данс сонгоно уу`);
+        toast.error(`Мөр ${i + 1}: Данс сонгоно уу`);
         return;
       }
       if (line.debit_amount === 0 && line.credit_amount === 0) {
-        setServerError(`Мөр ${i + 1}: Дебет эсвэл кредит дүн оруулна уу`);
+        toast.error(`Мөр ${i + 1}: Дебет эсвэл кредит дүн оруулна уу`);
         return;
       }
     }
@@ -159,12 +174,12 @@ export function JournalEntryEditDrawer({
       ),
     );
 
-    const result = await updateJournalEntry(undefined, formData);
-    if (result?.error) {
-      setServerError(result.error);
-    } else {
-      onOpenChange(false);
-    }
+    editMutation.mutate(formData, {
+      onSuccess: () => {
+        onOpenChange(false);
+        toast.success("Журналын бичилт амжилттай шинэчлэгдлээ.");
+      },
+    });
   };
 
   const getAccountLabel = (accountId: string) => {
@@ -178,9 +193,6 @@ export function JournalEntryEditDrawer({
       open={open}
       onOpenChange={(next) => {
         onOpenChange(next);
-        if (!next) {
-          setServerError(null);
-        }
       }}
       title="Журналын бичилт засах"
       description="Бичилтийн мэдээллийг шинэчлэх"
@@ -190,7 +202,7 @@ export function JournalEntryEditDrawer({
           <DrawerCancel onClick={() => onOpenChange(false)} />
           <DrawerSubmit
             form="journal-edit-form"
-            isPending={isSubmitting}
+            isPending={isSubmitting || editMutation.isPending}
             loadingLabel="Хадгалаж байна..."
           />
         </DrawerFooter>
@@ -384,7 +396,7 @@ export function JournalEntryEditDrawer({
           </p>
         )}
 
-        <ErrorBanner error={serverError} />
+        <ErrorBanner error={editMutation.error} />
       </form>
     </SlideInDrawer>
   );

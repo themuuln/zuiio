@@ -102,12 +102,18 @@ export function ProductEditDrawer({
   product,
   brands,
   children,
+  open: externalOpen,
+  onOpenChange: externalOnOpenChange,
 }: {
   product: ProductEditData;
   brands?: { id: string; name: string; logo_url: string | null }[];
   children?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = externalOpen ?? internalOpen;
+  const setOpen = externalOnOpenChange ?? setInternalOpen;
   const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
 
   // --- Unit combobox (creatable) ---

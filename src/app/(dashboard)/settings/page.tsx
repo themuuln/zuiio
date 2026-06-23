@@ -17,6 +17,7 @@ import { createServiceClient } from "@/lib/supabase/server-service";
 import { BrandingDrawer } from "./branding-drawer";
 import { LeaveOrganizationDialog } from "./leave-org-dialog";
 import { NotificationSettings } from "./notification-settings";
+import { OrgFeatureSettings } from "./org-feature-settings";
 import { OrgInfoForm } from "./org-info-form";
 import { OrgLogoUploader } from "./org-logo-uploader";
 import { ProfileForm } from "./profile-form";
@@ -42,7 +43,7 @@ export default async function SettingsPage() {
     supabase
       .from("organizations")
       .select(
-        "name, slug, company_type, currency, has_email_reports, has_brands",
+        "name, slug, company_type, currency, has_suppliers, has_inventory, has_customer_credit, has_multi_branch, has_variants, has_brands, has_categories, has_email_reports, has_audit_log",
       )
       .eq("id", organizationId)
       .single(),
@@ -58,6 +59,28 @@ export default async function SettingsPage() {
   const profile = profileResult.data;
   const brandConfig = (brandConfigResult.data?.brand_config ??
     {}) as BrandConfig;
+  const featureSettings = {
+    has_suppliers:
+      (org as Record<string, boolean | null> | null)?.has_suppliers !== false,
+    has_inventory:
+      (org as Record<string, boolean | null> | null)?.has_inventory !== false,
+    has_customer_credit:
+      (org as Record<string, boolean | null> | null)?.has_customer_credit !==
+      false,
+    has_multi_branch:
+      (org as Record<string, boolean | null> | null)?.has_multi_branch === true,
+    has_variants:
+      (org as Record<string, boolean | null> | null)?.has_variants !== false,
+    has_brands:
+      (org as Record<string, boolean | null> | null)?.has_brands !== false,
+    has_categories:
+      (org as Record<string, boolean | null> | null)?.has_categories !== false,
+    has_email_reports:
+      (org as Record<string, boolean | null> | null)?.has_email_reports !==
+      false,
+    has_audit_log:
+      (org as Record<string, boolean | null> | null)?.has_audit_log !== false,
+  };
   const hasEmailReports =
     (org as { has_email_reports: boolean } | null)?.has_email_reports !== false;
   const hasBrands =
@@ -137,6 +160,9 @@ export default async function SettingsPage() {
           />
         </CardContent>
       </Card>
+
+      {/* Organization Feature Settings */}
+      <OrgFeatureSettings initial={featureSettings} />
 
       {/* Product Brand Presets — available brands with products to import */}
       {hasBrands && hasPresets ? (

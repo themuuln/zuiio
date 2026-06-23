@@ -9,14 +9,6 @@ import { z } from "zod";
 import { createBundle } from "@/app/(dashboard)/products/bundles/actions";
 import type { SimpleProductOption } from "@/app/(dashboard)/products/bundles/types";
 import { Button } from "@/components/ui/button";
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-} from "@/components/ui/combobox";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   DrawerCancel,
@@ -26,6 +18,7 @@ import {
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { ProductPicker } from "@/components/products/product-picker";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import {
   Table,
@@ -36,6 +29,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { bundleKeys } from "@/lib/query/keys";
+import { useOptimisticCreate } from "@/lib/query/use-optimistic";
 
 const bundleSchema = z.object({
   name: z.string().min(1, "Нэр шаардлагатай"),
@@ -64,10 +59,25 @@ export function BundleCreateDrawer({
   products = [],
 }: BundleCreateDrawerProps) {
   const [open, setOpen] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
-  const [productQueries, setProductQueries] = useState<Record<number, string>>(
-    {},
-  );
+
+  const bundleMutation = useOptimisticCreate({
+    mutationFn: async (formData: FormData) => {
+      const result = await createBundle(undefined, formData);
+      if (result?.error) throw new Error(result.error);
+      return result;
+    },
+    queryKey: bundleKeys.all,
+    buildOptimistic: (formData) => ({
+      id: `opt-${Date.now()}`,
+      name: formData.get("name")?.toString() ?? "",
+      sku: formData.get("sku")?.toString() || null,
+      sale_price: Number(formData.get("sale_price") ?? 0) || null,
+      description: formData.get("description")?.toString() || null,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      product_bundle_items: [],
+    }),
+  });
 
   const {
     register,
@@ -96,8 +106,8 @@ export function BundleCreateDrawer({
 
   const selectedIds = new Set(items.map((i) => i.product_id).filter(Boolean));
 
-  const onSubmit = async (data: BundleValues) => {
-    setServerError(null);
+  const onSubmit = (data: BundleValues) => {
+    if (bundleMutation.isPending) return;
     const formData = new FormData();
     formData.append("name", data.name);
     formData.append("sku", data.sku ?? "");
@@ -114,242 +124,188 @@ export function BundleCreateDrawer({
       ),
     );
 
-    const result = await createBundle(undefined, formData);
-    if (result?.error) {
-      setServerError(result.error);
-    } else {
-      setOpen(false);
-      reset();
-      toast.success("Багц амжилттай үүсгэгдлээ.");
-    }
+    bundleMutation.mutate(formData, {
+      onSuccess: () => {
+        setOpen(false);
+        reset();
+        toast.success("Багц амжилттай үүсгэгдлээ.");
+      },
+    });
   };
 
   const handleCancel = () => {
-    setServerError(null);
     reset();
     setOpen(false);
   };
 
   return (
-    <SlideInDrawer
-      open={open}
-      onOpenChange={setOpen}
-      title="Шинэ багц"
-      description="Олон бүтээгдэхүүнийг нэгтгэн багц үүсгэх"
-      trigger={trigger}
-      panelWidth="32rem"
-      footer={
-        <DrawerFooter>
-          <DrawerCancel onClick={handleCancel} />
-          <DrawerSubmit
-            form="bundle-form"
-            isPending={isSubmitting}
-            label="Багц үүсгэх"
-            loadingLabel="Үүсгэж байна..."
-          />
-        </DrawerFooter>
-      }
-    >
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        id="bundle-form"
-        className="space-y-5"
+    <>
+      <SlideInDrawer
+        open={open}
+        onOpenChange={setOpen}
+        title="Шинэ багц"
+        description="Олон бүтээгдэхүүнийг нэгтгэн багц үүсгэх"
+        trigger={trigger}
+        panelWidth="32rem"
+        footer={
+          <DrawerFooter>
+            <DrawerCancel onClick={handleCancel} />
+            <DrawerSubmit
+              form="bundle-form"
+              isPending={isSubmitting || bundleMutation.isPending}
+              label="Багц үүсгэх"
+              loadingLabel="Үүсгэж байна..."
+            />
+          </DrawerFooter>
+        }
       >
-        {serverError && <ErrorBanner error={serverError} />}
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          id="bundle-form"
+          className="space-y-5"
+        >
+          <ErrorBanner error={bundleMutation.error} />
 
-        {/* Basic Info */}
-        <FieldGroup>
-          <Field>
-            <FieldLabel>Багцын нэр</FieldLabel>
-            <Input placeholder="Жнь: Чихэртэй хөтөч" {...register("name")} />
-            {errors.name && (
-              <p className="text-xs text-destructive">{errors.name.message}</p>
-            )}
-          </Field>
-          <Field>
-            <FieldLabel>SKU (optional)</FieldLabel>
-            <Input placeholder="BNDL-001" {...register("sku")} />
-          </Field>
-        </FieldGroup>
-
-        <FieldGroup>
-          <Field>
-            <FieldLabel>Борлуулалтын үнэ</FieldLabel>
-            <Controller
-              control={control}
-              name="sale_price"
-              render={({ field }) => (
-                <CurrencyInput
-                  value={field.value ?? 0}
-                  onChange={(val: number) => field.onChange(val)}
-                />
+          {/* Basic Info */}
+          <FieldGroup>
+            <Field>
+              <FieldLabel>Багцын нэр</FieldLabel>
+              <Input placeholder="Жнь: Чихэртэй хөтөч" {...register("name")} />
+              {errors.name && (
+                <p className="text-xs text-destructive">
+                  {errors.name.message}
+                </p>
               )}
-            />
-          </Field>
-        </FieldGroup>
+            </Field>
+            <Field>
+              <FieldLabel>SKU (optional)</FieldLabel>
+              <Input placeholder="BNDL-001" {...register("sku")} />
+            </Field>
+          </FieldGroup>
 
-        <FieldGroup>
-          <Field>
-            <FieldLabel>Тайлбар (optional)</FieldLabel>
-            <Textarea
-              placeholder="Багцын тайлбар"
-              {...register("description")}
-            />
-          </Field>
-        </FieldGroup>
+          <FieldGroup>
+            <Field>
+              <FieldLabel>Борлуулалтын үнэ</FieldLabel>
+              <Controller
+                control={control}
+                name="sale_price"
+                render={({ field }) => (
+                  <CurrencyInput
+                    value={field.value ?? 0}
+                    onChange={(val: number) => field.onChange(val)}
+                  />
+                )}
+              />
+            </Field>
+          </FieldGroup>
 
-        {/* Bundle Items */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
+          <FieldGroup>
+            <Field>
+              <FieldLabel>Тайлбар (optional)</FieldLabel>
+              <Textarea
+                placeholder="Багцын тайлбар"
+                {...register("description")}
+              />
+            </Field>
+          </FieldGroup>
+
+          {/* Bundle Items */}
+          <div className="space-y-3">
             <h3 className="text-sm font-medium">Багцын бараанууд</h3>
+
+            {errors.items?.message && (
+              <p className="text-xs text-destructive">{errors.items.message}</p>
+            )}
+
+            {fields.length > 0 && (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Бүтээгдэхүүн</TableHead>
+                      <TableHead className="w-24 text-right">
+                        Тоо хэмжээ
+                      </TableHead>
+                      <TableHead className="w-10" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {fields.map((field, index) => {
+                      return (
+                        <TableRow key={field.id}>
+                          <TableCell>
+                            <Controller
+                              control={control}
+                              name={`items.${index}.product_id`}
+                              render={({ field: pField }) => (
+                                <ProductPicker
+                                  products={products}
+                                  value={pField.value}
+                                  onValueChange={(productId) =>
+                                    pField.onChange(productId)
+                                  }
+                                  excludeIds={selectedIds}
+                                  placeholder="Бараа сонгох"
+                                  className="h-8"
+                                />
+                              )}
+                            />
+                            {errors.items?.[index]?.product_id && (
+                              <p className="text-xs text-destructive">
+                                {errors.items[index]?.product_id?.message}
+                              </p>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Controller
+                              control={control}
+                              name={`items.${index}.quantity`}
+                              render={({ field: qField }) => (
+                                <Input
+                                  type="number"
+                                  step="any"
+                                  min="0.01"
+                                  className="h-8 text-right"
+                                  value={qField.value}
+                                  onChange={(e) =>
+                                    qField.onChange(Number(e.target.value) || 0)
+                                  }
+                                />
+                              )}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="size-8"
+                              onClick={() => remove(index)}
+                            >
+                              <Trash className="size-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
             <Button
               type="button"
               variant="outline"
               size="sm"
+              className="w-full"
               onClick={() => append({ product_id: "", quantity: 1 })}
             >
               <Plus className="mr-1.5 size-3.5" />
               Бараа нэмэх
             </Button>
           </div>
-
-          {errors.items?.message && (
-            <p className="text-xs text-destructive">{errors.items.message}</p>
-          )}
-
-          {fields.length > 0 && (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Бүтээгдэхүүн</TableHead>
-                    <TableHead className="w-24 text-right">
-                      Тоо хэмжээ
-                    </TableHead>
-                    <TableHead className="w-10" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {fields.map((field, index) => {
-                    const trimmedQuery = (productQueries[index] ?? "")
-                      .trim()
-                      .toLowerCase();
-                    const available = products.filter(
-                      (p) =>
-                        !selectedIds.has(p.id) ||
-                        p.id === items[index]?.product_id,
-                    );
-                    const filtered = trimmedQuery
-                      ? available.filter((p) =>
-                          p.name.toLowerCase().includes(trimmedQuery),
-                        )
-                      : available;
-
-                    return (
-                      <TableRow key={field.id}>
-                        <TableCell>
-                          <Controller
-                            control={control}
-                            name={`items.${index}.product_id`}
-                            render={({ field: pField }) => (
-                              <Combobox
-                                items={filtered}
-                                value={
-                                  products.find((p) => p.id === pField.value) ??
-                                  null
-                                }
-                                onValueChange={(
-                                  next: { id: string; name: string } | null,
-                                ) => {
-                                  pField.onChange(next?.id ?? "");
-                                  setProductQueries((prev) => ({
-                                    ...prev,
-                                    [index]: "",
-                                  }));
-                                }}
-                                itemToStringValue={(c: { id: string } | null) =>
-                                  c?.id ?? ""
-                                }
-                                itemToStringLabel={(
-                                  c: { name: string } | null,
-                                ) => c?.name ?? ""}
-                                inputValue={productQueries[index] ?? ""}
-                                onInputValueChange={(q) =>
-                                  setProductQueries((prev) => ({
-                                    ...prev,
-                                    [index]: q,
-                                  }))
-                                }
-                              >
-                                <ComboboxInput
-                                  placeholder="Бараа хайх..."
-                                  showTrigger
-                                  className="h-8"
-                                />
-                                <ComboboxContent>
-                                  <ComboboxEmpty>Олдсонгүй</ComboboxEmpty>
-                                  <ComboboxList>
-                                    {(p: SimpleProductOption) => (
-                                      <ComboboxItem key={p.id}>
-                                        <div className="flex flex-col">
-                                          <span>{p.name}</span>
-                                          {p.sku && (
-                                            <span className="text-xs text-muted-foreground">
-                                              {p.sku}
-                                            </span>
-                                          )}
-                                        </div>
-                                      </ComboboxItem>
-                                    )}
-                                  </ComboboxList>
-                                </ComboboxContent>
-                              </Combobox>
-                            )}
-                          />
-                          {errors.items?.[index]?.product_id && (
-                            <p className="text-xs text-destructive">
-                              {errors.items[index]?.product_id?.message}
-                            </p>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Controller
-                            control={control}
-                            name={`items.${index}.quantity`}
-                            render={({ field: qField }) => (
-                              <Input
-                                type="number"
-                                step="any"
-                                min="0.01"
-                                className="h-8 text-right"
-                                value={qField.value}
-                                onChange={(e) =>
-                                  qField.onChange(Number(e.target.value) || 0)
-                                }
-                              />
-                            )}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="size-8"
-                            onClick={() => remove(index)}
-                          >
-                            <Trash className="size-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </div>
-      </form>
-    </SlideInDrawer>
+        </form>
+      </SlideInDrawer>
+    </>
   );
 }

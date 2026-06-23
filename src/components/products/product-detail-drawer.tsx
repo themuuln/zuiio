@@ -13,7 +13,6 @@ import { toast } from "sonner";
 import { deleteProduct } from "@/app/(dashboard)/products/actions";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { DrawerHeader } from "@/components/ui/drawer-header";
 import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { InfoRow } from "@/components/ui/info-row";
 import { formatCurrency } from "@/lib/format";
@@ -50,11 +49,17 @@ export function ProductDetailDrawer({
   children,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
+  onEdit,
+  onDelete,
+  isDeletePending,
 }: {
   product: ProductDetailData;
   children?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  isDeletePending?: boolean;
 }) {
   const [internalOpen, setInternalOpen] = useState(false);
   const open = controlledOpen ?? internalOpen;
@@ -95,13 +100,39 @@ export function ProductDetailDrawer({
   };
 
   return (
-    <DrawerLayout open={open} onOpenChange={setOpen} trigger={children}>
-      <DrawerHeader
-        title={product.name}
-        description="Бүтээгдэхүүний дэлгэрэнгүй мэдээлэл"
-      />
+    <DrawerLayout
+      open={open}
+      onOpenChange={setOpen}
+      trigger={children}
+      title={product.name}
+      description="Бүтээгдэхүүний дэлгэрэнгүй мэдээлэл"
+    >
+      <div className="space-y-6">
+        {/* Edit/Delete action buttons */}
+        {(onEdit || onDelete) && (
+          <div className="flex items-center justify-end gap-2">
+            {onEdit && (
+              <button
+                type="button"
+                onClick={onEdit}
+                className="inline-flex items-center justify-center rounded-md border border-border px-3 py-1.5 text-sm font-medium bg-transparent hover:bg-accent hover:text-accent-foreground transition-colors"
+              >
+                Засах
+              </button>
+            )}
+            {onDelete && (
+              <button
+                type="button"
+                onClick={onDelete}
+                disabled={isDeletePending}
+                className="inline-flex items-center justify-center rounded-md border border-border px-3 py-1.5 text-sm font-medium bg-transparent hover:bg-destructive hover:text-destructive-foreground transition-colors disabled:opacity-50 disabled:pointer-events-none"
+              >
+                Устгах
+              </button>
+            )}
+          </div>
+        )}
 
-      <div className="flex-1 overflow-y-auto min-h-0 space-y-6">
         {/* Image gallery */}
         {images.length > 0 && (
           <div className="group relative aspect-square w-full overflow-hidden rounded-lg bg-muted/30">

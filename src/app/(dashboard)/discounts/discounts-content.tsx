@@ -8,6 +8,10 @@ import {
   type DiscountDetailData,
   DiscountDetailDrawer,
 } from "@/components/discounts/discount-detail-drawer";
+import {
+  type DiscountEditData,
+  DiscountEditDrawer,
+} from "@/components/discounts/discount-edit-drawer";
 import { ErpDataTable } from "@/components/erp/data-table";
 import { PageShell } from "@/components/erp/page-shell";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +28,22 @@ const APPLIES_TO_LABELS: Record<string, string> = {
   selected_products: "Сонгосон бүтээгдэхүүн",
   selected_categories: "Сонгосон ангилал",
 };
+
+function toEditData(d: DiscountRow): DiscountEditData {
+  return {
+    id: d.id,
+    name: d.name,
+    description: d.description,
+    type: d.type,
+    value: d.value,
+    applies_to: d.applies_to,
+    min_purchase_amount: d.min_purchase_amount,
+    valid_from: d.valid_from,
+    valid_until: d.valid_until,
+    is_active: d.is_active,
+    usage_limit: d.usage_limit,
+  };
+}
 
 export function DiscountsContent({ discounts }: { discounts: DiscountRow[] }) {
   const searchParams = useSearchParams();
@@ -113,6 +133,15 @@ export function DiscountsContent({ discounts }: { discounts: DiscountRow[] }) {
                 <Badge variant={d.is_active ? "default" : "secondary"}>
                   {d.is_active ? "Тийм" : "Үгүй"}
                 </Badge>
+              ),
+            },
+            {
+              header: "",
+              className: "w-12",
+              accessor: (d: DiscountRow) => (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <DiscountEditDrawer discount={toEditData(d)} />
+                </div>
               ),
             },
           ]}

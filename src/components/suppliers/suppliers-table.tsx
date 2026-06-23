@@ -1,7 +1,7 @@
 "use client";
 
-import { Eye, NotePencil } from "@phosphor-icons/react";
 import type { ColumnDef } from "@tanstack/react-table";
+import { useState } from "react";
 import {
   type SupplierDetailData,
   SupplierDetailDrawer,
@@ -13,6 +13,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 import { DataTable } from "@/components/ui/data-table";
+import { TableActionsCell } from "@/components/ui/table-actions-cell";
 import { formatCurrency } from "@/lib/format";
 
 export type SupplierRow = {
@@ -45,15 +46,17 @@ function toEditData(supplier: SupplierRow): SupplierEditData {
   };
 }
 
-const defaultColumns: ColumnDef<SupplierRow>[] = [
-  {
-    accessorKey: "name",
-    header: "Нэр",
-    cell: ({ row }) => {
-      const supplier = row.original;
-      return (
-        <SupplierDetailDrawer supplier={toDetailData(supplier)}>
-          <div className="flex items-center gap-2 cursor-pointer">
+function buildColumns(
+  onEdit: (supplier: SupplierRow) => void,
+): ColumnDef<SupplierRow>[] {
+  return [
+    {
+      accessorKey: "name",
+      header: "Нэр",
+      cell: ({ row }) => {
+        const supplier = row.original;
+        return (
+          <div className="flex items-center gap-2">
             <Avatar className="size-7">
               <AvatarFallback>
                 {supplier.name.slice(0, 2).toUpperCase()}
@@ -61,53 +64,75 @@ const defaultColumns: ColumnDef<SupplierRow>[] = [
             </Avatar>
             <span className="font-medium">{supplier.name}</span>
           </div>
-        </SupplierDetailDrawer>
-      );
+        );
+      },
     },
-  },
-  {
-    accessorKey: "phone",
-    header: "Утас",
-    cell: ({ row }) => row.getValue("phone") ?? "-",
-  },
-  {
-    accessorKey: "email",
-    header: "Имэйл",
-    cell: ({ row }) => row.getValue("email") ?? "-",
-  },
-  {
-    accessorKey: "balance",
-    header: "Өглөг",
-    cell: ({ row }) => formatCurrency(Number(row.getValue("balance") ?? 0)),
-  },
-  {
-    id: "actions",
-    header: "",
-    cell: ({ row }) => {
-      const supplier = row.original;
-      return (
-        <div className="flex items-center gap-1">
-          <SupplierDetailDrawer supplier={toDetailData(supplier)} />
-          <SupplierEditDrawer supplier={toEditData(supplier)} />
-        </div>
-      );
+    {
+      accessorKey: "phone",
+      header: "Утас",
+      cell: ({ row }) => row.getValue("phone") ?? "-",
     },
-    enableSorting: false,
-    enableHiding: false,
-  },
-];
+    {
+      accessorKey: "email",
+      header: "Имэйл",
+      cell: ({ row }) => row.getValue("email") ?? "-",
+    },
+    {
+      accessorKey: "balance",
+      header: "Өглөг",
+      cell: ({ row }) => formatCurrency(Number(row.getValue("balance") ?? 0)),
+    },
+    {
+      id: "actions",
+      header: "",
+      cell: ({ row }) => {
+        const supplier = row.original;
+        return <TableActionsCell onEdit={() => onEdit(supplier)} />;
+      },
+      enableSorting: false,
+      enableHiding: false,
+    },
+  ];
+}
 
 export function SuppliersTable({ data }: { data: SupplierRow[] }) {
+  const [selectedSupplier, setSelectedSupplier] = useState<SupplierRow | null>(
+    null,
+  );
+  const [editSupplier, setEditSupplier] = useState<SupplierRow | null>(null);
+
   return (
-    <DataTable
-      columns={defaultColumns}
-      data={data}
-      searchColumn="name"
-      searchPlaceholder="Нийлүүлэгчээр хайх..."
-      pageSize={10}
-      totalLabel="нийлүүлэгч"
-      enableSorting
-      enableColumnVisibility
-    />
+    <>
+      <DataTable
+        columns={buildColumns(setEditSupplier)}
+        data={data}
+        searchColumn="name"
+        searchPlaceholder="Нийлүүлэгчээр хайх..."
+        pageSize={10}
+        totalLabel="нийлүүлэгч"
+        enableSorting
+        enableColumnVisibility
+        onRowClick={(row) => setSelectedSupplier(row)}
+      />
+      {selectedSupplier && (
+        <SupplierDetailDrawer
+          supplier={toDetailData(selectedSupplier)}
+          open={!!selectedSupplier}
+          onOpenChange={(open) => {
+            if (!open) setSelectedSupplier(null);
+          }}
+          onEdit={() => setEditSupplier(selectedSupplier)}
+        />
+      )}
+      {editSupplier && (
+        <SupplierEditDrawer
+          supplier={toEditData(editSupplier)}
+          open={!!editSupplier}
+          onOpenChange={(open) => {
+            if (!open) setEditSupplier(null);
+          }}
+        />
+      )}
+    </>
   );
 }

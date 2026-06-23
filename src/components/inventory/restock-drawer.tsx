@@ -26,6 +26,8 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
+import { purchaseKeys } from "@/lib/query/keys";
+import { useOptimisticCreate } from "@/lib/query/use-optimistic";
 
 type SupplierOption = {
   id: string;
@@ -63,8 +65,28 @@ export function RestockDrawer({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [serverError, setServerError] = useState<string | null>(null);
   const [supplierQuery, setSupplierQuery] = useState("");
+
+  const restockMutation = useOptimisticCreate({
+    mutationFn: async (formData: FormData) => {
+      const result = await createPurchaseOrder(undefined, formData);
+      if (result?.error) throw new Error(result.error);
+      return result;
+    },
+    queryKey: purchaseKeys.all,
+    buildOptimistic: (formData) => {
+      const orderDate = formData.get("order_date")?.toString() ?? "";
+      return {
+        id: `opt-${Date.now()}`,
+        order_number: `OPT-${Date.now()}`,
+        order_date: orderDate,
+        status: "draft",
+        total_amount: 0,
+        created_at: new Date().toISOString(),
+        contacts: null,
+      };
+    },
+  });
 
   const suggestedQty = product
     ? Math.max(1, (product.min_stock ?? 0) - (product.current_stock ?? 0))
@@ -95,9 +117,8 @@ export function RestockDrawer({
 
   const trimmedQuery = supplierQuery.trim().toLowerCase();
 
-  const onSubmit = async (data: RestockValues) => {
-    if (!product) return;
-    setServerError(null);
+  const onSubmit = (data: RestockValues) => {
+    if (!product || restockMutation.isPending) return;
 
     const formData = new FormData();
     if (data.supplier_id) formData.append("supplier_id", data.supplier_id);
@@ -114,22 +135,17 @@ export function RestockDrawer({
       ]),
     );
 
-    const result = await createPurchaseOrder(undefined, formData);
-
-    if (result?.error) {
-      setServerError(result.error);
-      return;
-    }
-
-    setServerError(null);
-    setSupplierQuery("");
-    onOpenChange(false);
-    reset();
-    toast.success("Худалдан авалтын захиалга амжилттай үүсгэгдлээ.");
+    restockMutation.mutate(formData, {
+      onSuccess: () => {
+        setSupplierQuery("");
+        onOpenChange(false);
+        reset();
+        toast.success("Худалдан авалтын захиалга амжилттай үүсгэгдлээ.");
+      },
+    });
   };
 
   const handleCancel = () => {
-    setServerError(null);
     setSupplierQuery("");
     reset();
     onOpenChange(false);
@@ -151,7 +167,7 @@ export function RestockDrawer({
           <DrawerCancel onClick={handleCancel} />
           <DrawerSubmit
             form="restock-form"
-            isPending={isSubmitting}
+            isPending={isSubmitting || restockMutation.isPending}
             label="Захиалга үүсгэх"
             loadingLabel="Үүсгэж байна..."
           />
@@ -163,7 +179,7 @@ export function RestockDrawer({
         className="flex flex-col gap-6"
         id="restock-form"
       >
-        {serverError && <ErrorBanner error={serverError} />}
+        <ErrorBanner error={restockMutation.error} />
 
         {/* Product Info (read-only) */}
         <FieldGroup>

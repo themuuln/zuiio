@@ -7,6 +7,10 @@ import {
   type ExpenseDetailData,
   ExpenseDetailDrawer,
 } from "@/components/expenses/expense-detail-drawer";
+import {
+  type ExpenseEditData,
+  ExpenseEditDrawer,
+} from "@/components/expenses/expense-edit-drawer";
 import { DataTable } from "@/components/ui/data-table";
 import { formatCurrency, formatDate } from "@/lib/format";
 
@@ -20,6 +24,17 @@ export type ExpenseRow = {
 };
 
 function toDetailData(expense: ExpenseRow): ExpenseDetailData {
+  return {
+    id: expense.id,
+    expense_date: expense.expense_date,
+    category: expense.category,
+    amount: expense.amount,
+    description: expense.description,
+    payment_method: expense.payment_method,
+  };
+}
+
+function toEditData(expense: ExpenseRow): ExpenseEditData {
   return {
     id: expense.id,
     expense_date: expense.expense_date,
@@ -83,7 +98,20 @@ export function ExpensesTable({ data }: { data: ExpenseRow[] }) {
   return (
     <>
       <DataTable
-        columns={columns}
+        columns={[
+          ...columns,
+          {
+            id: "actions",
+            header: "",
+            enableSorting: false,
+            enableHiding: false,
+            cell: ({ row }) => (
+              <div onClick={(e) => e.stopPropagation()} role="none">
+                <ExpenseEditDrawer expense={toEditData(row.original)} />
+              </div>
+            ),
+          },
+        ]}
         data={data}
         searchColumn="category"
         searchPlaceholder="Ангилал, тайлбараар хайх..."

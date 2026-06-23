@@ -2452,6 +2452,38 @@ export type Database = {
         };
         Returns: Json;
       };
+      process_batch_adjustment: {
+        Args: {
+          p_branch_id: string;
+          p_items: Json;
+          p_notes?: string;
+          p_org_id: string;
+          p_reference: string;
+          p_user_id: string;
+        };
+        Returns: Json;
+      };
+      process_receive_purchase_items: {
+        Args: {
+          p_branch_id: string;
+          p_items: Json;
+          p_order_id: string;
+          p_org_id: string;
+          p_user_id: string;
+        };
+        Returns: Json;
+      };
+      process_restock_stock_movements: {
+        Args: {
+          p_branch_id: string;
+          p_items: Json;
+          p_mark_received?: boolean;
+          p_org_id: string;
+          p_po_id: string;
+          p_user_id: string;
+        };
+        Returns: Json;
+      };
       unschedule_daily_report_cron: { Args: never; Returns: string };
       user_has_branch_access: {
         Args: { target_branch_id: string };

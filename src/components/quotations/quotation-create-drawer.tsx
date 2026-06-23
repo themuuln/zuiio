@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 import { createQuotation } from "@/app/(dashboard)/quotations/actions";
 import {
@@ -33,6 +34,8 @@ import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
 import { useVariantLineItemRemove } from "@/lib/use-variant-line-items";
+import { quotationKeys } from "@/lib/query/keys";
+import { useOptimisticCreate } from "@/lib/query/use-optimistic";
 
 const lineItemSchema = z.object({
   product_id: z.string().nullable().optional(),
@@ -79,12 +82,28 @@ export function QuotationCreateDrawer({
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen ?? internalOpen;
   const setOpen = externalOnOpenChange ?? setInternalOpen;
-  const [serverError, setServerError] = useState<string | null>(null);
   const [selectedContact, setSelectedContact] = useState<{
     id: string;
     name: string;
   } | null>(null);
   const [contactQuery, setContactQuery] = useState("");
+
+  const quotationMutation = useOptimisticCreate({
+    mutationFn: async (formData: FormData) => {
+      const result = await createQuotation(undefined, formData);
+      if (result?.error) throw new Error(result.error);
+      return result;
+    },
+    queryKey: quotationKeys.all,
+    buildOptimistic: (formData) => ({
+      id: `opt-${Date.now()}`,
+      issue_date: formData.get("issue_date")?.toString() ?? "",
+      status: "draft",
+      total_amount: 0,
+      created_at: new Date().toISOString(),
+      contacts: null,
+    }),
+  });
 
   const {
     register,
@@ -122,8 +141,8 @@ export function QuotationCreateDrawer({
       0,
     ) ?? 0;
 
-  const onSubmit = async (data: QuotationValues) => {
-    setServerError(null);
+  const onSubmit = (data: QuotationValues) => {
+    if (quotationMutation.isPending) return;
     const formData = new FormData();
     formData.append("contact_id", data.contact_id ?? "");
     formData.append("issue_date", data.issue_date);
@@ -141,13 +160,13 @@ export function QuotationCreateDrawer({
         })),
       ),
     );
-    const result = await createQuotation(undefined, formData);
-    if (result?.error) {
-      setServerError(result.error);
-    } else {
-      setOpen(false);
-      reset();
-    }
+    quotationMutation.mutate(formData, {
+      onSuccess: () => {
+        setOpen(false);
+        reset();
+        toast.success("Үнийн санал амжилттай үүсгэгдлээ.");
+      },
+    });
   };
 
   const trimmedQuery = contactQuery.trim().toLowerCase();
@@ -170,7 +189,6 @@ export function QuotationCreateDrawer({
       onOpenChange={(next) => {
         setOpen(next);
         if (!next) {
-          setServerError(null);
           reset();
           setVariantSelections({});
         }
@@ -191,7 +209,7 @@ export function QuotationCreateDrawer({
           <DrawerCancel onClick={() => setOpen(false)} />
           <DrawerSubmit
             form="quotation-form"
-            isPending={isSubmitting}
+            isPending={isSubmitting || quotationMutation.isPending}
             label="Үнийн санал үүсгэх"
             loadingLabel="Үүсгэж байна..."
           />
@@ -483,7 +501,7 @@ export function QuotationCreateDrawer({
           <Textarea placeholder="Нэмэлт тэмдэглэл..." {...register("notes")} />
         </Field>
 
-        <ErrorBanner error={serverError} />
+        <ErrorBanner error={quotationMutation.error} />
       </form>
     </SlideInDrawer>
   );

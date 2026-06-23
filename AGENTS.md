@@ -210,3 +210,214 @@ src/app/(dashboard)/invoices/
 6. **Create drawer** supports controlled `open`/`onOpenChange` props for the `?create=true` flow
 7. **Combobox** dropdowns use `ComboboxCreate` for creating new items inline (e.g., creating a contact while creating an invoice)
 <!-- END:drawer-pattern -->
+
+<!-- BEGIN:crud-optimistic-mutations -->
+
+# CRUD mutations: ALWAYS use `useOptimisticCreate`/`useOptimisticUpdate`/`useOptimisticDelete`
+
+All create, update, and delete mutations in drawer forms MUST use the TanStack Query optimistic hooks from `src/lib/query/use-optimistic.ts`. This ensures instant UI feedback, automatic cache rollback on errors, and proper cache invalidation.
+
+## Rules
+
+1. **NEVER use raw server action calls** (`await createX(undefined, formData)`) directly in event handlers. Always wrap them in a `useOptimisticCreate`/`useOptimisticUpdate`/`useOptimisticDelete` hook.
+2. **ALWAYS register a query key** for every entity in `src/lib/query/keys.ts` (see existing `productKeys`, `bundleKeys`, `invoiceKeys`, etc.).
+3. **Use `useOptimisticCreate`** for create drawers. Provide `buildOptimistic(formData)` to construct the fake item that appears instantly in the list.
+4. **Use `useOptimisticUpdate`** for edit drawers. Provide `getId(formData)` and `buildOptimistic(formData)` to merge partial updates into the cached item.
+5. **Use `useOptimisticDelete`** for delete confirmations. Provide `getId(formData)` to remove the item from the cache.
+6. **Use `mutation.mutate(formData, { onSuccess: ... })`** to handle success (close drawer, reset form, toast). Error recovery (toast + cache rollback) is handled automatically by the hook.
+7. **Use `<ErrorBanner error={mutation.error} />`** instead of manual `serverError` state.
+8. **Combine `mutation.isPending` with `isSubmitting`** on `DrawerSubmit`: `isPending={isSubmitting || mutation.isPending}`.
+9. **For non-CRUD actions** (share link generation, status transitions, item receiving) that don't create/update/delete list items, use raw `useMutation` from `@tanstack/react-query` with `queryClient.invalidateQueries` in `onSettled` — but DO NOT bypass the pattern for standard CRUD.
+
+## Standard create drawer pattern
+
+```tsx
+// Import the hook and query keys
+import { useOptimisticCreate } from "@/lib/query/use-optimistic";
+import { entityKeys } from "@/lib/query/keys";
+
+// Inside the component function, before useForm:
+const mutation = useOptimisticCreate({
+  mutationFn: async (formData: FormData) => {
+    const result = await createEntity(undefined, formData);
+    if (result?.error) throw new Error(result.error);
+    return result;
+  },
+  queryKey: entityKeys.all,
+  buildOptimistic: (formData) => ({
+    id: `opt-${Date.now()}`,
+    name: formData.get("name")?.toString() ?? "",
+    // ... other fields matching the list query return type
+    created_at: new Date().toISOString(),
+  }),
+});
+
+// onSubmit: use mutation.mutate instead of await + setServerError
+const onSubmit = (data: FormValues) => {
+  if (mutation.isPending) return;
+  const formData = new FormData();
+  // ... build formData
+  mutation.mutate(formData, {
+    onSuccess: () => {
+      setOpen(false);
+      reset();
+      toast.success("Амжилттай үүсгэгдлээ.");
+    },
+  });
+};
+
+// ErrorBanner uses mutation.error directly
+<ErrorBanner error={mutation.error} />
+
+// DrawerSubmit combines isSubmitting with mutation.isPending
+<DrawerSubmit isPending={isSubmitting || mutation.isPending} />
+```
+
+## Standard edit drawer pattern
+
+```tsx
+import { useOptimisticUpdate } from "@/lib/query/use-optimistic";
+
+const mutation = useOptimisticUpdate({
+  mutationFn: async (formData: FormData) => {
+    const result = await updateEntity(undefined, formData);
+    if (result?.error) throw new Error(result.error);
+    return result;
+  },
+  queryKey: entityKeys.all,
+  getId: (formData) => formData.get("id")?.toString() ?? "",
+  buildOptimistic: (formData) => ({
+    name: formData.get("name")?.toString() ?? "",
+    // ... fields that changed
+  }),
+});
+```
+
+## Standard delete pattern
+
+```tsx
+import { useOptimisticDelete } from "@/lib/query/use-optimistic";
+
+const mutation = useOptimisticDelete({
+  mutationFn: async (formData: FormData) => {
+    const result = await deleteEntity(undefined, formData);
+    if (result?.error) throw new Error(result.error);
+    return result;
+  },
+  queryKey: entityKeys.all,
+  getId: (formData) => formData.get("id")?.toString() ?? "",
+});
+```
+
+## Already migrated entities (DO NOT revert to raw pattern)
+
+- Products (create/edit/delete)
+- Categories (create/edit/delete)
+- Customers (create/edit)
+- Suppliers (create/edit)
+- Bundles (create/edit)
+- Invoices (create)
+- Discounts (create)
+- Quotations (create)
+- Returns (create)
+- Purchase orders (create)
+- Accounts (create)
+- Journal entries (create/edit)
+
+<!-- END:crud-optimistic-mutations -->
+
+<!-- BEGIN:detail-drawer-patterns -->
+
+# Detail drawers: Use reusable abstractions
+
+All detail drawers and table action columns MUST use the shared components from `src/components/ui/`.
+
+## Available reusable components
+
+### `DetailDrawerShell` (for detail views)
+
+Wraps `DrawerLayout` with standardized action buttons (Edit/Delete) and optional status badge.
+
+```tsx
+import { DetailDrawerShell } from "@/components/ui/detail-drawer-shell";
+
+const STATUS_MAP = {
+  pending: { label: "Хүлээгдэж буй", variant: "secondary" },
+  paid: { label: "Төлөгдсөн", variant: "default" },
+};
+
+<DetailDrawerShell
+  open={open}
+  onOpenChange={setOpen}
+  title={entity.name}
+  description="Дэлгэрэнгүй мэдээлэл"
+  status={{ value: entity.status, mapping: STATUS_MAP }}
+  onEdit={() => setEditOpen(true)}
+  onDelete={() => handleDelete(entity.id)}
+  isDeletePending={isDeleting}
+  footer={<DrawerFooter>...</DrawerFooter>}
+>
+  {/* info rows, tables, etc. */}
+</DetailDrawerShell>;
+```
+
+### `TableActionsCell` (for table action columns)
+
+Standardizes the 3-icon action column (View/Eye, Edit/Pencil, Delete/Trash) in data tables.
+
+```tsx
+import { TableActionsCell } from "@/components/ui/table-actions-cell";
+
+{
+  id: "actions",
+  header: "",
+  cell: ({ row }) => (
+    <TableActionsCell
+      onView={() => setSelected(row.original)}
+      onEdit={() => setEditItem(row.original)}
+      onDelete={() => handleDelete(row.original.id, row.original.name)}
+      isDeletePending={deletingId === row.original.id}
+    />
+  ),
+  enableSorting: false,
+  enableHiding: false,
+}
+```
+
+### `StatusBadge` (for status display)
+
+Renders a consistent status badge with label and color variant.
+
+```tsx
+import { StatusBadge } from "@/components/ui/status-badge";
+
+const STATUS_MAP = {
+  active: { label: "Идэвхтэй", variant: "default" },
+  inactive: { label: "Идэвхгүй", variant: "secondary" },
+};
+
+<StatusBadge value={status} mapping={STATUS_MAP} />;
+```
+
+### `useDeleteWithConfirm` (for delete mutations)
+
+Standardizes confirm dialog → mutate → toast → cache invalidation.
+
+```tsx
+import { useDeleteWithConfirm } from "@/hooks/use-delete-with-confirm";
+
+const { handleDelete, isPending } = useDeleteWithConfirm({
+  mutationFn: (id) => deleteEntity(id),
+  queryKey: entityKeys.all(),
+  entityName: "Бүтээгдэхүүн",
+});
+
+// In table action cell:
+<TableActionsCell onDelete={() => handleDelete(item.id, item.name)} />;
+```
+
+### `InfoRow` (for key-value display in detail drawers)
+
+Already exists at `src/components/ui/info-row.tsx`. Use it consistently instead of manual divs.
+
+<!-- END:detail-drawer-patterns -->

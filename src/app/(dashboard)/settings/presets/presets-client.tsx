@@ -19,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable } from "@/components/ui/data-table";
-import { DrawerHeader } from "@/components/ui/drawer-header";
 import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { InfoRow } from "@/components/ui/info-row";
 import { formatCurrency } from "@/lib/format";
@@ -475,80 +474,76 @@ function ProductTable({
         onOpenChange={(open) => {
           if (!open) setSelectedPreset(null);
         }}
+        title={selectedPreset?.product_name}
+        description="Бүтээгдэхүүний дэлгэрэнгүй"
       >
         {selectedPreset && (
-          <>
-            <DrawerHeader
-              title={selectedPreset.product_name}
-              description="Бүтээгдэхүүний дэлгэрэнгүй"
-            />
-            <div className="flex-1 overflow-y-auto min-h-0 space-y-1 px-6 pb-6">
-              {/* Brand info */}
-              <div className="flex items-center gap-3 rounded-lg bg-muted/30 p-3">
-                {selectedPreset.brand_logo_url ? (
-                  <img
-                    src={selectedPreset.brand_logo_url}
-                    alt={selectedPreset.brand_name}
-                    className="size-10 shrink-0 rounded object-contain"
-                  />
-                ) : (
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded bg-muted text-sm font-bold text-muted-foreground">
-                    {selectedPreset.brand_name.charAt(0)}
-                  </div>
-                )}
-                <div>
-                  <p className="text-xs text-muted-foreground">Брэнд</p>
-                  <p className="text-sm font-medium">
-                    {selectedPreset.brand_name}
-                  </p>
+          <div className="space-y-1 px-6 pb-6">
+            {/* Brand info */}
+            <div className="flex items-center gap-3 rounded-lg bg-muted/30 p-3">
+              {selectedPreset.brand_logo_url ? (
+                <img
+                  src={selectedPreset.brand_logo_url}
+                  alt={selectedPreset.brand_name}
+                  className="size-10 shrink-0 rounded object-contain"
+                />
+              ) : (
+                <div className="flex size-10 shrink-0 items-center justify-center rounded bg-muted text-sm font-bold text-muted-foreground">
+                  {selectedPreset.brand_name.charAt(0)}
                 </div>
-              </div>
-
-              {/* Detail rows */}
-              <div className="divide-y">
-                <InfoRow
-                  icon={<Package className="size-4" />}
-                  label="Бүтээгдэхүүн"
-                  value={selectedPreset.product_name}
-                />
-                <InfoRow
-                  icon={<Tag className="size-4" />}
-                  label="SKU"
-                  value={selectedPreset.product_sku ?? "-"}
-                />
-                <InfoRow
-                  icon={<Barcode className="size-4" />}
-                  label="Ангилал"
-                  value={selectedPreset.category_name ?? "Ангилаагүй"}
-                />
-                <InfoRow label="Нэгж" value={selectedPreset.unit ?? "ширхэг"} />
-                <InfoRow
-                  label="Өртөг үнэ"
-                  value={
-                    selectedPreset.cost_price && selectedPreset.cost_price > 0
-                      ? formatCurrency(selectedPreset.cost_price)
-                      : "-"
-                  }
-                />
-                <InfoRow
-                  label="Зарах үнэ"
-                  value={
-                    selectedPreset.sale_price && selectedPreset.sale_price > 0
-                      ? formatCurrency(selectedPreset.sale_price)
-                      : "-"
-                  }
-                />
-                <InfoRow
-                  label="Доод үлдэгдэл"
-                  value={
-                    selectedPreset.min_stock != null
-                      ? `${selectedPreset.min_stock} ${selectedPreset.unit ?? "ширхэг"}`
-                      : "-"
-                  }
-                />
+              )}
+              <div>
+                <p className="text-xs text-muted-foreground">Брэнд</p>
+                <p className="text-sm font-medium">
+                  {selectedPreset.brand_name}
+                </p>
               </div>
             </div>
-          </>
+
+            {/* Detail rows */}
+            <div className="divide-y">
+              <InfoRow
+                icon={<Package className="size-4" />}
+                label="Бүтээгдэхүүн"
+                value={selectedPreset.product_name}
+              />
+              <InfoRow
+                icon={<Tag className="size-4" />}
+                label="SKU"
+                value={selectedPreset.product_sku ?? "-"}
+              />
+              <InfoRow
+                icon={<Barcode className="size-4" />}
+                label="Ангилал"
+                value={selectedPreset.category_name ?? "Ангилаагүй"}
+              />
+              <InfoRow label="Нэгж" value={selectedPreset.unit ?? "ширхэг"} />
+              <InfoRow
+                label="Өртөг үнэ"
+                value={
+                  selectedPreset.cost_price && selectedPreset.cost_price > 0
+                    ? formatCurrency(selectedPreset.cost_price)
+                    : "-"
+                }
+              />
+              <InfoRow
+                label="Зарах үнэ"
+                value={
+                  selectedPreset.sale_price && selectedPreset.sale_price > 0
+                    ? formatCurrency(selectedPreset.sale_price)
+                    : "-"
+                }
+              />
+              <InfoRow
+                label="Доод үлдэгдэл"
+                value={
+                  selectedPreset.min_stock != null
+                    ? `${selectedPreset.min_stock} ${selectedPreset.unit ?? "ширхэг"}`
+                    : "-"
+                }
+              />
+            </div>
+          </div>
         )}
       </DrawerLayout>
     </>

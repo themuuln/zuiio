@@ -38,7 +38,6 @@ import {
   DrawerFooter,
   DrawerSubmit,
 } from "@/components/ui/drawer-footer";
-import { DrawerHeader } from "@/components/ui/drawer-header";
 import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import {
@@ -226,18 +225,25 @@ export function ProductCreateDrawer({
           Шинэ бүтээгдэхүүн
         </button>
       }
+      title="Шинэ бүтээгдэхүүн"
+      description="Каталогтоо бараа нэмээд шууд агуулах болон борлуулалтын урсгалд ашиглана."
+      footer={
+        <DrawerFooter>
+          <DrawerCancel onClick={() => setOpen(false)} />
+          <DrawerSubmit
+            form="product-form"
+            isPending={productMutation.isPending}
+            data-testid="create-product-submit"
+          />
+        </DrawerFooter>
+      }
     >
-      <DrawerHeader
-        title="Шинэ бүтээгдэхүүн"
-        description="Каталогтоо бараа нэмээд шууд агуулах болон борлуулалтын урсгалд ашиглана."
-      />
-
       <form
         id="product-form"
         onSubmit={handleSubmit(onSubmit)}
-        className="relative flex flex-col flex-1 min-h-0"
+        className="relative"
       >
-        <div className="flex-1 overflow-y-auto space-y-5">
+        <div className="space-y-5">
           <div className="grid gap-5">
             <FieldGroup>
               <Field>
@@ -494,15 +500,6 @@ export function ProductCreateDrawer({
         </div>
 
         <ErrorBanner error={productMutation.error} />
-
-        <DrawerFooter>
-          <DrawerCancel onClick={() => setOpen(false)} />
-          <DrawerSubmit
-            form="product-form"
-            isPending={productMutation.isPending}
-            data-testid="create-product-submit"
-          />
-        </DrawerFooter>
       </form>
 
       {isBarcodeScannerOpen && (

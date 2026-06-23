@@ -13,7 +13,6 @@ import {
   DrawerFooter,
   DrawerSubmit,
 } from "@/components/ui/drawer-footer";
-import { DrawerHeader } from "@/components/ui/drawer-header";
 import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -41,11 +40,17 @@ type SupplierEditValues = z.infer<typeof supplierEditSchema>;
 export function SupplierEditDrawer({
   supplier,
   children,
+  open: externalOpen,
+  onOpenChange: externalOnOpenChange,
 }: {
   supplier: SupplierEditData;
   children?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = externalOpen ?? internalOpen;
+  const setOpen = externalOnOpenChange ?? setInternalOpen;
 
   const {
     register,
@@ -106,14 +111,21 @@ export function SupplierEditDrawer({
           </button>
         )
       }
+      title="Нийлүүлэгч засах"
+      description={supplier.name}
+      footer={
+        <DrawerFooter>
+          <DrawerCancel onClick={() => setOpen(false)} />
+          <DrawerSubmit
+            isPending={editMutation.isPending}
+            label="Хадгалах"
+            form="edit-supplier-form"
+          />
+        </DrawerFooter>
+      }
     >
-      <DrawerHeader title="Нийлүүлэгч засах" description={supplier.name} />
-
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col flex-1 min-h-0"
-      >
-        <div className="flex-1 overflow-y-auto space-y-5">
+      <form id="edit-supplier-form" onSubmit={handleSubmit(onSubmit)}>
+        <div className="space-y-5">
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="edit-name">Нэр</FieldLabel>
@@ -160,13 +172,7 @@ export function SupplierEditDrawer({
             </Field>
           </FieldGroup>
         </div>
-
         <ErrorBanner error={editMutation.error} />
-
-        <DrawerFooter>
-          <DrawerCancel onClick={() => setOpen(false)} />
-          <DrawerSubmit isPending={editMutation.isPending} label="Хадгалах" />
-        </DrawerFooter>
       </form>
     </DrawerLayout>
   );

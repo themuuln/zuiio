@@ -10,7 +10,6 @@ import {
 } from "@/app/(dashboard)/quotations/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DrawerHeader } from "@/components/ui/drawer-header";
 import { DrawerLayout } from "@/components/ui/drawer-layout";
 import {
   Table,
@@ -148,17 +147,14 @@ export function QuotationDetailDrawer({
         if (!next) onClose();
       }}
       panelWidth="32rem"
+      title={quotation ? `#${quotation.quote_number}` : "Үнийн санал"}
     >
-      <DrawerHeader
-        title={quotation ? `#${quotation.quote_number}` : "Үнийн санал"}
-      />
-
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Уншиж байна...</p>
       ) : !quotation ? (
         <p className="text-sm text-muted-foreground">Үнийн санал олдсонгүй.</p>
       ) : (
-        <div className="flex-1 overflow-y-auto min-h-0 space-y-6">
+        <div className="space-y-6">
           {/* Status Badge */}
           <div className="flex items-center justify-between">
             <Badge variant={STATUS_VARIANTS[quotation.status] ?? "outline"}>

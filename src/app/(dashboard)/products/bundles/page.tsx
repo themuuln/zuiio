@@ -86,7 +86,7 @@ export default async function BundlesPage() {
           }
         />
       ) : (
-        <BundlesContent bundles={bundles} />
+        <BundlesContent bundles={bundles} products={products} />
       )}
     </PageShell>
   );

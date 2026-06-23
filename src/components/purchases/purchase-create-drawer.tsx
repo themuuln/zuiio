@@ -28,6 +28,8 @@ import {
   DrawerSubmit,
 } from "@/components/ui/drawer-footer";
 import { ErrorBanner } from "@/components/ui/error-banner";
+import { purchaseKeys } from "@/lib/query/keys";
+import { useOptimisticCreate } from "@/lib/query/use-optimistic";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
@@ -83,11 +85,28 @@ export function PurchaseCreateDrawer({
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen ?? internalOpen;
   const setOpen = externalOnOpenChange ?? setInternalOpen;
-  const [serverError, setServerError] = useState<string | null>(null);
   const [supplierQuery, setSupplierQuery] = useState("");
   const [_variantSelections, setVariantSelections] = useState<
     Record<number, SelectedVariant | null>
   >({});
+
+  const purchaseMutation = useOptimisticCreate({
+    mutationFn: async (formData: FormData) => {
+      const result = await createPurchaseOrder(undefined, formData);
+      if (result?.error) throw new Error(result.error);
+      return result;
+    },
+    queryKey: purchaseKeys.all,
+    buildOptimistic: (formData) => ({
+      id: `opt-${Date.now()}`,
+      order_number: `OPT-${Date.now()}`,
+      order_date: formData.get("order_date")?.toString() ?? "",
+      status: "draft",
+      total_amount: 0,
+      created_at: new Date().toISOString(),
+      contacts: null,
+    }),
+  });
 
   const {
     register,
@@ -143,8 +162,8 @@ export function PurchaseCreateDrawer({
     }
   }, [filteredSuppliers, watchedSupplierId, setValue]);
 
-  const onSubmit = async (data: PurchaseValues) => {
-    setServerError(null);
+  const onSubmit = (data: PurchaseValues) => {
+    if (purchaseMutation.isPending) return;
     const formData = new FormData();
     formData.append("supplier_id", data.supplier_id);
     formData.append("order_date", data.order_date);
@@ -162,21 +181,14 @@ export function PurchaseCreateDrawer({
       ),
     );
 
-    try {
-      const result = await createPurchaseOrder(undefined, formData);
-      if (result?.error) {
-        setServerError(result.error);
-      } else if (result && "success" in result) {
+    purchaseMutation.mutate(formData, {
+      onSuccess: () => {
         setOpen(false);
         reset();
         onSuccess?.();
         toast.success("Худалдан авалтын захиалга амжилттай үүсгэгдлээ.");
-      }
-    } catch (err) {
-      setServerError(
-        err instanceof Error ? err.message : "Захиалга үүсгэхэд алдаа гарлаа.",
-      );
-    }
+      },
+    });
   };
 
   return (
@@ -185,7 +197,6 @@ export function PurchaseCreateDrawer({
       onOpenChange={(next) => {
         setOpen(next);
         if (!next) {
-          setServerError(null);
           reset();
           setVariantSelections({});
         }
@@ -221,7 +232,7 @@ export function PurchaseCreateDrawer({
             />
             <DrawerSubmit
               form="purchase-form"
-              isPending={isSubmitting}
+              isPending={isSubmitting || purchaseMutation.isPending}
               label="Захиалга үүсгэх"
               loadingLabel="Үүсгэж байна..."
             />
@@ -484,7 +495,7 @@ export function PurchaseCreateDrawer({
           <Textarea placeholder="Нэмэлт тэмдэглэл..." {...register("notes")} />
         </Field>
 
-        <ErrorBanner error={serverError} />
+        <ErrorBanner error={purchaseMutation.error} />
       </form>
     </SlideInDrawer>
   );

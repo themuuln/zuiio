@@ -57,6 +57,15 @@ export async function createSale(
   }
 
   const paymentMethod = getString(formData, "payment_method") || "cash";
+  const paymentSplitsRaw = formData.get("payment_splits");
+  let paymentSplits = null;
+  if (paymentSplitsRaw) {
+    try {
+      paymentSplits = JSON.parse(paymentSplitsRaw.toString());
+    } catch {
+      // ignore invalid JSON
+    }
+  }
   const status = getString(formData, "status") || "completed";
 
   // --- Parse items from JSON ---
@@ -194,11 +203,12 @@ export async function createSale(
       total_amount: totalAmount,
       paid_amount: paidAmount,
       payment_method: paymentMethod,
+      payment_splits: paymentSplits,
       status,
       notes: getString(formData, "notes") || null,
       created_by: userId,
       salesperson_id: salespersonId,
-    })
+    } as any)
     .select("id")
     .single();
 

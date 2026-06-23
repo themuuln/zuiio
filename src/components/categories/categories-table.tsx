@@ -1,9 +1,7 @@
 "use client";
 
-import { NotePencil, Trash } from "@phosphor-icons/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useState } from "react";
-import { toast } from "sonner";
 import { deleteCategory } from "@/app/(dashboard)/inventory/categories/actions";
 import type { CategoryRow } from "@/app/(dashboard)/inventory/categories/page";
 import {
@@ -14,10 +12,10 @@ import {
   type CategoryEditData,
   CategoryEditDrawer,
 } from "@/components/categories/category-edit-drawer";
-import { buttonVariants } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
+import { TableActionsCell } from "@/components/ui/table-actions-cell";
 import { categoryKeys } from "@/lib/query/keys";
-import { useOptimisticDelete } from "@/lib/query/use-optimistic";
+import { useDeleteWithConfirm } from "@/hooks/use-delete-with-confirm";
 
 function toDetailData(category: CategoryRow): CategoryDetailData {
   return {
@@ -34,52 +32,11 @@ function toEditData(category: CategoryRow): CategoryEditData {
   };
 }
 
-function ActionsCell({ row }: { row: { original: CategoryRow } }) {
-  const category = row.original;
-
-  const deleteMutation = useOptimisticDelete({
-    mutationFn: async (formData: FormData) => {
-      const result = await deleteCategory(undefined, formData);
-      if (result?.error) throw new Error(result.error);
-      return result;
-    },
-    queryKey: categoryKeys.all,
-    getId: (formData) => formData.get("id")?.toString() ?? "",
-  });
-
-  const handleDelete = () => {
-    if (deleteMutation.isPending) return;
-    const confirmed = window.confirm(
-      `"${category.name}" ангиллыг устгахдаа итгэлтэй байна уу?`,
-    );
-    if (!confirmed) return;
-    const formData = new FormData();
-    formData.set("id", category.id);
-    deleteMutation.mutate(formData, {
-      onSuccess: () => toast.success("Ангилал амжилттай устгагдлаа."),
-    });
-  };
-
-  return (
-    <div
-      className="flex items-center gap-1"
-      onClick={(e) => e.stopPropagation()}
-    >
-      <CategoryEditDrawer category={toEditData(category)} />
-      <button
-        type="button"
-        onClick={handleDelete}
-        disabled={deleteMutation.isPending}
-        className={buttonVariants({ variant: "ghost", size: "icon-xs" })}
-        title="Устгах"
-      >
-        <Trash className="size-3.5" />
-      </button>
-    </div>
-  );
-}
-
-const defaultColumns: ColumnDef<CategoryRow>[] = [
+const columns = (
+  onEdit: (category: CategoryRow) => void,
+  onDelete: (id: string, name: string) => void,
+  deletePending: boolean,
+): ColumnDef<CategoryRow>[] => [
   {
     accessorKey: "name",
     header: "Нэр",
@@ -98,7 +55,16 @@ const defaultColumns: ColumnDef<CategoryRow>[] = [
   {
     id: "actions",
     header: "",
-    cell: ActionsCell,
+    cell: ({ row }) => {
+      const cat = row.original;
+      return (
+        <TableActionsCell
+          onEdit={() => onEdit(cat)}
+          onDelete={() => onDelete(cat.id, cat.name)}
+          isDeletePending={deletePending}
+        />
+      );
+    },
     enableSorting: false,
     enableHiding: false,
   },
@@ -108,11 +74,24 @@ export function CategoriesTable({ data }: { data: CategoryRow[] }) {
   const [selectedCategory, setSelectedCategory] = useState<CategoryRow | null>(
     null,
   );
+  const [editCategory, setEditCategory] = useState<CategoryRow | null>(null);
+
+  const { handleDelete, isPending: deletePending } = useDeleteWithConfirm({
+    mutationFn: async (id: string) => {
+      const formData = new FormData();
+      formData.set("id", id);
+      const result = await deleteCategory(undefined, formData);
+      if (result?.error) throw new Error(result.error);
+      return result;
+    },
+    queryKey: categoryKeys.all(),
+    entityName: "Ангилал",
+  });
 
   return (
     <>
       <DataTable
-        columns={defaultColumns}
+        columns={columns(setEditCategory, handleDelete, deletePending)}
         data={data}
         searchColumn="name"
         searchPlaceholder="Ангиллаар хайх..."
@@ -128,6 +107,20 @@ export function CategoriesTable({ data }: { data: CategoryRow[] }) {
           open={!!selectedCategory}
           onOpenChange={(open) => {
             if (!open) setSelectedCategory(null);
+          }}
+          onEdit={() => setEditCategory(selectedCategory)}
+          onDelete={() =>
+            handleDelete(selectedCategory.id, selectedCategory.name)
+          }
+          isDeletePending={deletePending}
+        />
+      )}
+      {editCategory && (
+        <CategoryEditDrawer
+          category={toEditData(editCategory)}
+          open={!!editCategory}
+          onOpenChange={(open) => {
+            if (!open) setEditCategory(null);
           }}
         />
       )}

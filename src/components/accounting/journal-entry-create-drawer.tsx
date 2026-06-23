@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 import { createJournalEntry } from "@/app/(dashboard)/accounting/actions";
 import { buttonVariants } from "@/components/ui/button";
@@ -27,6 +28,8 @@ import {
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
+import { journalEntryKeys } from "@/lib/query/keys";
+import { useOptimisticCreate } from "@/lib/query/use-optimistic";
 
 const lineSchema = z
   .object({
@@ -75,9 +78,22 @@ export function JournalEntryCreateDrawer({
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen ?? internalOpen;
   const setOpen = externalOnOpenChange ?? setInternalOpen;
-  const [serverError, setServerError] = useState<string | null>(null);
-
   const activeAccounts = accounts.filter((a) => a.is_active);
+
+  const journalMutation = useOptimisticCreate({
+    mutationFn: async (formData: FormData) => {
+      const result = await createJournalEntry(undefined, formData);
+      if (result?.error) throw new Error(result.error);
+      return result;
+    },
+    queryKey: journalEntryKeys.all,
+    buildOptimistic: (formData) => ({
+      id: `opt-${Date.now()}`,
+      entry_date: formData.get("entry_date")?.toString() ?? "",
+      description: formData.get("description")?.toString() ?? "",
+      created_at: new Date().toISOString(),
+    }),
+  });
 
   const {
     register,
@@ -108,25 +124,25 @@ export function JournalEntryCreateDrawer({
     lines?.reduce((sum, line) => sum + (line.credit_amount || 0), 0) ?? 0;
   const isBalanced = Math.abs(totalDebits - totalCredits) < 0.01;
 
-  const onSubmit = async (data: JournalEntryValues) => {
-    setServerError(null);
+  const onSubmit = (data: JournalEntryValues) => {
+    if (journalMutation.isPending) return;
 
     // Validate debits = credits
     const debits = data.lines.reduce((s, l) => s + (l.debit_amount || 0), 0);
     const credits = data.lines.reduce((s, l) => s + (l.credit_amount || 0), 0);
     if (Math.abs(debits - credits) > 0.01) {
-      setServerError("Дебет ба кредит дүн тэнцүү байх ёстой");
+      toast.error("Дебет ба кредит дүн тэнцүү байх ёстой");
       return;
     }
 
     // Validate each line
     for (const [i, line] of data.lines.entries()) {
       if (!line.account_id) {
-        setServerError(`Мөр ${i + 1}: Данс сонгоно уу`);
+        toast.error(`Мөр ${i + 1}: Данс сонгоно уу`);
         return;
       }
       if (line.debit_amount === 0 && line.credit_amount === 0) {
-        setServerError(`Мөр ${i + 1}: Дебет эсвэл кредит дүн оруулна уу`);
+        toast.error(`Мөр ${i + 1}: Дебет эсвэл кредит дүн оруулна уу`);
         return;
       }
     }
@@ -145,13 +161,13 @@ export function JournalEntryCreateDrawer({
       ),
     );
 
-    const result = await createJournalEntry(undefined, formData);
-    if (result?.error) {
-      setServerError(result.error);
-    } else {
-      setOpen(false);
-      reset();
-    }
+    journalMutation.mutate(formData, {
+      onSuccess: () => {
+        setOpen(false);
+        reset();
+        toast.success("Журналын бичилт амжилттай үүсгэгдлээ.");
+      },
+    });
   };
 
   const getAccountLabel = (accountId: string) => {
@@ -166,7 +182,6 @@ export function JournalEntryCreateDrawer({
       onOpenChange={(next) => {
         setOpen(next);
         if (!next) {
-          setServerError(null);
           reset();
         }
       }}
@@ -192,7 +207,7 @@ export function JournalEntryCreateDrawer({
           />
           <DrawerSubmit
             form="journal-form"
-            isPending={isSubmitting}
+            isPending={isSubmitting || journalMutation.isPending}
             label="Бичилт үүсгэх"
             loadingLabel="Үүсгэж байна..."
           />
@@ -387,7 +402,7 @@ export function JournalEntryCreateDrawer({
           </p>
         )}
 
-        <ErrorBanner error={serverError} />
+        <ErrorBanner error={journalMutation.error} />
       </form>
     </SlideInDrawer>
   );

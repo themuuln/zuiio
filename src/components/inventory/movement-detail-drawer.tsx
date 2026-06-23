@@ -2,7 +2,6 @@
 
 import { ArrowsClockwise } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
-import { DrawerHeader } from "@/components/ui/drawer-header";
 import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { formatCurrency, formatDate } from "@/lib/format";
 
@@ -47,13 +46,13 @@ export function MovementDetailDrawer({
     movement.unit_cost != null ? movement.unit_cost * movement.quantity : null;
 
   return (
-    <DrawerLayout open={open} onOpenChange={onOpenChange}>
-      <DrawerHeader
-        title="Барааны хөдөлгөөний дэлгэрэнгүй"
-        description={formatDate(movement.created_at)}
-      />
-
-      <div className="flex-1 overflow-y-auto min-h-0 space-y-6">
+    <DrawerLayout
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Барааны хөдөлгөөний дэлгэрэнгүй"
+      description={formatDate(movement.created_at)}
+    >
+      <div className="space-y-6">
         {/* Type badge + product */}
         <div className="flex items-center gap-2">
           <Badge variant={MOVEMENT_VARIANTS[movement.type] ?? "outline"}>

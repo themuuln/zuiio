@@ -146,7 +146,7 @@ export async function updatePurchaseOrderStatus(
 ) {
   const ctx = await requireWriteAction("purchases.update");
   if ("error" in ctx) return ctx;
-  const { supabase, organizationId, branchId, isBranchScoped } = ctx;
+  const { supabase, organizationId, userId, branchId, isBranchScoped } = ctx;
 
   let fetchQuery = supabase
     .from("purchase_orders")
@@ -160,6 +160,54 @@ export async function updatePurchaseOrderStatus(
 
   if (!order) {
     return { error: "Захиалга олдсонгүй." };
+  }
+
+  // When marking as received, update inventory
+  if (status === "received") {
+    const { data: items } = await supabase
+      .from("purchase_order_items")
+      .select(
+        "id, product_id, quantity, received_quantity, unit_cost, variant_id",
+      )
+      .eq("purchase_order_id", orderId);
+
+    if (items && items.length > 0) {
+      const remainingItems = items
+        .filter(
+          (item) =>
+            Number(item.quantity) - Number(item.received_quantity ?? 0) > 0,
+        )
+        .map((item) => {
+          const remaining =
+            Number(item.quantity) - Number(item.received_quantity ?? 0);
+          return {
+            product_id: item.product_id!,
+            variant_id: item.variant_id ?? null,
+            quantity: remaining,
+            unit_cost: item.unit_cost,
+          };
+        });
+
+      if (remainingItems.length > 0) {
+        const { error: rpcError } = await supabase.rpc(
+          "process_restock_stock_movements",
+          {
+            p_org_id: organizationId,
+            p_branch_id: branchId,
+            p_user_id: userId,
+            p_po_id: orderId,
+            p_items: remainingItems,
+            p_mark_received: true,
+          },
+        );
+
+        if (rpcError) {
+          return {
+            error: `Бараа хүлээн авахад алдаа: ${rpcError.message}`,
+          };
+        }
+      }
+    }
   }
 
   let updateQuery = supabase
@@ -176,7 +224,7 @@ export async function updatePurchaseOrderStatus(
     return { error: `Төлөв шинэчлэхэд алдаа гарлаа: ${error.message}` };
   }
 
-  revalidateEntities(["purchases"]);
+  revalidateEntities(["purchases", "inventory", "products"]);
   return { success: true as const, error: undefined };
 }
 
@@ -221,108 +269,29 @@ export async function receivePurchaseOrderItems(
     return { error: "Захиалга олдсонгүй." };
   }
 
-  // Fetch all items for this order
-  const { data: orderItems, error: itemsFetchError } = await supabase
-    .from("purchase_order_items")
-    .select("id, product_id, quantity, received_quantity")
-    .eq("purchase_order_id", orderId);
+  // Process receive in a single transaction RPC
+  const { data: rpcResult, error: rpcError } = await supabase.rpc(
+    "process_receive_purchase_items",
+    {
+      p_org_id: organizationId,
+      p_branch_id: branchId,
+      p_user_id: userId,
+      p_order_id: orderId,
+      p_items: items.map((item) => ({
+        item_id: item.item_id,
+        received_quantity: item.received_quantity,
+      })),
+    },
+  );
 
-  if (itemsFetchError || !orderItems) {
-    return { error: "Барааны мэдээлэл олдсонгүй." };
+  if (rpcError || (rpcResult && (rpcResult as any).error)) {
+    return {
+      error:
+        rpcError?.message ??
+        (rpcResult as any)?.error ??
+        "Бараа хүлээн авахад алдаа гарлаа.",
+    };
   }
-
-  // Update each item's received_quantity
-  for (const item of items) {
-    const existingItem = orderItems.find((oi) => oi.id === item.item_id);
-    if (!existingItem) {
-      return { error: "Бараа олдсонгүй." };
-    }
-
-    const newReceivedQty =
-      Number(existingItem.received_quantity ?? 0) + item.received_quantity;
-
-    if (newReceivedQty > Number(existingItem.quantity)) {
-      return {
-        error: "Хүлээн авсан тоо хэмжээ захиалсан хэмжээнээс хэтэрсэн байна.",
-      };
-    }
-
-    const { error: updateError } = await supabase
-      .from("purchase_order_items")
-      .update({ received_quantity: newReceivedQty })
-      .eq("id", item.item_id);
-
-    if (updateError) {
-      return {
-        error: `Барааны хүлээн авалт шинэчлэхэд алдаа гарлаа: ${updateError.message}`,
-      };
-    }
-
-    // Create stock movement (type='in')
-    const { error: movementError } = await supabase
-      .from("stock_movements")
-      .insert({
-        organization_id: organizationId,
-        product_id: existingItem.product_id!,
-        branch_id: branchId,
-        type: "in",
-        quantity: item.received_quantity,
-        reference: `PO-${orderId}`,
-        notes: `Худалдан авалтын захиалгаар хүлээн авсан`,
-        created_by: userId,
-      });
-
-    if (movementError) {
-      return {
-        error: `Барааны хөдөлгөөн бүртгэхэд алдаа гарлаа: ${movementError.message}`,
-      };
-    }
-
-    // Update product current_stock
-    const { data: product } = await supabase
-      .from("products")
-      .select("current_stock")
-      .eq("organization_id", organizationId)
-      .eq("id", existingItem.product_id!)
-      .single();
-
-    if (product) {
-      await supabase
-        .from("products")
-        .update({
-          current_stock:
-            Number(product.current_stock ?? 0) + item.received_quantity,
-        })
-        .eq("organization_id", organizationId)
-        .eq("id", existingItem.product_id!);
-    }
-  }
-
-  // Determine new order status based on fulfillment
-  const allItems = await supabase
-    .from("purchase_order_items")
-    .select("quantity, received_quantity")
-    .eq("purchase_order_id", orderId);
-
-  const allFullyReceived =
-    allItems.data?.every(
-      (oi) => Number(oi.received_quantity) >= Number(oi.quantity),
-    ) ?? false;
-
-  const anyReceived =
-    allItems.data?.some((oi) => Number(oi.received_quantity) > 0) ?? false;
-
-  let newStatus = "sent";
-  if (allFullyReceived) {
-    newStatus = "received";
-  } else if (anyReceived) {
-    newStatus = "partially_received";
-  }
-
-  await supabase
-    .from("purchase_orders")
-    .update({ status: newStatus })
-    .eq("id", orderId);
 
   revalidateEntities(["purchases"]);
   return { success: true as const, error: undefined };

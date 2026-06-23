@@ -2,7 +2,6 @@
 
 import { CalendarBlank, Percent } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
-import { DrawerHeader } from "@/components/ui/drawer-header";
 import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { formatCurrency, formatDate } from "@/lib/format";
 
@@ -43,13 +42,13 @@ export function DiscountDetailDrawer({
   onOpenChange: (open: boolean) => void;
 }) {
   return (
-    <DrawerLayout open={open} onOpenChange={onOpenChange}>
-      <DrawerHeader
-        title={discount.name}
-        description="Хямдралын дэлгэрэнгүй мэдээлэл"
-      />
-
-      <div className="flex-1 overflow-y-auto min-h-0 space-y-6">
+    <DrawerLayout
+      open={open}
+      onOpenChange={onOpenChange}
+      title={discount.name}
+      description="Хямдралын дэлгэрэнгүй мэдээлэл"
+    >
+      <div className="space-y-6">
         {/* Status */}
         <div className="flex items-center gap-2">
           <Badge variant={discount.is_active ? "default" : "secondary"}>

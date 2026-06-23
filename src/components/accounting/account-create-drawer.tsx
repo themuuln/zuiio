@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/select";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Switch } from "@/components/ui/switch";
+import { accountKeys } from "@/lib/query/keys";
+import { useOptimisticCreate } from "@/lib/query/use-optimistic";
 
 const accountSchema = z.object({
   code: z.string().min(1, "Код шаардлагатай"),
@@ -64,7 +66,23 @@ export function AccountCreateDrawer({
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen ?? internalOpen;
   const setOpen = externalOnOpenChange ?? setInternalOpen;
-  const [serverError, setServerError] = useState<string | null>(null);
+
+  const accountMutation = useOptimisticCreate({
+    mutationFn: async (formData: FormData) => {
+      const result = await createAccount(undefined, formData);
+      if (result?.error) throw new Error(result.error);
+      return result;
+    },
+    queryKey: accountKeys.all,
+    buildOptimistic: (formData) => ({
+      id: `opt-${Date.now()}`,
+      code: formData.get("code")?.toString() ?? "",
+      name: formData.get("name")?.toString() ?? "",
+      type: formData.get("type")?.toString() ?? "asset",
+      parent_id: formData.get("parent_id")?.toString() || null,
+      is_active: formData.get("is_active") === "on",
+    }),
+  });
 
   const {
     register,
@@ -91,21 +109,20 @@ export function AccountCreateDrawer({
   // Filter parent accounts by same type (or all types)
   const parentOptions = accounts.filter((a) => a.is_active);
 
-  const onSubmit = async (data: AccountValues) => {
-    setServerError(null);
+  const onSubmit = (data: AccountValues) => {
+    if (accountMutation.isPending) return;
     const formData = new FormData();
     formData.append("code", data.code);
     formData.append("name", data.name);
     formData.append("type", data.type);
     formData.append("parent_id", data.parent_id ?? "");
     formData.append("is_active", data.is_active ? "on" : "off");
-    const result = await createAccount(undefined, formData);
-    if (result?.error) {
-      setServerError(result.error);
-    } else {
-      setOpen(false);
-      reset();
-    }
+    accountMutation.mutate(formData, {
+      onSuccess: () => {
+        setOpen(false);
+        reset();
+      },
+    });
   };
 
   return (
@@ -114,7 +131,6 @@ export function AccountCreateDrawer({
       onOpenChange={(next) => {
         setOpen(next);
         if (!next) {
-          setServerError(null);
           reset();
         }
       }}
@@ -139,7 +155,7 @@ export function AccountCreateDrawer({
           />
           <DrawerSubmit
             form="account-form"
-            isPending={isSubmitting}
+            isPending={isSubmitting || accountMutation.isPending}
             label="Данс үүсгэх"
             loadingLabel="Үүсгэж байна..."
           />
@@ -235,7 +251,7 @@ export function AccountCreateDrawer({
           </Field>
         </FieldGroup>
 
-        <ErrorBanner error={serverError} />
+        <ErrorBanner error={accountMutation.error} />
       </form>
     </SlideInDrawer>
   );

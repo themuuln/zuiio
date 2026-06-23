@@ -68,3 +68,57 @@ export const commissionKeys = {
     ["commissions", "unpaid", orgId, profileId] as const,
   history: (orgId: string) => ["commissions", "history", orgId] as const,
 };
+
+export const bundleKeys = {
+  all: () => ["product_bundles"] as const,
+  lists: (orgId: string) => ["product_bundles", "list", orgId] as const,
+  detail: (id: string) => ["product_bundles", "detail", id] as const,
+};
+
+export const invoiceKeys = {
+  all: () => ["invoices"] as const,
+  lists: (orgId: string) => ["invoices", "list", orgId] as const,
+  detail: (id: string) => ["invoices", "detail", id] as const,
+};
+
+export const discountKeys = {
+  all: () => ["discounts"] as const,
+  lists: (orgId: string) => ["discounts", "list", orgId] as const,
+  detail: (id: string) => ["discounts", "detail", id] as const,
+};
+
+export const quotationKeys = {
+  all: () => ["quotations"] as const,
+  lists: (orgId: string) => ["quotations", "list", orgId] as const,
+  detail: (id: string) => ["quotations", "detail", id] as const,
+};
+
+export const returnKeys = {
+  all: () => ["returns"] as const,
+  lists: (orgId: string) => ["returns", "list", orgId] as const,
+  detail: (id: string) => ["returns", "detail", id] as const,
+};
+
+export const purchaseKeys = {
+  all: () => ["purchase_orders"] as const,
+  lists: (orgId: string) => ["purchase_orders", "list", orgId] as const,
+  detail: (id: string) => ["purchase_orders", "detail", id] as const,
+};
+
+export const accountKeys = {
+  all: () => ["accounts"] as const,
+  lists: (orgId: string) => ["accounts", "list", orgId] as const,
+  detail: (id: string) => ["accounts", "detail", id] as const,
+};
+
+export const journalEntryKeys = {
+  all: () => ["journal_entries"] as const,
+  lists: (orgId: string) => ["journal_entries", "list", orgId] as const,
+  detail: (id: string) => ["journal_entries", "detail", id] as const,
+};
+
+export const roleKeys = {
+  all: () => ["roles"] as const,
+  lists: (orgId: string) => ["roles", "list", orgId] as const,
+  detail: (id: string) => ["roles", "detail", id] as const,
+};

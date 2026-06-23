@@ -1,14 +1,16 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 import { createRole } from "@/app/(dashboard)/settings/roles/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { roleKeys } from "@/lib/query/keys";
+import { useOptimisticCreate } from "@/lib/query/use-optimistic";
 
 const schema = z.object({
   name: z.string().min(1, "Нэр шаардлагатай"),
@@ -22,24 +24,39 @@ interface RoleFormProps {
 }
 
 export function RoleForm({ onSuccess }: RoleFormProps) {
-  const [serverError, setServerError] = useState<string | null>(null);
+  const roleMutation = useOptimisticCreate({
+    mutationFn: async (formData: FormData) => {
+      const result = await createRole(formData);
+      if (result?.error) throw new Error(result.error);
+      return result;
+    },
+    queryKey: roleKeys.all,
+    buildOptimistic: (formData) => ({
+      id: `opt-${Date.now()}`,
+      name: formData.get("name")?.toString() ?? "",
+      description: formData.get("description")?.toString() || null,
+      is_system_role: false,
+      hierarchy_level: 99,
+    }),
+  });
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<Values>({ resolver: zodResolver(schema) });
 
-  const onSubmit = async (data: Values) => {
-    setServerError(null);
+  const onSubmit = (data: Values) => {
+    if (roleMutation.isPending) return;
     const formData = new FormData();
     formData.append("name", data.name);
     formData.append("description", data.description ?? "");
-    const result = await createRole(formData);
-    if (result?.error) {
-      setServerError(result.error);
-    } else {
-      onSuccess?.();
-    }
+    roleMutation.mutate(formData, {
+      onSuccess: () => {
+        onSuccess?.();
+        toast.success("Үүрэг амжилттай үүсгэгдлээ.");
+      },
+    });
   };
 
   return (
@@ -62,10 +79,20 @@ export function RoleForm({ onSuccess }: RoleFormProps) {
         />
       </div>
 
-      {serverError && <p className="text-sm text-destructive">{serverError}</p>}
+      {roleMutation.error && (
+        <p className="text-sm text-destructive">
+          {roleMutation.error instanceof Error
+            ? roleMutation.error.message
+            : "Алдаа гарлаа."}
+        </p>
+      )}
 
-      <Button type="submit" disabled={isSubmitting} className="w-full">
-        {isSubmitting ? "Үүсгэж байна..." : "Үүсгэх"}
+      <Button
+        type="submit"
+        disabled={isSubmitting || roleMutation.isPending}
+        className="w-full"
+      >
+        {isSubmitting || roleMutation.isPending ? "Үүсгэж байна..." : "Үүсгэх"}
       </Button>
     </form>
   );

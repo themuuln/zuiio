@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FileText, Plus, Trash } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 import { createInvoice } from "@/app/(dashboard)/invoices/actions";
 import {
@@ -27,7 +28,6 @@ import {
   DrawerFooter,
   DrawerSubmit,
 } from "@/components/ui/drawer-footer";
-import { DrawerHeader } from "@/components/ui/drawer-header";
 import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -36,6 +36,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
 import { useVariantLineItemRemove } from "@/lib/use-variant-line-items";
+import { invoiceKeys } from "@/lib/query/keys";
+import { useOptimisticCreate } from "@/lib/query/use-optimistic";
 
 type ProductOption = {
   id: string;
@@ -78,11 +80,28 @@ export function InvoiceCreateDrawer({
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen ?? internalOpen;
   const setOpen = externalOnOpenChange ?? setInternalOpen;
-  const [serverError, setServerError] = useState<string | null>(null);
   const [selectedContact, setSelectedContact] = useState<{
     id: string;
     name: string;
   } | null>(null);
+
+  const invoiceMutation = useOptimisticCreate({
+    mutationFn: async (formData: FormData) => {
+      const result = await createInvoice(undefined, formData);
+      if (result?.error) throw new Error(result.error);
+      return result;
+    },
+    queryKey: invoiceKeys.all,
+    buildOptimistic: (formData) => ({
+      id: `opt-${Date.now()}`,
+      invoice_number: `OPT-${Date.now()}`,
+      issue_date: formData.get("issue_date")?.toString() ?? "",
+      status: "pending",
+      total_amount: 0,
+      created_at: new Date().toISOString(),
+      contacts: null,
+    }),
+  });
   const [contactQuery, setContactQuery] = useState("");
   const [variantSelections, setVariantSelections] = useState<
     Record<number, SelectedVariant | null>
@@ -126,8 +145,8 @@ export function InvoiceCreateDrawer({
       0,
     ) ?? 0;
 
-  const onSubmit = async (data: InvoiceValues) => {
-    setServerError(null);
+  const onSubmit = (data: InvoiceValues) => {
+    if (invoiceMutation.isPending) return;
     const formData = new FormData();
     formData.append("contact_id", data.contact_id ?? "");
     formData.append("issue_date", data.issue_date);
@@ -145,10 +164,13 @@ export function InvoiceCreateDrawer({
         })),
       ),
     );
-    const result = await createInvoice(undefined, formData);
-    if (result?.error) {
-      setServerError(result.error);
-    }
+    invoiceMutation.mutate(formData, {
+      onSuccess: () => {
+        setOpen(false);
+        reset();
+        toast.success("Нэхэмжлэл амжилттай үүсгэгдлээ.");
+      },
+    });
   };
 
   const trimmedQuery = contactQuery.trim().toLowerCase();
@@ -162,7 +184,6 @@ export function InvoiceCreateDrawer({
       onOpenChange={(next) => {
         setOpen(next);
         if (!next) {
-          setServerError(null);
           reset();
           setVariantSelections({});
           setProductQueries([""]);
@@ -178,17 +199,22 @@ export function InvoiceCreateDrawer({
           Шинэ нэхэмжлэл
         </button>
       }
+      title="Шинэ нэхэмжлэл"
+      description="Харилцагч, огноо, барааны мэдээллийг оруулна уу."
+      footer={
+        <DrawerFooter>
+          <DrawerCancel onClick={() => setOpen(false)} />
+          <DrawerSubmit
+            form="invoice-form"
+            isPending={isSubmitting || invoiceMutation.isPending}
+            label="Нэхэмжлэл үүсгэх"
+            loadingLabel="Үүсгэж байна..."
+          />
+        </DrawerFooter>
+      }
     >
-      <DrawerHeader
-        title="Шинэ нэхэмжлэл"
-        description="Харилцагч, огноо, барааны мэдээллийг оруулна уу."
-      />
-
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col flex-1 min-h-0 space-y-5"
-      >
-        <div className="flex-1 overflow-y-auto space-y-5">
+      <form id="invoice-form" onSubmit={handleSubmit(onSubmit)}>
+        <div className="space-y-5">
           <FieldGroup>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field>
@@ -512,16 +538,7 @@ export function InvoiceCreateDrawer({
           </Field>
         </div>
 
-        <ErrorBanner error={serverError} />
-
-        <DrawerFooter>
-          <DrawerCancel onClick={() => setOpen(false)} />
-          <DrawerSubmit
-            isPending={isSubmitting}
-            label="Нэхэмжлэл үүсгэх"
-            loadingLabel="Үүсгэж байна..."
-          />
-        </DrawerFooter>
+        <ErrorBanner error={invoiceMutation.error} />
       </form>
     </DrawerLayout>
   );

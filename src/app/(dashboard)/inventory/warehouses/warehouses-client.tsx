@@ -12,6 +12,10 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { ErpDataTable } from "@/components/erp/data-table";
+import {
+  type WarehouseEditData,
+  WarehouseEditDrawer,
+} from "@/components/inventory/warehouse-edit-drawer";
 import { PageShell } from "@/components/erp/page-shell";
 import {
   type WarehouseDetailData,
@@ -125,6 +129,14 @@ export default function WarehousesPage() {
     };
   }
 
+  function toEditData(wh: Warehouse): WarehouseEditData {
+    return {
+      id: wh.id,
+      name: wh.name,
+      location: wh.location,
+    };
+  }
+
   return (
     <PageShell
       title="Агуулахууд"
@@ -218,6 +230,15 @@ export default function WarehousesPage() {
               <span className="text-muted-foreground">
                 {wh.created_at ? formatDate(wh.created_at) : "-"}
               </span>
+            ),
+          },
+          {
+            header: "",
+            className: "w-12",
+            accessor: (wh: Warehouse) => (
+              <div onClick={(e) => e.stopPropagation()}>
+                <WarehouseEditDrawer warehouse={toEditData(wh)} />
+              </div>
             ),
           },
         ]}

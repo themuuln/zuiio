@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowUUpLeft, Plus, Trash } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 import { createReturn } from "@/app/(dashboard)/returns/actions";
 import {
@@ -25,6 +26,8 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
 import { useVariantLineItemRemove } from "@/lib/use-variant-line-items";
+import { returnKeys } from "@/lib/query/keys";
+import { useOptimisticCreate } from "@/lib/query/use-optimistic";
 
 const lineItemSchema = z.object({
   product_id: z.string().min(1, "Бараа сонгоно уу"),
@@ -92,10 +95,26 @@ export function ReturnCreateDrawer({
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen ?? internalOpen;
   const setOpen = externalOnOpenChange ?? setInternalOpen;
-  const [serverError, setServerError] = useState<string | null>(null);
   const [variantSelections, setVariantSelections] = useState<
     Record<number, SelectedVariant | null>
   >({});
+
+  const returnMutation = useOptimisticCreate({
+    mutationFn: async (formData: FormData) => {
+      const result = await createReturn(undefined, formData);
+      if (result?.error) throw new Error(result.error);
+      return result;
+    },
+    queryKey: returnKeys.all,
+    buildOptimistic: (formData) => ({
+      id: `opt-${Date.now()}`,
+      type: formData.get("type")?.toString() ?? "sales_return",
+      return_date: formData.get("return_date")?.toString() ?? "",
+      status: "draft",
+      total_amount: 0,
+      created_at: new Date().toISOString(),
+    }),
+  });
 
   const {
     register,
@@ -145,8 +164,8 @@ export function ReturnCreateDrawer({
   const referenceLabel =
     watchedType === "sales_return" ? "Борлуулалт" : "Худалдан авалтын захиалга";
 
-  const onSubmit = async (data: ReturnValues) => {
-    setServerError(null);
+  const onSubmit = (data: ReturnValues) => {
+    if (returnMutation.isPending) return;
     const formData = new FormData();
     formData.append("type", data.type);
     if (data.reference_type)
@@ -167,13 +186,13 @@ export function ReturnCreateDrawer({
         })),
       ),
     );
-    const result = await createReturn(undefined, formData);
-    if (result?.error) {
-      setServerError(result.error);
-    } else {
-      setOpen(false);
-      reset();
-    }
+    returnMutation.mutate(formData, {
+      onSuccess: () => {
+        setOpen(false);
+        reset();
+        toast.success("Буцаалт амжилттай үүсгэгдлээ.");
+      },
+    });
   };
 
   return (
@@ -182,7 +201,6 @@ export function ReturnCreateDrawer({
       onOpenChange={(next) => {
         setOpen(next);
         if (!next) {
-          setServerError(null);
           reset();
           setVariantSelections({});
         }
@@ -204,13 +222,12 @@ export function ReturnCreateDrawer({
           <DrawerCancel
             onClick={() => {
               setOpen(false);
-              setServerError(null);
               reset();
             }}
           />
           <DrawerSubmit
             form="return-form"
-            isPending={isSubmitting}
+            isPending={isSubmitting || returnMutation.isPending}
             label="Буцаалт үүсгэх"
             loadingLabel="Үүсгэж байна..."
           />
@@ -463,8 +480,7 @@ export function ReturnCreateDrawer({
           <p className="text-xs text-destructive">{errors.items.message}</p>
         )}
 
-        {/* Server error */}
-        <ErrorBanner error={serverError} />
+        <ErrorBanner error={returnMutation.error} />
       </form>
     </SlideInDrawer>
   );

@@ -12,7 +12,14 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -22,7 +29,6 @@ import {
 } from "@/components/products/variant-picker";
 import { ProductBrowserDrawer } from "@/components/sales/product-browser-drawer";
 import { StaffPicker } from "@/components/shop/staff-picker";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Combobox,
@@ -86,10 +92,16 @@ const lineItemSchema = z.object({
   variant_id: z.string().optional(),
 });
 
+const paymentSplitSchema = z.object({
+  method: z.string().min(1, "Төлбөрийн арга сонгоно уу"),
+  amount: z.number().min(0, "Дүн 0-ээс багагүй"),
+});
+
 const saleSchema = z.object({
   items: z.array(lineItemSchema).min(1, "Дор хаяж нэг мөр оруулна уу"),
-  paid_amount: z.number().min(0, "Төлсөн дүн 0-ээс багагүй"),
-  payment_method: z.string().min(1, "Төлбөрийн арга сонгоно уу"),
+  payment_splits: z
+    .array(paymentSplitSchema)
+    .min(1, "Дор хаяж нэг төлбөрийн мөр оруулна уу"),
   status: z.string().min(1, "Төлөв сонгоно уу"),
   sale_date: z.string().min(1, "Огноо оруулна уу"),
   customer_name: z.string().optional(),
@@ -153,7 +165,6 @@ export function SaleForm({
   const [productPickerIndex, setProductPickerIndex] = useState<number | null>(
     null,
   );
-  const [paymentQuery, setPaymentQuery] = useState("");
   const [statusQuery, setStatusQuery] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [variantSelections, setVariantSelections] = useState<
@@ -174,8 +185,7 @@ export function SaleForm({
       items: [
         { product_id: "", quantity: 1, unit_price: 0, variant_id: undefined },
       ],
-      paid_amount: 0,
-      payment_method: "cash",
+      payment_splits: [{ method: "bank_transfer", amount: 0 }],
       status: "completed",
       sale_date: formatRouteDate(),
       customer_name: "",
@@ -187,6 +197,15 @@ export function SaleForm({
   const { fields, append, remove } = useFieldArray({
     control,
     name: "items",
+  });
+
+  const {
+    fields: splitFields,
+    append: appendSplit,
+    remove: removeSplit,
+  } = useFieldArray({
+    control,
+    name: "payment_splits",
   });
 
   const appendRow = useCallback(() => {
@@ -203,14 +222,13 @@ export function SaleForm({
   const resetForm = () => {
     reset(undefined, { keepDefaultValues: false });
     setVariantSelections({});
-    setPaymentQuery("");
     setStatusQuery("");
   };
 
   // Watched values
   const watchedItems = watch("items");
   const watchedStatus = watch("status");
-  const watchedPaidAmount = watch("paid_amount");
+  const watchedSplits = watch("payment_splits");
 
   // Compute subtotals per row and grand total
   const subtotals = useMemo(() => {
@@ -224,36 +242,39 @@ export function SaleForm({
     [subtotals],
   );
 
-  const isManualEditRef = useRef(false);
+  const totalPaid = useMemo(
+    () =>
+      (watchedSplits ?? []).reduce(
+        (sum, s) => sum + (Number(s.amount) || 0),
+        0,
+      ),
+    [watchedSplits],
+  );
 
-  // Derive payment state based on grand total
-  const paymentState =
-    watchedPaidAmount === 0
-      ? "Төлөөгүй"
-      : (watchedPaidAmount ?? 0) >= grandTotal
-        ? "Төлөгдсөн"
-        : "Хэсэгчлэн";
+  const remaining = Math.max(0, grandTotal - totalPaid);
 
-  const paymentBadgeVariant: "default" | "secondary" | "outline" =
-    paymentState === "Төлөгдсөн"
-      ? "default"
-      : paymentState === "Хэсэгчлэн"
-        ? "secondary"
-        : "outline";
-
-  const remaining = Math.max(0, grandTotal - (watchedPaidAmount || 0));
-
-  // Quick action handler for payment amounts
-  const handleQuickAction = (action: "all" | "half" | "zero") => {
-    isManualEditRef.current = true;
-    if (action === "all") {
-      setValue("paid_amount", grandTotal || 0);
-    } else if (action === "half") {
-      setValue("paid_amount", (grandTotal || 0) / 2);
-    } else if (action === "zero") {
-      setValue("paid_amount", 0);
+  // Auto-fill first split with grandTotal on initial load
+  const initializedSplit = useRef(false);
+  const prevGrandTotal = useRef(0);
+  useEffect(() => {
+    if (!initializedSplit.current && grandTotal > 0) {
+      initializedSplit.current = true;
+      setValue("payment_splits.0.amount", grandTotal);
+      prevGrandTotal.current = grandTotal;
     }
-  };
+    // When grandTotal changes and user hasn't manually edited, sync the amount
+    if (
+      initializedSplit.current &&
+      grandTotal !== prevGrandTotal.current &&
+      splitFields.length === 1
+    ) {
+      const currentAmt = watchedSplits?.[0]?.amount ?? 0;
+      if (currentAmt === prevGrandTotal.current || currentAmt === 0) {
+        setValue("payment_splits.0.amount", grandTotal);
+      }
+      prevGrandTotal.current = grandTotal;
+    }
+  }, [grandTotal, splitFields.length, watchedSplits, setValue]);
 
   // Stock warnings per row
   const stockWarnings = useMemo(() => {
@@ -481,8 +502,20 @@ export function SaleForm({
     }));
     formData.append("items", JSON.stringify(itemsPayload));
 
-    formData.append("paid_amount", String(data.paid_amount));
-    formData.append("payment_method", data.payment_method);
+    // Compute payment totals from splits
+    const totalPaidFromSplits = (data.payment_splits ?? []).reduce(
+      (sum, s) => sum + (Number(s.amount) || 0),
+      0,
+    );
+    const uniqueMethods = [
+      ...new Set(data.payment_splits.map((s) => s.method)),
+    ];
+    const paymentMethod =
+      uniqueMethods.length === 1 ? uniqueMethods[0] : "mixed";
+
+    formData.append("paid_amount", String(totalPaidFromSplits));
+    formData.append("payment_method", paymentMethod);
+    formData.append("payment_splits", JSON.stringify(data.payment_splits));
     formData.append("status", data.status);
     formData.append("sale_date", data.sale_date);
     if (data.customer_name) {
@@ -496,22 +529,6 @@ export function SaleForm({
     }
     saleMutation.mutate(formData);
   };
-
-  // --- Payment method combobox (creatable) ---
-  const trimmedPaymentQuery = paymentQuery.trim().toLowerCase();
-  const [allPaymentMethods, setAllPaymentMethods] = useState<string[]>([
-    ...initialPaymentMethods,
-  ]);
-  const paymentLabelMatch =
-    trimmedPaymentQuery === "" ||
-    allPaymentMethods.some((m) => {
-      const label = paymentMethodLabels[m] ?? m;
-      return label.toLowerCase().includes(trimmedPaymentQuery);
-    });
-  const paymentItems: string[] =
-    trimmedPaymentQuery !== "" && !paymentLabelMatch
-      ? [...allPaymentMethods, paymentQuery.trim()]
-      : allPaymentMethods;
 
   // --- Status combobox (creatable) ---
   const trimmedStatusQuery = statusQuery.trim().toLowerCase();
@@ -759,133 +776,130 @@ export function SaleForm({
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <div className="space-y-4">
           <SaleFormSection title="Төлбөр">
-            <FieldGroup className="gap-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <Field>
-                  <FieldLabel htmlFor="paid_amount">Төлсөн дүн</FieldLabel>
-                  <Controller
-                    control={control}
-                    name="paid_amount"
-                    render={({ field }) => (
-                      <CurrencyInput
-                        id="paid_amount"
-                        value={field.value}
-                        onChange={(value) => {
-                          isManualEditRef.current = true;
-                          field.onChange(value);
-                        }}
-                        className="h-10"
-                      />
-                    )}
-                  />
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="h-8 px-2.5 text-xs"
-                      onClick={() => handleQuickAction("all")}
-                    >
-                      Бүгд
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="h-8 px-2.5 text-xs"
-                      onClick={() => handleQuickAction("half")}
-                    >
-                      Хагас
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="h-8 px-2.5 text-xs"
-                      onClick={() => handleQuickAction("zero")}
-                    >
-                      Төлөөгүй
-                    </Button>
-                  </div>
-                  {errors.paid_amount && (
-                    <p className="text-xs text-destructive">
-                      {errors.paid_amount.message}
-                    </p>
-                  )}
-                </Field>
-
-                <Field>
-                  <FieldLabel htmlFor="payment_method">
-                    Төлбөрийн арга
-                  </FieldLabel>
-                  <Controller
-                    control={control}
-                    name="payment_method"
-                    render={({ field }) => (
-                      <Combobox
-                        name={field.name}
-                        items={paymentItems}
-                        value={field.value}
-                        onValueChange={(next: string | null) => {
-                          if (next && !allPaymentMethods.includes(next)) {
-                            setAllPaymentMethods((prev) => [...prev, next]);
-                          }
-                          field.onChange(next ?? "cash");
-                          setPaymentQuery("");
-                        }}
-                        itemToStringLabel={(item: string | null) =>
-                          item
-                            ? (paymentMethodLabels[item] ??
-                              (allPaymentMethods.includes(item)
-                                ? item
-                                : `"${item}" үүсгэх`))
-                            : ""
-                        }
-                        inputValue={paymentQuery}
-                        onInputValueChange={setPaymentQuery}
-                      >
-                        <ComboboxInput
-                          id="payment_method"
-                          placeholder="Сонгох"
-                          showTrigger
-                          className="w-full"
+            <div className="space-y-3">
+              {splitFields.map((field, index) => {
+                const methodError =
+                  errors.payment_splits?.[index]?.method?.message;
+                const amountError =
+                  errors.payment_splits?.[index]?.amount?.message;
+                return (
+                  <div key={field.id}>
+                    <div className="flex items-start gap-2">
+                      <div className="flex-1">
+                        <Controller
+                          control={control}
+                          name={`payment_splits.${index}.method`}
+                          render={({ field: methodField }) => (
+                            <select
+                              value={methodField.value}
+                              onChange={(e) =>
+                                methodField.onChange(e.target.value)
+                              }
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                              {initialPaymentMethods.map((m) => (
+                                <option key={m} value={m}>
+                                  {paymentMethodLabels[m]}
+                                </option>
+                              ))}
+                            </select>
+                          )}
                         />
-                        <ComboboxContent>
-                          <ComboboxEmpty>Арга байхгүй</ComboboxEmpty>
-                          <ComboboxList>
-                            {(item: string) => (
-                              <ComboboxItem key={item} value={item}>
-                                {allPaymentMethods.includes(item) ||
-                                initialPaymentMethods.includes(
-                                  item as (typeof initialPaymentMethods)[number],
-                                )
-                                  ? (paymentMethodLabels[item] ?? item)
-                                  : `"${item}" үүсгэх`}
-                              </ComboboxItem>
-                            )}
-                          </ComboboxList>
-                        </ComboboxContent>
-                      </Combobox>
+                      </div>
+                      <div className="flex-[2]">
+                        <Controller
+                          control={control}
+                          name={`payment_splits.${index}.amount`}
+                          render={({ field: amountField }) => (
+                            <CurrencyInput
+                              value={amountField.value}
+                              onChange={amountField.onChange}
+                              className="h-10"
+                            />
+                          )}
+                        />
+                      </div>
+                      {splitFields.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeSplit(index)}
+                          className="mt-2 shrink-0 rounded p-1 text-muted-foreground transition-colors hover:text-destructive"
+                        >
+                          <Trash className="size-4" />
+                        </button>
+                      )}
+                    </div>
+                    {methodError && (
+                      <p className="mt-1 text-xs text-destructive">
+                        {methodError}
+                      </p>
                     )}
-                  />
-                  {errors.payment_method && (
-                    <p className="text-xs text-destructive">
-                      {errors.payment_method.message}
-                    </p>
-                  )}
-                </Field>
+                    {amountError && (
+                      <p className="mt-1 text-xs text-destructive">
+                        {amountError}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+
+              {remaining > 0 && (
+                <div className="flex items-center justify-between rounded-md bg-amber-50 px-3 py-2 text-sm dark:bg-amber-950/20">
+                  <span className="text-amber-700 dark:text-amber-400">
+                    Үлдэгдэл
+                  </span>
+                  <span className="font-semibold text-amber-700 dark:text-amber-400">
+                    {formatCurrency(remaining)}
+                  </span>
+                </div>
+              )}
+
+              {totalPaid > 0 && remaining <= 0 && (
+                <div className="flex items-center justify-between rounded-md bg-green-50 px-3 py-2 text-sm dark:bg-green-950/20">
+                  <span className="text-green-700 dark:text-green-400">
+                    Төлөгдсөн
+                  </span>
+                  <CheckCircle className="size-4 text-green-600" />
+                </div>
+              )}
+
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    appendSplit({ method: "bank_transfer", amount: 0 })
+                  }
+                >
+                  <Plus className="size-4" />
+                  Мөр нэмэх
+                </Button>
+                {remaining > 0 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const lastIdx = splitFields.length - 1;
+                      const currentAmount =
+                        watchedSplits?.[lastIdx]?.amount || 0;
+                      setValue(
+                        `payment_splits.${lastIdx}.amount`,
+                        currentAmount + remaining,
+                      );
+                    }}
+                  >
+                    Үлдсэнийг бөглөх
+                  </Button>
+                )}
               </div>
-            </FieldGroup>
+            </div>
           </SaleFormSection>
         </div>
 
         <aside className="lg:sticky lg:top-0">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-base font-semibold tracking-tight">Тооцоо</h2>
-            <Badge variant={paymentBadgeVariant}>{paymentState}</Badge>
-          </div>
-
-          <div className="mt-3 grid grid-cols-3 gap-2">
+          <div className="mt-3 space-y-2">
             <div className="px-3 py-2.5">
               <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
                 Нийт дүн
@@ -894,22 +908,24 @@ export function SaleForm({
                 {formatCurrency(grandTotal)}
               </p>
             </div>
-            <div className="px-3 py-2.5">
+            <div className="border-t border-border/60 px-3 py-2.5">
               <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                Төлсөн
+                Төлсөн дүн
               </span>
               <p className="mt-0.5 text-base font-semibold">
-                {formatCurrency(watchedPaidAmount ?? 0)}
+                {formatCurrency(totalPaid)}
               </p>
             </div>
-            <div className="px-3 py-2.5">
-              <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                Үлдэгдэл
-              </span>
-              <p className="mt-0.5 text-base font-semibold">
-                {formatCurrency(remaining)}
-              </p>
-            </div>
+            {remaining > 0 && (
+              <div className="border-t border-border/60 px-3 py-2.5">
+                <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-amber-600 dark:text-amber-400">
+                  Үлдэгдэл
+                </span>
+                <p className="mt-0.5 text-base font-semibold text-amber-600 dark:text-amber-400">
+                  {formatCurrency(remaining)}
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="mt-3 px-3.5 py-2.5 text-sm">

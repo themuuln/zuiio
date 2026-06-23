@@ -138,7 +138,9 @@ export function DrawerLayout({
                   )}
                 </>
               ) : (
-                children
+                <div className="flex flex-col flex-1 min-h-0 px-6">
+                  {children}
+                </div>
               )}
             </Drawer.Content>
           </Drawer.Popup>

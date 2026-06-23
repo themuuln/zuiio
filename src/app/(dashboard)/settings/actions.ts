@@ -587,6 +587,46 @@ export async function saveReportEmailSettings(
   return { success: true as const };
 }
 
+// ─── Org Feature Settings ────────────────────────────────────────────
+
+const ALLOWED_FEATURE_SETTINGS = new Set([
+  "has_suppliers",
+  "has_inventory",
+  "has_customer_credit",
+  "has_multi_branch",
+  "has_variants",
+  "has_brands",
+  "has_categories",
+  "has_email_reports",
+  "has_audit_log",
+]);
+
+export async function updateOrgFeatureSetting(
+  _prevState: { error?: string } | undefined,
+  formData: FormData,
+) {
+  const { supabase, organizationId } = await requireAppContext();
+
+  const setting = formData.get("setting")?.toString();
+  const value = formData.get("value") === "true";
+
+  if (!setting || !ALLOWED_FEATURE_SETTINGS.has(setting)) {
+    return { error: "Буруу тохиргоо." };
+  }
+
+  const { error } = await supabase
+    .from("organizations")
+    .update({ [setting]: value } as any)
+    .eq("id", organizationId);
+
+  if (error) {
+    return { error: `Хадгалахад алдаа гарлаа: ${error.message}` };
+  }
+
+  revalidatePath("/settings");
+  return { success: true as const };
+}
+
 // ─── Leave Organization ──────────────────────────────────────────────
 
 export async function leaveOrganization(formData: FormData) {

@@ -24,7 +24,7 @@ export default async function AdjustmentsPage() {
   const { data: movements } = await supabase
     .from("stock_movements")
     .select(
-      "reference, created_at, quantity, notes, created_by, profiles!stock_movements_created_by_fkey(name)",
+      "reference, created_at, quantity, notes, created_by, profiles!stock_movements_created_by_fkey(full_name)",
     )
     .eq("organization_id", organizationId)
     .eq("type", "adjustment")
@@ -49,7 +49,8 @@ export default async function AdjustmentsPage() {
         created_at: m.created_at ?? new Date().toISOString(),
         items: [],
         notes: m.notes,
-        created_by_name: (m.profiles as { name: string } | null)?.name ?? null,
+        created_by_name:
+          (m.profiles as { full_name: string } | null)?.full_name ?? null,
       });
     }
     batchMap.get(ref)?.items.push({ quantity: m.quantity });

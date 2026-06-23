@@ -1,8 +1,6 @@
 "use client";
 
-import { X } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
-import { DrawerHeader } from "@/components/ui/drawer-header";
 import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { InfoRow } from "@/components/ui/info-row";
 import {
@@ -66,17 +64,14 @@ export function SaleDetailDrawer({
     Number(sale.total_amount ?? 0) - Number(sale.paid_amount ?? 0);
 
   return (
-    <DrawerLayout open={open} onOpenChange={onOpenChange} panelWidth="40rem">
-      <DrawerHeader
-        title="Борлуулалтын дэлгэрэнгүй"
-        description={
-          <>
-            {formatDate(sale.sale_date)} • {sale.contacts?.name ?? "Walk-in"}
-          </>
-        }
-      />
-
-      <div className="flex-1 overflow-y-auto min-h-0 space-y-6">
+    <DrawerLayout
+      open={open}
+      onOpenChange={onOpenChange}
+      panelWidth="40rem"
+      title="Борлуулалтын дэлгэрэнгүй"
+      description={`${formatDate(sale.sale_date)} • ${sale.contacts?.name ?? "Walk-in"}`}
+    >
+      <div className="space-y-6">
         {/* Summary cards */}
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-xl border border-border/80 bg-muted/40 p-4">

@@ -1,9 +1,7 @@
 "use client";
 
-import { NotePencil, Trash } from "@phosphor-icons/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
-import { toast } from "sonner";
 
 import { deleteProduct } from "@/app/(dashboard)/products/actions";
 import {
@@ -14,13 +12,13 @@ import {
   type ProductEditData,
   ProductEditDrawer,
 } from "@/components/products/product-edit-drawer";
-import { buttonVariants } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
+import { TableActionsCell } from "@/components/ui/table-actions-cell";
 import { formatCurrency } from "@/lib/format";
 import { useBrands } from "@/lib/query/hooks/use-brands";
 import { useProductVariants } from "@/lib/query/hooks/use-product-variants";
 import { productKeys } from "@/lib/query/keys";
-import { useOptimisticDelete } from "@/lib/query/use-optimistic";
+import { useDeleteWithConfirm } from "@/hooks/use-delete-with-confirm";
 
 export type ProductRow = {
   id: string;
@@ -60,56 +58,23 @@ function toEditData(product: ProductRow): ProductEditData {
 
 function ActionsCell({
   row,
-  brands,
+  onEdit,
+  onDelete,
+  deletePending,
 }: {
   row: { original: ProductRow };
-  brands?: { id: string; name: string; logo_url: string | null }[];
+  onEdit: (product: ProductRow) => void;
+  onDelete: (id: string, name: string) => void;
+  deletePending: boolean;
 }) {
   const product = row.original;
 
-  const deleteMutation = useOptimisticDelete({
-    mutationFn: async (formData: FormData) => {
-      const result = await deleteProduct(undefined, formData);
-      if (result?.error) throw new Error(result.error);
-      return result;
-    },
-    queryKey: productKeys.all,
-    getId: (formData) => formData.get("id")?.toString() ?? "",
-  });
-
-  const handleDelete = () => {
-    if (deleteMutation.isPending) return;
-    const confirmed = window.confirm(
-      `"${product.name}" бүтээгдэхүүнийг устгахдаа итгэлтэй байна уу?`,
-    );
-    if (!confirmed) return;
-    const formData = new FormData();
-    formData.set("id", product.id);
-    deleteMutation.mutate(formData, {
-      onSuccess: () => toast.success("Бүтээгдэхүүн амжилттай устгагдлаа."),
-    });
-  };
-
   return (
-    <div
-      className="flex items-center gap-1"
-      onClick={(e) => e.stopPropagation()}
-    >
-      <ProductEditDrawer product={toEditData(product)} brands={brands ?? []}>
-        <span className="flex size-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground">
-          <NotePencil className="size-3.5" />
-        </span>
-      </ProductEditDrawer>
-      <button
-        type="button"
-        onClick={handleDelete}
-        disabled={deleteMutation.isPending}
-        className={buttonVariants({ variant: "ghost", size: "icon-xs" })}
-        title="Устгах"
-      >
-        <Trash className="size-3.5" />
-      </button>
-    </div>
+    <TableActionsCell
+      onEdit={() => onEdit(product)}
+      onDelete={() => onDelete(product.id, product.name)}
+      isDeletePending={deletePending}
+    />
   );
 }
 
@@ -146,6 +111,20 @@ export function ProductsTable({
         current_stock: v.current_stock,
         option_labels: v.option_labels,
       })) ?? null,
+  });
+
+  const [editProduct, setEditProduct] = useState<ProductRow | null>(null);
+
+  const { handleDelete, isPending: deletePending } = useDeleteWithConfirm({
+    mutationFn: async (id: string) => {
+      const formData = new FormData();
+      formData.set("id", id);
+      const result = await deleteProduct(undefined, formData);
+      if (result?.error) throw new Error(result.error);
+      return result;
+    },
+    queryKey: productKeys.all(),
+    entityName: "Бүтээгдэхүүн",
   });
 
   const columns: ColumnDef<ProductRow>[] = useMemo(
@@ -246,12 +225,19 @@ export function ProductsTable({
       {
         id: "actions",
         header: "",
-        cell: ({ row }) => <ActionsCell row={row} brands={brands ?? []} />,
+        cell: ({ row }) => (
+          <ActionsCell
+            row={row}
+            onEdit={setEditProduct}
+            onDelete={handleDelete}
+            deletePending={deletePending}
+          />
+        ),
         enableSorting: false,
         enableHiding: false,
       },
     ],
-    [brands],
+    [brands, handleDelete, deletePending],
   );
 
   return (
@@ -273,6 +259,21 @@ export function ProductsTable({
           open={!!selectedProduct}
           onOpenChange={(open) => {
             if (!open) setSelectedProduct(null);
+          }}
+          onEdit={() => setEditProduct(selectedProduct)}
+          onDelete={() =>
+            handleDelete(selectedProduct.id, selectedProduct.name)
+          }
+          isDeletePending={deletePending}
+        />
+      )}
+      {editProduct && (
+        <ProductEditDrawer
+          product={toEditData(editProduct)}
+          brands={brands ?? []}
+          open={!!editProduct}
+          onOpenChange={(open) => {
+            if (!open) setEditProduct(null);
           }}
         />
       )}

@@ -57,9 +57,9 @@ export function ProductBrowserDrawer({
       panelWidth="100%"
       className="!max-w-full"
     >
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full p-6 gap-6">
         {/* Header with search */}
-        <div className="mb-4 flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
           <div className="relative flex-1">
             <MagnifyingGlass className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -76,7 +76,7 @@ export function ProductBrowserDrawer({
               setQuery("");
               onOpenChange(false);
             }}
-            className="flex size-9 shrink-0 items-center justify-center rounded-none border-0 bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="flex size-9 shrink-0 items-center justify-center rounded-md border-0 bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <X className="size-5" />
           </button>
@@ -89,7 +89,7 @@ export function ProductBrowserDrawer({
               <p>Бүтээгдэхүүн олдсонгүй</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 pb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
               {filtered.map((product) => {
                 const stock = Number(product.current_stock ?? 0);
                 const isOutOfStock = stock <= 0;

@@ -40,66 +40,33 @@ export async function createBatchAdjustment(
   const reference = `batch:${batchId}`;
   const defaultNotes = notes || "Бөөнөөр тохируулга";
 
-  // Update product/variant current_stock and create movements in sequence
-  for (const item of items) {
-    if (item.quantity === 0) continue;
+  // Process all adjustments atomically via RPC
+  const { data: rpcResult, error: rpcError } = await supabase.rpc(
+    "process_batch_adjustment",
+    {
+      p_org_id: organizationId,
+      p_branch_id: branchId!,
+      p_user_id: userId,
+      p_items: items
+        .filter((item) => item.quantity !== 0)
+        .map((item) => ({
+          product_id: item.product_id,
+          variant_id: item.variant_id ?? null,
+          quantity: item.quantity,
+          unit_cost: item.unit_cost,
+        })),
+      p_reference: reference,
+      p_notes: defaultNotes,
+    },
+  );
 
-    // Update stock
-    if (item.variant_id) {
-      const { data: variant } = await supabase
-        .from("product_variants")
-        .select("current_stock")
-        .eq("id", item.variant_id)
-        .single();
-
-      if (variant) {
-        const newStock = Math.max(
-          0,
-          (variant.current_stock ?? 0) + item.quantity,
-        );
-        await supabase
-          .from("product_variants")
-          .update({ current_stock: newStock })
-          .eq("id", item.variant_id);
-      }
-    }
-
-    const { data: product } = await supabase
-      .from("products")
-      .select("current_stock")
-      .eq("id", item.product_id)
-      .single();
-
-    if (product) {
-      const newStock = Math.max(
-        0,
-        (product.current_stock ?? 0) + item.quantity,
-      );
-      await supabase
-        .from("products")
-        .update({ current_stock: newStock })
-        .eq("id", item.product_id);
-    }
-
-    // Create stock movement
-    const { error: mvError } = await supabase.from("stock_movements").insert({
-      organization_id: organizationId,
-      branch_id: branchId!,
-      product_id: item.product_id,
-      variant_id: item.variant_id ?? null,
-      type: "adjustment",
-      quantity: item.quantity,
-      unit_cost: item.unit_cost,
-      notes: defaultNotes,
-      reference,
-      created_by: userId,
-    });
-
-    if (mvError) {
-      return {
-        error: `Тохируулга хадгалахад алдаа гарлаа: ${mvError.message}`,
-      };
-    }
+  if (rpcError || (rpcResult && (rpcResult as any).error)) {
+    return {
+      error:
+        rpcError?.message ??
+        (rpcResult as any)?.error ??
+        "Тохируулга хадгалахад алдаа гарлаа.",
+    };
   }
 
   revalidateEntities(["inventory"]);

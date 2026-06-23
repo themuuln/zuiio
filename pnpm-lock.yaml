@@ -133,8 +133,8 @@ importers:
         specifier: 4.0.0-beta.4
         version: 4.0.0-beta.4(codeceptjs@4.0.8(@types/node@20.19.43)(tsx@4.22.4))
       '@midscene/web':
-        specifier: ^1.9.7
-        version: 1.9.7(@playwright/test@1.61.0)(playwright@1.61.0)
+        specifier: ^1.9.8
+        version: 1.9.8(@playwright/test@1.61.0)(playwright@1.61.0)
       '@playwright/test':
         specifier: ^1.61.0
         version: 1.61.0
@@ -663,12 +663,12 @@ packages:
       search-insights:
         optional: true
 
-  '@dotenvx/dotenvx@1.75.0':
-    resolution: {integrity: sha512-49Ief8KxTEu7O+2TereI1msUDE5MfCWmddiNAz2Qz2KWzyN+HWQhZrqhQ0g8NaBlV7GstvOIsbrWFfV3IWb36A==}
+  '@dotenvx/dotenvx@1.75.1':
+    resolution: {integrity: sha512-/BITOC9dmS/edY2zQwZNicQ059O6RKabtQfyEafV0nGtfYRNHYy1DIPiYVcov40+tob9hfmBnbR963dS+EQ1DQ==}
     hasBin: true
 
-  '@dotenvx/primitives@0.7.1':
-    resolution: {integrity: sha512-bTCE4izhR4Q5wcBEFNLWuv9oZsUhXhvvYwOUJETa17zk4kKG8saKVIlM+UxpOsttLq4dJ0/jAmD8GBsginKOag==}
+  '@dotenvx/primitives@0.8.0':
+    resolution: {integrity: sha512-VYJy0uhFm9zTJ1TxBaW/pA8bjbOM/OttaNMwZ1RHG4JKyRG7DhSdiqD1ipQoAyoD22olUtxbP78W9xY3Wd11bg==}
 
   '@emnapi/runtime@1.11.1':
     resolution: {integrity: sha512-vgj7R3y3Wgx24IQaGPA/R6YFXLHVMOZ0uVEyIQPaWs+rd1AzfEMXlAC22FYwO1XkKR6NPsq7mUandH8oIRdZFw==}
@@ -1228,18 +1228,18 @@ packages:
   '@mermaid-js/parser@1.1.1':
     resolution: {integrity: sha512-VuHdsYMK1bT6X2JbcAaWAhugTRvRBRyuZgd+c22swUeI9g/ntaxF7CY7dYarhZovofCbUNO0G7JesfmNtjYOCw==}
 
-  '@midscene/core@1.9.7':
-    resolution: {integrity: sha512-ssIr/P4gsb41o8pD8FDgYK6v2edGr8PCYyPH092qD5k5gaWwKwAHevwSTmG5OXflZeSuv7OsLwn1mj7U3AvoXg==}
+  '@midscene/core@1.9.8':
+    resolution: {integrity: sha512-Elgk5K7TlUVXn5Ub7GvA3cycVNab9Q1tqTDfpcv9tXAhdMM8F3hb5aKvOOyf3PO9n7r6CF/F9SePFucRB9LCgA==}
     engines: {node: '>=18.19.0'}
 
-  '@midscene/playground@1.9.7':
-    resolution: {integrity: sha512-+WYuOH61v/wmQOWxtV7j6ReGNPisfka3T6x/d5pWsIxGddEsq8wnC1rVJZnY6BCjI4E9pQ4WN8+9cUqf9MEK7A==}
+  '@midscene/playground@1.9.8':
+    resolution: {integrity: sha512-71bJMHq3UlcNgnEZOtIs29VllI03bCdklmYpzy17b/rxRmO8UdkY/zN1DqQGQwxDGzDuHFJtBrlWIgtoK5x5kQ==}
 
-  '@midscene/shared@1.9.7':
-    resolution: {integrity: sha512-/jbemg9U96UNU15Y9dqtd3kV/+YwU6nmXDoMQl7ZZYGYTubtbDnzkur5Ba9jAf+cA6P5XOBb5/IK0jzc91ZNdw==}
+  '@midscene/shared@1.9.8':
+    resolution: {integrity: sha512-0mJS7m2KLoaQxgmNmwcvrBOZ19EN6K+/Z1LaZlp6tt35D9MGPMkbTyN0jf48lMzBaiUmQspbuJGZ+/eLVxiuGw==}
 
-  '@midscene/web@1.9.7':
-    resolution: {integrity: sha512-sC14oqn1OlJp2Cb7O3cCp7m2IgZritdBWwZKc6INPIiS5qOEpdosn4DO8Z2oTAKnHdVprYvJMelyMH7KJSxFNA==}
+  '@midscene/web@1.9.8':
+    resolution: {integrity: sha512-7xpYuuXVX+bTT2dj6k7qgjbFMD0rIVZYSdAG7C6DbjBjyOleNk2PDdMqOL1q7LRMGPwrfwYouVfsmhkWxIKKRg==}
     engines: {node: '>=18.19.0'}
     hasBin: true
     peerDependencies:
@@ -3973,8 +3973,8 @@ packages:
     resolution: {integrity: sha512-j6vWzfrGVfyXxge+O0x5sh6cvxAog0a/4Rdd2K36zCMV5eJ+/+tOAngRO8cODMNWbVRdVlmGZQL2YS3yR8bIUA==}
     engines: {node: '>= 0.4'}
 
-  es-toolkit@1.47.1:
-    resolution: {integrity: sha512-5RAqEwf4P4E17p+W75KLOWw/nOvKZzSQpxM32IpI2KZLaVonjTrZ0Ai5ghMaVI9eKC2p8eoQgcBdkEDgzFk6+Q==}
+  es-toolkit@1.48.1:
+    resolution: {integrity: sha512-wfnXlwd5I75eXRtdD2vuEs50xHHESECDsGD7yiQnfFVNoa5522NwXEbmgo98LfiukSQHs+mBM7/YG3qKJB9/mQ==}
 
   esbuild@0.21.5:
     resolution: {integrity: sha512-mg3OPMV4hXywwpoDxu3Qda5xCKQi+vCTZq8S9J/EpkhB2HzKXq4SNFZE3+NK93JYxc8VMSep+lOUSC/RVKaBqw==}
@@ -5237,8 +5237,8 @@ packages:
   mute-stream@0.0.8:
     resolution: {integrity: sha512-nnbWWOkoWyUsTjKrhgD0dcz22mdkSnpYqbEjIm2nhwhuxlSkpywJmBo8h0ZqJdkp73mb90SssHkN4rsRaBAfAA==}
 
-  nanoid@3.3.14:
-    resolution: {integrity: sha512-U9kYi5bpVMEI31yC8iw4bJJp0avcHXA0W8/wNfLfnvJYzihQo2ZRPYPvpAAd570HAcCBjCTN7vnr+v4StKl1IQ==}
+  nanoid@3.3.15:
+    resolution: {integrity: sha512-y7Wygv/7mEOvxTuEQDB8StXdMRBWf1kR/tlhAzBRUFkB2jfcLOAxO/SHmOO2zgz1pVgK29/kyupn059/bCHdjA==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
@@ -6258,14 +6258,14 @@ packages:
   symbol-tree@3.2.4:
     resolution: {integrity: sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw==}
 
-  systeminformation@5.31.7:
-    resolution: {integrity: sha512-/8NC53e5nP9nmhn42/ncdOkyJnOoue/Vy+tJOyUGd1Yv66G069wK4rrziwhrqDETgk78CudTQupw5z19S5uoZw==}
+  systeminformation@5.31.8:
+    resolution: {integrity: sha512-/HGurKdgjYGbfwCPSokoX4WAlasVxuj1SnTukLiIYHPkjbDbN1PMATj8mkHpqkVzUF34y5ZyCY1TMKP32AI9rA==}
     engines: {node: '>=8.0.0'}
     os: [darwin, linux, win32, freebsd, openbsd, netbsd, sunos, android]
     hasBin: true
 
-  tabbable@6.4.0:
-    resolution: {integrity: sha512-05PUHKSNE8ou2dwIxTngl4EzcnsCDZGJ/iCLtDflR/SHB/ny14rXc+qU5P4mG9JkusiV7EivzY9Mhm55AzAvCg==}
+  tabbable@6.5.0:
+    resolution: {integrity: sha512-wieBHXygIm7OyQOu5hQlkk62/WyCFYGlWg7L6/ZCUZwx0o398Zkn4pVmMyfYhfMG8kGrj/Krt8eIk6UKC6VzwA==}
 
   tagged-tag@1.0.0:
     resolution: {integrity: sha512-yEFYrVhod+hdNyx7g5Bnkkb0G6si8HJurOoOEgC8B/O0uXLHlaey/65KRv6cuWBNhBgHKAROVpc7QyYqE5gFng==}
@@ -7357,9 +7357,9 @@ snapshots:
     transitivePeerDependencies:
       - '@algolia/client-search'
 
-  '@dotenvx/dotenvx@1.75.0':
+  '@dotenvx/dotenvx@1.75.1':
     dependencies:
-      '@dotenvx/primitives': 0.7.1
+      '@dotenvx/primitives': 0.8.0
       commander: 11.1.0
       conf: 10.2.0
       dotenv: 17.4.2
@@ -7371,12 +7371,12 @@ snapshots:
       object-treeify: 1.1.33
       open: 8.4.2
       picomatch: 4.0.4
-      systeminformation: 5.31.7
+      systeminformation: 5.31.8
       undici: 7.28.0
       which: 4.0.0
       yocto-spinner: 1.2.0
 
-  '@dotenvx/primitives@0.7.1': {}
+  '@dotenvx/primitives@0.8.0': {}
 
   '@emnapi/runtime@1.11.1':
     dependencies:
@@ -7749,9 +7749,9 @@ snapshots:
     dependencies:
       '@chevrotain/types': 11.1.2
 
-  '@midscene/core@1.9.7(ws@8.21.0)':
+  '@midscene/core@1.9.8(ws@8.21.0)':
     dependencies:
-      '@midscene/shared': 1.9.7
+      '@midscene/shared': 1.9.8
       '@ui-tars/action-parser': 1.2.3
       dayjs: 1.11.21
       dotenv: 16.6.1
@@ -7768,10 +7768,10 @@ snapshots:
       - supports-color
       - ws
 
-  '@midscene/playground@1.9.7(ws@8.21.0)':
+  '@midscene/playground@1.9.8(ws@8.21.0)':
     dependencies:
-      '@midscene/core': 1.9.7(ws@8.21.0)
-      '@midscene/shared': 1.9.7
+      '@midscene/core': 1.9.8(ws@8.21.0)
+      '@midscene/shared': 1.9.8
       cors: 2.8.6
       dotenv: 16.6.1
       express: 4.22.2
@@ -7781,7 +7781,7 @@ snapshots:
       - supports-color
       - ws
 
-  '@midscene/shared@1.9.7':
+  '@midscene/shared@1.9.8':
     dependencies:
       '@modelcontextprotocol/sdk': 1.10.2
       '@silvia-odwyer/photon': 0.3.3
@@ -7796,11 +7796,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@midscene/web@1.9.7(@playwright/test@1.61.0)(playwright@1.61.0)':
+  '@midscene/web@1.9.8(@playwright/test@1.61.0)(playwright@1.61.0)':
     dependencies:
-      '@midscene/core': 1.9.7(ws@8.21.0)
-      '@midscene/playground': 1.9.7(ws@8.21.0)
-      '@midscene/shared': 1.9.7
+      '@midscene/core': 1.9.8(ws@8.21.0)
+      '@midscene/playground': 1.9.8(ws@8.21.0)
+      '@midscene/shared': 1.9.8
       cors: 2.8.6
       dayjs: 1.11.21
       dotenv: 16.6.1
@@ -10671,7 +10671,7 @@ snapshots:
       has-tostringtag: 1.0.2
       hasown: 2.0.4
 
-  es-toolkit@1.47.1: {}
+  es-toolkit@1.48.1: {}
 
   esbuild@0.21.5:
     optionalDependencies:
@@ -11014,7 +11014,7 @@ snapshots:
 
   focus-trap@7.8.0:
     dependencies:
-      tabbable: 6.4.0
+      tabbable: 6.5.0
 
   follow-redirects@1.16.0: {}
 
@@ -11885,7 +11885,7 @@ snapshots:
       dagre-d3-es: 7.0.14
       dayjs: 1.11.21
       dompurify: 3.4.11
-      es-toolkit: 1.47.1
+      es-toolkit: 1.48.1
       katex: 0.16.47
       khroma: 2.1.0
       marked: 16.4.2
@@ -12144,7 +12144,7 @@ snapshots:
 
   mute-stream@0.0.8: {}
 
-  nanoid@3.3.14: {}
+  nanoid@3.3.15: {}
 
   nanoid@5.1.15: {}
 
@@ -12514,13 +12514,13 @@ snapshots:
 
   postcss@8.4.31:
     dependencies:
-      nanoid: 3.3.14
+      nanoid: 3.3.15
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
   postcss@8.5.15:
     dependencies:
-      nanoid: 3.3.14
+      nanoid: 3.3.15
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
@@ -12805,7 +12805,7 @@ snapshots:
       '@reduxjs/toolkit': 2.12.0(react-redux@9.3.0(@types/react@19.2.17)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
       clsx: 2.1.1
       decimal.js-light: 2.5.1
-      es-toolkit: 1.47.1
+      es-toolkit: 1.48.1
       eventemitter3: 5.0.4
       immer: 10.2.0
       react: 19.2.4
@@ -13053,7 +13053,7 @@ snapshots:
       '@babel/parser': 7.29.7
       '@babel/plugin-transform-typescript': 7.29.7(@babel/core@7.29.7)
       '@babel/preset-typescript': 7.29.7(@babel/core@7.29.7)
-      '@dotenvx/dotenvx': 1.75.0
+      '@dotenvx/dotenvx': 1.75.1
       '@modelcontextprotocol/sdk': 1.29.0(zod@3.25.76)
       '@types/validate-npm-package-name': 4.0.2
       browserslist: 4.28.2
@@ -13378,9 +13378,9 @@ snapshots:
 
   symbol-tree@3.2.4: {}
 
-  systeminformation@5.31.7: {}
+  systeminformation@5.31.8: {}
 
-  tabbable@6.4.0: {}
+  tabbable@6.5.0: {}
 
   tagged-tag@1.0.0: {}
 

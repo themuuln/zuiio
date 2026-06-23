@@ -32,6 +32,8 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { formatRouteDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
+import { discountKeys } from "@/lib/query/keys";
+import { useOptimisticCreate } from "@/lib/query/use-optimistic";
 
 const discountSchema = z.object({
   name: z.string().min(1, "Нэр шаардлагатай"),
@@ -68,7 +70,6 @@ export function DiscountCreateDrawer({
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen ?? internalOpen;
   const setOpen = externalOnOpenChange ?? setInternalOpen;
-  const [serverError, setServerError] = useState<string | null>(null);
 
   // Conditions for selected_products / selected_categories
   const [conditions, setConditions] = useState<ConditionItem[]>([]);
@@ -212,38 +213,34 @@ export function DiscountCreateDrawer({
     .filter((c) => c.condition_type === "category")
     .map((c) => c.condition_value);
 
-  const [mutationPending, setMutationPending] = useState(false);
-  const [mutationError, setMutationError] = useState<string | null>(null);
-
-  const handleCreate = async (formData: FormData) => {
-    setMutationPending(true);
-    setMutationError(null);
-    try {
+  const discountMutation = useOptimisticCreate({
+    mutationFn: async (formData: FormData) => {
       const result = await createDiscount(undefined, formData);
       if (result?.error) throw new Error(result.error);
-      setOpen(false);
-      setConditions([]);
-      toast.success("Хямдрал амжилттай үүсгэгдсэн.");
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Хямдрал үүсгэхэд алдаа гарлаа.";
-      setMutationError(message);
-      toast.error(message);
-    } finally {
-      setMutationPending(false);
-    }
-  };
+      return result;
+    },
+    queryKey: discountKeys.all,
+    buildOptimistic: (formData) => ({
+      id: `opt-${Date.now()}`,
+      name: formData.get("name")?.toString() ?? "",
+      type: formData.get("type")?.toString() ?? "percentage",
+      value: Number(formData.get("value") ?? 0),
+      applies_to: formData.get("applies_to")?.toString() ?? "all",
+      is_active: formData.get("is_active") === "true",
+      valid_from: formData.get("valid_from")?.toString() ?? "",
+      created_at: new Date().toISOString(),
+    }),
+  });
 
   const onSubmit = (data: DiscountValues) => {
-    if (mutationPending) return;
-    setServerError(null);
+    if (discountMutation.isPending) return;
 
     if (
       (data.applies_to === "selected_products" ||
         data.applies_to === "selected_categories") &&
       conditions.length === 0
     ) {
-      setServerError(
+      toast.error(
         data.applies_to === "selected_products"
           ? "Бүтээгдэхүүн сонгоно уу."
           : "Ангилал сонгоно уу.",
@@ -281,7 +278,13 @@ export function DiscountCreateDrawer({
       );
     }
 
-    handleCreate(formData);
+    discountMutation.mutate(formData, {
+      onSuccess: () => {
+        setOpen(false);
+        setConditions([]);
+        toast.success("Хямдрал амжилттай үүсгэгдсэн.");
+      },
+    });
   };
 
   return (
@@ -290,7 +293,6 @@ export function DiscountCreateDrawer({
       onOpenChange={(next) => {
         setOpen(next);
         if (!next) {
-          setServerError(null);
           setConditions([]);
           reset();
         }
@@ -310,7 +312,10 @@ export function DiscountCreateDrawer({
               setConditions([]);
             }}
           />
-          <DrawerSubmit form="discount-form" isPending={mutationPending} />
+          <DrawerSubmit
+            form="discount-form"
+            isPending={discountMutation.isPending}
+          />
         </DrawerFooter>
       }
     >
@@ -639,9 +644,7 @@ export function DiscountCreateDrawer({
           </Field>
         </FieldGroup>
 
-        <ErrorBanner error={serverError} />
-
-        <ErrorBanner error={mutationError} />
+        <ErrorBanner error={discountMutation.error} />
       </form>
     </SlideInDrawer>
   );

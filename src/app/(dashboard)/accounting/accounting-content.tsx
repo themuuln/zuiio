@@ -1,6 +1,6 @@
 "use client";
 
-import { Calculator, StackSimple } from "@phosphor-icons/react";
+import { Calculator, NotePencil, StackSimple } from "@phosphor-icons/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import { AccountCreateDrawer } from "@/components/accounting/account-create-draw
 import { JournalEntryCreateDrawer } from "@/components/accounting/journal-entry-create-drawer";
 import type { JournalEntryDetailData } from "@/components/accounting/journal-entry-detail-drawer";
 import { JournalEntryDetailDrawer } from "@/components/accounting/journal-entry-detail-drawer";
+import { JournalEntryEditDrawer } from "@/components/accounting/journal-entry-edit-drawer";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
 import { Badge } from "@/components/ui/badge";
@@ -102,6 +103,7 @@ export function AccountingContent({
   const initialRef = useRef(createOpen);
   const [selectedEntry, setSelectedEntry] =
     useState<JournalEntryDetailData | null>(null);
+  const [editEntryId, setEditEntryId] = useState<string | null>(null);
   const [consolidated, setConsolidated] = useState(initialConsolidated);
 
   // Sync consolidated state with URL on toggle
@@ -282,8 +284,21 @@ export function AccountingContent({
                             {formatCurrency(totalCredit)}
                           </TableCell>
                           <TableCell>
-                            <span className="text-xs text-muted-foreground">
-                              Дэлгэрэнгүй
+                            <span className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditEntryId(entry.id);
+                                }}
+                                className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                                title="Засах"
+                              >
+                                <NotePencil className="size-3.5" />
+                              </button>
+                              <span className="text-xs text-muted-foreground">
+                                Дэлгэрэнгүй
+                              </span>
                             </span>
                           </TableCell>
                         </TableRow>
@@ -409,6 +424,21 @@ export function AccountingContent({
           }}
         />
       )}
+      {editEntryId &&
+        (() => {
+          const entry = journalEntries.find((e) => e.id === editEntryId);
+          if (!entry) return null;
+          return (
+            <JournalEntryEditDrawer
+              entry={entry}
+              accounts={accounts}
+              open={!!editEntryId}
+              onOpenChange={(open) => {
+                if (!open) setEditEntryId(null);
+              }}
+            />
+          );
+        })()}
     </PageShell>
   );
 }

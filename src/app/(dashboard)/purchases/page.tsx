@@ -26,7 +26,7 @@ export default async function PurchasesPage({
       supabase
         .from("purchase_orders")
         .select(
-          "id, order_number, order_date, expected_date, status, total_amount, notes, created_at, contacts!purchase_orders_supplier_id_fkey(name), profiles!purchase_orders_created_by_fkey(name)",
+          "id, order_number, order_date, expected_date, status, total_amount, notes, created_at, contacts!purchase_orders_supplier_id_fkey(name), profiles!purchase_orders_created_by_fkey(full_name)",
         )
         .eq("organization_id", organizationId)
         .order("created_at", { ascending: false }),
@@ -60,7 +60,7 @@ export default async function PurchasesPage({
       created_at: order.created_at,
       supplier_name: (order.contacts as { name: string } | null)?.name ?? null,
       created_by_name:
-        (order.profiles as { name: string } | null)?.name ?? null,
+        (order.profiles as { full_name: string } | null)?.full_name ?? null,
     })) ?? [];
 
   return (

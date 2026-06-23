@@ -10,7 +10,6 @@ import {
 } from "@/app/(dashboard)/purchases/actions";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { DrawerHeader } from "@/components/ui/drawer-header";
 import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { NativeSelect } from "@/components/ui/native-select";
 import {
@@ -67,7 +66,7 @@ type PurchaseDetailData = {
     products: { name: string; unit: string | null } | null;
   }>;
   supplier: { name: string; phone: string | null } | null;
-  createdBy: { name: string } | null;
+  createdBy: { full_name: string } | null;
 };
 
 async function fetchPurchaseOrder(
@@ -78,7 +77,7 @@ async function fetchPurchaseOrder(
   const { data: order } = await supabase
     .from("purchase_orders")
     .select(
-      "*, contacts!purchase_orders_supplier_id_fkey(name, phone), profiles!purchase_orders_created_by_fkey(name)",
+      "*, contacts!purchase_orders_supplier_id_fkey(name, phone), profiles!purchase_orders_created_by_fkey(full_name)",
     )
     .eq("id", id)
     .single();
@@ -103,7 +102,7 @@ async function fetchPurchaseOrder(
       products: item.products as { name: string; unit: string | null } | null,
     })),
     supplier: order.contacts as { name: string; phone: string | null } | null,
-    createdBy: order.profiles as { name: string } | null,
+    createdBy: order.profiles as { full_name: string } | null,
   };
 }
 
@@ -206,13 +205,8 @@ export function PurchaseDetailDrawer({
         }
       }}
       panelWidth="32rem"
+      title={data ? `#${data.order.order_number}` : "Худалдан авалтын захиалга"}
     >
-      <DrawerHeader
-        title={
-          data ? `#${data.order.order_number}` : "Худалдан авалтын захиалга"
-        }
-      />
-
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Уншиж байна...</p>
       ) : !data ? (
@@ -292,7 +286,7 @@ export function PurchaseDetailDrawer({
             {data.createdBy && (
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Үүсгэсэн</span>
-                <span className="text-sm">{data.createdBy.name}</span>
+                <span className="text-sm">{data.createdBy.full_name}</span>
               </div>
             )}
           </div>

@@ -17,7 +17,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { DrawerHeader } from "@/components/ui/drawer-header";
 import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -136,17 +135,14 @@ export function InvoiceDetailDrawer({
         if (!next) onClose();
       }}
       panelWidth="32rem"
+      title={data ? `#${data.invoice.invoice_number}` : "Нэхэмжлэл"}
     >
-      <DrawerHeader
-        title={data ? `#${data.invoice.invoice_number}` : "Нэхэмжлэл"}
-      />
-
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Уншиж байна...</p>
       ) : !data ? (
         <p className="text-sm text-muted-foreground">Нэхэмжлэл олдсонгүй.</p>
       ) : (
-        <div className="flex-1 overflow-y-auto min-h-0 space-y-6">
+        <div className="space-y-6">
           {/* Status & Actions */}
           <div className="flex items-center gap-2">
             <NativeSelect

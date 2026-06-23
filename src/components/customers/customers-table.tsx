@@ -1,6 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+import { useState } from "react";
 import {
   type CustomerDetailData,
   CustomerDetailDrawer,
@@ -12,6 +13,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 import { DataTable } from "@/components/ui/data-table";
+import { TableActionsCell } from "@/components/ui/table-actions-cell";
 import { formatCurrency } from "@/lib/format";
 
 export type CustomerRow = {
@@ -44,7 +46,10 @@ function toEditData(customer: CustomerRow): CustomerEditData {
   };
 }
 
-function buildColumns(showBalance: boolean): ColumnDef<CustomerRow>[] {
+function buildColumns(
+  showBalance: boolean,
+  onEdit: (customer: CustomerRow) => void,
+): ColumnDef<CustomerRow>[] {
   return [
     {
       accessorKey: "name",
@@ -52,16 +57,14 @@ function buildColumns(showBalance: boolean): ColumnDef<CustomerRow>[] {
       cell: ({ row }) => {
         const customer = row.original;
         return (
-          <CustomerDetailDrawer customer={toDetailData(customer)}>
-            <div className="flex items-center gap-2 cursor-pointer">
-              <Avatar className="size-7">
-                <AvatarFallback>
-                  {customer.name.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <span className="font-medium">{customer.name}</span>
-            </div>
-          </CustomerDetailDrawer>
+          <div className="flex items-center gap-2">
+            <Avatar className="size-7">
+              <AvatarFallback>
+                {customer.name.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <span className="font-medium">{customer.name}</span>
+          </div>
         );
       },
     },
@@ -90,12 +93,7 @@ function buildColumns(showBalance: boolean): ColumnDef<CustomerRow>[] {
       header: "",
       cell: ({ row }) => {
         const customer = row.original;
-        return (
-          <div className="flex items-center gap-1">
-            <CustomerDetailDrawer customer={toDetailData(customer)} />
-            <CustomerEditDrawer customer={toEditData(customer)} />
-          </div>
-        );
+        return <TableActionsCell onEdit={() => onEdit(customer)} />;
       },
       enableSorting: false,
       enableHiding: false,
@@ -110,16 +108,43 @@ export function CustomersTable({
   data: CustomerRow[];
   showBalance?: boolean;
 }) {
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerRow | null>(
+    null,
+  );
+  const [editCustomer, setEditCustomer] = useState<CustomerRow | null>(null);
+
   return (
-    <DataTable
-      columns={buildColumns(showBalance)}
-      data={data}
-      searchColumn="name"
-      searchPlaceholder="Харилцагчаар хайх..."
-      pageSize={10}
-      totalLabel="харилцагч"
-      enableSorting
-      enableColumnVisibility
-    />
+    <>
+      <DataTable
+        columns={buildColumns(showBalance, setEditCustomer)}
+        data={data}
+        searchColumn="name"
+        searchPlaceholder="Харилцагчаар хайх..."
+        pageSize={10}
+        totalLabel="харилцагч"
+        enableSorting
+        enableColumnVisibility
+        onRowClick={(row) => setSelectedCustomer(row)}
+      />
+      {selectedCustomer && (
+        <CustomerDetailDrawer
+          customer={toDetailData(selectedCustomer)}
+          open={!!selectedCustomer}
+          onOpenChange={(open) => {
+            if (!open) setSelectedCustomer(null);
+          }}
+          onEdit={() => setEditCustomer(selectedCustomer)}
+        />
+      )}
+      {editCustomer && (
+        <CustomerEditDrawer
+          customer={toEditData(editCustomer)}
+          open={!!editCustomer}
+          onOpenChange={(open) => {
+            if (!open) setEditCustomer(null);
+          }}
+        />
+      )}
+    </>
   );
 }

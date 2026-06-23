@@ -17,30 +17,52 @@ export const unstable_instant = {
   unstable_disableValidation: true,
 };
 
+const PAGE_SIZE = 20;
+
+const VALID_TYPES = new Set(["in", "out", "adjustment"]);
+
 export default async function InventoryMovementsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ branch?: string }>;
+  searchParams: Promise<{ branch?: string; page?: string; type?: string }>;
 }) {
-  const { branch: urlBranch } = await searchParams;
+  const {
+    branch: urlBranch,
+    page: pageStr,
+    type: typeFilter,
+  } = await searchParams;
   const { supabase, organizationId, branchId, isBranchScoped } =
     await requireAppContext();
   if (!(await checkOrgSetting(supabase, organizationId, "has_inventory")))
     redirect("/");
 
-  const { data: movements } = await withBranchFilter(
-    supabase
-      .from("stock_movements")
-      .select(
-        "id, type, quantity, unit_cost, reference, notes, created_at, products(name, unit, sku)",
-      )
-      .eq("organization_id", organizationId)
-      .order("created_at", { ascending: false })
-      .limit(50),
+  const currentPage = Math.max(1, Number(pageStr) || 1);
+  const offset = (currentPage - 1) * PAGE_SIZE;
+  const resolvedType =
+    typeFilter && VALID_TYPES.has(typeFilter) ? typeFilter : null;
+
+  let query = supabase
+    .from("stock_movements")
+    .select(
+      "id, type, quantity, unit_cost, reference, notes, created_at, products(name, unit, sku)",
+      { count: "exact" },
+    )
+    .eq("organization_id", organizationId);
+
+  if (resolvedType) {
+    query = query.eq("type", resolvedType);
+  }
+
+  query = query.order("created_at", { ascending: false });
+
+  const { data: movements, count } = await withBranchFilter(
+    query,
     branchId,
     isBranchScoped,
     urlBranch,
-  );
+  ).range(offset, offset + PAGE_SIZE - 1);
+
+  const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 0;
 
   const tableData: MovementRow[] =
     (movements ?? []).map((m) => {
@@ -66,7 +88,7 @@ export default async function InventoryMovementsPage({
   return (
     <PageShell
       title="Барааны хөдөлгөөн"
-      description="Орлого, зарлага, үлдэгдлийн тохируулгын сүүлийн 50 бүртгэл."
+      description="Орлого, зарлага, үлдэгдлийн тохируулгын бүртгэл."
       actions={
         <Button asChild>
           <Link href="/inventory/movements/new">
@@ -76,7 +98,13 @@ export default async function InventoryMovementsPage({
         </Button>
       }
     >
-      <MovementsContent movements={tableData} />
+      <MovementsContent
+        movements={tableData}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalCount={count ?? 0}
+        currentType={resolvedType}
+      />
     </PageShell>
   );
 }
