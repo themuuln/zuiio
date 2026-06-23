@@ -1,0 +1,19 @@
+{
+  "name": "@zer/core",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "date-fns": "^4.4.0",
+    "tailwind-merge": "^3.6.0"
+  },
+  "devDependencies": {
+    "@zer/config": "workspace:*",
+    "typescript": "^5"
+  }
+}

@@ -38,6 +38,12 @@ importers:
       '@yudiel/react-qr-scanner':
         specifier: ^2.6.0
         version: 2.6.0(@types/emscripten@1.41.5)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@zer/core':
+        specifier: workspace:*
+        version: link:packages/core
+      '@zer/query':
+        specifier: workspace:*
+        version: link:packages/query
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -219,6 +225,46 @@ importers:
       wait-on:
         specifier: ^9.0.10
         version: 9.0.10
+
+  packages/config: {}
+
+  packages/core:
+    dependencies:
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
+      date-fns:
+        specifier: ^4.4.0
+        version: 4.4.0
+      tailwind-merge:
+        specifier: ^3.6.0
+        version: 3.6.0
+    devDependencies:
+      '@zer/config':
+        specifier: workspace:*
+        version: link:../config
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
+  packages/query:
+    dependencies:
+      '@tanstack/react-query':
+        specifier: ^5
+        version: 5.101.0(react@19.2.4)
+      react:
+        specifier: ^19
+        version: 19.2.4
+      sonner:
+        specifier: ^2
+        version: 2.0.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+    devDependencies:
+      '@zer/config':
+        specifier: workspace:*
+        version: link:../config
+      typescript:
+        specifier: ^5
+        version: 5.9.3
 
 packages:
 
