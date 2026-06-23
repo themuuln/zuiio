@@ -38,6 +38,9 @@ importers:
       '@yudiel/react-qr-scanner':
         specifier: ^2.6.0
         version: 2.6.0(@types/emscripten@1.41.5)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@zer/branding':
+        specifier: workspace:*
+        version: link:packages/branding
       '@zer/core':
         specifier: workspace:*
         version: link:packages/core
@@ -237,6 +240,15 @@ importers:
       wait-on:
         specifier: ^9.0.10
         version: 9.0.10
+
+  packages/branding:
+    devDependencies:
+      '@zer/config':
+        specifier: workspace:*
+        version: link:../config
+      typescript:
+        specifier: ^5
+        version: 5.9.3
 
   packages/config: {}
 

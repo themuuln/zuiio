@@ -20,6 +20,7 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
+      "@zer/branding": ["./packages/branding/src/index.ts"],
       "@zer/core": ["./packages/core/src/index.ts"],
       "@zer/export": ["./packages/export/src/index.ts"],
       "@zer/hooks": ["./packages/hooks/src/index.ts"],
