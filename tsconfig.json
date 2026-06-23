@@ -21,7 +21,12 @@
     "paths": {
       "@/*": ["./src/*"],
       "@zer/core": ["./packages/core/src/index.ts"],
-      "@zer/query": ["./packages/query/src/index.ts"]
+      "@zer/query": ["./packages/query/src/index.ts"],
+      "@zer/supabase": ["./packages/supabase/src/index.ts"],
+      "@zer/supabase/auth": ["./packages/supabase/src/auth.ts"],
+      "@zer/supabase/errors": ["./packages/supabase/src/errors.ts"],
+      "@zer/supabase/query": ["./packages/supabase/src/query.ts"],
+      "@zer/supabase/storage": ["./packages/supabase/src/storage.ts"]
     }
   },
   "include": [
