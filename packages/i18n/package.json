@@ -1,0 +1,13 @@
+{
+  "name": "@zer/i18n",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "devDependencies": {
+    "@zer/config": "workspace:*",
+    "typescript": "^5"
+  }
+}

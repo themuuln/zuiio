@@ -1,0 +1,17 @@
+{
+  "name": "@zer/hooks",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "react": "^18 || ^19"
+  },
+  "devDependencies": {
+    "@zer/config": "workspace:*",
+    "@types/react": "^19",
+    "typescript": "^5"
+  }
+}
