@@ -11,11 +11,11 @@ import {
   Plus,
   Star,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
-import { PartForm } from "@/components/inventory/part-form";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -55,6 +55,13 @@ import type { SortKey } from "./constants";
 import { Modal } from "./modal";
 import { SortKeyHeader } from "./sort-key-header";
 import { TableSkeleton } from "./table-skeleton";
+
+// Dynamically imported to avoid SSR issues -- one of its transitive
+// dependencies (heic2any) references window at module evaluation time.
+const PartForm = dynamic(
+  () => import("@/components/inventory/part-form").then((m) => m.PartForm),
+  { ssr: false },
+);
 
 // Part data from API includes popularity_score joined from analytics
 type PartRow = PartsCatalogItem & { popularity_score?: number };

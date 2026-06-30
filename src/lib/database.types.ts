@@ -961,6 +961,121 @@ export type Database = {
           },
         ];
       };
+      customer_followups: {
+        Row: {
+          assigned_to: string | null;
+          cancelled_at: string | null;
+          completed_at: string | null;
+          created_at: string;
+          created_by: string | null;
+          customer_id: string;
+          deleted_at: string | null;
+          due_at: string;
+          estimate_id: string | null;
+          id: string;
+          invoice_id: string | null;
+          notes: string | null;
+          organization_id: string;
+          outcome: string | null;
+          outcome_notes: string | null;
+          status: string;
+          subject: string;
+          type: string;
+          updated_at: string;
+          vehicle_id: string | null;
+          work_order_id: string | null;
+        };
+        Insert: {
+          assigned_to?: string | null;
+          cancelled_at?: string | null;
+          completed_at?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          customer_id: string;
+          deleted_at?: string | null;
+          due_at: string;
+          estimate_id?: string | null;
+          id?: string;
+          invoice_id?: string | null;
+          notes?: string | null;
+          organization_id: string;
+          outcome?: string | null;
+          outcome_notes?: string | null;
+          status?: string;
+          subject: string;
+          type?: string;
+          updated_at?: string;
+          vehicle_id?: string | null;
+          work_order_id?: string | null;
+        };
+        Update: {
+          assigned_to?: string | null;
+          cancelled_at?: string | null;
+          completed_at?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          customer_id?: string;
+          deleted_at?: string | null;
+          due_at?: string;
+          estimate_id?: string | null;
+          id?: string;
+          invoice_id?: string | null;
+          notes?: string | null;
+          organization_id?: string;
+          outcome?: string | null;
+          outcome_notes?: string | null;
+          status?: string;
+          subject?: string;
+          type?: string;
+          updated_at?: string;
+          vehicle_id?: string | null;
+          work_order_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "customer_followups_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "customer_followups_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "customer_followups_vehicle_id_fkey";
+            columns: ["vehicle_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "customer_followups_work_order_id_fkey";
+            columns: ["work_order_id"];
+            isOneToOne: false;
+            referencedRelation: "work_orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "customer_followups_estimate_id_fkey";
+            columns: ["estimate_id"];
+            isOneToOne: false;
+            referencedRelation: "estimates";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "customer_followups_invoice_id_fkey";
+            columns: ["invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "invoices";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       day_close_logs: {
         Row: {
           closed_at: string;

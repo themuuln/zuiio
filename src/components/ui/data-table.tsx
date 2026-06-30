@@ -212,7 +212,7 @@ export function DataTable<TData, TValue>({
 
   // ── Empty state ───────────────────────────────────────────
 
-  if (data.length === 0) {
+  if (!data || data.length === 0) {
     return (
       <div className={cn(className)}>
         {emptyState ?? (

@@ -345,7 +345,8 @@
     "suppliers": "Suppliers",
     "valuation": "Valuation",
     "purchaseOrders": "Purchase Orders",
-    "estimates": "Estimates"
+    "estimates": "Estimates",
+    "appointments": "Appointments"
   },
   "mechanic": {
     "title": "My Shift",
@@ -1319,6 +1320,7 @@
     "editService": "Edit Service",
     "editServiceDescription": "Update service details and pricing",
     "serviceName": "Service Name",
+    "name": "Name",
     "nameMn": "Mongolian Name",
     "price": "Price",
     "category": "Category",

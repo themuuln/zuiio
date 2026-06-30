@@ -345,7 +345,8 @@
     "suppliers": "Нийлүүлэгчид",
     "valuation": "Үнэлгээ",
     "purchaseOrders": "Худалдан авалт",
-    "estimates": "Үнийн санал"
+    "estimates": "Үнийн санал",
+    "appointments": "Цаг захиалга"
   },
   "mechanic": {
     "title": "Миний ээлж",
@@ -1319,6 +1320,7 @@
     "editService": "Үйлчилгээ засах",
     "editServiceDescription": "Үйлчилгээний мэдээлэл, үнийг шинэчлэх",
     "serviceName": "Үйлчилгээний нэр",
+    "name": "Нэр",
     "nameMn": "Монгол нэр",
     "price": "Үнэ",
     "category": "Ангилал",

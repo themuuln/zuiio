@@ -1,6 +1,24 @@
 {
   "version": 1,
   "skills": {
+    "next-dev-loop": {
+      "source": "vercel/next.js",
+      "sourceType": "github",
+      "skillPath": "skills/next-dev-loop/SKILL.md",
+      "computedHash": "aad97b32ba6efd31e92d063ec77120a694fe0d4a9401daf9af4c205cd5e21b07"
+    },
+    "next-cache-components-adoption": {
+      "source": "vercel/next.js",
+      "sourceType": "github",
+      "skillPath": "skills/next-cache-components-adoption/SKILL.md",
+      "computedHash": "64349ab4d118a8b3eb9755b4ca510073fb71eafd6037079505c964e13c3d8375"
+    },
+    "next-cache-components-optimizer": {
+      "source": "vercel/next.js",
+      "sourceType": "github",
+      "skillPath": "skills/next-cache-components-optimizer/SKILL.md",
+      "computedHash": "baad40cdea0bdc2ba9afb55dc0da09e1f1f53e7d83685874ee30147713b00ad1"
+    },
     "shadcn": {
       "source": "shadcn/ui",
       "sourceType": "github",

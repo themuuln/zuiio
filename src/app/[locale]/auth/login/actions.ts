@@ -28,29 +28,106 @@ export async function login(
   _prevState: LoginState,
   formData: FormData,
 ): Promise<LoginState> {
-  const raw = {
-    identifier: (formData.get("identifier") as string)?.trim() || "",
-    password: (formData.get("password") as string) || "",
-  };
-
-  const parsed = loginSchema.safeParse(raw);
-  if (!parsed.success) {
-    return {
-      values: { identifier: raw.identifier },
-      fieldErrors: flattenFieldErrors(parsed.error.issues),
+  try {
+    const raw = {
+      identifier: (formData.get("identifier") as string)?.trim() || "",
+      password: (formData.get("password") as string) || "",
     };
-  }
 
-  const supabase = await createClient();
-  const serviceRole = await createServiceRoleClient();
+    const parsed = loginSchema.safeParse(raw);
+    if (!parsed.success) {
+      return {
+        values: { identifier: raw.identifier },
+        fieldErrors: flattenFieldErrors(parsed.error.issues),
+      };
+    }
 
-  const { identifier, password } = parsed.data;
-  const type = detectIdentifierType(identifier);
+    const supabase = await createClient();
+    const serviceRole = await createServiceRoleClient();
 
-  if (type === "email") {
-    // Sign in directly with email — Supabase Auth handles it natively
+    const { identifier, password } = parsed.data;
+    const type = detectIdentifierType(identifier);
+
+    if (type === "email") {
+      // Sign in directly with email — Supabase Auth handles it natively
+      const { error } = await supabase.auth.signInWithPassword({
+        email: identifier.trim(),
+        password,
+      });
+
+      if (error) {
+        return {
+          values: { identifier: raw.identifier },
+          formError: error.message,
+        };
+      }
+
+      const redirectTo = formData.get("redirectTo") as string | null;
+      const params = redirectTo
+        ? `?redirectTo=${encodeURIComponent(redirectTo)}`
+        : "";
+      return { redirectTo: `/auth/select-organization${params}` };
+    }
+
+    // For phone or username: look up the profile, get the auth email, then sign in
+    let lookupColumn: "username" | "phone";
+    let lookupValue: string;
+
+    if (type === "phone") {
+      lookupColumn = "phone";
+      lookupValue = normalizeMongolianPhone(identifier.trim());
+    } else {
+      lookupColumn = "username";
+      lookupValue = identifier.trim().toLowerCase();
+    }
+
+    const { data: profile, error: profileError } = await serviceRole
+      .from("profiles")
+      .select("id")
+      .eq(lookupColumn, lookupValue)
+      .maybeSingle();
+
+    if (profileError) {
+      reportServerError("Login lookup database error:", profileError);
+      return {
+        values: { identifier: raw.identifier },
+        formError: `Database lookup error: ${profileError.message}`,
+      };
+    }
+
+    if (!profile) {
+      return {
+        values: { identifier: raw.identifier },
+        formError:
+          type === "phone"
+            ? "No account found with this phone number"
+            : "No account found with this username",
+      };
+    }
+
+    // Get the user's email from auth.users via service role
+    const { data: authUser, error: authUserError } =
+      await serviceRole.auth.admin.getUserById(profile.id);
+    if (authUserError) {
+      reportServerError("Login auth user fetch error:", authUserError);
+      return {
+        values: { identifier: raw.identifier },
+        formError: `Auth lookup error: ${authUserError.message}`,
+      };
+    }
+
+    if (!authUser?.user?.email) {
+      return {
+        values: { identifier: raw.identifier },
+        formError:
+          type === "phone"
+            ? "No account found with this phone number"
+            : "No account found with this username",
+      };
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
-      email: identifier.trim(),
+      email: authUser.user.email,
       password,
     });
 
@@ -66,80 +143,13 @@ export async function login(
       ? `?redirectTo=${encodeURIComponent(redirectTo)}`
       : "";
     return { redirectTo: `/auth/select-organization${params}` };
-  }
-
-  // For phone or username: look up the profile, get the auth email, then sign in
-  let lookupColumn: "username" | "phone";
-  let lookupValue: string;
-
-  if (type === "phone") {
-    lookupColumn = "phone";
-    lookupValue = normalizeMongolianPhone(identifier.trim());
-  } else {
-    lookupColumn = "username";
-    lookupValue = identifier.trim().toLowerCase();
-  }
-
-  const { data: profile, error: profileError } = await serviceRole
-    .from("profiles")
-    .select("id")
-    .eq(lookupColumn, lookupValue)
-    .maybeSingle();
-
-  if (profileError) {
-    reportServerError("Login lookup database error:", profileError);
+  } catch (err) {
+    reportServerError("Login unexpected error:", err);
     return {
-      values: { identifier: raw.identifier },
-      formError: `Database lookup error: ${profileError.message}`,
+      values: {
+        identifier: (formData.get("identifier") as string)?.trim() || "",
+      },
+      formError: "An unexpected error occurred. Please try again.",
     };
   }
-
-  if (!profile) {
-    return {
-      values: { identifier: raw.identifier },
-      formError:
-        type === "phone"
-          ? "No account found with this phone number"
-          : "No account found with this username",
-    };
-  }
-
-  // Get the user's email from auth.users via service role
-  const { data: authUser, error: authUserError } =
-    await serviceRole.auth.admin.getUserById(profile.id);
-  if (authUserError) {
-    reportServerError("Login auth user fetch error:", authUserError);
-    return {
-      values: { identifier: raw.identifier },
-      formError: `Auth lookup error: ${authUserError.message}`,
-    };
-  }
-
-  if (!authUser?.user?.email) {
-    return {
-      values: { identifier: raw.identifier },
-      formError:
-        type === "phone"
-          ? "No account found with this phone number"
-          : "No account found with this username",
-    };
-  }
-
-  const { error } = await supabase.auth.signInWithPassword({
-    email: authUser.user.email,
-    password,
-  });
-
-  if (error) {
-    return {
-      values: { identifier: raw.identifier },
-      formError: error.message,
-    };
-  }
-
-  const redirectTo = formData.get("redirectTo") as string | null;
-  const params = redirectTo
-    ? `?redirectTo=${encodeURIComponent(redirectTo)}`
-    : "";
-  return { redirectTo: `/auth/select-organization${params}` };
 }

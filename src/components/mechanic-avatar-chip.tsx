@@ -3,6 +3,7 @@
 import type React from "react";
 import { Crown, X } from "lucide-react";
 import { MechanicAvatar } from "@/components/mechanic-avatar";
+import type { MechanicRef } from "@/lib/types/mechanic";
 import {
   Tooltip,
   TooltipContent,
@@ -11,16 +12,10 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-// ─── Types ──────────────────────────────────────────────────────
-
-export interface ChipMechanic {
-  id: string;
-  full_name: string | null;
-  avatar_url?: string | null;
-}
+export type { MechanicRef as ChipMechanic };
 
 export interface MechanicAvatarChipProps {
-  mechanic: ChipMechanic;
+  mechanic: MechanicRef;
   /** Show a crown icon for the lead mechanic */
   showLeadCrown?: boolean;
   /** Show a tooltip with the mechanic's name on hover (default: true) */
@@ -133,7 +128,7 @@ export function MechanicAvatarChip({
 // ─── Group ──────────────────────────────────────────────────────
 
 export interface MechanicAvatarGroupProps {
-  mechanics: ChipMechanic[];
+  mechanics: MechanicRef[];
   /** ID of the lead mechanic — gets a crown */
   leadId?: string | null;
   /** Max chips to show before "+N" overflow (default: 3) */

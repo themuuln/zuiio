@@ -13,7 +13,6 @@
  * only exists in the Node.js pino entry — browser bundles skip it.
  */
 
-import path from "node:path";
 import pino from "pino";
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -23,22 +22,6 @@ const rootLevel = process.env.LOG_LEVEL ?? (isProduction ? "info" : "debug");
 // pino.transport only exists on the server entry of pino.
 // In browser bundles (pino/browser.js), it's a plain function without .transport.
 const hasServerTransport = typeof pino.transport === "function";
-
-/**
- * Error-level file transport destination.
- * Empty string when running on client/Edge — no file transport available.
- * Shared so other modules can write to the same file.
- */
-export const ERROR_LOG_PATH =
-  hasServerTransport && !isEdge
-    ? (() => {
-        try {
-          return path.resolve(process.cwd(), "logs", "error.log");
-        } catch {
-          return "";
-        }
-      })()
-    : "";
 
 /**
  * Build the transport pipeline.
@@ -54,11 +37,12 @@ if (hasServerTransport && !isEdge) {
 
   // Persist error+ logs to a file so agents can discover recent errors
   // without scanning the full output stream.
+  // Use a relative path — pino resolves it from process.cwd() automatically.
   targets.push({
     target: "pino/file",
     level: "error",
     options: {
-      destination: ERROR_LOG_PATH,
+      destination: "logs/error.log",
       mkdir: true,
     },
   });

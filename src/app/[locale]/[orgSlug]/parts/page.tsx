@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { StorefrontPage } from "./_components/storefront-page";
 
-export const revalidate = 60;
 
 type OrgInfo = {
   id: string;

@@ -1,10 +1,7 @@
 import type { BaySlotData } from "@/lib/services/bay-view-service";
+import type { MechanicRef } from "@/lib/types/mechanic";
 
-export type BayCardMechanic = {
-  id: string;
-  full_name: string | null;
-  avatar_url: string | null;
-};
+export type BayCardMechanic = MechanicRef;
 
 export type BayCardWorkOrder = NonNullable<BaySlotData["workOrder"]>;
 

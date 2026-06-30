@@ -1,3 +1,8 @@
+<!-- BEGIN:nextjs-agent-rules -->
+# This is NOT the Next.js you know
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+<!-- END:nextjs-agent-rules -->
+
 # Agent Instructions
 
 **Always read `VISION.md` first** — it is the single source of truth for project direction, architecture, goals, and principles. This file (AGENTS.md) covers operational rules and coding specifics. When in doubt, defer to VISION.md.

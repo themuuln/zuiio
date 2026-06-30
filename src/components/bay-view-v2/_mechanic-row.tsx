@@ -2,24 +2,19 @@
 
 import { UserPlus } from "lucide-react";
 import { MechanicAvatarChip } from "@/components/mechanic-avatar-chip";
+import type { MechanicRef } from "@/lib/types/mechanic";
 import type { BayCardMechanic } from "./_bay-card-types";
 import { MechanicAssignSheet } from "./_mechanic-assign-sheet";
 import { MechanicBadge } from "./mechanic-badge";
 import { cn } from "@/lib/utils";
 
-interface MechanicRowItem {
-  id: string;
-  full_name: string | null;
-  avatar_url?: string | null;
-}
-
 interface MechanicsRowProps {
   /** Work order ID (used in callbacks) */
   woId: string;
   /** Lead mechanic (null if unassigned) */
-  leadMechanic: MechanicRowItem | null;
+  leadMechanic: MechanicRef | null;
   /** Helper mechanics assigned alongside the lead */
-  helpers: MechanicRowItem[];
+  helpers: MechanicRef[];
   /** Current work order status (affects badge display) */
   status?: string;
   /** Full list of available mechanics for the [add] sheet */

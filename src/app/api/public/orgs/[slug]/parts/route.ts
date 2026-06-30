@@ -2,8 +2,6 @@ import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { reportServerError } from "@/lib/sentry-report-server";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 60;
 
 type OrgInfo = {
   id: string;

@@ -1,13 +1,10 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getMechanicColor, getMechanicInitials } from "@/lib/mechanic-colors";
+import type { MechanicRef } from "@/lib/types/mechanic";
 import { cn } from "@/lib/utils";
 
 interface MechanicAvatarProps {
-  mechanic: {
-    id: string;
-    full_name: string | null;
-    avatar_url?: string | null;
-  };
+  mechanic: MechanicRef;
   /** Avatar size — matches Avatar component's size prop. Default: "default" */
   size?: "sm" | "default" | "lg";
   /** Additional classes (e.g. custom size like "size-4", "size-5") */

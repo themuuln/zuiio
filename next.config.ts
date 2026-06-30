@@ -15,6 +15,17 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
   reactCompiler: true,
+
+  // ── Next.js 16.3: Instant Navigations ──────────────────────
+  cacheComponents: true,
+  partialPrefetching: true,
+
+  // Point Turbopack at this project's root so it doesn't get confused
+  // by the parent monorepo (zuiio/) having its own pnpm-workspace.yaml.
+  turbopack: {
+    root: process.cwd(),
+  },
+
   serverExternalPackages: ["playwright-core"],
 
   images: {
@@ -26,6 +37,10 @@ const nextConfig: NextConfig = {
 
   experimental: {
     optimizePackageImports: ["lucide-react", "@tanstack/react-table"],
+    // Turbopack: persistent cache for faster successive builds
+    turbopackFileSystemCacheForBuild: true,
+    // Experimental Rust React Compiler (faster than Babel variant)
+    turbopackRustReactCompiler: true,
   },
 
   // ── Security Headers ──────────────────────────────────────────
@@ -76,7 +91,7 @@ const withPWA = withPWAInit({
   register: true,
   scope: "/",
   sw: "sw.js",
-  cacheOnFrontendNav: true,
+  cacheOnFrontEndNav: true,
   cacheStartUrl: true,
   reloadOnOnline: true,
   fallbacks: {

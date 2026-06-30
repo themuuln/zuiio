@@ -12,25 +12,15 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
+import type { HelperRef, MechanicPickerOption } from "@/lib/types/mechanic";
 import { cn } from "@/lib/utils";
-
-interface MechanicOption {
-  id: string;
-  full_name: string | null;
-  current_jobs?: number;
-}
-
-interface Helper {
-  id: string;
-  mechanic_id?: string;
-  full_name?: string | null | undefined;
-}
+import { buildSelectedMechanics } from "./_mechanic-helpers";
 
 interface MechanicAssignSheetProps {
   trigger: React.ReactNode;
-  mechanics: MechanicOption[];
+  mechanics: MechanicPickerOption[];
   leadMechanicId: string | null;
-  helpers: Helper[];
+  helpers: HelperRef[];
   onAssignLead?: (mechanicId: string) => Promise<void>;
   onAssignHelper?: (mechanicId: string) => Promise<void>;
   onUnassign?: (mechanicId: string) => Promise<void>;
@@ -46,7 +36,7 @@ const MechanicRow = memo(function MechanicRow({
   onToggle,
   onSetLead,
 }: {
-  mechanic: MechanicOption;
+  mechanic: MechanicPickerOption;
   isAssigned: boolean;
   isLead: boolean;
   onToggle?: (mechanicId: string) => void;
@@ -111,27 +101,6 @@ const MechanicRow = memo(function MechanicRow({
   );
 });
 
-// ── Helpers ──────────────────────────────────────────────────
-
-function buildSelectedValue(
-  leadMechanicId: string | null,
-  helpers: Helper[],
-  mechanics: MechanicOption[],
-): MechanicOption[] {
-  const result: MechanicOption[] = [];
-  if (leadMechanicId) {
-    const lead = mechanics.find((m) => m.id === leadMechanicId);
-    if (lead) result.push(lead);
-  }
-  for (const h of helpers) {
-    const hid = h.mechanic_id ?? h.id;
-    if (hid === leadMechanicId) continue;
-    const m = mechanics.find((mech) => mech.id === hid);
-    if (m) result.push(m);
-  }
-  return result;
-}
-
 // ── Main Component ──────────────────────────────────────────
 
 export function MechanicAssignSheet({
@@ -148,21 +117,20 @@ export function MechanicAssignSheet({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-  const serverValue = useMemo(
-    () => buildSelectedValue(leadMechanicId, helpers, mechanics),
+  // value is derived entirely from props — no local optimistic state.
+  // The parent's optimistic onMutate updates the RQ cache synchronously,
+  // so the new serverValue propagates back within the same render cycle.
+  const value = useMemo(
+    () => buildSelectedMechanics(leadMechanicId, helpers, mechanics),
     [leadMechanicId, helpers, mechanics],
   );
-
-  // Optimistic local state: set BEFORE callback, cleared when server catches up
-  const [localValue, setLocalValue] = useState<MechanicOption[] | null>(null);
-  const value = localValue ?? serverValue;
 
   // Reset search when opening
   useEffect(() => {
     if (open) setSearch("");
   }, [open]);
 
-  const assignedIds = new Set(value.map((m) => m.id));
+  const assignedIds = useMemo(() => new Set(value.map((m) => m.id)), [value]);
 
   const q = search.toLowerCase();
   const filtered = !q
@@ -183,29 +151,19 @@ export function MechanicAssignSheet({
 
       if (isAssigned) {
         // ── Unassign ──
-        const nextValue = value.filter((v) => v.id !== mechanicId);
-        setLocalValue(nextValue);
-
         if (mechanicId === leadMechanicId) {
-          // Removing lead — promote next helper
-          if (nextValue.length > 0) {
-            onAssignLead?.(nextValue[0].id);
-          }
+          const nextLead = value.find((v) => v.id !== mechanicId);
+          if (nextLead) onAssignLead?.(nextLead.id);
           onUnassign?.(mechanicId);
         } else {
           onUnassign?.(mechanicId);
         }
+      } else if (value.length === 0) {
+        // ── Assign as lead (first mechanic) ──
+        onAssignLead?.(mechanicId);
       } else {
-        // ── Assign ──
-        if (value.length === 0) {
-          // First mechanic = lead
-          setLocalValue([candidate]);
-          onAssignLead?.(mechanicId);
-        } else {
-          // Helper
-          setLocalValue([...value, candidate]);
-          onAssignHelper?.(mechanicId);
-        }
+        // ── Assign as helper ──
+        onAssignHelper?.(mechanicId);
       }
     },
     [
@@ -221,13 +179,9 @@ export function MechanicAssignSheet({
 
   const handleSetLead = useCallback(
     (mechanicId: string) => {
-      const candidate = mechanics.find((m) => m.id === mechanicId);
-      if (!candidate) return;
-      const updated = value.filter((v) => v.id !== mechanicId);
-      setLocalValue([candidate, ...updated]);
       onAssignLead?.(mechanicId);
     },
-    [mechanics, value, onAssignLead],
+    [onAssignLead],
   );
 
   const headerText = leadMechanicId ? t("changeMechanic") : t("assignMechanic");
@@ -298,9 +252,7 @@ export function MechanicAssignSheet({
             {ordered.length === 0 ? (
               <div className="px-3 py-8 text-center">
                 <span className="text-sm text-muted-foreground">
-                  {search
-                    ? (t("noMechanicsFound") ?? "No mechanics found")
-                    : (t("allMechanicsAssigned") ?? "All mechanics assigned")}
+                  {search ? t("noMechanicsFound") : t("allMechanicsAssigned")}
                 </span>
               </div>
             ) : (

@@ -13,25 +13,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import type { HelperRef, MechanicPickerOption } from "@/lib/types/mechanic";
 import { cn } from "@/lib/utils";
-
-interface MechanicOption {
-  id: string;
-  full_name: string;
-  current_jobs?: number;
-}
-
-interface Helper {
-  id: string;
-  mechanic_id?: string;
-  full_name?: string | null | undefined;
-}
+import { buildSelectedMechanics } from "./_mechanic-helpers";
 
 interface MechanicMultiSelectProps {
   leadMechanicId: string | null;
   leadMechanicName: string | null;
-  helpers: Helper[];
-  mechanics: MechanicOption[];
+  helpers: HelperRef[];
+  mechanics: MechanicPickerOption[];
   orgId: string;
   workOrderId: string;
   saving: boolean;
@@ -46,7 +36,7 @@ const MechanicRow = memo(function MechanicRow({
   onToggle,
   onSetLead,
 }: {
-  mechanic: MechanicOption;
+  mechanic: MechanicPickerOption;
   isAssigned: boolean;
   isLead: boolean;
   onToggle?: (mechanicId: string) => void;
@@ -102,26 +92,6 @@ const MechanicRow = memo(function MechanicRow({
   );
 });
 
-/** Build ordered value: [lead, ...helpers] */
-function buildSelectedValue(
-  leadMechanicId: string | null,
-  helpers: Helper[],
-  mechanics: MechanicOption[],
-): MechanicOption[] {
-  const result: MechanicOption[] = [];
-  if (leadMechanicId) {
-    const lead = mechanics.find((m) => m.id === leadMechanicId);
-    if (lead) result.push(lead);
-  }
-  for (const h of helpers) {
-    const hid = h.mechanic_id ?? h.id;
-    if (hid === leadMechanicId) continue;
-    const m = mechanics.find((mech) => mech.id === hid);
-    if (m) result.push(m);
-  }
-  return result;
-}
-
 export function MechanicMultiSelect({
   leadMechanicId,
   leadMechanicName: _leadMechanicName,
@@ -138,12 +108,12 @@ export function MechanicMultiSelect({
   const [search, setSearch] = useState("");
 
   const serverValue = useMemo(
-    () => buildSelectedValue(leadMechanicId, helpers, mechanics),
+    () => buildSelectedMechanics(leadMechanicId, helpers, mechanics),
     [leadMechanicId, helpers, mechanics],
   );
 
   // Optimistic local state: set BEFORE API call, cleared when server catches up
-  const [localValue, setLocalValue] = useState<MechanicOption[] | null>(null);
+  const [localValue, setLocalValue] = useState<MechanicPickerOption[] | null>(null);
   const value = localValue ?? serverValue;
 
   // Track pending API operations to avoid clearing localValue prematurely
@@ -174,7 +144,7 @@ export function MechanicMultiSelect({
   const q = search.toLowerCase();
   const filtered = !q
     ? mechanics
-    : mechanics.filter((m) => m.full_name.toLowerCase().includes(q));
+    : mechanics.filter((m) => (m.full_name ?? "").toLowerCase().includes(q));
 
   const unassigned = filtered.filter((m) => !assignedIds.has(m.id));
   const ordered = [...value, ...unassigned];
@@ -187,7 +157,7 @@ export function MechanicMultiSelect({
       if (!candidate) return;
 
       const isAssigned = assignedIds.has(mechanicId);
-      let nextValue: MechanicOption[];
+      let nextValue: MechanicPickerOption[];
 
       if (isAssigned) {
         // Unassign

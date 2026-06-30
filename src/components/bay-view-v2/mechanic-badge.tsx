@@ -4,6 +4,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { User, X } from "lucide-react";
 import { MechanicAvatar } from "@/components/mechanic-avatar";
 import { Button } from "@/components/ui/button";
+import type { MechanicRef } from "@/lib/types/mechanic";
 import {
   Tooltip,
   TooltipContent,
@@ -14,11 +15,7 @@ import { cn } from "@/lib/utils";
 
 interface MechanicBadgeProps {
   workOrderId: string;
-  mechanic: {
-    id: string;
-    full_name: string | null;
-    avatar_url: string | null;
-  } | null;
+  mechanic: MechanicRef | null;
   disabled?: boolean;
   compact?: boolean;
   role?: "main" | "helper";
