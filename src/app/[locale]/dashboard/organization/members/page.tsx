@@ -180,7 +180,12 @@ export default function MembersPage() {
 
   const handleSaveMember = async (
     memberId: string,
-    data: { fullName: string; phone: string; roleId: string; branchId: string },
+    data: {
+      fullName?: string;
+      phone?: string;
+      roleId: string;
+      branchId?: string;
+    },
   ) => {
     setSavingEdit(true);
     try {

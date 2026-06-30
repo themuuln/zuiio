@@ -4,7 +4,6 @@ import { ArrowUpDown, CheckCircle2, RefreshCw, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Drawer,
   DrawerContent,
@@ -36,25 +35,19 @@ export function OfflineQueueIndicator() {
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="fixed bottom-4 right-4 z-40 gap-2 shadow-lg"
-        >
-          {isReplaying ? (
-            <RefreshCw className="size-4 animate-spin" />
-          ) : (
-            <ArrowUpDown className="size-4" />
-          )}
-          <Badge variant={pendingCount > 0 ? "destructive" : "secondary"}>
-            {pendingCount > 0
-              ? t("pendingCount", { count: pendingCount })
-              : isReplaying
-                ? t("syncing")
-                : t("queueEmpty")}
-          </Badge>
-        </Button>
+      <DrawerTrigger className="fixed bottom-4 right-4 z-40 gap-2 shadow-lg inline-flex items-center justify-center whitespace-nowrap rounded-md border border-input bg-background text-sm font-medium hover:bg-accent hover:text-accent-foreground h-9 px-4">
+        {isReplaying ? (
+          <RefreshCw className="size-4 animate-spin" />
+        ) : (
+          <ArrowUpDown className="size-4" />
+        )}
+        <Badge variant={pendingCount > 0 ? "destructive" : "secondary"}>
+          {pendingCount > 0
+            ? t("pendingCount", { count: pendingCount })
+            : isReplaying
+              ? t("syncing")
+              : t("queueEmpty")}
+        </Badge>
       </DrawerTrigger>
 
       <DrawerContent className="w-80">

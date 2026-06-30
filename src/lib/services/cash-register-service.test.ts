@@ -1,4 +1,3 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createAuditLog } from "@/lib/audit";
@@ -20,7 +19,12 @@ vi.mock("@/lib/audit", () => ({
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
 
 describe("cash-register-service", () => {
-  const mockClient = createMockSupabaseClient() as unknown as SupabaseClient;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mockClient = createMockSupabaseClient() as any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sessionsQb = (mockClient.from as any)("cash_register_sessions");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const entriesQb = (mockClient.from as any)("cash_register_entries");
 
   beforeEach(() => {
     vi.clearAllMocks();

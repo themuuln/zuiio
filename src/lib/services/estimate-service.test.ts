@@ -258,7 +258,9 @@ describe("EstimateService", () => {
         ],
       });
 
-      expect(insertedEstimate?.status).toBe("sent");
+      expect((insertedEstimate as Record<string, unknown> | null)?.status).toBe(
+        "sent",
+      );
     });
 
     it("rejects when customer is missing", async () => {

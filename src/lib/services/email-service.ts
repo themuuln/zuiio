@@ -63,16 +63,20 @@ function parseAccounts(): SmtpAccount[] {
 /** Get the next transporter in round-robin order. */
 function getTransporter(): Transporter {
   parseAccounts();
-  const transporter = _transporters?.[_currentIndex % _transporters?.length];
+  const index = _currentIndex % (_transporters?.length ?? 1);
+  const transporter = _transporters?.[index];
   _currentIndex++;
+  if (!transporter) throw new Error("SMTP transporter not available");
   return transporter;
 }
 
 /** Get the from-email matching the current round-robin account. */
 function getFromEmail(): string {
   parseAccounts();
-  const account = _accounts?.[_currentIndex % _accounts?.length];
-  return account.from;
+  const index = _currentIndex % (_accounts?.length ?? 1);
+  const account = _accounts?.[index];
+  _currentIndex++;
+  return account?.from ?? "noreply@tolom.app";
 }
 
 // ── Public API ─────────────────────────────────────────────────
@@ -598,7 +602,7 @@ export async function testEmailConfig(): Promise<boolean> {
 /** Return the number of configured SMTP accounts (for diagnostics). */
 export function getSmtpAccountCount(): number {
   parseAccounts();
-  return _accounts?.length;
+  return _accounts?.length ?? 0;
 }
 
 // ── Estimate Email ─────────────────────────────────────────────
@@ -611,6 +615,8 @@ export interface SendEstimateEmailParams {
     valid_until: string | null;
     notes: string | null;
     subtotal: number;
+    discount_amount: number;
+    discount_percentage: number;
     discount_total: number;
     tax_total: number;
     grand_total: number;
@@ -631,6 +637,7 @@ export interface SendEstimateEmailParams {
       quantity: number;
       unit_price: number;
       discount_amount: number;
+      discount_percentage: number;
       line_total: number;
     }[];
   };

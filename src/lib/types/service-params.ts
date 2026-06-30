@@ -157,36 +157,36 @@ export interface UpdateEstimateParams {
 export interface CreateWorkOrderParams {
   customer_id?: string;
   vehicle_id: string;
-  branchId?: string | null;
-  mechanic_id?: string;
-  notes?: string;
-  complaint?: string;
-  diagnosis_label_id?: string | null;
+  branchId?: string | null | undefined;
+  mechanic_id?: string | null | undefined;
+  notes?: string | null | undefined;
+  complaint?: string | null | undefined;
+  diagnosis_label_id?: string | null | undefined;
   services?: AddServiceParams[];
   parts?: AddPartParams[];
-  discount_amount?: number;
-  discount_percentage?: number;
+  discount_amount?: number | null | undefined;
+  discount_percentage?: number | null | undefined;
 }
 
 export interface AddServiceParams {
-  service_catalog_id: string | null;
+  service_catalog_id?: string | null | undefined;
   service_name: string;
   quantity?: number;
   unit_price: number;
-  discount_amount?: number;
-  discount_percentage?: number;
-  notes?: string;
+  discount_amount?: number | null | undefined;
+  discount_percentage?: number | null | undefined;
+  notes?: string | null | undefined;
 }
 
 export interface AddPartParams {
   part_id?: string | null;
   part_name: string;
-  part_number?: string;
+  part_number?: string | null;
   quantity?: number;
   unit_price: number;
-  discount_amount?: number;
-  discount_percentage?: number;
-  notes?: string;
+  discount_amount?: number | null;
+  discount_percentage?: number | null;
+  notes?: string | null;
 }
 
 export interface WorkOrderFilters {

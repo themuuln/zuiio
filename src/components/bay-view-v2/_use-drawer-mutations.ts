@@ -196,7 +196,7 @@ export function useDrawerMutations({
 
   // ── Mechanic assignment ──
 
-  async function assignMechanic(mechanicId: string) {
+  async function assignMechanic(mechanicId: string, fullName?: string | null) {
     const orgId = orgIdRef.current;
     if (!orgId || !workOrderId) return;
     const prevWo = wo;
@@ -204,11 +204,19 @@ export function useDrawerMutations({
     // Optimistic: update drawer state immediately
     setWo((prev) => {
       if (!prev) return prev;
-      // If mechanicId is null/empty, clear the mechanic
+      // If mechanicId is null/empty, clear the mechanic entirely
       if (!mechanicId) {
-        return { ...prev, mechanic_id: null } as WorkOrderDetail;
+        return {
+          ...prev,
+          mechanic_id: null,
+          mechanic: null,
+        } as WorkOrderDetail;
       }
-      return { ...prev, mechanic_id: mechanicId } as WorkOrderDetail;
+      return {
+        ...prev,
+        mechanic_id: mechanicId,
+        mechanic: { id: mechanicId, full_name: fullName ?? null },
+      } as WorkOrderDetail;
     });
 
     try {

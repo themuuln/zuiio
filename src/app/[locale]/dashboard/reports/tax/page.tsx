@@ -115,11 +115,9 @@ export default function TaxReportPage() {
     <div className="flex flex-col gap-6 pb-8">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/dashboard/reports">
-            <ArrowLeft className="size-4" />
-            {commonT("back")}
-          </Link>
+        <Button variant="ghost" size="sm" render={<Link href="/dashboard/reports" />}>
+          <ArrowLeft className="size-4" />
+          {commonT("back")}
         </Button>
         <div>
           <Typography.H1 className="text-2xl font-semibold tracking-tight">

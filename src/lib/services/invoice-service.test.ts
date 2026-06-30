@@ -20,7 +20,7 @@ function createMockDb() {
   const createChain = (table: string) => {
     const chain: Record<string, any> = {};
 
-    const addMethod = (name: string, fn?: Function) => {
+    const addMethod = (name: string, fn?: (...args: never[]) => unknown) => {
       chain[name] = fn
         ? vi.fn().mockImplementation(fn)
         : vi.fn().mockReturnValue(chain);
@@ -70,7 +70,7 @@ function createMockDb() {
     });
 
     // Make thenable
-    chain.then = (resolve: Function) => {
+    chain.then = (resolve: (value: unknown) => unknown) => {
       const response = tableResponses[table]?.then ?? {
         data: null,
         error: null,

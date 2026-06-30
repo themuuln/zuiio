@@ -32,7 +32,10 @@ interface DrawerHeaderProps {
   saving: boolean;
   isAddingService: boolean;
   isFullScreen: boolean;
-  onAssignMechanic: (mechanicId: string) => Promise<void>;
+  onAssignMechanic: (
+    mechanicId: string,
+    fullName?: string | null,
+  ) => Promise<void>;
   onHelpersChange: () => void;
   onToggleFullScreen: () => void;
   onClose: () => void;
@@ -146,7 +149,10 @@ export function DrawerHeaderSection({
                 status={wo.status}
                 allMechanics={effectiveMechanics as any}
                 onAssignMechanic={async (_woId, mechanicId) => {
-                  await onAssignMechanic(mechanicId);
+                  const mech = effectiveMechanics.find(
+                    (m) => m.id === mechanicId,
+                  );
+                  await onAssignMechanic(mechanicId, mech?.full_name);
                 }}
                 onAddHelper={async (_woId, mechanicId) => {
                   try {

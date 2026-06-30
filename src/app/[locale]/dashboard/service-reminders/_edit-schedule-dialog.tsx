@@ -4,12 +4,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -96,12 +91,14 @@ export function EditScheduleDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>{t("serviceReminders.editSchedule")}</DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
+    <DetailDrawer open={open} onOpenChange={onOpenChange} size="lg">
+      <DetailDrawer.Header>
+        <DetailDrawer.Title>
+          {t("serviceReminders.editSchedule")}
+        </DetailDrawer.Title>
+      </DetailDrawer.Header>
+      <DetailDrawer.Body>
+        <div className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="edit-service_name">
               {t("serviceReminders.serviceName")}
@@ -173,15 +170,15 @@ export function EditScheduleDialog({
             />
           </div>
         </div>
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t("common.cancel")}
-          </Button>
-          <Button onClick={handleSave} disabled={isPending}>
-            {isPending ? t("common.saving") : t("common.save")}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+      </DetailDrawer.Body>
+      <DetailDrawer.Footer>
+        <Button variant="outline" onClick={() => onOpenChange(false)}>
+          {t("common.cancel")}
+        </Button>
+        <Button onClick={handleSave} disabled={isPending}>
+          {isPending ? t("common.saving") : t("common.save")}
+        </Button>
+      </DetailDrawer.Footer>
+    </DetailDrawer>
   );
 }

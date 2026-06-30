@@ -90,13 +90,13 @@ export function ReadyForPickupForm({
     },
   });
 
-  const odometerRegister = form.register("odometer");
+  const { ref: odometerRef, ...odometerRest } = form.register("odometer");
   const mergedOdometerRef = useCallback(
     (el: HTMLInputElement | null) => {
-      odometerRegister.ref({ current: el });
+      odometerRef(el);
       if (el) el.focus();
     },
-    [odometerRegister],
+    [odometerRef],
   );
 
   const paymentMethod = form.watch("paymentMethod");
@@ -191,7 +191,7 @@ export function ReadyForPickupForm({
                   placeholder={t("postServiceOdometerPlaceholder")}
                   className="h-10 pr-10"
                   min={0}
-                  {...odometerRegister}
+                  {...odometerRest}
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none select-none">
                   км
@@ -294,7 +294,7 @@ export function ReadyForPickupForm({
             {paymentMethod === "bank_transfer" && (
               <TransferBankPicker
                 banks={transferBanks}
-                value={transferBankId}
+                value={transferBankId ?? null}
                 onChange={(bankId) => form.setValue("transferBankId", bankId)}
               />
             )}

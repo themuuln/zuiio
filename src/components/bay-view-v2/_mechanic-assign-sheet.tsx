@@ -2,7 +2,7 @@
 
 import { Crown, Loader2, Search, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MechanicAvatar } from "@/components/mechanic-avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -71,9 +71,8 @@ const MechanicRow = memo(function MechanicRow({
       </div>
       <div className="flex items-center gap-1 shrink-0">
         {isAssigned && !isLead && onSetLead && (
-          <span
-            role="button"
-            tabIndex={0}
+          <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               onSetLead(mechanic.id);
@@ -88,7 +87,7 @@ const MechanicRow = memo(function MechanicRow({
             title="Set as lead mechanic"
           >
             <Crown className="size-3.5" />
-          </span>
+          </button>
         )}
         {isLead && (
           <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-amber-500/12 px-2 py-1 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
@@ -117,13 +116,51 @@ export function MechanicAssignSheet({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-  // value is derived entirely from props — no local optimistic state.
-  // The parent's optimistic onMutate updates the RQ cache synchronously,
-  // so the new serverValue propagates back within the same render cycle.
-  const value = useMemo(
+  // Server-derived value: computed from props after server confirms the change.
+  const serverValue = useMemo(
     () => buildSelectedMechanics(leadMechanicId, helpers, mechanics),
     [leadMechanicId, helpers, mechanics],
   );
+
+  // Local optimistic state: applied immediately on toggle, cleared once
+  // the server value catches up. This ensures the UI is always responsive
+  // regardless of whether the parent uses RQ optimism or raw fetch().
+  const [localValue, setLocalValue] = useState<MechanicPickerOption[] | null>(
+    null,
+  );
+  const value = localValue ?? serverValue;
+
+  // Sync: when server catches up to local state, drop the optimistic override.
+  const serverIdsRef = useRef<string>("");
+  useEffect(() => {
+    if (!localValue) return;
+    const s = serverValue
+      .map((m) => m.id)
+      .sort()
+      .join(",");
+    // First render after assignment — just record the server baseline.
+    if (serverIdsRef.current === "") {
+      serverIdsRef.current = s;
+      return;
+    }
+    // Server changed — if it now matches local, clear the optimistic state.
+    const l = localValue
+      .map((m) => m.id)
+      .sort()
+      .join(",");
+    if (l === s) {
+      setLocalValue(null);
+      serverIdsRef.current = "";
+    }
+  }, [localValue, serverValue]);
+
+  // Reset local state when the sheet closes so stale optimism doesn't linger.
+  useEffect(() => {
+    if (!open) {
+      setLocalValue(null);
+      serverIdsRef.current = "";
+    }
+  }, [open]);
 
   // Reset search when opening
   useEffect(() => {
@@ -148,6 +185,14 @@ export function MechanicAssignSheet({
       if (!candidate) return;
 
       const isAssigned = assignedIds.has(mechanicId);
+
+      // Apply optimistic local state immediately so the checkbox reflects
+      // the change before the server round-trip completes.
+      if (isAssigned) {
+        setLocalValue(value.filter((m) => m.id !== mechanicId));
+      } else {
+        setLocalValue([...value, candidate]);
+      }
 
       if (isAssigned) {
         // ── Unassign ──

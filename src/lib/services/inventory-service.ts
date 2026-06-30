@@ -219,7 +219,7 @@ export async function updatePart(
     record_id: id,
     user_id: userId,
     organization_id: orgId,
-    old_data: existingRecord,
+    old_data: existingRecord as Record<string, unknown> | undefined,
     new_data: data,
   });
   revalidateTag(cacheTags.partsCatalog(orgId), "max");

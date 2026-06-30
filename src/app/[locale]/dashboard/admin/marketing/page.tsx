@@ -21,14 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -293,14 +286,18 @@ export default function MarketingPage() {
       </Card>
 
       {/* Create Dialog */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create Campaign</DialogTitle>
-            <DialogDescription>
-              Create a new marketing campaign.
-            </DialogDescription>
-          </DialogHeader>
+      <DetailDrawer
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        size="lg"
+      >
+        <DetailDrawer.Header>
+          <DetailDrawer.Title>Create Campaign</DetailDrawer.Title>
+          <DetailDrawer.Description>
+            Create a new marketing campaign.
+          </DetailDrawer.Description>
+        </DetailDrawer.Header>
+        <DetailDrawer.Body>
           <div className="flex flex-col gap-4">
             <Input
               placeholder="Campaign name"
@@ -326,23 +323,20 @@ export default function MarketingPage() {
               </SelectContent>
             </Select>
           </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowCreateDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleCreate}
-              disabled={!newCampaign.name || creating}
-            >
-              {creating && <Loader2 className="size-4 mr-1 animate-spin" />}
-              Create
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </DetailDrawer.Body>
+        <DetailDrawer.Footer>
+          <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleCreate}
+            disabled={!newCampaign.name || creating}
+          >
+            {creating && <Loader2 className="size-4 mr-1 animate-spin" />}
+            Create
+          </Button>
+        </DetailDrawer.Footer>
+      </DetailDrawer>
     </div>
   );
 }

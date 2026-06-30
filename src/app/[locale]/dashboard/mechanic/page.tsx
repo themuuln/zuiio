@@ -754,8 +754,8 @@ function MechanicDashboard({
               <MechanicAvatar
                 mechanic={{
                   id: userId,
-                  full_name: mechanicName,
-                  avatar_url: avatarUrl,
+                  full_name: mechanicName ?? null,
+                  avatar_url: avatarUrl ?? null,
                 }}
                 className="size-10"
               />

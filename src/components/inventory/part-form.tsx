@@ -110,7 +110,9 @@ export function PartForm({
   const handleCreateCategory = async (name: string) => {
     if (!name) return;
     try {
-      const created = await createCategory.mutateAsync(name);
+      const created = (await createCategory.mutateAsync(name)) as {
+        name: string;
+      };
       form.setValue("category", created.name);
     } catch {
       // toast is handled by mutation

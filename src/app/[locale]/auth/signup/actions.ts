@@ -10,6 +10,7 @@ import { reportServerError } from "@/lib/sentry-report-server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { signupSchema } from "@/lib/validation/auth-schemas";
+import type { TablesInsert } from "@/lib/database.types";
 
 type SignupState = ActionState<{
   fullName: string;
@@ -130,7 +131,7 @@ export async function signup(
 
     // Save profile data
     if (data.user) {
-      const profileData: Record<string, string> = {
+      const profileData: TablesInsert<"profiles"> = {
         id: data.user.id,
         full_name: fullName,
       };

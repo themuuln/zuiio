@@ -1,5 +1,7 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import type {
   Branch,
   Customer,
@@ -39,7 +41,7 @@ interface OrgExport {
   };
   branches: Branch[];
   users: (OrganizationUser & {
-    profiles: Pick<Profile, "full_name" | "email"> | null;
+    profiles: (Pick<Profile, "full_name"> & { email: string | null }) | null;
   })[];
   roles: Role[];
   customers: Customer[];
@@ -68,15 +70,12 @@ interface OrgExport {
 }
 
 async function fetchAll<T>(
-  supabase: ReturnType<
-    typeof import("@/lib/supabase/server").createClient
-  > extends Promise<infer R>
-    ? R
-    : never,
+  supabase: SupabaseClient,
   table: string,
   orgId: string,
 ): Promise<T[]> {
-  const { data, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
     .from(table)
     .select("*")
     .eq("organization_id", orgId)
@@ -128,9 +127,10 @@ export const GET = createRouteHandler(async ({ orgId, supabase }) => {
   };
 
   const [{ data: users }, tableEntries] = await Promise.all([
-    supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
       .from("organization_users")
-      .select("*, profiles(full_name, email)")
+      .select("*, profiles(full_name)")
       .eq("organization_id", orgId),
     Promise.all(
       Object.entries(tables).map(async ([key, table]) => {
@@ -141,11 +141,49 @@ export const GET = createRouteHandler(async ({ orgId, supabase }) => {
   ]);
   const results: Record<string, unknown[]> = Object.fromEntries(tableEntries);
 
+  // Fetch user emails from auth.users via service role client
+  const userEmails: Record<string, string | null> = {};
+  try {
+    const serviceClient = await createServiceRoleClient();
+    const userIds = (users ?? []).map((u: { user_id: string }) => u.user_id);
+    if (userIds.length > 0) {
+      const { data: authUsers, error } = await (
+        serviceClient as unknown as SupabaseClient
+      ).rpc("get_users_by_ids", { user_ids: userIds });
+      if (!error && authUsers) {
+        for (const u of authUsers as Array<{
+          id: string;
+          email: string | null;
+        }>) {
+          userEmails[u.id] = u.email;
+        }
+      }
+    }
+  } catch {
+    // Gracefully degrade — email will be null if service role isn't configured
+  }
+
+  // Merge emails into user objects
+  const usersWithEmails = (users ?? []).map(
+    (
+      u: {
+        profiles: { full_name: string | null } | null;
+        user_id: string;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } & Record<string, any>,
+    ) => ({
+      ...u,
+      profiles: u.profiles
+        ? { ...u.profiles, email: userEmails[u.user_id] ?? null }
+        : null,
+    }),
+  );
+
   const exportData: OrgExport = {
     exported_at: new Date().toISOString(),
     organization: org,
     branches: results.branches as OrgExport["branches"],
-    users: (users ?? []) as unknown as OrgExport["users"],
+    users: usersWithEmails as unknown as OrgExport["users"],
     roles: results.roles as OrgExport["roles"],
     customers: results.customers as OrgExport["customers"],
     vehicles: results.vehicles as OrgExport["vehicles"],

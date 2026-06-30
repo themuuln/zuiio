@@ -1313,6 +1313,7 @@ export type Database = {
           id: string;
           notes: string | null;
           organization_id: string;
+          public_token: string;
           status: string;
           subtotal: number;
           tax_total: number;
@@ -1338,6 +1339,7 @@ export type Database = {
           id?: string;
           notes?: string | null;
           organization_id: string;
+          public_token?: string;
           status?: string;
           subtotal?: number;
           tax_total?: number;
@@ -1363,6 +1365,7 @@ export type Database = {
           id?: string;
           notes?: string | null;
           organization_id?: string;
+          public_token?: string;
           status?: string;
           subtotal?: number;
           tax_total?: number;

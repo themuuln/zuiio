@@ -75,7 +75,7 @@ export async function registerEInvoice(
   const { data: invoice, error: invoiceError } = await db
     .from("invoices")
     .select(
-      "id, invoice_number, issued_at, total, tax_total, customer_name, customer_email",
+      "id, invoice_number, issued_at, total, tax_total, customer_name, customer_email, einvoice_status, einvoice_registration_id, einvoice_qr_code",
     )
     .eq("id", invoiceId)
     .eq("organization_id", orgId)

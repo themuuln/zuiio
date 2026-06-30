@@ -266,7 +266,7 @@ export async function updateAppointment(
     record_id: id,
     user_id: user?.id,
     organization_id: orgId,
-    old_data: existingRecord,
+    old_data: existingRecord as Record<string, unknown> | undefined,
   });
 
   revalidateTag(cacheTags.appointments(orgId), "default");
@@ -328,7 +328,7 @@ export async function deleteAppointment(
     record_id: id,
     user_id: userId,
     organization_id: orgId,
-    old_data: existingRecord,
+    old_data: existingRecord as Record<string, unknown> | undefined,
   });
 
   revalidateTag(cacheTags.appointments(orgId), "default");

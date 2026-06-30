@@ -36,7 +36,9 @@ export function resolveOrgTransferBanks(
         isDefault: account.isDefault ?? false,
       };
     })
-    .filter((bank): bank is ResolvedTransferBank => bank !== null);
+    .filter(
+      (bank): bank is NonNullable<typeof bank> => bank !== null,
+    ) as ResolvedTransferBank[];
 }
 
 export function getDefaultTransferBank(
@@ -86,5 +88,7 @@ export function normalizeOrgTransferBankAccounts(
         isDefault: record.isDefault === true,
       };
     })
-    .filter((item): item is OrgTransferBankAccount => item !== null);
+    .filter(
+      (item): item is NonNullable<typeof item> => item !== null,
+    ) as OrgTransferBankAccount[];
 }

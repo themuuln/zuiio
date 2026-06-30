@@ -25,7 +25,7 @@ export async function GET(
       customer:customers(first_name, last_name, phone, email),
       vehicle:vehicles(plate_number, make, model, year),
       items:estimate_items(description, item_type, quantity, unit_price, discount_amount, discount_percentage, line_total, sort_order),
-      organization:organizations(name, phone, email, address)
+      organization:organizations(name)
     `,
     )
     .eq("public_token", token)
@@ -39,12 +39,7 @@ export async function GET(
     );
   }
 
-  const orgData = estimate.organization as {
-    name: string;
-    phone?: string;
-    email?: string;
-    address?: string;
-  } | null;
+  const orgData = estimate.organization as { name: string } | null;
 
   const buffer = await renderToPdfBuffer(
     EstimateDocument({
@@ -59,7 +54,9 @@ export async function GET(
         items: [...((estimate.items ?? []) as Record<string, unknown>[])]
           .sort((a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0))
           .map((item) => ({
-            ...item,
+            description: String(item.description ?? ""),
+            item_type: String(item.item_type ?? "custom"),
+            quantity: Number(item.quantity ?? 0),
             unit_price: Number(item.unit_price),
             discount_amount: Number(item.discount_amount ?? 0),
             discount_percentage: Number(item.discount_percentage ?? 0),

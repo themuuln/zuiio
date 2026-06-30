@@ -10,12 +10,7 @@ import { ListToolbar } from "@/components/list-toolbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import {
   Empty,
   EmptyContent,
@@ -247,12 +242,16 @@ export default function MovementsPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{t("newMovement")}</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <DetailDrawer open={showDialog} onOpenChange={setShowDialog} size="lg">
+        <DetailDrawer.Header>
+          <DetailDrawer.Title>{t("newMovement")}</DetailDrawer.Title>
+        </DetailDrawer.Header>
+        <DetailDrawer.Body>
+          <form
+            id="movement-form"
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-4"
+          >
             <div className="flex flex-col gap-2">
               <Label htmlFor="part_id">{t("part")} *</Label>
               <select
@@ -343,21 +342,25 @@ export default function MovementsPage() {
                 className="h-11"
               />
             </div>
-            <div className="flex justify-end gap-3 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowDialog(false)}
-              >
-                {t("cancel")}
-              </Button>
-              <Button type="submit" disabled={createMovement.isPending}>
-                {createMovement.isPending ? t("saving") : t("save")}
-              </Button>
-            </div>
           </form>
-        </DialogContent>
-      </Dialog>
+        </DetailDrawer.Body>
+        <DetailDrawer.Footer>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowDialog(false)}
+          >
+            {t("cancel")}
+          </Button>
+          <Button
+            type="submit"
+            form="movement-form"
+            disabled={createMovement.isPending}
+          >
+            {createMovement.isPending ? t("saving") : t("save")}
+          </Button>
+        </DetailDrawer.Footer>
+      </DetailDrawer>
     </div>
   );
 }

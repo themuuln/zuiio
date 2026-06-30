@@ -138,8 +138,14 @@ export function BayViewV2Client() {
   const updateBayCountMutation = useUpdateBayCount(branchFilter);
   const assignMechanicMutation = useAssignMechanicToWorkOrder(branchFilter);
   const removeMechanicMutation = useRemoveMechanicFromWorkOrder(branchFilter);
-  const addHelperMutation = useAddHelperToWorkOrder(branchFilter);
-  const removeHelperMutation = useRemoveHelperFromWorkOrder(branchFilter);
+  const addHelperMutation = useAddHelperToWorkOrder(
+    branchFilter,
+    orgInfo?.orgId,
+  );
+  const removeHelperMutation = useRemoveHelperFromWorkOrder(
+    branchFilter,
+    orgInfo?.orgId,
+  );
   const assignCustomerMutation = useAssignCustomerToWorkOrder(
     branchFilter,
     orgInfo?.orgId,

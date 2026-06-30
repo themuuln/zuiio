@@ -4,13 +4,7 @@ import { Mail, Phone, User, Wrench } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import {
   Field,
   FieldContent,
@@ -89,18 +83,18 @@ export function MechanicRegistrationDialog({
   });
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-base">
-            <Wrench className="size-4 text-purple-500" />
-            {t("registerMechanicBtn")}
-          </DialogTitle>
-          <DialogDescription className="sr-only">
-            {t("registerMechanicDesc")}
-          </DialogDescription>
-        </DialogHeader>
+    <DetailDrawer open={open} onOpenChange={handleOpenChange} size="sm">
+      <DetailDrawer.Header>
+        <DetailDrawer.Title className="flex items-center gap-2 text-base">
+          <Wrench className="size-4 text-purple-500" />
+          {t("registerMechanicBtn")}
+        </DetailDrawer.Title>
+        <DetailDrawer.Description className="sr-only">
+          {t("registerMechanicDesc")}
+        </DetailDrawer.Description>
+      </DetailDrawer.Header>
 
+      <DetailDrawer.Body>
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <FieldGroup>
             {/* Full Name — required */}
@@ -183,7 +177,7 @@ export function MechanicRegistrationDialog({
             </Button>
           </FieldGroup>
         </form>
-      </DialogContent>
-    </Dialog>
+      </DetailDrawer.Body>
+    </DetailDrawer>
   );
 }

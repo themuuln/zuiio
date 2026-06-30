@@ -7,7 +7,7 @@
  * Can only run in the Node.js runtime (not Edge).
  */
 
-import sharp from "sharp";
+import sharp, { type OutputInfo as SharpOutputInfo } from "sharp";
 
 export interface ImageOptimizeOptions {
   /** Max width in pixels (default: no resize) */
@@ -51,7 +51,7 @@ const DEFAULT_OPTIONS: Required<ImageOptimizeOptions> = {
 export async function optimizeImage(
   input: Buffer,
   options?: ImageOptimizeOptions,
-): Promise<{ data: Buffer; info: sharp.OutputInfo }> {
+): Promise<{ data: Buffer; info: SharpOutputInfo }> {
   const opts = { ...DEFAULT_OPTIONS, ...options };
   let pipeline = sharp(input);
 
@@ -85,7 +85,7 @@ export async function optimizeImage(
 
   const data = await pipeline.toBuffer();
   const info = await sharp(data).metadata();
-  const outputInfo: sharp.OutputInfo = {
+  const outputInfo: SharpOutputInfo = {
     format: opts.format,
     size: data.length,
     width: info.width!,
@@ -108,7 +108,7 @@ export async function optimizeImage(
 export async function generateThumbnail(
   input: Buffer,
   size: number = 200,
-): Promise<{ data: Buffer; info: sharp.OutputInfo }> {
+): Promise<{ data: Buffer; info: SharpOutputInfo }> {
   return optimizeImage(input, {
     maxWidth: size,
     maxHeight: size,

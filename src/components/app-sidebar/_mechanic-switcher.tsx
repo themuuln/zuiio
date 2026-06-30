@@ -85,7 +85,7 @@ export function MechanicSwitcher() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger
-          nativeButton={false}
+          nativeButton
           render={
             <SidebarMenuButton
               size="sm"

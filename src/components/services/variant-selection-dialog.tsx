@@ -4,14 +4,7 @@ import { Loader2, Wrench } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { useItemVariants } from "@/lib/queries/use-catalog-variants";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { VariantPicker, type VariantSelection } from "./variant-picker";
@@ -70,16 +63,18 @@ export function VariantSelectionDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Wrench className="size-5 text-muted-foreground" />
-            {entityName} — {t("selectVariant")}
-          </DialogTitle>
-          <DialogDescription>{t("selectVariantDescription")}</DialogDescription>
-        </DialogHeader>
+    <DetailDrawer open={open} onOpenChange={onOpenChange} size="lg">
+      <DetailDrawer.Header>
+        <DetailDrawer.Title className="flex items-center gap-2">
+          <Wrench className="size-5 text-muted-foreground" />
+          {entityName} — {t("selectVariant")}
+        </DetailDrawer.Title>
+        <DetailDrawer.Description>
+          {t("selectVariantDescription")}
+        </DetailDrawer.Description>
+      </DetailDrawer.Header>
 
+      <DetailDrawer.Body>
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="size-6 animate-spin text-muted-foreground" />
@@ -98,22 +93,21 @@ export function VariantSelectionDialog({
             onChange={setSelection}
           />
         )}
-
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={handleSkip} className="flex-1">
-            {t("addWithoutVariant")}
-          </Button>
-          <Button
-            onClick={handleConfirm}
-            className="flex-1"
-            disabled={!selection}
-          >
-            {selection
-              ? `${t("addVariant")}: ${selection.label}`
-              : t("selectAVariant")}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </DetailDrawer.Body>
+      <DetailDrawer.Footer className="gap-2 sm:gap-0">
+        <Button variant="outline" onClick={handleSkip} className="flex-1">
+          {t("addWithoutVariant")}
+        </Button>
+        <Button
+          onClick={handleConfirm}
+          className="flex-1"
+          disabled={!selection}
+        >
+          {selection
+            ? `${t("addVariant")}: ${selection.label}`
+            : t("selectAVariant")}
+        </Button>
+      </DetailDrawer.Footer>
+    </DetailDrawer>
   );
 }

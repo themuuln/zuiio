@@ -14,13 +14,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
@@ -224,18 +218,18 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
   // ── Render ─────────────────────────────────────────────
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-base">
-            <Smartphone className="size-4 text-blue-500" />
-            {t("deviceRegistration.title")}
-          </DialogTitle>
-          <DialogDescription className="sr-only">
-            {t("deviceRegistration.title")}
-          </DialogDescription>
-        </DialogHeader>
+    <DetailDrawer open={open} onOpenChange={handleOpenChange} size="sm">
+      <DetailDrawer.Header>
+        <DetailDrawer.Title className="flex items-center gap-2 text-base">
+          <Smartphone className="size-4 text-blue-500" />
+          {t("deviceRegistration.title")}
+        </DetailDrawer.Title>
+        <DetailDrawer.Description className="sr-only">
+          {t("deviceRegistration.title")}
+        </DetailDrawer.Description>
+      </DetailDrawer.Header>
 
+      <DetailDrawer.Body>
         {/* ── Error ───────────────────────────────────── */}
         {state === "error" && (
           <Alert variant="destructive">
@@ -381,7 +375,7 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
             </Button>
           </div>
         )}
-      </DialogContent>
-    </Dialog>
+      </DetailDrawer.Body>
+    </DetailDrawer>
   );
 }

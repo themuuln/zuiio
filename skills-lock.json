@@ -31,6 +31,12 @@
       "skillPath": "skills/finishing-a-development-branch/SKILL.md",
       "computedHash": "aa2632ed96df59c36348bd8f8ec1ff0fb0c5cc68b60691834687bf4cedc6be3f"
     },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-design/SKILL.md",
+      "computedHash": "4eabc66183767153e404b39d1b839b1c37f2d82d86f0a0d7e880a579d8d62336"
+    },
     "next-cache-components-adoption": {
       "source": "vercel/next.js",
       "sourceType": "github",
@@ -41,7 +47,7 @@
       "source": "vercel/next.js",
       "sourceType": "github",
       "skillPath": "skills/next-cache-components-optimizer/SKILL.md",
-      "computedHash": "baad40cdea0bdc2ba9afb55dc0da09e1f1f53e7d83685874ee30147713b00ad1"
+      "computedHash": "b8d757a1fe10ebe7b10de1d5ee83f9bcdbd1de1e1147efc68cf249377f471067"
     },
     "next-dev-loop": {
       "source": "vercel/next.js",
@@ -65,7 +71,7 @@
       "source": "shadcn/ui",
       "sourceType": "github",
       "skillPath": "skills/shadcn/SKILL.md",
-      "computedHash": "80a6226e78f6d1fe464214ae0ef449d49d8ffaa3e7704f011e9b418c678ad4d1"
+      "computedHash": "d81caa0f86aabab65b25e302d454f23a3328760386ed9078345584c0d5c8058e"
     },
     "subagent-driven-development": {
       "source": "obra/superpowers",
@@ -77,13 +83,13 @@
       "source": "supabase/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/supabase/SKILL.md",
-      "computedHash": "45a3cdccc364a4bbd6cdf700fc069e9f24ebc0428098746cbfbf8b18a5e160d2"
+      "computedHash": "d414d598b9428b3e851c4ce61898649906b19e55aa7415bb42a286bd9ca2ab32"
     },
     "supabase-postgres-best-practices": {
       "source": "supabase/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/supabase-postgres-best-practices/SKILL.md",
-      "computedHash": "d606a1146be6d54fb9e73f718b5320b9acac5ff2ba2d7230a555df4b5a923b4a"
+      "computedHash": "0d2c4857a7d6fdcd3fbc46e458fa4c497f029cab89a01548b3defce203003932"
     },
     "systematic-debugging": {
       "source": "obra/superpowers",

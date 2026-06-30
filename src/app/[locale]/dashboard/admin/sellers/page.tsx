@@ -13,14 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import {
   Select,
   SelectContent,
@@ -259,14 +252,18 @@ export default function SellersPage() {
       </Card>
 
       {/* Assign Dialog */}
-      <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Assign Organization</DialogTitle>
-            <DialogDescription>
-              Select an organization to assign to this seller.
-            </DialogDescription>
-          </DialogHeader>
+      <DetailDrawer
+        open={showAssignDialog}
+        onOpenChange={setShowAssignDialog}
+        size="lg"
+      >
+        <DetailDrawer.Header>
+          <DetailDrawer.Title>Assign Organization</DetailDrawer.Title>
+          <DetailDrawer.Description>
+            Select an organization to assign to this seller.
+          </DetailDrawer.Description>
+        </DetailDrawer.Header>
+        <DetailDrawer.Body>
           <Select
             value={selectedOrgId}
             onValueChange={(v) => setSelectedOrgId(v ?? "")}
@@ -282,23 +279,17 @@ export default function SellersPage() {
               ))}
             </SelectContent>
           </Select>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowAssignDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAssign}
-              disabled={!selectedOrgId || assigning}
-            >
-              {assigning && <Loader2 className="size-4 mr-1 animate-spin" />}
-              Assign
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </DetailDrawer.Body>
+        <DetailDrawer.Footer>
+          <Button variant="outline" onClick={() => setShowAssignDialog(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleAssign} disabled={!selectedOrgId || assigning}>
+            {assigning && <Loader2 className="size-4 mr-1 animate-spin" />}
+            Assign
+          </Button>
+        </DetailDrawer.Footer>
+      </DetailDrawer>
     </div>
   );
 }

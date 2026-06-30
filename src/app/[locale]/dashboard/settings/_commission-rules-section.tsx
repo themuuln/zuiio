@@ -15,13 +15,7 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import {
   Empty,
   EmptyDescription,
@@ -195,14 +189,15 @@ function CommissionFormDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing ? t("editCommissionRule") : t("createCommissionRule")}
-          </DialogTitle>
-        </DialogHeader>
+    <DetailDrawer open={open} onOpenChange={onOpenChange} size="md">
+      <DetailDrawer.Header>
+        <DetailDrawer.Title>
+          {isEditing ? t("editCommissionRule") : t("createCommissionRule")}
+        </DetailDrawer.Title>
+      </DetailDrawer.Header>
+      <DetailDrawer.Body>
         <form
+          id="commission-rule-form"
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-col gap-4"
         >
@@ -371,25 +366,28 @@ function CommissionFormDialog({
             />
             <Label className="cursor-pointer">{t("active")}</Label>
           </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting && (
-                <Loader2 className="mr-2 size-4 animate-spin" />
-              )}
-              {isEditing ? t("updateRule") : t("createRule")}
-            </Button>
-          </DialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </DetailDrawer.Body>
+      <DetailDrawer.Footer>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => onOpenChange(false)}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          form="commission-rule-form"
+          disabled={form.formState.isSubmitting}
+        >
+          {form.formState.isSubmitting && (
+            <Loader2 className="mr-2 size-4 animate-spin" />
+          )}
+          {isEditing ? t("updateRule") : t("createRule")}
+        </Button>
+      </DetailDrawer.Footer>
+    </DetailDrawer>
   );
 }
 

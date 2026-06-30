@@ -5,14 +5,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import {
   Field,
   FieldContent,
@@ -143,18 +136,18 @@ export function RefundDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <RotateCcw className="size-5" />
-            {t("invoice.recordRefund")}
-          </DialogTitle>
-          <DialogDescription>
-            {t("invoice.refundDesc")} — #{invoiceNumber}
-          </DialogDescription>
-        </DialogHeader>
+    <DetailDrawer open={open} onOpenChange={handleOpenChange} size="md">
+      <DetailDrawer.Header>
+        <DetailDrawer.Title className="flex items-center gap-2">
+          <RotateCcw className="size-5" />
+          {t("invoice.recordRefund")}
+        </DetailDrawer.Title>
+        <DetailDrawer.Description>
+          {t("invoice.refundDesc")} — #{invoiceNumber}
+        </DetailDrawer.Description>
+      </DetailDrawer.Header>
 
+      <DetailDrawer.Body>
         {step === "form" ? (
           <form
             onSubmit={form.handleSubmit(onSubmitForm)}
@@ -335,7 +328,7 @@ export function RefundDialog({
               </FieldContent>
             </Field>
 
-            <DialogFooter>
+            <div className="flex justify-end gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -346,7 +339,7 @@ export function RefundDialog({
               <Button type="submit" disabled={maxRefundable <= 0}>
                 {t("common.continue")}
               </Button>
-            </DialogFooter>
+            </div>
           </form>
         ) : (
           <>
@@ -383,7 +376,7 @@ export function RefundDialog({
               )}
             </div>
 
-            <DialogFooter>
+            <div className="flex justify-end gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -401,10 +394,10 @@ export function RefundDialog({
                 )}
                 {t("invoice.confirmRefund")}
               </Button>
-            </DialogFooter>
+            </div>
           </>
         )}
-      </DialogContent>
-    </Dialog>
+      </DetailDrawer.Body>
+    </DetailDrawer>
   );
 }

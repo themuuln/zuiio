@@ -15,12 +15,7 @@ import {
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -256,17 +251,17 @@ function CreateFollowupDialog({
   );
 
   return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Schedule Follow-up</DialogTitle>
-        </DialogHeader>
+    <DetailDrawer open onOpenChange={onClose} size="md">
+      <DetailDrawer.Header>
+        <DetailDrawer.Title>Schedule Follow-up</DetailDrawer.Title>
+      </DetailDrawer.Header>
+      <DetailDrawer.Body>
         <form onSubmit={handleSubmit} className="grid gap-4">
           <div className="grid gap-2">
             <Label>Type</Label>
             <Select
               value={form.type}
-              onValueChange={(v) => setForm((p) => ({ ...p, type: v }))}
+              onValueChange={(v) => setForm((p) => ({ ...p, type: v ?? "" }))}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -326,7 +321,7 @@ function CreateFollowupDialog({
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </DetailDrawer.Body>
+    </DetailDrawer>
   );
 }

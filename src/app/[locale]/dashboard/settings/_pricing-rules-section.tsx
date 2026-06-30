@@ -7,6 +7,7 @@ import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import {
   Dialog,
   DialogContent,
@@ -491,14 +492,14 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
       )}
 
       {/* Edit/Create Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {editingRule ? t("editPriceRule") : t("createPriceRule")}
-            </DialogTitle>
-          </DialogHeader>
+      <DetailDrawer open={dialogOpen} onOpenChange={setDialogOpen} size="lg">
+        <DetailDrawer.Header>
+          <DetailDrawer.Title>
+            {editingRule ? t("editPriceRule") : t("createPriceRule")}
+          </DetailDrawer.Title>
+        </DetailDrawer.Header>
 
+        <DetailDrawer.Body>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <Label>{t("ruleName")}</Label>
@@ -743,24 +744,24 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
               </div>
             </div>
           </div>
+        </DetailDrawer.Body>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              {t("cancel")}
-            </Button>
-            <Button
-              onClick={() => saveMutation.mutate({ id: editingRule?.id, form })}
-              disabled={!form.name || saveMutation.isPending}
-            >
-              {saveMutation.isPending
-                ? t("saving")
-                : editingRule
-                  ? t("updateRule")
-                  : t("createRule")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        <DetailDrawer.Footer>
+          <Button variant="outline" onClick={() => setDialogOpen(false)}>
+            {t("cancel")}
+          </Button>
+          <Button
+            onClick={() => saveMutation.mutate({ id: editingRule?.id, form })}
+            disabled={!form.name || saveMutation.isPending}
+          >
+            {saveMutation.isPending
+              ? t("saving")
+              : editingRule
+                ? t("updateRule")
+                : t("createRule")}
+          </Button>
+        </DetailDrawer.Footer>
+      </DetailDrawer>
 
       {/* Delete confirmation */}
       <Dialog

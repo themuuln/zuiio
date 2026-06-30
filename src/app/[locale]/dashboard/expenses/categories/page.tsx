@@ -22,13 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import {
   Empty,
   EmptyContent,
@@ -297,16 +291,19 @@ export default function CategoriesPage() {
       )}
 
       {/* ── Add/Edit Dialog ── */}
-      <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {isEditing
-                ? t("expenses.editCategoryTitle")
-                : t("expenses.addCategoryTitle")}
-            </DialogTitle>
-          </DialogHeader>
-
+      <DetailDrawer
+        open={dialogOpen}
+        onOpenChange={handleDialogChange}
+        size="md"
+      >
+        <DetailDrawer.Header>
+          <DetailDrawer.Title>
+            {isEditing
+              ? t("expenses.editCategoryTitle")
+              : t("expenses.addCategoryTitle")}
+          </DetailDrawer.Title>
+        </DetailDrawer.Header>
+        <DetailDrawer.Body>
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
               <Label htmlFor="name">
@@ -362,26 +359,25 @@ export default function CategoriesPage() {
               </div>
             </div>
           </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => handleDialogChange(false)}>
-              {t("common.cancel")}
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={
-                !formName.trim() ||
-                createCategory.isPending ||
-                updateCategory.isPending
-              }
-            >
-              {createCategory.isPending || updateCategory.isPending
-                ? t("common.loading")
-                : t("common.save")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </DetailDrawer.Body>
+        <DetailDrawer.Footer>
+          <Button variant="outline" onClick={() => handleDialogChange(false)}>
+            {t("common.cancel")}
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={
+              !formName.trim() ||
+              createCategory.isPending ||
+              updateCategory.isPending
+            }
+          >
+            {createCategory.isPending || updateCategory.isPending
+              ? t("common.loading")
+              : t("common.save")}
+          </Button>
+        </DetailDrawer.Footer>
+      </DetailDrawer>
 
       {/* ── Delete Confirmation ── */}
       <AlertDialog

@@ -73,7 +73,8 @@ export async function PUT(
   const { error: updateError } = await supabase
     .from("organizations")
     .update({
-      settings: { theme },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      settings: { theme } as any,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);

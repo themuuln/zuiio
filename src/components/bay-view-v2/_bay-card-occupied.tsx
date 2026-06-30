@@ -36,6 +36,7 @@ type BayCardOccupiedProps = Pick<
   | "onAssignMechanic"
   | "onRemoveMechanic"
   | "onAddHelper"
+  | "onReorderMechanics"
 >;
 
 export function BayCardOccupied({

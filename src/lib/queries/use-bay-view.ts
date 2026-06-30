@@ -9,13 +9,13 @@
 "use client";
 
 import {
+  type QueryClient,
   useMutation,
   useQueryClient,
-  type QueryClient,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { BaySlotData, BayViewData } from "@/lib/services/bay-view-service";
-import { bayViewKeys } from "./keys";
+import { bayViewKeys, workOrderKeys } from "./keys";
 
 // ─── Optimistic Update Helper ─────────────────────────────────
 
@@ -460,7 +460,10 @@ export function useRemoveMechanicFromWorkOrder(branchId: string | undefined) {
 
 // ─── Add Helper ────────────────────────────────────────────────
 
-export function useAddHelperToWorkOrder(branchId: string | undefined) {
+export function useAddHelperToWorkOrder(
+  branchId: string | undefined,
+  orgId?: string | undefined,
+) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -504,17 +507,26 @@ export function useAddHelperToWorkOrder(branchId: string | undefined) {
       toast.dismiss();
       toast.success("Helper added");
     },
-    onSettled: () => {
+    onSettled: (_data, _error, variables) => {
       queryClient.invalidateQueries({
         queryKey: bayViewKeys.data(branchId),
       });
+      // Invalidate drawer work order detail cache so both views stay in sync
+      if (orgId && variables?.woId) {
+        queryClient.invalidateQueries({
+          queryKey: workOrderKeys.detail(orgId, variables.woId),
+        });
+      }
     },
   });
 }
 
 // ─── Remove Helper ─────────────────────────────────────────────
 
-export function useRemoveHelperFromWorkOrder(branchId: string | undefined) {
+export function useRemoveHelperFromWorkOrder(
+  branchId: string | undefined,
+  orgId?: string | undefined,
+) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -554,10 +566,16 @@ export function useRemoveHelperFromWorkOrder(branchId: string | undefined) {
       toast.dismiss();
       toast.success("Helper removed");
     },
-    onSettled: () => {
+    onSettled: (_data, _error, variables) => {
       queryClient.invalidateQueries({
         queryKey: bayViewKeys.data(branchId),
       });
+      // Invalidate drawer work order detail cache so both views stay in sync
+      if (orgId && variables?.woId) {
+        queryClient.invalidateQueries({
+          queryKey: workOrderKeys.detail(orgId, variables.woId),
+        });
+      }
     },
   });
 }
@@ -574,7 +592,7 @@ export function useAssignCustomerToWorkOrder(
     mutationFn: async ({
       woId,
       customerId,
-      customerName,
+      customerName: _customerName,
     }: {
       woId: string;
       customerId: string | null;

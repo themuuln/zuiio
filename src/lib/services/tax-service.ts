@@ -298,7 +298,7 @@ export async function updateOrgNuatSettings(
     record_id: orgId,
     user_id: userId,
     organization_id: orgId,
-    old_data: currentSettings,
+    old_data: currentSettings as unknown as Record<string, unknown>,
     new_data: updates,
   });
 

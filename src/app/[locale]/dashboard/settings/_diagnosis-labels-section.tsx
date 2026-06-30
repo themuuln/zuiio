@@ -32,13 +32,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import {
   Field,
   FieldContent,
@@ -202,14 +196,15 @@ function LabelFormDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing ? t("editTitle") : t("addTitle")}
-          </DialogTitle>
-        </DialogHeader>
+    <DetailDrawer open={open} onOpenChange={onOpenChange} size="md">
+      <DetailDrawer.Header>
+        <DetailDrawer.Title>
+          {isEditing ? t("editTitle") : t("addTitle")}
+        </DetailDrawer.Title>
+      </DetailDrawer.Header>
+      <DetailDrawer.Body>
         <form
+          id="label-form"
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-col gap-4"
         >
@@ -299,25 +294,28 @@ function LabelFormDialog({
             />
             <Label className="cursor-pointer">{t("active")}</Label>
           </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting && (
-                <Loader2 className="mr-2 size-4 animate-spin" />
-              )}
-              {isEditing ? t("editLabel") : t("addLabel")}
-            </Button>
-          </DialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </DetailDrawer.Body>
+      <DetailDrawer.Footer>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => onOpenChange(false)}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          form="label-form"
+          disabled={form.formState.isSubmitting}
+        >
+          {form.formState.isSubmitting && (
+            <Loader2 className="mr-2 size-4 animate-spin" />
+          )}
+          {isEditing ? t("editLabel") : t("addLabel")}
+        </Button>
+      </DetailDrawer.Footer>
+    </DetailDrawer>
   );
 }
 
