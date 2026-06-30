@@ -6,6 +6,18 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./src/lib/i18n/request.ts");
 
 const nextConfig: NextConfig = {
+  // Turbopack doesn't transpile .ts in node_modules by default.
+  // @zuiio/* packages export raw .ts source — add them to the transpile list.
+  transpilePackages: [
+    "@zuiio/core",
+    "@zuiio/hooks",
+    "@zuiio/hr",
+    "@zuiio/offline",
+    "@zuiio/query",
+    "@zuiio/realtime",
+    "@zuiio/ui",
+  ],
+
   // Allow Tailscale IP for phone testing from mobile devices
   allowedDevOrigins: ["100.102.22.106", "192.168.1.121"],
 

@@ -24,7 +24,7 @@ import {
 import type { InventoryMovement, PartsCatalogItem } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
 import { formatDate, getMovementFilters, getMovementLabels } from "./constants";
-import { Modal } from "./modal";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { TableSkeleton } from "./table-skeleton";
 
 // API returns part_name joined on movements
@@ -348,11 +348,11 @@ export function MovementsTab({
         </Card>
       )}
 
-      {/* Record Movement Modal */}
-      {showAddMovement && (
-        <Modal
-          title={t("recordStockMovement")}
-          onClose={() => {
+      {/* Record Movement Drawer */}
+      <DetailDrawer
+        open={showAddMovement}
+        onOpenChange={(open) => {
+          if (!open) {
             setShowAddMovement(false);
             setMovementForm({
               part_id: "",
@@ -364,9 +364,19 @@ export function MovementsTab({
             });
             setParts([]);
             setPartsSearch("");
-          }}
-        >
-          <form onSubmit={handleRecordMovement} className="flex flex-col gap-4">
+          }
+        }}
+        size="lg"
+      >
+        <DetailDrawer.Header>
+          <DetailDrawer.Title>{t("recordStockMovement")}</DetailDrawer.Title>
+        </DetailDrawer.Header>
+        <DetailDrawer.Body>
+          <form
+            id="record-movement-form"
+            onSubmit={handleRecordMovement}
+            className="flex flex-col gap-4"
+          >
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium">{t("part")} *</label>
               <Input
@@ -475,21 +485,40 @@ export function MovementsTab({
                 }
               />
             </div>
-            <div className="flex justify-end gap-3 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowAddMovement(false)}
-              >
-                {t("cancel")}
-              </Button>
-              <Button type="submit" disabled={createMovement.isPending}>
-                {t("record")}
-              </Button>
-            </div>
           </form>
-        </Modal>
-      )}
+        </DetailDrawer.Body>
+        <DetailDrawer.Footer>
+          <div className="flex w-full gap-2">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                setShowAddMovement(false);
+                setMovementForm({
+                  part_id: "",
+                  part_name: "",
+                  quantity: "",
+                  unit_cost: "",
+                  movement_type: "purchase",
+                  notes: "",
+                });
+                setParts([]);
+                setPartsSearch("");
+              }}
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              className="flex-1"
+              form="record-movement-form"
+              type="submit"
+              disabled={createMovement.isPending}
+            >
+              {t("record")}
+            </Button>
+          </div>
+        </DetailDrawer.Footer>
+      </DetailDrawer>
     </div>
   );
 }

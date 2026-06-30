@@ -55,6 +55,12 @@ next-env.d.ts
 .playwright-mcp/
 opencode/
 
+# editor/agent scaffolding (symlinks to .agents/ which is already ignored)
+.claude/
+.commandcode/
+.pi/
+.factory/
+
 # VitePress guide docs
 public/guide/
 docs/.vitepress/cache/

@@ -1,37 +1,19 @@
-import type { RealtimeChannel } from "@supabase/supabase-js";
-import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+/**
+ * Re-export from @zuiio/realtime with Tolom-specific convenience wrappers
+ * that auto-inject the Supabase client and preserve the legacy `queryKey` API.
+ */
+export { useRealtimeMulti } from "@zuiio/realtime";
+export type {
+  UseRealtimeMultiOptions,
+  RealtimeTableConfig,
+} from "@zuiio/realtime";
+
+import { useRealtime as useRealtimeBase } from "@zuiio/realtime";
 import { createClient } from "@/lib/supabase/client";
 
-interface UseRealtimeOptions {
-  /** Supabase table name to subscribe to. */
-  table: string;
-  /** Query key prefix to invalidate on change. Pass the result of a keys factory method, e.g. `workOrderKeys.all(orgId)`. */
-  queryKey: readonly unknown[];
-  /** Filter the subscription (Supabase Realtime filter syntax). Example: `"organization_id=eq.${orgId}"`. */
-  filter?: string;
-  /** Whether to enable the subscription. Default: `true`. */
-  enabled?: boolean;
-  /** Schema to subscribe to. Default: `"public"`. */
-  schema?: string;
-}
-
 /**
- * Subscribe to Supabase Realtime table changes and automatically invalidate React Query caches.
- *
- * Uses RLS — Supabase only sends rows the authenticated user can read.
- * Pair with `filter` for org-scoped subscriptions to avoid receiving
- * rows from other organizations.
- *
- * @example
- * ```tsx
- * useRealtime({
- *   table: 'work_orders',
- *   queryKey: workOrderKeys.all(orgId),
- *   filter: `organization_id=eq.${orgId}`,
- *   enabled: !!orgId,
- * });
- * ```
+ * Convenience wrapper that auto-injects the Supabase browser client.
+ * Accepts a single `queryKey` (legacy API) for backward compatibility.
  */
 export function useRealtime({
   table,
@@ -39,38 +21,20 @@ export function useRealtime({
   filter,
   enabled = true,
   schema = "public",
-}: UseRealtimeOptions) {
-  const queryClient = useQueryClient();
-  const channelRef = useRef<RealtimeChannel | null>(null);
-
-  useEffect(() => {
-    if (!enabled) return;
-
-    const supabase = createClient();
-
-    const channel = supabase
-      .channel(`realtime:${table}`)
-      .on(
-        "postgres_changes" as const,
-        {
-          event: "*",
-          schema,
-          table,
-          ...(filter ? { filter } : {}),
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey });
-        },
-      )
-      .subscribe();
-
-    channelRef.current = channel;
-
-    return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
-    };
-  }, [table, filter, enabled, schema, queryClient, queryKey]);
+}: {
+  table: string;
+  queryKey: readonly unknown[];
+  filter?: string;
+  enabled?: boolean;
+  schema?: string;
+}) {
+  const supabase = createClient();
+  return useRealtimeBase({
+    supabase,
+    table,
+    queryKeys: queryKey,
+    filter,
+    enabled,
+    schema,
+  });
 }

@@ -25,11 +25,11 @@ import { getInitials } from "@/lib/utils";
 
 export function NavUser() {
   const t = useTranslations("userMenu");
-  const { data: profile, isLoading: loading } = useProfile();
+  const { data: profile } = useProfile();
 
   const displayName = profile?.fullName ?? t("user");
   const displayIdentifier = profile?.username ?? "";
-  const initials = getInitials(profile?.fullName);
+  const initials = getInitials(profile?.fullName ?? null);
 
   const router = useRouter();
 
@@ -41,6 +41,7 @@ export function NavUser() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
+        nativeButton={false}
         render={
           <Button
             variant="ghost"
@@ -49,7 +50,7 @@ export function NavUser() {
           >
             <Avatar className="size-7">
               <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-primary">
-                {loading ? "…" : initials}
+                {!profile ? "…" : initials}
               </AvatarFallback>
             </Avatar>
           </Button>
@@ -65,7 +66,7 @@ export function NavUser() {
             <ItemMedia variant="image">
               <Avatar className="size-8">
                 <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
-                  {loading ? "…" : initials}
+                  {!profile ? "…" : initials}
                 </AvatarFallback>
               </Avatar>
             </ItemMedia>

@@ -98,9 +98,13 @@
     "zod": "^4.4.3",
     "zustand": "^5.0.14",
     "@zuiio/core": "file:../zuiio/packages/core",
+    "@zuiio/export": "file:../zuiio/packages/export",
     "@zuiio/hooks": "file:../zuiio/packages/hooks",
+    "@zuiio/hr": "file:../zuiio/packages/hr",
     "@zuiio/offline": "file:../zuiio/packages/offline",
-    "@zuiio/query": "file:../zuiio/packages/query"
+    "@zuiio/query": "file:../zuiio/packages/query",
+    "@zuiio/realtime": "file:../zuiio/packages/realtime",
+    "@zuiio/ui": "file:../zuiio/packages/ui"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.16",

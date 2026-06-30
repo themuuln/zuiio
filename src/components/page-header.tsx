@@ -502,6 +502,7 @@ function QuickCreateActions() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
+        nativeButton={false}
         render={
           <Button
             size="icon-md"

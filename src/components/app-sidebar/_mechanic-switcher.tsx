@@ -85,6 +85,7 @@ export function MechanicSwitcher() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger
+          nativeButton={false}
           render={
             <SidebarMenuButton
               size="sm"
@@ -123,6 +124,7 @@ export function MechanicSwitcher() {
                 No mechanics found
               </span>
               <button
+                type="button"
                 onClick={() => setShowAddMechanic(true)}
                 className="flex items-center gap-1.5 text-xs text-primary hover:underline"
               >

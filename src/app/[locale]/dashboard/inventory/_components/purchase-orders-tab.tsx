@@ -33,7 +33,7 @@ import {
 } from "@/lib/queries/use-inventory";
 import { formatMNT } from "@/lib/utils";
 import { formatDate, getPoStatusLabels } from "./constants";
-import { Modal } from "./modal";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { TableSkeleton } from "./table-skeleton";
 
 interface PurchaseOrdersTabProps {
@@ -201,10 +201,23 @@ export function PurchaseOrdersTab({
         </div>
       )}
 
-      {/* Create PO Modal */}
-      {showAddPO && (
-        <Modal title={t("createPO")} onClose={() => setShowAddPO(false)}>
-          <form onSubmit={handleCreatePO} className="flex flex-col gap-4">
+      {/* Create PO Drawer */}
+      <DetailDrawer
+        open={showAddPO}
+        onOpenChange={(open) => {
+          if (!open) setShowAddPO(false);
+        }}
+        size="2xl"
+      >
+        <DetailDrawer.Header>
+          <DetailDrawer.Title>{t("createPO")}</DetailDrawer.Title>
+        </DetailDrawer.Header>
+        <DetailDrawer.Body>
+          <form
+            id="create-po-form"
+            onSubmit={handleCreatePO}
+            className="flex flex-col gap-4"
+          >
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-2">
                 <label
@@ -263,21 +276,28 @@ export function PurchaseOrdersTab({
               </div>
               <POItemEditor parts={activeParts} locale={locale} t={t} />
             </div>
-            <div className="flex justify-end gap-3 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowAddPO(false)}
-              >
-                {t("cancel")}
-              </Button>
-              <Button type="submit" disabled={createPO.isPending}>
-                {t("createPO")}
-              </Button>
-            </div>
           </form>
-        </Modal>
-      )}
+        </DetailDrawer.Body>
+        <DetailDrawer.Footer>
+          <div className="flex w-full gap-2">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => setShowAddPO(false)}
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              className="flex-1"
+              form="create-po-form"
+              type="submit"
+              disabled={createPO.isPending}
+            >
+              {t("createPO")}
+            </Button>
+          </div>
+        </DetailDrawer.Footer>
+      </DetailDrawer>
     </div>
   );
 }

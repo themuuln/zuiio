@@ -21,7 +21,7 @@ import {
   useUpdateSupplier,
 } from "@/lib/queries/use-inventory";
 import type { Supplier } from "@/lib/types";
-import { Modal } from "./modal";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { TableSkeleton } from "./table-skeleton";
 
 interface SuppliersTabProps {
@@ -261,16 +261,28 @@ export function SuppliersTab({
         </Card>
       )}
 
-      {/* Add/Edit Supplier Modal */}
-      {showAddSupplier && (
-        <Modal
-          title={editingSupplier ? t("editSupplier") : t("addSupplier")}
-          onClose={() => {
+      {/* Add/Edit Supplier Drawer */}
+      <DetailDrawer
+        open={showAddSupplier}
+        onOpenChange={(open) => {
+          if (!open) {
             setShowAddSupplier(false);
             setEditingSupplier(null);
-          }}
-        >
-          <form onSubmit={handleSaveSupplier} className="flex flex-col gap-4">
+          }
+        }}
+        size="lg"
+      >
+        <DetailDrawer.Header>
+          <DetailDrawer.Title>
+            {editingSupplier ? t("editSupplier") : t("addSupplier")}
+          </DetailDrawer.Title>
+        </DetailDrawer.Header>
+        <DetailDrawer.Body>
+          <form
+            id="supplier-form"
+            onSubmit={handleSaveSupplier}
+            className="flex flex-col gap-4"
+          >
             <div className="flex flex-col gap-2">
               <label
                 htmlFor="inv-supplier-name"
@@ -383,29 +395,31 @@ export function SuppliersTab({
                 />
               </div>
             </div>
-            <div className="flex justify-end gap-3 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setShowAddSupplier(false);
-                  setEditingSupplier(null);
-                }}
-              >
-                {t("inventory.cancel")}
-              </Button>
-              <Button
-                type="submit"
-                disabled={createSupplier.isPending || updateSupplier.isPending}
-              >
-                {editingSupplier
-                  ? t("inventory.update")
-                  : t("inventory.create")}
-              </Button>
-            </div>
           </form>
-        </Modal>
-      )}
+        </DetailDrawer.Body>
+        <DetailDrawer.Footer>
+          <div className="flex w-full gap-2">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                setShowAddSupplier(false);
+                setEditingSupplier(null);
+              }}
+            >
+              {t("inventory.cancel")}
+            </Button>
+            <Button
+              className="flex-1"
+              form="supplier-form"
+              type="submit"
+              disabled={createSupplier.isPending || updateSupplier.isPending}
+            >
+              {editingSupplier ? t("inventory.update") : t("inventory.create")}
+            </Button>
+          </div>
+        </DetailDrawer.Footer>
+      </DetailDrawer>
     </div>
   );
 }

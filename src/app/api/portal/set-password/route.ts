@@ -19,7 +19,7 @@ import { createServiceRoleClient } from "@/lib/supabase/service-role";
 export const POST = createSimpleRouteHandler(async ({ request }) => {
   // Rate limiting (prevents brute force and DoS)
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-  const rateCheck = authRateLimiter.check(ip);
+  const rateCheck = await authRateLimiter.check(ip);
   if (!rateCheck.allowed) {
     return NextResponse.json(
       { error: "Too many requests. Please try again later." },

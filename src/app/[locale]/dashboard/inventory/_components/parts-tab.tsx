@@ -52,7 +52,7 @@ import {
 import type { CreatePartParams, PartsCatalogItem } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
 import type { SortKey } from "./constants";
-import { Modal } from "./modal";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { SortKeyHeader } from "./sort-key-header";
 import { TableSkeleton } from "./table-skeleton";
 
@@ -789,19 +789,25 @@ export function PartsTab({
           </Card>
         ))}
 
-      {/* Add Part Modal */}
-      {showAddPart && (
-        <Modal
-          title={
-            forkingData
-              ? `${t("edit")}: ${locale === "mn" && forkingData.name_mn ? forkingData.name_mn : forkingData.name}`
-              : t("addPart")
-          }
-          onClose={() => {
+      {/* Add Part Drawer */}
+      <DetailDrawer
+        open={showAddPart}
+        onOpenChange={(open) => {
+          if (!open) {
             setShowAddPart(false);
             setForkingData(null);
-          }}
-        >
+          }
+        }}
+        size="lg"
+      >
+        <DetailDrawer.Header>
+          <DetailDrawer.Title>
+            {forkingData
+              ? `${t("edit")}: ${locale === "mn" && forkingData.name_mn ? forkingData.name_mn : forkingData.name}`
+              : t("addPart")}
+          </DetailDrawer.Title>
+        </DetailDrawer.Header>
+        <DetailDrawer.Body>
           <PartForm
             initialData={forkingData ?? undefined}
             onSuccess={() => {
@@ -820,59 +826,81 @@ export function PartsTab({
               setForkingData(null);
             }}
           />
-        </Modal>
-      )}
+        </DetailDrawer.Body>
+      </DetailDrawer>
 
-      {/* Edit Part Modal */}
-      {editingPart && (
-        <Modal
-          title={`${t("edit")}: ${locale === "mn" && editingPart.name_mn ? editingPart.name_mn : editingPart.name}`}
-          onClose={() => setEditingPart(null)}
-        >
-          <PartForm
-            partId={editingPart.id}
-            initialData={{
-              name: editingPart.name,
-              name_mn: editingPart.name_mn ?? undefined,
-              part_number: editingPart.part_number ?? undefined,
-              category: editingPart.category ?? undefined,
-              description: editingPart.description ?? undefined,
-              unit: editingPart.unit ?? undefined,
-              default_price: editingPart.default_price ?? undefined,
-            }}
-            onSuccess={() => setEditingPart(null)}
-            onCancel={() => setEditingPart(null)}
-          />
-        </Modal>
-      )}
+      {/* Edit Part Drawer */}
+      <DetailDrawer
+        open={!!editingPart}
+        onOpenChange={(open) => {
+          if (!open) setEditingPart(null);
+        }}
+        size="lg"
+      >
+        <DetailDrawer.Header>
+          <DetailDrawer.Title>
+            {editingPart
+              ? `${t("edit")}: ${locale === "mn" && editingPart.name_mn ? editingPart.name_mn : editingPart.name}`
+              : ""}
+          </DetailDrawer.Title>
+        </DetailDrawer.Header>
+        <DetailDrawer.Body>
+          {editingPart && (
+            <PartForm
+              partId={editingPart.id}
+              initialData={{
+                name: editingPart.name,
+                name_mn: editingPart.name_mn ?? undefined,
+                part_number: editingPart.part_number ?? undefined,
+                category: editingPart.category ?? undefined,
+                description: editingPart.description ?? undefined,
+                unit: editingPart.unit ?? undefined,
+                default_price: editingPart.default_price ?? undefined,
+              }}
+              onSuccess={() => setEditingPart(null)}
+              onCancel={() => setEditingPart(null)}
+            />
+          )}
+        </DetailDrawer.Body>
+      </DetailDrawer>
 
-      {/* View Part Modal */}
-      {viewingPart && (
-        <Modal
-          title={
-            locale === "mn" && viewingPart.name_mn
-              ? viewingPart.name_mn
-              : viewingPart.name
-          }
-          onClose={() => setViewingPart(null)}
-        >
-          <PartForm
-            readOnly
-            initialData={{
-              name: viewingPart.name,
-              name_mn: viewingPart.name_mn ?? undefined,
-              part_number: viewingPart.part_number ?? undefined,
-              category: viewingPart.category ?? undefined,
-              description: viewingPart.description ?? undefined,
-              unit: viewingPart.unit ?? undefined,
-              default_price: viewingPart.default_price ?? undefined,
-              image_url: viewingPart.image_url ?? undefined,
-              location: viewingPart.location ?? undefined,
-            }}
-            onCancel={() => setViewingPart(null)}
-          />
-        </Modal>
-      )}
+      {/* View Part Drawer */}
+      <DetailDrawer
+        open={!!viewingPart}
+        onOpenChange={(open) => {
+          if (!open) setViewingPart(null);
+        }}
+        size="lg"
+      >
+        <DetailDrawer.Header>
+          <DetailDrawer.Title>
+            {viewingPart
+              ? locale === "mn" && viewingPart.name_mn
+                ? viewingPart.name_mn
+                : viewingPart.name
+              : ""}
+          </DetailDrawer.Title>
+        </DetailDrawer.Header>
+        <DetailDrawer.Body>
+          {viewingPart && (
+            <PartForm
+              readOnly
+              initialData={{
+                name: viewingPart.name,
+                name_mn: viewingPart.name_mn ?? undefined,
+                part_number: viewingPart.part_number ?? undefined,
+                category: viewingPart.category ?? undefined,
+                description: viewingPart.description ?? undefined,
+                unit: viewingPart.unit ?? undefined,
+                default_price: viewingPart.default_price ?? undefined,
+                image_url: viewingPart.image_url ?? undefined,
+                location: viewingPart.location ?? undefined,
+              }}
+              onCancel={() => setViewingPart(null)}
+            />
+          )}
+        </DetailDrawer.Body>
+      </DetailDrawer>
 
       {/* Set Default Threshold Dialog */}
       {showDefaultThreshold && (

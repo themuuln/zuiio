@@ -82,7 +82,7 @@ export function createPortalRouteHandler(handler: PortalRouteHandler) {
   ) => {
     // Rate limiting: prevent brute force and DoS on portal token endpoints
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-    const rateCheck = authRateLimiter.check(ip);
+    const rateCheck = await authRateLimiter.check(ip);
     if (!rateCheck.allowed) {
       return NextResponse.json(
         { error: "Too many requests. Please try again later." },

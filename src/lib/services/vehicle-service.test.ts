@@ -33,7 +33,8 @@ function setupMockClient() {
   vi.mocked(createClient).mockResolvedValue(
     client as unknown as Awaited<ReturnType<typeof createClient>>,
   );
-  return client;
+  return client as unknown as ReturnType<typeof createMockSupabaseClient> &
+    Awaited<ReturnType<typeof createClient>>;
 }
 
 // ─── createVehicle ─────────────────────────────────────────────────

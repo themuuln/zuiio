@@ -6,7 +6,7 @@ import { redeemInvite } from "@/lib/services/invite-service";
 export const POST = createSimpleRouteHandler(
   async ({ request, user, supabase }) => {
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-    const rateCheck = authRateLimiter.check(ip);
+    const rateCheck = await authRateLimiter.check(ip);
     if (!rateCheck.allowed) {
       return NextResponse.json(
         { error: { code: "RATE_LIMITED", message: "Too many requests" } },

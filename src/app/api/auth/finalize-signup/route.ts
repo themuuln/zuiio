@@ -5,7 +5,7 @@ import { finalizeSignup } from "@/lib/services/signup-service";
 
 export const POST = createSimpleRouteHandler(async ({ request, supabase }) => {
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-  const rateCheck = authRateLimiter.check(ip);
+  const rateCheck = await authRateLimiter.check(ip);
   if (!rateCheck.allowed) {
     return NextResponse.json(
       { error: { code: "RATE_LIMITED", message: "Too many requests" } },

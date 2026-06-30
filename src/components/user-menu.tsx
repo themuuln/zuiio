@@ -37,7 +37,7 @@ interface UserMenuProps {
 export default function UserMenu({ collapsed }: UserMenuProps) {
   const t = useTranslations("userMenu");
   const { push, refresh } = useRouter();
-  const { data: profile, isLoading: loading } = useProfile();
+  const { data: profile } = useProfile();
 
   const handleSignOut = async () => {
     await fetch("/auth/signout", { method: "POST" });
@@ -49,7 +49,10 @@ export default function UserMenu({ collapsed }: UserMenuProps) {
   const displayIdentifier = profile?.username ?? "";
   const initials = getInitials(profile?.fullName);
 
-  if (loading) {
+  // Use profile check instead of isLoading — during SSR isLoading is false
+  // even though data hasn't loaded, which would render initials from undefined
+  // and cause hydration mismatches with the persisted client cache.
+  if (!profile) {
     return (
       <div
         className={cn(

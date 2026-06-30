@@ -110,6 +110,7 @@ export function BayCardFooter({
       <div className="ml-auto flex items-center gap-1">
         <DropdownMenu>
           <DropdownMenuTrigger
+            nativeButton={false}
             onClick={(e) => e.stopPropagation()}
             render={
               <Button
