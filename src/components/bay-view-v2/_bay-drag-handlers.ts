@@ -115,16 +115,11 @@ export function useBayDragHandlers({
       if (targetWo && currentBay) {
         // Both bays occupied — use swap callback
         markPending(woId, targetWo.id);
-        onSwapBays(woId, currentBay.bayNumber, targetWo.id, bayNumber)
-          .catch((err) => {
-            toast.dismiss();
-            toast.error(
-              `Swap failed: ${err instanceof Error ? err.message : "Unknown error"}`,
-            );
-          })
-          .finally(() => {
+        onSwapBays(woId, currentBay.bayNumber, targetWo.id, bayNumber).finally(
+          () => {
             clearPending(woId, targetWo.id);
-          });
+          },
+        );
         return;
       }
 

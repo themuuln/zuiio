@@ -40,6 +40,7 @@ import {
   useRemoveHelperFromWorkOrder,
   useRemoveMechanicFromWorkOrder,
   useRemoveVehicleFromBay,
+  useSwapBays,
   useUpdateBayCount,
   useUpdateBayViewStatus,
 } from "@/lib/queries/use-bay-view";
@@ -219,22 +220,8 @@ export function BayViewV2Client() {
   const keyboardSensor = useSensor(KeyboardSensor);
   const sensors = useSensors(pointerSensor, touchSensor, keyboardSensor);
 
-  // ── Swap bays callback ──────────────────────────────────────
-  const handleSwapBays = useCallback(
-    async (
-      woId: string,
-      srcBay: number,
-      targetWoId: string,
-      targetBay: number,
-    ) => {
-      const { swapBayNumbers } = await import(
-        "@/lib/services/bay-view-service.actions"
-      );
-      await swapBayNumbers(woId, srcBay, targetWoId, targetBay);
-      await fetchData();
-    },
-    [fetchData],
-  );
+  // ── Swap bays mutation ──────────────────────────────────────
+  const swapMutation = useSwapBays(branchFilter);
 
   // ── Reorder queue callback ─────────────────────────────────
   const handleReorderQueue = useCallback(
@@ -259,7 +246,13 @@ export function BayViewV2Client() {
       addHelper: (vars) => addHelperMutation.mutate(vars),
       assignToBay: (vars) => assignMutation.mutate(vars),
       removeFromBay: (vars) => removeMutation.mutate(vars),
-      onSwapBays: handleSwapBays,
+      onSwapBays: (woId, srcBay, targetWoId, targetBay) =>
+        swapMutation.mutateAsync({
+          woIdA: woId,
+          bayNumberA: srcBay,
+          woIdB: targetWoId,
+          bayNumberB: targetBay,
+        }),
       onReorderQueue: handleReorderQueue,
       markPending,
       clearPending,

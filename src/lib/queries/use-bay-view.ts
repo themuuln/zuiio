@@ -8,21 +8,55 @@
  */
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { BaySlotData, BayViewData } from "@/lib/services/bay-view-service";
 import { bayViewKeys } from "./keys";
 
+// ─── Optimistic Update Helper ─────────────────────────────────
+
+/**
+ * Cancel in-flight queries, snapshot current data, apply optimistic update,
+ * and return the snapshot for rollback in `onError`.
+ */
+async function applyBayViewOptimistic(
+  queryClient: QueryClient,
+  branchId: string | undefined,
+  updateFn: (data: BayViewData) => BayViewData,
+): Promise<{ previous: BayViewData | undefined }> {
+  const key = bayViewKeys.data(branchId);
+  await queryClient.cancelQueries({ queryKey: key });
+  const previous = queryClient.getQueryData<BayViewData>(key);
+  if (previous) {
+    queryClient.setQueryData<BayViewData>(key, updateFn(previous));
+  }
+  return { previous };
+}
+
 // ─── Rollback Helper ──────────────────────────────────────────
 
 function rollbackOnError(
-  queryClient: ReturnType<typeof useQueryClient>,
+  queryClient: QueryClient,
   branchId: string | undefined,
   context: { previous: BayViewData | undefined } | undefined,
 ) {
   if (context?.previous) {
     queryClient.setQueryData(bayViewKeys.data(branchId), context.previous);
   }
+}
+
+// ─── Mechanic Lookup Helper ───────────────────────────────────
+
+function lookupMechanic(
+  mechanics: BayViewData["mechanics"],
+  mechanicId: string,
+): { full_name: string | null; avatar_url: string | null } {
+  const m = mechanics.find((m) => m.id === mechanicId);
+  return { full_name: m?.full_name ?? null, avatar_url: m?.avatar_url ?? null };
 }
 
 // ─── Branch Sections Helper ───────────────────────────────────
@@ -69,35 +103,27 @@ export function useUpdateBayViewStatus(branchId: string | undefined) {
         notes,
       );
     },
-    onMutate: async (vars) => {
-      const key = bayViewKeys.data(branchId);
-      await queryClient.cancelQueries({ queryKey: key });
-      const previous = queryClient.getQueryData<BayViewData>(key);
-      if (previous) {
-        queryClient.setQueryData<BayViewData>(
-          key,
-          updateBaysInData(previous, (b) =>
-            b.workOrder?.id === vars.woId
-              ? {
-                  ...b,
-                  workOrder: b.workOrder
-                    ? {
-                        ...b.workOrder,
-                        status: vars.status as typeof b.workOrder.status,
-                        bay_number:
-                          vars.status === "Completed" ||
-                          vars.status === "Cancelled"
-                            ? null
-                            : b.workOrder.bay_number,
-                      }
-                    : null,
-                }
-              : b,
-          ),
-        );
-      }
-      return { previous };
-    },
+    onMutate: (vars) =>
+      applyBayViewOptimistic(queryClient, branchId, (data) =>
+        updateBaysInData(data, (b) =>
+          b.workOrder?.id === vars.woId
+            ? {
+                ...b,
+                workOrder: b.workOrder
+                  ? {
+                      ...b.workOrder,
+                      status: vars.status as typeof b.workOrder.status,
+                      bay_number:
+                        vars.status === "Completed" ||
+                        vars.status === "Cancelled"
+                          ? null
+                          : b.workOrder.bay_number,
+                    }
+                  : null,
+              }
+            : b,
+        ),
+      ),
     onError: (_err, _vars, context) => {
       rollbackOnError(queryClient, branchId, context);
       toast.error("Failed to update status");
@@ -131,33 +157,55 @@ export function useAssignVehicleToBay(branchId: string | undefined) {
       const key = bayViewKeys.data(branchId);
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<BayViewData>(key);
-      if (previous) {
-        const wo = previous.waitingQueue.find((w) => w.id === vars.workOrderId);
-        if (wo) {
-          queryClient.setQueryData<BayViewData>(key, (prev) => {
-            if (!prev) return prev;
-            return {
-              ...updateBaysInData(prev, (b) =>
-                b.bayNumber === vars.bayNumber
-                  ? {
-                      ...b,
-                      workOrder: {
-                        ...wo,
-                        bay_number: vars.bayNumber,
-                        status: "New" as const,
-                        mechanic: null,
-                        helpers: [],
-                        customer_name: null,
-                      },
-                    }
-                  : b,
-              ),
-              waitingQueue: prev.waitingQueue.filter(
-                (w) => w.id !== vars.workOrderId,
-              ),
-            };
-          });
-        }
+
+      // Find the WO — it may be in the waiting queue OR already in a bay (reassign)
+      const woFromQueue = previous?.waitingQueue.find(
+        (w) => w.id === vars.workOrderId,
+      );
+      const woFromBay = previous?.bays.find(
+        (b) => b.workOrder?.id === vars.workOrderId,
+      )?.workOrder;
+      const wo = woFromQueue ?? woFromBay;
+
+      if (previous && wo) {
+        // Track source bay so we can clear it in the bay-to-bay case
+        const sourceBayNumber = previous.bays.find(
+          (b) => b.workOrder?.id === vars.workOrderId,
+        )?.bayNumber;
+
+        queryClient.setQueryData<BayViewData>(key, (prev) => {
+          if (!prev) return prev;
+          return {
+            ...updateBaysInData(prev, (b) => {
+              // Clear source bay if this is a bay-to-bay reassignment
+              if (
+                sourceBayNumber != null &&
+                sourceBayNumber !== vars.bayNumber &&
+                b.bayNumber === sourceBayNumber
+              ) {
+                return { ...b, workOrder: null };
+              }
+              // Set the WO in the target bay
+              if (b.bayNumber === vars.bayNumber) {
+                return {
+                  ...b,
+                  workOrder: {
+                    ...wo,
+                    bay_number: vars.bayNumber,
+                    status: "New" as const,
+                    mechanic: null,
+                    helpers: [],
+                    customer_name: null,
+                  },
+                };
+              }
+              return b;
+            }),
+            waitingQueue: prev.waitingQueue.filter(
+              (w) => w.id !== vars.workOrderId,
+            ),
+          };
+        });
       }
       return { previous };
     },
@@ -168,6 +216,11 @@ export function useAssignVehicleToBay(branchId: string | undefined) {
     onSuccess: (_data, vars) => {
       toast.dismiss();
       toast.success(`Assigned to Bay ${vars.bayNumber}`);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: bayViewKeys.data(branchId),
+      });
     },
   });
 }
@@ -188,24 +241,22 @@ export function useRemoveVehicleFromBay(branchId: string | undefined) {
       const key = bayViewKeys.data(branchId);
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<BayViewData>(key);
-      if (previous) {
-        const removedWO = previous.bays.find(
-          (b) => b.workOrder?.id === vars.woId,
-        )?.workOrder;
-        if (removedWO) {
-          queryClient.setQueryData<BayViewData>(key, (prev) => {
-            if (!prev) return prev;
-            return {
-              ...updateBaysInData(prev, (b) =>
-                b.workOrder?.id === vars.woId ? { ...b, workOrder: null } : b,
-              ),
-              waitingQueue: [
-                ...prev.waitingQueue,
-                { ...removedWO, bay_number: null, status: "New" as const },
-              ],
-            };
-          });
-        }
+      const removedWO = previous?.bays.find(
+        (b) => b.workOrder?.id === vars.woId,
+      )?.workOrder;
+      if (previous && removedWO) {
+        queryClient.setQueryData<BayViewData>(key, (prev) => {
+          if (!prev) return prev;
+          return {
+            ...updateBaysInData(prev, (b) =>
+              b.workOrder?.id === vars.woId ? { ...b, workOrder: null } : b,
+            ),
+            waitingQueue: [
+              ...prev.waitingQueue,
+              { ...removedWO, bay_number: null, status: "New" as const },
+            ],
+          };
+        });
       }
       return { previous };
     },
@@ -216,6 +267,87 @@ export function useRemoveVehicleFromBay(branchId: string | undefined) {
     onSuccess: () => {
       toast.dismiss();
       toast.success("Removed from bay");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: bayViewKeys.data(branchId),
+      });
+    },
+  });
+}
+
+// ─── Swap Bays ────────────────────────────────────────────────
+
+export function useSwapBays(branchId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      woIdA,
+      bayNumberA,
+      woIdB,
+      bayNumberB,
+    }: {
+      woIdA: string;
+      bayNumberA: number;
+      woIdB: string;
+      bayNumberB: number;
+    }) => {
+      const { swapBayNumbers } = await import(
+        "@/lib/services/bay-view-service.actions"
+      );
+      await swapBayNumbers(woIdA, bayNumberA, woIdB, bayNumberB);
+    },
+    onMutate: async (vars) => {
+      const key = bayViewKeys.data(branchId);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<BayViewData>(key);
+
+      if (previous) {
+        const woA = previous.bays.find(
+          (b) => b.workOrder?.id === vars.woIdA,
+        )?.workOrder;
+        const woB = previous.bays.find(
+          (b) => b.workOrder?.id === vars.woIdB,
+        )?.workOrder;
+
+        if (woA && woB) {
+          queryClient.setQueryData<BayViewData>(key, (prev) => {
+            if (!prev) return prev;
+            return {
+              ...updateBaysInData(prev, (b) => {
+                if (b.bayNumber === vars.bayNumberA) {
+                  return {
+                    ...b,
+                    workOrder: { ...woB, bay_number: vars.bayNumberA },
+                  };
+                }
+                if (b.bayNumber === vars.bayNumberB) {
+                  return {
+                    ...b,
+                    workOrder: { ...woA, bay_number: vars.bayNumberB },
+                  };
+                }
+                return b;
+              }),
+            };
+          });
+        }
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      rollbackOnError(queryClient, branchId, context);
+      toast.error("Failed to swap bays");
+    },
+    onSuccess: () => {
+      toast.dismiss();
+      toast.success("Bays swapped");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: bayViewKeys.data(branchId),
+      });
     },
   });
 }
@@ -238,15 +370,45 @@ export function useAssignMechanicToWorkOrder(branchId: string | undefined) {
       );
       await assignMechanicToWorkOrder(woId, mechanicId);
     },
-    onError: () => {
+    onMutate: (vars) =>
+      applyBayViewOptimistic(queryClient, branchId, (data) => {
+        const mechanic = lookupMechanic(data.mechanics, vars.mechanicId);
+        return updateBaysInData(data, (b) => {
+          let bay = b;
+          // If mechanic was assigned elsewhere, clear them from that bay
+          if (bay.workOrder?.mechanic?.id === vars.mechanicId) {
+            bay = {
+              ...bay,
+              workOrder: bay.workOrder
+                ? { ...bay.workOrder, mechanic: null, mechanic_id: null }
+                : null,
+            };
+          }
+          // Assign mechanic to target work order
+          if (bay.workOrder?.id === vars.woId && bay.workOrder) {
+            bay = {
+              ...bay,
+              workOrder: {
+                ...bay.workOrder,
+                mechanic: { id: vars.mechanicId, ...mechanic },
+                mechanic_id: vars.mechanicId,
+                status: "In Progress" as const,
+              },
+            };
+          }
+          return bay;
+        });
+      }),
+    onError: (_err, _vars, context) => {
+      rollbackOnError(queryClient, branchId, context);
       toast.error("Failed to assign mechanic");
     },
     onSuccess: () => {
       toast.dismiss();
       toast.success("Mechanic assigned");
     },
-    onSettled: async () => {
-      await queryClient.refetchQueries({
+    onSettled: () => {
+      queryClient.invalidateQueries({
         queryKey: bayViewKeys.data(branchId),
       });
     },
@@ -265,15 +427,31 @@ export function useRemoveMechanicFromWorkOrder(branchId: string | undefined) {
       );
       await unassignMechanicFromWorkOrder(woId);
     },
-    onError: () => {
+    onMutate: (vars) =>
+      applyBayViewOptimistic(queryClient, branchId, (data) =>
+        updateBaysInData(data, (b) =>
+          b.workOrder?.id === vars.woId && b.workOrder
+            ? {
+                ...b,
+                workOrder: {
+                  ...b.workOrder,
+                  mechanic: null,
+                  mechanic_id: null,
+                },
+              }
+            : b,
+        ),
+      ),
+    onError: (_err, _vars, context) => {
+      rollbackOnError(queryClient, branchId, context);
       toast.error("Failed to remove mechanic");
     },
     onSuccess: () => {
       toast.dismiss();
       toast.success("Mechanic removed");
     },
-    onSettled: async () => {
-      await queryClient.refetchQueries({
+    onSettled: () => {
+      queryClient.invalidateQueries({
         queryKey: bayViewKeys.data(branchId),
       });
     },
@@ -298,15 +476,36 @@ export function useAddHelperToWorkOrder(branchId: string | undefined) {
       );
       await assignHelperToWorkOrder(woId, mechanicId);
     },
-    onError: () => {
+    onMutate: (vars) =>
+      applyBayViewOptimistic(queryClient, branchId, (data) => {
+        const mechanic = lookupMechanic(data.mechanics, vars.mechanicId);
+        return updateBaysInData(data, (b) => {
+          if (b.workOrder?.id !== vars.woId || !b.workOrder) return b;
+          if (b.workOrder.helpers.some((h) => h.id === vars.mechanicId))
+            return b;
+          if (b.workOrder.mechanic?.id === vars.mechanicId) return b;
+          return {
+            ...b,
+            workOrder: {
+              ...b.workOrder,
+              helpers: [
+                ...b.workOrder.helpers,
+                { id: vars.mechanicId, ...mechanic },
+              ],
+            },
+          };
+        });
+      }),
+    onError: (_err, _vars, context) => {
+      rollbackOnError(queryClient, branchId, context);
       toast.error("Failed to add helper");
     },
     onSuccess: () => {
       toast.dismiss();
       toast.success("Helper added");
     },
-    onSettled: async () => {
-      await queryClient.refetchQueries({
+    onSettled: () => {
+      queryClient.invalidateQueries({
         queryKey: bayViewKeys.data(branchId),
       });
     },
@@ -331,15 +530,32 @@ export function useRemoveHelperFromWorkOrder(branchId: string | undefined) {
       );
       await removeHelperFromWorkOrder(woId, mechanicId);
     },
-    onError: () => {
+    onMutate: (vars) =>
+      applyBayViewOptimistic(queryClient, branchId, (data) =>
+        updateBaysInData(data, (b) =>
+          b.workOrder?.id === vars.woId && b.workOrder
+            ? {
+                ...b,
+                workOrder: {
+                  ...b.workOrder,
+                  helpers: b.workOrder.helpers.filter(
+                    (h) => h.id !== vars.mechanicId,
+                  ),
+                },
+              }
+            : b,
+        ),
+      ),
+    onError: (_err, _vars, context) => {
+      rollbackOnError(queryClient, branchId, context);
       toast.error("Failed to remove helper");
     },
     onSuccess: () => {
       toast.dismiss();
       toast.success("Helper removed");
     },
-    onSettled: async () => {
-      await queryClient.refetchQueries({
+    onSettled: () => {
+      queryClient.invalidateQueries({
         queryKey: bayViewKeys.data(branchId),
       });
     },
@@ -377,28 +593,20 @@ export function useAssignCustomerToWorkOrder(
         throw new Error(json.error.message ?? "Failed to assign customer");
       return json.data;
     },
-    onMutate: async (vars) => {
-      const key = bayViewKeys.data(branchId);
-      await queryClient.cancelQueries({ queryKey: key });
-      const previous = queryClient.getQueryData<BayViewData>(key);
-      if (previous) {
-        queryClient.setQueryData<BayViewData>(
-          key,
-          updateBaysInData(previous, (b) =>
-            b.workOrder?.id === vars.woId && b.workOrder
-              ? {
-                  ...b,
-                  workOrder: {
-                    ...b.workOrder,
-                    customer_name: vars.customerName ?? null,
-                  },
-                }
-              : b,
-          ),
-        );
-      }
-      return { previous };
-    },
+    onMutate: (vars) =>
+      applyBayViewOptimistic(queryClient, branchId, (data) =>
+        updateBaysInData(data, (b) =>
+          b.workOrder?.id === vars.woId && b.workOrder
+            ? {
+                ...b,
+                workOrder: {
+                  ...b.workOrder,
+                  customer_name: vars.customerName ?? null,
+                },
+              }
+            : b,
+        ),
+      ),
     onError: (_err, _vars, context) => {
       rollbackOnError(queryClient, branchId, context);
       toast.error("Failed to assign customer");
@@ -424,31 +632,23 @@ export function useUpdateBayCount(branchId: string | undefined) {
       );
       await updateBayCount(count);
     },
-    onMutate: async (vars) => {
-      const key = bayViewKeys.data(branchId);
-      await queryClient.cancelQueries({ queryKey: key });
-      const previous = queryClient.getQueryData<BayViewData>(key);
-      if (previous) {
-        const newBays = Array.from({ length: vars.count }, (_, i) => {
-          const existing = previous.bays[i];
+    onMutate: (vars) =>
+      applyBayViewOptimistic(queryClient, branchId, (data) => ({
+        ...data,
+        bayCount: vars.count,
+        bays: Array.from({ length: vars.count }, (_, i) => {
+          const existing = data.bays[i];
           return existing ?? { bayNumber: i + 1, workOrder: null };
-        });
-        queryClient.setQueryData<BayViewData>(key, {
-          ...previous,
+        }),
+        branchSections: data.branchSections?.map((section) => ({
+          ...section,
           bayCount: vars.count,
-          bays: newBays,
-          branchSections: previous.branchSections?.map((section) => ({
-            ...section,
-            bayCount: vars.count,
-            bays: Array.from({ length: vars.count }, (_, i) => {
-              const existing = section.bays[i];
-              return existing ?? { bayNumber: i + 1, workOrder: null };
-            }),
-          })),
-        });
-      }
-      return { previous };
-    },
+          bays: Array.from({ length: vars.count }, (_, i) => {
+            const existing = section.bays[i];
+            return existing ?? { bayNumber: i + 1, workOrder: null };
+          }),
+        })),
+      })),
     onError: (_err, _vars, context) => {
       rollbackOnError(queryClient, branchId, context);
       toast.error("Failed to update bay count");
