@@ -1,15 +1,12 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { requireAppContext } from "@/lib/erp";
+import { requireActionContext } from "@/lib/action-utils";
+import { revalidateEntity } from "@/lib/revalidate";
 import type { AppPermission } from "@/lib/permissions";
 
 export async function createRole(formData: FormData) {
-  const ctx = await requireAppContext();
-
-  if (!ctx.permissions.includes("roles.manage")) {
-    return { error: "Эрх хүрэлцэхгүй байна." };
-  }
+  const ctx = await requireActionContext("roles.manage");
+  if ("error" in ctx) return ctx;
 
   const name = formData.get("name") as string;
   const description = formData.get("description") as string;
@@ -33,15 +30,12 @@ export async function createRole(formData: FormData) {
     return { error: error.message };
   }
 
-  revalidatePath("/settings/roles");
+  revalidateEntity("roles");
 }
 
 export async function updateRole(roleId: string, formData: FormData) {
-  const ctx = await requireAppContext();
-
-  if (!ctx.permissions.includes("roles.manage")) {
-    return { error: "Эрх хүрэлцэхгүй байна." };
-  }
+  const ctx = await requireActionContext("roles.manage");
+  if ("error" in ctx) return ctx;
 
   const name = formData.get("name") as string;
   const description = formData.get("description") as string;
@@ -66,15 +60,12 @@ export async function updateRole(roleId: string, formData: FormData) {
     return { error: error.message };
   }
 
-  revalidatePath("/settings/roles");
+  revalidateEntity("roles");
 }
 
 export async function deleteRole(roleId: string) {
-  const ctx = await requireAppContext();
-
-  if (!ctx.permissions.includes("roles.manage")) {
-    return { error: "Эрх хүрэлцэхгүй байна." };
-  }
+  const ctx = await requireActionContext("roles.manage");
+  if ("error" in ctx) return ctx;
 
   // Check if role has members
   const { count, error: countError } = await ctx.supabase
@@ -101,18 +92,15 @@ export async function deleteRole(roleId: string) {
 
   if (error) return { error: error.message };
 
-  revalidatePath("/settings/roles");
+  revalidateEntity("roles");
 }
 
 export async function setRolePermissions(
   roleId: string,
   permissions: AppPermission[],
 ) {
-  const ctx = await requireAppContext();
-
-  if (!ctx.permissions.includes("roles.manage")) {
-    return { error: "Эрх хүрэлцэхгүй байна." };
-  }
+  const ctx = await requireActionContext("roles.manage");
+  if ("error" in ctx) return ctx;
 
   // Use the transactional RPC to avoid data loss if insert fails after delete
   const { data: result, error: rpcError } = await ctx.supabase.rpc(
@@ -126,15 +114,12 @@ export async function setRolePermissions(
     return { error: (result as { error: string }).error };
   }
 
-  revalidatePath("/settings/roles");
+  revalidateEntity("roles");
 }
 
 export async function updateUserRole(profileId: string, roleId: string | null) {
-  const ctx = await requireAppContext();
-
-  if (!ctx.permissions.includes("members.manage_role")) {
-    return { error: "Эрх хүрэлцэхгүй байна." };
-  }
+  const ctx = await requireActionContext("members.manage_role");
+  if ("error" in ctx) return ctx;
 
   const { error } = await ctx.supabase
     .from("profiles")
@@ -144,5 +129,5 @@ export async function updateUserRole(profileId: string, roleId: string | null) {
 
   if (error) return { error: error.message };
 
-  revalidatePath("/settings/users");
+  revalidateEntity("users");
 }

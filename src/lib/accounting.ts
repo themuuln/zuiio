@@ -23,45 +23,45 @@ export async function postSaleToJournal(
     unit_price: number;
   }>,
 ): Promise<{ success: boolean; error?: string }> {
-  try {
-    const totalDebit =
-      saleData.paid_amount > 0 ? saleData.paid_amount : saleData.total_amount;
+  const totalDebit =
+    saleData.paid_amount > 0 ? saleData.paid_amount : saleData.total_amount;
 
-    const lines: Array<{
-      account_id: string;
-      debit_amount: number;
-      credit_amount: number;
-    }> = [
-      { account_id: "1200", debit_amount: totalDebit, credit_amount: 0 },
-      {
-        account_id: "4100",
-        debit_amount: 0,
-        credit_amount: totalDebit,
-      },
-    ];
+  const lines: Array<{
+    account_id: string;
+    debit_amount: number;
+    credit_amount: number;
+  }> = [
+    { account_id: "1200", debit_amount: totalDebit, credit_amount: 0 },
+    {
+      account_id: "4100",
+      debit_amount: 0,
+      credit_amount: totalDebit,
+    },
+  ];
 
-    // If sale has items, debit COGS and credit Inventory
-    if (_items && _items.length > 0) {
-      const totalCost = _items.reduce(
-        (sum, item) => sum + item.quantity * item.unit_price,
-        0,
+  // If sale has items, debit COGS and credit Inventory
+  if (_items && _items.length > 0) {
+    const totalCost = _items.reduce(
+      (sum, item) => sum + item.quantity * item.unit_price,
+      0,
+    );
+    if (totalCost > 0) {
+      lines.push(
+        {
+          account_id: "5100",
+          debit_amount: totalCost,
+          credit_amount: 0,
+        },
+        {
+          account_id: "1400",
+          debit_amount: 0,
+          credit_amount: totalCost,
+        },
       );
-      if (totalCost > 0) {
-        lines.push(
-          {
-            account_id: "5100",
-            debit_amount: totalCost,
-            credit_amount: 0,
-          },
-          {
-            account_id: "1400",
-            debit_amount: 0,
-            credit_amount: totalCost,
-          },
-        );
-      }
     }
+  }
 
+  try {
     return await createJournalEntry(supabase, {
       organizationId,
       userId,
@@ -73,9 +73,11 @@ export async function postSaleToJournal(
       accountCodes: ["1200", "1300", "4100", "5100", "1400"],
       lines,
     });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Алдаа гарлаа";
-    return { success: false, error: message };
+  } catch (error) {
+    return {
+      success: false,
+      error: `Журналын бичилт үүсгэхэд алдаа гарлаа: ${error instanceof Error ? error.message : String(error)}`,
+    };
   }
 }
 
@@ -123,9 +125,11 @@ export async function postExpenseToJournal(
         },
       ],
     });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Алдаа гарлаа";
-    return { success: false, error: message };
+  } catch (error) {
+    return {
+      success: false,
+      error: `Журналын бичилт үүсгэхэд алдаа гарлаа: ${error instanceof Error ? error.message : String(error)}`,
+    };
   }
 }
 
@@ -147,10 +151,9 @@ export async function postPurchaseToJournal(
     status?: string;
   },
 ): Promise<{ success: boolean; error?: string }> {
-  try {
-    const creditAccountId =
-      purchaseData.status === "received" ? "1200" : "2100";
+  const creditAccountId = purchaseData.status === "received" ? "1200" : "2100";
 
+  try {
     return await createJournalEntry(supabase, {
       organizationId,
       userId,
@@ -173,8 +176,10 @@ export async function postPurchaseToJournal(
         },
       ],
     });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Алдаа гарлаа";
-    return { success: false, error: message };
+  } catch (error) {
+    return {
+      success: false,
+      error: `Журналын бичилт үүсгэхэд алдаа гарлаа: ${error instanceof Error ? error.message : String(error)}`,
+    };
   }
 }

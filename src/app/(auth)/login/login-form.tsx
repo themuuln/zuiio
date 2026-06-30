@@ -32,6 +32,7 @@ export function LoginForm({ next }: { next: string }) {
                 type="email"
                 placeholder="name@example.com"
                 required
+                autoComplete="email"
                 className="pl-9"
                 defaultValue={isDev ? DEV_EMAIL : undefined}
               />
@@ -47,6 +48,7 @@ export function LoginForm({ next }: { next: string }) {
                 type="password"
                 placeholder="••••••••"
                 required
+                autoComplete="current-password"
                 className="pl-9"
                 defaultValue={isDev ? DEV_PASSWORD : undefined}
               />

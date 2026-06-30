@@ -1,3 +1,3 @@
 "use client";
 
-export { QueryProvider } from "@zer/query";
+export { QueryProvider } from "@zuiio/query";

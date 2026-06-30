@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { requireActionContext } from "@/lib/action-utils";
+import { revalidateEntity } from "@/lib/revalidate";
 import {
   type BrandConfig,
   DEFAULT_BRAND_CONFIG,
@@ -8,7 +9,6 @@ import {
   getTheme,
   isValidColorValue,
 } from "@/lib/branding";
-import { requireAppContext } from "@/lib/erp";
 
 export type BrandingState = {
   error?: string;
@@ -19,7 +19,9 @@ export async function updateBrandConfig(
   _prevState: BrandingState | undefined,
   formData: FormData,
 ): Promise<BrandingState> {
-  const { supabase, organizationId } = await requireAppContext();
+  const ctx = await requireActionContext("settings.manage");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
 
   const theme = formData.get("theme")?.toString();
   const radiusStr = formData.get("radius")?.toString();
@@ -102,7 +104,7 @@ export async function updateBrandConfig(
     return { error: `Хадгалахад алдаа гарлаа: ${error.message}` };
   }
 
-  revalidatePath("/settings/branding");
-  revalidatePath("/");
+  revalidateEntity("branding");
+  revalidateEntity("settings");
   return { success: true };
 }

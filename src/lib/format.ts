@@ -3,4 +3,4 @@ export {
   formatDate,
   formatRouteDate,
   slugify,
-} from "@zer/core";
+} from "@zuiio/core";

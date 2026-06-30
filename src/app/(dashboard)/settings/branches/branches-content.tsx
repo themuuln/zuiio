@@ -190,7 +190,7 @@ export function BranchesContent({ branches, canManage }: BranchesContentProps) {
                           setDefaultBusy(branch.id);
                           const result = await setDefaultBranch(branch.id);
                           setDefaultBusy(null);
-                          if (result?.error) {
+                          if (result && "error" in result) {
                             toast.error(result.error);
                           } else {
                             toast.success("Үндсэн салбар болгон өөрчиллөө.");
@@ -283,7 +283,7 @@ function CreateBranchDialog({ onClose }: { onClose: () => void }) {
 
     const result = await createBranch(formData);
 
-    if (result?.error) {
+    if (result && "error" in result) {
       setServerError(result.error);
     } else {
       toast.success("Салбар амжилттай үүсгэгдлээ.");
@@ -387,7 +387,7 @@ function EditBranchDialog({
 
     const result = await updateBranch(branch.id, formData);
 
-    if (result?.error) {
+    if (result && "error" in result) {
       setServerError(result.error);
     } else {
       toast.success("Салбарын мэдээлэл шинэчлэгдлээ.");
@@ -464,7 +464,7 @@ function DeleteBranchDialog({
     const result = await deleteBranch(branch.id);
     setDeleting(false);
 
-    if (result?.error) {
+    if (result && "error" in result) {
       setServerError(result.error);
     } else {
       toast.success("Салбар амжилттай устгагдлаа.");

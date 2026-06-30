@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import type { User } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import { PUBLIC_ROUTES } from "@/lib/constants";
 import { getSupabaseEnv } from "./env";
@@ -25,9 +26,16 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user: User | null = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch (e) {
+    // Session is invalid — treat as unauthenticated.
+    // Log auth-failure exceptions for observability so we can distinguish
+    // "no session" from "auth service unavailable" or "corrupt token".
+    console.error("Session validation failed:", e);
+  }
 
   const isPublicRoute = PUBLIC_ROUTES.some(
     (route) =>
@@ -75,8 +83,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Pass user ID as a header so layouts/pages can skip duplicate getUser() calls.
-  // Proxy already verified the session — layouts can read this header + getSession().
+  // Pass user ID as a header so consumers can avoid a duplicate getUser() call.
   if (user) {
     supabaseResponse.headers.set("x-authed-user-id", user.id);
   }

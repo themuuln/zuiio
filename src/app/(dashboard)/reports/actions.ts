@@ -1,8 +1,7 @@
 "use server";
 
 import { randomBytes } from "node:crypto";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { requireActionContext } from "@/lib/action-utils";
 
 export type ShareLinkState = {
   token?: string;
@@ -13,24 +12,9 @@ export async function createShareLink(
   _prevState: ShareLinkState | undefined,
   formData: FormData,
 ): Promise<ShareLinkState> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("organization_id")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile?.organization_id) {
-    return { error: "Байгууллага олдсонгүй." };
-  }
+  const ctx = await requireActionContext("reports.manage");
+  if ("error" in ctx) return { error: ctx.error };
+  const { supabase, organizationId } = ctx;
 
   const dateFrom = formData.get("date_from") as string;
   const dateTo = formData.get("date_to") as string;
@@ -46,7 +30,7 @@ export async function createShareLink(
   const { data: existing } = await supabase
     .from("shared_reports")
     .select("id")
-    .eq("organization_id", profile.organization_id)
+    .eq("organization_id", organizationId)
     .eq("date_from", dateFrom)
     .eq("date_to", dateTo)
     .maybeSingle();
@@ -54,7 +38,7 @@ export async function createShareLink(
   if (existing) {
     const { error: updateError } = await supabase
       .from("shared_reports")
-      .update({ token, created_by: user.id })
+      .update({ token })
       .eq("id", existing.id);
 
     if (updateError) {
@@ -64,11 +48,10 @@ export async function createShareLink(
     const { error: insertError } = await supabase
       .from("shared_reports")
       .insert({
-        organization_id: profile.organization_id,
+        organization_id: organizationId,
         token,
         date_from: dateFrom,
         date_to: dateTo,
-        created_by: user.id,
       });
 
     if (insertError) {
@@ -80,31 +63,15 @@ export async function createShareLink(
 }
 
 export async function deleteShareLink(shareId: string) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  // Verify the share link belongs to the user's organization
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("organization_id")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile?.organization_id) {
-    return { error: "Байгууллага олдсонгүй." };
-  }
+  const ctx = await requireActionContext("reports.manage");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
 
   const { error } = await supabase
     .from("shared_reports")
     .delete()
     .eq("id", shareId)
-    .eq("organization_id", profile.organization_id);
+    .eq("organization_id", organizationId);
 
   if (error) {
     console.error("Failed to delete share link:", error);

@@ -4,4 +4,4 @@ export {
   useOptimisticCreate,
   useOptimisticDelete,
   useOptimisticUpdate,
-} from "@zer/query";
+} from "@zuiio/query";

@@ -1,16 +1,16 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { requireActionContext } from "@/lib/action-utils";
 import { validateProductInput } from "@/lib/domain-rules";
-import { checkPermission, requireAppContext } from "@/lib/erp";
+import { revalidateEntity } from "@/lib/revalidate";
 
 export async function createProduct(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, permissions } = await requireAppContext();
-  const permError = checkPermission(permissions, "products.create");
-  if (permError) return { error: permError };
+  const ctx = await requireActionContext("products.create");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
 
   const name = formData.get("name")?.toString() ?? "";
   const costPrice = Number(formData.get("cost_price") ?? 0);
@@ -184,6 +184,6 @@ export async function createProduct(
     }
   }
 
-  revalidatePath("/products");
+  revalidateEntity("products");
   return { success: true as const };
 }

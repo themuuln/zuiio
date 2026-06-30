@@ -47,13 +47,18 @@ export async function createInvoice(
     return { error: "Барааны мэдээлэл шаардлагатай." };
   }
 
-  const items = JSON.parse(itemsJson) as Array<{
+  let items: Array<{
     product_id: string | null;
     description: string;
     quantity: number;
     unit_price: number;
     variant_id?: string;
   }>;
+  try {
+    items = JSON.parse(itemsJson);
+  } catch {
+    return { error: "Барааны мэдээллийн формат буруу байна." };
+  }
 
   if (items.length === 0) {
     return { error: "Дор хаяж нэг бараа оруулна уу." };

@@ -1,16 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash } from "@phosphor-icons/react";
+import { Plus } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { createQuotation } from "@/app/(dashboard)/quotations/actions";
-import {
-  type SelectedVariant,
-  VariantPicker,
-} from "@/components/products/variant-picker";
+import type { SelectedVariant } from "@/components/products/variant-picker";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Combobox,
@@ -20,7 +17,6 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-import { CurrencyInput } from "@/components/ui/currency-input";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
   DrawerCancel,
@@ -29,7 +25,10 @@ import {
 } from "@/components/ui/drawer-footer";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import {
+  LineItemRow,
+  computeLineItemsTotal,
+} from "@/components/ui/line-item-row";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
@@ -132,14 +131,16 @@ export function QuotationCreateDrawer({
     Record<number, SelectedVariant | null>
   >({});
 
-  const removeRow = useVariantLineItemRemove(remove, setVariantSelections);
+  const [productQueries, setProductQueries] = useState<string[]>([]);
+
+  const removeRow = useVariantLineItemRemove(
+    remove,
+    setVariantSelections,
+    setProductQueries,
+  );
 
   const items = watch("items");
-  const totalAmount =
-    items?.reduce(
-      (sum, item) => sum + (item.quantity || 0) * (item.unit_price || 0),
-      0,
-    ) ?? 0;
+  const totalAmount = computeLineItemsTotal(items);
 
   const onSubmit = (data: QuotationValues) => {
     if (quotationMutation.isPending) return;
@@ -173,15 +174,6 @@ export function QuotationCreateDrawer({
   const filteredContacts = trimmedQuery
     ? customers.filter((c) => c.name.toLowerCase().includes(trimmedQuery))
     : customers;
-
-  // Product combobox helpers for items
-  const [productQueries, setProductQueries] = useState<Record<number, string>>(
-    {},
-  );
-
-  const setProductQuery = (index: number, query: string) => {
-    setProductQueries((prev) => ({ ...prev, [index]: query }));
-  };
 
   return (
     <SlideInDrawer
@@ -332,153 +324,43 @@ export function QuotationCreateDrawer({
           </div>
 
           {fields.map((field, index) => (
-            <div
+            <LineItemRow
               key={field.id}
-              className="flex flex-wrap items-end gap-2 rounded-lg border p-3"
-            >
-              <div className="flex-1 min-w-[140px]">
-                <FieldLabel className="mb-1 text-xs">Бараа</FieldLabel>
-                <Controller
-                  control={control}
-                  name={`items.${index}.product_id`}
-                  render={({ field: productField }) => (
-                    <Combobox
-                      items={products}
-                      value={
-                        products.find((p) => p.id === productField.value) ??
-                        null
-                      }
-                      onValueChange={(next: ProductOption | null) => {
-                        productField.onChange(next?.id ?? null);
-                        // Clear variant selection when product changes
-                        setVariantSelections((prev) => ({
-                          ...prev,
-                          [index]: null,
-                        }));
-                        setValue(`items.${index}.variant_id`, undefined);
-                        // Auto-fill unit_price from product
-                        if (next) {
-                          setValue(
-                            `items.${index}.unit_price`,
-                            next.sale_price ?? 0,
-                          );
-                        }
-                        setProductQuery(index, "");
-                      }}
-                      itemToStringValue={(p: ProductOption | null) =>
-                        p?.id ?? ""
-                      }
-                      itemToStringLabel={(p: ProductOption | null) =>
-                        p?.name ?? ""
-                      }
-                      inputValue={productQueries[index] ?? ""}
-                      onInputValueChange={(v) => setProductQuery(index, v)}
-                    >
-                      <ComboboxInput
-                        placeholder="Сонгох"
-                        showTrigger
-                        className="w-full"
-                      />
-                      <ComboboxContent>
-                        <ComboboxEmpty>Бараа байхгүй</ComboboxEmpty>
-                        <ComboboxList>
-                          {(p: ProductOption) => (
-                            <ComboboxItem key={p.id}>{p.name}</ComboboxItem>
-                          )}
-                        </ComboboxList>
-                      </ComboboxContent>
-                    </Combobox>
-                  )}
-                />
-                {products.find(
-                  (p) => p.id === watch(`items.${index}.product_id`),
-                ) && (
-                  <div className="mt-1">
-                    <VariantPicker
-                      productId={watch(`items.${index}.product_id`)!}
-                      onSelect={(variant) => {
-                        setVariantSelections((prev) => ({
-                          ...prev,
-                          [index]: variant,
-                        }));
-                        if (variant) {
-                          setValue(
-                            `items.${index}.unit_price`,
-                            variant.sale_price ?? 0,
-                          );
-                          setValue(
-                            `items.${index}.variant_id`,
-                            variant.variant_id,
-                          );
-                        } else {
-                          const product = products.find(
-                            (p) => p.id === watch(`items.${index}.product_id`),
-                          );
-                          setValue(
-                            `items.${index}.unit_price`,
-                            product?.sale_price ?? 0,
-                          );
-                          setValue(`items.${index}.variant_id`, undefined);
-                        }
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-[140px]">
-                <FieldLabel className="mb-1 text-xs">Тайлбар</FieldLabel>
-                <Input
-                  placeholder="Бүтээгдэхүүний нэр"
-                  {...register(`items.${index}.description`)}
-                />
-                {errors.items?.[index]?.description && (
-                  <p className="text-xs text-destructive">
-                    {errors.items[index]?.description?.message}
-                  </p>
-                )}
-              </div>
-              <div className="w-20">
-                <FieldLabel className="mb-1 text-xs">Тоо</FieldLabel>
-                <Input
-                  type="number"
-                  min="0.01"
-                  step="any"
-                  {...register(`items.${index}.quantity`, {
-                    valueAsNumber: true,
-                  })}
-                />
-              </div>
-              <div className="w-28">
-                <FieldLabel className="mb-1 text-xs">Нэгж үнэ</FieldLabel>
-                <Controller
-                  control={control}
-                  name={`items.${index}.unit_price`}
-                  render={({ field }) => (
-                    <CurrencyInput
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                  )}
-                />
-              </div>
-              <div className="flex items-center gap-1 pb-1">
-                <span className="text-sm font-medium">
-                  {formatCurrency(
-                    (items?.[index]?.quantity ?? 0) *
-                      (items?.[index]?.unit_price ?? 0),
-                  )}
-                </span>
-                {fields.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeRow(index)}
-                    className="size-8 flex items-center justify-center text-destructive hover:bg-muted rounded"
-                  >
-                    <Trash className="size-4" />
-                  </button>
-                )}
-              </div>
-            </div>
+              index={index}
+              control={control}
+              register={register}
+              watch={watch}
+              setValue={setValue}
+              errors={errors}
+              products={products}
+              getProductId={(p) => p.id}
+              getProductLabel={(p) => p.name}
+              onProductSelect={(product, i) => {
+                if (product) {
+                  setValue(
+                    `items.${i}.unit_price`,
+                    (product as any).sale_price ?? 0,
+                  );
+                }
+              }}
+              onVariantSelect={(variant, i) => {
+                if (variant) {
+                  setValue(`items.${i}.unit_price`, variant.sale_price ?? 0);
+                } else {
+                  const product = products.find(
+                    (p) => p.id === watch(`items.${i}.product_id`),
+                  );
+                  setValue(`items.${i}.unit_price`, product?.sale_price ?? 0);
+                }
+              }}
+              variantSelections={variantSelections}
+              setVariantSelections={setVariantSelections}
+              canRemove={fields.length > 1}
+              onRemove={() => removeRow(index)}
+              showDescription
+              productQueries={productQueries}
+              setProductQueries={setProductQueries}
+            />
           ))}
         </div>
 

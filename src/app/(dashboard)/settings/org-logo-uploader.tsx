@@ -26,7 +26,7 @@ export function OrgLogoUploader({
       return updateOrgLogo(null);
     },
     onSuccess: (result) => {
-      if (result?.error) {
+      if (result && "error" in result) {
         toast.error(result.error);
       } else {
         setLogoUrl(null);
@@ -71,7 +71,7 @@ export function OrgLogoUploader({
       const publicUrl = urlData.publicUrl;
 
       const result = await updateOrgLogo(publicUrl);
-      if (result?.error) {
+      if (result && "error" in result) {
         toast.error(result.error);
         return;
       }

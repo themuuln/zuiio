@@ -1,17 +1,17 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { requireActionContext } from "@/lib/action-utils";
 import { validateProductInput } from "@/lib/domain-rules";
-import { checkPermission, requireAppContext } from "@/lib/erp";
 import { checkLowStockAndNotify } from "@/lib/notification";
+import { revalidateEntity } from "@/lib/revalidate";
 
 export async function updateProduct(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, permissions } = await requireAppContext();
-  const permError = checkPermission(permissions, "products.update");
-  if (permError) return { error: permError };
+  const ctx = await requireActionContext("products.update");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
 
   const id = formData.get("id")?.toString();
   if (!id) {
@@ -230,7 +230,7 @@ export async function updateProduct(
   // Check low stock and notify
   checkLowStockAndNotify(organizationId, name, currentStock, minStock);
 
-  revalidatePath("/products");
+  revalidateEntity("products");
   return { success: true as const };
 }
 
@@ -238,9 +238,9 @@ export async function deleteProduct(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, permissions } = await requireAppContext();
-  const permError = checkPermission(permissions, "products.delete");
-  if (permError) return { error: permError };
+  const ctx = await requireActionContext("products.delete");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
 
   const id = formData.get("id")?.toString();
   if (!id) {
@@ -259,7 +259,7 @@ export async function deleteProduct(
     return { error: error.message ?? "Бүтээгдэхүүн устгахад алдаа гарлаа." };
   }
 
-  revalidatePath("/products");
-  revalidatePath("/inventory");
+  revalidateEntity("products");
+  revalidateEntity("inventory");
   return { success: true as const };
 }

@@ -120,8 +120,8 @@ export function ProductsTable({
       const formData = new FormData();
       formData.set("id", id);
       const result = await deleteProduct(undefined, formData);
-      if (result?.error) throw new Error(result.error);
-      return result;
+      if (result && "error" in result) throw new Error(result.error);
+      return undefined;
     },
     queryKey: productKeys.all(),
     entityName: "Бүтээгдэхүүн",

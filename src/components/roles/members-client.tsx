@@ -97,7 +97,7 @@ export function MembersClient({
     setChanging(profileId);
     const result = await assignUserBranch(profileId, branchId);
     setChanging(null);
-    if (result?.error) {
+    if (result && "error" in result) {
       toast.error(result.error);
     }
   };
@@ -111,7 +111,7 @@ export function MembersClient({
     const result = await inviteMember(formData);
     setInvitePending(false);
 
-    if (result?.error) {
+    if (result && "error" in result) {
       toast.error(result.error);
     } else {
       toast.success("Урилга амжилттай илгээгдлээ.");
@@ -127,7 +127,7 @@ export function MembersClient({
     formData.append("profile_id", removeTarget.id);
     const result = await removeMember(formData);
 
-    if (result?.error) {
+    if (result && "error" in result) {
       toast.error(result.error);
     } else {
       toast.success("Гишүүнийг хассан.");

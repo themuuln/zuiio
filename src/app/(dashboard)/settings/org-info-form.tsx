@@ -74,7 +74,8 @@ export function OrgInfoForm({
     formData.append("slug", data.slug);
     formData.append("company_type", data.company_type);
     const result = await updateOrganization(undefined, formData);
-    return result?.error ? { error: result.error } : undefined;
+    if (result && "error" in result) return { error: result.error };
+    return undefined;
   }, [getValues]);
 
   useRegisterSave({

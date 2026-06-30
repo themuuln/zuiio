@@ -1,0 +1,21 @@
+{
+  "name": "@zer/hr-supabase",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "@supabase/supabase-js": "^2"
+  },
+  "dependencies": {
+    "@zer/hr-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@zer/config": "workspace:*",
+    "@supabase/supabase-js": "^2",
+    "typescript": "^5"
+  }
+}

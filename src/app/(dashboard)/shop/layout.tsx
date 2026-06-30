@@ -11,18 +11,18 @@ export default async function ShopLayout({
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data, error } = await supabase.auth.getClaims();
 
-  if (!user) {
+  const claims = data?.claims;
+  const userId = claims?.sub;
+  if (error || !userId) {
     redirect("/login");
   }
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("organization_id")
-    .eq("id", user.id)
+    .eq("id", userId)
     .single();
 
   if (!profile) {

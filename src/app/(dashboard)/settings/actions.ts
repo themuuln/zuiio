@@ -1,15 +1,17 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireAppContext } from "@/lib/erp";
+import { requireActionContext, requireAppContext } from "@/lib/action-utils";
+import { revalidateEntity } from "@/lib/revalidate";
 import { createServiceClient } from "@/lib/supabase/server-service";
 
 export async function updateOrganization(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId } = await requireAppContext();
+  const ctx = await requireActionContext("settings.manage");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
 
   const name = formData.get("name");
   const slug = formData.get("slug");
@@ -46,7 +48,7 @@ export async function updateOrganization(
     return { error: `Шинэчлэхэд алдаа гарлаа: ${error.message}` };
   }
 
-  revalidatePath("/settings");
+  revalidateEntity("settings");
   return { success: true as const };
 }
 
@@ -54,7 +56,9 @@ export async function toggleBrandPreset(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId } = await requireAppContext();
+  const ctx = await requireActionContext("settings.manage");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
 
   const brandName = formData.get("brand_name")?.toString();
   const enabled = formData.get("enabled") === "true";
@@ -93,7 +97,7 @@ export async function toggleBrandPreset(
 
   if (error) return { error: error.message };
 
-  revalidatePath("/settings");
+  revalidateEntity("settings");
   return { success: true as const };
 }
 
@@ -126,7 +130,9 @@ const PRESET_IMAGE_MAP: Record<string, string> = {
 };
 
 export async function importBrandPresets(formData: FormData) {
-  const { organizationId } = await requireAppContext();
+  const ctx = await requireActionContext("settings.manage");
+  if ("error" in ctx) return ctx;
+  const { organizationId } = ctx;
   const serviceSupabase = createServiceClient();
 
   const brandName = formData.get("brand_name")?.toString();
@@ -224,13 +230,15 @@ export async function importBrandPresets(formData: FormData) {
     if (!prodErr) importedCount++;
   }
 
-  revalidatePath("/products");
-  revalidatePath("/settings");
+  revalidateEntity("products");
+  revalidateEntity("settings");
   return { success: true as const, count: importedCount };
 }
 
 export async function importProductPreset(formData: FormData) {
-  const { organizationId } = await requireAppContext();
+  const ctx = await requireActionContext("settings.manage");
+  if ("error" in ctx) return ctx;
+  const { organizationId } = ctx;
   const serviceSupabase = createServiceClient();
 
   const presetId = formData.get("preset_id")?.toString();
@@ -336,13 +344,15 @@ export async function importProductPreset(formData: FormData) {
 
   if (prodErr) return { error: prodErr.message };
 
-  revalidatePath("/products");
-  revalidatePath("/settings");
+  revalidateEntity("products");
+  revalidateEntity("settings");
   return { success: true as const, name: preset.product_name };
 }
 
 export async function importProductPresetsByIds(presetIds: string[]) {
-  const { organizationId } = await requireAppContext();
+  const ctx = await requireActionContext("settings.manage");
+  if ("error" in ctx) return ctx;
+  const { organizationId } = ctx;
   const serviceSupabase = createServiceClient();
 
   if (!presetIds.length) return { error: "Бүтээгдэхүүн сонгоогүй байна." };
@@ -460,8 +470,8 @@ export async function importProductPresetsByIds(presetIds: string[]) {
     if (!prodErr) count++;
   }
 
-  revalidatePath("/products");
-  revalidatePath("/settings");
+  revalidateEntity("products");
+  revalidateEntity("settings");
   return { success: true as const, count };
 }
 
@@ -486,7 +496,7 @@ export async function updateProfile(
     return { error: `Профайл шинэчлэхэд алдаа гарлаа: ${error.message}` };
   }
 
-  revalidatePath("/settings");
+  revalidateEntity("settings");
   return { success: true as const };
 }
 
@@ -496,7 +506,9 @@ export async function saveSmtpConfig(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase } = await requireAppContext();
+  const ctx = await requireActionContext("emails.manage");
+  if ("error" in ctx) return ctx;
+  const { supabase } = ctx;
 
   const host = formData.get("host")?.toString();
   const portStr = formData.get("port")?.toString();
@@ -550,7 +562,7 @@ export async function saveSmtpConfig(
     }
   }
 
-  revalidatePath("/settings");
+  revalidateEntity("settings");
   return { success: true as const };
 }
 
@@ -560,7 +572,9 @@ export async function saveReportEmailSettings(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId } = await requireAppContext();
+  const ctx = await requireActionContext("settings.manage");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
 
   const enabled = formData.get("enabled") === "true";
   const recipient = formData.get("recipient")?.toString() || null;
@@ -583,7 +597,7 @@ export async function saveReportEmailSettings(
     return { error: `Хадгалахад алдаа гарлаа: ${error.message}` };
   }
 
-  revalidatePath("/settings");
+  revalidateEntity("settings");
   return { success: true as const };
 }
 
@@ -599,13 +613,16 @@ const ALLOWED_FEATURE_SETTINGS = new Set([
   "has_categories",
   "has_email_reports",
   "has_audit_log",
+  "has_hr",
 ]);
 
 export async function updateOrgFeatureSetting(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId } = await requireAppContext();
+  const ctx = await requireActionContext("settings.manage");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
 
   const setting = formData.get("setting")?.toString();
   const value = formData.get("value") === "true";
@@ -623,7 +640,7 @@ export async function updateOrgFeatureSetting(
     return { error: `Хадгалахад алдаа гарлаа: ${error.message}` };
   }
 
-  revalidatePath("/settings");
+  revalidateEntity("settings");
   return { success: true as const };
 }
 
@@ -679,7 +696,9 @@ export async function leaveOrganization(formData: FormData) {
 // ─── Org Logo ─────────────────────────────────────────────────────────
 
 export async function updateOrgLogo(logoUrl: string | null) {
-  const { supabase, organizationId } = await requireAppContext();
+  const ctx = await requireActionContext("settings.manage");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
 
   // Fetch current brand_config to preserve other fields
   const { data: org, error: fetchError } = await supabase
@@ -708,7 +727,7 @@ export async function updateOrgLogo(logoUrl: string | null) {
     return { error: `Хадгалахад алдаа гарлаа: ${updateError.message}` };
   }
 
-  revalidatePath("/settings");
-  revalidatePath("/");
+  revalidateEntity("settings");
+  revalidateEntity("branding");
   return { success: true as const };
 }

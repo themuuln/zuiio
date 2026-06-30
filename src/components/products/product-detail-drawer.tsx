@@ -76,7 +76,7 @@ export function ProductDetailDrawer({
   const deleteMutation = useOptimisticDelete({
     mutationFn: async (formData: FormData) => {
       const result = await deleteProduct(undefined, formData);
-      if (result?.error) throw new Error(result.error);
+      if (result && "error" in result) throw new Error(result.error);
       return result;
     },
     queryKey: productKeys.all,

@@ -23,6 +23,7 @@ type OrgSettings = {
   has_categories: boolean;
   has_email_reports: boolean;
   has_audit_log: boolean;
+  has_hr: boolean;
 };
 
 const SETTINGS: {
@@ -77,6 +78,11 @@ const SETTINGS: {
     label: "Үйлдлийн түүх",
     description: "Үйлдлийн түүх хажуугийн цэсэнд харагдана",
   },
+  {
+    key: "has_hr",
+    label: "Хүний нөөц, цалин",
+    description: "Ажилтны бүртгэл, ирц, чөлөө, цалингийн модуль",
+  },
 ];
 
 export function OrgFeatureSettings({ initial }: { initial: OrgSettings }) {
@@ -125,7 +131,7 @@ function FeatureToggle({
       formData.append("setting", settingKey);
       formData.append("value", String(value));
       const result = await updateOrgFeatureSetting(undefined, formData);
-      if (result?.error) throw new Error(result.error);
+      if (result && "error" in result) throw new Error(result.error);
     },
     onError: (err) => {
       toast.error(err.message);

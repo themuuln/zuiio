@@ -1,7 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { requireAppContext } from "@/lib/erp";
+import { requireActionContext } from "@/lib/action-utils";
+import { revalidateEntity } from "@/lib/revalidate";
 import { slugify } from "@/lib/format";
 import { createServiceClient } from "@/lib/supabase/server-service";
 
@@ -63,11 +63,8 @@ const DEFAULT_ACCOUNTS: Array<{
 // ─── Create Branch ──────────────────────────────────────────────────────
 
 export async function createBranch(formData: FormData) {
-  const ctx = await requireAppContext();
-
-  if (!ctx.permissions.includes("settings.manage")) {
-    return { error: "Танд эрх байхгүй байна." };
-  }
+  const ctx = await requireActionContext("settings.manage");
+  if ("error" in ctx) return ctx;
 
   const name = formData.get("name") as string;
   const address = (formData.get("address") as string) || null;
@@ -149,9 +146,9 @@ export async function createBranch(formData: FormData) {
     };
   }
 
-  revalidatePath("/settings/branches");
-  revalidatePath("/inventory/warehouses");
-  revalidatePath("/", "layout");
+  revalidateEntity("branches");
+  revalidateEntity("inventory");
+  revalidateEntity("settings");
   return { success: true, branch };
 }
 
@@ -194,11 +191,8 @@ async function seedChartOfAccounts(
 // ─── Update Branch ──────────────────────────────────────────────────────
 
 export async function updateBranch(branchId: string, formData: FormData) {
-  const ctx = await requireAppContext();
-
-  if (!ctx.permissions.includes("settings.manage")) {
-    return { error: "Танд эрх байхгүй байна." };
-  }
+  const ctx = await requireActionContext("settings.manage");
+  if ("error" in ctx) return ctx;
 
   const name = (formData.get("name") as string) || null;
   const address = (formData.get("address") as string) || null;
@@ -256,19 +250,16 @@ export async function updateBranch(branchId: string, formData: FormData) {
     return { error: `Шинэчлэхэд алдаа гарлаа: ${error.message}` };
   }
 
-  revalidatePath("/settings/branches");
-  revalidatePath("/", "layout");
+  revalidateEntity("branches");
+  revalidateEntity("settings");
   return { success: true };
 }
 
 // ─── Set Default Branch ─────────────────────────────────────────────────
 
 export async function setDefaultBranch(branchId: string) {
-  const ctx = await requireAppContext();
-
-  if (!ctx.permissions.includes("settings.manage")) {
-    return { error: "Танд эрх байхгүй байна." };
-  }
+  const ctx = await requireActionContext("settings.manage");
+  if ("error" in ctx) return ctx;
 
   const { data: branch } = await ctx.supabase
     .from("branches")
@@ -311,19 +302,16 @@ export async function setDefaultBranch(branchId: string) {
     };
   }
 
-  revalidatePath("/settings/branches");
-  revalidatePath("/", "layout");
+  revalidateEntity("branches");
+  revalidateEntity("settings");
   return { success: true };
 }
 
 // ─── Delete Branch ──────────────────────────────────────────────────────
 
 export async function deleteBranch(branchId: string) {
-  const ctx = await requireAppContext();
-
-  if (!ctx.permissions.includes("settings.manage")) {
-    return { error: "Танд эрх байхгүй байна." };
-  }
+  const ctx = await requireActionContext("settings.manage");
+  if ("error" in ctx) return ctx;
 
   // Check if branch has any transactional data
   const tablesToCheck = [
@@ -374,7 +362,7 @@ export async function deleteBranch(branchId: string) {
     return { error: `Устгахад алдаа гарлаа: ${error.message}` };
   }
 
-  revalidatePath("/settings/branches");
+  revalidateEntity("branches");
   return { success: true };
 }
 
@@ -384,11 +372,8 @@ export async function assignUserBranch(
   profileId: string,
   branchId: string | null,
 ) {
-  const ctx = await requireAppContext();
-
-  if (!ctx.permissions.includes("members.manage_role")) {
-    return { error: "Танд эрх байхгүй байна." };
-  }
+  const ctx = await requireActionContext("members.manage_role");
+  if ("error" in ctx) return ctx;
 
   const { error } = await ctx.supabase
     .from("profiles")
@@ -400,6 +385,6 @@ export async function assignUserBranch(
     return { error: `Салбар онооход алдаа гарлаа: ${error.message}` };
   }
 
-  revalidatePath("/settings/users");
+  revalidateEntity("users");
   return { success: true };
 }

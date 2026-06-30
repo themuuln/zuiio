@@ -2,9 +2,9 @@ export type {
   DiscountCondition,
   DiscountParams,
   DiscountResult,
-} from "@zer/core";
+} from "@zuiio/core";
 export {
   calculateDiscount,
   matchesSelectedCategories,
   matchesSelectedProducts,
-} from "@zer/core";
+} from "@zuiio/core";

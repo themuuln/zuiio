@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
-import { ExpensesCreateDrawer } from "@/components/expenses/expenses-create-drawer";
+import { ExpenseCreateDrawer } from "@/components/expenses/expense-create-drawer";
 import { buttonVariants } from "@/components/ui/button";
 import { type ExpenseRow, ExpensesTable } from "./expenses-table";
 
@@ -33,10 +33,7 @@ export function ExpensesContent({ expenses }: { expenses: ExpenseRow[] }) {
             href="/api/export/expenses"
             filename={`expenses-${new Date().toISOString().slice(0, 10)}.csv`}
           />
-          <ExpensesCreateDrawer
-            open={createOpen}
-            onOpenChange={setCreateOpen}
-          />
+          <ExpenseCreateDrawer open={createOpen} onOpenChange={setCreateOpen} />
         </>
       }
     >

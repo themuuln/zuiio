@@ -227,7 +227,7 @@ export function ProductEditDrawer({
   const editMutation = useOptimisticUpdate({
     mutationFn: async (formData: FormData) => {
       const result = await updateProduct(undefined, formData);
-      if (result?.error) throw new Error(result.error);
+      if (result && "error" in result) throw new Error(result.error);
       return result;
     },
     queryKey: productKeys.all,

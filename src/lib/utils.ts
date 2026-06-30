@@ -1,1 +1,1 @@
-export { cn } from "@zer/core";
+export { cn } from "@zuiio/core";

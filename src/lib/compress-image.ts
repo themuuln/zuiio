@@ -1,1 +1,1 @@
-export { compressImage } from "@zer/core";
+export { compressImage } from "@zuiio/core";

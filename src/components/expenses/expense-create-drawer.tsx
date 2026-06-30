@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/drawer-footer";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 
-export function ExpensesCreateDrawer({
+export function ExpenseCreateDrawer({
   open: externalOpen,
   onOpenChange: externalOnOpenChange,
 }: {

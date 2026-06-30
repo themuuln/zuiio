@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { type BranchOption, BranchProvider } from "@/lib/branch-context";
 import { type BrandConfig, generateBrandCSS } from "@/lib/branding";
+import { FEATURE_KEYS } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardShell } from "./dashboard-shell";
 
@@ -11,14 +12,11 @@ export default async function DashboardLayout({
 }) {
   const supabase = await createClient();
 
-  // Proxy already verified the session via getUser().
-  // Use getSession() (cookie-only, no network roundtrip) to get the user ID.
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const { data, error } = await supabase.auth.getClaims();
 
-  const userId = session?.user?.id;
-  if (!userId) {
+  const claims = data?.claims;
+  const userId = claims?.sub;
+  if (error || !userId) {
     redirect("/login");
   }
 
@@ -30,7 +28,8 @@ export default async function DashboardLayout({
        organizations!inner(
          name, brand_config, onboarding_completed, enabled_features,
          has_suppliers, has_inventory, has_customer_credit, has_multi_branch,
-         has_variants, has_brands, has_categories, has_email_reports, has_audit_log
+         has_variants, has_brands, has_categories, has_email_reports, has_audit_log,
+         has_hr
        )`,
     )
     .eq("id", userId)
@@ -44,7 +43,7 @@ export default async function DashboardLayout({
     redirect("/organization/new");
   }
 
-  const org = profile.organizations as {
+  const org = profile.organizations as unknown as {
     name: string;
     brand_config: unknown;
     onboarding_completed: boolean;
@@ -58,6 +57,7 @@ export default async function DashboardLayout({
     has_categories: boolean;
     has_email_reports: boolean;
     has_audit_log: boolean;
+    has_hr: boolean;
   };
 
   if (!org.onboarding_completed) {
@@ -88,6 +88,7 @@ export default async function DashboardLayout({
   const hasEmailReports = org.has_email_reports === true;
   const hasAuditLog = org.has_audit_log !== false;
   const hasSuppliers = org.has_suppliers !== false;
+  const hasHr = org.has_hr === true;
 
   const allFeatures =
     enabledFeatures.length > 0
@@ -99,6 +100,7 @@ export default async function DashboardLayout({
           ...(hasBrands ? ["_brands"] : []),
           ...(hasAuditLog ? ["_audit_log"] : []),
           ...(hasSuppliers ? ["_suppliers"] : []),
+          ...(hasHr ? [FEATURE_KEYS.hr] : []),
         ]
       : [];
 
@@ -139,6 +141,7 @@ export default async function DashboardLayout({
             hasCategories,
             hasEmailReports,
             hasAuditLog,
+            hasHr,
           }}
         >
           {children}

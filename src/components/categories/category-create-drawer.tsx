@@ -77,7 +77,7 @@ export function CategoryCreateDrawer({
   const categoryMutation = useOptimisticCreate({
     mutationFn: async (formData: FormData) => {
       const result = await createCategory(undefined, formData);
-      if (result?.error) throw new Error(result.error);
+      if (result && "error" in result) throw new Error(result.error);
       return result;
     },
     queryKey: categoryKeys.all,

@@ -13,6 +13,7 @@ import {
   Folder,
   GearSix,
   House,
+  IdentificationBadge,
   MapPin,
   Package,
   Percent,
@@ -21,6 +22,7 @@ import {
   Users,
   Warehouse,
 } from "@phosphor-icons/react/dist/ssr";
+import { FEATURE_KEYS } from "@/lib/constants";
 
 export type NavItem = {
   title: string;
@@ -168,6 +170,23 @@ export const navGroups: NavGroup[] = [
         href: "/accounting",
         icon: Calculator,
         featureKey: "accounting",
+      },
+    ],
+  },
+  {
+    label: "Хүний нөөц",
+    items: [
+      {
+        title: "Ажилтны бүртгэл",
+        href: "/hr",
+        icon: IdentificationBadge,
+        featureKey: FEATURE_KEYS.hr,
+      },
+      {
+        title: "Цалин",
+        href: "/hr/payroll",
+        icon: CurrencyDollar,
+        featureKey: FEATURE_KEYS.hr,
       },
     ],
   },

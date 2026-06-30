@@ -52,8 +52,8 @@ export default function UpdatePasswordPage() {
   useEffect(() => {
     const supabase = createClient();
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
         setCheckingSession(false);
       } else {
         // Check for hash-based recovery token — give it a moment to exchange
@@ -62,8 +62,8 @@ export default function UpdatePasswordPage() {
           // The Supabase client will exchange the hash tokens.
           // Wait a bit and retry.
           setTimeout(async () => {
-            const { data: retryData } = await supabase.auth.getSession();
-            if (retryData.session) {
+            const { data: retryData } = await supabase.auth.getUser();
+            if (retryData.user) {
               setCheckingSession(false);
             } else {
               setSessionError(true);

@@ -1,9 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { getSuperadminEmail } from "@/lib/superadmin";
+import { requireActionContext } from "@/lib/action-utils";
+import { revalidateEntity } from "@/lib/revalidate";
 
 export type OrgSettingsState = {
   error?: string;
@@ -14,29 +12,9 @@ export async function updateReportEmailSettings(
   _prevState: OrgSettingsState | undefined,
   formData: FormData,
 ): Promise<OrgSettingsState> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  // Only superadmin (developer) can change report email settings
-  if (!(await getSuperadminEmail())) {
-    return { error: "Зөвхөн хөгжүүлэгч энэ тохиргоог өөрчлөх боломжтой." };
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("organization_id")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile?.organization_id) {
-    return { error: "Байгууллага олдсонгүй." };
-  }
+  const ctx = await requireActionContext("settings.manage");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
 
   const enabled = formData.get("report_email_enabled") === "on";
   const time = formData.get("report_email_time") as string;
@@ -58,7 +36,7 @@ export async function updateReportEmailSettings(
       report_email_time: enabled ? time : null,
       report_email_recipient: recipient || null,
     })
-    .eq("id", profile.organization_id);
+    .eq("id", organizationId);
 
   if (updateError) {
     return {
@@ -66,6 +44,6 @@ export async function updateReportEmailSettings(
     };
   }
 
-  revalidatePath("/settings/organization");
+  revalidateEntity("settings");
   return { success: true };
 }

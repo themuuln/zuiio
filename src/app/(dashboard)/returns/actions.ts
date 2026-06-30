@@ -28,13 +28,18 @@ export async function createReturn(
     return { error: "Барааны мэдээлэл шаардлагатай." };
   }
 
-  const items = JSON.parse(itemsJson) as Array<{
+  let items: Array<{
     product_id: string;
     quantity: number;
     unit_price: number;
     reason?: string;
     variant_id?: string;
   }>;
+  try {
+    items = JSON.parse(itemsJson);
+  } catch {
+    return { error: "Барааны мэдээллийн формат буруу байна." };
+  }
 
   if (!items.length) {
     return { error: "Дор хаяж нэг бараа оруулна уу." };
@@ -167,12 +172,17 @@ export async function completeReturn(returnId: string) {
     return { error: "Буцаалтад бараа ороогүй байна." };
   }
 
+  // Track successfully processed items for rollback on partial failure
+  const processedItems: Array<{
+    product_id: string;
+    stockDelta: number;
+    wasStockUpdated: boolean;
+    prevStock: number;
+  }> = [];
   const errors: string[] = [];
 
   for (const item of items) {
     // Create reverse stock movement
-    // sales_return → stock in (add stock back)
-    // purchase_return → stock out (return to supplier)
     const movementType = returnRecord.type === "sales_return" ? "in" : "out";
     const movementQuantity = item.quantity;
 
@@ -197,7 +207,8 @@ export async function completeReturn(returnId: string) {
       errors.push(
         `Барааны хөдөлгөөн бүртгэхэд алдаа: ${movementError.message}`,
       );
-      continue;
+      await rollbackCompletedReturnItems(supabase, processedItems, returnId);
+      return { error: errors.join("; ") };
     }
 
     // Update product current_stock
@@ -208,26 +219,52 @@ export async function completeReturn(returnId: string) {
       .eq("id", item.product_id)
       .single();
 
+    const prevStock = product ? Number(product.current_stock ?? 0) : 0;
+    let wasStockUpdated = false;
+
     if (product) {
       const stockDelta =
         returnRecord.type === "sales_return"
           ? item.quantity // add stock back
           : -item.quantity; // remove stock (return to supplier)
 
-      const { error: stockError } = await supabase
+      const updateQuery = supabase
         .from("products")
-        .update({
-          current_stock: Math.max(
-            0,
-            Number(product.current_stock ?? 0) + stockDelta,
-          ),
-        })
+        .update({ current_stock: Math.max(0, prevStock + stockDelta) })
         .eq("organization_id", organizationId)
         .eq("id", item.product_id);
 
+      // Guard against underselling on purchase returns (stock going down)
+      if (stockDelta < 0) {
+        updateQuery.gte("current_stock", Math.abs(stockDelta));
+      }
+
+      const { data: updated, error: stockError } = await updateQuery
+        .select("current_stock")
+        .maybeSingle();
+
       if (stockError) {
         errors.push(`Үлдэгдэл шинэчлэхэд алдаа: ${stockError.message}`);
+        await rollbackCompletedReturnItems(supabase, processedItems, returnId);
+        return { error: errors.join("; ") };
       }
+
+      // If the .gte() guard prevented the update, updated will be null/no row returned.
+      if (!updated) {
+        errors.push(
+          `Бараа (ID: ${item.product_id}) - агуулахын үлдэгдэл хүрэлцэхгүй байна. Зөвхөн ${prevStock} ширхэг үлдэгдэлтэй.`,
+        );
+        await rollbackCompletedReturnItems(supabase, processedItems, returnId);
+        return { error: errors.join("; ") };
+      }
+
+      wasStockUpdated = true;
+      processedItems.push({
+        product_id: item.product_id,
+        stockDelta,
+        wasStockUpdated,
+        prevStock,
+      });
     }
 
     // If purchase return with reference to purchase order, update received_quantity
@@ -244,26 +281,32 @@ export async function completeReturn(returnId: string) {
         .maybeSingle();
 
       if (poItem) {
+        const newReceivedQty = Math.max(
+          0,
+          Number(poItem.received_quantity ?? 0) - item.quantity,
+        );
         const { error: poUpdateError } = await supabase
           .from("purchase_order_items")
-          .update({
-            received_quantity: Math.max(
-              0,
-              Number(poItem.received_quantity ?? 0) - item.quantity,
-            ),
-          })
+          .update({ received_quantity: newReceivedQty })
           .eq("id", poItem.id);
 
         if (poUpdateError) {
           errors.push(
             `Захиалгын хүлээн авсан тоо шинэчлэхэд алдаа: ${poUpdateError.message}`,
           );
+          await rollbackCompletedReturnItems(
+            supabase,
+            processedItems,
+            returnId,
+          );
+          return { error: errors.join("; ") };
         }
       }
     }
   }
 
   if (errors.length > 0) {
+    await rollbackCompletedReturnItems(supabase, processedItems, returnId);
     return { error: errors.join("; ") };
   }
 
@@ -286,6 +329,40 @@ export async function completeReturn(returnId: string) {
 
   revalidateEntities(["returns", "inventory", "products"]);
   return { success: true as const, error: undefined };
+}
+
+/**
+ * Rollback completed return items by reverting stock movements and product stock.
+ * Called when a subsequent item fails during completeReturn.
+ */
+async function rollbackCompletedReturnItems(
+  supabase: any,
+  processedItems: Array<{
+    product_id: string;
+    stockDelta: number;
+    wasStockUpdated: boolean;
+    prevStock: number;
+  }>,
+  returnId: string,
+) {
+  for (const item of processedItems) {
+    if (item.wasStockUpdated) {
+      // Revert product stock to previous value.
+      // RLS handles organization_id scoping via the authenticated user.
+      await supabase
+        .from("products")
+        .update({ current_stock: item.prevStock })
+        .eq("id", item.product_id);
+    }
+
+    // Delete the stock movement we created.
+    // RLS handles organization_id scoping via the authenticated user.
+    await supabase
+      .from("stock_movements")
+      .delete()
+      .eq("reference", `return:${returnId}`)
+      .eq("product_id", item.product_id);
+  }
 }
 
 export async function cancelReturn(returnId: string) {

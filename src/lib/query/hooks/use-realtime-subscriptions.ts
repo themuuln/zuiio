@@ -1,7 +1,7 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useRealtimeMulti } from "@zuiio/realtime";
+import { createClient } from "@/lib/supabase/client";
 import {
   brandKeys,
   contactKeys,
@@ -10,13 +10,6 @@ import {
   productKeys,
   saleKeys,
 } from "@/lib/query/keys";
-import { createClient } from "@/lib/supabase/client";
-
-type RealtimeChannelGroup = {
-  name: string;
-  table: string;
-  keyLists: (orgId: string) => readonly string[];
-};
 
 /**
  * Sets up Supabase Realtime channels for key entities (products, sales, contacts,
@@ -30,72 +23,37 @@ type RealtimeChannelGroup = {
  * (e.g., when the user hasn't created an organization yet).
  */
 export function useRealtimeSubscriptions(orgId: string | null | undefined) {
-  const queryClient = useQueryClient();
+  const supabase = createClient();
 
-  useEffect(() => {
-    if (!orgId) return;
-
-    const supabase = createClient();
-
-    const channels: RealtimeChannelGroup[] = [
+  useRealtimeMulti({
+    supabase,
+    enabled: !!orgId,
+    tables: [
       {
-        name: `products:${orgId}`,
         table: "products",
-        keyLists: (id) => productKeys.lists(id),
+        queryKeys: [productKeys.lists(orgId!)],
+        filter: `organization_id=eq.${orgId}`,
       },
       {
-        name: `sales:${orgId}`,
         table: "sales",
-        keyLists: (id) => saleKeys.lists(id),
+        queryKeys: [saleKeys.lists(orgId!), inventoryKeys.lists(orgId!)],
+        filter: `organization_id=eq.${orgId}`,
       },
       {
-        name: `contacts:${orgId}`,
         table: "contacts",
-        keyLists: (id) => contactKeys.lists(id),
+        queryKeys: [contactKeys.lists(orgId!)],
+        filter: `organization_id=eq.${orgId}`,
       },
       {
-        name: `expenses:${orgId}`,
         table: "expenses",
-        keyLists: (id) => expenseKeys.lists(id),
+        queryKeys: [expenseKeys.lists(orgId!)],
+        filter: `organization_id=eq.${orgId}`,
       },
       {
-        name: `brands:${orgId}`,
         table: "brands",
-        keyLists: (id) => brandKeys.lists(id),
+        queryKeys: [brandKeys.lists(orgId!)],
+        filter: `organization_id=eq.${orgId}`,
       },
-    ];
-
-    const subscribedChannels = channels.map(({ name, table, keyLists }) => {
-      const channel = supabase.channel(name);
-
-      const keyFactories =
-        table === "sales"
-          ? [keyLists(orgId), inventoryKeys.lists(orgId)]
-          : [keyLists(orgId)];
-
-      channel.on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table,
-          filter: `organization_id=eq.${orgId}`,
-        },
-        () => {
-          for (const queryKey of keyFactories) {
-            queryClient.invalidateQueries({ queryKey });
-          }
-        },
-      );
-
-      channel.subscribe();
-      return channel;
-    });
-
-    return () => {
-      for (const channel of subscribedChannels) {
-        supabase.removeChannel(channel);
-      }
-    };
-  }, [orgId, queryClient]);
+    ],
+  });
 }

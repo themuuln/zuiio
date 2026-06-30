@@ -1,15 +1,12 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { requireAppContext } from "@/lib/erp";
+import { requireActionContext } from "@/lib/action-utils";
+import { revalidateEntity } from "@/lib/revalidate";
 import { createServiceClient } from "@/lib/supabase/server-service";
 
 export async function inviteMember(formData: FormData) {
-  const ctx = await requireAppContext();
-
-  if (!ctx.permissions.includes("members.invite")) {
-    return { error: "Эрх хүрэлцэхгүй байна." };
-  }
+  const ctx = await requireActionContext("members.invite");
+  if ("error" in ctx) return ctx;
 
   const email = formData.get("email") as string;
   if (!email?.trim()) {
@@ -93,16 +90,13 @@ export async function inviteMember(formData: FormData) {
     }
   }
 
-  revalidatePath("/settings/users");
+  revalidateEntity("users");
   return { success: true };
 }
 
 export async function removeMember(formData: FormData) {
-  const ctx = await requireAppContext();
-
-  if (!ctx.permissions.includes("members.remove")) {
-    return { error: "Эрх хүрэлцэхгүй байна." };
-  }
+  const ctx = await requireActionContext("members.remove");
+  if ("error" in ctx) return ctx;
 
   const profileId = formData.get("profile_id") as string;
   if (!profileId) {
@@ -130,6 +124,6 @@ export async function removeMember(formData: FormData) {
     return { error: `Хасахад алдаа гарлаа: ${error.message}` };
   }
 
-  revalidatePath("/settings/users");
+  revalidateEntity("users");
   return { success: true };
 }

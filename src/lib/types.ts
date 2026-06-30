@@ -7,5 +7,5 @@ export type {
   ProductOption,
   SaleItemData,
   SupplierOption,
-} from "@zer/core";
-export { err, ok } from "@zer/core";
+} from "@zuiio/core";
+export { err, ok } from "@zuiio/core";

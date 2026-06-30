@@ -55,31 +55,36 @@ export default async function SettingsPage() {
       .single(),
   ]);
 
-  const org = orgResult.data;
+  const org = orgResult.data as {
+    name: string | null;
+    slug: string | null;
+    company_type: string | null;
+    currency: string | null;
+    has_suppliers: boolean | null;
+    has_inventory: boolean | null;
+    has_customer_credit: boolean | null;
+    has_multi_branch: boolean | null;
+    has_variants: boolean | null;
+    has_brands: boolean | null;
+    has_categories: boolean | null;
+    has_email_reports: boolean | null;
+    has_audit_log: boolean | null;
+    has_hr: boolean | null;
+  } | null;
   const profile = profileResult.data;
   const brandConfig = (brandConfigResult.data?.brand_config ??
     {}) as BrandConfig;
   const featureSettings = {
-    has_suppliers:
-      (org as Record<string, boolean | null> | null)?.has_suppliers !== false,
-    has_inventory:
-      (org as Record<string, boolean | null> | null)?.has_inventory !== false,
-    has_customer_credit:
-      (org as Record<string, boolean | null> | null)?.has_customer_credit !==
-      false,
-    has_multi_branch:
-      (org as Record<string, boolean | null> | null)?.has_multi_branch === true,
-    has_variants:
-      (org as Record<string, boolean | null> | null)?.has_variants !== false,
-    has_brands:
-      (org as Record<string, boolean | null> | null)?.has_brands !== false,
-    has_categories:
-      (org as Record<string, boolean | null> | null)?.has_categories !== false,
-    has_email_reports:
-      (org as Record<string, boolean | null> | null)?.has_email_reports !==
-      false,
-    has_audit_log:
-      (org as Record<string, boolean | null> | null)?.has_audit_log !== false,
+    has_suppliers: org?.has_suppliers !== false,
+    has_inventory: org?.has_inventory !== false,
+    has_customer_credit: org?.has_customer_credit !== false,
+    has_multi_branch: org?.has_multi_branch === true,
+    has_variants: org?.has_variants !== false,
+    has_brands: org?.has_brands !== false,
+    has_categories: org?.has_categories !== false,
+    has_email_reports: org?.has_email_reports !== false,
+    has_audit_log: org?.has_audit_log !== false,
+    has_hr: org?.has_hr === true,
   };
   const hasEmailReports =
     (org as { has_email_reports: boolean } | null)?.has_email_reports !== false;
@@ -151,7 +156,7 @@ export default async function SettingsPage() {
           <OrgInfoForm
             initialName={org?.name ?? ""}
             initialSlug={org?.slug ?? ""}
-            initialCompanyType={org?.company_type}
+            initialCompanyType={org?.company_type ?? undefined}
           />
           <Separator />
           <OrgLogoUploader

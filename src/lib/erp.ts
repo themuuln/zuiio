@@ -18,21 +18,20 @@ export function checkPermission(
 export async function requireAppContext() {
   const supabase = await createClient();
 
-  // Use getSession() instead of getUser() to avoid a Supabase Auth API roundtrip.
-  // The proxy already verified the session via getUser() and set cookies.
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  const user = session?.user;
-  if (!user) {
+  const { data, error } = await supabase.auth.getClaims();
+  if (error) {
+    redirect("/login");
+  }
+  const claims = data?.claims;
+  const userId = claims?.sub;
+  if (!userId) {
     redirect("/login");
   }
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("organization_id, role_id, branch_id")
-    .eq("id", user.id)
+    .eq("id", userId)
     .single();
 
   if (profileError || !profile?.organization_id) {
@@ -42,6 +41,11 @@ export async function requireAppContext() {
     redirect("/organization/new");
   }
 
+  // NOTE: The user object shape changed from the full Supabase User (getUser())
+  // to a minimal { id, email } object from JWT claims (getClaims()).
+  // The old shape included role, app_metadata, user_metadata — these are no longer
+  // available. All callers have been audited: none access user.role or user.app_metadata.
+  // If a future caller needs these fields, add them here from the claims or a profile query.
   // Load user permissions
   const { data: permissions } = await supabase.rpc("get_user_permissions");
 
@@ -50,8 +54,11 @@ export async function requireAppContext() {
   return {
     supabase,
     organizationId: profile.organization_id,
-    user,
-    userId: user.id,
+    user: {
+      id: userId,
+      email: (claims as Record<string, unknown>).email ?? null,
+    },
+    userId,
     roleId: profile.role_id,
     permissions: (permissions ?? []) as AppPermission[],
     /** The user's assigned branch ID, or null for org-wide access. */

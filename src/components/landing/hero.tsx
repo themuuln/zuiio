@@ -1,9 +1,4 @@
-import {
-  ArrowRight,
-  ChartLine,
-  ShoppingCart,
-  Users,
-} from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -49,24 +44,34 @@ export function Hero() {
             </Button>
           </div>
 
-          {/* Trust indicators */}
-          <div className="mt-16 grid grid-cols-3 gap-8 border-t pt-8">
-            <div className="flex flex-col items-center gap-2">
-              <ShoppingCart className="size-6 text-primary" />
-              <span className="text-2xl font-bold">10,000+</span>
-              <span className="text-sm text-muted-foreground">Бараа</span>
+          {/* Trust indicators — contextual proof */}
+          <div className="mt-16 grid gap-x-12 gap-y-6 border-t pt-10 sm:grid-cols-3">
+            <div className="text-left">
+              <p className="text-sm font-medium">
+                Барааны бүртгэл автоматжсан
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                10,000 гаруй бүтээгдэхүүний нөөц, үнэ, түүхийг нэг дэлгэцээс
+                хянах боломжтой.
+              </p>
             </div>
-            <div className="flex flex-col items-center gap-2">
-              <Users className="size-6 text-primary" />
-              <span className="text-2xl font-bold">500+</span>
-              <span className="text-sm text-muted-foreground">Байгууллага</span>
+            <div className="text-left">
+              <p className="text-sm font-medium">
+                500+ байгууллага итгэж хэрэглэж байна
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Монголын жижиг дунд бизнес эрхлэгчид Zer-ийг сонгож, өдөр
+                тутмын ажлаа дижитал хэлбэрт шилжүүлсэн.
+              </p>
             </div>
-            <div className="flex flex-col items-center gap-2">
-              <ChartLine className="size-6 text-primary" />
-              <span className="text-2xl font-bold">95%</span>
-              <span className="text-sm text-muted-foreground">
-                Сэтгэл ханамж
-              </span>
+            <div className="text-left">
+              <p className="text-sm font-medium">
+                Хэрэглэгчдийн 95% сэтгэл ханамжтай
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Судалгаанд оролцогчдын дийлэнх нь Zer ашигласнаар ажлын бүртгэл
+                хөтлөх хугацаагаа эрс багасгасан гэж хариулсан.
+              </p>
             </div>
           </div>
         </div>

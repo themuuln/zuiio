@@ -81,8 +81,8 @@ export function CategoriesTable({ data }: { data: CategoryRow[] }) {
       const formData = new FormData();
       formData.set("id", id);
       const result = await deleteCategory(undefined, formData);
-      if (result?.error) throw new Error(result.error);
-      return result;
+      if (result && "error" in result) throw new Error(result.error);
+      return undefined;
     },
     queryKey: categoryKeys.all(),
     entityName: "Ангилал",

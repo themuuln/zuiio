@@ -5,4 +5,4 @@ export {
   requireEmail,
   requirePassword,
   sanitizeRedirectPath,
-} from "@zer/core";
+} from "@zuiio/core";

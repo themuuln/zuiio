@@ -6,237 +6,171 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 <!-- END:nextjs-agent-rules -->
 
-<!-- BEGIN:form-packages -->
+# Agent Instructions
 
-# Form handling: react-hook-form + zod
+**Always read `VISION.md` first** — it is the single source of truth for project direction, architecture, goals, and principles. This file (AGENTS.md) covers operational rules and coding specifics. When in doubt, defer to VISION.md.
 
-All forms in this project use **react-hook-form** + **zod** for validation.
+---
 
-## Standard pattern
+## @zuiio Shared Packages
+
+**Zer shares 7 packages with Tolom via the `@zuiio` monorepo** (`/Users/themuuln/coding/personal/zuiio/`). Before writing any utility, hook, or export code, check if it already exists in `@zuiio`.
+
+### Package Map
+
+| Package | What's Inside | How to Import |
+|---------|---------------|---------------|
+| `@zuiio/core` | UUID, errors (AppError hierarchy), timezone (UB), currency formatting, name helpers, array utils, date ranges, discount calc, rate limiter, **Mongolian domain validators** (phone/plate/VIN/year), form validation (flattenFieldErrors, ActionState), paginate, validation helpers | `import { cn, generateUUID, formatCurrency, ... } from "@zuiio/core"` |
+| `@zuiio/hooks` | useDebounce, useDisclosure, useCopyToClipboard, useIntersectionObserver, useLocalStorage, useOnlineStatus, useTableFilters, useFuzzySearch | `import { useDebounce, ... } from "@zuiio/hooks"` |
+| `@zuiio/query` | React Query provider, useOptimisticCreate/Update/Delete (FormData + JSON variants) | `import { useOptimisticCreate, ... } from "@zuiio/query"` |
+| `@zuiio/realtime` | useRealtime (single table), useRealtimeMulti (multi-table on one WebSocket channel) — accepts supabase client as param. Zer's `useRealtimeSubscriptions` wraps `useRealtimeMulti` | `import { useRealtimeMulti, ... } from "@zuiio/realtime"` |
+| `@zuiio/hr` | Mongolian payroll: income tax, social insurance, overtime, salary calc, validation (extracted from Zer's hr-core). Zer's `hr-core` is now a re-export barrel | `import { calculateSalary, ... } from "@zuiio/hr"` |
+| `@zuiio/export` | toCsv, toXlsx, toXlsxMultiSheet, toDocx, toDocxMultiSection, toPdfAsync, toPdfMultiSectionAsync, serveEntityExport. Zer's `lib/export/` and `lib/csv.ts` are now re-export barrels | `import { toCsv, serveEntityExport, ... } from "@zuiio/export"` |
+| `@zuiio/offline` | Mutation queue engine, IndexedDB persister, useOfflineMutation | `import { MutationQueueProvider, ... } from "@zuiio/offline"` |
+
+### Zer Barrel Files (re-export from @zuiio)
+
+These files are thin wrappers that re-export from `@zuiio`. **Do not put new code here** — add new code to `@zuiio` or add it as Zer-specific below the re-exports.
+
+| File | Re-exports From |
+|------|----------------|
+| `src/lib/utils.ts` | `@zuiio/core` — cn |
+| `src/lib/validation.ts` | `@zuiio/core` — escapeHtml, getString, normalizePhone, requireEmail, requirePassword, sanitizeRedirectPath |
+| `src/lib/format.ts` | `@zuiio/core` — formatCurrency, formatDate, formatRouteDate, slugify |
+| `src/lib/types.ts` | `@zuiio/core` — ActionResult, CartItemData, CustomerOption, FormState, LineItem, ProductOption, SaleItemData, SupplierOption, ok, err |
+| `src/lib/rate-limit.ts` | `@zuiio/core` — rateLimit, resetRateLimit, clearAllRateLimits |
+| `src/lib/compress-image.ts` | `@zuiio/core` — compressImage |
+| `src/lib/discount-utils.ts` | `@zuiio/core` — calculateDiscount, DiscountCondition, DiscountParams, DiscountResult |
+| `src/lib/csv.ts` | `@zuiio/export` — toCsv |
+| `src/lib/export/index.ts` | `@zuiio/export` — toCsv, toXlsx, toXlsxMultiSheet, toDocx, toDocxMultiSection, toPdfAsync, toPdfMultiSectionAsync, serveEntityExport, formatExtensions, formatMimeTypes, types |
+| `packages/hr-core/src/index.ts` | `@zuiio/hr` — full hr package re-export |
+| `packages/hr-supabase/src/index.ts` | Adapter layer over `@zuiio/hr` (Zer-specific Supabase queries) — NOT a barrel |
+| `src/lib/query/use-optimistic.ts` | `@zuiio/query` — useOptimisticCreate/Update/Delete |
+| `src/lib/query/provider.tsx` | `@zuiio/query` — QueryProvider |
+| `src/lib/query/hooks/use-realtime-subscriptions.ts` | `@zuiio/realtime` — wraps useRealtimeMulti with Zer-specific Supabase client and sales→inventory cross-invalidation |
+
+### Zer-Specific Code (NOT in @zuiio)
+
+These files contain domain logic specific to Zer and should **never** be moved to `@zuiio`:
+
+| File | Why Zer-Specific |
+|------|-----------------|
+| `src/lib/accounting-utils.ts` / `accounting.ts` | Zer's accounting schema and calculation logic |
+| `src/lib/action-utils.ts` | FormData-to-create-params mapper (Zer's Server Action pattern) |
+| `src/lib/audit.ts` | Zer's audit log schema |
+| `src/lib/branches.ts` / `branch-context.tsx` | Zer's branch management |
+| `src/lib/branding.ts` | Zer's white-label branding config |
+| `src/lib/commissions.ts` | Zer's commission structure |
+| `src/lib/constants.ts` | Zer-specific business constants |
+| `src/lib/contact-utils.ts` | Zer's contact formatting |
+| `src/lib/domain-rules.ts` | Zer-specific business validation (separate from @zuiio/core's generic Mongolian validators) |
+| `src/lib/email.ts` | Zer's email templates |
+| `src/lib/erp.ts` | Zer's `requireAppContext` server auth helper |
+| `src/lib/invoicing.ts` | Zer's invoice logic |
+| `src/lib/navigation.ts` | Zer's sidebar nav config |
+| `src/lib/notification.ts` | Zer's notification system |
+| `src/lib/org-settings.ts` / `org-settings-context.tsx` | Zer's org settings |
+| `src/lib/permissions.ts` | Zer's permission system |
+| `src/lib/reports.ts` | Zer's reporting engine |
+| `src/lib/revalidate.ts` | Zer's cache revalidation strategy |
+| `src/lib/shop-cart.ts` | Zer's POS cart state |
+| `src/lib/stock-utils.ts` | Zer's inventory management |
+| `src/lib/superadmin.ts` | Zer's superadmin utilities |
+| `src/lib/use-variant-line-items.ts` | Zer's variant line-item hook |
+
+### Adding New Code
+
+1. **Is it reusable by Tolom too?** → Add it to the appropriate `@zuiio` package
+2. **Is it specific to Zer?** → Add it to `src/lib/` as a new file
+3. **Are you unsure?** → Start in Zer; extract to `@zuiio` later if/when Tolom needs it
+
+---
+
+## Core Rules
+
+1. **Follow VISION.md.** Architecture, design principles, goals, and constraints live there. This file never overrides it.
+2. **Server Actions + FormData.** Zer uses Next.js Server Actions with FormData (not JSON API routes like Tolom). Every mutation is a server action.
+3. **Multi-tenancy.** Every table has `organization_id`. Every query is RLS-scoped. Never bypass.
+4. **Optimistic by default.** All mutations use `useOptimisticCreate`/`useOptimisticUpdate`/`useOptimisticDelete` from `@zuiio/query`.
+5. **Use drawers for create/edit/detail.** Use `SlideInDrawer` / `DrawerLayout` for all side panels.
+6. **Test coverage.** Every action, route, and RLS policy has tests.
+
+---
+
+## Forms
+
+All forms use **react-hook-form** + **zod** + **Server Actions**:
 
 ```tsx
 "use client";
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
-const schema = z.object({
-  email: z.string().email("Зөв и-мэйл хаяг оруулна уу"),
-  password: z.string().min(1, "Нууц үг шаардлагатай"),
-});
-
+const schema = z.object({ name: z.string().min(1, "Нэр шаардлагатай") });
 type Values = z.infer<typeof schema>;
 
 export default function MyForm() {
-  const [serverError, setServerError] = useState<string | null>(null);
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    watch,
-    setValue,
-    control,
-  } = useForm<Values>({ resolver: zodResolver(schema) });
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<Values>({
+    resolver: zodResolver(schema),
+  });
 
   const onSubmit = async (data: Values) => {
-    setServerError(null);
     const formData = new FormData();
-    formData.append("field", data.field);
+    formData.append("name", data.name);
     const result = await serverAction(undefined, formData);
-    if (result?.error) setServerError(result.error);
+    if (result?.error) throw new Error(result.error);
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <input {...register("field")} />
-      {errors.field && (
-        <p className="text-xs text-destructive">{errors.field.message}</p>
-      )}
-      {serverError && <p className="text-sm text-destructive">{serverError}</p>}
-      <button type="submit" disabled={isSubmitting}>
-        Submit
-      </button>
+      <input {...register("name")} />
+      {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+      <button type="submit" disabled={isSubmitting}>Хадгалах</button>
     </form>
   );
 }
 ```
 
-## Rules
+**Rules:**
+1. Always `onSubmit={handleSubmit(onSubmit)}` — never `form action={...}`
+2. Use `register()` for standard inputs, `Controller` for custom components (Combobox, Select)
+3. Server errors go in `serverError` useState or `ErrorBanner` component
+4. Combine `mutation.isPending` with `isSubmitting` on submit buttons
+5. Error messages in Mongolian
 
-1. Always use `onSubmit={handleSubmit(onSubmit)}` — never `form action={...}`
-2. Use `register()` for standard inputs (text, number, email, date)
-3. Use `Controller` from react-hook-form for custom components (Combobox, Select)
-4. Use `{ valueAsNumber: true }` in register for number inputs
-5. Server errors go in a `serverError` useState, not useActionState
-6. Use `z.infer<typeof schema>` for type safety
-7. Error messages are in Mongolian
+---
 
-## Available form components
+## Drawers
 
-- **shadcn Form**: `Form`, `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormMessage` at `src/components/ui/form.tsx`
-- **Simple pattern** (preferred for most forms): direct `register`/`handleSubmit`/`errors` — see `src/app/login/page.tsx`
-
-## For useMutation forms (TanStack Query)
-
-Keep the existing `useMutation` for submission, but add `useForm` + `zod` on top for form state, validation, and Enter key support. Build FormData from validated values in onSubmit.
-
-<!-- END:form-packages -->
-
-<!-- BEGIN:drawer-pattern -->
-
-# Create/Edit/Detail: Use Slide-in Drawers, Not Full Pages
-
-All **create**, **edit**, and **detail** views must use slide-in drawers (`@base-ui/react/drawer`) instead of full-page routes.
-
-## Pattern
-
-- The **list page** (server component) fetches data and renders a client component
-- The **client component** manages drawer state (`selectedInvoiceId`, `createOpen`) with `useState`
-- **Drawer component** receives data as props and uses the shared `SlideInDrawer` wrapper
-- The **full-page route** (`/invoices/new`, `/sales/new`, etc.) redirects to the list page with `?create=true` search param, which auto-opens the drawer
-
-## Use the Shared `SlideInDrawer` Wrapper
-
-All drawers must use `SlideInDrawer` from `@/components/ui/slide-in-drawer` instead of manually writing Base UI Drawer boilerplate. This eliminates 15+ lines of duplicated class strings per file.
+All create/edit/detail views use slide-in drawers. Use `SlideInDrawer` / `DrawerLayout` from `@/components/ui/`.
 
 ### Standard drawer
 
 ```tsx
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
-import {
-  DrawerCancel,
-  DrawerFooter,
-  DrawerSubmit,
-} from "@/components/ui/drawer-footer";
+import { DrawerCancel, DrawerFooter, DrawerSubmit } from "@/components/ui/drawer-footer";
 
-<SlideInDrawer
-  open={open}
-  onOpenChange={setOpen}
-  title="Шинэ нэхэмжлэл"
-  description="Optional description"
-  trigger={
-    <button type="button" className={buttonVariants({ variant: "default" })}>
-      <Plus className="size-4" />
-      Шинэ ...
-    </button>
-  }
-  footer={
-    <DrawerFooter>
-      <DrawerCancel onClick={() => setOpen(false)} />
-      <DrawerSubmit form="my-form" label="Хадгалах" />
-    </DrawerFooter>
-  }
->
-  {/* drawer content — scrollable body */}
-</SlideInDrawer>;
+<SlideInDrawer open={open} onOpenChange={setOpen} title="Шинэ ..." trigger={<Button>Шинэ ...</Button>}
+  footer={<DrawerFooter><DrawerCancel onClick={() => setOpen(false)} /><DrawerSubmit form="my-form" label="Хадгалах" /></DrawerFooter>}>
+  <form id="my-form" onSubmit={handleSubmit(onSubmit)}>...</form>
+</SlideInDrawer>
 ```
 
-Props: `open`, `onOpenChange`, `title`, `description` (optional), `trigger` (optional), `panelWidth` (optional, default `"28rem"`), `footer` (optional).
+### Nested drawers
 
-### When using `DrawerLayout` directly
+Use `NestedDrawerPanel` from `@/components/ui/nested-drawer-panel` for drawers inside drawers (e.g., variant manager inside product create).
 
-Pass `title`, `description`, and `footer` as props for the full-width header/footer treatment:
+---
+
+## Optimistic Mutations
+
+All CRUD uses `useOptimisticCreate`/`useOptimisticUpdate`/`useOptimisticDelete` from `@zuiio/query`.
 
 ```tsx
-<DrawerLayout
-  open={open}
-  onOpenChange={setOpen}
-  title="Шинэ бүтээгдэхүүн"
-  description="Description"
-  footer={
-    <DrawerFooter>
-      <DrawerCancel onClick={() => setOpen(false)} />
-      <DrawerSubmit form="my-form" />
-    </DrawerFooter>
-  }
->
-  {/* scrollable content */}
-</DrawerLayout>
-```
-
-**Never** render `DrawerHeader` or `DrawerFooter` inside children when using these props — the header/footer are rendered as full-width `bg-card` strips with `border-b`/`border-t` outside the scrollable area.
-
-### Nested drawer panels
-
-For drawers that open inside another drawer (e.g., variant manager inside product create), use `NestedDrawerPanel` instead of a separate portal-based drawer. This keeps the parent drawer visible and creates a true nested feel.
-
-```tsx
-import { NestedDrawerPanel } from "@/components/ui/nested-drawer-panel";
-
-// In parent drawer content, with `relative` on the scroll container:
-<div className="relative">
-  <button onClick={() => setNestedOpen(true)}>Open nested</button>
-  <NestedDrawerPanel
-    open={nestedOpen}
-    onClose={() => setNestedOpen(false)}
-    title="Nested panel title"
-    parentTitle="Parent drawer title"
-    footer={<DrawerFooter>...</DrawerFooter>}
-  >
-    {/* nested panel content */}
-  </NestedDrawerPanel>
-</div>;
-```
-
-## Reference Structure
-
-- The **list page** (server component) fetches data and renders a client component
-- The **client component** manages drawer state (`selectedInvoiceId`, `createOpen`) with `useState`
-- **Drawer component** receives data as props and uses `Drawer.Root` for the slide-in panel
-- The **full-page route** (`/invoices/new`, `/sales/new`, etc.) redirects to the list page with `?create=true` search param, which auto-opens the drawer
-
-## Reference Structure
-
-```
-src/components/{entity}/
-├── invoice-create-drawer.tsx   ← Drawer.Root wrapping the create form
-└── invoice-detail-drawer.tsx   ← Drawer.Root wrapping the detail view
-
-src/app/(dashboard)/invoices/
-├── page.tsx                    ← Server component (fetches data)
-├── invoices-content.tsx        ← Client component (manages drawer state)
-├── new/page.tsx                ← Redirect to /invoices?create=true
-└── [id]/page.tsx               ← Standalone detail page (for direct links)
-```
-
-## Key Implementation Details
-
-1. **Create drawer** is a `<Drawer.Root>` with `<Drawer.Trigger>` as the "Шинэ ..." button in the list page's `actions` slot
-2. **Detail drawer** is controlled: list page passes `selectedId` + `onClose` — opens when an ID is set, closes on `null`
-3. **Drawer classes** use the exact same Base UI classes as `product-create-drawer.tsx` for consistent styling
-4. **Server-to-client**: server component fetches data, client component receives it as props — no `"use client"` in the page file
-5. **Redirect**: the `/new` route uses `redirect("/page?create=true")`; the client component reads `useSearchParams()` and auto-opens the drawer, then cleans the URL with `history.replaceState`
-6. **Create drawer** supports controlled `open`/`onOpenChange` props for the `?create=true` flow
-7. **Combobox** dropdowns use `ComboboxCreate` for creating new items inline (e.g., creating a contact while creating an invoice)
-<!-- END:drawer-pattern -->
-
-<!-- BEGIN:crud-optimistic-mutations -->
-
-# CRUD mutations: ALWAYS use `useOptimisticCreate`/`useOptimisticUpdate`/`useOptimisticDelete`
-
-All create, update, and delete mutations in drawer forms MUST use the TanStack Query optimistic hooks from `src/lib/query/use-optimistic.ts`. This ensures instant UI feedback, automatic cache rollback on errors, and proper cache invalidation.
-
-## Rules
-
-1. **NEVER use raw server action calls** (`await createX(undefined, formData)`) directly in event handlers. Always wrap them in a `useOptimisticCreate`/`useOptimisticUpdate`/`useOptimisticDelete` hook.
-2. **ALWAYS register a query key** for every entity in `src/lib/query/keys.ts` (see existing `productKeys`, `bundleKeys`, `invoiceKeys`, etc.).
-3. **Use `useOptimisticCreate`** for create drawers. Provide `buildOptimistic(formData)` to construct the fake item that appears instantly in the list.
-4. **Use `useOptimisticUpdate`** for edit drawers. Provide `getId(formData)` and `buildOptimistic(formData)` to merge partial updates into the cached item.
-5. **Use `useOptimisticDelete`** for delete confirmations. Provide `getId(formData)` to remove the item from the cache.
-6. **Use `mutation.mutate(formData, { onSuccess: ... })`** to handle success (close drawer, reset form, toast). Error recovery (toast + cache rollback) is handled automatically by the hook.
-7. **Use `<ErrorBanner error={mutation.error} />`** instead of manual `serverError` state.
-8. **Combine `mutation.isPending` with `isSubmitting`** on `DrawerSubmit`: `isPending={isSubmitting || mutation.isPending}`.
-9. **For non-CRUD actions** (share link generation, status transitions, item receiving) that don't create/update/delete list items, use raw `useMutation` from `@tanstack/react-query` with `queryClient.invalidateQueries` in `onSettled` — but DO NOT bypass the pattern for standard CRUD.
-
-## Standard create drawer pattern
-
-```tsx
-// Import the hook and query keys
-import { useOptimisticCreate } from "@/lib/query/use-optimistic";
+import { useOptimisticCreate } from "@zuiio/query";
 import { entityKeys } from "@/lib/query/keys";
 
-// Inside the component function, before useForm:
 const mutation = useOptimisticCreate({
   mutationFn: async (formData: FormData) => {
     const result = await createEntity(undefined, formData);
@@ -247,177 +181,124 @@ const mutation = useOptimisticCreate({
   buildOptimistic: (formData) => ({
     id: `opt-${Date.now()}`,
     name: formData.get("name")?.toString() ?? "",
-    // ... other fields matching the list query return type
-    created_at: new Date().toISOString(),
   }),
 });
 
-// onSubmit: use mutation.mutate instead of await + setServerError
-const onSubmit = (data: FormValues) => {
-  if (mutation.isPending) return;
-  const formData = new FormData();
-  // ... build formData
-  mutation.mutate(formData, {
-    onSuccess: () => {
-      setOpen(false);
-      reset();
-      toast.success("Амжилттай үүсгэгдлээ.");
-    },
-  });
-};
-
-// ErrorBanner uses mutation.error directly
-<ErrorBanner error={mutation.error} />
-
-// DrawerSubmit combines isSubmitting with mutation.isPending
-<DrawerSubmit isPending={isSubmitting || mutation.isPending} />
+// In onSubmit:
+mutation.mutate(formData, { onSuccess: () => { setOpen(false); reset(); toast.success("Амжилттай."); } });
 ```
 
-## Standard edit drawer pattern
+**Already migrated entities** (DO NOT revert): Products, Categories, Customers, Suppliers, Bundles, Invoices, Discounts, Quotations, Returns, Purchase Orders, Accounts, Journal Entries.
 
-```tsx
-import { useOptimisticUpdate } from "@/lib/query/use-optimistic";
+---
 
-const mutation = useOptimisticUpdate({
-  mutationFn: async (formData: FormData) => {
-    const result = await updateEntity(undefined, formData);
-    if (result?.error) throw new Error(result.error);
-    return result;
-  },
-  queryKey: entityKeys.all,
-  getId: (formData) => formData.get("id")?.toString() ?? "",
-  buildOptimistic: (formData) => ({
-    name: formData.get("name")?.toString() ?? "",
-    // ... fields that changed
-  }),
-});
+## Workflow & Autonomy
+
+### Pipeline
+
+- **Research** → understand the codebase area, existing patterns, dependencies
+- **Plan** → break into phases with clear success criteria
+- **Implement** → phase by phase, verify each before moving on
+- **Validate** → lint, type-check, test, self-review
+
+### Guardrails
+
+- Run `pnpm typecheck && pnpm test` before considering any task complete
+- Never merge with failing tests or type errors
+- One module at a time
+- Atomic commits
+
+### Autonomy Matrix
+
+| Proceed autonomously | Ask first |
+|---------------------|-----------|
+| Bug fixes with clear root cause | Business logic changes (revenue, visibility) |
+| UI adjustments (spacing, loading, tokens) | Schema migrations altering column semantics |
+| Type improvements, test additions | Breaking API response shape changes |
+| Documentation updates | New external dependencies |
+| Adding RLS policies (follow existing patterns) | Auth or authorization changes |
+
+---
+
+## Tools & Commands
+
+```bash
+# Development
+pnpm dev                      # Dev server (Turbopack)
+pnpm build                    # Production build
+
+# Validation
+pnpm typecheck                # tsc --noEmit
+pnpm validate                 # Full validation
+pnpm test                     # Run tests
+pnpm lint                     # Biome lint
+
+# Supabase
+supabase start                # Local Supabase stack
+supabase migration new <name> # Create migration file
+supabase gen types typescript --linked > src/lib/database.types.ts  # Regen types
 ```
 
-## Standard delete pattern
+---
 
-```tsx
-import { useOptimisticDelete } from "@/lib/query/use-optimistic";
+## Coding Standards
 
-const mutation = useOptimisticDelete({
-  mutationFn: async (formData: FormData) => {
-    const result = await deleteEntity(undefined, formData);
-    if (result?.error) throw new Error(result.error);
-    return result;
-  },
-  queryKey: entityKeys.all,
-  getId: (formData) => formData.get("id")?.toString() ?? "",
-});
+| Element | Convention | Example |
+|---------|-----------|---------|
+| Files/directories | kebab-case | `invoice-create-drawer.tsx` |
+| Components | PascalCase | `InvoiceCreateDrawer` |
+| Hooks | `use` prefix | `useInvoiceData` |
+| Database tables | snake_case | `invoices`, `organization_id` |
+| Server Actions | camelCase verb-noun | `createInvoice` |
+| Import types | From `@zuiio/core` or local `types.ts` | Never from auto-generated `database.types.ts` |
+
+---
+
+## Supabase Integration Rules
+
+### RLS Policy Checklist
+
+Every new table **MUST** have all 4 policies:
+
+```sql
+ALTER TABLE my_table ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "my_table_select" ON my_table FOR SELECT USING (organization_id = get_user_organization_id());
+CREATE POLICY "my_table_insert" ON my_table FOR INSERT WITH CHECK (organization_id = get_user_organization_id());
+CREATE POLICY "my_table_update" ON my_table FOR UPDATE USING (organization_id = get_user_organization_id()) WITH CHECK (organization_id = get_user_organization_id());
+CREATE POLICY "my_table_delete" ON my_table FOR DELETE USING (organization_id = get_user_organization_id());
 ```
 
-## Already migrated entities (DO NOT revert to raw pattern)
+### Service Query Checklist
 
-- Products (create/edit/delete)
-- Categories (create/edit/delete)
-- Customers (create/edit)
-- Suppliers (create/edit)
-- Bundles (create/edit)
-- Invoices (create)
-- Discounts (create)
-- Quotations (create)
-- Returns (create)
-- Purchase orders (create)
-- Accounts (create)
-- Journal entries (create/edit)
+| Clause | Purpose |
+|--------|---------|
+| `.eq('organization_id', orgId)` | Multi-tenancy scope |
+| `.is('deleted_at', null)` | Soft delete filter |
+| `.select('col1, col2, ...')` | Explicit columns — never `select('*')` |
 
-<!-- END:crud-optimistic-mutations -->
+### Auth & Keys
 
-<!-- BEGIN:detail-drawer-patterns -->
+- **Client-side**: `anon` key only (respects RLS)
+- **Server-side**: `service_role` key only (bypasses RLS)
+- **Never** mix keys
 
-# Detail drawers: Use reusable abstractions
+---
 
-All detail drawers and table action columns MUST use the shared components from `src/components/ui/`.
+## Common Pitfalls
 
-## Available reusable components
+| Issue | Symptom | Fix |
+|-------|---------|-----|
+| **RLS blocking queries** | Empty results, no error | Add 4 RLS policies + `.eq('organization_id', orgId)` |
+| Missing RLS on new table | Data leaks across orgs | Every new table needs SELECT, INSERT, UPDATE, DELETE policies |
+| Types not regenerated | Frontend fields missing/wrong | Run `supabase gen types` after EVERY migration |
+| Service role in client | Bypasses RLS accidentally | Use anon key in browser, service_role in server only |
 
-### `DetailDrawerShell` (for detail views)
+---
 
-Wraps `DrawerLayout` with standardized action buttons (Edit/Delete) and optional status badge.
+## Sub-AGENTS.md Reference
 
-```tsx
-import { DetailDrawerShell } from "@/components/ui/detail-drawer-shell";
-
-const STATUS_MAP = {
-  pending: { label: "Хүлээгдэж буй", variant: "secondary" },
-  paid: { label: "Төлөгдсөн", variant: "default" },
-};
-
-<DetailDrawerShell
-  open={open}
-  onOpenChange={setOpen}
-  title={entity.name}
-  description="Дэлгэрэнгүй мэдээлэл"
-  status={{ value: entity.status, mapping: STATUS_MAP }}
-  onEdit={() => setEditOpen(true)}
-  onDelete={() => handleDelete(entity.id)}
-  isDeletePending={isDeleting}
-  footer={<DrawerFooter>...</DrawerFooter>}
->
-  {/* info rows, tables, etc. */}
-</DetailDrawerShell>;
-```
-
-### `TableActionsCell` (for table action columns)
-
-Standardizes the 3-icon action column (View/Eye, Edit/Pencil, Delete/Trash) in data tables.
-
-```tsx
-import { TableActionsCell } from "@/components/ui/table-actions-cell";
-
-{
-  id: "actions",
-  header: "",
-  cell: ({ row }) => (
-    <TableActionsCell
-      onView={() => setSelected(row.original)}
-      onEdit={() => setEditItem(row.original)}
-      onDelete={() => handleDelete(row.original.id, row.original.name)}
-      isDeletePending={deletingId === row.original.id}
-    />
-  ),
-  enableSorting: false,
-  enableHiding: false,
-}
-```
-
-### `StatusBadge` (for status display)
-
-Renders a consistent status badge with label and color variant.
-
-```tsx
-import { StatusBadge } from "@/components/ui/status-badge";
-
-const STATUS_MAP = {
-  active: { label: "Идэвхтэй", variant: "default" },
-  inactive: { label: "Идэвхгүй", variant: "secondary" },
-};
-
-<StatusBadge value={status} mapping={STATUS_MAP} />;
-```
-
-### `useDeleteWithConfirm` (for delete mutations)
-
-Standardizes confirm dialog → mutate → toast → cache invalidation.
-
-```tsx
-import { useDeleteWithConfirm } from "@/hooks/use-delete-with-confirm";
-
-const { handleDelete, isPending } = useDeleteWithConfirm({
-  mutationFn: (id) => deleteEntity(id),
-  queryKey: entityKeys.all(),
-  entityName: "Бүтээгдэхүүн",
-});
-
-// In table action cell:
-<TableActionsCell onDelete={() => handleDelete(item.id, item.name)} />;
-```
-
-### `InfoRow` (for key-value display in detail drawers)
-
-Already exists at `src/components/ui/info-row.tsx`. Use it consistently instead of manual divs.
-
-<!-- END:detail-drawer-patterns -->
+| Layer | File |
+|-------|------|
+| Business logic | `src/lib/services/AGENTS.md` |
+| Shared components | `src/components/AGENTS.md` |
+| Feature modules | `src/app/(dashboard)/<module>/AGENTS.md` |

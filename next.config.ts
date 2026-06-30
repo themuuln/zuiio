@@ -6,8 +6,17 @@ const nextConfig: NextConfig = {
   },
   reactCompiler: true,
   cacheComponents: true,
+  partialPrefetching: true,
+  transpilePackages: [
+    "@zer/branding",
+    "@zer/export",
+    "@zer/i18n",
+    "@zer/supabase",
+  ],
   experimental: {
     viewTransition: true,
+    turbopackFileSystemCacheForBuild: true,
+    turbopackRustReactCompiler: true,
   },
   async headers() {
     return [

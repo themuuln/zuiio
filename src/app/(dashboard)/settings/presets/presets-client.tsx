@@ -305,11 +305,11 @@ function ProductTable({
       return importProductPresetsByIds(presetIds);
     },
     onSuccess: (result, presetIds) => {
-      if (result?.error) {
+      if (result && "error" in result) {
         toast.error(result.error);
-      } else {
+      } else if (result) {
         toast.success(
-          `${result?.count ?? presetIds.length} бүтээгдэхүүн амжилттай импортлогдлоо.`,
+          `${result.count ?? presetIds.length} бүтээгдэхүүн амжилттай импортлогдлоо.`,
         );
         setImportedIds((prev) => {
           const next = new Set(prev);
@@ -331,11 +331,10 @@ function ProductTable({
       return importProductPreset(formData);
     },
     onSuccess: (result) => {
-      if (result?.error) {
+      if (result && "error" in result) {
         toast.error(result.error);
-      } else {
-        const productName = result?.name ?? "Бүтээгдэхүүн";
-        toast.success(`"${productName}" амжилттай хуулагдлаа.`);
+      } else if (result) {
+        toast.success(`"${result.name}" амжилттай хуулагдлаа.`);
       }
     },
     onError: () => {
@@ -410,7 +409,7 @@ function ProductTable({
                     e.stopPropagation();
                     copyProductMutation.mutate(p.id, {
                       onSuccess: (result) => {
-                        if (!result?.error) {
+                        if (result && !("error" in result)) {
                           setImportedIds((prev) => new Set(prev).add(p.id));
                         }
                       },

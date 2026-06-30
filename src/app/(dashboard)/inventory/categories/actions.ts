@@ -1,17 +1,17 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { requireActionContext } from "@/lib/action-utils";
 import { validateCategoryInput } from "@/lib/domain-rules";
-import { checkPermission, requireAppContext } from "@/lib/erp";
+import { revalidateEntity } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
 
 export async function createCategory(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, permissions } = await requireAppContext();
-  const permError = checkPermission(permissions, "categories.create");
-  if (permError) return { error: permError };
+  const ctx = await requireActionContext("categories.create");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
 
   const name = getString(formData, "name");
 
@@ -41,9 +41,7 @@ export async function createCategory(
     return { error: error.message ?? "Ангилал үүсгэхэд алдаа гарлаа." };
   }
 
-  revalidatePath("/inventory/categories");
-  revalidatePath("/products");
-  revalidatePath("/inventory");
+  revalidateEntity("categories");
   return { success: true as const };
 }
 
@@ -51,9 +49,9 @@ export async function updateCategory(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, permissions } = await requireAppContext();
-  const permError = checkPermission(permissions, "categories.update");
-  if (permError) return { error: permError };
+  const ctx = await requireActionContext("categories.update");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
 
   const id = getString(formData, "id");
   const name = getString(formData, "name");
@@ -90,9 +88,7 @@ export async function updateCategory(
     return { error: error.message ?? "Ангилал хадгалахад алдаа гарлаа." };
   }
 
-  revalidatePath("/inventory/categories");
-  revalidatePath("/products");
-  revalidatePath("/inventory");
+  revalidateEntity("categories");
   return { success: true as const };
 }
 
@@ -100,9 +96,9 @@ export async function deleteCategory(
   _prevState: { error?: string } | undefined,
   formData: FormData,
 ) {
-  const { supabase, organizationId, permissions } = await requireAppContext();
-  const permError = checkPermission(permissions, "categories.delete");
-  if (permError) return { error: permError };
+  const ctx = await requireActionContext("categories.delete");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId } = ctx;
 
   const id = getString(formData, "id");
 
@@ -137,8 +133,6 @@ export async function deleteCategory(
     return { error: error.message ?? "Ангилал устгахад алдаа гарлаа." };
   }
 
-  revalidatePath("/inventory/categories");
-  revalidatePath("/products");
-  revalidatePath("/inventory");
+  revalidateEntity("categories");
   return { success: true as const };
 }

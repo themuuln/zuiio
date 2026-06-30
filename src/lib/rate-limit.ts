@@ -1,1 +1,1 @@
-export { clearAllRateLimits, rateLimit, resetRateLimit } from "@zer/core";
+export { clearAllRateLimits, rateLimit, resetRateLimit } from "@zuiio/core";

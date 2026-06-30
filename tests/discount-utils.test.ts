@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { DiscountParams } from "@/lib/discount-utils";
-import { calculateDiscount } from "@/lib/discount-utils";
+import {
+  calculateDiscount,
+  matchesSelectedCategories,
+  matchesSelectedProducts,
+} from "@/lib/discount-utils";
 
 test("percentage discount on all items", () => {
   const params: DiscountParams = {
@@ -155,4 +159,14 @@ test("percentage discount on multiple items in selected category", () => {
   const result = calculateDiscount(params);
   assert.equal(result.discountAmount, 35000);
   assert.equal(result.totalAfterDiscount, 205000);
+});
+
+// ─── matchesSelectedCategories / matchesSelectedProducts re-exports ──
+
+test("matchesSelectedCategories is re-exported from discount-utils", () => {
+  assert.equal(typeof matchesSelectedCategories, "function");
+});
+
+test("matchesSelectedProducts is re-exported from discount-utils", () => {
+  assert.equal(typeof matchesSelectedProducts, "function");
 });

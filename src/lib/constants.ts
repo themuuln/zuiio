@@ -62,6 +62,15 @@ export const FEATURES: FeatureDef[] = [
   { key: "accounting", label: "Нягтлан", description: "Нягтлан бодох бүртгэл" },
 ];
 
+/**
+ * Shared feature key constants used across nav, layout, and settings.
+ * These keys gate sidebar items in navigation.ts and are pushed to
+ * the allFeatures array in layout.tsx. Keep in sync.
+ */
+export const FEATURE_KEYS = {
+  hr: "hr",
+} as const;
+
 // Map nav item href → feature key for sidebar gating
 export const NAV_FEATURE_MAP: Record<string, string> = {
   "/sales": "sales",

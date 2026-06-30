@@ -48,8 +48,8 @@ const InvoiceDrawer = dynamic(
 
 const ExpensesCreateDrawer = dynamic(
   () =>
-    import("@/components/expenses/expenses-create-drawer").then(
-      (m) => m.ExpensesCreateDrawer,
+    import("@/components/expenses/expense-create-drawer").then(
+      (m) => m.ExpenseCreateDrawer,
     ),
   { ssr: false },
 );

@@ -1,9 +1,7 @@
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+"use client";
+
+import { useState } from "react";
+import { CaretDown, Question } from "@phosphor-icons/react/dist/ssr";
 
 const faqs = [
   {
@@ -44,11 +42,56 @@ const faqs = [
   },
 ];
 
+function FAQCard({
+  question,
+  answer,
+}: {
+  question: string;
+  answer: string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div
+      className={`cursor-pointer rounded-xl border bg-background p-5 transition-colors hover:bg-muted/50 ${
+        open ? "ring-1 ring-primary/20" : ""
+      }`}
+      onClick={() => setOpen(!open)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          setOpen(!open);
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-expanded={open}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <Question className="mt-0.5 size-5 shrink-0 text-primary" />
+          <h3 className="text-sm font-medium">{question}</h3>
+        </div>
+        <CaretDown
+          className={`mt-1 size-4 shrink-0 text-muted-foreground transition-transform duration-200 ${
+            open ? "rotate-180" : ""
+          }`}
+        />
+      </div>
+      {open && (
+        <p className="mt-4 border-l-2 border-primary/20 pl-4 text-sm leading-relaxed text-muted-foreground">
+          {answer}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function FAQ() {
   return (
     <section id="faq" className="border-t bg-muted/30 py-20 md:py-28">
-      <div className="mx-auto max-w-3xl px-4">
-        <div className="mb-12 text-center">
+      <div className="mx-auto max-w-6xl px-4">
+        <div className="mb-12 max-w-2xl">
           <h2 className="mb-4 text-3xl font-bold md:text-4xl">
             Түгээмэл асуултууд
           </h2>
@@ -57,18 +100,15 @@ export function FAQ() {
           </p>
         </div>
 
-        <Accordion type="single" collapsible className="w-full">
+        <div className="grid gap-4 md:grid-cols-2">
           {faqs.map((faq) => (
-            <AccordionItem key={faq.id} value={faq.id}>
-              <AccordionTrigger className="text-left">
-                {faq.question}
-              </AccordionTrigger>
-              <AccordionContent className="text-muted-foreground">
-                {faq.answer}
-              </AccordionContent>
-            </AccordionItem>
+            <FAQCard
+              key={faq.id}
+              question={faq.question}
+              answer={faq.answer}
+            />
           ))}
-        </Accordion>
+        </div>
       </div>
     </section>
   );

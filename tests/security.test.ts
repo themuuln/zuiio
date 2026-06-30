@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import type { AppContext } from "@/lib/erp";
 import { checkPermission } from "@/lib/erp";
 import { escapeHtml } from "@/lib/validation";
 
@@ -34,6 +35,24 @@ test("checkPermission is case-sensitive", () => {
     ),
     "Танд эрх байхгүй байна.",
   );
+});
+
+// ─── requireAppContext user shape ────────────────────────────────────
+
+test("AppContext type has minimal user shape (id + email only)", () => {
+  // This validates at compile-time that AppContext['user'] is { id: string; email: unknown }
+  // At runtime, requireAppContext() returns user: { id: userId, email: claims.email ?? null }.
+  // No consumer should access user.role or user.app_metadata on the narrowed shape.
+  const mockUser: AppContext["user"] = {
+    id: "test-user-id",
+    email: "test@example.com",
+  };
+  assert.equal(mockUser.id, "test-user-id");
+  assert.equal(mockUser.email, "test@example.com");
+  // Verify user.role is NOT present on the AppContext['user'] type
+  // @ts-expect-error - user.role should not exist on narrowed user shape
+  const _roleCheck: undefined = mockUser.role;
+  void _roleCheck;
 });
 
 // ─── escapeHtml ───────────────────────────────────────────────────────

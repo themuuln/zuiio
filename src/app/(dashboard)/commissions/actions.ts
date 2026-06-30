@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { requireActionContext } from "@/lib/action-utils";
 import { withBranchFilter } from "@/lib/branches";
 import {
   buildStaffSummary,
@@ -10,7 +10,6 @@ import {
   validatePayoutRequest,
 } from "@/lib/commissions";
 import { requireAppContext } from "@/lib/erp";
-import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
 type SaleItemRow = Database["public"]["Tables"]["sale_items"]["Row"];
@@ -289,26 +288,12 @@ export async function createPayout(
   _prevState: CreatePayoutState | undefined,
   formData: FormData,
 ): Promise<CreatePayoutState | undefined> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const ctx = await requireActionContext("accounting.manage");
+  if ("error" in ctx) return ctx;
 
-  if (!user) {
-    redirect("/login");
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("organization_id, branch_id")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile?.organization_id) {
-    return { error: "Байгууллага олдсонгүй." };
-  }
-
-  const orgId = profile.organization_id;
+  const supabase = ctx.supabase;
+  const user = ctx.user;
+  const orgId = ctx.organizationId;
   const profileId = formData.get("profile_id") as string;
   const notes = (formData.get("notes") as string) || "";
 
@@ -387,8 +372,7 @@ export async function createPayout(
     .eq("id", profileId)
     .single();
 
-  let payoutBranchId: string | null =
-    targetProfile?.branch_id ?? profile.branch_id;
+  let payoutBranchId: string | null = targetProfile?.branch_id ?? ctx.branchId;
 
   if (!payoutBranchId) {
     const { data: fallbackBranch } = await supabase
