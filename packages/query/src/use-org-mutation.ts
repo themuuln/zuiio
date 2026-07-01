@@ -22,12 +22,12 @@
  *   successMessage: "Created",
  * });
  *
- * // Delete
- * const del = useOrgMutation<MyType, string>({
+ * // Delete with separate response/cache types
+ * const del = useOrgMutation<{ success: true }, string, MyType>({
  *   endpoint: (id) => `/api/${orgId}/items/${id}`,
  *   method: "DELETE",
  *   queryKey: itemKeys.all(orgId),
- *   optimisticUpdate: (cached, id) => cached.filter((i) => i.id !== id),
+ *   optimisticUpdate: (notes, noteId) => notes.filter((n) => n.id !== noteId),
  *   successMessage: "Deleted",
  * });
  * ```
@@ -43,7 +43,7 @@ import { useMutationQueue } from "@zuiio/offline";
 
 type HttpMethod = "POST" | "PATCH" | "DELETE";
 
-export interface OrgMutationConfig<TData, TVariables> {
+export interface OrgMutationConfig<TResponse, TVariables, TCache = TResponse> {
   /** API endpoint — static string or function that builds it from variables. */
   endpoint: string | ((variables: TVariables) => string);
 
@@ -69,12 +69,22 @@ export interface OrgMutationConfig<TData, TVariables> {
   optimisticQueryKey?: readonly unknown[];
 
   /**
+   * Optional mutation key for mutation deduplication.
+   * When set, onSettled skips invalidation if sibling mutations
+   * with the same key are still in-flight — preventing one mutation's
+   * refetch from clearing another mutation's optimistic state.
+   * Defaults to ["org-mutation", optimisticQueryKey ?? queryKey].
+   */
+  mutationKey?: readonly unknown[];
+
+  /**
    * Optimistic update — transforms the cached list before the server responds.
+   * Uses TCache (not TResponse) so the cache type can differ from the response type.
    * - Create: `(old, vars) => [...old, tempItem(vars)]`
    * - Update: `(old, vars) => old.map(...)`
    * - Delete: `(old, vars) => old.filter(...)`
    */
-  optimisticUpdate?: (cached: TData[], variables: TVariables) => TData[];
+  optimisticUpdate?: (cached: TCache[], variables: TVariables) => TCache[];
 
   /** Success toast message — string or function of variables. */
   successMessage?: string | ((variables: TVariables) => string);
@@ -90,7 +100,7 @@ export interface OrgMutationConfig<TData, TVariables> {
   onErrorToast?: (
     error: Error,
     variables: TVariables,
-    helpers: { retry: () => Promise<TData> },
+    helpers: { retry: () => Promise<TResponse> },
   ) => void;
 
   /** Extra query keys to invalidate on settle (beyond queryKey). */
@@ -104,26 +114,33 @@ export interface OrgMutationConfig<TData, TVariables> {
   bodyFn?: (variables: TVariables) => unknown;
 
   /** Extra side effects on successful online mutation. */
-  onSuccess?: (data: TData, variables: TVariables) => void;
+  onSuccess?: (data: TResponse, variables: TVariables) => void;
+
+  /**
+   * Error side-effect callback (non-toast).
+   * Runs after rollback but independently of toast error display.
+   */
+  onError?: (error: Error, variables: TVariables) => void | Promise<void>;
 }
 
 // ─── Context type (internal) ───────────────────────────────────
 
-interface MutationContext<TData> {
-  previous: TData[] | undefined;
+interface MutationContext<TCache> {
+  previous: TCache[] | undefined;
   wasOffline: boolean;
 }
 
 // ─── Factory ───────────────────────────────────────────────────
 
-export function useOrgMutation<TData, TVariables = void>(
-  config: OrgMutationConfig<TData, TVariables>,
+export function useOrgMutation<TResponse, TVariables = void, TCache = TResponse>(
+  config: OrgMutationConfig<TResponse, TVariables, TCache>,
 ) {
   const {
     endpoint,
     method = "POST",
     queryKey,
     optimisticQueryKey,
+    mutationKey,
     optimisticUpdate,
     successMessage,
     errorMessage,
@@ -131,6 +148,7 @@ export function useOrgMutation<TData, TVariables = void>(
     invalidateKeys = [],
     bodyFn,
     onSuccess,
+    onError: onErrorCb,
   } = config;
 
   const queryClient = useQueryClient();
@@ -138,8 +156,10 @@ export function useOrgMutation<TData, TVariables = void>(
   const queue = useMutationQueue();
 
   const exactKey = optimisticQueryKey ?? queryKey;
+  const resolvedMutationKey =
+    mutationKey ?? ["org-mutation", ...exactKey];
 
-  const mutateRef = React.useRef<((vars: TVariables) => Promise<TData>) | null>(null);
+  const mutateRef = React.useRef<((vars: TVariables) => Promise<TResponse>) | null>(null);
 
   const resolveEndpoint = (vars: TVariables): string =>
     typeof endpoint === "function" ? endpoint(vars) : endpoint;
@@ -157,8 +177,10 @@ export function useOrgMutation<TData, TVariables = void>(
       : successMessage;
   };
 
-  const mutation = useMutation<TData, Error, TVariables, MutationContext<TData>>({
-    mutationFn: async (variables): Promise<TData> => {
+  const mutation = useMutation<TResponse, Error, TVariables, MutationContext<TCache>>({
+    mutationKey: resolvedMutationKey,
+
+    mutationFn: async (variables): Promise<TResponse> => {
       const url = resolveEndpoint(variables);
 
       if (isOnline) {
@@ -182,7 +204,7 @@ export function useOrgMutation<TData, TVariables = void>(
 
         const json = await res.json();
         if (json.error) throw new Error(json.error.message);
-        return json.data as TData;
+        return json.data as TResponse;
       }
 
       // Offline — enqueue for later replay
@@ -196,17 +218,17 @@ export function useOrgMutation<TData, TVariables = void>(
         ],
       });
 
-      return { queued: true } as unknown as TData;
+      return { queued: true } as unknown as TResponse;
     },
 
-    onMutate: async (variables): Promise<MutationContext<TData>> => {
+    onMutate: async (variables): Promise<MutationContext<TCache>> => {
       await queryClient.cancelQueries({ queryKey });
-      const previous = queryClient.getQueryData<TData[]>(exactKey);
+      const previous = queryClient.getQueryData<TCache[]>(exactKey);
 
       if (previous && optimisticUpdate) {
         const next = optimisticUpdate(previous, variables);
         if (next !== undefined) {
-          queryClient.setQueryData<TData[]>(exactKey, next);
+          queryClient.setQueryData<TCache[]>(exactKey, next);
         }
       }
 
@@ -216,8 +238,11 @@ export function useOrgMutation<TData, TVariables = void>(
     onError: (error, variables, context) => {
       // Rollback on error
       if (context?.previous) {
-        queryClient.setQueryData(exactKey, context.previous);
+        queryClient.setQueryData<TCache[]>(exactKey, context.previous);
       }
+
+      // Non-toast error callback (runs independently)
+      onErrorCb?.(error, variables);
 
       if (onErrorToast) {
         const retryFn = () => {
@@ -253,10 +278,16 @@ export function useOrgMutation<TData, TVariables = void>(
       // the MutationQueueProvider will handle invalidation after replay.
       if (context?.wasOffline) return;
 
-      queryClient.invalidateQueries({ queryKey });
-      for (const key of invalidateKeys) {
-        queryClient.invalidateQueries({ queryKey: key });
-      }
+      // If sibling mutations with the same key are still in-flight,
+      // skip invalidation to avoid clearing their optimistic state.
+      if (queryClient.isMutating({ mutationKey: resolvedMutationKey }) > 1) return;
+
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey }),
+        ...invalidateKeys.map((key) =>
+          queryClient.invalidateQueries({ queryKey: key }),
+        ),
+      ]);
     },
   });
 
