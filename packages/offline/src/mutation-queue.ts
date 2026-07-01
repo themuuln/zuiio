@@ -47,6 +47,12 @@ export interface QueuedMutation {
   maxRetries: number;
   /** Last error message if failed */
   error?: string;
+  /**
+   * Idempotency key for safe offline replay.
+   * When set, the server should reject duplicate requests with the same key.
+   * Sent as the `Idempotency-Key` HTTP header during replay.
+   */
+  idempotencyKey?: string;
 }
 
 export interface ReplayResult {
@@ -190,9 +196,16 @@ export async function replayPendingMutations(
 
       await updateMutationStatus(mutation.id, "in-flight");
 
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (mutation.idempotencyKey) {
+        headers["Idempotency-Key"] = mutation.idempotencyKey;
+      }
+
       const res = await fetch(mutation.endpoint, {
         method: mutation.method,
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: mutation.body ? JSON.stringify(mutation.body) : undefined,
       });
 

@@ -35,6 +35,21 @@
 
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+/**
+ * UUID v4 generator (no external deps).
+ * Falls back to crypto.randomUUID when available.
+ */
+function generateOptimisticId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
 import { toast } from "sonner";
 import { useOnlineStatus } from "@zuiio/hooks";
 import { useMutationQueue } from "@zuiio/offline";
@@ -42,6 +57,14 @@ import { useMutationQueue } from "@zuiio/offline";
 // ─── Types ─────────────────────────────────────────────────────
 
 type HttpMethod = "POST" | "PATCH" | "DELETE";
+
+/** Context passed to `optimisticUpdate` for stable temp ID generation. */
+export interface OptimisticContext {
+  /** Stable unique ID for the optimistic item (use instead of Date.now() in temp IDs). */
+  optimisticId: string;
+  /** ISO timestamp of when the mutation was submitted. */
+  submittedAt: string;
+}
 
 export interface OrgMutationConfig<TResponse, TVariables, TCache = TResponse> {
   /** API endpoint — static string or function that builds it from variables. */
@@ -80,11 +103,20 @@ export interface OrgMutationConfig<TResponse, TVariables, TCache = TResponse> {
   /**
    * Optimistic update — transforms the cached list before the server responds.
    * Uses TCache (not TResponse) so the cache type can differ from the response type.
+   *
+   * The third argument provides:
+   * - `optimisticId`: a stable UUID for temp IDs (use instead of `Date.now()`)
+   * - `submittedAt`: ISO timestamp of submission
+   *
    * - Create: `(old, vars) => [...old, tempItem(vars)]`
    * - Update: `(old, vars) => old.map(...)`
    * - Delete: `(old, vars) => old.filter(...)`
    */
-  optimisticUpdate?: (cached: TCache[], variables: TVariables) => TCache[];
+  optimisticUpdate?: (
+    cached: TCache[],
+    variables: TVariables,
+    context: OptimisticContext,
+  ) => TCache[];
 
   /** Success toast message — string or function of variables. */
   successMessage?: string | ((variables: TVariables) => string);
@@ -112,6 +144,16 @@ export interface OrgMutationConfig<TResponse, TVariables, TCache = TResponse> {
    * When provided, ALWAYS called (including for DELETE).
    */
   bodyFn?: (variables: TVariables) => unknown;
+
+  /**
+   * Idempotency key factory for safe retry.
+   * When provided, the key is sent as the `Idempotency-Key` HTTP header
+   * on online requests, and stored with the queued mutation for offline replay.
+   * The server should reject duplicate requests with the same key.
+   *
+   * Example: `idempotencyKey: (vars) => \`refund-\${orgId}-\${vars.invoice_id}\``
+   */
+  idempotencyKey?: (variables: TVariables) => string;
 
   /** Extra side effects on successful online mutation. */
   onSuccess?: (data: TResponse, variables: TVariables) => void;
@@ -142,6 +184,7 @@ export function useOrgMutation<TResponse, TVariables = void, TCache = TResponse>
     optimisticQueryKey,
     mutationKey,
     optimisticUpdate,
+    idempotencyKey,
     successMessage,
     errorMessage,
     onErrorToast,
@@ -187,12 +230,18 @@ export function useOrgMutation<TResponse, TVariables = void, TCache = TResponse>
         const built = buildBody(variables);
         const init: RequestInit = {
           method,
-          headers:
-            built !== undefined
-              ? { "Content-Type": "application/json" }
-              : undefined,
           body: built !== undefined ? JSON.stringify(built) : undefined,
         };
+
+        if (built !== undefined) {
+          const h: Record<string, string> = {
+            "Content-Type": "application/json",
+          };
+          if (idempotencyKey) {
+            h["Idempotency-Key"] = idempotencyKey(variables);
+          }
+          init.headers = h;
+        }
 
         const res = await fetch(url, init);
         if (!res.ok) {
@@ -212,6 +261,7 @@ export function useOrgMutation<TResponse, TVariables = void, TCache = TResponse>
         endpoint: url,
         method,
         body: buildBody(variables),
+        idempotencyKey: idempotencyKey?.(variables),
         queryKeysToInvalidate: [
           [...queryKey],
           ...invalidateKeys.map((k) => [...k]),
@@ -226,7 +276,11 @@ export function useOrgMutation<TResponse, TVariables = void, TCache = TResponse>
       const previous = queryClient.getQueryData<TCache[]>(exactKey);
 
       if (previous && optimisticUpdate) {
-        const next = optimisticUpdate(previous, variables);
+        const context: OptimisticContext = {
+          optimisticId: generateOptimisticId(),
+          submittedAt: new Date().toISOString(),
+        };
+        const next = optimisticUpdate(previous, variables, context);
         if (next !== undefined) {
           queryClient.setQueryData<TCache[]>(exactKey, next);
         }

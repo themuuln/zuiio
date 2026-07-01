@@ -448,10 +448,12 @@ describe("useOrgMutation — DELETE without bodyFn", () => {
 			"/api/test/1",
 			expect.objectContaining({
 				method: "DELETE",
-				headers: undefined,
 				body: undefined,
 			}),
 		);
+		// headers should not be set when there's no body
+		const callArgs = mockFetch.mock.calls[0][1];
+		expect(callArgs).not.toHaveProperty("headers");
 	});
 });
 
@@ -801,5 +803,173 @@ describe("useOrgMutation — separate TResponse and TCache", () => {
 
 		// Response type is { success: boolean }
 		expect(result.current.data).toEqual({ success: true });
+	});
+});
+
+// ─── Tests: optimisticId context ───────────────────────────
+
+describe("useOrgMutation — optimistic context", () => {
+	it("passes optimisticId and submittedAt to optimisticUpdate", async () => {
+		const queryClient = new QueryClient({
+			defaultOptions: {
+				queries: { retry: false },
+				mutations: { retry: false },
+			},
+		});
+
+		queryClient.setQueryData(
+			["items"],
+			[{ id: "1", name: "one" }],
+		);
+
+		mockedOnlineStatus.mockReturnValue(false);
+		mockEnqueue.mockResolvedValueOnce(undefined);
+
+		const contextSpy = vi.fn();
+
+		const { result } = renderHook(
+			() =>
+				useOrgMutation<
+					{ id: string; name: string },
+					{ name: string },
+					{ id: string; name: string }
+				>({
+					endpoint: "/api/items",
+					method: "POST",
+					queryKey: ["items"],
+					optimisticUpdate: (cached, vars, ctx) => {
+						contextSpy(ctx);
+						return [
+							...cached,
+							{ id: ctx.optimisticId, name: vars.name },
+						];
+					},
+				}),
+			{
+				wrapper: function Wrapper({ children }: { children: ReactNode }) {
+					return (
+						<QueryClientProvider client={queryClient}>
+							{children}
+						</QueryClientProvider>
+					);
+				},
+			},
+		);
+
+		result.current.mutate({ name: "two" });
+
+		await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+		expect(contextSpy).toHaveBeenCalledTimes(1);
+		const ctx = contextSpy.mock.calls[0][0];
+		expect(ctx).toHaveProperty("optimisticId");
+		expect(ctx).toHaveProperty("submittedAt");
+		expect(typeof ctx.optimisticId).toBe("string");
+		expect(ctx.optimisticId.length).toBeGreaterThan(10);
+		expect(typeof ctx.submittedAt).toBe("string");
+		expect(ctx.submittedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+
+		// optimisticId should be used as the temp item's id
+		const cached = queryClient.getQueryData(["items"]) as Array<{
+			id: string;
+		}>;
+		expect(cached).toHaveLength(2);
+		expect(cached![1]?.id).toBe(ctx.optimisticId);
+	});
+});
+
+// ─── Tests: idempotencyKey ────────────────────────────────
+
+describe("useOrgMutation — idempotencyKey", () => {
+	it("sends Idempotency-Key header on online POST", async () => {
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({ data: { id: "1" } }),
+		});
+
+		const { result } = renderHook(
+			() =>
+				useOrgMutation<{ id: string }, { invoice_id: string }>({
+					endpoint: "/api/refunds",
+					method: "POST",
+					queryKey: ["refunds"],
+					idempotencyKey: (vars) => `refund-${vars.invoice_id}`,
+				}),
+			{ wrapper: createWrapper() },
+		);
+
+		result.current.mutate({ invoice_id: "inv-123" });
+
+		await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+		expect(mockFetch).toHaveBeenCalledWith(
+			"/api/refunds",
+			expect.objectContaining({
+				headers: expect.objectContaining({
+					"Idempotency-Key": "refund-inv-123",
+				}),
+			}),
+		);
+	});
+
+	it("sends Idempotency-Key header on DELETE with bodyFn", async () => {
+		mockFetch.mockResolvedValueOnce({
+			ok: true,
+			json: async () => ({ data: { success: true } }),
+		});
+
+		const { result } = renderHook(
+			() =>
+				useOrgMutation<
+					{ success: boolean },
+					{ id: string; reason: string }
+				>({
+					endpoint: (vars) => `/api/items/${vars.id}`,
+					method: "DELETE",
+					queryKey: ["items"],
+					bodyFn: ({ reason }) => ({ reason }),
+					idempotencyKey: (vars) => `delete-${vars.id}`,
+				}),
+			{ wrapper: createWrapper() },
+		);
+
+		result.current.mutate({ id: "item-1", reason: "archived" });
+
+		await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+		expect(mockFetch).toHaveBeenCalledWith(
+			"/api/items/item-1",
+			expect.objectContaining({
+				headers: expect.objectContaining({
+					"Idempotency-Key": "delete-item-1",
+				}),
+			}),
+		);
+	});
+
+	it("includes idempotencyKey when queueing offline", async () => {
+		mockedOnlineStatus.mockReturnValue(false);
+		mockEnqueue.mockResolvedValueOnce(undefined);
+
+		const { result } = renderHook(
+			() =>
+				useOrgMutation<unknown, { invoice_id: string }>({
+					endpoint: "/api/refunds",
+					method: "POST",
+					queryKey: ["refunds"],
+					idempotencyKey: (vars) => `refund-${vars.invoice_id}`,
+				}),
+			{ wrapper: createWrapper() },
+		);
+
+		result.current.mutate({ invoice_id: "inv-123" });
+
+		await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+		expect(mockEnqueue).toHaveBeenCalledWith(
+			expect.objectContaining({
+				idempotencyKey: "refund-inv-123",
+			}),
+		);
 	});
 });
