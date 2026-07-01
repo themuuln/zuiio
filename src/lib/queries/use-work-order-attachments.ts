@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { WorkOrderAttachment } from "@/lib/types";
 import { createOrgQuery } from "./factory";
 import { attachmentKeys } from "./keys";
-import { useOrgMutation } from "./mutation-factory";
+import { useOrgMutation } from "@zuiio/query";
 
 export function useAttachments(orgId: string | undefined, woId: string) {
   const fetchAttachments = createOrgQuery<WorkOrderAttachment[]>(

@@ -2,7 +2,7 @@ import { type UseQueryResult, useQuery } from "@tanstack/react-query";
 import type { CustomerNote, CustomerNoteType } from "@/lib/types";
 import { createOrgQuery } from "./factory";
 import { customerNoteKeys } from "./keys";
-import { useOrgMutation } from "./mutation-factory";
+import { useOrgMutation } from "@zuiio/query";
 
 /**
  * Fetches notes for a customer.

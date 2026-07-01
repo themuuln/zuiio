@@ -17,7 +17,7 @@ import type {
 } from "@/lib/types";
 import { createOrgQuery } from "./factory";
 import { globalCatalogKeys, inventoryKeys } from "./keys";
-import { useOrgMutation } from "./mutation-factory";
+import { useOrgMutation } from "@zuiio/query";
 
 // ── Global Catalog Fetcher ───────────────────────────────────
 

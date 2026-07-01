@@ -7,7 +7,7 @@
 import { type UseQueryResult, useQuery } from "@tanstack/react-query";
 import { createOrgQuery } from "./factory";
 import { clockKeys, mechanicKeys } from "./keys";
-import { useOrgMutation } from "./mutation-factory";
+import { useOrgMutation } from "@zuiio/query";
 
 // ── Types ──────────────────────────────────────────
 

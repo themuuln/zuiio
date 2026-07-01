@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { OrgTransferBankAccount } from "@/lib/payments/org-bank-accounts";
 import { orgKeys } from "./keys";
-import { useOrgMutation } from "./mutation-factory";
+import { useOrgMutation } from "@zuiio/query";
 
 interface OrgSettings {
   daily_revenue_goal?: number;

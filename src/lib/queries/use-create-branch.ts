@@ -1,6 +1,6 @@
 import type { Branch, CreateBranchParams } from "@/lib/types";
 import { branchKeys } from "./keys";
-import { useOrgMutation } from "./mutation-factory";
+import { useOrgMutation } from "@zuiio/query";
 
 /**
  * Mutation hook for creating a new branch.

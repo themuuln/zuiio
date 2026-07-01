@@ -9,7 +9,7 @@ import { type UseQueryResult, useQuery } from "@tanstack/react-query";
 import type { EndOfDaySummary } from "@/lib/types";
 import { createOrgQuery } from "./factory";
 import { dayCloseKeys, reportKeys } from "./keys";
-import { useOrgMutation } from "./mutation-factory";
+import { useOrgMutation } from "@zuiio/query";
 
 // ── Types ──────────────────────────────────────────────────
 

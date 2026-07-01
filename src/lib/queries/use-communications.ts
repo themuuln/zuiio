@@ -35,11 +35,17 @@ export function useCreateCustomerCommunication(
   orgId: string | undefined,
   customerId: string | undefined,
 ) {
-  return useOrgMutation<CustomerCommunication, CreateCustomerCommunicationParams>({
+  return useOrgMutation<
+    CustomerCommunication,
+    CreateCustomerCommunicationParams
+  >({
     endpoint: `/api/organizations/${orgId}/customers/${customerId}/communications`,
     method: "POST",
     queryKey: customerCommunicationKeys.all(orgId ?? "", customerId ?? ""),
-    optimisticQueryKey: customerCommunicationKeys.list(orgId ?? "", customerId ?? ""),
+    optimisticQueryKey: customerCommunicationKeys.list(
+      orgId ?? "",
+      customerId ?? "",
+    ),
     optimisticUpdate: (cached, variables) => {
       const optimistic: CustomerCommunication = {
         id: `temp-${Date.now()}`,
@@ -74,9 +80,11 @@ export function useDeleteCustomerCommunication(
       `/api/organizations/${orgId}/customers/${customerId}/communications/${commId}`,
     method: "DELETE",
     queryKey: customerCommunicationKeys.all(orgId ?? "", customerId ?? ""),
-    optimisticQueryKey: customerCommunicationKeys.list(orgId ?? "", customerId ?? ""),
-    optimisticUpdate: (cached, commId) =>
-      cached.filter((c) => c.id !== commId),
+    optimisticQueryKey: customerCommunicationKeys.list(
+      orgId ?? "",
+      customerId ?? "",
+    ),
+    optimisticUpdate: (cached, commId) => cached.filter((c) => c.id !== commId),
     successMessage: "Communication deleted",
     errorMessage: "Failed to delete communication",
     onErrorToast: (err, _commId, { retry }) =>

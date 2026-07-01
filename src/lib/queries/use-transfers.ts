@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createOrgQuery } from "@/lib/queries/factory";
 import { inventoryKeys } from "@/lib/queries/keys";
-import { useOrgMutation } from "@/lib/queries/mutation-factory";
+import { useOrgMutation } from "@zuiio/query";
 import type {
   CreateTransferParams,
   PaginatedResponse,

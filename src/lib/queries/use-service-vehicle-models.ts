@@ -3,7 +3,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { serviceKeys, vehicleModelKeys } from "./keys";
-import { useOrgMutation } from "./mutation-factory";
+import { useOrgMutation } from "@zuiio/query";
 
 export interface VehicleModelServiceRow {
   id: string;

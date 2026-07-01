@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { MechanicCommissionRule } from "@/lib/types";
 import { createOrgQuery } from "./factory";
 import { commissionKeys } from "./keys";
-import { useOrgMutation } from "./mutation-factory";
+import { useOrgMutation } from "@zuiio/query";
 
 const fetchCommissionRules =
   createOrgQuery<MechanicCommissionRule[]>("/commission-rules");

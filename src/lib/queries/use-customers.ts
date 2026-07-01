@@ -2,7 +2,7 @@ import { type UseQueryResult, useQuery } from "@tanstack/react-query";
 import type { CreateCustomerParams, Customer } from "@/lib/types";
 import { createOrgQuery } from "./factory";
 import { customerKeys } from "./keys";
-import { useOrgMutation } from "./mutation-factory";
+import { useOrgMutation } from "@zuiio/query";
 
 interface CustomerWithVehicleCount extends Customer {
   vehicle_count?: number;

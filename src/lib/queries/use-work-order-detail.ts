@@ -7,7 +7,7 @@ import {
   serviceKeys,
   workOrderKeys,
 } from "./keys";
-import { useOrgMutation } from "./mutation-factory";
+import { useOrgMutation } from "@zuiio/query";
 
 export async function fetchServicePriceHistory(
   orgId: string,

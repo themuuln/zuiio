@@ -10,7 +10,7 @@ import type {
 } from "@/lib/types";
 import { createOrgQuery } from "./factory";
 import { expenseKeys } from "./keys";
-import { useOrgMutation } from "./mutation-factory";
+import { useOrgMutation } from "@zuiio/query";
 
 interface ExpenseListParams {
   q?: string;
