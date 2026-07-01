@@ -1,12 +1,24 @@
-import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 
-/** Minimal Supabase client surface needed by realtime hooks. */
-export interface RealtimeClient {
-  channel: SupabaseClient<unknown>["channel"];
-  removeChannel: SupabaseClient<unknown>["removeChannel"];
+/** A Supabase realtime channel subscription handle. */
+export interface RealtimeChannelHandle {
+  subscribe: (callback?: (status: string) => void) => void;
+  on: (
+    event: string,
+    filter: Record<string, unknown>,
+    callback: (payload: Record<string, unknown>) => void,
+  ) => RealtimeChannelHandle;
+  unsubscribe: () => void;
 }
+
+/**
+ * Minimal Supabase client surface needed by realtime hooks.
+ * Defined with plain function signatures (not derived from SupabaseClient)
+ * to avoid type incompatibilities between @supabase/supabase-js versions.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type RealtimeClient = any;
 
 /** Configuration for a single realtime subscription. */
 export interface RealtimeTableConfig {
@@ -76,7 +88,7 @@ export function useRealtime({
   schema = "public",
 }: UseRealtimeOptions) {
   const queryClient = useQueryClient();
-  const channelRef = useRef<RealtimeChannel | null>(null);
+  const channelRef = useRef<RealtimeChannelHandle | null>(null);
 
   // Normalize: single array → array of arrays
   const queryKeys = Array.isArray(rawQueryKeys[0])

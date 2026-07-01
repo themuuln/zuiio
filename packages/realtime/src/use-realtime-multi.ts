@@ -1,4 +1,3 @@
-import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import type { RealtimeClient, RealtimeTableConfig } from "./use-realtime";
@@ -38,7 +37,7 @@ export function useRealtimeMulti({
   enabled = true,
 }: UseRealtimeMultiOptions) {
   const queryClient = useQueryClient();
-  const channelRef = useRef<RealtimeChannel | null>(null);
+  const channelRef = useRef<ReturnType<RealtimeClient["channel"]> | null>(null);
 
   useEffect(() => {
     if (!enabled || tables.length === 0) return;
