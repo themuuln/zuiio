@@ -58,7 +58,11 @@ export function useRecordRefund(orgId: string) {
     endpoint: `/api/organizations/${orgId}/refunds`,
     method: "POST",
     queryKey: refundKeys.all(orgId),
-    invalidateKeys: [["organizations", orgId, "invoices"], refundKeys.stats(orgId)],
+    optimisticQueryKey: refundKeys.list(orgId),
+    invalidateKeys: [
+      ["organizations", orgId, "invoices"],
+      refundKeys.stats(orgId),
+    ],
     optimisticUpdate: (cached, params) => {
       const optimisticRefund: RefundWithInvoice = {
         id: `optimistic-${Date.now()}`,
@@ -86,10 +90,11 @@ export function useRecordRefund(orgId: string) {
 
 export function useCancelRefund(orgId: string) {
   return useOrgMutation<RefundWithInvoice, string>({
-    endpoint: (refundId) =>
-      `/api/organizations/${orgId}/refunds/${refundId}`,
+    endpoint: (refundId) => `/api/organizations/${orgId}/refunds/${refundId}`,
     method: "PATCH",
     queryKey: refundKeys.all(orgId),
+    optimisticQueryKey: refundKeys.list(orgId),
+    invalidateKeys: [refundKeys.stats(orgId)],
     bodyFn: () => ({ action: "cancel" }),
     optimisticUpdate: (cached, refundId) =>
       cached.map((r) =>
