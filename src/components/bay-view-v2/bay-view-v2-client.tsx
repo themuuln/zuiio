@@ -105,20 +105,19 @@ export function BayViewV2Client() {
   const router = useRouter();
 
   // ── React Query ──────────────────────────────────────────────
-  const [isPollingPaused, setIsPollingPaused] = useState(false);
 
   const bayQuery = useQuery({
     queryKey: bayViewKeys.data(branchFilter),
     queryFn: () => getBayViewDataFresh(branchFilter),
-    refetchInterval: isPollingPaused ? false : 30_000,
-    staleTime: 15_000,
+    staleTime: 60_000,
+    refetchInterval: 300_000,
   });
 
   const shiftQuery = useQuery({
     queryKey: bayViewKeys.shiftReport(branchFilter),
     queryFn: () => getShiftReport(branchFilter),
-    refetchInterval: isPollingPaused ? false : 30_000,
-    staleTime: 15_000,
+    staleTime: 60_000,
+    refetchInterval: 300_000,
   });
 
   const data = bayQuery.data ?? null;
@@ -657,7 +656,6 @@ export function BayViewV2Client() {
       );
     }
     setBatchCompletePending(false);
-    await fetchData();
 
     // Clean up URL if the currently open drawer WO was completed
     if (detailWoId && succeeded > 0 && readyWos.includes(detailWoId)) {
@@ -770,23 +768,6 @@ export function BayViewV2Client() {
     enabled: !!orgInfo?.orgId,
     tables: realtimeTables,
   });
-
-  // ── Polling pause ────────────────────────────────────────────
-  useEffect(() => {
-    const anyDialogOpen =
-      dialogs.open.shiftReport ||
-      dialogs.open.vehicleReg ||
-      pending.pending !== null ||
-      dialogs.open.assign ||
-      detailDrawerOpen;
-    setIsPollingPaused(anyDialogOpen);
-  }, [
-    dialogs.open.shiftReport,
-    dialogs.open.vehicleReg,
-    pending.pending,
-    dialogs.open.assign,
-    detailDrawerOpen,
-  ]);
 
   // ── Remove helper ────────────────────────────────────────────
   const handleRemoveHelper = useCallback(
@@ -1244,7 +1225,6 @@ export function BayViewV2Client() {
           dialogs.hide("vehicleReg");
           toast.dismiss();
           toast.success("Added to waiting queue");
-          void fetchData();
         }}
         onAssigned={() => {
           dialogs.hide("vehicleReg");
@@ -1255,7 +1235,6 @@ export function BayViewV2Client() {
               bayNumber: directAssignBayNumber ?? 0,
             }),
           );
-          void fetchData();
         }}
         assignBayNumber={directAssignBayNumber ?? undefined}
         branchId={branchFilter}
