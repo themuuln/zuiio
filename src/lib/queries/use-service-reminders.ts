@@ -142,9 +142,10 @@ export function useCreateServiceSchedule(orgId: string | undefined) {
     endpoint: `/api/organizations/${orgId}/service-reminders`,
     method: "POST",
     queryKey: serviceReminderKeys.all(orgId ?? ""),
-    optimisticUpdate: (cached, payload) => {
+    optimisticMode: "prefix",
+    optimisticUpdate: (cached, payload, ctx) => {
       const optimistic: ServiceScheduleItem = {
-        id: `temp-${Date.now()}`,
+        id: ctx.optimisticId,
         organization_id: orgId ?? "",
         branch_id: null,
         vehicle_id: payload.vehicle_id ?? "",
@@ -190,6 +191,7 @@ export function useUpdateServiceSchedule(orgId: string | undefined) {
     method: "PATCH",
     queryKey: serviceReminderKeys.all(orgId ?? ""),
     bodyFn: ({ id: _id, ...payload }) => payload,
+    optimisticMode: "prefix",
     optimisticUpdate: (cached, { id, ...payload }) =>
       cached.map((item) => (item.id === id ? { ...item, ...payload } : item)),
     successMessage: "Schedule updated",
@@ -201,6 +203,7 @@ export function useDeleteServiceSchedule(orgId: string | undefined) {
     endpoint: (id) => `/api/organizations/${orgId}/service-reminders/${id}`,
     method: "DELETE",
     queryKey: serviceReminderKeys.all(orgId ?? ""),
+    optimisticMode: "prefix",
     optimisticUpdate: (cached, id) => cached.filter((item) => item.id !== id),
     successMessage: "Schedule deleted",
   });
@@ -215,6 +218,7 @@ export function useUpdateContactStatus(orgId: string | undefined) {
       contact_status: status,
       contacted_at: new Date().toISOString(),
     }),
+    optimisticMode: "prefix",
     optimisticUpdate: (cached, { id, status }) =>
       cached.map((item) =>
         item.id === id
