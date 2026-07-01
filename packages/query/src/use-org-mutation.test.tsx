@@ -362,6 +362,208 @@ describe("useOrgMutation — bodyFn", () => {
   });
 });
 
+// ─── Tests: PATCH ────────────────────────────────────────────
+
+describe("useOrgMutation — PATCH", () => {
+  it("sends correct PATCH request with body", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: { id: "1", name: "updated" } }),
+    });
+
+    const { result } = renderHook(
+      () =>
+        useOrgMutation<{ id: string; name: string }, { id: string; name: string }>({
+          endpoint: (vars) => `/api/test/${vars.id}`,
+          method: "PATCH",
+          queryKey: ["test"],
+        }),
+      { wrapper: createWrapper() },
+    );
+
+    result.current.mutate({ id: "1", name: "updated" });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      "/api/test/1",
+      expect.objectContaining({
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: "1", name: "updated" }),
+      }),
+    );
+    expect(result.current.data).toEqual({ id: "1", name: "updated" });
+  });
+});
+
+// ─── Tests: DELETE without bodyFn ────────────────────────────
+
+describe("useOrgMutation — DELETE without bodyFn", () => {
+  it("sends DELETE with no Content-Type and no body", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: { success: true } }),
+    });
+
+    const { result } = renderHook(
+      () =>
+        useOrgMutation<{ success: boolean }, { id: string }>({
+          endpoint: (vars) => `/api/test/${vars.id}`,
+          method: "DELETE",
+          queryKey: ["test"],
+        }),
+      { wrapper: createWrapper() },
+    );
+
+    result.current.mutate({ id: "1" });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      "/api/test/1",
+      expect.objectContaining({
+        method: "DELETE",
+        headers: undefined,
+        body: undefined,
+      }),
+    );
+  });
+});
+
+// ─── Tests: successMessage as function ──────────────────────
+
+describe("useOrgMutation — successMessage function", () => {
+  it("calls successMessage function with variables", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: { id: "1" } }),
+    });
+
+    const successMessageFn = vi.fn((vars: { name: string }) => `Created ${vars.name}`);
+
+    const { result } = renderHook(
+      () =>
+        useOrgMutation<{ id: string }, { name: string }>({
+          endpoint: "/api/test",
+          method: "POST",
+          queryKey: ["test"],
+          successMessage: successMessageFn,
+        }),
+      { wrapper: createWrapper() },
+    );
+
+    result.current.mutate({ name: "item" });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(successMessageFn).toHaveBeenCalledWith({ name: "item" });
+  });
+});
+
+// ─── Tests: invalidateKeys ──────────────────────────────────
+
+describe("useOrgMutation — invalidateKeys", () => {
+  it("invalidates extra keys on settle", async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+
+    // Seed caches under both primary and extra keys
+    queryClient.setQueryData(["test"], [{ id: "1" }]);
+    queryClient.setQueryData(["stats"], { count: 1 });
+    queryClient.setQueryData(["dashboard"], { loaded: true });
+
+    const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: { id: "2" } }),
+    });
+
+    const { result } = renderHook(
+      () =>
+        useOrgMutation<unknown, { name: string }>({
+          endpoint: "/api/test",
+          method: "POST",
+          queryKey: ["test"],
+          invalidateKeys: [["stats"], ["dashboard"]],
+        }),
+      {
+        wrapper: function Wrapper({ children }: { children: ReactNode }) {
+          return (
+            <QueryClientProvider client={queryClient}>
+              {children}
+            </QueryClientProvider>
+          );
+        },
+      },
+    );
+
+    result.current.mutate({ name: "new" });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    // Wait for onSettled to fire
+    await waitFor(() => {
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["test"] });
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["stats"] });
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["dashboard"] });
+    });
+  });
+});
+
+// ─── Tests: onSettled skips invalidation when offline ───────
+
+describe("useOrgMutation — onSettled offline skip", () => {
+  it("does NOT invalidate queryKey when mutation was offline", async () => {
+    mockedOnlineStatus.mockReturnValue(false);
+    mockEnqueue.mockResolvedValueOnce(undefined);
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    const seedData = [{ id: "1", name: "persisted" }];
+    queryClient.setQueryData(["test"], seedData);
+
+    const setQueryDataSpy = vi.spyOn(queryClient, "setQueryData");
+    const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+    const { result } = renderHook(
+      () =>
+        useOrgMutation<unknown, { name: string }>({
+          endpoint: "/api/test",
+          method: "POST",
+          queryKey: ["test"],
+          optimisticUpdate: (cached: Array<{ name: string }>, vars) => [
+            ...cached,
+            { id: "temp", name: vars.name },
+          ],
+        }),
+      {
+        wrapper: function Wrapper({ children }: { children: ReactNode }) {
+          return (
+            <QueryClientProvider client={queryClient}>
+              {children}
+            </QueryClientProvider>
+          );
+        },
+      },
+    );
+
+    result.current.mutate({ name: "queued" });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    // onSettled should NOT have called invalidateQueries because wasOffline = true
+    expect(invalidateSpy).not.toHaveBeenCalledWith({ queryKey: ["test"] });
+
+    // Seed data should still be in cache (plus the optimistic append)
+    const cached = queryClient.getQueryData(["test"]);
+    expect(cached).toBeDefined();
+  });
+});
+
 describe("useOrgMutation — error handling", () => {
   it("shows custom errorMessage on failure", async () => {
     mockFetch.mockRejectedValueOnce(new Error("Network error"));

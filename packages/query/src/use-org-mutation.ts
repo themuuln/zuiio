@@ -33,6 +33,7 @@
  * ```
  */
 
+import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useOnlineStatus } from "@zuiio/hooks";
@@ -138,6 +139,8 @@ export function useOrgMutation<TData, TVariables = void>(
 
   const exactKey = optimisticQueryKey ?? queryKey;
 
+  const mutateRef = React.useRef<((vars: TVariables) => Promise<TData>) | null>(null);
+
   const resolveEndpoint = (vars: TVariables): string =>
     typeof endpoint === "function" ? endpoint(vars) : endpoint;
 
@@ -154,18 +157,19 @@ export function useOrgMutation<TData, TVariables = void>(
       : successMessage;
   };
 
-  return useMutation<TData, Error, TVariables, MutationContext<TData>>({
+  const mutation = useMutation<TData, Error, TVariables, MutationContext<TData>>({
     mutationFn: async (variables): Promise<TData> => {
       const url = resolveEndpoint(variables);
 
       if (isOnline) {
+        const built = buildBody(variables);
         const init: RequestInit = {
           method,
           headers:
-            method !== "DELETE" || bodyFn
+            built !== undefined
               ? { "Content-Type": "application/json" }
               : undefined,
-          body: JSON.stringify(buildBody(variables)),
+          body: built !== undefined ? JSON.stringify(built) : undefined,
         };
 
         const res = await fetch(url, init);
@@ -216,9 +220,12 @@ export function useOrgMutation<TData, TVariables = void>(
       }
 
       if (onErrorToast) {
-        const retryFn = () =>
-          // Re-run the mutation — uses the same hook instance
-          Promise.reject(new Error("Retry not supported at this level"));
+        const retryFn = () => {
+          if (mutateRef.current) {
+            return mutateRef.current(variables);
+          }
+          return Promise.reject(new Error("Mutation not initialized"));
+        };
         onErrorToast(error, variables, { retry: retryFn });
       } else {
         toast.dismiss();
@@ -252,6 +259,10 @@ export function useOrgMutation<TData, TVariables = void>(
       }
     },
   });
+
+  mutateRef.current = mutation.mutateAsync;
+
+  return mutation;
 }
 
 // ─── Generic alias for shared Zuiio usage ────────────────────
