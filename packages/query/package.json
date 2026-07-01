@@ -12,10 +12,21 @@
     "react": "^19",
     "sonner": "^2"
   },
+  "dependencies": {
+    "@zuiio/hooks": "link:../hooks",
+    "@zuiio/offline": "link:../offline"
+  },
   "devDependencies": {
+    "@testing-library/react": "^16",
     "@types/node": "^26",
     "@types/react": "^19",
     "@zuiio/config": "workspace:*",
-    "typescript": "^5"
+    "jsdom": "^26",
+    "typescript": "^5",
+    "vitest": "^3"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
   }
 }

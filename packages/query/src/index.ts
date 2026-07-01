@@ -15,3 +15,5 @@ export type {
   OptimisticDeleteConfig,
   OptimisticDeleteJsonConfig,
 } from "./use-optimistic";
+export { useOrgMutation, useOfflineJsonMutation } from "./use-org-mutation";
+export type { OrgMutationConfig } from "./use-org-mutation";
