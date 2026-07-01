@@ -8,7 +8,6 @@ import {
   SiHonda,
   SiHyundai,
   SiKia,
-  SiLandrover,
   SiMazda,
   SiMitsubishi,
   SiNissan,
@@ -34,7 +33,6 @@ const LOGO_MAP: Record<string, IconType> = {
   honda: SiHonda,
   hyundai: SiHyundai,
   kia: SiKia,
-  "land rover": SiLandrover,
   mazda: SiMazda,
   mitsubishi: SiMitsubishi,
   nissan: SiNissan,
@@ -78,6 +76,7 @@ function GenesisLogo({ className, ...p }: React.SVGProps<SVGSVGElement>) {
 
 const SVG_FALLBACKS: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
   lexus: LexusLogo,
+  "land rover": LexusLogo,
   genesis: GenesisLogo,
 };
 
