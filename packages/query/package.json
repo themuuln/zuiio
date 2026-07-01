@@ -17,7 +17,8 @@
     "@types/node": "^26",
     "@types/react": "^19",
     "@zuiio/config": "workspace:*",
-
+    "@zuiio/hooks": "workspace:*",
+    "@zuiio/offline": "workspace:*",
     "jsdom": "^26",
     "typescript": "^5",
     "vitest": "^3"
