@@ -74,9 +74,30 @@ function GenesisLogo({ className, ...p }: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+function LandRoverLogo({ className, ...p }: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      {...p}
+    >
+      {/* Simplified Land Rover silhouette: boxy shape with grille */}
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <rect x="6" y="8" width="12" height="8" rx="1" />
+      <line x1="10" y1="8" x2="10" y2="16" />
+      <line x1="14" y1="8" x2="14" y2="16" />
+    </svg>
+  );
+}
+
 const SVG_FALLBACKS: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
   lexus: LexusLogo,
-  "land rover": LexusLogo,
+  "land rover": LandRoverLogo,
   genesis: GenesisLogo,
 };
 
