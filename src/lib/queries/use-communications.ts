@@ -1,13 +1,11 @@
 import type { UseQueryResult } from "@tanstack/react-query";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { useOnlineStatus } from "@/lib/hooks/use-online-status";
-import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
-import { toastRetry } from "@/lib/toast-utils";
+import { useQuery } from "@tanstack/react-query";
+import { toastRetry } from "@zuiio/ui";
 import type {
   CreateCustomerCommunicationParams,
   CustomerCommunication,
 } from "@/lib/types";
+import { useOrgMutation } from "@zuiio/query";
 import { createOrgQuery } from "./factory";
 import { customerCommunicationKeys } from "./keys";
 
@@ -31,190 +29,57 @@ export function useCustomerCommunications(
 }
 
 /**
- * Creates a communication for a customer and invalidates the communications query.
+ * Creates a communication for a customer — optimistic + offline-queue.
  */
 export function useCreateCustomerCommunication(
   orgId: string | undefined,
   customerId: string | undefined,
 ) {
-  const queryClient = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-
-  const mutation = useMutation({
-    mutationFn: async (variables: CreateCustomerCommunicationParams) => {
-      if (isOnline) {
-        const url = `/api/organizations/${orgId}/customers/${customerId}/communications`;
-        const res = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(variables),
-        });
-        if (!res.ok) {
-          const json = await res.json();
-          throw new Error(
-            json.error?.message ?? "Failed to create communication",
-          );
-        }
-        const json = await res.json();
-        return json.data as CustomerCommunication;
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/customers/${customerId}/communications`,
-        method: "POST",
-        body: variables,
-        queryKeysToInvalidate: [
-          [...customerCommunicationKeys.all(orgId ?? "", customerId ?? "")],
-        ],
-      });
-      return { queued: true } as unknown as CustomerCommunication;
+  return useOrgMutation<CustomerCommunication, CreateCustomerCommunicationParams>({
+    endpoint: `/api/organizations/${orgId}/customers/${customerId}/communications`,
+    method: "POST",
+    queryKey: customerCommunicationKeys.all(orgId ?? "", customerId ?? ""),
+    optimisticQueryKey: customerCommunicationKeys.list(orgId ?? "", customerId ?? ""),
+    optimisticUpdate: (cached, variables) => {
+      const optimistic: CustomerCommunication = {
+        id: `temp-${Date.now()}`,
+        organization_id: orgId ?? "",
+        customer_id: customerId ?? "",
+        type: variables.type,
+        direction: variables.direction,
+        subject: variables.subject ?? null,
+        content: variables.content,
+        staff_id: null,
+        created_at: new Date().toISOString(),
+        deleted_at: null,
+      };
+      return [...cached, optimistic];
     },
-    onMutate: async (variables) => {
-      const queryKey = customerCommunicationKeys.all(
-        orgId ?? "",
-        customerId ?? "",
-      );
-      await queryClient.cancelQueries({ queryKey });
-      const listKey = customerCommunicationKeys.list(
-        orgId ?? "",
-        customerId ?? "",
-      );
-      const previous =
-        queryClient.getQueryData<CustomerCommunication[]>(listKey);
-      if (previous) {
-        const optimistic: CustomerCommunication = {
-          id: `temp-${Date.now()}`,
-          organization_id: orgId ?? "",
-          customer_id: customerId ?? "",
-          type: variables.type,
-          direction: variables.direction,
-          subject: variables.subject ?? null,
-          content: variables.content,
-          staff_id: null,
-          created_at: new Date().toISOString(),
-          deleted_at: null,
-        };
-        queryClient.setQueryData<CustomerCommunication[]>(listKey, [
-          ...previous,
-          optimistic,
-        ]);
-      }
-      return { previous };
-    },
-    onError: (err, variables, context) => {
-      if (context?.previous) {
-        const listKey = customerCommunicationKeys.list(
-          orgId ?? "",
-          customerId ?? "",
-        );
-        queryClient.setQueryData<CustomerCommunication[]>(
-          listKey,
-          context.previous,
-        );
-      }
-      toastRetry(err.message, () => mutation.mutateAsync(variables));
-    },
-    onSuccess: (data) => {
-      const d = data as unknown as Record<string, unknown>;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        toast.dismiss();
-        toast.success("Communication created");
-      }
-    },
-    onSettled: () => {
-      void queryClient.invalidateQueries({
-        queryKey: customerCommunicationKeys.all(orgId ?? "", customerId ?? ""),
-      });
-    },
+    successMessage: "Communication created",
+    errorMessage: "Failed to create communication",
+    onErrorToast: (err, _variables, { retry }) =>
+      toastRetry(err.message, () => retry()),
   });
-  return mutation;
 }
 
 /**
- * Deletes a customer communication and invalidates the communications query.
+ * Deletes a customer communication — optimistic + offline-queue.
  */
 export function useDeleteCustomerCommunication(
   orgId: string | undefined,
   customerId: string | undefined,
 ) {
-  const queryClient = useQueryClient();
-  const isOnline = useOnlineStatus();
-  const queue = useMutationQueue();
-
-  const mutation = useMutation({
-    mutationFn: async (commId: string) => {
-      if (isOnline) {
-        const url = `/api/organizations/${orgId}/customers/${customerId}/communications/${commId}`;
-        const res = await fetch(url, { method: "DELETE" });
-        if (!res.ok) {
-          const json = await res.json();
-          throw new Error(
-            json.error?.message ?? "Failed to delete communication",
-          );
-        }
-        const json = await res.json();
-        return json.data;
-      }
-
-      await queue.enqueue({
-        endpoint: `/api/organizations/${orgId}/customers/${customerId}/communications/${commId}`,
-        method: "DELETE",
-        body: undefined,
-        queryKeysToInvalidate: [
-          [...customerCommunicationKeys.all(orgId ?? "", customerId ?? "")],
-        ],
-      });
-    },
-    onMutate: async (commId) => {
-      const queryKey = customerCommunicationKeys.all(
-        orgId ?? "",
-        customerId ?? "",
-      );
-      await queryClient.cancelQueries({ queryKey });
-      const listKey = customerCommunicationKeys.list(
-        orgId ?? "",
-        customerId ?? "",
-      );
-      const previous =
-        queryClient.getQueryData<CustomerCommunication[]>(listKey);
-      if (previous) {
-        queryClient.setQueryData<CustomerCommunication[]>(
-          listKey,
-          previous.filter((c) => c.id !== commId),
-        );
-      }
-      return { previous };
-    },
-    onError: (err, commId, context) => {
-      if (context?.previous) {
-        const listKey = customerCommunicationKeys.list(
-          orgId ?? "",
-          customerId ?? "",
-        );
-        queryClient.setQueryData<CustomerCommunication[]>(
-          listKey,
-          context.previous,
-        );
-      }
-      toastRetry(err.message, () => mutation.mutateAsync(commId));
-    },
-    onSuccess: (data) => {
-      const d = data as unknown as Record<string, unknown> | undefined;
-      if (d?.queued) {
-        toast.info("Saved offline — will sync when connected");
-      } else {
-        toast.dismiss();
-        toast.success("Communication deleted");
-      }
-    },
-    onSettled: () => {
-      void queryClient.invalidateQueries({
-        queryKey: customerCommunicationKeys.all(orgId ?? "", customerId ?? ""),
-      });
-    },
+  return useOrgMutation<CustomerCommunication, string>({
+    endpoint: (commId) =>
+      `/api/organizations/${orgId}/customers/${customerId}/communications/${commId}`,
+    method: "DELETE",
+    queryKey: customerCommunicationKeys.all(orgId ?? "", customerId ?? ""),
+    optimisticQueryKey: customerCommunicationKeys.list(orgId ?? "", customerId ?? ""),
+    optimisticUpdate: (cached, commId) =>
+      cached.filter((c) => c.id !== commId),
+    successMessage: "Communication deleted",
+    errorMessage: "Failed to delete communication",
+    onErrorToast: (err, _commId, { retry }) =>
+      toastRetry(err.message, () => retry()),
   });
-  return mutation;
 }
