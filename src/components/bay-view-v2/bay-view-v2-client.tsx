@@ -58,9 +58,9 @@ import { useBayDragHandlers } from "./_bay-drag-handlers";
 import { EmptyBayActionDrawer } from "./_empty-bay-action-drawer";
 import { BayViewErrorState } from "./_error-state";
 import { KpiCards } from "./_kpi-cards";
-import { BayViewViews } from "./_view-renderer";
 import { BayViewPageSkeleton } from "./_page-skeleton";
 import { resolvePaymentMethodFees } from "./_payment-fees";
+import { BayViewTickProvider } from "./_tick-context";
 import { Toolbar } from "./_toolbar";
 import {
   type ActiveDragState,
@@ -68,10 +68,11 @@ import {
   GuardedTouchSensor,
   type ViewMode,
 } from "./_types";
-import { useBayViewSidebar } from "./_use-bay-view-sidebar";
 import { useBayCountMutation } from "./_use-bay-count-mutation";
 import { useBayViewDialogs } from "./_use-bay-view-dialogs";
 import { useBayViewPending } from "./_use-bay-view-pending";
+import { useBayViewSidebar } from "./_use-bay-view-sidebar";
+import { BayViewViews } from "./_view-renderer";
 import { AssignDialog } from "./assign-dialog";
 import { BayCardDragPreview } from "./bay-card";
 import type { PickupCompleteData } from "./pickup-complete-dialog";
@@ -662,7 +663,15 @@ export function BayViewV2Client() {
   }
 
   // ── Sidebar tabs ─────────────────────────────────────────────
-  useBayViewSidebar(data, filteredQueue, pendingWoIds, availableBays, handleQuickAssign, handleQueueItemClick, handleQuickAssignToBay);
+  useBayViewSidebar(
+    data,
+    filteredQueue,
+    pendingWoIds,
+    availableBays,
+    handleQuickAssign,
+    handleQueueItemClick,
+    handleQuickAssignToBay,
+  );
 
   // ── Realtime subscriptions ─────────────────────────────────
   const realtimeTables = useMemo(
@@ -806,242 +815,245 @@ export function BayViewV2Client() {
       onDragEnd={onDragEnd}
       onDragCancel={onDragCancel}
     >
-      <div className="flex h-full flex-1 flex-col overflow-hidden">
-        <Toolbar
-          viewMode={viewMode}
-          setViewMode={setViewMode}
-          userIsMechanic={userIsMechanic}
-          myJobsOnly={myJobsOnly}
-          setMyJobsOnly={setMyJobsOnly}
-          fetchData={fetchData}
-          baySearchQuery={baySearchQuery}
-          setBaySearchQuery={setBaySearchQuery}
-          readyWosCount={readyWosCount}
-          t={t}
-          batchCompletePending={batchCompletePending}
-          setBatchCompleteDialogOpen={(v) => dialogs.set("batchComplete", v)}
-          setShowVehicleReg={(v) => dialogs.set("vehicleReg", v)}
-          setShowShiftReport={(v) => dialogs.set("shiftReport", v)}
-          bayCountMutationInFlightRef={{ current: false }}
-          bayCountDebounceRef={{ current: null }}
-          bayCountPending={bayCount.pending}
-          bayCountInputValue={bayCount.inputValue}
-          setBayCountInputValue={bayCount.setInputValue}
-          applyBayCountChange={bayCount.apply}
-          bayCount={data.bayCount}
-          branches={data.branches}
-          selectedBranchId={selectedBranchId}
-          onBranchChange={setSelectedBranchId}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-        />
-
-        <KpiCards
-          shiftReport={shiftReport}
-          trendDelta={trendDelta}
-          occupiedBays={occupiedBays}
-          bayCount={data.bayCount}
-          waitingQueueLength={data.waitingQueue.length}
-          bays={
-            data.branchSections?.flatMap((section) => section.bays) ?? data.bays
-          }
-          waitingQueue={data.waitingQueue}
-          onOpenWorkOrder={handleOpenDetail}
-          t={t}
-        />
-
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent">
-          <BayViewViews
+      <BayViewTickProvider>
+        <div className="flex h-full flex-1 flex-col overflow-hidden">
+          <Toolbar
             viewMode={viewMode}
-            searchedBranchSections={searchedBranchSections}
-            searchedBays={searchedBays}
-            filteredQueue={filteredQueue}
-            pendingWoIds={pendingWoIds}
+            setViewMode={setViewMode}
+            userIsMechanic={userIsMechanic}
+            myJobsOnly={myJobsOnly}
+            setMyJobsOnly={setMyJobsOnly}
+            fetchData={fetchData}
+            baySearchQuery={baySearchQuery}
+            setBaySearchQuery={setBaySearchQuery}
             readyWosCount={readyWosCount}
+            t={t}
             batchCompletePending={batchCompletePending}
-            onStatusChange={handleStatusClick}
-            onRemoveFromBay={handleRemoveFromBay}
-            onOpenDetail={handleOpenDetail}
-            onAssignClick={handleEmptyBayClick}
-            onQueueItemClick={handleQueueItemClick}
-            onRemoveHelper={handleRemoveHelper}
-            onAssignMechanic={handleAssignMechanic}
-            onRemoveMechanic={handleRemoveMechanic}
-            onAddHelper={handleAddHelper}
-            onReorderMechanics={handleReorderMechanics}
-            orgId={orgInfo?.orgId}
-            mechanics={data?.mechanics ?? []}
+            setBatchCompleteDialogOpen={(v) => dialogs.set("batchComplete", v)}
+            setShowVehicleReg={(v) => dialogs.set("vehicleReg", v)}
+            setShowShiftReport={(v) => dialogs.set("shiftReport", v)}
+            bayCountMutationInFlightRef={{ current: false }}
+            bayCountDebounceRef={{ current: null }}
+            bayCountPending={bayCount.pending}
+            bayCountInputValue={bayCount.inputValue}
+            setBayCountInputValue={bayCount.setInputValue}
+            applyBayCountChange={bayCount.apply}
+            bayCount={data.bayCount}
+            branches={data.branches}
+            selectedBranchId={selectedBranchId}
+            onBranchChange={setSelectedBranchId}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+          />
+
+          <KpiCards
+            shiftReport={shiftReport}
+            trendDelta={trendDelta}
+            occupiedBays={occupiedBays}
+            bayCount={data.bayCount}
+            waitingQueueLength={data.waitingQueue.length}
+            bays={
+              data.branchSections?.flatMap((section) => section.bays) ??
+              data.bays
+            }
+            waitingQueue={data.waitingQueue}
+            onOpenWorkOrder={handleOpenDetail}
             t={t}
           />
+
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent">
+            <BayViewViews
+              viewMode={viewMode}
+              searchedBranchSections={searchedBranchSections}
+              searchedBays={searchedBays}
+              filteredQueue={filteredQueue}
+              pendingWoIds={pendingWoIds}
+              readyWosCount={readyWosCount}
+              batchCompletePending={batchCompletePending}
+              onStatusChange={handleStatusClick}
+              onRemoveFromBay={handleRemoveFromBay}
+              onOpenDetail={handleOpenDetail}
+              onAssignClick={handleEmptyBayClick}
+              onQueueItemClick={handleQueueItemClick}
+              onRemoveHelper={handleRemoveHelper}
+              onAssignMechanic={handleAssignMechanic}
+              onRemoveMechanic={handleRemoveMechanic}
+              onAddHelper={handleAddHelper}
+              onReorderMechanics={handleReorderMechanics}
+              orgId={orgInfo?.orgId}
+              mechanics={data?.mechanics ?? []}
+              t={t}
+            />
+          </div>
         </div>
-      </div>
 
-      {/* ── Dialogs ──────────────────────────────────────────── */}
-      {pending.pending?.type === "status" && (
-        <StatusNotesModal
-          woId={pending.pending.woId}
-          newStatus={pending.pending.status}
-          onConfirm={handleStatusModalConfirm}
-          onCancel={pending.clearPending}
-        />
-      )}
+        {/* ── Dialogs ──────────────────────────────────────────── */}
+        {pending.pending?.type === "status" && (
+          <StatusNotesModal
+            woId={pending.pending.woId}
+            newStatus={pending.pending.status}
+            onConfirm={handleStatusModalConfirm}
+            onCancel={pending.clearPending}
+          />
+        )}
 
-      {pending.pending?.type === "postService" && pendingPostServiceBay && (
-        <PostServiceDialog
-          open
+        {pending.pending?.type === "postService" && pendingPostServiceBay && (
+          <PostServiceDialog
+            open
+            onOpenChange={(open) => {
+              if (!open) pending.clearPending();
+            }}
+            woId={pending.pending.woId}
+            vehicleId={pending.pending.vehicleId}
+            vehiclePlate={pending.pending.vehiclePlate}
+            currentOdometer={pending.pending.currentOdometer}
+            bayData={pendingPostServiceBay}
+            newStatus={pending.pending.newStatus}
+            grandTotal={pending.pending.totalCost}
+            paymentMethodFees={paymentMethodFees}
+            transferBanks={transferBanks}
+            onConfirm={handlePostServiceConfirm}
+          />
+        )}
+
+        {pending.pending?.type === "pickupComplete" && (
+          <PickupCompleteDialog
+            open
+            onOpenChange={(open) => {
+              if (!open) pending.clearPending();
+            }}
+            woId={pending.pending.woId}
+            vehiclePlate={pending.pending.vehiclePlate}
+            totalCost={pending.pending.totalCost}
+            onConfirm={handlePickupCompleteConfirm}
+          />
+        )}
+
+        <AlertDialog
+          open={dialogs.open.batchComplete}
+          onOpenChange={(v) => dialogs.set("batchComplete", v)}
+        >
+          <AlertDialogContent size="sm">
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {t("batchCompleteConfirmTitle")}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("batchCompleteConfirmDesc", { count: readyWosCount })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={async () => {
+                  dialogs.hide("batchComplete");
+                  await handleBatchComplete();
+                }}
+                disabled={batchCompletePending}
+              >
+                {batchCompletePending
+                  ? t("batchCompleteProcessing")
+                  : t("batchComplete", { count: readyWosCount })}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AssignDialog
+          key={dialogs.assignBay ?? "closed"}
+          open={dialogs.open.assign}
           onOpenChange={(open) => {
-            if (!open) pending.clearPending();
+            if (!open) dialogs.closeAssign();
           }}
-          woId={pending.pending.woId}
-          vehicleId={pending.pending.vehicleId}
-          vehiclePlate={pending.pending.vehiclePlate}
-          currentOdometer={pending.pending.currentOdometer}
-          bayData={pendingPostServiceBay}
-          newStatus={pending.pending.newStatus}
-          grandTotal={pending.pending.totalCost}
-          paymentMethodFees={paymentMethodFees}
-          transferBanks={transferBanks}
-          onConfirm={handlePostServiceConfirm}
+          bayNumber={dialogs.assignBay ?? 0}
+          queue={data.waitingQueue}
+          mechanics={data.mechanics}
+          onAssign={handleAssignToBay}
+          branchId={branchFilter}
         />
-      )}
 
-      {pending.pending?.type === "pickupComplete" && (
-        <PickupCompleteDialog
-          open
+        <EmptyBayActionDrawer
+          open={emptyBayBayNumber !== null}
           onOpenChange={(open) => {
-            if (!open) pending.clearPending();
+            if (!open) setEmptyBayBayNumber(null);
           }}
-          woId={pending.pending.woId}
-          vehiclePlate={pending.pending.vehiclePlate}
-          totalCost={pending.pending.totalCost}
-          onConfirm={handlePickupCompleteConfirm}
-        />
-      )}
-
-      <AlertDialog
-        open={dialogs.open.batchComplete}
-        onOpenChange={(v) => dialogs.set("batchComplete", v)}
-      >
-        <AlertDialogContent size="sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t("batchCompleteConfirmTitle")}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("batchCompleteConfirmDesc", { count: readyWosCount })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={async () => {
-                dialogs.hide("batchComplete");
-                await handleBatchComplete();
-              }}
-              disabled={batchCompletePending}
-            >
-              {batchCompletePending
-                ? t("batchCompleteProcessing")
-                : t("batchComplete", { count: readyWosCount })}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AssignDialog
-        key={dialogs.assignBay ?? "closed"}
-        open={dialogs.open.assign}
-        onOpenChange={(open) => {
-          if (!open) dialogs.closeAssign();
-        }}
-        bayNumber={dialogs.assignBay ?? 0}
-        queue={data.waitingQueue}
-        mechanics={data.mechanics}
-        onAssign={handleAssignToBay}
-        branchId={branchFilter}
-      />
-
-      <EmptyBayActionDrawer
-        open={emptyBayBayNumber !== null}
-        onOpenChange={(open) => {
-          if (!open) setEmptyBayBayNumber(null);
-        }}
-        bayNumber={emptyBayBayNumber ?? 0}
-        queue={data.waitingQueue}
-        onSelectRegister={() => {
-          setEmptyBayBayNumber(null);
-          dialogs.set("vehicleReg", true);
-        }}
-        onSelectRegisterAndAssign={() => {
-          handleRegisterAndAssign(emptyBayBayNumber ?? 0);
-        }}
-        onSelectQueueItem={handleEmptyBayQueueSelect}
-      />
-
-      <DragOverlay dropAnimation={null}>
-        {activeDrag &&
-          (activeDrag.type === "vehicle" && activeDrag.previewBay ? (
-            <div className="origin-top-left rotate-[1deg] scale-[1.02]">
-              <BayCardDragPreview bay={activeDrag.previewBay} />
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 rounded-lg border-2 border-primary/60 bg-card px-3 py-2 text-sm font-semibold shadow-xl">
-              <GripVertical className="size-4 text-muted-foreground/40" />
-              {activeDrag.label}
-            </div>
-          ))}
-      </DragOverlay>
-
-      <ErrorBoundary>
-        <WorkOrderDetailDrawer
-          workOrderId={detailWoId}
-          open={detailDrawerOpen}
-          onOpenChange={(open) => {
-            setDetailDrawerOpen(open);
-            if (!open) {
-              setDetailWoId(null);
-              setDrawerInitialAction(null);
-              const params = new URLSearchParams(window.location.search);
-              params.delete("woId");
-              router.replace(`?${params.toString()}`, { scroll: false });
-            }
+          bayNumber={emptyBayBayNumber ?? 0}
+          queue={data.waitingQueue}
+          onSelectRegister={() => {
+            setEmptyBayBayNumber(null);
+            dialogs.set("vehicleReg", true);
           }}
-          onRefresh={fetchData}
-          initialAction={drawerInitialAction}
-          branchFilter={branchFilter}
-          assignMechanicMutation={assignMechanicMutation}
-          assignCustomerMutation={assignCustomerMutation}
+          onSelectRegisterAndAssign={() => {
+            handleRegisterAndAssign(emptyBayBayNumber ?? 0);
+          }}
+          onSelectQueueItem={handleEmptyBayQueueSelect}
         />
-      </ErrorBoundary>
 
-      <ShiftReportDialog
-        open={dialogs.open.shiftReport}
-        onOpenChange={(v) => dialogs.set("shiftReport", v)}
-      />
-      <VehicleRegistrationDrawer
-        open={dialogs.open.vehicleReg}
-        onOpenChange={(v) => {
-          dialogs.set("vehicleReg", v);
-          if (!v) setDirectAssignBayNumber(null);
-        }}
-        onQueued={() => {
-          dialogs.hide("vehicleReg");
-          toast.dismiss();
-          toast.success("Added to waiting queue");
-        }}
-        onAssigned={() => {
-          dialogs.hide("vehicleReg");
-          setDirectAssignBayNumber(null);
-          toast.dismiss();
-          toast.success(
-            t("assignedDirectlyToBay", {
-              bayNumber: directAssignBayNumber ?? 0,
-            }),
-          );
-        }}
-        assignBayNumber={directAssignBayNumber ?? undefined}
-        branchId={branchFilter}
-      />
+        <DragOverlay dropAnimation={null}>
+          {activeDrag &&
+            (activeDrag.type === "vehicle" && activeDrag.previewBay ? (
+              <div className="origin-top-left rotate-[1deg] scale-[1.02]">
+                <BayCardDragPreview bay={activeDrag.previewBay} />
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 rounded-lg border-2 border-primary/60 bg-card px-3 py-2 text-sm font-semibold shadow-xl">
+                <GripVertical className="size-4 text-muted-foreground/40" />
+                {activeDrag.label}
+              </div>
+            ))}
+        </DragOverlay>
+
+        <ErrorBoundary>
+          <WorkOrderDetailDrawer
+            workOrderId={detailWoId}
+            open={detailDrawerOpen}
+            onOpenChange={(open) => {
+              setDetailDrawerOpen(open);
+              if (!open) {
+                setDetailWoId(null);
+                setDrawerInitialAction(null);
+                const params = new URLSearchParams(window.location.search);
+                params.delete("woId");
+                router.replace(`?${params.toString()}`, { scroll: false });
+              }
+            }}
+            onRefresh={fetchData}
+            initialAction={drawerInitialAction}
+            branchFilter={branchFilter}
+            assignMechanicMutation={assignMechanicMutation}
+            assignCustomerMutation={assignCustomerMutation}
+          />
+        </ErrorBoundary>
+
+        <ShiftReportDialog
+          open={dialogs.open.shiftReport}
+          onOpenChange={(v) => dialogs.set("shiftReport", v)}
+        />
+        <VehicleRegistrationDrawer
+          open={dialogs.open.vehicleReg}
+          onOpenChange={(v) => {
+            dialogs.set("vehicleReg", v);
+            if (!v) setDirectAssignBayNumber(null);
+          }}
+          onQueued={() => {
+            dialogs.hide("vehicleReg");
+            toast.dismiss();
+            toast.success("Added to waiting queue");
+          }}
+          onAssigned={() => {
+            dialogs.hide("vehicleReg");
+            setDirectAssignBayNumber(null);
+            toast.dismiss();
+            toast.success(
+              t("assignedDirectlyToBay", {
+                bayNumber: directAssignBayNumber ?? 0,
+              }),
+            );
+          }}
+          assignBayNumber={directAssignBayNumber ?? undefined}
+          branchId={branchFilter}
+        />
+      </BayViewTickProvider>
     </DndContext>
   );
 }

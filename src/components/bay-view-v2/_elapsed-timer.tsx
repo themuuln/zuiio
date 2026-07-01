@@ -1,8 +1,8 @@
 "use client";
 
 import { Clock } from "lucide-react";
-import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useBayViewTick } from "./_tick-context";
 
 function formatDuration(ms: number): string {
   const minutes = Math.floor(ms / 60000);
@@ -13,29 +13,17 @@ function formatDuration(ms: number): string {
   return m > 0 ? `${h}h ${m}m` : `${h}h`;
 }
 
-/**
- * Elapsed time since a job started.
- * Shows urgency styling when > 2 hours.
- */
 export function ElapsedTimer({
   startedAt,
 }: {
   startedAt: string | null | undefined;
 }) {
-  const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    if (!startedAt) return;
-    const tick = () => setNow(Date.now());
-    tick();
-    const interval = setInterval(tick, 30_000);
-    return () => clearInterval(interval);
-  }, [startedAt]);
+  const tick = useBayViewTick(); // shared tick, no local useState
 
   if (!startedAt) return null;
 
-  const ms = new Date(startedAt).getTime();
-  const elapsedMs = Math.max(0, now - ms);
+  const ms = tick - new Date(startedAt).getTime();
+  const elapsedMs = Math.max(0, ms);
   const elapsedMinutes = Math.round(elapsedMs / 60_000);
   const display = formatDuration(elapsedMs);
 
