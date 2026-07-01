@@ -35,6 +35,39 @@
 
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+// ─── Queued result sentinel ────────────────────────────────
+
+/**
+ * Well-known Symbol key for identifying offline-queued mutation results.
+ * Check with `isQueuedResult(data)` instead of `data?.queued`.
+ */
+export const QUEUED_SENTINEL = Symbol("zuiio-queued");
+
+export interface QueuedResult {
+  [QUEUED_SENTINEL]: true;
+}
+
+/**
+ * Type guard to check if a mutation result was queued for offline replay.
+ * Use in `onSuccess` or `mutation.data` checks instead of `data?.queued`.
+ *
+ * @example
+ * ```ts
+ * if (isQueuedResult(data)) {
+ *   toast.info("Saved offline");
+ *   return;
+ * }
+ * ```
+ */
+export function isQueuedResult(data: unknown): data is QueuedResult {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    QUEUED_SENTINEL in data
+  );
+}
 
 /**
  * UUID v4 generator (no external deps).
@@ -50,7 +83,6 @@ function generateOptimisticId(): string {
     return v.toString(16);
   });
 }
-import { toast } from "sonner";
 import { useOnlineStatus } from "@zuiio/hooks";
 import { useMutationQueue } from "@zuiio/offline";
 
@@ -118,6 +150,16 @@ export interface OrgMutationConfig<TResponse, TVariables, TCache = TResponse> {
     context: OptimisticContext,
   ) => TCache[];
 
+  /**
+   * Optimistic cache update mode.
+   * - `'exact'` (default): uses `getQueryData`/`setQueryData` with `optimisticQueryKey`.
+   *   Only updates a single exact cache entry. Use when you have one active list.
+   * - `'prefix'`: uses `getQueriesData`/`setQueriesData` with `queryKey` prefix.
+   *   Updates ALL list queries matching the prefix. Use for filtered/paginated lists
+   *   where multiple list queries may be active (e.g. service reminders with filters).
+   */
+  optimisticMode?: "exact" | "prefix";
+
   /** Success toast message — string or function of variables. */
   successMessage?: string | ((variables: TVariables) => string);
 
@@ -165,10 +207,19 @@ export interface OrgMutationConfig<TResponse, TVariables, TCache = TResponse> {
   onError?: (error: Error, variables: TVariables) => void | Promise<void>;
 }
 
+/** Snapshot of one cache entry for rollback. */
+interface CacheSnapshot<TCache> {
+  key: readonly unknown[];
+  data: TCache[] | undefined;
+}
+
 // ─── Context type (internal) ───────────────────────────────────
 
 interface MutationContext<TCache> {
+  /** Single cache snapshot (exact mode). */
   previous: TCache[] | undefined;
+  /** Multiple cache snapshots (prefix mode). */
+  snapshots: CacheSnapshot<TCache>[];
   wasOffline: boolean;
 }
 
@@ -183,6 +234,7 @@ export function useOrgMutation<TResponse, TVariables = void, TCache = TResponse>
     queryKey,
     optimisticQueryKey,
     mutationKey,
+    optimisticMode,
     optimisticUpdate,
     idempotencyKey,
     successMessage,
@@ -268,30 +320,65 @@ export function useOrgMutation<TResponse, TVariables = void, TCache = TResponse>
         ],
       });
 
-      return { queued: true } as unknown as TResponse;
+      return { [QUEUED_SENTINEL]: true } as unknown as TResponse;
     },
 
     onMutate: async (variables): Promise<MutationContext<TCache>> => {
       await queryClient.cancelQueries({ queryKey });
+
+      const optContext: OptimisticContext = {
+        optimisticId: generateOptimisticId(),
+        submittedAt: new Date().toISOString(),
+      };
+
+      if (optimisticMode === "prefix") {
+        // Prefix mode: update ALL cached queries matching queryKey
+        const snapshots = queryClient.getQueriesData<TCache[]>({
+          queryKey,
+        });
+
+        queryClient.setQueriesData<TCache[]>(
+          { queryKey },
+          (old) => {
+            if (!old || !optimisticUpdate) return old;
+            return optimisticUpdate(old, variables, optContext);
+          },
+        );
+
+        return {
+          previous: undefined,
+          snapshots: snapshots.map(([key, data]) => ({
+            key,
+            data: data ?? undefined,
+          })),
+          wasOffline: !isOnline,
+        };
+      }
+
+      // Exact mode (default): update a single cache entry
       const previous = queryClient.getQueryData<TCache[]>(exactKey);
 
       if (previous && optimisticUpdate) {
-        const context: OptimisticContext = {
-          optimisticId: generateOptimisticId(),
-          submittedAt: new Date().toISOString(),
-        };
-        const next = optimisticUpdate(previous, variables, context);
+        const next = optimisticUpdate(previous, variables, optContext);
         if (next !== undefined) {
           queryClient.setQueryData<TCache[]>(exactKey, next);
         }
       }
 
-      return { previous: previous ?? undefined, wasOffline: !isOnline };
+      return { previous: previous ?? undefined, snapshots: [], wasOffline: !isOnline };
     },
 
     onError: (error, variables, context) => {
       // Rollback on error
-      if (context?.previous) {
+      if (context?.snapshots && context.snapshots.length > 0) {
+        // Prefix mode: restore all cached entries
+        for (const snap of context.snapshots) {
+          if (snap.data !== undefined) {
+            queryClient.setQueryData<TCache[]>(snap.key, snap.data);
+          }
+        }
+      } else if (context?.previous) {
+        // Exact mode: restore single cache entry
         queryClient.setQueryData<TCache[]>(exactKey, context.previous);
       }
 
@@ -313,7 +400,7 @@ export function useOrgMutation<TResponse, TVariables = void, TCache = TResponse>
     },
 
     onSuccess: (data, variables) => {
-      if ((data as unknown as Record<string, unknown>)?.queued) {
+      if (isQueuedResult(data)) {
         toast.info("Saved offline — will sync when connected");
         return;
       }

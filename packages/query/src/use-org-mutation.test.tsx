@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { useOrgMutation } from "./use-org-mutation";
+import { useOrgMutation, isQueuedResult, QUEUED_SENTINEL } from "./use-org-mutation";
 
 // ─── Mocks for @zuiio/hooks and @zuiio/offline ───────────────
 
@@ -295,7 +295,7 @@ describe("useOrgMutation — offline", () => {
 				body: { name: "offline" },
 			}),
 		);
-		expect(result.current.data).toEqual({ queued: true });
+		expect(isQueuedResult(result.current.data)).toBe(true);
 	});
 
 	it("does NOT call fetch when offline", async () => {
@@ -803,6 +803,149 @@ describe("useOrgMutation — separate TResponse and TCache", () => {
 
 		// Response type is { success: boolean }
 		expect(result.current.data).toEqual({ success: true });
+	});
+});
+
+// ─── Tests: isQueuedResult / QUEUED_SENTINEL ──────────────
+
+describe("isQueuedResult / QUEUED_SENTINEL", () => {
+	it("identifies queued results", () => {
+		expect(isQueuedResult({ [QUEUED_SENTINEL]: true })).toBe(true);
+	});
+
+	it("rejects non-queued values", () => {
+		expect(isQueuedResult(null)).toBe(false);
+		expect(isQueuedResult(undefined)).toBe(false);
+		expect(isQueuedResult({})).toBe(false);
+		expect(isQueuedResult({ queued: true })).toBe(false);
+		expect(isQueuedResult("string")).toBe(false);
+		expect(isQueuedResult(42)).toBe(false);
+	});
+});
+
+// ─── Tests: optimisticMode: prefix ────────────────────────
+
+describe("useOrgMutation — optimisticMode prefix", () => {
+	it("updates all cached list queries matching the prefix", async () => {
+		const queryClient = new QueryClient({
+			defaultOptions: {
+				queries: { retry: false },
+				mutations: { retry: false },
+			},
+		});
+
+		// Seed multiple filtered list caches under the same prefix
+		queryClient.setQueryData(
+			["reminders", "list", "filter-a"],
+			[{ id: "1", name: "one" }],
+		);
+		queryClient.setQueryData(
+			["reminders", "list", "filter-b"],
+			[{ id: "2", name: "two" }],
+		);
+
+		mockedOnlineStatus.mockReturnValue(false);
+		mockEnqueue.mockResolvedValueOnce(undefined);
+
+		const { result } = renderHook(
+			() =>
+				useOrgMutation<
+					{ id: string; name: string },
+					{ name: string },
+					{ id: string; name: string }
+				>({
+					endpoint: "/api/reminders",
+					method: "POST",
+					queryKey: ["reminders"],
+					optimisticMode: "prefix",
+					optimisticUpdate: (cached, vars, ctx) => [
+						...cached,
+						{ id: ctx.optimisticId, name: vars.name },
+					],
+				}),
+			{
+				wrapper: function Wrapper({ children }: { children: ReactNode }) {
+					return (
+						<QueryClientProvider client={queryClient}>
+							{children}
+						</QueryClientProvider>
+					);
+				},
+			},
+		);
+
+		result.current.mutate({ name: "three" });
+
+		await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+		// Both list caches should have the optimistic item appended
+		const listA = queryClient.getQueryData([
+			"reminders",
+			"list",
+			"filter-a",
+		]) as Array<{ name: string }>;
+		expect(listA).toHaveLength(2);
+		expect(listA![1]?.name).toBe("three");
+
+		const listB = queryClient.getQueryData([
+			"reminders",
+			"list",
+			"filter-b",
+		]) as Array<{ name: string }>;
+		expect(listB).toHaveLength(2);
+		expect(listB![1]?.name).toBe("three");
+	});
+
+	it("rolls back all cached queries on error", async () => {
+		const queryClient = new QueryClient({
+			defaultOptions: {
+				queries: { retry: false },
+				mutations: { retry: false },
+			},
+		});
+
+		const initialA = [{ id: "1", name: "a1" }];
+		const initialB = [{ id: "2", name: "b1" }];
+		queryClient.setQueryData(["items", "list", "a"], initialA);
+		queryClient.setQueryData(["items", "list", "b"], initialB);
+
+		mockFetch.mockRejectedValueOnce(new Error("Server error"));
+
+		const { result } = renderHook(
+			() =>
+				useOrgMutation<
+					{ id: string; name: string },
+					{ name: string },
+					{ id: string; name: string }
+				>({
+					endpoint: "/api/items",
+					method: "POST",
+					queryKey: ["items"],
+					optimisticMode: "prefix",
+					optimisticUpdate: (cached, vars, ctx) => [
+						...cached,
+						{ id: ctx.optimisticId, name: vars.name },
+					],
+					errorMessage: "Server error",
+				}),
+			{
+				wrapper: function Wrapper({ children }: { children: ReactNode }) {
+					return (
+						<QueryClientProvider client={queryClient}>
+							{children}
+						</QueryClientProvider>
+					);
+				},
+			},
+		);
+
+		result.current.mutate({ name: "added" });
+
+		await waitFor(() => expect(result.current.isError).toBe(true));
+
+		// Both caches should be rolled back to initial state
+		expect(queryClient.getQueryData(["items", "list", "a"])).toEqual(initialA);
+		expect(queryClient.getQueryData(["items", "list", "b"])).toEqual(initialB);
 	});
 });
 
