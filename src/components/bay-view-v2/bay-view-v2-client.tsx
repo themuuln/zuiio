@@ -8,7 +8,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { useQuery } from "@tanstack/react-query";
-import { Building2, GripVertical, List, Users } from "lucide-react";
+import { GripVertical, List, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -58,10 +58,8 @@ import { formatPlateNumber } from "@/lib/utils";
 import { useBayDragHandlers } from "./_bay-drag-handlers";
 import { EmptyBayActionDrawer } from "./_empty-bay-action-drawer";
 import { BayViewErrorState } from "./_error-state";
-import { GridView } from "./_grid-view";
-import { KanbanView } from "./_kanban-view";
 import { KpiCards } from "./_kpi-cards";
-import { ListView } from "./_list-view";
+import { BayViewViews } from "./_view-renderer";
 import { BayViewPageSkeleton } from "./_page-skeleton";
 import { resolvePaymentMethodFees } from "./_payment-fees";
 import { Toolbar } from "./_toolbar";
@@ -876,24 +874,6 @@ export function BayViewV2Client() {
         null)
       : null;
 
-  // ── View renderers ───────────────────────────────────────────
-  const renderBranchHeader = (section: {
-    branchId: string;
-    branchName: string;
-    bayCount: number;
-    bays: typeof data.bays;
-  }) => (
-    <div className="flex items-center gap-2 mb-3">
-      <Building2 className="size-4 text-muted-foreground/60" />
-      <span className="text-sm font-semibold text-foreground/80">
-        {section.branchName}
-      </span>
-      <span className="text-xs text-muted-foreground/50 bg-muted/60 px-2 py-0.5 rounded-md font-mono">
-        {section.bays.filter((b) => b.workOrder).length}/{section.bayCount} bays
-      </span>
-    </div>
-  );
-
   return (
     <DndContext
       sensors={sensors}
@@ -946,130 +926,28 @@ export function BayViewV2Client() {
         />
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent">
-          {viewMode === "grid" &&
-            (searchedBranchSections ? (
-              <div className="flex-1 min-h-full overflow-y-auto p-5">
-                {searchedBranchSections.map((section) => (
-                  <div key={section.branchId} className="mb-6 last:mb-0">
-                    {searchedBranchSections.length > 1 &&
-                      renderBranchHeader(section)}
-                    <GridView
-                      bays={section.bays}
-                      pendingWoIds={pendingWoIds}
-                      onStatusChange={handleStatusClick}
-                      onRemoveFromBay={handleRemoveFromBay}
-                      onOpenDetail={handleOpenDetail}
-                      onAssignClick={handleEmptyBayClick}
-                      onRemoveHelper={handleRemoveHelper}
-                      orgId={orgInfo?.orgId}
-                      mechanics={data?.mechanics ?? []}
-                      onAssignMechanic={handleAssignMechanic}
-                      onRemoveMechanic={handleRemoveMechanic}
-                      onAddHelper={handleAddHelper}
-                      onReorderMechanics={handleReorderMechanics}
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex-1 min-h-full overflow-y-auto p-5">
-                <GridView
-                  bays={searchedBays}
-                  pendingWoIds={pendingWoIds}
-                  onStatusChange={handleStatusClick}
-                  onRemoveFromBay={handleRemoveFromBay}
-                  onOpenDetail={handleOpenDetail}
-                  onAssignClick={handleEmptyBayClick}
-                  onRemoveHelper={handleRemoveHelper}
-                  orgId={orgInfo?.orgId}
-                  mechanics={data?.mechanics ?? []}
-                  onAssignMechanic={handleAssignMechanic}
-                  onRemoveMechanic={handleRemoveMechanic}
-                  onAddHelper={handleAddHelper}
-                  onReorderMechanics={handleReorderMechanics}
-                />
-              </div>
-            ))}
-
-          {viewMode === "kanban" &&
-            (searchedBranchSections ? (
-              <div className="flex-1 min-h-0 overflow-y-auto p-5">
-                {searchedBranchSections.map((section) => (
-                  <div key={section.branchId} className="mb-6 last:mb-0">
-                    {searchedBranchSections.length > 1 &&
-                      renderBranchHeader(section)}
-                    <KanbanView
-                      searchedBays={section.bays}
-                      assignableBays={section.bays}
-                      queue={filteredQueue}
-                      pendingWoIds={pendingWoIds}
-                      onStatusChange={handleStatusClick}
-                      onRemoveFromBay={handleRemoveFromBay}
-                      onOpenDetail={handleOpenDetail}
-                      onAssignClick={handleEmptyBayClick}
-                      onNoEmptyBays={() => {
-                        toast.dismiss();
-                        toast.error("No empty bays available");
-                      }}
-                      onQueueItemClick={handleQueueItemClick}
-                      onRemoveHelper={handleRemoveHelper}
-                      t={t}
-                      orgId={orgInfo?.orgId}
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex-1 min-h-0 overflow-y-auto p-5">
-                <KanbanView
-                  searchedBays={searchedBays}
-                  assignableBays={data.bays}
-                  queue={filteredQueue}
-                  pendingWoIds={pendingWoIds}
-                  onStatusChange={handleStatusClick}
-                  onRemoveFromBay={handleRemoveFromBay}
-                  onOpenDetail={handleOpenDetail}
-                  onAssignClick={handleEmptyBayClick}
-                  onNoEmptyBays={() => {
-                    toast.dismiss();
-                    toast.error("No empty bays available");
-                  }}
-                  onQueueItemClick={handleQueueItemClick}
-                  onRemoveHelper={handleRemoveHelper}
-                  t={t}
-                  orgId={orgInfo?.orgId}
-                />
-              </div>
-            ))}
-
-          {viewMode === "list" &&
-            (searchedBranchSections ? (
-              <div className="flex-1 min-h-0 overflow-y-auto p-5">
-                {searchedBranchSections.map((section) => (
-                  <div key={section.branchId} className="mb-6 last:mb-0">
-                    {searchedBranchSections.length > 1 &&
-                      renderBranchHeader(section)}
-                    <ListView
-                      bays={section.bays}
-                      onOpenDetail={handleOpenDetail}
-                      onAssignClick={handleEmptyBayClick}
-                      orgId={orgInfo?.orgId}
-                      t={t}
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex-1 min-h-0 overflow-y-auto p-5">
-                <ListView
-                  bays={searchedBays}
-                  onOpenDetail={handleOpenDetail}
-                  onAssignClick={handleEmptyBayClick}
-                  orgId={orgInfo?.orgId}
-                  t={t}
-                />
-              </div>
-            ))}
+          <BayViewViews
+            viewMode={viewMode}
+            searchedBranchSections={searchedBranchSections}
+            searchedBays={searchedBays}
+            filteredQueue={filteredQueue}
+            pendingWoIds={pendingWoIds}
+            readyWosCount={readyWosCount}
+            batchCompletePending={batchCompletePending}
+            onStatusChange={handleStatusClick}
+            onRemoveFromBay={handleRemoveFromBay}
+            onOpenDetail={handleOpenDetail}
+            onAssignClick={handleEmptyBayClick}
+            onQueueItemClick={handleQueueItemClick}
+            onRemoveHelper={handleRemoveHelper}
+            onAssignMechanic={handleAssignMechanic}
+            onRemoveMechanic={handleRemoveMechanic}
+            onAddHelper={handleAddHelper}
+            onReorderMechanics={handleReorderMechanics}
+            orgId={orgInfo?.orgId}
+            mechanics={data?.mechanics ?? []}
+            t={t}
+          />
         </div>
       </div>
 
