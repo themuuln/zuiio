@@ -8,7 +8,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { useQuery } from "@tanstack/react-query";
-import { GripVertical, List, Users } from "lucide-react";
+import { GripVertical } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -24,7 +24,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
 import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
 import {
@@ -69,17 +68,16 @@ import {
   GuardedTouchSensor,
   type ViewMode,
 } from "./_types";
+import { useBayViewSidebar } from "./_use-bay-view-sidebar";
 import { useBayCountMutation } from "./_use-bay-count-mutation";
 import { useBayViewDialogs } from "./_use-bay-view-dialogs";
 import { useBayViewPending } from "./_use-bay-view-pending";
 import { AssignDialog } from "./assign-dialog";
 import { BayCardDragPreview } from "./bay-card";
-import { MechanicPanel } from "./mechanic-panel";
 import type { PickupCompleteData } from "./pickup-complete-dialog";
 import { PickupCompleteDialog } from "./pickup-complete-dialog";
 import type { PostServiceFormData } from "./post-service-dialog";
 import { PostServiceDialog } from "./post-service-dialog";
-import { QueuePanel } from "./queue-panel";
 import { ShiftReportDialog } from "./shift-report-dialog";
 import { StatusNotesModal } from "./status-notes-modal";
 import { VehicleRegistrationDrawer } from "./vehicle-registration-drawer";
@@ -664,80 +662,7 @@ export function BayViewV2Client() {
   }
 
   // ── Sidebar tabs ─────────────────────────────────────────────
-  const { registerTab, updateTabContent, unregisterTab } = useRightSidebar();
-
-  // Register sidebar tabs once on mount, unregister on unmount only.
-  // Content updates are handled by the separate effect below — mixing
-  // cleanup + re-register in the same effect causes a render loop
-  // because unregisterTab mutates state, triggering re-renders.
-  useEffect(() => {
-    if (!data) return;
-    registerTab(
-      "queue",
-      t("waitingQueue"),
-      <QueuePanel
-        items={filteredQueue}
-        pendingWoIds={pendingWoIds}
-        onQuickAssign={handleQuickAssign}
-        mechanics={data.mechanics}
-        onItemClick={handleQueueItemClick}
-        availableBays={availableBays}
-        onAssignToBay={handleQuickAssignToBay}
-      />,
-      <List className="size-4" />,
-    );
-    registerTab(
-      "mechanics",
-      t("mechanics"),
-      <MechanicPanel mechanics={data.mechanics} />,
-      <Users className="size-4" />,
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    t,
-    registerTab,
-    handleQuickAssign,
-    pendingWoIds,
-    handleQueueItemClick,
-    data,
-    handleQuickAssignToBay,
-    filteredQueue,
-    availableBays,
-  ]);
-
-  useEffect(() => {
-    return () => {
-      unregisterTab("queue");
-      unregisterTab("mechanics");
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unregisterTab]);
-
-  // Use refs for callbacks to avoid effect re-fires that cause render loops.
-  const handleQuickAssignRef = useRef(handleQuickAssign);
-  handleQuickAssignRef.current = handleQuickAssign;
-  const handleQueueItemClickRef = useRef(handleQueueItemClick);
-  handleQueueItemClickRef.current = handleQueueItemClick;
-  const handleQuickAssignToBayRef = useRef(handleQuickAssignToBay);
-  handleQuickAssignToBayRef.current = handleQuickAssignToBay;
-
-  useEffect(() => {
-    if (!data) return;
-    updateTabContent(
-      "queue",
-      <QueuePanel
-        items={filteredQueue}
-        pendingWoIds={pendingWoIds}
-        onQuickAssign={(...args) => handleQuickAssignRef.current(...args)}
-        mechanics={data.mechanics}
-        onItemClick={(...args) => handleQueueItemClickRef.current(...args)}
-        availableBays={availableBays}
-        onAssignToBay={(...args) => handleQuickAssignToBayRef.current(...args)}
-      />,
-    );
-    updateTabContent("mechanics", <MechanicPanel mechanics={data.mechanics} />);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, filteredQueue, pendingWoIds, availableBays, updateTabContent]);
+  useBayViewSidebar(data, filteredQueue, pendingWoIds, availableBays, handleQuickAssign, handleQueueItemClick, handleQuickAssignToBay);
 
   // ── Realtime subscriptions ─────────────────────────────────
   const realtimeTables = useMemo(
