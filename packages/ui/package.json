@@ -1,0 +1,20 @@
+{
+  "name": "@zuiio/ui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared UI utilities — search highlighting, toast helpers, form input mappings",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.ts",
+  "devDependencies": {
+    "@zuiio/config": "workspace:*",
+    "@types/react": "^19",
+    "react": "^19",
+    "sonner": "^2",
+    "typescript": "^5"
+  },
+  "peerDependencies": {
+    "react": "^19",
+    "sonner": "^2"
+  }
+}

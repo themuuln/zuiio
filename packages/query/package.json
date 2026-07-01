@@ -1,0 +1,21 @@
+{
+  "name": "@zuiio/query",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5",
+    "react": "^19",
+    "sonner": "^2"
+  },
+  "devDependencies": {
+    "@types/node": "^26",
+    "@types/react": "^19",
+    "@zuiio/config": "workspace:*",
+    "typescript": "^5"
+  }
+}

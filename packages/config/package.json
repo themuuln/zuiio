@@ -1,0 +1,10 @@
+{
+  "name": "@zuiio/config",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    "./tsconfig": "./tsconfig.json"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "@zuiio/realtime",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Supabase Realtime hooks for React Query cache invalidation",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.ts",
+  "devDependencies": {
+    "@zuiio/config": "workspace:*",
+    "@supabase/supabase-js": "^2",
+    "@tanstack/react-query": "^5",
+    "@types/react": "^19",
+    "react": "^19",
+    "typescript": "^5"
+  },
+  "peerDependencies": {
+    "@supabase/supabase-js": "^2",
+    "@tanstack/react-query": "^5",
+    "react": "^19"
+  }
+}

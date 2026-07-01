@@ -1,0 +1,53 @@
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+/** Merge Tailwind classes — safe for conditional / override patterns. */
+export function cn(...inputs: ClassValue[]): string {
+  return twMerge(clsx(inputs));
+}
+
+/** Format number as Mongolian tögrög with decimal support. Example: formatCurrency(1000) → "₮ 1,000", formatCurrency(1000.5) → "₮ 1,000.5" */
+export function formatCurrency(amount: number): string {
+  const formatted = new Intl.NumberFormat("mn-MN", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(amount);
+  return `₮ ${formatted}`;
+}
+
+/** Alias for formatCurrency. */
+export const formatMNT = formatCurrency;
+
+/**
+ * Get initials from a full name.
+ * getInitials("Bold Tsengel") → "BT"
+ * getInitials("Bold") → "B"
+ */
+export function getInitials(name: string | null | undefined): string {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return (parts[0]?.[0] ?? "").toUpperCase();
+  return `${parts[0]?.[0] ?? ""}${parts[parts.length - 1]?.[0] ?? ""}`.toUpperCase();
+}
+
+/** Format Mongolian license plate: "1234УБА" → "1234 УБА" */
+export function formatPlateNumber(plate: string | null | undefined): string {
+  if (!plate) return "";
+  const trimmed = plate.trim().toUpperCase();
+  const match = trimmed.match(/^(\d{4})([А-ЯӨҮ]{3})$/);
+  if (match) return `${match[1]} ${match[2]}`;
+  return trimmed;
+}
+
+/** Stable JSON.stringify with sorted keys — deterministic cache keys. */
+export function stableStringify(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (typeof value !== "object" || Array.isArray(value)) {
+    return JSON.stringify(value);
+  }
+  const sorted: Record<string, unknown> = {};
+  for (const key of Object.keys(value as Record<string, unknown>).sort()) {
+    sorted[key] = (value as Record<string, unknown>)[key];
+  }
+  return JSON.stringify(sorted);
+}

@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "incremental": true,
+    "paths": {
+      "@zuiio/core": ["./packages/core/src/index.ts"],
+      "@zuiio/query": ["./packages/query/src/index.ts"],
+      "@zuiio/hooks": ["./packages/hooks/src/index.ts"],
+      "@zuiio/hr": ["./packages/hr/src/index.ts"],
+      "@zuiio/offline": ["./packages/offline/src/index.ts"],
+      "@zuiio/realtime": ["./packages/realtime/src/index.ts"],
+      "@zuiio/ui": ["./packages/ui/src/index.ts"],
+      "@zuiio/export": ["./packages/export/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "apps"]
+}

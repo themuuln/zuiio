@@ -1,0 +1,13 @@
+{
+  "name": "@zuiio/hr",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mongolian payroll & tax calculation — НДШ, ХХОАТ, илүү цаг",
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@zuiio/config": "workspace:*",
+    "typescript": "^5",
+    "vitest": "^4.1.9"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "zuiio",
+  "private": true,
+  "scripts": {
+    "lint": "biome check",
+    "format": "biome format --write"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.1",
+    "@types/react": "^19.2.17"
+  }
+}
