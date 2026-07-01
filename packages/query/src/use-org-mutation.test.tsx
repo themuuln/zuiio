@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useOrgMutation } from "./use-org-mutation";
 
 // ─── Mocks for @zuiio/hooks and @zuiio/offline ───────────────
@@ -535,8 +535,8 @@ describe("useOrgMutation — onSettled offline skip", () => {
           endpoint: "/api/test",
           method: "POST",
           queryKey: ["test"],
-          optimisticUpdate: (cached: Array<{ name: string }>, vars) => [
-            ...cached,
+          optimisticUpdate: (cached, vars) => [
+            ...(cached as Array<{ name: string }>),
             { id: "temp", name: vars.name },
           ],
         }),
