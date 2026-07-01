@@ -150,12 +150,6 @@ importers:
       '@tanstack/react-query':
         specifier: ^5
         version: 5.101.0(react@19.0.0)
-      '@zuiio/hooks':
-        specifier: link:../hooks
-        version: link:../hooks
-      '@zuiio/offline':
-        specifier: link:../offline
-        version: link:../offline
       react:
         specifier: ^19
         version: 19.0.0
@@ -175,6 +169,12 @@ importers:
       '@zuiio/config':
         specifier: workspace:*
         version: link:../config
+      '@zuiio/hooks':
+        specifier: workspace:*
+        version: link:../hooks
+      '@zuiio/offline':
+        specifier: workspace:*
+        version: link:../offline
       jsdom:
         specifier: ^26
         version: 26.1.0
