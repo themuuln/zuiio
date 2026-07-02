@@ -15,6 +15,12 @@ importers:
         specifier: ^19.2.17
         version: 19.2.17
 
+  packages/branding:
+    devDependencies:
+      '@zuiio/config':
+        specifier: workspace:*
+        version: link:../config
+
   packages/config: {}
 
   packages/core:
@@ -169,12 +175,6 @@ importers:
       '@zuiio/config':
         specifier: workspace:*
         version: link:../config
-      '@zuiio/hooks':
-        specifier: workspace:*
-        version: link:../hooks
-      '@zuiio/offline':
-        specifier: workspace:*
-        version: link:../offline
       jsdom:
         specifier: ^26
         version: 26.1.0

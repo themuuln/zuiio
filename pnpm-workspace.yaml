@@ -1,4 +1,6 @@
 packages:
   - "packages/*"
+  - "apps/*"
+  - "apps/*/packages/*"
 allowBuilds:
   esbuild: set this to true or false
