@@ -8,7 +8,7 @@
     ".": "./src/index.ts"
   },
   "devDependencies": {
-    "@zer/config": "workspace:*",
+    "@zuiio/config": "workspace:*",
     "typescript": "^5"
   }
 }

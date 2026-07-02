@@ -10,34 +10,34 @@ export const metadata: Metadata = {
 
 const features = [
 	{
-		title: "Job Scheduling",
+		title: "Bay View Workshop",
 		description:
-			"Book appointments, assign mechanics, and track job status in real time. No more double-booked bays.",
+			"Visual bay management with Grid, Kanban, and List views. Drag-and-drop vehicle and mechanic assignment, queue management, and post-service workflows.",
 	},
 	{
-		title: "Repair Tracking",
+		title: "Work Orders",
 		description:
-			"Log every repair with detailed work descriptions, parts used, and labor time. Full history for every vehicle.",
+			"Full lifecycle management — create, assign, track status transitions, log services and parts used. Complete repair history for every vehicle.",
 	},
 	{
-		title: "Parts Inventory",
+		title: "Parts & Inventory",
 		description:
-			"Track stock levels, set reorder alerts, and manage suppliers. Never run out of common parts.",
+			"Parts catalog with stock management, purchase orders, reorder alerts, and supplier management. Never run out of common parts.",
 	},
 	{
-		title: "Invoicing & Payments",
+		title: "Estimates & Invoicing",
 		description:
-			"Generate professional invoices, accept payments, and send receipts. Integrates with your accounting.",
+			"Generate quotes (6 views), convert to work orders, create professional invoices, and track payments. Integrated with your accounting.",
 	},
 	{
-		title: "Customer Management",
+		title: "Customer & Vehicle Management",
 		description:
-			"Store vehicle info, service history, and contact details. Send reminders for upcoming services.",
+			"Store vehicle info, full service history, and customer contact details. Plate search, service reminders, and history tracking.",
 	},
 	{
-		title: "Offline Mode",
+		title: "Mechanic Management",
 		description:
-			"Works even when your internet doesn't. Data syncs automatically when you're back online.",
+			"Daily reports, clock in/out, work queue, and performance tracking. Assign mechanics to bays and track labor efficiency.",
 	},
 ];
 
@@ -134,7 +134,7 @@ export default function TolomProductPage() {
 		<>
 			<Hero
 				title="Tolom"
-				subtitle="Auto repair shop management for Mongolia. Scheduling, repairs, parts, and invoices — all in one tool."
+				subtitle="Auto repair shop management for Mongolia. Bay view, work orders, parts, estimates, and mechanic tracking — all in one tool."
 				cta={{ label: "Get started", href: "/pricing" }}
 				secondaryCta={{ label: "Learn more", href: "#features" }}
 			/>
@@ -147,8 +147,8 @@ export default function TolomProductPage() {
 						Run your shop like clockwork
 					</h2>
 					<p className="mt-4 text-lg text-muted-foreground">
-						From the moment a customer calls to the final invoice, Tolom keeps
-						your repair shop organized and efficient.
+						From bay view scheduling to final invoicing, Tolom keeps your auto
+						repair shop organized and efficient.
 					</p>
 				</div>
 				<div className="grid gap-5 md:grid-cols-3 md:grid-rows-2">

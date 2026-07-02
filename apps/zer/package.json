@@ -22,7 +22,6 @@
     "test:e2e:nav": "playwright test e2e/sidebar-navigation.spec.ts",
     "test:e2e:a11y": "playwright test e2e/a11y/",
     "test:e2e:all": "playwright test --ignore='**/codeceptjs/**' --ignore='**/fixture.ts' --ignore='**/seed.spec.ts' --ignore='**/midscene_run/**'",
-    "prepare": "husky",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs"
@@ -38,9 +37,6 @@
     "@tanstack/react-query-devtools": "^5.101.0",
     "@tanstack/react-table": "^8.21.3",
     "@zer/branding": "workspace:*",
-    "@zer/export": "workspace:*",
-    "@zer/i18n": "workspace:*",
-    "@zer/supabase": "workspace:*",
     "@zuiio/core": "workspace:*",
     "@zuiio/export": "workspace:*",
     "@zuiio/hooks": "workspace:*",

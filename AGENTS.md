@@ -16,28 +16,29 @@
 
 ```
 zuiio/
-├── packages/       ← 10 shared packages (branding, config, core, hooks, query, realtime, ui, offline, hr, export)
+├── packages/        ← 10 shared @zuiio/* packages
 ├── apps/
-│   └── website/    ← Company website (Next.js 16, Tailwind v4, shadcn New York)
-├── docs/           ← Design system, stacks, vision
-├── templates/      ← Project boilerplate
-├── README.md       ← Human-facing entry point
-└── AGENTS.md       ← Project instructions (this file)
+│   ├── website/     ← Company website (Next.js 16, Tailwind v4)
+│   ├── zer/         ← HR + Accounting app (464 src files)
+│   │   └── packages/branding/  ← @zer/branding
+│   └── tolom/       ← Auto repair app (1086 src files)
+│       └── packages/{config,supabase}  ← @tolom/*
+├── docs/            ← Design system, stacks, vision
+├── templates/       ← Project boilerplate
+├── .claude/         ← AI agent instructions
+├── README.md
+└── AGENTS.md        ← Project instructions (this file)
 ```
 
 ## Apps
 
-| App | Stack | Description |
-|-----|-------|-------------|
-| `website` | Next.js 16, Tailwind v4, shadcn New York | Company website — home, products, pricing, blog, about |
+| App | Stack | Description | dev command |
+|-----|-------|-------------|-------------|
+| `website` | Next.js 16, Tailwind v4 | Company site | `cd apps/website && pnpm dev` |
+| `zer` | Next.js 16 + Supabase | HR & Accounting | `cd apps/zer && pnpm dev` |
+| `tolom` | Next.js 16 + Supabase | Auto repair management | `cd apps/tolom && pnpm dev` |
 
-### Website commands
-
-```bash
-cd apps/website
-pnpm dev          # next dev --turbopack
-pnpm build        # next build
-```
+Each app has its own `AGENTS.md` with app-specific rules. Read them when working in that app.
 
 ## Packages
 
@@ -56,17 +57,10 @@ pnpm build        # next build
 
 ## Consumer Projects
 
-```
-zuiio/           ← this repo
-├── packages/    ← 10 shared packages
-zer/             ← sibling repo, uses 7 packages
-tolom/           ← sibling repo, uses 7 packages
-```
-
-Both consumers use `file:` protocol for cross-monorepo dependencies:
+All apps consume `@zuiio/*` packages via `workspace:*` protocol inside this monorepo:
 
 ```json
-"@zuiio/core": "file:../zuiio/packages/core"
+"@zuiio/core": "workspace:*"
 ```
 
 ## Conventions

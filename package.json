@@ -3,7 +3,11 @@
   "private": true,
   "scripts": {
     "lint": "biome check",
-    "format": "biome format --write"
+    "format": "biome format --write",
+    "dev:website": "cd apps/website && pnpm dev",
+    "dev:zer": "cd apps/zer && pnpm dev",
+    "dev:tolom": "cd apps/tolom && pnpm dev",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/node": "^26.0.1",

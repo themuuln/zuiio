@@ -23,10 +23,10 @@ export const metadata: Metadata = {
 		template: "%s | Zuiio",
 	},
 	description:
-		"Zuiio builds software for Mongolian businesses — HR, accounting, and auto repair management tools that feel like they were made for you.",
+	"Zuiio builds software for Mongolian businesses — business management (ERP) and auto repair shop tools that feel like they were made for you.",
 	openGraph: {
 		title: "Zuiio",
-		description: "Mongolian business software — built for the way you work.",
+		description: "Business management and auto repair software — built for the way Mongolia works.",
 		url: "https://zuiio.com",
 		siteName: "Zuiio",
 		locale: "mn_MN",

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 const footerLinks = {
 	Products: [
-		{ href: "/products/zer", label: "Zer — HR & Accounting" },
+		{ href: "/products/zer", label: "Zer — Mini ERP" },
 		{ href: "/products/tolom", label: "Tolom — Auto Repair" },
 		{ href: "/pricing", label: "Pricing" },
 	],

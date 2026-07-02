@@ -3,41 +3,41 @@ import { Hero } from "@/components/marketing/Hero";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-	title: "Zer — HR & Accounting",
+	title: "Zer — Mini ERP",
 	description:
-		"Payroll, social insurance, tax filings, and employee management for Mongolian businesses.",
+		"Inventory management, sales, expenses, customer management, and reporting for Mongolian small and medium businesses.",
 };
 
 const features = [
 	{
-		title: "Automated Payroll",
+		title: "Inventory & Stock Management",
 		description:
-			"Calculate salaries, overtime, and deductions automatically. Mongolian tax and social insurance rules built in.",
+			"Track products, categories, units, and stock levels in real time. Automatic stock counts, product codes, price history, and low-stock alerts.",
 	},
 	{
-		title: "Social Insurance",
+		title: "Sales & POS",
 		description:
-			"Auto-calculate employer and employee contributions. Generate required filings for the General Authority for Social Insurance.",
+			"Create sales with multi-line entry, customer selection, and payment tracking. Shop POS module with product catalog, cart, checkout, and receipt printing for retail.",
 	},
 	{
-		title: "Employee Management",
+		title: "Expense Tracking",
 		description:
-			"Maintain employee records, contracts, leave tracking, and performance history in one place.",
+			"Log expenses by category, amount, date, and payment method. Monthly expense reports with comparisons and CSV export.",
 	},
 	{
-		title: "Tax Filings",
+		title: "Customer & Supplier Management",
 		description:
-			"Prepare and submit income tax reports. Stay compliant with Mongolian tax regulations.",
+			"Detailed profiles with contact info, balance tracking, and full transaction history for both customers and suppliers.",
 	},
 	{
-		title: "Financial Reports",
+		title: "Reports & Analytics",
 		description:
-			"Generate balance sheets, income statements, and payroll summaries with a single click.",
+			"Sales, expense, and profit reports with charts and graphs. Date range filtering, CSV export, and public share links.",
 	},
 	{
-		title: "Offline Mode",
+		title: "Multi-Branch Support",
 		description:
-			"Work without internet. Your data syncs automatically when you reconnect.",
+			"Manage multiple physical locations with isolated transactions per branch. Consolidated accounting view across all branches.",
 	},
 ];
 
@@ -138,7 +138,7 @@ export default function ZerProductPage() {
 		<>
 			<Hero
 				title="Zer"
-				subtitle="HR and accounting for Mongolian businesses. Payroll, social insurance, tax filings — all in one place."
+				subtitle="Mini ERP for Mongolian SMEs. Inventory, sales, expenses, customers, and reports — all in one system."
 				cta={{ label: "Get started", href: "/pricing" }}
 				secondaryCta={{ label: "Learn more", href: "#features" }}
 			/>
@@ -148,11 +148,11 @@ export default function ZerProductPage() {
 						className="text-3xl font-semibold tracking-tight md:text-4xl"
 						style={{ fontFamily: "var(--font-display)" }}
 					>
-						Everything you need to run your people operations
+						Everything you need to run your business
 					</h2>
 					<p className="mt-4 text-lg text-muted-foreground">
-						From payroll to tax filings, Zer handles the complexity of Mongolian
-						HR and accounting so you don&apos;t have to.
+						From inventory to sales to reporting, Zer handles the complexity of
+						running a Mongolian small business so you don&apos;t have to.
 					</p>
 				</div>
 				<div className="grid gap-5 md:grid-cols-3 md:grid-rows-2">
@@ -264,7 +264,7 @@ export default function ZerProductPage() {
 						className="text-3xl font-semibold tracking-tight"
 						style={{ fontFamily: "var(--font-display)" }}
 					>
-						Ready to simplify your HR?
+						Ready to simplify your business?
 					</h2>
 					<p className="mx-auto mt-4 max-w-md text-muted-foreground">
 						Start free. No credit card required.

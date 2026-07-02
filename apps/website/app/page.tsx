@@ -9,17 +9,17 @@ const features = [
 	{
 		title: "Built for Mongolia",
 		description:
-			"Mongolian tax codes, social insurance brackets, and labor laws — handled automatically. No spreadsheets, no manual calculations.",
+			"Designed from the ground up for Mongolian SMEs — inventory, sales, expenses, and repair management, not adapted from other markets.",
 	},
 	{
 		title: "Works offline",
 		description:
-			"Garage with spotty internet? No problem. Your data syncs when you're back online. Never lose a record.",
+			"Spotty internet? No problem. Your data syncs when you're back online. Never lose a record.",
 	},
 	{
-		title: "One integration, many tools",
+		title: "One platform, two products",
 		description:
-			"HR, accounting, and repair management share the same data. Enter it once, use it everywhere.",
+			"Zer runs your business operations. Tolom manages your auto shop. Share data between them when you're ready.",
 	},
 	{
 		title: "Simple pricing",
@@ -41,13 +41,13 @@ const features = [
 const testimonials = [
 	{
 		quote:
-			"Zer saved us hours every month on payroll. The social insurance calculation alone was worth the switch.",
+			"Zer transformed how we manage inventory and sales. Stock levels, customer history, daily revenue — all in one place.",
 		author: "Бат-Эрдэнэ",
 		role: "CFO, Эрдэнэт ХХК",
 	},
 	{
 		quote:
-			"Tolom transformed our shop. Scheduling, invoicing, parts tracking — all in one place. Our mechanics love it.",
+			"Tolom's bay view alone saved us hours a day. Drag-and-drop scheduling, mechanic tracking, instant estimates — our shop has never run smoother.",
 		author: "Солонго",
 		role: "Owner, Унаагар Auto Service",
 	},
@@ -59,8 +59,8 @@ const plans = [
 		price: "Free",
 		description: "For small teams getting started.",
 		features: [
-			"Up to 5 employees",
-			"Basic payroll",
+			"Up to 5 users",
+			"Basic inventory & sales",
 			"Standard reports",
 			"Email support",
 		],
@@ -70,9 +70,10 @@ const plans = [
 		price: "₮49,000",
 		description: "For growing businesses.",
 		features: [
-			"Up to 50 employees",
-			"Full payroll + social insurance",
-			"Advanced reports",
+			"Up to 50 users",
+			"Full feature access",
+			"Multi-branch support",
+			"Advanced reports & exports",
 			"Priority support",
 			"Offline mode",
 		],
@@ -83,7 +84,7 @@ const plans = [
 		price: "₮149,000",
 		description: "For organizations with custom needs.",
 		features: [
-			"Unlimited employees",
+			"Unlimited users",
 			"Everything in Pro",
 			"Custom integrations",
 			"Dedicated support",
@@ -97,7 +98,7 @@ export default function HomePage() {
 		<>
 			<Hero
 				title="Mongolian business software, built for the way you work."
-				subtitle="Zer handles HR and accounting. Tolom runs your auto repair shop. One brand, two tools — both made for Mongolia."
+				subtitle="Zer runs your business — inventory, sales, and operations. Tolom manages your auto repair shop. Two tools, one brand, both made for Mongolia."
 				cta={{ label: "Explore products", href: "/products" }}
 				secondaryCta={{ label: "See pricing", href: "/pricing" }}
 			/>
@@ -117,15 +118,15 @@ export default function HomePage() {
 				<div className="grid gap-6 md:grid-cols-2">
 					<ProductCard
 						name="Zer"
-						tagline="HR & Accounting"
-						description="Payroll, social insurance, tax filings, and employee management — everything Mongolian businesses need to run their people operations."
+						tagline="Mini ERP"
+						description="Inventory, sales, expenses, customer management, and reporting — everything Mongolian SMEs need to run their business operations."
 						href="/products/zer"
 						variant="zer"
 					/>
 					<ProductCard
 						name="Tolom"
 						tagline="Auto Repair Management"
-						description="Scheduling, job tracking, parts inventory, invoices, and customer management for Mongolian auto repair shops."
+						description="Bay view scheduling, work orders, parts inventory, estimates, and mechanic management for Mongolian auto repair shops."
 						href="/products/tolom"
 						variant="tolom"
 					/>
