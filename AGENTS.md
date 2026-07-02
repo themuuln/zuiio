@@ -1,4 +1,14 @@
-# @zuiio — Shared Packages + Company Website
+# @zuiio — Project Instructions (for AI agents)
+
+> **⚠️ Required reading for AI agents:** Before writing any code, load these files for full context:
+>
+> 1. `docs/design.md` — design tokens (OKLch colors, typography, spacing, motion, component conventions)
+> 2. `docs/vision.md` — product vision and how we build
+> 3. `docs/stack-web.md` — Next.js 16 stack (when working on web apps)
+> 4. `docs/stack-mobile.md` — React Native + Expo stack (when working on mobile apps)
+> 5. `.claude/instructions.md` — design essentials and common patterns (quick reference)
+>
+> You MUST read these before starting any significant task. This file (`AGENTS.md`) covers project structure, package map, and conventions.
 
 **Private monorepo** (`/Users/themuuln/coding/personal/zuiio/`) serving two Mongolian business apps: **Zer** (HR + accounting) and **Tolom** (auto repair shop management), plus the **Zuiio company website**.
 
