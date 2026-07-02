@@ -36,4 +36,4 @@ Each product lives under `apps/` and shares the `@zuiio` package ecosystem.
 
 ---
 
-*This document should be updated as the vision sharpens — not rewritten, but refined.*
+_This document should be updated as the vision sharpens — not rewritten, but refined._

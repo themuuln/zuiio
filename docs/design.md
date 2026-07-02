@@ -22,15 +22,17 @@ All colors use OKLch for perceptual uniformity and predictable light/dark behavi
 
 ### Semantic Tokens (shadcn / Tailwind v4)
 
-Defined in `globals.css`. Follows shadcn convention exactly.
+Defined in `@zuiio/branding/globals.css`. Follows shadcn convention exactly.
 
 **Light mode**
+
 - Background: `oklch(0.99 0.003 275)` — violet-tinted white
 - Foreground: `oklch(0.12 0.018 275)` — near-black
 - Primary: `oklch(0.50 0.26 275)` — brand violet
 - Accent: `oklch(0.72 0.14 195)` — brand teal
 
 **Dark mode**
+
 - Background: `oklch(0.10 0.018 275)`
 - Foreground: `oklch(0.96 0.005 275)`
 - Primary: `oklch(0.65 0.22 275)` — lightened violet
@@ -122,6 +124,7 @@ Defined in `globals.css`. Follows shadcn convention exactly.
 ```
 
 Brand glow (primary surfaces):
+
 ```
 --shadow-brand: 0 0 0 1px oklch(0.50 0.26 275 / 0.15), 0 4px 16px oklch(0.50 0.26 275 / 0.12)
 ```
@@ -172,11 +175,13 @@ In dark mode: depth via violet-tinted background steps, not opacity overlays.
 **Radius**: `--radius` = `8px` (maps to `--radius-md`)
 
 ### Forms
+
 - Always vertical stack: Label → Input → Helper/Error
 - Error state: `--destructive` border + error text below input
 - Required indicator: asterisk in `--destructive`, never "(required)"
 
 ### Modals / Overlays
+
 | Use case | Component |
 |----------|-----------|
 | Form / edit | Sheet (right side) |
@@ -185,9 +190,11 @@ In dark mode: depth via violet-tinted background steps, not opacity overlays.
 | Quick info | Popover |
 
 ### Empty States
+
 Always include: what goes here + single primary action CTA. Never just an icon.
 
 ### Loading
+
 - Skeleton over spinner for content areas
 - Spinner only for button actions and page-level loading
 
@@ -214,6 +221,7 @@ Always include: what goes here + single primary action CTA. Never just an icon.
 `zuiio [Product]` — e.g. `zuiio ERP`, `zuiio Pay`, `zuiio Docs`
 
 Each product:
+
 - Shares primary violet (never overridden)
 - Gets its own accent hue (±30° shift from base teal `195`)
 - Gets its own phosphor icon (consistent `duotone` weight for product marks)
@@ -231,9 +239,9 @@ Each product:
 ## File Conventions
 
 ```
-packages/branding/     — TypeScript brand tokens (source of truth)
-globals.css            — CSS variables for each app (shadcn-compatible)
+packages/branding/     — CSS brand tokens (source of truth)
+apps/*/globals.css     — per-app shadcn-compatible CSS variables
 components.json        — shadcn config per app
 ```
 
-All color values in `globals.css` are derived from `packages/branding`. The TypeScript tokens are the single source of truth.
+All color values are derived from `@zuiio/branding`. The CSS variables in `packages/branding/globals.css` are the single source of truth.

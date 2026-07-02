@@ -101,6 +101,7 @@ Requires `agent-browser@^0.27` (`npm install -g agent-browser@^0.27`).
 ### next-cache-components-adoption
 
 Walks through enabling Cache Components and adopting routes one feature at a time. Two modes:
+
 - **Incremental** — single mechanical PR opting all routes out, ship features in follow-ups
 - **Direct** — adopt every route in place on one branch
 
@@ -117,6 +118,7 @@ npx skills add vercel/next.js --skill next-cache-components-optimizer
 ```
 
 Two modes:
+
 - **Page-render** — increase how much of a single page renders statically
 - **Nav** — ensure navigations between pages are instant
 
@@ -181,6 +183,7 @@ Append `.md` to any `nextjs.org/docs` URL for plain Markdown. Full index at `/do
 ### DevTools MCP Server
 
 Add `next-devtools-mcp` to `.mcp.json` for compilation tools:
+
 - `get_compilation_issues` — check the whole project from the dev server
 - `compile_route` — compile a single route (faster than `next build`)
 

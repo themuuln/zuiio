@@ -1,0 +1,7 @@
+{
+	"extends": "@zuiio/config/tsconfig",
+	"compilerOptions": {
+		"outDir": "./dist"
+	},
+	"include": ["src"]
+}

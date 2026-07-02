@@ -81,6 +81,7 @@ Interactive tables (sort/filter/edit): TanStack Table + FlashList.
 | `victory-native` (XL) | Modern Skia-based charts (line, bar, area, scatter). Performant, touch-interactive (tooltips, pan/zoom). |
 
 **Decision guide:**
+
 - Simple charts fast → `react-native-gifted-charts`
 - Performant, interactive, room to grow → Victory Native XL + Skia
 - Fully custom viz → raw Skia (draw your own)
@@ -144,6 +145,6 @@ Install only what you use. These ship from Expo and are well-maintained:
 
 ## Related
 
-- [`STACK.md`](/STACK.md) — current monorepo mobile stack
+- [`docs/stack-mobile.md`](/docs/stack-mobile.md) — monorepo mobile stack
 - [`AGENTS.md`](/AGENTS.md) — monorepo conventions and adding new apps/packages
-- [`DESIGN.md`](/DESIGN.md) — full design system reference
+- [`docs/design.md`](/docs/design.md) — full design system reference

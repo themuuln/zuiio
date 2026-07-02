@@ -1,11 +1,39 @@
-# @zuiio — Shared Packages for Zer + Tolom
+# @zuiio — Shared Packages + Company Website
 
-**Private monorepo** (`/Users/themuuln/coding/personal/zuiio/`) serving two Mongolian business apps: **Zer** (HR + accounting) and **Tolom** (auto repair shop management).
+**Private monorepo** (`/Users/themuuln/coding/personal/zuiio/`) serving two Mongolian business apps: **Zer** (HR + accounting) and **Tolom** (auto repair shop management), plus the **Zuiio company website**.
+
+## Directory Structure
+
+```
+zuiio/
+├── packages/       ← 10 shared packages (branding, config, core, hooks, query, realtime, ui, offline, hr, export)
+├── apps/
+│   └── website/    ← Company website (Next.js 16, Tailwind v4, shadcn New York)
+├── docs/           ← Design system, stacks, vision
+├── templates/      ← Project boilerplate
+├── README.md       ← Human-facing entry point
+└── AGENTS.md       ← Project instructions (this file)
+```
+
+## Apps
+
+| App | Stack | Description |
+|-----|-------|-------------|
+| `website` | Next.js 16, Tailwind v4, shadcn New York | Company website — home, products, pricing, blog, about |
+
+### Website commands
+
+```bash
+cd apps/website
+pnpm dev          # next dev --turbopack
+pnpm build        # next build
+```
 
 ## Packages
 
 | Package | Layer | Description | Dependencies |
 |---------|-------|-------------|--------------|
+| `branding` | Framework-agnostic | OKLch design tokens, globals.css source of truth | — |
 | `config` | Build | Shared tsconfig extended by all packages | — |
 | `core` | Framework-agnostic | Formatting, validation, errors, timezone, domain rules, UUID, form validation | date-fns |
 | `hooks` | React | Generic hooks: useDebounce, useDisclosure, useCopyToClipboard, etc. | react |
@@ -20,12 +48,13 @@
 
 ```
 zuiio/           ← this repo
-├── packages/    ← 9 shared packages
+├── packages/    ← 10 shared packages
 zer/             ← sibling repo, uses 7 packages
 tolom/           ← sibling repo, uses 7 packages
 ```
 
 Both consumers use `file:` protocol for cross-monorepo dependencies:
+
 ```json
 "@zuiio/core": "file:../zuiio/packages/core"
 ```
@@ -42,6 +71,7 @@ Both consumers use `file:` protocol for cross-monorepo dependencies:
 ### Package structure
 
 Every package follows:
+
 ```
 packages/<name>/
 ├── package.json      # name: "@zuiio/<name>", main: "./src/index.ts"

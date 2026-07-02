@@ -53,6 +53,7 @@ All apps consume shared `@zuiio/*` packages:
 | Package | What it provides |
 |---------|------------------|
 | `@zuiio/branding` | OKLch color tokens, theme types |
-| `@zuiio/utils` | Supabase client factory, shared types, validation schemas |
-| `@zuiio/hooks` | TanStack Query wrappers, auth hooks |
+| `@zuiio/core` | Formatting, validation, errors, timezone, domain rules |
+| `@zuiio/hooks` | Generic React hooks |
+| `@zuiio/query` | TanStack Query wrappers, optimistic CRUD |
 | `@zuiio/ui-native` | RN UI primitives (shadcn-style, NativeWind-based) |
