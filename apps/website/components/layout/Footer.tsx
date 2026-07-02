@@ -10,11 +10,6 @@ const footerLinks = {
 		{ href: "/about", label: "About" },
 		{ href: "/blog", label: "Blog" },
 	],
-	Legal: [
-		{ href: "/privacy", label: "Privacy Policy" },
-		{ href: "/terms", label: "Terms of Service" },
-		{ href: "/contact", label: "Contact" },
-	],
 };
 
 export function Footer() {

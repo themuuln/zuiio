@@ -14,8 +14,8 @@ const plans = [
 		price: "Free",
 		description: "For small teams getting started.",
 		features: [
-			"Up to 5 employees",
-			"Basic payroll",
+			"Up to 5 users",
+			"Core features",
 			"Standard reports",
 			"Email support",
 		],
@@ -25,8 +25,9 @@ const plans = [
 		price: "₮49,000",
 		description: "For growing businesses.",
 		features: [
-			"Up to 50 employees",
-			"Full payroll + social insurance",
+			"Up to 50 users",
+			"All features",
+			"Multi-branch support",
 			"Advanced reports",
 			"Priority support",
 			"Offline mode",
@@ -35,10 +36,10 @@ const plans = [
 	},
 	{
 		name: "Enterprise",
-		price: "₮149,000",
+		price: "Contact us",
 		description: "For organizations with custom needs.",
 		features: [
-			"Unlimited employees",
+			"Unlimited users",
 			"Everything in Pro",
 			"Custom integrations",
 			"Dedicated support",

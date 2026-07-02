@@ -18,10 +18,10 @@ const posts = [
 		author: "Zuiio Team",
 	},
 	{
-		slug: "mongolian-payroll-explained",
-		title: "Mongolian Payroll: What Every Business Should Know",
+		slug: "getting-started-with-zer",
+		title: "Getting Started with Zer",
 		excerpt:
-			"A practical guide to payroll in Mongolia — tax brackets, social insurance rates, and common pitfalls.",
+			"A practical walkthrough of Zer's core features — inventory, sales, expenses, and reporting.",
 		date: "2026-05-20",
 		author: "Zuiio Team",
 	},

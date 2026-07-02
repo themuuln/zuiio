@@ -51,14 +51,14 @@ export default function AboutPage() {
 				</p>
 				<p className="mt-4 text-base leading-relaxed text-muted-foreground">
 					We&apos;re changing that. Zuiio products are built from the ground up
-					for Mongolian businesses. Every form, every workflow, every feature
-					— designed for how businesses actually work in Mongolia.
+					for Mongolian businesses. Every form, every workflow, every feature —
+					designed for how businesses actually work in Mongolia.
 				</p>
 				<p className="mt-4 text-base leading-relaxed text-muted-foreground">
 					Zer is a mini ERP for SMEs — inventory, sales, expenses, customers,
-					and reports. Tolom manages auto repair shops — bay view, work
-					orders, parts, estimates, and mechanics. Two tools, one philosophy
-					— software that feels like it was made for you.
+					and reports. Tolom manages auto repair shops — bay view, work orders,
+					parts, estimates, and mechanics. Two tools, one philosophy — software
+					that feels like it was made for you.
 				</p>
 			</section>
 			<section className="border-t border-border">
