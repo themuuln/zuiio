@@ -1,5 +1,6 @@
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
+
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
@@ -70,7 +71,9 @@ When multiple skills apply, load them in the listed order. Earlier skills set co
 
 ### Pipeline
 
-Use the **rpiv pipeline** for research, planning, and large features:
+Use the **rpiv pipeline** for research, planning, and large features. Every task starts with triage:
+
+- **Triage** → classify scope (see Triage Protocol below). Minor = proceed silently. Major = stop after research and get confirmation.
 - **Research** → understand the codebase area, existing patterns, dependencies
 - **Plan** → break into phases with clear success criteria
 - **Implement** → phase by phase, verify each before moving on
@@ -78,22 +81,46 @@ Use the **rpiv pipeline** for research, planning, and large features:
 
 ### Guardrails
 
+- Run `npm run lint && npx tsc --noEmit` (or `npm run validate`) before any build
 - Run `npm run validate && npm run test` before considering any task complete
 - Run `lsp_diagnostics` on changed files before builds
 - Never merge with failing tests or type errors
 - One module at a time — don't refactor neighbors while fixing a target
 - Atomic commits — one logical change per commit
 
-### Autonomy Matrix
+### Triage Protocol
 
-| Proceed autonomously | Ask first |
-|---------------------|-----------|
-| Bug fixes with clear root cause | Business logic changes (revenue, visibility) |
-| UI adjustments (spacing, loading, tokens) | Schema migrations altering column semantics |
-| Type improvements, test additions | Breaking API response shape changes |
-| Documentation updates | New external dependencies |
-| Minor/patch dependency bumps | Auth or authorization changes |
-| Adding RLS policies (follow existing patterns) | Anything touching `organization_id` scope logic |
+Before any task, the agent must triage it. Always research first (2-5 mins — read relevant files, understand scope and dependencies), then classify. If the classification is ambiguous, default to major.
+
+#### Heuristics Table
+
+| Minor → Do silently, commit without asking | Major → Research → Recommend → Wait |
+|-------------------------------------------|--------------------------------------|
+| 1-2 files changed | 3+ files changed |
+| No schema/data change | Migration, column semantics, or new table |
+| No API response shape change | Breaking API shape or new endpoint |
+| Pure UI (spacing, loading, copy, tokens) | Affects business logic (revenue, visibility, auth) |
+| Same responsibility, no new concepts | Crosses module boundaries or adds new concepts |
+| Production bundle unaffected | New dependency or significant bundle growth |
+| Self-contained test addition | Integration tests across multiple services |
+| Minor/patch dependency bumps | Anything touching `organization_id` scope logic |
+| Type improvements, documentation updates | Bug fixes without clear root cause |
+
+#### Behavior Rules
+
+**If Minor:**
+
+- Proceed with research → implement → validate
+- Commit and mention the change in passing
+
+**If Major:**
+
+1. **Research** — understand the code area, read docs, explore 2-3 approaches
+2. **Present** — lay out options with trade-offs (one paragraph each)
+3. **Recommend** — suggest the best path and why
+4. **Wait** — do nothing until the user confirms
+
+Default to major when in doubt. When a major change touches shared code (layouts, wrappers, utilities), also note which sibling routes or modules could be affected.
 
 ---
 
@@ -115,7 +142,8 @@ npm run validate:lint          # Biome lint only
 # Testing
 npm run test                   # Vitest unit/integration tests
 npm run test:e2e               # Playwright E2E tests
-npm run lint                   # Full Biome check (lint + format + import sort)
+npm run lint                   # Biome check only
+npx tsc --noEmit             # Type check (or npm run validate:types)
 
 # Supabase (CLI only — MCP preferred for queries)
 supabase start                 # Local Supabase stack
@@ -129,10 +157,11 @@ npm run docs:build             # Rebuild VitePress into public/guide/
 ### Pre-Merge Checklist
 
 ```bash
-npm run validate && npm run test
+npm run lint && npx tsc --noEmit && npm run build   # Gate build on lint + types
+npm run test                                           # Tests after build
 ```
 
-For CI/production readiness, add `&& npm run build`.
+For CI/production readiness, the full chain: `npm run lint && npx tsc --noEmit && npm run build && npm run test`.
 
 ### Testing Speed
 
@@ -213,14 +242,13 @@ DetailDrawer (root — always @/components/ui/detail-drawer)
 ```
 
 Rules:
+
 - **Use `DetailDrawer`** — never raw `Drawer`/`Sheet`/`Dialog` for side panels.
 - **Footer outside `<form>`** — buttons connect to the form via `form="<id>"` + `type="submit"` so the footer stays pinned on scroll.
 - **Header actions** — use the `actions` prop on `DetailDrawer.Header` for buttons alongside the title (e.g. "Manage Variants"). Never build custom header layouts.
 - **Width convention** — simple forms (invite, config) → `size="md"`, standard forms → `size="lg"` (default), complex forms with tables → `size="2xl"`.
 - **`modal={false}`** — only when a nested dialog opens while the drawer stays open (e.g. VariantEditorSheet inside EditServiceSheet).
 - **All widths use `sm:max-w-*`** — full-width on mobile, constrained on desktop.
-
-
 
 ---
 
@@ -254,6 +282,7 @@ Rules:
 ### Optimistic UI
 
 Load `.agents/skills/optimistic-ui/SKILL.md` before any mutation work. Core rules:
+
 - Never block optimistic updates with `if (busy) return`
 - Use stable keys (sorted IDs, not object refs) for reconciliation
 - Track in-flight fetches with a counter, not a boolean
@@ -324,6 +353,7 @@ CREATE POLICY "my_table_delete" ON my_table FOR DELETE
 ```
 
 **Verify RLS coverage before writing service code:**
+
 ```sql
 SELECT tablename, policyname FROM pg_policies WHERE schemaname = 'public' ORDER BY tablename;
 ```
@@ -353,6 +383,7 @@ Every service query **MUST** include:
 ### Silent Failure Detection
 
 RLS failures return `data: []` with **no error**. Always:
+
 1. Check `data` is not empty when expecting results
 2. Log response shape in development
 3. Test with different org users to verify isolation

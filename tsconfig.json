@@ -20,14 +20,12 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@zuiio/core": ["../zuiio/packages/core/src/index.ts"],
-      "@zuiio/export": ["../zuiio/packages/export/src/index.ts"],
-      "@zuiio/hooks": ["../zuiio/packages/hooks/src/index.ts"],
-      "@zuiio/hr": ["../zuiio/packages/hr/src/index.ts"],
-      "@zuiio/offline": ["../zuiio/packages/offline/src/index.ts"],
-      "@zuiio/query": ["../zuiio/packages/query/src/index.ts"],
-      "@zuiio/realtime": ["../zuiio/packages/realtime/src/index.ts"],
-      "@zuiio/ui": ["../zuiio/packages/ui/src/index.ts"]
+      "@zuiio/core": ["./packages/zuiio/packages/core/src/index.ts"],
+      "@zuiio/hooks": ["./packages/zuiio/packages/hooks/src/index.ts"],
+      "@zuiio/offline": ["./packages/zuiio/packages/offline/src/index.ts"],
+      "@zuiio/query": ["./packages/zuiio/packages/query/src/index.ts"],
+      "@zuiio/realtime": ["./packages/zuiio/packages/realtime/src/index.ts"],
+      "@zuiio/ui": ["./packages/zuiio/packages/ui/src/index.ts"]
     }
   },
   "include": [
@@ -37,8 +35,26 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts",
-    "../zuiio/packages/*/src/**/*.ts",
-    "../zuiio/packages/*/src/**/*.tsx"
+    "packages/*/src/**/*.ts",
+    "packages/*/src/**/*.tsx",
+    "packages/zuiio/packages/*/src/**/*.ts",
+    "packages/zuiio/packages/*/src/**/*.tsx"
   ],
-  "exclude": ["node_modules", "supabase", "scratch", "templates"]
+  "exclude": [
+    "node_modules",
+    "supabase",
+    "scratch",
+    "templates",
+    "packages/zuiio/src",
+    "packages/zuiio/apps",
+    "packages/zer/src",
+    "packages/zer/apps",
+    "packages/zuiio/packages/*/node_modules",
+    "packages/zer/packages/*/node_modules",
+    "packages/zer/tests",
+    "packages/zer/templates",
+    "packages/zer/vitest.config.ts",
+    "packages/zuiio/node_modules",
+    "packages/zer/node_modules"
+  ]
 }

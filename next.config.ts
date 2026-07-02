@@ -6,12 +6,10 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./src/lib/i18n/request.ts");
 
 const nextConfig: NextConfig = {
-  // Turbopack doesn't transpile .ts in node_modules by default.
-  // @zuiio/* packages export raw .ts source — add them to the transpile list.
+  // @zuiio/* packages export raw .ts source — transpile them.
   transpilePackages: [
     "@zuiio/core",
     "@zuiio/hooks",
-    "@zuiio/hr",
     "@zuiio/offline",
     "@zuiio/query",
     "@zuiio/realtime",
@@ -22,7 +20,6 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["100.102.22.106", "192.168.1.121"],
 
   // TypeScript validation is handled by `pnpm validate` before build.
-  // Enable build-time type checking to catch issues that slip through.
   typescript: {
     ignoreBuildErrors: false,
   },
@@ -31,12 +28,6 @@ const nextConfig: NextConfig = {
   // ── Next.js 16.3: Instant Navigations ──────────────────────
   cacheComponents: true,
   partialPrefetching: true,
-
-  // Point Turbopack at this project's root so it doesn't get confused
-  // by the parent monorepo (zuiio/) having its own pnpm-workspace.yaml.
-  turbopack: {
-    root: process.cwd(),
-  },
 
   serverExternalPackages: ["playwright-core"],
 
