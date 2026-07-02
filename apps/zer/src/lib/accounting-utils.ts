@@ -1,0 +1,143 @@
+import "server-only";
+import { logAuditEventWithClient } from "@/lib/audit";
+
+/**
+ * Shared journal entry creation helper.
+ *
+ * Reduces ~70% boilerplate duplication across postSaleToJournal,
+ * postExpenseToJournal, and postPurchaseToJournal.
+ *
+ * Steps:
+ * 1. Fetches chart_of_accounts by code
+ * 2. Generates entry number via RPC
+ * 3. Validates debits = credits
+ * 4. Creates journal entry record
+ * 5. Inserts journal entry lines
+ * 6. Logs audit event
+ */
+export async function createJournalEntry(
+  supabase: any,
+  {
+    organizationId,
+    userId,
+    branchId,
+    referenceType,
+    referenceId,
+    entryDate,
+    description,
+    accountCodes,
+    lines,
+  }: {
+    organizationId: string;
+    userId: string;
+    branchId: string;
+    referenceType: string;
+    referenceId: string;
+    entryDate: string;
+    description: string;
+    accountCodes: string[];
+    lines: Array<{
+      account_id: string;
+      debit_amount: number;
+      credit_amount: number;
+    }>;
+  },
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // 1. Fetch accounts by code
+    const { data: accounts } = await supabase
+      .from("chart_of_accounts")
+      .select("id, code")
+      .eq("organization_id", organizationId)
+      .in("code", accountCodes);
+
+    if (!accounts || accounts.length < 2) {
+      return { success: false, error: "Дансны бүртгэл олдсонгүй." };
+    }
+
+    const accountMap = new Map(
+      (accounts as Array<{ id: string; code: string }>).map((a: any) => [
+        a.code,
+        a.id,
+      ]),
+    );
+
+    // Resolve account IDs from codes
+    const resolvedLines = lines.map((line) => {
+      const accountId = accountMap.get(line.account_id as any);
+      if (!accountId) {
+        throw new Error(`Данс олдсонгүй: ${line.account_id}`);
+      }
+      return { ...line, account_id: accountId };
+    });
+
+    // 2. Generate entry number
+    const { data: jeData, error: jeError } = await supabase.rpc(
+      "generate_journal_entry_number",
+    );
+
+    if (jeError) return { success: false, error: jeError.message };
+    const entryNumber = jeData as string;
+
+    // 3. Validate debits = credits
+    const totalDebits = resolvedLines.reduce(
+      (s: number, l: any) => s + l.debit_amount,
+      0,
+    );
+    const totalCredits = resolvedLines.reduce(
+      (s: number, l: any) => s + l.credit_amount,
+      0,
+    );
+    if (Math.abs(totalDebits - totalCredits) > 0.01) {
+      return { success: false, error: "Дебет ба кредит дүн тэнцүү биш байна." };
+    }
+
+    // 4. Create journal entry
+    const { data: journalEntry, error: entryError } = await supabase
+      .from("journal_entries")
+      .insert({
+        organization_id: organizationId,
+        branch_id: branchId,
+        entry_date: entryDate,
+        entry_number: entryNumber,
+        reference_type: referenceType,
+        reference_id: referenceId,
+        description,
+        created_by: userId,
+      })
+      .select("id")
+      .single();
+
+    if (entryError) return { success: false, error: entryError.message };
+
+    // 5. Insert lines
+    const { error: linesError } = await supabase
+      .from("journal_entry_lines")
+      .insert(
+        resolvedLines.map((l: any) => ({
+          journal_entry_id: journalEntry.id,
+          account_id: l.account_id,
+          debit_amount: l.debit_amount,
+          credit_amount: l.credit_amount,
+        })),
+      );
+
+    if (linesError) return { success: false, error: linesError.message };
+
+    // 6. Audit log
+    await logAuditEventWithClient(
+      supabase,
+      organizationId,
+      userId,
+      "created" as any,
+      referenceType as any,
+      referenceId,
+      undefined,
+      `Журналын бичилт ${entryNumber} үүсгэсэн`,
+    );
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message ?? "Алдаа гарлаа" };
+  }
+}

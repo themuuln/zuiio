@@ -1,0 +1,16 @@
+packages:
+  - "."
+  - "packages/*"
+
+allowBuilds:
+  core-js: true
+  esbuild: true
+  sharp: true
+minimumReleaseAgeExclude:
+  - '@playwright/test@1.61.0'
+  - playwright-core@1.61.0
+  - playwright@1.61.0
+  - '@midscene/core@1.9.7'
+  - '@midscene/playground@1.9.7'
+  - '@midscene/shared@1.9.7'
+  - '@midscene/web@1.9.7'

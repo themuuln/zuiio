@@ -1,0 +1,384 @@
+"use client";
+
+import {
+  Barcode,
+  CheckCircle,
+  MagnifyingGlass,
+  Package,
+  XCircle,
+} from "@phosphor-icons/react";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useCart } from "@/app/(dashboard)/shop/cart-context";
+import type { CategoryChip } from "@/components/shop/category-chips";
+import { CategoryChips } from "@/components/shop/category-chips";
+import type { ProductCardProduct } from "@/components/shop/product-card";
+import { ProductCard } from "@/components/shop/product-card";
+import { Button } from "@/components/ui/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+
+const CameraScanner = dynamic(
+  () => import("./camera-scanner").then((m) => m.CameraScanner),
+  { ssr: false },
+);
+
+type BarcodeStatus =
+  | { type: "idle" }
+  | { type: "found"; productName: string }
+  | { type: "not-found"; barcode: string }
+  | { type: "error"; message: string };
+
+const SKELETON_IDS = [
+  "skeleton-0",
+  "skeleton-1",
+  "skeleton-2",
+  "skeleton-3",
+  "skeleton-4",
+  "skeleton-5",
+] as const;
+
+type CatalogClientProps = {
+  products: ProductCardProduct[];
+  categories: CategoryChip[];
+};
+
+export function CatalogClient({ products, categories }: CatalogClientProps) {
+  const { addItem } = useCart();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null,
+  );
+  const [barcodeStatus, setBarcodeStatus] = useState<BarcodeStatus>({
+    type: "idle",
+  });
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+
+  // Auto-focus on mount
+  useEffect(() => {
+    const t = setTimeout(() => inputRef.current?.focus(), 100);
+    return () => clearTimeout(t);
+  }, []);
+
+  const clearStatusAfterDelay = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      setBarcodeStatus({ type: "idle" });
+    }, 2000);
+  };
+
+  const handleBarcodeMatch = (barcode: string) => {
+    const trimmed = barcode.trim();
+    if (!trimmed) return false;
+
+    const product = products.find(
+      (p) => p.barcode && p.barcode.toLowerCase() === trimmed.toLowerCase(),
+    );
+
+    if (product) {
+      const stock = Number(product.current_stock ?? 0);
+      if (stock <= 0) {
+        setBarcodeStatus({
+          type: "error",
+          message: `"${product.name}" дууссан байна.`,
+        });
+        clearStatusAfterDelay();
+        return true;
+      }
+
+      addItem({
+        productId: product.id,
+        name: product.name,
+        unitPrice: Number(product.sale_price ?? 0),
+        unit: product.unit ?? "ш",
+        maxStock: stock,
+      });
+
+      setBarcodeStatus({ type: "found", productName: product.name });
+      clearStatusAfterDelay();
+      return true;
+    }
+
+    setBarcodeStatus({ type: "not-found", barcode: trimmed });
+    clearStatusAfterDelay();
+    return false;
+  };
+
+  const handleCameraScan = (barcode: string) => {
+    const product = products.find(
+      (p) => p.barcode && p.barcode.toLowerCase() === barcode.toLowerCase(),
+    );
+
+    if (!product) return { found: false } as const;
+
+    const stock = Number(product.current_stock ?? 0);
+    if (stock <= 0) {
+      return {
+        found: false,
+        error: `"${product.name}" дууссан байна.`,
+      } as const;
+    }
+
+    addItem({
+      productId: product.id,
+      name: product.name,
+      unitPrice: Number(product.sale_price ?? 0),
+      unit: product.unit ?? "ш",
+      maxStock: stock,
+    });
+
+    setBarcodeStatus({ type: "found", productName: product.name });
+    setTimeout(() => {
+      setIsCameraOpen(false);
+      setBarcodeStatus({ type: "idle" });
+    }, 1200);
+
+    return { found: true } as const;
+  };
+
+  const filteredProducts = useMemo(() => {
+    let result = products;
+
+    // Category filter
+    if (selectedCategoryId) {
+      result = result.filter(
+        (product) => product.category_id === selectedCategoryId,
+      );
+    }
+
+    // Search filter by name, SKU, or barcode (case-insensitive)
+    const query = searchQuery.toLowerCase().trim();
+    if (query) {
+      result = result.filter(
+        (product) =>
+          product.name.toLowerCase().includes(query) ||
+          product.sku?.toLowerCase().includes(query) ||
+          product.barcode?.toLowerCase().includes(query),
+      );
+    }
+
+    return result;
+  }, [products, searchQuery, selectedCategoryId]);
+
+  const isEmpty = products.length === 0;
+  const hasNoResults = !isEmpty && filteredProducts.length === 0;
+
+  const showStatus = barcodeStatus.type !== "idle";
+
+  return (
+    <div className="flex flex-col gap-4 pb-20">
+      {/* Unified search + barcode input */}
+      <div className="sticky top-[52px] z-20 bg-background pb-2 pt-4">
+        <div className="relative flex items-center gap-2">
+          <div className="relative flex-1">
+            <MagnifyingGlass className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              ref={inputRef}
+              type="search"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                if (barcodeStatus.type !== "idle") {
+                  setBarcodeStatus({ type: "idle" });
+                  if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (searchQuery.trim()) {
+                    handleBarcodeMatch(searchQuery);
+                  }
+                }
+              }}
+              onPaste={(e) => {
+                const pastedText = e.clipboardData.getData("text");
+                if (pastedText) {
+                  setTimeout(() => {
+                    handleBarcodeMatch(pastedText);
+                    setSearchQuery("");
+                  }, 0);
+                }
+              }}
+              placeholder="Бүтээгдэхүүн, баркод, SKU-аар хайх..."
+              autoComplete="off"
+              className={cn(
+                "h-[44px] w-full rounded-lg pl-9 pr-4 text-sm",
+                "focus-visible:ring-2 focus-visible:ring-primary/20",
+                showStatus &&
+                  barcodeStatus.type === "found" &&
+                  "border-emerald-500 bg-emerald-50 dark:border-emerald-400 dark:bg-emerald-950/30",
+                showStatus &&
+                  barcodeStatus.type === "not-found" &&
+                  "border-amber-500 bg-amber-50 dark:border-amber-400 dark:bg-amber-950/30",
+                showStatus &&
+                  barcodeStatus.type === "error" &&
+                  "border-destructive bg-destructive/10",
+              )}
+            />
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => setIsCameraOpen(true)}
+            className={cn(
+              "h-[44px] w-[44px] shrink-0 rounded-lg",
+              "border-2 border-dashed",
+              isCameraOpen && "ring-2 ring-primary/30",
+            )}
+            title="Баркод скан хийх"
+          >
+            <Barcode className="size-5" weight="bold" />
+          </Button>
+        </div>
+
+        {/* Status feedback */}
+        {showStatus && (
+          <div className="mt-2 flex items-center gap-2 text-sm">
+            {barcodeStatus.type === "found" && (
+              <>
+                <CheckCircle
+                  className="size-4 text-emerald-600 dark:text-emerald-400"
+                  weight="fill"
+                />
+                <span className="text-emerald-700 dark:text-emerald-300">
+                  <strong>{barcodeStatus.productName}</strong> сагсанд
+                  нэмэгдлээ.
+                </span>
+              </>
+            )}
+            {barcodeStatus.type === "not-found" && (
+              <>
+                <XCircle
+                  className="size-4 text-amber-600 dark:text-amber-400"
+                  weight="fill"
+                />
+                <span className="text-amber-700 dark:text-amber-300">
+                  &ldquo;{barcodeStatus.barcode}&rdquo; баркодтой бүтээгдэхүүн
+                  олдсонгүй.
+                </span>
+              </>
+            )}
+            {barcodeStatus.type === "error" && (
+              <>
+                <XCircle className="size-4 text-destructive" weight="fill" />
+                <span className="text-destructive">
+                  {barcodeStatus.message}
+                </span>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Camera scanner overlay */}
+      {isCameraOpen && (
+        <CameraScanner
+          onScan={handleCameraScan}
+          onClose={() => setIsCameraOpen(false)}
+        />
+      )}
+
+      {/* Category chips */}
+      <CategoryChips
+        categories={categories}
+        selectedId={selectedCategoryId}
+        onSelect={setSelectedCategoryId}
+      />
+
+      {/* Content area */}
+      {isEmpty ? (
+        <EmptyCatalogState />
+      ) : hasNoResults ? (
+        <EmptySearchResults query={searchQuery} />
+      ) : (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {filteredProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function CatalogSkeleton() {
+  return (
+    <div className="flex flex-col gap-4 pb-20">
+      {/* Skeleton search bar */}
+      <Skeleton className="h-[44px] w-full rounded-lg" />
+
+      {/* Skeleton category chips */}
+      <div className="flex gap-2">
+        <Skeleton className="h-[44px] w-16 rounded-full" />
+        <Skeleton className="h-[44px] w-24 rounded-full" />
+        <Skeleton className="h-[44px] w-20 rounded-full" />
+        <Skeleton className="h-[44px] w-28 rounded-full" />
+      </div>
+
+      {/* Skeleton product grid */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {SKELETON_IDS.map((id) => (
+          <div key={id} className="flex flex-col gap-2">
+            <Skeleton className="aspect-square w-full" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-1/2" />
+            <Skeleton className="h-[44px] w-full" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function EmptyCatalogState() {
+  return (
+    <Empty className="min-h-[300px] rounded-xl border border-dashed border-border bg-card/50">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <Package className="size-6" />
+        </EmptyMedia>
+        <EmptyTitle>Бүтээгдэхүүн байхгүй байна</EmptyTitle>
+        <EmptyDescription>
+          Танай байгууллагад бүртгэлтэй бүтээгдэхүүн одоогоор байхгүй байна.
+          Шинэ бүтээгдэхүүн нэмэхийн тулд Бүтээгдэхүүн хэсэгт очно уу.
+        </EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>
+        <Button asChild>
+          <Link href="/products/new">Бүтээгдэхүүн нэмэх</Link>
+        </Button>
+      </EmptyContent>
+    </Empty>
+  );
+}
+
+function EmptySearchResults({ query }: { query: string }) {
+  return (
+    <Empty className="min-h-[200px] rounded-xl border border-dashed border-border bg-card/50">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <MagnifyingGlass className="size-6" />
+        </EmptyMedia>
+        <EmptyTitle>Бүтээгдэхүүн олдсонгүй</EmptyTitle>
+        <EmptyDescription>
+          &ldquo;{query}&rdquo; төстэй бүтээгдэхүүн олдсонгүй. Хайлтаа өөрчлөн
+          үзнэ үү.
+        </EmptyDescription>
+      </EmptyHeader>
+    </Empty>
+  );
+}

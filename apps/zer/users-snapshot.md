@@ -1,0 +1,37 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e6]:
+      - list [ref=e8]:
+        - listitem [ref=e9]
+      - generic [ref=e18]:
+        - generic [ref=e19]: Цэс
+        - list [ref=e21]
+      - list [ref=e113]:
+        - listitem [ref=e114]
+        - listitem [ref=e119]
+      - button "Toggle Sidebar" [ref=e125]
+    - main [ref=e126]:
+      - generic [ref=e127]:
+        - button "Toggle Sidebar" [ref=e128]
+        - button "Шинэ" [ref=e131]
+      - generic [ref=e134]:
+        - generic [ref=e136]
+        - generic [ref=e142]
+  - region "Notifications alt+T"
+  - generic [ref=e150]:
+    - img [ref=e152]
+    - button "Open Tanstack query devtools" [ref=e200] [cursor=pointer]:
+      - img [ref=e201]
+  - button "Open Next.js Dev Tools" [ref=e254] [cursor=pointer]:
+    - img [ref=e255]
+  - alert [ref=e258]
+  - generic [ref=e260]:
+    - generic [ref=e263]:
+      - button "Copy element" [ref=e265] [cursor=pointer]:
+        - img [ref=e267]
+      - button "Comment on element" [ref=e270] [cursor=pointer]:
+        - img [ref=e271]
+      - button "Style element" [ref=e274] [cursor=pointer]:
+        - img [ref=e275]
+    - button "Collapse toolbar" [expanded] [ref=e277] [cursor=pointer]:
+      - img [ref=e278]

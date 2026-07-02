@@ -1,0 +1,68 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e6]:
+      - list [ref=e8]:
+        - listitem [ref=e9]:
+          - button "Tolom Mini ERP" [ref=e10]
+      - generic [ref=e18]:
+        - generic [ref=e19]: Цэс
+        - list [ref=e21]:
+          - listitem [ref=e22]
+          - listitem [ref=e27]
+          - listitem [ref=e32]
+          - listitem [ref=e37]
+          - listitem [ref=e42]
+          - listitem [ref=e47]
+          - listitem [ref=e52]
+          - listitem [ref=e57]
+          - listitem [ref=e62]
+          - listitem [ref=e67]
+          - listitem [ref=e72]
+          - listitem [ref=e77]
+          - listitem [ref=e82]
+          - listitem [ref=e87]
+          - listitem [ref=e92]
+          - listitem [ref=e97]
+          - listitem [ref=e102]
+          - listitem [ref=e107]
+      - list [ref=e113]:
+        - listitem [ref=e114]:
+          - link "T Temuulen" [ref=e115] [cursor=pointer]:
+            - /url: /settings
+        - listitem [ref=e119]:
+          - button "Гарах" [ref=e121]
+      - button "Toggle Sidebar" [ref=e125]
+    - main [ref=e126]:
+      - generic [ref=e127]:
+        - button "Toggle Sidebar" [ref=e128]:
+          - img
+          - generic [ref=e129]: Toggle Sidebar
+        - button "Шинэ" [ref=e131]:
+          - img
+          - generic [ref=e132]: Шинэ
+      - generic [ref=e134]:
+        - generic [ref=e135]:
+          - generic [ref=e136]
+          - button "Шинэ нэхэмжлэл" [ref=e140]
+        - generic [ref=e141]:
+          - img [ref=e143]
+          - generic [ref=e145]
+          - button "Шинэ нэхэмжлэл" [ref=e149]
+  - region "Notifications alt+T"
+  - generic [ref=e150]:
+    - img [ref=e152]
+    - button "Open Tanstack query devtools" [ref=e200] [cursor=pointer]:
+      - img [ref=e201]
+  - button "Open Next.js Dev Tools" [ref=e254] [cursor=pointer]:
+    - img [ref=e255]
+  - alert [ref=e258]
+  - generic [ref=e260]:
+    - generic [ref=e263]:
+      - button "Copy element" [ref=e265] [cursor=pointer]:
+        - img [ref=e267]
+      - button "Comment on element" [ref=e270] [cursor=pointer]:
+        - img [ref=e271]
+      - button "Style element" [ref=e274] [cursor=pointer]:
+        - img [ref=e275]
+    - button "Collapse toolbar" [expanded] [ref=e277] [cursor=pointer]:
+      - img [ref=e278]
