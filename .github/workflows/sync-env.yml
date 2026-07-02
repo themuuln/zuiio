@@ -46,7 +46,11 @@ jobs:
           while IFS='=' read -r name value; do
             [ -z "$name" ] && continue
             name="${name%% }"  # strip trailing whitespace
-            vercel env add "$name" production \
+            # update if exists, add if new
+            vercel env update "$name" production \
+              --value "$value" \
+              --token="$VERCEL_TOKEN" --non-interactive 2>/dev/null \
+            || vercel env add "$name" production \
               --value "$value" \
               --yes --non-interactive \
               --token="$VERCEL_TOKEN"

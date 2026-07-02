@@ -1,2282 +1,2432 @@
 [
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/_landing-sections.tsx",
-    "line": 281,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/_landing-sections.tsx",
+    "line": 283,
     "type": "aria-label",
     "value": "Toggle annual billing"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/_landing-sections.tsx",
-    "line": 281,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/_landing-sections.tsx",
+    "line": 283,
     "type": "label-prop",
     "value": "Toggle annual billing"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/[orgSlug]/parts/_components/storefront-page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/[orgSlug]/parts/_components/storefront-page.tsx",
     "line": 77,
     "type": "jsx-text",
     "value": "No parts available yet."
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/[orgSlug]/parts/_components/storefront-page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/[orgSlug]/parts/_components/storefront-page.tsx",
     "line": 77,
     "type": "ui-tag",
     "value": "No parts available yet."
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/[orgSlug]/parts/_components/storefront-page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/[orgSlug]/parts/_components/storefront-page.tsx",
     "line": 243,
     "type": "placeholder",
     "value": "Search parts..."
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/[orgSlug]/parts/_components/storefront-page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/[orgSlug]/parts/_components/storefront-page.tsx",
     "line": 281,
     "type": "alt",
     "value": "part.name"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/[orgSlug]/parts/_components/storefront-page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/[orgSlug]/parts/_components/storefront-page.tsx",
     "line": 322,
     "type": "jsx-text",
     "value": "Out of Stock"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/[orgSlug]/parts/_components/storefront-page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/[orgSlug]/parts/_components/storefront-page.tsx",
     "line": 409,
     "type": "alt",
     "value": "org.name"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/[orgSlug]/parts/_components/storefront-page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/[orgSlug]/parts/_components/storefront-page.tsx",
     "line": 422,
     "type": "jsx-text",
     "value": "Parts Catalog"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/[orgSlug]/parts/_components/storefront-page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/[orgSlug]/parts/_components/storefront-page.tsx",
     "line": 479,
     "type": "jsx-text",
     "value": "Powered by TOLOM"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/[orgSlug]/parts/not-found.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/[orgSlug]/parts/not-found.tsx",
     "line": 9,
     "type": "jsx-text",
     "value": "Shop Not Found"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/auth/forgot-password/actions.ts",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/auth/forgot-password/actions.ts",
     "line": 48,
     "type": "jsx-text",
     "value": "TOLOM"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/auth/login/page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/auth/login/page.tsx",
     "line": 168,
     "type": "aria-label",
     "value": "showPassword ? "
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/auth/signup/page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/auth/signup/page.tsx",
     "line": 141,
     "type": "aria-label",
     "value": "showPassword ? "
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/clock/page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/clock/page.tsx",
     "line": 234,
     "type": "jsx-text",
     "value": "Redirecting to login..."
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/clock/page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/clock/page.tsx",
     "line": 234,
     "type": "ui-tag",
     "value": "Redirecting to login..."
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
-    "line": 123,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
+    "line": 116,
     "type": "toast",
     "value": "Campaign created"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
-    "line": 143,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
+    "line": 136,
     "type": "toast",
     "value": "Campaign deleted"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
-    "line": 205,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
+    "line": 198,
     "type": "jsx-text",
     "value": "Total Campaigns"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
-    "line": 205,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
+    "line": 198,
     "type": "ui-tag",
     "value": "Total Campaigns"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
-    "line": 219,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
+    "line": 212,
     "type": "jsx-text",
     "value": "Opened"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
-    "line": 219,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
+    "line": 212,
     "type": "ui-tag",
     "value": "Opened"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
-    "line": 227,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
+    "line": 220,
     "type": "jsx-text",
     "value": "Clicked"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
-    "line": 227,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
+    "line": 220,
     "type": "ui-tag",
     "value": "Clicked"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
-    "line": 238,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
+    "line": 231,
     "type": "jsx-text",
     "value": "Campaigns"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
-    "line": 299,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
+    "line": 295,
     "type": "jsx-text",
     "value": "Create Campaign"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
-    "line": 299,
-    "type": "ui-tag",
-    "value": "Create Campaign"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
-    "line": 306,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
+    "line": 303,
     "type": "placeholder",
     "value": "Campaign name"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
-    "line": 324,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
+    "line": 321,
     "type": "jsx-text",
     "value": "Push Notification"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
-    "line": 325,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/marketing/page.tsx",
+    "line": 322,
     "type": "jsx-text",
     "value": "All Channels"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/page.tsx",
     "line": 218,
     "type": "jsx-text",
     "value": "Total Orgs"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/page.tsx",
     "line": 236,
     "type": "jsx-text",
     "value": "On Trial"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
-    "line": 98,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
+    "line": 91,
     "type": "toast",
     "value": "Organization assigned"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
-    "line": 117,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
+    "line": 110,
     "type": "toast",
     "value": "Assignment removed"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
-    "line": 179,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
+    "line": 172,
     "type": "jsx-text",
     "value": "Assigned Organizations"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
-    "line": 179,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
+    "line": 172,
     "type": "ui-tag",
     "value": "Assigned Organizations"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
-    "line": 185,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
+    "line": 178,
     "type": "jsx-text",
     "value": "Active Subscriptions"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
-    "line": 185,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
+    "line": 178,
     "type": "ui-tag",
     "value": "Active Subscriptions"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
-    "line": 196,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
+    "line": 189,
     "type": "jsx-text",
     "value": "Trial Organizations"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
-    "line": 196,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
+    "line": 189,
     "type": "ui-tag",
     "value": "Trial Organizations"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
-    "line": 207,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
+    "line": 200,
     "type": "jsx-text",
     "value": "Organizations"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
-    "line": 265,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
+    "line": 261,
     "type": "jsx-text",
     "value": "Assign Organization"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
-    "line": 265,
-    "type": "ui-tag",
-    "value": "Assign Organization"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
-    "line": 275,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/admin/sellers/page.tsx",
+    "line": 272,
     "type": "placeholder",
     "value": "Select organization"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/customers/import/page.tsx",
-    "line": 397,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/customers/import/page.tsx",
+    "line": 400,
     "type": "jsx-text",
     "value": "Upload CSV File"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/expenses/categories/page.tsx",
-    "line": 351,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/expenses/categories/page.tsx",
+    "line": 349,
     "type": "aria-label",
     "value": "color.name"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/expenses/categories/page.tsx",
-    "line": 352,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/expenses/categories/page.tsx",
+    "line": 350,
     "type": "title",
     "value": "color.name"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/expenses/new/page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/expenses/new/page.tsx",
     "line": 128,
     "type": "aria-label",
     "value": "commonT("
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/expenses/new/page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/expenses/new/page.tsx",
     "line": 159,
     "type": "aria-label",
     "value": "commonT("
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/expenses/new/page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/expenses/new/page.tsx",
     "line": 293,
     "type": "placeholder",
     "value": "commonT("
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/finance/_overview-tab.tsx",
-    "line": 285,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/finance/_overview-tab.tsx",
+    "line": 286,
     "type": "title",
     "value": "financeT("
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/finance/_overview-tab.tsx",
-    "line": 294,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/finance/_overview-tab.tsx",
+    "line": 295,
     "type": "title",
     "value": "financeT("
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/finance/_transactions-tab.tsx",
-    "line": 134,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/finance/_transactions-tab.tsx",
+    "line": 133,
     "type": "title",
     "value": "financeT("
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/finance/_transactions-tab.tsx",
-    "line": 151,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/finance/_transactions-tab.tsx",
+    "line": 150,
     "type": "title",
     "value": "financeT("
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/finance/_transactions-tab.tsx",
-    "line": 171,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/finance/_transactions-tab.tsx",
+    "line": 170,
     "type": "title",
     "value": "financeT("
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/finance/_transactions-tab.tsx",
-    "line": 185,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/finance/_transactions-tab.tsx",
+    "line": 184,
     "type": "title",
     "value": "financeT("
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/finance/_transactions-tab.tsx",
-    "line": 202,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/finance/_transactions-tab.tsx",
+    "line": 201,
     "type": "title",
     "value": "financeT("
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/finance/_transactions-tab.tsx",
-    "line": 225,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/finance/_transactions-tab.tsx",
+    "line": 224,
     "type": "title",
     "value": "financeT("
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/finance/_transactions-tab.tsx",
-    "line": 242,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/finance/_transactions-tab.tsx",
+    "line": 241,
     "type": "title",
     "value": "financeT("
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/inventory/_components/_suppliers-columns.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/inventory/_components/_suppliers-columns.tsx",
     "line": 28,
     "type": "title",
     "value": "Contact"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/inventory/_components/parts-tab.tsx",
-    "line": 450,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/inventory/_components/parts-tab.tsx",
+    "line": 457,
     "type": "label-prop",
     "value": "Popularity"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/inventory/_components/parts-tab.tsx",
-    "line": 469,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/inventory/_components/parts-tab.tsx",
+    "line": 476,
     "type": "label-prop",
     "value": "Default Price"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/inventory/_components/parts-tab.tsx",
-    "line": 478,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/inventory/_components/parts-tab.tsx",
+    "line": 485,
     "type": "label-prop",
     "value": "On Hand"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/inventory/parts-cars/new/page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/inventory/parts-cars/new/page.tsx",
     "line": 101,
     "type": "placeholder",
     "value": "Toyota, Honda"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/inventory/parts-cars/new/page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/inventory/parts-cars/new/page.tsx",
     "line": 113,
     "type": "placeholder",
     "value": "Camry, Civic"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/inventory/parts-cars/new/page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/inventory/parts-cars/new/page.tsx",
     "line": 137,
     "type": "placeholder",
     "value": "partsCarsT("
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/inventory/parts-cars/new/page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/inventory/parts-cars/new/page.tsx",
     "line": 150,
     "type": "placeholder",
     "value": "1HGCM82633A004352"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/inventory/parts-cars/new/page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/inventory/parts-cars/new/page.tsx",
     "line": 164,
     "type": "placeholder",
     "value": "partsCarsT("
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/inventory/parts-cars/new/page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/inventory/parts-cars/new/page.tsx",
     "line": 188,
     "type": "placeholder",
     "value": "partsCarsT("
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/inventory/parts/[partId]/_header.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/inventory/parts/[partId]/_header.tsx",
     "line": 82,
     "type": "alt",
     "value": "part.name"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/mechanic/page.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/mechanic/page.tsx",
     "line": 285,
     "type": "aria-label",
     "value": "`Open work order for ${wo.customer_name ?? "
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/organization/members/_edit-member-sheet.tsx",
-    "line": 72,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/organization/page.tsx",
-    "line": 486,
-    "type": "placeholder",
-    "value": "pageT("
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/organization/page.tsx",
-    "line": 519,
-    "type": "placeholder",
-    "value": "pageT("
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/organization/page.tsx",
-    "line": 532,
-    "type": "alt",
-    "value": "orgT("
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/payroll/page.tsx",
-    "line": 431,
-    "type": "placeholder",
-    "value": "row.hourlyRate?.toString() ?? "
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/service-reminders/_add-schedule-dialog.tsx",
-    "line": 47,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/service-reminders/_edit-schedule-dialog.tsx",
-    "line": 34,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/settings/_appearance-customization.tsx",
-    "line": 179,
-    "type": "title",
-    "value": "preset.label"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/settings/_appearance-customization.tsx",
-    "line": 180,
-    "type": "aria-label",
-    "value": "preset.label"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/settings/_diagnosis-labels-section.tsx",
-    "line": 255,
-    "type": "title",
-    "value": "preset.label"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/settings/_settings-sub-sidebar.tsx",
-    "line": 58,
-    "type": "aria-label",
-    "value": "section.title"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/settings/_vehicle-niche-form.tsx",
-    "line": 249,
-    "type": "label-prop",
-    "value": "Show only specific vehicle brands"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/settings/page.tsx",
-    "line": 532,
-    "type": "title",
-    "value": "section.title"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/vehicles/_columns.tsx",
-    "line": 92,
-    "type": "aria-label",
-    "value": "useTranslations("
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/vehicles/_columns.tsx",
-    "line": 109,
-    "type": "aria-label",
-    "value": "useTranslations("
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/vehicles/new/page.tsx",
-    "line": 363,
-    "type": "placeholder",
-    "value": "1234 UBA"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/vehicles/new/page.tsx",
-    "line": 388,
-    "type": "placeholder",
-    "value": "JTJHK31U..."
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/vehicles/new/page.tsx",
-    "line": 407,
-    "type": "placeholder",
-    "value": "Toyota"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/vehicles/new/page.tsx",
-    "line": 431,
-    "type": "placeholder",
-    "value": "Prius"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/vehicles/page.tsx",
-    "line": 103,
-    "type": "title",
-    "value": "Stats"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/vehicles/page.tsx",
-    "line": 115,
-    "type": "title",
-    "value": "Recently Added"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/vehicles/page.tsx",
-    "line": 255,
-    "type": "jsx-text",
-    "value": "Delete vehicle"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/work-orders/_columns.tsx",
-    "line": 400,
-    "type": "title",
-    "value": "val ?? undefined"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/dashboard/work-orders/[id]/page.tsx",
-    "line": 1378,
-    "type": "alt",
-    "value": "att.file_name"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/[locale]/faq/page.tsx",
-    "line": 119,
-    "type": "placeholder",
-    "value": "searchQuery ? "
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/app/invoice/[token]/page.tsx",
-    "line": 282,
-    "type": "jsx-text",
-    "value": "TOLOM"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/auth/organization-selection-form.tsx",
-    "line": 19,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/auth/organization-selection-form.tsx",
-    "line": 172,
-    "type": "placeholder",
-    "value": "copy.organizationLabel"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/auth/organization-selection-form.tsx",
-    "line": 257,
-    "type": "placeholder",
-    "value": "copy.pinPlaceholder"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/auth/organization-selection-form.tsx",
-    "line": 297,
-    "type": "placeholder",
-    "value": "copy.pinPlaceholder"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/auth/organization-setup-form.tsx",
-    "line": 143,
-    "type": "placeholder",
-    "value": "copy.orgNamePlaceholder"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_bay-action-handlers.ts",
-    "line": 26,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_bay-card-mechanics-row.tsx",
-    "line": 15,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_bay-card-mechanics-row.tsx",
-    "line": 16,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_bay-card-mechanics-row.tsx",
-    "line": 17,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_bay-card-mechanics-row.tsx",
-    "line": 21,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_bay-card-types.ts",
-    "line": 21,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_bay-card-types.ts",
-    "line": 22,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_bay-card-types.ts",
-    "line": 23,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_bay-card-types.ts",
-    "line": 27,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_bay-drag-handlers.ts",
-    "line": 36,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_catalog-combobox.tsx",
-    "line": 100,
-    "type": "title",
-    "value": "tooltip"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_catalog-combobox.tsx",
-    "line": 190,
-    "type": "placeholder",
-    "value": "placeholder"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_catalog-combobox.tsx",
-    "line": 376,
-    "type": "placeholder",
-    "value": "placeholder"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_catalog-combobox.tsx",
-    "line": 389,
-    "type": "placeholder",
-    "value": "placeholder"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_catalog-picker-drawer.tsx",
-    "line": 74,
-    "type": "placeholder",
-    "value": "placeholder"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_customer-picker-modal.tsx",
-    "line": 123,
-    "type": "placeholder",
-    "value": "Search by name or phone..."
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_customer-picker-modal.tsx",
-    "line": 181,
-    "type": "placeholder",
-    "value": "e.g. Bat"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_customer-picker-modal.tsx",
-    "line": 198,
-    "type": "placeholder",
-    "value": "e.g. Erdene"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_drawer-footer.tsx",
-    "line": 27,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_drawer-footer.tsx",
-    "line": 30,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_drawer-footer.tsx",
-    "line": 32,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_drawer-header.tsx",
-    "line": 35,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_drawer-types.ts",
-    "line": 70,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_error-state.tsx",
-    "line": 9,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_grid-view.tsx",
-    "line": 15,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_grid-view.tsx",
-    "line": 28,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_grid-view.tsx",
-    "line": 30,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_grid-view.tsx",
-    "line": 32,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_grid-view.tsx",
-    "line": 37,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_inline-editable-field.tsx",
-    "line": 121,
-    "type": "aria-label",
-    "value": "displayText"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_kanban-view.tsx",
-    "line": 36,
-    "type": "aria-label",
-    "value": "`${status"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_kanban-view.tsx",
-    "line": 63,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_kpi-cards.tsx",
-    "line": 468,
-    "type": "jsx-text",
-    "value": "No bay data available"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_kpi-cards.tsx",
-    "line": 608,
-    "type": "jsx-text",
-    "value": "No active jobs"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_kpi-cards.tsx",
-    "line": 881,
-    "type": "jsx-text",
-    "value": "No vehicles waiting"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_mechanic-multi-select.tsx",
-    "line": 107,
-    "type": "aria-label",
-    "value": "`Toggle ${mechanic.full_name"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_mechanic-quick-assign.tsx",
-    "line": 43,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_mechanic-quick-assign.tsx",
-    "line": 44,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_mechanic-quick-assign.tsx",
-    "line": 45,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_mechanic-quick-assign.tsx",
-    "line": 46,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_mechanic-quick-assign.tsx",
-    "line": 96,
-    "type": "aria-label",
-    "value": "`Toggle ${mechanic.full_name ?? "
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_notes-section.tsx",
-    "line": 107,
-    "type": "aria-label",
-    "value": "`Edit ${label"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_parts-section.tsx",
-    "line": 20,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_parts-section.tsx",
-    "line": 21,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_parts-section.tsx",
-    "line": 22,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_payment-method-field.tsx",
-    "line": 85,
-    "type": "placeholder",
-    "value": "t(PAYMENT_METHOD_LABEL_KEY[value])"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_ready-for-pickup-form.tsx",
-    "line": 57,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_ready-for-pickup-form.tsx",
-    "line": 235,
-    "type": "placeholder",
-    "value": "t(PAYMENT_METHOD_LABEL_KEY[paymentMethod])"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_schema.ts",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/organization/members/_edit-member-drawer.tsx",
     "line": 65,
     "type": "jsx-text",
     "value": "Promise"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_service-timeline.tsx",
-    "line": 166,
-    "type": "title",
-    "value": "vehicle.color"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_services-section.tsx",
-    "line": 19,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_services-section.tsx",
-    "line": 20,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_services-section.tsx",
-    "line": 21,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_toolbar.tsx",
-    "line": 52,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_toolbar.tsx",
-    "line": 68,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-bay-count-mutation.ts",
-    "line": 7,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-bay-count-mutation.ts",
-    "line": 8,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 26,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 152,
-    "type": "toast",
-    "value": "Status changed to ${newStatus}"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 152,
-    "type": "toast-template",
-    "value": "Status changed to ${newStatus}"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 174,
-    "type": "toast",
-    "value": "Failed to update status"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 200,
-    "type": "toast",
-    "value": "Failed to assign mechanic"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 299,
-    "type": "toast",
-    "value": "Added service: ${svc.service_name}"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 299,
-    "type": "toast-template",
-    "value": "Added service: ${svc.service_name}"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 307,
-    "type": "toast",
-    "value": "Failed to add service"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 394,
-    "type": "toast",
-    "value": "Failed to restore service"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 402,
-    "type": "toast",
-    "value": "Failed to remove service"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 500,
-    "type": "toast",
-    "value": "Added part: ${part.part_name}"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 500,
-    "type": "toast-template",
-    "value": "Added part: ${part.part_name}"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 508,
-    "type": "toast",
-    "value": "Failed to add part"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 588,
-    "type": "toast",
-    "value": "Failed to restore part"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 596,
-    "type": "toast",
-    "value": "Failed to remove part"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 618,
-    "type": "toast",
-    "value": "Invalid price"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 668,
-    "type": "toast",
-    "value": "Price updated"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 671,
-    "type": "toast",
-    "value": "Failed to update price"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 699,
-    "type": "toast",
-    "value": "Invalid price"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 743,
-    "type": "toast",
-    "value": "Price updated"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 746,
-    "type": "toast",
-    "value": "Failed to update price"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 776,
-    "type": "toast",
-    "value": "Quantity must be at least 1"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 832,
-    "type": "toast",
-    "value": "Quantity updated"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 835,
-    "type": "toast",
-    "value": "Failed to update quantity"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 867,
-    "type": "toast",
-    "value": "Quantity must be at least 1"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 922,
-    "type": "toast",
-    "value": "Quantity updated"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 925,
-    "type": "toast",
-    "value": "Failed to update quantity"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 961,
-    "type": "toast",
-    "value": "Invoice ${json.data.invoice_number} created"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 961,
-    "type": "toast-template",
-    "value": "Invoice ${json.data.invoice_number} created"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 966,
-    "type": "toast",
-    "value": "Failed to create invoice"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 1075,
-    "type": "toast",
-    "value": "Ready for Pickup — recommendations saved"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 1080,
-    "type": "toast",
-    "value": "Failed to save post-service data"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 1107,
-    "type": "toast",
-    "value": "Customer assigned"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
-    "line": 1111,
-    "type": "toast",
-    "value": "Failed to assign customer"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/_work-order-row.tsx",
-    "line": 103,
-    "type": "aria-label",
-    "value": "deleteLabel"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/assign-dialog.tsx",
-    "line": 93,
-    "type": "aria-label",
-    "value": "`Toggle ${mechanic.full_name ?? "
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/assign-dialog.tsx",
-    "line": 130,
-    "type": "jsx-text",
-    "value": "Promise"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/assign-dialog.tsx",
-    "line": 382,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/organization/page.tsx",
+    "line": 489,
     "type": "placeholder",
-    "value": "Search by plate, make, or model..."
+    "value": "pageT("
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/bay-card.tsx",
-    "line": 76,
-    "type": "aria-label",
-    "value": "`Bay ${bay.bayNumber"
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/organization/page.tsx",
+    "line": 526,
+    "type": "placeholder",
+    "value": "pageT("
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/bay-view-provider.tsx",
-    "line": 32,
-    "type": "jsx-text",
-    "value": "Promise"
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/organization/page.tsx",
+    "line": 539,
+    "type": "alt",
+    "value": "orgT("
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/pickup-complete-dialog.tsx",
-    "line": 39,
-    "type": "jsx-text",
-    "value": "Promise"
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/payroll/page.tsx",
+    "line": 425,
+    "type": "placeholder",
+    "value": "row.hourlyRate?.toString() ?? "
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/pickup-complete-dialog.tsx",
-    "line": 63,
-    "type": "aria-label",
-    "value": "`${star"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/pickup-complete-form.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/service-reminders/_add-schedule-dialog.tsx",
     "line": 42,
     "type": "jsx-text",
     "value": "Promise"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/pickup-complete-form.tsx",
-    "line": 69,
-    "type": "aria-label",
-    "value": "`${star"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/post-service-dialog.tsx",
-    "line": 71,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/service-reminders/_edit-schedule-dialog.tsx",
+    "line": 30,
     "type": "jsx-text",
     "value": "Promise"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/qr-clock-display.tsx",
-    "line": 311,
-    "type": "alt",
-    "value": "Clock-in QR code"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/queue-panel.tsx",
-    "line": 201,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/settings/_appearance-customization.tsx",
+    "line": 179,
     "type": "title",
-    "value": "`Assign to Bay ${String(bayNum).padStart(2, "
+    "value": "preset.label"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/vehicle-registration-dialog.tsx",
-    "line": 806,
-    "type": "placeholder",
-    "value": "VIN / Chassis"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/vehicle-registration-dialog.tsx",
-    "line": 850,
-    "type": "placeholder",
-    "value": "e.g. Bat"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/vehicle-registration-dialog.tsx",
-    "line": 864,
-    "type": "placeholder",
-    "value": "e.g. Erdene"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/vehicle-registration-dialog.tsx",
-    "line": 987,
-    "type": "title",
-    "value": "lookupResult.vehicle.color"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/work-order-detail-drawer.tsx",
-    "line": 348,
-    "type": "toast",
-    "value": "Ready for Pickup"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/bay-view-v2/work-order-detail-drawer.tsx",
-    "line": 352,
-    "type": "toast",
-    "value": "Failed to save post-service data"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/branch-select.tsx",
-    "line": 35,
-    "type": "placeholder",
-    "value": "placeholder"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/breadcrumb.tsx",
-    "line": 32,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/settings/_appearance-customization.tsx",
+    "line": 180,
     "type": "aria-label",
-    "value": "ariaLabel"
+    "value": "preset.label"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/chart-area-interactive.tsx",
-    "line": 171,
-    "type": "jsx-text",
-    "value": "Total Visitors"
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/settings/_diagnosis-labels-section.tsx",
+    "line": 250,
+    "type": "title",
+    "value": "preset.label"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/chart-area-interactive.tsx",
-    "line": 171,
-    "type": "ui-tag",
-    "value": "Total Visitors"
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/settings/_settings-sub-sidebar.tsx",
+    "line": 58,
+    "type": "aria-label",
+    "value": "section.title"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/customers/customer-detail-sheet.tsx",
-    "line": 391,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/settings/_vehicle-niche-form.tsx",
+    "line": 245,
     "type": "label-prop",
-    "value": "Company"
+    "value": "Show only specific vehicle brands"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/customers/customer-followups-section.tsx",
-    "line": 175,
-    "type": "toast",
-    "value": "Follow-up completed"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/customers/customer-followups-section.tsx",
-    "line": 176,
-    "type": "toast",
-    "value": "Failed to complete follow-up"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/customers/customer-followups-section.tsx",
-    "line": 234,
-    "type": "toast",
-    "value": "Subject and due date are required"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/customers/customer-followups-section.tsx",
-    "line": 248,
-    "type": "toast",
-    "value": "Follow-up created"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/customers/customer-followups-section.tsx",
-    "line": 251,
-    "type": "toast",
-    "value": "Failed to create follow-up"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/customers/customer-followups-section.tsx",
-    "line": 262,
-    "type": "jsx-text",
-    "value": "Schedule Follow-up"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/customers/customer-followups-section.tsx",
-    "line": 262,
-    "type": "ui-tag",
-    "value": "Schedule Follow-up"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/customers/customer-followups-section.tsx",
-    "line": 275,
-    "type": "jsx-text",
-    "value": "Call"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/customers/customer-followups-section.tsx",
-    "line": 277,
-    "type": "jsx-text",
-    "value": "Message"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/customers/customer-followups-section.tsx",
-    "line": 278,
-    "type": "jsx-text",
-    "value": "Visit"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/customers/customer-followups-section.tsx",
-    "line": 279,
-    "type": "jsx-text",
-    "value": "Other"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/customers/customer-followups-section.tsx",
-    "line": 286,
-    "type": "placeholder",
-    "value": "e.g. Callback about brake quote"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/customers/customer-followups-section.tsx",
-    "line": 308,
-    "type": "placeholder",
-    "value": "Additional details..."
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/customers/quick-create-customer-sheet.tsx",
-    "line": 24,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/settings/page.tsx",
+    "line": 532,
     "type": "title",
-    "value": "New customer"
+    "value": "section.title"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 127,
-    "type": "jsx-text",
-    "value": "Drag to reorder"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 149,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/vehicles/_columns.tsx",
+    "line": 92,
     "type": "aria-label",
-    "value": "Select all"
+    "value": "useTranslations("
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 149,
-    "type": "label-prop",
-    "value": "Select all"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 158,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/vehicles/_columns.tsx",
+    "line": 109,
     "type": "aria-label",
-    "value": "Select row"
+    "value": "useTranslations("
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 158,
-    "type": "label-prop",
-    "value": "Select row"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 200,
-    "type": "jsx-text",
-    "value": "Target"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 226,
-    "type": "jsx-text",
-    "value": "Limit"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 271,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/vehicles/new/page.tsx",
+    "line": 363,
     "type": "placeholder",
-    "value": "Assign reviewer"
+    "value": "1234 UBA"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 274,
-    "type": "jsx-text",
-    "value": "Eddie Lake"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 298,
-    "type": "jsx-text",
-    "value": "Open menu"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 303,
-    "type": "jsx-text",
-    "value": "Make a copy"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 304,
-    "type": "jsx-text",
-    "value": "Favorite"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 421,
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/vehicles/new/page.tsx",
+    "line": 388,
     "type": "placeholder",
-    "value": "Select a view"
+    "value": "JTJHK31U..."
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 424,
-    "type": "jsx-text",
-    "value": "Outline"
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/vehicles/new/page.tsx",
+    "line": 407,
+    "type": "placeholder",
+    "value": "Toyota"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 425,
-    "type": "jsx-text",
-    "value": "Past Performance"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 426,
-    "type": "jsx-text",
-    "value": "Key Personnel"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 427,
-    "type": "jsx-text",
-    "value": "Focus Documents"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/vehicles/new/page.tsx",
     "line": 431,
-    "type": "jsx-text",
-    "value": "Outline"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 438,
-    "type": "jsx-text",
-    "value": "Focus Documents"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 446,
-    "type": "jsx-text",
-    "value": "Customize Columns"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 447,
-    "type": "jsx-text",
-    "value": "Columns"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 471,
-    "type": "jsx-text",
-    "value": "Add Section"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 548,
     "type": "placeholder",
-    "value": "table.getState().pagination.pageSize"
+    "value": "Prius"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 571,
-    "type": "jsx-text",
-    "value": "Go to first page"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 581,
-    "type": "jsx-text",
-    "value": "Go to previous page"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 591,
-    "type": "jsx-text",
-    "value": "Go to next page"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 601,
-    "type": "jsx-text",
-    "value": "Go to last page"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 664,
-    "type": "placeholder",
-    "value": "Select a type"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 676,
-    "type": "jsx-text",
-    "value": "Design"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 677,
-    "type": "jsx-text",
-    "value": "Capabilities"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 681,
-    "type": "jsx-text",
-    "value": "Narrative"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 682,
-    "type": "jsx-text",
-    "value": "Cover Page"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 690,
-    "type": "placeholder",
-    "value": "Select a status"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 694,
-    "type": "jsx-text",
-    "value": "In Progress"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 695,
-    "type": "jsx-text",
-    "value": "Not Started"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 702,
-    "type": "jsx-text",
-    "value": "Target"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 706,
-    "type": "jsx-text",
-    "value": "Limit"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 711,
-    "type": "jsx-text",
-    "value": "Reviewer"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 714,
-    "type": "placeholder",
-    "value": "Select a reviewer"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 717,
-    "type": "jsx-text",
-    "value": "Eddie Lake"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 721,
-    "type": "jsx-text",
-    "value": "Emily Whalen"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 728,
-    "type": "jsx-text",
-    "value": "Apply"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/data-table-dashboard.tsx",
-    "line": 728,
-    "type": "ui-tag",
-    "value": "Apply"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/expenses/expense-detail-sheet.tsx",
-    "line": 453,
-    "type": "placeholder",
-    "value": "commonT("
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/expenses/expense-detail-sheet.tsx",
-    "line": 491,
-    "type": "placeholder",
-    "value": "commonT("
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/expenses/expense-form.tsx",
-    "line": 224,
-    "type": "placeholder",
-    "value": "commonT("
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/new-parts-car-sheet.tsx",
-    "line": 215,
-    "type": "placeholder",
-    "value": "Toyota, Honda"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/new-parts-car-sheet.tsx",
-    "line": 236,
-    "type": "placeholder",
-    "value": "Camry, Civic"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/new-parts-car-sheet.tsx",
-    "line": 289,
-    "type": "placeholder",
-    "value": "1HGCM82633A004352"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/part-form.tsx",
-    "line": 253,
-    "type": "placeholder",
-    "value": "e.g. Oil Filter"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/part-form.tsx",
-    "line": 265,
-    "type": "jsx-text",
-    "value": "Part Number"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/part-form.tsx",
-    "line": 265,
-    "type": "ui-tag",
-    "value": "Part Number"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/part-form.tsx",
-    "line": 293,
-    "type": "placeholder",
-    "value": "e.g. Filters, Suspension"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/part-form.tsx",
-    "line": 304,
-    "type": "jsx-text",
-    "value": "Part Number"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/part-form.tsx",
-    "line": 304,
-    "type": "ui-tag",
-    "value": "Part Number"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/part-form.tsx",
-    "line": 379,
-    "type": "placeholder",
-    "value": "e.g. piece, liter"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/part-form.tsx",
-    "line": 390,
-    "type": "placeholder",
-    "value": "Optional description"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/part-photo-upload.tsx",
-    "line": 89,
-    "type": "toast",
-    "value": "Зөвхөн JPEG, PNG, WebP, HEIC зураг ашиглах боломжтой"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/part-photo-upload.tsx",
-    "line": 193,
-    "type": "alt",
-    "value": "Part photo"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/parts-car-detail-sheet.tsx",
-    "line": 122,
-    "type": "toast",
-    "value": "Please enter a part name"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/parts-car-detail-sheet.tsx",
-    "line": 484,
-    "type": "placeholder",
-    "value": "Price ₮"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/supplier-detail-sheet.tsx",
-    "line": 249,
-    "type": "jsx-text",
-    "value": "Tax ID"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/supplier-detail-sheet.tsx",
-    "line": 249,
-    "type": "ui-tag",
-    "value": "Tax ID"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/supplier-detail-sheet.tsx",
-    "line": 261,
-    "type": "jsx-text",
-    "value": "Payment Terms"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/supplier-detail-sheet.tsx",
-    "line": 261,
-    "type": "ui-tag",
-    "value": "Payment Terms"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/supplier-form.tsx",
-    "line": 206,
-    "type": "jsx-text",
-    "value": "Tax ID"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/supplier-form.tsx",
-    "line": 206,
-    "type": "ui-tag",
-    "value": "Tax ID"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/supplier-form.tsx",
-    "line": 219,
-    "type": "jsx-text",
-    "value": "Payment Terms"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/inventory/supplier-form.tsx",
-    "line": 219,
-    "type": "ui-tag",
-    "value": "Payment Terms"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/list-page-shell.tsx",
-    "line": 133,
-    "type": "title",
-    "value": "Customers"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/list-toolbar.tsx",
-    "line": 49,
-    "type": "placeholder",
-    "value": "search.placeholder"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/mechanic-select.tsx",
-    "line": 78,
-    "type": "placeholder",
-    "value": "placeholder"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/mechanic-select.tsx",
-    "line": 101,
-    "type": "jsx-text",
-    "value": "No mechanics found"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/org-theme-settings.tsx",
-    "line": 431,
-    "type": "jsx-text",
-    "value": "Color Presets"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/org-theme-settings.tsx",
-    "line": 431,
-    "type": "ui-tag",
-    "value": "Color Presets"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/org-theme-settings.tsx",
-    "line": 467,
-    "type": "jsx-text",
-    "value": "Custom Colors"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/org-theme-settings.tsx",
-    "line": 467,
-    "type": "ui-tag",
-    "value": "Custom Colors"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/org-theme-settings.tsx",
-    "line": 472,
-    "type": "jsx-text",
-    "value": "Primary Color"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/org-theme-settings.tsx",
-    "line": 494,
-    "type": "jsx-text",
-    "value": "Accent Color"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/org-theme-settings.tsx",
-    "line": 521,
-    "type": "jsx-text",
-    "value": "Border Radius"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/org-theme-settings.tsx",
-    "line": 521,
-    "type": "ui-tag",
-    "value": "Border Radius"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/org-theme-settings.tsx",
-    "line": 570,
-    "type": "jsx-text",
-    "value": "Primary"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/org-theme-settings.tsx",
-    "line": 570,
-    "type": "ui-tag",
-    "value": "Primary"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/org-theme-settings.tsx",
-    "line": 571,
-    "type": "jsx-text",
-    "value": "Secondary"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/org-theme-settings.tsx",
-    "line": 572,
-    "type": "jsx-text",
-    "value": "Outline"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/page-header.tsx",
-    "line": 544,
-    "type": "aria-label",
-    "value": "state.isOpen ? "
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/preload-screen.tsx",
-    "line": 34,
-    "type": "jsx-text",
-    "value": "TOLOM"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/preload-screen.tsx",
-    "line": 82,
-    "type": "jsx-text",
-    "value": "Connected"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/preload-screen.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/vehicles/page.tsx",
     "line": 87,
+    "type": "title",
+    "value": "Stats"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/vehicles/page.tsx",
+    "line": 99,
+    "type": "title",
+    "value": "Recently Added"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/vehicles/page.tsx",
+    "line": 213,
+    "type": "jsx-text",
+    "value": "Delete vehicle"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/work-orders/_columns.tsx",
+    "line": 351,
+    "type": "title",
+    "value": "val ?? undefined"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/dashboard/work-orders/[id]/page.tsx",
+    "line": 1378,
+    "type": "alt",
+    "value": "att.file_name"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/faq/page.tsx",
+    "line": 119,
+    "type": "placeholder",
+    "value": "searchQuery ? "
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/[locale]/offline/page.tsx",
+    "line": 25,
     "type": "jsx-text",
     "value": "Offline"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/right-sidebar.tsx",
-    "line": 29,
-    "type": "aria-label",
-    "value": "tab.label"
+    "file": "/Users/themuuln/coding/personal/tolom/src/app/invoice/[token]/page.tsx",
+    "line": 282,
+    "type": "jsx-text",
+    "value": "TOLOM"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/right-sidebar.tsx",
-    "line": 30,
-    "type": "title",
-    "value": "tab.label"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/search-input.tsx",
-    "line": 132,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-cell-viewer.tsx",
+    "line": 65,
     "type": "placeholder",
-    "value": "resolvedPlaceholder"
+    "value": "Select a type"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/search-input.tsx",
-    "line": 133,
-    "type": "aria-label",
-    "value": "resolvedPlaceholder"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/section-cards.tsx",
-    "line": 18,
-    "type": "jsx-text",
-    "value": "Total Revenue"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/section-cards.tsx",
-    "line": 18,
-    "type": "ui-tag",
-    "value": "Total Revenue"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/section-cards.tsx",
-    "line": 40,
-    "type": "jsx-text",
-    "value": "New Customers"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/section-cards.tsx",
-    "line": 40,
-    "type": "ui-tag",
-    "value": "New Customers"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/section-cards.tsx",
-    "line": 62,
-    "type": "jsx-text",
-    "value": "Active Accounts"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/section-cards.tsx",
-    "line": 62,
-    "type": "ui-tag",
-    "value": "Active Accounts"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/section-cards.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-cell-viewer.tsx",
     "line": 77,
     "type": "jsx-text",
-    "value": "Engagement exceed targets"
+    "value": "Design"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/section-cards.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-cell-viewer.tsx",
+    "line": 78,
+    "type": "jsx-text",
+    "value": "Capabilities"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-cell-viewer.tsx",
     "line": 82,
     "type": "jsx-text",
-    "value": "Growth Rate"
+    "value": "Narrative"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/section-cards.tsx",
-    "line": 82,
-    "type": "ui-tag",
-    "value": "Growth Rate"
-  },
-  {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/section-cards.tsx",
-    "line": 97,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-cell-viewer.tsx",
+    "line": 83,
     "type": "jsx-text",
-    "value": "Meets growth projections"
+    "value": "Cover Page"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/services/service-model-prices-sheet.tsx",
-    "line": 404,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-cell-viewer.tsx",
+    "line": 91,
     "type": "placeholder",
-    "value": "String(defaultPrice)"
+    "value": "Select a status"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/subscription-expired-dialog.tsx",
-    "line": 40,
-    "type": "alt",
-    "value": "Khanbank"
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-cell-viewer.tsx",
+    "line": 95,
+    "type": "jsx-text",
+    "value": "In Progress"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/theme-toggle.tsx",
-    "line": 40,
-    "type": "aria-label",
-    "value": "isDark ? "
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-cell-viewer.tsx",
+    "line": 96,
+    "type": "jsx-text",
+    "value": "Not Started"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/ui/breadcrumb.tsx",
-    "line": 11,
-    "type": "aria-label",
-    "value": "breadcrumb"
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-cell-viewer.tsx",
+    "line": 103,
+    "type": "jsx-text",
+    "value": "Target"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/ui/breadcrumb.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-cell-viewer.tsx",
+    "line": 107,
+    "type": "jsx-text",
+    "value": "Limit"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-cell-viewer.tsx",
     "line": 112,
     "type": "jsx-text",
-    "value": "More"
+    "value": "Reviewer"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/ui/carousel.tsx",
-    "line": 199,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-cell-viewer.tsx",
+    "line": 115,
+    "type": "placeholder",
+    "value": "Select a reviewer"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-cell-viewer.tsx",
+    "line": 118,
     "type": "jsx-text",
-    "value": "Previous slide"
+    "value": "Eddie Lake"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/ui/carousel.tsx",
-    "line": 229,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-cell-viewer.tsx",
+    "line": 122,
     "type": "jsx-text",
-    "value": "Next slide"
+    "value": "Emily Whalen"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/ui/combobox.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-columns.tsx",
+    "line": 63,
+    "type": "jsx-text",
+    "value": "Drag to reorder"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-columns.tsx",
+    "line": 85,
+    "type": "aria-label",
+    "value": "Select all"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-columns.tsx",
+    "line": 85,
+    "type": "label-prop",
+    "value": "Select all"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-columns.tsx",
+    "line": 94,
+    "type": "aria-label",
+    "value": "Select row"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-columns.tsx",
+    "line": 94,
+    "type": "label-prop",
+    "value": "Select row"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-columns.tsx",
+    "line": 136,
+    "type": "jsx-text",
+    "value": "Target"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-columns.tsx",
+    "line": 162,
+    "type": "jsx-text",
+    "value": "Limit"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-columns.tsx",
+    "line": 207,
+    "type": "placeholder",
+    "value": "Assign reviewer"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-columns.tsx",
+    "line": 210,
+    "type": "jsx-text",
+    "value": "Eddie Lake"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-columns.tsx",
+    "line": 234,
+    "type": "jsx-text",
+    "value": "Open menu"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-columns.tsx",
+    "line": 239,
+    "type": "jsx-text",
+    "value": "Make a copy"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/_data-table-columns.tsx",
+    "line": 240,
+    "type": "jsx-text",
+    "value": "Favorite"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/auth/organization-selection-form.tsx",
+    "line": 19,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/auth/organization-selection-form.tsx",
+    "line": 172,
+    "type": "placeholder",
+    "value": "copy.organizationLabel"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/auth/organization-selection-form.tsx",
+    "line": 257,
+    "type": "placeholder",
+    "value": "copy.pinPlaceholder"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/auth/organization-selection-form.tsx",
+    "line": 297,
+    "type": "placeholder",
+    "value": "copy.pinPlaceholder"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/auth/organization-setup-form.tsx",
+    "line": 143,
+    "type": "placeholder",
+    "value": "copy.orgNamePlaceholder"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_bay-card-mechanics-row.tsx",
+    "line": 17,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_bay-card-mechanics-row.tsx",
+    "line": 18,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_bay-card-mechanics-row.tsx",
+    "line": 19,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_bay-card-types.ts",
+    "line": 18,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_bay-card-types.ts",
+    "line": 19,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_bay-card-types.ts",
+    "line": 20,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_bay-card-types.ts",
+    "line": 24,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_bay-drag-handlers.ts",
+    "line": 32,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_bay-drag-handlers.ts",
+    "line": 36,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_bay-drag-handlers.ts",
+    "line": 258,
+    "type": "toast",
+    "value": "Re-order failed — please try again"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_catalog-combobox.tsx",
+    "line": 100,
+    "type": "title",
+    "value": "tooltip"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_catalog-combobox.tsx",
+    "line": 190,
+    "type": "placeholder",
+    "value": "placeholder"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_catalog-combobox.tsx",
     "line": 376,
     "type": "placeholder",
     "value": "placeholder"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/ui/data-table.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_catalog-combobox.tsx",
+    "line": 389,
+    "type": "placeholder",
+    "value": "placeholder"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_catalog-picker-drawer.tsx",
+    "line": 63,
+    "type": "placeholder",
+    "value": "placeholder"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_customer-picker-modal.tsx",
+    "line": 123,
+    "type": "placeholder",
+    "value": "Search by name or phone..."
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_customer-picker-modal.tsx",
+    "line": 181,
+    "type": "placeholder",
+    "value": "e.g. Bat"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_customer-picker-modal.tsx",
+    "line": 198,
+    "type": "placeholder",
+    "value": "e.g. Erdene"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_drawer-footer.tsx",
+    "line": 27,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_drawer-footer.tsx",
+    "line": 30,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_drawer-footer.tsx",
+    "line": 32,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_drawer-header.tsx",
+    "line": 38,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_drawer-types.ts",
+    "line": 70,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_drawer-types.ts",
+    "line": 92,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_drawer-types.ts",
+    "line": 99,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_error-state.tsx",
+    "line": 9,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_grid-view.tsx",
+    "line": 15,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_grid-view.tsx",
+    "line": 28,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_grid-view.tsx",
+    "line": 30,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_grid-view.tsx",
+    "line": 32,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_grid-view.tsx",
+    "line": 37,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_inline-editable-field.tsx",
+    "line": 121,
+    "type": "aria-label",
+    "value": "displayText"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_kanban-view.tsx",
+    "line": 36,
+    "type": "aria-label",
+    "value": "`${status"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_kanban-view.tsx",
+    "line": 63,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_kpi-cards.tsx",
     "line": 468,
+    "type": "jsx-text",
+    "value": "No bay data available"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_kpi-cards.tsx",
+    "line": 608,
+    "type": "jsx-text",
+    "value": "No active jobs"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_kpi-cards.tsx",
+    "line": 881,
+    "type": "jsx-text",
+    "value": "No vehicles waiting"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_mechanic-assign-drawer.tsx",
+    "line": 15,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_mechanic-assign-drawer.tsx",
+    "line": 16,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_mechanic-assign-drawer.tsx",
+    "line": 17,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_mechanic-assign-drawer.tsx",
+    "line": 175,
+    "type": "title",
+    "value": "headerText"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_mechanic-row.tsx",
+    "line": 26,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_mechanic-row.tsx",
+    "line": 27,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_mechanic-row.tsx",
+    "line": 28,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_notes-section.tsx",
+    "line": 107,
+    "type": "aria-label",
+    "value": "`Edit ${label"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_parts-section.tsx",
+    "line": 20,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_parts-section.tsx",
+    "line": 21,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_parts-section.tsx",
+    "line": 22,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_ready-for-pickup-form.tsx",
+    "line": 57,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_schema.ts",
+    "line": 65,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_service-timeline.tsx",
+    "line": 166,
+    "type": "title",
+    "value": "vehicle.color"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_services-section.tsx",
+    "line": 19,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_services-section.tsx",
+    "line": 20,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_services-section.tsx",
+    "line": 21,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_toolbar.tsx",
+    "line": 52,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_toolbar.tsx",
+    "line": 68,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-bay-count-mutation.ts",
+    "line": 7,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-bay-count-mutation.ts",
+    "line": 8,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 26,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 39,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 46,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 171,
+    "type": "toast",
+    "value": "Status changed to ${newStatus}"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 171,
+    "type": "toast-template",
+    "value": "Status changed to ${newStatus}"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 193,
+    "type": "toast",
+    "value": "Failed to update status"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 245,
+    "type": "toast",
+    "value": "Mechanic assigned"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 247,
+    "type": "toast",
+    "value": "Mechanic removed"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 359,
+    "type": "toast",
+    "value": "Added service: ${svc.service_name}"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 359,
+    "type": "toast-template",
+    "value": "Added service: ${svc.service_name}"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 367,
+    "type": "toast",
+    "value": "Failed to add service"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 466,
+    "type": "toast",
+    "value": "Failed to restore service"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 474,
+    "type": "toast",
+    "value": "Failed to remove service"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 578,
+    "type": "toast",
+    "value": "Added part: ${part.part_name}"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 578,
+    "type": "toast-template",
+    "value": "Added part: ${part.part_name}"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 586,
+    "type": "toast",
+    "value": "Failed to add part"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 678,
+    "type": "toast",
+    "value": "Failed to restore part"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 686,
+    "type": "toast",
+    "value": "Failed to remove part"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 708,
+    "type": "toast",
+    "value": "Invalid price"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 758,
+    "type": "toast",
+    "value": "Price updated"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 761,
+    "type": "toast",
+    "value": "Failed to update price"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 789,
+    "type": "toast",
+    "value": "Invalid price"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 833,
+    "type": "toast",
+    "value": "Price updated"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 836,
+    "type": "toast",
+    "value": "Failed to update price"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 866,
+    "type": "toast",
+    "value": "Quantity must be at least 1"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 922,
+    "type": "toast",
+    "value": "Quantity updated"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 925,
+    "type": "toast",
+    "value": "Failed to update quantity"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 957,
+    "type": "toast",
+    "value": "Quantity must be at least 1"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 1012,
+    "type": "toast",
+    "value": "Quantity updated"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 1015,
+    "type": "toast",
+    "value": "Failed to update quantity"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 1051,
+    "type": "toast",
+    "value": "Invoice ${json.data.invoice_number} created"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 1051,
+    "type": "toast-template",
+    "value": "Invoice ${json.data.invoice_number} created"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 1056,
+    "type": "toast",
+    "value": "Failed to create invoice"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 1165,
+    "type": "toast",
+    "value": "Ready for Pickup — recommendations saved"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 1170,
+    "type": "toast",
+    "value": "Failed to save post-service data"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_use-drawer-mutations.ts",
+    "line": 1225,
+    "type": "toast",
+    "value": "Customer assigned"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_view-renderer.tsx",
+    "line": 36,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_view-renderer.tsx",
+    "line": 37,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_view-renderer.tsx",
+    "line": 38,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_view-renderer.tsx",
+    "line": 39,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_view-renderer.tsx",
+    "line": 43,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/_work-order-row.tsx",
+    "line": 103,
+    "type": "aria-label",
+    "value": "deleteLabel"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/assign-dialog.tsx",
+    "line": 93,
+    "type": "aria-label",
+    "value": "`Toggle ${mechanic.full_name ?? "
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/assign-dialog.tsx",
+    "line": 130,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/assign-dialog.tsx",
+    "line": 382,
+    "type": "placeholder",
+    "value": "Search by plate, make, or model..."
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/bay-card.tsx",
+    "line": 77,
+    "type": "aria-label",
+    "value": "`Bay ${bay.bayNumber"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/bay-view-v2-client.tsx",
+    "line": 578,
+    "type": "toast",
+    "value": "No empty bay available"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/bay-view-v2-client.tsx",
+    "line": 763,
+    "type": "toast",
+    "value": "Mechanics reordered"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/bay-view-v2-client.tsx",
+    "line": 766,
+    "type": "toast",
+    "value": "Failed to reorder mechanics"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/bay-view-v2-client.tsx",
+    "line": 1040,
+    "type": "toast",
+    "value": "Added to waiting queue"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/pickup-complete-dialog.tsx",
+    "line": 38,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/pickup-complete-dialog.tsx",
+    "line": 62,
+    "type": "aria-label",
+    "value": "`${star"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/pickup-complete-form.tsx",
+    "line": 42,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/pickup-complete-form.tsx",
+    "line": 69,
+    "type": "aria-label",
+    "value": "`${star"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/post-service-dialog.tsx",
+    "line": 66,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/qr-clock-display.tsx",
+    "line": 311,
+    "type": "alt",
+    "value": "Clock-in QR code"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/queue-panel.tsx",
+    "line": 200,
+    "type": "title",
+    "value": "`Assign to Bay ${String(bayNum).padStart(2, "
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/vehicle-registration-drawer.tsx",
+    "line": 838,
+    "type": "placeholder",
+    "value": "VIN / Chassis"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/vehicle-registration-drawer.tsx",
+    "line": 932,
+    "type": "placeholder",
+    "value": "e.g. Bat"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/vehicle-registration-drawer.tsx",
+    "line": 946,
+    "type": "placeholder",
+    "value": "e.g. Erdene"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/vehicle-registration-drawer.tsx",
+    "line": 1083,
+    "type": "title",
+    "value": "lookupResult.vehicle.color"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/work-order-detail-drawer.tsx",
+    "line": 494,
+    "type": "toast",
+    "value": "Ready for Pickup"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/bay-view-v2/work-order-detail-drawer.tsx",
+    "line": 498,
+    "type": "toast",
+    "value": "Failed to save post-service data"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/branch-select.tsx",
+    "line": 35,
+    "type": "placeholder",
+    "value": "placeholder"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/breadcrumb.tsx",
+    "line": 32,
+    "type": "aria-label",
+    "value": "ariaLabel"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/chart-area-interactive.tsx",
+    "line": 171,
+    "type": "jsx-text",
+    "value": "Total Visitors"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/chart-area-interactive.tsx",
+    "line": 171,
+    "type": "ui-tag",
+    "value": "Total Visitors"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/customers/customer-detail-drawer.tsx",
+    "line": 394,
+    "type": "label-prop",
+    "value": "Company"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/customers/customer-followups-section.tsx",
+    "line": 170,
+    "type": "toast",
+    "value": "Follow-up completed"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/customers/customer-followups-section.tsx",
+    "line": 171,
+    "type": "toast",
+    "value": "Failed to complete follow-up"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/customers/customer-followups-section.tsx",
+    "line": 229,
+    "type": "toast",
+    "value": "Subject and due date are required"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/customers/customer-followups-section.tsx",
+    "line": 243,
+    "type": "toast",
+    "value": "Follow-up created"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/customers/customer-followups-section.tsx",
+    "line": 246,
+    "type": "toast",
+    "value": "Failed to create follow-up"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/customers/customer-followups-section.tsx",
+    "line": 256,
+    "type": "jsx-text",
+    "value": "Schedule Follow-up"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/customers/customer-followups-section.tsx",
+    "line": 270,
+    "type": "jsx-text",
+    "value": "Call"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/customers/customer-followups-section.tsx",
+    "line": 272,
+    "type": "jsx-text",
+    "value": "Message"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/customers/customer-followups-section.tsx",
+    "line": 273,
+    "type": "jsx-text",
+    "value": "Visit"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/customers/customer-followups-section.tsx",
+    "line": 274,
+    "type": "jsx-text",
+    "value": "Other"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/customers/customer-followups-section.tsx",
+    "line": 281,
+    "type": "placeholder",
+    "value": "e.g. Callback about brake quote"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/customers/customer-followups-section.tsx",
+    "line": 303,
+    "type": "placeholder",
+    "value": "Additional details..."
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/customers/quick-create-customer-drawer.tsx",
+    "line": 24,
+    "type": "title",
+    "value": "New customer"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/data-table-dashboard.tsx",
+    "line": 155,
+    "type": "placeholder",
+    "value": "Select a view"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/data-table-dashboard.tsx",
+    "line": 158,
+    "type": "jsx-text",
+    "value": "Outline"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/data-table-dashboard.tsx",
+    "line": 159,
+    "type": "jsx-text",
+    "value": "Past Performance"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/data-table-dashboard.tsx",
+    "line": 160,
+    "type": "jsx-text",
+    "value": "Key Personnel"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/data-table-dashboard.tsx",
+    "line": 161,
+    "type": "jsx-text",
+    "value": "Focus Documents"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/data-table-dashboard.tsx",
+    "line": 165,
+    "type": "jsx-text",
+    "value": "Outline"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/data-table-dashboard.tsx",
+    "line": 172,
+    "type": "jsx-text",
+    "value": "Focus Documents"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/data-table-dashboard.tsx",
+    "line": 180,
+    "type": "jsx-text",
+    "value": "Customize Columns"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/data-table-dashboard.tsx",
+    "line": 181,
+    "type": "jsx-text",
+    "value": "Columns"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/data-table-dashboard.tsx",
+    "line": 205,
+    "type": "jsx-text",
+    "value": "Add Section"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/data-table-dashboard.tsx",
+    "line": 282,
     "type": "placeholder",
     "value": "table.getState().pagination.pageSize"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/ui/pagination.tsx",
-    "line": 11,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/data-table-dashboard.tsx",
+    "line": 305,
+    "type": "jsx-text",
+    "value": "Go to first page"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/data-table-dashboard.tsx",
+    "line": 315,
+    "type": "jsx-text",
+    "value": "Go to previous page"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/data-table-dashboard.tsx",
+    "line": 325,
+    "type": "jsx-text",
+    "value": "Go to next page"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/data-table-dashboard.tsx",
+    "line": 335,
+    "type": "jsx-text",
+    "value": "Go to last page"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/expenses/_expense-detail-edit-form.tsx",
+    "line": 35,
+    "type": "jsx-text",
+    "value": "Promise"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/expenses/_expense-detail-edit-form.tsx",
+    "line": 148,
+    "type": "placeholder",
+    "value": "commonT("
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/expenses/_expense-detail-edit-form.tsx",
+    "line": 186,
+    "type": "placeholder",
+    "value": "commonT("
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/expenses/expense-form.tsx",
+    "line": 212,
+    "type": "placeholder",
+    "value": "commonT("
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/new-parts-car-drawer.tsx",
+    "line": 193,
+    "type": "placeholder",
+    "value": "Toyota, Honda"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/new-parts-car-drawer.tsx",
+    "line": 213,
+    "type": "placeholder",
+    "value": "Camry, Civic"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/new-parts-car-drawer.tsx",
+    "line": 263,
+    "type": "placeholder",
+    "value": "1HGCM82633A004352"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/part-form.tsx",
+    "line": 258,
+    "type": "placeholder",
+    "value": "e.g. Oil Filter"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/part-form.tsx",
+    "line": 270,
+    "type": "jsx-text",
+    "value": "Part Number"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/part-form.tsx",
+    "line": 270,
+    "type": "ui-tag",
+    "value": "Part Number"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/part-form.tsx",
+    "line": 298,
+    "type": "placeholder",
+    "value": "e.g. Filters, Suspension"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/part-form.tsx",
+    "line": 309,
+    "type": "jsx-text",
+    "value": "Part Number"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/part-form.tsx",
+    "line": 309,
+    "type": "ui-tag",
+    "value": "Part Number"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/part-form.tsx",
+    "line": 383,
+    "type": "placeholder",
+    "value": "e.g. piece, liter"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/part-form.tsx",
+    "line": 394,
+    "type": "placeholder",
+    "value": "Optional description"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/part-photo-upload.tsx",
+    "line": 89,
+    "type": "toast",
+    "value": "Зөвхөн JPEG, PNG, WebP, HEIC зураг ашиглах боломжтой"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/part-photo-upload.tsx",
+    "line": 193,
+    "type": "alt",
+    "value": "Part photo"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/parts-car-detail-drawer.tsx",
+    "line": 122,
+    "type": "toast",
+    "value": "Please enter a part name"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/parts-car-detail-drawer.tsx",
+    "line": 484,
+    "type": "placeholder",
+    "value": "Price ₮"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/supplier-detail-drawer.tsx",
+    "line": 249,
+    "type": "jsx-text",
+    "value": "Tax ID"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/supplier-detail-drawer.tsx",
+    "line": 249,
+    "type": "ui-tag",
+    "value": "Tax ID"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/supplier-detail-drawer.tsx",
+    "line": 261,
+    "type": "jsx-text",
+    "value": "Payment Terms"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/supplier-detail-drawer.tsx",
+    "line": 261,
+    "type": "ui-tag",
+    "value": "Payment Terms"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/supplier-form.tsx",
+    "line": 209,
+    "type": "jsx-text",
+    "value": "Tax ID"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/supplier-form.tsx",
+    "line": 209,
+    "type": "ui-tag",
+    "value": "Tax ID"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/supplier-form.tsx",
+    "line": 222,
+    "type": "jsx-text",
+    "value": "Payment Terms"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/inventory/supplier-form.tsx",
+    "line": 222,
+    "type": "ui-tag",
+    "value": "Payment Terms"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/list-page-shell.tsx",
+    "line": 133,
+    "type": "title",
+    "value": "Customers"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/list-toolbar.tsx",
+    "line": 49,
+    "type": "placeholder",
+    "value": "search.placeholder"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/mechanic-combobox.tsx",
+    "line": 100,
+    "type": "title",
+    "value": "Set as lead mechanic"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/mechanic-combobox.tsx",
+    "line": 209,
+    "type": "placeholder",
+    "value": "searchPlaceholder"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/mechanic-list.tsx",
+    "line": 179,
+    "type": "placeholder",
+    "value": "searchPlaceholder"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/mechanic-select.tsx",
+    "line": 77,
+    "type": "placeholder",
+    "value": "placeholder"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/mechanic-select.tsx",
+    "line": 100,
+    "type": "jsx-text",
+    "value": "No mechanics found"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/org-theme-settings.tsx",
+    "line": 75,
+    "type": "jsx-text",
+    "value": "Color Presets"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/org-theme-settings.tsx",
+    "line": 75,
+    "type": "ui-tag",
+    "value": "Color Presets"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/org-theme-settings.tsx",
+    "line": 111,
+    "type": "jsx-text",
+    "value": "Custom Colors"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/org-theme-settings.tsx",
+    "line": 111,
+    "type": "ui-tag",
+    "value": "Custom Colors"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/org-theme-settings.tsx",
+    "line": 116,
+    "type": "jsx-text",
+    "value": "Primary Color"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/org-theme-settings.tsx",
+    "line": 138,
+    "type": "jsx-text",
+    "value": "Accent Color"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/org-theme-settings.tsx",
+    "line": 165,
+    "type": "jsx-text",
+    "value": "Border Radius"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/org-theme-settings.tsx",
+    "line": 165,
+    "type": "ui-tag",
+    "value": "Border Radius"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/org-theme-settings.tsx",
+    "line": 214,
+    "type": "jsx-text",
+    "value": "Primary"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/org-theme-settings.tsx",
+    "line": 214,
+    "type": "ui-tag",
+    "value": "Primary"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/org-theme-settings.tsx",
+    "line": 215,
+    "type": "jsx-text",
+    "value": "Secondary"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/org-theme-settings.tsx",
+    "line": 216,
+    "type": "jsx-text",
+    "value": "Outline"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/page-header.tsx",
+    "line": 545,
+    "type": "aria-label",
+    "value": "state.isOpen ? "
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/preload-screen.tsx",
+    "line": 42,
+    "type": "jsx-text",
+    "value": "TOLOM"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/preload-screen.tsx",
+    "line": 118,
+    "type": "jsx-text",
+    "value": "Connected"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/preload-screen.tsx",
+    "line": 123,
+    "type": "jsx-text",
+    "value": "Offline"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/right-sidebar.tsx",
+    "line": 29,
+    "type": "aria-label",
+    "value": "tab.label"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/right-sidebar.tsx",
+    "line": 30,
+    "type": "title",
+    "value": "tab.label"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/search-input.tsx",
+    "line": 132,
+    "type": "placeholder",
+    "value": "resolvedPlaceholder"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/search-input.tsx",
+    "line": 133,
+    "type": "aria-label",
+    "value": "resolvedPlaceholder"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/section-cards.tsx",
+    "line": 18,
+    "type": "jsx-text",
+    "value": "Total Revenue"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/section-cards.tsx",
+    "line": 18,
+    "type": "ui-tag",
+    "value": "Total Revenue"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/section-cards.tsx",
+    "line": 40,
+    "type": "jsx-text",
+    "value": "New Customers"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/section-cards.tsx",
+    "line": 40,
+    "type": "ui-tag",
+    "value": "New Customers"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/section-cards.tsx",
+    "line": 62,
+    "type": "jsx-text",
+    "value": "Active Accounts"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/section-cards.tsx",
+    "line": 62,
+    "type": "ui-tag",
+    "value": "Active Accounts"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/section-cards.tsx",
+    "line": 77,
+    "type": "jsx-text",
+    "value": "Engagement exceed targets"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/section-cards.tsx",
+    "line": 82,
+    "type": "jsx-text",
+    "value": "Growth Rate"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/section-cards.tsx",
+    "line": 82,
+    "type": "ui-tag",
+    "value": "Growth Rate"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/section-cards.tsx",
+    "line": 97,
+    "type": "jsx-text",
+    "value": "Meets growth projections"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/services/service-model-prices-drawer.tsx",
+    "line": 404,
+    "type": "placeholder",
+    "value": "String(defaultPrice)"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/services/variant-editor-drawer.tsx",
+    "line": 439,
+    "type": "aria-label",
+    "value": "Delete variant"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/services/variant-editor-drawer.tsx",
+    "line": 439,
+    "type": "label-prop",
+    "value": "Delete variant"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/subscription-expired-dialog.tsx",
+    "line": 40,
+    "type": "alt",
+    "value": "Khanbank"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/theme-toggle.tsx",
+    "line": 40,
+    "type": "aria-label",
+    "value": "isDark ? "
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/ui/breadcrumb.tsx",
+    "line": 10,
+    "type": "aria-label",
+    "value": "breadcrumb"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/ui/breadcrumb.tsx",
+    "line": 108,
+    "type": "jsx-text",
+    "value": "More"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/ui/carousel.tsx",
+    "line": 198,
+    "type": "jsx-text",
+    "value": "Previous slide"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/ui/carousel.tsx",
+    "line": 228,
+    "type": "jsx-text",
+    "value": "Next slide"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/ui/combobox.tsx",
+    "line": 375,
+    "type": "placeholder",
+    "value": "placeholder"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/ui/data-table-page.tsx",
+    "line": 104,
+    "type": "title",
+    "value": "Vehicles"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/ui/data-table-page.tsx",
+    "line": 163,
+    "type": "title",
+    "value": "title"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/ui/data-table.tsx",
+    "line": 492,
+    "type": "placeholder",
+    "value": "table.getState().pagination.pageSize"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/ui/pagination.tsx",
+    "line": 13,
     "type": "aria-label",
     "value": "pagination"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/ui/pagination.tsx",
-    "line": 72,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/ui/pagination.tsx",
+    "line": 74,
     "type": "aria-label",
     "value": "Go to previous page"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/ui/pagination.tsx",
-    "line": 72,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/ui/pagination.tsx",
+    "line": 74,
     "type": "label-prop",
     "value": "Go to previous page"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/ui/pagination.tsx",
-    "line": 90,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/ui/pagination.tsx",
+    "line": 92,
     "type": "aria-label",
     "value": "Go to next page"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/ui/pagination.tsx",
-    "line": 90,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/ui/pagination.tsx",
+    "line": 92,
     "type": "label-prop",
     "value": "Go to next page"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/ui/pagination.tsx",
-    "line": 117,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/ui/pagination.tsx",
+    "line": 118,
     "type": "jsx-text",
     "value": "More pages"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/color-select.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/color-select.tsx",
     "line": 66,
     "type": "placeholder",
     "value": "placeholder"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/license-plate.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/license-plate.tsx",
     "line": 67,
     "type": "jsx-text",
     "value": "Soyombo Symbol"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-detail-sheet.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-detail-drawer.tsx",
     "line": 797,
     "type": "placeholder",
     "value": "placeholder"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-detail-sheet.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-detail-drawer.tsx",
     "line": 913,
     "type": "jsx-text",
     "value": "Gasoline"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-detail-sheet.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-detail-drawer.tsx",
     "line": 914,
     "type": "jsx-text",
     "value": "Diesel"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-detail-sheet.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-detail-drawer.tsx",
     "line": 915,
     "type": "jsx-text",
     "value": "Electric"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-detail-sheet.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-detail-drawer.tsx",
     "line": 916,
     "type": "jsx-text",
     "value": "Hybrid"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-detail-sheet.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-detail-drawer.tsx",
     "line": 931,
     "type": "jsx-text",
     "value": "Automatic"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-detail-sheet.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-detail-drawer.tsx",
     "line": 932,
     "type": "jsx-text",
     "value": "Manual"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-detail-sheet.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-detail-drawer.tsx",
     "line": 966,
     "type": "jsx-text",
     "value": "Sedan"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-detail-sheet.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-detail-drawer.tsx",
     "line": 967,
     "type": "jsx-text",
     "value": "Hatchback"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-detail-sheet.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-detail-drawer.tsx",
     "line": 968,
     "type": "jsx-text",
     "value": "Coupe"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-detail-sheet.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-detail-drawer.tsx",
     "line": 969,
     "type": "jsx-text",
     "value": "Wagon"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-detail-sheet.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-detail-drawer.tsx",
     "line": 971,
     "type": "jsx-text",
     "value": "Truck"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-form.tsx",
-    "line": 1112,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-form.tsx",
+    "line": 1080,
     "type": "jsx-text",
     "value": "Gasoline"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-form.tsx",
-    "line": 1113,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-form.tsx",
+    "line": 1081,
     "type": "jsx-text",
     "value": "Diesel"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-form.tsx",
-    "line": 1114,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-form.tsx",
+    "line": 1082,
     "type": "jsx-text",
     "value": "Electric"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-form.tsx",
-    "line": 1115,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-form.tsx",
+    "line": 1083,
     "type": "jsx-text",
     "value": "Hybrid"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-form.tsx",
-    "line": 1135,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-form.tsx",
+    "line": 1103,
     "type": "jsx-text",
     "value": "Automatic"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-form.tsx",
-    "line": 1136,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-form.tsx",
+    "line": 1104,
     "type": "jsx-text",
     "value": "Manual"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-form.tsx",
-    "line": 1184,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-form.tsx",
+    "line": 1152,
     "type": "jsx-text",
     "value": "Sedan"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-form.tsx",
-    "line": 1186,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-form.tsx",
+    "line": 1154,
     "type": "jsx-text",
     "value": "Crossover"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-form.tsx",
-    "line": 1187,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-form.tsx",
+    "line": 1155,
     "type": "jsx-text",
     "value": "Hatchback"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-form.tsx",
-    "line": 1188,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-form.tsx",
+    "line": 1156,
     "type": "jsx-text",
     "value": "Wagon"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-form.tsx",
-    "line": 1189,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-form.tsx",
+    "line": 1157,
     "type": "jsx-text",
     "value": "Coupe"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-form.tsx",
-    "line": 1190,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-form.tsx",
+    "line": 1158,
     "type": "jsx-text",
     "value": "Convertible"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/vehicles/vehicle-form.tsx",
-    "line": 1191,
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/vehicles/vehicle-form.tsx",
+    "line": 1159,
     "type": "jsx-text",
     "value": "Pickup"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/work-orders/wizard/wizard-context.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/work-orders/wizard/wizard-context.tsx",
     "line": 140,
     "type": "jsx-text",
     "value": "Promise"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/work-orders/wizard/wizard-context.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/work-orders/wizard/wizard-context.tsx",
     "line": 172,
     "type": "jsx-text",
     "value": "Promise"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/work-orders/wizard/wizard-step-indicator.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/work-orders/wizard/wizard-step-indicator.tsx",
     "line": 62,
     "type": "aria-label",
     "value": "Work order creation progress"
   },
   {
-    "file": "/Users/themuuln/coding/personal/tolom/tolom/src/components/work-orders/wizard/wizard-step-indicator.tsx",
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/work-orders/wizard/wizard-step-indicator.tsx",
     "line": 62,
     "type": "label-prop",
     "value": "Work order creation progress"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/work-orders/work-order-detail-drawer.tsx",
+    "line": 263,
+    "type": "label-prop",
+    "value": "Services"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/work-orders/work-order-detail-drawer.tsx",
+    "line": 265,
+    "type": "jsx-text",
+    "value": "No services"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/work-orders/work-order-detail-drawer.tsx",
+    "line": 271,
+    "type": "jsx-text",
+    "value": "Service"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/work-orders/work-order-detail-drawer.tsx",
+    "line": 312,
+    "type": "label-prop",
+    "value": "Parts"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/work-orders/work-order-detail-drawer.tsx",
+    "line": 314,
+    "type": "jsx-text",
+    "value": "No parts"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/work-orders/work-order-detail-drawer.tsx",
+    "line": 320,
+    "type": "jsx-text",
+    "value": "Part"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/work-orders/work-order-detail-drawer.tsx",
+    "line": 363,
+    "type": "jsx-text",
+    "value": "Services"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/work-orders/work-order-detail-drawer.tsx",
+    "line": 367,
+    "type": "jsx-text",
+    "value": "Parts"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/work-orders/work-order-detail-drawer.tsx",
+    "line": 372,
+    "type": "jsx-text",
+    "value": "Discount"
+  },
+  {
+    "file": "/Users/themuuln/coding/personal/tolom/src/components/work-orders/work-order-detail-drawer.tsx",
+    "line": 379,
+    "type": "jsx-text",
+    "value": "Grand Total"
   }
 ]

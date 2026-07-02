@@ -3,7 +3,7 @@ create table if not exists work_order_commissions (
   id uuid primary key default gen_random_uuid(),
   work_order_id uuid not null references work_orders(id) on delete cascade,
   mechanic_id uuid not null references profiles(id),
-  commission_rule_id uuid references mechanic_commission_rules(id) on delete set null,
+  commission_rule_id uuid,
   commission_type text not null,
   commission_rate numeric(10,2) not null,
   commission_amount numeric(12,2) not null default 0,

@@ -49,3 +49,11 @@ drop trigger if exists set_mechanic_commission_rules_updated_at on mechanic_comm
 create trigger set_mechanic_commission_rules_updated_at
   before update on mechanic_commission_rules
   for each row execute function update_updated_at_column();
+
+-- Add FK from work_order_commissions (created in 00004, deferred until now)
+alter table work_order_commissions
+  add constraint fk_wo_commissions_rule
+  foreign key (commission_rule_id)
+  references mechanic_commission_rules(id)
+  on delete set null;
+
