@@ -1,0 +1,42 @@
+{
+  "agent": {
+    "name": "workflow-worker",
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object"
+    },
+    "prompt": {
+      "context": {
+        "projectPath": "/Users/themuuln/coding/personal/tolom/tolom"
+      },
+      "instructions": [
+        "Read both locale files to find vehicleModels section",
+        "Add new keys at the end of the vehicleModels object"
+      ],
+      "outputFormat": "JSON",
+      "role": "Frontend engineer",
+      "task": "Add missing i18n keys to both src/messages/en.json and src/messages/mn.json under the \"vehicleModels\" section.\n\nNew keys needed:\n- \"deleteConfirmation\": \"Are you sure you want to delete this variant?\" / \"Энэ хувилбарыг устгахдаа итгэлтэй байна уу?\"\n- \"deleteTitle\": \"Delete variant\" / \"Хувилбар устгах\"\n- \"addVariant\": \"Add Variant\" / \"Хувилбар нэмэх\"\n- \"details\": \"Details\" / \"Дэлгэрэнгүй\"\n- \"years\": \"Years\" / \"Онууд\"\n- \"noVariants\": \"No variants\" / \"Хувилбар байхгүй\"\n\nIMPORTANT: \n1. Read both en.json and mn.json first to find the exact location of the vehicleModels section\n2. Add the new keys at the end of the vehicleModels object in both files\n3. Keep existing keys unchanged\n4. Actually write the files — do not plan"
+    }
+  },
+  "io": {
+    "inputJsonPath": "tasks/01KT89W8H4QSFF15NF6T8RWM5T/input.json",
+    "outputJsonPath": "tasks/01KT89W8H4QSFF15NF6T8RWM5T/output.json"
+  },
+  "kind": "agent",
+  "title": "Add missing i18n keys for vehicle-models",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KT89W8H4QSFF15NF6T8RWM5T",
+  "taskId": "add-i18n-keys",
+  "invocationKey": "vehicle-models-ui-improve:S000003:add-i18n-keys",
+  "stepId": "S000003",
+  "inputs": {
+    "projectPath": "/Users/themuuln/coding/personal/tolom/tolom"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KSYQSRAFFXGSEPNK3TYG9R8Q",
+  "taskId": "execute-inventory-phase",
+  "invocationKey": "inventory-improvement:S000009:execute-inventory-phase",
+  "status": "ok",
+  "result": {
+    "buildPassing": true,
+    "error": null,
+    "status": "completed",
+    "summary": "Implemented Phase 5 UI & UX Polish across the inventory module. Changes: (1) Added current balance badge in movement recording modal. (2) Added 'Set Default Threshold' button + dialog in parts-tab toolbar with summary badge for parts without thresholds. (3) Reviewed alerts-to-PO flow left as-is. (4) Fixed raw color values: text-red-600 to text-destructive, bg-green-50/text-green-700 to Badge variant secondary, updated MOVEMENT_COLORS/PO_STATUS_COLORS with dark-mode-aware colors. (5) Added i18n keys: currentBalance, setDefaultThreshold, defaultThreshold, defaultThresholdDescription, thresholdSet, partsNoThreshold to both mn.json and en.json."
+  },
+  "startedAt": "2026-05-31T10:10:44.709Z",
+  "finishedAt": "2026-05-31T10:10:44.709Z",
+  "value": {
+    "buildPassing": true,
+    "error": null,
+    "status": "completed",
+    "summary": "Implemented Phase 5 UI & UX Polish across the inventory module. Changes: (1) Added current balance badge in movement recording modal. (2) Added 'Set Default Threshold' button + dialog in parts-tab toolbar with summary badge for parts without thresholds. (3) Reviewed alerts-to-PO flow left as-is. (4) Fixed raw color values: text-red-600 to text-destructive, bg-green-50/text-green-700 to Badge variant secondary, updated MOVEMENT_COLORS/PO_STATUS_COLORS with dark-mode-aware colors. (5) Added i18n keys: currentBalance, setDefaultThreshold, defaultThreshold, defaultThresholdDescription, thresholdSet, partsNoThreshold to both mn.json and en.json."
+  }
+}

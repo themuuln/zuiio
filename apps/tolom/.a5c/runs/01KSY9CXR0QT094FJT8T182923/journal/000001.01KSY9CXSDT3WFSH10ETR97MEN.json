@@ -1,0 +1,16 @@
+{
+  "type": "RUN_CREATED",
+  "recordedAt": "2026-05-31T05:51:36.237Z",
+  "data": {
+    "runId": "01KSY9CXR0QT094FJT8T182923",
+    "processId": "tolom-ux-improvements",
+    "entrypoint": {
+      "importPath": "../../processes/tolom-ux-improvements.mjs",
+      "exportName": "process"
+    },
+    "harness": "pi",
+    "inputsRef": "inputs.json",
+    "prompt": "Execute all P0 + P1 UX improvements from PRACTICAL.md across all TOLOM pages. Start with Bay View fixes, then continue through each page category. Verify with build after each phase."
+  },
+  "checksum": "d28f5c914d814b75a2b6ac30421dc4aa9394e93e79ec8d96bea81f7e23c59d17"
+}

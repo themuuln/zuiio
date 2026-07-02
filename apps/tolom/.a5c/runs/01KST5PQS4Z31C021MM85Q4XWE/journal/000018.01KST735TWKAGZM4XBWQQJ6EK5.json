@@ -1,0 +1,17 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-29T15:54:21.916Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KST735T4Z00PET82KFB2WZN1",
+    "invocationKey": "project-install:S000009:configure-cicd",
+    "invocationHash": "7b6e40c4fa42a6f092b91f102f7b4a401944d9d5ca45d659b9787853ee8b11d9",
+    "stepId": "S000009",
+    "taskId": "configure-cicd",
+    "kind": "agent",
+    "label": "agent",
+    "taskDefRef": "tasks/01KST735T4Z00PET82KFB2WZN1/task.json",
+    "labels": ["agent", "cradle", "cicd", "configuration"]
+  },
+  "checksum": "b53747ce3c7eb3f4f11d4770b9aefc3b01e691b0d1a1cdb826688670e3743de8"
+}

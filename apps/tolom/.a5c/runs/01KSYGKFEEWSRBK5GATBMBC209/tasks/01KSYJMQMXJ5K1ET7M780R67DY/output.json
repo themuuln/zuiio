@@ -1,0 +1,1 @@
+{"status":"completed","buildPassing":true,"changes":["src/app/[locale]/dashboard/organization/roles/page.tsx - new roles management page with role cards, member counts, descriptions","src/app/api/organizations/[id]/roles/route.ts - extended select to return description, is_system","src/app/[locale]/dashboard/organization/page.tsx - added View Roles button to members card"]}

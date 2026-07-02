@@ -1,0 +1,57 @@
+name: Sync Env to Vercel
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  sync-env:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+
+      - name: Pull Vercel environment
+        run: >
+          vercel pull --yes --environment=production
+          --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Push env vars to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          {
+            printf 'NEXT_PUBLIC_SUPABASE_URL=%s\n' \
+              "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}"
+            printf 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=%s\n' \
+              "${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}"
+            printf 'NEXT_PUBLIC_SUPABASE_ANON_KEY=%s\n' \
+              "${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}"
+            printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n' \
+              "${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
+            printf 'RESEND_API_KEY=%s\n' \
+              "${{ secrets.RESEND_API_KEY }}"
+            printf 'SMTP_HOST=%s\n' "${{ secrets.SMTP_HOST }}"
+            printf 'SMTP_PORT=%s\n' "${{ secrets.SMTP_PORT }}"
+            printf 'SMTP_SECURE=%s\n' "${{ secrets.SMTP_SECURE }}"
+            printf 'SMTP_USER=%s\n' "${{ secrets.SMTP_USER }}"
+            printf 'SMTP_PASS=%s\n' "${{ secrets.SMTP_PASS }}"
+            printf 'EMAIL_FROM=%s\n' "${{ secrets.EMAIL_FROM }}"
+          } > /tmp/.env.vercel
+
+          while IFS='=' read -r name value; do
+            [ -z "$name" ] && continue
+            name="${name%% }"  # strip trailing whitespace
+            # update if exists, add if new
+            vercel env update "$name" production \
+              --value "$value" \
+              --token="$VERCEL_TOKEN" --non-interactive 2>/dev/null \
+            || vercel env add "$name" production \
+              --value "$value" \
+              --yes --non-interactive \
+              --token="$VERCEL_TOKEN"
+          done < /tmp/.env.vercel

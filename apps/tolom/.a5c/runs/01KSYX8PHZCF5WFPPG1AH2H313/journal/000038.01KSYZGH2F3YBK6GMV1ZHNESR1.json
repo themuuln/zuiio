@@ -1,0 +1,19 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-31T12:18:02.959Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KSYZGH1SW28H3NN3M25NCWEA",
+    "invocationKey": "feature/qr-clock-in:S000019:write-tests",
+    "invocationHash": "0ab7f2e032b5ede5753b99ae2957ca3c93511c948581889d1a37d47fa6a4d4d9",
+    "stepId": "S000019",
+    "taskId": "write-tests",
+    "kind": "agent",
+    "label": "testing",
+    "taskDefRef": "tasks/01KSYZGH1SW28H3NN3M25NCWEA/task.json",
+    "labels": [
+      "testing"
+    ]
+  },
+  "checksum": "682d4c4c04af2aed69dd48f39c27f034787b3c052b43a41c8db7ac1e54009040"
+}

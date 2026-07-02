@@ -1,0 +1,17 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-29T15:56:36.101Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KST778VD09K7M5KGP60FJK1G",
+    "invocationKey": "project-install:S000011:initialize-a5c-infra",
+    "invocationHash": "5f1c078f03a74901bbc55010111961097d6e9df29fba23593bb6208f9ecaceb4",
+    "stepId": "S000011",
+    "taskId": "initialize-a5c-infra",
+    "kind": "agent",
+    "label": "agent",
+    "taskDefRef": "tasks/01KST778VD09K7M5KGP60FJK1G/task.json",
+    "labels": ["agent", "cradle", "infrastructure", "quality-gates"]
+  },
+  "checksum": "a72071a835b1539f4c4632731e92482830ca2b5380aa206db7275e08ad7f34e9"
+}

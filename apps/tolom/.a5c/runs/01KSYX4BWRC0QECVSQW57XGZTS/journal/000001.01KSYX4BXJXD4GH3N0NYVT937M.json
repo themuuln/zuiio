@@ -1,0 +1,15 @@
+{
+  "type": "RUN_CREATED",
+  "recordedAt": "2026-05-31T11:36:27.314Z",
+  "data": {
+    "runId": "01KSYX4BWRC0QECVSQW57XGZTS",
+    "processId": "feature/qr-clock-in",
+    "entrypoint": {
+      "importPath": "../../processes/qr-clock-in.js",
+      "exportName": "process"
+    },
+    "harness": "pi",
+    "prompt": "Implement QR scan + phone identity verification for mechanic clock-in/out. Admin registers mechanic's phone via QR code, then clock-in requires scanning a QR shown on the shop tablet with the mechanic's personal phone (mobile website)."
+  },
+  "checksum": "5ad984e9a3aae0d6f5e74b52e30d43b119c0b5d902e752fb0b0512ae8e91d404"
+}

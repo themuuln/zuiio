@@ -1,0 +1,109 @@
+{
+  "agent": {
+    "name": "general-purpose",
+    "outputSchema": {
+      "properties": {
+        "buildPassing": {
+          "type": "boolean"
+        },
+        "error": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "completed",
+            "failed"
+          ],
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "summary",
+        "buildPassing"
+      ],
+      "type": "object"
+    },
+    "prompt": {
+      "context": {
+        "conventions": {
+          "apiPattern": "All API routes use api-handler.ts wrapper with ApiResponse<T>",
+          "branchNaming": "feat/phase2/<module>-<description>",
+          "i18n": "Update both mn.json and en.json for any UI string change",
+          "importConvention": "Import types from @/lib/types, never from @/lib/database.types",
+          "queryPattern": "React Query hooks in src/lib/queries/, services in src/lib/services/",
+          "uiRules": "Use shadcn components, semantic color tokens, gap-* over space-y-*, size-* over w-* h-*"
+        },
+        "description": "Replace the 5-min cron-refreshed materialized view with a PostgreSQL trigger function that updates inventory_balances in real-time on every movement insert/update/delete.",
+        "phaseId": "real-time-balances",
+        "projectProfile": "TOLOM auto repair SaaS — Next.js 16, Supabase, shadcn/ui, React Query, Zustand",
+        "repoRoot": "/Users/themuuln/coding/personal/tolom/tolom"
+      },
+      "instructions": [
+        "You are executing phase 1: Real-Time Inventory Balances",
+        "",
+        "GOAL: Replace the 5-min cron-refreshed materialized view (inventory_balances) with a real-time mechanism.",
+        "",
+        "Current state:",
+        "- supabase/migrations/20260514100000_materialize_inventory_balances.sql creates the materialized view and schedules a cron job to refresh every 5 minutes",
+        "- inventory_balances is computed: SUM(quantity) grouped by part_id, with adjustments for movement direction",
+        "",
+        "What to do:",
+        "1. CREATE a new migration file: supabase migration new realtime_inventory_balances",
+        "2. In the migration:",
+        "   a. Drop the existing cron schedule (cron.unschedule)",
+        "   b. Create or replace a function refresh_inventory_balance(part_id uuid) that recalculates and upserts the balance for a single part",
+        "   c. Create a trigger on inventory_movements (AFTER INSERT/UPDATE/DELETE) that calls refresh_inventory_balance(NEW.part_id or OLD.part_id)",
+        "   d. Keep the materialized view as the backing table but make it a regular table, or create a new table inventory_balances_realtime that mirrors the current structure",
+        "   e. Add proper indexes",
+        "3. Apply the migration using supabase_execute_sql MCP",
+        "4. Regenerate TypeScript types",
+        "5. Update the inventory service if needed (src/lib/services/inventory-service.ts)",
+        "6. Verify: npm run lint && npm run build passes",
+        "7. Return structured result",
+        "",
+        "=== General Instructions ===",
+        "1. Read the affected files first before making changes",
+        "2. Apply changes — write new files, edit existing ones",
+        "3. After implementation, run: npm run lint && npm run build",
+        "4. If build fails, diagnose and fix until it passes",
+        "5. If TypeScript regeneration needed, run: supabase gen types typescript --linked > src/lib/database.types.ts",
+        "6. Update both i18n files (mn.json + en.json) for any user-visible strings",
+        "7. Run the tests: npm run test if phase affects service files with tests",
+        "8. Return structured result with { status: 'completed'|'failed', summary: string, buildPassing: boolean, error?: string }",
+        "9. Keep the scope TIGHT — this is a quick targeted win, not a full redesign"
+      ],
+      "outputFormat": "JSON",
+      "role": "Full-stack developer",
+      "task": "Execute phase 1/5: Real-Time Inventory Balances"
+    }
+  },
+  "io": {
+    "inputJsonPath": "tasks/01KSYKXVW5NYHJYB2H5S3VDT53/input.json",
+    "outputJsonPath": "tasks/01KSYKXVW5NYHJYB2H5S3VDT53/result.json"
+  },
+  "kind": "agent",
+  "labels": [
+    "implementation",
+    "inventory",
+    "phase-real-time-balances"
+  ],
+  "title": "Phase 1: Real-Time Inventory Balances",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KSYKXVW5NYHJYB2H5S3VDT53",
+  "taskId": "execute-inventory-phase",
+  "invocationKey": "inventory-improvement:S000001:execute-inventory-phase",
+  "stepId": "S000001",
+  "inputs": {
+    "phase": {
+      "description": "Replace the 5-min cron-refreshed materialized view with a PostgreSQL trigger function that updates inventory_balances in real-time on every movement insert/update/delete.",
+      "id": "real-time-balances",
+      "title": "Real-Time Inventory Balances"
+    },
+    "phaseIndex": 1,
+    "totalPhases": 5
+  }
+}

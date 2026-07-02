@@ -1,0 +1,57 @@
+{
+  "agent": {
+    "name": "general-purpose",
+    "outputSchema": {
+      "properties": {
+        "files": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "files"
+      ],
+      "type": "object"
+    },
+    "prompt": {
+      "context": {
+        "projectPath": "/Users/themuuln/coding/personal/tolom/tolom"
+      },
+      "instructions": [
+        "Create under src/app/api/organizations/[id]/payroll/:",
+        "",
+        "1. pay-rates/route.ts:",
+        "  - export const GET = createRouteHandler(...) — calls listPayRates, { requiredPermission: { resource: \"payroll\", action: \"read\" } }",
+        "  - export const PUT = createRouteHandler(...) — calls upsertPayRate from body { mechanicId, hourlyRate, effectiveFrom }, { requiredPermission: { resource: \"payroll\", action: \"write\" } }",
+        "",
+        "2. records/route.ts:",
+        "  - export const GET = createRouteHandler(...) — reads year/month from searchParams, calls getPayrollRecords",
+        "",
+        "3. calculate/route.ts:",
+        "  - export const POST = createRouteHandler(...) — reads year/month from body, calls calculateMonthlyPayroll",
+        "",
+        "4. records/[id]/route.ts:",
+        "  - export const PATCH = createRouteHandler(...) — reads action from body (approve|pay), calls updatePayrollRecordStatus"
+      ],
+      "outputFormat": "JSON with files array",
+      "role": "Backend developer",
+      "task": "Create 5 route files for payroll endpoints"
+    }
+  },
+  "io": {
+    "inputJsonPath": "tasks/01KT1W6A3H4NQST2D5DVMXSFX1/input.json",
+    "outputJsonPath": "tasks/01KT1W6A3H4NQST2D5DVMXSFX1/output.json"
+  },
+  "kind": "agent",
+  "title": "Build payroll API routes",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KT1W6A3H4NQST2D5DVMXSFX1",
+  "taskId": "payroll-api",
+  "invocationKey": "payroll-feature:S000003:payroll-api",
+  "stepId": "S000003",
+  "inputs": {
+    "input": {}
+  }
+}

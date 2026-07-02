@@ -1,0 +1,399 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KST5T1NQDK54NM9Q4QJ2X4H9",
+  "taskId": "analyze-repo",
+  "invocationKey": "project-install:S000002:analyze-repo",
+  "status": "ok",
+  "result": {
+    "architecture": {
+      "dataFlow": "Pages → React Query hooks (src/lib/queries/) → API Routes (src/app/api/) → Services (src/lib/services/) → Supabase client → PostgreSQL",
+      "entryPoints": [
+        "src/app/[locale]/page.tsx",
+        "src/app/layout.tsx",
+        "src/app/[locale]/layout.tsx"
+      ],
+      "modules": [
+        {
+          "description": "CRM — customer list, detail, notes, comms",
+          "name": "customers",
+          "path": "src/app/[locale]/dashboard/customers"
+        },
+        {
+          "description": "Vehicle registry and lookup",
+          "name": "vehicles",
+          "path": "src/app/[locale]/dashboard/vehicles"
+        },
+        {
+          "description": "Work order creation, detail, wizard",
+          "name": "work-orders",
+          "path": "src/app/[locale]/dashboard/work-orders"
+        },
+        {
+          "description": "Parts inventory, movements, purchase orders",
+          "name": "inventory",
+          "path": "src/app/[locale]/dashboard/inventory"
+        },
+        {
+          "description": "Expense tracking and categories",
+          "name": "expenses",
+          "path": "src/app/[locale]/dashboard/expenses"
+        },
+        {
+          "description": "Financial overview, P&L",
+          "name": "finance",
+          "path": "src/app/[locale]/dashboard/finance"
+        },
+        {
+          "description": "Analytics, charts, forecasting, retention",
+          "name": "reports",
+          "path": "src/app/[locale]/dashboard/reports"
+        },
+        {
+          "description": "Service catalog management",
+          "name": "services",
+          "path": "src/app/[locale]/dashboard/services"
+        },
+        {
+          "description": "Org settings, staff management",
+          "name": "organization",
+          "path": "src/app/[locale]/dashboard/organization"
+        },
+        {
+          "description": "Physical bay assignment view",
+          "name": "bay-view",
+          "path": "src/app/[locale]/dashboard/bay-view-v2"
+        },
+        {
+          "description": "Mechanic view, time tracking",
+          "name": "mechanic",
+          "path": "src/app/[locale]/dashboard/mechanic"
+        },
+        {
+          "description": "Customer self-service portal",
+          "name": "portal",
+          "path": "src/app/[locale]/dashboard/portal"
+        },
+        {
+          "description": "Scheduled service reminders",
+          "name": "service-reminders",
+          "path": "src/app/[locale]/dashboard/service-reminders"
+        },
+        {
+          "description": "Vehicle make/model database",
+          "name": "vehicle-models",
+          "path": "src/app/[locale]/dashboard/vehicle-models"
+        }
+      ],
+      "pattern": "Vertical SaaS — multi-tenant application with feature-based modules"
+    },
+    "conventions": {
+      "codeStyle": {
+        "formatter": "Biome",
+        "indentation": "2 spaces",
+        "quotes": "single quotes",
+        "semicolons": "trailing"
+      },
+      "errorHandling": "Custom AppError hierarchy (NotFoundError, UnauthorizedError, ForbiddenError, ValidationError, ConflictError) with toApiErrorResponse() wire format. All API routes wrapped in createRouteHandler.",
+      "importOrder": [
+        "@/lib/*",
+        "@/components/*",
+        "@/hooks/*",
+        "external packages"
+      ],
+      "naming": {
+        "apiRoutes": "RESTful nested under /api/organizations/[id]/...",
+        "components": "PascalCase exports, kebab-case files",
+        "database": "snake_case",
+        "directories": "kebab-case",
+        "hooks": "use- prefix"
+      },
+      "testingConventions": "Vitest for unit/integration, Playwright for E2E. Co-located test files. Test credentials in AGENTS.md."
+    },
+    "directoryTree": {
+      "src": {
+        "app": "Next.js App Router pages",
+        "components": "React components",
+        "hooks": "Custom hooks",
+        "lib": "Utilities, services, queries, stores, types"
+      }
+    },
+    "documentation": [
+      {
+        "path": "MASTER_PLAN.md",
+        "summary": "Full product vision, development phases, pricing strategy",
+        "type": "product-vision"
+      },
+      {
+        "path": "AGENTS.md",
+        "summary": "Global + project agent configuration with comprehensive rules",
+        "type": "agent-config"
+      },
+      {
+        "path": "README.md",
+        "summary": "Repository readme",
+        "type": "readme"
+      },
+      {
+        "path": "docs/",
+        "summary": "VitePress documentation with 25+ pages",
+        "type": "documentation-site"
+      }
+    ],
+    "techStack": {
+      "buildTools": ["Next.js", "Turbopack", "PostCSS", "Tailwind CSS"],
+      "databases": [
+        {
+          "name": "PostgreSQL",
+          "provider": "Supabase",
+          "type": "relational",
+          "version": "15+"
+        }
+      ],
+      "frameworks": [
+        {
+          "category": "framework",
+          "name": "Next.js",
+          "version": "16.2.6"
+        },
+        {
+          "category": "ui",
+          "name": "React",
+          "version": "19.2.4"
+        },
+        {
+          "category": "css",
+          "name": "Tailwind CSS",
+          "version": "4.3"
+        },
+        {
+          "category": "component-library",
+          "name": "shadcn/ui",
+          "version": "4"
+        }
+      ],
+      "infrastructure": [
+        {
+          "category": "hosting",
+          "name": "Vercel"
+        },
+        {
+          "category": "backend-as-a-service",
+          "name": "Supabase"
+        },
+        {
+          "category": "error-monitoring",
+          "name": "Sentry"
+        },
+        {
+          "category": "email",
+          "name": "Resend"
+        }
+      ],
+      "languages": [
+        {
+          "name": "TypeScript",
+          "role": "primary",
+          "version": "5.9"
+        }
+      ],
+      "packageManagers": ["pnpm"]
+    }
+  },
+  "startedAt": "2026-05-29T15:35:17.304Z",
+  "finishedAt": "2026-05-29T15:35:17.304Z",
+  "value": {
+    "architecture": {
+      "dataFlow": "Pages → React Query hooks (src/lib/queries/) → API Routes (src/app/api/) → Services (src/lib/services/) → Supabase client → PostgreSQL",
+      "entryPoints": [
+        "src/app/[locale]/page.tsx",
+        "src/app/layout.tsx",
+        "src/app/[locale]/layout.tsx"
+      ],
+      "modules": [
+        {
+          "description": "CRM — customer list, detail, notes, comms",
+          "name": "customers",
+          "path": "src/app/[locale]/dashboard/customers"
+        },
+        {
+          "description": "Vehicle registry and lookup",
+          "name": "vehicles",
+          "path": "src/app/[locale]/dashboard/vehicles"
+        },
+        {
+          "description": "Work order creation, detail, wizard",
+          "name": "work-orders",
+          "path": "src/app/[locale]/dashboard/work-orders"
+        },
+        {
+          "description": "Parts inventory, movements, purchase orders",
+          "name": "inventory",
+          "path": "src/app/[locale]/dashboard/inventory"
+        },
+        {
+          "description": "Expense tracking and categories",
+          "name": "expenses",
+          "path": "src/app/[locale]/dashboard/expenses"
+        },
+        {
+          "description": "Financial overview, P&L",
+          "name": "finance",
+          "path": "src/app/[locale]/dashboard/finance"
+        },
+        {
+          "description": "Analytics, charts, forecasting, retention",
+          "name": "reports",
+          "path": "src/app/[locale]/dashboard/reports"
+        },
+        {
+          "description": "Service catalog management",
+          "name": "services",
+          "path": "src/app/[locale]/dashboard/services"
+        },
+        {
+          "description": "Org settings, staff management",
+          "name": "organization",
+          "path": "src/app/[locale]/dashboard/organization"
+        },
+        {
+          "description": "Physical bay assignment view",
+          "name": "bay-view",
+          "path": "src/app/[locale]/dashboard/bay-view-v2"
+        },
+        {
+          "description": "Mechanic view, time tracking",
+          "name": "mechanic",
+          "path": "src/app/[locale]/dashboard/mechanic"
+        },
+        {
+          "description": "Customer self-service portal",
+          "name": "portal",
+          "path": "src/app/[locale]/dashboard/portal"
+        },
+        {
+          "description": "Scheduled service reminders",
+          "name": "service-reminders",
+          "path": "src/app/[locale]/dashboard/service-reminders"
+        },
+        {
+          "description": "Vehicle make/model database",
+          "name": "vehicle-models",
+          "path": "src/app/[locale]/dashboard/vehicle-models"
+        }
+      ],
+      "pattern": "Vertical SaaS — multi-tenant application with feature-based modules"
+    },
+    "conventions": {
+      "codeStyle": {
+        "formatter": "Biome",
+        "indentation": "2 spaces",
+        "quotes": "single quotes",
+        "semicolons": "trailing"
+      },
+      "errorHandling": "Custom AppError hierarchy (NotFoundError, UnauthorizedError, ForbiddenError, ValidationError, ConflictError) with toApiErrorResponse() wire format. All API routes wrapped in createRouteHandler.",
+      "importOrder": [
+        "@/lib/*",
+        "@/components/*",
+        "@/hooks/*",
+        "external packages"
+      ],
+      "naming": {
+        "apiRoutes": "RESTful nested under /api/organizations/[id]/...",
+        "components": "PascalCase exports, kebab-case files",
+        "database": "snake_case",
+        "directories": "kebab-case",
+        "hooks": "use- prefix"
+      },
+      "testingConventions": "Vitest for unit/integration, Playwright for E2E. Co-located test files. Test credentials in AGENTS.md."
+    },
+    "directoryTree": {
+      "src": {
+        "app": "Next.js App Router pages",
+        "components": "React components",
+        "hooks": "Custom hooks",
+        "lib": "Utilities, services, queries, stores, types"
+      }
+    },
+    "documentation": [
+      {
+        "path": "MASTER_PLAN.md",
+        "summary": "Full product vision, development phases, pricing strategy",
+        "type": "product-vision"
+      },
+      {
+        "path": "AGENTS.md",
+        "summary": "Global + project agent configuration with comprehensive rules",
+        "type": "agent-config"
+      },
+      {
+        "path": "README.md",
+        "summary": "Repository readme",
+        "type": "readme"
+      },
+      {
+        "path": "docs/",
+        "summary": "VitePress documentation with 25+ pages",
+        "type": "documentation-site"
+      }
+    ],
+    "techStack": {
+      "buildTools": ["Next.js", "Turbopack", "PostCSS", "Tailwind CSS"],
+      "databases": [
+        {
+          "name": "PostgreSQL",
+          "provider": "Supabase",
+          "type": "relational",
+          "version": "15+"
+        }
+      ],
+      "frameworks": [
+        {
+          "category": "framework",
+          "name": "Next.js",
+          "version": "16.2.6"
+        },
+        {
+          "category": "ui",
+          "name": "React",
+          "version": "19.2.4"
+        },
+        {
+          "category": "css",
+          "name": "Tailwind CSS",
+          "version": "4.3"
+        },
+        {
+          "category": "component-library",
+          "name": "shadcn/ui",
+          "version": "4"
+        }
+      ],
+      "infrastructure": [
+        {
+          "category": "hosting",
+          "name": "Vercel"
+        },
+        {
+          "category": "backend-as-a-service",
+          "name": "Supabase"
+        },
+        {
+          "category": "error-monitoring",
+          "name": "Sentry"
+        },
+        {
+          "category": "email",
+          "name": "Resend"
+        }
+      ],
+      "languages": [
+        {
+          "name": "TypeScript",
+          "role": "primary",
+          "version": "5.9"
+        }
+      ],
+      "packageManagers": ["pnpm"]
+    }
+  }
+}

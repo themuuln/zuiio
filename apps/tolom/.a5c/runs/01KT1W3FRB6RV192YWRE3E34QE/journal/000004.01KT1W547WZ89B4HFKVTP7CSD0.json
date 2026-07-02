@@ -1,0 +1,16 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-06-01T15:17:06.940Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KT1W5471D8858AC27MJK8A0B",
+    "invocationKey": "payroll-feature:S000002:payroll-service",
+    "invocationHash": "50f20439b5e377a6cedfcdc8a5b4538ae2c2c18e5b7498cf2d3f902471b43de2",
+    "stepId": "S000002",
+    "taskId": "payroll-service",
+    "kind": "agent",
+    "label": "Build payroll service",
+    "taskDefRef": "tasks/01KT1W5471D8858AC27MJK8A0B/task.json"
+  },
+  "checksum": "0254ecc6c2aaac321fdd9f84313339c853e702446c0aec677c3fe4185e6f96ca"
+}

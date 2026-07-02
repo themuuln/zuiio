@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KSYYBMEMQ8KWTD2Q1VMCGC76",
+  "taskId": "create-tablet-qr-display",
+  "invocationKey": "feature/qr-clock-in:S000013:create-tablet-qr-display",
+  "status": "ok",
+  "result": {
+    "components": [
+      "QrClockDisplay"
+    ],
+    "files": [
+      "src/components/bay-view-v2/qr-clock-display.tsx",
+      "src/components/bay-view-v2/bay-view-v2-client.tsx",
+      "src/app/[locale]/dashboard/mechanic/page.tsx"
+    ]
+  },
+  "startedAt": "2026-05-31T12:08:28.038Z",
+  "finishedAt": "2026-05-31T12:08:28.038Z",
+  "value": {
+    "components": [
+      "QrClockDisplay"
+    ],
+    "files": [
+      "src/components/bay-view-v2/qr-clock-display.tsx",
+      "src/components/bay-view-v2/bay-view-v2-client.tsx",
+      "src/app/[locale]/dashboard/mechanic/page.tsx"
+    ]
+  }
+}

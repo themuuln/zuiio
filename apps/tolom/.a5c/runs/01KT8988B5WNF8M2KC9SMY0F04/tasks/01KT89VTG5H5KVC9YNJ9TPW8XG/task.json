@@ -1,0 +1,44 @@
+{
+  "agent": {
+    "name": "workflow-worker",
+    "outputSchema": {
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "result"
+      ],
+      "type": "object"
+    },
+    "prompt": {
+      "context": {
+        "projectPath": "/Users/themuuln/coding/personal/tolom/tolom"
+      },
+      "instructions": [
+        "Read the current page.tsx completely",
+        "Read the new _vehicle-model-form-sheet.tsx",
+        "Read the services page for AlertDialog pattern reference",
+        "Rewrite the page.tsx with all improvements"
+      ],
+      "outputFormat": "JSON",
+      "role": "Frontend engineer",
+      "task": "Refactor src/app/[locale]/dashboard/vehicle-models/page.tsx to:\n\n1. REPLACE the inline Card add/edit form with the new _vehicle-model-form-sheet component\n   - Remove all inline form state (editForm, showDetails, resetForm)\n   - Remove the add/edit form Card section entirely\n   - Add state: formMode ('add' | 'edit'), formItem (VehicleModelItem | null), formOpen (boolean)\n   - \"Add\" button opens sheet with mode='add'\n   - \"Edit\" button on variant rows opens sheet with mode='edit' + the variant data\n\n2. ADD AlertDialog for delete confirmation\n   - Import AlertDialog components from @/components/ui/alert-dialog\n   - State: deleteItem (VehicleModelItem | null)\n   - Clicking delete on a variant sets deleteItem, opens the dialog\n   - Dialog shows \"Delete variant\" title, confirmation text with the variant name\n   - Confirm button calls deleteMutation.mutate(item.id)\n   - Cancel button clears deleteItem\n\n3. IMPROVE the tree view design:\n   - Make rows more visually polished with better spacing and hover effects\n   - Add subtle left border accent on make headers when expanded\n   - Variant rows should show more info in a cleaner layout: show model as primary text, generation/engine/body_type/years as secondary metadata below\n   - Add a small edit icon and delete icon (Pencil, Trash2 from lucide-react) that appear on hover\n   - Use proper Badge components for body_type display\n   - Keep the tree expand/collapse pattern but improve visual hierarchy\n\n4. REMOVE the inline form code (editForm state, showDetails state, resetForm function, the entire Card section)\n\n5. Keep all existing functionality: search, export, tree view, optimistic mutations\n\n6. Follow TOLOM style rules: use gap- not space-y-, use semantic color tokens, use Badge for status labels\n\nIMPORTANT: Actually write the complete refactored file. Do not plan — implement."
+    }
+  },
+  "io": {
+    "inputJsonPath": "tasks/01KT89VTG5H5KVC9YNJ9TPW8XG/input.json",
+    "outputJsonPath": "tasks/01KT89VTG5H5KVC9YNJ9TPW8XG/output.json"
+  },
+  "kind": "agent",
+  "title": "Refactor vehicle-models page to use DetailSheet and improve design",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KT89VTG5H5KVC9YNJ9TPW8XG",
+  "taskId": "refactor-page",
+  "invocationKey": "vehicle-models-ui-improve:S000002:refactor-page",
+  "stepId": "S000002",
+  "inputs": {
+    "projectPath": "/Users/themuuln/coding/personal/tolom/tolom"
+  }
+}

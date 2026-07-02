@@ -1,0 +1,16 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-31T08:04:52.406Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KSYH0YH0T14S6MQ6ZB18K98H",
+    "invocationKey": "rbac-system:S000002:execute-phase",
+    "invocationHash": "146cd29622feb9d765e317a848550e716f4b013da46ec264a29cf0a9378ff8cc",
+    "stepId": "S000002",
+    "taskId": "execute-phase",
+    "kind": "agent",
+    "label": "Execute phase: Seed Manager & Guest roles",
+    "taskDefRef": "tasks/01KSYH0YH0T14S6MQ6ZB18K98H/task.json"
+  },
+  "checksum": "badf22a7c2865c2273bd95e003d0fa5980f13757259eb00324e274a05dd250ea"
+}

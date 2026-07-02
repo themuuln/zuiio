@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KSWX60GEYP01TD96P4BDSJCQ",
+  "taskId": "add-navigation-i18n",
+  "invocationKey": "feature/eod-close-ritual:S000004:add-navigation-i18n",
+  "status": "ok",
+  "result": {
+    "i18nKeysAdded": true,
+    "navEntryAdded": true
+  },
+  "startedAt": "2026-05-30T17:44:40.592Z",
+  "finishedAt": "2026-05-30T17:44:40.592Z",
+  "value": {
+    "i18nKeysAdded": true,
+    "navEntryAdded": true
+  }
+}

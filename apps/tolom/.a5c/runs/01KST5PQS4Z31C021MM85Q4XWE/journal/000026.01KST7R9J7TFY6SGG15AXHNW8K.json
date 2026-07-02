@@ -1,0 +1,17 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-29T16:05:53.863Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KST7R9GVX7KY32JVB1F3HXXP",
+    "invocationKey": "project-install:S000013:configure-gitignore",
+    "invocationHash": "fdf6115054f48a4401c6e9191f9782190da0032d97a24f241096bd66d85123aa",
+    "stepId": "S000013",
+    "taskId": "configure-gitignore",
+    "kind": "agent",
+    "label": "agent",
+    "taskDefRef": "tasks/01KST7R9GVX7KY32JVB1F3HXXP/task.json",
+    "labels": ["agent", "cradle", "gitignore", "configuration"]
+  },
+  "checksum": "247d3197d0de6791a1eb3e19f0bba91b9a98926d78f95a0f4b3b2e396cb220c7"
+}

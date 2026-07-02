@@ -1,0 +1,17 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-30T14:44:19.997Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KSWNFNB5BNCJ0KYGS9EZ4XE7",
+    "invocationKey": "feature/edit-parts-catalog:S000004:verify-build",
+    "invocationHash": "f0995e45fb38270334c015e3bdb359d3523e9686953dde78fdda8af9625f2cc4",
+    "stepId": "S000004",
+    "taskId": "verify-build",
+    "kind": "shell",
+    "label": "quality",
+    "taskDefRef": "tasks/01KSWNFNB5BNCJ0KYGS9EZ4XE7/task.json",
+    "labels": ["quality", "typescript", "build"]
+  },
+  "checksum": "c7754ddcf634358ed19163a5d04005c6f2312b33730abf10304c5aee979ef0e9"
+}

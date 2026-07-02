@@ -1,0 +1,1 @@
+{"status":"completed","buildPassing":true,"changes":["src/lib/supabase/auth-routes.ts - added owner/manager/mechanic/admin route classification","src/lib/supabase/middleware.ts - added role-based redirect checks","src/lib/supabase/role-guard.ts - created requireRole/getUserRole helpers","src/lib/api-handler.ts - added optional minimumRole to route handlers"]}

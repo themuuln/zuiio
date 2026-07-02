@@ -1,0 +1,15 @@
+{
+  "runId": "01KT1W1EXSFWY6DJ3R2JE7MCMS",
+  "request": "payroll-feature",
+  "processId": "payroll-feature",
+  "harness": "pi",
+  "entrypoint": {
+    "importPath": "../../processes/payroll-feature.js",
+    "exportName": "process"
+  },
+  "processPath": "../../processes/payroll-feature.js",
+  "layoutVersion": "2026.01-storage-preview",
+  "createdAt": "2026-06-01T15:15:06.825Z",
+  "prompt": "Build complete payroll system for TOLOM: pay rates per mechanic, monthly payroll calculation, payroll history table, and payroll management page",
+  "completionProof": "0cac6948a91dff935313d664d9c8d18a"
+}

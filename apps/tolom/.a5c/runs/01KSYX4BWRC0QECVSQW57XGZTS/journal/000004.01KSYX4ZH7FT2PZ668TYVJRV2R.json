@@ -1,0 +1,21 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-31T11:36:47.399Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KSYX4ZGKKXQ8Z2S7YJZV8JFT",
+    "invocationKey": "feature/qr-clock-in:S000002:create-db-migration",
+    "invocationHash": "3ae00f243e35d313ab5088852bad882d70d6328a4d604fc63637dda704185108",
+    "stepId": "S000002",
+    "taskId": "create-db-migration",
+    "kind": "agent",
+    "label": "db",
+    "taskDefRef": "tasks/01KSYX4ZGKKXQ8Z2S7YJZV8JFT/task.json",
+    "labels": [
+      "db",
+      "migration",
+      "supabase"
+    ]
+  },
+  "checksum": "92b9e4d8e578b266bfcc3b69606e3909108e26ce536a58b63ba378d7b0babc53"
+}

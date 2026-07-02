@@ -1,0 +1,1 @@
+{"files": ["src/lib/services/qr-token-service.ts"], "serviceExports": ["generateClockToken", "verifyAndClaimClockToken", "registerDevice", "getRegisteredDevices", "revokeDevice", "generateRegistrationToken"]}

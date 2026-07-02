@@ -1,0 +1,59 @@
+{
+  "agent": {
+    "name": "general-purpose",
+    "outputSchema": {
+      "properties": {
+        "files": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "files"
+      ],
+      "type": "object"
+    },
+    "prompt": {
+      "context": {
+        "keysFile": "src/lib/queries/keys.ts",
+        "projectPath": "/Users/themuuln/coding/personal/tolom/tolom"
+      },
+      "instructions": [
+        "In src/lib/queries/keys.ts, add payrollKeys after expenseKeys:",
+        "  export const payrollKeys = {",
+        "    all: (orgId: string) => [...orgKeys.detail(orgId), \"payroll\"] as const,",
+        "    payRates: (orgId: string) => [...payrollKeys.all(orgId), \"pay-rates\"] as const,",
+        "    records: (orgId: string, year: number, month: number) => [...payrollKeys.all(orgId), \"records\", String(year), String(month)] as const,",
+        "  };",
+        "",
+        "Create src/lib/queries/use-payroll.ts with:",
+        "- usePayRates(orgId): useQuery with payrollKeys.payRates, fetcher GET pay-rates via createOrgQuery",
+        "- usePayrollRecords(orgId, year, month): useQuery with payrollKeys.records, fetcher GET records",
+        "- usePayRateUpsert(orgId): useMutation with PUT pay-rates, invalidates payrollKeys.payRates on success",
+        "- useCalculatePayroll(orgId): useMutation with POST calculate, invalidates payrollKeys.records on success",
+        "- useUpdatePayrollRecord(orgId): useMutation with PATCH records/[id], invalidates payrollKeys.records",
+        "",
+        "Follow patterns from use-mechanic-dashboard.ts (createOrgQuery for GET, useMutation for writes)"
+      ],
+      "outputFormat": "JSON with files array",
+      "role": "Frontend developer",
+      "task": "Add payroll query keys and create use-payroll.ts"
+    }
+  },
+  "io": {
+    "inputJsonPath": "tasks/01KT1WBNPN7F8HKY96WCW40N31/input.json",
+    "outputJsonPath": "tasks/01KT1WBNPN7F8HKY96WCW40N31/output.json"
+  },
+  "kind": "agent",
+  "title": "Build payroll query hooks",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KT1WBNPN7F8HKY96WCW40N31",
+  "taskId": "payroll-queries",
+  "invocationKey": "payroll-feature:S000005:payroll-queries",
+  "stepId": "S000005",
+  "inputs": {
+    "input": {}
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "status": "completed",
+  "buildPassing": true,
+  "changes": ["src/app/[locale]/dashboard/reports/page.tsx", "src/components/reports/mechanic-table.tsx"],
+  "buildError": null
+}

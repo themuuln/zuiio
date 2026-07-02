@@ -1,0 +1,1 @@
+{"status":"completed","buildPassing":true,"changes":["Created src/lib/plan-features.ts with PLAN_FEATURES map for starter/pro/business/enterprise","Exported FEATURE_KEYS const object with all known feature keys","Exported getPlanFeatures(), isPlanFeatureEnabled(), getNextPlanWithFeature() helpers","Build passed"]}

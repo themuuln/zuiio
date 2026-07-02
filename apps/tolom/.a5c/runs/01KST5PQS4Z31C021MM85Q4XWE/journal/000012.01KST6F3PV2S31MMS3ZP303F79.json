@@ -1,0 +1,17 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-29T15:43:24.379Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KST6F3P6EK6MKVB5GF66A58Z",
+    "invocationKey": "project-install:S000006:build-profile",
+    "invocationHash": "dd0b01d2b08e002a51092413223be7c696e5261caaf458094aad4cad1aa3a0db",
+    "stepId": "S000006",
+    "taskId": "build-profile",
+    "kind": "agent",
+    "label": "agent",
+    "taskDefRef": "tasks/01KST6F3P6EK6MKVB5GF66A58Z/task.json",
+    "labels": ["agent", "cradle", "profile", "build"]
+  },
+  "checksum": "c50a5e7ed5ddd9bd2132e22e4b0957778de07f5820d023f221cc49025cd963f7"
+}

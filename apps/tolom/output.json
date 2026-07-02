@@ -1,0 +1,12 @@
+{
+  "status": "completed",
+  "buildPassing": false,
+  "buildNote": "Pre-existing build error in src/app/[locale]/dashboard/eod-close/page.tsx (unrelated to these changes). All modified files type-check clean.",
+  "changes": [
+    "supabase/migrations/20260531080520_seed_manager_and_guest_roles.sql - seed Manager & Guest roles for existing orgs",
+    "src/hooks/use-current-user-role.ts - expanded RoleName union, added isManager/isGuest booleans",
+    "src/lib/services/signup-service.ts - added Manager/Guest role creation in bootstrapOrganization",
+    "src/lib/services/organization-service.ts - added Manager/Guest role creation in createOrganization with cleanup",
+    "src/lib/database.types.ts - regenerated types"
+  ]
+}

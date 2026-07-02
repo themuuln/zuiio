@@ -1,0 +1,502 @@
+{
+  "projectName": "TOLOM",
+  "description": "Vertical operating system for auto service businesses — a multi-tenant SaaS platform covering customer management, vehicle tracking, work order lifecycle, inventory ledgering, expense tracking, financial reporting, bay view scheduling, mechanic portal, service reminders, and vehicle model catalogs. Built for the Mongolian auto service market with SmartCar.mn integration.",
+  "version": "0.1.0",
+  "lastUpdated": "2026-05-29",
+
+  "goals": {
+    "current": [
+      "Ship Phase 1 features (customers, vehicles, work orders, inventory, expenses, finance, reports)",
+      "Polish existing 14 dashboard modules to production quality",
+      "Prepare for beta launch with real auto service businesses"
+    ],
+    "next": [
+      "Phase 2 features (services catalog, subscriptions, portal, organization management)",
+      "Flutter mobile app for mechanics",
+      "Multi-language support (Mongolian primary, English secondary)"
+    ],
+    "longTerm": [
+      "Vertical OS expansion — become the operating system layer for auto services",
+      "Marketplace of integrations (SmartCar.mn, insurance, parts suppliers)",
+      "Self-serve onboarding with automated tenant provisioning"
+    ]
+  },
+
+  "techStack": {
+    "framework": "Next.js 16 (App Router, React Server Components)",
+    "language": "TypeScript (strict, zero any without justification)",
+    "ui": {
+      "componentLibrary": "shadcn/ui v4 (59 installed components)",
+      "styling": "Tailwind CSS v4 with CSS custom properties for dark mode",
+      "primitives": "@base-ui/react (migrated from Radix)",
+      "icons": "Phosphor Icons (@phosphor-icons/react)",
+      "charts": "Recharts (via shadcn Chart)",
+      "tables": "@tanstack/react-table v8"
+    },
+    "stateManagement": {
+      "serverState": "@tanstack/react-query v5 (24 query hooks)",
+      "clientUIState": "Zustand (2 stores: ui-store, work-order-store) with devtools + immer + persist",
+      "urlState": "nuqs",
+      "forms": "react-hook-form + @hookform/resolvers"
+    },
+    "database": {
+      "engine": "PostgreSQL via Supabase",
+      "orm": "Supabase JS Client v2 (@supabase/supabase-js ^2.106.2)",
+      "auth": "Supabase Auth with SSR (@supabase/ssr ^0.10.3)",
+      "rls": "Row Level Security on all tables (enforced via migrations)",
+      "migrations": "71 ordered SQL migrations",
+      "types": "Auto-generated database.types.ts (130KB), re-exported via src/lib/types/"
+    },
+    "testing": {
+      "unit": "vitest with coverage",
+      "e2e": "Playwright",
+      "doctor": "react-doctor (lint, accessibility, bundle, architecture)"
+    },
+    "pdf": "@react-pdf/renderer",
+    "email": "@react-email/render",
+    "dragDrop": "@dnd-kit (core, sortable, modifiers, utilities)",
+    "search": "Fuse.js (fuzzy client-side search)",
+    "export": "ExcelJS (spreadsheet export)",
+    "monitoring": "@sentry/nextjs v10",
+    "packageManager": "pnpm 9",
+    "nodeVersion": 22
+  },
+
+  "architecture": {
+    "pattern": "Multi-tenant SaaS with feature-based modules",
+    "routing": "App Router with [locale] dynamic segment for i18n",
+    "layers": {
+      "pages": "src/app/[locale]/dashboard/ — 16 module directories + dashboard root",
+      "components": "src/components/ — feature folders (customers/, vehicles/, work-orders/, inventory/, expenses/, reports/, services/, bay-view-v2/, auth/, app-sidebar/)",
+      "hooks": "src/lib/queries/ — 24 React Query hooks with factory pattern",
+      "services": "src/lib/services/ — 40+ service files with test coverage",
+      "types": "src/lib/types/ — re-exported types from database.types.ts (7 type modules)",
+      "stores": "src/lib/stores/ — 2 Zustand stores with selector hooks",
+      "api": "src/app/api/ — API routes using api-handler.ts wrapper (ApiResponse<T> shape)",
+      "middleware": "src/middleware.ts — auth + tenant resolution"
+    },
+    "multiTenancy": {
+      "strategy": "organization_id on every table, resolved via middleware",
+      "isolation": "RLS policies enforce tenant boundaries at database level",
+      "requiredColumns": [
+        "organization_id",
+        "branch_id",
+        "created_by",
+        "updated_by",
+        "created_at",
+        "updated_at",
+        "deleted_at"
+      ],
+      "softDelete": "deleted_at column — never hard-delete financial records"
+    },
+    "dataFlow": "Page → React Query hook → API route → Service → Supabase",
+    "inventoriesAreLedgerBased": true,
+    "featureFlags": "Configuration-driven, never hard-coded"
+  },
+
+  "modules": {
+    "count": 14,
+    "dashboard": [
+      {
+        "name": "customers",
+        "path": "src/app/[locale]/dashboard/customers/",
+        "service": "src/lib/services/customer-service.ts",
+        "hooks": ["use-customers"],
+        "tests": ["customer-service.test.ts"]
+      },
+      {
+        "name": "vehicles",
+        "path": "src/app/[locale]/dashboard/vehicles/",
+        "service": "src/lib/services/vehicle-service.ts",
+        "hooks": ["use-vehicles", "use-car-catalog"],
+        "tests": ["vehicle-service.test.ts"]
+      },
+      {
+        "name": "work-orders",
+        "path": "src/app/[locale]/dashboard/work-orders/",
+        "service": "src/lib/services/invoice-service.ts",
+        "hooks": [
+          "use-work-orders",
+          "use-work-order-detail",
+          "use-work-order-attachments"
+        ],
+        "tests": ["work-order-service.test.ts"]
+      },
+      {
+        "name": "inventory",
+        "path": "src/app/[locale]/dashboard/inventory/",
+        "service": "src/lib/services/inventory-service.ts",
+        "hooks": ["use-inventory"],
+        "tests": ["inventory-service.test.ts"]
+      },
+      {
+        "name": "expenses",
+        "path": "src/app/[locale]/dashboard/expenses/",
+        "service": "src/lib/services/expense-service.ts",
+        "hooks": ["use-expenses"],
+        "tests": []
+      },
+      {
+        "name": "finance",
+        "path": "src/app/[locale]/dashboard/finance/",
+        "service": null,
+        "hooks": [],
+        "tests": []
+      },
+      {
+        "name": "reports",
+        "path": "src/app/[locale]/dashboard/reports/",
+        "service": "src/lib/services/report-service.ts (90KB — largest service)",
+        "hooks": ["use-reports"],
+        "tests": ["report-service.test.ts"]
+      },
+      {
+        "name": "services",
+        "path": "src/app/[locale]/dashboard/services/",
+        "service": "src/lib/services/service-catalog-service.ts",
+        "hooks": [],
+        "tests": ["service-catalog-service.test.ts"]
+      },
+      {
+        "name": "organization",
+        "path": "src/app/[locale]/dashboard/organization/",
+        "service": "src/lib/services/organization-service.ts",
+        "hooks": ["use-organization", "use-org-settings", "use-org-theme"],
+        "tests": []
+      },
+      {
+        "name": "bay-view",
+        "path": "src/app/[locale]/dashboard/bay-view/",
+        "service": "src/lib/services/bay-view-service.ts",
+        "hooks": [],
+        "tests": []
+      },
+      {
+        "name": "mechanic",
+        "path": "src/app/[locale]/dashboard/mechanic/",
+        "service": null,
+        "hooks": [],
+        "tests": []
+      },
+      {
+        "name": "service-reminders",
+        "path": "src/app/[locale]/dashboard/service-reminders/",
+        "service": "src/lib/services/service-reminder-service.ts",
+        "hooks": ["use-service-reminders"],
+        "tests": []
+      },
+      {
+        "name": "vehicle-models",
+        "path": "src/app/[locale]/dashboard/vehicle-models/",
+        "service": "src/lib/services/vehicle-models-service.ts",
+        "hooks": ["use-vehicle-models"],
+        "tests": []
+      },
+      {
+        "name": "portal",
+        "path": "src/app/[locale]/portal/",
+        "service": "src/lib/portal-auth.ts",
+        "hooks": [],
+        "tests": []
+      }
+    ],
+    "nonDashboardRoutes": [
+      "auth/ (login, signup, PIN setup)",
+      "pricing/ (landing page pricing)",
+      "about/ (about page)",
+      "faq/ (FAQ)",
+      "blog/ (blog)",
+      "integrations/ (integration showcase)",
+      "services/ (public service listing)",
+      "status/ (system status)",
+      "invite/ (invitation flow)",
+      "guide/ (VitePress documentation)",
+      "invoice/ (invoice viewer)"
+    ]
+  },
+
+  "team": {
+    "size": 1,
+    "role": "Solo full-stack developer",
+    "name": "Temuulen Undrakhbayar",
+    "gitUser": "Temuulen Undrakhbayar",
+    "agentAssist": "Pi (coding agent), Factory, CommandCode, Codex, OpenCode — multi-CLI setup with shared AGENTS.md",
+    "autonomyLevel": "Autonomous (low breakpoint tolerance for babysitter mode)",
+    "primaryCLIs": ["Pi", "Factory", "Codex"]
+  },
+
+  "workflows": {
+    "development": {
+      "branching": "Trunk-based (main branch)",
+      "conventionalCommits": true,
+      "commitStyle": "~58% conventional commits (feat, fix, chore prefixes)",
+      "branchNaming": "feat/<phase>/<module>-<description>",
+      "commitOrder": "utilities/types → models/schemas → services/logic → API/controllers → config/infra",
+      "atomicCommits": true,
+      "testPairing": "Test files in same commit as implementation"
+    },
+    "qualityGates": {
+      "preCommit": [
+        "npm run lint (biome check)",
+        "npm run test (vitest)",
+        "npm run build"
+      ],
+      "ciChecks": [
+        "biome lint",
+        "tsc --noEmit",
+        "vitest --coverage",
+        "next build"
+      ],
+      "doctor": "react-doctor for accessibility, bundle, architecture audits"
+    },
+    "documentation": {
+      "system": "VitePress (docs/ → public/guide/)",
+      "rule": "Code changes → doc updates required",
+      "location": "docs/*.md files with sidebar config in docs/.vitepress/config.mjs"
+    },
+    "designSystem": {
+      "rule": "shadcn mandatory — raw HTML elements forbidden when shadcn covers the use case",
+      "componentAudit": "59 shadcn/ui components installed in src/components/ui/",
+      "addingComponents": "npx shadcn@latest add <component-name>"
+    }
+  },
+
+  "conventions": {
+    "linting": "Biome v2.2 (no ESLint, no Prettier)",
+    "formatter": "Biome — 2-space indent, space style",
+    "fileCasing": "kebab-case (work-order-form.tsx, use-customer-data.ts)",
+    "componentCasing": "PascalCase (WorkOrderForm)",
+    "hookCasing": "use prefix (useCustomerData)",
+    "dbNaming": "snake_case (work_orders, organization_id)",
+    "apiRouting": "RESTful — GET /api/organizations/[id]/work-orders",
+    "typeImports": "Always from @/lib/types, never from @/lib/database.types",
+    "apiRoutes": "All routes use api-handler.ts wrapper (ApiResponse<T> shape)",
+    "spacing": "Use gap-* with flex/flex-col, NOT space-y-* or space-x-*",
+    "sizeProps": "Use size-* when width equals height",
+    "colors": "Semantic tokens only (bg-background, text-foreground, etc.) — never raw colors",
+    "truncation": "Use truncate shorthand, not overflow-hidden text-ellipsis",
+    "darkMode": "Automatic via CSS variables — no manual dark: overrides",
+    "pageComponentLimit": "Keep page components under ~400 lines, split at 500",
+    "i18n": "Both mn.json and en.json must be updated together",
+    "databaseTypes": "Regenerate TypeScript types after every migration"
+  },
+
+  "tools": {
+    "codeQuality": {
+      "linter": "Biome (biome.json)",
+      "formatter": "Biome",
+      "doctor": "react-doctor (npx react-doctor@latest)",
+      "typeChecker": "TypeScript (tsc --noEmit)"
+    },
+    "testing": {
+      "unit": "vitest with coverage",
+      "e2e": "Playwright",
+      "runAll": "npm run test (vitest run)"
+    },
+    "versionControl": "Git, trunk-based",
+    "ci": "GitHub Actions",
+    "hosting": "Vercel",
+    "monitoring": "Sentry",
+    "docs": "VitePress",
+    "rtk": "rtk (output compression for verbose shell commands)",
+    "portManagement": "nextport (avoid port conflicts in parallel sessions)"
+  },
+
+  "services": {
+    "supabase": {
+      "purpose": "PostgreSQL database, Auth, RLS, Edge Functions",
+      "usage": "Primary data layer — all CRUD via Supabase client",
+      "migrations": 71,
+      "mcpTools": [
+        "supabase_apply_migration",
+        "supabase_execute_sql",
+        "supabase_generate_typescript_types",
+        "supabase_list_tables",
+        "supabase_get_advisors"
+      ],
+      "cliUses": ["supabase migration new (create files only)"]
+    },
+    "vercel": {
+      "purpose": "Hosting, CI/CD, deployment",
+      "branch": "main",
+      "runtime": "Node 22, pnpm 9"
+    },
+    "sentry": {
+      "purpose": "Error monitoring, performance tracking",
+      "package": "@sentry/nextjs v10"
+    },
+    "resend": {
+      "purpose": "Transactional email delivery",
+      "rendering": "@react-email/render"
+    },
+    "smartcarMn": {
+      "purpose": "Vehicle data API — make/model/year search, parts lookup",
+      "location": "src/lib/smartcar/"
+    }
+  },
+
+  "externalIntegrations": [
+    {
+      "name": "SmartCar.mn",
+      "type": "Vehicle data API",
+      "purpose": "Make/model/year search, parts catalog, vehicle specifications",
+      "location": "src/lib/smartcar/"
+    },
+    {
+      "name": "Supabase Auth",
+      "type": "Authentication",
+      "purpose": "User registration, login, session management, PIN-based auth",
+      "location": "src/middleware.ts, src/lib/auth-redirect.ts"
+    },
+    {
+      "name": "Resend",
+      "type": "Email delivery",
+      "purpose": "Transactional emails (invitations, notifications)",
+      "location": "src/lib/services/email-service.ts"
+    },
+    {
+      "name": "Sentry",
+      "type": "Monitoring",
+      "purpose": "Error tracking, performance monitoring",
+      "location": "@sentry/nextjs"
+    },
+    {
+      "name": "DnD Kit",
+      "type": "UI interaction",
+      "purpose": "Drag and drop for bay view, work order items",
+      "location": "@dnd-kit/*"
+    }
+  ],
+
+  "painPoints": [
+    {
+      "issue": "Schema drift & type sync",
+      "description": "71 migrations require manual type regeneration. database.types.ts is 130KB auto-generated file — importing directly causes silent build breaks on regeneration.",
+      "mitigation": "src/lib/types/ re-export layer + biome noRestrictedImports rule enforcing import from @/lib/types",
+      "severity": "medium",
+      "status": "mitigated"
+    },
+    {
+      "issue": "i18n double-touch burden",
+      "description": "Every UI string must be added to both mn.json and en.json. Missing translations cause fallback keys in the UI.",
+      "mitigation": "Documentation rule in AGENTS.md, but no automated enforcement",
+      "severity": "low",
+      "status": "open"
+    },
+    {
+      "issue": "report-service.ts is 90KB",
+      "description": "The report service is the largest file at 90KB — a maintenance and performance concern.",
+      "mitigation": "None yet — candidate for splitting",
+      "severity": "medium",
+      "status": "open"
+    }
+  ],
+
+  "bottlenecks": [
+    {
+      "issue": "Solo developer throughput",
+      "description": "Single developer across 14 modules, 71 migrations, 40+ services. Agent assistance (Pi, Factory, Codex) multiplies capacity but introduces AI-slop risk.",
+      "impact": "Feature velocity limited by review bandwidth",
+      "mitigation": "Multi-CLI agent setup, react-doctor, review-work skill, commit skill"
+    },
+    {
+      "issue": "Type regeneration after migrations",
+      "description": "Every database migration requires: apply → regenerate types → update @/lib/types → verify build. Breaks developer flow.",
+      "impact": "2-5 minutes per migration cycle",
+      "mitigation": "MCP tools streamline the flow, but still manual"
+    },
+    {
+      "issue": "Large service files",
+      "description": "report-service (90KB), bay-view-service (25KB), inventory-service (24KB) — approaching maintainability limits.",
+      "impact": "Code navigation, AI context window pressure, merge conflicts",
+      "mitigation": "None yet"
+    }
+  ],
+
+  "cicd": {
+    "platform": "GitHub Actions",
+    "triggers": ["push to main", "pull_request"],
+    "workflows": [
+      {
+        "name": "ci.yml",
+        "steps": [
+          "checkout (fetch-depth: 0)",
+          "pnpm setup (v9)",
+          "node setup (v22)",
+          "pnpm install --frozen-lockfile",
+          "biome lint (pnpm lint)",
+          "tsc --noEmit (continue-on-error: true)",
+          "vitest --coverage (NODE_OPTIONS=--experimental-vm-modules)",
+          "next build (pnpm build)"
+        ]
+      },
+      {
+        "name": "react-doctor.yml",
+        "purpose": "Automated React diagnostics"
+      }
+    ],
+    "localChecks": {
+      "lint": "pnpm lint (biome check)",
+      "typecheck": "pnpm exec tsc --noEmit",
+      "test": "pnpm test (vitest run)",
+      "build": "pnpm build",
+      "doctor": "npx react-doctor@latest"
+    }
+  },
+
+  "statistics": {
+    "commits": 50,
+    "migrations": 71,
+    "services": 40,
+    "queryHooks": 24,
+    "shadcnComponents": 59,
+    "dashboardModules": 14,
+    "typeModules": 7,
+    "zustandStores": 2,
+    "testFiles": 8,
+    "workflowFiles": 2
+  },
+
+  "agentProfile": {
+    "babysitterMode": "autonomous",
+    "breakpointTolerance": "low",
+    "primaryAgent": "Pi (nextjs profile — supabase + shadcn + next-devtools + playwright + context7)",
+    "agentProfiles": [
+      "piw (web/nextjs)",
+      "pif (flutter)",
+      "pid (default)",
+      "pii (interactive picker)"
+    ],
+    "skillsInstalled": [
+      "react-doctor",
+      "supabase",
+      "supabase-postgres-best-practices",
+      "karpathy-guidelines",
+      "diagnose",
+      "tdd",
+      "shadcn",
+      "next-best-practices",
+      "next-cache-components",
+      "ui-ux-pro-max",
+      "frontend-design",
+      "web-design-guidelines",
+      "marketing-psychology",
+      "vercel-react-best-practices",
+      "vercel-composition-patterns",
+      "ast-grep",
+      "lsp-navigation",
+      "webapp-testing",
+      "migrate-select-base-ui"
+    ]
+  },
+
+  "projectStructure": {
+    "root": "tolom/",
+    "application": "src/ (Next.js app router)",
+    "database": "supabase/ (migrations, edge functions)",
+    "documentation": "docs/ (VitePress)",
+    "artifacts": ".rpiv/artifacts/ (agent research, reviews, plans)",
+    "skills": ".agents/skills/ (project-specific agent skills)",
+    "public": "public/ (static assets, guide/ output)"
+  }
+}

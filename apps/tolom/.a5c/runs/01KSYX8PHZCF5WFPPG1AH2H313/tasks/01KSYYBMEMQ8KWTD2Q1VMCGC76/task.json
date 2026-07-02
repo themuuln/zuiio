@@ -1,0 +1,94 @@
+{
+  "agent": {
+    "name": "general-purpose",
+    "outputSchema": {
+      "properties": {
+        "components": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "files": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "files",
+        "components"
+      ],
+      "type": "object"
+    },
+    "prompt": {
+      "context": {
+        "bayViewPath": "src/components/bay-view-v2/",
+        "mechanicPagePath": "src/app/[locale]/dashboard/mechanic/page.tsx",
+        "project": "TOLOM",
+        "toolbarLocation": "BayViewV2Client toolbar (around line 260 in bay-view-v2-client.tsx)"
+      },
+      "instructions": [
+        "Read src/components/bay-view-v2/bay-view-v2-client.tsx thoroughly — especially the toolbar with action buttons (around line 260-360)",
+        "Read src/app/[locale]/dashboard/mechanic/page.tsx — especially the ClockInOutButton component and handleClockToggle",
+        "Read src/lib/hooks/use-realtime.ts for the Realtime subscription pattern",
+        "Read src/lib/supabase/client.ts for createClient pattern",
+        "",
+        "1. Create src/components/bay-view-v2/qr-clock-display.tsx:",
+        "   - A modal/dialog that shows when mechanic taps 'Clock In'",
+        "   - Shows a large QR code generated from qrcode library (canvas)",
+        "   - The QR encodes: { token: rawToken, sessionId } as JSON",
+        "   - Auto-refreshes QR every 45 seconds (new token each time)",
+        "   - Shows 'Scan with your phone' + instructions in Mongolian",
+        "   - Subscribes to Realtime channel: clock_in_confirmations:{sessionId}",
+        "   - On Realtime confirmation: show '✓ [Name] clocked in at HH:MM'",
+        "   - Has a countdown timer showing when QR will refresh",
+        "   - Auto-closes on success after 3 seconds",
+        "   - Has a manual close/cancel button",
+        "   - Props: open, onOpenChange, mechanicName, mechanicId, orgId",
+        "",
+        "2. Integrate into BayViewV2Client:",
+        "   - Add QR clock state management (useState for dialog open)",
+        "   - Add QR clock dialog to the toolbar similar to existing dialogs",
+        "   - Show it when mechanic taps clock in (or from a toolbar button)",
+        "",
+        "3. Integrate into Mechanic Dashboard:",
+        "   - Modify ClockInOutButton onClick in mechanic/page.tsx",
+        "   - When clicked: show QR dialog instead of direct API call",
+        "   - The QR flow replaces direct POST for non-admin mechanics",
+        "",
+        "4. For qrcode generation (server-side):",
+        "   - Use qrcode package's toDataURL() which returns a base64 PNG",
+        "   - Or use the canvas API directly in the component",
+        "   - QR content: JSON.stringify({ t: rawToken, s: sessionId })",
+        "",
+        "5. Realtime subscription:",
+        "   - Table: clock_in_confirmations (or use a dedicated Realtime channel)",
+        "   - Filter: `session_id=eq.${sessionId}`",
+        "   - On event: check if claimed_at is set → success",
+        "   - Alternative: use a separate Postgres channel with broadcast"
+      ],
+      "outputFormat": "JSON with { files: string[], components: string[] }",
+      "role": "Frontend Developer",
+      "task": "Create the QR display component for the shop tablet"
+    }
+  },
+  "io": {
+    "inputJsonPath": "tasks/01KSYYBMEMQ8KWTD2Q1VMCGC76/input.json",
+    "outputJsonPath": "tasks/01KSYYBMEMQ8KWTD2Q1VMCGC76/output.json"
+  },
+  "kind": "agent",
+  "labels": [
+    "qrcode",
+    "realtime",
+    "ui"
+  ],
+  "title": "Create tablet QR display component",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KSYYBMEMQ8KWTD2Q1VMCGC76",
+  "taskId": "create-tablet-qr-display",
+  "invocationKey": "feature/qr-clock-in:S000013:create-tablet-qr-display",
+  "stepId": "S000013",
+  "inputs": {}
+}

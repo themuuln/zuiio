@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KT1W5471D8858AC27MJK8A0B",
+  "taskId": "payroll-service",
+  "invocationKey": "payroll-feature:S000002:payroll-service",
+  "status": "ok",
+  "result": {
+    "files": [
+      "src/lib/services/payroll-service.ts"
+    ]
+  },
+  "startedAt": "2026-06-01T15:17:38.847Z",
+  "finishedAt": "2026-06-01T15:17:38.847Z",
+  "value": {
+    "files": [
+      "src/lib/services/payroll-service.ts"
+    ]
+  }
+}

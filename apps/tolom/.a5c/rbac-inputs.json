@@ -1,0 +1,32 @@
+{
+  "orgId": null,
+  "skipMigration": false,
+  "supabaseProjectId": "tlqvnwfhqclsfutkbqxn",
+  "rolesToSeed": [
+    {
+      "name": "Super Admin",
+      "description": "Cross-org platform administrator",
+      "isSystem": true
+    },
+    {
+      "name": "Org Owner",
+      "description": "Full access to all org resources and settings",
+      "isSystem": true
+    },
+    {
+      "name": "Manager",
+      "description": "Day-to-day operations manager",
+      "isSystem": true
+    },
+    {
+      "name": "Mechanic",
+      "description": "Assigned to work orders, views own performance",
+      "isSystem": true
+    },
+    {
+      "name": "Guest",
+      "description": "External invoice viewer via token-based portal",
+      "isSystem": true
+    }
+  ]
+}

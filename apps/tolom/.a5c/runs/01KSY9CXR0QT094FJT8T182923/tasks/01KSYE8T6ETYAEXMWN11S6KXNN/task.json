@@ -1,0 +1,94 @@
+{
+  "agent": {
+    "name": "general-purpose",
+    "prompt": {
+      "context": {
+        "description": "",
+        "fixes": [
+          "Show date range in period bar: \"This Week (Mon 5/25 – Sun 5/31)\".",
+          "Add OVERDUE badge + color-coded row backgrounds to invoice list.",
+          "Limit default period to Past Year, force custom range for beyond."
+        ],
+        "phase": {
+          "id": "finance",
+          "items": [
+            54,
+            56,
+            57
+          ],
+          "title": "Finance UX fixes"
+        },
+        "phaseIndex": 7,
+        "referenceDoc": "PRACTICAL.md",
+        "totalPhases": 14
+      },
+      "instructions": [
+        "Read PRACTICAL.md for the full description of each fix item.",
+        "Implement all fix items for this phase in the codebase.",
+        "Use existing skills and agents as needed (uiux, frontend-design, codebase-analyzer).",
+        "For each fix: read the relevant file(s), make the change, verify with LSP diagnostics.",
+        "After implementing all fixes in this phase, run \"npm run build\" to verify the build passes.",
+        "The build MUST pass for the phase to be considered complete.",
+        "If the build fails, diagnose and fix the error, then rebuild. Do not move to the next phase.",
+        "Keep changes focused — only touch files related to the fix items in this phase.",
+        "Return structured JSON output with status and build results."
+      ],
+      "outputFormat": "JSON",
+      "outputSchema": {
+        "properties": {
+          "buildError": {
+            "type": "string"
+          },
+          "buildPassing": {
+            "type": "boolean"
+          },
+          "changes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "completed",
+              "failed"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "buildPassing",
+          "changes"
+        ],
+        "type": "object"
+      },
+      "role": "Frontend developer implementing UX improvements",
+      "task": "Implement UX fix items 54, 56, 57 for the Finance UX fixes phase."
+    }
+  },
+  "io": {
+    "inputJsonPath": "tasks/01KSYE8T6ETYAEXMWN11S6KXNN/input.json",
+    "outputJsonPath": "tasks/01KSYE8T6ETYAEXMWN11S6KXNN/output.json"
+  },
+  "kind": "agent",
+  "title": "Execute phase: Finance UX fixes",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KSYE8T6ETYAEXMWN11S6KXNN",
+  "taskId": "execute-phase",
+  "invocationKey": "tolom-ux-improvements:S000007:execute-phase",
+  "stepId": "S000007",
+  "inputs": {
+    "phase": {
+      "id": "finance",
+      "items": [
+        54,
+        56,
+        57
+      ],
+      "title": "Finance UX fixes"
+    },
+    "phaseIndex": 7,
+    "totalPhases": 14
+  }
+}

@@ -1,0 +1,1194 @@
+{
+  "agent": {
+    "name": "general-purpose",
+    "outputSchema": {
+      "properties": {
+        "changesSummary": {
+          "type": "string"
+        },
+        "profile": {
+          "properties": {
+            "architecture": {
+              "type": "object"
+            },
+            "bottlenecks": {
+              "items": {
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "cicd": {
+              "type": "object"
+            },
+            "claudeMdInstructions": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "conventions": {
+              "type": "object"
+            },
+            "createdAt": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "externalIntegrations": {
+              "items": {
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "goals": {
+              "items": {
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "installedAgents": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "installedProcesses": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "installedSkills": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "painPoints": {
+              "items": {
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "processes": {
+              "items": {
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "projectName": {
+              "type": "string"
+            },
+            "repositories": {
+              "items": {
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "services": {
+              "items": {
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "team": {
+              "items": {
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "techStack": {
+              "type": "object"
+            },
+            "tools": {
+              "type": "object"
+            },
+            "updatedAt": {
+              "type": "string"
+            },
+            "version": {
+              "type": "number"
+            },
+            "workflows": {
+              "items": {
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "projectName",
+            "description",
+            "goals",
+            "techStack",
+            "architecture",
+            "workflows",
+            "conventions",
+            "createdAt",
+            "updatedAt",
+            "version"
+          ],
+          "type": "object"
+        },
+        "sourcesUsed": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": ["profile", "changesSummary"],
+      "type": "object"
+    },
+    "prompt": {
+      "context": {
+        "additionalContext": "TOLOM is a vertical SaaS for auto service businesses. Next.js + Supabase + PostgreSQL. Phase 0 foundation complete, building product features.",
+        "existingProfile": null,
+        "isNewProject": false,
+        "miningResult": {
+          "bottlenecks": [
+            {
+              "description": "Both mn.json and en.json changed in lockstep (24 commits each)",
+              "frequency": "every feature",
+              "id": "bn-i18n-0",
+              "impact": "Doubles cost of every UI text change",
+              "location": "src/messages/"
+            },
+            {
+              "description": "src/lib/types/index.ts changed 18 times — central type hub",
+              "frequency": "every migration",
+              "id": "bn-types-0",
+              "impact": "Every new table/column/enum ripples here",
+              "location": "src/lib/types/"
+            },
+            {
+              "description": "Schema drift between local and remote DB",
+              "frequency": "recurring",
+              "id": "bn-schema-0",
+              "impact": "5+ commits specifically fixing drift",
+              "location": "supabase/migrations/"
+            },
+            {
+              "description": "21 'backup' commits with 100-365 files each",
+              "frequency": "frequently",
+              "id": "bn-backup-0",
+              "impact": "Obscures development history, makes git blame useless",
+              "location": "entire repo"
+            }
+          ],
+          "branchPatterns": {
+            "mergeStrategy": "linear — no merges, no feature branches",
+            "observation": "All work lands directly on main. Solo developer workflow.",
+            "strategy": "trunk-based (single main branch)"
+          },
+          "commitPatterns": {
+            "averageCommitSize": {
+              "giantCommitMax": 365,
+              "medianEstimated": "8-12 files"
+            },
+            "messageFormat": {
+              "conventionalPercentage": 58,
+              "nonConventionalPercentage": 42,
+              "topPrefixes": ["fix(", "feat(", "chore(", "docs("]
+            },
+            "timeSpan": {
+              "days": 18,
+              "first": "2026-05-11",
+              "last": "2026-05-29"
+            },
+            "totalCommits": 125,
+            "velocity": {
+              "avgPerDay": 6.9,
+              "peakDay": "2026-05-28 with 19 commits"
+            }
+          },
+          "contributors": [
+            {
+              "areas": ["all"],
+              "commitCount": 125,
+              "name": "Temuulen Undrakhbayar"
+            }
+          ],
+          "evolution": {
+            "growthAreas": [
+              "Dashboard modules (14 features)",
+              "Service catalog",
+              "Inventory ledger",
+              "Vehicle models global catalog"
+            ],
+            "majorEvents": [
+              {
+                "date": "2026-05-11",
+                "description": "Project initialization — foundation setup"
+              },
+              {
+                "date": "2026-05-16",
+                "description": "Feature bootstrapping — expenses, CRM, reminders, subscription system"
+              },
+              {
+                "date": "2026-05-22",
+                "description": "UI polish — Base UI adoption, react-doctor fixes, shadcn updates"
+              },
+              {
+                "date": "2026-05-28",
+                "description": "Stabilization — vehicle model search overhaul, form validation overhaul"
+              }
+            ],
+            "technologyChanges": [
+              "Base UI migration from Radix (asChild → render prop)",
+              "React Compiler enabled",
+              "Supabase MCP integration"
+            ]
+          },
+          "implicitRules": [
+            "All work goes to main directly — no feature branches",
+            "i18n keys always updated in both locale files in same commit",
+            "Database types regenerated after migrations",
+            "react-doctor run periodically in batch rather than per-commit",
+            "Phase-gated development model (Phase 0→1→2) per MASTER_PLAN.md"
+          ],
+          "painPoints": [
+            {
+              "category": "workflow",
+              "description": "No branching strategy — no code review, no safe experimentation",
+              "id": "pp-branching-0",
+              "severity": "high"
+            },
+            {
+              "category": "workflow",
+              "description": "Giant 'backup' commits obscure development history",
+              "id": "pp-backup-0",
+              "severity": "high"
+            },
+            {
+              "category": "quality",
+              "description": "Commit message quality degrades under time pressure",
+              "id": "pp-commit-quality-0",
+              "severity": "medium"
+            },
+            {
+              "category": "tooling",
+              "description": "Recurring schema drift between local and remote DB",
+              "id": "pp-schema-drift-0",
+              "severity": "medium"
+            },
+            {
+              "category": "productivity",
+              "description": "i18n double-touch burden slows feature velocity",
+              "id": "pp-i18n-burden-0",
+              "severity": "medium"
+            },
+            {
+              "category": "release",
+              "description": "No release/versioning strategy — no tags, no CHANGELOG",
+              "id": "pp-no-versioning-0",
+              "severity": "medium"
+            }
+          ],
+          "releasePatterns": {
+            "deploymentEvidence": "Vercel auto-deploy on push to main",
+            "tags": 0,
+            "versioningScheme": "none"
+          }
+        },
+        "projectProfileSchema": {
+          "architectureSchema": "{ pattern?: string, modules?: [{name, path, description?, dependencies?}], entryPoints?: string[], dataFlow?: string }",
+          "bottleneckSchema": "{ id: string, description: string, impact: string, location?: string, frequency?: string }",
+          "cicdSchema": "{ provider?: string, configPaths?: string[], pipelines?: [{name, trigger?, stages?}], babysitterIntegration?: {enabled?, triggerOn?, processIds?} }",
+          "conventionsSchema": "{ naming?: Record<string, string>, git?: Record<string, string>, codeStyle?: Record<string, unknown>, importOrder?: string[], errorHandling?: string, testingConventions?: string, additionalRules?: string[] }",
+          "goalSchema": "{ id: string, description: string, category: string, priority?: string, status?: string }",
+          "painPointSchema": "{ id: string, description: string, severity: string, category?: string, discoveredVia?: string, suggestedRemediation?: string }",
+          "requiredFields": [
+            "projectName",
+            "description",
+            "goals",
+            "techStack",
+            "architecture",
+            "workflows",
+            "conventions",
+            "createdAt",
+            "updatedAt",
+            "version"
+          ],
+          "teamMemberSchema": "{ name: string, role: string, responsibilities?: string[] }",
+          "techStackSchema": "{ languages?: [{name, version?, role?}], frameworks?: [{name, version?, category?}], databases?: [{name, type?, version?}], infrastructure?: [{name, category?}], buildTools?: string[], packageManagers?: string[] }",
+          "workflowSchema": "{ name: string, description?: string, steps?: string[], triggers?: string[] }"
+        },
+        "projectRoot": "/Users/themuuln/coding/personal/tolom/tolom",
+        "repoStructure": {
+          "architecture": {
+            "dataFlow": "Pages → React Query hooks (src/lib/queries/) → API Routes (src/app/api/) → Services (src/lib/services/) → Supabase client → PostgreSQL",
+            "entryPoints": [
+              "src/app/[locale]/page.tsx",
+              "src/app/layout.tsx",
+              "src/app/[locale]/layout.tsx"
+            ],
+            "modules": [
+              {
+                "description": "CRM — customer list, detail, notes, comms",
+                "name": "customers",
+                "path": "src/app/[locale]/dashboard/customers"
+              },
+              {
+                "description": "Vehicle registry and lookup",
+                "name": "vehicles",
+                "path": "src/app/[locale]/dashboard/vehicles"
+              },
+              {
+                "description": "Work order creation, detail, wizard",
+                "name": "work-orders",
+                "path": "src/app/[locale]/dashboard/work-orders"
+              },
+              {
+                "description": "Parts inventory, movements, purchase orders",
+                "name": "inventory",
+                "path": "src/app/[locale]/dashboard/inventory"
+              },
+              {
+                "description": "Expense tracking and categories",
+                "name": "expenses",
+                "path": "src/app/[locale]/dashboard/expenses"
+              },
+              {
+                "description": "Financial overview, P&L",
+                "name": "finance",
+                "path": "src/app/[locale]/dashboard/finance"
+              },
+              {
+                "description": "Analytics, charts, forecasting, retention",
+                "name": "reports",
+                "path": "src/app/[locale]/dashboard/reports"
+              },
+              {
+                "description": "Service catalog management",
+                "name": "services",
+                "path": "src/app/[locale]/dashboard/services"
+              },
+              {
+                "description": "Org settings, staff management",
+                "name": "organization",
+                "path": "src/app/[locale]/dashboard/organization"
+              },
+              {
+                "description": "Physical bay assignment view",
+                "name": "bay-view",
+                "path": "src/app/[locale]/dashboard/bay-view-v2"
+              },
+              {
+                "description": "Mechanic view, time tracking",
+                "name": "mechanic",
+                "path": "src/app/[locale]/dashboard/mechanic"
+              },
+              {
+                "description": "Customer self-service portal",
+                "name": "portal",
+                "path": "src/app/[locale]/dashboard/portal"
+              },
+              {
+                "description": "Scheduled service reminders",
+                "name": "service-reminders",
+                "path": "src/app/[locale]/dashboard/service-reminders"
+              },
+              {
+                "description": "Vehicle make/model database",
+                "name": "vehicle-models",
+                "path": "src/app/[locale]/dashboard/vehicle-models"
+              }
+            ],
+            "pattern": "Vertical SaaS — multi-tenant application with feature-based modules"
+          },
+          "conventions": {
+            "codeStyle": {
+              "formatter": "Biome",
+              "indentation": "2 spaces",
+              "quotes": "single quotes",
+              "semicolons": "trailing"
+            },
+            "errorHandling": "Custom AppError hierarchy (NotFoundError, UnauthorizedError, ForbiddenError, ValidationError, ConflictError) with toApiErrorResponse() wire format. All API routes wrapped in createRouteHandler.",
+            "importOrder": [
+              "@/lib/*",
+              "@/components/*",
+              "@/hooks/*",
+              "external packages"
+            ],
+            "naming": {
+              "apiRoutes": "RESTful nested under /api/organizations/[id]/...",
+              "components": "PascalCase exports, kebab-case files",
+              "database": "snake_case",
+              "directories": "kebab-case",
+              "hooks": "use- prefix"
+            },
+            "testingConventions": "Vitest for unit/integration, Playwright for E2E. Co-located test files. Test credentials in AGENTS.md."
+          },
+          "directoryTree": {
+            "src": {
+              "app": "Next.js App Router pages",
+              "components": "React components",
+              "hooks": "Custom hooks",
+              "lib": "Utilities, services, queries, stores, types"
+            }
+          },
+          "documentation": [
+            {
+              "path": "MASTER_PLAN.md",
+              "summary": "Full product vision, development phases, pricing strategy",
+              "type": "product-vision"
+            },
+            {
+              "path": "AGENTS.md",
+              "summary": "Global + project agent configuration with comprehensive rules",
+              "type": "agent-config"
+            },
+            {
+              "path": "README.md",
+              "summary": "Repository readme",
+              "type": "readme"
+            },
+            {
+              "path": "docs/",
+              "summary": "VitePress documentation with 25+ pages",
+              "type": "documentation-site"
+            }
+          ],
+          "techStack": {
+            "buildTools": ["Next.js", "Turbopack", "PostCSS", "Tailwind CSS"],
+            "databases": [
+              {
+                "name": "PostgreSQL",
+                "provider": "Supabase",
+                "type": "relational",
+                "version": "15+"
+              }
+            ],
+            "frameworks": [
+              {
+                "category": "framework",
+                "name": "Next.js",
+                "version": "16.2.6"
+              },
+              {
+                "category": "ui",
+                "name": "React",
+                "version": "19.2.4"
+              },
+              {
+                "category": "css",
+                "name": "Tailwind CSS",
+                "version": "4.3"
+              },
+              {
+                "category": "component-library",
+                "name": "shadcn/ui",
+                "version": "4"
+              }
+            ],
+            "infrastructure": [
+              {
+                "category": "hosting",
+                "name": "Vercel"
+              },
+              {
+                "category": "backend-as-a-service",
+                "name": "Supabase"
+              },
+              {
+                "category": "error-monitoring",
+                "name": "Sentry"
+              },
+              {
+                "category": "email",
+                "name": "Resend"
+              }
+            ],
+            "languages": [
+              {
+                "name": "TypeScript",
+                "role": "primary",
+                "version": "5.9"
+              }
+            ],
+            "packageManagers": ["pnpm"]
+          }
+        },
+        "toolsAndServices": {
+          "cicd": {
+            "configPaths": [
+              ".github/workflows/ci.yml",
+              ".github/workflows/react-doctor.yml"
+            ],
+            "pipelines": [
+              {
+                "name": "CI",
+                "stages": ["lint", "typecheck", "test", "build"],
+                "trigger": "pull_request + push to main"
+              },
+              {
+                "name": "React Doctor",
+                "stages": ["diff analysis", "PR comment"],
+                "trigger": "pull_request + push to main"
+              }
+            ],
+            "provider": "GitHub Actions"
+          },
+          "containerization": {
+            "docker": false,
+            "note": "Serverless deployment on Vercel"
+          },
+          "externalIntegrations": [
+            {
+              "category": "authentication",
+              "enabled": true,
+              "service": "Supabase Auth"
+            },
+            {
+              "category": "database",
+              "enabled": true,
+              "service": "Supabase Database"
+            },
+            {
+              "category": "serverless",
+              "enabled": true,
+              "service": "Supabase Edge Functions"
+            },
+            {
+              "category": "monitoring",
+              "enabled": true,
+              "service": "Sentry Error Tracking"
+            },
+            {
+              "category": "email",
+              "enabled": true,
+              "service": "Resend Email"
+            },
+            {
+              "category": "vehicle-data",
+              "enabled": true,
+              "service": "SmartCar.mn"
+            }
+          ],
+          "infrastructure": {
+            "cron": "pg_cron + pg_net",
+            "database": "Supabase (managed PostgreSQL)",
+            "hosting": "Vercel",
+            "monitoring": "Sentry"
+          },
+          "services": [
+            {
+              "name": "Supabase",
+              "type": "backend-as-a-service",
+              "url": "https://supabase.com"
+            },
+            {
+              "name": "Vercel",
+              "type": "hosting",
+              "url": "https://vercel.com"
+            },
+            {
+              "name": "Sentry",
+              "type": "error-monitoring",
+              "url": "https://sentry.io"
+            },
+            {
+              "name": "Resend",
+              "type": "email",
+              "url": "https://resend.com"
+            },
+            {
+              "name": "SmartCar.mn",
+              "type": "vehicle-lookup",
+              "url": "https://smartcar.mn"
+            }
+          ],
+          "tools": {
+            "formatting": [
+              {
+                "name": "Biome",
+                "purpose": "Code formatting",
+                "version": "2.2.0"
+              }
+            ],
+            "linting": [
+              {
+                "config": "biome.json",
+                "name": "Biome",
+                "purpose": "Linting + formatting + import organization",
+                "version": "2.2.0"
+              }
+            ],
+            "testing": [
+              {
+                "config": "vitest.config.mts",
+                "name": "Vitest",
+                "purpose": "Unit/integration testing",
+                "version": "3.2.4"
+              },
+              {
+                "config": "playwright.config.ts",
+                "name": "Playwright",
+                "purpose": "E2E testing",
+                "version": "1.60.0"
+              },
+              {
+                "name": "react-doctor",
+                "purpose": "React code quality analysis",
+                "version": "0.2.9"
+              }
+            ]
+          },
+          "workflows": [
+            {
+              "description": "Local dev with hot reload",
+              "name": "Development",
+              "steps": ["pnpm install", "pnpm dev"],
+              "triggers": ["manual"]
+            },
+            {
+              "description": "Automated quality gates",
+              "name": "CI/CD",
+              "steps": ["lint", "typecheck", "test", "build"],
+              "triggers": ["PR", "push to main"]
+            },
+            {
+              "description": "Vercel auto-deploy on merge",
+              "name": "Deployment",
+              "steps": ["merge to main", "Vercel build", "Vercel deploy"],
+              "triggers": ["merge to main"]
+            }
+          ]
+        }
+      },
+      "instructions": [
+        "Read the breakpoint response from the user interview (Phase 4) to get user-provided information",
+        "If an existing profile exists (loaded via `babysitter profile:read --project --json` in Phase 1), use it as the base and merge new information on top",
+        "IMPORTANT: Do not import or call SDK profile functions directly — use the babysitter CLI for all profile I/O",
+        "Incorporate repo structure analysis into architecture, techStack, and conventions",
+        "Incorporate tools and services analysis into tools, services, cicd, externalIntegrations, and workflows",
+        "Incorporate process mining results into bottlenecks, painPoints, conventions (git patterns), and workflows",
+        "Incorporate user interview responses into goals, team, workflows, and preferences",
+        "Build a complete ProjectProfile object conforming to the schema described in context",
+        "For any fields not discovered or provided, use sensible defaults:",
+        "  - conventions: extract from detected code patterns or leave minimal",
+        "  - workflows: at minimum include a \"development\" workflow",
+        "Set createdAt to the existing profile createdAt if updating, or current timestamp if new",
+        "Set updatedAt to current timestamp",
+        "Set version to existing version + 1 if updating, or 1 if new",
+        "Generate unique IDs for goals (format: goal-<category>-<index>)",
+        "Generate unique IDs for pain points (format: pp-<category>-<index>)",
+        "Generate unique IDs for bottlenecks (format: bn-<location>-<index>)",
+        "Merge arrays by deduplicating on id/name fields, not replacing entire arrays",
+        "Write the preview profile to artifacts/project-profile-preview.json for the review breakpoint (this is a run artifact, NOT the actual profile — the actual profile is written later by the save task using `babysitter profile:write`)",
+        "Do NOT write to .a5c/project-profile.json or any profile path directly — that is the save task's job via the CLI"
+      ],
+      "outputFormat": "JSON with profile (complete ProjectProfile object), changesSummary (string describing what was new/changed), sourcesUsed (array of strings indicating which data sources contributed)",
+      "role": "project profile architect and data integration engineer",
+      "task": "Build a comprehensive ProjectProfile by merging all available information sources. The profile must conform to the babysitter SDK ProjectProfile schema. Use merge semantics: merge, do not overwrite. Always use the babysitter CLI for profile I/O — never import SDK profile functions directly."
+    }
+  },
+  "description": "Merge existing profile + repo research + tools analysis + process mining + user interview into a complete ProjectProfile",
+  "io": {
+    "inputJsonPath": "tasks/01KST6F3P6EK6MKVB5GF66A58Z/input.json",
+    "outputJsonPath": "tasks/01KST6F3P6EK6MKVB5GF66A58Z/result.json"
+  },
+  "kind": "agent",
+  "labels": ["agent", "build", "cradle", "profile"],
+  "title": "Build comprehensive project profile",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KST6F3P6EK6MKVB5GF66A58Z",
+  "taskId": "build-profile",
+  "invocationKey": "project-install:S000006:build-profile",
+  "stepId": "S000006",
+  "inputs": {
+    "additionalContext": "TOLOM is a vertical SaaS for auto service businesses. Next.js + Supabase + PostgreSQL. Phase 0 foundation complete, building product features.",
+    "existingProfile": null,
+    "isNewProject": false,
+    "miningResult": {
+      "bottlenecks": [
+        {
+          "description": "Both mn.json and en.json changed in lockstep (24 commits each)",
+          "frequency": "every feature",
+          "id": "bn-i18n-0",
+          "impact": "Doubles cost of every UI text change",
+          "location": "src/messages/"
+        },
+        {
+          "description": "src/lib/types/index.ts changed 18 times — central type hub",
+          "frequency": "every migration",
+          "id": "bn-types-0",
+          "impact": "Every new table/column/enum ripples here",
+          "location": "src/lib/types/"
+        },
+        {
+          "description": "Schema drift between local and remote DB",
+          "frequency": "recurring",
+          "id": "bn-schema-0",
+          "impact": "5+ commits specifically fixing drift",
+          "location": "supabase/migrations/"
+        },
+        {
+          "description": "21 'backup' commits with 100-365 files each",
+          "frequency": "frequently",
+          "id": "bn-backup-0",
+          "impact": "Obscures development history, makes git blame useless",
+          "location": "entire repo"
+        }
+      ],
+      "branchPatterns": {
+        "mergeStrategy": "linear — no merges, no feature branches",
+        "observation": "All work lands directly on main. Solo developer workflow.",
+        "strategy": "trunk-based (single main branch)"
+      },
+      "commitPatterns": {
+        "averageCommitSize": {
+          "giantCommitMax": 365,
+          "medianEstimated": "8-12 files"
+        },
+        "messageFormat": {
+          "conventionalPercentage": 58,
+          "nonConventionalPercentage": 42,
+          "topPrefixes": ["fix(", "feat(", "chore(", "docs("]
+        },
+        "timeSpan": {
+          "days": 18,
+          "first": "2026-05-11",
+          "last": "2026-05-29"
+        },
+        "totalCommits": 125,
+        "velocity": {
+          "avgPerDay": 6.9,
+          "peakDay": "2026-05-28 with 19 commits"
+        }
+      },
+      "contributors": [
+        {
+          "areas": ["all"],
+          "commitCount": 125,
+          "name": "Temuulen Undrakhbayar"
+        }
+      ],
+      "evolution": {
+        "growthAreas": [
+          "Dashboard modules (14 features)",
+          "Service catalog",
+          "Inventory ledger",
+          "Vehicle models global catalog"
+        ],
+        "majorEvents": [
+          {
+            "date": "2026-05-11",
+            "description": "Project initialization — foundation setup"
+          },
+          {
+            "date": "2026-05-16",
+            "description": "Feature bootstrapping — expenses, CRM, reminders, subscription system"
+          },
+          {
+            "date": "2026-05-22",
+            "description": "UI polish — Base UI adoption, react-doctor fixes, shadcn updates"
+          },
+          {
+            "date": "2026-05-28",
+            "description": "Stabilization — vehicle model search overhaul, form validation overhaul"
+          }
+        ],
+        "technologyChanges": [
+          "Base UI migration from Radix (asChild → render prop)",
+          "React Compiler enabled",
+          "Supabase MCP integration"
+        ]
+      },
+      "implicitRules": [
+        "All work goes to main directly — no feature branches",
+        "i18n keys always updated in both locale files in same commit",
+        "Database types regenerated after migrations",
+        "react-doctor run periodically in batch rather than per-commit",
+        "Phase-gated development model (Phase 0→1→2) per MASTER_PLAN.md"
+      ],
+      "painPoints": [
+        {
+          "category": "workflow",
+          "description": "No branching strategy — no code review, no safe experimentation",
+          "id": "pp-branching-0",
+          "severity": "high"
+        },
+        {
+          "category": "workflow",
+          "description": "Giant 'backup' commits obscure development history",
+          "id": "pp-backup-0",
+          "severity": "high"
+        },
+        {
+          "category": "quality",
+          "description": "Commit message quality degrades under time pressure",
+          "id": "pp-commit-quality-0",
+          "severity": "medium"
+        },
+        {
+          "category": "tooling",
+          "description": "Recurring schema drift between local and remote DB",
+          "id": "pp-schema-drift-0",
+          "severity": "medium"
+        },
+        {
+          "category": "productivity",
+          "description": "i18n double-touch burden slows feature velocity",
+          "id": "pp-i18n-burden-0",
+          "severity": "medium"
+        },
+        {
+          "category": "release",
+          "description": "No release/versioning strategy — no tags, no CHANGELOG",
+          "id": "pp-no-versioning-0",
+          "severity": "medium"
+        }
+      ],
+      "releasePatterns": {
+        "deploymentEvidence": "Vercel auto-deploy on push to main",
+        "tags": 0,
+        "versioningScheme": "none"
+      }
+    },
+    "projectRoot": "/Users/themuuln/coding/personal/tolom/tolom",
+    "repoStructure": {
+      "architecture": {
+        "dataFlow": "Pages → React Query hooks (src/lib/queries/) → API Routes (src/app/api/) → Services (src/lib/services/) → Supabase client → PostgreSQL",
+        "entryPoints": [
+          "src/app/[locale]/page.tsx",
+          "src/app/layout.tsx",
+          "src/app/[locale]/layout.tsx"
+        ],
+        "modules": [
+          {
+            "description": "CRM — customer list, detail, notes, comms",
+            "name": "customers",
+            "path": "src/app/[locale]/dashboard/customers"
+          },
+          {
+            "description": "Vehicle registry and lookup",
+            "name": "vehicles",
+            "path": "src/app/[locale]/dashboard/vehicles"
+          },
+          {
+            "description": "Work order creation, detail, wizard",
+            "name": "work-orders",
+            "path": "src/app/[locale]/dashboard/work-orders"
+          },
+          {
+            "description": "Parts inventory, movements, purchase orders",
+            "name": "inventory",
+            "path": "src/app/[locale]/dashboard/inventory"
+          },
+          {
+            "description": "Expense tracking and categories",
+            "name": "expenses",
+            "path": "src/app/[locale]/dashboard/expenses"
+          },
+          {
+            "description": "Financial overview, P&L",
+            "name": "finance",
+            "path": "src/app/[locale]/dashboard/finance"
+          },
+          {
+            "description": "Analytics, charts, forecasting, retention",
+            "name": "reports",
+            "path": "src/app/[locale]/dashboard/reports"
+          },
+          {
+            "description": "Service catalog management",
+            "name": "services",
+            "path": "src/app/[locale]/dashboard/services"
+          },
+          {
+            "description": "Org settings, staff management",
+            "name": "organization",
+            "path": "src/app/[locale]/dashboard/organization"
+          },
+          {
+            "description": "Physical bay assignment view",
+            "name": "bay-view",
+            "path": "src/app/[locale]/dashboard/bay-view-v2"
+          },
+          {
+            "description": "Mechanic view, time tracking",
+            "name": "mechanic",
+            "path": "src/app/[locale]/dashboard/mechanic"
+          },
+          {
+            "description": "Customer self-service portal",
+            "name": "portal",
+            "path": "src/app/[locale]/dashboard/portal"
+          },
+          {
+            "description": "Scheduled service reminders",
+            "name": "service-reminders",
+            "path": "src/app/[locale]/dashboard/service-reminders"
+          },
+          {
+            "description": "Vehicle make/model database",
+            "name": "vehicle-models",
+            "path": "src/app/[locale]/dashboard/vehicle-models"
+          }
+        ],
+        "pattern": "Vertical SaaS — multi-tenant application with feature-based modules"
+      },
+      "conventions": {
+        "codeStyle": {
+          "formatter": "Biome",
+          "indentation": "2 spaces",
+          "quotes": "single quotes",
+          "semicolons": "trailing"
+        },
+        "errorHandling": "Custom AppError hierarchy (NotFoundError, UnauthorizedError, ForbiddenError, ValidationError, ConflictError) with toApiErrorResponse() wire format. All API routes wrapped in createRouteHandler.",
+        "importOrder": [
+          "@/lib/*",
+          "@/components/*",
+          "@/hooks/*",
+          "external packages"
+        ],
+        "naming": {
+          "apiRoutes": "RESTful nested under /api/organizations/[id]/...",
+          "components": "PascalCase exports, kebab-case files",
+          "database": "snake_case",
+          "directories": "kebab-case",
+          "hooks": "use- prefix"
+        },
+        "testingConventions": "Vitest for unit/integration, Playwright for E2E. Co-located test files. Test credentials in AGENTS.md."
+      },
+      "directoryTree": {
+        "src": {
+          "app": "Next.js App Router pages",
+          "components": "React components",
+          "hooks": "Custom hooks",
+          "lib": "Utilities, services, queries, stores, types"
+        }
+      },
+      "documentation": [
+        {
+          "path": "MASTER_PLAN.md",
+          "summary": "Full product vision, development phases, pricing strategy",
+          "type": "product-vision"
+        },
+        {
+          "path": "AGENTS.md",
+          "summary": "Global + project agent configuration with comprehensive rules",
+          "type": "agent-config"
+        },
+        {
+          "path": "README.md",
+          "summary": "Repository readme",
+          "type": "readme"
+        },
+        {
+          "path": "docs/",
+          "summary": "VitePress documentation with 25+ pages",
+          "type": "documentation-site"
+        }
+      ],
+      "techStack": {
+        "buildTools": ["Next.js", "Turbopack", "PostCSS", "Tailwind CSS"],
+        "databases": [
+          {
+            "name": "PostgreSQL",
+            "provider": "Supabase",
+            "type": "relational",
+            "version": "15+"
+          }
+        ],
+        "frameworks": [
+          {
+            "category": "framework",
+            "name": "Next.js",
+            "version": "16.2.6"
+          },
+          {
+            "category": "ui",
+            "name": "React",
+            "version": "19.2.4"
+          },
+          {
+            "category": "css",
+            "name": "Tailwind CSS",
+            "version": "4.3"
+          },
+          {
+            "category": "component-library",
+            "name": "shadcn/ui",
+            "version": "4"
+          }
+        ],
+        "infrastructure": [
+          {
+            "category": "hosting",
+            "name": "Vercel"
+          },
+          {
+            "category": "backend-as-a-service",
+            "name": "Supabase"
+          },
+          {
+            "category": "error-monitoring",
+            "name": "Sentry"
+          },
+          {
+            "category": "email",
+            "name": "Resend"
+          }
+        ],
+        "languages": [
+          {
+            "name": "TypeScript",
+            "role": "primary",
+            "version": "5.9"
+          }
+        ],
+        "packageManagers": ["pnpm"]
+      }
+    },
+    "toolsAndServices": {
+      "cicd": {
+        "configPaths": [
+          ".github/workflows/ci.yml",
+          ".github/workflows/react-doctor.yml"
+        ],
+        "pipelines": [
+          {
+            "name": "CI",
+            "stages": ["lint", "typecheck", "test", "build"],
+            "trigger": "pull_request + push to main"
+          },
+          {
+            "name": "React Doctor",
+            "stages": ["diff analysis", "PR comment"],
+            "trigger": "pull_request + push to main"
+          }
+        ],
+        "provider": "GitHub Actions"
+      },
+      "containerization": {
+        "docker": false,
+        "note": "Serverless deployment on Vercel"
+      },
+      "externalIntegrations": [
+        {
+          "category": "authentication",
+          "enabled": true,
+          "service": "Supabase Auth"
+        },
+        {
+          "category": "database",
+          "enabled": true,
+          "service": "Supabase Database"
+        },
+        {
+          "category": "serverless",
+          "enabled": true,
+          "service": "Supabase Edge Functions"
+        },
+        {
+          "category": "monitoring",
+          "enabled": true,
+          "service": "Sentry Error Tracking"
+        },
+        {
+          "category": "email",
+          "enabled": true,
+          "service": "Resend Email"
+        },
+        {
+          "category": "vehicle-data",
+          "enabled": true,
+          "service": "SmartCar.mn"
+        }
+      ],
+      "infrastructure": {
+        "cron": "pg_cron + pg_net",
+        "database": "Supabase (managed PostgreSQL)",
+        "hosting": "Vercel",
+        "monitoring": "Sentry"
+      },
+      "services": [
+        {
+          "name": "Supabase",
+          "type": "backend-as-a-service",
+          "url": "https://supabase.com"
+        },
+        {
+          "name": "Vercel",
+          "type": "hosting",
+          "url": "https://vercel.com"
+        },
+        {
+          "name": "Sentry",
+          "type": "error-monitoring",
+          "url": "https://sentry.io"
+        },
+        {
+          "name": "Resend",
+          "type": "email",
+          "url": "https://resend.com"
+        },
+        {
+          "name": "SmartCar.mn",
+          "type": "vehicle-lookup",
+          "url": "https://smartcar.mn"
+        }
+      ],
+      "tools": {
+        "formatting": [
+          {
+            "name": "Biome",
+            "purpose": "Code formatting",
+            "version": "2.2.0"
+          }
+        ],
+        "linting": [
+          {
+            "config": "biome.json",
+            "name": "Biome",
+            "purpose": "Linting + formatting + import organization",
+            "version": "2.2.0"
+          }
+        ],
+        "testing": [
+          {
+            "config": "vitest.config.mts",
+            "name": "Vitest",
+            "purpose": "Unit/integration testing",
+            "version": "3.2.4"
+          },
+          {
+            "config": "playwright.config.ts",
+            "name": "Playwright",
+            "purpose": "E2E testing",
+            "version": "1.60.0"
+          },
+          {
+            "name": "react-doctor",
+            "purpose": "React code quality analysis",
+            "version": "0.2.9"
+          }
+        ]
+      },
+      "workflows": [
+        {
+          "description": "Local dev with hot reload",
+          "name": "Development",
+          "steps": ["pnpm install", "pnpm dev"],
+          "triggers": ["manual"]
+        },
+        {
+          "description": "Automated quality gates",
+          "name": "CI/CD",
+          "steps": ["lint", "typecheck", "test", "build"],
+          "triggers": ["PR", "push to main"]
+        },
+        {
+          "description": "Vercel auto-deploy on merge",
+          "name": "Deployment",
+          "steps": ["merge to main", "Vercel build", "Vercel deploy"],
+          "triggers": ["merge to main"]
+        }
+      ]
+    }
+  }
+}

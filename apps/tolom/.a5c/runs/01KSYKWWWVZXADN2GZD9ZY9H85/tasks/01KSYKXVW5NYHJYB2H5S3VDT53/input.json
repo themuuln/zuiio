@@ -1,0 +1,8 @@
+{
+  "phase": {
+    "id": "real-time-balances",
+    "title": "Real-Time Inventory Balances"
+  },
+  "phaseIndex": 1,
+  "totalPhases": 5
+}

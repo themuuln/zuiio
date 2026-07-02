@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KT1WMGRT9WPMX72WDN0VXX96",
+  "taskId": "build-verify",
+  "invocationKey": "payroll-feature:S000007:build-verify",
+  "status": "ok",
+  "result": {
+    "result": "Type check passed. All payroll files compile cleanly."
+  },
+  "startedAt": "2026-06-01T15:28:11.901Z",
+  "finishedAt": "2026-06-01T15:28:11.901Z",
+  "value": {
+    "result": "Type check passed. All payroll files compile cleanly."
+  }
+}

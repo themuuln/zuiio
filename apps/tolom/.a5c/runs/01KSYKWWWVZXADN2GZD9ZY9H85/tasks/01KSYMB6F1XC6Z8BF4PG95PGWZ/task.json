@@ -1,0 +1,47 @@
+{
+  "kind": "breakpoint",
+  "metadata": {
+    "label": "breakpoint",
+    "payload": {
+      "context": {
+        "completedPhases": [
+          "real-time-balances"
+        ],
+        "description": "Create a dedicated /parts/[partId] page with stock history timeline, movement list, threshold editing, purchase price tracking, and edit form — replacing inline-only modal editing.",
+        "phase": "part-detail-page"
+      },
+      "expert": "product-owner",
+      "question": "Proceed to phase 2: Part Detail Page?",
+      "tags": [
+        "progress-gate"
+      ],
+      "title": "Phase 2 — Part Detail Page"
+    },
+    "requestedAt": "2026-05-31T09:02:53.921Z"
+  },
+  "title": "breakpoint",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KSYMB6F1XC6Z8BF4PG95PGWZ",
+  "taskId": "__sdk.breakpoint",
+  "invocationKey": "inventory-improvement:S000002:__sdk.breakpoint",
+  "stepId": "S000002",
+  "inputs": {
+    "label": "breakpoint",
+    "payload": {
+      "context": {
+        "completedPhases": [
+          "real-time-balances"
+        ],
+        "description": "Create a dedicated /parts/[partId] page with stock history timeline, movement list, threshold editing, purchase price tracking, and edit form — replacing inline-only modal editing.",
+        "phase": "part-detail-page"
+      },
+      "expert": "product-owner",
+      "question": "Proceed to phase 2: Part Detail Page?",
+      "tags": [
+        "progress-gate"
+      ],
+      "title": "Phase 2 — Part Detail Page"
+    },
+    "requestedAt": "2026-05-31T09:02:53.921Z"
+  }
+}

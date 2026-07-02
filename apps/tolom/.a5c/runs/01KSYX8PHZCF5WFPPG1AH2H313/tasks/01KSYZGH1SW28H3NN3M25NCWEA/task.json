@@ -1,0 +1,79 @@
+{
+  "agent": {
+    "name": "general-purpose",
+    "outputSchema": {
+      "properties": {
+        "count": {
+          "type": "number"
+        },
+        "testFiles": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "testNames": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "count",
+        "testFiles"
+      ],
+      "type": "object"
+    },
+    "prompt": {
+      "context": {
+        "project": "TOLOM"
+      },
+      "instructions": [
+        "Read src/lib/services/time-tracking-service.test.ts for the existing test patterns",
+        "Read src/test/mocks/supabase.ts for mock client patterns",
+        "Read src/test/setup-tests.ts for test setup",
+        "",
+        "Extend src/lib/services/time-tracking-service.test.ts:",
+        "- Add test for QR-based clockIn flow",
+        "- Add test for QR-based clockOut flow",
+        "",
+        "Create src/lib/services/qr-token-service.test.ts:",
+        "- Test generateClockToken generates valid token",
+        "- Test verifyAndClaimClockToken validates correctly",
+        "- Test expired token is rejected",
+        "- Test claimed token cannot be reused",
+        "- Test registerDevice creates device record",
+        "- Test getRegisteredDevices returns device list",
+        "- Test revokeDevice marks as revoked",
+        "",
+        "Create src/components/bay-view-v2/device-registration-dialog.test.tsx:",
+        "- Test dialog renders with mechanic list",
+        "- Test QR generation button works",
+        "- Test success state renders",
+        "",
+        "Use vi.mock for all external dependencies.",
+        "Follow the same patterns as existing tests (vi.fn(), makeBuilder helper, etc).",
+        "Do NOT test Realtime subscriptions (hard to mock reliably)."
+      ],
+      "outputFormat": "JSON with { count: number, testFiles: string[], testNames: string[] }",
+      "role": "QA Engineer",
+      "task": "Write tests for the QR clock-in feature"
+    }
+  },
+  "io": {
+    "inputJsonPath": "tasks/01KSYZGH1SW28H3NN3M25NCWEA/input.json",
+    "outputJsonPath": "tasks/01KSYZGH1SW28H3NN3M25NCWEA/output.json"
+  },
+  "kind": "agent",
+  "labels": [
+    "testing"
+  ],
+  "title": "Write tests for QR clock-in feature",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KSYZGH1SW28H3NN3M25NCWEA",
+  "taskId": "write-tests",
+  "invocationKey": "feature/qr-clock-in:S000019:write-tests",
+  "stepId": "S000019",
+  "inputs": {}
+}

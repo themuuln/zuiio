@@ -1,0 +1,18 @@
+{
+  "io": {
+    "outputJsonPath": "tasks/01KSWZT5J1CC3RZHJ33Y1DSJD9/output.json"
+  },
+  "kind": "shell",
+  "shell": {
+    "command": "pnpm run build 2>&1 | tail -30",
+    "timeoutMs": 60000,
+    "workingDirectory": "/Users/themuuln/coding/personal/tolom/tolom"
+  },
+  "title": "Verify TypeScript build",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KSWZT5J1CC3RZHJ33Y1DSJD9",
+  "taskId": "verify-build",
+  "invocationKey": "feature/eod-close-ritual:S000005:verify-build",
+  "stepId": "S000005",
+  "inputs": {}
+}

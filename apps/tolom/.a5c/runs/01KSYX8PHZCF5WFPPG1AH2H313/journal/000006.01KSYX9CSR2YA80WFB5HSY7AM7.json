@@ -1,0 +1,21 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-31T11:39:12.056Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KSYX9CS3M56BAKF2JM6JYWRY",
+    "invocationKey": "feature/qr-clock-in:S000003:generate-types",
+    "invocationHash": "180f0cda9a35d004c13d4ca381d516795fea1402722a520931a8041fe795d3e1",
+    "stepId": "S000003",
+    "taskId": "generate-types",
+    "kind": "agent",
+    "label": "typescript",
+    "taskDefRef": "tasks/01KSYX9CS3M56BAKF2JM6JYWRY/task.json",
+    "labels": [
+      "typescript",
+      "types",
+      "supabase"
+    ]
+  },
+  "checksum": "881c920dbef1e9edd2a8094d54303897f2920d13581ba073f17257fe542ea7ca"
+}

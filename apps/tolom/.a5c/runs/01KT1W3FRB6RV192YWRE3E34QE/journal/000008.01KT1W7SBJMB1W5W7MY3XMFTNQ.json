@@ -1,0 +1,16 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-06-01T15:18:34.098Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KT1W7SAE19AR0BJX5KNJ1DE4",
+    "invocationKey": "payroll-feature:S000004:permissions-seed",
+    "invocationHash": "51195c8267046f293d6ad5661e2a0daca57b946512745aca52513d36ed1e3843",
+    "stepId": "S000004",
+    "taskId": "permissions-seed",
+    "kind": "skill",
+    "label": "Add payroll permissions",
+    "taskDefRef": "tasks/01KT1W7SAE19AR0BJX5KNJ1DE4/task.json"
+  },
+  "checksum": "0ad7a7e0a0230f05210cedb35986ea4ab342a253b34a38f9cf3385d18c064397"
+}
