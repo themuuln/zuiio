@@ -3,7 +3,7 @@ name: Sync Env to Vercel
 on:
   push:
     branches: [main]
-  workflow_dispatch: # manual trigger
+  workflow_dispatch:
 
 jobs:
   sync-env:
@@ -16,23 +16,38 @@ jobs:
         run: npm i -g vercel@latest
 
       - name: Pull Vercel environment
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Write env file from GitHub Secrets
-        run: |
-          cat > /tmp/.env.vercel <<'EOF'
-          NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
-          SMTP_HOST=${{ secrets.SMTP_HOST }}
-          SMTP_PORT=${{ secrets.SMTP_PORT }}
-          SMTP_SECURE=${{ secrets.SMTP_SECURE }}
-          SMTP_USER=${{ secrets.SMTP_USER }}
-          SMTP_PASS=${{ secrets.SMTP_PASS }}
-          EMAIL_FROM=${{ secrets.EMAIL_FROM }}
-          EOF
+        run: >
+          vercel pull --yes --environment=production
+          --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Push env vars to Vercel
-        run: vercel env push /tmp/.env.vercel --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          {
+            printf 'NEXT_PUBLIC_SUPABASE_URL=%s\n' \
+              "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}"
+            printf 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=%s\n' \
+              "${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}"
+            printf 'NEXT_PUBLIC_SUPABASE_ANON_KEY=%s\n' \
+              "${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}"
+            printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n' \
+              "${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
+            printf 'RESEND_API_KEY=%s\n' \
+              "${{ secrets.RESEND_API_KEY }}"
+            printf 'SMTP_HOST=%s\n' "${{ secrets.SMTP_HOST }}"
+            printf 'SMTP_PORT=%s\n' "${{ secrets.SMTP_PORT }}"
+            printf 'SMTP_SECURE=%s\n' "${{ secrets.SMTP_SECURE }}"
+            printf 'SMTP_USER=%s\n' "${{ secrets.SMTP_USER }}"
+            printf 'SMTP_PASS=%s\n' "${{ secrets.SMTP_PASS }}"
+            printf 'EMAIL_FROM=%s\n' "${{ secrets.EMAIL_FROM }}"
+          } > /tmp/.env.vercel
+
+          while IFS='=' read -r name value; do
+            [ -z "$name" ] && continue
+            # strip trailing whitespace from name
+            name="${name%% }"
+            printf '%s' "$value" |
+              vercel env add "$name" production \
+                --token="$VERCEL_TOKEN" --non-interactive
+          done < /tmp/.env.vercel
