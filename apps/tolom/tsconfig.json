@@ -32,10 +32,5 @@
     "packages/*/src/**/*.ts",
     "packages/*/src/**/*.tsx"
   ],
-  "exclude": [
-    "node_modules",
-    "supabase",
-    "scratch",
-    "templates"
-  ]
+  "exclude": ["node_modules", "supabase", "scratch", "templates"]
 }
