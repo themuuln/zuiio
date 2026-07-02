@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Instrument_Serif, Geist } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 
 const instrumentSerif = Instrument_Serif({
 	subsets: ["latin"],
@@ -19,7 +17,7 @@ const geist = Geist({
 
 export const metadata: Metadata = {
 	title: {
-		default: "Zuiio — Mongolian Business Software",
+		default: "Zuiio — Монгол бизнесийн программ хангамж",
 		template: "%s | Zuiio",
 	},
 	description:
@@ -46,16 +44,7 @@ export default function RootLayout({
 			className={`${instrumentSerif.variable} ${geist.variable}`}
 			suppressHydrationWarning
 		>
-			<body className="min-h-screen flex flex-col antialiased">
-				<a href="#main-content" className="skip-to-content">
-					Skip to content
-				</a>
-				<Header />
-				<main id="main-content" className="flex-1">
-					{children}
-				</main>
-				<Footer />
-			</body>
+			<body className="min-h-screen flex flex-col antialiased">{children}</body>
 		</html>
 	);
 }

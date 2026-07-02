@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 interface HeroProps {
 	title: string;
 	subtitle: string;
+	eyebrow?: string;
 	cta?: { label: string; href: string };
 	secondaryCta?: { label: string; href: string };
 	className?: string;
@@ -13,6 +14,7 @@ interface HeroProps {
 export function Hero({
 	title,
 	subtitle,
+eyebrow,
 	cta,
 	secondaryCta,
 	className,
@@ -41,7 +43,7 @@ export function Hero({
 						style={{ backgroundColor: "var(--brand-teal)" }}
 						aria-hidden="true"
 					/>
-					Built for Mongolian businesses
+					{eyebrow}
 				</div>
 				<h1
 					className="animate-fade-up text-4xl font-semibold leading-tight tracking-tight md:text-6xl lg:text-7xl"
