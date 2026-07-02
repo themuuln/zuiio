@@ -8,6 +8,18 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Agent Instructions
 
+## Required reading: @zuiio shared context (inside monorepo)
+
+This project now lives inside the `@zuiio` monorepo at `apps/zer/`. Before coding, load these shared docs:
+
+| File | What it covers |
+|------|----------------|
+| `../../docs/design.md` | OKLch color tokens, typography, spacing, motion, component conventions, voice & tone |
+| `../../docs/vision.md` | Overall zuiio product vision and how we build |
+| `../../docs/stack-web.md` | Next.js 16 stack, Instant Navigations, Turbopack config |
+| `../../.claude/instructions.md` | Design essentials quick reference + common patterns |
+| `../../AGENTS.md` | Monorepo project structure, package map, TypeScript conventions |
+
 **Always read `VISION.md` first** — it is the single source of truth for project direction, architecture, goals, and principles. This file (AGENTS.md) covers operational rules and coding specifics. When in doubt, defer to VISION.md.
 
 ---
@@ -133,6 +145,7 @@ export default function MyForm() {
 ```
 
 **Rules:**
+
 1. Always `onSubmit={handleSubmit(onSubmit)}` — never `form action={...}`
 2. Use `register()` for standard inputs, `Controller` for custom components (Combobox, Select)
 3. Server errors go in `serverError` useState or `ErrorBanner` component
