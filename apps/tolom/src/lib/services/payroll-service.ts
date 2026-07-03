@@ -9,6 +9,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
+import { withDbCapture } from "@/lib/supabase/query";
 
 // ── Types ──────────────────────────────────────────
 
@@ -49,15 +50,19 @@ export async function getPayRate(
 ): Promise<PayRate | null> {
   const supabase = db;
 
-  const { data } = await supabase
-    .from("mechanic_pay_rates")
-    .select(
-      "id, organization_id, mechanic_id, hourly_rate, effective_from, effective_to",
-    )
-    .eq("organization_id", orgId)
-    .eq("mechanic_id", mechanicId)
-    .is("effective_to", null)
-    .maybeSingle();
+  const { data, error } = await withDbCapture(
+    "getPayRate",
+    supabase
+      .from("mechanic_pay_rates")
+      .select(
+        "id, organization_id, mechanic_id, hourly_rate, effective_from, effective_to",
+      )
+      .eq("organization_id", orgId)
+      .eq("mechanic_id", mechanicId)
+      .is("effective_to", null)
+      .maybeSingle(),
+  );
+  if (error) return null;
 
   return data as PayRate | null;
 }

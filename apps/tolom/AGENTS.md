@@ -433,6 +433,49 @@ After any user-facing change, check if `docs/*.md` (VitePress source) needs upda
 
 ---
 
+
+---
+
+## Debugging
+
+Tolom uses `@zuiio/capture` for unified error capture. Every error is logged to console.error (visible in `npm run dev` terminal) and sent to Sentry.
+
+### How to capture errors
+
+```ts
+import { capture, withDbCapture } from "@/lib/capture";
+
+// Generic error
+capture(error, { context: "Work order load" });
+
+// Auto-capture Supabase query errors (preferred — catches every path)
+const { data, error } = await withDbCapture("loadWorkOrder",
+  supabase.from("work_orders").select("*").single()
+);
+```
+
+**Wrap every Supabase query** with `withDbCapture()` — especially `.single()`, `.maybeSingle()`, and `.insert()` calls.
+
+### Where errors appear
+
+| Source | When | How to check |
+|--------|------|-------------|
+| `npm run dev` terminal | Immediately | Look for `[capture]` lines |
+| `.next/dev/logs/next-development.log` | Immediately | `grep "\[capture\]" .next/dev/logs/next-development.log` |
+| Sentry dashboard | Production | `sentry.io` — requires `NEXT_PUBLIC_SENTRY_DSN` |
+| Browser DevTools | Client-side errors | Console + Network tabs |
+
+### Redirect loop protection
+
+The middleware (`src/lib/supabase/middleware.ts`) detects repeated redirects and breaks the loop after 3 attempts within 30 seconds.
+
+### Debugging checklist
+
+When investigating a bug:
+1. Check the dev terminal for `[capture]` lines
+2. Check `grep "\[capture\]" .next/dev/logs/next-development.log`
+4. Open the browser and check console + network tab
+
 ## Sub-AGENTS.md Reference
 
 | Layer | File |

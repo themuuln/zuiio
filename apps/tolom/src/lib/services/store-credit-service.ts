@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { withDbCapture } from "@/lib/supabase/query";
 
 /**
  * Get store credit balance for a customer in an organization.
@@ -8,12 +9,16 @@ export async function getStoreCreditBalance(
   customerId: string,
   orgId: string,
 ): Promise<number> {
-  const { data } = await supabase
-    .from("store_credit_balances")
-    .select("balance")
-    .eq("customer_id", customerId)
-    .eq("organization_id", orgId)
-    .single();
+  const { data, error } = await withDbCapture(
+    "getStoreCreditBalance",
+    supabase
+      .from("store_credit_balances")
+      .select("balance")
+      .eq("customer_id", customerId)
+      .eq("organization_id", orgId)
+      .single(),
+  );
+  if (error) return 0;
 
   return Number(data?.balance ?? 0);
 }

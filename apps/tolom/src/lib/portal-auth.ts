@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import { toApiErrorResponse, UnauthorizedError } from "@/lib/errors";
 import { authRateLimiter } from "@/lib/rate-limit";
+import { withDbCapture } from "@/lib/supabase/query";
 import { createClient } from "@/lib/supabase/server";
 
 // ── Types ─────────────────────────────────────────────────────
@@ -32,14 +33,18 @@ export async function authenticatePortalRequest(
 
   if (tokenMatch) {
     const supabase = await createClient();
-    const { data } = await supabase
-      .from("customers")
-      .select(
-        "id, organization_id, first_name, last_name, phone, email, portal_token, customer_user_id",
-      )
-      .eq("portal_token", tokenMatch[1])
-      .is("deleted_at", null)
-      .maybeSingle();
+    const { data, error } = await withDbCapture(
+      "portalAuth_byToken",
+      supabase
+        .from("customers")
+        .select(
+          "id, organization_id, first_name, last_name, phone, email, portal_token, customer_user_id",
+        )
+        .eq("portal_token", tokenMatch[1])
+        .is("deleted_at", null)
+        .maybeSingle(),
+    );
+    if (error) return null;
     return data as PortalCustomer | null;
   }
 
@@ -48,14 +53,18 @@ export async function authenticatePortalRequest(
     data: { user },
   } = await supabase.auth.getUser();
   if (user) {
-    const { data } = await supabase
-      .from("customers")
-      .select(
-        "id, organization_id, first_name, last_name, phone, email, portal_token",
-      )
-      .eq("customer_user_id", user.id)
-      .is("deleted_at", null)
-      .maybeSingle();
+    const { data, error } = await withDbCapture(
+      "portalAuth_byUser",
+      supabase
+        .from("customers")
+        .select(
+          "id, organization_id, first_name, last_name, phone, email, portal_token",
+        )
+        .eq("customer_user_id", user.id)
+        .is("deleted_at", null)
+        .maybeSingle(),
+    );
+    if (error) return null;
     return data as PortalCustomer | null;
   }
 

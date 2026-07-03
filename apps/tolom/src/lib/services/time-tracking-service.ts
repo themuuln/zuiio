@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
+import { withDbCapture } from "@/lib/supabase/query";
 
 export interface TimeLog {
   id: string;
@@ -124,18 +125,22 @@ export async function getTodayLog(
   const supabase = db;
   const today = new Date().toISOString().split("T")[0];
 
-  const { data } = await supabase
-    .from("mechanic_time_logs")
-    .select(
-      "id, organization_id, mechanic_id, clock_in, clock_out, date, notes",
-    )
-    .eq("mechanic_id", mechanicId)
-    .eq("organization_id", orgId)
-    .eq("date", today)
-    .is("clock_out", null)
-    .order("clock_in", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const { data, error } = await withDbCapture(
+    "getTodayLog",
+    supabase
+      .from("mechanic_time_logs")
+      .select(
+        "id, organization_id, mechanic_id, clock_in, clock_out, date, notes",
+      )
+      .eq("mechanic_id", mechanicId)
+      .eq("organization_id", orgId)
+      .eq("date", today)
+      .is("clock_out", null)
+      .order("clock_in", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  );
+  if (error) return null;
 
   return data;
 }
@@ -151,13 +156,17 @@ export async function getTodayHours(
   const supabase = db;
   const today = new Date().toISOString().split("T")[0];
 
-  const { data } = await supabase
-    .from("mechanic_daily_reports")
-    .select("hours_worked")
-    .eq("mechanic_id", mechanicId)
-    .eq("organization_id", orgId)
-    .eq("report_date", today)
-    .maybeSingle();
+  const { data, error } = await withDbCapture(
+    "getTodayHours",
+    supabase
+      .from("mechanic_daily_reports")
+      .select("hours_worked")
+      .eq("mechanic_id", mechanicId)
+      .eq("organization_id", orgId)
+      .eq("report_date", today)
+      .maybeSingle(),
+  );
+  if (error) return 0;
 
   return data?.hours_worked ?? 0;
 }

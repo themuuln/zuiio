@@ -3,6 +3,65 @@ import { type NextRequest, NextResponse } from "next/server";
 import { matchRoutes } from "./auth-routes";
 import { env, getSupabaseKey } from "./env";
 
+/**
+ * Detect and break redirect loops.
+ * Returns a 500 error response when the same redirect fires too many times.
+ */
+function guardRedirect(
+  request: NextRequest,
+  url: NextResponse,
+): NextResponse | null {
+  const REDIRECT_WINDOW_S = 30;
+  const REDIRECT_MAX = 3;
+  const redirectCookie = request.cookies.get("__redirect_count");
+  const redirectCount = redirectCookie
+    ? parseInt(redirectCookie.value, 10) || 0
+    : 0;
+
+  if (redirectCount >= REDIRECT_MAX) {
+    console.error(
+      `[redirect-loop] Breaking loop: ${request.nextUrl.pathname} (×${redirectCount + 1})`,
+    );
+
+    return new NextResponse(
+      `<!DOCTYPE html>
+<html lang="mn">
+<head><meta charset="utf-8"><title>Системд алдаа гарлаа</title>
+<style>
+  body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 2rem; }
+  .card { max-width: 480px; text-align: center; }
+  h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; }
+  p { color: #666; line-height: 1.5; }
+</style></head>
+<body><div class="card">
+  <h1>Системд алдаа гарлаа</h1>
+  <p>Дахин чиглүүлэлтийн хязгаарт хүрсэн байна.</p>
+  <p style="font-size:0.85rem;color:#999;margin-top:1rem;">
+    redirect loop detected &middot; ×${redirectCount + 1}
+  </p>
+</div></body></html>`,
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Set-Cookie":
+            "__redirect_count=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax",
+        },
+      },
+    );
+  }
+
+  // Increment and attach the cookie
+  const response = url;
+  response.cookies.set("__redirect_count", String(redirectCount + 1), {
+    maxAge: REDIRECT_WINDOW_S,
+    path: "/",
+    httpOnly: true,
+    sameSite: "lax",
+  });
+  return null; // no loop detected, proceed normally
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -20,9 +79,7 @@ export async function updateSession(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) => {
             request.cookies.set(name, value);
           });
-          supabaseResponse = NextResponse.next({
-            request,
-          });
+          supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) => {
             supabaseResponse.cookies.set(name, value, options);
           });
@@ -48,14 +105,11 @@ export async function updateSession(request: NextRequest) {
     "auth",
     "dashboard",
     "api",
-    "invoice",
-    "booking",
-    "portal",
-    "invite",
-    "pricing",
-    "guide",
-    "super-admin",
+    "_next",
     "favicon.ico",
+    "manifest.json",
+    "sw.js",
+    "workbox",
   ]);
   const isStorefrontPath =
     !!slug &&
@@ -84,12 +138,18 @@ export async function updateSession(request: NextRequest) {
     // With localePrefix: "never" the URL has no locale segment
     url.pathname = "/auth/login";
     url.searchParams.set("redirectTo", request.nextUrl.pathname);
+
+    const loop = guardRedirect(request, NextResponse.redirect(url));
+    if (loop) return loop;
     return NextResponse.redirect(url);
   }
 
   if (user && routes.isLoginRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/select-organization";
+
+    const loop = guardRedirect(request, NextResponse.redirect(url));
+    if (loop) return loop;
     return NextResponse.redirect(url);
   }
 
@@ -141,11 +201,25 @@ export async function updateSession(request: NextRequest) {
       request: { headers: request.headers },
       headers: { "x-storefront-rewrite": "1" },
     });
-    // Copy cookies from supabase session refresh
-    for (const cookie of supabaseResponse.cookies.getAll()) {
-      rewritten.cookies.set(cookie.name, cookie.value, cookie);
+    // Carry over the __redirect_count cookie so it clears on success
+    const countCookie = request.cookies.get("__redirect_count");
+    if (countCookie) {
+      rewritten.cookies.set("__redirect_count", countCookie.value, {
+        maxAge: 30,
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax",
+      });
     }
     return rewritten;
+  }
+
+  // Clear the redirect counter on successful page loads (no redirect happened)
+  if (request.cookies.get("__redirect_count")) {
+    supabaseResponse.cookies.set("__redirect_count", "", {
+      maxAge: 0,
+      path: "/",
+    });
   }
 
   return supabaseResponse;

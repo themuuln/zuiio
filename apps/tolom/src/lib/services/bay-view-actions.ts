@@ -4,6 +4,7 @@ import { ValidationError } from "@/lib/errors";
 import { lookupPlate } from "@/lib/smartcar/browser";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import { withDbCapture } from "@/lib/supabase/query";
 import { createCustomer } from "./customer-service";
 import { createVehicle, updateVehicle } from "./vehicle-service";
 import { createWorkOrder } from "./work-order-service";
@@ -33,14 +34,18 @@ async function withOrgClient() {
 
 export async function findCustomerByPhone(phone: string) {
   const { supabase, orgId } = await withOrgClient();
+  const { data, error } = await withDbCapture(
+    "findCustomerByPhone",
+    supabase
+      .from("customers")
+      .select("id, first_name, last_name, phone")
+      .eq("organization_id", orgId)
+      .eq("phone", phone)
+      .is("deleted_at", null)
+      .maybeSingle(),
+  );
 
-  const { data } = await supabase
-    .from("customers")
-    .select("id, first_name, last_name, phone")
-    .eq("organization_id", orgId)
-    .eq("phone", phone)
-    .is("deleted_at", null)
-    .maybeSingle();
+  if (error) return null;
 
   return data;
 }
@@ -48,16 +53,21 @@ export async function findCustomerByPhone(phone: string) {
 export async function findCustomerByPlate(plate: string) {
   const { supabase, orgId } = await withOrgClient();
 
-  const { data } = await supabase
-    .from("vehicles")
-    .select(
-      "id, plate_number, make, model, year, color, owners:vehicle_owners!inner(customer_id, customers!inner(id, first_name, last_name, phone)))",
-    )
-    .eq("organization_id", orgId)
-    .eq("plate_number", plate)
-    .is("deleted_at", null)
-    .is("vehicle_owners.owned_until", null)
-    .maybeSingle();
+  const { data, error } = await withDbCapture(
+    "findCustomerByPlate",
+    supabase
+      .from("vehicles")
+      .select(
+        "id, plate_number, make, model, year, color, owners:vehicle_owners!inner(customer_id, customers!inner(id, first_name, last_name, phone)))",
+      )
+      .eq("organization_id", orgId)
+      .eq("plate_number", plate)
+      .is("deleted_at", null)
+      .is("vehicle_owners.owned_until", null)
+      .maybeSingle(),
+  );
+
+  if (error) return null;
 
   return data;
 }

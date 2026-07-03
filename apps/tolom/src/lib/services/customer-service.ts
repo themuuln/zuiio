@@ -11,6 +11,7 @@ import type {
 } from "@/lib/types";
 import { createCrudService } from "./create-crud-service";
 import { trimField } from "./trim-field";
+import { withDbCapture } from "@/lib/supabase/query";
 
 // ── Factory-backed CRUD ───────────────────────────────────────
 
@@ -405,12 +406,16 @@ export async function getSharedCustomerVehicles(
   }[]
 > {
   const supabase = db;
-  const { data } = await supabase
-    .from("vehicles")
-    .select("id, plate_number, make, model, year")
-    .eq("customer_id", customerId)
-    .neq("organization_id", viewerOrgId)
-    .is("deleted_at", null);
+  const { data, error } = await withDbCapture(
+    "getSharedCustomerVehicles",
+    supabase
+      .from("vehicles")
+      .select("id, plate_number, make, model, year")
+      .eq("customer_id", customerId)
+      .neq("organization_id", viewerOrgId)
+      .is("deleted_at", null),
+  );
+  if (error) return [];
 
   return data ?? [];
 }
