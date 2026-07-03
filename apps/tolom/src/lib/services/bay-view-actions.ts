@@ -23,14 +23,16 @@ async function getOrgId(): Promise<string> {
   return data;
 }
 
+async function withOrgClient() {
+  const supabase = await createClient();
+  const orgId = await getOrgId();
+  return { supabase, orgId };
+}
+
 // ── Find or Create Customer ─────────────────────────────────────
 
 export async function findCustomerByPhone(phone: string) {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
+  const { supabase, orgId } = await withOrgClient();
 
   const { data } = await supabase
     .from("customers")
@@ -44,11 +46,7 @@ export async function findCustomerByPhone(phone: string) {
 }
 
 export async function findCustomerByPlate(plate: string) {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
+  const { supabase, orgId } = await withOrgClient();
 
   const { data } = await supabase
     .from("vehicles")
@@ -105,11 +103,7 @@ export interface VehicleLookupResult {
 export async function lookupVehicleByPlate(
   plate: string,
 ): Promise<VehicleLookupResult> {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
+  const { supabase, orgId } = await withOrgClient();
 
   // Find vehicle
   const { data: vehicle } = await supabase
@@ -302,12 +296,8 @@ export async function quickRegisterVehicle(params: {
   if (!params.make?.trim()) throw new ValidationError("Make is required");
   if (!params.model?.trim()) throw new ValidationError("Model is required");
 
-  const {
-    data: { user: authUser },
-  } = await (await createClient()).auth.getUser();
-  if (!authUser) throw new Error("Not authenticated");
-
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
+  const { supabase, orgId } = await withOrgClient();
+  const { data: { user: authUser } } = await supabase.auth.getUser();
 
   // Find or create customer
   let customerId: string | null = null;
@@ -387,11 +377,7 @@ export async function quickRegisterVehicle(params: {
 // ── Search mechanics (for registration) ─────────────────────────
 
 export async function searchMechanics(search?: string) {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
+  const { supabase, orgId } = await withOrgClient();
 
   let query = supabase
     .from("profiles")
@@ -410,11 +396,7 @@ export async function searchMechanics(search?: string) {
 // ── Search Vehicles (for autocomplete) ──────────────────────────
 
 export async function searchVehicles(search?: string) {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
+  const { supabase, orgId } = await withOrgClient();
 
   let query = supabase
     .from("vehicles")
@@ -438,11 +420,7 @@ export async function searchVehicles(search?: string) {
 // ── Search Vehicles with Customers (for assign dialog) ─────────
 
 export async function searchVehiclesWithCustomers(search?: string) {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
+  const { supabase, orgId } = await withOrgClient();
 
   let query = supabase
     .from("vehicles")
@@ -499,12 +477,7 @@ export async function registerMechanic(params: {
   if (!params.email?.trim()) throw new ValidationError("Email is required");
   if (!params.fullName?.trim()) throw new ValidationError("Name is required");
 
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
+  const { supabase, orgId } = await withOrgClient();
   const adminClient = await createServiceRoleClient();
 
   // Find existing auth user by email, or create one
@@ -552,11 +525,7 @@ export async function registerMechanic(params: {
 export async function getVehicleServiceTimeline(
   vehicleId: string,
 ): Promise<VehicleLookupResult["serviceHistory"]> {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
+  const { supabase, orgId } = await withOrgClient();
 
   const { data: workOrders } = await supabase
     .from("work_orders")
@@ -621,11 +590,7 @@ export async function addVehicleToQueue(params: {
   complaint?: string;
   branchId?: string;
 }): Promise<{ workOrderId: string }> {
-  const {
-    data: { user },
-  } = await (await createClient()).auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  const [supabase, orgId] = await Promise.all([createClient(), getOrgId()]);
+  const { supabase, orgId } = await withOrgClient();
 
   if (!params.vehicleId) throw new ValidationError("Vehicle is required");
 

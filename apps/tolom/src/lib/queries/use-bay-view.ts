@@ -231,9 +231,6 @@ export function useAssignVehicleToBay(branchId: string | undefined) {
       toast.dismiss();
       toast.success(`Assigned to Bay ${vars.bayNumber}`);
     },
-    onSettled: () => {
-      // Realtime subscriptions cover work_orders/work_order_helpers/mechanic_assignments
-    },
   });
 }
 
@@ -279,9 +276,6 @@ export function useRemoveVehicleFromBay(branchId: string | undefined) {
     onSuccess: () => {
       toast.dismiss();
       toast.success("Removed from bay");
-    },
-    onSettled: () => {
-      // Realtime subscriptions cover work_orders/work_order_helpers/mechanic_assignments
     },
   });
 }
@@ -412,9 +406,6 @@ export function useAssignMechanicToWorkOrder(branchId: string | undefined) {
       toast.dismiss();
       toast.success("Mechanic assigned");
     },
-    onSettled: () => {
-      // Realtime subscriptions cover work_orders/work_order_helpers/mechanic_assignments
-    },
   });
 }
 
@@ -452,9 +443,6 @@ export function useRemoveMechanicFromWorkOrder(branchId: string | undefined) {
     onSuccess: () => {
       toast.dismiss();
       toast.success("Mechanic removed");
-    },
-    onSettled: () => {
-      // Realtime subscriptions cover work_orders/work_order_helpers/mechanic_assignments
     },
   });
 }

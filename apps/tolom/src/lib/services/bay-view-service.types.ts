@@ -46,6 +46,22 @@ export interface BayViewData {
   mechanics: (Profile & { current_jobs: number })[];
 }
 
+export interface WorkOrderWithDetails extends WorkOrder {
+  vehicle: Vehicle | null;
+  customer: { full_name: string | null; company_name: string | null } | null;
+  mechanic: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null;
+  helpers: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  }[];
+  customer_name: string | null;
+}
+
 export interface ShiftReport {
   completedToday: number;
   revenueToday: number;

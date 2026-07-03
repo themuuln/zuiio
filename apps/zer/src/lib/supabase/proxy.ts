@@ -32,8 +32,6 @@ export async function updateSession(request: NextRequest) {
     user = data.user;
   } catch (e) {
     // Session is invalid — treat as unauthenticated.
-    // Log auth-failure exceptions for observability so we can distinguish
-    // "no session" from "auth service unavailable" or "corrupt token".
     console.error("Session validation failed:", e);
   }
 
@@ -44,11 +42,9 @@ export async function updateSession(request: NextRequest) {
   );
 
   // Allow public share links (/r/[token]) without auth.
-  // The /r/[token] page handles data access via the get_public_report_data RPC function.
   const isShareRoute = request.nextUrl.pathname.startsWith("/r/");
 
   // Allow public org product pages (/{slug}/products) without auth.
-  // Data access is handled by the get_public_products SECURITY DEFINER function.
   const isPublicProductsRoute = /^\/[^/]+\/products(\/|$)/.test(
     request.nextUrl.pathname,
   );
@@ -69,7 +65,60 @@ export async function updateSession(request: NextRequest) {
       "next",
       `${request.nextUrl.pathname}${request.nextUrl.search}`,
     );
-    return NextResponse.redirect(url);
+
+    // ── Redirect loop guard ─────────────────────────────────────
+    // Detect when the same unauthenticated redirect path fires repeatedly
+    // within a short window. This prevents infinite redirect loops.
+    const REDIRECT_WINDOW_MS = 30_000;
+    const REDIRECT_MAX = 3;
+    const redirectCookie = request.cookies.get("__redirect_count");
+    const redirectCount = redirectCookie
+      ? parseInt(redirectCookie.value, 10) || 0
+      : 0;
+
+    if (redirectCount >= REDIRECT_MAX) {
+      console.error(
+        `[redirect-loop] Breaking loop: ${request.nextUrl.pathname} (×${redirectCount + 1})`,
+      );
+
+      return new NextResponse(
+        `<!DOCTYPE html>
+<html lang="mn">
+<head><meta charset="utf-8"><title>Системд алдаа гарлаа</title>
+<style>
+  body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 2rem; }
+  .card { max-width: 480px; text-align: center; }
+  h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; }
+  p { color: #666; line-height: 1.5; }
+</style></head>
+<body><div class="card">
+  <h1>Системд алдаа гарлаа</h1>
+  <p>Дахин чиглүүлэлтийн хязгаарт хүрсэн байна. Хэрэв энэ асуудал давтагдвал админдаа хандана уу.</p>
+  <p style="font-size:0.85rem;color:#999;margin-top:1rem;">
+    redirect loop detected &middot; ${request.nextUrl.pathname} &middot; &times;${redirectCount + 1}
+  </p>
+</div></body></html>`,
+        {
+          status: 500,
+          headers: {
+            "Content-Type": "text/html; charset=utf-8",
+            // Clear the cookie so a refresh retries fresh
+            "Set-Cookie":
+              "__redirect_count=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax",
+          },
+        },
+      );
+    }
+
+    // Increment redirect count
+    const response = NextResponse.redirect(url);
+    response.cookies.set("__redirect_count", String(redirectCount + 1), {
+      maxAge: REDIRECT_WINDOW_MS / 1000,
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+    });
+    return response;
   }
 
   // Redirect authenticated users away from auth pages
@@ -81,6 +130,14 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
+  }
+
+  // Clear the redirect counter on successful page loads (no redirect happened)
+  if (request.cookies.get("__redirect_count")) {
+    supabaseResponse.cookies.set("__redirect_count", "", {
+      maxAge: 0,
+      path: "/",
+    });
   }
 
   // Pass user ID as a header so consumers can avoid a duplicate getUser() call.

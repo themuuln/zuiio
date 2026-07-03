@@ -2,7 +2,7 @@ import { Coin, Package, ShoppingCart } from "@phosphor-icons/react/dist/ssr";
 import { Suspense } from "react";
 import { HeroActionCard } from "@/components/dashboard/dashboard-cards";
 import { LowStockToast } from "@/components/dashboard/low-stock-toast";
-import { requireAppContext } from "@/lib/erp";
+import { getDashboardContext } from "@/lib/dashboard-context";
 import { MonthlyTrendSection } from "./_sections/monthly-trend-section";
 import { OnboardingChecklist } from "./_sections/onboarding-checklist";
 import { QuickShortcuts } from "./_sections/quick-shortcuts";
@@ -11,8 +11,7 @@ import { TodayPulse } from "./_sections/today-pulse";
 
 export default async function DashboardPage() {
   const { supabase, organizationId, branchId, isBranchScoped } =
-    await requireAppContext();
-
+    await getDashboardContext();
   // Lightweight query for the toast — runs in parallel with sections
   const { count: lowStockCount } = await supabase
     .from("products")

@@ -2,7 +2,6 @@
 
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Typography } from "@/components/ui/typography";
 
 interface DrawerLoadingProps {
   loading: boolean;
@@ -19,18 +18,16 @@ export function DrawerLoading({
 }: DrawerLoadingProps) {
   if (loading && !hasLoadedOnce) {
     return (
-      <div className="flex items-center justify-center py-20 text-muted-foreground">
-        <Loader2 className="size-6 animate-spin" />
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="size-5 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   if (error && !loading && !hasLoadedOnce) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 gap-3 px-4">
-        <Typography.Muted className="text-sm text-muted-foreground">
-          {error}
-        </Typography.Muted>
+      <div className="flex flex-col items-center justify-center gap-3 px-4 py-16">
+        <p className="text-sm text-muted-foreground">{error}</p>
         <Button variant="outline" size="sm" onClick={onRetry}>
           Retry
         </Button>
@@ -58,15 +55,15 @@ export function DrawerSkeleton({
     return (
       <div className="flex-1 overflow-y-auto min-h-0">
         <div className="px-3 py-2">
-          <div className="animate-pulse flex flex-col gap-3">
-            <div className="h-4 w-20 bg-muted-foreground/20 rounded" />
-            <div className="h-10 bg-muted-foreground/10 rounded" />
-            <div className="h-10 bg-muted-foreground/10 rounded" />
-            <div className="h-10 bg-muted-foreground/10 rounded" />
-            <div className="h-4 w-16 bg-muted-foreground/20 rounded mt-6" />
-            <div className="h-10 bg-muted-foreground/10 rounded" />
-            <div className="h-10 bg-muted-foreground/10 rounded" />
-            <div className="h-20 bg-muted-foreground/10 rounded" />
+          <div className="flex flex-col gap-3 animate-pulse">
+            <div className="h-4 w-20 rounded bg-foreground/5" />
+            <div className="h-10 rounded bg-foreground/5" />
+            <div className="h-10 rounded bg-foreground/5" />
+            <div className="h-10 rounded bg-foreground/5" />
+            <div className="mt-6 h-4 w-16 rounded bg-foreground/5" />
+            <div className="h-10 rounded bg-foreground/5" />
+            <div className="h-10 rounded bg-foreground/5" />
+            <div className="h-20 rounded bg-foreground/5" />
           </div>
         </div>
       </div>
@@ -75,10 +72,8 @@ export function DrawerSkeleton({
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 gap-3 px-4">
-        <Typography.Muted className="text-sm text-muted-foreground">
-          {error}
-        </Typography.Muted>
+      <div className="flex flex-col items-center justify-center gap-3 px-4 py-16">
+        <p className="text-sm text-muted-foreground">{error}</p>
         <Button variant="outline" size="sm" onClick={onRetry}>
           Retry
         </Button>

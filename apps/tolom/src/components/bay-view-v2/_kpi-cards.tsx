@@ -23,6 +23,7 @@ import { Separator } from "@/components/ui/separator";
 import type { BaySlotData, ShiftReport } from "@/lib/services/bay-view-service";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { formatMNT, formatPlateNumber } from "@/lib/utils";
+import { elapsedMinutes } from "./_helpers";
 
 interface TrendDelta {
   bayUtilization: number;
@@ -48,13 +49,6 @@ interface KpiCardsProps {
 
 // ── Helpers ────────────────────────────────────────────────────
 
-function elapsedMinutes(startedAt: string | null): number | null {
-  if (!startedAt) return null;
-  const ms = Date.now() - new Date(startedAt).getTime();
-  const mins = Math.round(ms / 60000);
-  return Number.isFinite(mins) && mins >= 0 ? mins : null;
-}
-
 function formatElapsed(minutes: number | null): string {
   if (minutes === null) return "—";
   if (minutes < 60) return `${minutes}m`;
@@ -62,7 +56,6 @@ function formatElapsed(minutes: number | null): string {
   const m = minutes % 60;
   return m > 0 ? `${h}h ${m}m` : `${h}h`;
 }
-
 
 // ── Bay occupancy row ──────────────────────────────────────────
 
@@ -111,7 +104,13 @@ function BayOccupancyRow({
 }
 // ── StatChip component ────────────────────────────────────
 
-function StatChip({ label, value, trend, subtitle, onClick }: {
+function StatChip({
+  label,
+  value,
+  trend,
+  subtitle,
+  onClick,
+}: {
   label: string;
   value: string;
   trend?: number | null;
@@ -124,15 +123,28 @@ function StatChip({ label, value, trend, subtitle, onClick }: {
       onClick={onClick}
       className="flex items-center gap-2 text-xs hover:bg-muted/50 px-2 py-1 rounded-md transition-colors cursor-pointer shrink-0"
     >
-      <span className="font-semibold text-muted-foreground tabular-nums">{label}</span>
-      <span className="font-mono font-bold text-sm text-foreground">{value}</span>
+      <span className="font-semibold text-muted-foreground tabular-nums">
+        {label}
+      </span>
+      <span className="font-mono font-bold text-sm text-foreground">
+        {value}
+      </span>
       {trend !== undefined && trend !== null && trend !== 0 && (
-        <span className={`inline-flex items-center gap-0.5 text-[10px] font-semibold ${trend > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-          {trend > 0 ? <ArrowUp className="size-2.5" /> : <ArrowDown className="size-2.5" />}
-          {Math.abs(trend)}{label.includes('%') ? '%' : ''}
+        <span
+          className={`inline-flex items-center gap-0.5 text-[10px] font-semibold ${trend > 0 ? "text-emerald-500" : "text-red-500"}`}
+        >
+          {trend > 0 ? (
+            <ArrowUp className="size-2.5" />
+          ) : (
+            <ArrowDown className="size-2.5" />
+          )}
+          {Math.abs(trend)}
+          {label.includes("%") ? "%" : ""}
         </span>
       )}
-      {subtitle && <span className="text-[10px] text-muted-foreground/60">{subtitle}</span>}
+      {subtitle && (
+        <span className="text-[10px] text-muted-foreground/60">{subtitle}</span>
+      )}
     </button>
   );
 }
@@ -177,15 +189,40 @@ export const KpiCards = React.memo(function KpiCards({
   return (
     <div className="shrink-0">
       <div className="flex items-center gap-4 px-4 py-1.5 border-b border-border/30 shrink-0">
-        <StatChip label={t("bayUtilization")} value={`${shiftReport?.bayUtilization ?? 0}%`} trend={trendDelta?.bayUtilization} onClick={() => setBayUtilOpen(true)} />
+        <StatChip
+          label={t("bayUtilization")}
+          value={`${shiftReport?.bayUtilization ?? 0}%`}
+          trend={trendDelta?.bayUtilization}
+          onClick={() => setBayUtilOpen(true)}
+        />
         <Separator orientation="vertical" className="h-5" />
-        <StatChip label={t("activeJobs")} value={String(shiftReport?.activeJobs ?? 0)} trend={trendDelta?.activeJobs} subtitle={`+${waitingQueueLength}`} onClick={() => setActiveJobsOpen(true)} />
+        <StatChip
+          label={t("activeJobs")}
+          value={String(shiftReport?.activeJobs ?? 0)}
+          trend={trendDelta?.activeJobs}
+          subtitle={`+${waitingQueueLength}`}
+          onClick={() => setActiveJobsOpen(true)}
+        />
         <Separator orientation="vertical" className="h-5" />
-        <StatChip label={t("completedToday")} value={String(shiftReport?.completedToday ?? 0)} trend={trendDelta?.completedToday} onClick={() => setCompletedOpen(true)} />
+        <StatChip
+          label={t("completedToday")}
+          value={String(shiftReport?.completedToday ?? 0)}
+          trend={trendDelta?.completedToday}
+          onClick={() => setCompletedOpen(true)}
+        />
         <Separator orientation="vertical" className="h-5" />
-        <StatChip label={t("revPerLaborHr")} value={formatMNT(shiftReport?.revenuePerLaborHour ?? 0)} trend={trendDelta?.revenuePerLaborHour} onClick={() => setRevenueOpen(true)} />
+        <StatChip
+          label={t("revPerLaborHr")}
+          value={formatMNT(shiftReport?.revenuePerLaborHour ?? 0)}
+          trend={trendDelta?.revenuePerLaborHour}
+          onClick={() => setRevenueOpen(true)}
+        />
         <Separator orientation="vertical" className="h-5" />
-        <StatChip label={t("waitingQueue")} value={String(waitingQueueLength)} onClick={() => setQueueOpen(true)} />
+        <StatChip
+          label={t("waitingQueue")}
+          value={String(waitingQueueLength)}
+          onClick={() => setQueueOpen(true)}
+        />
       </div>
 
       {/* ═══ Drill-down dialogs ═══════════════════════════════════ */}

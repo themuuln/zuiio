@@ -14,6 +14,8 @@ import type { WorkOrderDetail } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
 import { InvoiceQrPopover } from "./_invoice-qr-popover";
 
+// ─── Props ───────────────────────────────────────────────────────
+
 interface DrawerFooterProps {
   wo: WorkOrderDetail;
   grandTotal: number;
@@ -33,6 +35,75 @@ interface DrawerFooterProps {
   t: (key: string, values?: Record<string, string>) => string;
 }
 
+// ─── Status-specific action config ───────────────────────────────
+
+interface StatusAction {
+  key: string;
+  icon: typeof ArrowRight;
+  labelKey: string;
+  onClick: () => void | Promise<void>;
+  variant?: "default" | "outline";
+}
+
+function getStatusActions(
+  wo: WorkOrderDetail,
+  onStartDiagnose: () => void,
+  onStartWork: () => void,
+  onMarkReady: () => void,
+  onComplete: () => void,
+): StatusAction[] {
+  switch (wo.status) {
+    case "New":
+      return [
+        {
+          key: "diagnose",
+          icon: ArrowRight,
+          labelKey: "startDiagnosing",
+          onClick: onStartDiagnose,
+        },
+      ];
+    case "Diagnosing":
+      return [
+        {
+          key: "work",
+          icon: ArrowRight,
+          labelKey: "startWork",
+          onClick: onStartWork,
+        },
+      ];
+    case "In Progress":
+      return [
+        {
+          key: "ready",
+          icon: CheckCircle2,
+          labelKey: "markReady",
+          onClick: onMarkReady,
+          variant: "default",
+        },
+        {
+          key: "complete",
+          icon: CheckCircle2,
+          labelKey: "complete",
+          onClick: onComplete,
+          variant: "outline",
+        },
+      ];
+    case "Ready for Pickup":
+      return [
+        {
+          key: "complete",
+          icon: CheckCircle2,
+          labelKey: "complete",
+          onClick: onComplete,
+        },
+      ];
+    default:
+      return [];
+  }
+}
+
+// ─── Footer component ────────────────────────────────────────────
+
 export function DrawerFooter({
   wo,
   grandTotal,
@@ -51,6 +122,14 @@ export function DrawerFooter({
   onCreateInvoice,
   t,
 }: DrawerFooterProps) {
+  const actions = getStatusActions(
+    wo,
+    () => onChangeStatus("Diagnosing"),
+    () => onChangeStatus("In Progress"),
+    onMarkReady,
+    onComplete,
+  );
+
   return (
     <div className="shrink-0 border-t border-border bg-background px-3 py-2 flex flex-col gap-2">
       {/* Status change confirmation */}
@@ -99,63 +178,31 @@ export function DrawerFooter({
 
       {/* Primary status flow + secondary actions */}
       <div className="flex items-center gap-2">
+        {/* Grand total — left side */}
         <span className="text-xs text-muted-foreground mr-auto">
           {t("grandTotal")}
           <span className="ml-1.5 font-semibold tabular-nums text-primary">
             {formatMNT(grandTotal)}
           </span>
         </span>
-        {wo.status === "New" && (
-          <Button
-            className="flex-1 md:flex-initial md:px-5 h-9 text-xs font-semibold"
-            onClick={() => onChangeStatus("Diagnosing")}
-            disabled={saving}
-          >
-            <ArrowRight className="size-4" />
-            {t("startDiagnosing")}
-          </Button>
-        )}
-        {wo.status === "Diagnosing" && (
-          <Button
-            className="flex-1 md:flex-initial md:px-5 h-9 text-xs font-semibold"
-            onClick={() => onChangeStatus("In Progress")}
-            disabled={saving}
-          >
-            <ArrowRight className="size-4" />
-            {t("startWork")}
-          </Button>
-        )}
-        {wo.status === "In Progress" && (
-          <>
+
+        {/* Status actions */}
+        {actions.map((action) => {
+          const Icon = action.icon;
+          const isDefault = (action.variant ?? "default") === "default";
+          return (
             <Button
+              key={action.key}
+              variant={isDefault ? "default" : "outline"}
               className="flex-1 md:flex-initial md:px-5 h-9 text-xs font-semibold"
-              onClick={onMarkReady}
+              onClick={action.onClick}
               disabled={saving}
             >
-              <CheckCircle2 className="size-4" />
-              {t("markReady")}
+              <Icon className="size-4" />
+              {t(action.labelKey)}
             </Button>
-            <Button
-              variant="outline"
-              className="flex-1 md:flex-initial md:px-5 h-9 text-xs font-semibold"
-              onClick={onComplete}
-              disabled={saving}
-            >
-              <CheckCircle2 className="size-4" />
-              {t("complete")}
-            </Button>
-          </>
-        )}
-        {wo.status === "Ready for Pickup" && (
-          <Button
-            className="flex-1 md:flex-initial md:px-5 h-9 text-xs font-semibold"
-            onClick={onComplete}
-            disabled={saving}
-          >
-            <CheckCircle2 className="size-4" />
-            {t("complete")}
-          </Button>
-        )}
+          );
+        })}
 
         {/* Invoice */}
         {canInvoice &&

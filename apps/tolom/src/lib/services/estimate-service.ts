@@ -586,7 +586,6 @@ export async function convertEstimateToWorkOrder(
   revalidateTag(cacheTags.estimates(orgId), "max");
   revalidateTag(cacheTags.estimate(estimateId), "max");
   revalidateTag(cacheTags.workOrders(orgId), "max");
-  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
 
   // Return the work order detail
   const { getWorkOrder } = await import("@/lib/services/work-order-service");

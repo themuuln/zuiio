@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { capture } from "@zuiio/capture";
 import { getActiveSmtpConfig, sendEmail } from "@/lib/email";
 import { createClient } from "@/lib/supabase/server";
 
@@ -31,11 +32,12 @@ export async function POST(request: Request) {
         }
       | undefined;
     if (smtpConfigId) {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("smtp_configs")
         .select("*")
         .eq("id", smtpConfigId)
         .single();
+      if (error) capture(error, { context: "[email/test] get smtp config" });
 
       if (data) {
         smtpConfig = {

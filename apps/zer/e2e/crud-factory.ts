@@ -123,9 +123,10 @@ async function fillField(page: Page, field: FormField, value: string) {
     },
   ];
 
-  if (field.placeholder) {
+  const placeholder = field.placeholder;
+  if (placeholder) {
     locators.push(async () => {
-      const l = page.getByPlaceholder(field.placeholder);
+      const l = page.getByPlaceholder(placeholder);
       return { loc: l, found: await l.isVisible().catch(() => false) };
     });
   }

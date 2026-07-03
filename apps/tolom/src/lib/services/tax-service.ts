@@ -179,7 +179,6 @@ export async function updateWorkOrderNuat(
   });
 
   revalidateTag(cacheTags.workOrders(orgId), "max");
-  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
 
   return true;
 }

@@ -98,16 +98,15 @@ Use the **rpiv pipeline** for research, planning, and large features. Every task
 - **Research** → understand the codebase area, existing patterns, dependencies
 - **Plan** → break into phases with clear success criteria
 - **Implement** → phase by phase, verify each before moving on
+- **Verify at runtime** → use `next-dev-loop` skill (agent-browser + `/_next/mcp`) after every edit that changes behavior
 - **Validate** → lint, type-check, test, self-review
 
 ### Guardrails
 
 - Run `npm run lint && npx tsc --noEmit` (or `npm run validate`) before any build
 - Run `npm run validate && npm run test` before considering any task complete
+- **After every edit that changes UI or behavior:** verify at runtime with `next-dev-loop` (see Pipeline above)
 - Run `lsp_diagnostics` on changed files before builds
-- Never merge with failing tests or type errors
-- One module at a time — don't refactor neighbors while fixing a target
-- Atomic commits — one logical change per commit
 
 ### Triage Protocol
 

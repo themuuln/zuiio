@@ -68,7 +68,7 @@ export async function completeOnboarding(
     const { data: presets } = await serviceSupabase
       .from("product_presets")
       .select(
-        "id, brand_name, brand_logo_url, product_name, product_sku, category_name, unit, cost_price, sale_price, min_stock, image_url, image_urls",
+        "id, brand_name, brand_logo_url, product_name, product_sku, category_name, unit, cost_price, sale_price, min_stock",
       )
       .in("brand_name", brandNamesToImport)
       .order("sort_order");
@@ -157,8 +157,12 @@ export async function completeOnboarding(
           sale_price: preset.sale_price,
           min_stock: preset.min_stock,
           current_stock: 0,
-          image_url: preset.image_url,
-          image_urls: preset.image_urls,
+          image_url: preset.product_sku
+            ? `/images/presets/${preset.product_sku}.webp`
+            : null,
+          image_urls: preset.product_sku
+            ? [`/images/presets/${preset.product_sku}.webp`]
+            : [],
         });
       }
     }

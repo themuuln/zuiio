@@ -30,6 +30,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { productKeys, saleKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
+import { capture } from "@zuiio/capture";
 
 type Contact = {
   id: string;
@@ -80,11 +81,12 @@ export default function CheckoutPage() {
     async function fetchContacts() {
       try {
         const supabase = createClient();
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("contacts")
           .select("id, name, phone")
           .eq("type", "customer")
           .order("name");
+        if (error) capture(error, { context: "[checkout] fetch contacts" });
         if (data) {
           setContacts(data);
         }

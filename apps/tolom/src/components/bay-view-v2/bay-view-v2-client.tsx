@@ -25,10 +25,7 @@ import { BayViewPageSkeleton } from "./_page-skeleton";
 import { resolvePaymentMethodFees } from "./_payment-fees";
 import { BayViewTickProvider } from "./_tick-context";
 import { Toolbar } from "./_toolbar";
-import {
-  GuardedPointerSensor,
-  GuardedTouchSensor,
-} from "./_types";
+import { GuardedPointerSensor, GuardedTouchSensor } from "./_types";
 import { useBayCountMutation } from "./_use-bay-count-mutation";
 import { useBayViewData } from "./_use-bay-view-data";
 import { useBayViewDialogs } from "./_use-bay-view-dialogs";
@@ -57,25 +54,18 @@ export function BayViewV2Client() {
   const pending = useBayViewPending();
 
   // ── Data, search, UI state, derived data, realtime ──
-  const bayViewData = useBayViewData(orgInfo?.orgId, branchFilter, dialogs, pending);
+  const bayViewData = useBayViewData(
+    orgInfo?.orgId,
+    branchFilter,
+    dialogs,
+    pending,
+  );
 
   // ── Mutations & handlers ──
   const mutations = useBayViewMutations({
     branchFilter,
     orgId: orgInfo?.orgId,
     data: bayViewData.data,
-    detailWoId: bayViewData.detailWoId,
-    pendingWoIds: bayViewData.pendingWoIds,
-    markPending: bayViewData.markPending,
-    clearPending: bayViewData.clearPending,
-    setActiveDrag: bayViewData.setActiveDrag,
-    emptyBayBayNumber: bayViewData.emptyBayBayNumber,
-    directAssignBayNumber: bayViewData.directAssignBayNumber,
-    setDetailDrawerOpen: bayViewData.setDetailDrawerOpen,
-    setDetailWoId: bayViewData.setDetailWoId,
-    setDrawerInitialAction: bayViewData.setDrawerInitialAction,
-    setEmptyBayBayNumber: bayViewData.setEmptyBayBayNumber,
-    setDirectAssignBayNumber: bayViewData.setDirectAssignBayNumber,
     fetchData: bayViewData.fetchData,
     t,
     paymentMethodFees,
@@ -210,16 +200,17 @@ export function BayViewV2Client() {
                 t={t}
               />
             </div>
-            {viewMode === "grid" && bayViewData.data.waitingQueue.length > 0 && (
-              <QueueRail
-                items={bayViewData.data.waitingQueue}
-                open={showQueueRail}
-                onToggle={() => setShowQueueRail((s) => !s)}
-                onItemClick={mutations.handleQueueItemClick}
-                onAssignToBay={(woId) => {}}
-                t={t}
-              />
-            )}
+            {bayViewData.viewMode === "grid" &&
+              bayViewData.data.waitingQueue.length > 0 && (
+                <QueueRail
+                  items={bayViewData.data.waitingQueue}
+                  open={showQueueRail}
+                  onToggle={() => setShowQueueRail((s) => !s)}
+                  onItemClick={mutations.handleQueueItemClick}
+                  onAssignToBay={(woId) => {}}
+                  t={t}
+                />
+              )}
           </div>
         </div>
 
@@ -234,11 +225,6 @@ export function BayViewV2Client() {
           pendingPostServiceBay={pendingPostServiceBay}
           readyWosCount={bayViewData.readyWosCount}
           batchCompleteIsPending={mutations.batchCompleteMutation.isPending}
-          detailWoId={bayViewData.detailWoId}
-          detailDrawerOpen={bayViewData.detailDrawerOpen}
-          drawerInitialAction={bayViewData.drawerInitialAction}
-          emptyBayBayNumber={bayViewData.emptyBayBayNumber}
-          directAssignBayNumber={bayViewData.directAssignBayNumber}
           handleStatusModalConfirm={mutations.handleStatusModalConfirm}
           handlePostServiceConfirm={mutations.handlePostServiceConfirm}
           handlePickupCompleteConfirm={mutations.handlePickupCompleteConfirm}
@@ -250,18 +236,15 @@ export function BayViewV2Client() {
           t={t}
           assignMechanicMutation={mutations.assignMechanicMutation}
           assignCustomerMutation={mutations.assignCustomerMutation}
-          setDetailDrawerOpen={bayViewData.setDetailDrawerOpen}
-          setDetailWoId={bayViewData.setDetailWoId}
-          setDrawerInitialAction={bayViewData.setDrawerInitialAction}
-          setEmptyBayBayNumber={bayViewData.setEmptyBayBayNumber}
-          setDirectAssignBayNumber={bayViewData.setDirectAssignBayNumber}
         />
 
         {/* ── Drag overlay (kept in main file for DndContext composition) ── */}
-        <DragOverlay dropAnimation={{
-          duration: 200,
-          easing: "cubic-bezier(0.16, 1, 0.3, 1)",
-        }}>
+        <DragOverlay
+          dropAnimation={{
+            duration: 200,
+            easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+          }}
+        >
           {bayViewData.activeDrag &&
             (bayViewData.activeDrag.type === "vehicle" &&
             bayViewData.activeDrag.previewBay ? (

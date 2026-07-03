@@ -322,10 +322,9 @@ export async function importProductPreset(formData: FormData) {
     }
   }
 
-  const imageUrl =
-    (preset.product_sku ? PRESET_IMAGE_MAP[preset.product_sku] : null) ??
-    preset.image_url ??
-    null;
+  const imageUrl = preset.product_sku
+    ? (PRESET_IMAGE_MAP[preset.product_sku] ?? null)
+    : null;
 
   const { error: prodErr } = await serviceSupabase.from("products").insert({
     organization_id: organizationId,
@@ -447,10 +446,9 @@ export async function importProductPresetsByIds(presetIds: string[]) {
       if (existing) continue; // skip duplicates
     }
 
-    const imageUrl =
-      (preset.product_sku ? PRESET_IMAGE_MAP[preset.product_sku] : null) ??
-      preset.image_url ??
-      null;
+    const imageUrl = preset.product_sku
+      ? (PRESET_IMAGE_MAP[preset.product_sku] ?? null)
+      : null;
 
     const { error: prodErr } = await serviceSupabase.from("products").insert({
       organization_id: organizationId,

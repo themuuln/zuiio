@@ -12,7 +12,6 @@ export interface OrgSettings {
   hasCategories: boolean;
   hasEmailReports: boolean;
   hasAuditLog: boolean;
-  hasHr: boolean;
 }
 
 const defaults: OrgSettings = {
@@ -25,7 +24,6 @@ const defaults: OrgSettings = {
   hasCategories: true,
   hasEmailReports: false,
   hasAuditLog: true,
-  hasHr: false,
 };
 
 const OrgSettingsContext = createContext<OrgSettings>(defaults);

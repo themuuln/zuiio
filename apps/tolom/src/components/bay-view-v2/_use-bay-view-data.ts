@@ -7,10 +7,7 @@ import { useFuzzySearch } from "@zuiio/hooks";
 import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
 import { bayViewKeys } from "@/lib/queries/keys";
 import { useProfile } from "@/lib/queries/use-profile";
-import type {
-  BayViewData,
-  ShiftReport,
-} from "@/lib/services/bay-view-service";
+import type { BayViewData, ShiftReport } from "@/lib/services/bay-view-service";
 import {
   getBayViewDataFresh,
   getShiftReport,
@@ -29,20 +26,7 @@ export function useBayViewData(
   const woIdFromUrl = searchParams.get("woId");
 
   // ── UI state ─────────────────────────────────────────────────
-  const [detailDrawerOpen, setDetailDrawerOpen] = useState(!!woIdFromUrl);
-  const [detailWoId, setDetailWoId] = useState<string | null>(woIdFromUrl);
-  const [drawerInitialAction, setDrawerInitialAction] = useState<
-    "add-service" | "add-part" | null
-  >(null);
-  const [emptyBayBayNumber, setEmptyBayBayNumber] = useState<number | null>(
-    null,
-  );
-  const [directAssignBayNumber, setDirectAssignBayNumber] = useState<
-    number | null
-  >(null);
-  const [pendingWoIds, setPendingWoIds] = useState<Record<string, boolean>>(
-    {},
-  );
+  const [pendingWoIds, setPendingWoIds] = useState<Record<string, boolean>>({});
   const [activeDrag, setActiveDrag] = useState<ActiveDragState | null>(null);
   const [currentProfile, setCurrentProfile] = useState<{
     id: string;
@@ -115,8 +99,7 @@ export function useBayViewData(
   const data = bayQuery.data ?? null;
   const shiftReport = shiftQuery.data ?? null;
   const loading = bayQuery.isLoading;
-  const error =
-    bayQuery.error instanceof Error ? bayQuery.error.message : null;
+  const error = bayQuery.error instanceof Error ? bayQuery.error.message : null;
 
   const fetchData = useCallback(async () => {
     await bayQuery.refetch();
@@ -132,19 +115,16 @@ export function useBayViewData(
   );
 
   const userIsMechanic =
-    currentProfile &&
-    data?.mechanics.some((m) => m.id === currentProfile.id);
+    currentProfile && data?.mechanics.some((m) => m.id === currentProfile.id);
 
   const filteredBays = useMemo(() => {
     const bays = myJobsOnly
       ? (data?.bays.map((bay) => {
           if (!bay.workOrder) return bay;
-          const isMain =
-            bay.workOrder.mechanic?.id === currentProfile?.id;
+          const isMain = bay.workOrder.mechanic?.id === currentProfile?.id;
           const isHelper =
-            bay.workOrder.helpers?.some(
-              (h) => h.id === currentProfile?.id,
-            ) ?? false;
+            bay.workOrder.helpers?.some((h) => h.id === currentProfile?.id) ??
+            false;
           return {
             ...bay,
             workOrder: isMain || isHelper ? bay.workOrder : null,
@@ -177,8 +157,7 @@ export function useBayViewData(
           activeJobs: shiftReport.activeJobs - prevShiftReport.activeJobs,
           completedToday:
             shiftReport.completedToday - prevShiftReport.completedToday,
-          revenueToday:
-            shiftReport.revenueToday - prevShiftReport.revenueToday,
+          revenueToday: shiftReport.revenueToday - prevShiftReport.revenueToday,
           revenuePerLaborHour:
             shiftReport.revenuePerLaborHour -
             prevShiftReport.revenuePerLaborHour,
@@ -266,16 +245,6 @@ export function useBayViewData(
     setBaySearchQuery,
     statusFilter,
     setStatusFilter,
-    detailDrawerOpen,
-    setDetailDrawerOpen,
-    detailWoId,
-    setDetailWoId,
-    drawerInitialAction,
-    setDrawerInitialAction,
-    emptyBayBayNumber,
-    setEmptyBayBayNumber,
-    directAssignBayNumber,
-    setDirectAssignBayNumber,
     pendingWoIds,
     setPendingWoIds,
     markPending,

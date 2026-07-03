@@ -25,6 +25,7 @@ import type { BayViewPendingState } from "./_use-bay-view-pending";
 import type { BayViewDialogsState } from "./_use-bay-view-dialogs";
 import type { PaymentMethodFees } from "./_payment-fees";
 import type { PickupCompleteData } from "./pickup-complete-dialog";
+import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
 import type { PostServiceFormData } from "./post-service-dialog";
 import { STATUS_TRANSLATION_KEYS } from "./_constants";
 
@@ -35,18 +36,10 @@ export interface BayViewMutationsParams {
   pendingWoIds: Record<string, boolean>;
   markPending: (...ids: string[]) => void;
   clearPending: (...ids: string[]) => void;
-  detailWoId: string | null;
-  setDetailDrawerOpen: (open: boolean) => void;
-  setDetailWoId: (id: string | null) => void;
-  setDrawerInitialAction: (action: "add-service" | "add-part" | null) => void;
-  setEmptyBayBayNumber: (num: number | null) => void;
-  emptyBayBayNumber: number | null;
-  directAssignBayNumber: number | null;
-  setDirectAssignBayNumber: (num: number | null) => void;
   fetchData: () => Promise<void>;
   t: (key: string) => string;
   paymentMethodFees: PaymentMethodFees;
-  transferBanks: { accountId: string; bankName: string; accountNumber: string }[];
+  transferBanks: ResolvedTransferBank[];
   dialogs: BayViewDialogsState;
   pending: BayViewPendingState;
 }
@@ -60,18 +53,20 @@ export function useBayViewMutations(params: BayViewMutationsParams) {
     markPending,
     clearPending,
     setActiveDrag,
-    detailWoId,
-    setDetailDrawerOpen,
-    setDetailWoId,
-    setDrawerInitialAction,
-    setEmptyBayBayNumber,
-    emptyBayBayNumber,
-    directAssignBayNumber,
-    setDirectAssignBayNumber,
+    fetchData,
     t,
     paymentMethodFees,
     transferBanks,
-    dialogs,
+    dialogs: {
+      detailWoId,
+      setDetailDrawerOpen,
+      setDetailWoId,
+      setDrawerInitialAction,
+      setEmptyBayBayNumber,
+      emptyBayBayNumber,
+      directAssignBayNumber,
+      setDirectAssignBayNumber,
+    },
     pending: pendingState,
   } = params;
 
@@ -83,8 +78,14 @@ export function useBayViewMutations(params: BayViewMutationsParams) {
   const assignMechanicMutation = useAssignMechanicToWorkOrder(branchFilter);
   const removeMechanicMutation = useRemoveMechanicFromWorkOrder(branchFilter);
   const addHelperMutation = useAddHelperToWorkOrder(branchFilter, orgId);
-  const removeHelperMutation = useRemoveHelperFromWorkOrder(branchFilter, orgId);
-  const assignCustomerMutation = useAssignCustomerToWorkOrder(branchFilter, orgId);
+  const removeHelperMutation = useRemoveHelperFromWorkOrder(
+    branchFilter,
+    orgId,
+  );
+  const assignCustomerMutation = useAssignCustomerToWorkOrder(
+    branchFilter,
+    orgId,
+  );
   const batchCompleteMutation = useBatchCompleteMutation(branchFilter);
   const swapMutation = useSwapBays(branchFilter);
 
@@ -207,7 +208,13 @@ export function useBayViewMutations(params: BayViewMutationsParams) {
 
       pendingState.clearPending();
     },
-    [pendingState, updateStatusMutation, orgId, paymentMethodFees, transferBanks],
+    [
+      pendingState,
+      updateStatusMutation,
+      orgId,
+      paymentMethodFees,
+      transferBanks,
+    ],
   );
 
   // ── Pickup complete confirm ──────────────────────────────────
@@ -237,7 +244,14 @@ export function useBayViewMutations(params: BayViewMutationsParams) {
         window.history.replaceState(null, "", `?${params.toString()}`);
       }
     },
-    [pendingState, updateStatusMutation, detailWoId, setDetailDrawerOpen, setDetailWoId, setDrawerInitialAction],
+    [
+      pendingState,
+      updateStatusMutation,
+      detailWoId,
+      setDetailDrawerOpen,
+      setDetailWoId,
+      setDrawerInitialAction,
+    ],
   );
 
   // ── Detail drawer ────────────────────────────────────────────
@@ -314,7 +328,12 @@ export function useBayViewMutations(params: BayViewMutationsParams) {
       }
       dialogs.closeAssign();
     },
-    [dialogs.assignBay, assignMutation, assignMechanicMutation, dialogs.closeAssign],
+    [
+      dialogs.assignBay,
+      assignMutation,
+      assignMechanicMutation,
+      dialogs.closeAssign,
+    ],
   );
 
   // ── Batch complete ───────────────────────────────────────────

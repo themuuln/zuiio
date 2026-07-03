@@ -11,6 +11,7 @@ import { BayCardEmptyState } from "./_bay-card-empty-state";
 import { BayCardOccupied } from "./_bay-card-occupied";
 import { BayCardPreview } from "./_bay-card-preview";
 import { BayCardProvider } from "./_bay-card-context";
+import { elapsedMinutes } from "./_helpers";
 
 import type { BayCardProps } from "./_bay-card-types";
 
@@ -106,13 +107,7 @@ export const BayCard = React.memo(function BayCard({
         {wo && (
           <BayCardAccent
             status={wo.status}
-            elapsedMinutes={
-              wo.started_at
-                ? Math.round(
-                    (Date.now() - new Date(wo.started_at).getTime()) / 60_000,
-                  )
-                : null
-            }
+            elapsedMinutes={elapsedMinutes(wo.started_at)}
           />
         )}
 

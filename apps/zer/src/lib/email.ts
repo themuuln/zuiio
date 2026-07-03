@@ -1,3 +1,5 @@
+import { capture } from "@zuiio/capture";
+
 import type { SupabaseClient } from "@supabase/supabase-js";
 import nodemailer from "nodemailer";
 import { formatCurrency } from "@/lib/format";
@@ -49,6 +51,7 @@ export async function getActiveSmtpConfig(
     .order("priority", { ascending: false })
     .limit(1)
     .maybeSingle();
+  if (error) capture(error, { context: "[email] getActiveSmtpConfig" });
 
   if (error || !data) {
     return { data: null };
@@ -435,5 +438,6 @@ export async function logEmailResult(
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await supabase.from("report_email_log").insert(payload as any);
+  const { error } = await supabase.from("report_email_log").insert(payload as any);
+  if (error) capture(error, { context: "[email] logEmailResult" });
 }

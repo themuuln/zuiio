@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { capture } from "@zuiio/capture";
 import { createServiceClient } from "@/lib/supabase/server-service";
 
 /**
@@ -10,11 +11,12 @@ import { createServiceClient } from "@/lib/supabase/server-service";
  */
 async function getBotToken(): Promise<string | null> {
   const supabase = createServiceClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("app_config")
     .select("value")
     .eq("key", "telegram_bot_token")
     .maybeSingle();
+  if (error) capture(error, { context: "[telegram/webhook/setup] getBotToken" });
   return (
     (data?.value as { token?: string })?.token ??
     process.env.TELEGRAM_BOT_TOKEN ??

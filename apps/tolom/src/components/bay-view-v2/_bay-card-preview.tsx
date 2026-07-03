@@ -7,6 +7,7 @@ import { BayCardVehicleInfo } from "./_bay-card-vehicle-info";
 import { BayNumberLabel } from "./_bay-number-label";
 import { BayStatusBadge } from "./_bay-status-badge";
 import { MechanicsRow } from "./_mechanic-row";
+import { elapsedMinutes } from "./_helpers";
 
 interface BayCardPreviewProps {
   bay: BaySlotData;
@@ -14,12 +15,6 @@ interface BayCardPreviewProps {
 }
 
 /** Elapsed minutes helper — mirrors the one in _bay-card-occupied */
-function elapsedMinutes(startedAt: string | null | undefined): number | null {
-  if (!startedAt) return null;
-  const ms = Date.now() - new Date(startedAt).getTime();
-  const mins = Math.round(ms / 60_000);
-  return Number.isFinite(mins) && mins >= 0 ? mins : null;
-}
 
 export function BayCardPreview({ bay, className }: BayCardPreviewProps) {
   const wo = bay.workOrder;

@@ -2,3 +2,5 @@ node_modules
 dist
 .tsbuildinfo
 .next
+# next-agents-md
+.next-docs/

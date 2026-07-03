@@ -6,6 +6,16 @@ import { formatMNT } from "@/lib/utils";
 
 // ── Helpers ──────────────────────────────────────────────────
 
+/** Elapsed minutes since a timestamp */
+export function elapsedMinutes(
+  startedAt: string | null | undefined,
+): number | null {
+  if (!startedAt) return null;
+  const ms = Date.now() - new Date(startedAt).getTime();
+  const mins = Math.round(ms / 60_000);
+  return mins >= 0 ? mins : null;
+}
+
 export function computeNextDueDate(months: number | null): string | null {
   if (!months) return null;
   const d = new Date();

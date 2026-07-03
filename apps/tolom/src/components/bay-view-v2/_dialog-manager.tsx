@@ -18,6 +18,7 @@ import type { BayViewData, BaySlotData } from "@/lib/services/bay-view-service";
 import type { BayViewDialogsState } from "./_use-bay-view-dialogs";
 import type { BayViewPendingState } from "./_use-bay-view-pending";
 import type { PaymentMethodFees } from "./_payment-fees";
+import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
 import { AssignDialog } from "./assign-dialog";
 import { EmptyBayActionDrawer } from "./_empty-bay-action-drawer";
 import type { PickupCompleteData } from "./pickup-complete-dialog";
@@ -37,18 +38,11 @@ export interface DialogManagerProps {
   data: BayViewData | null;
   branchFilter: string | undefined;
   paymentMethodFees: PaymentMethodFees;
-  transferBanks: { accountId: string; bankName: string; accountNumber: string }[];
+  transferBanks: ResolvedTransferBank[];
   // Computed values
   pendingPostServiceBay: BaySlotData | null;
   readyWosCount: number;
   batchCompleteIsPending: boolean;
-  // Detail drawer state
-  detailWoId: string | null;
-  detailDrawerOpen: boolean;
-  drawerInitialAction: "add-service" | "add-part" | null;
-  // Empty bay / direct assign state
-  emptyBayBayNumber: number | null;
-  directAssignBayNumber: number | null;
   // Handler callbacks
   handleStatusModalConfirm: (
     woId: string,
@@ -69,10 +63,7 @@ export interface DialogManagerProps {
   t: (key: string) => string;
   // Mutation refs passed to child components
   assignMechanicMutation: {
-    mutateAsync: (vars: {
-      woId: string;
-      mechanicId: string;
-    }) => Promise<void>;
+    mutateAsync: (vars: { woId: string; mechanicId: string }) => Promise<void>;
   };
   assignCustomerMutation: {
     mutateAsync: (vars: {
@@ -81,12 +72,6 @@ export interface DialogManagerProps {
       customerName?: string | null;
     }) => Promise<void>;
   };
-  // State setters for drawer close cleanup
-  setDetailDrawerOpen: (open: boolean) => void;
-  setDetailWoId: (id: string | null) => void;
-  setDrawerInitialAction: (action: "add-service" | "add-part" | null) => void;
-  setEmptyBayBayNumber: (num: number | null) => void;
-  setDirectAssignBayNumber: (num: number | null) => void;
 }
 
 export function DialogManager({
@@ -99,11 +84,6 @@ export function DialogManager({
   pendingPostServiceBay,
   readyWosCount,
   batchCompleteIsPending,
-  detailWoId,
-  detailDrawerOpen,
-  drawerInitialAction,
-  emptyBayBayNumber,
-  directAssignBayNumber,
   handleStatusModalConfirm,
   handlePostServiceConfirm,
   handlePickupCompleteConfirm,
@@ -115,32 +95,24 @@ export function DialogManager({
   t,
   assignMechanicMutation,
   assignCustomerMutation,
-  setDetailDrawerOpen,
-  setDetailWoId,
-  setDrawerInitialAction,
-  setEmptyBayBayNumber,
-  setDirectAssignBayNumber,
 }: DialogManagerProps) {
   const handleDetailDrawerClose = useCallback(
     (open: boolean) => {
-      setDetailDrawerOpen(open);
       if (!open) {
-        setDetailWoId(null);
-        setDrawerInitialAction(null);
+        dialogs.closeDetail();
         const params = new URLSearchParams(window.location.search);
         params.delete("woId");
         window.history.replaceState(null, "", `?${params.toString()}`);
       }
     },
-    [setDetailDrawerOpen, setDetailWoId, setDrawerInitialAction],
+    [dialogs],
   );
-
   const handleVehicleRegOpenChange = useCallback(
     (open: boolean) => {
       dialogs.set("vehicleReg", open);
-      if (!open) setDirectAssignBayNumber(null);
+      if (!open) dialogs.setDirectAssignBayNumber(null);
     },
-    [dialogs, setDirectAssignBayNumber],
+    [dialogs],
   );
 
   const handleVehicleRegQueued = useCallback(() => {
@@ -151,14 +123,14 @@ export function DialogManager({
 
   const handleVehicleRegAssigned = useCallback(() => {
     dialogs.hide("vehicleReg");
-    setDirectAssignBayNumber(null);
+    dialogs.setDirectAssignBayNumber(null);
     toast.dismiss();
     toast.success(
       t("assignedDirectlyToBay", {
-        bayNumber: directAssignBayNumber ?? 0,
+        bayNumber: dialogs.directAssignBayNumber ?? 0,
       }),
     );
-  }, [dialogs, setDirectAssignBayNumber, directAssignBayNumber, t]);
+  }, [dialogs, t]);
 
   return (
     <>
@@ -253,18 +225,18 @@ export function DialogManager({
 
       {/* Empty bay action drawer */}
       <EmptyBayActionDrawer
-        open={emptyBayBayNumber !== null}
+        open={dialogs.emptyBayBayNumber !== null}
         onOpenChange={(open) => {
-          if (!open) setEmptyBayBayNumber(null);
+          if (!open) dialogs.setEmptyBayBayNumber(null);
         }}
-        bayNumber={emptyBayBayNumber ?? 0}
+        bayNumber={dialogs.emptyBayBayNumber ?? 0}
         queue={data?.waitingQueue ?? []}
         onSelectRegister={() => {
-          setEmptyBayBayNumber(null);
+          dialogs.setEmptyBayBayNumber(null);
           dialogs.set("vehicleReg", true);
         }}
         onSelectRegisterAndAssign={() => {
-          handleRegisterAndAssign(emptyBayBayNumber ?? 0);
+          handleRegisterAndAssign(dialogs.emptyBayBayNumber ?? 0);
         }}
         onSelectQueueItem={handleEmptyBayQueueSelect}
       />
@@ -272,11 +244,11 @@ export function DialogManager({
       {/* Work order detail drawer */}
       <ErrorBoundary>
         <WorkOrderDetailDrawer
-          workOrderId={detailWoId}
-          open={detailDrawerOpen}
+          workOrderId={dialogs.detailWoId}
+          open={dialogs.detailDrawerOpen}
           onOpenChange={handleDetailDrawerClose}
           onRefresh={onRefresh}
-          initialAction={drawerInitialAction}
+          initialAction={dialogs.drawerInitialAction}
           branchFilter={branchFilter}
           assignMechanicMutation={assignMechanicMutation}
           assignCustomerMutation={assignCustomerMutation}
@@ -295,7 +267,7 @@ export function DialogManager({
         onOpenChange={handleVehicleRegOpenChange}
         onQueued={handleVehicleRegQueued}
         onAssigned={handleVehicleRegAssigned}
-        assignBayNumber={directAssignBayNumber ?? undefined}
+        assignBayNumber={dialogs.directAssignBayNumber ?? undefined}
         branchId={branchFilter}
       />
     </>

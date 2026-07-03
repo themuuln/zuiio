@@ -39,18 +39,18 @@ export function SectionCard({
   children,
 }: SectionCardProps) {
   return (
-    <section className="rounded-lg border border-border/60 bg-card/40 p-3">
+    <section className="rounded-lg ring-1 ring-foreground/10 bg-card/40 p-3">
       {/* Header */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center size-5 rounded-md bg-primary/10">
-            <Icon className="size-3 text-primary" />
-          </div>
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-1.5">
+          <Icon className="size-3.5 text-muted-foreground" />
+          <span className="text-xs font-semibold text-foreground/80">
             {title}
           </span>
           {count != null && count > 0 && (
-            <Badge variant="outline">{count}</Badge>
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
+              {count}
+            </Badge>
           )}
         </div>
       </div>
@@ -60,8 +60,9 @@ export function SectionCard({
         children
       ) : (
         <div className="flex flex-col items-center justify-center py-6 px-4 text-center">
-          <Icon className="size-4 text-muted-foreground/40 mb-2" />
-          <span className="text-xs text-muted-foreground">{emptyMessage}</span>
+          <span className="text-xs text-muted-foreground/60">
+            {emptyMessage}
+          </span>
         </div>
       )}
 
@@ -69,7 +70,7 @@ export function SectionCard({
       <Button
         variant="outline"
         onClick={onToggleAdd}
-        className="mt-2 w-full border-dashed text-xs h-9 gap-2 border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-all duration-200"
+        className="mt-2 w-full border-dashed text-xs h-9 gap-2 text-muted-foreground hover:text-foreground transition-colors"
       >
         <Plus className="size-4" />
         {addLabel}

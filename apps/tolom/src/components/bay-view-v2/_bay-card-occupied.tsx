@@ -12,14 +12,9 @@ import { MechanicsRow } from "./_mechanic-row";
 import { useBayCardContext } from "./_bay-card-context";
 
 import { STATUS_TRANSLATION_KEYS } from "./_constants";
+import { elapsedMinutes } from "./_helpers";
 
 /** Elapsed minutes helper */
-function elapsedMinutes(startedAt: string | null | undefined): number | null {
-  if (!startedAt) return null;
-  const ms = Date.now() - new Date(startedAt).getTime();
-  const mins = Math.round(ms / 60_000);
-  return Number.isFinite(mins) && mins >= 0 ? mins : null;
-}
 
 interface BayCardOccupiedProps {
   bay: BayCardProps["bay"];
@@ -28,9 +23,7 @@ interface BayCardOccupiedProps {
   mechanics?: BayCardProps["mechanics"];
 }
 
-export function BayCardOccupied({
-  bay,
-}: BayCardOccupiedProps) {
+export function BayCardOccupied({ bay }: BayCardOccupiedProps) {
   const t = useTranslations("bayView");
   const {
     isPending,

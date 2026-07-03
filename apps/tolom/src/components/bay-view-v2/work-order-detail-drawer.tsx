@@ -1,7 +1,7 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
 import {
   useCallback,
@@ -11,12 +11,12 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
-import type { VariantSelection } from "@/components/services/variant-picker";
 import { VariantSelectionDialog } from "@/components/services/variant-selection-dialog";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { VehicleMakeLogo } from "@/components/vehicles/vehicle-make-logo";
+import { TotalsSummary } from "@/components/work-orders/line-items";
 import {
   normalizeOrgTransferBankAccounts,
   resolveOrgTransferBanks,
@@ -35,17 +35,13 @@ import { DrawerCelebration } from "./_drawer-celebration";
 import { DrawerFooter } from "./_drawer-footer";
 import { DrawerHeaderSection } from "./_drawer-header";
 import { DrawerLoading, DrawerSkeleton } from "./_drawer-loading";
-import type {
-  CatalogPartItem,
-  CatalogServiceItem,
-  WorkOrderDetailDrawerProps,
-} from "./_drawer-types";
+import type { WorkOrderDetailDrawerProps } from "./_drawer-types";
 import { UnsavedWarning } from "./_drawer-unsaved-warning";
 import { createInvoiceAndRecordPayment } from "./_helpers";
 import { resolvePaymentMethodFees } from "./_payment-fees";
 import { ReadyForPickupForm } from "./_ready-for-pickup-form";
-import { TotalsSummary } from "@/components/work-orders/line-items";
 import { useDrawerMutations } from "./_use-drawer-mutations";
+import { useVariantSelection } from "./_use-variant-selection";
 import type { PickupCompleteData } from "./pickup-complete-form";
 import { PickupCompleteForm } from "./pickup-complete-form";
 
@@ -54,24 +50,24 @@ const sectionLoading = (h: string) => () => (
   <div className={`h-${h} animate-pulse rounded-lg bg-muted/10`} />
 );
 
-const ServicesSection = dynamic(
-  () => import("./_services-section").then((m) => m.ServicesSection),
+const WorkOrderServicesSection = dynamic(
+  () => import("./_work-order-services-section").then((m) => m.WorkOrderServicesSection),
   { ssr: false, loading: sectionLoading("24") },
 );
-const PartsSection = dynamic(
-  () => import("./_parts-section").then((m) => m.PartsSection),
+const WorkOrderPartsSection = dynamic(
+  () => import("./_work-order-parts-section").then((m) => m.WorkOrderPartsSection),
   { ssr: false, loading: sectionLoading("24") },
 );
-const NotesSection = dynamic(
-  () => import("./_notes-section").then((m) => m.NotesSection),
+const WorkOrderNotesSection = dynamic(
+  () => import("./_work-order-notes-section").then((m) => m.WorkOrderNotesSection),
   { ssr: false, loading: sectionLoading("16") },
 );
-const StatusTimeline = dynamic(
-  () => import("./_status-timeline").then((m) => m.StatusTimeline),
+const WorkOrderTimelineSection = dynamic(
+  () => import("./_work-order-timeline-section").then((m) => m.WorkOrderTimelineSection),
   { ssr: false, loading: sectionLoading("32") },
 );
-const QuickActions = dynamic(
-  () => import("./_quick-actions").then((m) => m.QuickActions),
+const WorkOrderQuickActions = dynamic(
+  () => import("./_work-order-quick-actions").then((m) => m.WorkOrderQuickActions),
   { ssr: false },
 );
 
@@ -210,122 +206,19 @@ export function WorkOrderDetailDrawer({
   const [showCelebration, setShowCelebration] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
-
-  // Variant selection state
-  const [pendingVariantItem, setPendingVariantItem] = useState<{
-    entityType: "service" | "part";
-    entityId: string;
-    entityName: string;
-    defaultPrice: number;
-    onConfirm: (selection: VariantSelection | null) => void;
-    onSkip: () => void;
-  } | null>(null);
+  // ── Variant selection ──
+  const {
+    pendingVariantItem,
+    setPendingVariantItem,
+    handleServiceSelect,
+    handlePartSelect,
+  } = useVariantSelection({
+    orgId,
+    addService,
+    addPart,
+  });
 
   const isFirstRender = useRef(true);
-
-  // ── Variant-aware service/part selection handlers ──
-
-  async function handleServiceSelect(svc: CatalogServiceItem) {
-    if (svc.id && svc._source !== "global") {
-      // Check if this service has variants
-      try {
-        const res = await fetch(
-          `/api/organizations/${orgId}/catalog-variants`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              action: "list-items",
-              entity_type: "service",
-              entity_id: svc.id,
-            }),
-          },
-        );
-        const json = await res.json();
-        const items = json.data as Array<{ id: string }>;
-        if (items.length > 0) {
-          // Show variant picker
-          setPendingVariantItem({
-            entityType: "service",
-            entityId: svc.id,
-            entityName: svc.name,
-            defaultPrice: Number(svc.last_price ?? svc.default_price ?? 0),
-            onConfirm: (selection) => {
-              if (selection) {
-                const svcWithVariant = {
-                  ...svc,
-                  last_price: selection.price,
-                  variant_id: selection.variantId,
-                  variant_label: selection.label,
-                } as CatalogServiceItem & {
-                  variant_id?: string | null;
-                  variant_label?: string;
-                };
-                addService(svcWithVariant);
-              } else {
-                addService(svc);
-              }
-            },
-            onSkip: () => addService(svc),
-          });
-          return;
-        }
-      } catch {
-        // If variant check fails, proceed as normal
-      }
-    }
-    addService(svc);
-  }
-
-  async function handlePartSelect(part: CatalogPartItem) {
-    if (part.id && part._source !== "global") {
-      try {
-        const res = await fetch(
-          `/api/organizations/${orgId}/catalog-variants`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              action: "list-items",
-              entity_type: "part",
-              entity_id: part.id,
-            }),
-          },
-        );
-        const json = await res.json();
-        const items = json.data as Array<{ id: string }>;
-        if (items.length > 0) {
-          setPendingVariantItem({
-            entityType: "part",
-            entityId: part.id,
-            entityName: part.name,
-            defaultPrice: Number(part.last_price ?? part.default_price ?? 0),
-            onConfirm: (selection) => {
-              if (selection) {
-                const partWithVariant = {
-                  ...part,
-                  last_price: selection.price,
-                  variant_id: selection.variantId,
-                  variant_label: selection.label,
-                } as CatalogPartItem & {
-                  variant_id?: string | null;
-                  variant_label?: string;
-                };
-                addPart(partWithVariant);
-              } else {
-                addPart(part);
-              }
-            },
-            onSkip: () => addPart(part),
-          });
-          return;
-        }
-      } catch {
-        // proceed as normal
-      }
-    }
-    addPart(part);
-  }
 
   // Reset fullscreen when drawer closes
   useEffect(() => {
@@ -593,7 +486,7 @@ export function WorkOrderDetailDrawer({
 
           {/* Quick actions — always visible after first load */}
           {hasLoadedOnce && wo && orgId && workOrderId && (
-            <QuickActions
+            <WorkOrderQuickActions
               workOrderId={workOrderId}
               orgId={orgId}
               existingNotes={wo.notes}
@@ -636,7 +529,7 @@ export function WorkOrderDetailDrawer({
                                   { "--stagger": 0 } as React.CSSProperties
                                 }
                               >
-                                <ServicesSection
+                                <WorkOrderServicesSection
                                   services={wo.services ?? []}
                                   catalog={catalog}
                                   serviceSearch={serviceSearch}
@@ -661,7 +554,7 @@ export function WorkOrderDetailDrawer({
                                   { "--stagger": 1 } as React.CSSProperties
                                 }
                               >
-                                <PartsSection
+                                <WorkOrderPartsSection
                                   parts={wo.parts ?? []}
                                   partsCatalog={partsCatalog}
                                   lowStockMap={lowStockMap}
@@ -688,7 +581,7 @@ export function WorkOrderDetailDrawer({
                                     { "--stagger": 2 } as React.CSSProperties
                                   }
                                 >
-                                  <NotesSection
+                                  <WorkOrderNotesSection
                                     complaint={wo.complaint}
                                     diagnosis={wo.diagnosis}
                                     notes={wo.notes}
@@ -707,7 +600,7 @@ export function WorkOrderDetailDrawer({
                               className="[animation:fade-slide-in_300ms_ease-out-quart_backwards]"
                               style={{ "--stagger": 3 } as React.CSSProperties}
                             >
-                              <StatusTimeline
+                              <WorkOrderTimelineSection
                                 statusHistory={wo.status_history ?? []}
                                 serviceHistory={wo.service_history ?? []}
                                 t={t}

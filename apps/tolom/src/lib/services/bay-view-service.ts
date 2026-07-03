@@ -16,6 +16,7 @@ import type {
   BranchInfo,
   BranchSectionData,
   ShiftReport,
+  WorkOrderWithDetails,
 } from "./bay-view-service.types";
 import { updateWorkOrderStatus as updateWorkOrderStatusCanonical } from "./work-order-workflow";
 
@@ -36,7 +37,7 @@ export type {
  * each branch's bays grouped under a branch name header.
  */
 function buildBranchSections(
-  woWithDetails: any[],
+  woWithDetails: WorkOrderWithDetails[],
   allBranches: { id: string; name: string; settings: unknown }[],
 ): BranchSectionData[] {
   return allBranches.map((branch) => {
@@ -46,14 +47,14 @@ function buildBranchSections(
 
     // Bay-assigned work orders belonging to this branch (or legacy null)
     const branchBayWOs = woWithDetails.filter(
-      (wo: any) =>
+      (wo) =>
         wo.bay_number != null &&
         (wo.branch_id === branch.id || wo.branch_id === null),
     );
 
     const bays: BaySlotData[] = [];
     for (let i = 1; i <= bayCount; i++) {
-      const wo = branchBayWOs.find((w: any) => w.bay_number === i) ?? null;
+      const wo = branchBayWOs.find((w) => w.bay_number === i) ?? null;
       bays.push({
         bayNumber: i,
         workOrder: wo as unknown as BaySlotData["workOrder"],
@@ -339,7 +340,6 @@ export async function assignVehicleToBay(
   if (assignError)
     throw new Error(assignError.message ?? "Failed to assign vehicle to bay");
 
-  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
 }
@@ -356,40 +356,30 @@ export async function swapBayNumbers(
 ): Promise<void> {
   const now = new Date().toISOString();
 
-  // Step 1: temporarily clear both bays so no conflict check fires
-  const { error: clearErr } = await db
-    .from("work_orders")
-    .update({ bay_number: null, updated_at: now })
-    .in("id", [workOrderIdA, workOrderIdB])
-    .eq("organization_id", orgId);
-  if (clearErr) throw new Error(clearErr.message ?? "Failed to swap bays");
-
-  // Step 2: assign each vehicle to the other's bay (both bays are now free)
-  const { error: swapErr } = await Promise.all([
-    db
-      .from("work_orders")
-      .update({ bay_number: bayNumberA, updated_at: now })
-      .eq("id", workOrderIdB)
-      .eq("organization_id", orgId),
+  // Direct swap: both UPDATEs target different rows, no intermediate "both null" state.
+  // If one fails, the other may have succeeded — same tradeoff as the old 3-step approach,
+  // minus the window where both bays were null.
+  const [{ error: errA }, { error: errB }] = await Promise.all([
     db
       .from("work_orders")
       .update({ bay_number: bayNumberB, updated_at: now })
       .eq("id", workOrderIdA)
       .eq("organization_id", orgId),
-  ]).then((results) => {
-    const errs = results.map((r) => r.error).filter(Boolean);
-    return { error: errs.length > 0 ? errs[0] : null };
-  });
-  if (swapErr)
-    throw new Error(swapErr.message ?? "Failed to assign vehicle to bay");
+    db
+      .from("work_orders")
+      .update({ bay_number: bayNumberA, updated_at: now })
+      .eq("id", workOrderIdB)
+      .eq("organization_id", orgId),
+  ]);
+  if (errA || errB)
+    throw new Error(errA?.message ?? errB?.message ?? "Failed to swap bays");
 
-  // Step 3: clean up helpers for both work orders
+  // Clean up helpers for both work orders (non-critical — doesn't affect bay correctness)
   await db
     .from("work_order_helpers")
     .delete()
     .in("work_order_id", [workOrderIdA, workOrderIdB]);
 
-  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
   revalidateTag(cacheTags.workOrder(workOrderIdA), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderIdA), "max");
   revalidateTag(cacheTags.workOrder(workOrderIdB), "max");
@@ -427,7 +417,6 @@ export async function removeVehicleFromBay(
     db.from("work_order_parts").delete().eq("work_order_id", workOrderId),
   ]);
 
-  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
 }
@@ -459,7 +448,6 @@ export async function assignMechanicToWorkOrder(
     .eq("work_order_id", workOrderId)
     .eq("mechanic_id", mechanicId);
 
-  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
 }
@@ -482,7 +470,6 @@ export async function unassignMechanicFromWorkOrder(
 
   if (error) throw new Error(error.message ?? "Failed to unassign mechanic");
 
-  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
 }
@@ -532,7 +519,6 @@ export async function assignHelperToWorkOrder(
   if (error)
     throw new Error(error.message ?? "Failed to assign helper mechanic");
 
-  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
 }
@@ -555,7 +541,6 @@ export async function removeHelperFromWorkOrder(
   if (error)
     throw new Error(error.message ?? "Failed to remove helper mechanic");
 
-  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
 }
@@ -595,7 +580,6 @@ export async function reorderWorkOrderHelpers(
     if (updErr) throw new Error(updErr.message ?? "Failed to reorder helper");
   }
 
-  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
 }
@@ -613,7 +597,6 @@ export async function clearHelpersFromWorkOrder(
     .eq("work_order_id", workOrderId)
     .eq("organization_id", orgId);
 
-  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
 }
@@ -734,7 +717,6 @@ export async function updateBayCount(
 
   if (error) throw new Error(error.message ?? "Failed to update bay count");
 
-  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
   return count;
 }
 
@@ -955,9 +937,6 @@ export async function seedWaitingQueue(
     }
   }
 
-  // Invalidate bay view cache so the UI picks up the new queue entries
-  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
-
   return { created, errors };
 }
 
@@ -1025,7 +1004,6 @@ export async function assignToFirstAvailableBay(
     db.from("work_order_helpers").delete().eq("work_order_id", workOrderId),
   ]);
 
-  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
   return firstEmpty;
@@ -1054,8 +1032,6 @@ export async function reorderQueue(
       }
     }),
   );
-
-  revalidateTag(cacheTags.bayView(orgId, orgId), "max");
 }
 
 // ── Shift Report ─────────────────────────────────────────────

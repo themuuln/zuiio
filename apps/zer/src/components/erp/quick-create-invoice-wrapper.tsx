@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { InvoiceCreateDrawer } from "@/components/invoices/invoice-create-drawer";
 import { createClient } from "@/lib/supabase/client";
+import { capture } from "@zuiio/capture";
 
 export function QuickCreateInvoiceWrapper({
   organizationId,
@@ -16,12 +17,13 @@ export function QuickCreateInvoiceWrapper({
   const { data: contacts } = useQuery({
     queryKey: ["quick-create", "contacts", organizationId],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("contacts")
         .select("id, name")
         .eq("organization_id", organizationId)
         .eq("type", "customer")
         .order("name");
+      if (error) capture(error, { context: "[quick-create-invoice] contacts query" });
       return data ?? [];
     },
   });
@@ -29,12 +31,13 @@ export function QuickCreateInvoiceWrapper({
   const { data: products } = useQuery({
     queryKey: ["quick-create", "products", organizationId],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("products")
         .select("id, name, sale_price, current_stock, unit")
         .eq("organization_id", organizationId)
         .is("deleted_at", null)
         .order("name");
+      if (error) capture(error, { context: "[quick-create-invoice] products query" });
       return data ?? [];
     },
   });

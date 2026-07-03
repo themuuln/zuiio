@@ -456,6 +456,7 @@
     "title": "Bay View",
     "workOrder": "Work Order",
     "baysActive": "Bays Active",
+    "bayCount": "Bay count",
     "mechanicsWorking": "Mechanics Working",
     "inQueue": "In Queue",
     "myJobs": "My Jobs",

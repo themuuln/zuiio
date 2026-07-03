@@ -1,4 +1,3 @@
-export const instant = false;
 import { LoginForm } from "./login-form";
 
 export default async function LoginPage({

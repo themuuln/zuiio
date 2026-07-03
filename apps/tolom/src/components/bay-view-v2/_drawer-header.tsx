@@ -16,17 +16,15 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { MongolianLicensePlate } from "@/components/vehicles/license-plate";
-import { VehicleMakeLogo } from "@/components/vehicles/vehicle-make-logo";
 import type { WorkOrderDetail } from "@/lib/types";
-import { cn } from "@/lib/utils";
-import { STATUS_BG } from "./_constants";
+import type { MechanicRef } from "@/lib/types/mechanic";
 import { StatusPill } from "./status-pill";
 
 interface DrawerHeaderProps {
   wo: WorkOrderDetail | null;
   loading: boolean;
-  mechanics: Array<{ id: string; full_name: string; current_jobs?: number }>;
-  helpers: Array<{ id: string; full_name?: string | null | undefined }>;
+  mechanics: Array<{ id: string; full_name: string }>;
+  helpers: MechanicRef[];
   orgId: string;
   workOrderId: string;
   saving: boolean;
@@ -80,12 +78,7 @@ export function DrawerHeaderSection({
   })();
 
   return (
-    <DrawerHeader
-      className={cn(
-        "border-b border-border px-3 py-2.5 text-left shrink-0",
-        wo?.status ? (STATUS_BG[wo.status] ?? "bg-muted/5") : "bg-muted/5",
-      )}
-    >
+    <DrawerHeader className="border-b border-border px-3 py-2.5 text-left shrink-0">
       <DrawerTitle className="sr-only">
         {wo
           ? `${t("workOrder")} — ${wo.vehicle?.plate_number ?? wo.id?.slice(0, 8) ?? ""}`
@@ -94,7 +87,7 @@ export function DrawerHeaderSection({
       <DrawerDescription className="sr-only">
         {t("workOrderDrawerDescription")}
       </DrawerDescription>
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
         {/* Row 1: Vehicle info | Status + Mechanic + Actions */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -140,14 +133,16 @@ export function DrawerHeaderSection({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             {wo && orgId && workOrderId && (
               <MechanicsRow
                 woId={workOrderId}
                 leadMechanic={wo.mechanic}
-                helpers={helpers as any}
+                // helpers and allMechanics are structurally compatible with MechanicRef[] —
+                // `full_name` may be more optional than MechanicRef expects
+                helpers={helpers as MechanicRef[]}
                 status={wo.status}
-                allMechanics={effectiveMechanics as any}
+                allMechanics={effectiveMechanics}
                 onAssignMechanic={async (_woId, mechanicId) => {
                   const mech = effectiveMechanics.find(
                     (m) => m.id === mechanicId,
@@ -193,7 +188,7 @@ export function DrawerHeaderSection({
                 }}
               />
             )}
-            <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
               {showBack && (
                 <Button
                   variant="ghost"
@@ -237,8 +232,8 @@ export function DrawerHeaderSection({
         {(wo?.customer || wo) && (
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             {wo?.customer ? (
-              <div className="flex items-center gap-2 text-xs text-foreground/80 font-bold">
-                <User className="size-4 text-muted-foreground/75" />
+              <div className="flex items-center gap-2 text-xs text-foreground/80 font-semibold">
+                <User className="size-4 text-muted-foreground/70" />
                 <span>
                   {[wo.customer.first_name, wo.customer.last_name]
                     .filter(Boolean)
@@ -261,7 +256,7 @@ export function DrawerHeaderSection({
                 onClick={() => setShowCustomerPicker?.(true)}
                 className="flex items-center gap-2 text-xs text-muted-foreground italic hover:text-foreground transition-colors"
               >
-                <User className="size-4 text-muted-foreground/75" />
+                <User className="size-4 text-muted-foreground/70" />
                 {t("selectCustomer")}
               </button>
             )}

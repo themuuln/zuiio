@@ -1,8 +1,7 @@
 "use client";
 
-import { PointerSensor, TouchSensor, useDroppable } from "@dnd-kit/core";
+import { PointerSensor, TouchSensor } from "@dnd-kit/core";
 import type { BaySlotData } from "@/lib/services/bay-view-service";
-import { cn } from "@/lib/utils";
 
 export type ViewMode = "grid" | "kanban" | "list";
 
@@ -38,31 +37,4 @@ export interface ActiveDragState {
   type: string;
   label: string;
   previewBay?: BaySlotData | null;
-}
-
-export function KanbanDropColumn({
-  status,
-  children,
-  className,
-}: {
-  status: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  const { setNodeRef, isOver } = useDroppable({
-    id: `kanban-status-${encodeURIComponent(status)}`,
-  });
-
-  return (
-    <div
-      ref={setNodeRef}
-      className={cn(
-        "transition-colors duration-200 rounded-xl",
-        isOver && "bg-primary/5 ring-1 ring-primary/20",
-        className,
-      )}
-    >
-      {children}
-    </div>
-  );
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { capture } from "@zuiio/capture";
 import { createServiceClient } from "@/lib/supabase/server-service";
 
 /**
@@ -25,9 +26,10 @@ export async function GET(request: Request) {
 
   try {
     const supabase = createServiceClient();
-    const { data } = await supabase.rpc("schedule_daily_report_cron", {
+    const { data, error } = await supabase.rpc("schedule_daily_report_cron", {
       app_url: siteUrl.startsWith("http") ? siteUrl : `https://${siteUrl}`,
     });
+    if (error) capture(error, { context: "[cron/setup] schedule_daily_report_cron" });
 
     return NextResponse.json({
       ok: true,
@@ -53,7 +55,8 @@ export async function DELETE(request: Request) {
 
   try {
     const supabase = createServiceClient();
-    const { data } = await supabase.rpc("unschedule_daily_report_cron");
+    const { data, error } = await supabase.rpc("unschedule_daily_report_cron");
+    if (error) capture(error, { context: "[cron/setup] unschedule_daily_report_cron" });
 
     return NextResponse.json({ ok: true, message: data });
   } catch (err) {

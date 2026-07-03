@@ -251,14 +251,6 @@ export function useBayDragHandlers({
             queue_order: i,
           }));
 
-          // Optimistic update locally
-          const queryClient = (globalThis as Record<string, unknown>)
-            .__queryClient as
-            | {
-                setQueryData: (key: unknown, data: unknown) => void;
-              }
-            | undefined;
-
           // Fire reorder in background
           onReorderQueue(updates).catch((err) => {
             reportServerError("Re-order failed:", err);

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { updateWorkOrderNotes } from "@/lib/services/bay-view-service.actions";
 
 interface QuickActionsProps {
   workOrderId: string;
@@ -16,15 +17,16 @@ interface QuickActionsProps {
 
 function parseNotes(raw: string | null): string {
   if (!raw) return "";
-  if (typeof raw === "object" && raw !== null) {
-    return (raw as { content: string }).content ?? "";
+  if (typeof raw === "object" && raw !== null && "content" in raw) {
+    const maybeContent = raw.content;
+    return typeof maybeContent === "string" ? maybeContent : "";
   }
   return String(raw);
 }
 
 export function QuickActions({
   workOrderId,
-  orgId,
+  orgId: _orgId,
   existingNotes,
   onNoteAdded,
   t,
@@ -43,9 +45,6 @@ export function QuickActions({
       const separator = current ? "\n---\n" : "";
       const newNotes = `${current}${separator}${trimmed}`;
 
-      const { updateWorkOrderNotes } = await import(
-        "@/lib/services/bay-view-service.actions"
-      );
       await updateWorkOrderNotes(workOrderId, newNotes);
 
       toast.dismiss();
@@ -63,30 +62,27 @@ export function QuickActions({
   return (
     <div className="flex flex-col gap-2 px-4 py-2 border-b border-border/60 shrink-0">
       <div className="flex items-center gap-2">
-        {/* Add Note chip */}
         {!showNoteInput ? (
           <button
             type="button"
             onClick={() => setShowNoteInput(true)}
-            className="inline-flex items-center gap-2 rounded-full bg-muted/70 px-3 py-2 text-xs font-medium text-foreground/80 hover:bg-muted transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:bg-muted transition-colors cursor-pointer"
           >
             <MessageSquarePlus className="size-4" />
             {t("addNote")}
           </button>
         ) : null}
 
-        {/* Log Time chip (placeholder) */}
         <button
           type="button"
           onClick={() => toast.info(t("timeTrackingComingSoon"))}
-          className="inline-flex items-center gap-2 rounded-full bg-muted/70 px-3 py-2 text-xs font-medium text-foreground/80 hover:bg-muted transition-colors cursor-pointer"
+          className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium text-foreground/80 hover:bg-muted transition-colors cursor-pointer"
         >
           <Timer className="size-4" />
           {t("logTime")}
         </button>
       </div>
 
-      {/* Inline note textarea */}
       {showNoteInput && (
         <div className="flex flex-col gap-2">
           <Textarea

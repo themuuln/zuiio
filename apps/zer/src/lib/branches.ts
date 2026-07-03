@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
+import { capture } from "@zuiio/capture";
 
 export type BranchRow = Database["public"]["Tables"]["branches"]["Row"];
 
@@ -28,29 +29,38 @@ export interface BranchInfo {
 export async function getUserBranches(userId: string): Promise<BranchInfo[]> {
   const supabase = await createClient();
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("organization_id, branch_id")
     .eq("id", userId)
     .single();
 
+  if (profileError) {
+    console.error("[branches] Profile query failed for branch access", {
+      userId,
+      error: profileError,
+    });
+  }
+
   if (!profile?.organization_id) return [];
 
   if (profile.branch_id) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("branches")
       .select("*")
       .eq("id", profile.branch_id)
       .eq("organization_id", profile.organization_id);
+    if (error) capture(error, { context: "[branches] getUserBranches scoped query" });
 
     return (data ?? []) as BranchInfo[];
   }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("branches")
     .select("*")
     .eq("organization_id", profile.organization_id)
     .order("name");
+  if (error) capture(error, { context: "[branches] getUserBranches org-wide query" });
 
   return (data ?? []) as BranchInfo[];
 }
@@ -78,20 +88,22 @@ export async function getAccessibleBranches(
   if (!profile) return [];
 
   if (profile.branch_id) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("branches")
       .select("*")
       .eq("id", profile.branch_id)
       .eq("organization_id", organizationId);
+    if (error) capture(error, { context: "[branches] getAccessibleBranches scoped query" });
 
     return (data ?? []) as BranchInfo[];
   }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("branches")
     .select("*")
     .eq("organization_id", organizationId)
     .order("name");
+  if (error) capture(error, { context: "[branches] getAccessibleBranches org-wide query" });
 
   return (data ?? []) as BranchInfo[];
 }

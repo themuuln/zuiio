@@ -98,7 +98,8 @@ export const ListView = React.memo(function ListView({
                         variant="outline"
                         className={cn(
                           "text-xs uppercase tracking-wider font-bold py-1 px-2 rounded-full",
-                          STATUS_BADGE_CLASS[wo.status],
+                          STATUS_BADGE_CLASS[wo.status] ??
+                            "bg-muted text-muted-foreground",
                         )}
                       >
                         {wo.status}

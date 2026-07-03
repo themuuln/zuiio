@@ -19,10 +19,11 @@ interface NotesSectionProps {
 
 type EditableField = "complaint" | "diagnosis" | "notes";
 
-function parseNotes(raw: string | null): string {
+function parseNotes(raw: unknown): string {
   if (!raw) return "";
-  if (typeof raw === "object" && raw !== null) {
-    return (raw as { content: string }).content ?? "";
+  if (typeof raw === "object" && raw !== null && "content" in raw) {
+    const content = raw.content;
+    return typeof content === "string" ? content : "";
   }
   return String(raw);
 }
@@ -96,7 +97,7 @@ export function NotesSection({
     return (
       <div>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">
+          <span className="text-xs font-medium text-muted-foreground/60">
             {label}
           </span>
           {!isEditing && displayValue && (
@@ -143,10 +144,8 @@ export function NotesSection({
   return (
     <section className="rounded-lg border border-border/60 bg-card/40 p-3">
       <div className="flex items-center gap-2 mb-3">
-        <div className="flex items-center justify-center size-5 rounded-md bg-primary/10">
-          <FileText className="size-3 text-primary" />
-        </div>
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        <FileText className="size-3.5 text-muted-foreground/70" />
+        <span className="text-xs font-semibold text-muted-foreground">
           {t("complaintAndNotes")}
         </span>
       </div>

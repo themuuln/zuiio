@@ -35,6 +35,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
+import { capture } from "@zuiio/capture";
 
 const warehouseSchema = z.object({
   name: z.string().min(1, "Нэр шаардлагатай"),
@@ -53,7 +54,8 @@ type Warehouse = {
 
 async function fetchWarehouses(): Promise<Warehouse[]> {
   const supabase = createClient();
-  const { data } = await supabase.from("warehouses").select("*").order("name");
+  const { data, error } = await supabase.from("warehouses").select("*").order("name");
+  if (error) capture(error, { context: "[warehouses] fetchWarehouses" });
   return data ?? [];
 }
 

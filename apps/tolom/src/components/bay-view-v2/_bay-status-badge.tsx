@@ -20,7 +20,8 @@ export function BayStatusBadge({
       variant="outline"
       className={cn(
         "h-5 rounded-full border px-2 text-xs font-bold uppercase tracking-wider",
-        STATUS_BADGE_CLASS[status],
+        STATUS_BADGE_CLASS[status] ??
+          "bg-muted border-muted-foreground/30 text-muted-foreground",
         className,
       )}
     >

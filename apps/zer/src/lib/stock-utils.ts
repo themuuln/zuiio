@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
+import { capture } from "@zuiio/capture";
 
 export type SupabaseDb = SupabaseClient<Database>;
 
@@ -23,11 +24,12 @@ export async function fetchProductsForStock(
     }
   >
 > {
-  const { data: products } = await supabase
+  const { data: products, error } = await supabase
     .from("products")
     .select("id, name, current_stock, unit")
     .eq("organization_id", organizationId)
     .in("id", productIds);
+  if (error) capture(error, { context: "[stock-utils] fetchProductsForStock" });
 
   return new Map((products ?? []).map((p) => [p.id, p]));
 }
@@ -42,10 +44,11 @@ export async function fetchVariantsForStock(
 ): Promise<
   Map<string, { id: string; current_stock: number | null; product_id: string }>
 > {
-  const { data: variants } = await supabase
+  const { data: variants, error } = await supabase
     .from("product_variants")
     .select("id, current_stock, product_id")
     .in("id", variantIds);
+  if (error) capture(error, { context: "[stock-utils] fetchVariantsForStock" });
 
   return new Map(
     (variants ?? []).map((v) => [
@@ -67,12 +70,13 @@ export async function decrementProductStock(
   productId: string,
   quantity: number,
 ): Promise<{ id: string; current_stock: number; name: string } | null> {
-  const { data: product } = await supabase
+  const { data: product, error: fetchError } = await supabase
     .from("products")
     .select("id, current_stock, name")
     .eq("organization_id", organizationId)
     .eq("id", productId)
     .single();
+  if (fetchError) capture(fetchError, { context: "[stock-utils] decrementProductStock" });
 
   if (!product) return null;
 
@@ -100,15 +104,16 @@ export async function decrementVariantStock(
   variantId: string,
   quantity: number,
 ): Promise<boolean> {
-  const { data: variant } = await supabase
+  const { data: variant, error: fetchError } = await supabase
     .from("product_variants")
     .select("id, current_stock")
     .eq("id", variantId)
     .single();
+  if (fetchError) capture(fetchError, { context: "[stock-utils] decrementVariantStock fetch" });
 
   if (!variant) return false;
 
-  const { data: updated } = await supabase
+  const { data: updated, error } = await supabase
     .from("product_variants")
     .update({
       current_stock: Number(variant.current_stock ?? 0) - quantity,
@@ -117,6 +122,7 @@ export async function decrementVariantStock(
     .gte("current_stock", quantity)
     .select("id")
     .maybeSingle();
+  if (error) capture(error, { context: "[stock-utils] decrementVariantStock update" });
 
   return !!updated;
 }
@@ -130,12 +136,13 @@ export async function incrementProductStock(
   productId: string,
   quantity: number,
 ): Promise<boolean> {
-  const { data: product } = await supabase
+  const { data: product, error: fetchError } = await supabase
     .from("products")
     .select("current_stock")
     .eq("organization_id", organizationId)
     .eq("id", productId)
     .single();
+  if (fetchError) capture(fetchError, { context: "[stock-utils] incrementProductStock" });
 
   if (!product) return false;
 

@@ -1,0 +1,15 @@
+{
+  "name": "@zuiio/capture",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Unified error capture layer — wraps Sentry + console.error with Supabase query error helpers",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "devDependencies": {
+    "@zuiio/config": "workspace:*",
+    "typescript": "^5"
+  }
+}

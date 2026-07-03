@@ -36,3 +36,10 @@ These are the most-used rules. See `docs/design.md` for full reference.
 - `noUncheckedIndexedAccess: true` — always account for `undefined` on indexed access.
 - `file:` protocol for consumers: `"@zuiio/core": "file:../zuiio/packages/core"`.
 - `pnpm exec tsc --noEmit` to type-check all packages together.
+
+## Runtime verification (applies to all Next.js apps)
+
+- **After every edit that changes UI or behavior**, verify the page still works at runtime using the `next-dev-loop` skill.
+- The skill cross-checks `/_next/mcp` (Next.js framework view: compilation, routes, server errors) against `agent-browser` (real Chrome: DOM, console, network, React fiber).
+- Requires: `next dev` running with Turbopack, and `agent-browser >= 0.31.1`.
+- Check: compiles, runs without errors, behaves as intended, no React-level regressions.

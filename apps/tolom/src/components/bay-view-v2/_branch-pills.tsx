@@ -1,4 +1,5 @@
-"use client";
+import { cn } from "@/lib/utils";
+("use client");
 
 import { Building2 } from "lucide-react";
 import { hasMultipleBranches } from "@/lib/utils";
@@ -29,11 +30,12 @@ export function BranchPills({
       <button
         type="button"
         onClick={() => onBranchChange("all")}
-        className={`flex items-center gap-2 rounded-md px-3 text-xs font-semibold transition-all cursor-pointer h-full ${
+        className={cn(
+          "flex items-center gap-2 rounded-md px-3 text-xs font-semibold transition-all cursor-pointer h-full",
           selectedBranchId === "all"
             ? "bg-background text-foreground font-bold border border-border/30"
-            : "text-muted-foreground/80 hover:bg-muted/70 hover:text-foreground"
-        }`}
+            : "text-muted-foreground/80 hover:bg-muted/70 hover:text-foreground",
+        )}
       >
         <Building2 className="size-4" />
         <span className="hidden sm:inline text-xs">{t("allBranches")}</span>
@@ -43,11 +45,12 @@ export function BranchPills({
           key={b.id}
           type="button"
           onClick={() => onBranchChange(b.id)}
-          className={`flex items-center gap-2 rounded-md px-3 text-xs font-semibold transition-all cursor-pointer h-full ${
+          className={cn(
+            "flex items-center gap-2 rounded-md px-3 text-xs font-semibold transition-all cursor-pointer h-full",
             selectedBranchId === b.id
               ? "bg-background text-foreground font-bold border border-border/30"
-              : "text-muted-foreground/80 hover:bg-muted/70 hover:text-foreground"
-          }`}
+              : "text-muted-foreground/80 hover:bg-muted/70 hover:text-foreground",
+          )}
         >
           <Building2 className="size-4" />
           <span className="hidden sm:inline text-xs">{b.name}</span>

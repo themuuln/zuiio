@@ -23,7 +23,6 @@ import {
 import { STATUS_BTN_SOLID } from "./_constants";
 import { cn } from "@/lib/utils";
 
-
 import { useBayCardContext } from "./_bay-card-context";
 import type { BayCardWorkOrder } from "./_bay-card-types";
 
@@ -46,14 +45,38 @@ export function BayCardFooter({
     onQuickAddService,
     onQuickAddParts,
   } = useBayCardContext();
-
-  // Map current status → target status for button color derivation
-  const statusButtonTarget: Record<string, string> = {
-    New: "Diagnosing",
-    Diagnosing: "In Progress",
-    "In Progress": "Ready for Pickup",
-    "Ready for Pickup": "Completed",
-  };
+  // Status transition buttons — config driven
+  const statusActions: {
+    status: string;
+    targetStatus: string;
+    icon: React.ReactNode;
+    label: string;
+  }[] = [
+    {
+      status: "New",
+      targetStatus: "Diagnosing",
+      icon: <Play className="size-3.5" />,
+      label: "Start",
+    },
+    {
+      status: "Diagnosing",
+      targetStatus: "In Progress",
+      icon: <Wrench className="size-3.5" />,
+      label: "Repair",
+    },
+    {
+      status: "In Progress",
+      targetStatus: "Ready for Pickup",
+      icon: <Check className="size-3.5" />,
+      label: "Ready",
+    },
+    {
+      status: "Ready for Pickup",
+      targetStatus: "Completed",
+      icon: <CheckCircle className="size-3.5" />,
+      label: "Complete",
+    },
+  ];
   const targetStatus = statusButtonTarget[workOrder.status];
   const btnBg = targetStatus ? STATUS_BTN_SOLID[targetStatus] : "";
 
@@ -62,57 +85,24 @@ export function BayCardFooter({
       data-slot="bay-view-footer-buttons"
       className="flex items-center gap-2 px-3 py-2.5"
     >
-      {workOrder.status === "New" && (
-        <Button
-          size="sm"
-          className={cn("h-8 gap-1.5 rounded-lg text-xs font-bold text-white hover:opacity-85", btnBg)}
-          onClick={(e) => {
-            e.stopPropagation();
-            onStatusChange(workOrder.id, "Diagnosing");
-          }}
-          disabled={isPending}
-        >
-          <Play className="size-3.5" /> Start
-        </Button>
-      )}
-      {workOrder.status === "Diagnosing" && (
-        <Button
-          size="sm"
-          className={cn("h-8 gap-1.5 rounded-lg text-xs font-bold text-white hover:opacity-85", btnBg)}
-          onClick={(e) => {
-            e.stopPropagation();
-            onStatusChange(workOrder.id, "In Progress");
-          }}
-          disabled={isPending}
-        >
-          <Wrench className="size-3.5" /> Repair
-        </Button>
-      )}
-      {workOrder.status === "In Progress" && (
-        <Button
-          size="sm"
-          className={cn("h-8 gap-1.5 rounded-lg text-xs font-bold text-white hover:opacity-85", btnBg)}
-          onClick={(e) => {
-            e.stopPropagation();
-            onStatusChange(workOrder.id, "Ready for Pickup");
-          }}
-          disabled={isPending}
-        >
-          <Check className="size-3.5" /> Ready
-        </Button>
-      )}
-      {workOrder.status === "Ready for Pickup" && (
-        <Button
-          size="sm"
-          className={cn("h-8 gap-1.5 rounded-lg text-xs font-bold text-white hover:opacity-85", btnBg)}
-          onClick={(e) => {
-            e.stopPropagation();
-            onStatusChange(workOrder.id, "Completed");
-          }}
-          disabled={isPending}
-        >
-          <CheckCircle className="size-3.5" /> Complete
-        </Button>
+      {statusActions.map((action) =>
+        workOrder.status === action.status ? (
+          <Button
+            key={action.status}
+            size="sm"
+            className={cn(
+              "h-8 gap-1.5 rounded-lg text-xs font-bold text-white hover:opacity-85",
+              btnBg,
+            )}
+            onClick={(e) => {
+              e.stopPropagation();
+              onStatusChange(workOrder.id, action.targetStatus);
+            }}
+            disabled={isPending}
+          >
+            {action.icon} {action.label}
+          </Button>
+        ) : null,
       )}
       <div className="ml-auto flex items-center gap-1">
         <DropdownMenu>

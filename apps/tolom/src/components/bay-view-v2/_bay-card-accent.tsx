@@ -28,6 +28,8 @@ export function BayCardAccent({ status, elapsedMinutes }: BayCardAccentProps) {
     <div
       className={cn(
         "h-1 w-full shrink-0 rounded-t-xl",
+        STATUS_ACCENT[status] ?? "bg-muted",
+        urgencyClass,
       )}
     />
   );

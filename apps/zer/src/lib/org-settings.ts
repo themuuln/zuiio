@@ -34,12 +34,25 @@ export async function checkOrgSetting(
     throw new Error(`Invalid org setting column: "${setting}"`);
   }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("organizations")
     .select(setting)
     .eq("id", organizationId)
     .single();
 
-  type Row = Record<string, boolean | null>;
-  return (data as Row | null)?.[setting] !== false;
+  if (error) {
+    // Query failure (e.g. a column doesn't exist) must NOT silently enable features.
+    // Log the error and deny the check — the feature will be hidden from the user.
+    console.error("[org-settings] Query failed", {
+      setting,
+      organizationId,
+      error,
+    });
+    return false;
+  }
+
+  return (
+    (data as unknown as Record<string, boolean | null> | null)?.[setting] !==
+    false
+  );
 }

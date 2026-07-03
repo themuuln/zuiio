@@ -1,8 +1,7 @@
-import { redirect } from "next/navigation";
 import { type BranchOption, BranchProvider } from "@/lib/branch-context";
 import { type BrandConfig, generateBrandCSS } from "@/lib/branding";
 import { FEATURE_KEYS } from "@/lib/constants";
-import { createClient } from "@/lib/supabase/server";
+import { getDashboardContext } from "@/lib/dashboard-context";
 import { DashboardShell } from "./dashboard-shell";
 
 export default async function DashboardLayout({
@@ -10,65 +9,14 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
+  const { supabase, profile, org, organizationId } =
+    await getDashboardContext();
 
-  const { data, error } = await supabase.auth.getClaims();
-
-  const claims = data?.claims;
-  const userId = claims?.sub;
-  if (error || !userId) {
-    redirect("/login");
-  }
-
-  // Fetch profile with org details in one join (eliminates separate org query)
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select(
-      `full_name, organization_id, branch_id,
-       organizations!inner(
-         name, brand_config, onboarding_completed, enabled_features,
-         has_suppliers, has_inventory, has_customer_credit, has_multi_branch,
-         has_variants, has_brands, has_categories, has_email_reports, has_audit_log,
-         has_hr
-       )`,
-    )
-    .eq("id", userId)
-    .single();
-
-  if (!profile) {
-    redirect("/login");
-  }
-
-  if (!profile.organization_id) {
-    redirect("/organization/new");
-  }
-
-  const org = profile.organizations as unknown as {
-    name: string;
-    brand_config: unknown;
-    onboarding_completed: boolean;
-    enabled_features: string[];
-    has_suppliers: boolean;
-    has_inventory: boolean;
-    has_customer_credit: boolean;
-    has_multi_branch: boolean;
-    has_variants: boolean;
-    has_brands: boolean;
-    has_categories: boolean;
-    has_email_reports: boolean;
-    has_audit_log: boolean;
-    has_hr: boolean;
-  };
-
-  if (!org.onboarding_completed) {
-    redirect("/onboarding");
-  }
-
-  // Branches fetched in parallel with profile above
+  // Branches
   const { data: branchRows } = await supabase
     .from("branches")
     .select("id, name, slug, is_default")
-    .eq("organization_id", profile.organization_id)
+    .eq("organization_id", organizationId)
     .order("name");
 
   const branches: BranchOption[] = (branchRows ?? []).map((b) => ({
@@ -88,7 +36,7 @@ export default async function DashboardLayout({
   const hasEmailReports = org.has_email_reports === true;
   const hasAuditLog = org.has_audit_log !== false;
   const hasSuppliers = org.has_suppliers !== false;
-  const hasHr = org.has_hr === true;
+  const hasHr = false; // has_hr column not yet added to organizations table
 
   const allFeatures =
     enabledFeatures.length > 0
@@ -125,7 +73,7 @@ export default async function DashboardLayout({
       )}
       <BranchProvider branches={branches} userBranchId={profile.branch_id}>
         <DashboardShell
-          organizationId={profile.organization_id}
+          organizationId={organizationId}
           organizationName={org.name ?? null}
           logoUrl={brandConfig.logo_url ?? null}
           userFullName={profile.full_name}
@@ -141,7 +89,6 @@ export default async function DashboardLayout({
             hasCategories,
             hasEmailReports,
             hasAuditLog,
-            hasHr,
           }}
         >
           {children}
