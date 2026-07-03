@@ -1,6 +1,6 @@
 "use client";
 
-import { useTableFilters } from "@zuiio/hooks";
+import { useTableFilters } from "@/lib/hooks/use-table-filters";
 import { Car, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";

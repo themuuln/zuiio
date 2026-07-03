@@ -245,7 +245,7 @@ export function DialogManager({
       <ErrorBoundary>
         <WorkOrderDetailDrawer
           workOrderId={dialogs.detailWoId}
-          open={dialogs.detailDrawerOpen}
+          open={dialogs.detailWoId !== null}
           onOpenChange={handleDetailDrawerClose}
           onRefresh={onRefresh}
           initialAction={dialogs.drawerInitialAction}

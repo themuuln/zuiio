@@ -20,7 +20,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
-import { useTableFilters } from "@zuiio/hooks";
+import { useTableFilters } from "@/lib/hooks/use-table-filters";
 import { useRouter } from "@/lib/i18n/navigation";
 import { estimateKeys } from "@/lib/queries/keys";
 import {

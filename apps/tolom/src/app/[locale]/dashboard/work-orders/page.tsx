@@ -38,7 +38,7 @@ import { useClientNow } from "@/hooks/use-client-now";
 import { usePageHeader } from "@/hooks/use-page-header";
 import type { ExportColumn } from "@/lib/export";
 import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
-import { useTableFilters } from "@zuiio/hooks";
+import { useTableFilters } from "@/lib/hooks/use-table-filters";
 import { workOrderKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useUpdateWorkOrderStatus } from "@/lib/queries/use-work-order-detail";

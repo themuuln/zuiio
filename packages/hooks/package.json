@@ -8,10 +8,10 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "fuse.js": "^7",
-    "nuqs": "^2"
+    "fuse.js": "^7"
   },
   "peerDependencies": {
+    "nuqs": "^2",
     "react": "^19"
   },
   "devDependencies": {

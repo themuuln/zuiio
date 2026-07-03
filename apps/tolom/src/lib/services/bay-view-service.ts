@@ -19,6 +19,7 @@ import type {
   WorkOrderWithDetails,
 } from "./bay-view-service.types";
 import { updateWorkOrderStatus as updateWorkOrderStatusCanonical } from "./work-order-workflow";
+import { capture } from "@/lib/capture";
 
 export type { UpdateStatusParams } from "./bay-view-service.types";
 // Re-export types for backward compatibility
@@ -74,7 +75,7 @@ async function fetchBayViewData(
 ): Promise<BayViewData> {
   // ── Batch 1: Independent queries (run in parallel) ──
   // branches, work_orders, and organization_users have no deps on each other
-  const [{ data: allBranches }, { data: activeWOs }, memberQueryResult] =
+  const [{ data: allBranches, error: branchesErr }, { data: activeWOs, error: activeWOsErr }, memberQueryResult] =
     await Promise.all([
       // 1a. Branches (for pills, bay count, branch sections)
       db
@@ -109,6 +110,9 @@ async function fetchBayViewData(
         return q;
       })(),
     ]);
+  if (branchesErr) capture(branchesErr, { context: "[bay-view-service] fetchBayViewData" });
+  if (activeWOsErr) capture(activeWOsErr, { context: "[bay-view-service] fetchBayViewData" });
+  if (memberQueryResult.error) capture(memberQueryResult.error, { context: "[bay-view-service] fetchBayViewData" });
 
   const workOrders = activeWOs ?? [];
 
@@ -138,9 +142,9 @@ async function fetchBayViewData(
 
   // ── Batch 2: Dependent queries (run in parallel) ──
   const [
-    { data: helperRecords },
-    { data: woMechanicProfiles },
-    { data: mechProfiles },
+    { data: helperRecords, error: helpersErr },
+    { data: woMechanicProfiles, error: woMechErr },
+    { data: mechProfiles, error: mechErr },
   ] = await Promise.all([
     // 2a. Helper records (needs activeWoIds)
     activeWoIds.length > 0
@@ -166,6 +170,9 @@ async function fetchBayViewData(
           .order("full_name")
       : Promise.resolve({ data: [] }),
   ]);
+  if (helpersErr) capture(helpersErr, { context: "[bay-view-service] fetchBayViewData" });
+  if (woMechErr) capture(woMechErr, { context: "[bay-view-service] fetchBayViewData" });
+  if (mechErr) capture(mechErr, { context: "[bay-view-service] fetchBayViewData" });
 
   // ── Assembly ──
   const helperMechanicIds = [
@@ -179,13 +186,14 @@ async function fetchBayViewData(
   const extraMechIds = allMechanicIds.filter(
     (id) => !mainMechanicIds.includes(id),
   );
-  const { data: extraProfiles } =
+  const { data: extraProfiles, error: extraErr } =
     extraMechIds.length > 0
       ? await db
           .from("profiles")
           .select("id, full_name, avatar_url")
           .in("id", extraMechIds)
-      : { data: [] };
+      : { data: [], error: null };
+  if (extraErr) capture(extraErr, { context: "[bay-view-service] fetchBayViewData" });
 
   // Build mechanic lookup map
   const mechanicMap = new Map<
@@ -318,7 +326,7 @@ export async function assignVehicleToBay(
       .eq("organization_id", orgId);
     return { error };
   };
-  const [{ data: conflict }, { error: assignError }] = await Promise.all([
+  const [{ data: conflict, error: conflictErr }, { error: assignError }] = await Promise.all([
     db
       .from("work_orders")
       .select("id")
@@ -328,17 +336,20 @@ export async function assignVehicleToBay(
       .is("deleted_at", null)
       .maybeSingle(),
     assignFn(),
-    db.from("work_order_helpers").delete().eq("work_order_id", workOrderId),
-    db.from("work_order_services").delete().eq("work_order_id", workOrderId),
-    db.from("work_order_parts").delete().eq("work_order_id", workOrderId),
+    db.from("work_order_helpers").delete().eq("work_order_id", workOrderId).catch((e) => capture(e, { context: "[bay-view-service] assignVehicleToBay" })),
+    db.from("work_order_services").delete().eq("work_order_id", workOrderId).catch((e) => capture(e, { context: "[bay-view-service] assignVehicleToBay" })),
+    db.from("work_order_parts").delete().eq("work_order_id", workOrderId).catch((e) => capture(e, { context: "[bay-view-service] assignVehicleToBay" })),
   ]);
+  if (conflictErr) capture(conflictErr, { context: "[bay-view-service] assignVehicleToBay" });
 
   if (conflict && conflict.id !== workOrderId) {
     throw new ValidationError(`Bay ${bayNumber} is already occupied`);
   }
 
-  if (assignError)
+  if (assignError) {
+    capture(assignError, { context: "[bay-view-service] assignVehicleToBay" });
     throw new Error(assignError.message ?? "Failed to assign vehicle to bay");
+  }
 
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
@@ -371,14 +382,18 @@ export async function swapBayNumbers(
       .eq("id", workOrderIdB)
       .eq("organization_id", orgId),
   ]);
-  if (errA || errB)
+  if (errA || errB) {
+    if (errA) capture(errA, { context: "[bay-view-service] swapBayNumbers" });
+    if (errB) capture(errB, { context: "[bay-view-service] swapBayNumbers" });
     throw new Error(errA?.message ?? errB?.message ?? "Failed to swap bays");
+  }
 
   // Clean up helpers for both work orders (non-critical — doesn't affect bay correctness)
   await db
     .from("work_order_helpers")
     .delete()
-    .in("work_order_id", [workOrderIdA, workOrderIdB]);
+    .in("work_order_id", [workOrderIdA, workOrderIdB])
+    .catch((e) => capture(e, { context: "[bay-view-service] swapBayNumbers" }));
 
   revalidateTag(cacheTags.workOrder(workOrderIdA), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderIdA), "max");
@@ -407,14 +422,16 @@ export async function removeVehicleFromBay(
     .eq("id", workOrderId)
     .eq("organization_id", orgId);
 
-  if (error)
+  if (error) {
+    capture(error, { context: "[bay-view-service] removeVehicleFromBay" });
     throw new Error(error.message ?? "Failed to remove vehicle from bay");
+  }
 
   // Clear helpers, services, and parts
   await Promise.all([
-    db.from("work_order_helpers").delete().eq("work_order_id", workOrderId),
-    db.from("work_order_services").delete().eq("work_order_id", workOrderId),
-    db.from("work_order_parts").delete().eq("work_order_id", workOrderId),
+    db.from("work_order_helpers").delete().eq("work_order_id", workOrderId).catch((e) => capture(e, { context: "[bay-view-service] removeVehicleFromBay" })),
+    db.from("work_order_services").delete().eq("work_order_id", workOrderId).catch((e) => capture(e, { context: "[bay-view-service] removeVehicleFromBay" })),
+    db.from("work_order_parts").delete().eq("work_order_id", workOrderId).catch((e) => capture(e, { context: "[bay-view-service] removeVehicleFromBay" })),
   ]);
 
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
@@ -439,14 +456,18 @@ export async function assignMechanicToWorkOrder(
     .eq("id", workOrderId)
     .eq("organization_id", orgId);
 
-  if (error) throw new Error(error.message ?? "Failed to assign mechanic");
+  if (error) {
+    capture(error, { context: "[bay-view-service] assignMechanicToWorkOrder" });
+    throw new Error(error.message ?? "Failed to assign mechanic");
+  }
 
   // If this mechanic was previously a helper on this WO, remove them from helpers
   await db
     .from("work_order_helpers")
     .delete()
     .eq("work_order_id", workOrderId)
-    .eq("mechanic_id", mechanicId);
+    .eq("mechanic_id", mechanicId)
+    .catch((e) => capture(e, { context: "[bay-view-service] assignMechanicToWorkOrder" }));
 
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
@@ -468,7 +489,10 @@ export async function unassignMechanicFromWorkOrder(
     .eq("id", workOrderId)
     .eq("organization_id", orgId);
 
-  if (error) throw new Error(error.message ?? "Failed to unassign mechanic");
+  if (error) {
+    capture(error, { context: "[bay-view-service] unassignMechanicFromWorkOrder" });
+    throw new Error(error.message ?? "Failed to unassign mechanic");
+  }
 
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
@@ -484,12 +508,13 @@ export async function assignHelperToWorkOrder(
   userId: string,
 ): Promise<void> {
   // Check if this mechanic is already a helper on this WO
-  const { data: existing } = await db
+  const { data: existing, error: existingErr } = await db
     .from("work_order_helpers")
     .select("id")
     .eq("work_order_id", workOrderId)
     .eq("mechanic_id", mechanicId)
     .maybeSingle();
+  if (existingErr) capture(existingErr, { context: "[bay-view-service] assignHelperToWorkOrder" });
 
   if (existing) {
     // Already assigned as helper — no-op
@@ -497,13 +522,14 @@ export async function assignHelperToWorkOrder(
   }
 
   // Don't add as helper if they're already the main mechanic
-  const { data: wo } = await db
+  const { data: wo, error: woErr } = await db
     .from("work_orders")
     .select("mechanic_id")
     .eq("id", workOrderId)
     .eq("organization_id", orgId)
     .is("deleted_at", null)
     .maybeSingle();
+  if (woErr) capture(woErr, { context: "[bay-view-service] assignHelperToWorkOrder" });
 
   if (wo?.mechanic_id === mechanicId) {
     return; // Already the main mechanic
@@ -516,8 +542,10 @@ export async function assignHelperToWorkOrder(
     created_by: userId,
   });
 
-  if (error)
+  if (error) {
+    capture(error, { context: "[bay-view-service] assignHelperToWorkOrder" });
     throw new Error(error.message ?? "Failed to assign helper mechanic");
+  }
 
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
@@ -538,8 +566,10 @@ export async function removeHelperFromWorkOrder(
     .eq("mechanic_id", mechanicId)
     .eq("organization_id", orgId);
 
-  if (error)
+  if (error) {
+    capture(error, { context: "[bay-view-service] removeHelperFromWorkOrder" });
     throw new Error(error.message ?? "Failed to remove helper mechanic");
+  }
 
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
@@ -560,7 +590,10 @@ export async function reorderWorkOrderHelpers(
     .eq("work_order_id", workOrderId)
     .eq("organization_id", orgId);
 
-  if (fetchErr) throw new Error(fetchErr.message ?? "Failed to fetch helpers");
+  if (fetchErr) {
+    capture(fetchErr, { context: "[bay-view-service] reorderWorkOrderHelpers" });
+    throw new Error(fetchErr.message ?? "Failed to fetch helpers");
+  }
 
   // Build a map of mechanic_id → row id
   const idByMechanic = new Map<string, string>();
@@ -577,7 +610,10 @@ export async function reorderWorkOrderHelpers(
       .update({ sort_order: i })
       .eq("id", rowId);
 
-    if (updErr) throw new Error(updErr.message ?? "Failed to reorder helper");
+    if (updErr) {
+      capture(updErr, { context: "[bay-view-service] reorderWorkOrderHelpers" });
+      throw new Error(updErr.message ?? "Failed to reorder helper");
+    }
   }
 
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
@@ -595,7 +631,8 @@ export async function clearHelpersFromWorkOrder(
     .from("work_order_helpers")
     .delete()
     .eq("work_order_id", workOrderId)
-    .eq("organization_id", orgId);
+    .eq("organization_id", orgId)
+    .catch((e) => capture(e, { context: "[bay-view-service] clearHelpersFromWorkOrder" }));
 
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
@@ -680,12 +717,13 @@ export async function updateBayCount(
     throw new ValidationError("Bay count must be between 1 and 50");
 
   // Get current branch settings
-  const { data: branch } = await db
+  const { data: branch, error: branchErr } = await db
     .from("branches")
     .select("id, settings")
     .eq("organization_id", orgId)
     .eq("is_main", true)
     .single();
+  if (branchErr) capture(branchErr, { context: "[bay-view-service] updateBayCount" });
 
   if (!branch) throw new NotFoundError("Main branch not found");
 
@@ -695,7 +733,7 @@ export async function updateBayCount(
 
   // If reducing bay count, unassign vehicles from removed bays
   if (count < oldCount) {
-    await db
+    const { error: unassignErr } = await db
       .from("work_orders")
       .update({
         bay_number: null,
@@ -706,6 +744,7 @@ export async function updateBayCount(
       .gt("bay_number", count)
       .not("status", "in", '("Completed","Cancelled")')
       .is("deleted_at", null);
+    if (unassignErr) capture(unassignErr, { context: "[bay-view-service] updateBayCount" });
   }
 
   const newSettings = { ...currentSettings, bay_count: count };
@@ -715,7 +754,10 @@ export async function updateBayCount(
     .update({ settings: newSettings, updated_at: new Date().toISOString() })
     .eq("id", branch.id);
 
-  if (error) throw new Error(error.message ?? "Failed to update bay count");
+  if (error) {
+    capture(error, { context: "[bay-view-service] updateBayCount" });
+    throw new Error(error.message ?? "Failed to update bay count");
+  }
 
   return count;
 }
@@ -730,12 +772,13 @@ export async function seedWaitingQueue(
   created: number;
   errors: string[];
 }> {
-  const { data: branch } = await db
+  const { data: branch, error: branchErr } = await db
     .from("branches")
     .select("id")
     .eq("organization_id", orgId)
     .eq("is_main", true)
     .maybeSingle();
+  if (branchErr) capture(branchErr, { context: "[bay-view-service] seedWaitingQueue" });
   if (!branch) throw new Error("Branch not found");
 
   const SEED_VEHICLES = [
@@ -862,19 +905,20 @@ export async function seedWaitingQueue(
     try {
       // Find or create customer
       let custId: string;
-      const { data: existingCust } = await db
+      const { data: existingCust, error: existingCustErr } = await db
         .from("customers")
         .select("id")
         .eq("organization_id", orgId)
         .eq("phone", v.phone)
         .is("deleted_at", null)
         .maybeSingle();
+      if (existingCustErr) capture(existingCustErr, { context: "[bay-view-service] seedWaitingQueue" });
 
       if (existingCust) {
         custId = existingCust.id;
       } else {
         const [first, ...rest] = v.owner.split(" ");
-        const { data: newCust } = await db
+        const { data: newCust, error: newCustErr } = await db
           .from("customers")
           .insert({
             organization_id: orgId,
@@ -888,23 +932,25 @@ export async function seedWaitingQueue(
           .select("id")
           .single();
         if (!newCust) throw new Error("customer insert returned no data");
+        if (newCustErr) capture(newCustErr, { context: "[bay-view-service] seedWaitingQueue" });
         custId = newCust.id;
       }
 
       // Find or create vehicle
       let vehId: string;
-      const { data: existingVeh } = await db
+      const { data: existingVeh, error: existingVehErr } = await db
         .from("vehicles")
         .select("id")
         .eq("organization_id", orgId)
         .eq("plate_number", v.plate)
         .is("deleted_at", null)
         .maybeSingle();
+      if (existingVehErr) capture(existingVehErr, { context: "[bay-view-service] seedWaitingQueue" });
 
       if (existingVeh) {
         vehId = existingVeh.id;
       } else {
-        const { data: newVeh } = await db
+        const { data: newVeh, error: newVehErr } = await db
           .from("vehicles")
           .insert({
             organization_id: orgId,
@@ -920,6 +966,7 @@ export async function seedWaitingQueue(
           .select("id")
           .single();
         if (!newVeh) throw new Error("vehicle insert returned no data");
+        if (newVehErr) capture(newVehErr, { context: "[bay-view-service] seedWaitingQueue" });
         vehId = newVeh.id;
       }
 
@@ -948,25 +995,27 @@ export async function assignToFirstAvailableBay(
   workOrderId: string,
 ): Promise<number> {
   // Get current bay count
-  const { data: branch } = await db
+  const { data: branch, error: branchErr } = await db
     .from("branches")
     .select("settings")
     .eq("organization_id", orgId)
     .eq("is_main", true)
     .maybeSingle();
+  if (branchErr) capture(branchErr, { context: "[bay-view-service] assignToFirstAvailableBay" });
 
   const bayCount =
     ((branch?.settings as unknown as Record<string, unknown> | null)
       ?.bay_count as number) ?? 6;
 
   // Find occupied bays
-  const { data: active } = await db
+  const { data: active, error: activeErr } = await db
     .from("work_orders")
     .select("bay_number")
     .eq("organization_id", orgId)
     .not("status", "in", '("Completed","Cancelled")')
     .is("deleted_at", null)
     .not("bay_number", "is", null);
+  if (activeErr) capture(activeErr, { context: "[bay-view-service] assignToFirstAvailableBay" });
 
   const occupied = new Set((active ?? []).map((w) => w.bay_number));
 
@@ -994,14 +1043,15 @@ export async function assignToFirstAvailableBay(
     .eq("organization_id", orgId);
 
   if (error) {
+    capture(error, { context: "[bay-view-service] assignToFirstAvailableBay" });
     throw new Error(error.message ?? "Failed to assign vehicle to bay");
   }
 
   // Clear old services and parts
   await Promise.all([
-    db.from("work_order_services").delete().eq("work_order_id", workOrderId),
-    db.from("work_order_parts").delete().eq("work_order_id", workOrderId),
-    db.from("work_order_helpers").delete().eq("work_order_id", workOrderId),
+    db.from("work_order_services").delete().eq("work_order_id", workOrderId).catch((e) => capture(e, { context: "[bay-view-service] assignToFirstAvailableBay" })),
+    db.from("work_order_parts").delete().eq("work_order_id", workOrderId).catch((e) => capture(e, { context: "[bay-view-service] assignToFirstAvailableBay" })),
+    db.from("work_order_helpers").delete().eq("work_order_id", workOrderId).catch((e) => capture(e, { context: "[bay-view-service] assignToFirstAvailableBay" })),
   ]);
 
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
@@ -1028,6 +1078,7 @@ export async function reorderQueue(
         .eq("organization_id", orgId);
 
       if (error) {
+        capture(error, { context: "[bay-view-service] reorderQueue" });
         throw new Error(error.message ?? "Failed to reorder queue");
       }
     }),
@@ -1051,7 +1102,8 @@ export async function getShiftReport(
   } else {
     branchQuery.eq("is_main", true);
   }
-  const { data: branch } = await branchQuery.maybeSingle();
+  const { data: branch, error: branchErr } = await branchQuery.maybeSingle();
+  if (branchErr) capture(branchErr, { context: "[bay-view-service] getShiftReport" });
 
   const bayCount =
     ((branch?.settings as unknown as Record<string, unknown> | null)
@@ -1061,7 +1113,7 @@ export async function getShiftReport(
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
-  const [{ data: completed }, { data: active }, { count: inBayCount }] =
+  const [{ data: completed, error: completedErr }, { data: active, error: activeErr }, { count: inBayCount, error: inBayErr }] =
     await Promise.all([
       // Completed jobs today — fetch totals + timestamps for revenue & duration
       withBranchFilter(
@@ -1096,6 +1148,9 @@ export async function getShiftReport(
         branchId,
       ),
     ]);
+  if (completedErr) capture(completedErr, { context: "[bay-view-service] getShiftReport" });
+  if (activeErr) capture(activeErr, { context: "[bay-view-service] getShiftReport" });
+  if (inBayErr) capture(inBayErr, { context: "[bay-view-service] getShiftReport" });
 
   const completedToday = completed?.length ?? 0;
   const revenueToday =
@@ -1169,10 +1224,11 @@ export async function updateBayViewPin(
   }
 
   // Verify current PIN first
-  const { data: verified } = await db.rpc("verify_organization_bay_view_pin", {
+  const { data: verified, error: verifyErr } = await db.rpc("verify_organization_bay_view_pin", {
     target_org_id: orgId,
     plain_pin: currentPin,
   });
+  if (verifyErr) capture(verifyErr, { context: "[bay-view-service] updateBayViewPin" });
 
   if (!verified) {
     throw new ValidationError("Current PIN is incorrect");
@@ -1185,6 +1241,7 @@ export async function updateBayViewPin(
   });
 
   if (error) {
+    capture(error, { context: "[bay-view-service] updateBayViewPin" });
     throw new ValidationError(error.message);
   }
 }

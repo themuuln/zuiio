@@ -5,10 +5,13 @@
  * Use this instead of bare console.error() for unexpected failures
  * so errors are both logged via structured logger AND sent to Sentry.
  *
+ * Routes through @zuiio/capture which dispatches to the registered telemetry
+ * handler (Sentry) and always logs to console.error.
+ *
  * For expected errors (validation, not-found), just throw the appropriate
  * AppError and let api-handler.ts handle it.
  */
-import * as Sentry from "@sentry/nextjs";
+import { capture } from "@zuiio/capture";
 import { logger } from "@/lib/logger";
 
 export function reportServerError(
@@ -16,22 +19,16 @@ export function reportServerError(
   error?: unknown,
   context?: Record<string, unknown>,
 ) {
-  // Local visibility via pino
+  // Local visibility via pino (structured logging)
   if (error) {
     logger.error({ err: error, ...context }, message);
   } else {
     logger.error(context ?? {}, message);
   }
 
-  // Sentry
-  Sentry.withScope((scope) => {
-    scope.setTag("source", "server");
-    if (context) scope.setExtras(context);
-    if (error instanceof Error) {
-      scope.setExtras({ originalMessage: error.message });
-      Sentry.captureException(error);
-    } else {
-      Sentry.captureMessage(message, "error");
-    }
+  // Route through @zuiio/capture to telemetry handler (Sentry)
+  capture(error ?? new Error(message), {
+    context: `[server] ${message}`,
+    ...context,
   });
 }

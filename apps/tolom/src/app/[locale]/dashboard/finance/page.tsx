@@ -60,7 +60,8 @@ function formatInvoiceDate(iso: string): string {
   }
 }
 
-import { useFuzzySearch, useTableFilters } from "@zuiio/hooks";
+import { useFuzzySearch } from "@zuiio/hooks";
+import { useTableFilters } from "@/lib/hooks/use-table-filters";
 import type { ExportColumn } from "@/lib/export";
 import { Link } from "@/lib/i18n/navigation";
 import { useBranches } from "@/lib/queries/use-branches";

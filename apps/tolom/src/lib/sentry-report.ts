@@ -3,22 +3,14 @@
  *
  * Every error.tsx / global-error.tsx should call this instead of console.error()
  * so that errors are both logged locally AND sent to Sentry.
+ *
+ * Routes through @zuiio/capture which dispatches to the registered telemetry
+ * handler (Sentry) and always logs to console.error.
  */
-import * as Sentry from "@sentry/nextjs";
+import { capture } from "@zuiio/capture";
 
 export function reportError(error: unknown, boundary?: string) {
-  const err = error instanceof Error ? error : new Error(String(error));
-
-  // Local visibility (devtools / server logs)
-  console.error(boundary ? `[${boundary}]` : "Error:", err);
-
-  // Sentry — guard against SDK not being fully initialized
-  try {
-    Sentry.captureException(err, {
-      tags: { source: "error-boundary" },
-      ...(boundary && { extra: { boundary } }),
-    });
-  } catch {
-    // Sentry SDK may not be ready yet — avoid error-in-error
-  }
+  capture(error, {
+    context: boundary ? `[error-boundary] ${boundary}` : "error-boundary",
+  });
 }

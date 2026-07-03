@@ -57,18 +57,20 @@ export function useBayViewMutations(params: BayViewMutationsParams) {
     t,
     paymentMethodFees,
     transferBanks,
-    dialogs: {
-      detailWoId,
-      setDetailDrawerOpen,
-      setDetailWoId,
-      setDrawerInitialAction,
-      setEmptyBayBayNumber,
-      emptyBayBayNumber,
-      directAssignBayNumber,
-      setDirectAssignBayNumber,
-    },
     pending: pendingState,
   } = params;
+
+  const {
+    detailWoId,
+    setDetailWoId,
+    setDrawerInitialAction,
+    openDetail,
+    closeDetail,
+    setEmptyBayBayNumber,
+    emptyBayBayNumber,
+    directAssignBayNumber,
+    setDirectAssignBayNumber,
+  } = params.dialogs;
 
   // ── Mutation hooks ────────────────────────────────────────────
   const updateStatusMutation = useUpdateBayViewStatus(branchFilter);
@@ -236,35 +238,23 @@ export function useBayViewMutations(params: BayViewMutationsParams) {
       pendingState.clearPending();
 
       if (detailWoId === p.woId) {
-        setDetailDrawerOpen(false);
-        setDetailWoId(null);
-        setDrawerInitialAction(null);
+        closeDetail();
         const params = new URLSearchParams(window.location.search);
         params.delete("woId");
         window.history.replaceState(null, "", `?${params.toString()}`);
       }
     },
-    [
-      pendingState,
-      updateStatusMutation,
-      detailWoId,
-      setDetailDrawerOpen,
-      setDetailWoId,
-      setDrawerInitialAction,
-    ],
+    [pendingState, updateStatusMutation, detailWoId, closeDetail],
   );
-
   // ── Detail drawer ────────────────────────────────────────────
   const handleOpenDetail = useCallback(
     (woId: string, initialAction?: "add-service" | "add-part") => {
-      setDetailWoId(woId);
-      setDrawerInitialAction(initialAction ?? null);
-      setDetailDrawerOpen(true);
+      openDetail(woId, initialAction);
       const params = new URLSearchParams(window.location.search);
       params.set("woId", woId);
       window.history.replaceState(null, "", `?${params.toString()}`);
     },
-    [setDetailWoId, setDrawerInitialAction, setDetailDrawerOpen],
+    [openDetail],
   );
 
   const handleRemoveFromBay = useCallback(
@@ -277,13 +267,12 @@ export function useBayViewMutations(params: BayViewMutationsParams) {
   const handleQueueItemClick = useCallback(
     (wo: WorkOrder & { vehicle: Vehicle | null }) => {
       const id = wo.id;
-      setDetailWoId(id);
-      setDetailDrawerOpen(true);
+      openDetail(id);
       const params = new URLSearchParams(window.location.search);
       params.set("woId", id);
       window.history.replaceState(null, "", `?${params.toString()}`);
     },
-    [setDetailWoId, setDetailDrawerOpen],
+    [openDetail],
   );
 
   // ── Empty bay ────────────────────────────────────────────────

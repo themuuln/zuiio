@@ -7,3 +7,5 @@ export {
 export type { CaptureContext } from "./capture";
 
 export { withDbCapture } from "./query";
+
+export { withSupabaseConsoleCapture } from "./fetch";

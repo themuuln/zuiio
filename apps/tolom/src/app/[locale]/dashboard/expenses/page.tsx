@@ -1,6 +1,6 @@
 "use client";
 
-import { useTableFilters } from "@zuiio/hooks";
+import { useTableFilters } from "@/lib/hooks/use-table-filters";
 import {
   AlertCircle,
   Clock,

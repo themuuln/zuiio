@@ -14,6 +14,7 @@ import {
   requireRole,
 } from "@/lib/supabase/role-guard";
 import { createClient } from "@/lib/supabase/server";
+import { capture } from "@zuiio/capture";
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -167,6 +168,14 @@ export function createRouteHandler(
         },
         "API request failed",
       );
+      if (status >= 500) {
+        capture(error, {
+          context: `[api] ${request.method} ${request.nextUrl.pathname}`,
+          method: request.method,
+          path: request.nextUrl.pathname,
+          status,
+        });
+      }
       const authHeaders = new Headers(headers);
       if (status === 401) {
         authHeaders.set("X-Auth-Required", "true");
@@ -236,6 +245,15 @@ export function createSimpleRouteHandler(handler: SimpleRouteHandler) {
         },
         "Simple API request failed",
       );
+      if (status >= 500) {
+        capture(error, {
+          context: `[api] ${request.method} ${request.nextUrl.pathname}`,
+          method: request.method,
+          path: request.nextUrl.pathname,
+          status,
+          orgId: undefined,
+        });
+      }
       const authHeaders = new Headers(headers);
       if (status === 401) {
         authHeaders.set("X-Auth-Required", "true");

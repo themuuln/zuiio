@@ -54,21 +54,7 @@ export function useBayViewData(
   }, []);
 
   // ── Polling pause: pause background refetch when any surface is open ──
-  const anySurfaceOpen = useMemo(
-    () =>
-      Object.values(dialogs.open).some(Boolean) ||
-      pending.pending !== null ||
-      detailDrawerOpen ||
-      emptyBayBayNumber !== null ||
-      directAssignBayNumber !== null,
-    [
-      dialogs.open,
-      pending.pending,
-      detailDrawerOpen,
-      emptyBayBayNumber,
-      directAssignBayNumber,
-    ],
-  );
+  const anySurfaceOpen = dialogs.anyOpen;
 
   // ── Profile ──────────────────────────────────────────────────
   const { data: profileData } = useProfile();
