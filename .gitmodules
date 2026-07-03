@@ -1,0 +1,45 @@
+[submodule "apps/tamga-web"]
+	path = apps/tamga-web
+	url = https://github.com/themuuln/tamga-web.git
+[submodule "apps/khosuud"]
+	path = apps/khosuud
+	url = https://github.com/themuuln/khosuud.git
+[submodule "apps/tamga"]
+	path = apps/tamga
+	url = https://github.com/themuuln/tamga.git
+[submodule "apps/card"]
+	path = apps/card
+	url = https://github.com/themuuln/card.git
+[submodule "apps/zer-packages"]
+	path = apps/zer-packages
+	url = https://github.com/themuuln/zer-packages.git
+[submodule "apps/zatly"]
+	path = apps/zatly
+	url = https://github.com/themuuln/zatly
+[submodule "apps/tumurch"]
+	path = apps/tumurch
+	url = https://github.com/themuuln/tumurch-app
+[submodule "apps/zer-app"]
+	path = apps/zer-app
+	url = https://github.com/themuuln/zer-app.git
+[submodule "apps/zerbu"]
+	path = apps/zerbu
+	url = https://github.com/themuuln/zerbu.git
+[submodule "apps/zoa"]
+	path = apps/zoa
+	url = https://github.com/themuuln/zoa.git
+[submodule "apps/zraf-web"]
+	path = apps/zraf-web
+	url = https://github.com/themuuln/zraf-web.git
+[submodule "apps/zill"]
+	path = apps/zill
+	url = https://github.com/themuuln/zill.git
+[submodule "apps/side"]
+	path = apps/side
+	url = https://github.com/themuuln/side.git
+[submodule "apps/zraf"]
+	path = apps/zraf
+	url = https://github.com/themuuln/zraf.git
+[submodule "apps/zunch"]
+	path = apps/zunch
+	url = https://github.com/themuuln/zunch.git
