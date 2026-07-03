@@ -27,6 +27,7 @@ customers/
 ## Key Components
 
 ### List Page (`page.tsx`)
+
 - `ToggleGroup` switch: "My Customers" vs "Shared" (cross-org) view
 - `ListPageShell` / `ListToolbar` with search, inactive filter chip, export
 - `DataTable` (20 rows) with mobile card rendering
@@ -35,6 +36,7 @@ customers/
 - Right sidebar tabs: stats overview (total, new this month) + recent customers
 
 ### Columns (`_columns.tsx`)
+
 - **My columns:** name (with icon), contact (phone/email), vehicles (badge), visits, last visit (relative), chevron
 - **Shared columns:** same as my, plus `organization_name` badge with Globe icon
 - `CustomerRow` extends `Customer` with `vehicle_count` and `organization_name`
@@ -42,6 +44,7 @@ customers/
 - Relative date formatting: today, yesterday, X days ago, X weeks ago, then absolute date
 
 ### Customer Edit Form (`[id]/_customer-edit-form.tsx`)
+
 - Toggle between `individual` and `company` type
 - **Individual:** firstName, lastName, phone (Mongolian formatted), email, address, notes
 - **Company:** companyName, contactPerson, phone, email, address, notes
@@ -49,9 +52,11 @@ customers/
 - Reused by both create dialog and detail edit dialog
 
 ### New Customer (`new/page.tsx`)
+
 - Simple redirect: `useEffect(() => replace("/dashboard/customers?new=1"))` — triggers the new customer dialog in the page header
 
 ### Import Page (`import/page.tsx`)
+
 - CSV upload with drag-and-drop zone
 - Template download button (pre-filled sample CSV)
 - Preview step: shows first 5 rows in a table, total row count
@@ -64,6 +69,7 @@ customers/
 ## Data Flow
 
 ### API Endpoints
+
 | Endpoint | Methods | Purpose |
 |----------|---------|---------|
 | `/api/organizations/[id]/customers` | GET, POST | List/create customers |
@@ -76,12 +82,14 @@ customers/
 | `/api/organizations/[id]/customers/[customerId]/communications` | GET, POST | Communication log |
 
 ### React Query Hooks
+
 - `useCustomers(orgId, search, branchFilter)` — list with search and branch filtering
 - `useSharedCustomers(orgId, search)` — cross-org customer list
 - `useCreateCustomer(orgId)` — create mutation
 - `useCustomerDuplicateCheck(orgId, phone?, email?)` — duplicate detection
 
 ### Types
+
 - `CustomerWithVehicleCount` — extends `Customer` with `vehicle_count`, `total_visits`, `last_visit_at`, `organization_name`
 - `CustomerRow` — defined in `_columns.tsx`, adds `vehicle_count` and `organization_name` to `Customer`
 
@@ -91,7 +99,6 @@ customers/
 - **Branch filter:** `useSelectedBranchId()` from UI store
 - **Inactive filter:** Local `useState(false)` — client-side filtering on `last_visit_at`
 - **Page header:** `usePageHeader()` provides `setNewCustomerDialogOpen()` and `setDetailCustomerId()`
-- **Right sidebar:** Registers stats and recent tabs via `useRightSidebar().registerTab()`
 - **No Zustand store** — customer list state is managed by React Query
 
 ## Conventions

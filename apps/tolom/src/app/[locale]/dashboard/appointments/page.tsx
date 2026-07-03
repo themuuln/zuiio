@@ -28,7 +28,7 @@ import { appointmentKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId } from "@/lib/stores";
 import type { Appointment, AppointmentStatus } from "@/lib/types";
-import { AppointmentCreateSheet } from "@/components/appointments/create-sheet";
+import { AppointmentCreateSheet } from "@/components/appointments/create-drawer";
 
 // ── Status helpers ────────────────────────────────────────────
 

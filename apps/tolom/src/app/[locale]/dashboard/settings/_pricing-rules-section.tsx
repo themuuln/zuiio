@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -677,11 +678,10 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
 
             <div className="flex flex-col gap-2">
               <Label>{t("value")}</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={form.value}
-                onChange={(e) => setForm({ ...form, value: e.target.value })}
+              <NumericInput
+                step={0.01}
+                value={Number(form.value) || 0}
+                onChange={(v) => setForm({ ...form, value: v.toString() })}
                 placeholder={
                   form.operator === "multiply"
                     ? "1.25"
@@ -701,10 +701,9 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
 
             <div className="flex flex-col gap-2">
               <Label>{t("priorityLabel")}</Label>
-              <Input
-                type="number"
-                value={form.priority}
-                onChange={(e) => setForm({ ...form, priority: e.target.value })}
+              <NumericInput
+                value={Number(form.priority) || 0}
+                onChange={(v) => setForm({ ...form, priority: v.toString() })}
                 placeholder="100"
               />
               <Typography.Muted className="text-[11px] text-muted-foreground">

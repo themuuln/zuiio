@@ -8,7 +8,7 @@
 services/
 ├── page.tsx               # Service catalog list page
 ├── _columns.tsx           # DataTable column definitions
-├── _edit-service-sheet.tsx # Side panel form for editing a service
+├── _edit-service-drawer.tsx # Side panel form for editing a service
 ├── loading.tsx            # Loading skeleton
 └── error.tsx              # Error boundary
 ```
@@ -19,7 +19,7 @@ services/
 - **createColumns** (`_columns.tsx`) — Factory function for `ColumnDef<ServiceCatalog>[]`. Columns: name (locale-aware bilingual display), category badge, default price (MNT formatted), last-used price (amber highlight), model-specific prices button (with count badge), edit/delete actions.
 - **EditServiceSheet** — `DetailSheet` side panel with fields: name, name_mn (Mongolian), default_price (MNT), category (combobox with create-new option), description. Optimistic update on save.
 - **ServiceForm** — Used for inline add within the page (imported from `@/components/services/service-form`).
-- **ServiceModelPricesSheet** — Sheet for managing per-vehicle-model pricing overrides (imported from `@/components/services/service-model-prices-sheet`).
+- **ServiceModelPricesSheet** — Drawer for managing per-vehicle-model pricing overrides (imported from `@/components/services/service-model-prices-drawer`).
 
 ## Columns Detail
 
@@ -53,14 +53,13 @@ services/
 - Client component (`"use client"`)
 - Optimistic mutations with rollback on error
 - Client-side category + search filtering (no server-side pagination)
-- Sidebar registers "categories" (StatusSummary) and "popular" (RecentList) tabs
 - Export with MNT currency formatting
 - Bilingual name display: locale-aware primary + secondary name
 
 ## Dependencies
 
 - `@/components/services/service-form` — Service creation form (used in inline add mode)
-- `@/components/services/service-model-prices-sheet` — Model-specific pricing management
+- `@/components/services/service-model-prices-drawer` — Model-specific pricing management
 - `@/lib/queries/use-price-memory` — Last-used price tracking
 - `@/lib/queries/use-service-vehicle-models` — Model price counts
 - `@/lib/queries/keys` — `serviceKeys` query key factory

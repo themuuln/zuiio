@@ -41,6 +41,7 @@
     "@zuiio/export": "workspace:*",
     "@zuiio/hooks": "workspace:*",
     "@zuiio/hr": "workspace:*",
+    "@zuiio/ai-agent": "workspace:*",
     "@zuiio/query": "workspace:*",
     "@zuiio/realtime": "workspace:*",
     "@yudiel/react-qr-scanner": "^2.6.0",

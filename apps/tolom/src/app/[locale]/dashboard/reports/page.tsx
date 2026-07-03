@@ -12,7 +12,6 @@ import {
   Calendar,
   CheckCircle2,
   ClipboardList,
-  GitBranch,
   type LucideIcon,
   RefreshCw,
   TrendingUp,
@@ -38,7 +37,6 @@ import {
   ServiceBreakdownChart,
   TargetCard,
 } from "@/components/reports";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -60,10 +58,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Typography } from "@/components/ui/typography";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { useSelectedBranchGuard } from "@/hooks/use-selected-branch-guard";
 import type { ExportColumn } from "@/lib/export";
-import { useBranchComparison } from "@/lib/queries/use-branch-comparison";
 import { useBranches } from "@/lib/queries/use-branches";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import {
@@ -84,7 +80,9 @@ import type {
   ReportProfitability,
 } from "@/lib/types";
 import { formatCurrency, hasMultipleBranches } from "@/lib/utils";
-import { BranchComparisonView } from "./_branch-comparison-view";
+import { EodView } from "./_eod-view";
+import type { ReportType, ReportData } from "./_helpers";
+import { periodTitle, getDateRange } from "./_helpers";
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -506,12 +504,6 @@ export default function ReportsPage() {
     !isEod,
     branchFilter,
   );
-  const branchComparisonQ = useBranchComparison(
-    orgId,
-    dateFrom,
-    dateTo,
-    reportType === "comparison",
-  );
 
   const loading = reportQ.isLoading;
   const erpLoading = insightsQ.isLoading;
@@ -519,40 +511,8 @@ export default function ReportsPage() {
   const eodReport = reportQ.data as EodReport | null;
 
   // ── Sidebar ──────────────────────────────────────────
-  const { registerTab } = useRightSidebar();
 
   // ── Sidebar ──────────────────────────────────────────
-  useEffect(() => {
-    registerTab(
-      "help",
-      t("help"),
-      <div className="flex flex-col gap-1.5">
-        <Typography.Muted className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
-          {t("title")}
-        </Typography.Muted>
-        {(["daily", "weekly", "monthly", "eodSummary"] as const).map((key) => (
-          <div
-            key={key}
-            className="rounded-md border border-border/50 bg-card px-2.5 py-2"
-          >
-            <Typography.Text className="text-xs font-medium">
-              {t(key)}
-            </Typography.Text>
-          </div>
-        ))}
-      </div>,
-    );
-    registerTab(
-      "recent",
-      t("recent"),
-      <RecentList
-        items={[]}
-        title={t("recentlyViewed")}
-        emptyMessage={t("generatedOnDemand")}
-      />,
-    );
-  }, [t, registerTab]);
-
   // ── Derived data ─────────────────────────────────────
   const r = report;
   const mechExportCols: ExportColumn<ReportMechanicKpi>[] = [
@@ -620,15 +580,6 @@ export default function ReportsPage() {
     { label: t("monthly"), value: "monthly", icon: TrendingUp },
     { label: t("customRange"), value: "custom", icon: Calendar },
     { label: t("eodSummary"), value: "eod", icon: ClipboardList },
-    ...(hasMultipleBranches(branches)
-      ? [
-          {
-            label: t("branchComparison"),
-            value: "comparison" as ReportType,
-            icon: GitBranch,
-          },
-        ]
-      : []),
   ];
 
   const handleTabKeyDown = (
@@ -865,20 +816,6 @@ export default function ReportsPage() {
           aria-labelledby="reports-tab-eod"
         >
           <EodView data={eodReport} t={t} />
-        </div>
-      )}
-
-      {/* ═══ BRANCH COMPARISON ════════════════════════════ */}
-      {!loading && reportType === "comparison" && (
-        <div
-          id="reports-panel-comparison"
-          role="tabpanel"
-          aria-labelledby="reports-tab-comparison"
-        >
-          <BranchComparisonView
-            data={branchComparisonQ.data ?? null}
-            loading={branchComparisonQ.isLoading}
-          />
         </div>
       )}
 

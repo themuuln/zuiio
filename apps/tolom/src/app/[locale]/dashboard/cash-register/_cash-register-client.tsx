@@ -23,6 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -347,13 +348,13 @@ function OpenSessionDialog({
   branchId: string | null;
 }) {
   const t = useTranslations();
-  const [balance, setBalance] = useState("");
+  const [balance, setBalance] = useState(0);
   const openSession = useOpenSession(orgId);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      const amount = Number(balance);
+      const amount = balance;
       if (Number.isNaN(amount) || amount < 0) return;
 
       await openSession.mutateAsync(
@@ -361,7 +362,7 @@ function OpenSessionDialog({
         {
           onSuccess: () => {
             onOpenChange(false);
-            setBalance("");
+            setBalance(0);
           },
         },
       );
@@ -380,15 +381,13 @@ function OpenSessionDialog({
             <Label htmlFor="opening-balance">
               {t("cashRegister.openingBalance")}
             </Label>
-            <Input
-              id="opening-balance"
-              type="number"
-              min="0"
-              step="100"
+            <CurrencyInput
               value={balance}
-              onChange={(e) => setBalance(e.target.value)}
-              placeholder="0"
-              autoFocus
+              onChange={setBalance}
+              min={0}
+              placeholder="₮ 0"
+              showPrefix={false}
+              aria-label={t("cashRegister.openingBalance")}
             />
             <Typography.Muted className="text-xs">
               Count the cash in the drawer and enter the amount.
@@ -396,7 +395,7 @@ function OpenSessionDialog({
           </div>
           <Button
             type="submit"
-            disabled={openSession.isPending || balance === ""}
+            disabled={openSession.isPending || balance === 0}
           >
             {openSession.isPending ? (
               <Loader2 className="mr-1.5 size-3.5 animate-spin" />
@@ -427,11 +426,11 @@ function CloseSessionDialog({
   session: NonNullable<ReturnType<typeof useCurrentSession>["data"]>;
 }) {
   const t = useTranslations();
-  const [balance, setBalance] = useState("");
+  const [balance, setBalance] = useState(0);
   const [note, setNote] = useState("");
   const closeSession = useCloseSession(orgId);
 
-  const closingAmount = Number(balance) || 0;
+  const closingAmount = balance;
   const expectedBalance =
     session.expected_balance ??
     session.opening_balance + session.cash_in - session.cash_out;
@@ -452,7 +451,7 @@ function CloseSessionDialog({
         {
           onSuccess: () => {
             onOpenChange(false);
-            setBalance("");
+            setBalance(0);
             setNote("");
           },
         },
@@ -508,15 +507,13 @@ function CloseSessionDialog({
             <Label htmlFor="closing-balance">
               {t("cashRegister.closingBalance")}
             </Label>
-            <Input
-              id="closing-balance"
-              type="number"
-              min="0"
-              step="100"
+            <CurrencyInput
               value={balance}
-              onChange={(e) => setBalance(e.target.value)}
-              placeholder="0"
-              autoFocus
+              onChange={setBalance}
+              min={0}
+              placeholder="₮ 0"
+              showPrefix={false}
+              aria-label={t("cashRegister.closingBalance")}
             />
             <Typography.Muted className="text-xs">
               Count the cash in the drawer and enter the actual amount.
@@ -573,7 +570,7 @@ function CloseSessionDialog({
           </div>
           <Button
             type="submit"
-            disabled={closeSession.isPending || balance === ""}
+            disabled={closeSession.isPending || balance === 0}
           >
             {closeSession.isPending ? (
               <Loader2 className="mr-1.5 size-3.5 animate-spin" />
@@ -604,14 +601,14 @@ function CashOutDialog({
   sessionId: string;
 }) {
   const t = useTranslations();
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(0);
   const [description, setDescription] = useState("");
   const cashOut = useCashOut(orgId);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      const amt = Number(amount);
+      const amt = amount;
       if (Number.isNaN(amt) || amt <= 0 || !description.trim()) return;
 
       await cashOut.mutateAsync(
@@ -619,7 +616,7 @@ function CashOutDialog({
         {
           onSuccess: () => {
             onOpenChange(false);
-            setAmount("");
+            setAmount(0);
             setDescription("");
           },
         },
@@ -639,15 +636,13 @@ function CashOutDialog({
             <Label htmlFor="cashout-amount">
               {t("cashRegister.cashOutAmount")}
             </Label>
-            <Input
-              id="cashout-amount"
-              type="number"
-              min="1"
-              step="100"
+            <CurrencyInput
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0"
-              autoFocus
+              onChange={setAmount}
+              min={1}
+              placeholder="₮ 0"
+              showPrefix={false}
+              aria-label={t("cashRegister.cashOutAmount")}
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -663,7 +658,7 @@ function CashOutDialog({
           </div>
           <Button
             type="submit"
-            disabled={cashOut.isPending || amount === "" || !description.trim()}
+            disabled={cashOut.isPending || amount <= 0 || !description.trim()}
           >
             {cashOut.isPending ? (
               <Loader2 className="mr-1.5 size-3.5 animate-spin" />

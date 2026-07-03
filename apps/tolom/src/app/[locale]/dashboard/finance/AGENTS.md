@@ -21,7 +21,7 @@ finance/
 
 | Component | Role |
 |-----------|------|
-| `FinancePage` | Main orchestrator. Manages tabs, date range, branch filter, search. Registers right sidebar tabs. |
+| `FinancePage` | Main orchestrator. Manages tabs, date range, branch filter, search. |
 | `TabBar` | 4-tab switcher: Overview, Transactions, Invoices, Expenses |
 | `KpiCard` | Generic metric card — `label`, `value`, `icon`, `subtitle`, `loading` |
 | `OverviewTab` | Renders KPIs (revenue, WOs, avg order, profit, margin), `AreaChart` revenue trend, `RevenueSplitBar`, `TopServicesTable` |
@@ -55,8 +55,6 @@ finance/
 - Branch filtering is gated behind `finance_separate_per_branch` org setting — only shows `BranchSelect` when enabled
 - All currency uses `formatCurrency()` (MNT)
 - Invoice status badges use color-coded `Badge` with dark mode variants
-- Sidebar gets two registered tabs: "Period Summary" and "Recent Transactions"
-- `useRightSidebar().registerTab()` pattern for populating sidebar with summary/recent data
 - Invoices and Expenses tabs fetch data inline (not via shared hooks in some cases)
 
 ## Dependencies
@@ -64,9 +62,7 @@ finance/
 - `@/components/branch-select` — branch filter dropdown
 - `@/components/export-button` — Excel export
 - `@/components/list-toolbar` — search + filter bar
-- `@/components/sidebar-tabs/recent-list`, `status-summary` — right sidebar content
 - `@/components/charts/area-chart` — revenue trend chart (Recharts)
 - `@/lib/queries/use-dashboard`, `use-expenses`, `use-organization`, `use-org-settings`, `use-branches`
 - `@/lib/hooks/use-url-filters`, `use-fuzzy-search` — table filtering/searching
-- `@/hooks/use-right-sidebar` — sidebar tab registration
 - `@/hooks/use-client-now` — SSR-safe current time

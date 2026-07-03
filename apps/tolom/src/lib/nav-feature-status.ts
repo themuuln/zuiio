@@ -1,6 +1,6 @@
 /**
  * Nav item status — small colored dots in the sidebar indicating
- * whether a feature is fully validated (green) or still being implemented (yellow).
+ * whether a feature is fully validated (green).
  */
 
 export type NavItemStatus = "validated" | "implementing";
@@ -8,42 +8,29 @@ export type NavItemStatus = "validated" | "implementing";
 const VALIDATED_HREFS = new Set([
   "/dashboard",
   "/dashboard/bay-view",
-  "/dashboard/mechanic",
-  "/dashboard/mechanic-performance",
-  "/dashboard/customers",
-  "/dashboard/vehicles",
-  "/dashboard/inventory",
-  "/dashboard/services",
   "/dashboard/work-orders",
+  "/dashboard/services",
+  "/dashboard/customers",
   "/dashboard/service-reminders",
-  "/dashboard/estimates",
-  "/dashboard/expenses",
-  "/dashboard/vehicle-models",
+  "/dashboard/inventory",
+  "/dashboard/finance",
+  "/dashboard/reports",
   "/dashboard/organization",
-  "/dashboard/organization/members",
-  "/dashboard/payroll",
   "/dashboard/settings",
-  "/guide",
-]);
-
-// Pages still being implemented (yellow dot)
-const _IMPLEMENTING_HREFS = new Set([
-  "/dashboard/cash-register",
-  "/dashboard/inventory/transfers",
 ]);
 
 /**
  * Returns the validation status for a nav item by its href.
+ * All sidebar items are validated.
  */
-export function getNavItemStatus(href: string): NavItemStatus {
-  return VALIDATED_HREFS.has(href) ? "validated" : "implementing";
+export function getNavItemStatus(_href: string): NavItemStatus {
+  return "validated";
 }
 
 /**
  * Tailwind class for the dot color based on status.
+ * Always green for sidebar-visible items.
  */
 export function getNavStatusDotClass(href: string): string {
-  return getNavItemStatus(href) === "validated"
-    ? "bg-green-500"
-    : "bg-amber-400";
+  return VALIDATED_HREFS.has(href) ? "bg-green-500" : "bg-amber-400";
 }

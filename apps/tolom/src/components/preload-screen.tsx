@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Progress } from "@/components/ui/progress";
-import { useOnlineStatus } from "@/lib/hooks/use-online-status";
+import { useOnlineStatus } from "@zuiio/hooks";
 import type { PreloadProgress } from "@/lib/offline/preload-engine";
 
 interface PreloadScreenProps {

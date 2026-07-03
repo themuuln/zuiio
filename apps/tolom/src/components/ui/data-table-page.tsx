@@ -1,11 +1,12 @@
 "use client";
 
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef, Table as TanStackTable } from "@tanstack/react-table";
 import type { ReactNode } from "react";
+import { useRef } from "react";
 import { ListPageShell } from "@/components/list-page-shell";
 import { ListToolbar } from "@/components/list-toolbar";
 import { Card, CardContent } from "@/components/ui/card";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTablePagination } from "@/components/ui/data-table";
 import {
   Empty,
   EmptyContent,
@@ -13,6 +14,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { cn } from "@/lib/utils";
 
 // ─── Types ─────────────────────────────────────────────────────
 
@@ -137,6 +139,8 @@ export function DataTablePage<TData, TValue>({
   className,
 }: DataTablePageProps<TData, TValue>) {
   const isFirstLoad = loading && data.length === 0;
+  const tableRef = useRef<TanStackTable<TData> | null>(null);
+  const paginationEnabled = pageSize === undefined || pageSize > 0;
 
   const resolvedEmptyState: ReactNode =
     emptyState ??
@@ -176,7 +180,7 @@ export function DataTablePage<TData, TValue>({
       {beforeTable}
 
       {!error && (
-        <Card className={cardClassName}>
+        <Card className={cn(cardClassName)}>
           <CardContent className="p-0">
             <DataTable
               columns={columns}
@@ -189,9 +193,21 @@ export function DataTablePage<TData, TValue>({
               showColumnVisibility={showColumnVisibility}
               enableRowSelection={enableRowSelection}
               emptyState={resolvedEmptyState}
+              insideCard
+              noPagination={paginationEnabled}
+              onTableReady={(t) => {
+                tableRef.current = t;
+              }}
             />
           </CardContent>
         </Card>
+      )}
+
+      {!error && tableRef.current && paginationEnabled && (
+        <DataTablePagination
+          table={tableRef.current}
+          showColumnVisibility={showColumnVisibility}
+        />
       )}
     </ListPageShell>
   );

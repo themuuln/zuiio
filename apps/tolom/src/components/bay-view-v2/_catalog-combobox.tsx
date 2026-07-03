@@ -62,6 +62,13 @@ const MATCH_COLORS: Record<PriceMatchQuality, string> = {
   fallback: "text-muted-foreground/30",
 };
 
+/** Match quality indicator dot colors. */
+const MATCH_DOT_COLORS: Record<PriceMatchQuality, string> = {
+  exact: "bg-green-500",
+  same_make: "bg-yellow-400",
+  fallback: "bg-muted-foreground/30",
+};
+
 /** Human-readable label for tooltip per match quality tier. */
 const MATCH_LABELS: Record<PriceMatchQuality, string> = {
   exact: "Exact vehicle match",
@@ -70,18 +77,46 @@ const MATCH_LABELS: Record<PriceMatchQuality, string> = {
 };
 
 /**
- * Renders a formatted price or "—" when price is null/undefined.
- * When match_quality is provided, the color reflects how relevant
- * the stored price is to the current vehicle.
+ * Renders the last price (from price memory) with match quality dot.
+ */
+function LastPriceDot({
+  matchQuality,
+}: {
+  matchQuality?: PriceMatchQuality | null;
+}) {
+  if (!matchQuality) return null;
+  return (
+    <span
+      title={MATCH_LABELS[matchQuality]}
+      className={cn(
+        "inline-block size-1.5 rounded-full shrink-0",
+        MATCH_DOT_COLORS[matchQuality],
+      )}
+    />
+  );
+}
+
+/**
+ * Renders formatted price or "—" when price is null/undefined.
+ * When both last_price and default_price exist and differ, shows both.
  */
 function PriceDisplay({
   price,
+  defaultPrice,
   matchQuality,
 }: {
   price: number | null | undefined;
+  defaultPrice?: number | null | undefined;
   matchQuality?: PriceMatchQuality | null;
 }) {
-  if (price == null || price <= 0) {
+  const showDefault =
+    defaultPrice != null &&
+    defaultPrice > 0 &&
+    price != null &&
+    price > 0 &&
+    defaultPrice !== price;
+
+  if ((price == null || price <= 0) && !showDefault) {
     return (
       <span className="shrink-0 tabular-nums font-medium text-muted-foreground/40">
         —&#x2009;₮
@@ -92,18 +127,22 @@ function PriceDisplay({
   const colorClass = matchQuality
     ? MATCH_COLORS[matchQuality]
     : "text-green-600 dark:text-green-400";
-
   const tooltip = matchQuality ? MATCH_LABELS[matchQuality] : undefined;
 
   return (
-    <span
-      title={tooltip}
-      className={cn(
-        "shrink-0 tabular-nums font-medium transition-colors",
-        colorClass,
+    <span className="flex items-center gap-1 shrink-0">
+      <span
+        title={tooltip}
+        className={cn("tabular-nums font-medium transition-colors", colorClass)}
+      >
+        {price != null && price > 0 ? formatMNT(price) : "—"}
+      </span>
+      {showDefault && (
+        <span className="tabular-nums text-[10px] text-muted-foreground/40 line-through">
+          {formatMNT(defaultPrice)}
+        </span>
       )}
-    >
-      {formatMNT(price)}
+      <LastPriceDot matchQuality={matchQuality} />
     </span>
   );
 }
@@ -248,6 +287,7 @@ function InlineCatalogResults<T extends CatalogItem>({
                   {/* Price */}
                   <PriceDisplay
                     price={item.last_price ?? item.default_price}
+                    defaultPrice={item.default_price}
                     matchQuality={item.match_quality}
                   />
                 </CommandItem>

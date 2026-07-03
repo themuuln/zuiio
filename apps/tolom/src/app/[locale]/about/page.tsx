@@ -75,7 +75,7 @@ export default function AboutPage() {
             </Card>
 
             <Card className="relative overflow-hidden">
-              <div className="absolute inset-0 -z-10 bg-gradient-to-br from-violet-500/10 to-background" />
+              <div className="absolute inset-0 -z-10 bg-gradient-to-br from-sky-500/10 to-background" />
               <CardHeader>
                 <Badge className="mb-2 w-fit" variant="secondary">
                   🔭

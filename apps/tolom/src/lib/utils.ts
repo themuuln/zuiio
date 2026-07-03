@@ -1,10 +1,9 @@
-// Re-exported from @zuiio/core — single shared implementation
 export {
   cn,
   formatCurrency,
   formatMNT,
-  getInitials,
   formatPlateNumber,
+  getInitials,
   stableStringify,
 } from "@zuiio/core";
 

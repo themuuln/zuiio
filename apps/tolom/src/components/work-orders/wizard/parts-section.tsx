@@ -1,10 +1,11 @@
 "use client";
 
-import { Check, Clock, Plus, Trash2 } from "lucide-react";
+import { Check, Clock, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { PartForm } from "@/components/inventory/part-form";
 import { SearchInput } from "@/components/search-input";
+import { PartLineRow } from "@/components/work-orders/line-items";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -13,8 +14,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { NumericKeypad } from "@/components/ui/numeric-keypad";
 import { Typography } from "@/components/ui/typography";
 import { formatCurrency } from "@/lib/utils";
 import { useWizardContext } from "./wizard-context";
@@ -244,84 +243,35 @@ export function PartsSection() {
           </Typography.Muted>
         ) : (
           <div className="border rounded-lg overflow-hidden">
-            <div className="flex flex-col gap-2">
-              {ctx.partLines.map((part, idx) => {
-                const pname = part.part_name.toLowerCase();
-                const vehiclePrice = ctx.vehiclePartPrices[pname];
-                const partLast = part.part_name
-                  ? (vehiclePrice ?? ctx.partHistory[pname])
-                  : undefined;
-                return (
-                  <div
-                    key={part.part_number || part.part_name || `wpart-${idx}`}
-                    className="flex flex-wrap items-center gap-2 p-3 hover:bg-muted/20"
-                  >
-                    <div className="flex-1 min-w-[140px]">
-                      <Input
-                        value={part.part_name}
-                        onChange={(e) =>
-                          ctx.updatePart(idx, "part_name", e.target.value)
-                        }
-                        className="h-11"
-                        placeholder={t("partName")}
-                        aria-label={t("partName")}
-                      />
-                      {partLast && (
-                        <Typography.Text
-                          className={`mt-1 text-[11px] ${part.unit_price <= partLast ? "text-green-600" : "text-amber-600"}`}
-                        >
-                          {part.unit_price <= partLast ? "✓ " : "↑ "}
-                          {t("lastSoldShort", {
-                            price: formatCurrency(partLast),
-                          })}
-                        </Typography.Text>
-                      )}
-                    </div>
-                    <NumericKeypad
-                      value={part.quantity}
-                      onChange={(val) =>
-                        ctx.updatePart(
-                          idx,
-                          "quantity",
-                          Math.max(1, Math.round(val)),
-                        )
-                      }
-                    >
-                      <Input
-                        value={part.quantity}
-                        className="w-16 h-11 text-center cursor-pointer"
-                        min={1}
-                        aria-label={t("quantity")}
-                      />
-                    </NumericKeypad>
-                    <NumericKeypad
-                      value={part.unit_price}
-                      onChange={(val) => ctx.updatePart(idx, "unit_price", val)}
-                    >
-                      <Input
-                        value={part.unit_price || ""}
-                        className="w-28 h-11 cursor-pointer"
-                        placeholder={t("unitPrice")}
-                        aria-label={t("unitPrice")}
-                      />
-                    </NumericKeypad>
-                    <span className="w-24 text-right text-sm font-semibold tabular-nums shrink-0">
-                      {formatCurrency(part.final_price)}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      onClick={() => ctx.removePart(idx)}
-                      data-slot="touch-target"
-                      className="min-w-[44px]"
-                      aria-label={t("remove")}
-                    >
-                      <Trash2 className="size-5 text-destructive" />
-                    </Button>
-                  </div>
-                );
-              })}
-            </div>
+            {ctx.partLines.map((part, idx) => {
+              const pname = part.part_name.toLowerCase();
+              const vehiclePrice = ctx.vehiclePartPrices[pname];
+              const partLast = part.part_name
+                ? (vehiclePrice ?? ctx.partHistory[pname])
+                : undefined;
+              return (
+                <PartLineRow
+                  key={part.part_number || part.part_name || `wpart-${idx}`}
+                  name={part.part_name}
+                  partNumber={part.part_number || undefined}
+                  quantity={part.quantity}
+                  unitPrice={part.unit_price}
+                  finalPrice={part.final_price}
+                  lastPrice={partLast}
+                  onNameChange={(name) =>
+                    ctx.updatePart(idx, "part_name", name)
+                  }
+                  onQuantityChange={(qty) =>
+                    ctx.updatePart(idx, "quantity", qty)
+                  }
+                  onPriceChange={(price) =>
+                    ctx.updatePart(idx, "unit_price", price)
+                  }
+                  onDelete={() => ctx.removePart(idx)}
+                  deleteLabel={t("remove")}
+                />
+              );
+            })}
           </div>
         )}
       </CardContent>

@@ -1,0 +1,53 @@
+# Deploy VitePress docs to GitLab Pages
+stages:
+  - build
+  - deploy
+
+variables:
+  NODE_VERSION: "20"
+
+build-docs:
+  stage: build
+  image: node:${NODE_VERSION}
+  before_script:
+    - |
+      if [ -f "website/package.json" ]; then
+        cd website && npm ci
+      else
+        npm ci
+      fi
+  script:
+    - |
+      if [ -f "website/package.json" ]; then
+        cd website && npm run docs:build && cd ..
+      else
+        npm run docs:build
+      fi
+  artifacts:
+    paths:
+      - website/docs/.vitepress/dist
+      - docs/.vitepress/dist
+    expire_in: 1 hour
+  rules:
+    - changes:
+        - docs/**/*
+        - website/docs/**/*
+      when: always
+
+pages:
+  stage: deploy
+  dependencies:
+    - build-docs
+  script:
+    - |
+      if [ -d "website/docs/.vitepress/dist" ]; then
+        mv website/docs/.vitepress/dist public
+      elif [ -d "docs/.vitepress/dist" ]; then
+        mv docs/.vitepress/dist public
+      fi
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: always

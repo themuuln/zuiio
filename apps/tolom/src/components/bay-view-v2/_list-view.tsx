@@ -46,7 +46,7 @@ export const ListView = React.memo(function ListView({
 
   return (
     <div className="p-4 overflow-y-auto w-full h-full">
-      <Card className="py-0 bg-card/75 backdrop-blur border-border/50 shadow-sm rounded-xl overflow-hidden">
+      <Card className="py-0 bg-card/75 backdrop-blur border-border/50 rounded-xl overflow-hidden">
         <Table className="text-xs">
           <TableHeader className="bg-muted/40 select-none">
             <TableRow className="hover:bg-transparent">
@@ -139,7 +139,7 @@ export const ListView = React.memo(function ListView({
                       {wo?.mechanic ? (
                         <Badge
                           variant="outline"
-                          className="bg-indigo-50 dark:bg-indigo-950/20 border-indigo-200/60 dark:border-indigo-800/40 font-medium py-1 px-2 text-xs rounded-full"
+                          className="bg-muted border-border/60 font-medium py-1 px-2 text-xs rounded-full"
                         >
                           {wo.mechanic.full_name}
                         </Badge>
@@ -168,7 +168,7 @@ export const ListView = React.memo(function ListView({
                           <Badge
                             key={h.id}
                             variant="outline"
-                            className="bg-amber-50 dark:bg-amber-950/20 border-amber-200/60 dark:border-amber-800/40 font-medium py-1 px-2 text-xs rounded-full"
+                            className="bg-muted border-border/60 font-medium py-1 px-2 text-xs rounded-full"
                           >
                             {h.full_name ?? "?"}
                           </Badge>

@@ -43,19 +43,11 @@ export function QuickActions({
       const separator = current ? "\n---\n" : "";
       const newNotes = `${current}${separator}${trimmed}`;
 
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${workOrderId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ notes: newNotes }),
-        },
+      const { updateWorkOrderNotes } = await import(
+        "@/lib/services/bay-view-service.actions"
       );
-      const json = await res.json();
-      if (json.error) {
-        toast.error(json.error.message ?? t("failedToSaveNote"));
-        return;
-      }
+      await updateWorkOrderNotes(workOrderId, newNotes);
+
       toast.dismiss();
       toast.success(t("noteAdded") ?? "Note added");
       setNoteText("");

@@ -8,9 +8,13 @@
     ".": "./src/index.ts"
   },
   "peerDependencies": {
-    "@tanstack/react-query": "^5",
-    "react": "^19",
+    "@tanstack/react-query": "^5.101.2",
+    "react": "^19.2.0",
     "sonner": "^2"
+  },
+  "dependencies": {
+    "@zuiio/hooks": "workspace:*",
+    "@zuiio/offline": "workspace:*"
   },
   "devDependencies": {
     "@testing-library/react": "^16",

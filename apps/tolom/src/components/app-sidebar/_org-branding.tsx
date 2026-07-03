@@ -5,7 +5,7 @@ import { Building2, Check, CirclePlus, Store } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
-import { QuickCreateBranchSheet } from "@/components/branches/quick-create-branch-sheet";
+import { QuickCreateBranchSheet } from "@/components/branches/quick-create-branch-drawer";
 import {
   DropdownMenu,
   DropdownMenuContent,

@@ -11,16 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
+import { useState } from "react";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const DataTableChart = dynamic(
@@ -40,27 +32,25 @@ interface TableCellViewerItem {
 
 export function TableCellViewer({ item }: { item: TableCellViewerItem }) {
   const isMobile = useIsMobile();
+  const [open, setOpen] = useState(false);
 
   return (
-    <Drawer>
-      <DrawerTrigger
-        render={
-          <Button
-            variant="link"
-            className="w-fit px-0 text-left text-foreground"
-          />
-        }
+    <>
+      <Button
+        variant="link"
+        className="w-fit px-0 text-left text-foreground"
+        onClick={() => setOpen(true)}
       >
         {item.header}
-      </DrawerTrigger>
-      <DrawerContent showCloseButton={false}>
-        <DrawerHeader className="gap-1">
-          <DrawerTitle>{item.header}</DrawerTitle>
-          <DrawerDescription>
+      </Button>
+      <DetailDrawer open={open} onOpenChange={setOpen} size="lg">
+        <DetailDrawer.Header>
+          <DetailDrawer.Title>{item.header}</DetailDrawer.Title>
+          <DetailDrawer.Description>
             Showing total visitors for the last 6 months
-          </DrawerDescription>
-        </DrawerHeader>
-        <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
+          </DetailDrawer.Description>
+        </DetailDrawer.Header>
+        <DetailDrawer.Body>
           {!isMobile && <DataTableChart />}
           <form className="flex flex-col gap-4">
             <div className="flex flex-col gap-3">
@@ -134,12 +124,11 @@ export function TableCellViewer({ item }: { item: TableCellViewerItem }) {
               </Select>
             </div>
           </form>
-        </div>
-        <DrawerFooter>
-          <Button>Apply</Button>
-          <DrawerClose render={<Button variant="outline" />}>Close</DrawerClose>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+        </DetailDrawer.Body>
+        <DetailDrawer.Footer>
+          <Button onClick={() => setOpen(false)}>Close</Button>
+        </DetailDrawer.Footer>
+      </DetailDrawer>
+    </>
   );
 }

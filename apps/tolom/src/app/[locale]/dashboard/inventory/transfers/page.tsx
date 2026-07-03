@@ -32,8 +32,8 @@ import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useTransfers } from "@/lib/queries/use-transfers";
 import { useSelectedBranchId } from "@/lib/stores";
 import type { StockTransferRow, StockTransferStatus } from "@/lib/types";
-import { CreateTransferSheet } from "./_create-transfer-sheet";
-import { TransferDetailSheet } from "./_transfer-detail-sheet";
+import { CreateTransferSheet } from "./_create-transfer-drawer";
+import { TransferDetailSheet } from "./_transfer-detail-drawer";
 
 const STATUS_CONFIG: Record<
   string,

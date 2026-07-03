@@ -5,8 +5,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import {
   Item,
   ItemActions,
@@ -14,7 +13,7 @@ import {
   ItemTitle,
 } from "@/components/ui/item";
 import { Typography } from "@/components/ui/typography";
-import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
+import { useFuzzySearch } from "@zuiio/hooks";
 import type { ServiceCatalog } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import { HighlightText } from "@/lib/utils/search-utils";
@@ -162,25 +161,13 @@ export function ServiceLines({
                     )}
                   </ItemContent>
                   <ItemActions>
-                    <Input
-                      type="number"
+                    <NumericInput
                       value={svc.quantity}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        if (v === "") {
-                          onUpdate(idx, "quantity", 0);
-                          return;
-                        }
-                        const n = parseInt(v, 10);
-                        if (!Number.isNaN(n)) onUpdate(idx, "quantity", n);
-                      }}
-                      onBlur={(e) => {
-                        const n = Number(e.target.value);
-                        if (Number.isNaN(n) || n < 1)
-                          onUpdate(idx, "quantity", 1);
-                      }}
-                      className="w-14 h-10 text-center"
+                      onChange={(qty) => onUpdate(idx, "quantity", Math.max(1, Math.round(qty)))}
                       min={1}
+                      size="md"
+                      align="center"
+                      className="w-14"
                       aria-label={tc("quantity")}
                     />
                     <span className="text-sm font-semibold tabular-nums w-20 text-right">

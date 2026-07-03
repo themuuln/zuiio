@@ -23,7 +23,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Typography } from "@/components/ui/typography";
-import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
+import { useFuzzySearch } from "@zuiio/hooks";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { cn, formatPlateNumber } from "@/lib/utils";
 import { HighlightText } from "@/lib/utils/search-utils";
@@ -95,7 +95,8 @@ function QueueItem({
       else setWaitInfo({ text: `${Math.floor(minutes / 60)}h+`, urgent: true });
     };
     tick();
-    const interval = setInterval(tick, 30000);
+    // Tick every 15s for smoother timer display
+    const interval = setInterval(tick, 15000);
     return () => clearInterval(interval);
   }, [workOrder.created_at]);
 

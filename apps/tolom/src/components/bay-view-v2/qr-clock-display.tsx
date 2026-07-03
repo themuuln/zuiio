@@ -284,7 +284,7 @@ export function QrClockDisplay({
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
-            <QrCode className="size-4 text-indigo-500" />
+            <QrCode className="size-4 text-teal-500" />
             {t("qrTitle")}
           </DialogTitle>
         </DialogHeader>

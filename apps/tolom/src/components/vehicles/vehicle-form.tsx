@@ -25,6 +25,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import {
   Item,
   ItemActions,
@@ -66,7 +67,7 @@ import { vehicleSchema as sharedVehicleSchema } from "@/lib/validation/vehicle-s
 
 // ── Schema ───────────────────────────────────────────────────
 // Import shared vehicle schema — fields match exactly.
-// Number fields are strings in the form (matching <Input type="number">).
+// Number fields are strings in the form (matching NumericInput).
 // Validated in submit handler, converted to number there.
 
 const vehicleSchema = sharedVehicleSchema;
@@ -959,13 +960,10 @@ export function VehicleForm({
           <Field data-invalid={!!form.formState.errors.year}>
             <FieldLabel>{t("year")}</FieldLabel>
             <FieldContent>
-              <Input
-                type="number"
-                value={form.watch("year") || ""}
-                onChange={(e) => form.setValue("year", e.target.value)}
+              <NumericInput
+                value={Number(form.watch("year")) || 0}
+                onChange={(v) => form.setValue("year", v ? String(v) : "", {shouldValidate: true})}
                 placeholder="2020"
-                aria-invalid={!!form.formState.errors.year}
-                {...inputProps("year")}
               />
               {form.formState.errors.year && (
                 <FieldError>{form.formState.errors.year.message}</FieldError>
@@ -977,13 +975,10 @@ export function VehicleForm({
           <Field data-invalid={!!form.formState.errors.odometer}>
             <FieldLabel>{t("odometer")} (km)</FieldLabel>
             <FieldContent>
-              <Input
-                type="number"
-                value={form.watch("odometer") || ""}
-                onChange={(e) => form.setValue("odometer", e.target.value)}
+              <NumericInput
+                value={Number(form.watch("odometer")) || 0}
+                onChange={(v) => form.setValue("odometer", v ? String(v) : "", {shouldValidate: true})}
                 placeholder="120000"
-                aria-invalid={!!form.formState.errors.odometer}
-                {...inputProps("odometer")}
               />
               {form.formState.errors.odometer && (
                 <FieldError>
@@ -1166,12 +1161,10 @@ export function VehicleForm({
               <Field data-invalid={!!form.formState.errors.seats}>
                 <FieldLabel>{t("seats")}</FieldLabel>
                 <FieldContent>
-                  <Input
-                    type="number"
-                    value={form.watch("seats") || ""}
-                    onChange={(e) => form.setValue("seats", e.target.value)}
+                  <NumericInput
+                    value={Number(form.watch("seats")) || 0}
+                    onChange={(v) => form.setValue("seats", v ? String(v) : "", {shouldValidate: true})}
                     placeholder="5"
-                    aria-invalid={!!form.formState.errors.seats}
                   />
                   {form.formState.errors.seats && (
                     <FieldError>
@@ -1258,50 +1251,48 @@ export function VehicleForm({
               <Field>
                 <FieldLabel>{t("height")}</FieldLabel>
                 <FieldContent>
-                  <Input
-                    type="number"
-                    value={form.watch("height") || ""}
-                    onChange={(e) => form.setValue("height", e.target.value)}
+                  <NumericInput
+                    value={Number(form.watch("height")) || 0}
+                    onChange={(v) => form.setValue("height", v ? String(v) : "", {shouldValidate: true})}
                     placeholder={t("heightPlaceholder")}
+                    step={0.1}
                   />
                 </FieldContent>
               </Field>
-
               <Field>
                 <FieldLabel>{t("width")}</FieldLabel>
                 <FieldContent>
-                  <Input
-                    type="number"
-                    value={form.watch("width") || ""}
-                    onChange={(e) => form.setValue("width", e.target.value)}
+                  <NumericInput
+                    value={Number(form.watch("width")) || 0}
+                    onChange={(v) => form.setValue("width", v ? String(v) : "", {shouldValidate: true})}
                     placeholder={t("widthPlaceholder")}
+                    step={0.1}
                   />
                 </FieldContent>
               </Field>
-
               <Field>
                 <FieldLabel>{t("length")}</FieldLabel>
                 <FieldContent>
-                  <Input
-                    type="number"
-                    value={form.watch("length") || ""}
-                    onChange={(e) => form.setValue("length", e.target.value)}
+                  <NumericInput
+                    value={Number(form.watch("length")) || 0}
+                    onChange={(v) => form.setValue("length", v ? String(v) : "", {shouldValidate: true})}
                     placeholder={t("lengthPlaceholder")}
+                    step={0.1}
+                  />
+                </FieldContent>
+              </Field>
+              <Field>
+                <FieldLabel>{t("weight")}</FieldLabel>
+                <FieldContent>
+                  <NumericInput
+                    value={Number(form.watch("weight")) || 0}
+                    onChange={(v) => form.setValue("weight", v ? String(v) : "", {shouldValidate: true})}
+                    placeholder={t("weightPlaceholder")}
+                    step={0.1}
                   />
                 </FieldContent>
               </Field>
 
-              <Field>
-                <FieldLabel>{t("weight")}</FieldLabel>
-                <FieldContent>
-                  <Input
-                    type="number"
-                    value={form.watch("weight") || ""}
-                    onChange={(e) => form.setValue("weight", e.target.value)}
-                    placeholder={t("weightPlaceholder")}
-                  />
-                </FieldContent>
-              </Field>
             </>
           )}
 

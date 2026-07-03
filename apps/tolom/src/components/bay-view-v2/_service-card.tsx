@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import {
   Select,
   SelectContent,
@@ -36,17 +37,17 @@ export function ServiceCard({
   const nextDate = computeNextDueDate(entry.intervalMonths);
   const nextKm = computeNextDueKm(entry.intervalKm, odometer);
 
-  const priorityBorderColors: Record<string, string> = {
-    standard: "border-l-blue-400/50",
-    important: "border-l-amber-400/60",
-    urgent: "border-l-red-400/60",
+  const priorityBgColors: Record<string, string> = {
+    standard: "bg-blue-50/30 dark:bg-blue-950/10",
+    important: "bg-amber-50/30 dark:bg-amber-950/10",
+    urgent: "bg-red-50/30 dark:bg-red-950/10",
   };
 
   return (
     <div
       className={cn(
-        "rounded-lg border border-border/60 bg-card/50 overflow-hidden transition-all duration-200 border-l-2",
-        priorityBorderColors[entry.priority],
+        "rounded-lg border border-border/60 bg-card/50 overflow-hidden transition-all duration-200",
+        priorityBgColors[entry.priority],
       )}
     >
       {/* Header — always visible */}
@@ -78,20 +79,15 @@ export function ServiceCard({
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
               <label
-                htmlFor={`post-service-interval-months-${entry.workOrderServiceId}`}
                 className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider"
               >
                 {t("postServiceIntervalMonths")}
               </label>
-              <Input
-                id={`post-service-interval-months-${entry.workOrderServiceId}`}
-                type="number"
-                value={entry.intervalMonths ?? ""}
-                onChange={(e) =>
+              <NumericInput
+                value={entry.intervalMonths ?? 0}
+                onChange={(val) =>
                   onChange({
-                    intervalMonths: e.target.value
-                      ? parseInt(e.target.value, 10)
-                      : null,
+                    intervalMonths: val || null,
                   })
                 }
                 className="h-8 text-xs"
@@ -101,20 +97,15 @@ export function ServiceCard({
             </div>
             <div className="flex flex-col gap-1">
               <label
-                htmlFor={`post-service-interval-km-${entry.workOrderServiceId}`}
                 className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider"
               >
                 {t("postServiceIntervalKm")}
               </label>
-              <Input
-                id={`post-service-interval-km-${entry.workOrderServiceId}`}
-                type="number"
-                value={entry.intervalKm ?? ""}
-                onChange={(e) =>
+              <NumericInput
+                value={entry.intervalKm ?? 0}
+                onChange={(val) =>
                   onChange({
-                    intervalKm: e.target.value
-                      ? parseInt(e.target.value, 10)
-                      : null,
+                    intervalKm: val || null,
                   })
                 }
                 className="h-8 text-xs"

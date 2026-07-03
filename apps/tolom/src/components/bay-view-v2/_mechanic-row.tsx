@@ -4,7 +4,7 @@ import { UserPlus } from "lucide-react";
 import { MechanicAvatarChip } from "@/components/mechanic-avatar-chip";
 import type { MechanicRef } from "@/lib/types/mechanic";
 import type { BayCardMechanic } from "./_bay-card-types";
-import { MechanicAssignSheet } from "./_mechanic-assign-sheet";
+import { MechanicAssignSheet } from "./_mechanic-assign-drawer";
 import { MechanicBadge } from "./mechanic-badge";
 import { cn } from "@/lib/utils";
 

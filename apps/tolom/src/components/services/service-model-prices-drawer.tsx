@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { DrawerDescription, DrawerTitle } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Typography } from "@/components/ui/typography";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import {
@@ -397,19 +398,16 @@ export function ServiceModelPricesSheet({
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <Input
-                            type="number"
-                            min="0"
-                            placeholder={String(defaultPrice)}
-                            value={value}
-                            onChange={(e) =>
-                              handlePriceChange(vm.id, e.target.value)
-                            }
-                            className={`h-8 w-24 text-right tabular-nums ${
-                              isChanged ? "border-primary" : ""
-                            }`}
-                          />
+                        <CurrencyInput
+                          min={0}
+                          placeholder={String(defaultPrice)}
+                          value={Number(value) || 0}
+                          onChange={(val) => handlePriceChange(vm.id, String(val))}
+                          className={`h-8 w-24 tabular-nums ${
+                            isChanged ? "border-primary" : ""
+                          }`}
+                          size="sm"
+                        />
                           {hasExisting && !isChanged && (
                             <Button
                               variant="ghost"

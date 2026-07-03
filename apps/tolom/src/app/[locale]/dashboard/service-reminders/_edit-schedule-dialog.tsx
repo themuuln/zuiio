@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
@@ -40,9 +41,8 @@ export function EditScheduleDialog({
 }: EditScheduleDialogProps) {
   const t = useTranslations();
   const [form, setForm] = useState({
-    service_name: "",
-    interval_months: "",
-    interval_km: "",
+    interval_months: 0,
+    interval_km: 0,
     notes: "",
     reminder_enabled: true,
   });
@@ -51,8 +51,8 @@ export function EditScheduleDialog({
     if (item) {
       setForm({
         service_name: item.service_name,
-        interval_months: item.interval_months?.toString() ?? "",
-        interval_km: item.interval_km?.toString() ?? "",
+        interval_months: item.interval_months ?? 0,
+        interval_km: item.interval_km ?? 0,
         notes: item.notes ?? "",
         reminder_enabled: item.reminder_enabled,
       });
@@ -69,12 +69,8 @@ export function EditScheduleDialog({
       await onSave({
         id: item.id,
         service_name: form.service_name.trim(),
-        interval_months: form.interval_months
-          ? Number.parseInt(form.interval_months, 10)
-          : null,
-        interval_km: form.interval_km
-          ? Number.parseInt(form.interval_km, 10)
-          : null,
+        interval_months: form.interval_months > 0 ? form.interval_months : null,
+        interval_km: form.interval_km > 0 ? form.interval_km : null,
         notes: form.notes || null,
         reminder_enabled: form.reminder_enabled,
       });
@@ -118,12 +114,11 @@ export function EditScheduleDialog({
               <Label htmlFor="edit-interval_months">
                 {t("serviceReminders.intervalMonths")}
               </Label>
-              <Input
+              <NumericInput
                 id="edit-interval_months"
-                type="number"
                 value={form.interval_months}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, interval_months: e.target.value }))
+                onChange={(val) =>
+                  setForm((p) => ({ ...p, interval_months: val }))
                 }
                 placeholder="6"
               />
@@ -132,12 +127,11 @@ export function EditScheduleDialog({
               <Label htmlFor="edit-interval_km">
                 {t("serviceReminders.intervalKm")}
               </Label>
-              <Input
+              <NumericInput
                 id="edit-interval_km"
-                type="number"
                 value={form.interval_km}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, interval_km: e.target.value }))
+                onChange={(val) =>
+                  setForm((p) => ({ ...p, interval_km: val }))
                 }
                 placeholder="5000"
               />

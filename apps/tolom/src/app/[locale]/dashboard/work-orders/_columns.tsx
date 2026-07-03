@@ -1,10 +1,9 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal, Trash2 } from "lucide-react";
+import { MoreHorizontal, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { MechanicAvatar } from "@/components/mechanic-avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTableColumnHeader } from "@/components/ui/data-table";
 import {
@@ -12,7 +11,6 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -26,19 +24,6 @@ import type { WorkOrderListItem } from "@/lib/queries/use-work-orders";
 import { cn, formatMNT } from "@/lib/utils";
 
 // ── Status helpers ────────────────────────────────────────────
-
-const STATUS_NAMES: Record<string, string> = {
-  New: "statusNew",
-  Diagnosing: "statusDiagnosing",
-  "In Progress": "statusInProgress",
-  "Ready for Pickup": "statusReadyForPickup",
-  Completed: "statusCompleted",
-  Cancelled: "statusCancelled",
-};
-
-const STATUS_OPTIONS = Object.keys(STATUS_NAMES).filter(
-  (s) => s !== "Cancelled",
-);
 
 // ── Helpers ───────────────────────────────────────────────────
 
@@ -82,6 +67,7 @@ interface ColumnCallbacks {
   onCancel: (woId: string) => void;
   updatePending: boolean;
   onViewDetail?: (woId: string) => void;
+  onChangeStatus?: (woId: string, currentStatus: string) => void;
 }
 
 export function createColumns(
@@ -162,7 +148,6 @@ export function createColumns(
         return <DataTableColumnHeader column={column} title={t("status")} />;
       },
       cell: ({ row }) => {
-        const t = useTranslations("workOrders");
         const wo = row.original;
         const statusColors: Record<string, string> = {
           New: "bg-blue-500/15 text-blue-500 border-blue-500/30",
@@ -175,51 +160,17 @@ export function createColumns(
           Cancelled: "bg-red-500/15 text-red-500 border-red-500/30",
         };
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              nativeButton={false}
-              render={
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "gap-1.5 cursor-pointer hover:opacity-80 transition-opacity",
-                    statusColors[wo.status] ??
-                      "bg-gray-500/15 text-gray-500 border-gray-500/30",
-                  )}
-                >
-                  {wo.status}
-                  <ArrowUpDown className="size-3 opacity-60" />
-                </Badge>
-              }
-            />
-            <DropdownMenuContent align="start" className="min-w-[160px]">
-              <DropdownMenuGroup>
-                {STATUS_OPTIONS.flatMap((s) =>
-                  s !== wo.status
-                    ? [
-                        <DropdownMenuItem
-                          key={s}
-                          onClick={() => cb.onStatusChange(wo.id, s)}
-                          disabled={cb.updatePending}
-                        >
-                          {s}
-                        </DropdownMenuItem>,
-                      ]
-                    : [],
-                )}
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  className="text-destructive"
-                  onClick={() => cb.onCancel(wo.id)}
-                >
-                  <Trash2 className="size-3.5 mr-2" />
-                  {t("cancelWorkOrder")}
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <button
+            type="button"
+            onClick={() => cb.onChangeStatus?.(wo.id, wo.status)}
+            className={cn(
+              "inline-flex h-5 shrink-0 items-center gap-1 rounded-md border px-1.5 text-[11px] font-medium whitespace-nowrap cursor-pointer select-none transition-opacity hover:opacity-80",
+              statusColors[wo.status] ??
+                "bg-gray-500/15 text-gray-500 border-gray-500/30",
+            )}
+          >
+            {wo.status}
+          </button>
         );
       },
     },

@@ -45,7 +45,7 @@ export function RefundReceipt({
         <head>
           <title>Refund Receipt - ${invoice.invoice_number}</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 20px; max-width: 400px; margin: 0 auto; }
+            body { font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; max-width: 400px; margin: 0 auto; }
             .header { text-align: center; margin-bottom: 20px; }
             .org-name { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
             .title { font-size: 14px; color: #666; }

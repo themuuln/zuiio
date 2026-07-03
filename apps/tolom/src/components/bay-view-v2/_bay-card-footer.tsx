@@ -20,22 +20,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type {
-  BayCardActionHandlers,
-  BayCardWorkOrder,
-} from "./_bay-card-types";
+import { STATUS_BTN_SOLID } from "./_constants";
+import { cn } from "@/lib/utils";
 
-interface BayCardFooterProps
-  extends Pick<
-    BayCardActionHandlers,
-    | "onStatusChange"
-    | "onRemoveFromBay"
-    | "onOpenDetail"
-    | "onPauseTimer"
-    | "onAddNote"
-    | "onQuickAddService"
-    | "onQuickAddParts"
-  > {
+
+import { useBayCardContext } from "./_bay-card-context";
+import type { BayCardWorkOrder } from "./_bay-card-types";
+
+interface BayCardFooterProps {
   workOrder: BayCardWorkOrder;
   isPending?: boolean;
 }
@@ -43,22 +35,37 @@ interface BayCardFooterProps
 export function BayCardFooter({
   workOrder,
   isPending = false,
-  onStatusChange,
-  onRemoveFromBay,
-  onOpenDetail,
-  onPauseTimer,
-  onAddNote,
-  onQuickAddService,
-  onQuickAddParts,
 }: BayCardFooterProps) {
   const t = useTranslations("bayView");
+  const {
+    onStatusChange,
+    onRemoveFromBay,
+    onOpenDetail,
+    onPauseTimer,
+    onAddNote,
+    onQuickAddService,
+    onQuickAddParts,
+  } = useBayCardContext();
+
+  // Map current status → target status for button color derivation
+  const statusButtonTarget: Record<string, string> = {
+    New: "Diagnosing",
+    Diagnosing: "In Progress",
+    "In Progress": "Ready for Pickup",
+    "Ready for Pickup": "Completed",
+  };
+  const targetStatus = statusButtonTarget[workOrder.status];
+  const btnBg = targetStatus ? STATUS_BTN_SOLID[targetStatus] : "";
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2.5">
+    <div
+      data-slot="bay-view-footer-buttons"
+      className="flex items-center gap-2 px-3 py-2.5"
+    >
       {workOrder.status === "New" && (
         <Button
           size="sm"
-          className="h-8 gap-1.5 rounded-lg bg-blue-600 text-xs font-bold text-white shadow-sm hover:bg-blue-700"
+          className={cn("h-8 gap-1.5 rounded-lg text-xs font-bold text-white hover:opacity-85", btnBg)}
           onClick={(e) => {
             e.stopPropagation();
             onStatusChange(workOrder.id, "Diagnosing");
@@ -71,7 +78,7 @@ export function BayCardFooter({
       {workOrder.status === "Diagnosing" && (
         <Button
           size="sm"
-          className="h-8 gap-1.5 rounded-lg bg-indigo-600 text-xs font-bold text-white shadow-sm hover:bg-indigo-700"
+          className={cn("h-8 gap-1.5 rounded-lg text-xs font-bold text-white hover:opacity-85", btnBg)}
           onClick={(e) => {
             e.stopPropagation();
             onStatusChange(workOrder.id, "In Progress");
@@ -84,7 +91,7 @@ export function BayCardFooter({
       {workOrder.status === "In Progress" && (
         <Button
           size="sm"
-          className="h-8 gap-1.5 rounded-lg bg-emerald-600 text-xs font-bold text-white shadow-sm hover:bg-emerald-700"
+          className={cn("h-8 gap-1.5 rounded-lg text-xs font-bold text-white hover:opacity-85", btnBg)}
           onClick={(e) => {
             e.stopPropagation();
             onStatusChange(workOrder.id, "Ready for Pickup");
@@ -97,7 +104,7 @@ export function BayCardFooter({
       {workOrder.status === "Ready for Pickup" && (
         <Button
           size="sm"
-          className="h-8 gap-1.5 rounded-lg bg-emerald-600 text-xs font-bold text-white shadow-sm hover:bg-emerald-700"
+          className={cn("h-8 gap-1.5 rounded-lg text-xs font-bold text-white hover:opacity-85", btnBg)}
           onClick={(e) => {
             e.stopPropagation();
             onStatusChange(workOrder.id, "Completed");
@@ -118,6 +125,7 @@ export function BayCardFooter({
                 variant="ghost"
                 disabled={isPending}
                 className="size-8 rounded-lg text-muted-foreground/60 hover:text-foreground"
+                aria-label={t("moreActions")}
               />
             }
           >
@@ -183,6 +191,7 @@ export function BayCardFooter({
                 onRemoveFromBay(workOrder.id);
               }}
               title={t("removeFromBay")}
+              aria-label={t("removeFromBay")}
               disabled={isPending}
               className="size-8 rounded-lg text-muted-foreground/60 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/20"
             >

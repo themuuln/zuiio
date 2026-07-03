@@ -15,24 +15,24 @@ import { useCallback, useEffect, useState } from "react";
  *
  * @example
  * ```tsx
- * function MyDetailSheet({ open, onOpenChange }) {
+ * function MyDetailDrawer({ open, onOpenChange }) {
  *   const { childOpen, openChild, closeChild } = useNestedSheet(open);
  *
  *   return (
- *     <DetailSheet open={open} onOpenChange={onOpenChange}>
- *       <DetailSheet.Body>
+ *     <DetailDrawer open={open} onOpenChange={onOpenChange}>
+ *       <DetailDrawer.Body>
  *         <Button onClick={openChild}>Open Sub Form</Button>
  *
- *         <Sheet
+ *         <DetailDrawer
  *           open={childOpen}
  *           onOpenChange={(v) => (v ? openChild() : closeChild())}
  *         >
- *           <SheetContent side="right">
+ *           <DetailDrawer.Body>
  *             <SubForm onSuccess={closeChild} />
- *           </SheetContent>
- *         </Sheet>
- *       </DetailSheet.Body>
- *     </DetailSheet>
+ *           </DetailDrawer.Body>
+ *         </DetailDrawer>
+ *       </DetailDrawer.Body>
+ *     </DetailDrawer>
  *   );
  * }
  * ```

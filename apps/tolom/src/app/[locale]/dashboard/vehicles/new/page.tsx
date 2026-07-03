@@ -10,6 +10,7 @@ import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { PlateInput } from "@/components/ui/plate-input";
 import {
   Select,
@@ -441,14 +442,13 @@ function NewVehicleForm() {
               <label className="mb-1 block text-sm font-medium" htmlFor="year">
                 {t("year")}
               </label>
-              <Input
+              <NumericInput
                 id="year"
-                type="number"
-                value={form.year}
-                onChange={(event) =>
+                value={Number(form.year) || new Date().getFullYear()}
+                onChange={(v) =>
                   setForm((current) => ({
                     ...current,
-                    year: event.target.value,
+                    year: v.toString(),
                   }))
                 }
                 className="h-11"
@@ -463,14 +463,13 @@ function NewVehicleForm() {
               >
                 {t("odometer")}
               </label>
-              <Input
+              <NumericInput
                 id="odometer"
-                type="number"
-                value={form.odometer}
-                onChange={(event) =>
+                value={Number(form.odometer) || 0}
+                onChange={(v) =>
                   setForm((current) => ({
                     ...current,
-                    odometer: event.target.value,
+                    odometer: v.toString(),
                   }))
                 }
                 className="h-11"

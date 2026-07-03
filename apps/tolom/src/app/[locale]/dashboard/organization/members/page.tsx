@@ -3,10 +3,8 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Clock3, ShieldCheck, UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,11 +16,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { useProfile } from "@/lib/queries/use-profile";
 import type { ApiResponse, UserProfile } from "@/lib/types";
-import { EditMemberSheet } from "./_edit-member-sheet";
-import { InviteSheet } from "./_invite-sheet";
+import { EditMemberSheet } from "./_edit-member-drawer";
+import { InviteSheet } from "./_invite-drawer";
 import { MemberList } from "./_member-list";
 import { PendingInvites } from "./_pending-invites";
 import type { InviteWithEmail } from "./types";
@@ -41,7 +38,7 @@ export default function MembersPage() {
   const commonT = useTranslations("common");
   const t = useTranslations("organization.memberManagement");
   const queryClient = useQueryClient();
-  const { registerTab, unregisterTab } = useRightSidebar();
+
   const { data: profile } = useProfile();
   const orgId = profile?.organizationId ?? "";
 
@@ -285,64 +282,6 @@ export default function MembersPage() {
       );
     }
   };
-
-  const roleCounts = useMemo(
-    () =>
-      members.reduce<Record<string, number>>((acc, member) => {
-        const role = member.roleName ?? t("noRole");
-        acc[role] = (acc[role] ?? 0) + 1;
-        return acc;
-      }, {}),
-    [members, t],
-  );
-
-  const pendingInviteItems = useMemo(
-    () =>
-      invites.map((invite) => ({
-        id: invite.id,
-        primary: invite.email,
-        secondary: invite.message ?? undefined,
-        timestamp: invite.created_at
-          ? new Date(invite.created_at).toLocaleDateString()
-          : undefined,
-      })),
-    [invites],
-  );
-
-  useEffect(() => {
-    registerTab(
-      "roles",
-      t("roleLabel"),
-      <StatusSummary
-        title={t("membersDescription")}
-        items={Object.entries(roleCounts).map(([label, count]) => ({
-          label,
-          count,
-        }))}
-      />,
-    );
-    registerTab(
-      "pending",
-      t("pendingInvites"),
-      <RecentList
-        title={t("pendingInvites")}
-        items={pendingInviteItems}
-        loading={loadingInvites}
-        emptyMessage={t("noPendingInvites")}
-      />,
-    );
-    return () => {
-      unregisterTab("roles");
-      unregisterTab("pending");
-    };
-  }, [
-    loadingInvites,
-    pendingInviteItems,
-    registerTab,
-    roleCounts,
-    t,
-    unregisterTab,
-  ]);
 
   return (
     <div className="flex flex-col gap-6 pb-8">

@@ -16,6 +16,7 @@ import {
 import { DatePicker } from "@/components/ui/date-picker";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 
 interface Vehicle {
@@ -52,9 +53,8 @@ export function AddScheduleDialog({
   const [form, setForm] = useState({
     vehicle_id: "",
     service_catalog_id: "",
-    service_name: "",
-    interval_months: "",
-    interval_km: "",
+    interval_months: 0,
+    interval_km: 0,
     last_service_date: "",
     last_service_odometer: "",
     next_due_date: "",
@@ -71,8 +71,7 @@ export function AddScheduleDialog({
       toast.error(t("serviceReminders.searchVehicle"));
       return;
     }
-
-    if (!form.interval_months && !form.interval_km) {
+    if (form.interval_months <= 0 && form.interval_km <= 0) {
       toast.error(t("serviceReminders.intervalRequired"));
       return;
     }
@@ -82,12 +81,8 @@ export function AddScheduleDialog({
         vehicle_id: form.vehicle_id || undefined,
         service_catalog_id: form.service_catalog_id || undefined,
         service_name: form.service_name.trim(),
-        interval_months: form.interval_months
-          ? Number.parseInt(form.interval_months, 10)
-          : null,
-        interval_km: form.interval_km
-          ? Number.parseInt(form.interval_km, 10)
-          : null,
+        interval_months: form.interval_months > 0 ? form.interval_months : null,
+        interval_km: form.interval_km > 0 ? form.interval_km : null,
         last_service_date: form.last_service_date || undefined,
         last_service_odometer: form.last_service_odometer
           ? Number.parseInt(form.last_service_odometer, 10)
@@ -102,8 +97,8 @@ export function AddScheduleDialog({
         vehicle_id: "",
         service_catalog_id: "",
         service_name: "",
-        interval_months: "",
-        interval_km: "",
+        interval_months: 0,
+        interval_km: 0,
         last_service_date: "",
         last_service_odometer: "",
         next_due_date: "",
@@ -208,12 +203,11 @@ export function AddScheduleDialog({
                 <Label htmlFor="interval_months">
                   {t("serviceReminders.intervalMonths")}
                 </Label>
-                <Input
+                <NumericInput
                   id="interval_months"
-                  type="number"
                   value={form.interval_months}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, interval_months: e.target.value }))
+                  onChange={(val) =>
+                    setForm((p) => ({ ...p, interval_months: val }))
                   }
                   placeholder="6"
                 />
@@ -222,12 +216,11 @@ export function AddScheduleDialog({
                 <Label htmlFor="interval_km">
                   {t("serviceReminders.intervalKm")}
                 </Label>
-                <Input
+                <NumericInput
                   id="interval_km"
-                  type="number"
                   value={form.interval_km}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, interval_km: e.target.value }))
+                  onChange={(val) =>
+                    setForm((p) => ({ ...p, interval_km: val }))
                   }
                   placeholder="5000"
                 />

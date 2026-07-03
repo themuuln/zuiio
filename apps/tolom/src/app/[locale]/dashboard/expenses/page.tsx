@@ -1,20 +1,18 @@
 "use client";
 
+import { useTableFilters } from "@zuiio/hooks";
 import {
   AlertCircle,
   Clock,
   DollarSign,
   Plus,
-  Tag,
   TrendingUp,
   Wallet,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import type { DateRange } from "react-day-picker";
 import { ExportButton } from "@/components/export-button";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -32,9 +30,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
 import { usePageHeader } from "@/hooks/use-page-header";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import type { ExportColumn } from "@/lib/export";
-import { useTableFilters } from "@/lib/hooks/use-url-filters";
 import {
   useExpenseCategories,
   useExpenseStats,
@@ -194,56 +190,6 @@ export default function ExpensesPage() {
   );
 
   const { data: categories } = useExpenseCategories(orgId);
-
-  const sidebar = useRightSidebar();
-
-  useEffect(() => {
-    if (!stats || !categories) return;
-
-    sidebar.setActiveTab("summary");
-
-    sidebar.registerTab(
-      "summary",
-      t("expenses.summary"),
-      <StatusSummary
-        title={t("expenses.thisMonth")}
-        items={[
-          { label: t("expenses.total"), count: stats.thisMonth },
-          {
-            label: t("expenses.unpaid"),
-            count: stats.unpaidAmount,
-            color: "destructive",
-          },
-        ]}
-      />,
-      <DollarSign className="size-4" />,
-    );
-
-    sidebar.registerTab(
-      "categories",
-      t("expenses.categories"),
-      <RecentList
-        items={categories.map((cat) => ({
-          id: cat.id,
-          primary: cat.name,
-        }))}
-        emptyMessage={t("expenses.noCategories")}
-      />,
-      <Tag className="size-4" />,
-    );
-
-    return () => {
-      sidebar.unregisterTab("summary");
-      sidebar.unregisterTab("categories");
-    };
-  }, [
-    categories,
-    sidebar.registerTab,
-    sidebar.setActiveTab,
-    sidebar.unregisterTab,
-    stats,
-    t,
-  ]);
 
   const displayError =
     isError || (!orgId && !orgLoading)

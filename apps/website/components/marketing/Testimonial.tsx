@@ -58,7 +58,7 @@ export function Testimonial({
 	return (
 		<div
 			className={cn(
-				"relative rounded-2xl border border-border bg-card p-8 transition-all duration-250 ease-out hover:shadow-card-hover",
+				"relative rounded-2xl bg-card p-8 shadow-card-hover transition-shadow duration-250 ease-out",
 				className,
 			)}
 		>

@@ -44,7 +44,7 @@ interface PricingCardProps {
 	description: string;
 	features: string[];
 	highlighted?: boolean;
-	ctaLabel?: string;
+	ctaLabel: string;
 	className?: string;
 }
 
@@ -54,13 +54,13 @@ export function PricingCard({
 	description,
 	features,
 	highlighted,
-	ctaLabel = "Get started",
+	ctaLabel,
 	className,
 }: PricingCardProps) {
 	return (
 		<div
 			className={cn(
-				"relative flex flex-col rounded-2xl p-8 transition-all duration-250 ease-out",
+				"relative flex flex-col rounded-2xl p-8 transition-shadow duration-250 ease-out",
 				highlighted
 					? "border-2 border-primary bg-card shadow-brand hover:shadow-lg"
 					: "border border-border bg-card hover:shadow-card-hover",
@@ -96,7 +96,7 @@ export function PricingCard({
 			<Link
 				href="/pricing"
 				className={cn(
-					"mt-8 block rounded-xl px-4 py-3 text-center text-sm font-semibold transition-all duration-150 ease-out",
+					"mt-8 block rounded-xl px-4 py-3 text-center text-sm font-semibold transition-colors duration-150 ease-out",
 					highlighted
 						? "btn-primary justify-center"
 						: "border border-border bg-background text-foreground hover:bg-muted hover:border-foreground inline-flex items-center justify-center gap-2",

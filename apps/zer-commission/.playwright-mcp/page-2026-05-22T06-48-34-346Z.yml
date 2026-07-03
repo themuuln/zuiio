@@ -1,0 +1,93 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e30] [cursor=pointer]:
+    - img [ref=e31]
+  - alert [ref=e34]
+  - generic [ref=e35]:
+    - generic [ref=e38]:
+      - list [ref=e40]:
+        - listitem [ref=e41]:
+          - button "... Mini ERP" [ref=e42]:
+            - img [ref=e44]
+            - generic [ref=e46]:
+              - generic [ref=e47]: ...
+              - generic [ref=e48]: Mini ERP
+      - generic [ref=e50]:
+        - generic [ref=e51]: Цэс
+        - list [ref=e53]:
+          - listitem [ref=e54]:
+            - link "Хяналтын самбар" [ref=e55] [cursor=pointer]:
+              - /url: /
+              - img [ref=e56]
+              - generic [ref=e58]: Хяналтын самбар
+          - listitem [ref=e59]:
+            - link "Бүтээгдэхүүн" [ref=e60] [cursor=pointer]:
+              - /url: /products
+              - img [ref=e61]
+              - generic [ref=e63]: Бүтээгдэхүүн
+          - listitem [ref=e64]:
+            - link "Бараа material" [ref=e65] [cursor=pointer]:
+              - /url: /inventory
+              - img [ref=e66]
+              - generic [ref=e68]: Бараа material
+          - listitem [ref=e69]:
+            - link "Борлуулалт" [ref=e70] [cursor=pointer]:
+              - /url: /sales
+              - img [ref=e71]
+              - generic [ref=e73]: Борлуулалт
+          - listitem [ref=e74]:
+            - link "Зарлага" [ref=e75] [cursor=pointer]:
+              - /url: /expenses
+              - img [ref=e76]
+              - generic [ref=e78]: Зарлага
+          - listitem [ref=e79]:
+            - link "Харилцагчид" [ref=e80] [cursor=pointer]:
+              - /url: /customers
+              - img [ref=e81]
+              - generic [ref=e83]: Харилцагчид
+          - listitem [ref=e84]:
+            - link "Нийлүүлэгчид" [ref=e85] [cursor=pointer]:
+              - /url: /suppliers
+              - img [ref=e86]
+              - generic [ref=e88]: Нийлүүлэгчид
+          - listitem [ref=e89]:
+            - link "Тохиргоо" [ref=e90] [cursor=pointer]:
+              - /url: /settings
+              - img [ref=e91]
+              - generic [ref=e93]: Тохиргоо
+      - list [ref=e95]:
+        - listitem [ref=e96]:
+          - link "?? Хэрэглэгч" [ref=e97] [cursor=pointer]:
+            - /url: /settings
+            - generic [ref=e99]: "??"
+            - generic [ref=e100]: Хэрэглэгч
+        - listitem [ref=e101]:
+          - button "Гарах" [ref=e102]:
+            - img [ref=e103]
+            - generic [ref=e105]: Гарах
+      - button "Toggle Sidebar" [ref=e106]
+    - main [ref=e107]:
+      - generic [ref=e108]:
+        - button "Toggle Sidebar" [ref=e109]:
+          - img
+          - generic [ref=e110]: Toggle Sidebar
+        - separator [ref=e111]
+      - generic [ref=e114]:
+        - generic [ref=e115]:
+          - generic [ref=e116]: Байгууллага үүсгэх
+          - generic [ref=e117]: Байгууллагын нэрээ оруулаад эхэлцгээе
+        - generic [ref=e119]:
+          - generic [ref=e120]:
+            - group [ref=e121]:
+              - generic [ref=e122]: Байгууллагын нэр
+              - generic [ref=e123]:
+                - img
+                - textbox "Байгууллагын нэр" [ref=e124]:
+                  - /placeholder: Жишээ дэлгүүр
+            - group [ref=e125]:
+              - generic [ref=e126]: Холбоос
+              - textbox "Холбоос" [ref=e127]:
+                - /placeholder: jishee-delguur
+              - paragraph [ref=e128]: Автоматаар үүсэх болно
+          - button "Байгууллага үүсгэх" [ref=e129]:
+            - text: Байгууллага үүсгэх
+            - img

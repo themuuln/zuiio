@@ -24,9 +24,9 @@ export const KPI_ACCENTS: Record<
     bg: "bg-blue-50",
   },
   totalCustomers: {
-    bar: "bg-violet-500",
-    icon: "text-violet-600",
-    bg: "bg-violet-50",
+    bar: "bg-sky-500",
+    icon: "text-sky-600",
+    bg: "bg-sky-50",
   },
   serviceRevenue: {
     bar: "bg-sky-500",

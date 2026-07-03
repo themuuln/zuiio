@@ -30,6 +30,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import { BuuzHint } from "@/components/ui/plate-input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -228,6 +229,13 @@ export function VehicleRegistrationDrawer({
     if (!open) return;
     plateRef.current?.focus();
   }, [open]);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    };
+  }, []);
 
   // Reset on open
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — only reset on open toggle
@@ -793,11 +801,13 @@ export function VehicleRegistrationDrawer({
                   <div className="grid grid-cols-2 gap-2">
                     <Field data-invalid={!!form.formState.errors.year}>
                       <FieldContent>
-                        <Input
-                          type="number"
+                        <NumericInput
+                          {...form.register("year")}
+                          value={formValues.year ? parseInt(formValues.year, 10) : 0}
+                          onChange={(val) => form.setValue("year", val?.toString() ?? "", { shouldValidate: true })}
+                          onBlur={() => form.trigger("year")}
                           placeholder={`${t("year")} (e.g. 2020)`}
                           aria-invalid={!!form.formState.errors.year}
-                          {...form.register("year")}
                         />
                         {form.formState.errors.year && (
                           <FieldError>
@@ -855,13 +865,15 @@ export function VehicleRegistrationDrawer({
                       </div>
                       <Field data-invalid={!!form.formState.errors.odometer}>
                         <FieldContent>
-                          <Input
-                            type="number"
-                            placeholder={`${t("odometer")} (e.g. 120000)`}
-                            className="text-xs"
-                            aria-invalid={!!form.formState.errors.odometer}
-                            {...form.register("odometer")}
-                          />
+                        <NumericInput
+                          {...form.register("odometer")}
+                          value={formValues.odometer ? parseInt(formValues.odometer, 10) : 0}
+                          onChange={(val) => form.setValue("odometer", val?.toString() ?? "", { shouldValidate: true })}
+                          onBlur={() => form.trigger("odometer")}
+                          className="text-xs"
+                          placeholder={`${t("odometer")} (e.g. 120000)`}
+                          aria-invalid={!!form.formState.errors.odometer}
+                        />
                         </FieldContent>
                       </Field>
                     </div>

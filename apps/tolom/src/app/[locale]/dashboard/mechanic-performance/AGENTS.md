@@ -3,6 +3,7 @@
 **Purpose:** Cross-mechanic comparison analytics — leaderboard, revenue chart, per-mechanic detail sheet with reviews and ratings.
 
 ## File Structure
+
 ```
 mechanic-performance/
 └── page.tsx    # Full page: KPIs, bar chart, sortable leaderboard table, detail sheet
@@ -38,13 +39,11 @@ mechanic-performance/
 
 - No sub-component files — everything inline in `page.tsx`.
 - No React Query hooks for data fetching — uses raw `fetch()` + `useState` (not yet migrated to hooks pattern).
-- Sidebar tabs: "summary" (StatusSummary) and "leaderboard" (RecentList).
 - Currency via `formatMNT()`. Rating shown as stars with review count.
 
 ## Dependencies
 
 - `@/components/charts` — BarChart
-- `@/components/sidebar-tabs/*` — StatusSummary, RecentList
 - `@/lib/queries/use-branches` — Branch list
 - `@/lib/queries/use-organization` — Current org
 - `@/lib/stores` — useSelectedBranchId

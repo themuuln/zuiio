@@ -187,15 +187,29 @@ export function useAssignVehicleToBay(branchId: string | undefined) {
               }
               // Set the WO in the target bay
               if (b.bayNumber === vars.bayNumber) {
+                // Preserve mechanic/helpers on bay→bay moves;
+                // clear them only for queue→bay first assignments.
+                // When sourceBayNumber != null, wo came from woFromBay
+                // (has the enriched type with mechanic/helpers/customer).
+                const isFromQueue = sourceBayNumber == null;
+                const overrides = {
+                  mechanic: isFromQueue
+                    ? null
+                    : (wo as NonNullable<typeof woFromBay>).mechanic,
+                  helpers: isFromQueue
+                    ? []
+                    : (wo as NonNullable<typeof woFromBay>).helpers,
+                  customer_name: isFromQueue
+                    ? null
+                    : (wo as NonNullable<typeof woFromBay>).customer_name,
+                } as const;
                 return {
                   ...b,
                   workOrder: {
                     ...wo,
                     bay_number: vars.bayNumber,
                     status: "New" as const,
-                    mechanic: null,
-                    helpers: [],
-                    customer_name: null,
+                    ...overrides,
                   },
                 };
               }
@@ -218,9 +232,7 @@ export function useAssignVehicleToBay(branchId: string | undefined) {
       toast.success(`Assigned to Bay ${vars.bayNumber}`);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: bayViewKeys.data(branchId),
-      });
+      // Realtime subscriptions cover work_orders/work_order_helpers/mechanic_assignments
     },
   });
 }
@@ -269,9 +281,7 @@ export function useRemoveVehicleFromBay(branchId: string | undefined) {
       toast.success("Removed from bay");
     },
     onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: bayViewKeys.data(branchId),
-      });
+      // Realtime subscriptions cover work_orders/work_order_helpers/mechanic_assignments
     },
   });
 }
@@ -344,11 +354,6 @@ export function useSwapBays(branchId: string | undefined) {
       toast.dismiss();
       toast.success("Bays swapped");
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: bayViewKeys.data(branchId),
-      });
-    },
   });
 }
 
@@ -408,9 +413,7 @@ export function useAssignMechanicToWorkOrder(branchId: string | undefined) {
       toast.success("Mechanic assigned");
     },
     onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: bayViewKeys.data(branchId),
-      });
+      // Realtime subscriptions cover work_orders/work_order_helpers/mechanic_assignments
     },
   });
 }
@@ -451,9 +454,7 @@ export function useRemoveMechanicFromWorkOrder(branchId: string | undefined) {
       toast.success("Mechanic removed");
     },
     onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: bayViewKeys.data(branchId),
-      });
+      // Realtime subscriptions cover work_orders/work_order_helpers/mechanic_assignments
     },
   });
 }
@@ -508,9 +509,6 @@ export function useAddHelperToWorkOrder(
       toast.success("Helper added");
     },
     onSettled: (_data, _error, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: bayViewKeys.data(branchId),
-      });
       // Invalidate drawer work order detail cache so both views stay in sync
       if (orgId && variables?.woId) {
         queryClient.invalidateQueries({
@@ -567,9 +565,6 @@ export function useRemoveHelperFromWorkOrder(
       toast.success("Helper removed");
     },
     onSettled: (_data, _error, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: bayViewKeys.data(branchId),
-      });
       // Invalidate drawer work order detail cache so both views stay in sync
       if (orgId && variables?.woId) {
         queryClient.invalidateQueries({
@@ -633,6 +628,92 @@ export function useAssignCustomerToWorkOrder(
       toast.dismiss();
       if (vars.customerId) {
         toast.success("Customer assigned");
+      }
+    },
+    onSettled: (_data, _error, vars) => {
+      // Invalidate drawer work order detail cache so the drawer reflects the customer change
+      if (orgId && vars?.woId) {
+        queryClient.invalidateQueries({
+          queryKey: workOrderKeys.detail(orgId, vars.woId),
+        });
+      }
+    },
+  });
+}
+
+// ─── Batch Complete ────────────────────────────────────────────
+
+/**
+ * Complete all "Ready for Pickup" work orders at once.
+ * Uses Promise.allSettled under the hood so partial success doesn't fail the batch.
+ */
+export function useBatchCompleteMutation(branchId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (workOrderIds: string[]) => {
+      const { batchCompleteWorkOrders } = await import(
+        "@/lib/services/bay-view-service.actions"
+      );
+      return batchCompleteWorkOrders(workOrderIds);
+    },
+    onMutate: async (workOrderIds) => {
+      const key = bayViewKeys.data(branchId);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<BayViewData>(key);
+
+      if (previous) {
+        const woIdSet = new Set(workOrderIds);
+        queryClient.setQueryData<BayViewData>(key, {
+          ...previous,
+          bays: previous.bays.map((b) =>
+            b.workOrder && woIdSet.has(b.workOrder.id)
+              ? { ...b, workOrder: null }
+              : b,
+          ),
+          branchSections: previous.branchSections?.map((section) => ({
+            ...section,
+            bays: section.bays.map((b) =>
+              b.workOrder && woIdSet.has(b.workOrder.id)
+                ? { ...b, workOrder: null }
+                : b,
+            ),
+          })),
+        });
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      rollbackOnError(queryClient, branchId, context);
+      toast.error("Failed to complete all ready work orders");
+    },
+    onSuccess: (result) => {
+      toast.dismiss();
+      const readyCount = result.succeeded + result.failed;
+      if (result.succeeded === readyCount) {
+        toast.success(
+          `Completed ${result.succeeded} work order${result.succeeded === 1 ? "" : "s"}`,
+        );
+      } else if (result.failed === readyCount) {
+        toast.error("Failed to complete work orders — try again");
+      } else {
+        toast.error(
+          `Completed ${result.succeeded} of ${readyCount}; ${result.failed} failed`,
+        );
+      }
+    },
+    onSettled: (_data, _error, workOrderIds) => {
+      queryClient.invalidateQueries({
+        queryKey: bayViewKeys.data(branchId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: bayViewKeys.shiftReport(branchId),
+      });
+      // Invalidate work order detail caches so open drawers reflect completion
+      for (const woId of workOrderIds ?? []) {
+        queryClient.invalidateQueries({
+          queryKey: ["workOrder", "detail", woId],
+        });
       }
     },
   });

@@ -15,8 +15,10 @@ import {
   ComboboxList,
 } from "@/components/ui/combobox";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
-import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
+import { DetailSheetHeader } from "@/components/ui/detail-drawer-header";
 import { DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Typography } from "@/components/ui/typography";
@@ -466,22 +468,20 @@ export function PartsCarDetailSheet({
                 </div>
 
                 <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    min="1"
+                  <NumericInput
+                    min={1}
                     value={partQty}
-                    onChange={(e) => setPartQty(Number(e.target.value))}
+                    onChange={setPartQty}
                     className="h-9 text-sm w-20"
                     placeholder="Qty"
                   />
-                  <Input
-                    type="number"
-                    min="0"
-                    step="100"
+                  <CurrencyInput
+                    min={0}
                     value={partPrice}
-                    onChange={(e) => setPartPrice(Number(e.target.value))}
+                    onChange={setPartPrice}
                     className="h-9 text-sm flex-1"
                     placeholder="Price ₮"
+                    showPrefix={false}
                   />
                   <Button
                     type="submit"

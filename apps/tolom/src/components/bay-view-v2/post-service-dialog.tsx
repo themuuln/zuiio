@@ -15,6 +15,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -23,13 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { Typography } from "@/components/ui/typography";
 import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
 import { getDefaultTransferBank } from "@/lib/payments/org-bank-accounts";
@@ -247,189 +242,182 @@ export function PostServiceDialog({
   const isComplete = newStatus === "Completed";
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} swipeDirection="right">
-      <DrawerContent className="sm:max-w-md" showCloseButton={false}>
-        <DrawerHeader>
-          <DrawerTitle className="flex items-center gap-2 text-base">
-            <Car className="size-4 text-muted-foreground" />
-            {isComplete ? t("postServiceCompleteTitle") : t("postServiceTitle")}
-            <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50 px-2 py-1 ml-1">
-              {vehiclePlate}
+    <DetailDrawer open={open} onOpenChange={onOpenChange} size="md">
+      <DetailDrawer.Header>
+        <DetailDrawer.Title className="flex items-center gap-2 text-base">
+          <Car className="size-4 text-muted-foreground" />
+          {isComplete ? t("postServiceCompleteTitle") : t("postServiceTitle")}
+          <span className="text-xs font-mono text-muted-foreground/60 bg-muted/50 px-2 py-1 ml-1">
+            {vehiclePlate}
+          </span>
+        </DetailDrawer.Title>
+      </DetailDrawer.Header>
+
+      <DetailDrawer.Body>
+        {/* Odometer */}
+        <div className="flex flex-col gap-2">
+          <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+            <Gauge className="size-4" />
+            {t("postServiceOdometer")}
+          </Label>
+          <NumericInput
+            value={odometer ? parseInt(odometer, 10) : 0}
+            onChange={(val) => setOdometer(val ? val.toString() : "")}
+            placeholder={t("postServiceOdometerPlaceholder")}
+            min={0}
+          />
+        </div>
+
+        {/* Services */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+              <MessageSquare className="size-4" />
+              {t("postServiceServicesTitle")}
+              <Badge variant="secondary">{entries.length}</Badge>
             </span>
-          </DrawerTitle>
-        </DrawerHeader>
-
-        <div className="flex-1 overflow-y-auto px-4">
-          {/* Odometer */}
-          <div className="flex flex-col gap-2">
-            <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
-              <Gauge className="size-4" />
-              {t("postServiceOdometer")}
-            </Label>
-            <Input
-              type="number"
-              value={odometer}
-              onChange={(e) => setOdometer(e.target.value)}
-              placeholder={t("postServiceOdometerPlaceholder")}
-              min={0}
-            />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setAllExpanded(!allExpanded)}
+              className="gap-1 text-xs h-auto"
+            >
+              {allExpanded ? (
+                <ChevronUp className="size-3" />
+              ) : (
+                <ChevronDown className="size-3" />
+              )}
+              {allExpanded ? t("collapseToggle") : t("expandToggle")}
+            </Button>
           </div>
 
-          {/* Services */}
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
-                <MessageSquare className="size-4" />
-                {t("postServiceServicesTitle")}
-                <Badge variant="secondary">{entries.length}</Badge>
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setAllExpanded(!allExpanded)}
-                className="gap-1 text-xs h-auto"
-              >
-                {allExpanded ? (
-                  <ChevronUp className="size-3" />
-                ) : (
-                  <ChevronDown className="size-3" />
-                )}
-                {allExpanded ? t("collapseToggle") : t("expandToggle")}
-              </Button>
+          {servicesLoading && (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="size-5 animate-spin text-muted-foreground" />
             </div>
-
-            {servicesLoading && (
-              <div className="flex items-center justify-center py-4">
-                <Loader2 className="size-5 animate-spin text-muted-foreground" />
-              </div>
-            )}
-
-            {!servicesLoading && !hasEntries && (
-              <Typography.Muted className="text-xs text-muted-foreground/60 italic py-2">
-                {t("noServicesRecorded")}
-              </Typography.Muted>
-            )}
-
-            <div className="flex flex-col gap-2">
-              {entries.map((entry, idx) => (
-                <ServiceCard
-                  key={entry.workOrderServiceId}
-                  entry={entry}
-                  odometer={odometerNum}
-                  onChange={(updates) => updateEntry(idx, updates)}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Parts */}
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
-                <Package className="size-4" />
-                {t("parts")}
-                <Badge variant="secondary">{parts.length}</Badge>
-              </span>
-            </div>
-
-            {partsLoading && (
-              <div className="flex items-center justify-center py-4">
-                <Loader2 className="size-5 animate-spin text-muted-foreground" />
-              </div>
-            )}
-
-            {!partsLoading && parts.length === 0 && (
-              <Typography.Muted className="text-xs text-muted-foreground/60 italic py-2">
-                {t("noPartsRecorded")}
-              </Typography.Muted>
-            )}
-
-            {!partsLoading && parts.length > 0 && (
-              <div className="flex flex-col gap-1.5">
-                {parts.map((part) => (
-                  <div
-                    key={part.id}
-                    className="flex items-center justify-between rounded-lg border border-border/60 bg-card/50 px-3 py-2"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <span className="text-sm font-medium">
-                        {part.part_name}
-                      </span>
-                      {part.part_number && (
-                        <span className="ml-2 text-xs text-muted-foreground">
-                          #{part.part_number}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0 ml-3">
-                      <span className="text-xs text-muted-foreground tabular-nums">
-                        {part.quantity} x {formatMNT(part.unit_price)}
-                      </span>
-                      <span className="text-sm font-medium tabular-nums">
-                        {formatMNT(part.final_price)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Mechanic notes */}
-          <div className="flex flex-col gap-2">
-            <Label className="text-xs font-semibold text-muted-foreground">
-              {t("mechanicNotesLabel")}
-            </Label>
-            <Input
-              value={mechanicNotes}
-              onChange={(e) => setMechanicNotes(e.target.value)}
-              placeholder={t("notePlaceholder")}
-            />
-          </div>
-
-          {!isComplete && (
-            <PaymentMethodField
-              value={paymentMethod}
-              onChange={setPaymentMethod}
-              transferBankId={transferBankId}
-              onTransferBankChange={setTransferBankId}
-              subtotal={grandTotal}
-              fees={paymentMethodFees}
-              transferBanks={transferBanks}
-            />
           )}
 
-          {/* Error */}
-          {error && (
-            <div className="flex items-start gap-2  bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 p-3">
-              <AlertTriangle className="mt-1 size-4 shrink-0 text-red-500" />
-              <Typography.Text className="text-xs text-red-700 dark:text-red-400">
-                {error}
-              </Typography.Text>
+          {!servicesLoading && !hasEntries && (
+            <Typography.Muted className="text-xs text-muted-foreground/60 italic py-2">
+              {t("noServicesRecorded")}
+            </Typography.Muted>
+          )}
+
+          <div className="flex flex-col gap-2">
+            {entries.map((entry, idx) => (
+              <ServiceCard
+                key={entry.workOrderServiceId}
+                entry={entry}
+                odometer={odometerNum}
+                onChange={(updates) => updateEntry(idx, updates)}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Parts */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+              <Package className="size-4" />
+              {t("parts")}
+              <Badge variant="secondary">{parts.length}</Badge>
+            </span>
+          </div>
+
+          {partsLoading && (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            </div>
+          )}
+
+          {!partsLoading && parts.length === 0 && (
+            <Typography.Muted className="text-xs text-muted-foreground/60 italic py-2">
+              {t("noPartsRecorded")}
+            </Typography.Muted>
+          )}
+
+          {!partsLoading && parts.length > 0 && (
+            <div className="flex flex-col gap-1.5">
+              {parts.map((part) => (
+                <div
+                  key={part.id}
+                  className="flex items-center justify-between rounded-lg border border-border/60 bg-card/50 px-3 py-2"
+                >
+                  <div className="min-w-0 flex-1">
+                    <span className="text-sm font-medium">
+                      {part.part_name}
+                    </span>
+                    {part.part_number && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        #{part.part_number}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0 ml-3">
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {part.quantity} x {formatMNT(part.unit_price)}
+                    </span>
+                    <span className="text-sm font-medium tabular-nums">
+                      {formatMNT(part.final_price)}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
 
-        <DrawerFooter className="flex-row items-center justify-end gap-2 border-t px-4 py-3">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            size="default"
-            disabled={saving}
-          >
-            {t("cancel")}
-          </Button>
-          <Button onClick={handleSubmit} size="default" disabled={saving}>
-            {saving && <Loader2 className="size-4 animate-spin mr-1.5" />}
-            {saving
-              ? t("postServiceSaving")
-              : isComplete
-                ? t("complete")
-                : t("markReady")}
-          </Button>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+        {/* Mechanic notes */}
+        <div className="flex flex-col gap-2">
+          <Label className="text-xs font-semibold text-muted-foreground">
+            {t("mechanicNotesLabel")}
+          </Label>
+          <Input
+            value={mechanicNotes}
+            onChange={(e) => setMechanicNotes(e.target.value)}
+            placeholder={t("notePlaceholder")}
+          />
+        </div>
+
+        {!isComplete && (
+          <PaymentMethodField
+            value={paymentMethod}
+            onChange={setPaymentMethod}
+            transferBankId={transferBankId}
+            onTransferBankChange={setTransferBankId}
+            subtotal={grandTotal}
+            fees={paymentMethodFees}
+            transferBanks={transferBanks}
+          />
+        )}
+
+        {/* Error */}
+        {error && (
+          <div className="flex items-start gap-2  bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 p-3">
+            <AlertTriangle className="mt-1 size-4 shrink-0 text-red-500" />
+            <Typography.Text className="text-xs text-red-700 dark:text-red-400">
+              {error}
+            </Typography.Text>
+          </div>
+        )}
+      </DetailDrawer.Body>
+
+      <DetailDrawer.Footer className="flex-row items-center justify-end gap-2">
+        <Button
+          variant="outline"
+          onClick={() => onOpenChange(false)}
+          size="default"
+          disabled={saving}
+        >
+          {t("cancel")}
+        </Button>
+        <Button onClick={handleSubmit} size="default" disabled={saving}>
+          {saving && <Loader2 className="size-4 animate-spin mr-1.5" />}saving ?
+          t("postServiceSaving") : isComplete ? t("complete") : t("markReady")
+        </Button>
+      </DetailDrawer.Footer>
+    </DetailDrawer>
   );
 }
 
@@ -477,14 +465,11 @@ function ServiceCard({
               <Label className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider">
                 {t("postServiceIntervalMonths")}
               </Label>
-              <Input
-                type="number"
-                value={entry.intervalMonths ?? ""}
-                onChange={(e) =>
+              <NumericInput
+                value={entry.intervalMonths ?? 0}
+                onChange={(val) =>
                   onChange({
-                    intervalMonths: e.target.value
-                      ? parseInt(e.target.value, 10)
-                      : null,
+                    intervalMonths: val || null,
                   })
                 }
                 className="h-8 text-xs"
@@ -496,14 +481,11 @@ function ServiceCard({
               <Label className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider">
                 {t("postServiceIntervalKm")}
               </Label>
-              <Input
-                type="number"
-                value={entry.intervalKm ?? ""}
-                onChange={(e) =>
+              <NumericInput
+                value={entry.intervalKm ?? 0}
+                onChange={(val) =>
                   onChange({
-                    intervalKm: e.target.value
-                      ? parseInt(e.target.value, 10)
-                      : null,
+                    intervalKm: val || null,
                   })
                 }
                 className="h-8 text-xs"

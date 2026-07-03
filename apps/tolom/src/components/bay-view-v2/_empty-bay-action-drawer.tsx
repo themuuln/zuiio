@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DrawerClose } from "@/components/ui/drawer";
-import { QuickActionDrawer } from "@/components/ui/quick-action-drawer";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { Separator } from "@/components/ui/separator";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { cn, formatPlateNumber } from "@/lib/utils";
@@ -62,9 +62,14 @@ export function EmptyBayActionDrawer({
   };
 
   return (
-    <QuickActionDrawer open={open} onOpenChange={onOpenChange} size="md">
+    <DetailDrawer
+      open={open}
+      onOpenChange={onOpenChange}
+      size="md"
+      variant="quick"
+    >
       {/* ── Header ──────────────────────────────────────────── */}
-      <QuickActionDrawer.Header bordered={false} className="p-6 pb-4">
+      <DetailDrawer.Header bordered={false} className="p-6 pb-4">
         <div className="flex items-center justify-between mb-2">
           <Badge variant="outline" className="text-xs font-mono">
             Bay #{bayNumber}
@@ -82,13 +87,13 @@ export function EmptyBayActionDrawer({
             <span className="sr-only">Close</span>
           </DrawerClose>
         </div>
-        <QuickActionDrawer.Title className="text-lg">
+        <DetailDrawer.Title className="text-lg">
           {t("addVehicleTitle")}
-        </QuickActionDrawer.Title>
-        <QuickActionDrawer.Description className="text-sm mt-1">
+        </DetailDrawer.Title>
+        <DetailDrawer.Description className="text-sm mt-1">
           {t("addVehicleSubtitle", { bayNumber })}
-        </QuickActionDrawer.Description>
-      </QuickActionDrawer.Header>
+        </DetailDrawer.Description>
+      </DetailDrawer.Header>
 
       {/* ── Action cards ────────────────────────────────────── */}
       <div className="px-6 pb-4 flex flex-col gap-2.5">
@@ -223,6 +228,6 @@ export function EmptyBayActionDrawer({
           </div>
         </>
       )}
-    </QuickActionDrawer>
+    </DetailDrawer>
   );
 }

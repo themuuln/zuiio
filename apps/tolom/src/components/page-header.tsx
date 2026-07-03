@@ -7,8 +7,6 @@ import {
   Cog,
   DollarSign,
   Package,
-  PanelRightClose,
-  PanelRightOpen,
   Plus,
   SearchIcon,
   Truck,
@@ -49,7 +47,6 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigation } from "@/hooks/use-navigation";
 import { usePageHeader } from "@/hooks/use-page-header";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { Link, usePathname, useRouter } from "@/lib/i18n/navigation";
 
 export interface PageTab {
@@ -72,7 +69,6 @@ const NAV_LABEL_KEYS: Record<string, string> = {
   vehicles: "nav.vehicles",
   inventory: "nav.inventory",
   "bay-view": "nav.bayView",
-  "bay-view-v2": "nav.bayView",
   reports: "nav.reports",
   services: "nav.services",
   "service-reminders": "nav.serviceReminders",
@@ -262,7 +258,6 @@ export function PageHeader({
             <QuickCreateActions />
             <SettingsShortcut />
             <NavUser />
-            <RightSidebarToggle />
           </div>
         </div>
 
@@ -529,27 +524,5 @@ function QuickCreateActions() {
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-}
-
-function RightSidebarToggle() {
-  const { state, toggle } = useRightSidebar();
-
-  if (!state.hasSidebar || state.tabs.length === 0) return null;
-
-  return (
-    <Button
-      variant="ghost"
-      size="icon-md"
-      onClick={toggle}
-      aria-label={state.isOpen ? "Collapse sidebar" : "Expand sidebar"}
-      className="rounded-xl text-muted-foreground/70 hover:text-foreground"
-    >
-      {state.isOpen ? (
-        <PanelRightClose className="size-4" />
-      ) : (
-        <PanelRightOpen className="size-4" />
-      )}
-    </Button>
   );
 }

@@ -85,15 +85,19 @@ Hub page with **4 KPI cards** (Total SKUs, Total Stock Value, Turnover Rate, Slo
 ## Tabs Components (inside `_components/`)
 
 ### PartsTab
+
 Dual sub-tabs: **My Inventory** (org parts with stock levels, thresholds, popularity) and **Global Catalog** (reference parts that can be "forked" into local inventory). Sortable by name, category, price, stock, popularity. Threshold editing inline. Bulk default threshold setter. Export to XLSX.
 
 ### MovementsTab
+
 Movement history with type filter chips (purchase, sale, adjustment, transfer_in, transfer_out, return, waste, disassembly). Record form with part search (live API search), quantity, unit cost, movement type, notes. Shows current balance when part selected.
 
 ### SuppliersTab
+
 DataTable with name, contact, phone, email. Add/Edit via Modal. Form fields: name, contact_person, phone, email, address, tax_id, notes.
 
 ### PurchaseOrdersTab
+
 Expandable card list. Each PO expands to show line items table (part, qty ordered, qty received, unit cost). Create PO modal with dynamic item rows. Receive stock button for pending POs.
 
 ## Data Flow
@@ -150,7 +154,4 @@ Expandable card list. Each PO expands to show line items table (part, qty ordere
 - `@/components/list-toolbar` — Search + filter + actions toolbar
 - `@/components/filter-chips` — `FilterChips` + `FilterChip` for type/status filters
 - `@/components/export-button` — XLSX export
-- `@/components/sidebar-tabs/status-summary` — Sidebar summary cards
-- `@/components/sidebar-tabs/recent-list` — Sidebar recent items
 - `@/hooks/use-page-header` — Detail navigation (partId, PO ID, supplier ID, partsCar ID)
-- `@/hooks/use-right-sidebar` — Sidebar tab registration

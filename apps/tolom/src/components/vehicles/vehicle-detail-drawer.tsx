@@ -27,10 +27,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
-import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
+import { DetailSheetHeader } from "@/components/ui/detail-drawer-header";
 import { DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import {
   Item,
   ItemContent,
@@ -356,6 +357,10 @@ export function VehicleDetailSheet({
       );
       return { previous };
     },
+    onSuccess: () => {
+      toast.dismiss();
+      toast.success(t("vehicleUpdated"));
+    },
     onError: (_err, _vars, context) => {
       if (context?.previous) {
         queryClient.setQueryData(
@@ -368,8 +373,6 @@ export function VehicleDetailSheet({
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: vehicleKeys.all(orgId ?? "") });
       setEditing(false);
-      toast.dismiss();
-      toast.success(t("vehicleUpdated"));
     },
   });
 
@@ -771,6 +774,7 @@ function FormField({
   className = "",
   placeholder,
   uppercase,
+  step,
 }: {
   label: string;
   field: keyof VehicleFormState;
@@ -780,7 +784,24 @@ function FormField({
   className?: string;
   placeholder?: string;
   uppercase?: boolean;
+  step?: number;
 }) {
+  if (type === "number") {
+    return (
+      <Field className={className}>
+        <FieldLabel htmlFor={`vds-${field}`}>{label}</FieldLabel>
+        <NumericInput
+          id={`vds-${field}`}
+          value={Number(form[field]) || 0}
+          onChange={(v) =>
+            onFieldChange(field, v ? String(v) : "")
+          }
+          placeholder={placeholder}
+          step={step ?? 1}
+        />
+      </Field>
+    );
+  }
   return (
     <Field className={className}>
       <FieldLabel htmlFor={`vds-${field}`}>{label}</FieldLabel>
@@ -849,6 +870,7 @@ function VehicleEditForm({
           onFieldChange={setField}
           type="number"
           placeholder="2020"
+          step={1}
         />
         <FormField
           label={t("vin")}
@@ -1000,6 +1022,7 @@ function VehicleEditForm({
             onFieldChange={setField}
             type="number"
             placeholder={t("seatsPlaceholderEdit")}
+            step={1}
           />
           <FormField
             label={t("height")}
@@ -1008,6 +1031,7 @@ function VehicleEditForm({
             onFieldChange={setField}
             type="number"
             placeholder={t("heightPlaceholder")}
+            step={0.1}
           />
           <FormField
             label={t("width")}
@@ -1016,6 +1040,7 @@ function VehicleEditForm({
             onFieldChange={setField}
             type="number"
             placeholder={t("widthPlaceholder")}
+            step={0.1}
           />
           <FormField
             label={t("length")}
@@ -1024,6 +1049,7 @@ function VehicleEditForm({
             onFieldChange={setField}
             type="number"
             placeholder={t("lengthPlaceholder")}
+            step={0.1}
           />
           <FormField
             label={t("weight")}
@@ -1032,6 +1058,7 @@ function VehicleEditForm({
             onFieldChange={setField}
             type="number"
             placeholder={t("weightPlaceholder")}
+            step={0.1}
           />
           <FormField
             label={t("importDate")}

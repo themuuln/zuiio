@@ -1,0 +1,16 @@
+{
+  "name": "@zuiio/ai-agent",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^26",
+    "@zuiio/config": "workspace:*",
+    "typescript": "^5"
+  }
+}

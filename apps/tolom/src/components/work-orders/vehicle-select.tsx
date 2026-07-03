@@ -21,7 +21,7 @@ import {
   FieldError,
   FieldLabel,
 } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import {
   Item,
   ItemActions,
@@ -435,12 +435,16 @@ export function VehicleSelect({
                   <Field>
                     <FieldLabel>{t("year")}</FieldLabel>
                     <FieldContent>
-                      <Input
+                      <NumericInput
                         placeholder="20__"
-                        type="number"
+                        value={Number(form.watch("year")) || 0}
+                        onChange={(v) =>
+                          form.setValue("year", v ? String(v) : "", {
+                            shouldValidate: true,
+                          })
+                        }
                         className="h-11"
-                        {...inputProps("year")}
-                        {...form.register("year")}
+                        aria-label={t("year")}
                       />
                     </FieldContent>
                   </Field>

@@ -4,7 +4,9 @@ import { Package, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { formatCurrency } from "@/lib/utils";
 
 export interface PartLine {
@@ -71,42 +73,20 @@ export function PartLines({
                     }
                     className="w-24 h-10"
                   />
-                  <Input
-                    type="number"
+                  <NumericInput
                     value={part.quantity}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      if (v === "") {
-                        onUpdate(idx, "quantity", 0);
-                        return;
-                      }
-                      const n = parseInt(v, 10);
-                      if (!Number.isNaN(n)) onUpdate(idx, "quantity", n);
-                    }}
-                    onBlur={(e) => {
-                      const n = Number(e.target.value);
-                      if (Number.isNaN(n) || n < 1)
-                        onUpdate(idx, "quantity", 1);
-                    }}
-                    className="w-14 h-10 text-center"
+                    onChange={(qty) => onUpdate(idx, "quantity", Math.max(1, Math.round(qty)))}
                     min={1}
+                    size="md"
+                    align="center"
+                    className="w-14"
                     aria-label={tc("quantity")}
                   />
-                  <Input
-                    type="number"
+                  <CurrencyInput
                     value={part.unit_price}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      if (v === "") {
-                        onUpdate(idx, "unit_price", 0);
-                        return;
-                      }
-                      const n = parseFloat(v);
-                      if (!Number.isNaN(n)) onUpdate(idx, "unit_price", n);
-                    }}
-                    className="w-20 h-10 text-right"
-                    min={0}
-                    step={100}
+                    onChange={(price) => onUpdate(idx, "unit_price", price)}
+                    size="md"
+                    className="w-20"
                     aria-label={tc("unitPrice")}
                   />
                   <span className="text-sm font-semibold tabular-nums w-20 text-right">

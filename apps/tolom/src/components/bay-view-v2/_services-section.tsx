@@ -2,10 +2,11 @@
 
 import { Wrench } from "lucide-react";
 import type { WorkOrderService } from "@/lib/types";
+import { ServiceLineRow } from "@/components/work-orders/line-items";
 import { CatalogPickerDrawer } from "./_catalog-picker-drawer";
 import type { CatalogServiceItem } from "./_drawer-types";
 import { SectionCard } from "./_section-card";
-import { WorkOrderListHeader, WorkOrderRow } from "./_work-order-row";
+import { WorkOrderListHeader } from "./_work-order-row";
 
 interface ServicesSectionProps {
   services: WorkOrderService[];
@@ -19,6 +20,11 @@ interface ServicesSectionProps {
   onRemoveService: (serviceId: string) => Promise<void>;
   onEditPriceSave: (id: string, price: number) => Promise<void>;
   onEditQtySave: (id: string, qty: number) => Promise<void>;
+  onEditDiscountSave?: (
+    id: string,
+    discountAmount: number,
+    discountPercent: number,
+  ) => Promise<void>;
   t: (key: string) => string;
 }
 
@@ -34,6 +40,7 @@ export function ServicesSection({
   onRemoveService,
   onEditPriceSave,
   onEditQtySave,
+  onEditDiscountSave,
   t,
 }: ServicesSectionProps) {
   const isEmpty = (services?.length ?? 0) === 0;
@@ -90,15 +97,42 @@ export function ServicesSection({
               price={t("price")}
             />
             {services?.map((svc) => (
-              <WorkOrderRow
+              <ServiceLineRow
                 key={svc.id}
-                name={getServiceDisplayName(svc)}
+                name={svc.service_name}
+                nameMn={getServiceDisplayName(svc)}
                 quantity={Number(svc.quantity ?? 1)}
-                price={Number(svc.final_price)}
-                onQtySave={(qty) => onEditQtySave(svc.id, qty)}
-                onPriceSave={(price) => onEditPriceSave(svc.id, price)}
+                unitPrice={Number(svc.unit_price ?? 0)}
+                finalPrice={Number(svc.final_price)}
+                discountAmount={Number(svc.discount_amount ?? 0)}
+                discountPercent={Number(svc.discount_percentage ?? 0)}
+                lastPrice={undefined}
+                locale={locale}
+                onQuantityChange={(qty) => onEditQtySave(svc.id, qty)}
+                onPriceChange={(price) => onEditPriceSave(svc.id, price)}
+                onDiscountAmountChange={
+                  onEditDiscountSave
+                    ? (amount) =>
+                        onEditDiscountSave(
+                          svc.id,
+                          amount,
+                          Number(svc.discount_percentage ?? 0),
+                        )
+                    : undefined
+                }
+                onDiscountPercentChange={
+                  onEditDiscountSave
+                    ? (percent) =>
+                        onEditDiscountSave(
+                          svc.id,
+                          Number(svc.discount_amount ?? 0),
+                          percent,
+                        )
+                    : undefined
+                }
                 onDelete={() => onRemoveService(svc.id)}
                 deleteLabel={t("removeServiceAria")}
+                t={t}
               />
             ))}
           </div>

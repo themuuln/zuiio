@@ -132,7 +132,7 @@ export function ProductCard({
 		<Link
 			href={href}
 			className={cn(
-				"group relative flex flex-col rounded-2xl border border-border bg-card p-8 transition-all duration-250 ease-out hover:-translate-y-1 hover:shadow-card-hover",
+				"group relative flex flex-col rounded-2xl bg-card p-8 shadow-md transition-shadow duration-250 ease-out hover:shadow-lg",
 				className,
 			)}
 		>
@@ -168,7 +168,7 @@ export function ProductCard({
 				className="mt-6 flex items-center gap-1.5 text-sm font-medium transition-all duration-250 ease-out group-hover:gap-3"
 				style={{ color: iconColor }}
 			>
-				Learn more{" "}
+				Learn more…{" "}
 				<ArrowRightIcon className="transition-transform duration-250 ease-out group-hover:translate-x-0.5" />
 			</div>
 		</Link>

@@ -1,22 +1,12 @@
 "use client";
 
-import {
-  BarChart3,
-  Building2,
-  Clock,
-  Globe,
-  Plus,
-  User,
-  Users,
-} from "lucide-react";
+import { Building2, Globe, Plus, User, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { ExportButton } from "@/components/export-button";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
 import { ListPageShell } from "@/components/list-page-shell";
 import { ListToolbar } from "@/components/list-toolbar";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
@@ -30,9 +20,8 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useClientNow } from "@/hooks/use-client-now";
 import { usePageHeader } from "@/hooks/use-page-header";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import type { ExportColumn } from "@/lib/export";
-import { useTableFilters } from "@/lib/hooks/use-url-filters";
+import { useTableFilters } from "@zuiio/hooks";
 import { useCustomers, useSharedCustomers } from "@/lib/queries/use-customers";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId } from "@/lib/stores";
@@ -121,59 +110,6 @@ export default function CustomersPage() {
         (c) => !c.last_visit_at || new Date(c.last_visit_at) < threeMonthsAgo,
       )
     : rawCustomersForView;
-
-  const { registerTab } = useRightSidebar();
-
-  useEffect(() => {
-    if (!rawCustomersForView) return;
-
-    const now = new Date();
-    const newThisMonth = rawCustomersForView.filter(
-      (c) =>
-        c.created_at &&
-        new Date(c.created_at).getMonth() === now.getMonth() &&
-        new Date(c.created_at).getFullYear() === now.getFullYear(),
-    ).length;
-
-    registerTab(
-      "stats",
-      t("common.stats"),
-      <StatusSummary
-        title={t("customers.overview")}
-        items={[
-          {
-            label: t("customers.totalCustomers"),
-            count: rawCustomersForView.length,
-          },
-          { label: t("customers.newThisMonth"), count: newThisMonth },
-        ]}
-      />,
-      <BarChart3 className="size-4" />,
-    );
-
-    const recent = [...rawCustomersForView]
-      .sort(
-        (a, b) =>
-          new Date(b.created_at ?? 0).getTime() -
-          new Date(a.created_at ?? 0).getTime(),
-      )
-      .slice(0, 5)
-      .map((c) => ({
-        id: c.id,
-        primary:
-          [c.first_name, c.last_name].filter(Boolean).join(" ") ||
-          c.phone ||
-          t("common.unknown"),
-        secondary: c.phone,
-      }));
-
-    registerTab(
-      "recent",
-      t("common.recent"),
-      <RecentList items={recent} title={t("customers.recentCustomers")} />,
-      <Clock className="size-4" />,
-    );
-  }, [rawCustomersForView, registerTab, t]);
 
   const inactiveChip: FilterChip = {
     key: "inactive",

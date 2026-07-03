@@ -21,7 +21,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   Select,
   SelectContent,
@@ -417,19 +417,17 @@ export default function PayrollPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Input
-                          type="number"
-                          step="0.5"
-                          min="0"
-                          className="h-9 w-32 rounded-xl"
-                          placeholder={row.hourlyRate?.toString() ?? "0"}
-                          value={draftValue}
-                          onChange={(event) =>
+                        <CurrencyInput
+                          value={Number(draftValue) || 0}
+                          onChange={(val) =>
                             setEditingRates((prev) => ({
                               ...prev,
-                              [row.mechanicId]: event.target.value,
+                              [row.mechanicId]: String(val),
                             }))
                           }
+                          min={0}
+                          className="h-9 w-32 rounded-xl"
+                          placeholder={row.hourlyRate?.toString() ?? "0"}
                         />
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">

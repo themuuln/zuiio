@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
-import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
+import { DetailSheetHeader } from "@/components/ui/detail-drawer-header";
 import {
   Field,
   FieldContent,
@@ -174,7 +174,7 @@ export function SupplierDetailSheet({
             </Button>
           </div>
         ) : (
-          <form id="supplier-detail-sheet-form" onSubmit={onSubmit}>
+          <form id="supplier-detail-drawer-form" onSubmit={onSubmit}>
             <FieldGroup>
               <Field data-invalid={!!form.formState.errors.name}>
                 <FieldLabel>
@@ -296,7 +296,7 @@ export function SupplierDetailSheet({
           </Button>
           <Button
             type="submit"
-            form="supplier-detail-sheet-form"
+            form="supplier-detail-drawer-form"
             className="flex-1 gap-2"
             disabled={updateSupplier.isPending}
           >

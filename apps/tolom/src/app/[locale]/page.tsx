@@ -69,7 +69,7 @@ const FEATURES = [
   {
     key: "featureCustomers",
     icon: Users,
-    gradient: "from-violet-500/20 to-violet-600/10",
+    gradient: "from-sky-500/20 to-sky-600/10",
     previewLabel: "CRM",
   },
   {
@@ -93,7 +93,7 @@ const FEATURES = [
   {
     key: "featureMultiBranch",
     icon: Users,
-    gradient: "from-indigo-500/20 to-indigo-600/10",
+    gradient: "from-slate-500/20 to-slate-600/10",
     previewLabel: "Multi-Branch",
   },
   {

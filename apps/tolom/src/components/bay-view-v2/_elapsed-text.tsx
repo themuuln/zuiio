@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 
 export function ElapsedText({
   startedAt,
+  className,
 }: {
   startedAt: string | null | undefined;
+  className?: string;
 }) {
   const [display, setDisplay] = useState("");
   useEffect(() => {
@@ -22,5 +24,5 @@ export function ElapsedText({
     const interval = setInterval(tick, 30000);
     return () => clearInterval(interval);
   }, [startedAt]);
-  return <>{display}</>;
+  return <span className={className}>{display}</span>;
 }

@@ -2,7 +2,7 @@
 
 import { Plus, Truck, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -420,6 +422,28 @@ function POItemEditor({
   t: (key: string) => string;
 }) {
   const [count, setCount] = useState(0);
+  const [itemValues, setItemValues] = useState<{ qty: number; cost: number }[]>([]);
+  const prevCountRef = useRef(count);
+
+  useEffect(() => {
+    if (count !== prevCountRef.current) {
+      prevCountRef.current = count;
+      setItemValues((prev) => {
+        if (prev.length === count) return prev;
+        const next = prev.slice(0, count);
+        while (next.length < count) next.push({ qty: 1, cost: 0 });
+        return next;
+      });
+    }
+  }, [count]);
+
+  const updateItem = (index: number, field: "qty" | "cost", val: number) => {
+    setItemValues((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: val };
+      return next;
+    });
+  };
 
   return (
     <div className="flex flex-col gap-3">
@@ -446,25 +470,25 @@ function POItemEditor({
           </div>
           <div className="w-20 flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">{t("qty")}</span>
-            <input
-              type="number"
-              name={`item_${i}_qty`}
-              defaultValue={1}
+            <NumericInput
+              value={itemValues[i]?.qty ?? 1}
+              onChange={(qty) => updateItem(i, "qty", Math.max(1, Math.round(qty)))}
               min={1}
-              className="h-9 w-full rounded border border-input bg-background px-2 text-sm text-center"
+              className="h-9 w-full text-center"
             />
+            <input type="hidden" name={`item_${i}_qty`} value={itemValues[i]?.qty ?? 1} />
           </div>
           <div className="w-24 flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">
               {t("unitCost")}
             </span>
-            <input
-              type="number"
-              name={`item_${i}_cost`}
-              defaultValue={0}
-              min={0}
-              className="h-9 w-full rounded border border-input bg-background px-2 text-sm text-right"
+            <CurrencyInput
+              value={itemValues[i]?.cost ?? 0}
+              onChange={(cost) => updateItem(i, "cost", cost)}
+              showPrefix={false}
+              className="h-9 w-full text-right"
             />
+            <input type="hidden" name={`item_${i}_cost`} value={itemValues[i]?.cost ?? 0} />
           </div>
           <Button
             variant="ghost"

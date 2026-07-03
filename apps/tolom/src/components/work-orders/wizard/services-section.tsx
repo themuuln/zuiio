@@ -1,14 +1,13 @@
 "use client";
 
-import { Check, Clock, Plus, Trash2, Wrench } from "lucide-react";
+import { Check, Clock, Plus, Wrench } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { SearchInput } from "@/components/search-input";
 import { ServiceForm } from "@/components/services/service-form";
+import { ServiceLineRow } from "@/components/work-orders/line-items";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { NumericKeypad } from "@/components/ui/numeric-keypad";
 import { Typography } from "@/components/ui/typography";
 import { formatCurrency } from "@/lib/utils";
 import { useWizardContext } from "./wizard-context";
@@ -275,88 +274,30 @@ export function ServicesSection() {
 
         {/* Service lines */}
         {ctx.serviceLines.length > 0 && (
-          <div className="border rounded-lg overflow-hidden">
-            <div className="divide-y">
-              {ctx.serviceLines.map((svc, idx) => (
-                <div
-                  key={svc.service_catalog_id ?? `wsvc-${idx}`}
-                  className="flex flex-wrap items-center gap-2 p-3 hover:bg-muted/20"
-                >
-                  <div className="flex-1 min-w-[120px]">
-                    <Typography.Text className="text-sm font-medium truncate">
-                      {svc.name}
-                    </Typography.Text>
-                    {svc.last_price && (
-                      <Typography.Text
-                        className={`text-[11px] ${svc.base_price <= svc.last_price ? "text-green-600" : "text-amber-600"}`}
-                      >
-                        {svc.base_price <= svc.last_price ? "✓ " : "↑ "}
-                        {t("lastSoldShort", {
-                          price: formatCurrency(svc.last_price),
-                        })}
-                      </Typography.Text>
-                    )}
-                  </div>
-                  <NumericKeypad
-                    value={svc.quantity}
-                    onChange={(val) =>
-                      ctx.updateService(
-                        idx,
-                        "quantity",
-                        Math.max(1, Math.round(val)),
-                      )
-                    }
-                  >
-                    <Input
-                      value={svc.quantity}
-                      className="w-16 h-11 text-center cursor-pointer"
-                      min={1}
-                      aria-label={t("quantity")}
-                    />
-                  </NumericKeypad>
-                  <NumericKeypad
-                    value={svc.base_price}
-                    onChange={(val) =>
-                      ctx.updateService(idx, "base_price", val)
-                    }
-                  >
-                    <Input
-                      value={svc.base_price}
-                      className="w-28 h-11 cursor-pointer"
-                      aria-label={t("price")}
-                    />
-                  </NumericKeypad>
-                  <div className="flex items-center gap-1">
-                    <NumericKeypad
-                      value={svc.discount_amount_mnt}
-                      onChange={(val) =>
-                        ctx.updateService(idx, "discount_amount_mnt", val)
-                      }
-                    >
-                      <Input
-                        value={svc.discount_amount_mnt || ""}
-                        className="w-24 h-11 cursor-pointer"
-                        placeholder={t("discount")}
-                        aria-label={t("discount")}
-                      />
-                    </NumericKeypad>
-                  </div>
-                  <span className="w-24 text-right text-sm font-semibold tabular-nums shrink-0">
-                    {formatCurrency(svc.final_price)}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={() => ctx.removeService(idx)}
-                    data-slot="touch-target"
-                    className="min-w-[44px]"
-                    aria-label={t("remove")}
-                  >
-                    <Trash2 className="size-5 text-destructive" />
-                  </Button>
-                </div>
-              ))}
-            </div>
+          <div className="border rounded-lg overflow-hidden divide-y">
+            {ctx.serviceLines.map((svc, idx) => (
+              <ServiceLineRow
+                key={svc.service_catalog_id ?? `wsvc-${idx}`}
+                name={svc.name}
+                quantity={svc.quantity}
+                unitPrice={svc.base_price}
+                finalPrice={svc.final_price}
+                discountAmount={svc.discount_amount_mnt}
+                discountPercent={svc.discount_percent}
+                lastPrice={svc.last_price}
+                onQuantityChange={(qty) =>
+                  ctx.updateService(idx, "quantity", qty)
+                }
+                onPriceChange={(price) =>
+                  ctx.updateService(idx, "base_price", price)
+                }
+                onDiscountAmountChange={(amount) =>
+                  ctx.updateService(idx, "discount_amount_mnt", amount)
+                }
+                onDelete={() => ctx.removeService(idx)}
+                deleteLabel={t("remove")}
+              />
+            ))}
           </div>
         )}
 

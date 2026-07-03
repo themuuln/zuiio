@@ -42,7 +42,7 @@ export function StatusStepper({ currentStatus }: { currentStatus: string }) {
                   STATUS_DOT["Ready for Pickup"] +
                     " border-emerald-500 text-white shadow-sm",
                 isCurrent &&
-                  "bg-indigo-600 border-indigo-600 text-white scale-110 shadow-sm shadow-indigo-600/30 font-bold",
+                  "bg-teal-600 border-teal-600 text-white scale-110 shadow-sm shadow-teal-600/30 font-bold",
                 isFuture &&
                   "bg-background border-border text-muted-foreground/35",
               )}
@@ -52,8 +52,7 @@ export function StatusStepper({ currentStatus }: { currentStatus: string }) {
             <span
               className={cn(
                 "text-xs font-bold leading-none tracking-tight transition-colors",
-                isCurrent &&
-                  "text-indigo-600 dark:text-indigo-400 font-extrabold",
+                isCurrent && "text-teal-600 dark:text-teal-400 font-extrabold",
                 !isCurrent && "text-muted-foreground/45",
               )}
             >

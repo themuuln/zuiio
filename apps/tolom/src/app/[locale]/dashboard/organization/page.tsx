@@ -40,7 +40,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { orgKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -260,95 +259,6 @@ export default function OrganizationPage() {
     ],
     [orgT],
   );
-
-  const { registerTab, unregisterTab } = useRightSidebar();
-
-  useEffect(() => {
-    registerTab(
-      "subscription",
-      orgT("subscription"),
-      <div className="flex flex-col gap-2">
-        {subscription ? (
-          <>
-            <div className="rounded-md border border-border/50 bg-card px-2.5 py-1.5">
-              <Typography.Muted className="text-[10px] text-muted-foreground">
-                {orgT("plan")}
-              </Typography.Muted>
-              <Typography.Text className="text-xs font-medium">
-                {formatPlanType(subscription.planType)}
-              </Typography.Text>
-            </div>
-            <div className="rounded-md border border-border/50 bg-card px-2.5 py-1.5">
-              <Typography.Muted className="text-[10px] text-muted-foreground">
-                {orgT("status")}
-              </Typography.Muted>
-              <Typography.Text className="text-xs font-medium capitalize">
-                {subscription.status}
-              </Typography.Text>
-            </div>
-            <div className="rounded-md border border-border/50 bg-card px-2.5 py-1.5">
-              <Typography.Muted className="text-[10px] text-muted-foreground">
-                {orgT("started")}
-              </Typography.Muted>
-              <Typography.Text className="text-xs font-medium">
-                {formatDate(subscription.startedAt)}
-              </Typography.Text>
-            </div>
-            {subscription.trial && subscription.expiresAt && (
-              <div className="rounded-md border border-amber-200/50 bg-amber-50/50 px-2.5 py-1.5 dark:border-amber-900/30 dark:bg-amber-950/20">
-                <Typography.Muted className="text-[10px] text-muted-foreground">
-                  {orgT("trialEnds")}
-                </Typography.Muted>
-                <Typography.Text className="text-xs font-medium">
-                  {formatDate(subscription.expiresAt)}
-                </Typography.Text>
-              </div>
-            )}
-            {subscription.planType !== "enterprise" && (
-              <Link
-                href="/pricing"
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "sm" }),
-                  "mt-1 h-8 w-full text-xs",
-                )}
-              >
-                {orgT("upgradePlan")}
-              </Link>
-            )}
-            {subscription.planType === "enterprise" && (
-              <Badge variant="secondary" className="mt-1 w-fit text-[10px]">
-                {orgT("currentPlan")}
-              </Badge>
-            )}
-          </>
-        ) : (
-          <Typography.Muted className="text-xs text-muted-foreground">
-            {orgT("noActiveSubscription")}
-          </Typography.Muted>
-        )}
-      </div>,
-    );
-
-    registerTab(
-      "team",
-      orgT("team"),
-      <Typography.Muted className="px-2.5 py-1.5 text-xs text-muted-foreground">
-        {orgT("manageTeamMembers")}
-      </Typography.Muted>,
-    );
-
-    return () => {
-      unregisterTab("subscription");
-      unregisterTab("team");
-    };
-  }, [
-    formatDate,
-    formatPlanType,
-    orgT,
-    registerTab,
-    subscription,
-    unregisterTab,
-  ]);
 
   if (loading) {
     return (

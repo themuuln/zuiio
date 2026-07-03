@@ -31,6 +31,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
@@ -293,11 +294,12 @@ function CommissionFormDialog({
               </FieldLabel>
               <FieldContent>
                 <div className="relative">
-                  <Input
+                  <NumericInput
                     id="commission-value"
-                    type="number"
-                    step="0.01"
-                    min="0"
+                    value={Number(form.watch("commissionValue")) || 0}
+                    onChange={(val) => form.setValue("commissionValue", String(val))}
+                    min={0}
+                    step={0.01}
                     placeholder={
                       watchedCommissionType === "fixed_per_work_order"
                         ? "0.00"
@@ -309,7 +311,6 @@ function CommissionFormDialog({
                         ? "pr-8"
                         : ""
                     }
-                    {...form.register("commissionValue")}
                   />
                   {watchedCommissionType !== "fixed_per_work_order" && (
                     <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
@@ -331,13 +332,13 @@ function CommissionFormDialog({
                   {t("minCommission")}
                 </FieldLabel>
                 <FieldContent>
-                  <Input
+                  <NumericInput
                     id="min-commission"
-                    type="number"
-                    step="0.01"
-                    min="0"
+                    value={Number(form.watch("minCommission")) || 0}
+                    onChange={(val) => form.setValue("minCommission", String(val))}
+                    min={0}
+                    step={0.01}
                     placeholder={t("optional")}
-                    {...form.register("minCommission")}
                   />
                 </FieldContent>
               </Field>
@@ -346,13 +347,13 @@ function CommissionFormDialog({
                   {t("maxCommission")}
                 </FieldLabel>
                 <FieldContent>
-                  <Input
+                  <NumericInput
                     id="max-commission"
-                    type="number"
-                    step="0.01"
-                    min="0"
+                    value={Number(form.watch("maxCommission")) || 0}
+                    onChange={(val) => form.setValue("maxCommission", String(val))}
+                    min={0}
+                    step={0.01}
                     placeholder={t("optional")}
-                    {...form.register("maxCommission")}
                   />
                 </FieldContent>
               </Field>

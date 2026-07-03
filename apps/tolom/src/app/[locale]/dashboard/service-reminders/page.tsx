@@ -9,10 +9,9 @@ import {
   X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -40,12 +39,10 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Typography } from "@/components/ui/typography";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import {
   useCreateServiceSchedule,
   useDeleteServiceSchedule,
-  useReminderLogs,
   useServiceSchedules,
   useUpdateContactStatus,
   useUpdateServiceSchedule,
@@ -54,7 +51,7 @@ import { useVehicles } from "@/lib/queries/use-vehicles";
 import { useSelectedBranchId } from "@/lib/stores";
 import { ActionButtons } from "./_action-buttons";
 import { AddScheduleDialog } from "./_add-schedule-dialog";
-import { ConfigSheet } from "./_config-sheet";
+import { ConfigSheet } from "./_config-drawer";
 import { DeleteConfirmDialog } from "./_delete-confirm-dialog";
 import { EditScheduleDialog } from "./_edit-schedule-dialog";
 import { ReminderLogsTab } from "./_reminder-logs-tab";
@@ -83,8 +80,6 @@ export default function ServiceRemindersPage() {
   const deleteSchedule = useDeleteServiceSchedule(orgId);
   const updateSchedule = useUpdateServiceSchedule(orgId);
   const updateContactStatus = useUpdateContactStatus(orgId);
-  const reminderLogs = useReminderLogs(orgId, undefined, branchFilter);
-  const { registerTab } = useRightSidebar();
 
   const [editItem, setEditItem] = useState<{
     id: string;
@@ -206,51 +201,6 @@ export default function ServiceRemindersPage() {
   };
 
   const listError = error ? error.message : null;
-
-  // Sidebar tabs
-  useEffect(() => {
-    if (!schedules) return;
-
-    registerTab(
-      "due-soon",
-      t("sidebar.dueSoon"),
-      <StatusSummary
-        title={t("sidebar.reminderStatus")}
-        items={[
-          {
-            label: t("sidebar.overdue"),
-            count: counts.overdue,
-            color: "destructive" as const,
-          },
-          { label: t("sidebar.dueIn7Days"), count: counts.dueSoon },
-        ]}
-      />,
-    );
-
-    const logs = reminderLogs.data ?? [];
-    const recent = logs.slice(0, 10).map((log) => ({
-      id: log.id,
-      primary: log.vehicle ? formatVehicleLabel(log.vehicle) : log.service_name,
-      secondary: `${log.status} · ${log.channel}`,
-      timestamp: log.scheduled_at
-        ? new Date(log.scheduled_at).toLocaleDateString("mn-MN", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          })
-        : undefined,
-    }));
-
-    registerTab(
-      "history",
-      t("serviceReminders.reminderLogs"),
-      <RecentList
-        items={recent}
-        title={t("sidebar.recentSends")}
-        emptyMessage={t("sidebar.noReminderHistory")}
-      />,
-    );
-  }, [schedules, counts, reminderLogs.data, registerTab, t]);
 
   return (
     <div className="flex flex-col gap-4 p-4">

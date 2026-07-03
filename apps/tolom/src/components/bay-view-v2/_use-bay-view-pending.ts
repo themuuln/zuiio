@@ -98,3 +98,24 @@ export function useBayViewPending() {
     requestPickupComplete,
   } as const;
 }
+
+export interface BayViewPendingState {
+  pending: PendingIntercept;
+  clearPending: () => void;
+  requestStatusChange: (woId: string, status: string) => void;
+  requestPostService: (
+    woId: string,
+    vehicleId: string,
+    vehiclePlate: string,
+    currentOdometer: number | null,
+    newStatus: string,
+    totalCost: number,
+  ) => void;
+  requestPickupComplete: (
+    woId: string,
+    vehicleId: string,
+    vehiclePlate: string,
+    newStatus: string,
+    totalCost: number,
+  ) => void;
+}

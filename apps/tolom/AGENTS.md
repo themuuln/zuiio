@@ -6,17 +6,16 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Agent Instructions
 
-## Required reading: @zuiio shared context (inside monorepo)
+## Required reading: @zuiio shared context
 
-This project now lives inside the `@zuiio` monorepo at `apps/tolom/`. Before coding, load these shared docs:
+Before coding, load these shared design system docs from the `@zuiio` monorepo (sibling dir `../zuiio/`):
 
 | File | What it covers |
 |------|----------------|
-| `../../docs/design.md` | OKLch color tokens, typography, spacing, motion, component conventions, voice & tone |
-| `../../docs/vision.md` | Overall zuiio product vision and how we build |
-| `../../docs/stack-web.md` | Next.js 16 stack, Instant Navigations, Turbopack config |
-| `../../.claude/instructions.md` | Design essentials quick reference + common patterns |
-| `../../AGENTS.md` | Monorepo project structure, package map, TypeScript conventions |
+| `../zuiio/docs/design.md` | OKLch color tokens, typography, spacing, motion, component conventions, voice & tone |
+| `../zuiio/docs/vision.md` | Overall zuiio product vision and how we build |
+| `../zuiio/docs/stack-web.md` | Next.js 16 stack, Instant Navigations, Turbopack config |
+| `../zuiio/.claude/instructions.md` | Design essentials quick reference + common patterns |
 
 **Always read `VISION.md` first** — it is the single source of truth for project direction, architecture, goals, and principles. This file (AGENTS.md) covers operational rules and coding specifics. When in doubt, defer to VISION.md.
 
@@ -56,6 +55,10 @@ This project now lives inside the `@zuiio` monorepo at `apps/tolom/`. Before cod
 | **Theme/visual changes** | `design-system` |
 | **Accessibility audit** | `accessibility` |
 | **Toast/notification work** | `error-handling` |
+| **Design cleanup / anti-slop removal** | `impeccable` → `redesign-existing-projects` → `design-taste-frontend` |
+| **Visual polish / UI refinement** | `impeccable` (polish) → `design-system` |
+| **Design audit / critique** | `impeccable` (critique) → `design-system` |
+| **Redesign existing page/feature** | `impeccable` → `redesign-existing-projects` → `design-system` |
 | **Database queries** | `supabase-patterns` |
 | **PR review / audit** | **Manual:** `/skill:codebase-review` |
 
@@ -76,6 +79,12 @@ When multiple skills apply, load them in the listed order. Earlier skills set co
 **"Write tests for expense service"** → `testing-patterns` + `supabase-patterns`
 
 **"Add dark mode toggle"** → `design-system` + `accessibility` + `code-standards`
+
+**"Clean up this AI slop website"** → `impeccable` (critique) → `redesign-existing-projects` → `design-taste-frontend`
+
+**"Polish this interface / make it look premium"** → `impeccable` (polish) → `design-system`
+
+**"Audit my UI for issues"** → `impeccable` (critique) → `design-system`
 
 ---
 
@@ -434,3 +443,25 @@ After any user-facing change, check if `docs/*.md` (VitePress source) needs upda
 | Feature modules | `src/app/[locale]/dashboard/<module>/AGENTS.md` |
 
 Every dashboard module has its own AGENTS.md. Read the relevant one when working in that module — it contains module-specific patterns, API shapes, and pitfalls not covered here.
+
+---
+
+## Design Context
+
+Before making visual decisions, load these project-level design files:
+
+| File | What it covers |
+|------|----------------|
+| `PRODUCT.md` | Register (product), target users, brand personality, anti-references, design principles, accessibility requirements |
+| `DESIGN.md` | Color palette (OKLCH tokens), typography (SF Pro Display), component conventions, elevation, do's and don'ts |
+| `packages/zuiio/DESIGN.md` | Parent design system (violet brand, teal accent) — inherited foundation |
+| `.impeccable/design.json` | Live panel sidecar: tonal ramps, component HTML/CSS snippets, motion tokens |
+
+**Key identity rules from DESIGN.md:**
+
+- Monochrome-neutral core: no decorative color, no brand color washes
+- Single font family (SF Pro Display) for all UI text
+- Cards use `ring-1 ring-foreground/10`, never paired with drop shadows
+- Red means danger only — never decoration
+- Motion: 150–250ms, ease-out-quart, transform/opacity only
+- Tablet-native: 44px touch targets

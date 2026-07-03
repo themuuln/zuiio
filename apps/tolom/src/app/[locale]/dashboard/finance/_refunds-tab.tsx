@@ -31,7 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
+import { useFuzzySearch } from "@zuiio/hooks";
 import {
   useCancelRefund,
   useRefundList,

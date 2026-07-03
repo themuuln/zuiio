@@ -11,24 +11,15 @@ import {
   Wrench,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { BarChart } from "@/components/charts";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { Typography } from "@/components/ui/typography";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { useBranches } from "@/lib/queries/use-branches";
 import {
   useMechanicCommissions,
@@ -57,10 +48,10 @@ interface MechanicPerf {
 }
 
 const ACCENT_MAP = {
-  indigo: {
-    dot: "bg-indigo-500",
-    icon: "text-indigo-600 dark:text-indigo-400",
-    bg: "bg-indigo-50/60 dark:bg-indigo-950/20 ring-indigo-500/15",
+  teal: {
+    dot: "bg-teal-500",
+    icon: "text-teal-600 dark:text-teal-400",
+    bg: "bg-teal-50/60 dark:bg-teal-950/20 ring-teal-500/15",
   },
   emerald: {
     dot: "bg-emerald-500",
@@ -89,7 +80,7 @@ function KpiCard({
   label: string;
   value: string;
   icon: React.ComponentType<{ className?: string }>;
-  accent: "indigo" | "emerald" | "amber" | "blue";
+  accent: "teal" | "emerald" | "amber" | "blue";
   loading?: boolean;
 }) {
   const a = ACCENT_MAP[accent];
@@ -139,8 +130,6 @@ export default function MechanicPerformancePage() {
     start.setDate(start.getDate() - 29);
     return { from: start, to: end };
   });
-  const { registerTab, unregisterTab } = useRightSidebar();
-
   // ── Compute date range ────────────────────────────
   const selectedRange = useMemo(() => {
     if (!dateRange?.from) return null;
@@ -233,60 +222,6 @@ export default function MechanicPerformancePage() {
     null,
   );
 
-  // ── Sidebar ───────────────────────────────────────
-  useEffect(() => {
-    if (!mechanics.length) return;
-    const totalJobs = mechanics.reduce(
-      (s, m) => s + m.work_orders_completed,
-      0,
-    );
-    const totalHours = mechanics.reduce((s, m) => s + m.hours_worked, 0);
-    const totalRevenue = mechanics.reduce((s, m) => s + m.total_revenue, 0);
-    const topMech = mechanics[0];
-
-    registerTab(
-      "summary",
-      t("sidebar.summary"),
-      <StatusSummary
-        title={t("sidebar.periodSummary")}
-        items={[
-          { label: t("activeMechanics"), count: mechanics.length },
-          { label: t("sidebar.totalJobs"), count: totalJobs },
-          {
-            label: t("sidebar.totalHours"),
-            count: Math.round(totalHours * 10) / 10,
-          },
-          { label: t("totalRevenue"), count: totalRevenue },
-          ...(topMech
-            ? [
-                {
-                  label: `${t("sidebar.top")}: ${topMech.mechanic_name.split(" ")[0]}`,
-                  count: topMech.total_revenue,
-                },
-              ]
-            : []),
-        ]}
-      />,
-      <BarChart3 className="size-4" />,
-    );
-    registerTab(
-      "leaderboard",
-      t("sidebar.rankings"),
-      <RecentList
-        items={mechanics.map((m) => ({
-          id: m.mechanic_id,
-          primary: m.mechanic_name,
-          secondary: `${m.work_orders_completed} ${t("sidebar.jobs")} · ${formatMNT(m.total_revenue)}`,
-        }))}
-        emptyMessage={t("sidebar.noData")}
-      />,
-    );
-    return () => {
-      unregisterTab("summary");
-      unregisterTab("leaderboard");
-    };
-  }, [mechanics, registerTab, unregisterTab, t]);
-
   const totals = useMemo(
     () => ({
       mechanics: mechanics.length,
@@ -369,7 +304,7 @@ export default function MechanicPerformancePage() {
             label={t("activeMechanics")}
             value={loading ? "—" : String(totals.mechanics)}
             icon={Users}
-            accent="indigo"
+            accent="teal"
             loading={loading}
           />
           <KpiCard
@@ -576,7 +511,7 @@ export default function MechanicPerformancePage() {
                               "border-b border-border/40 transition-colors cursor-pointer",
                               "hover:bg-muted/40",
                               isTop &&
-                                "bg-amber-50/30 dark:bg-amber-950/10 border-l-2 border-l-amber-500",
+                                "bg-amber-50/40 dark:bg-amber-950/15 ring-1 ring-amber-500/20",
                             )}
                             onClick={() => setSelectedMechanic(m)}
                           >
@@ -685,218 +620,209 @@ export default function MechanicPerformancePage() {
       </div>
 
       {/* Mechanic Detail Sheet */}
-      <Drawer
+      <DetailDrawer
         open={selectedMechanic !== null}
         onOpenChange={(open) => {
           if (!open) setSelectedMechanic(null);
         }}
+        size="lg"
       >
-        <DrawerContent
-          className="sm:max-w-lg"
-          contentClassName="flex flex-col p-0 overflow-hidden"
-        >
-          {selectedMechanic && (
-            <>
-              <DrawerHeader className="p-6 pb-4 shrink-0 text-left border-b border-border">
-                <DrawerTitle className="text-xl font-bold flex items-center gap-2">
-                  <span>{selectedMechanic.mechanic_name}</span>
-                  {selectedMechanic === sortedMechanics[0] && (
-                    <span className="text-[10px] font-medium text-amber-600 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded-full">
-                      {t("topBadge")}
-                    </span>
-                  )}
-                </DrawerTitle>
-                <DrawerDescription>
-                  {t("performanceBreakdown")}
-                </DrawerDescription>
-              </DrawerHeader>
-
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                {/* KPI grid */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-lg bg-muted/50 p-3">
-                    <Typography.Muted className="text-xs">
-                      {t("jobsCompleted")}
-                    </Typography.Muted>
-                    <p className="text-xl font-semibold tabular-nums mt-1">
-                      {selectedMechanic.work_orders_completed}
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-muted/50 p-3">
-                    <Typography.Muted className="text-xs">
-                      {t("hoursWorked")}
-                    </Typography.Muted>
-                    <p className="text-xl font-semibold tabular-nums mt-1">
-                      {selectedMechanic.hours_worked > 0
-                        ? Math.round(selectedMechanic.hours_worked * 10) / 10
-                        : "—"}
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-muted/50 p-3">
-                    <Typography.Muted className="text-xs">
-                      {t("totalRevenue")}
-                    </Typography.Muted>
-                    <p className="text-xl font-semibold tabular-nums mt-1">
-                      {formatMNT(selectedMechanic.total_revenue)}
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-muted/50 p-3">
-                    <Typography.Muted className="text-xs">
-                      {t("revenuePerHour")}
-                    </Typography.Muted>
-                    <p className="text-xl font-semibold tabular-nums mt-1">
-                      {selectedMechanic.revenue_per_hour > 0
-                        ? formatMNT(
-                            Math.round(selectedMechanic.revenue_per_hour),
-                          )
-                        : "—"}
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-muted/50 p-3">
-                    <Typography.Muted className="text-xs">
-                      {t("avgRevenuePerJob")}
-                    </Typography.Muted>
-                    <p className="text-xl font-semibold tabular-nums mt-1">
-                      {selectedMechanic.avg_revenue_per_wo > 0
-                        ? formatMNT(selectedMechanic.avg_revenue_per_wo)
-                        : "—"}
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-muted/50 p-3">
-                    <Typography.Muted className="text-xs">
-                      {t("customerRating")}
-                    </Typography.Muted>
-                    <p className="text-xl font-semibold tabular-nums mt-1 flex items-center gap-1.5">
-                      {selectedMechanic.avg_satisfaction != null ? (
-                        <>
-                          <Star className="size-4 text-amber-400 fill-amber-400" />
-                          {selectedMechanic.avg_satisfaction.toFixed(1)}
-                          <span className="text-sm text-muted-foreground font-normal">
-                            / 5 ({selectedMechanic.total_reviews}{" "}
-                            {selectedMechanic.total_reviews !== 1
-                              ? t("reviews")
-                              : t("review")}
-                            )
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-muted-foreground/50 text-base">
-                          {t("noReviews")}
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-muted/50 p-3">
-                    <Typography.Muted className="text-xs">
-                      {t("commission")}
-                    </Typography.Muted>
-                    <p className="text-xl font-semibold tabular-nums mt-1">
-                      {selectedMechanic.total_commission > 0 ? (
-                        <span className="text-green-600">
-                          {formatMNT(selectedMechanic.total_commission)}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground/50">—</span>
-                      )}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Service / Parts breakdown */}
-                <div>
-                  <Typography.Muted className="text-xs font-medium mb-2">
-                    {t("servicePartsBreakdown")}
-                  </Typography.Muted>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
-                      <span className="text-sm">{t("servicesPerformed")}</span>
-                      <span className="text-sm font-medium tabular-nums">
-                        {selectedMechanic.services_count}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
-                      <span className="text-sm">{t("partsUsed")}</span>
-                      <span className="text-sm font-medium tabular-nums">
-                        {selectedMechanic.parts_count}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Recent Reviews */}
-                {selectedMechanic.recent_reviews.length > 0 && (
-                  <div>
-                    <Typography.Muted className="text-xs font-medium mb-2">
-                      {t("recentReviews", {
-                        count: selectedMechanic.recent_reviews.length,
-                      })}
-                    </Typography.Muted>
-                    <div className="space-y-2">
-                      {selectedMechanic.recent_reviews.map((review, idx) => (
-                        <div
-                          key={`${review.date}-${idx}`}
-                          className="rounded-lg bg-muted/50 px-3 py-2.5"
-                        >
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center gap-1.5">
-                              {Array.from({ length: 5 }, (_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`size-3 ${
-                                    i < review.rating
-                                      ? "text-amber-400 fill-amber-400"
-                                      : "text-muted-foreground/20"
-                                  }`}
-                                />
-                              ))}
-                              <span className="text-xs text-muted-foreground ml-1">
-                                {review.customer_name ?? t("anonymous")}
-                              </span>
-                            </div>
-                            <span className="text-[10px] text-muted-foreground/60">
-                              {new Date(review.date).toLocaleDateString(
-                                "en-US",
-                                {
-                                  month: "short",
-                                  day: "numeric",
-                                },
-                              )}
-                            </span>
-                          </div>
-                          {review.feedback && (
-                            <p className="text-xs text-muted-foreground mt-1 italic">
-                              "{review.feedback}"
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+        {selectedMechanic && (
+          <>
+            <DetailDrawer.Header className="p-6 pb-4 shrink-0 text-left border-b border-border">
+              <DetailDrawer.Title className="text-xl font-bold flex items-center gap-2">
+                <span>{selectedMechanic.mechanic_name}</span>
+                {selectedMechanic === sortedMechanics[0] && (
+                  <span className="text-[10px] font-medium text-amber-600 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded-full">
+                    {t("topBadge")}
+                  </span>
                 )}
+              </DetailDrawer.Title>
+              <DetailDrawer.Description>
+                {t("performanceBreakdown")}
+              </DetailDrawer.Description>
+            </DetailDrawer.Header>
 
-                {/* Rank context */}
-                <div>
-                  <Typography.Muted className="text-xs font-medium mb-2">
-                    {t("periodContext")}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* KPI grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-lg bg-muted/50 p-3">
+                  <Typography.Muted className="text-xs">
+                    {t("jobsCompleted")}
                   </Typography.Muted>
-                  <div className="rounded-lg bg-muted/50 p-3">
-                    <Typography.Muted className="text-xs">
-                      {t("rankContext", {
-                        rank:
-                          sortedMechanics.findIndex(
-                            (sm) =>
-                              sm.mechanic_id === selectedMechanic.mechanic_id,
-                          ) + 1,
-                        total: mechanics.length,
-                      })}
-                    </Typography.Muted>
+                  <p className="text-xl font-semibold tabular-nums mt-1">
+                    {selectedMechanic.work_orders_completed}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-muted/50 p-3">
+                  <Typography.Muted className="text-xs">
+                    {t("hoursWorked")}
+                  </Typography.Muted>
+                  <p className="text-xl font-semibold tabular-nums mt-1">
+                    {selectedMechanic.hours_worked > 0
+                      ? Math.round(selectedMechanic.hours_worked * 10) / 10
+                      : "—"}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-muted/50 p-3">
+                  <Typography.Muted className="text-xs">
+                    {t("totalRevenue")}
+                  </Typography.Muted>
+                  <p className="text-xl font-semibold tabular-nums mt-1">
+                    {formatMNT(selectedMechanic.total_revenue)}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-muted/50 p-3">
+                  <Typography.Muted className="text-xs">
+                    {t("revenuePerHour")}
+                  </Typography.Muted>
+                  <p className="text-xl font-semibold tabular-nums mt-1">
+                    {selectedMechanic.revenue_per_hour > 0
+                      ? formatMNT(Math.round(selectedMechanic.revenue_per_hour))
+                      : "—"}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-muted/50 p-3">
+                  <Typography.Muted className="text-xs">
+                    {t("avgRevenuePerJob")}
+                  </Typography.Muted>
+                  <p className="text-xl font-semibold tabular-nums mt-1">
+                    {selectedMechanic.avg_revenue_per_wo > 0
+                      ? formatMNT(selectedMechanic.avg_revenue_per_wo)
+                      : "—"}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-muted/50 p-3">
+                  <Typography.Muted className="text-xs">
+                    {t("customerRating")}
+                  </Typography.Muted>
+                  <p className="text-xl font-semibold tabular-nums mt-1 flex items-center gap-1.5">
+                    {selectedMechanic.avg_satisfaction != null ? (
+                      <>
+                        <Star className="size-4 text-amber-400 fill-amber-400" />
+                        {selectedMechanic.avg_satisfaction.toFixed(1)}
+                        <span className="text-sm text-muted-foreground font-normal">
+                          / 5 ({selectedMechanic.total_reviews}{" "}
+                          {selectedMechanic.total_reviews !== 1
+                            ? t("reviews")
+                            : t("review")}
+                          )
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground/50 text-base">
+                        {t("noReviews")}
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-muted/50 p-3">
+                  <Typography.Muted className="text-xs">
+                    {t("commission")}
+                  </Typography.Muted>
+                  <p className="text-xl font-semibold tabular-nums mt-1">
+                    {selectedMechanic.total_commission > 0 ? (
+                      <span className="text-green-600">
+                        {formatMNT(selectedMechanic.total_commission)}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground/50">—</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Service / Parts breakdown */}
+              <div>
+                <Typography.Muted className="text-xs font-medium mb-2">
+                  {t("servicePartsBreakdown")}
+                </Typography.Muted>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
+                    <span className="text-sm">{t("servicesPerformed")}</span>
+                    <span className="text-sm font-medium tabular-nums">
+                      {selectedMechanic.services_count}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
+                    <span className="text-sm">{t("partsUsed")}</span>
+                    <span className="text-sm font-medium tabular-nums">
+                      {selectedMechanic.parts_count}
+                    </span>
                   </div>
                 </div>
               </div>
-            </>
-          )}
-        </DrawerContent>
-      </Drawer>
+
+              {/* Recent Reviews */}
+              {selectedMechanic.recent_reviews.length > 0 && (
+                <div>
+                  <Typography.Muted className="text-xs font-medium mb-2">
+                    {t("recentReviews", {
+                      count: selectedMechanic.recent_reviews.length,
+                    })}
+                  </Typography.Muted>
+                  <div className="space-y-2">
+                    {selectedMechanic.recent_reviews.map((review, idx) => (
+                      <div
+                        key={`${review.date}-${idx}`}
+                        className="rounded-lg bg-muted/50 px-3 py-2.5"
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-1.5">
+                            {Array.from({ length: 5 }, (_, i) => (
+                              <Star
+                                key={i}
+                                className={`size-3 ${
+                                  i < review.rating
+                                    ? "text-amber-400 fill-amber-400"
+                                    : "text-muted-foreground/20"
+                                }`}
+                              />
+                            ))}
+                            <span className="text-xs text-muted-foreground ml-1">
+                              {review.customer_name ?? t("anonymous")}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground/60">
+                            {new Date(review.date).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </span>
+                        </div>
+                        {review.feedback && (
+                          <p className="text-xs text-muted-foreground mt-1 italic">
+                            "{review.feedback}"
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Rank context */}
+              <div>
+                <Typography.Muted className="text-xs font-medium mb-2">
+                  {t("periodContext")}
+                </Typography.Muted>
+                <div className="rounded-lg bg-muted/50 p-3">
+                  <Typography.Muted className="text-xs">
+                    {t("rankContext", {
+                      rank:
+                        sortedMechanics.findIndex(
+                          (sm) =>
+                            sm.mechanic_id === selectedMechanic.mechanic_id,
+                        ) + 1,
+                      total: mechanics.length,
+                    })}
+                  </Typography.Muted>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </DetailDrawer>
     </>
   );
 }

@@ -1,5 +1,6 @@
 import { startOfDay, subDays } from "date-fns";
 import { NextResponse } from "next/server";
+import { generateEveningReport } from "@zuiio/ai-agent";
 import { sendDailyReportEmail } from "@/lib/email";
 import { formatCurrency } from "@/lib/format";
 import { sendTelegramNotification } from "@/lib/notification";
@@ -11,14 +12,19 @@ import { createServiceClient } from "@/lib/supabase/server-service";
  * Sends daily summary Telegram notifications to all orgs that have
  * daily_summary event type enabled, AND sends daily report emails
  * to orgs with report_email_enabled = true.
+ *
+ * Telegram messages use AI-generated prose via DeepSeek Flash.
+ * Falls back to static template on failure or when DEEPSEEK_API_KEY
+ * is not set.
  */
 export async function POST(request: Request) {
-  // Require CRON_SECRET Bearer token to prevent unauthorized invocation
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const deepseekKey = process.env.DEEPSEEK_API_KEY;
 
   try {
     const supabase = createServiceClient();
@@ -31,8 +37,8 @@ export async function POST(request: Request) {
     // ─── Telegram Notifications ─────────────────────────────────────
 
     let telegramSent = 0;
+    let telegramAIDone = 0;
 
-    // Fetch all telegram notification configs with daily_summary enabled
     const { data: configs } = await supabase
       .from("notification_configs")
       .select("*, organizations!inner(name)")
@@ -54,17 +60,83 @@ export async function POST(request: Request) {
           config as unknown as { organizations: { name: string } }
         ).organizations.name;
 
-        // Get report data for this org
         const report = await getFullReport(supabase, orgId, dateFrom, dateTo);
 
-        const message =
+        // Build message: try AI first, fall back to static template
+        let usedAi = false;
+        let message =
           `*${orgName}* — Өдрийн тойм\n\n` +
           `📊 *Борлуулалт:* ${formatCurrency(report.financialSummary.totalSales)}\n` +
           `💵 *Орлого:* ${formatCurrency(report.financialSummary.totalPaid)}\n` +
           `📉 *Зарлага:* ${formatCurrency(report.financialSummary.totalExpenses)}\n` +
           `📦 *Борлуулсан бүтээгдэхүүн:* ${report.productSales.length}\n` +
-          `⏳ *Хүлээгдэж буй:* ${report.pendingSales.length} борлуулалт (${formatCurrency(report.financialSummary.netCash < 0 ? 0 : report.financialSummary.netCash)})\n` +
+          `⏳ *Хүлээгдэж буй:* ${report.pendingSales.length} борлуулалт\n` +
           `📋 *Хөдөлгөөн:* +${report.stockMovements.in} / -${report.stockMovements.out}`;
+
+        if (deepseekKey) {
+          try {
+            const topProducts = [...report.productSales]
+              .sort((a, b) => b.revenue - a.revenue)
+              .slice(0, 5)
+              .map((p) => ({
+                name: p.productName,
+                quantity: p.quantity,
+                revenue: p.revenue,
+              }));
+
+            const lowStockItems: Array<{
+              name: string;
+              stock: number;
+              threshold: number;
+            }> = [];
+
+            message = await generateEveningReport(
+              {
+                date: yesterday.toISOString().slice(0, 10),
+                orgName,
+                totalSales: report.financialSummary.totalSales,
+                totalPaid: report.financialSummary.totalPaid,
+                totalExpenses: report.financialSummary.totalExpenses,
+                grossProfit: report.financialSummary.grossProfit,
+                productSales: report.productSales.map((p) => ({
+                  name: p.productName,
+                  quantity: p.quantity,
+                  revenue: p.revenue,
+                  cost: p.cost,
+                  profit: p.profit,
+                  margin: p.margin,
+                })),
+                topProducts,
+                expenseBreakdown: report.expenseBreakdown.map((e) => ({
+                  category: e.category,
+                  count: e.count,
+                  total: e.total,
+                })),
+                stockMovements: {
+                  in: report.stockMovements.in,
+                  out: report.stockMovements.out,
+                  adjustment: report.stockMovements.adjustment,
+                },
+                pendingSales: report.pendingSales.map((s) => ({
+                  id: s.id,
+                  contactName: s.contactName,
+                  totalAmount: s.totalAmount,
+                  paymentMethod: s.paymentMethod,
+                })),
+                commissionSummary: {
+                  totalEarned: report.commissionSummary.totalEarned,
+                  totalPaid: report.commissionSummary.totalPaid,
+                  totalUnpaid: report.commissionSummary.totalUnpaid,
+                },
+                lowStockItems,
+              },
+              { apiKey: deepseekKey },
+            );
+            usedAi = true;
+          } catch (aiErr) {
+            console.error("AI report generation failed for org", orgId, aiErr);
+          }
+        }
 
         const result = await sendTelegramNotification(
           orgId,
@@ -74,7 +146,10 @@ export async function POST(request: Request) {
           supabase,
         );
 
-        if (result.success) telegramSent++;
+        if (result.success) {
+          telegramSent++;
+          if (usedAi) telegramAIDone++;
+        }
       }
     }
 
@@ -82,7 +157,6 @@ export async function POST(request: Request) {
 
     let emailSent = 0;
 
-    // Fetch all orgs with report_email_enabled and a recipient configured
     const { data: emailOrgs } = await supabase
       .from("organizations")
       .select("id, name, report_email_recipient")
@@ -99,7 +173,6 @@ export async function POST(request: Request) {
           org.name,
           org.report_email_recipient,
         );
-
         if (result.success) emailSent++;
       }
     }
@@ -107,6 +180,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       telegramSent,
+      telegramAIDone,
       emailSent,
     });
   } catch (err) {

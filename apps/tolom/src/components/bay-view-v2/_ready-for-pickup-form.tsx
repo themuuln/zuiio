@@ -2,11 +2,10 @@
 
 import { AlertTriangle, Gauge, MessageSquare, Wallet } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { TransferBankPicker } from "@/components/banks/transfer-bank-picker";
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -16,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { useForm } from "@/lib/hooks/use-form";
 import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
 import { getDefaultTransferBank } from "@/lib/payments/org-bank-accounts";
@@ -90,14 +90,6 @@ export function ReadyForPickupForm({
     },
   });
 
-  const { ref: odometerRef, ...odometerRest } = form.register("odometer");
-  const mergedOdometerRef = useCallback(
-    (el: HTMLInputElement | null) => {
-      odometerRef(el);
-      if (el) el.focus();
-    },
-    [odometerRef],
-  );
 
   const paymentMethod = form.watch("paymentMethod");
   const transferBankId = form.watch("transferBankId");
@@ -185,13 +177,12 @@ export function ReadyForPickupForm({
             </FieldLabel>
             <FieldContent>
               <div className="relative max-w-full">
-                <Input
-                  ref={mergedOdometerRef}
-                  type="number"
+                <NumericInput
                   placeholder={t("postServiceOdometerPlaceholder")}
                   className="h-10 pr-10"
                   min={0}
-                  {...odometerRest}
+                  onChange={(val) => form.setValue("odometer", val?.toString() ?? "", { shouldValidate: true })}
+                  onBlur={() => form.trigger("odometer")}
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none select-none">
                   км

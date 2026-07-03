@@ -15,8 +15,8 @@ organization/
 │   ├── error.tsx                     # Error boundary
 │   ├── types.ts                      # InviteWithEmail type (extends OrgInvite)
 │   ├── _member-list.tsx              # Active member list with role selector + edit/remove actions
-│   ├── _invite-sheet.tsx             # Side sheet: invite by email/phone/username + role
-│   ├── _edit-member-sheet.tsx        # Side sheet: edit name, phone, role, branch
+│   ├── _invite-drawer.tsx            # Side drawer: invite by email/phone/username + role
+│   ├── _edit-member-drawer.tsx       # Side drawer: edit name, phone, role, branch
 │   └── _pending-invites.tsx          # Pending invite list with copy/resend/cancel
 ├── roles/
 │   └── page.tsx                      # Read-only role cards with member counts
@@ -43,8 +43,6 @@ Dashboard-style card grid:
 | **Devices** | Tablet management | Links to `/devices` |
 | **Settings** | Business defaults | Links to `/dashboard/settings` |
 
-Also registers **right sidebar tabs** ("Subscription" and "Team") via `useRightSidebar()`.
-
 API: `GET /api/organizations/{id}` + `GET /api/organizations/{id}/subscription`. Edit saves via `PATCH /api/organizations/{id}`.
 
 ### Members (`members/page.tsx`)
@@ -54,8 +52,8 @@ Full member management page with `useReducer` for batched state:
 | Sub-component | Purpose |
 |---------------|---------|
 | `_member-list.tsx` | Active members: avatar, name, inline role `<Select>`, dropdown (edit/remove) |
-| `_invite-sheet.tsx` | Invite sheet: email/phone/username input + role selector. Zod validated |
-| `_edit-member-sheet.tsx` | Edit sheet: fullName, phone, role, branch. Zod validated |
+| `_invite-drawer.tsx` | Invite drawer: email/phone/username input + role selector. Zod validated |
+| `_edit-member-drawer.tsx` | Edit drawer: fullName, phone, role, branch. Zod validated |
 | `_pending-invites.tsx` | Pending invites: email, expiry, copy link / resend / cancel actions |
 
 **Data fetching pattern:** Manual `useCallback` loaders (not React Query) -- fetches `/api/profile` for orgId, then loads members, invites, roles, branches in parallel on mount.
@@ -73,8 +71,6 @@ Full member management page with `useReducer` for batched state:
 | Resend invite | PATCH | `/api/organizations/{id}/invites` |
 | Update member | PATCH | `/api/organizations/{id}/users/{userId}` |
 | Remove member | DELETE | `/api/organizations/{id}/users` |
-
-Also registers right sidebar tabs ("Roles" role summary, "Pending" invite list).
 
 ### Roles (`roles/page.tsx`)
 
@@ -102,7 +98,7 @@ Thin wrapper that delegates to `@/components/org-theme-settings` component. Uses
 - **No layout.tsx** -- sub-pages are standalone (no shared sidebar like settings)
 - **Members use `useReducer`** instead of React Query for batched state updates across 4 parallel data sources
 - **Every member action re-fetches** the full list after mutation (no optimistic updates)
-- **InviteSheet** supports multi-locale labels (en/mn) for identifier field
+- **InviteDrawer** supports multi-locale labels (en/mn) for identifier field
 - **Role change** is inline via `<Select>` in the member list -- no confirmation dialog
 - All pages use `useTranslations("organization.*")` for i18n
 
@@ -112,6 +108,4 @@ Thin wrapper that delegates to `@/components/org-theme-settings` component. Uses
 - `next-intl` -- translations
 - `zod` -- form validation (invite, edit member, org edit)
 - `sonner` -- toast notifications
-- `@/hooks/use-right-sidebar` -- sidebar tab registration
 - `@/components/org-theme-settings` -- theme customization component
-- `@/components/sidebar-tabs/*` -- StatusSummary, RecentList for sidebar

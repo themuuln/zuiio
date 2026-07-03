@@ -17,7 +17,6 @@ src/components/
 ├── services/             # Service catalog UI
 ├── charts/               # Chart wrapper components
 ├── auth/                 # Auth pages UI
-├── sidebar-tabs/         # Sidebar navigation
 └── app-sidebar/          # App-level sidebar
 ```
 

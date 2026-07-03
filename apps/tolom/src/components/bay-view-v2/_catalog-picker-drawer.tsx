@@ -2,14 +2,7 @@
 
 import { useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import type { CatalogItem } from "./_catalog-combobox";
 import { CatalogCombobox } from "./_catalog-combobox";
 
@@ -49,50 +42,42 @@ export function CatalogPickerDrawer<T extends CatalogItem>({
   const locale = useLocale();
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} swipeDirection="right">
-      <DrawerContent contentClassName="bg-background">
-        <DrawerHeader className="border-b border-border/80 px-5 py-5 pr-16 text-left">
-          <div className="mx-auto flex w-full max-w-3xl flex-col gap-1.5">
-            <DrawerTitle className="text-2xl tracking-tight">
-              {title}
-            </DrawerTitle>
-            <DrawerDescription className="max-w-2xl text-base leading-7 text-muted-foreground/85">
-              {description}
-            </DrawerDescription>
-          </div>
-        </DrawerHeader>
+    <DetailDrawer open={open} onOpenChange={onOpenChange} size="5xl">
+      <DetailDrawer.Header>
+        <DetailDrawer.Title className="text-2xl tracking-tight">
+          {title}
+        </DetailDrawer.Title>
+        <DetailDrawer.Description className="max-w-2xl text-base leading-7 text-muted-foreground/85">
+          {description}
+        </DetailDrawer.Description>
+      </DetailDrawer.Header>
 
-        <div className="flex-1 overflow-y-auto px-5 py-5">
-          <div className="mx-auto flex h-full w-full max-w-3xl flex-col">
-            <CatalogCombobox
-              items={items}
-              search={search}
-              onSearchChange={onSearchChange}
-              onSelect={onSelect}
-              onAddNew={onAddNew}
-              isAdded={isAdded}
-              placeholder={placeholder}
-              noMatchMessage={noMatchMessage}
-              addAsNewLabel={addAsNewLabel}
-              locale={locale}
-              resultsMode="inline"
-            />
-          </div>
-        </div>
+      <DetailDrawer.Body>
+        <CatalogCombobox
+          items={items}
+          search={search}
+          onSearchChange={onSearchChange}
+          onSelect={onSelect}
+          onAddNew={onAddNew}
+          isAdded={isAdded}
+          placeholder={placeholder}
+          noMatchMessage={noMatchMessage}
+          addAsNewLabel={addAsNewLabel}
+          locale={locale}
+          resultsMode="inline"
+        />
+      </DetailDrawer.Body>
 
-        <DrawerFooter className="border-t border-border/80 bg-background/95 px-5 py-4 backdrop-blur">
-          <div className="mx-auto flex w-full max-w-3xl">
-            <Button
-              variant="outline"
-              size="default"
-              className="flex-1 rounded-lg text-sm font-medium"
-              onClick={() => onOpenChange(false)}
-            >
-              {closeLabel}
-            </Button>
-          </div>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+      <DetailDrawer.Footer>
+        <Button
+          variant="outline"
+          size="default"
+          className="flex-1 rounded-lg text-sm font-medium"
+          onClick={() => onOpenChange(false)}
+        >
+          {closeLabel}
+        </Button>
+      </DetailDrawer.Footer>
+    </DetailDrawer>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { STATUS_ACCENT } from "./_constants";
+import { STATUS_ACCENT, URGENCY_CRITICAL, URGENCY_WARNING } from "./_constants";
 
 interface BayCardAccentProps {
   status: string;
@@ -16,10 +16,8 @@ interface BayCardAccentProps {
  */
 function getUrgencyClass(elapsed: number | null | undefined): string {
   if (elapsed == null || elapsed <= 0) return "";
-  if (elapsed > 180)
-    return "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.35)] animate-pulse";
-  if (elapsed > 120)
-    return "bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.3)] animate-pulse";
+  if (elapsed > 180) return `${URGENCY_CRITICAL} animate-pulse`;
+  if (elapsed > 120) return `${URGENCY_WARNING} animate-pulse`;
   return "";
 }
 
@@ -29,8 +27,7 @@ export function BayCardAccent({ status, elapsedMinutes }: BayCardAccentProps) {
   return (
     <div
       className={cn(
-        "absolute bottom-0 left-0 top-0 w-[4px]",
-        urgencyClass || (STATUS_ACCENT[status] ?? "bg-primary"),
+        "h-1 w-full shrink-0 rounded-t-xl",
       )}
     />
   );

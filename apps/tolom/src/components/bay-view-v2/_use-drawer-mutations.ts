@@ -1031,6 +1031,206 @@ export function useDrawerMutations({
     }
   }
 
+  // ── Discount Editing (Service) ──
+
+  async function handleServiceDiscountSave(
+    serviceId: string,
+    discountAmount: number,
+    discountPercent: number,
+  ) {
+    const orgId = orgIdRef.current;
+    if (!orgId || !workOrderId) return;
+
+    const originalService = wo?.services?.find((s) => s.id === serviceId);
+    const oldAmount = originalService?.discount_amount ?? 0;
+    const oldPercent = originalService?.discount_percentage ?? 0;
+
+    // Optimistic: apply discount immediately
+    setWo((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        services: (prev.services ?? []).map((s) =>
+          s.id === serviceId
+            ? {
+                ...s,
+                discount_amount: discountAmount,
+                discount_percentage: discountPercent,
+                // Recompute final_price = (unit_price * quantity) - discount
+                final_price: Math.max(
+                  0,
+                  Number(s.unit_price ?? 0) * Number(s.quantity ?? 1) -
+                    discountAmount,
+                ),
+              }
+            : s,
+        ),
+      };
+    });
+
+    try {
+      const res = await fetch(
+        `/api/organizations/${orgId}/work-orders/${workOrderId}/services?serviceId=${serviceId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            discount_amount: discountAmount,
+            discount_percentage: discountPercent,
+          }),
+        },
+      );
+      const json = await res.json();
+      if (json.error) {
+        // Rollback
+        setWo((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            services: (prev.services ?? []).map((s) =>
+              s.id === serviceId
+                ? {
+                    ...s,
+                    discount_amount: oldAmount,
+                    discount_percentage: oldPercent,
+                    final_price:
+                      Number(s.unit_price ?? 0) * Number(s.quantity ?? 1) -
+                      Number(oldAmount),
+                  }
+                : s,
+            ),
+          };
+        });
+        toast.error(json.error.message ?? "Failed to update discount");
+        return;
+      }
+      toast.dismiss();
+      toast.success("Discount updated");
+      onRefresh();
+    } catch {
+      // Rollback
+      setWo((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          services: (prev.services ?? []).map((s) =>
+            s.id === serviceId
+              ? {
+                  ...s,
+                  discount_amount: oldAmount,
+                  discount_percentage: oldPercent,
+                  final_price:
+                    Number(s.unit_price ?? 0) * Number(s.quantity ?? 1) -
+                    Number(oldAmount),
+                }
+              : s,
+          ),
+        };
+      });
+      toast.error("Failed to update discount");
+    }
+  }
+
+  // ── Discount Editing (Part) ──
+
+  async function handlePartDiscountSave(
+    partId: string,
+    discountAmount: number,
+    discountPercent: number,
+  ) {
+    const orgId = orgIdRef.current;
+    if (!orgId || !workOrderId) return;
+
+    const originalPart = wo?.parts?.find((p) => p.id === partId);
+    const oldAmount = originalPart?.discount_amount ?? 0;
+    const oldPercent = originalPart?.discount_percentage ?? 0;
+
+    // Optimistic: apply discount immediately
+    setWo((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        parts: (prev.parts ?? []).map((p) =>
+          p.id === partId
+            ? {
+                ...p,
+                discount_amount: discountAmount,
+                discount_percentage: discountPercent,
+                // Recompute final_price = (unit_price * quantity) - discount
+                final_price: Math.max(
+                  0,
+                  Number(p.unit_price ?? 0) * Number(p.quantity ?? 1) -
+                    discountAmount,
+                ),
+              }
+            : p,
+        ),
+      };
+    });
+
+    try {
+      const res = await fetch(
+        `/api/organizations/${orgId}/work-orders/${workOrderId}/parts?partId=${partId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            discount_amount: discountAmount,
+            discount_percentage: discountPercent,
+          }),
+        },
+      );
+      const json = await res.json();
+      if (json.error) {
+        // Rollback
+        setWo((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            parts: (prev.parts ?? []).map((p) =>
+              p.id === partId
+                ? {
+                    ...p,
+                    discount_amount: oldAmount,
+                    discount_percentage: oldPercent,
+                    final_price:
+                      Number(p.unit_price ?? 0) * Number(p.quantity ?? 1) -
+                      Number(oldAmount),
+                  }
+                : p,
+            ),
+          };
+        });
+        toast.error(json.error.message ?? "Failed to update discount");
+        return;
+      }
+      toast.dismiss();
+      toast.success("Discount updated");
+      onRefresh();
+    } catch {
+      // Rollback
+      setWo((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          parts: (prev.parts ?? []).map((p) =>
+            p.id === partId
+              ? {
+                  ...p,
+                  discount_amount: oldAmount,
+                  discount_percentage: oldPercent,
+                  final_price:
+                    Number(p.unit_price ?? 0) * Number(p.quantity ?? 1) -
+                    Number(oldAmount),
+                }
+              : p,
+          ),
+        };
+      });
+      toast.error("Failed to update discount");
+    }
+  }
+
   // ── Invoice ──
 
   async function generateInvoice() {
@@ -1301,10 +1501,12 @@ export function useDrawerMutations({
     removeService,
     handleServicePriceSave,
     handleServiceQtySave,
+    handleServiceDiscountSave,
     addPart,
     removePart,
     handlePartPriceSave,
     handlePartQtySave,
+    handlePartDiscountSave,
     assignMechanic,
     changeStatus,
     generateInvoice,

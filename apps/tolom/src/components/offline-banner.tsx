@@ -3,7 +3,7 @@
 import { WifiOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useOnlineStatus } from "@/lib/hooks/use-online-status";
+import { useOnlineStatus } from "@zuiio/hooks";
 
 /**
  * Fixed banner that appears when the browser is offline.

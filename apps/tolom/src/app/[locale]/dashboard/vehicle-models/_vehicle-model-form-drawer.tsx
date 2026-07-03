@@ -15,6 +15,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -396,26 +397,27 @@ export function VehicleModelFormSheet({
               <Field data-invalid={!!form.formState.errors.yearEnd}>
                 <FieldLabel>{t("yearFrom")}</FieldLabel>
                 <FieldContent>
-                  <Input
-                    type="number"
-                    min="1900"
-                    max="2100"
+                  <NumericInput
+                    min={1900}
+                    max={2100}
                     placeholder="2014"
-                    {...form.register("yearStart")}
+                    value={Number(form.watch("yearStart")) || new Date().getFullYear()}
+                    onChange={(v) => form.setValue("yearStart", v.toString())}
+                    onBlur={() => form.trigger("yearStart")}
                   />
                 </FieldContent>
               </Field>
 
               <Field data-invalid={!!form.formState.errors.yearEnd}>
-                <FieldLabel>{t("yearTo")}</FieldLabel>
                 <FieldContent>
-                  <Input
-                    type="number"
-                    min="1900"
-                    max="2100"
+                  <NumericInput
+                    min={1900}
+                    max={2100}
                     placeholder="2020"
                     aria-invalid={!!form.formState.errors.yearEnd}
-                    {...form.register("yearEnd")}
+                    value={Number(form.watch("yearEnd")) || new Date().getFullYear()}
+                    onChange={(v) => form.setValue("yearEnd", v.toString())}
+                    onBlur={() => form.trigger("yearEnd")}
                   />
                   {form.formState.errors.yearEnd && (
                     <FieldError>

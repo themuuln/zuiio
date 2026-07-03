@@ -10,48 +10,48 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v5
-
-      - name: Install Vercel CLI
-        run: npm i -g vercel@latest
-
-      - name: Pull Vercel environment
-        run: >
-          vercel pull --yes --environment=production
-          --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Push env vars to Vercel
+      - name: Push env vars to Vercel API
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          {
-            printf 'NEXT_PUBLIC_SUPABASE_URL=%s\n' \
-              "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}"
-            printf 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=%s\n' \
-              "${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}"
-            printf 'NEXT_PUBLIC_SUPABASE_ANON_KEY=%s\n' \
-              "${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}"
-            printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n' \
-              "${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
-            printf 'RESEND_API_KEY=%s\n' \
-              "${{ secrets.RESEND_API_KEY }}"
-            printf 'SMTP_HOST=%s\n' "${{ secrets.SMTP_HOST }}"
-            printf 'SMTP_PORT=%s\n' "${{ secrets.SMTP_PORT }}"
-            printf 'SMTP_SECURE=%s\n' "${{ secrets.SMTP_SECURE }}"
-            printf 'SMTP_USER=%s\n' "${{ secrets.SMTP_USER }}"
-            printf 'SMTP_PASS=%s\n' "${{ secrets.SMTP_PASS }}"
-            printf 'EMAIL_FROM=%s\n' "${{ secrets.EMAIL_FROM }}"
-          } > /tmp/.env.vercel
+          VERCEL_PROJECT_ID="prj_8ptuuZXIH0gKvAISDhKxtEm5wHo0"
+          VERCEL_TEAM_ID="team_gpvntVuvgulKYbPElyfplj50"
+          API="https://api.vercel.com/v9/projects/${VERCEL_PROJECT_ID}/env?teamId=${VERCEL_TEAM_ID}"
 
-          while IFS='=' read -r name value; do
-            [ -z "$name" ] && continue
-            name="${name%% }"  # strip trailing whitespace
-            # update if exists, add if new
-            vercel env update "$name" production \
-              --value "$value" \
-              --token="$VERCEL_TOKEN" --non-interactive 2>/dev/null \
-            || vercel env add "$name" production \
-              --value "$value" \
-              --yes --non-interactive \
-              --token="$VERCEL_TOKEN"
-          done < /tmp/.env.vercel
+          upsert_env() {
+            local key="$1" value="$2"
+            local file="/tmp/env-${key}.json"
+
+            {
+              printf '%s' '{"key":"'
+              printf '%s' "$key"
+              printf '%s' '","value":"'
+              printf '%s' "$value"
+              printf '%s' '","target":["production"]'
+              printf '%s' ',"type":"encrypted"}'
+            } > "$file"
+
+            curl -sf -X POST "$API" \
+              -H "Authorization: Bearer $VERCEL_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "@$file" \
+              && echo "  ok $key" \
+              || echo "  fail $key"
+          }
+
+          upsert_env "NEXT_PUBLIC_SUPABASE_URL" \
+            "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}"
+          upsert_env "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY" \
+            "${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}"
+          upsert_env "NEXT_PUBLIC_SUPABASE_ANON_KEY" \
+            "${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}"
+          upsert_env "SUPABASE_SERVICE_ROLE_KEY" \
+            "${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
+          upsert_env "RESEND_API_KEY" \
+            "${{ secrets.RESEND_API_KEY }}"
+          upsert_env "SMTP_HOST" "${{ secrets.SMTP_HOST }}"
+          upsert_env "SMTP_PORT" "${{ secrets.SMTP_PORT }}"
+          upsert_env "SMTP_SECURE" "${{ secrets.SMTP_SECURE }}"
+          upsert_env "SMTP_USER" "${{ secrets.SMTP_USER }}"
+          upsert_env "SMTP_PASS" "${{ secrets.SMTP_PASS }}"
+          upsert_env "EMAIL_FROM" "${{ secrets.EMAIL_FROM }}"

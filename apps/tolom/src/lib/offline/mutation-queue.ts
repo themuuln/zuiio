@@ -1,12 +1,11 @@
-// Re-exported from @zuiio/offline — single shared implementation
 export {
+  cleanupStaleMutations,
   enqueueMutation,
-  replayPendingMutations,
-  removeMutation,
   getAllMutations,
   getMutationsByStatus,
   getPendingCount,
-  cleanupStaleMutations,
   type QueuedMutation,
   type ReplayResult,
+  removeMutation,
+  replayPendingMutations,
 } from "@zuiio/offline";

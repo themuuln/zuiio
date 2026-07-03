@@ -135,4 +135,90 @@ describe("bay-view pure service functions", () => {
       assignVehicleToBay(asDb(mockDb), "org-1", "wo-1", 1),
     ).resolves.toBeUndefined();
   });
+
+  describe("batchCompleteWorkOrders", () => {
+    it("calls updateWorkOrderStatusCanonical for each work order", async () => {
+      const { batchCompleteWorkOrders } = await import("./bay-view-service");
+      const mockDb = createMockSupabaseClient();
+
+      const result = await batchCompleteWorkOrders(asDb(mockDb), "org-1", [
+        "wo-1",
+        "wo-2",
+        "wo-3",
+      ]);
+
+      expect(canonicalUpdate).toHaveBeenCalledTimes(3);
+      expect(canonicalUpdate).toHaveBeenCalledWith(
+        asDb(mockDb),
+        "wo-1",
+        "org-1",
+        "Completed",
+      );
+      expect(canonicalUpdate).toHaveBeenCalledWith(
+        asDb(mockDb),
+        "wo-2",
+        "org-1",
+        "Completed",
+      );
+      expect(canonicalUpdate).toHaveBeenCalledWith(
+        asDb(mockDb),
+        "wo-3",
+        "org-1",
+        "Completed",
+      );
+      expect(result.succeeded).toBe(3);
+      expect(result.failed).toBe(0);
+      expect(result.errors).toEqual([]);
+    });
+
+    it("reports partial success when some work orders fail", async () => {
+      const { batchCompleteWorkOrders } = await import("./bay-view-service");
+      const mockDb = createMockSupabaseClient();
+
+      vi.mocked(canonicalUpdate)
+        .mockResolvedValueOnce({} as any) // wo-1 succeeds
+        .mockRejectedValueOnce(new Error("Network error")) // wo-2 fails
+        .mockResolvedValueOnce({} as any); // wo-3 succeeds
+
+      const result = await batchCompleteWorkOrders(asDb(mockDb), "org-1", [
+        "wo-1",
+        "wo-2",
+        "wo-3",
+      ]);
+
+      expect(result.succeeded).toBe(2);
+      expect(result.failed).toBe(1);
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0].woId).toBe("wo-2");
+      expect(result.errors[0].error).toBe("Network error");
+    });
+
+    it("reports total failure when all work orders fail", async () => {
+      const { batchCompleteWorkOrders } = await import("./bay-view-service");
+      const mockDb = createMockSupabaseClient();
+
+      vi.mocked(canonicalUpdate).mockRejectedValue(new Error("Server error"));
+
+      const result = await batchCompleteWorkOrders(asDb(mockDb), "org-1", [
+        "wo-1",
+        "wo-2",
+      ]);
+
+      expect(result.succeeded).toBe(0);
+      expect(result.failed).toBe(2);
+      expect(result.errors).toHaveLength(2);
+    });
+
+    it("returns zero counts for empty input", async () => {
+      const { batchCompleteWorkOrders } = await import("./bay-view-service");
+      const mockDb = createMockSupabaseClient();
+
+      const result = await batchCompleteWorkOrders(asDb(mockDb), "org-1", []);
+
+      expect(canonicalUpdate).not.toHaveBeenCalled();
+      expect(result.succeeded).toBe(0);
+      expect(result.failed).toBe(0);
+      expect(result.errors).toEqual([]);
+    });
+  });
 });

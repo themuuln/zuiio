@@ -6,7 +6,7 @@ import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { generateUUID } from "@/lib/crypto-utils";
+import { generateUUID } from "@zuiio/core";
 import { useCreateAttachment } from "@/lib/queries/use-work-order-attachments";
 import { createClient } from "@/lib/supabase/client";
 

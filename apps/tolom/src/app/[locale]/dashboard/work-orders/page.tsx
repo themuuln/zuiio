@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ClipboardList, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
@@ -21,8 +21,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import type { Table } from "@tanstack/react-table";
 import { Card, CardContent } from "@/components/ui/card";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTablePagination } from "@/components/ui/data-table";
 import {
   Empty,
   EmptyContent,
@@ -32,11 +33,12 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Typography } from "@/components/ui/typography";
+import { ChangeStatusSheet } from "@/components/work-orders/change-status-drawer";
 import { useClientNow } from "@/hooks/use-client-now";
 import { usePageHeader } from "@/hooks/use-page-header";
 import type { ExportColumn } from "@/lib/export";
 import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
-import { useTableFilters } from "@/lib/hooks/use-url-filters";
+import { useTableFilters } from "@zuiio/hooks";
 import { workOrderKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useUpdateWorkOrderStatus } from "@/lib/queries/use-work-order-detail";
@@ -172,9 +174,12 @@ export default function WorkOrdersPage() {
     setStatus,
   } = useTableFilters("work-orders");
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
+  const [changeStatusWoId, setChangeStatusWoId] = useState<string | null>(null);
+  const [changeStatusCurStatus, setChangeStatusCurStatus] = useState("");
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [todayStr, setTodayStr] = useState("");
   const [mounted, setMounted] = useState(false);
+  const tableRef = useRef<Table<WorkOrderListItem> | null>(null);
 
   useEffect(() => {
     setTodayStr(new Date().toISOString().split("T")[0]);
@@ -309,6 +314,10 @@ export default function WorkOrdersPage() {
         onCancel: (woId) => setCancelTarget(woId),
         updatePending: updateStatus.isPending,
         onViewDetail: (woId) => setDetailWorkOrderId(woId),
+        onChangeStatus: (woId, status) => {
+          setChangeStatusWoId(woId);
+          setChangeStatusCurStatus(status);
+        },
       }),
     [handleStatusChange, updateStatus.isPending, setDetailWorkOrderId],
   );
@@ -388,7 +397,7 @@ export default function WorkOrdersPage() {
             </EmptyContent>
           </Empty>
         ) : (
-          <Card className="py-0">
+          <Card className="rounded-sm py-0">
             <CardContent className="p-0">
               <DataTable
                 columns={columns}
@@ -397,6 +406,11 @@ export default function WorkOrdersPage() {
                 pageSize={20}
                 onRowClick={(row) => setDetailWorkOrderId(row.id)}
                 showColumnVisibility
+                insideCard
+                noPagination
+                onTableReady={(t) => {
+                  tableRef.current = t;
+                }}
                 renderMobileCard={(wo) => {
                   const customerName =
                     [wo.customer?.first_name, wo.customer?.last_name]
@@ -487,6 +501,10 @@ export default function WorkOrdersPage() {
             </CardContent>
           </Card>
         )}
+
+        {tableRef.current && list.length > 0 && (
+          <DataTablePagination table={tableRef.current} showColumnVisibility />
+        )}
       </ListPageShell>
 
       <AlertDialog
@@ -518,6 +536,15 @@ export default function WorkOrdersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ChangeStatusSheet
+        open={changeStatusWoId !== null}
+        onOpenChange={(open) => {
+          if (!open) setChangeStatusWoId(null);
+        }}
+        workOrderId={changeStatusWoId ?? ""}
+        currentStatus={changeStatusCurStatus}
+      />
     </>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import {
@@ -41,17 +42,38 @@ import type {
 } from "./_drawer-types";
 import { UnsavedWarning } from "./_drawer-unsaved-warning";
 import { createInvoiceAndRecordPayment } from "./_helpers";
-import { NotesSection } from "./_notes-section";
-import { PartsSection } from "./_parts-section";
 import { resolvePaymentMethodFees } from "./_payment-fees";
-import { QuickActions } from "./_quick-actions";
 import { ReadyForPickupForm } from "./_ready-for-pickup-form";
-import { ServicesSection } from "./_services-section";
-import { StatusTimeline } from "./_status-timeline";
-import { TotalsSummary } from "./_totals-summary";
+import { TotalsSummary } from "@/components/work-orders/line-items";
 import { useDrawerMutations } from "./_use-drawer-mutations";
 import type { PickupCompleteData } from "./pickup-complete-form";
 import { PickupCompleteForm } from "./pickup-complete-form";
+
+// ── Dynamic imports (code-split heavy sections) ────────────────
+const sectionLoading = (h: string) => () => (
+  <div className={`h-${h} animate-pulse rounded-lg bg-muted/10`} />
+);
+
+const ServicesSection = dynamic(
+  () => import("./_services-section").then((m) => m.ServicesSection),
+  { ssr: false, loading: sectionLoading("24") },
+);
+const PartsSection = dynamic(
+  () => import("./_parts-section").then((m) => m.PartsSection),
+  { ssr: false, loading: sectionLoading("24") },
+);
+const NotesSection = dynamic(
+  () => import("./_notes-section").then((m) => m.NotesSection),
+  { ssr: false, loading: sectionLoading("16") },
+);
+const StatusTimeline = dynamic(
+  () => import("./_status-timeline").then((m) => m.StatusTimeline),
+  { ssr: false, loading: sectionLoading("32") },
+);
+const QuickActions = dynamic(
+  () => import("./_quick-actions").then((m) => m.QuickActions),
+  { ssr: false },
+);
 
 // ── Drawer ───────────────────────────────────────────────────
 
@@ -94,9 +116,14 @@ export function WorkOrderDetailDrawer({
   );
 
   // Track first successful load for layout-preserving skeleton
+  // Delay by 320ms to let the drawer slide-in animation finish before
+  // inserting the full content tree (avoids layout thrash mid-transition)
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   useEffect(() => {
-    if (wo && !hasLoadedOnce) setHasLoadedOnce(true);
+    if (wo && !hasLoadedOnce) {
+      const timer = setTimeout(() => setHasLoadedOnce(true), 320);
+      return () => clearTimeout(timer);
+    }
   }, [wo, hasLoadedOnce]);
 
   // fetchWo: refetch the work order detail query (called by mutations after writes)
@@ -144,9 +171,11 @@ export function WorkOrderDetailDrawer({
     removeService,
     handleServicePriceSave,
     handleServiceQtySave,
+    handleServiceDiscountSave,
     removePart,
     handlePartPriceSave,
     handlePartQtySave,
+    handlePartDiscountSave,
     assignMechanic,
     assignCustomer,
     changeStatus,
@@ -601,59 +630,89 @@ export function WorkOrderDetailDrawer({
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                           <div className="lg:col-span-2">
                             <div className="flex flex-col gap-3 min-h-0 flex-1 overflow-y-auto">
-                              <ServicesSection
-                                services={wo.services ?? []}
-                                catalog={catalog}
-                                serviceSearch={serviceSearch}
-                                showAddService={showAddService}
-                                locale={locale}
-                                onServiceSearchChange={setServiceSearch}
-                                onAddServiceOpenChange={
-                                  handleServiceDrawerOpenChange
+                              <div
+                                className="[animation:fade-slide-in_300ms_ease-out-quart_backwards]"
+                                style={
+                                  { "--stagger": 0 } as React.CSSProperties
                                 }
-                                onAddService={handleServiceSelect}
-                                onRemoveService={removeService}
-                                onEditPriceSave={handleServicePriceSave}
-                                onEditQtySave={handleServiceQtySave}
-                                t={t}
-                              />
-
-                              <PartsSection
-                                parts={wo.parts ?? []}
-                                partsCatalog={partsCatalog}
-                                lowStockMap={lowStockMap}
-                                partSearch={partSearch}
-                                showAddPart={showAddPart}
-                                locale={locale}
-                                onPartSearchChange={setPartSearch}
-                                onAddPartOpenChange={handlePartDrawerOpenChange}
-                                onAddPart={handlePartSelect}
-                                onRemovePart={removePart}
-                                onEditPriceSave={handlePartPriceSave}
-                                onEditQtySave={handlePartQtySave}
-                                t={t}
-                              />
-
-                              {orgId && workOrderId ? (
-                                <NotesSection
-                                  complaint={wo.complaint}
-                                  diagnosis={wo.diagnosis}
-                                  notes={wo.notes}
-                                  orgId={orgId}
-                                  workOrderId={workOrderId}
-                                  onUpdated={() => fetchWo(true)}
+                              >
+                                <ServicesSection
+                                  services={wo.services ?? []}
+                                  catalog={catalog}
+                                  serviceSearch={serviceSearch}
+                                  showAddService={showAddService}
+                                  locale={locale}
+                                  onServiceSearchChange={setServiceSearch}
+                                  onAddServiceOpenChange={
+                                    handleServiceDrawerOpenChange
+                                  }
+                                  onAddService={handleServiceSelect}
+                                  onRemoveService={removeService}
+                                  onEditPriceSave={handleServicePriceSave}
+                                  onEditQtySave={handleServiceQtySave}
+                                  onEditDiscountSave={handleServiceDiscountSave}
                                   t={t}
                                 />
+                              </div>
+
+                              <div
+                                className="[animation:fade-slide-in_300ms_ease-out-quart_backwards]"
+                                style={
+                                  { "--stagger": 1 } as React.CSSProperties
+                                }
+                              >
+                                <PartsSection
+                                  parts={wo.parts ?? []}
+                                  partsCatalog={partsCatalog}
+                                  lowStockMap={lowStockMap}
+                                  partSearch={partSearch}
+                                  showAddPart={showAddPart}
+                                  locale={locale}
+                                  onPartSearchChange={setPartSearch}
+                                  onAddPartOpenChange={
+                                    handlePartDrawerOpenChange
+                                  }
+                                  onAddPart={handlePartSelect}
+                                  onRemovePart={removePart}
+                                  onEditPriceSave={handlePartPriceSave}
+                                  onEditQtySave={handlePartQtySave}
+                                  onEditDiscountSave={handlePartDiscountSave}
+                                  t={t}
+                                />
+                              </div>
+
+                              {orgId && workOrderId ? (
+                                <div
+                                  className="[animation:fade-slide-in_300ms_ease-out-quart_backwards]"
+                                  style={
+                                    { "--stagger": 2 } as React.CSSProperties
+                                  }
+                                >
+                                  <NotesSection
+                                    complaint={wo.complaint}
+                                    diagnosis={wo.diagnosis}
+                                    notes={wo.notes}
+                                    orgId={orgId}
+                                    workOrderId={workOrderId}
+                                    onUpdated={() => fetchWo(true)}
+                                    t={t}
+                                  />
+                                </div>
                               ) : null}
                             </div>
                           </div>
 
                           <div className="flex flex-col gap-3 lg:sticky lg:top-3 self-start">
-                            <StatusTimeline
-                              statusHistory={wo.status_history ?? []}
-                              serviceHistory={wo.service_history ?? []}
-                              t={t}
-                            />
+                            <div
+                              className="[animation:fade-slide-in_300ms_ease-out-quart_backwards]"
+                              style={{ "--stagger": 3 } as React.CSSProperties}
+                            >
+                              <StatusTimeline
+                                statusHistory={wo.status_history ?? []}
+                                serviceHistory={wo.service_history ?? []}
+                                t={t}
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -733,6 +792,8 @@ export function WorkOrderDetailDrawer({
                             servicesTotal={servicesTotal}
                             partsTotal={partsTotal}
                             grandTotal={grandTotal}
+                            serviceCount={wo.services?.length ?? 0}
+                            partCount={wo.parts?.length ?? 0}
                             discountTotal={wo.discount_total ?? 0}
                             taxRate={orgSettings?.default_tax_rate ?? 0}
                             nuatEnabled={

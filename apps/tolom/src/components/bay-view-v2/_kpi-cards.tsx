@@ -12,7 +12,6 @@ import {
   Wrench,
 } from "lucide-react";
 import React from "react";
-import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +22,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import type { BaySlotData, ShiftReport } from "@/lib/services/bay-view-service";
 import type { Vehicle, WorkOrder } from "@/lib/types";
-import { cn, formatMNT, formatPlateNumber } from "@/lib/utils";
+import { formatMNT, formatPlateNumber } from "@/lib/utils";
 
 interface TrendDelta {
   bayUtilization: number;
@@ -64,40 +63,6 @@ function formatElapsed(minutes: number | null): string {
   return m > 0 ? `${h}h ${m}m` : `${h}h`;
 }
 
-// ── Clickable card wrapper ─────────────────────────────────────
-
-function ClickableKpiCard({
-  onClick,
-  className,
-  children,
-}: {
-  onClick: () => void;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      onClick();
-    }
-  }
-
-  return (
-    <Card
-      className={cn(
-        "bg-transparent border-none ring-0 shadow-none px-4 py-3 gap-0 flex flex-col rounded-none flex-1 min-w-0 cursor-pointer select-none transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-        className,
-      )}
-      role="button"
-      tabIndex={0}
-      aria-haspopup="dialog"
-      onClick={onClick}
-      onKeyDown={handleKeyDown}
-    >
-      {children}
-    </Card>
-  );
-}
 
 // ── Bay occupancy row ──────────────────────────────────────────
 
@@ -123,7 +88,7 @@ function BayOccupancyRow({
       className="flex items-center justify-between rounded-lg border border-border/50 bg-card px-3 py-2 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
     >
       <div className="flex items-center gap-3">
-        <span className="flex size-7 items-center justify-center rounded-md bg-indigo-100 dark:bg-indigo-900/30 text-xs font-bold text-indigo-700 dark:text-indigo-300">
+        <span className="flex size-7 items-center justify-center rounded-md bg-muted text-xs font-bold text-foreground">
           {bay.bayNumber}
         </span>
         <div className="flex flex-col">
@@ -144,14 +109,39 @@ function BayOccupancyRow({
     </button>
   );
 }
+// ── StatChip component ────────────────────────────────────
+
+function StatChip({ label, value, trend, subtitle, onClick }: {
+  label: string;
+  value: string;
+  trend?: number | null;
+  subtitle?: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-2 text-xs hover:bg-muted/50 px-2 py-1 rounded-md transition-colors cursor-pointer shrink-0"
+    >
+      <span className="font-semibold text-muted-foreground tabular-nums">{label}</span>
+      <span className="font-mono font-bold text-sm text-foreground">{value}</span>
+      {trend !== undefined && trend !== null && trend !== 0 && (
+        <span className={`inline-flex items-center gap-0.5 text-[10px] font-semibold ${trend > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+          {trend > 0 ? <ArrowUp className="size-2.5" /> : <ArrowDown className="size-2.5" />}
+          {Math.abs(trend)}{label.includes('%') ? '%' : ''}
+        </span>
+      )}
+      {subtitle && <span className="text-[10px] text-muted-foreground/60">{subtitle}</span>}
+    </button>
+  );
+}
 
 // ── Main component ─────────────────────────────────────────────
 
 export const KpiCards = React.memo(function KpiCards({
   shiftReport,
   trendDelta,
-  occupiedBays,
-  bayCount,
   waitingQueueLength,
   bays,
   waitingQueue,
@@ -185,202 +175,17 @@ export const KpiCards = React.memo(function KpiCards({
   );
 
   return (
-    <div className="px-5 py-2 shrink-0">
-      <div className="flex flex-col lg:flex-row">
-        {/* Card 1: Bay Utilization */}
-        <ClickableKpiCard onClick={() => setBayUtilOpen(true)}>
-          <div className="flex items-center justify-between">
-            <span className="text-xs uppercase font-bold tracking-wider text-muted-foreground">
-              {t("bayUtilization")}
-            </span>
-            <div className="flex size-8 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400">
-              <Activity className="size-4" />
-            </div>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-xl font-bold font-mono tracking-tight">
-              {shiftReport?.bayUtilization ?? 0}%
-              {trendDelta && trendDelta.bayUtilization !== 0 && (
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1 text-xs font-semibold ml-2",
-                    trendDelta.bayUtilization > 0
-                      ? "text-emerald-500"
-                      : "text-red-500",
-                  )}
-                >
-                  {trendDelta.bayUtilization > 0 ? (
-                    <ArrowUp className="size-3" />
-                  ) : (
-                    <ArrowDown className="size-3" />
-                  )}
-                  {Math.abs(trendDelta.bayUtilization)}%
-                </span>
-              )}
-            </span>
-            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full bg-indigo-500 rounded-full transition-all duration-500"
-                style={{ width: `${shiftReport?.bayUtilization ?? 0}%` }}
-              />
-            </div>
-          </div>
-          <span className="text-xs text-muted-foreground font-medium">
-            {occupiedBays} of {bayCount} bays occupied
-          </span>
-        </ClickableKpiCard>
-        <Separator orientation="vertical" className="hidden lg:block" />
-
-        {/* Card 2: Active Workloads */}
-        <ClickableKpiCard onClick={() => setActiveJobsOpen(true)}>
-          <div className="flex items-center justify-between">
-            <span className="text-xs uppercase font-bold tracking-wider text-muted-foreground">
-              {t("activeJobs")}
-            </span>
-            <div className="flex size-8 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400">
-              <Wrench className="size-4" />
-            </div>
-          </div>
-          <div className="flex items-baseline gap-1 mt-1">
-            <span className="text-xl font-bold font-mono tracking-tight">
-              {shiftReport?.activeJobs ?? 0}
-              {trendDelta && trendDelta.activeJobs !== 0 && (
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1 text-xs font-semibold ml-2",
-                    trendDelta.activeJobs > 0
-                      ? "text-emerald-500"
-                      : "text-red-500",
-                  )}
-                >
-                  {trendDelta.activeJobs > 0 ? (
-                    <ArrowUp className="size-3" />
-                  ) : (
-                    <ArrowDown className="size-3" />
-                  )}
-                  {Math.abs(trendDelta.activeJobs)}
-                </span>
-              )}
-            </span>
-            <span className="text-xs text-muted-foreground font-medium">
-              active
-            </span>
-          </div>
-          <span className="text-xs text-muted-foreground font-medium mt-1">
-            +{waitingQueueLength} in waiting queue
-          </span>
-        </ClickableKpiCard>
-        <Separator orientation="vertical" className="hidden lg:block" />
-
-        {/* Card 3: Completed Today */}
-        <ClickableKpiCard onClick={() => setCompletedOpen(true)}>
-          <div className="flex items-center justify-between">
-            <span className="text-xs uppercase font-bold tracking-wider text-muted-foreground">
-              {t("completedToday")}
-            </span>
-            <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400">
-              <CheckCircle2 className="size-4" />
-            </div>
-          </div>
-          <div className="flex items-baseline gap-1 mt-1">
-            <span className="text-xl font-bold font-mono tracking-tight">
-              {shiftReport?.completedToday ?? 0}
-              {trendDelta && trendDelta.completedToday !== 0 && (
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1 text-xs font-semibold ml-2",
-                    trendDelta.completedToday > 0
-                      ? "text-emerald-500"
-                      : "text-red-500",
-                  )}
-                >
-                  {trendDelta.completedToday > 0 ? (
-                    <ArrowUp className="size-3" />
-                  ) : (
-                    <ArrowDown className="size-3" />
-                  )}
-                  {Math.abs(trendDelta.completedToday)}
-                </span>
-              )}
-            </span>
-            <span className="text-xs text-muted-foreground font-medium">
-              completed
-            </span>
-          </div>
-          <span className="flex items-center gap-1 text-xs text-muted-foreground font-medium mt-1">
-            <Clock className="size-3" /> Avg{" "}
-            {Number.isFinite(shiftReport?.avgDurationMinutes)
-              ? (shiftReport?.avgDurationMinutes ?? 0)
-              : 0}
-            m
-          </span>
-        </ClickableKpiCard>
-        <Separator orientation="vertical" className="hidden lg:block" />
-
-        {/* Card 4: Revenue / Labor Hour */}
-        <ClickableKpiCard onClick={() => setRevenueOpen(true)}>
-          <div className="flex items-center justify-between">
-            <span className="text-xs uppercase font-bold tracking-wider text-muted-foreground">
-              Rev / Labor Hr
-            </span>
-            <div className="flex size-8 items-center justify-center rounded-lg bg-sky-50 dark:bg-sky-950/30 text-sky-600 dark:text-sky-400">
-              <DollarSign className="size-4" />
-            </div>
-          </div>
-          <div className="flex items-baseline gap-1 mt-1">
-            <span className="text-xl font-bold font-mono tracking-tight text-emerald-600 dark:text-emerald-400">
-              {formatMNT(
-                Number.isFinite(shiftReport?.revenuePerLaborHour)
-                  ? (shiftReport?.revenuePerLaborHour ?? 0)
-                  : 0,
-              )}
-              {trendDelta && trendDelta.revenuePerLaborHour !== 0 && (
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1 text-xs font-semibold ml-2",
-                    trendDelta.revenuePerLaborHour > 0
-                      ? "text-emerald-500"
-                      : "text-red-500",
-                  )}
-                >
-                  {trendDelta.revenuePerLaborHour > 0 ? (
-                    <ArrowUp className="size-3" />
-                  ) : (
-                    <ArrowDown className="size-3" />
-                  )}
-                  {formatMNT(Math.abs(trendDelta.revenuePerLaborHour || 0))}
-                </span>
-              )}
-            </span>
-          </div>
-          <span className="text-xs text-muted-foreground font-medium mt-1">
-            {formatMNT(shiftReport?.revenueToday ?? 0)} total today
-          </span>
-        </ClickableKpiCard>
-        <Separator orientation="vertical" className="hidden lg:block" />
-
-        {/* Card 5: Waiting Queue */}
-        <ClickableKpiCard onClick={() => setQueueOpen(true)}>
-          <div className="flex items-center justify-between">
-            <span className="text-xs uppercase font-bold tracking-wider text-muted-foreground">
-              {t("waitingQueue")}
-            </span>
-            <div className="flex size-8 items-center justify-center rounded-lg bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400">
-              <Users className="size-4" />
-            </div>
-          </div>
-          <div className="flex items-baseline gap-1 mt-1">
-            <span className="text-xl font-bold font-mono tracking-tight">
-              {waitingQueueLength}
-            </span>
-            <span className="text-xs text-muted-foreground font-medium">
-              waiting
-            </span>
-          </div>
-          <span className="text-xs text-muted-foreground font-medium mt-1">
-            {shiftReport?.activeJobs ?? 0} jobs in progress
-          </span>
-        </ClickableKpiCard>
+    <div className="shrink-0">
+      <div className="flex items-center gap-4 px-4 py-1.5 border-b border-border/30 shrink-0">
+        <StatChip label={t("bayUtilization")} value={`${shiftReport?.bayUtilization ?? 0}%`} trend={trendDelta?.bayUtilization} onClick={() => setBayUtilOpen(true)} />
+        <Separator orientation="vertical" className="h-5" />
+        <StatChip label={t("activeJobs")} value={String(shiftReport?.activeJobs ?? 0)} trend={trendDelta?.activeJobs} subtitle={`+${waitingQueueLength}`} onClick={() => setActiveJobsOpen(true)} />
+        <Separator orientation="vertical" className="h-5" />
+        <StatChip label={t("completedToday")} value={String(shiftReport?.completedToday ?? 0)} trend={trendDelta?.completedToday} onClick={() => setCompletedOpen(true)} />
+        <Separator orientation="vertical" className="h-5" />
+        <StatChip label={t("revPerLaborHr")} value={formatMNT(shiftReport?.revenuePerLaborHour ?? 0)} trend={trendDelta?.revenuePerLaborHour} onClick={() => setRevenueOpen(true)} />
+        <Separator orientation="vertical" className="h-5" />
+        <StatChip label={t("waitingQueue")} value={String(waitingQueueLength)} onClick={() => setQueueOpen(true)} />
       </div>
 
       {/* ═══ Drill-down dialogs ═══════════════════════════════════ */}
@@ -390,7 +195,7 @@ export const KpiCards = React.memo(function KpiCards({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
-              <Activity className="size-4 text-indigo-500" />
+              <Activity className="size-4 text-muted-foreground" />
               {t("bayUtilization")}
             </DialogTitle>
             <DialogDescription className="sr-only">
@@ -400,16 +205,16 @@ export const KpiCards = React.memo(function KpiCards({
 
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-lg bg-indigo-50/50 dark:bg-indigo-950/10 border border-indigo-200/50 dark:border-indigo-800/30 p-3 text-center">
-                <div className="text-2xl font-semibold tabular-nums text-indigo-700 dark:text-indigo-300">
+              <div className="rounded-lg bg-muted/50 border border-border/50 p-3 text-center">
+                <div className="text-2xl font-semibold tabular-nums text-foreground">
                   {shiftReport?.bayUtilization ?? 0}%
                 </div>
                 <div className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
                   Utilization
                 </div>
               </div>
-              <div className="rounded-lg bg-emerald-50/50 dark:bg-emerald-950/10 border border-emerald-200/50 dark:border-emerald-800/30 p-3 text-center">
-                <div className="text-2xl font-semibold tabular-nums text-emerald-700 dark:text-emerald-300">
+              <div className="rounded-lg bg-muted/50 border border-border/50 p-3 text-center">
+                <div className="text-2xl font-semibold tabular-nums text-foreground">
                   {occupiedBaySlots.length}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
@@ -428,7 +233,7 @@ export const KpiCards = React.memo(function KpiCards({
 
             {occupiedBaySlots.length > 0 && (
               <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <span className="text-xs font-semibold text-muted-foreground">
                   Occupied Bays
                 </span>
                 <div className="flex flex-col gap-1">
@@ -446,7 +251,7 @@ export const KpiCards = React.memo(function KpiCards({
 
             {emptyBaySlots.length > 0 && (
               <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <span className="text-xs font-semibold text-muted-foreground">
                   Available Bays
                 </span>
                 <div className="flex flex-wrap gap-1.5">
@@ -477,7 +282,7 @@ export const KpiCards = React.memo(function KpiCards({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
-              <Wrench className="size-4 text-amber-500" />
+              <Wrench className="size-4 text-muted-foreground" />
               {t("activeJobs")}
             </DialogTitle>
             <DialogDescription className="sr-only">
@@ -487,16 +292,16 @@ export const KpiCards = React.memo(function KpiCards({
 
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-lg bg-amber-50/50 dark:bg-amber-950/10 border border-amber-200/50 dark:border-amber-800/30 p-3 text-center">
-                <div className="text-2xl font-semibold tabular-nums text-amber-700 dark:text-amber-300">
+              <div className="rounded-lg bg-muted/50 border border-border/50 p-3 text-center">
+                <div className="text-2xl font-semibold tabular-nums text-foreground">
                   {activeBaySlots.length}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
                   In Bays
                 </div>
               </div>
-              <div className="rounded-lg bg-rose-50/50 dark:bg-rose-950/10 border border-rose-200/50 dark:border-rose-800/30 p-3 text-center">
-                <div className="text-2xl font-semibold tabular-nums text-rose-700 dark:text-rose-300">
+              <div className="rounded-lg bg-muted/50 border border-border/50 p-3 text-center">
+                <div className="text-2xl font-semibold tabular-nums text-foreground">
                   {waitingQueueLength}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
@@ -507,7 +312,7 @@ export const KpiCards = React.memo(function KpiCards({
 
             {activeBaySlots.length > 0 && (
               <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <span className="text-xs font-semibold text-muted-foreground">
                   Jobs in Bays
                 </span>
                 <div className="flex flex-col gap-1">
@@ -525,7 +330,7 @@ export const KpiCards = React.memo(function KpiCards({
                         className="flex items-center justify-between rounded-lg border border-border/50 bg-card px-3 py-2 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                       >
                         <div className="flex items-center gap-3">
-                          <span className="flex size-7 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/30 text-xs font-bold text-amber-700 dark:text-amber-300">
+                          <span className="flex size-7 items-center justify-center rounded-md bg-muted text-xs font-bold text-foreground">
                             {bay.bayNumber}
                           </span>
                           <div className="flex flex-col">
@@ -556,7 +361,7 @@ export const KpiCards = React.memo(function KpiCards({
 
             {waitingQueue.length > 0 && (
               <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <span className="text-xs font-semibold text-muted-foreground">
                   Waiting Queue
                 </span>
                 <div className="flex flex-col gap-1">
@@ -573,7 +378,7 @@ export const KpiCards = React.memo(function KpiCards({
                         className="flex items-center justify-between rounded-lg border border-border/50 bg-card px-3 py-2 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                       >
                         <div className="flex items-center gap-3">
-                          <span className="flex size-7 items-center justify-center rounded-md bg-rose-100 dark:bg-rose-900/30 text-xs font-bold text-rose-700 dark:text-rose-300">
+                          <span className="flex size-7 items-center justify-center rounded-md bg-muted text-xs font-bold text-foreground">
                             <Users className="size-3.5" />
                           </span>
                           <div className="flex flex-col">
@@ -617,7 +422,7 @@ export const KpiCards = React.memo(function KpiCards({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
-              <CheckCircle2 className="size-4 text-emerald-500" />
+              <CheckCircle2 className="size-4 text-muted-foreground" />
               {t("completedToday")}
             </DialogTitle>
             <DialogDescription className="sr-only">
@@ -627,16 +432,16 @@ export const KpiCards = React.memo(function KpiCards({
 
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-lg bg-emerald-50/50 dark:bg-emerald-950/10 border border-emerald-200/50 dark:border-emerald-800/30 p-3 text-center">
-                <div className="text-2xl font-semibold tabular-nums text-emerald-700 dark:text-emerald-300">
+              <div className="rounded-lg bg-muted/50 border border-border/50 p-3 text-center">
+                <div className="text-2xl font-semibold tabular-nums text-foreground">
                   {shiftReport?.completedToday ?? 0}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
                   Completed
                 </div>
               </div>
-              <div className="rounded-lg bg-emerald-50/50 dark:bg-emerald-950/10 border border-emerald-200/50 dark:border-emerald-800/30 p-3 text-center">
-                <div className="text-xl font-semibold tabular-nums text-emerald-700 dark:text-emerald-300 truncate">
+              <div className="rounded-lg bg-muted/50 border border-border/50 p-3 text-center">
+                <div className="text-xl font-semibold tabular-nums text-foreground truncate">
                   {formatMNT(shiftReport?.revenueToday ?? 0)}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
@@ -672,7 +477,7 @@ export const KpiCards = React.memo(function KpiCards({
                   <DollarSign className="size-4" />
                   Total revenue
                 </span>
-                <span className="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+                <span className="font-semibold tabular-nums text-foreground">
                   {formatMNT(shiftReport?.revenueToday ?? 0)}
                 </span>
               </div>
@@ -715,18 +520,18 @@ export const KpiCards = React.memo(function KpiCards({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
-              <DollarSign className="size-4 text-sky-500" />
-              Revenue / Labor Hour
+              <DollarSign className="size-4 text-muted-foreground" />
+              {t("revenuePerLaborHour")}
             </DialogTitle>
             <DialogDescription className="sr-only">
-              Revenue and labor efficiency breakdown
+              {t("revenuePerLaborHourDesc")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-lg bg-sky-50/50 dark:bg-sky-950/10 border border-sky-200/50 dark:border-sky-800/30 p-3 text-center">
-                <div className="text-xl font-semibold tabular-nums text-sky-700 dark:text-sky-300">
+              <div className="rounded-lg bg-muted/50 border border-border/50 p-3 text-center">
+                <div className="text-xl font-semibold tabular-nums text-foreground">
                   {formatMNT(
                     Number.isFinite(shiftReport?.revenuePerLaborHour)
                       ? (shiftReport?.revenuePerLaborHour ?? 0)
@@ -737,8 +542,8 @@ export const KpiCards = React.memo(function KpiCards({
                   Per Labor Hour
                 </div>
               </div>
-              <div className="rounded-lg bg-emerald-50/50 dark:bg-emerald-950/10 border border-emerald-200/50 dark:border-emerald-800/30 p-3 text-center">
-                <div className="text-xl font-semibold tabular-nums text-emerald-700 dark:text-emerald-300 truncate">
+              <div className="rounded-lg bg-muted/50 border border-border/50 p-3 text-center">
+                <div className="text-xl font-semibold tabular-nums text-foreground truncate">
                   {formatMNT(shiftReport?.revenueToday ?? 0)}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
@@ -753,7 +558,7 @@ export const KpiCards = React.memo(function KpiCards({
                   <DollarSign className="size-4" />
                   Revenue today
                 </span>
-                <span className="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+                <span className="font-semibold tabular-nums text-foreground">
                   {formatMNT(shiftReport?.revenueToday ?? 0)}
                 </span>
               </div>
@@ -799,7 +604,7 @@ export const KpiCards = React.memo(function KpiCards({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
-              <Users className="size-4 text-rose-500" />
+              <Users className="size-4 text-muted-foreground" />
               {t("waitingQueue")}
             </DialogTitle>
             <DialogDescription className="sr-only">
@@ -809,16 +614,16 @@ export const KpiCards = React.memo(function KpiCards({
 
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-lg bg-rose-50/50 dark:bg-rose-950/10 border border-rose-200/50 dark:border-rose-800/30 p-3 text-center">
-                <div className="text-2xl font-semibold tabular-nums text-rose-700 dark:text-rose-300">
+              <div className="rounded-lg bg-muted/50 border border-border/50 p-3 text-center">
+                <div className="text-2xl font-semibold tabular-nums text-foreground">
                   {waitingQueueLength}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
                   Waiting
                 </div>
               </div>
-              <div className="rounded-lg bg-amber-50/50 dark:bg-amber-950/10 border border-amber-200/50 dark:border-amber-800/30 p-3 text-center">
-                <div className="text-2xl font-semibold tabular-nums text-amber-700 dark:text-amber-300">
+              <div className="rounded-lg bg-muted/50 border border-border/50 p-3 text-center">
+                <div className="text-2xl font-semibold tabular-nums text-foreground">
                   {shiftReport?.activeJobs ?? 0}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
@@ -829,7 +634,7 @@ export const KpiCards = React.memo(function KpiCards({
 
             {waitingQueue.length > 0 && (
               <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <span className="text-xs font-semibold text-muted-foreground">
                   Queue
                 </span>
                 <div className="flex flex-col gap-1">
@@ -846,7 +651,7 @@ export const KpiCards = React.memo(function KpiCards({
                         className="flex items-center justify-between rounded-lg border border-border/50 bg-card px-3 py-2 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                       >
                         <div className="flex items-center gap-3">
-                          <span className="flex size-7 items-center justify-center rounded-md bg-rose-100 dark:bg-rose-900/30 text-xs font-bold text-rose-700 dark:text-rose-300">
+                          <span className="flex size-7 items-center justify-center rounded-md bg-muted text-xs font-bold text-foreground">
                             {idx + 1}
                           </span>
                           <div className="flex flex-col">

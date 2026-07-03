@@ -104,6 +104,22 @@ export interface DataTableProps<TData, TValue> {
    * mobile and replaced with card-based layout.
    */
   renderMobileCard?: (row: TData) => React.ReactNode;
+  /**
+   * When true, the table container omits its own border and border-radius,
+   * relying on the parent Card to provide those. Use inside DataTablePage
+   * to prevent double borders.
+   */
+  insideCard?: boolean;
+  /**
+   * When true, the pagination footer is not rendered inside the table.
+   * Use with `onTableReady` to render pagination externally.
+   */
+  noPagination?: boolean;
+  /**
+   * Called with the TanStack Table instance when it's created.
+   * Use to render pagination controls outside the DataTable component.
+   */
+  onTableReady?: (table: TanStackTable<TData>) => void;
 }
 
 // ─── DataTable (self-contained) ────────────────────────────────
@@ -122,6 +138,9 @@ export function DataTable<TData, TValue>({
   search,
   className,
   renderMobileCard,
+  insideCard = false,
+  noPagination = false,
+  onTableReady,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -137,7 +156,7 @@ export function DataTable<TData, TValue>({
     setMounted(true);
   }, []);
 
-  const paginationEnabled = pageSize > 0;
+  const paginationEnabled = pageSize > 0 && !noPagination;
 
   const table = useReactTable({
     data,
@@ -177,6 +196,15 @@ export function DataTable<TData, TValue>({
       : {}),
   });
 
+  // Notify caller when table instance is ready (for external pagination)
+  const tableRef = React.useRef(table);
+  tableRef.current = table;
+  React.useEffect(() => {
+    onTableReady?.(table);
+  }, [table, onTableReady]);
+
+  const t = useTranslations("common");
+
   // ── Loading skeleton ──────────────────────────────────────
 
   if (loading) {
@@ -207,8 +235,6 @@ export function DataTable<TData, TValue>({
       </div>
     );
   }
-
-  const t = useTranslations("common");
 
   // ── Empty state ───────────────────────────────────────────
 
@@ -277,8 +303,9 @@ export function DataTable<TData, TValue>({
                   onRowClick?.(row.original);
                 }}
                 className={cn(
-                  "rounded-lg border border-border bg-card p-4 transition-colors",
-                  onRowClick && "cursor-pointer active:bg-muted/50",
+                  "rounded-md border border-border/80 bg-card p-4 shadow-sm transition-colors",
+                  onRowClick &&
+                    "cursor-pointer hover:border-border active:bg-muted/50",
                 )}
               >
                 {renderMobileCard(row.original)}
@@ -295,11 +322,11 @@ export function DataTable<TData, TValue>({
       {/* ── Table ──────────────────────────────────────────── */}
       <div
         className={cn(
-          "overflow-hidden rounded-md border",
+          insideCard ? "overflow-hidden" : "overflow-hidden rounded-sm border",
           renderMobileCard && "hidden md:block",
         )}
       >
-        <Table>
+        <Table className="[&_thead_tr]:bg-muted/30">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -334,8 +361,8 @@ export function DataTable<TData, TValue>({
                     onRowClick?.(row.original);
                   }}
                   className={cn(
-                    "transition-colors",
-                    onRowClick && "cursor-pointer hover:bg-muted/30",
+                    "transition-colors even:bg-muted/[.04]",
+                    onRowClick && "cursor-pointer",
                   )}
                 >
                   {row.getVisibleCells().map((cell) => (
@@ -402,7 +429,7 @@ export function DataTableColumnHeader<TData>({
         variant="ghost"
         size="sm"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="-ml-3 h-8 px-2 text-sm font-medium text-foreground hover:bg-accent hover:text-accent-foreground data-[state=open]:bg-accent"
+        className="-ml-2 h-8 px-2 text-sm font-medium text-foreground hover:bg-accent hover:text-accent-foreground data-[state=open]:bg-accent"
       >
         <span>{title}</span>
         {column.getIsSorted() === "asc" ? (
@@ -432,7 +459,7 @@ export function DataTablePagination<TData>({
   const pageSizes = [10, 20, 30, 40, 50];
 
   return (
-    <div className="flex items-center justify-between px-2">
+    <div className="flex items-center justify-between border-t border-border/50 px-2 py-3">
       {/* Left: selected count + column visibility */}
       <div className="flex flex-1 items-center gap-4">
         <div className="hidden text-sm text-muted-foreground sm:block">

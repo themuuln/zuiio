@@ -641,6 +641,51 @@ export async function updateWorkOrderStatus(
   await updateWorkOrderStatusCanonical(db, workOrderId, orgId, status, notes);
 }
 
+// ── Batch Complete ────────────────────────────────────────────
+
+interface BatchCompleteResult {
+  succeeded: number;
+  failed: number;
+  errors: Array<{ woId: string; error: string }>;
+}
+
+/**
+ * Complete multiple work orders that are in "Ready for Pickup" status.
+ * Uses Promise.allSettled so partial success doesn't fail the entire batch.
+ */
+export async function batchCompleteWorkOrders(
+  db: SupabaseClient,
+  orgId: string,
+  workOrderIds: string[],
+): Promise<BatchCompleteResult> {
+  const results = await Promise.allSettled(
+    workOrderIds.map((woId) =>
+      updateWorkOrderStatusCanonical(db, woId, orgId, "Completed"),
+    ),
+  );
+
+  const errors: Array<{ woId: string; error: string }> = [];
+  let succeeded = 0;
+
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i];
+    if (r.status === "fulfilled") {
+      succeeded++;
+    } else {
+      errors.push({
+        woId: workOrderIds[i],
+        error: r.reason instanceof Error ? r.reason.message : String(r.reason),
+      });
+    }
+  }
+
+  return {
+    succeeded,
+    failed: errors.length,
+    errors,
+  };
+}
+
 // ── Update Bay Count ───────────────────────────────────────────
 
 export async function updateBayCount(

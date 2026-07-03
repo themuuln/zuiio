@@ -91,9 +91,9 @@ export function MechanicBadge({
                         status === "New" &&
                           "border-blue-400/80 dark:border-blue-500/60 ring-1 ring-blue-200/50 dark:ring-blue-500/40",
                         status === "Diagnosing" &&
-                          "border-violet-400/80 dark:border-violet-500/60 ring-1 ring-violet-200/50 dark:ring-violet-500/40",
+                          "border-blue-400/80 dark:border-blue-500/60 ring-1 ring-blue-200/50 dark:ring-blue-500/40",
                         status === "In Progress" &&
-                          "border-indigo-400/80 dark:border-indigo-500/60 ring-1 ring-indigo-200/50 dark:ring-indigo-500/40",
+                          "border-teal-400/80 dark:border-teal-500/60 ring-1 ring-teal-200/50 dark:ring-teal-500/40",
                         status === "Ready for Pickup" &&
                           "border-emerald-400/80 dark:border-emerald-500/60 ring-1 ring-emerald-200/50 dark:ring-emerald-500/40",
                         status === "Completed" &&

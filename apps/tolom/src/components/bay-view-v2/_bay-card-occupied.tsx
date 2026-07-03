@@ -9,6 +9,8 @@ import { BayCardVehicleInfo } from "./_bay-card-vehicle-info";
 import { BayNumberLabel } from "./_bay-number-label";
 import { BayStatusBadge } from "./_bay-status-badge";
 import { MechanicsRow } from "./_mechanic-row";
+import { useBayCardContext } from "./_bay-card-context";
+
 import { STATUS_TRANSLATION_KEYS } from "./_constants";
 
 /** Elapsed minutes helper */
@@ -19,44 +21,33 @@ function elapsedMinutes(startedAt: string | null | undefined): number | null {
   return Number.isFinite(mins) && mins >= 0 ? mins : null;
 }
 
-type BayCardOccupiedProps = Pick<
-  BayCardProps,
-  | "bay"
-  | "isPending"
-  | "isKanbanMode"
-  | "mechanics"
-  | "onStatusChange"
-  | "onRemoveFromBay"
-  | "onOpenDetail"
-  | "onRemoveHelper"
-  | "onPauseTimer"
-  | "onAddNote"
-  | "onQuickAddService"
-  | "onQuickAddParts"
-  | "onAssignMechanic"
-  | "onRemoveMechanic"
-  | "onAddHelper"
-  | "onReorderMechanics"
->;
+interface BayCardOccupiedProps {
+  bay: BayCardProps["bay"];
+  isPending?: boolean;
+  isKanbanMode?: boolean;
+  mechanics?: BayCardProps["mechanics"];
+}
 
 export function BayCardOccupied({
   bay,
-  isPending = false,
-  isKanbanMode = false,
-  mechanics = [],
-  onStatusChange,
-  onRemoveFromBay,
-  onOpenDetail,
-  onRemoveHelper,
-  onPauseTimer,
-  onAddNote,
-  onQuickAddService,
-  onQuickAddParts,
-  onAssignMechanic,
-  onRemoveMechanic,
-  onAddHelper,
 }: BayCardOccupiedProps) {
   const t = useTranslations("bayView");
+  const {
+    isPending,
+    isKanbanMode,
+    mechanics,
+    onRemoveHelper,
+    onAssignMechanic,
+    onRemoveMechanic,
+    onAddHelper,
+    onStatusChange,
+    onRemoveFromBay,
+    onOpenDetail,
+    onPauseTimer,
+    onAddNote,
+    onQuickAddService,
+    onQuickAddParts,
+  } = useBayCardContext();
   const wo = bay.workOrder;
   if (!wo) return null;
 
@@ -124,17 +115,7 @@ export function BayCardOccupied({
 
       <Separator />
 
-      <BayCardFooter
-        workOrder={wo}
-        isPending={isPending}
-        onStatusChange={onStatusChange}
-        onRemoveFromBay={onRemoveFromBay}
-        onOpenDetail={onOpenDetail}
-        onPauseTimer={onPauseTimer}
-        onAddNote={onAddNote}
-        onQuickAddService={onQuickAddService}
-        onQuickAddParts={onQuickAddParts}
-      />
+      <BayCardFooter workOrder={wo} isPending={isPending} />
     </>
   );
 }

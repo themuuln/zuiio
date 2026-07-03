@@ -1,16 +1,13 @@
-/**
- * Re-export from @zuiio/core for backward compatibility.
- */
 export {
-  normalizeMongolianPhone,
+  type ActionState,
+  flattenFieldErrors,
   isValidMongolianPhone,
+  isValidMongolianPlate,
+  isValidNonNegativeNumber,
+  isValidPositiveNumber,
   isValidVehicleYear,
   isValidVin,
-  isValidPositiveNumber,
-  isValidNonNegativeNumber,
-  transliterateMongolianPlate,
+  normalizeMongolianPhone,
   normalizeMongolianPlate,
-  isValidMongolianPlate,
-  flattenFieldErrors,
-  type ActionState,
+  transliterateMongolianPlate,
 } from "@zuiio/core";

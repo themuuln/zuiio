@@ -11,7 +11,7 @@ import {
   Package,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +27,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
@@ -88,18 +89,6 @@ export function PostServiceFormBody({
     },
   });
 
-  const odometerRegister = form.register("odometer");
-  const odometerRef = useRef<HTMLInputElement | null>(null);
-  const mergedOdometerRef = useCallback(
-    (el: HTMLInputElement | null) => {
-      odometerRegister.ref({ current: el });
-      odometerRef.current = el;
-    },
-    [odometerRegister.ref],
-  );
-  useEffect(() => {
-    odometerRef.current?.focus();
-  }, []);
 
   const paymentMethod = form.watch("paymentMethod");
   const transferBankId = form.watch("transferBankId");
@@ -200,16 +189,14 @@ export function PostServiceFormBody({
               </FieldLabel>
               <FieldContent>
                 <div className="relative max-w-full">
-                  <Input
-                    ref={mergedOdometerRef}
-                    type="number"
+                  <NumericInput
+                    value={odometerValue ? parseInt(odometerValue, 10) : 0}
+                    onChange={(val) => form.setValue("odometer", val?.toString() ?? "", { shouldValidate: true })}
+                    onBlur={() => form.trigger("odometer")}
                     placeholder={t("postServiceOdometerPlaceholder")}
                     className="h-10 pr-10"
                     min={0}
                     aria-invalid={!!form.formState.errors.odometer}
-                    onChange={odometerRegister.onChange}
-                    onBlur={odometerRegister.onBlur}
-                    name={odometerRegister.name}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
@@ -444,19 +431,6 @@ export function PostServiceForm({
     },
   });
 
-  // Merge form.register ref with auto-focus ref for odometer
-  const odometerRegister = form.register("odometer");
-  const odometerRef = useRef<HTMLInputElement | null>(null);
-  const mergedOdometerRef = useCallback(
-    (el: HTMLInputElement | null) => {
-      odometerRegister.ref({ current: el });
-      odometerRef.current = el;
-    },
-    [odometerRegister.ref],
-  );
-  useEffect(() => {
-    odometerRef.current?.focus();
-  }, []);
 
   // Escape key handler
   useEffect(() => {
@@ -581,16 +555,14 @@ export function PostServiceForm({
                 </FieldLabel>
                 <FieldContent>
                   <div className="relative max-w-full">
-                    <Input
-                      ref={mergedOdometerRef}
-                      type="number"
+                    <NumericInput
+                      value={odometerValue ? parseInt(odometerValue, 10) : 0}
+                      onChange={(val) => form.setValue("odometer", val?.toString() ?? "", { shouldValidate: true })}
+                      onBlur={() => form.trigger("odometer")}
                       placeholder={t("postServiceOdometerPlaceholder")}
                       className="h-10 pr-10"
                       min={0}
                       aria-invalid={!!form.formState.errors.odometer}
-                      onChange={odometerRegister.onChange}
-                      onBlur={odometerRegister.onBlur}
-                      name={odometerRegister.name}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault();

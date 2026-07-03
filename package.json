@@ -9,6 +9,13 @@
     "dev:tolom": "cd apps/tolom && pnpm dev",
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@tanstack/react-query": "^5.101.2",
+    "@tanstack/react-query-persist-client": "^5.101.2",
+    "react": "^19.2.7",
+    "sonner": "^2.0.7",
+    "@supabase/supabase-js": "^2.50.0"
+  },
   "devDependencies": {
     "@types/node": "^26.0.1",
     "@types/react": "^19.2.17"

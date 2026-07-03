@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { generateUUID } from "@/lib/crypto-utils";
+import { generateUUID } from "@zuiio/core";
 import { AppError } from "@/lib/errors";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";

@@ -167,7 +167,11 @@ export function createRouteHandler(
         },
         "API request failed",
       );
-      return NextResponse.json(body, { status, headers });
+      const authHeaders = new Headers(headers);
+      if (status === 401) {
+        authHeaders.set("X-Auth-Required", "true");
+      }
+      return NextResponse.json(body, { status, headers: authHeaders });
     }
   };
 }
@@ -232,7 +236,11 @@ export function createSimpleRouteHandler(handler: SimpleRouteHandler) {
         },
         "Simple API request failed",
       );
-      return NextResponse.json(body, { status, headers });
+      const authHeaders = new Headers(headers);
+      if (status === 401) {
+        authHeaders.set("X-Auth-Required", "true");
+      }
+      return NextResponse.json(body, { status, headers: authHeaders });
     }
   };
 }

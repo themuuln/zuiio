@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Typography } from "@/components/ui/typography";
-import { generateUUID } from "@/lib/crypto-utils";
+import { generateUUID } from "@zuiio/core";
 import { useRouter } from "@/lib/i18n/navigation";
 import {
   useCreatePurchaseOrder,
@@ -212,21 +214,14 @@ export default function NewPurchaseOrderPage() {
                       <FieldLabel className="text-xs text-muted-foreground">
                         {t("quantity")}
                       </FieldLabel>
-                      <Input
-                        type="number"
-                        min={1}
+                      <NumericInput
                         value={item.quantity_ordered}
-                        onChange={(e) => {
-                          const v = e.target.value;
+                        onChange={(qty) =>
                           updateItem(item.id, {
-                            quantity_ordered: v === "" ? 0 : Number(v) || 0,
-                          });
-                        }}
-                        onBlur={(e) => {
-                          const n = Number(e.target.value);
-                          if (Number.isNaN(n) || n < 1)
-                            updateItem(item.id, { quantity_ordered: 1 });
-                        }}
+                            quantity_ordered: Math.max(1, Math.round(qty)),
+                          })
+                        }
+                        min={1}
                         className="h-9 text-center"
                       />
                     </Field>
@@ -234,25 +229,17 @@ export default function NewPurchaseOrderPage() {
                       <FieldLabel className="text-xs text-muted-foreground">
                         {t("unitCost")}
                       </FieldLabel>
-                      <Input
-                        type="number"
-                        min={0}
+                      <CurrencyInput
                         value={item.unit_cost}
-                        onChange={(e) => {
-                          const v = e.target.value;
+                        onChange={(cost) =>
                           updateItem(item.id, {
-                            unit_cost: v === "" ? 0 : Number(v) || 0,
-                          });
-                        }}
+                            unit_cost: cost,
+                          })
+                        }
+                        showPrefix={false}
                         className="h-9 text-right"
                       />
                     </Field>
-                    <div className="w-24 text-right text-sm tabular-nums pb-2">
-                      {(item.quantity_ordered * item.unit_cost).toLocaleString(
-                        "mn-MN",
-                      )}{" "}
-                      ₮
-                    </div>
                     <Button
                       type="button"
                       variant="ghost"

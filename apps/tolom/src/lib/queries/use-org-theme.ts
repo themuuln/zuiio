@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useOnlineStatus } from "@/lib/hooks/use-online-status";
+import { useOnlineStatus } from "@zuiio/hooks";
 import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
 import type { OrgTheme } from "@/lib/types";
 

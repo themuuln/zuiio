@@ -31,6 +31,8 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
@@ -559,16 +561,12 @@ export default function EstimateDetailPage() {
                         <Field>
                           <FieldLabel>{t("qty")}</FieldLabel>
                           <FieldContent>
-                            <Input
-                              type="number"
+                            <NumericInput
                               min={1}
                               value={line.quantity}
-                              onChange={(event) =>
+                              onChange={(value) =>
                                 updateLine(line.id, {
-                                  quantity: Math.max(
-                                    1,
-                                    Number(event.target.value) || 1,
-                                  ),
+                                  quantity: Math.max(1, value || 1),
                                 })
                               }
                               className="h-11 text-right"
@@ -579,16 +577,12 @@ export default function EstimateDetailPage() {
                         <Field>
                           <FieldLabel>{t("unitPrice")}</FieldLabel>
                           <FieldContent>
-                            <Input
-                              type="number"
+                            <CurrencyInput
                               min={0}
                               value={line.unit_price}
-                              onChange={(event) =>
+                              onChange={(value) =>
                                 updateLine(line.id, {
-                                  unit_price: Math.max(
-                                    0,
-                                    Number(event.target.value) || 0,
-                                  ),
+                                  unit_price: Math.max(0, value || 0),
                                 })
                               }
                               className="h-11 text-right"
@@ -599,19 +593,16 @@ export default function EstimateDetailPage() {
                         <Field>
                           <FieldLabel>{t("discountPercent")}</FieldLabel>
                           <FieldContent>
-                            <Input
-                              type="number"
+                            <NumericInput
                               min={0}
                               max={100}
+                              step={0.1}
                               value={line.discount_percentage}
-                              onChange={(event) =>
+                              onChange={(value) =>
                                 updateLine(line.id, {
                                   discount_percentage: Math.max(
                                     0,
-                                    Math.min(
-                                      100,
-                                      Number(event.target.value) || 0,
-                                    ),
+                                    Math.min(100, value || 0),
                                   ),
                                 })
                               }
@@ -623,16 +614,12 @@ export default function EstimateDetailPage() {
                         <Field>
                           <FieldLabel>{t("discountAmount")}</FieldLabel>
                           <FieldContent>
-                            <Input
-                              type="number"
+                            <CurrencyInput
                               min={0}
                               value={line.discount_amount}
-                              onChange={(event) =>
+                              onChange={(value) =>
                                 updateLine(line.id, {
-                                  discount_amount: Math.max(
-                                    0,
-                                    Number(event.target.value) || 0,
-                                  ),
+                                  discount_amount: Math.max(0, value || 0),
                                 })
                               }
                               className="h-11 text-right"
@@ -812,17 +799,14 @@ export default function EstimateDetailPage() {
                     <Field>
                       <FieldLabel>{t("discountPercent")}</FieldLabel>
                       <FieldContent>
-                        <Input
-                          type="number"
+                        <NumericInput
                           min={0}
                           max={100}
+                          step={0.1}
                           value={editDiscountPercent}
-                          onChange={(event) =>
+                          onChange={(value) =>
                             setEditDiscountPercent(
-                              Math.max(
-                                0,
-                                Math.min(100, Number(event.target.value) || 0),
-                              ),
+                              Math.max(0, Math.min(100, value || 0)),
                             )
                           }
                           className="h-11 text-right"
@@ -832,13 +816,12 @@ export default function EstimateDetailPage() {
                     <Field>
                       <FieldLabel>{t("discountAmount")}</FieldLabel>
                       <FieldContent>
-                        <Input
-                          type="number"
+                        <CurrencyInput
                           min={0}
                           value={editDiscountAmount}
-                          onChange={(event) =>
+                          onChange={(value) =>
                             setEditDiscountAmount(
-                              Math.max(0, Number(event.target.value) || 0),
+                              Math.max(0, value || 0),
                             )
                           }
                           className="h-11 text-right"
@@ -848,13 +831,12 @@ export default function EstimateDetailPage() {
                     <Field>
                       <FieldLabel>{t("tax")}</FieldLabel>
                       <FieldContent>
-                        <Input
-                          type="number"
+                        <CurrencyInput
                           min={0}
                           value={editTaxTotal}
-                          onChange={(event) =>
+                          onChange={(value) =>
                             setEditTaxTotal(
-                              Math.max(0, Number(event.target.value) || 0),
+                              Math.max(0, value || 0),
                             )
                           }
                           className="h-11 text-right"

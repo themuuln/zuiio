@@ -3,14 +3,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CarFront, Pencil, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { ExportButton } from "@/components/export-button";
 import { ServiceForm } from "@/components/services/service-form";
-import { ServiceModelPricesSheet } from "@/components/services/service-model-prices-sheet";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { ServiceModelPricesSheet } from "@/components/services/service-model-prices-drawer";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,7 +32,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { useClientNow } from "@/hooks/use-client-now";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
+
 import type { ExportColumn } from "@/lib/export";
 import { serviceKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -43,7 +42,7 @@ import type { ServiceCatalog } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
 
 import { createColumns } from "./_columns";
-import { EditServiceSheet } from "./_edit-service-sheet";
+import { EditServiceSheet } from "./_edit-service-drawer";
 
 export default function ServicesPage() {
   const st = useTranslations("services");
@@ -184,61 +183,6 @@ export default function ServicesPage() {
       ),
     [modelPriceCounts, lastUsedPrices.data],
   );
-
-  // ── Sidebar tabs ──
-
-  const sidebar = useRightSidebar();
-
-  useEffect(() => {
-    if (services.length === 0) return;
-
-    const catCount = new Map<string, number>();
-    for (const s of services) {
-      const cat = s.category ?? st("uncategorized");
-      catCount.set(cat, (catCount.get(cat) ?? 0) + 1);
-    }
-
-    const top5 = [...services]
-      .sort((a, b) => b.default_price - a.default_price)
-      .slice(0, 5);
-
-    sidebar.setActiveTab("categories");
-
-    sidebar.registerTab(
-      "categories",
-      st("category"),
-      <StatusSummary
-        items={Array.from(catCount.entries()).map(([label, count]) => ({
-          label,
-          count,
-        }))}
-      />,
-    );
-
-    sidebar.registerTab(
-      "popular",
-      st("lastUsed"),
-      <RecentList
-        items={top5.map((s) => ({
-          id: s.id,
-          primary: s.name,
-          secondary: s.category ?? null,
-        }))}
-        emptyMessage={st("noServices")}
-      />,
-    );
-
-    return () => {
-      sidebar.unregisterTab("categories");
-      sidebar.unregisterTab("popular");
-    };
-  }, [
-    services,
-    sidebar.registerTab,
-    sidebar.setActiveTab,
-    sidebar.unregisterTab,
-    st,
-  ]);
 
   // ── Empty state (two variants) ──
 

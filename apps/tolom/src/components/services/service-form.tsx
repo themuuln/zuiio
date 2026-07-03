@@ -13,6 +13,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -161,20 +162,18 @@ export function ServiceForm({
             <FieldLabel>
               {st("price")} (₮) <span className="text-destructive">*</span>
             </FieldLabel>
-            <FieldContent>
-              <Input
-                type="number"
-                min="0"
-                placeholder="45000"
-                aria-invalid={!!form.formState.errors.default_price}
-                {...form.register("default_price")}
-              />
-              {form.formState.errors.default_price && (
-                <FieldError>
-                  {form.formState.errors.default_price.message}
-                </FieldError>
-              )}
-            </FieldContent>
+              <FieldContent>
+                <CurrencyInput
+                  placeholder="45000"
+                  value={Number(form.watch("default_price")) || 0}
+                  onChange={(val) => form.setValue("default_price", String(val))}
+                />
+                {form.formState.errors.default_price && (
+                  <FieldError>
+                    {form.formState.errors.default_price.message}
+                  </FieldError>
+                )}
+              </FieldContent>
           </Field>
         </div>
 

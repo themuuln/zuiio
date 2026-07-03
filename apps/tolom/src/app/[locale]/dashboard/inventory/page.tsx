@@ -9,20 +9,17 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import { Link } from "@/lib/i18n/navigation";
 import {
   useInventoryBalances,
   useInventoryTurnover,
   usePartsCatalog,
   useSlowMovingStock,
-  useStockThresholds,
 } from "@/lib/queries/use-inventory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId } from "@/lib/stores";
@@ -35,7 +32,6 @@ export default function InventoryPage() {
   const orgId = org?.orgId ?? null;
   const selectedBranchId = useSelectedBranchId();
   const branchFilter = selectedBranchId === "all" ? null : selectedBranchId;
-  const { registerTab } = useRightSidebar();
 
   // Tab navigation removed - sidebar handles navigation
   // This stub is kept for PartsTab's onNavigate prop compatibility
@@ -50,11 +46,7 @@ export default function InventoryPage() {
     orgId ?? undefined,
     branchFilter,
   );
-  const { data: thresholds = [], error: thresholdsError } = useStockThresholds(
-    orgId ?? undefined,
-    branchFilter,
-  );
-  const inventoryError = partsError || balancesError || thresholdsError;
+  const inventoryError = partsError || balancesError;
 
   const { data: turnover } = useInventoryTurnover(
     orgId ?? undefined,
@@ -64,53 +56,6 @@ export default function InventoryPage() {
     orgId ?? undefined,
     branchFilter,
   );
-
-  // ── Sidebar: Stock Summary + Quick Actions ──────────
-  const balanceMap = useMemo(() => {
-    const map = new Map<string, (typeof balances)[number]>();
-    for (const b of balances) {
-      if (b.part_id) map.set(b.part_id, b);
-    }
-    return map;
-  }, [balances]);
-
-  const thresholdMap = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const t of thresholds) {
-      map[t.part_id] = t.minimum_quantity;
-    }
-    return map;
-  }, [thresholds]);
-
-  useEffect(() => {
-    if (parts.length === 0) return;
-
-    const totalParts = parts.filter((p) => p.is_active).length;
-    let lowStock = 0;
-    let outOfStock = 0;
-
-    for (const p of parts) {
-      if (!p.is_active) continue;
-      const bal = balanceMap.get(p.id);
-      const qty = bal?.quantity_on_hand ?? 0;
-      const min = thresholdMap[p.id] ?? 5;
-      if (qty <= 0) outOfStock++;
-      else if (qty < min) lowStock++;
-    }
-
-    registerTab(
-      "stock",
-      "Stock",
-      <StatusSummary
-        items={[
-          { label: "Total SKUs", count: totalParts },
-          { label: "Low Stock", count: lowStock, color: "secondary" },
-          { label: "Out of Stock", count: outOfStock, color: "destructive" },
-        ]}
-      />,
-      <Package className="size-4" />,
-    );
-  }, [parts, balanceMap, thresholdMap, registerTab]);
 
   // ── Loading state ──────────────────────────────────
   if (orgLoading && !orgId) {

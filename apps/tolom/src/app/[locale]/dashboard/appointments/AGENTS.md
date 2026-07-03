@@ -7,7 +7,7 @@
 ```
 appointments/
 ├── page.tsx          # Main appointments list page (~257 lines)
-└── _create-sheet.tsx # AppointmentCreateSheet — modal wrapper for AppointmentForm
+└── _create-drawer.tsx # AppointmentCreateDrawer — modal wrapper for AppointmentForm
 ```
 
 ## Key Components

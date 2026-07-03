@@ -1,8 +1,13 @@
 import { CatalogClient } from "@/components/shop/catalog-client";
 import { requireAppContext } from "@/lib/erp";
+import { getVerticalPreset } from "@/lib/vertical-config";
 
 export default async function ShopCatalogPage() {
   const { supabase, organizationId } = await requireAppContext();
+
+  // Vertical config: NEXT_PUBLIC_VERTICAL_KEY env overrides default
+  const verticalKey = process.env.NEXT_PUBLIC_VERTICAL_KEY ?? "default";
+  const config = getVerticalPreset(verticalKey);
 
   // Fetch products and categories in parallel
   const [{ data: products }, { data: categories }] = await Promise.all([
@@ -51,7 +56,11 @@ export default async function ShopCatalogPage() {
         Бүтээгдэхүүн хайж, сагсанд нэмнэ үү.
       </p>
       <div className="mt-4">
-        <CatalogClient products={productList} categories={categoryList} />
+        <CatalogClient
+          products={productList}
+          categories={categoryList}
+          selectionMode={config.selectionMode}
+        />
       </div>
     </div>
   );

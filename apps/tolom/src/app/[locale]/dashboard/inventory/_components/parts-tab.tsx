@@ -28,7 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import {
   Table,
   TableBody,
@@ -566,11 +566,10 @@ export function PartsTab({
                         <TableCell className="px-4 py-3 text-center">
                           {editingThreshold === part.id ? (
                             <div className="flex items-center justify-center gap-1">
-                              <Input
-                                type="number"
-                                value={thresholdValue}
-                                onChange={(e) =>
-                                  setThresholdValue(e.target.value)
+                              <NumericInput
+                                value={Number(thresholdValue) || 0}
+                                onChange={(qty) =>
+                                  setThresholdValue(String(qty))
                                 }
                                 className="h-8 w-16 text-center"
                                 min={0}
@@ -919,12 +918,11 @@ export function PartsTab({
               <label className="text-sm font-medium">
                 {t("defaultThreshold")}
               </label>
-              <Input
-                type="number"
-                min={0}
-                value={defaultThresholdValue}
-                onChange={(e) => setDefaultThresholdValue(e.target.value)}
+              <NumericInput
+                value={Number(defaultThresholdValue) || 0}
+                onChange={(qty) => setDefaultThresholdValue(String(qty))}
                 className="h-10 w-24"
+                min={0}
                 autoFocus
               />
             </div>

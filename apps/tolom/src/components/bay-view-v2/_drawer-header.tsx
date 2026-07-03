@@ -98,9 +98,9 @@ export function DrawerHeaderSection({
         {/* Row 1: Vehicle info | Status + Mechanic + Actions */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex items-center justify-center size-10 shrink-0 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">
+            <div className="flex items-center justify-center size-10 shrink-0 rounded-xl bg-muted ring-1 ring-border">
               {loading ? (
-                <Loader2 className="size-5 animate-spin text-primary" />
+                <Loader2 className="size-5 animate-spin text-muted-foreground" />
               ) : (
                 <VehicleMakeLogo
                   make={wo?.vehicle?.make}
@@ -193,18 +193,19 @@ export function DrawerHeaderSection({
                 }}
               />
             )}
-            {showBack ? (
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                onClick={onBack}
-                aria-label={t("backLabel")}
-              >
-                <ArrowLeft className="size-4" />
-              </Button>
-            ) : (
-              <div className="flex items-center gap-3 shrink-0">
-                {wo?.status && <StatusPill status={wo.status} />}
+            <div className="flex items-center gap-3 shrink-0">
+              {showBack && (
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onClick={onBack}
+                  aria-label={t("backLabel")}
+                >
+                  <ArrowLeft className="size-4" />
+                </Button>
+              )}
+              {wo?.status && <StatusPill status={wo.status} />}
+              {!showBack && (
                 <Button
                   variant="ghost"
                   size="icon-xs"
@@ -219,16 +220,16 @@ export function DrawerHeaderSection({
                     <Maximize2 className="size-4" />
                   )}
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={onClose}
-                  aria-label={t("close")}
-                >
-                  <X className="size-4" />
-                </Button>
-              </div>
-            )}
+              )}
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={onClose}
+                aria-label={t("close")}
+              >
+                <X className="size-4" />
+              </Button>
+            </div>
           </div>
         </div>
 

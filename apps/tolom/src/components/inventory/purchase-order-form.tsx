@@ -13,6 +13,8 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -273,23 +275,24 @@ export function PurchaseOrderForm({
                   )}
                 </div>
                 <div className="w-20">
-                  <Input
-                    type="number"
+                  <NumericInput
                     min={1}
                     className="text-center"
-                    {...form.register(`items.${index}.quantity_ordered`, {
-                      valueAsNumber: true,
-                    })}
+                    value={form.watch(`items.${index}.quantity_ordered`) || 0}
+                    onChange={(val) =>
+                      form.setValue(`items.${index}.quantity_ordered`, val)
+                    }
                   />
                 </div>
                 <div className="w-28">
-                  <Input
-                    type="number"
+                  <CurrencyInput
                     min={0}
                     className="text-right"
-                    {...form.register(`items.${index}.unit_cost`, {
-                      valueAsNumber: true,
-                    })}
+                    value={form.watch(`items.${index}.unit_cost`) || 0}
+                    onChange={(val) =>
+                      form.setValue(`items.${index}.unit_cost`, val)
+                    }
+                    showPrefix={false}
                   />
                 </div>
                 <div className="w-24 text-right text-sm tabular-nums pb-2">

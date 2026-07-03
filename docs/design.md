@@ -115,54 +115,84 @@ Defined in `@zuiio/branding/globals.css`. Follows shadcn convention exactly.
 
 ## Elevation & Shadow
 
-```
---shadow-xs: 0 1px 2px oklch(0 0 0 / 0.05)
---shadow-sm: 0 1px 3px oklch(0 0 0 / 0.10), 0 1px 2px -1px oklch(0 0 0 / 0.10)
---shadow-md: 0 4px 6px -1px oklch(0 0 0 / 0.10), 0 2px 4px -2px oklch(0 0 0 / 0.10)
---shadow-lg: 0 10px 15px -3px oklch(0 0 0 / 0.10), 0 4px 6px -4px oklch(0 0 0 / 0.10)
---shadow-xl: 0 20px 25px -5px oklch(0 0 0 / 0.10), 0 8px 10px -6px oklch(0 0 0 / 0.10)
+```css
+--shadow-xs:   0 1px 2px oklch(0 0 0 / 0.05);
+--shadow-sm:   0 1px 3px oklch(0 0 0 / 0.10), 0 1px 2px -1px oklch(0 0 0 / 0.10);
+--shadow-md:   0 4px 6px -1px oklch(0 0 0 / 0.10), 0 2px 4px -2px oklch(0 0 0 / 0.10);
+--shadow-lg:   0 10px 15px -3px oklch(0 0 0 / 0.10), 0 4px 6px -4px oklch(0 0 0 / 0.10);
+--shadow-xl:   0 20px 25px -5px oklch(0 0 0 / 0.10), 0 8px 10px -6px oklch(0 0 0 / 0.10);
 ```
 
 Brand glow (primary surfaces):
 
+```css
+--shadow-brand: 0 0 0 1px oklch(0.50 0.26 275 / 0.15), 0 4px 12px oklch(0.50 0.26 275 / 0.12);
 ```
---shadow-brand: 0 0 0 1px oklch(0.50 0.26 275 / 0.15), 0 4px 16px oklch(0.50 0.26 275 / 0.12)
+
+Hover card lift:
+
+```css
+--shadow-card-hover: 0 4px 12px oklch(0 0 0 / 0.08), 0 2px 4px oklch(0 0 0 / 0.06);
 ```
+
+**Rule:** Never pair `border` with `box-shadow` on the same element — pick one. A subtle border + wide blur shadow ("ghost-card") is the most common AI tell. Cards use shadow-only or border-only, never both as decoration.
 
 ---
 
 ## Motion
 
-```
---ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1)
---ease-out:     cubic-bezier(0.0, 0.0, 0.2, 1)
---ease-in-out:  cubic-bezier(0.4, 0.0, 0.2, 1)
+### Easing
 
---duration-fast:   100ms
---duration-base:   150ms
---duration-slow:   250ms
---duration-slower: 400ms
+```css
+--ease-out:     cubic-bezier(0.23, 1, 0.32, 1);   /* strong enter — button press, popover, modal, dropdown */
+--ease-move:    cubic-bezier(0.25, 1, 0.5, 1);    /* slides, drawers, panels on-screen */
+--ease-in-out:  cubic-bezier(0.77, 0, 0.175, 1);  /* slow deliberate transitions, marketing */
+--ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1); /* micro-scale only: buttons, toggles, badges */
+```
+
+Built-in `ease` and weak `ease-out` variants are too soft — use these named curves.
+`ease-spring` has overshoot (1.56); reserve it for micro-interactions where bounce feels deliberate, never for panel opens or page transitions.
+
+### Duration
+
+```css
+--duration-instant: 80ms;   /* hover color/opacity changes */
+--duration-fast:    120ms;  /* button press feedback, focus rings */
+--duration-base:    200ms;  /* tooltips, small popovers, checkboxes */
+--duration-slow:    280ms;  /* dropdowns, selects, toggles */
+--duration-slower:  350ms;  /* modals, drawers, sheets */
 ```
 
 | Interaction | Duration | Easing |
 |-------------|----------|--------|
-| Hover / focus | `fast` | `ease-out` |
-| UI state change | `base` | `ease-out` |
-| Panel open / modal | `slow` | `ease-in-out` |
-| Micro spring (scale) | `slow` | `ease-spring` |
+| Hover color / opacity | `instant` | `ease-out` |
+| Button press (`:active` scale) | `fast` | `ease-out` |
+| Focus ring | `fast` | `ease-out` |
+| Tooltip, small popover | `base` | `ease-out` |
+| Dropdown, select, toggle | `slow` | `ease-out` |
+| Panel / drawer open | `slower` | `ease-move` |
+| Modal / dialog | `slower` | `ease-out` |
+| Micro spring (badge count, toggle snap) | `slow` | `ease-spring` |
 | Page transition | `slower` | `ease-in-out` |
 
-Never animate layout properties (`width`, `height`) — use `transform` and `opacity` only.
+Never animate layout properties (`width`, `height`, `margin`, `padding`, `top`, `left`) — use `transform` and `opacity` only.
+Never `transition: all` — list properties explicitly.
+Every animation must have a `@media (prefers-reduced-motion: reduce)` fallback.
 
 ---
 
 ## Surfaces
 
-3-layer depth model:
+6-layer z-index scale (semantic — never raw values like 999 or 9999):
 
-1. **Base** — `--background` — page canvas
-2. **Raised** — `--card` + `--shadow-sm` — cards, sections, sidebars
-3. **Floating** — `--popover` + `--shadow-lg` — dropdowns, modals, tooltips
+| Layer | z-index | Surface |
+|-------|---------|---------|
+| Base | 0 | Page canvas (`--background`) |
+| Raised | 10 | Cards, sections, sidebars |
+| Sticky | 20 | Headers, persistent nav |
+| Floating | 30 | Dropdowns, popovers, tooltips |
+| Overlay | 40 | Modals, sheets, drawers |
+| Top | 50 | Toasts, notifications, skip-link |
 
 In dark mode: depth via violet-tinted background steps, not opacity overlays.
 
@@ -239,9 +269,16 @@ Each product:
 ## File Conventions
 
 ```
-packages/branding/     — CSS brand tokens (source of truth)
-apps/*/globals.css     — per-app shadcn-compatible CSS variables
-components.json        — shadcn config per app
+packages/branding/         — CSS brand tokens (source of truth)
+packages/branding/src/     — JS/TS token constants for programmatic access
+apps/*/globals.css         — per-app shadcn-compatible CSS variables
+apps/*/components.json     — shadcn config per app
 ```
 
-All color values are derived from `@zuiio/branding`. The CSS variables in `packages/branding/globals.css` are the single source of truth.
+All color, motion, spacing, and shadow values derive from `@zuiio/branding`. The CSS variables in `packages/branding/globals.css` are the single source of truth. Each app imports these and overlays only its app-specific shadcn semantic tokens.
+
+```css
+/* apps/<app>/globals.css */
+@import "@zuiio/branding/globals.css";   /* brand tokens, spacing, motion, shadows */
+/* … then app-specific shadcn semantic tokens … */
+```

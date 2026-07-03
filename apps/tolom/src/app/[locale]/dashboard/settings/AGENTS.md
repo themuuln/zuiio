@@ -80,5 +80,5 @@ State management: `useState` for form data (`SettingsForm`), synced from `organi
 - `zod` -- form validation (in sub-components)
 - `@dnd-kit/core` -- drag-and-drop in diagnosis labels
 - `@/components/org-logo-upload` -- logo upload widget
-- `@/components/branches/quick-create-branch-sheet` -- branch creation sheet
+- `@/components/branches/quick-create-branch-drawer` -- branch creation drawer
 - `@/components/brand-theme-provider` -- live brand color preview

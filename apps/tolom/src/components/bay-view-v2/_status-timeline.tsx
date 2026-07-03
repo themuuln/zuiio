@@ -137,8 +137,8 @@ export function StatusTimeline({
     >
       <div className="flex flex-col gap-1 mb-3">
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center size-5 rounded-md bg-purple-500/10">
-            <History className="size-3 text-purple-500" />
+          <div className="flex items-center justify-center size-5 rounded-md bg-sky-500/10">
+            <History className="size-3 text-sky-500" />
           </div>
           <h3
             id="status-timeline-title"

@@ -23,6 +23,7 @@ work-orders/
 ## Key Components
 
 ### List Page (`page.tsx`)
+
 - `ListPageShell` / `ListToolbar` — standard list layout with search, filter chips, export
 - `DataTable` with column visibility toggle, mobile card rendering, 20-item pages
 - Status badge summary bar (clickable to filter)
@@ -30,6 +31,7 @@ work-orders/
 - `ExportButton` for XLSX export
 
 ### Detail Page (`[id]/page.tsx`)
+
 - Status change buttons with confirmation dialog (required for Completed/Cancelled)
 - `MechanicSelect` — assign mechanic with job count
 - Services list with inline search from `useServiceCatalog` and price history
@@ -43,6 +45,7 @@ work-orders/
 - Right sidebar tabs: vehicle info, customer info, status timeline
 
 ### New Work Order (`new/page.tsx`)
+
 - Wraps all sections in `WizardProvider` (from `@/components/work-orders/wizard`)
 - Sequential sections: Customer → Vehicle → Complaint → Services → Parts → Mechanic → Summary
 - Draft persistence via localStorage (currently hidden/disabled)
@@ -64,6 +67,7 @@ All monetary columns use MNT (₮) formatting via `formatMNT`.
 ## Data Flow
 
 ### API Endpoints
+
 | Endpoint | Methods | Purpose |
 |----------|---------|---------|
 | `/api/organizations/[id]/work-orders` | GET, POST | List/create work orders |
@@ -74,6 +78,7 @@ All monetary columns use MNT (₮) formatting via `formatMNT`.
 | `/api/organizations/[id]/work-orders/[woId]/pdf` | GET | PDF generation |
 
 ### React Query Hooks
+
 - `useWorkOrders(orgId, status, search, branchFilter)` — list
 - `useWorkOrderDetail(orgId, woId)` — detail with services, parts, status_history
 - `useUpdateWorkOrderStatus(orgId)` — status mutation
@@ -91,6 +96,7 @@ All monetary columns use MNT (₮) formatting via `formatMNT`.
 - `fetchServicePriceHistory(...)` / `fetchPartPriceHistory(...)` — async price lookups
 
 ### Realtime
+
 `useRealtimeMulti` listens to: `work_orders`, `work_order_services`, `work_order_parts`, `mechanic_assignments` — invalidates `workOrderKeys.all()` on changes.
 
 ## State Management
@@ -98,7 +104,6 @@ All monetary columns use MNT (₮) formatting via `formatMNT`.
 - **URL filters:** `useTableFilters("work-orders")` for search and status filter
 - **Branch filter:** `useSelectedBranchId()` from UI store
 - **Page header:** `usePageHeader()` for `setNewWorkOrderSheetOpen`
-- **Right sidebar:** `useRightSidebar()` for tab registration (vehicle, customer, timeline)
 - **Optimistic updates:** Detail page uses `queryClient.setQueryData` for service/part add/remove with rollback on error
 - **Wizard state:** Entirely managed in `WizardProvider` context — customer, vehicle, services, parts, complaint, mechanic, totals
 
@@ -115,7 +120,7 @@ All monetary columns use MNT (₮) formatting via `formatMNT`.
 
 ## Dependencies
 
-- **Shared components:** `ListPageShell`, `ListToolbar`, `FilterChips`, `DataTable`, `ExportButton`, `StatusBadge`, `MechanicSelect`, `ContactCard`, `RecentList`, `WorkOrderPhotoUpload`
+- **Shared components:** `ListPageShell`, `ListToolbar`, `FilterChips`, `DataTable`, `ExportButton`, `StatusBadge`, `MechanicSelect`, `WorkOrderPhotoUpload`
 - **Wizard components:** `@/components/work-orders/wizard/*` (7 section components + context)
 - **Cross-module:** Invoices navigate to `/invoice/[publicToken]`, estimates can convert to work orders
 - **Stores:** `useSelectedBranchId` from UI store, `usePageHeader` for header button state

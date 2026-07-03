@@ -58,18 +58,18 @@ export function TransferBankPicker({
                 aria-checked={selected}
                 onClick={() => onChange(bank.id)}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg border px-3 py-3 text-left transition-colors border-l-2",
+                  "flex items-center gap-3 rounded-lg border px-3 py-3 text-left transition-colors",
                   selected
                     ? "bg-muted/40"
-                    : "border-border/60 border-l-border/60 bg-card/50 hover:bg-muted/20",
+                    : "border-border/60 bg-card/50 hover:bg-muted/20",
                 )}
                 style={
                   selected
                     ? {
-                        borderLeftColor: bank.brandColor,
-                        backgroundColor: `${bank.brandColor}08`,
+                        borderColor: bank.brandColor,
+                        backgroundColor: `${bank.brandColor}12`,
                       }
-                    : { borderLeftColor: bank.brandColor }
+                    : undefined
                 }
               >
                 <BankLogo bank={bank} size="md" />

@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
  * via next/dynamic. Matches the exact visual layout of the rendered view
  * so the transition from skeleton → content is seamless.
  *
- * Used by: bay-view/page.tsx, bay-view-v2/page.tsx
+ * Used by: bay-view/page.tsx
  */
 export function BayViewPageSkeleton() {
   return (
@@ -91,7 +91,7 @@ function KpiCardSkeleton({
 function BayCardSkeleton() {
   return (
     <Card className="relative min-h-[160px] flex flex-col border-dashed border-muted-foreground/30 bg-muted/10 rounded-xl overflow-hidden">
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:10px_10px]" />
+      <div className="absolute inset-0 bg-muted/10" />
       <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-2 px-4 py-6">
         <Skeleton className="size-9 rounded-full" />
         <div className="flex flex-col items-center gap-1">

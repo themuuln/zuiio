@@ -47,3 +47,28 @@ export const radii = {
 	xl: "16px",
 	full: "9999px",
 } as const;
+
+export const motion = {
+	easing: {
+		out: "cubic-bezier(0.23, 1, 0.32, 1)",
+		move: "cubic-bezier(0.25, 1, 0.5, 1)",
+		inOut: "cubic-bezier(0.77, 0, 0.175, 1)",
+		spring: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+	},
+	duration: {
+		instant: "80ms",
+		fast: "120ms",
+		base: "200ms",
+		slow: "280ms",
+		slower: "350ms",
+	},
+} as const;
+
+export const zIndexes = {
+	base: 0,
+	raised: 10,
+	sticky: 20,
+	floating: 30,
+	overlay: 40,
+	top: 50,
+} as const;

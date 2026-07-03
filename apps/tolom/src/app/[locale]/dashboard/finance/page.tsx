@@ -22,8 +22,7 @@ import { toast } from "sonner";
 import { BranchSelect } from "@/components/branch-select";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
+
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,7 +46,6 @@ import {
 } from "@/components/ui/table";
 import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
 
 // ── Shared helpers (module scope to avoid per-render rebuild) ──
 
@@ -62,9 +60,8 @@ function formatInvoiceDate(iso: string): string {
   }
 }
 
+import { useFuzzySearch, useTableFilters } from "@zuiio/hooks";
 import type { ExportColumn } from "@/lib/export";
-import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
-import { useTableFilters } from "@/lib/hooks/use-url-filters";
 import { Link } from "@/lib/i18n/navigation";
 import { useBranches } from "@/lib/queries/use-branches";
 import { useDashboard } from "@/lib/queries/use-dashboard";
@@ -743,7 +740,6 @@ function ExpensesTab({ orgId }: { orgId: string | null }) {
 
 export default function FinancePage() {
   const t = useTranslations();
-  const { registerTab } = useRightSidebar();
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => ({
     from: subMonths(new Date(), 3),
     to: new Date(),
@@ -791,46 +787,6 @@ export default function FinancePage() {
       : dataError
         ? dataError.message
         : null;
-
-  useEffect(() => {
-    if (!data) return;
-    const s = data.summary;
-    registerTab(
-      "summary",
-      t("finance.summary"),
-      <StatusSummary
-        title={t("finance.periodSummary")}
-        items={[
-          { label: t("finance.totalRevenue"), count: s.totalRevenue },
-          { label: t("finance.serviceRevenue"), count: s.serviceRevenue },
-          { label: t("finance.partsRevenue"), count: s.partsRevenue },
-          { label: t("finance.activeOrders"), count: s.activeWorkOrders },
-          { label: t("finance.completedToday"), count: s.completedToday },
-          { label: t("finance.grossProfit"), count: s.grossProfit },
-        ]}
-      />,
-    );
-    registerTab(
-      "recent",
-      t("finance.recent"),
-      <RecentList
-        title={t("finance.recentTransactions")}
-        items={(data.recentWorkOrders ?? []).map((wo) => ({
-          id: wo.id,
-          primary:
-            (wo.customer?.full_name ??
-              `${wo.customer?.first_name ?? ""} ${wo.customer?.last_name ?? ""}`.trim()) ||
-            t("common.unknown"),
-          secondary: `${wo.vehicle?.plate_number ?? "—"} · ${formatCurrency(wo.total)}`,
-          timestamp: new Date(wo.created_at).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-          }),
-          href: `/dashboard/work-orders/${wo.id}`,
-        }))}
-      />,
-    );
-  }, [data, registerTab, t]);
 
   const summary = data?.summary;
   const hasRevenue = (summary?.totalRevenue ?? 0) > 0;

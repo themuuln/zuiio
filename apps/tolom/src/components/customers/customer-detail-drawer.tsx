@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
-import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
+import { DetailSheetHeader } from "@/components/ui/detail-drawer-header";
 import { DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import {
   Item,

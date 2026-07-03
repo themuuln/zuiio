@@ -11,6 +11,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   Select,
   SelectContent,
@@ -80,14 +81,11 @@ export function ExpenseDetailEditForm({
               {t("amount")} <span className="text-destructive">*</span>
             </FieldLabel>
             <FieldContent>
-              <Input
+              <CurrencyInput
                 id="eds-amount"
-                type="number"
-                step="0.01"
-                min="0"
                 placeholder="\u20AE"
-                aria-invalid={!!form.formState.errors.amount}
-                {...form.register("amount")}
+                value={Number(form.watch("amount")) || 0}
+                onChange={(val) => form.setValue("amount", String(val))}
               />
               {form.formState.errors.amount && (
                 <FieldError>{form.formState.errors.amount.message}</FieldError>
@@ -99,13 +97,11 @@ export function ExpenseDetailEditForm({
           <Field>
             <FieldLabel>{t("taxAmount")}</FieldLabel>
             <FieldContent>
-              <Input
+              <CurrencyInput
                 id="eds-taxAmount"
-                type="number"
-                step="0.01"
-                min="0"
                 placeholder="\u20AE"
-                {...form.register("taxAmount")}
+                value={Number(form.watch("taxAmount")) || 0}
+                onChange={(val) => form.setValue("taxAmount", String(val))}
               />
             </FieldContent>
           </Field>

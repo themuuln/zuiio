@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { DrawerDescription, DrawerTitle } from "@/components/ui/drawer";
-import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   Select,
   SelectContent,
@@ -407,29 +407,18 @@ function VariantRow({
           </Typography.Muted>
         )}
       </div>
-      <div className="flex items-center gap-1.5 shrink-0">
-        <div className="flex items-center gap-1">
-          <Input
-            type="number"
-            min="0"
+          <CurrencyInput
+            min={0}
             key={`${variant.id}-${variant.price}`}
-            className={`h-8 w-24 text-right tabular-nums ${
+            value={currentPrice}
+            onChange={(val) => onPriceChange(variant.id, String(val))}
+            className={`h-8 w-24 tabular-nums ${
               variant.price != null && variant.price !== defaultPrice
                 ? "border-primary"
                 : ""
             }`}
-            defaultValue={currentPrice}
-            onBlur={(e) => {
-              const val = e.target.value;
-              if (val && parseFloat(val) !== currentPrice) {
-                onPriceChange(variant.id, val);
-              }
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.currentTarget.blur();
-              }
-            }}
+            size="sm"
+            autoSelect
           />
           <Button
             variant="ghost"
@@ -440,7 +429,6 @@ function VariantRow({
           >
             <Trash2 className="size-3.5 text-destructive" />
           </Button>
-        </div>
       </div>
     </div>
   );

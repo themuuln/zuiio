@@ -18,7 +18,7 @@ import {
   Plus,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { NewCustomerSheet } from "@/components/customers/new-customer-sheet";
+import { NewCustomerSheet } from "@/components/customers/new-customer-drawer";
 import { MechanicAvatar } from "@/components/mechanic-avatar";
 import {
   type SortableItem,
@@ -36,7 +36,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Typography } from "@/components/ui/typography";
-import { NewVehicleSheet } from "@/components/vehicles/new-vehicle-sheet";
+import { NewVehicleSheet } from "@/components/vehicles/new-vehicle-drawer";
 import { reportError } from "@/lib/sentry-report";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { cn, formatPlateNumber } from "@/lib/utils";

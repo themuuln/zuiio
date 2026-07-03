@@ -7,7 +7,7 @@
 ```
 vehicle-models/
 ├── page.tsx                      # Tree-view catalog page
-├── _vehicle-model-form-sheet.tsx # Slide-over form for add/edit variant
+├── _vehicle-model-form-drawer.tsx # Slide-over form for add/edit variant
 ├── loading.tsx                   # Loading skeleton
 └── error.tsx                     # Error boundary
 ```

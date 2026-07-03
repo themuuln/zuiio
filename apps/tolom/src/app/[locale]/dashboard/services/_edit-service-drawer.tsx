@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { VariantEditorSheet } from "@/components/services/variant-editor-sheet";
+import { VariantEditorSheet } from "@/components/services/variant-editor-drawer";
 import { Button } from "@/components/ui/button";
 import {
   Combobox,
@@ -26,6 +26,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { inputProps } from "@/lib/form-ux";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
 import { serviceKeys } from "@/lib/queries/keys";
@@ -238,13 +239,12 @@ export function EditServiceSheet({
                 {t("price")} (₮) <span className="text-destructive">*</span>
               </FieldLabel>
               <FieldContent>
-                <Input
-                  type="number"
-                  min="0"
+                <CurrencyInput
+                  value={Number(form.watch("defaultPrice")) || 0}
+                  onChange={(val) => form.setValue("defaultPrice", String(val))}
+                  min={0}
                   placeholder="45000"
                   aria-invalid={!!form.formState.errors.defaultPrice}
-                  {...inputProps("price")}
-                  {...form.register("defaultPrice")}
                 />
                 {form.formState.errors.defaultPrice && (
                   <FieldError>

@@ -18,7 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
-import { DetailSheetHeader } from "@/components/ui/detail-sheet-header";
+import { DetailSheetHeader } from "@/components/ui/detail-drawer-header";
 import { Typography } from "@/components/ui/typography";
 
 import { useForm, zodResolver } from "@/lib/hooks/use-form";

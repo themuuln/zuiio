@@ -9,6 +9,11 @@ import {
   FileText,
   User,
 } from "lucide-react";
+import {
+  ServiceLineRow,
+  PartLineRow,
+  TotalsSummary,
+} from "@/components/work-orders/line-items";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -22,14 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+
 import { workOrderKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import {
@@ -264,46 +262,21 @@ export function WorkOrderDetailSheet({
           {(wo.services ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground">No services</p>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Service</TableHead>
-                    <TableHead className="text-right w-16">Qty</TableHead>
-                    <TableHead className="text-right w-24">Price</TableHead>
-                    <TableHead className="text-right w-24">Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(wo.services ?? []).map((svc) => (
-                    <TableRow key={svc.id}>
-                      <TableCell className="text-sm">
-                        {svc.service_name}
-                      </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums">
-                        {svc.quantity}
-                      </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums">
-                        {formatMNT(svc.unit_price)}
-                      </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums font-medium">
-                        {formatMNT(svc.final_price)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  <TableRow>
-                    <TableCell
-                      colSpan={3}
-                      className="text-right text-sm font-medium"
-                    >
-                      Services Total
-                    </TableCell>
-                    <TableCell className="text-right text-sm font-semibold tabular-nums">
-                      {formatMNT(servicesTotal)}
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+            <div className="-mx-1 divide-y">
+              {(wo.services ?? []).map((svc) => (
+                <ServiceLineRow
+                  key={svc.id}
+                  name={svc.service_name}
+                  quantity={Number(svc.quantity ?? 1)}
+                  unitPrice={Number(svc.unit_price ?? 0)}
+                  finalPrice={Number(svc.final_price)}
+                  readOnly
+                />
+              ))}
+              <div className="flex justify-between px-2 py-2 text-sm font-medium">
+                <span className="text-muted-foreground">Services Total</span>
+                <span className="tabular-nums">{formatMNT(servicesTotal)}</span>
+              </div>
             </div>
           )}
         </DetailDrawer.Section>
@@ -313,76 +286,44 @@ export function WorkOrderDetailSheet({
           {(wo.parts ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground">No parts</p>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Part</TableHead>
-                    <TableHead className="text-right w-16">Qty</TableHead>
-                    <TableHead className="text-right w-24">Price</TableHead>
-                    <TableHead className="text-right w-24">Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(wo.parts ?? []).map((part) => (
-                    <TableRow key={part.id}>
-                      <TableCell className="text-sm">
-                        {part.part_name}
-                      </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums">
-                        {part.quantity}
-                      </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums">
-                        {formatMNT(part.unit_price)}
-                      </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums font-medium">
-                        {formatMNT(part.final_price)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  <TableRow>
-                    <TableCell
-                      colSpan={3}
-                      className="text-right text-sm font-medium"
-                    >
-                      Parts Total
-                    </TableCell>
-                    <TableCell className="text-right text-sm font-semibold tabular-nums">
-                      {formatMNT(partsTotal)}
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+            <div className="-mx-1 divide-y">
+              {(wo.parts ?? []).map((part) => (
+                <PartLineRow
+                  key={part.id}
+                  name={part.part_name}
+                  quantity={Number(part.quantity ?? 1)}
+                  unitPrice={Number(part.unit_price ?? 0)}
+                  finalPrice={Number(part.final_price)}
+                  readOnly
+                />
+              ))}
+              <div className="flex justify-between px-2 py-2 text-sm font-medium">
+                <span className="text-muted-foreground">Parts Total</span>
+                <span className="tabular-nums">{formatMNT(partsTotal)}</span>
+              </div>
             </div>
           )}
         </DetailDrawer.Section>
 
-        {/* Financial Summary */}
-        <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Services</span>
-            <span className="tabular-nums">{formatMNT(servicesTotal)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Parts</span>
-            <span className="tabular-nums">{formatMNT(partsTotal)}</span>
-          </div>
-          {Number(wo.discount_total) > 0 && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Discount</span>
-              <span className="tabular-nums text-destructive">
-                -{formatMNT(Number(wo.discount_total))}
-              </span>
-            </div>
-          )}
-          <div className="border-t pt-2 flex justify-between text-sm font-semibold">
-            <span>Grand Total</span>
-            <span className="tabular-nums">{formatMNT(grandTotal)}</span>
-          </div>
-          {wo.loss_reason && (
-            <p className="text-xs text-destructive pt-1">{wo.loss_reason}</p>
-          )}
-        </div>
+        <TotalsSummary
+          servicesTotal={servicesTotal}
+          partsTotal={partsTotal}
+          grandTotal={grandTotal}
+          discountTotal={Number(wo.discount_total)}
+          t={(key) => {
+            const labels: Record<string, string> = {
+              grandTotal: "Grand Total",
+              services: "Services",
+              parts: "Parts",
+              discount: "Discount",
+              totalToPay: "Total to Pay",
+            };
+            return labels[key] ?? key;
+          }}
+        />
+        {wo.loss_reason && (
+          <p className="text-xs text-destructive">{wo.loss_reason}</p>
+        )}
 
         {/* Dates */}
         <div className="flex items-center gap-4 text-xs text-muted-foreground">

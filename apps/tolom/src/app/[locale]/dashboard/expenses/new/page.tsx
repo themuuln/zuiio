@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -211,18 +212,15 @@ export default function NewExpensePage() {
                   className="mb-1 block text-sm font-medium"
                 >
                   {t("amount")} <span className="text-destructive">*</span>
-                </Label>
-                <Input
+                <CurrencyInput
                   id="amount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={form.amount}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, amount: e.target.value }))
+                  value={Number(form.amount) || 0}
+                  onChange={(val) =>
+                    setForm((prev) => ({ ...prev, amount: String(val) }))
                   }
                   className={`h-11 ${fieldErrors.amount ? "border-destructive" : ""}`}
-                  placeholder="₮"
+                  placeholder={t("amount")}
+                  min={0}
                   required
                   aria-invalid={!!fieldErrors.amount}
                 />
@@ -330,17 +328,15 @@ export default function NewExpensePage() {
                 >
                   {t("taxAmount")}
                 </Label>
-                <Input
+                <CurrencyInput
                   id="taxAmount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={form.taxAmount}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, taxAmount: e.target.value }))
+                  value={Number(form.taxAmount) || 0}
+                  onChange={(val) =>
+                    setForm((prev) => ({ ...prev, taxAmount: String(val) }))
                   }
                   className="h-11"
-                  placeholder="₮"
+                  placeholder={t("taxAmount")}
+                  min={0}
                 />
               </div>
 

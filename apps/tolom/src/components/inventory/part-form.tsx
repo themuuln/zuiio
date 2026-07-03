@@ -13,6 +13,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
@@ -319,13 +320,12 @@ export function PartForm({
             <Field data-invalid={!!form.formState.errors.default_price}>
               <FieldLabel>Default Selling Price (₮)</FieldLabel>
               <FieldContent>
-                <Input
-                  type="number"
-                  min="0"
+                <CurrencyInput
+                  min={0}
                   placeholder="15000"
                   disabled={readOnly}
-                  aria-invalid={!!form.formState.errors.default_price}
-                  {...form.register("default_price")}
+                  value={Number(form.watch("default_price")) || 0}
+                  onChange={(val) => form.setValue("default_price", String(val))}
                 />
                 {form.formState.errors.default_price && (
                   <FieldError>
@@ -343,12 +343,11 @@ export function PartForm({
             <Field data-invalid={!!form.formState.errors.default_price}>
               <FieldLabel>Default Selling Price (₮)</FieldLabel>
               <FieldContent>
-                <Input
-                  type="number"
-                  min="0"
+                <CurrencyInput
+                  min={0}
                   placeholder="15000"
-                  aria-invalid={!!form.formState.errors.default_price}
-                  {...form.register("default_price")}
+                  value={Number(form.watch("default_price")) || 0}
+                  onChange={(val) => form.setValue("default_price", String(val))}
                 />
                 {form.formState.errors.default_price && (
                   <FieldError>
@@ -361,12 +360,11 @@ export function PartForm({
             <Field data-invalid={!!form.formState.errors.purchase_price}>
               <FieldLabel>Purchase Price (₮)</FieldLabel>
               <FieldContent>
-                <Input
-                  type="number"
-                  min="0"
+                <CurrencyInput
+                  min={0}
                   placeholder="10000"
-                  aria-invalid={!!form.formState.errors.purchase_price}
-                  {...form.register("purchase_price")}
+                  value={Number(form.watch("purchase_price")) || 0}
+                  onChange={(val) => form.setValue("purchase_price", String(val))}
                 />
                 {form.formState.errors.purchase_price && (
                   <FieldError>

@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import {
   Drawer,
   DrawerContent,
@@ -12,9 +11,8 @@ import {
 } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 
-// ─── Types ─────────────────────────────────────────────────────
-
 type DrawerSize = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl";
+type DetailDrawerVariant = "detail" | "quick";
 
 const drawerSizeClasses: Record<DrawerSize, string> = {
   sm: "sm:max-w-sm",
@@ -31,23 +29,40 @@ interface DetailDrawerRootProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   children: React.ReactNode;
-  /** Width of the drawer on desktop (default: "lg" = max-w-lg) */
+  /** Width of the drawer on desktop (default: "lg" for detail, "sm" for quick) */
   size?: DrawerSize;
   className?: string;
   /** Whether clicking the backdrop closes the drawer (default: true) */
   modal?: boolean;
+  /**
+   * "detail" (default) — full-featured drawer with Divider/Section sub-components.
+   * "quick" — compact drawer for quick action flows (choose, confirm, pick from a list).
+   */
+  variant?: DetailDrawerVariant;
 }
-
-// ─── Root ──────────────────────────────────────────────────────
 
 export function DetailDrawer({
   open,
   onOpenChange,
   children,
-  size = "lg",
+  size,
   className,
   modal = true,
+  variant = "detail",
 }: DetailDrawerRootProps) {
+  const resolvedSize = size ?? (variant === "quick" ? "sm" : "lg");
+
+  if (variant === "quick" && !["sm", "md"].includes(resolvedSize)) {
+    console.warn(
+      `DetailDrawer variant="quick" does not support size="${resolvedSize}". Defaulting to "sm".`,
+    );
+  }
+
+  const effectiveSize =
+    variant === "quick" && !["sm", "md"].includes(resolvedSize)
+      ? "sm"
+      : resolvedSize;
+
   return (
     <Drawer
       open={open}
@@ -57,11 +72,8 @@ export function DetailDrawer({
     >
       <DrawerContent
         showCloseButton={false}
-        className={drawerSizeClasses[size]}
-        contentClassName={cn(
-          "flex flex-col p-0 gap-0 overflow-hidden",
-          className,
-        )}
+        className={cn(drawerSizeClasses[effectiveSize], className)}
+        contentClassName="flex flex-col p-0 gap-0 overflow-hidden"
       >
         {children}
       </DrawerContent>
@@ -69,7 +81,7 @@ export function DetailDrawer({
   );
 }
 
-// ─── Header ────────────────────────────────────────────────────
+// ── Header ────────────────────────────────────────────────────
 
 interface DetailDrawerHeaderProps {
   children: React.ReactNode;
@@ -106,7 +118,7 @@ DetailDrawer.Header = function DetailDrawerHeaderComponent({
   );
 };
 
-// ─── Title ─────────────────────────────────────────────────────
+// ── Title ─────────────────────────────────────────────────────
 
 interface DetailDrawerTitleProps {
   children: React.ReactNode;
@@ -122,7 +134,7 @@ DetailDrawer.Title = function DetailDrawerTitleComponent({
   );
 };
 
-// ─── Description ───────────────────────────────────────────────
+// ── Description ───────────────────────────────────────────────
 
 interface DetailDrawerDescriptionProps {
   children: React.ReactNode;
@@ -140,7 +152,7 @@ DetailDrawer.Description = function DetailDrawerDescriptionComponent({
   );
 };
 
-// ─── Body (scrollable) ─────────────────────────────────────────
+// ── Body ──────────────────────────────────────────────────────
 
 interface DetailDrawerBodyProps {
   children: React.ReactNode;
@@ -158,7 +170,7 @@ DetailDrawer.Body = function DetailDrawerBodyComponent({
   );
 };
 
-// ─── Footer ────────────────────────────────────────────────────
+// ── Footer ────────────────────────────────────────────────────
 
 interface DetailDrawerFooterProps {
   children: React.ReactNode;
@@ -185,7 +197,7 @@ DetailDrawer.Footer = function DetailDrawerFooterComponent({
   );
 };
 
-// ─── Divider (for visual separation inside body) ──────────────
+// ── Divider ───────────────────────────────────────────────────
 
 interface DetailDrawerDividerProps {
   className?: string;
@@ -197,7 +209,7 @@ DetailDrawer.Divider = function DetailDrawerDividerComponent({
   return <div className={cn("border-t border-border my-4", className)} />;
 };
 
-// ─── Section (label + content group) ──────────────────────────
+// ── Section ───────────────────────────────────────────────────
 
 interface DetailDrawerSectionProps {
   label?: string;

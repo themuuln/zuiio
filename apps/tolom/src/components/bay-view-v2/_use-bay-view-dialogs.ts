@@ -50,3 +50,15 @@ export function useBayViewDialogs() {
     closeAssign,
   } as const;
 }
+
+export type { DialogKey };
+
+export interface BayViewDialogsState {
+  open: Record<DialogKey, boolean>;
+  show: (key: DialogKey) => void;
+  hide: (key: DialogKey) => void;
+  set: (key: DialogKey, value: boolean) => void;
+  assignBay: number | null;
+  openAssign: (bayNumber: number) => void;
+  closeAssign: () => void;
+}

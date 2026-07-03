@@ -287,15 +287,6 @@ export const dashboardKeys = {
     ["organizations", orgId, "dashboard", branchId ?? "all"] as const,
   summary: (orgId: string, period: string, branchId?: string | null) =>
     [...dashboardKeys.all(orgId, branchId), "summary", period] as const,
-  branchComparison: (orgId: string, dateFrom: string, dateTo: string) =>
-    [
-      "organizations",
-      orgId,
-      "dashboard",
-      "branch-comparison",
-      dateFrom,
-      dateTo,
-    ] as const,
 };
 
 export const inventoryKeys = {

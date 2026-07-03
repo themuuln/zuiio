@@ -1,11 +1,10 @@
-// Re-exported from @zuiio/core — single shared implementation
 export {
-  AppError,
-  NotFoundError,
-  UnauthorizedError,
-  ForbiddenError,
-  ValidationError,
-  ConflictError,
-  toApiErrorResponse,
   type ApiErrorResponse,
+  AppError,
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  toApiErrorResponse,
+  UnauthorizedError,
+  ValidationError,
 } from "@zuiio/core";

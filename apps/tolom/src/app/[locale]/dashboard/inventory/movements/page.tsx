@@ -19,6 +19,8 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
@@ -62,6 +64,8 @@ export default function MovementsPage() {
   const [typeFilter, setTypeFilter] = useState("");
   const [search, setSearch] = useState("");
   const [showDialog, setShowDialog] = useState(false);
+  const [quantity, setQuantity] = useState(0);
+  const [unitCost, setUnitCost] = useState(0);
 
   const { data: movements = [], isLoading } = useInventoryMovements(
     orgId,
@@ -120,18 +124,15 @@ export default function MovementsPage() {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     try {
-      await createMovement.mutateAsync({
-        part_id: form.get("part_id") as string,
-        movement_type: form.get("movement_type") as string,
-        quantity: Number(form.get("quantity")),
-        unit_cost: form.get("unit_cost")
-          ? Number(form.get("unit_cost"))
-          : undefined,
+        quantity: quantity,
+        unit_cost: unitCost || undefined,
         reference_type: (form.get("reference_type") as string) || undefined,
         reference_id: (form.get("reference_id") as string) || undefined,
         notes: (form.get("notes") as string) || undefined,
       });
       toast.success(t("movementRecorded"));
+      setQuantity(0);
+      setUnitCost(0);
       setShowDialog(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("failedToRecord"));
@@ -293,22 +294,25 @@ export default function MovementsPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="quantity">{t("quantity")} *</Label>
-                <Input
+                <NumericInput
                   id="quantity"
                   name="quantity"
-                  type="number"
-                  required
+                  value={quantity}
+                  onChange={(qty) => setQuantity(qty)}
+                  step={1}
                   min={1}
+                  required
                   className="h-11"
                 />
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="unit_cost">{t("unitCost")}</Label>
-                <Input
+                <CurrencyInput
                   id="unit_cost"
                   name="unit_cost"
-                  type="number"
-                  min={0}
+                  value={unitCost}
+                  onChange={(cost) => setUnitCost(cost)}
+                  showPrefix={false}
                   className="h-11"
                 />
               </div>

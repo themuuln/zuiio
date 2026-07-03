@@ -8,6 +8,8 @@ export const metadata: Metadata = {
   title: "Offline | TOLOM",
 };
 
+import { RetryButton } from "./_retry-button";
+
 export default function OfflinePage() {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center bg-background p-8 text-center">
@@ -37,13 +39,7 @@ export default function OfflinePage() {
         <p className="text-sm text-muted-foreground">
           You are offline. Please check your connection.
         </p>
-        <button
-          type="button"
-          onClick={() => window.location.reload()}
-          className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90"
-        >
-          Дахин оролдох / Retry
-        </button>
+        <RetryButton />
       </div>
     </main>
   );

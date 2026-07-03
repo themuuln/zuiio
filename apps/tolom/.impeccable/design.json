@@ -1,0 +1,318 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-02T00:00:00.000Z",
+  "title": "Design System: TOLOM",
+  "extensions": {
+    "colorMeta": {
+      "workshop-ink": {
+        "role": "primary",
+        "displayName": "Workshop Ink",
+        "canonical": "oklch(0.205 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.25 0 0)",
+          "oklch(0.35 0 0)",
+          "oklch(0.45 0 0)",
+          "oklch(0.55 0 0)",
+          "oklch(0.65 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.95 0 0)"
+        ]
+      },
+      "counter-white": {
+        "role": "neutral",
+        "displayName": "Counter White",
+        "canonical": "oklch(1 0 0)",
+        "tonalRamp": [
+          "oklch(0.88 0 0)",
+          "oklch(0.90 0 0)",
+          "oklch(0.92 0 0)",
+          "oklch(0.94 0 0)",
+          "oklch(0.96 0 0)",
+          "oklch(0.97 0 0)",
+          "oklch(0.99 0 0)",
+          "oklch(1 0 0)"
+        ]
+      },
+      "shop-floor": {
+        "role": "neutral",
+        "displayName": "Shop Floor",
+        "canonical": "oklch(0.145 0 0)",
+        "tonalRamp": [
+          "oklch(0.10 0 0)",
+          "oklch(0.145 0 0)",
+          "oklch(0.20 0 0)",
+          "oklch(0.30 0 0)",
+          "oklch(0.40 0 0)",
+          "oklch(0.50 0 0)",
+          "oklch(0.65 0 0)",
+          "oklch(0.80 0 0)"
+        ]
+      },
+      "dust-gray": {
+        "role": "neutral",
+        "displayName": "Dust Gray",
+        "canonical": "oklch(0.97 0 0)",
+        "tonalRamp": [
+          "oklch(0.85 0 0)",
+          "oklch(0.88 0 0)",
+          "oklch(0.91 0 0)",
+          "oklch(0.94 0 0)",
+          "oklch(0.97 0 0)",
+          "oklch(0.98 0 0)",
+          "oklch(0.99 0 0)",
+          "oklch(1 0 0)"
+        ]
+      },
+      "steel": {
+        "role": "neutral",
+        "displayName": "Steel",
+        "canonical": "oklch(0.556 0 0)",
+        "tonalRamp": [
+          "oklch(0.40 0 0)",
+          "oklch(0.45 0 0)",
+          "oklch(0.50 0 0)",
+          "oklch(0.556 0 0)",
+          "oklch(0.60 0 0)",
+          "oklch(0.65 0 0)",
+          "oklch(0.75 0 0)",
+          "oklch(0.85 0 0)"
+        ]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "oklch(0.922 0 0)",
+        "tonalRamp": [
+          "oklch(0.85 0 0)",
+          "oklch(0.88 0 0)",
+          "oklch(0.90 0 0)",
+          "oklch(0.922 0 0)",
+          "oklch(0.94 0 0)",
+          "oklch(0.96 0 0)",
+          "oklch(0.98 0 0)",
+          "oklch(1 0 0)"
+        ]
+      },
+      "tool-red": {
+        "role": "semantic",
+        "displayName": "Tool Red",
+        "canonical": "oklch(0.577 0.245 27.325)",
+        "tonalRamp": [
+          "oklch(0.25 0.20 27)",
+          "oklch(0.35 0.22 27)",
+          "oklch(0.45 0.24 27)",
+          "oklch(0.577 0.245 27)",
+          "oklch(0.65 0.23 27)",
+          "oklch(0.75 0.18 27)",
+          "oklch(0.85 0.10 27)",
+          "oklch(0.95 0.04 27)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "body": {
+        "displayName": "Body",
+        "purpose": "All body text, form labels, table cells, list items."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card titles, section headers, form group labels."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page titles. One per screen."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Badges, status indicators, sidebar section labels."
+      },
+      "code": {
+        "displayName": "Code",
+        "purpose": "Code blocks, monospaced values, precision input fields."
+      }
+    },
+    "shadows": [
+      {
+        "name": "surface-ring",
+        "value": "0 0 0 1px oklch(0.145 0 0 / 0.10)",
+        "purpose": "Card borders, raised panels. Rings instead of drop shadows for subtle structure."
+      },
+      {
+        "name": "floating",
+        "value": "0 10px 15px -3px oklch(0 0 0 / 0.10), 0 4px 6px -4px oklch(0 0 0 / 0.10)",
+        "purpose": "Dropdowns, popovers, tooltips, command palettes."
+      },
+      {
+        "name": "modal",
+        "value": "0 20px 25px -5px oklch(0 0 0 / 0.10), 0 8px 10px -6px oklch(0 0 0 / 0.10)",
+        "purpose": "Dialogs, sheets, modals. When UI interrupts the user."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-quart",
+        "value": "cubic-bezier(0.25, 1, 0.5, 1)",
+        "purpose": "Default easing for UI state changes. Smooth deceleration."
+      },
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Entrance animations, sidebar stagger. Sharper initial motion."
+      },
+      {
+        "name": "ease-in-expo",
+        "value": "cubic-bezier(0.7, 0, 0.84, 0)",
+        "purpose": "Exit animations. Quick disappearance."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main call-to-action. Near-black background, white text, 10px radius.",
+      "html": "<button class=\"ds-btn-primary\">Save Changes</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 10px; background: oklch(0.205 0 0); color: oklch(1 0 0); font-family: 'SF Pro Display', Inter, system-ui, sans-serif; font-size: 14px; font-weight: 500; border: none; border-radius: 10px; cursor: pointer; white-space: nowrap; transition: background 150ms cubic-bezier(0.25, 1, 0.5, 1); } .ds-btn-primary:hover { background: oklch(0.205 0 0 / 0.80); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px oklch(0.556 0 0 / 0.50); } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:disabled { opacity: 0.5; pointer-events: none; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary action. Transparent with hairline border.",
+      "html": "<button class=\"ds-btn-outline\">Cancel</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 10px; background: transparent; color: oklch(0.145 0 0); font-family: 'SF Pro Display', Inter, system-ui, sans-serif; font-size: 14px; font-weight: 500; border: 1px solid oklch(0.922 0 0); border-radius: 10px; cursor: pointer; white-space: nowrap; transition: background 150ms cubic-bezier(0.25, 1, 0.5, 1); } .ds-btn-outline:hover { background: oklch(0.97 0 0); } .ds-btn-outline:focus-visible { outline: none; box-shadow: 0 0 0 3px oklch(0.556 0 0 / 0.50); } .ds-btn-outline:disabled { opacity: 0.5; pointer-events: none; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Bare minimum button. For icon-only actions and toolbar items.",
+      "html": "<button class=\"ds-btn-ghost\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M12 5v14M5 12h14\"/></svg></button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: transparent; color: oklch(0.145 0 0); font-family: 'SF Pro Display', Inter, system-ui, sans-serif; border: none; border-radius: 10px; cursor: pointer; transition: background 150ms cubic-bezier(0.25, 1, 0.5, 1); } .ds-btn-ghost:hover { background: oklch(0.97 0 0); } .ds-btn-ghost:focus-visible { outline: none; box-shadow: 0 0 0 3px oklch(0.556 0 0 / 0.50); }"
+    },
+    {
+      "name": "Destructive Button",
+      "kind": "button",
+      "refersTo": "button-destructive",
+      "description": "Danger actions. Red tinted background, red text. Used for delete, remove, irreversible actions.",
+      "html": "<button class=\"ds-btn-destructive\">Delete</button>",
+      "css": ".ds-btn-destructive { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 10px; background: oklch(0.577 0.245 27.325 / 0.10); color: oklch(0.577 0.245 27.325); font-family: 'SF Pro Display', Inter, system-ui, sans-serif; font-size: 14px; font-weight: 500; border: none; border-radius: 10px; cursor: pointer; white-space: nowrap; transition: background 150ms cubic-bezier(0.25, 1, 0.5, 1); } .ds-btn-destructive:hover { background: oklch(0.577 0.245 27.325 / 0.20); } .ds-btn-destructive:focus-visible { outline: none; box-shadow: 0 0 0 3px oklch(0.577 0.245 27.325 / 0.20); }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Content container. White background, 14px radius, 1px ring border. Used for grouping related content.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-header\"><h3 class=\"ds-card-title\">Work Order #1234</h3><p class=\"ds-card-desc\">In progress — assigned to Bat</p></div><div class=\"ds-card-body\">Content goes here</div></div>",
+      "css": ".ds-card { display: flex; flex-direction: column; gap: 16px; background: oklch(1 0 0); color: oklch(0.145 0 0); border-radius: 14px; padding: 16px; padding-top: 4px; box-shadow: 0 0 0 1px oklch(0.145 0 0 / 0.10); overflow: hidden; font-size: 14px; } .ds-card-header { display: grid; grid-template-rows: auto auto; gap: 4px; } .ds-card-title { font-size: 16px; font-weight: 600; line-height: 1.4; margin: 0; } .ds-card-desc { font-size: 14px; color: oklch(0.556 0 0); margin: 0; } .ds-card-body { }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Text input. 32px tall, transparent background, hairline border. Focus gets a 3px ring.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Search...\" />",
+      "css": ".ds-input { width: 100%; height: 32px; min-width: 0; padding: 4px 10px; background: transparent; color: oklch(0.145 0 0); font-family: 'SF Pro Display', Inter, system-ui, sans-serif; font-size: 14px; border: 1px solid oklch(0.922 0 0); border-radius: 10px; outline: none; transition: border-color 150ms cubic-bezier(0.25, 1, 0.5, 1), box-shadow 150ms cubic-bezier(0.25, 1, 0.5, 1); } .ds-input::placeholder { color: oklch(0.556 0 0); } .ds-input:focus-visible { border-color: oklch(0.556 0 0); box-shadow: 0 0 0 3px oklch(0.556 0 0 / 0.50); } .ds-input:disabled { opacity: 0.5; pointer-events: none; }"
+    },
+    {
+      "name": "Badge",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "Pill-shaped status indicator. Full border-radius, small, inline.",
+      "html": "<span class=\"ds-badge\">Active</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 20px; padding: 2px 8px; background: oklch(0.205 0 0); color: oklch(1 0 0); font-family: 'SF Pro Display', Inter, system-ui, sans-serif; font-size: 12px; font-weight: 500; border: none; border-radius: 9999px; white-space: nowrap; }"
+    },
+    {
+      "name": "Detail Drawer",
+      "kind": "nav",
+      "refersTo": "detail-drawer",
+      "description": "Side panel for creating, editing, and viewing records. Slides in from the right. Keeps page context intact.",
+      "html": "<div class=\"ds-drawer\"><div class=\"ds-drawer-header\"><h2 class=\"ds-drawer-title\">Edit Service</h2><p class=\"ds-drawer-desc\">Update service details and pricing.</p></div><div class=\"ds-drawer-body\"><p>Form content goes here.</p></div><div class=\"ds-drawer-footer\"><button class=\"ds-btn-outline\" style=\"flex:1\">Cancel</button><button class=\"ds-btn-primary\" style=\"flex:1\">Save</button></div></div>",
+      "css": ".ds-drawer { display: flex; flex-direction: column; height: 100%; background: oklch(1 0 0); } .ds-drawer-header { flex-shrink: 0; padding: 16px; border-bottom: 1px solid oklch(0.922 0 0); } .ds-drawer-title { font-size: 16px; font-weight: 600; line-height: 1.4; margin: 0; color: oklch(0.145 0 0); } .ds-drawer-desc { font-size: 14px; color: oklch(0.556 0 0); margin: 0; } .ds-drawer-body { flex: 1; overflow-y: auto; padding: 16px; } .ds-drawer-footer { flex-shrink: 0; display: flex; gap: 8px; padding: 16px; border-top: 1px solid oklch(0.922 0 0); }"
+    },
+    {
+      "name": "Sidebar Navigation",
+      "kind": "nav",
+      "refersTo": "sidebar",
+      "description": "Main app navigation. Dark surface, light text. Expands from icons to full labels. 16rem wide expanded, 3rem collapsed.",
+      "html": "<nav class=\"ds-sidebar\"><div class=\"ds-sidebar-item ds-sidebar-item-active\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"7\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\"/><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\"/></svg><span class=\"ds-sidebar-label\">Dashboard</span></div><div class=\"ds-sidebar-item\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z\"/></svg><span class=\"ds-sidebar-label\">Work Orders</span></div></nav>",
+      "css": ".ds-sidebar { display: flex; flex-direction: column; gap: 4px; width: 256px; padding: 8px; background: oklch(0.205 0 0); color: oklch(0.985 0 0); font-family: 'SF Pro Display', Inter, system-ui, sans-serif; font-size: 14px; } .ds-sidebar-item { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 8px; color: oklch(0.708 0 0); cursor: pointer; transition: background 150ms cubic-bezier(0.25, 1, 0.5, 1), color 150ms cubic-bezier(0.25, 1, 0.5, 1); } .ds-sidebar-item:hover { background: oklch(0.269 0 0); color: oklch(0.985 0 0); } .ds-sidebar-item-active { background: oklch(0.205 0 0); color: oklch(1 0 0); font-weight: 500; } .ds-sidebar-label { white-space: nowrap; }"
+    },
+    {
+      "name": "Empty State",
+      "kind": "custom",
+      "refersTo": "empty-state",
+      "description": "Empty container with description and primary CTA. Always includes what goes here + action.",
+      "html": "<div class=\"ds-empty\"><svg width=\"48\" height=\"48\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"oklch(0.556 0 0)\" stroke-width=\"1.5\"><path d=\"M12 5v14M5 12h14\"/></svg><h3 class=\"ds-empty-title\">No work orders yet</h3><p class=\"ds-empty-desc\">Create your first work order to start tracking jobs.</p><button class=\"ds-btn-primary\">Create Work Order</button></div>",
+      "css": ".ds-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 48px 16px; text-align: center; color: oklch(0.556 0 0); } .ds-empty-title { font-size: 16px; font-weight: 600; line-height: 1.4; color: oklch(0.145 0 0); margin: 0; } .ds-empty-desc { font-size: 14px; max-width: 400px; color: oklch(0.556 0 0); margin: 0; line-height: 1.5; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Workshop Counter",
+    "overview": "Clean, organized, purposeful. Like a well-run auto shop — tools in their place, everything visible, nothing wasted. The interface should feel like stepping up to a counter where someone already knows what you need.\n\nTOLOM's visual system is built on the zuiio design foundation and rendered through shadcn/ui (base-nova style). It inherits zuiio's precision and confidence but adds a layer of approachable warmth — the same quality, but in work clothes. SF Pro Display carries the typographic voice; a tight neutral palette keeps the surface quiet so the data speaks. Color is reserved for state (error, warning, success) and primary actions, not decoration.\n\nThis system explicitly rejects enterprise bloat (dense nested tables, dropdown overload), toy-like gamification, and generic SaaS templates. Every pixel on screen should answer \"does this help someone run their shop.\"",
+    "keyCharacteristics": [
+      "Monochrome-neutral core with red for danger, no decorative color",
+      "Single sans-serif family (SF Pro Display) for all UI text",
+      "shadcn base-nova components with --radius at 0.625rem (10px)",
+      "Ring-1 borders on cards instead of drop shadows for subtle structure",
+      "Motion reserved for state changes (150–250ms, ease-out-quart)",
+      "Tablet-native: 44px touch targets, SF Pro optimized for Apple clarity"
+    ],
+    "rules": [
+      {
+        "name": "The No-Decoration Rule",
+        "body": "The primary color is used on actions, selections, and state indicators only. It does not appear as background washes, section tints, decorative borders, or brand flourishes. If you're reaching for primary to make something \"look nice,\" stop.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tool Red Rule",
+        "body": "Red means danger or error. It is never used for emphasis, decoration, or \"making things pop.\" One red alert on screen at a time is enough; two means a design failure.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Family Rule",
+        "body": "SF Pro Display carries every typographic role: headings, body, labels, buttons, data. No serif display font, no decorative weight, no secondary sans. The system's variety comes from weight, size, and spacing — not from font mixing.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "Surfaces are flat at rest. Shadows appear only as a response to state (hover, elevation, focus). If a surface isn't floating above something, it doesn't cast a shadow.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use a single sans-serif family (SF Pro Display) for all UI text — headings, body, labels, buttons, data.",
+      "Do use ring-1 ring-foreground/10 for card borders instead of box-shadows. Never pair both as decoration.",
+      "Do keep card radius at 14px (--radius-xl) maximum. Cards are not rounded beyond recognition.",
+      "Do use gap-* with flex for spacing, never space-y-* or space-x-*.",
+      "Do preserve page chrome (tabs, headers, buttons) during data refetch — only skeleton-load content areas.",
+      "Do cap body text line length at 65–75ch in prose contexts (empty states, descriptions).",
+      "Do maintain 44px minimum touch targets on tablet layouts.",
+      "Do use text-wrap: balance on h1–h3 for even line lengths.",
+      "Do animate only transform and opacity — never layout properties (width, height, top, left).",
+      "Do respect prefers-reduced-motion — crossfade or instant transition for all animations."
+    ],
+    "donts": [
+      "Don't use gradient text (background-clip: text). Solid color only; emphasis via weight or size.",
+      "Don't use side-stripe borders (border-left or border-right > 1px) as colored accents on cards, list items, or callouts.",
+      "Don't pair border: 1px solid X with box-shadow: 0 Npx Mpx ... (M ≥ 16px) on the same element. The \"ghost-card\" pattern. Pick one.",
+      "Don't apply border-radius: 32px+ on cards, sections, or inputs. Cards top out at 14px; full-pill is for tags and badges only.",
+      "Don't use raw color values like bg-blue-500. Always use semantic tokens (bg-primary, text-muted-foreground).",
+      "Don't use space-y-* or space-x-* — use gap-* with flex instead.",
+      "Don't build from scratch what shadcn/ui provides. Never write custom modals, selects, or tooltips when the library has them.",
+      "Don't use enterprise bloat patterns: dense nested tables, overwhelming data density, multi-level dropdowns.",
+      "Don't use toy-like gamification, cartoonish illustrations, or playful interface patterns. This is real business software.",
+      "Don't use display fonts or decorative type in UI labels, buttons, or data.",
+      "Don't use modal dialogs as the first choice. Exhaust inline editing, expandable sections, and drawer panels first.",
+      "Don't use bg-background or oklch(1 0 0) as API — use bg-card for surfaces that sit on the page background."
+    ]
+  }
+}

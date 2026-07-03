@@ -1,11 +1,10 @@
 "use client";
 
-import { BarChart3, Car, Clock, Plus } from "lucide-react";
+import { useTableFilters } from "@zuiio/hooks";
+import { Car, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ExportButton } from "@/components/export-button";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
-import { StatusSummary } from "@/components/sidebar-tabs/status-summary";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,9 +19,7 @@ import { Button } from "@/components/ui/button";
 import { DataTablePage } from "@/components/ui/data-table-page";
 import { useClientNow } from "@/hooks/use-client-now";
 import { usePageHeader } from "@/hooks/use-page-header";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
 import type { ExportColumn } from "@/lib/export";
-import { useTableFilters } from "@/lib/hooks/use-url-filters";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useDeleteVehicle, useVehicles } from "@/lib/queries/use-vehicles";
 import { useSelectedBranchId } from "@/lib/stores";
@@ -52,8 +49,6 @@ export default function VehiclesPage() {
   const [vehicleToDelete, setVehicleToDelete] = useState<VehicleRow | null>(
     null,
   );
-  const { registerTab } = useRightSidebar();
-
   const handleEdit = useCallback(
     (vehicle: VehicleRow) => {
       setDetailVehicleId(vehicle.id);
@@ -76,47 +71,6 @@ export default function VehiclesPage() {
     () => createColumns({ onEdit: handleEdit, onDelete: handleDelete }),
     [handleEdit, handleDelete],
   );
-
-  useEffect(() => {
-    if (!list.length) return;
-    const makes = [...new Set(list.map((v) => v.make).filter(Boolean))];
-    registerTab(
-      "stats",
-      "Stats",
-      <StatusSummary
-        title="Stats"
-        items={[
-          { label: "Total", count: list.length },
-          { label: "Makes", count: makes.length },
-        ]}
-      />,
-      <BarChart3 className="size-4" />,
-    );
-    registerTab(
-      "recent",
-      "Recent",
-      <RecentList
-        title="Recently Added"
-        items={[...list]
-          .sort(
-            (a, b) =>
-              new Date(b.created_at).getTime() -
-              new Date(a.created_at).getTime(),
-          )
-          .slice(0, 5)
-          .map((v) => ({
-            id: v.id,
-            primary: v.plate_number,
-            secondary: [v.make, v.model].filter(Boolean).join(" "),
-            timestamp: v.created_at
-              ? new Date(v.created_at).toLocaleDateString()
-              : undefined,
-            href: `/dashboard/vehicles/${v.id}`,
-          }))}
-      />,
-      <Clock className="size-4" />,
-    );
-  }, [list, registerTab]);
 
   const exportColumns: ExportColumn<VehicleRow>[] = [
     { key: "plate_number", label: "Plate" },

@@ -2,11 +2,12 @@
  * Re-export from @zuiio/realtime with Tolom-specific convenience wrappers
  * that auto-inject the Supabase client and preserve the legacy `queryKey` API.
  */
-export { useRealtimeMulti } from "@zuiio/realtime";
+
 export type {
-  UseRealtimeMultiOptions,
   RealtimeTableConfig,
+  UseRealtimeMultiOptions,
 } from "@zuiio/realtime";
+export { useRealtimeMulti } from "@zuiio/realtime";
 
 import { useRealtime as useRealtimeBase } from "@zuiio/realtime";
 import { createClient } from "@/lib/supabase/client";

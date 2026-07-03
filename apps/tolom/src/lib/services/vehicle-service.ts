@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
-import { generateUUID } from "@/lib/crypto-utils";
+import { generateUUID } from "@zuiio/core";
 import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import {
   isValidMongolianPlate,

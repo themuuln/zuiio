@@ -33,12 +33,12 @@ const MECHANIC_COLORS = [
     text: "text-sky-700 dark:text-sky-300",
   },
   {
-    bg: "bg-indigo-100 dark:bg-indigo-950/40",
-    text: "text-indigo-700 dark:text-indigo-300",
+    bg: "bg-teal-100 dark:bg-teal-950/40",
+    text: "text-teal-700 dark:text-teal-300",
   },
   {
-    bg: "bg-violet-100 dark:bg-violet-950/40",
-    text: "text-violet-700 dark:text-violet-300",
+    bg: "bg-orange-100 dark:bg-orange-950/40",
+    text: "text-orange-700 dark:text-orange-300",
   },
   {
     bg: "bg-fuchsia-100 dark:bg-fuchsia-950/40",

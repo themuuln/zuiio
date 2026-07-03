@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, DataTableColumnHeader } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
@@ -423,34 +425,28 @@ export function MovementsTab({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium">{t("quantity")} *</label>
-                <Input
-                  type="number"
-                  min="1"
-                  required
-                  value={movementForm.quantity}
-                  onChange={(e) =>
+                <NumericInput
+                  value={Number(movementForm.quantity) || 0}
+                  onChange={(qty) =>
                     setMovementForm((prev) => ({
                       ...prev,
-                      quantity: e.target.value,
+                      quantity: String(qty),
                     }))
                   }
+                  min={1}
+                  required
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium">{t("unitCost")}</label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="₮"
-                  value={movementForm.unit_cost}
-                  onChange={(e) =>
+                <CurrencyInput
+                  value={movementForm.unit_cost ? Number(movementForm.unit_cost) : 0}
+                  onChange={(cost) =>
                     setMovementForm((prev) => ({
                       ...prev,
-                      unit_cost: e.target.value,
+                      unit_cost: String(cost),
                     }))
                   }
+                  showPrefix={false}
                 />
               </div>
             </div>

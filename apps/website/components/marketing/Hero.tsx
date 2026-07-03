@@ -14,7 +14,7 @@ interface HeroProps {
 export function Hero({
 	title,
 	subtitle,
-eyebrow,
+	eyebrow,
 	cta,
 	secondaryCta,
 	className,
@@ -27,6 +27,7 @@ eyebrow,
 				gutters && "px-6",
 				className,
 			)}
+			aria-labelledby={eyebrow ? undefined : "hero-heading"}
 		>
 			<div
 				className="pointer-events-none absolute -inset-32 -z-10 opacity-40 dark:opacity-20"
@@ -46,7 +47,8 @@ eyebrow,
 					{eyebrow}
 				</div>
 				<h1
-					className="animate-fade-up text-4xl font-semibold leading-tight tracking-tight md:text-6xl lg:text-7xl"
+					id="hero-heading"
+					className="animate-fade-up text-4xl font-semibold leading-tight tracking-tight md:text-6xl lg:text-7xl text-balance"
 					style={{ fontFamily: "var(--font-display)" }}
 				>
 					{title}

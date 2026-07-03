@@ -90,7 +90,7 @@ function DrawerContent({
         <DrawerPrimitive.Popup
           data-slot="drawer-popup"
           className={cn(
-            "relative flex h-full w-full max-w-full [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[320ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:transition-none data-starting-style:translate-x-full data-ending-style:translate-x-full data-ending-style:duration-[calc(var(--drawer-swipe-strength)*320ms)] data-[nested-drawer-open]:-translate-x-3 sm:max-w-lg pointer-events-auto",
+            "relative flex h-full w-full max-w-full [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[320ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:transition-none data-starting-style:translate-x-full data-ending-style:translate-x-full data-ending-style:duration-[calc(var(--drawer-swipe-strength)*320ms)] data-[nested-drawer-open]:-translate-x-3 sm:max-w-lg pointer-events-auto will-change-transform",
             className,
           )}
           {...props}

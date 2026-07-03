@@ -49,6 +49,7 @@
   --ease-in-expo: cubic-bezier(0.7, 0, 0.84, 0);
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
   --animate-marquee: marquee 30s linear infinite;
+  --animate-pulse-border: pulse-border 1.5s ease-in-out infinite;
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -209,6 +210,17 @@
     border-color: oklch(0.75 0.12 80 / 60%);
   }
 }
+
+@keyframes pulse-border {
+  0%, 100% {
+    border-color: oklch(0.6 0.18 145 / 50%);
+    box-shadow: 0 0 0 0 oklch(0.6 0.18 145 / 20%);
+  }
+  50% {
+    border-color: oklch(0.55 0.22 140 / 70%);
+    box-shadow: 0 0 0 4px oklch(0.55 0.22 140 / 10%);
+  }
+  }
 
 @keyframes glow {
   0%,

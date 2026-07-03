@@ -3,6 +3,7 @@
 **Purpose:** Daily call list for reception — track which customers need service calls, mark contact status, and manage recurring service schedules for vehicles.
 
 ## File Structure
+
 ```
 service-reminders/
 ├── page.tsx                 # Full page: summary cards, schedule table with filters, add/edit dialogs, config sheet, reminder logs tab
@@ -13,7 +14,7 @@ service-reminders/
 ├── _edit-schedule-dialog.tsx# Edit dialog: service name, intervals, notes, reminder toggle
 ├── _delete-confirm-dialog.tsx # Confirmation dialog showing vehicle/service being deleted
 ├── _action-buttons.tsx      # Sync History + Send Pending (with text labels on wider screens)
-├── _config-sheet.tsx        # Org-level settings: default channel, auto-enable toggle
+├── _config-drawer.tsx       # Org-level settings: default channel, auto-enable toggle
 ├── _reminder-logs-tab.tsx   # Reminder history with search, status/channel filters
 ├── error.tsx                # Sentry error boundary
 └── loading.tsx              # Spinner skeleton
@@ -54,6 +55,7 @@ service-reminders/
 | `useUpdateOrgSettings(orgId)` | Mutate: save org reminder config |
 
 **Action buttons:**
+
 - **Sync History** (`POST /api/organizations/{orgId}/service-reminders/sync-history`) — Generates reminders from work order history.
 - **Send Pending** (`POST /api/organizations/{orgId}/service-reminders/send-pending`) — Sends all pending reminders.
 
@@ -72,11 +74,13 @@ For reception daily call list:
 ## Filtering
 
 **Schedule table filters:**
+
 - **Search** — Matches vehicle (make/model/plate) or service name
 - **Status filter** — All / Overdue / Due Soon
 - **Reminder filter** — All / With Reminders / Without Reminders
 
 **Reminder logs filters:**
+
 - **Search** — Matches vehicle (make/model/plate) or service name
 - **Status filter** — All / Pending / Sent / Failed / Cancelled
 - **Channel filter** — All / In-App / Email / Both
@@ -86,6 +90,7 @@ For reception daily call list:
 **Migration:** `20260610050652_add_contact_status_to_service_schedules.sql`
 
 Adds to `vehicle_service_schedules`:
+
 - `contact_status TEXT NOT NULL DEFAULT 'pending'` — CHECK constraint: pending, called-scheduled, called-no-answer, skipped
 - `contacted_at TIMESTAMPTZ` — Timestamp of last contact attempt
 
@@ -106,7 +111,6 @@ Adds to `vehicle_service_schedules`:
 - `@/components/ui/dropdown-menu` — Contact status dropdown
 - `@/components/ui/select` — Filter dropdowns
 - `@/components/ui/tooltip` — Notes hover tooltip
-- `@/components/sidebar-tabs/*` — StatusSummary, RecentList
 - `@/lib/queries/use-org-settings` — Org reminder settings
 - `@/lib/queries/use-service-reminders` — All schedule/log hooks
 - `@/lib/queries/use-vehicles` — Vehicle list

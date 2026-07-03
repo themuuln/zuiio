@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import type {
   CatalogPartItem,
   CatalogServiceItem,
@@ -15,26 +15,27 @@ import type {
   StockThreshold,
   WorkOrderDetail,
 } from "@/lib/types";
-import {
-  globalCatalogKeys,
-  inventoryKeys,
-  mechanicKeys,
-  priceMemoryKeys,
-  serviceKeys,
-  workOrderKeys,
-} from "./keys";
 import { useCurrentOrg } from "./use-organization";
+
+// ── Shape of the consolidated API response ─────────────────────
+
+interface DrawerDetailResponse {
+  workOrder: WorkOrderDetail;
+  servicesCatalog: ServiceCatalog[];
+  partsCatalog: PartsCatalogItem[];
+  globalServices: GlobalServiceCatalog[];
+  globalParts: GlobalPartCatalog[];
+  balances: Array<{ part_id: string; quantity_on_hand: number }>;
+  thresholds: StockThreshold[];
+  mechanics: Array<{ id: string; full_name: string }>;
+  priceMemory: {
+    services: Record<string, PriceMemoryEntry>;
+    parts: Record<string, PriceMemoryEntry>;
+  };
+}
 
 // ── Match quality helper ───────────────────────────────────────
 
-/**
- * Determine how well a stored price record matches the current vehicle.
- *
- * Tiers:
- * - "exact":  same make + same model (exact vehicle match)
- * - "same_make": same make, different model (same family, different generation)
- * - "fallback": different make entirely (closest available price)
- */
 function computeMatchQuality(
   lastMake: string | null | undefined,
   lastModel: string | null | undefined,
@@ -42,7 +43,6 @@ function computeMatchQuality(
   currentModel: string | null | undefined,
 ): PriceMatchQuality | null {
   if (!lastMake || !currentMake) return null;
-  // Normalise for comparison
   const lm = lastMake.toLowerCase();
   const lmd = lastModel?.toLowerCase();
   const cm = currentMake.toLowerCase();
@@ -55,7 +55,6 @@ function computeMatchQuality(
   return "fallback";
 }
 
-/** Price memory entry shape returned by the API — includes vehicle context. */
 interface PriceMemoryEntry {
   unit_price: number;
   last_price?: number;
@@ -191,11 +190,17 @@ function computeLowStock(
   return lowStock;
 }
 
+// ── Consolidated query key ─────────────────────────────────────
+
+const drawerDetailKeys = {
+  all: (orgId: string, woId: string) => ["drawer-detail", orgId, woId] as const,
+};
+
 // ── Prefetch function (call on hover) ──────────────────────────
 
 /**
  * Warm the React Query cache before the drawer opens.
- * Call on onMouseEnter of a work order card for instant drawer open.
+ * Prefetches the consolidated detail endpoint in a single request.
  */
 export async function prefetchDrawerData(
   queryClient: ReturnType<typeof useQueryClient>,
@@ -204,93 +209,18 @@ export async function prefetchDrawerData(
 ): Promise<void> {
   if (!orgId || !woId) return;
 
-  await Promise.allSettled([
-    queryClient.prefetchQuery({
-      queryKey: workOrderKeys.detail(orgId, woId),
-      queryFn: async () => {
-        const res = await fetch(
-          `/api/organizations/${orgId}/work-orders/${woId}`,
-        );
-        const json = await res.json();
-        if (json.error) throw new Error(json.error.message);
-        return json.data as WorkOrderDetail;
-      },
-      staleTime: 15_000,
-    }),
-    queryClient.prefetchQuery({
-      queryKey: serviceKeys.list(orgId),
-      queryFn: async () => {
-        const res = await fetch(`/api/organizations/${orgId}/services`);
-        const json = await res.json();
-        if (json.error) throw new Error(json.error.message);
-        return (json.data ?? []) as ServiceCatalog[];
-      },
-      staleTime: 300_000, // 5 min — catalog rarely changes after setup
-    }),
-    queryClient.prefetchQuery({
-      queryKey: mechanicKeys.list(orgId),
-      queryFn: async () => {
-        const res = await fetch(
-          `/api/organizations/${orgId}/reports?type=mechanics`,
-        );
-        const json = await res.json();
-        return (json.data ?? []) as Array<{ id: string; full_name: string }>;
-      },
-      staleTime: 60_000, // 1 min — mechanics change occasionally
-    }),
-    queryClient.prefetchQuery({
-      queryKey: inventoryKeys.parts(orgId),
-      queryFn: async () => {
-        const res = await fetch(`/api/organizations/${orgId}/inventory/parts`);
-        const json = await res.json();
-        return (json.data?.data ?? json.data ?? []) as PartsCatalogItem[];
-      },
-      staleTime: 300_000, // 5 min — parts rarely change after setup
-    }),
-    queryClient.prefetchQuery({
-      queryKey: globalCatalogKeys.services(),
-      queryFn: async () => {
-        const res = await fetch("/api/global-catalog/services");
-        const json = await res.json();
-        return (json.data ?? []) as GlobalServiceCatalog[];
-      },
-      staleTime: 3600_000,
-    }),
-    queryClient.prefetchQuery({
-      queryKey: globalCatalogKeys.parts(),
-      queryFn: async () => {
-        const res = await fetch("/api/global-catalog/parts");
-        const json = await res.json();
-        return (json.data ?? []) as GlobalPartCatalog[];
-      },
-      staleTime: 3600_000,
-    }),
-    queryClient.prefetchQuery({
-      queryKey: inventoryKeys.balances(orgId),
-      queryFn: async () => {
-        const res = await fetch(
-          `/api/organizations/${orgId}/inventory/balances`,
-        );
-        const json = await res.json();
-        return (json.data?.data ?? json.data ?? []) as Array<{
-          part_id: string;
-          quantity_on_hand: number;
-        }>;
-      },
-      staleTime: 30_000,
-    }),
-    queryClient.prefetchQuery({
-      queryKey: inventoryKeys.thresholds(orgId),
-      queryFn: async () => {
-        const res = await fetch(
-          `/api/organizations/${orgId}/inventory/thresholds`,
-        );
-        const json = await res.json();
-        return (json.data?.data ?? json.data ?? []) as StockThreshold[];
-      },
-      staleTime: 60_000,
-    }),
-  ]);
+  await queryClient.prefetchQuery({
+    queryKey: drawerDetailKeys.all(orgId, woId),
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/organizations/${orgId}/work-orders/${woId}/detail`,
+      );
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      return json.data as DrawerDetailResponse;
+    },
+    staleTime: 15_000,
+  });
 }
 
 // ── Drawer data hook (React Query) ─────────────────────────────
@@ -318,177 +248,43 @@ export function useDrawerQueries(woId: string | null): UseDrawerQueriesResult {
   const orgIdRef = useRef<string | null>(null);
   orgIdRef.current = orgId;
 
-  // Defer catalog loading — only fetch after work order detail renders
-  const [catalogsEnabled, setCatalogsEnabled] = useState(false);
-
-  // Work order detail
-  const woQuery = useQuery({
-    queryKey: workOrderKeys.detail(orgId ?? "", woId ?? ""),
+  // ── Consolidated query: single API call for all drawer data ──
+  const detailQuery = useQuery({
+    queryKey: drawerDetailKeys.all(orgId ?? "", woId ?? ""),
     queryFn: async () => {
       const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${woId}`,
+        `/api/organizations/${orgId}/work-orders/${woId}/detail`,
       );
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
-      return json.data as WorkOrderDetail;
+      return json.data as DrawerDetailResponse;
     },
     enabled: !!orgId && !!woId,
     staleTime: 15_000,
   });
 
-  // Lazy-load catalogs: fire after work order detail renders
-  useEffect(() => {
-    if (woQuery.data) setCatalogsEnabled(true);
-  }, [woQuery.data]);
-
-  // Org service catalog
-  const serviceQuery = useQuery({
-    queryKey: serviceKeys.list(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/services`);
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as ServiceCatalog[];
-    },
-    enabled: catalogsEnabled && !!orgId,
-    staleTime: 300_000, // 5 min — catalog rarely changes after setup
-  });
-
-  // Org parts catalog
-  const partsQuery = useQuery({
-    queryKey: inventoryKeys.parts(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/inventory/parts`);
-      const json = await res.json();
-      return (json.data?.data ?? json.data ?? []) as PartsCatalogItem[];
-    },
-    enabled: catalogsEnabled && !!orgId,
-    staleTime: 300_000, // 5 min — catalog rarely changes after setup
-  });
-
-  // Global service catalog
-  const globalServicesQuery = useQuery({
-    queryKey: globalCatalogKeys.services(),
-    queryFn: async () => {
-      const res = await fetch("/api/global-catalog/services");
-      const json = await res.json();
-      return (json.data ?? []) as GlobalServiceCatalog[];
-    },
-    staleTime: 3600_000,
-  });
-
-  // Global parts catalog
-  const globalPartsQuery = useQuery({
-    queryKey: globalCatalogKeys.parts(),
-    queryFn: async () => {
-      const res = await fetch("/api/global-catalog/parts");
-      const json = await res.json();
-      return (json.data ?? []) as GlobalPartCatalog[];
-    },
-    staleTime: 3600_000,
-  });
-
-  // Inventory balances
-  const balancesQuery = useQuery({
-    queryKey: inventoryKeys.balances(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/inventory/balances`);
-      const json = await res.json();
-      return (json.data?.data ?? json.data ?? []) as Array<{
-        part_id: string;
-        quantity_on_hand: number;
-      }>;
-    },
-    enabled: catalogsEnabled && !!orgId,
-    staleTime: 30_000,
-  });
-
-  // Stock thresholds
-  const thresholdsQuery = useQuery({
-    queryKey: inventoryKeys.thresholds(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/inventory/thresholds`,
-      );
-      const json = await res.json();
-      return (json.data?.data ?? json.data ?? []) as StockThreshold[];
-    },
-    enabled: catalogsEnabled && !!orgId,
-    staleTime: 60_000, // 1 min — thresholds
-  });
-
-  // Mechanics
-  const mechanicsQuery = useQuery({
-    queryKey: mechanicKeys.list(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/reports?type=mechanics`,
-      );
-      const json = await res.json();
-      return (json.data ?? []) as Array<{ id: string; full_name: string }>;
-    },
-    enabled: catalogsEnabled && !!orgId,
-    staleTime: 60_000,
-  });
-
-  // Price memory — org-wide last sold prices for services and parts
-  const priceMemoryQuery = useQuery({
-    queryKey: priceMemoryKeys.serviceLastUsed(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/price-history`);
-      const json = await res.json();
-      if (!res.ok || json.error) {
-        // Price memory is best-effort — return empty on failure
-        return { services: {}, parts: {} };
-      }
-      const data = json.data as {
-        services: Record<string, PriceMemoryEntry>;
-        parts: Record<string, PriceMemoryEntry>;
-      };
-      const serviceMap: Record<string, PriceMemoryEntry> = {};
-      for (const [id, row] of Object.entries(data?.services ?? {})) {
-        serviceMap[id] = {
-          unit_price: Number(row.unit_price ?? row.last_price ?? 0),
-          created_at: row.created_at ?? "",
-          last_make: row.last_make ?? undefined,
-          last_model: row.last_model ?? undefined,
-        };
-      }
-      const partsMap: Record<string, PriceMemoryEntry> = {};
-      for (const [name, row] of Object.entries(data?.parts ?? {})) {
-        partsMap[name] = {
-          unit_price: Number(row.unit_price ?? 0),
-          created_at: row.created_at ?? "",
-          last_make: row.last_make ?? undefined,
-          last_model: row.last_model ?? undefined,
-        };
-      }
-      return { services: serviceMap, parts: partsMap };
-    },
-    enabled: catalogsEnabled && !!orgId,
-    staleTime: 60_000,
-  });
+  const response = detailQuery.data;
 
   // ── Vehicle context for match quality ──
 
-  const currentMake = woQuery.data?.vehicle?.make;
-  const currentModel = woQuery.data?.vehicle?.model;
+  const currentMake = response?.workOrder?.vehicle?.make;
+  const currentModel = response?.workOrder?.vehicle?.model;
 
-  // ── Derived data (computed from cached queries) ──
+  // ── Derived data ──
 
   const catalog = useMemo(
     () =>
       mergeServices(
-        serviceQuery.data ?? [],
-        globalServicesQuery.data ?? [],
-        priceMemoryQuery.data?.services,
+        response?.servicesCatalog ?? [],
+        response?.globalServices ?? [],
+        response?.priceMemory?.services,
         currentMake,
         currentModel,
       ),
     [
-      serviceQuery.data,
-      globalServicesQuery.data,
-      priceMemoryQuery.data,
+      response?.servicesCatalog,
+      response?.globalServices,
+      response?.priceMemory?.services,
       currentMake,
       currentModel,
     ],
@@ -497,27 +293,27 @@ export function useDrawerQueries(woId: string | null): UseDrawerQueriesResult {
   const partsCatalog = useMemo(
     () =>
       mergeParts(
-        partsQuery.data ?? [],
-        globalPartsQuery.data ?? [],
-        priceMemoryQuery.data?.parts,
+        response?.partsCatalog ?? [],
+        response?.globalParts ?? [],
+        response?.priceMemory?.parts,
         currentMake,
         currentModel,
       ),
     [
-      partsQuery.data,
-      globalPartsQuery.data,
-      priceMemoryQuery.data?.parts,
+      response?.partsCatalog,
+      response?.globalParts,
+      response?.priceMemory?.parts,
       currentMake,
       currentModel,
     ],
   );
 
   const lowStockMap = useMemo(
-    () => computeLowStock(balancesQuery.data ?? [], thresholdsQuery.data ?? []),
-    [balancesQuery.data, thresholdsQuery.data],
+    () => computeLowStock(response?.balances ?? [], response?.thresholds ?? []),
+    [response?.balances, response?.thresholds],
   );
 
-  // ── setWo: update the query cache directly ──
+  // ── setWo: update the work order inside the consolidated cache ──
 
   const setWo = useCallback(
     (
@@ -527,12 +323,14 @@ export function useDrawerQueries(woId: string | null): UseDrawerQueriesResult {
         | ((prev: WorkOrderDetail | null) => WorkOrderDetail | null),
     ) => {
       if (!orgId || !woId) return;
-      const key = workOrderKeys.detail(orgId, woId);
-      queryClient.setQueryData<WorkOrderDetail>(key, (prev) => {
-        if (typeof updater === "function") {
-          return updater(prev ?? null) ?? undefined;
-        }
-        return updater ?? undefined;
+      const key = drawerDetailKeys.all(orgId, woId);
+      queryClient.setQueryData<DrawerDetailResponse>(key, (prev) => {
+        if (!prev) return prev;
+        const currentWo = prev.workOrder;
+        const newWo =
+          typeof updater === "function" ? updater(currentWo ?? null) : updater;
+        if (!newWo) return prev;
+        return { ...prev, workOrder: newWo };
       });
     },
     [orgId, woId, queryClient],
@@ -541,20 +339,20 @@ export function useDrawerQueries(woId: string | null): UseDrawerQueriesResult {
   // ── Loading state ──
 
   const isLoading =
-    orgQuery.isLoading || (woQuery.isEnabled && woQuery.isLoading);
+    orgQuery.isLoading || (detailQuery.isEnabled && detailQuery.isLoading);
 
-  const isError = orgQuery.isError || woQuery.isError;
-  const error = orgQuery.error || woQuery.error;
+  const isError = orgQuery.isError || detailQuery.isError;
+  const error = orgQuery.error || detailQuery.error;
 
   return {
     orgId,
     orgIdRef,
-    wo: woQuery.data ?? null,
+    wo: response?.workOrder ?? null,
     setWo,
     catalog,
     partsCatalog,
     lowStockMap,
-    mechanics: mechanicsQuery.data ?? [],
+    mechanics: response?.mechanics ?? [],
     isLoading,
     isError,
     error,

@@ -1,11 +1,12 @@
 "use client";
 
-import { Package, TriangleAlert } from "lucide-react";
+import { Package } from "lucide-react";
 import type { WorkOrderPart } from "@/lib/types";
+import { PartLineRow } from "@/components/work-orders/line-items";
 import { CatalogPickerDrawer } from "./_catalog-picker-drawer";
 import type { CatalogPartItem } from "./_drawer-types";
 import { SectionCard } from "./_section-card";
-import { WorkOrderListHeader, WorkOrderRow } from "./_work-order-row";
+import { WorkOrderListHeader } from "./_work-order-row";
 
 interface PartsSectionProps {
   parts: WorkOrderPart[];
@@ -20,6 +21,11 @@ interface PartsSectionProps {
   onRemovePart: (partId: string) => Promise<void>;
   onEditPriceSave: (id: string, price: number) => Promise<void>;
   onEditQtySave: (partId: string, qty: number) => Promise<void>;
+  onEditDiscountSave?: (
+    id: string,
+    discountAmount: number,
+    discountPercent: number,
+  ) => Promise<void>;
   t: (key: string) => string;
 }
 
@@ -41,6 +47,7 @@ export function PartsSection({
   onRemovePart,
   onEditPriceSave,
   onEditQtySave,
+  onEditDiscountSave,
   t,
 }: PartsSectionProps) {
   const isEmpty = (parts?.length ?? 0) === 0;
@@ -98,32 +105,61 @@ export function PartsSection({
             {parts?.map((part) => {
               const catalogPartId = (part as WorkOrderPartWithSource).part_id;
               const lowStock = lowStockMap?.[catalogPartId ?? ""];
-              const isLowStock =
-                lowStock && part.quantity <= lowStock.threshold;
 
               return (
-                <WorkOrderRow
+                <PartLineRow
                   key={part.id}
-                  name={getPartDisplayName(part)}
-                  badge={
-                    isLowStock ? (
-                      <TriangleAlert
-                        className="size-3 text-yellow-500 shrink-0"
-                        aria-label={t("lowStockLabel")}
-                      />
-                    ) : undefined
-                  }
-                  subtitle={
-                    lowStock ? (
-                      <span className="text-[10px] text-muted-foreground/60 tabular-nums">
-                        {t("stock")}: {lowStock.quantity}
-                      </span>
-                    ) : undefined
-                  }
+                  name={part.part_name}
+                  nameMn={getPartDisplayName(part)}
+                  partNumber={part.part_number ?? undefined}
                   quantity={Number(part.quantity ?? 1)}
-                  price={Number(part.final_price)}
-                  onQtySave={(qty) => onEditQtySave(part.id, qty)}
-                  onPriceSave={(price) => onEditPriceSave(part.id, price)}
+                  unitPrice={Number(part.unit_price ?? 0)}
+                  finalPrice={Number(part.final_price)}
+                  discountAmount={Number(
+                    (part as unknown as Record<string, unknown>)
+                      .discount_amount ?? 0,
+                  )}
+                  discountPercent={Number(
+                    (part as unknown as Record<string, unknown>)
+                      .discount_percentage ?? 0,
+                  )}
+                  stockInfo={
+                    lowStock
+                      ? {
+                          quantity: lowStock.quantity,
+                          threshold: lowStock.threshold,
+                        }
+                      : null
+                  }
+                  locale={locale}
+                  onQuantityChange={(qty) => onEditQtySave(part.id, qty)}
+                  onPriceChange={(price) => onEditPriceSave(part.id, price)}
+                  onDiscountAmountChange={
+                    onEditDiscountSave
+                      ? (amount) =>
+                          onEditDiscountSave(
+                            part.id,
+                            amount,
+                            Number(
+                              (part as unknown as Record<string, unknown>)
+                                .discount_percentage ?? 0,
+                            ),
+                          )
+                      : undefined
+                  }
+                  onDiscountPercentChange={
+                    onEditDiscountSave
+                      ? (percent) =>
+                          onEditDiscountSave(
+                            part.id,
+                            Number(
+                              (part as unknown as Record<string, unknown>)
+                                .discount_amount ?? 0,
+                            ),
+                            percent,
+                          )
+                      : undefined
+                  }
                   onDelete={() => onRemovePart(part.id)}
                   deleteLabel={t("removePartLabel")}
                 />

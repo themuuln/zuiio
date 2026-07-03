@@ -86,7 +86,7 @@ export function MechanicRegistrationDialog({
     <DetailDrawer open={open} onOpenChange={handleOpenChange} size="sm">
       <DetailDrawer.Header>
         <DetailDrawer.Title className="flex items-center gap-2 text-base">
-          <Wrench className="size-4 text-purple-500" />
+          <Wrench className="size-4 text-sky-500" />
           {t("registerMechanicBtn")}
         </DetailDrawer.Title>
         <DetailDrawer.Description className="sr-only">

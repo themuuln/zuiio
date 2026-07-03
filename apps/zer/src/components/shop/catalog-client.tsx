@@ -51,9 +51,14 @@ const SKELETON_IDS = [
 type CatalogClientProps = {
   products: ProductCardProduct[];
   categories: CategoryChip[];
+  /** When "grid", hides barcode scanner and shows larger product tiles for tap-to-add. */
+  selectionMode?: "grid" | "barcode" | "hybrid";
 };
-
-export function CatalogClient({ products, categories }: CatalogClientProps) {
+export function CatalogClient({
+  products,
+  categories,
+  selectionMode = "barcode",
+}: CatalogClientProps) {
   const { addItem } = useCart();
   const inputRef = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -196,7 +201,7 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
                 }
               }}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
+                if (selectionMode !== "grid" && e.key === "Enter") {
                   e.preventDefault();
                   if (searchQuery.trim()) {
                     handleBarcodeMatch(searchQuery);
@@ -204,15 +209,21 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
                 }
               }}
               onPaste={(e) => {
-                const pastedText = e.clipboardData.getData("text");
-                if (pastedText) {
-                  setTimeout(() => {
-                    handleBarcodeMatch(pastedText);
-                    setSearchQuery("");
-                  }, 0);
+                if (selectionMode !== "grid") {
+                  const pastedText = e.clipboardData.getData("text");
+                  if (pastedText) {
+                    setTimeout(() => {
+                      handleBarcodeMatch(pastedText);
+                      setSearchQuery("");
+                    }, 0);
+                  }
                 }
               }}
-              placeholder="Бүтээгдэхүүн, баркод, SKU-аар хайх..."
+              placeholder={
+                selectionMode === "grid"
+                  ? "Бүтээгдэхүүнээр хайх..."
+                  : "Бүтээгдэхүүн, баркод, SKU-аар хайх..."
+              }
               autoComplete="off"
               className={cn(
                 "h-[44px] w-full rounded-lg pl-9 pr-4 text-sm",
@@ -229,20 +240,22 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
               )}
             />
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => setIsCameraOpen(true)}
-            className={cn(
-              "h-[44px] w-[44px] shrink-0 rounded-lg",
-              "border-2 border-dashed",
-              isCameraOpen && "ring-2 ring-primary/30",
-            )}
-            title="Баркод скан хийх"
-          >
-            <Barcode className="size-5" weight="bold" />
-          </Button>
+          {selectionMode !== "grid" && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => setIsCameraOpen(true)}
+              className={cn(
+                "h-[44px] w-[44px] shrink-0 rounded-lg",
+                "border-2 border-dashed",
+                isCameraOpen && "ring-2 ring-primary/30",
+              )}
+              title="Баркод скан хийх"
+            >
+              <Barcode className="size-5" weight="bold" />
+            </Button>
+          )}
         </div>
 
         {/* Status feedback */}
@@ -307,7 +320,11 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              variant={selectionMode === "grid" ? "tile" : "card"}
+            />
           ))}
         </div>
       )}

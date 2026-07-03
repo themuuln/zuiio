@@ -14,6 +14,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import {
   Select,
   SelectContent,
@@ -357,15 +358,15 @@ export function BusinessDefaultsForm({
               </FieldLabel>
               <FieldContent>
                 <div className="flex items-center gap-2">
-                  <Input
+                  <NumericInput
                     id="defaultTaxRate"
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.1"
+                    value={Number(rhfForm.watch("defaultTaxRate")) || 0}
+                    onChange={(val) => rhfForm.setValue("defaultTaxRate", String(val))}
+                    min={0}
+                    max={100}
+                    step={0.1}
                     className="w-24"
                     aria-invalid={!!rhfForm.formState.errors.defaultTaxRate}
-                    {...rhfForm.register("defaultTaxRate")}
                   />
                   <span className="text-sm text-muted-foreground">%</span>
                 </div>
@@ -412,13 +413,15 @@ export function BusinessDefaultsForm({
                 </FieldLabel>
                 <FieldContent>
                   <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.1"
+                    <NumericInput
+                      min={0}
+                      max={100}
+                      step={0.1}
                       className="w-24"
-                      {...rhfForm.register("ndshEmployerRate")}
+                      value={Number(rhfForm.watch("ndshEmployerRate")) || 0}
+                      onChange={(val) =>
+                        rhfForm.setValue("ndshEmployerRate", String(val))
+                      }
                     />
                     <span className="text-sm text-muted-foreground">%</span>
                   </div>
@@ -430,13 +433,15 @@ export function BusinessDefaultsForm({
                 </FieldLabel>
                 <FieldContent>
                   <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.1"
+                    <NumericInput
+                      min={0}
+                      max={100}
+                      step={0.1}
                       className="w-24"
-                      {...rhfForm.register("ndshEmployeeRate")}
+                      value={Number(rhfForm.watch("ndshEmployeeRate")) || 0}
+                      onChange={(val) =>
+                        rhfForm.setValue("ndshEmployeeRate", String(val))
+                      }
                     />
                     <span className="text-sm text-muted-foreground">%</span>
                   </div>

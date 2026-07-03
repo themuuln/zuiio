@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
 import { usePageHeader } from "@/hooks/use-page-header";
@@ -24,6 +26,8 @@ export default function NewPartsCarPage() {
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
   const create = useCreatePartsCar(orgId);
+  const [year, setYear] = useState(0);
+  const [purchaseCost, setPurchaseCost] = useState(0);
   const [saving, setSaving] = useState(false);
   const [arrivalDate, setArrivalDate] = useState<Date>(new Date());
 
@@ -36,15 +40,13 @@ export default function NewPartsCarPage() {
       const car = await create.mutateAsync({
         make: form.get("make") as string,
         model: form.get("model") as string,
-        year: form.get("year") ? Number(form.get("year")) : undefined,
+        year: year > 0 ? year : undefined,
         vin: (form.get("vin") as string)?.toUpperCase() || undefined,
         license_plate:
           transliterateMongolianPlate(
             (form.get("license_plate") as string) || "",
           ) || undefined,
-        purchase_cost: form.get("purchase_cost")
-          ? Number(form.get("purchase_cost"))
-          : 0,
+        purchase_cost: purchaseCost,
         arrival_date: arrivalDate
           ? arrivalDate.toISOString().split("T")[0]
           : new Date().toISOString().split("T")[0],
@@ -116,12 +118,10 @@ export default function NewPartsCarPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <Field>
-                <FieldLabel htmlFor="year">{partsCarsT("year")}</FieldLabel>
-                <Input
+                <NumericInput
                   id="year"
-                  name="year"
-                  type="number"
+                  value={year}
+                  onChange={setYear}
                   min={1980}
                   max={2030}
                   placeholder="2018"
@@ -170,14 +170,14 @@ export default function NewPartsCarPage() {
               <FieldLabel htmlFor="purchase_cost">
                 {partsCarsT("purchaseCost")}
               </FieldLabel>
-              <Input
-                id="purchase_cost"
-                name="purchase_cost"
-                type="number"
-                min={0}
-                step={10000}
-                placeholder="12,000,000"
-              />
+                <CurrencyInput
+                  id="purchase_cost"
+                  value={purchaseCost}
+                  onChange={setPurchaseCost}
+                  showPrefix={false}
+                  min={0}
+                  placeholder="12,000,000"
+                />
             </Field>
 
             <Field>

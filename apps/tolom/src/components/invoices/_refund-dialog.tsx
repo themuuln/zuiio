@@ -13,6 +13,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   Select,
   SelectContent,
@@ -188,31 +189,24 @@ export function RefundDialog({
 
             <Field>
               <FieldLabel>{t("invoice.refundAmount")}</FieldLabel>
-              <FieldContent>
-                <Input
-                  type="number"
-                  min={0.01}
-                  max={maxRefundable}
-                  step={0.01}
-                  value={form.watch("amount")}
-                  onChange={(e) =>
-                    form.setValue(
-                      "amount",
-                      Number.parseFloat(e.target.value) || 0,
-                    )
-                  }
-                />
-                <FieldError
-                  {...(form.formState.errors.amount
-                    ? {
-                        errors: [
-                          { message: form.formState.errors.amount.message },
-                        ],
-                      }
-                    : {})}
-                />
-              </FieldContent>
-            </Field>
+                <FieldContent>
+                  <CurrencyInput
+                    min={0.01}
+                    max={maxRefundable}
+                    value={Number(form.watch("amount")) || 0}
+                    onChange={(val) => form.setValue("amount", val)}
+                  />
+                  <FieldError
+                    {...(form.formState.errors.amount
+                      ? {
+                          errors: [
+                            { message: form.formState.errors.amount.message },
+                          ],
+                        }
+                      : {})}
+                  />
+                </FieldContent>
+              </Field>
 
             <Field>
               <FieldLabel>{t("invoice.refundMethod")}</FieldLabel>

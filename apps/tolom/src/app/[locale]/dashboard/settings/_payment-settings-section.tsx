@@ -8,6 +8,7 @@ import { DEFAULT_PAYMENT_METHOD_FEES } from "@/components/bay-view-v2/_payment-f
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
@@ -80,11 +81,9 @@ export function PaymentSettingsSection({ orgId }: PaymentSettingsSectionProps) {
       banks.filter((bank) => bank.enabled && bank.accountNumber.trim()).length,
     [banks],
   );
-
-  function updateFee(key: FeeKey, value: string) {
-    const parsed = value === "" ? 0 : Number(value);
-    if (Number.isNaN(parsed) || parsed < 0 || parsed > 100) return;
-    setFees((prev) => ({ ...prev, [key]: parsed }));
+  function updateFee(key: FeeKey, value: number) {
+    if (value < 0 || value > 100) return;
+    setFees((prev) => ({ ...prev, [key]: value }));
     setDirty(true);
   }
 
@@ -161,14 +160,13 @@ export function PaymentSettingsSection({ orgId }: PaymentSettingsSectionProps) {
                 {t(`paymentFee_${key}`)}
               </Label>
               <div className="relative">
-                <Input
+                <NumericInput
                   id={`fee-${key}`}
-                  type="number"
+                  value={fees[key]}
+                  onChange={(val) => updateFee(key, val)}
                   min={0}
                   max={100}
                   step={0.1}
-                  value={fees[key]}
-                  onChange={(event) => updateFee(key, event.target.value)}
                   className="h-8 pr-8"
                 />
                 <span className="absolute top-1/2 right-3 -translate-y-1/2 text-xs text-muted-foreground">

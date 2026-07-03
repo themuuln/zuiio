@@ -1,33 +1,27 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   ArrowLeft,
   Camera,
   FileText,
-  Mail,
-  Phone,
   Plus,
   Printer,
   RotateCcw,
   Trash2,
   Wallet,
 } from "lucide-react";
-import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 import { z } from "zod";
 import { ExportButton } from "@/components/export-button";
 import { RefundDialog } from "@/components/invoices/_refund-dialog";
 import { RefundReceipt } from "@/components/invoices/_refund-receipt";
 import { MechanicSelect } from "@/components/mechanic-select";
-import { ContactCard } from "@/components/sidebar-tabs/contact-card";
-import { RecentList } from "@/components/sidebar-tabs/recent-list";
 import { StatusBadge } from "@/components/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -47,547 +41,105 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
 import WorkOrderPhotoUpload from "@/components/work-order-photo-upload";
-import { useRightSidebar } from "@/hooks/use-right-sidebar";
-import type { ExportColumn } from "@/lib/export";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
-import { useRouter } from "@/lib/i18n/navigation";
-import { workOrderKeys } from "@/lib/queries/keys";
-import { usePartsCatalog } from "@/lib/queries/use-inventory";
-import { useCurrentOrg } from "@/lib/queries/use-organization";
-import { useLastVisitData } from "@/lib/queries/use-price-memory";
-import {
-  useRefundList,
-  useStoreCreditBalance,
-} from "@/lib/queries/use-refunds";
-import {
-  useAttachments,
-  useDeleteAttachment,
-} from "@/lib/queries/use-work-order-attachments";
-import {
-  fetchServicePriceHistory,
-  useAddPart,
-  useAddService,
-  useAssignMechanic,
-  useCreateInvoice,
-  useInvoicePayments,
-  useMechanicsList,
-  usePartPriceHistory,
-  useRecordPayment,
-  useRemovePart,
-  useRemoveService,
-  useServiceCatalog,
-  useUpdateWorkOrderStatus,
-  useWorkOrderDetail,
-} from "@/lib/queries/use-work-order-detail";
-import type {
-  ServiceCatalog,
-  WorkOrderAttachment,
-  WorkOrderDetail,
-  WorkOrderPart,
-  WorkOrderService,
-  WorkOrderStatus,
-} from "@/lib/types";
+import type { WorkOrderAttachment, WorkOrderStatus } from "@/lib/types";
 import { cn, formatMNT } from "@/lib/utils";
+import { useWorkOrderDetailPage } from "./_use-work-order-detail-page";
 
-const STATUSES = [
-  "New",
-  "Diagnosing",
-  "In Progress",
-  "Ready for Pickup",
-  "Completed",
-  "Cancelled",
-] as const;
+export type ReturnTypeOfUseWorkOrderDetail = ReturnType<
+  typeof useWorkOrderDetailPage
+>;
 
 export default function WorkOrderDetailPage() {
-  const params = useParams();
-  const router = useRouter();
-  const { push, back } = router;
-  const woId = params.id as string;
+  const ctx = useWorkOrderDetailPage();
   const t = useTranslations("workOrderDetail");
 
-  const [serviceSearch, setServiceSearch] = useState("");
-  const [showAddService, setShowAddService] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<{
-    type: "service" | "part";
-    id: string;
-    name: string;
-  } | null>(null);
-
-  const [newPart, setNewPart] = useState({
-    part_name: "",
-    quantity: 1,
-    unit_price: 0,
-  });
-  const [showAddPart, setShowAddPart] = useState(false);
-
-  const [confirmStatus, setConfirmStatus] = useState<string | null>(null);
-  const [statusNotes, setStatusNotes] = useState("");
-  const [lossReasonText, setLossReasonText] = useState("");
-
-  const [existingInvoiceId, setExistingInvoiceId] = useState<string | null>(
-    null,
-  );
-  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const [showRefundDialog, setShowRefundDialog] = useState(false);
-  const [receiptRefund, setReceiptRefund] = useState<{
-    id: string;
-    amount: number;
-    method: string;
-    reason: string | null;
-    reference: string | null;
-    notes: string | null;
-    refunded_at: string;
-  } | null>(null);
-  const [showRepeatDialog, setShowRepeatDialog] = useState(false);
-
+  // paymentForm is UI state, not data-layer — keep it here
   const paymentSchema = z.object({
     amount: z.number().positive("Amount must be greater than 0"),
     method: z.string().min(1, "Payment method is required"),
     reference: z.string().optional().or(z.literal("")),
     notes: z.string().optional().or(z.literal("")),
   });
-
   type PaymentFormValues = z.infer<typeof paymentSchema>;
-
   const paymentForm = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentSchema),
-    defaultValues: {
-      amount: 0,
-      method: "cash",
-      reference: "",
-      notes: "",
-    },
+    defaultValues: { amount: 0, method: "cash", reference: "", notes: "" },
   });
 
+  // ── Destructure hook values ──
   const {
-    data: orgData,
-    isLoading: orgLoading,
-    error: orgError,
-  } = useCurrentOrg();
-  const orgId = orgData?.orgId;
-  const orgName = orgData?.orgName;
-
-  const {
-    data: wo,
-    isLoading: woLoading,
-    error: woError,
-    refetch: refetchWo,
-  } = useWorkOrderDetail(orgId, woId);
-  const { data: catalog = [] } = useServiceCatalog(orgId);
-  const { data: partsCatalog = [] } = usePartsCatalog(orgId);
-  const { data: mechanics = [] } = useMechanicsList(orgId);
-
-  const { data: partPriceHistoryData } = usePartPriceHistory(
-    orgId,
-    newPart.part_name,
-    wo?.vehicle?.make,
-  );
-
-  const updateStatus = useUpdateWorkOrderStatus(orgId);
-  const assignMechanicMutation = useAssignMechanic(orgId);
-  const addService = useAddService(orgId);
-  const removeService = useRemoveService(orgId);
-  const addPart = useAddPart(orgId);
-  const removePart = useRemovePart(orgId);
-  const createInvoice = useCreateInvoice(orgId);
-  const { data: invoicePaymentsData } = useInvoicePayments(
-    orgId,
+    woId,
+    wo,
+    catalog,
+    partsCatalog,
+    mechanics,
+    payments,
+    attachments,
+    storeCreditBalance,
     existingInvoiceId,
-  );
-  const { data: invoiceRefundsData } = useRefundList(orgId);
-  const { data: storeCreditBalance = 0 } = useStoreCreditBalance(
+    invoicePaymentsData,
+    servicesTotal,
+    partsTotal,
+    totalPaid,
+    balanceDue,
+    invoiceStatus,
+    invoiceRefunds,
+    totalRefunded,
+    maxRefundable,
+    servicesCost,
+    partsCost,
+    totalCost,
+    grossProfit,
+    marginPercent,
+    serviceSearch,
+    showAddService,
+    deleteConfirm,
+    newPart,
+    showAddPart,
+    confirmStatus,
+    statusNotes,
+    lossReasonText,
+    showPaymentDialog,
+    showRefundDialog,
+    receiptRefund,
+    showRepeatDialog,
+    saving,
+    loading,
+    error,
+    setServiceSearch,
+    setShowAddService,
+    setDeleteConfirm,
+    setNewPart,
+    setShowAddPart,
+    setConfirmStatus,
+    setStatusNotes,
+    setLossReasonText,
+    setShowPaymentDialog,
+    setShowRefundDialog,
+    setReceiptRefund,
+    setShowRepeatDialog,
+    handleChangeStatus,
+    handleAssignMechanic,
+    handleAddService,
+    handleAddPart,
+    handleRemoveLine,
+    handleRepeatFromLastVisit,
+    handleGenerateInvoice,
+    handlePaymentSubmit,
+    refetchWo,
+    back,
     orgId,
-    wo?.customer_id ?? undefined,
-  );
-  const recordPayment = useRecordPayment(orgId);
+    orgName,
+    serviceExportColumns,
+    partExportColumns,
 
-  const { data: attachments = [] } = useAttachments(orgId, woId);
-  const deleteAttachment = useDeleteAttachment(orgId, woId);
-  const { data: lastVisit } = useLastVisitData(
-    orgId,
-    wo?.vehicle_id ?? undefined,
-  );
-  const queryClient = useQueryClient();
-  const detailKey = workOrderKeys.detail(orgId ?? "", woId);
-
-  const sidebar = useRightSidebar();
-
-  const saving =
-    updateStatus.isPending ||
-    assignMechanicMutation.isPending ||
-    addService.isPending ||
-    removeService.isPending ||
-    addPart.isPending ||
-    removePart.isPending ||
-    deleteAttachment.isPending;
-
-  useEffect(() => {
-    if (!orgLoading && !orgId && !orgError) {
-      push("/auth/select-organization?returnUrl=/dashboard/work-orders");
-    }
-  }, [orgLoading, orgId, orgError, push]);
-
-  useEffect(() => {
-    if (partPriceHistoryData?.[0] && newPart.unit_price === 0) {
-      setNewPart((part) => ({ ...part, unit_price: partPriceHistoryData[0] }));
-    }
-  }, [partPriceHistoryData, newPart.unit_price]);
-
-  // Mount effect: register sidebar tabs with null content, unregister on unmount
-  useEffect(() => {
-    sidebar.registerTab("vehicle", t("vehicle"), null);
-    sidebar.registerTab("customer", t("customer"), null);
-    sidebar.registerTab("timeline", t("timeline"), null);
-
-    return () => {
-      sidebar.unregisterTab("vehicle");
-      sidebar.unregisterTab("customer");
-      sidebar.unregisterTab("timeline");
-    };
-  }, [sidebar.unregisterTab, t, sidebar.registerTab]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Data effect: update tab content when work order data changes
-  useEffect(() => {
-    if (!wo) return;
-
-    sidebar.setActiveTab("vehicle");
-
-    sidebar.updateTabContent(
-      "vehicle",
-      <ContactCard
-        title={t("vehicle")}
-        items={[
-          {
-            label: t("plateNumber"),
-            value: wo.vehicle?.plate_number,
-            copyable: true,
-          },
-          {
-            label: t("makeModel"),
-            value: [wo.vehicle?.make, wo.vehicle?.model]
-              .filter(Boolean)
-              .join(" "),
-          },
-          { label: t("year"), value: wo.vehicle?.year?.toString() },
-          { label: "VIN", value: wo.vehicle?.vin, copyable: true },
-        ]}
-      />,
-    );
-
-    sidebar.updateTabContent(
-      "customer",
-      <ContactCard
-        title={t("customer")}
-        items={[
-          {
-            label: t("name"),
-            value: [wo.customer?.first_name, wo.customer?.last_name]
-              .filter(Boolean)
-              .join(" "),
-            copyable: true,
-          },
-          {
-            label: t("phoneLabel"),
-            value: wo.customer?.phone,
-            icon: Phone,
-            copyable: true,
-          },
-          {
-            label: t("emailLabel"),
-            value: wo.customer?.email,
-            icon: Mail,
-            copyable: true,
-          },
-        ]}
-      />,
-    );
-
-    sidebar.updateTabContent(
-      "timeline",
-      <RecentList
-        title={t("statusHistory")}
-        items={(wo.status_history ?? []).map((h) => ({
-          id: h.id,
-          primary: h.status,
-          secondary: h.notes ?? undefined,
-          timestamp: new Date(h.created_at).toLocaleString(),
-        }))}
-        emptyMessage={t("noStatusChanges")}
-      />,
-    );
-  }, [wo, sidebar.updateTabContent, sidebar.setActiveTab, t]);
-
-  const serviceExportColumns: ExportColumn<WorkOrderService>[] = useMemo(
-    () => [
-      { key: "service_name", label: t("service") },
-      { key: "quantity", label: t("qty") },
-      { key: "unit_price", label: t("unitPrice"), format: "currency" },
-      { key: "discount_amount", label: t("discount"), format: "currency" },
-      { key: "final_price", label: t("finalPrice"), format: "currency" },
-    ],
-    [t],
-  );
-
-  const partExportColumns: ExportColumn<WorkOrderPart>[] = useMemo(
-    () => [
-      { key: "part_name", label: t("part") },
-      { key: "quantity", label: t("qty") },
-      { key: "unit_price", label: t("unitPrice"), format: "currency" },
-      { key: "final_price", label: t("finalPrice"), format: "currency" },
-    ],
-    [t],
-  );
-
-  const changeStatus = (newStatus: string, lossReason?: string) => {
-    if (
-      (newStatus === "Completed" || newStatus === "Cancelled") &&
-      confirmStatus !== newStatus
-    ) {
-      setConfirmStatus(newStatus);
-      setStatusNotes("");
-      setLossReasonText("");
-      return;
-    }
-
-    // Optimistic: close confirmation immediately
-    setConfirmStatus(null);
-    setStatusNotes("");
-    setLossReasonText("");
-
-    updateStatus.mutate({
-      woId,
-      status: newStatus,
-      notes: statusNotes || undefined,
-      loss_reason: lossReason || undefined,
-    });
-  };
-
-  const assignMechanic = (mechanicId: string) => {
-    assignMechanicMutation.mutate({ woId, mechanicId });
-  };
-
-  const addServiceLine = async (svc: ServiceCatalog) => {
-    if (!orgId || !woId) return;
-    // Price history is best-effort — never block the add
-    let unitPrice = svc.default_price ?? 0;
-    try {
-      const prices = await fetchServicePriceHistory(
-        orgId,
-        svc.id,
-        wo?.vehicle?.make,
-        wo?.vehicle?.model,
-      );
-      unitPrice = prices[0] ?? svc.default_price ?? 0;
-    } catch {
-      // Fall back to default_price
-    }
-    try {
-      // Optimistic: inject service with temp ID
-      const prev = queryClient.getQueryData<WorkOrderDetail>(detailKey);
-      const tempId = `temp-${Date.now()}`;
-      queryClient.setQueryData<WorkOrderDetail>(detailKey, (prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          services: [
-            ...(prev.services ?? []),
-            {
-              id: tempId,
-              service_catalog_id: svc.id,
-              service_name: svc.name,
-              quantity: 1,
-              unit_price: unitPrice,
-              final_price: unitPrice,
-              discount_amount: 0,
-              discount_percentage: 0,
-              unit_cost: 0,
-              last_sold_price: null,
-              notes: null,
-              description: null,
-              mechanic_id: null,
-              work_order_id: woId,
-              organization_id: orgId,
-              created_by: null,
-              created_at: new Date().toISOString(),
-            } as WorkOrderService,
-          ],
-        };
-      });
-
-      addService.mutate(
-        {
-          woId,
-          body: {
-            service_catalog_id: svc.id,
-            service_name: svc.name,
-            quantity: 1,
-            unit_price: unitPrice,
-          },
-        },
-        {
-          onError: () => {
-            queryClient.setQueryData<WorkOrderDetail>(detailKey, prev!);
-          },
-        },
-      );
-    } catch {
-      toast.error(t("failedToAddService"));
-    }
-  };
-
-  const addPartLine = () => {
-    if (!orgId || !woId || !newPart.part_name.trim()) return;
-    const unitPrice =
-      newPart.unit_price || (partPriceHistoryData ?? [])[0] || 0;
-
-    // Optimistic: inject part with temp ID
-    const prev = queryClient.getQueryData<WorkOrderDetail>(detailKey);
-    const tempId = `temp-${Date.now()}`;
-    queryClient.setQueryData<WorkOrderDetail>(detailKey, (prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        parts: [
-          ...(prev.parts ?? []),
-          {
-            id: tempId,
-            part_name: newPart.part_name.trim(),
-            quantity: newPart.quantity,
-            unit_price: unitPrice,
-            final_price: unitPrice * newPart.quantity,
-            unit_cost: 0,
-            discount_amount: 0,
-            discount_percentage: 0,
-            last_sold_price: null,
-            notes: null,
-            part_number: null,
-            part_id: null,
-            work_order_id: woId,
-            organization_id: orgId,
-            created_by: null,
-            created_at: new Date().toISOString(),
-          } as WorkOrderPart,
-        ],
-      };
-    });
-
-    addPart.mutate(
-      {
-        woId,
-        body: {
-          part_name: newPart.part_name.trim(),
-          quantity: newPart.quantity,
-          unit_price: unitPrice,
-        },
-      },
-      {
-        onSuccess: () => {
-          setNewPart({ part_name: "", quantity: 1, unit_price: 0 });
-          setShowAddPart(false);
-        },
-        onError: () => {
-          queryClient.setQueryData<WorkOrderDetail>(detailKey, prev!);
-        },
-      },
-    );
-  };
-
-  const repeatFromLastVisit = async () => {
-    if (!orgId || !woId || !lastVisit) return;
-    setShowRepeatDialog(false);
-    const svcNames = lastVisit.services.map((s) => s.service_name);
-    const partNames = lastVisit.parts.map((p) => p.part_name);
-    let hasError = false;
-    for (const svc of lastVisit.services) {
-      try {
-        await addService.mutateAsync({
-          woId,
-          body: {
-            service_catalog_id: svc.service_catalog_id ?? "",
-            service_name: svc.service_name,
-            quantity: svc.quantity,
-            unit_price: svc.unit_price,
-          },
-        });
-      } catch {
-        hasError = true;
-      }
-    }
-    for (const part of lastVisit.parts) {
-      try {
-        await addPart.mutateAsync({
-          woId,
-          body: {
-            part_name: part.part_name,
-            quantity: part.quantity,
-            unit_price: part.unit_price,
-          },
-        });
-      } catch {
-        hasError = true;
-      }
-    }
-    if (hasError) {
-      toast.warning(t("repeatPartialWarning"));
-    } else {
-      toast.success(
-        t("repeatSuccess", {
-          services: svcNames.length,
-          parts: partNames.length,
-        }),
-      );
-    }
-  };
-
-  const generateInvoice = () => {
-    if (!orgId || !woId) return;
-    createInvoice.mutate(
-      { woId },
-      {
-        onSuccess: (data) => {
-          setExistingInvoiceId(data.id);
-          push(`/invoice/${data.public_token}`);
-        },
-      },
-    );
-  };
-
-  const handlePaymentSubmit = paymentForm.handleSubmit(async (data) => {
-    if (!orgId || !existingInvoiceId) {
-      toast.error(t("invalidPaymentAmount"));
-      return;
-    }
-    recordPayment.mutate(
-      {
-        invoiceId: existingInvoiceId,
-        amount: data.amount,
-        method: data.method,
-        reference: data.reference || undefined,
-        notes: data.notes || undefined,
-      },
-      {
-        onSuccess: () => {
-          setShowPaymentDialog(false);
-          paymentForm.reset();
-          toast.success(t("paymentRecorded"));
-        },
-        onError: (err: Error) => {
-          toast.error(err.message || t("failedToRecordPayment"));
-        },
-      },
-    );
-  });
-
-  const loading = orgLoading || woLoading;
-
-  let error: string | null = null;
-  if (orgError) {
-    error = orgError.message;
-  } else if (!orgLoading && !orgId) {
-    error = t("noOrganization");
-  } else if (woError) {
-    error = woError.message;
-  }
+    createInvoice,
+    recordPayment,
+    invoicePaymentsData: _,
+    invoiceRefundsData: __,
+    partPriceHistoryData: ___,
+  } = ctx;
 
   if (loading) {
     return (
@@ -624,48 +176,9 @@ export default function WorkOrderDetailPage() {
     );
   }
 
-  const servicesTotal = (wo.services ?? []).reduce(
-    (sum, s) => sum + Number(s.final_price),
-    0,
-  );
-  const partsTotal = (wo.parts ?? []).reduce(
-    (sum, p) => sum + Number(p.final_price),
-    0,
-  );
-  const payments = invoicePaymentsData?.payments ?? [];
-  const totalPaid = invoicePaymentsData?.total_paid ?? 0;
-  const balanceDue =
-    invoicePaymentsData?.balance_due ?? servicesTotal + partsTotal;
-  const invoiceStatus = invoicePaymentsData?.status ?? "";
-
-  // Filter refunds for this invoice
-  const invoiceRefunds = (invoiceRefundsData ?? []).filter(
-    (r) => r.invoice_id === existingInvoiceId && r.status === "completed",
-  );
-  const totalRefunded = invoiceRefunds.reduce(
-    (sum, r) => sum + Number(r.amount),
-    0,
-  );
-  const maxRefundable = totalPaid - totalRefunded;
-
-  const servicesCost = (wo.services ?? []).reduce(
-    (sum, s) => sum + Number(s.unit_cost ?? 0) * s.quantity,
-    0,
-  );
-  const partsCost = (wo.parts ?? []).reduce(
-    (sum, p) => sum + Number(p.unit_cost ?? 0) * p.quantity,
-    0,
-  );
-  const totalCost = servicesCost + partsCost;
-  const grossProfit = servicesTotal + partsTotal - totalCost;
-  const marginPercent =
-    servicesTotal + partsTotal > 0
-      ? (grossProfit / (servicesTotal + partsTotal)) * 100
-      : 0;
-
   return (
     <div className="tablet-touch flex max-w-5xl flex-col gap-6 tablet:gap-6 tablet:px-4">
-      {/* Header */}
+      {/* ── Header ── */}
       <div className="flex items-center gap-4 tablet:gap-6">
         <Button
           variant="ghost"
@@ -686,27 +199,33 @@ export default function WorkOrderDetailPage() {
           </div>
           <Typography.Muted className="text-sm text-muted-foreground">
             {new Date(wo.created_at).toLocaleDateString()}
-            {wo.customer
-              ? ` \u00B7 ${wo.customer.first_name} ${wo.customer.last_name ?? ""}`
-              : ""}
-            {wo.vehicle ? ` \u00B7 ${wo.vehicle.plate_number}` : ""}
+            {wo.customer &&
+              ` \u00B7 ${wo.customer.first_name} ${wo.customer.last_name ?? ""}`}
+            {wo.vehicle && ` \u00B7 ${wo.vehicle.plate_number}`}
           </Typography.Muted>
         </div>
       </div>
 
-      {/* Status Change */}
+      {/* ── Status Change ── */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">{t("status")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2 flex-wrap">
-            {STATUSES.map((s) => (
+            {[
+              "New",
+              "Diagnosing",
+              "In Progress",
+              "Ready for Pickup",
+              "Completed",
+              "Cancelled",
+            ].map((s) => (
               <Button
                 key={s}
                 variant={wo.status === s ? "default" : "outline"}
                 size="sm"
-                onClick={() => changeStatus(s)}
+                onClick={() => handleChangeStatus(s)}
                 disabled={saving || wo.status === s}
                 className="min-h-[var(--ui-touch-target)]"
               >
@@ -717,7 +236,7 @@ export default function WorkOrderDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Status Change Confirmation Dialog */}
+      {/* ── Status Change Confirmation ── */}
       {confirmStatus && (
         <Card className="border-amber-200/50 bg-amber-50/30 dark:border-amber-800/30 dark:bg-amber-950/10">
           <CardContent className="p-4">
@@ -778,7 +297,9 @@ export default function WorkOrderDetailPage() {
                       (confirmStatus === "Completed" ||
                         confirmStatus === "Cancelled"))
                   }
-                  onClick={() => changeStatus(confirmStatus, lossReasonText)}
+                  onClick={() =>
+                    handleChangeStatus(confirmStatus, lossReasonText)
+                  }
                 >
                   {saving
                     ? t("updating")
@@ -790,7 +311,7 @@ export default function WorkOrderDetailPage() {
         </Card>
       )}
 
-      {/* Customer & Vehicle Info */}
+      {/* ── Customer & Vehicle ── */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">{t("customerAndVehicle")}</CardTitle>
@@ -827,8 +348,6 @@ export default function WorkOrderDetailPage() {
               {t("noCustomerOrVehicle")}
             </Typography.Muted>
           )}
-
-          {/* Complaint & Diagnosis Label */}
           {(wo.complaint || wo.diagnosis_label) && (
             <div className="flex flex-col gap-2 p-3 bg-muted/30 rounded-lg">
               {wo.complaint && (
@@ -850,7 +369,7 @@ export default function WorkOrderDetailPage() {
                     variant="outline"
                     className="gap-1.5"
                     style={{
-                      backgroundColor: wo.diagnosis_label?.color
+                      backgroundColor: wo.diagnosis_label.color
                         ? `${wo.diagnosis_label.color}20`
                         : undefined,
                       color: wo.diagnosis_label.color ?? undefined,
@@ -859,9 +378,7 @@ export default function WorkOrderDetailPage() {
                     {wo.diagnosis_label.color && (
                       <span
                         className="size-2 rounded-full"
-                        style={{
-                          backgroundColor: wo.diagnosis_label.color,
-                        }}
+                        style={{ backgroundColor: wo.diagnosis_label.color }}
                       />
                     )}
                     {wo.diagnosis_label.name_mn ?? wo.diagnosis_label.name}
@@ -873,7 +390,7 @@ export default function WorkOrderDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Mechanic Assignment */}
+      {/* ── Mechanic Assignment ── */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">{t("mechanic")}</CardTitle>
@@ -881,7 +398,7 @@ export default function WorkOrderDetailPage() {
         <CardContent>
           <MechanicSelect
             value={wo.mechanic_id ?? ""}
-            onChange={assignMechanic}
+            onChange={handleAssignMechanic}
             mechanics={mechanics}
             disabled={saving}
             showJobCount
@@ -889,7 +406,7 @@ export default function WorkOrderDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Services */}
+      {/* ── Services ── */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">{t("services")}</CardTitle>
@@ -901,14 +418,20 @@ export default function WorkOrderDetailPage() {
               sheetName="Services"
               label={t("exportServices")}
             />
+            {/* Repeat from last visit is on line 3 — keeping it under services button group */}
+          </div>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          {/* Repeat from Last Visit */}
+          <div className="flex gap-2 mb-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowRepeatDialog(true)}
               disabled={
-                !lastVisit ||
-                (lastVisit.services.length === 0 &&
-                  lastVisit.parts.length === 0)
+                !ctx.lastVisit ||
+                (ctx.lastVisit.services.length === 0 &&
+                  ctx.lastVisit.parts.length === 0)
               }
             >
               {t("repeatFromLastVisit")}
@@ -921,8 +444,6 @@ export default function WorkOrderDetailPage() {
               <Plus className="size-4" /> {t("add")}
             </Button>
           </div>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3">
           {showAddService && (
             <div className="flex flex-col gap-2 mb-2">
               <Input
@@ -939,7 +460,7 @@ export default function WorkOrderDetailPage() {
                           <Button
                             key={s.id}
                             onClick={() => {
-                              addServiceLine(s);
+                              handleAddService(s);
                               setShowAddService(false);
                               setServiceSearch("");
                             }}
@@ -976,9 +497,8 @@ export default function WorkOrderDetailPage() {
                   </Typography.Text>
                   <Typography.Muted className="text-xs text-muted-foreground">
                     {s.quantity} x {formatMNT(Number(s.unit_price))}
-                    {Number(s.discount_amount) > 0
-                      ? ` (-${formatMNT(Number(s.discount_amount))})`
-                      : ""}
+                    {Number(s.discount_amount) > 0 &&
+                      ` (-${formatMNT(Number(s.discount_amount))})`}
                   </Typography.Muted>
                   {s.last_sold_price && (
                     <Typography.Text className="text-xs text-amber-600">
@@ -1014,7 +534,7 @@ export default function WorkOrderDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Parts */}
+      {/* ── Parts ── */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">{t("parts")}</CardTitle>
@@ -1064,13 +584,13 @@ export default function WorkOrderDetailPage() {
                         .map((part) => (
                           <Button
                             key={part.id}
-                            onClick={() => {
+                            onClick={() =>
                               setNewPart({
                                 part_name: part.name,
                                 quantity: 1,
                                 unit_price: part.default_price ?? 0,
-                              });
-                            }}
+                              })
+                            }
                             variant="ghost"
                             className="w-full justify-between px-3 py-3"
                           >
@@ -1089,68 +609,53 @@ export default function WorkOrderDetailPage() {
                             </span>
                           </Button>
                         ))}
-                      {partsCatalog.filter(
-                        (p) =>
-                          p.name
-                            .toLowerCase()
-                            .includes(newPart.part_name.toLowerCase()) ||
-                          p.part_number
-                            ?.toLowerCase()
-                            .includes(newPart.part_name.toLowerCase()),
-                      ).length === 0 && (
-                        <div className="p-3 text-sm text-muted-foreground text-center">
-                          No parts found
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
                 <div className="w-20">
-                  <Input
-                    type="number"
-                    placeholder={t("qty")}
+                  <NumericInput
                     value={newPart.quantity}
-                    onChange={(e) => {
-                      const v = e.target.value;
+                    onChange={(qty) =>
                       setNewPart((p) => ({
                         ...p,
-                        quantity: v === "" ? 0 : Number(v) || 0,
-                      }));
-                    }}
-                    onBlur={(e) => {
-                      const n = Number(e.target.value);
-                      if (Number.isNaN(n) || n < 1)
-                        setNewPart((p) => ({ ...p, quantity: 1 }));
-                    }}
-                    className="h-11"
+                        quantity: Math.max(1, Math.round(qty)),
+                      }))
+                    }
+                    size="lg"
+                    align="center"
+                    className="w-14"
+                    aria-label={t("qty")}
+                    min={1}
                   />
                 </div>
                 <div className="w-28">
-                  <Input
-                    type="number"
-                    placeholder={t("unitPrice")}
-                    value={newPart.unit_price || ""}
-                    onChange={(e) =>
+                  <CurrencyInput
+                    value={newPart.unit_price}
+                    onChange={(price) =>
                       setNewPart((p) => ({
                         ...p,
-                        unit_price: Number(e.target.value) || 0,
+                        unit_price: price,
                       }))
                     }
-                    className="h-11"
+                    size="lg"
+                    showPrefix={false}
+                    aria-label={t("unitPrice")}
                   />
-                  {(partPriceHistoryData ?? []).length > 0 && (
-                    <Typography.Text className="mt-1 text-[11px] text-amber-600">
-                      {t("lastPrices", {
-                        prices: (partPriceHistoryData ?? [])
-                          .map((price) => formatMNT(price))
-                          .join(" | "),
-                      })}
-                    </Typography.Text>
-                  )}
+                  {ctx.partPriceHistoryData &&
+                    ctx.partPriceHistoryData.length > 0 && (
+                      <Typography.Text className="mt-1 text-[11px] text-amber-600">
+                        {t("lastPrices", {
+                          prices: ctx.partPriceHistoryData
+                            .map((price) => formatMNT(price))
+                            .join(" | "),
+                        })}
+                      </Typography.Text>
+                    )}
                 </div>
                 <Button
-                  size="default"
-                  onClick={addPartLine}
+                  variant="default"
+                  size="sm"
+                  onClick={handleAddPart}
                   disabled={!newPart.part_name.trim()}
                 >
                   {t("add")}
@@ -1209,7 +714,7 @@ export default function WorkOrderDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Delete Confirmation Dialog */}
+      {/* ── Delete Confirmation ── */}
       {deleteConfirm && (
         <Card className="border-destructive/20 bg-destructive/5">
           <CardContent className="p-4">
@@ -1222,7 +727,7 @@ export default function WorkOrderDetailPage() {
                   </Typography.Text>
                   <Typography.Muted className="text-xs text-muted-foreground mt-1">
                     <strong>{deleteConfirm.name}</strong> will be removed from
-                    this work order. This can be undone by re-adding it.
+                    this work order.
                   </Typography.Muted>
                 </div>
               </div>
@@ -1239,61 +744,7 @@ export default function WorkOrderDetailPage() {
                   size="sm"
                   onClick={() => {
                     setDeleteConfirm(null);
-                    if (deleteConfirm.type === "service") {
-                      // Optimistic: remove immediately
-                      const prev =
-                        queryClient.getQueryData<WorkOrderDetail>(detailKey);
-                      queryClient.setQueryData<WorkOrderDetail>(
-                        detailKey,
-                        (prev) => {
-                          if (!prev) return prev;
-                          return {
-                            ...prev,
-                            services: (prev.services ?? []).filter(
-                              (s) => s.id !== deleteConfirm.id,
-                            ),
-                          };
-                        },
-                      );
-                      removeService.mutate(
-                        { woId, serviceId: deleteConfirm.id },
-                        {
-                          onError: () => {
-                            queryClient.setQueryData<WorkOrderDetail>(
-                              detailKey,
-                              prev!,
-                            );
-                          },
-                        },
-                      );
-                    } else {
-                      // Optimistic: remove immediately
-                      const prev =
-                        queryClient.getQueryData<WorkOrderDetail>(detailKey);
-                      queryClient.setQueryData<WorkOrderDetail>(
-                        detailKey,
-                        (prev) => {
-                          if (!prev) return prev;
-                          return {
-                            ...prev,
-                            parts: (prev.parts ?? []).filter(
-                              (p) => p.id !== deleteConfirm.id,
-                            ),
-                          };
-                        },
-                      );
-                      removePart.mutate(
-                        { woId, partId: deleteConfirm.id },
-                        {
-                          onError: () => {
-                            queryClient.setQueryData<WorkOrderDetail>(
-                              detailKey,
-                              prev!,
-                            );
-                          },
-                        },
-                      );
-                    }
+                    handleRemoveLine(deleteConfirm.type, deleteConfirm.id);
                   }}
                 >
                   {t("remove")}
@@ -1304,7 +755,7 @@ export default function WorkOrderDetailPage() {
         </Card>
       )}
 
-      {/* Status History */}
+      {/* ── Status History ── */}
       {wo.status_history && wo.status_history.length > 0 && (
         <Card>
           <CardHeader>
@@ -1345,7 +796,7 @@ export default function WorkOrderDetailPage() {
         </Card>
       )}
 
-      {/* Photos & Documents */}
+      {/* ── Photos & Documents ── */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
@@ -1396,9 +847,8 @@ export default function WorkOrderDetailPage() {
                     variant="ghost"
                     size="icon-xs"
                     onClick={() => {
-                      if (confirm(t("removePhotoConfirm"))) {
-                        deleteAttachment.mutate(att.id);
-                      }
+                      if (confirm(t("removePhotoConfirm")))
+                        ctx.deleteAttachment.mutate(att.id);
                     }}
                     className="absolute top-1 right-1 rounded-full bg-background/80 text-muted-foreground opacity-0 hover:bg-destructive hover:text-destructive-foreground group-hover:opacity-100"
                     aria-label={t("removePhoto")}
@@ -1412,7 +862,7 @@ export default function WorkOrderDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Invoice Generation */}
+      {/* ── Invoice Generation ── */}
       {(wo.status === "Completed" || wo.status === "Ready for Pickup") && (
         <Card className="border-green-200/50 bg-green-50/30 dark:border-green-800/30 dark:bg-green-950/10">
           <CardContent className="p-4">
@@ -1432,7 +882,7 @@ export default function WorkOrderDetailPage() {
               </div>
               <Button
                 size="default"
-                onClick={generateInvoice}
+                onClick={handleGenerateInvoice}
                 disabled={createInvoice.isPending}
                 className="shrink-0"
               >
@@ -1448,7 +898,7 @@ export default function WorkOrderDetailPage() {
         </Card>
       )}
 
-      {/* Record Payment */}
+      {/* ── Payment ── */}
       {existingInvoiceId && (
         <Card className="border-green-200/50 bg-green-50/30 dark:border-green-800/30 dark:bg-green-950/10">
           <CardContent className="flex p-4 flex-col gap-3">
@@ -1471,8 +921,6 @@ export default function WorkOrderDetailPage() {
                 {invoiceStatus || "pending"}
               </Badge>
             </div>
-
-            {/* Payment history list */}
             {payments.length > 0 && (
               <div className="flex flex-col gap-1.5">
                 {payments.map(
@@ -1494,7 +942,6 @@ export default function WorkOrderDetailPage() {
                 )}
               </div>
             )}
-
             <div className="flex justify-between text-sm border-t pt-2">
               <span>{t("totalPaid")}</span>
               <span className="font-medium">{formatMNT(totalPaid)}</span>
@@ -1507,7 +954,6 @@ export default function WorkOrderDetailPage() {
                 </span>
               </div>
             )}
-
             {balanceDue > 0 && (
               <Button
                 onClick={() => {
@@ -1520,8 +966,7 @@ export default function WorkOrderDetailPage() {
                 <Wallet className="size-4" /> {t("recordPayment")}
               </Button>
             )}
-
-            {maxRefundable > 0 && existingInvoiceId && (
+            {maxRefundable > 0 && (
               <Button
                 onClick={() => setShowRefundDialog(true)}
                 variant="outline"
@@ -1535,6 +980,7 @@ export default function WorkOrderDetailPage() {
         </Card>
       )}
 
+      {/* ── Refund History ── */}
       {existingInvoiceId && totalRefunded > 0 && (
         <Card className="border-amber-200/50 bg-amber-50/30 dark:border-amber-800/30 dark:bg-amber-950/10">
           <CardContent className="flex p-4 flex-col gap-2">
@@ -1580,7 +1026,7 @@ export default function WorkOrderDetailPage() {
         </Card>
       )}
 
-      {/* Refund Dialog */}
+      {/* ── Refund Dialog ── */}
       {existingInvoiceId && orgId && (
         <RefundDialog
           open={showRefundDialog}
@@ -1594,7 +1040,7 @@ export default function WorkOrderDetailPage() {
         />
       )}
 
-      {/* Refund Receipt Dialog */}
+      {/* ── Refund Receipt Dialog ── */}
       {receiptRefund && (
         <Dialog
           open={!!receiptRefund}
@@ -1619,7 +1065,7 @@ export default function WorkOrderDetailPage() {
         </Dialog>
       )}
 
-      {/* Totals */}
+      {/* ── Totals ── */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">{t("totals")}</CardTitle>
@@ -1657,7 +1103,7 @@ export default function WorkOrderDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Profit / Cost Summary */}
+      {/* ── Profit / Cost Summary ── */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">{t("profitAndCost")}</CardTitle>
@@ -1735,7 +1181,7 @@ export default function WorkOrderDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Repeat from Last Visit Dialog */}
+      {/* ── Repeat from Last Visit Dialog ── */}
       <Dialog open={showRepeatDialog} onOpenChange={setShowRepeatDialog}>
         <DialogContent>
           <DialogHeader>
@@ -1744,8 +1190,8 @@ export default function WorkOrderDetailPage() {
           <div className="flex flex-col gap-4">
             <p className="text-sm text-muted-foreground">
               {t("repeatDialogDesc", {
-                services: lastVisit?.services.length ?? 0,
-                parts: lastVisit?.parts.length ?? 0,
+                services: ctx.lastVisit?.services.length ?? 0,
+                parts: ctx.lastVisit?.parts.length ?? 0,
               })}
             </p>
             <div className="flex justify-end gap-2">
@@ -1755,13 +1201,15 @@ export default function WorkOrderDetailPage() {
               >
                 {t("cancel")}
               </Button>
-              <Button onClick={repeatFromLastVisit}>{t("continue")}</Button>
+              <Button onClick={handleRepeatFromLastVisit}>
+                {t("continue")}
+              </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Record Payment Dialog */}
+      {/* ── Record Payment Dialog ── */}
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
         <DialogContent>
           <DialogHeader>
@@ -1771,14 +1219,15 @@ export default function WorkOrderDetailPage() {
             <Field data-invalid={!!paymentForm.formState.errors.amount}>
               <FieldLabel>{t("amount")}</FieldLabel>
               <FieldContent>
-                <Input
-                  type="number"
+                <CurrencyInput
                   min={1}
                   max={balanceDue}
                   aria-invalid={!!paymentForm.formState.errors.amount}
-                  {...paymentForm.register("amount", {
-                    valueAsNumber: true,
-                  })}
+                  value={Number(paymentForm.watch("amount")) || 0}
+                  onChange={(v) =>
+                    paymentForm.setValue("amount", v, { shouldValidate: true })
+                  }
+                  onBlur={() => paymentForm.trigger("amount")}
                 />
                 {paymentForm.formState.errors.amount && (
                   <FieldError>

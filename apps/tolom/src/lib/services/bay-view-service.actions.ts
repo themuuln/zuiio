@@ -140,6 +140,31 @@ export async function updateWorkOrderStatus(
   );
 }
 
+export async function updateWorkOrderNotes(
+  workOrderId: string,
+  notes: string,
+): Promise<void> {
+  return withOrg(async (db, orgId) => {
+    const { error } = await db
+      .from("work_orders")
+      .update({ notes, updated_at: new Date().toISOString() })
+      .eq("id", workOrderId)
+      .eq("organization_id", orgId);
+
+    if (error) throw new Error(error.message ?? "Failed to update notes");
+  });
+}
+
+export async function batchCompleteWorkOrders(workOrderIds: string[]): Promise<{
+  succeeded: number;
+  failed: number;
+  errors: Array<{ woId: string; error: string }>;
+}> {
+  return withOrg((db, orgId) =>
+    service.batchCompleteWorkOrders(db, orgId, workOrderIds),
+  );
+}
+
 export async function updateBayCount(count: number): Promise<number> {
   return withOrg((db, orgId) => service.updateBayCount(db, orgId, count));
 }
@@ -148,6 +173,15 @@ export async function reorderQueue(
   updates: { id: string; queue_order: number }[],
 ): Promise<void> {
   return withOrg((db, orgId) => service.reorderQueue(db, orgId, updates));
+}
+
+export async function reorderWorkOrderHelpers(
+  workOrderId: string,
+  orderedMechanicIds: string[],
+): Promise<void> {
+  return withOrg((db, orgId) =>
+    service.reorderWorkOrderHelpers(db, orgId, workOrderId, orderedMechanicIds),
+  );
 }
 
 export async function updateBayViewPin(

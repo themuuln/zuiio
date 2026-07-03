@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { inventoryKeys } from "@/lib/queries/keys";
 
@@ -30,7 +30,7 @@ export function ThresholdCard({
   const t = useTranslations("inventory");
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(String(currentMinimum));
+  const [value, setValue] = useState(currentMinimum);
 
   const saveThreshold = useMutation({
     mutationFn: async (minimumQuantity: number) => {
@@ -84,10 +84,9 @@ export function ThresholdCard({
           <Skeleton className="h-10 w-full" />
         ) : editing ? (
           <div className="flex items-center gap-2">
-            <Input
-              type="number"
+            <NumericInput
               value={value}
-              onChange={(e) => setValue(e.target.value)}
+              onChange={(qty) => setValue(Math.round(qty))}
               className="h-10 w-24 text-center"
               min={0}
               autoFocus
@@ -95,7 +94,7 @@ export function ThresholdCard({
             <Button
               variant="default"
               size="sm"
-              onClick={() => saveThreshold.mutate(Number(value) || 0)}
+              onClick={() => saveThreshold.mutate(value || 0)}
               disabled={saveThreshold.isPending}
             >
               <Check className="size-4" />

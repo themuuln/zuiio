@@ -88,7 +88,7 @@ export const BayViewViews = React.memo(function BayViewViews({
   if (viewMode === "grid") {
     if (searchedBranchSections) {
       return (
-        <div className="flex-1 min-h-full overflow-y-auto p-5">
+        <div className="flex-1 min-h-full overflow-y-auto p-4">
           {searchedBranchSections.map((section) => (
             <div key={section.branchId} className="mb-6 last:mb-0">
               {searchedBranchSections.length > 1 && (
@@ -115,7 +115,7 @@ export const BayViewViews = React.memo(function BayViewViews({
       );
     }
     return (
-      <div className="flex-1 min-h-full overflow-y-auto p-5">
+        <div className="flex-1 min-h-full overflow-y-auto p-4">
         <GridView
           bays={searchedBays}
           pendingWoIds={pendingWoIds}
@@ -139,7 +139,7 @@ export const BayViewViews = React.memo(function BayViewViews({
   if (viewMode === "kanban") {
     if (searchedBranchSections) {
       return (
-        <div className="flex-1 min-h-0 overflow-y-auto p-5">
+        <div className="flex-1 min-h-0 overflow-y-auto p-4">
           {searchedBranchSections.map((section) => (
             <div key={section.branchId} className="mb-6 last:mb-0">
               {searchedBranchSections.length > 1 && (
@@ -166,7 +166,7 @@ export const BayViewViews = React.memo(function BayViewViews({
       );
     }
     return (
-      <div className="flex-1 min-h-0 overflow-y-auto p-5">
+        <div className="flex-1 min-h-0 overflow-y-auto p-4">
         <KanbanView
           searchedBays={searchedBays}
           assignableBays={[]}
@@ -189,7 +189,7 @@ export const BayViewViews = React.memo(function BayViewViews({
   // ── List view ──
   if (searchedBranchSections) {
     return (
-      <div className="flex-1 min-h-0 overflow-y-auto p-5">
+        <div className="flex-1 min-h-0 overflow-y-auto p-4">
         {searchedBranchSections.map((section) => (
           <div key={section.branchId} className="mb-6 last:mb-0">
             {searchedBranchSections.length > 1 && (
@@ -208,7 +208,7 @@ export const BayViewViews = React.memo(function BayViewViews({
     );
   }
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto p-5">
+        <div className="flex-1 min-h-0 overflow-y-auto p-4">
       <ListView
         bays={searchedBays}
         onOpenDetail={onOpenDetail}

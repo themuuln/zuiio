@@ -13,6 +13,8 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import {
   Select,
   SelectContent,
@@ -262,28 +264,24 @@ export function CreateTransferSheet({
                     <span className="text-sm font-medium flex-1 min-w-0 truncate">
                       {item.part_name}
                     </span>
-                    <Input
-                      type="number"
-                      min="1"
+                    <NumericInput
                       value={item.quantity}
-                      onChange={(e) =>
+                      onChange={(qty) =>
                         updateItem(
                           item.part_id,
                           "quantity",
-                          Math.max(1, Number(e.target.value)),
+                          Math.max(1, Math.round(qty)),
                         )
                       }
+                      min={1}
                       className="w-20 text-center"
                     />
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder={t("transferUnitCost")}
-                      value={item.unit_cost}
-                      onChange={(e) =>
-                        updateItem(item.part_id, "unit_cost", e.target.value)
+                    <CurrencyInput
+                      value={item.unit_cost ? Number(item.unit_cost) : 0}
+                      onChange={(cost) =>
+                        updateItem(item.part_id, "unit_cost", String(cost))
                       }
+                      showPrefix={false}
                       className="w-24"
                     />
                     <Button

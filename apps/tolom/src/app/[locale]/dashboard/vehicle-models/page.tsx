@@ -51,12 +51,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useClientNow } from "@/hooks/use-client-now";
 import type { ExportColumn } from "@/lib/export";
-import { useFuzzySearch } from "@/lib/hooks/use-fuzzy-search";
+import { useFuzzySearch } from "@zuiio/hooks";
 import { vehicleModelKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { cn } from "@/lib/utils";
 import { HighlightText } from "@/lib/utils/search-utils";
-import { VehicleModelFormSheet } from "./_vehicle-model-form-sheet";
+import { VehicleModelFormSheet } from "./_vehicle-model-form-drawer";
 
 interface VehicleModelItem {
   id: string;

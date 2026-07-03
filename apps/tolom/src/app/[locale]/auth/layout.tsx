@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { AuthShowcase } from "@/components/auth/auth-showcase";
 import { Toaster } from "@/components/ui/sonner";
 import { Typography } from "@/components/ui/typography";
 
@@ -30,8 +29,18 @@ export default async function AuthLayout({
         <div className="absolute bottom-10 right-10 size-[300px] rounded-full bg-sky-500/5 blur-[120px] pointer-events-none" />
 
         {/* Content wrapper */}
-        <div className="relative z-10 flex h-full flex-col justify-between">
-          <AuthShowcase />
+        <div className="relative z-10 flex h-full flex-col justify-center items-center">
+          <div className="mx-auto mb-3 flex size-14 items-center justify-center border border-zinc-800 bg-zinc-900">
+            <span className="font-heading text-2xl font-bold tracking-widest text-white">
+              T
+            </span>
+          </div>
+          <Typography.H1 className="text-2xl font-bold tracking-tight text-white">
+            {t("name")}
+          </Typography.H1>
+          <Typography.Muted className="mt-2 text-sm text-zinc-500">
+            {t("tagline")}
+          </Typography.Muted>
         </div>
       </div>
 

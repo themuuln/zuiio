@@ -24,6 +24,7 @@
       "@zuiio/offline": ["./packages/offline/src/index.ts"],
       "@zuiio/realtime": ["./packages/realtime/src/index.ts"],
       "@zuiio/ui": ["./packages/ui/src/index.ts"],
+      "@zuiio/ai-agent": ["./packages/ai-agent/src/index.ts"],
       "@zuiio/export": ["./packages/export/src/index.ts"]
     }
   },

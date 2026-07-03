@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { PartForm } from "@/components/inventory/part-form";
-import { VariantEditorSheet } from "@/components/services/variant-editor-sheet";
+import { VariantEditorSheet } from "@/components/services/variant-editor-drawer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

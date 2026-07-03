@@ -3,6 +3,7 @@
 **Purpose:** Individual mechanic's daily workspace — work orders, clock in/out, KPIs, and admin mechanic-switching.
 
 ## File Structure
+
 ```
 mechanic/
 ├── page.tsx        # Full page: role gating, mechanic selector (admin), dashboard shell
@@ -35,8 +36,6 @@ mechanic/
 
 **Status transitions:** New -> Diagnosing -> In Progress -> Ready for Pickup -> Completed (any status can also go to Cancelled).
 
-**Sidebar tabs:** Registers "stats" (StatusSummary) and "jobs" (RecentList) into the right sidebar via `useRightSidebar()`.
-
 ## Conventions
 
 - All inline — no extracted `_`-prefixed files in this directory. Components are defined locally in `page.tsx`.
@@ -48,6 +47,5 @@ mechanic/
 
 - `@/components/bay-view-v2/pickup-complete-dialog` — PickupCompleteDialog
 - `@/components/mechanic-select` — Admin mechanic dropdown
-- `@/components/new-mechanic-sheet` — Invite mechanic sheet
-- `@/components/sidebar-tabs/*` — StatusSummary, RecentList
+- `@/components/new-mechanic-drawer` — Invite mechanic drawer
 - `../_charts` — MechanicTrendChart (shared across dashboard modules)
