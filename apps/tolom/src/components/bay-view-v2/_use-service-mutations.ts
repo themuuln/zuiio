@@ -120,7 +120,7 @@ export function useServiceMutations({
             notes: null,
             description: null,
             mechanic_id: null,
-            work_order_id: workOrderId,
+            work_order_id: workOrderId!,
             organization_id: null,
             created_by: null,
             created_at: new Date().toISOString(),

@@ -147,4 +147,13 @@ export class TelegramChannel implements Channel {
   const arrayBuffer = await res.arrayBuffer();
   return Buffer.from(arrayBuffer);
  }
+
+ /** Send a chat action (typing, upload_photo, etc.) for a more responsive feel. */
+ async sendChatAction(chatId: number | string, action = "typing"): Promise<void> {
+  await fetch(`${this.baseUrl}/sendChatAction`, {
+   method: "POST",
+   headers: { "Content-Type": "application/json" },
+   body: JSON.stringify({ chat_id: chatId, action }),
+  });
+ }
 }

@@ -114,7 +114,7 @@ export function usePartMutations({
             last_sold_price: item.last_price ?? null,
             notes: null,
             part_number: null,
-            work_order_id: workOrderId,
+            work_order_id: workOrderId!,
             organization_id: null,
             created_by: null,
             created_at: new Date().toISOString(),
