@@ -1,15 +1,55 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import { useColorScheme } from 'react-native';
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { ActivityIndicator, View, StyleSheet } from "react-native";
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { QueryProvider } from "@/lib/query-provider";
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+function RootNavigator() {
+  const { state } = useAuth();
+
+  if (state.status === "loading") {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  const isAuthenticated = state.status === "authenticated";
+
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <>
+      <StatusBar style={isAuthenticated ? "dark" : "dark"} />
+      <Stack>
+        <Stack.Protected guard={isAuthenticated}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        </Stack.Protected>
+        <Stack.Protected guard={!isAuthenticated}>
+          <Stack.Screen
+            name="login"
+            options={{ headerShown: false, animation: "fade" }}
+          />
+        </Stack.Protected>
+      </Stack>
+    </>
   );
 }
+
+export default function RootLayout() {
+  return (
+    <QueryProvider>
+      <AuthProvider>
+        <RootNavigator />
+      </AuthProvider>
+    </QueryProvider>
+  );
+}
+
+const styles = StyleSheet.create({
+  loading: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});

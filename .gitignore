@@ -4,3 +4,10 @@ dist
 .next
 # next-agents-md
 .next-docs/
+*.env
+*.env.local
+.expo/
+dist/
+web-build/
+*.tsbuildinfo
+expo-env.d.ts
