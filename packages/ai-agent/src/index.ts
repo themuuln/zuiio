@@ -3,6 +3,7 @@ export { generateEveningReport } from "./report-gen";
 export { nlQuery } from "./nl-query";
 export { categorizeExpense } from "./categorize";
 export { runWithTools } from "./tool-runner";
+export type { Message } from "./tool-runner";
 export type {
   ReportInput,
   NLQueryInput,

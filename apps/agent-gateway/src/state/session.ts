@@ -20,7 +20,7 @@ export interface SessionState {
   tokenCount: number;
 }
 
-const MAX_SESSION_MESSAGES = 50;
+export const MAX_SESSION_MESSAGES = 50;
 const SESSION_TTL_HOURS = 24;
 
 /**

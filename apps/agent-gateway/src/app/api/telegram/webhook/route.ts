@@ -6,7 +6,7 @@ import { DeepSeekProvider } from "@/providers/deepseek";
 import { GptMiniProvider } from "@/providers/gpt-mini";
 import { AiGateway, type GatewayTool, type ToolContext } from "@/providers/types";
 import { stageAction, confirmAction, rejectAction } from "@/runtime/confirmation";
-import { loadSession, appendToSession } from "@/state/session";
+import { loadSession, saveSession, MAX_SESSION_MESSAGES } from "@/state/session";
 import { checkDailyBudget, recordUsageAtomic, REQUEST_LIMITS } from "@/state/budget";
 import { createServiceClient } from "@/lib/supabase";
 import { deepSeekConfig, openAiConfig } from "@/lib/env";
@@ -63,19 +63,318 @@ ${groupWarning}`;
 
 // ─── Tools ───────────────────────────────────────────────────────────────────
 
-function tolomTools(_context: ToolContext): GatewayTool[] {
+function tolomTools(context: ToolContext): GatewayTool[] {
+  const { supabase, orgId } = context;
+
+  // Shared date helpers — computed once per call
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const yesterdayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1).toISOString();
+  const yesterdayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59, 999).toISOString();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
+
   return [
+    // ── getDailySummary ──────────────────────────────────────────────────
     {
       name: "getDailySummary",
-      description: "Өдрийн борлуулалт, зарлага, идэвхтэй захиалга",
+      description: "Өдрийн хураангуй: орлого, зарлага, идэвхтэй захиалга, шинэ харилцагч",
       parameters: [],
-      execute: async () => ({ message: "Өдрийн хураангуй удахгүй бэлэн болно." }),
+      execute: async () => {
+        try {
+          const [todayRevenueInv, todayRevenueLegacy, yesterdayRevenueInv, yesterdayRevenueLegacy,
+            monthRevenueInv, monthRevenueLegacy, activeWO, expensesToday, newCustomers] =
+            await Promise.all([
+              supabase.from("invoice_payments").select("amount, invoices!inner(organization_id)")
+                .eq("invoices.organization_id", orgId).gte("paid_at", todayStart),
+              supabase.from("payments").select("amount").eq("organization_id", orgId)
+                .gte("paid_at", todayStart).is("deleted_at", null),
+              supabase.from("invoice_payments").select("amount, invoices!inner(organization_id)")
+                .eq("invoices.organization_id", orgId)
+                .gte("paid_at", yesterdayStart).lte("paid_at", yesterdayEnd),
+              supabase.from("payments").select("amount").eq("organization_id", orgId)
+                .gte("paid_at", yesterdayStart).lte("paid_at", yesterdayEnd).is("deleted_at", null),
+              supabase.from("invoice_payments").select("amount, invoices!inner(organization_id)")
+                .eq("invoices.organization_id", orgId)
+                .gte("paid_at", monthStart).lte("paid_at", monthEnd),
+              supabase.from("payments").select("amount").eq("organization_id", orgId)
+                .gte("paid_at", monthStart).lte("paid_at", monthEnd).is("deleted_at", null),
+              supabase.from("work_orders").select("id", { count: "exact", head: true })
+                .eq("organization_id", orgId).is("deleted_at", null)
+                .not("status", "in", '("Completed","Cancelled")'),
+              supabase.from("expenses").select("amount").eq("organization_id", orgId)
+                .gte("expense_date", todayStart).is("deleted_at", null),
+              supabase.from("customers").select("id", { count: "exact", head: true })
+                .eq("organization_id", orgId).is("deleted_at", null)
+                .gte("created_at", monthStart),
+            ]);
+
+          const sum = (rows: { amount: unknown }[] | null) =>
+            (rows ?? []).reduce((s, r) => s + (Number(r.amount) || 0), 0);
+
+          return {
+            revenueToday: sum(todayRevenueInv.data) + sum(todayRevenueLegacy.data),
+            revenueYesterday: sum(yesterdayRevenueInv.data) + sum(yesterdayRevenueLegacy.data),
+            revenueMonth: sum(monthRevenueInv.data) + sum(monthRevenueLegacy.data),
+            activeWorkOrders: activeWO.count ?? 0,
+            expensesToday: sum(expensesToday.data),
+            newCustomersMonth: newCustomers.count ?? 0,
+          };
+        } catch (err) {
+          return { error: "Өдрийн хураангуй авахад алдаа гарлаа" };
+        }
+      },
     },
+
+    // ── getActiveWorkOrders ──────────────────────────────────────────────
     {
       name: "getActiveWorkOrders",
-      description: "Идэвхтэй захиалгын жагсаалт + төлөв",
+      description: "Идэвхтэй захиалгын жагсаалт: төлөв, харилцагч, улсын дугаар, дүн",
       parameters: [],
-      execute: async () => ({ message: "Идэвхтэй захиалгын жагсаалт удахгүй бэлэн болно." }),
+      execute: async () => {
+        try {
+          const { data: orders, error } = await supabase
+            .from("work_orders")
+            .select(`
+              id, status, total, created_at, bay_number, description,
+              customers:customer_id ( full_name, phone ),
+              vehicles:vehicle_id ( plate_number, make, model )
+            `)
+            .eq("organization_id", orgId)
+            .is("deleted_at", null)
+            .not("status", "in", '("Completed","Cancelled")')
+            .order("created_at", { ascending: false })
+            .limit(20);
+
+          if (error) return { error: "Захиалга авахад алдаа гарлаа" };
+
+          return (orders ?? []).map((wo: Record<string, unknown>) => ({
+            id: wo.id,
+            status: wo.status,
+            total: Number(wo.total) || 0,
+            createdAt: wo.created_at,
+            bayNumber: wo.bay_number,
+            description: wo.description,
+            customerName: (wo.customers as Record<string, unknown> | null)?.full_name ?? "—",
+            customerPhone: (wo.customers as Record<string, unknown> | null)?.phone ?? "—",
+            vehiclePlate: (wo.vehicles as Record<string, unknown> | null)?.plate_number ?? "—",
+            vehicleInfo: [wo.vehicles as Record<string, unknown> | null]
+              .filter(Boolean)
+              .map((v) => [v!.make, v!.model].filter(Boolean).join(" "))
+              .join("") || "—",
+          }));
+        } catch {
+          return { error: "Идэвхтэй захиалга авахад алдаа гарлаа" };
+        }
+      },
+    },
+
+    // ── getCustomerHistory ───────────────────────────────────────────────
+    {
+      name: "getCustomerHistory",
+      description: "Харилцагчийн түүх: дугаар эсвэл нэрээр хайх",
+      parameters: [
+        { name: "query", type: "string", description: "Улсын дугаар эсвэл харилцагчийн нэр", required: true },
+      ],
+      execute: async (args) => {
+        const q = String(args.query ?? "").trim();
+        if (!q) return { error: "Хайх утга оруулна уу" };
+
+        try {
+          // Try plate match first
+          const { data: vehicles } = await supabase
+            .from("vehicles")
+            .select("customer_id, plate_number, make, model, year, total_visits, last_visit_at")
+            .eq("organization_id", orgId)
+            .ilike("plate_number", `%${q}%`)
+            .is("deleted_at", null)
+            .limit(5);
+
+          if (vehicles && vehicles.length > 0) {
+            const customerIds = [...new Set(vehicles.map((v) => v.customer_id).filter(Boolean))];
+            const { data: customers } = customerIds.length > 0
+              ? await supabase.from("customers").select("id, full_name, phone, total_visits, last_visit_at")
+                .eq("organization_id", orgId).in("id", customerIds).is("deleted_at", null)
+              : { data: [] };
+            const custMap = new Map((customers ?? []).map((c) => [c.id, c]));
+            return vehicles.map((v) => {
+              const cust = v.customer_id ? custMap.get(v.customer_id) : null;
+              return {
+                matchType: "plate",
+                plateNumber: v.plate_number,
+                vehicle: [v.make, v.model].filter(Boolean).join(" ") + (v.year ? ` (${v.year})` : ""),
+                customerName: (cust as Record<string, unknown> | null)?.full_name ?? "—",
+                phone: (cust as Record<string, unknown> | null)?.phone ?? "—",
+                totalVisits: v.total_visits ?? 0,
+                lastVisit: v.last_visit_at ?? (cust as Record<string, unknown> | null)?.last_visit_at ?? null,
+              };
+            });
+          }
+
+          // Fallback: name search
+          const { data: customers } = await supabase
+            .from("customers")
+            .select("id, full_name, first_name, last_name, phone, total_visits, last_visit_at")
+            .eq("organization_id", orgId)
+            .is("deleted_at", null)
+            .or(`full_name.ilike.%${q}%,first_name.ilike.%${q}%,last_name.ilike.%${q}%,phone.ilike.%${q}%`)
+            .limit(5);
+
+          if (!customers || customers.length === 0) return { error: "Харилцагч олдсонгүй" };
+
+          const custIds = customers.map((c) => c.id);
+          const { data: custVehicles } = await supabase
+            .from("vehicles")
+            .select("customer_id, plate_number, make, model, year, total_visits, last_visit_at")
+            .eq("organization_id", orgId)
+            .in("customer_id", custIds)
+            .is("deleted_at", null);
+
+          const vehByCust = new Map<string, typeof custVehicles>();
+          for (const v of custVehicles ?? []) {
+            const cid = v.customer_id as string;
+            if (!vehByCust.has(cid)) vehByCust.set(cid, []);
+            vehByCust.get(cid)!.push(v);
+          }
+
+          return customers.map((c) => {
+            const vehs = vehByCust.get(c.id) ?? [];
+            return {
+              matchType: "name",
+              customerName: (c.full_name ?? [c.first_name, c.last_name].filter(Boolean).join(" ")) || "—",
+              phone: c.phone ?? "—",
+              totalVisits: c.total_visits ?? 0,
+              lastVisit: c.last_visit_at ?? null,
+              vehicles: vehs.map((v) => ({
+                plateNumber: v.plate_number,
+                info: [v.make, v.model].filter(Boolean).join(" ") + (v.year ? ` (${v.year})` : ""),
+              })),
+            };
+          });
+        } catch {
+          return { error: "Харилцагч хайхад алдаа гарлаа" };
+        }
+      },
+    },
+
+    // ── getInvoiceStatus ─────────────────────────────────────────────────
+    {
+      name: "getInvoiceStatus",
+      description: "Тухайн сарын нэхэмжлэлийн хураангуй: нийт, төлөгдсөн, үлдэгдэл",
+      parameters: [],
+      execute: async () => {
+        try {
+          const { data: invoices, error } = await supabase
+            .from("invoices")
+            .select("total, amount_paid, balance_due, status")
+            .eq("organization_id", orgId)
+            .is("deleted_at", null)
+            .gte("issued_at", monthStart)
+            .lte("issued_at", monthEnd);
+
+          if (error) return { error: "Нэхэмжлэл авахад алдаа гарлаа" };
+
+          const rows = invoices ?? [];
+          const totalInvoiced = rows.reduce((s, r) => s + (Number(r.total) || 0), 0);
+          const totalPaid = rows.reduce((s, r) => s + (Number(r.amount_paid) || 0), 0);
+          const totalUnpaid = rows.reduce((s, r) => s + (Number(r.balance_due) || 0), 0);
+          const countByStatus: Record<string, number> = {};
+          for (const r of rows) {
+            const st = r.status ?? "unknown";
+            countByStatus[st] = (countByStatus[st] ?? 0) + 1;
+          }
+
+          return {
+            totalInvoiced,
+            totalPaid,
+            totalUnpaid,
+            invoiceCount: rows.length,
+            byStatus: countByStatus,
+          };
+        } catch {
+          return { error: "Нэхэмжлэлийн хураангуй авахад алдаа гарлаа" };
+        }
+      },
+    },
+
+    // ── getExpensesSummary ───────────────────────────────────────────────
+    {
+      name: "getExpensesSummary",
+      description: "Тухайн сарын зарлагын хураангуй, ангилалаар",
+      parameters: [],
+      execute: async () => {
+        try {
+          const { data: expenses, error } = await supabase
+            .from("expenses")
+            .select(`
+              amount, category_id, expense_date,
+              expense_categories:category_id ( name )
+            `)
+            .eq("organization_id", orgId)
+            .is("deleted_at", null)
+            .gte("expense_date", monthStart)
+            .lte("expense_date", monthEnd);
+
+          if (error) return { error: "Зарлага авахад алдаа гарлаа" };
+
+          const rows = expenses ?? [];
+          const byCategory: Record<string, number> = {};
+          let total = 0;
+          for (const r of rows) {
+            const amount = Number(r.amount) || 0;
+            total += amount;
+            const catName = ((r.expense_categories as unknown as { name?: string } | null)?.name) ?? "Бусад";
+            byCategory[catName] = (byCategory[catName] ?? 0) + amount;
+          }
+
+          return { total, byCategory, expenseCount: rows.length };
+        } catch {
+          return { error: "Зарлагын хураангуй авахад алдаа гарлаа" };
+        }
+      },
+    },
+
+    // ── getAppointments ──────────────────────────────────────────────────
+    {
+      name: "getAppointments",
+      description: "Өнөөдрийн болон ирэх цагийн хуваариуд",
+      parameters: [],
+      execute: async () => {
+        try {
+          const { data: appointments, error } = await supabase
+            .from("appointments")
+            .select(`
+              id, title, scheduled_at, end_at, status, notes,
+              customers:customer_id ( full_name, phone ),
+              vehicles:vehicle_id ( plate_number, make, model )
+            `)
+            .eq("organization_id", orgId)
+            .is("deleted_at", null)
+            .gte("scheduled_at", todayStart)
+            .order("scheduled_at", { ascending: true })
+            .limit(30);
+
+          if (error) return { error: "Хуваарь авахад алдаа гарлаа" };
+
+          return (appointments ?? []).map((a: Record<string, unknown>) => ({
+            id: a.id,
+            title: a.title,
+            scheduledAt: a.scheduled_at,
+            endAt: a.end_at,
+            status: a.status,
+            notes: a.notes,
+            customerName: (a.customers as Record<string, unknown> | null)?.full_name ?? "—",
+            customerPhone: (a.customers as Record<string, unknown> | null)?.phone ?? "—",
+            vehiclePlate: (a.vehicles as Record<string, unknown> | null)?.plate_number ?? "—",
+            vehicleInfo: [a.vehicles as Record<string, unknown> | null]
+              .filter(Boolean)
+              .map((v) => [v!.make, v!.model].filter(Boolean).join(" "))
+              .join("") || "—",
+          }));
+        } catch {
+          return { error: "Хуваарь авахад алдаа гарлаа" };
+        }
+      },
     },
   ];
 }
@@ -260,6 +559,9 @@ async function handleUserMessage(chatId: number, userId: number, text: string, c
     productType = resolved.context.productType;
 
     await sb.from("telegram_links").update({ updated_at: new Date().toISOString() })
+      .eq("telegram_chat_id", chatId)
+      .eq("telegram_user_id", userId)
+      .eq("is_active", true);
   } catch (err) {
     await tg.sendMessage(chatId, err instanceof Error ? err.message : "Таны Telegram холбогдоогүй байна. Эхлээд QR код уншуулна уу.");
     return;
@@ -278,16 +580,31 @@ async function handleUserMessage(chatId: number, userId: number, text: string, c
   await tg.sendMessage(chatId, "⏳ Түр хүлээнэ үү...");
 
   try {
+    // Load prior conversation for context-aware responses
+    const session = await loadSession(sb, context.orgId, chatId, userId);
+
+    const sanitizedText = sanitizeUserInput(text);
     const response = await getProviders().runWithTools({
       system: systemPromptFor(productType, context.orgId, chatType),
-      userMessage: sanitizeUserInput(text),
+      userMessage: sanitizedText,
       tools,
       context,
       maxRounds: REQUEST_LIMITS.maxToolRounds,
+      conversationHistory: session.messages.length > 0 ? session.messages : undefined,
     });
 
     await tg.sendMessage(chatId, response);
-    await appendToSession(sb, context.orgId, chatId, userId, text, response, 500);
+
+    // Build updated message list and trim before saving
+    const updatedMessages = [
+      ...session.messages,
+      { role: "user" as const, content: sanitizedText },
+      { role: "assistant" as const, content: response },
+    ];
+    const trimmed = updatedMessages.length > MAX_SESSION_MESSAGES
+      ? updatedMessages.slice(updatedMessages.length - MAX_SESSION_MESSAGES)
+      : updatedMessages;
+    await saveSession(sb, context.orgId, chatId, userId, trimmed, session.tokenCount + 500);
     await recordUsageAtomic(sb, context.orgId, 500);
   } catch (err) {
     console.error("Agent error:", err);
