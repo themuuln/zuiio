@@ -24,6 +24,7 @@ import { ProfileForm } from "./profile-form";
 import { ReportEmailSettings } from "./report-email-settings";
 import { RolesDrawer } from "./roles-drawer";
 import { SettingsShell } from "./settings-shell";
+import { TelegramLink } from "./telegram-link";
 import { SmtpSettings } from "./smtp-settings";
 
 const SUPERADMIN_EMAIL = "zerone.offical@gmail.com";
@@ -201,6 +202,12 @@ export default async function SettingsPage() {
           <ProfileForm initialFullName={profile?.full_name ?? ""} />
         </CardContent>
       </Card>
+
+      {/* Telegram Integration */}
+      <TelegramLink
+        organizationId={organizationId}
+        userId={userId}
+      />
 
       {/* Roles & Permissions */}
       {canManageRoles && (
