@@ -19,9 +19,6 @@
 [submodule "apps/tumurch"]
 	path = apps/tumurch
 	url = https://github.com/themuuln/tumurch-app
-[submodule "apps/zer-app"]
-	path = apps/zer-app
-	url = https://github.com/themuuln/zer-app.git
 [submodule "apps/zerbu"]
 	path = apps/zerbu
 	url = https://github.com/themuuln/zerbu.git
