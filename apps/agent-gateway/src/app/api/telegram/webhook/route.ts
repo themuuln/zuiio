@@ -8,6 +8,7 @@ import { AiGateway, type GatewayTool, type ToolContext } from "@/providers/types
 import { stageAction, confirmAction, rejectAction } from "@/runtime/confirmation";
 import { loadSession, saveSession, MAX_SESSION_MESSAGES } from "@/state/session";
 import { checkDailyBudget, recordUsageAtomic, REQUEST_LIMITS } from "@/state/budget";
+import { checkRateLimit, RATE_LIMITS } from "@/state/rate-limit";
 import { withAudit } from "@/state/audit";
 import { createServiceClient } from "@/lib/supabase";
 import { deepSeekConfig, openAiConfig } from "@/lib/env";
@@ -636,6 +637,14 @@ async function handleUserMessage(chatId: number, userId: number, text: string, c
     await tg.sendMessage(chatId, budget.reason!);
     return;
   }
+
+  // Rate limiting — check per-org message frequency
+  const rateLimit = checkRateLimit(context.orgId, RATE_LIMITS.messagesPerMinute);
+  if (!rateLimit.allowed) {
+    await tg.sendMessage(chatId, `⏳ Хэт олон хүсэлт илгээсэн байна. ${Math.ceil(rateLimit.resetInMs / 1000)} секундын дараа дахин оролдоно уу.`);
+    return;
+  }
+
 
   // Select tools
   const rawTools = productType === "tolom" ? tolomTools(context) : zerTools(context);
