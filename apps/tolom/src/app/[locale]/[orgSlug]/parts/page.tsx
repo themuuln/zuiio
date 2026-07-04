@@ -143,6 +143,7 @@ async function fetchCatalog(slug: string): Promise<CatalogData | null> {
         part_count: 0,
       });
     }
+    // biome-ignore lint/style/noNonNullAssertion: set on line 139
     const modelMapEntry = modelMap.get(vm.id)!;
     modelMapEntry.part_count++;
 
@@ -157,6 +158,7 @@ async function fetchCatalog(slug: string): Promise<CatalogData | null> {
         part_count: 0,
       });
     }
+    // biome-ignore lint/style/noNonNullAssertion: set on line 152
     const modelSetEntry = modelSet.get(vm.id)!;
     modelSetEntry.part_count++;
 

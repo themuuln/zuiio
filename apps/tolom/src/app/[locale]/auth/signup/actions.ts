@@ -10,6 +10,7 @@ import { reportServerError } from "@/lib/sentry-report-server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { signupSchema } from "@/lib/validation/auth-schemas";
+// biome-ignore lint/style/noRestrictedImports: TablesInsert is only defined in database.types
 import type { TablesInsert } from "@/lib/database.types";
 
 type SignupState = ActionState<{

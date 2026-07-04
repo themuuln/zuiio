@@ -28,11 +28,6 @@
     "indentStyle": "space",
     "indentWidth": 2
   },
-  "css": {
-    "parser": {
-      "tailwindDirectives": true
-    }
-  },
   "linter": {
     "enabled": true,
     "rules": {
@@ -59,7 +54,10 @@
         "noConsole": {
           "level": "error",
           "options": {
-            "allow": ["warn", "error"]
+            "allow": [
+              "warn",
+              "error"
+            ]
           }
         },
         "noExplicitAny": "error",
@@ -79,6 +77,24 @@
       "react": "recommended"
     }
   },
+  "overrides": [
+    {
+      "includes": [
+        "src/test/**"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off",
+            "noThenProperty": "off"
+          },
+          "complexity": {
+            "noBannedTypes": "off"
+          }
+        }
+      }
+    }
+  ],
   "assist": {
     "actions": {
       "source": {
