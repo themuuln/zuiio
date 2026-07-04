@@ -5,10 +5,7 @@ import { requireAppContext } from "@/lib/erp";
 import { checkOrgSetting } from "@/lib/org-settings";
 import { BranchesContent } from "./branches-content";
 
-export const unstable_instant = {
-  prefetch: "static",
-  unstable_disableValidation: true,
-};
+
 
 export default async function BranchesPage() {
   const { supabase, organizationId, permissions } = await requireAppContext();

@@ -1,0 +1,10 @@
+{
+  "extends": "@zuiio/config/tsconfig",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "paths": {
+      "@zuiio/auth": ["./src/index.ts"]
+    }
+  },
+  "include": ["src"]
+}

@@ -1,23 +1,16 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
-import type React from "react";
-import { Button } from "@/components/ui/button";
-import { CurrencyInput } from "@/components/ui/currency-input";
-import { NumericInput } from "@/components/ui/numeric-input";
+import { parseCurrencyInput } from "@zuiio/core";
+import { useCallback, useState } from "react";
+import { InlineEditableField } from "@/components/bay-view-v2/_inline-editable-field";
 import { Typography } from "@/components/ui/typography";
 import { formatCurrency } from "@/lib/utils";
 
 /**
- * A reusable service line row for editing a single service item.
+ * A service line row displaying item name, quantity, unit price, and total.
  *
- * Handles quantity, price, discount, and final price display.
- * Used in the bay-view detail drawer, wizard, and work-order detail drawer.
- *
- * @remarks
- * Price editing uses CurrencyInput (type="text" + inputMode="numeric")
- * to avoid React's broken `<input type="number">` controlled input behavior
- * where intermediate states (e.g. typing "1" before "2") get lost.
+ * When edit callbacks are provided (editable mode), quantity and unit price
+ * become inline-editable fields. Otherwise renders as read-only.
  */
 export interface ServiceLineRowProps {
   /** Service name */
@@ -25,35 +18,19 @@ export interface ServiceLineRowProps {
   /** Mongolian name (optional — shown when locale is "mn") */
   nameMn?: string | null;
   /** Quantity */
-  quantity: number;
-  /** Unit price */
-  unitPrice: number;
-  /** Final price (unitPrice * quantity - discounts) */
+  quantity?: number;
+  /** Unit price (before discounts) — shown in editable mode */
+  unitPrice?: number;
+  /** Final price (quantity × unitPrice − discounts) */
   finalPrice: number;
-  /** Discount amount in MNT */
-  discountAmount?: number;
-  /** Discount percentage */
-  discountPercent?: number;
-  /** Last price from price history (for comparison badge) */
-  lastPrice?: number;
   /** Locale for name display */
   locale?: string;
-  /** Disable editing */
-  readOnly?: boolean;
-  /** Quantity change callback */
-  onQuantityChange?: (qty: number) => void;
-  /** Price change callback */
-  onPriceChange?: (price: number) => void;
-  /** Discount amount change callback */
-  onDiscountAmountChange?: (amount: number) => void;
-  /** Discount percent change callback */
-  onDiscountPercentChange?: (percent: number) => void;
-  /** Delete callback */
-  onDelete?: () => void;
-  /** Delete button aria label */
-  deleteLabel?: string;
-  /** Translations function for dynamic labels */
-  t?: (key: string) => string;
+  /** Called when quantity is saved (enables editable mode) */
+  onEditQtySave?: (id: string, qty: number) => Promise<void>;
+  /** Called when price is saved (enables editable mode) */
+  onEditPriceSave?: (id: string, price: number) => Promise<void>;
+  /** Service ID — required when edit callbacks are provided */
+  serviceId?: string;
 }
 
 export function ServiceLineRow({
@@ -62,103 +39,95 @@ export function ServiceLineRow({
   quantity,
   unitPrice,
   finalPrice,
-  discountAmount,
-  discountPercent,
-  lastPrice,
   locale = "en",
-  readOnly = false,
-  onQuantityChange,
-  onPriceChange,
-  onDiscountAmountChange,
-  onDiscountPercentChange,
-  onDelete,
-  deleteLabel = "Remove",
-  t,
+  onEditQtySave,
+  onEditPriceSave,
+  serviceId,
 }: ServiceLineRowProps) {
   const displayName = locale === "mn" && nameMn ? nameMn : name;
-  const hasDiscount = (discountAmount ?? 0) > 0 || (discountPercent ?? 0) > 0;
-  // Label for translations
-  const tt = t ?? ((k: string) => k);
+
+  const isEditable = !!(onEditQtySave || onEditPriceSave) && !!serviceId;
+
+  // Optimistic drafts for live displayTotal preview while editing
+  const [draftQty, setDraftQty] = useState<number | null>(null);
+  const [draftPrice, setDraftPrice] = useState<number | null>(null);
+
+  const handleQtyChange = useCallback((val: number) => {
+    setDraftQty(val);
+  }, []);
+
+  const handlePriceChange = useCallback((val: number) => {
+    setDraftPrice(val);
+  }, []);
+
+  const handleQtySave = useCallback(
+    (qty: number) => {
+      setDraftQty(null);
+      if (serviceId && onEditQtySave) {
+        void onEditQtySave(serviceId, Math.max(1, Math.round(qty)));
+      }
+    },
+    [serviceId, onEditQtySave],
+  );
+
+  const handlePriceSave = useCallback(
+    (price: number) => {
+      setDraftPrice(null);
+      if (serviceId && onEditPriceSave) {
+        void onEditPriceSave(serviceId, Math.max(0, price));
+      }
+    },
+    [serviceId, onEditPriceSave],
+  );
+
+  // Use optimistic drafts while editing for live preview, fall back to props
+  const effectiveQty = draftQty ?? quantity;
+  const effectivePrice = draftPrice ?? unitPrice;
+
+  const displayTotal =
+    isEditable && effectiveQty != null && effectivePrice != null
+      ? formatCurrency(effectiveQty * effectivePrice)
+      : formatCurrency(finalPrice);
 
   return (
-    <div className="group flex flex-wrap items-center gap-2 p-3 hover:bg-muted/20 rounded-lg transition-colors">
-      {/* Name */}
-      <div className="flex-1 min-w-[120px]">
-        <Typography.Text className="text-sm font-medium truncate block">
-          {displayName}
-        </Typography.Text>
-        {lastPrice && lastPrice > 0 && lastPrice !== unitPrice && (
-          <Typography.Text
-            className={`text-[11px] ${unitPrice <= lastPrice ? "text-green-600" : "text-amber-600"}`}
-          >
-            {unitPrice <= lastPrice ? "✓ " : "↑ "}
-            {`Last: ${formatCurrency(lastPrice)}`}
-          </Typography.Text>
-        )}
-      </div>
+    <div className="flex items-center justify-between gap-2 p-3 rounded-lg">
+      <Typography.Text className="text-sm font-medium truncate min-w-0 flex-1">
+        {displayName}
+      </Typography.Text>
 
-      {/* Quantity */}
-      {readOnly ? (
-        <span className="text-sm text-muted-foreground min-w-[3ch] text-center">
-          {quantity}
-        </span>
+      {isEditable ? (
+        <div className="flex items-center gap-1.5 shrink-0">
+          {onEditQtySave && quantity != null && (
+            <>
+              <InlineEditableField
+                value={quantity}
+                onSave={handleQtySave}
+                onChange={handleQtyChange}
+                type="number"
+                className="w-10 text-center text-xs font-semibold tabular-nums"
+              />
+              <span className="text-xs text-muted-foreground">×</span>
+            </>
+          )}
+          {onEditPriceSave && unitPrice != null && (
+            <InlineEditableField
+              value={unitPrice}
+              onSave={handlePriceSave}
+              onChange={handlePriceChange}
+              formatDisplay={formatCurrency}
+              parseInput={parseCurrencyInput}
+              type="number"
+              className="w-16 text-right text-xs font-semibold tabular-nums"
+            />
+          )}
+          <span className="text-xs font-semibold tabular-nums text-muted-foreground ml-0.5">
+            {displayTotal}
+          </span>
+        </div>
       ) : (
-        <NumericInput
-          value={quantity}
-          onChange={(qty) => onQuantityChange?.(Math.max(1, Math.round(qty)))}
-          min={1}
-          size="lg"
-          align="center"
-          className="w-16"
-          aria-label="Quantity"
-        />
-      )}
-
-      {/* Unit Price */}
-      {readOnly ? (
-        <span className="text-sm font-semibold tabular-nums min-w-[5rem] text-right">
-          {formatCurrency(unitPrice)}
+        <span className="text-sm font-semibold tabular-nums shrink-0">
+          {formatCurrency(finalPrice)}
         </span>
-      ) : (
-        <CurrencyInput
-          value={unitPrice}
-          onChange={onPriceChange}
-          size="lg"
-          className="w-28"
-          aria-label="Price"
-        />
-      )}
-
-      {/* Discount */}
-      {!readOnly && onDiscountAmountChange && (
-        <CurrencyInput
-          value={discountAmount ?? 0}
-          onChange={onDiscountAmountChange}
-          size="lg"
-          className="w-24"
-          placeholder="Disc."
-          aria-label="Discount"
-        />
-      )}
-
-      {/* Final price */}
-      <span
-        className={`w-24 text-right text-sm font-semibold tabular-nums shrink-0 ${hasDiscount ? "text-primary" : ""}`}
-      >
-        {formatCurrency(finalPrice)}
-      </span>
-
-      {/* Delete */}
-      {!readOnly && onDelete && (
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          onClick={onDelete}
-          className="min-w-[44px]"
-          aria-label={deleteLabel}
-        >
-          <Trash2 className="size-5 text-destructive" />
-        </Button>
       )}
     </div>
   );

@@ -310,7 +310,6 @@ export function DashboardShell({
   const prevPathRef = React.useRef(pathname);
 
   // Sync ?branch= URL param into context on mount
-  // biome-ignore lint/correctness/useExhaustiveDependencies: mount-only sync
   React.useEffect(() => {
     if (isBranchScoped) return;
     const urlBranch = searchParams.get("branch");
@@ -320,7 +319,7 @@ export function DashboardShell({
         setSelectedBranchId(urlBranch);
       }
     }
-  }, []);
+  }, [isBranchScoped, searchParams, branches, selectedBranchId, setSelectedBranchId]);
 
   const handleBranchChange = (newId: string) => {
     if (newId === "__create") {

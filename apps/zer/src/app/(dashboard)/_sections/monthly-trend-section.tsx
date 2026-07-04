@@ -1,3 +1,4 @@
+import { withDbCapture } from "@zuiio/capture";
 import { addDays, startOfDay, subDays } from "date-fns";
 import { withBranchFilter } from "@/lib/branches";
 import { createClient } from "@/lib/supabase/server";
@@ -19,12 +20,15 @@ export async function MonthlyTrendSection({
   const thirtyDaysAgo = subDays(today, 30);
 
   const { data: monthlySales } = await withBranchFilter(
-    supabase
-      .from("sales")
-      .select("total_amount, sale_date")
-      .eq("organization_id", orgId)
-      .gte("sale_date", thirtyDaysAgo.toISOString())
-      .lt("sale_date", tomorrow.toISOString()),
+    withDbCapture(
+      "dashboard_monthly_sales",
+      supabase
+        .from("sales")
+        .select("total_amount, sale_date")
+        .eq("organization_id", orgId)
+        .gte("sale_date", thirtyDaysAgo.toISOString())
+        .lt("sale_date", tomorrow.toISOString()),
+    ),
     branchId,
     isBranchScoped,
   );

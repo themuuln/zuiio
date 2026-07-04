@@ -21,6 +21,7 @@ export const ENTITY_PATHS = {
   categories: ["/inventory/categories"],
   customers: ["/customers", "/suppliers", "/sales/new"],
   suppliers: ["/customers", "/suppliers", "/sales/new"],
+  hr: ["/hr"],
   accounting: ["/accounting"],
   commissions: ["/commissions"],
   settings: ["/settings"],

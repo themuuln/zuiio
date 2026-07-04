@@ -2,15 +2,18 @@
 
 import {
   Bank,
+  CaretDown,
+  CaretUp,
   CashRegister,
   CreditCard,
   FileText,
   ShoppingCart,
+  User,
 } from "@phosphor-icons/react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { createShopSale } from "@/app/(dashboard)/shop/actions";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
@@ -18,6 +21,11 @@ import { CustomerPicker } from "@/components/shop/customer-picker";
 import { NumericKeypad } from "@/components/shop/numeric-keypad";
 import { StaffPicker } from "@/components/shop/staff-picker";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   Empty,
   EmptyContent,
@@ -28,8 +36,10 @@ import {
 } from "@/components/ui/empty";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
 import { productKeys, saleKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 import { capture } from "@zuiio/capture";
 
 type Contact = {
@@ -45,10 +55,29 @@ const paymentMethods = [
   { value: "invoice", label: "Нэхэмжлэл", icon: FileText },
 ] as const;
 
+/** Quick amount presets based on common Mongolian banknote denominations */
+const QUICK_AMOUNTS = [5000, 10000, 20000, 50000, 100000];
+
 export default function CheckoutPage() {
   const { items, totalAmount, clearCart } = useCart();
   const router = useRouter();
-  const [contacts, setContacts] = useState<Contact[]>([]);
+  // Fetch contacts
+  const { data: contacts = [] } = useQuery({
+    queryKey: ["checkout", "contacts"],
+    queryFn: async () => {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("contacts")
+        .select("id, name, phone")
+        .eq("type", "customer")
+        .order("name");
+      if (error) {
+        capture(error, { context: "[checkout] fetch contacts" });
+        throw error;
+      }
+      return data ?? [];
+    },
+  });
 
   // Customer state
   const [selectedContactId, setSelectedContactId] = useState<string | null>(
@@ -56,13 +85,15 @@ export default function CheckoutPage() {
   );
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [customerOpen, setCustomerOpen] = useState(false);
+  const [orderExpanded, setOrderExpanded] = useState(false);
 
   // Payment state
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [paidAmountStr, setPaidAmountStr] = useState("0");
   const [showKeypad, setShowKeypad] = useState(false);
 
-  // Hidden fields ref for setting form values programmatically
+  // Hidden fields refs
   const itemsInputRef = useRef<HTMLInputElement>(null);
   const paymentMethodInputRef = useRef<HTMLInputElement>(null);
   const paidAmountInputRef = useRef<HTMLInputElement>(null);
@@ -72,30 +103,10 @@ export default function CheckoutPage() {
 
   const paidAmount = Number(paidAmountStr) || 0;
   const change = paidAmount > totalAmount ? paidAmount - totalAmount : 0;
+  const isExactAmount = paidAmount === totalAmount;
 
   const isFormValid =
     items.length > 0 && paymentMethod && paidAmount >= totalAmount;
-
-  // Fetch contacts on mount
-  useEffect(() => {
-    async function fetchContacts() {
-      try {
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from("contacts")
-          .select("id, name, phone")
-          .eq("type", "customer")
-          .order("name");
-        if (error) capture(error, { context: "[checkout] fetch contacts" });
-        if (data) {
-          setContacts(data);
-        }
-      } catch {
-        // Silently fail — contacts are optional for walk-in
-      }
-    }
-    fetchContacts();
-  }, []);
 
   const handleSelectContact = (contact: Contact | null) => {
     setSelectedContactId(contact?.id ?? null);
@@ -144,11 +155,9 @@ export default function CheckoutPage() {
       return result;
     },
     onMutate: async (formData) => {
-      // Cancel any in-flight queries so they don't overwrite our optimistic update
       await queryClient.cancelQueries({ queryKey: saleKeys.all() });
       await queryClient.cancelQueries({ queryKey: productKeys.all() });
 
-      // Snapshot current cache entries for rollback
       const previousSales = queryClient.getQueriesData({
         queryKey: saleKeys.all(),
       });
@@ -156,7 +165,6 @@ export default function CheckoutPage() {
         queryKey: productKeys.all(),
       });
 
-      // Parse items from formData for optimistic updates
       const itemsRaw = formData.get("items")?.toString();
       if (itemsRaw) {
         try {
@@ -175,7 +183,6 @@ export default function CheckoutPage() {
             formData.get("payment_method")?.toString() || "cash";
           const custName = formData.get("customer_name")?.toString();
 
-          // Build optimistic sale entry
           const optimisticSale = {
             id: `opt-${Date.now()}`,
             total_amount: totalAmount,
@@ -188,7 +195,6 @@ export default function CheckoutPage() {
             contacts: custName ? { name: custName } : null,
           };
 
-          // Optimistically prepend sale to all sales list caches
           queryClient.setQueriesData(
             { queryKey: saleKeys.all(), type: "active" },
             (oldData: unknown) => {
@@ -199,7 +205,6 @@ export default function CheckoutPage() {
             },
           );
 
-          // Optimistically decrement stock for each purchased product
           queryClient.setQueriesData(
             { queryKey: productKeys.all(), type: "active" },
             (oldData: unknown) => {
@@ -237,13 +242,11 @@ export default function CheckoutPage() {
       }
     },
     onError: (err, _formData, context) => {
-      // Rollback sales caches to snapshot
       if (context?.previousSales) {
         for (const [key, data] of context.previousSales) {
           queryClient.setQueryData(key, data);
         }
       }
-      // Rollback products caches to snapshot
       if (context?.previousProducts) {
         for (const [key, data] of context.previousProducts) {
           queryClient.setQueryData(key, data);
@@ -252,7 +255,6 @@ export default function CheckoutPage() {
       toast.error(err?.message || "Алдаа гарлаа");
     },
     onSettled: () => {
-      // Always invalidate to reconcile with server state
       queryClient.invalidateQueries({ queryKey: saleKeys.all() });
       queryClient.invalidateQueries({ queryKey: productKeys.all() });
     },
@@ -260,7 +262,7 @@ export default function CheckoutPage() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (mutation.isPending) return; // prevent double submission
+    if (mutation.isPending) return;
     const formData = new FormData(e.currentTarget);
     handleFormSubmit(formData);
     mutation.mutate(formData);
@@ -288,151 +290,289 @@ export default function CheckoutPage() {
     );
   }
 
+  const totalQty = items.reduce((s, i) => s + i.quantity, 0);
+
   return (
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="flex flex-col gap-5 pb-28"
+      className="flex flex-col gap-4 pb-28"
     >
-      <h1 className="text-lg font-semibold">Төлбөр тооцоо</h1>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-lg font-semibold">Төлбөр тооцоо</h1>
+        <span className="text-sm text-muted-foreground">{totalQty} ширхэг</span>
+      </div>
 
-      {/* Hidden fields — set dynamically before submission */}
+      {/* Hidden fields */}
       <input type="hidden" name="items" ref={itemsInputRef} />
       <input type="hidden" name="payment_method" ref={paymentMethodInputRef} />
       <input type="hidden" name="paid_amount" ref={paidAmountInputRef} />
       <input type="hidden" name="customer_name" ref={customerNameInputRef} />
       <input type="hidden" name="customer_phone" ref={customerPhoneInputRef} />
 
-      {/* Customer section */}
-      <section className="flex flex-col gap-3">
-        <CustomerPicker
-          contacts={contacts}
-          selectedContactId={selectedContactId}
-          customerName={customerName}
-          customerPhone={customerPhone}
-          onSelectContact={handleSelectContact}
-          onNameChange={handleNameChange}
-          onPhoneChange={handlePhoneChange}
-        />
-      </section>
-
-      {/* Staff/salesperson picker */}
-      <section className="flex flex-col gap-3">
-        <StaffPicker />
-      </section>
-
-      {/* Order summary */}
-      <section className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
-        <span className="text-sm font-medium text-muted-foreground">
-          Захиалга
-        </span>
-        <div className="flex flex-col gap-1.5">
-          {items.map((item) => (
-            <div
-              key={item.productId}
-              className="flex items-center justify-between text-sm"
-            >
-              <span className="text-muted-foreground">
-                {item.name}{" "}
-                <span className="text-xs text-muted-foreground/60">
-                  ×{item.quantity}
-                </span>
-              </span>
-              <span className="font-medium tabular-nums">
-                {(item.unitPrice * item.quantity).toLocaleString()}₮
-              </span>
-            </div>
-          ))}
-        </div>
-        <div className="mt-1 border-t border-border pt-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold">Нийт дүн</span>
-            <span className="text-lg font-bold tabular-nums">
+      {/* === ORDER SUMMARY CARD === */}
+      <div className="rounded-xl border border-border bg-card">
+        {/* Total row — always visible */}
+        <button
+          type="button"
+          onClick={() => setOrderExpanded(!orderExpanded)}
+          aria-expanded={orderExpanded}
+          aria-controls="checkout-order-items"
+          className="flex w-full items-center justify-between rounded-xl px-4 py-4 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+        >
+          <div className="flex flex-col items-start gap-0.5">
+            <span className="text-xs font-medium text-muted-foreground">
+              Нийт дүн
+            </span>
+            <span className="text-2xl font-bold tabular-nums">
               {totalAmount.toLocaleString()}₮
             </span>
           </div>
-        </div>
-      </section>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span>
+              {items.length} төрлийн {totalQty} ширхэг
+            </span>
+            {orderExpanded ? (
+              <CaretUp className="size-4" />
+            ) : (
+              <CaretDown className="size-4" />
+            )}
+          </div>
+        </button>
 
-      {/* Payment method */}
-      <section className="flex flex-col gap-2">
-        <span className="text-sm font-medium text-muted-foreground">
+        {/* Expanded item list */}
+        {orderExpanded && (
+          <>
+            <Separator />
+            <div
+              id="checkout-order-items"
+              className="flex flex-col gap-1.5 px-4 py-3"
+            >
+              {items.map((item) => {
+                const lineTotal = item.unitPrice * item.quantity;
+                return (
+                  <div
+                    key={`${item.productId}-${item.variantId ?? ""}`}
+                    className="flex items-center justify-between text-sm"
+                  >
+                    <span className="min-w-0 flex-1 truncate text-muted-foreground">
+                      {item.name}{" "}
+                      <span className="text-xs text-muted-foreground/60">
+                        ×{item.quantity}
+                      </span>
+                    </span>
+                    <span className="ml-3 shrink-0 font-medium tabular-nums">
+                      {lineTotal.toLocaleString()}₮
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* === PAYMENT METHOD === */}
+      <div className="rounded-xl border border-border bg-card p-4">
+        <span className="mb-3 block text-xs font-medium text-muted-foreground">
           Төлбөрийн хэлбэр
         </span>
         <RadioGroup
           value={paymentMethod}
           onValueChange={(value: string) => setPaymentMethod(value)}
-          className="grid grid-cols-2 gap-2"
+          aria-label="Төлбөрийн хэлбэр"
+          className="grid grid-cols-4 gap-2"
         >
           {paymentMethods.map((method) => {
             const Icon = method.icon;
+            const isSelected = paymentMethod === method.value;
             return (
               <Label
                 key={method.value}
-                className="flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border border-border p-3 text-xs transition-colors has-[data-checked]:border-primary has-[data-checked]:bg-primary/5"
+                className={cn(
+                  "flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border p-3 text-xs transition-all",
+                  isSelected
+                    ? "border-primary bg-primary/5 shadow-sm"
+                    : "border-border hover:bg-muted/50",
+                )}
               >
                 <RadioGroupItem value={method.value} className="sr-only" />
-                <Icon className="size-5" />
-                <span>{method.label}</span>
+                <Icon
+                  className={cn(
+                    "size-5",
+                    isSelected ? "text-primary" : "text-muted-foreground",
+                  )}
+                  weight={isSelected ? "fill" : "regular"}
+                />
+                <span
+                  className={cn(
+                    "font-medium",
+                    isSelected ? "text-primary" : "text-muted-foreground",
+                  )}
+                >
+                  {method.label}
+                </span>
               </Label>
             );
           })}
         </RadioGroup>
-      </section>
+      </div>
 
-      {/* Paid amount */}
-      <section className="flex flex-col gap-2">
-        <span className="text-sm font-medium text-muted-foreground">
+      {/* === PAID AMOUNT === */}
+      <div className="rounded-xl border border-border bg-card p-4">
+        <span className="mb-3 block text-xs font-medium text-muted-foreground">
           Төлсөн дүн
         </span>
 
         {/* Amount display — clickable to open keypad */}
         <button
           type="button"
-          className="flex h-[56px] w-full items-center justify-end rounded-xl border border-border bg-card px-4 text-right text-2xl font-bold tabular-nums"
           onClick={() => setShowKeypad(!showKeypad)}
+          className={cn(
+            "flex h-14 w-full items-center justify-end rounded-xl border bg-background px-4 text-right text-2xl font-bold tabular-nums transition-all",
+            showKeypad
+              ? "border-primary ring-2 ring-primary/20"
+              : "border-border",
+          )}
         >
           {paidAmount.toLocaleString()}₮
         </button>
 
+        {/* Quick amount presets */}
+        <div className="mt-3 flex flex-wrap gap-2">
+          {/* Exact amount button */}
+          <button
+            type="button"
+            onClick={() => {
+              setPaidAmountStr(String(totalAmount));
+              setShowKeypad(false);
+            }}
+            className={cn(
+              "rounded-lg border px-3 py-1.5 text-xs font-medium transition-all",
+              isExactAmount
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
+          >
+            Яг дүн
+          </button>
+          {QUICK_AMOUNTS.map((amount) => {
+            const isSelected = paidAmount === amount;
+            return (
+              <button
+                key={amount}
+                type="button"
+                onClick={() => {
+                  setPaidAmountStr(String(amount));
+                  setShowKeypad(false);
+                }}
+                className={cn(
+                  "rounded-lg border px-3 py-1.5 text-xs font-medium tabular-nums transition-all",
+                  isSelected
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                {amount.toLocaleString()}₮
+              </button>
+            );
+          })}
+        </div>
+
         {/* Numeric keypad */}
         {showKeypad && (
-          <NumericKeypad
-            value={paidAmountStr}
-            onChange={(v) => setPaidAmountStr(v)}
-            onConfirm={() => setShowKeypad(false)}
-            confirmLabel="Батлах"
-          />
+          <div className="mt-3">
+            <NumericKeypad
+              value={paidAmountStr}
+              onChange={(v) => setPaidAmountStr(v)}
+              onConfirm={() => setShowKeypad(false)}
+              confirmLabel="Батлах"
+            />
+          </div>
         )}
 
         {/* Change display */}
         {paidAmount > totalAmount && (
-          <div className="flex items-center justify-between rounded-xl bg-green-50 px-4 py-3 dark:bg-green-950/20">
-            <span className="text-sm font-medium text-green-700 dark:text-green-400">
+          <div className="mt-3 flex items-center justify-between rounded-xl bg-emerald-50 px-4 py-3 dark:bg-emerald-950/20">
+            <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
               Өөрчлөлт
             </span>
-            <span className="text-lg font-bold text-green-700 dark:text-green-400 tabular-nums">
+            <span className="text-lg font-bold text-emerald-700 dark:text-emerald-400 tabular-nums">
               {change.toLocaleString()}₮
             </span>
           </div>
         )}
-      </section>
+      </div>
+      {/* === CUSTOMER (collapsible) === */}
+      <Collapsible open={customerOpen} onOpenChange={setCustomerOpen}>
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="flex w-full items-center justify-between rounded-xl border border-border bg-card p-4 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+            aria-expanded={customerOpen}
+            aria-controls="checkout-customer-section"
+          >
+            <div className="flex items-center gap-2">
+              <User className="size-4 text-muted-foreground" />
+              <span className="text-sm font-medium">
+                {customerName || "Харилцагч"}
+              </span>
+              {customerName && (
+                <span className="text-xs text-muted-foreground">
+                  ({customerPhone || "утасгүй"})
+                </span>
+              )}
+            </div>
+            {customerOpen ? (
+              <CaretUp className="size-4 text-muted-foreground" />
+            ) : (
+              <CaretDown className="size-4 text-muted-foreground" />
+            )}
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-2">
+          <div id="checkout-customer-section" className="rounded-xl border border-border bg-card p-4">
+            <CustomerPicker
+              contacts={contacts}
+              selectedContactId={selectedContactId}
+              customerName={customerName}
+              customerPhone={customerPhone}
+              onSelectContact={handleSelectContact}
+              onNameChange={handleNameChange}
+              onPhoneChange={handlePhoneChange}
+            />
+            <div className="mt-4">
+              <span className="mb-2 block text-xs font-medium text-muted-foreground">
+                Борлуулагч
+              </span>
+              <StaffPicker />
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       {/* Error message */}
       {mutation.error && (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div
+          className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          role="alert"
+        >
           {mutation.error.message}
         </div>
       )}
 
-      {/* Submit button — no loading spinner per optimistic update pattern */}
+      {/* Submit button */}
       <Button
         type="submit"
         size="lg"
-        className="sticky bottom-24 mt-2 h-[56px] w-full text-sm font-semibold"
+        className="sticky bottom-24 mt-2 h-14 w-full text-sm font-semibold shadow-lg"
         disabled={!isFormValid || mutation.isPending}
+        aria-busy={mutation.isPending}
       >
-        {mutation.isPending ? "Үүсгэж байна..." : "Борлуулалт үүсгэх"}
+        {mutation.isPending
+          ? "Үүсгэж байна..."
+          : `Борлуулалт үүсгэх (${totalAmount.toLocaleString()}₮)`}
       </Button>
     </form>
   );

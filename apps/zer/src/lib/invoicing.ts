@@ -3,6 +3,7 @@
 import { randomBytes } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
+import { capture } from "@zuiio/capture";
 
 /**
  * Creates an invoice from a completed sale.
@@ -30,7 +31,7 @@ export async function createInvoiceFromSale(
       .single();
 
     if (!sale) {
-      console.error("Invoice generation: sale not found", saleId);
+      capture(new Error(`Invoice generation: sale not found: ${saleId}`), { context: "invoicing: sale lookup" });
       return null;
     }
 
@@ -41,7 +42,7 @@ export async function createInvoiceFromSale(
       .eq("sale_id", saleId);
 
     if (!items || items.length === 0) {
-      console.error("Invoice generation: no sale items found", saleId);
+      capture(new Error(`Invoice generation: no sale items found: ${saleId}`), { context: "invoicing: items lookup" });
       return null;
     }
 
@@ -71,7 +72,7 @@ export async function createInvoiceFromSale(
       .single();
 
     if (invoiceError) {
-      console.error("Invoice creation failed:", invoiceError.message);
+      capture(invoiceError, { context: "invoicing: create invoice" });
       return null;
     }
 
@@ -91,15 +92,14 @@ export async function createInvoiceFromSale(
     const { error: itemsError } = await supabase
       .from("invoice_items")
       .insert(invoiceItems);
-
     if (itemsError) {
       // Invoice exists but without items — partially bad state
-      console.error("Invoice items creation failed:", itemsError.message);
+      capture(itemsError, { context: "invoicing: create invoice items" });
     }
 
     return { invoiceId: invoice.id, invoiceNumber, token };
   } catch (err) {
-    console.error("Unexpected error in createInvoiceFromSale:", err);
+    capture(err, { context: "invoicing: createInvoiceFromSale" });
     return null;
   }
 }

@@ -42,7 +42,12 @@ export function CatalogPickerDrawer<T extends CatalogItem>({
   const locale = useLocale();
 
   return (
-    <DetailDrawer open={open} onOpenChange={onOpenChange} size="5xl">
+    <DetailDrawer
+      open={open}
+      onOpenChange={onOpenChange}
+      size="5xl"
+      backdropForceRender
+    >
       <DetailDrawer.Header>
         <DetailDrawer.Title className="text-2xl tracking-tight">
           {title}

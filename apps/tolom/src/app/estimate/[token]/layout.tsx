@@ -17,7 +17,7 @@ export default async function EstimateLayout({
   children: React.ReactNode;
 }) {
   const cookieStore = await cookies();
-  const locale = (cookieStore.get("NEXT_LOCALE")?.value ?? "en") as "en" | "mn";
+  const locale = (cookieStore.get("NEXT_LOCALE")?.value ?? "mn") as "en" | "mn";
   const messages = await getMessages({ locale });
 
   return (

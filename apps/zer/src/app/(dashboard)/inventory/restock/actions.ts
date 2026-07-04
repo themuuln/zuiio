@@ -1,4 +1,5 @@
 "use server";
+import { capture } from "@zuiio/capture";
 
 import { postPurchaseToJournal } from "@/lib/accounting";
 import { requireWriteAction } from "@/lib/action-utils";
@@ -106,19 +107,23 @@ async function processSingleOrder(
     return { created: false, error: `Бараа хүлээн авахад алдаа: ${errorMsg}` };
   }
 
-  // Post to general ledger (fire-and-forget)
-  postPurchaseToJournal(
-    supabase,
-    organizationId,
-    userId,
-    branchId,
-    purchaseOrder.id,
-    {
-      total_amount: totalAmount,
-      order_date: new Date().toISOString().slice(0, 10),
-      status: "received",
-    },
-  ).catch(console.error);
+  // Post to general ledger (fire-and-forget with error capture)
+  try {
+    await postPurchaseToJournal(
+      supabase,
+      organizationId,
+      userId,
+      branchId,
+      purchaseOrder.id,
+      {
+        total_amount: totalAmount,
+        order_date: new Date().toISOString().slice(0, 10),
+        status: "received",
+      },
+    );
+  } catch (err) {
+    capture(err, { context: "restock: postPurchaseToJournal" });
+  }
 
   return { created: true };
 }

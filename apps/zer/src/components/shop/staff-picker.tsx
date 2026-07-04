@@ -10,6 +10,7 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
+import { capture } from "@zuiio/capture";
 
 type StaffProfile = {
   id: string;
@@ -44,7 +45,7 @@ export function StaffPicker({ name = "salesperson_id" }: StaffPickerProps) {
           currentUserId?: string;
         }) => {
           if (result.error) {
-            console.error(result.error);
+            capture(result.error, { context: "staff-picker: get staff list" });
             return;
           }
           const staffList = result.profiles ?? [];
@@ -60,7 +61,9 @@ export function StaffPicker({ name = "salesperson_id" }: StaffPickerProps) {
           }
         },
       )
-      .catch(console.error)
+      .catch((err) => {
+        capture(err, { context: "staff-picker: get staff list" });
+      })
       .finally(() => setLoading(false));
   }, []);
 

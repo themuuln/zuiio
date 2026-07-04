@@ -9,32 +9,66 @@ import {
 import { ShortcutCard } from "@/components/dashboard/dashboard-cards";
 import { formatCurrency } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
+import { withDbCapture } from "@zuiio/capture";
 
 export async function QuickShortcuts({ orgId }: { orgId: string }) {
   const supabase = await createClient();
 
   const [productsResult, customersResult, suppliersResult, inventoryResult] =
     await Promise.all([
-      supabase
-        .from("products")
-        .select("id", { count: "exact", head: true })
-        .eq("organization_id", orgId)
-        .is("deleted_at", null),
-      supabase
-        .from("contacts")
-        .select("id", { count: "exact", head: true })
-        .eq("organization_id", orgId)
-        .eq("type", "customer"),
-      supabase
-        .from("contacts")
-        .select("id", { count: "exact", head: true })
-        .eq("organization_id", orgId)
-        .eq("type", "supplier"),
-      supabase
-        .from("products")
-        .select("cost_price, current_stock, min_stock")
-        .eq("organization_id", orgId)
-        .is("deleted_at", null),
+      withDbCapture(
+        "dashboard_quick_products",
+        supabase
+          .from("products")
+          .select("id", { count: "exact", head: true })
+          .eq("organization_id", orgId)
+          .is("deleted_at", null),
+      ).then(
+        (r) =>
+          r as unknown as {
+            data: Array<{ id: string }> | null;
+            count: number | null;
+            error: unknown;
+          },
+      ),
+      withDbCapture(
+        "dashboard_quick_customers",
+        supabase
+          .from("contacts")
+          .select("id", { count: "exact", head: true })
+          .eq("organization_id", orgId)
+          .eq("type", "customer"),
+      ).then(
+        (r) =>
+          r as unknown as {
+            data: Array<{ id: string }> | null;
+            count: number | null;
+            error: unknown;
+          },
+      ),
+      withDbCapture(
+        "dashboard_quick_suppliers",
+        supabase
+          .from("contacts")
+          .select("id", { count: "exact", head: true })
+          .eq("organization_id", orgId)
+          .eq("type", "supplier"),
+      ).then(
+        (r) =>
+          r as unknown as {
+            data: Array<{ id: string }> | null;
+            count: number | null;
+            error: unknown;
+          },
+      ),
+      withDbCapture(
+        "dashboard_quick_inventory",
+        supabase
+          .from("products")
+          .select("cost_price, current_stock, min_stock")
+          .eq("organization_id", orgId)
+          .is("deleted_at", null),
+      ),
     ]);
 
   const totalProducts = productsResult.count ?? 0;

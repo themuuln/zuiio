@@ -19,15 +19,13 @@ export function CategoryChips({
   onSelect,
 }: CategoryChipsProps) {
   return (
-    <div
-      className="sticky top-[112px] z-10 w-full overflow-x-auto bg-background pt-2 pb-1"
-      style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-    >
+    <div className="sticky top-[112px] z-10 w-full overflow-x-auto bg-background pt-2 pb-1">
       <div className="flex gap-2 px-1 pb-1" style={{ minWidth: "max-content" }}>
         {/* "All" chip — always present */}
         <button
           type="button"
           onClick={() => onSelect(null)}
+          aria-pressed={selectedId === null}
           className={cn(
             "flex h-[44px] shrink-0 items-center justify-center rounded-full border px-5 text-sm font-medium transition-colors whitespace-nowrap",
             selectedId === null
@@ -45,6 +43,7 @@ export function CategoryChips({
               key={category.id}
               type="button"
               onClick={() => onSelect(isSelected ? null : category.id)}
+              aria-pressed={isSelected}
               className={cn(
                 "flex h-[44px] shrink-0 items-center justify-center rounded-full border px-5 text-sm font-medium transition-colors whitespace-nowrap",
                 isSelected

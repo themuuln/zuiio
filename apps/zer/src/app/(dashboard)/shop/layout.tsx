@@ -36,12 +36,25 @@ export default async function ShopLayout({
   return (
     <CartProvider>
       {/* Shop container: full-width, mobile-first, no sidebar */}
+      {/* Skip to main content for keyboard users */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary"
+      >
+        Үндсэн агуулга руу очих
+      </a>
       <div className="flex min-h-svh flex-col bg-background">
         {/* Top header bar with sidebar toggle */}
         <ShopHeaderClient />
 
         {/* Main content area */}
-        <main className="mx-auto w-full flex-1 px-4 py-4">{children}</main>
+        <main
+          id="main-content"
+          aria-label="Дэлгүүрийн үндсэн агуулга"
+          className="mx-auto w-full max-w-3xl flex-1 px-4 py-4"
+        >
+          {children}
+        </main>
 
         {/* Bottom tab bar */}
         <BottomBar />

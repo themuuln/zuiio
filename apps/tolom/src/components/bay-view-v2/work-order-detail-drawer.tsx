@@ -1,8 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import dynamic from "next/dynamic";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import {
   useCallback,
   useEffect,
@@ -14,10 +13,6 @@ import {
 import { toast } from "sonner";
 import { VariantSelectionDialog } from "@/components/services/variant-selection-dialog";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { VehicleMakeLogo } from "@/components/vehicles/vehicle-make-logo";
-import { TotalsSummary } from "@/components/work-orders/line-items";
 import {
   normalizeOrgTransferBankAccounts,
   resolveOrgTransferBanks,
@@ -33,50 +28,21 @@ import {
 } from "@/lib/services/post-service-service";
 import type { WorkOrderDetail } from "@/lib/types/composite";
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
 import { CustomerPickerModal } from "./_customer-picker-modal";
 import { DrawerCelebration } from "./_drawer-celebration";
-import { DrawerFooter } from "./_drawer-footer";
 import { DrawerHeaderSection } from "./_drawer-header";
 import { DrawerLoading, DrawerSkeleton } from "./_drawer-loading";
 import type { WorkOrderDetailDrawerProps } from "./_drawer-types";
 import { UnsavedWarning } from "./_drawer-unsaved-warning";
 import { createInvoiceAndRecordPayment } from "./_helpers";
 import { resolvePaymentMethodFees } from "./_payment-fees";
-import { ReadyForPickupForm } from "./_ready-for-pickup-form";
 import { useDrawerMutations } from "./_use-drawer-mutations";
 import { useVariantSelection } from "./_use-variant-selection";
+import { DrawerContentPanel } from "./_drawer-content-panel";
+import { DrawerNestedForms } from "./_drawer-nested-forms";
 import type { PickupCompleteData } from "./pickup-complete-form";
-import { PickupCompleteForm } from "./pickup-complete-form";
 
-// ── Dynamic imports (code-split heavy sections) ────────────────
-const sectionLoading = (h: string) => () => (
-  <div className={`h-${h} animate-pulse rounded-lg bg-muted/10`} />
-);
-
-const WorkOrderServicesSection = dynamic(
-  () =>
-    import("./_work-order-services-section").then(
-      (m) => m.WorkOrderServicesSection,
-    ),
-  { ssr: false, loading: sectionLoading("24") },
-);
-const WorkOrderPartsSection = dynamic(
-  () =>
-    import("./_work-order-parts-section").then((m) => m.WorkOrderPartsSection),
-  { ssr: false, loading: sectionLoading("24") },
-);
-const WorkOrderNotesSection = dynamic(
-  () =>
-    import("./_work-order-notes-section").then((m) => m.WorkOrderNotesSection),
-  { ssr: false, loading: sectionLoading("16") },
-);
-const WorkOrderTimelineSection = dynamic(
-  () =>
-    import("./_work-order-timeline-section").then(
-      (m) => m.WorkOrderTimelineSection,
-    ),
-  { ssr: false, loading: sectionLoading("32") },
-);
 const WorkOrderQuickActions = dynamic(
   () =>
     import("./_work-order-quick-actions").then((m) => m.WorkOrderQuickActions),
@@ -96,11 +62,10 @@ export function WorkOrderDetailDrawer({
   assignCustomerMutation: drawerAssignCustomerMutation,
 }: WorkOrderDetailDrawerProps) {
   const t = useTranslations("bayView");
-  const locale = useLocale();
 
   const queryClient = useQueryClient();
 
-  // ── Data layer (React Query) ──
+  // ── Data layer ──
 
   const {
     orgId,
@@ -134,17 +99,15 @@ export function WorkOrderDetailDrawer({
     }
   }, [wo, hasLoadedOnce]);
 
-  // fetchWo: refetch the work order detail query (called by mutations after writes)
+  // fetchWo: refetch the work order detail query
   const fetchWo = useCallback(
     async (silent = false) => {
       if (!orgId || !workOrderId) return;
       if (silent) {
-        // Background refetch — don't show loading spinner
         await queryClient.invalidateQueries({
           queryKey: workOrderKeys.detail(orgId, workOrderId),
         });
       } else {
-        // Full refetch
         await queryClient.refetchQueries({
           queryKey: workOrderKeys.detail(orgId, workOrderId),
         });
@@ -210,7 +173,7 @@ export function WorkOrderDetailDrawer({
   } = useDrawerMutations({
     workOrderId,
     orgIdRef,
-    orgId,
+    orgId: orgId ?? undefined,
     wo,
     setWo,
     fetchWo,
@@ -223,7 +186,7 @@ export function WorkOrderDetailDrawer({
     assignCustomerMutation: drawerAssignCustomerMutation,
   });
 
-  // ── Inline mutations for complete / ready-for-pickup ──
+  // ── Inline mutations for status transitions ──
 
   const completeMutation = useOrgMutation<
     unknown,
@@ -255,7 +218,9 @@ export function WorkOrderDetailDrawer({
   const [showCelebration, setShowCelebration] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
+
   // ── Variant selection ──
+
   const {
     pendingVariantItem,
     setPendingVariantItem,
@@ -266,6 +231,15 @@ export function WorkOrderDetailDrawer({
     addService,
     addPart,
   });
+
+  const handleServiceDrawerOpenChange = useCallback(
+    (open: boolean) => setShowAddService(open),
+    [setShowAddService],
+  );
+  const handlePartDrawerOpenChange = useCallback(
+    (open: boolean) => setShowAddPart(open),
+    [setShowAddPart],
+  );
 
   const isFirstRender = useRef(true);
 
@@ -306,9 +280,7 @@ export function WorkOrderDetailDrawer({
       isFirstRender.current = false;
       return;
     }
-    // Phase 1: shrink (visible for one frame)
     requestAnimationFrame(() => setTransitioning(true));
-    // Phase 2: apply size change, then expand
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         setTransitioning(false);
@@ -316,17 +288,16 @@ export function WorkOrderDetailDrawer({
     });
   }, [isFullScreen]);
 
-  // ── Pickup complete ──
+  // ── Handlers ──
 
   async function handleCompleteSubmit(data: PickupCompleteData) {
     const orgIdVal = orgIdRef.current;
     if (!orgIdVal || !workOrderId || !wo?.vehicle_id) return;
 
-    // Step 1: Persist completion data (idempotent — safe to retry)
     try {
       await saveCompletionData({
         workOrderId,
-        vehicleId: wo.vehicle_id as string,
+        vehicleId: wo.vehicle_id,
         odometerReading: null,
         customerSatisfaction: data.customerSatisfaction,
         customerFeedback: data.customerFeedback,
@@ -337,12 +308,8 @@ export function WorkOrderDetailDrawer({
       return;
     }
 
-    // Step 2: Update status to Completed via useOrgMutation
     try {
-      await completeMutation.mutateAsync({
-        status: "Completed",
-      });
-
+      await completeMutation.mutateAsync({ status: "Completed" });
       await fetchWo(true);
       toast.dismiss();
       toast.success(t("workOrderCompleted"));
@@ -357,8 +324,6 @@ export function WorkOrderDetailDrawer({
       toast.error(`${t("completionDataSaved")} ${t("failedToComplete")}`);
     }
   }
-
-  // ── Ready for Pickup (simplified) ──
 
   async function handleMarkReady() {
     if (workOrderId) {
@@ -375,10 +340,8 @@ export function WorkOrderDetailDrawer({
     const orgIdVal = orgIdRef.current;
     if (!orgIdVal || !workOrderId || !wo?.vehicle_id) return;
 
-    // Snapshot for rollback
     const prevWo = wo;
 
-    // Optimistic: update status immediately, close form
     setWo((prev) =>
       prev
         ? ({ ...prev, status: "Ready for Pickup" } as WorkOrderDetail)
@@ -386,14 +349,10 @@ export function WorkOrderDetailDrawer({
     );
     setShowReadyForm(false);
 
-    // Run sequentially to avoid partial-success state:
-    // savePostServiceData first, then PATCH status. If the PATCH fails after
-    // post-service data was saved, we log a warning but don't revert the UI
-    // (the data is already persisted and the UI transition is desirable).
     try {
       await savePostServiceData({
         workOrderId,
-        vehicleId: wo.vehicle_id as string,
+        vehicleId: wo.vehicle_id,
         odometerReading: data.odometerReading,
         recommendations: [],
         mechanicNotes: data.mechanicNotes,
@@ -434,6 +393,28 @@ export function WorkOrderDetailDrawer({
       toast.error("Failed to save post-service data");
     }
   }
+
+  const handleNuatToggle = useCallback(
+    async (checked: boolean) => {
+      setWo((prev) =>
+        prev ? ({ ...prev, nuat_enabled: checked } as WorkOrderDetail) : prev,
+      );
+
+      try {
+        await nuatMutation.mutateAsync({ nuat_enabled: checked });
+        toast.success(checked ? "НӨАТ идэвхижүүлэв" : "НӨАТ идэвхигүй болгов");
+      } catch {
+        setWo((prev) =>
+          prev
+            ? ({ ...prev, nuat_enabled: !checked } as WorkOrderDetail)
+            : prev,
+        );
+        toast.error("НӨАТ тохиргоо шинэчлэхэд алдаа гарлаа");
+      }
+    },
+    [setWo, nuatMutation],
+  );
+
   // ── Render ──
 
   return (
@@ -497,8 +478,8 @@ export function WorkOrderDetailDrawer({
             />
           )}
 
-          {/* Content — always rendered after first load (skeleton when refetching) */}
-          {hasLoadedOnce && (
+          {/* Content — always rendered after first load */}
+          {hasLoadedOnce && wo && (
             <div
               className={cn(
                 "flex flex-col min-h-0 flex-1 overflow-hidden transition-all duration-300 ease-out",
@@ -512,208 +493,55 @@ export function WorkOrderDetailDrawer({
                 error={error?.message ?? null}
                 onRetry={() => fetchWo()}
               >
-                {wo ? (
-                  <>
-                    <div className="relative flex-1 overflow-y-auto min-h-0">
-                      <VehicleMakeLogo
-                        make={wo.vehicle?.make}
-                        size="70%"
-                        className="absolute inset-0 m-auto pointer-events-none select-none text-primary/[0.03]"
-                        aria-hidden
-                      />
-                      <div className="relative px-3 py-2">
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-                          <div className="lg:col-span-2">
-                            <div className="flex flex-col gap-3 min-h-0 flex-1 overflow-y-auto">
-                              <div
-                                className="[animation:fade-slide-in_300ms_ease-out-quart_backwards]"
-                                style={
-                                  { "--stagger": 0 } as React.CSSProperties
-                                }
-                              >
-                                <WorkOrderServicesSection
-                                  services={wo.services ?? []}
-                                  catalog={catalog}
-                                  serviceSearch={serviceSearch}
-                                  showAddService={showAddService}
-                                  locale={locale}
-                                  onServiceSearchChange={setServiceSearch}
-                                  onAddServiceOpenChange={
-                                    handleServiceDrawerOpenChange
-                                  }
-                                  onAddService={handleServiceSelect}
-                                  onRemoveService={removeService}
-                                  onEditPriceSave={handleServicePriceSave}
-                                  onEditQtySave={handleServiceQtySave}
-                                  onEditDiscountSave={handleServiceDiscountSave}
-                                  t={t}
-                                />
-                              </div>
-
-                              <div
-                                className="[animation:fade-slide-in_300ms_ease-out-quart_backwards]"
-                                style={
-                                  { "--stagger": 1 } as React.CSSProperties
-                                }
-                              >
-                                <WorkOrderPartsSection
-                                  parts={wo.parts ?? []}
-                                  partsCatalog={partsCatalog}
-                                  lowStockMap={lowStockMap}
-                                  partSearch={partSearch}
-                                  showAddPart={showAddPart}
-                                  locale={locale}
-                                  onPartSearchChange={setPartSearch}
-                                  onAddPartOpenChange={
-                                    handlePartDrawerOpenChange
-                                  }
-                                  onAddPart={handlePartSelect}
-                                  onRemovePart={removePart}
-                                  onEditPriceSave={handlePartPriceSave}
-                                  onEditQtySave={handlePartQtySave}
-                                  onEditDiscountSave={handlePartDiscountSave}
-                                  t={t}
-                                />
-                              </div>
-
-                              {orgId && workOrderId ? (
-                                <div
-                                  className="[animation:fade-slide-in_300ms_ease-out-quart_backwards]"
-                                  style={
-                                    { "--stagger": 2 } as React.CSSProperties
-                                  }
-                                >
-                                  <WorkOrderNotesSection
-                                    complaint={wo.complaint}
-                                    diagnosis={wo.diagnosis}
-                                    notes={wo.notes}
-                                    orgId={orgId}
-                                    workOrderId={workOrderId}
-                                    onUpdated={() => fetchWo(true)}
-                                    t={t}
-                                  />
-                                </div>
-                              ) : null}
-                            </div>
-                          </div>
-
-                          <div className="flex flex-col gap-3 lg:sticky lg:top-3 self-start">
-                            <div
-                              className="[animation:fade-slide-in_300ms_ease-out-quart_backwards]"
-                              style={{ "--stagger": 3 } as React.CSSProperties}
-                            >
-                              <WorkOrderTimelineSection
-                                statusHistory={wo.status_history ?? []}
-                                serviceHistory={wo.service_history ?? []}
-                                t={t}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* НӨАТ + Totals — floating above drawer footer (same width as lg:col-span-2) */}
-                    <div>
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-                        <div className="lg:col-span-2 flex flex-col gap-3 shrink-0">
-                          <div className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2">
-                            <div className="flex flex-col">
-                              <Label className="text-xs font-medium">
-                                {orgSettings?.language === "en"
-                                  ? "VAT"
-                                  : "НӨАТ"}
-                              </Label>
-                              <span className="text-[10px] text-muted-foreground">
-                                {orgSettings?.language === "en"
-                                  ? "Value Added Tax"
-                                  : "Нэмэгдсэн Өртөгт Татвар"}
-                              </span>
-                            </div>
-                            <Switch
-                              checked={
-                                ((wo as Record<string, unknown>)
-                                  .nuat_enabled as boolean) ?? false
-                              }
-                              onCheckedChange={async (checked) => {
-                                // Optimistic update immediately
-                                setWo((prev) =>
-                                  prev
-                                    ? ({
-                                        ...prev,
-                                        nuat_enabled: checked,
-                                      } as WorkOrderDetail)
-                                    : prev,
-                                );
-
-                                try {
-                                  await nuatMutation.mutateAsync({
-                                    nuat_enabled: checked,
-                                  });
-                                  toast.success(
-                                    checked
-                                      ? "НӨАТ идэвхижүүлэв"
-                                      : "НӨАТ идэвхигүй болгов",
-                                  );
-                                } catch {
-                                  // Rollback on error
-                                  setWo((prev) =>
-                                    prev
-                                      ? ({
-                                          ...prev,
-                                          nuat_enabled: !checked,
-                                        } as WorkOrderDetail)
-                                      : prev,
-                                  );
-                                  toast.error(
-                                    "НӨАТ тохиргоо шинэчлэхэд алдаа гарлаа",
-                                  );
-                                }
-                              }}
-                            />
-                          </div>
-                          <TotalsSummary
-                            servicesTotal={servicesTotal}
-                            partsTotal={partsTotal}
-                            grandTotal={grandTotal}
-                            serviceCount={wo.services?.length ?? 0}
-                            partCount={wo.parts?.length ?? 0}
-                            discountTotal={wo.discount_total ?? 0}
-                            taxRate={orgSettings?.default_tax_rate ?? 0}
-                            nuatEnabled={
-                              ((wo as Record<string, unknown>)
-                                .nuat_enabled as boolean) ?? false
-                            }
-                            locale={(orgSettings?.language as string) ?? "mn"}
-                            t={t}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <DrawerFooter
-                      wo={wo}
-                      grandTotal={grandTotal}
-                      invoicePublicToken={invoicePublicToken}
-                      saving={saving}
-                      confirmStatus={confirmStatus}
-                      statusNotes={statusNotes}
-                      creatingInvoice={creatingInvoice}
-                      canCancel={canCancel}
-                      canInvoice={canInvoice}
-                      onChangeStatus={changeStatus}
-                      onConfirmCancel={() => {
-                        setConfirmStatus(null);
-                        setStatusNotes("");
-                      }}
-                      onStatusNotesChange={setStatusNotes}
-                      onMarkReady={handleMarkReady}
-                      onComplete={() => setShowCompleteForm(true)}
-                      onCreateInvoice={generateInvoice}
-                      t={t}
-                    />
-                  </>
-                ) : null}
+                <DrawerContentPanel
+                  wo={wo}
+                  orgId={orgId ?? ""}
+                  workOrderId={workOrderId ?? ""}
+                  catalog={catalog}
+                  partsCatalog={partsCatalog}
+                  lowStockMap={lowStockMap}
+                  serviceSearch={serviceSearch}
+                  showAddService={showAddService}
+                  onServiceSearchChange={setServiceSearch}
+                  onAddServiceOpenChange={handleServiceDrawerOpenChange}
+                  onAddService={handleServiceSelect}
+                  onRemoveService={removeService}
+                  onEditServicePriceSave={handleServicePriceSave}
+                  onEditServiceQtySave={handleServiceQtySave}
+                  onEditServiceDiscountSave={handleServiceDiscountSave}
+                  partSearch={partSearch}
+                  showAddPart={showAddPart}
+                  onPartSearchChange={setPartSearch}
+                  onAddPartOpenChange={handlePartDrawerOpenChange}
+                  onAddPart={handlePartSelect}
+                  onRemovePart={removePart}
+                  onEditPartPriceSave={handlePartPriceSave}
+                  onEditPartQtySave={handlePartQtySave}
+                  onEditPartDiscountSave={handlePartDiscountSave}
+                  onNotesUpdated={() => fetchWo(true)}
+                  nuatEnabled={
+                    ((wo as Record<string, unknown>).nuat_enabled as boolean) ??
+                    false
+                  }
+                  onNuatToggle={handleNuatToggle}
+                  taxRate={orgSettings?.default_tax_rate ?? 0}
+                  saving={saving}
+                  confirmStatus={confirmStatus}
+                  statusNotes={statusNotes}
+                  creatingInvoice={creatingInvoice}
+                  canCancel={canCancel}
+                  canInvoice={canInvoice}
+                  invoicePublicToken={invoicePublicToken}
+                  onChangeStatus={changeStatus}
+                  onConfirmCancel={() => {
+                    setConfirmStatus(null);
+                    setStatusNotes("");
+                  }}
+                  onStatusNotesChange={setStatusNotes}
+                  onMarkReady={handleMarkReady}
+                  onComplete={() => setShowCompleteForm(true)}
+                  onCreateInvoice={generateInvoice}
+                />
               </DrawerSkeleton>
             </div>
           )}
@@ -729,66 +557,24 @@ export function WorkOrderDetailDrawer({
             show={showCelebration}
             message={t("completedCelebration")}
           />
+
+          {/* Nested drawers */}
+          <DrawerNestedForms
+            wo={wo}
+            showReadyForm={showReadyForm}
+            showCompleteForm={showCompleteForm}
+            grandTotal={grandTotal}
+            paymentMethodFees={paymentMethodFees}
+            transferBanks={transferBanks}
+            onReadyFormClose={() => setShowReadyForm(false)}
+            onCompleteFormClose={() => setShowCompleteForm(false)}
+            onReadyForPickupSubmit={handleReadyForPickupSubmit}
+            onCompleteSubmit={handleCompleteSubmit}
+          />
         </DrawerContent>
-
-        {/* Nested drawer for Ready for Pickup form */}
-        {wo && (
-          <Drawer
-            open={showReadyForm}
-            onOpenChange={(next) => {
-              if (!next) setShowReadyForm(false);
-            }}
-            swipeDirection="right"
-          >
-            <DrawerContent
-              showCloseButton={false}
-              className="sm:max-w-md"
-              contentClassName="flex flex-col gap-0 border-border/80 shadow-2xl"
-            >
-              <ReadyForPickupForm
-                vehiclePlate={
-                  (wo.vehicle as { plate_number?: string })?.plate_number ?? ""
-                }
-                currentOdometer={
-                  (wo.vehicle as { odometer?: number | null })?.odometer ?? null
-                }
-                grandTotal={grandTotal}
-                paymentMethodFees={paymentMethodFees}
-                transferBanks={transferBanks}
-                onConfirm={handleReadyForPickupSubmit}
-                onBack={() => setShowReadyForm(false)}
-              />
-            </DrawerContent>
-          </Drawer>
-        )}
-
-        {/* Nested drawer for Complete form */}
-        {wo && (
-          <Drawer
-            open={showCompleteForm}
-            onOpenChange={(next) => {
-              if (!next) setShowCompleteForm(false);
-            }}
-            swipeDirection="right"
-          >
-            <DrawerContent
-              showCloseButton={false}
-              className="sm:max-w-md"
-              contentClassName="flex flex-col gap-0 border-border/80 shadow-2xl"
-            >
-              <PickupCompleteForm
-                vehiclePlate={
-                  (wo.vehicle as { plate_number?: string })?.plate_number ?? ""
-                }
-                onConfirm={handleCompleteSubmit}
-                onBack={() => setShowCompleteForm(false)}
-              />
-            </DrawerContent>
-          </Drawer>
-        )}
       </Drawer>
 
-      {/* Customer picker modal — rendered outside the parent drawer to avoid nested dialog focus conflicts */}
+      {/* Customer picker modal — outside parent drawer to avoid nested dialog focus conflicts */}
       {showCustomerPicker && orgId && (
         <CustomerPickerModal
           orgId={orgId}
@@ -800,7 +586,7 @@ export function WorkOrderDetailDrawer({
         />
       )}
 
-      {/* Variant Selection Dialog */}
+      {/* Variant selection dialog */}
       {pendingVariantItem && (
         <VariantSelectionDialog
           open={!!pendingVariantItem}

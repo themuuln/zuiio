@@ -11,6 +11,7 @@ import {
 } from "@/lib/commissions";
 import { requireAppContext } from "@/lib/erp";
 import type { Database } from "@/lib/supabase/types";
+import { capture } from "@zuiio/capture";
 
 type SaleItemRow = Database["public"]["Tables"]["sale_items"]["Row"];
 
@@ -44,10 +45,6 @@ export type PayoutRecord = {
   created_at: string | null;
 };
 
-/**
- * Get per-staff commission summary for an organization.
- * Returns total earned, paid, and unpaid amounts per staff member.
- */
 export async function getCommissionSummary(
   orgId: string,
 ): Promise<StaffCommissionSummary[]> {
@@ -129,10 +126,6 @@ export async function getCommissionSummary(
   return summary.filter((s) => s.totalEarned > 0);
 }
 
-/**
- * Get unpaid sale_items for a specific staff member.
- * Only returns items that haven't been paid out yet.
- */
 export async function getUnpaidItems(
   orgId: string,
   profileId: string,
@@ -204,9 +197,6 @@ export async function getUnpaidItems(
   return unpaidItems;
 }
 
-/**
- * Get payout history for an organization.
- */
 export async function getPayoutHistory(orgId: string): Promise<PayoutRecord[]> {
   const { supabase, branchId, isBranchScoped } = await requireAppContext();
 
@@ -234,7 +224,7 @@ export async function getPayoutHistory(orgId: string): Promise<PayoutRecord[]> {
   const { data, error } = await query;
 
   if (error) {
-    console.error("Error fetching payout history:", error);
+    capture(error, { context: "commissions: fetch payout history" });
     return [];
   }
 
@@ -276,14 +266,6 @@ export type CreatePayoutState = {
   error?: string;
 };
 
-/**
- * Create a payout for selected sale_items.
- * Validates:
- * - Items are not already paid
- * - Items belong to the same profile/organization
- * - At least one item is selected
- * Cleans up on failure to avoid orphaned records.
- */
 export async function createPayout(
   _prevState: CreatePayoutState | undefined,
   formData: FormData,
@@ -406,7 +388,7 @@ export async function createPayout(
     .single();
 
   if (payoutError || !payout) {
-    console.error("Error creating payout:", payoutError);
+    capture(payoutError, { context: "commissions: create payout" });
     return { error: "Төлөлт үүсгэхэд алдаа гарлаа." };
   }
 
@@ -422,7 +404,7 @@ export async function createPayout(
     .insert(payoutItems);
 
   if (itemsInsertError) {
-    console.error("Error inserting payout items:", itemsInsertError);
+    capture(itemsInsertError, { context: "commissions: insert payout items" });
 
     // Cleanup: delete the payout if items failed (best-effort rollback)
     await supabase.from("commission_payouts").delete().eq("id", payout.id);

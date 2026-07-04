@@ -28,7 +28,7 @@ export async function inviteMember(formData: FormData) {
 
   if (existingUser) {
     // Check if user already belongs to another org
-    const { data: existingProfile } = await serviceClient
+    const { data: existingProfile } = await ctx.supabase
       .from("profiles")
       .select("id, organization_id")
       .eq("id", existingUser.id)
@@ -46,7 +46,7 @@ export async function inviteMember(formData: FormData) {
     }
 
     // User exists but has no org — add them
-    const { error: updateError } = await serviceClient
+    const { error: updateError } = await ctx.supabase
       .from("profiles")
       .update({
         organization_id: ctx.organizationId,
@@ -75,7 +75,7 @@ export async function inviteMember(formData: FormData) {
     }
 
     // Create profile with org membership
-    const { error: profileError } = await serviceClient
+    const { error: profileError } = await ctx.supabase
       .from("profiles")
       .insert({
         id: data.user.id,
@@ -108,9 +108,7 @@ export async function removeMember(formData: FormData) {
     return { error: "Та өөрийгөө хасах боломжгүй." };
   }
 
-  const serviceClient = createServiceClient();
-
-  const { error } = await serviceClient
+  const { error } = await ctx.supabase
     .from("profiles")
     .update({
       organization_id: null,
@@ -119,7 +117,6 @@ export async function removeMember(formData: FormData) {
     })
     .eq("id", profileId)
     .eq("organization_id", ctx.organizationId);
-
   if (error) {
     return { error: `Хасахад алдаа гарлаа: ${error.message}` };
   }

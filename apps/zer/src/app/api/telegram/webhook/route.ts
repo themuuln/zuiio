@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { runWithTools } from "@zuiio/ai-agent";
 import { createAllAgentTools } from "@/lib/agent-tools";
 import { createServiceClient } from "@/lib/supabase/server-service";
+import { capture } from "@zuiio/capture";
 
 const WELCOME_MESSAGE = `Сайн байна уу! 👋 Би таны Zer-ийн AI туслах.
 
@@ -157,7 +158,7 @@ async function sendTelegramMessage(
   const token = botToken ?? process.env.TELEGRAM_BOT_TOKEN;
 
   if (!token) {
-    console.error("TELEGRAM_BOT_TOKEN not set for sendMessage");
+    capture(new Error("TELEGRAM_BOT_TOKEN not set"), { context: "telegram sendMessage" });
     return;
   }
 
@@ -172,13 +173,12 @@ async function sendTelegramMessage(
     );
 
     if (!res.ok) {
-      console.error(
-        "Telegram sendMessage failed:",
-        res.status,
-        await res.text(),
+      capture(
+        new Error(`Telegram sendMessage failed: ${res.status} ${res.statusText}`),
+        { context: "telegram sendMessage" },
       );
     }
   } catch (err) {
-    console.error("Telegram sendMessage error:", err);
+    capture(err, { context: "telegram sendMessage" });
   }
 }

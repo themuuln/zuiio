@@ -226,9 +226,8 @@ async function handleStartCommand(chatId: number, userId: number, text: string):
         user_id: payload.userId,
         telegram_chat_id: chatId,
         telegram_user_id: userId,
-        product_type: payload.productType,
         is_active: true,
-        last_active_at: new Date().toISOString(),
+        notification_preferences: { productType: payload.productType },
       });
 
     if (linkErr) {
@@ -260,9 +259,7 @@ async function handleUserMessage(chatId: number, userId: number, text: string, c
     context = { orgId: resolved.context.orgId, userId: resolved.context.userId, supabase: sb };
     productType = resolved.context.productType;
 
-    await sb.from("telegram_links").update({ last_active_at: new Date().toISOString() })
-      .eq("organization_id", context.orgId)
-      .eq("user_id", context.userId);
+    await sb.from("telegram_links").update({ updated_at: new Date().toISOString() })
   } catch (err) {
     await tg.sendMessage(chatId, err instanceof Error ? err.message : "Таны Telegram холбогдоогүй байна. Эхлээд QR код уншуулна уу.");
     return;

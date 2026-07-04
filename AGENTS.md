@@ -10,7 +10,7 @@
 >
 > You MUST read these before starting any significant task. This file (`AGENTS.md`) covers project structure, package map, and conventions.
 
-**Private monorepo** (`/Users/themuuln/coding/personal/zuiio/`) serving two Mongolian business apps: **Zer** (HR + accounting) and **Tolom** (auto repair shop management), plus the **Zuiio company website**.
+**Private monorepo** (`/Users/themuuln/coding/personal/zuiio/`) serving two Mongolian business apps: **Zer** (SMB ERP) and **Tolom** (auto repair shop management), plus the **Zuiio company website**.
 
 ## Directory Structure
 
@@ -19,7 +19,7 @@ zuiio/
 ├── packages/        ← 10 shared @zuiio/* packages
 ├── apps/
 │   ├── website/     ← Company website (Next.js 16, Tailwind v4)
-│   ├── zer/         ← HR + Accounting app (464 src files)
+│   ├── zer/         ← SMB ERP app (464 src files)
 │   │   └── packages/branding/  ← @zer/branding
 │   └── tolom/       ← Auto repair app (1086 src files)
 │       └── packages/{config,supabase}  ← @tolom/*
@@ -35,7 +35,7 @@ zuiio/
 | App | Stack | Description | dev command |
 |-----|-------|-------------|-------------|
 | `website` | Next.js 16, Tailwind v4 | Company site | `cd apps/website && pnpm dev` |
-| `zer` | Next.js 16 + Supabase | HR & Accounting | `cd apps/zer && pnpm dev` |
+| `zer` | Next.js 16 + Supabase | SMB ERP | `cd apps/zer && pnpm dev` |
 | `tolom` | Next.js 16 + Supabase | Auto repair management | `cd apps/tolom && pnpm dev` |
 
 Each app has its own `AGENTS.md` with app-specific rules. Read them when working in that app.

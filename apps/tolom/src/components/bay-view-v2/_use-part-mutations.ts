@@ -65,10 +65,7 @@ export function usePartMutations({
       : undefined,
   });
 
-  const deletePartMutation = useOrgMutation<
-    unknown,
-    { partId: string }
-  >({
+  const deletePartMutation = useOrgMutation<unknown, { partId: string }>({
     endpoint: (vars) =>
       `/api/organizations/${orgIdRef.current}/work-orders/${workOrderId}/parts?partId=${vars.partId}`,
     method: "DELETE",
@@ -89,6 +86,7 @@ export function usePartMutations({
     invalidateKeys: branchId
       ? ([bayViewKeys.data(branchId)] as const)
       : undefined,
+    bodyFn: (vars) => vars.body,
   });
 
   // ── Optimistic add ──
@@ -121,10 +119,16 @@ export function usePartMutations({
             created_by: null,
             created_at: new Date().toISOString(),
             name_mn: item.name_mn ?? null,
-            catalog_item_variant_id: (item as Record<string, unknown>)
-              .variant_id as string | null | undefined ?? null,
-            variant_label: (item as Record<string, unknown>)
-              .variant_label as string | null | undefined ?? null,
+            catalog_item_variant_id:
+              ((item as Record<string, unknown>).variant_id as
+                | string
+                | null
+                | undefined) ?? null,
+            variant_label:
+              ((item as Record<string, unknown>).variant_label as
+                | string
+                | null
+                | undefined) ?? null,
           } satisfies WorkOrderPart & { name_mn?: string | null },
         ],
       };
@@ -156,9 +160,7 @@ export function usePartMutations({
         if (!prev) return prev;
         return {
           ...prev,
-          parts: (prev.parts ?? []).map((p) =>
-            p.id === partId ? newPart : p,
-          ),
+          parts: (prev.parts ?? []).map((p) => (p.id === partId ? newPart : p)),
         };
       });
       toast.dismiss();
@@ -326,9 +328,7 @@ export function usePartMutations({
   async function handlePartQtySave(partId: string, qty: number) {
     if (partId.startsWith("temp-")) {
       const part = wo?.parts?.find((p) => p.id === partId);
-      const price = part
-        ? Number(part.final_price ?? part.unit_price ?? 0)
-        : 0;
+      const price = part ? Number(part.final_price ?? part.unit_price ?? 0) : 0;
       await confirmAddPart(partId, price);
       return;
     }

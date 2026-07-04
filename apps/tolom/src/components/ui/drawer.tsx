@@ -73,6 +73,7 @@ function DrawerContent({
   className,
   contentClassName,
   backdropClassName,
+  backdropForceRender,
   viewportClassName,
   children,
   showCloseButton = true,
@@ -81,11 +82,15 @@ function DrawerContent({
   showCloseButton?: boolean;
   contentClassName?: string;
   backdropClassName?: string;
+  backdropForceRender?: boolean;
   viewportClassName?: string;
 }) {
   return (
     <DrawerPortal>
-      <DrawerBackdrop className={backdropClassName} />
+      <DrawerBackdrop
+        className={backdropClassName}
+        forceRender={backdropForceRender}
+      />
       <DrawerViewport className={viewportClassName}>
         <DrawerPrimitive.Popup
           data-slot="drawer-popup"

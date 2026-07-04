@@ -1,99 +1,26 @@
-import { type BranchOption, BranchProvider } from "@/lib/branch-context";
-import { type BrandConfig, generateBrandCSS } from "@/lib/branding";
-import { FEATURE_KEYS } from "@/lib/constants";
-import { getDashboardContext } from "@/lib/dashboard-context";
-import { DashboardShell } from "./dashboard-shell";
+import { Suspense } from "react";
+import { DashboardFetcher } from "./dashboard-fetcher";
+import { DashboardShellSkeleton } from "./dashboard-shell-skeleton";
 
-export default async function DashboardLayout({
+/**
+ * Dashboard layout — renders a shell skeleton immediately while
+ * DashboardFetcher resolves auth, profile, org, and branch data.
+ *
+ * The auth check + redirect happens inside the Suspense boundary
+ * (DashboardFetcher calls getDashboardContext), which works correctly
+ * because Next.js handles redirect() thrown errors even within Suspense.
+ *
+ * Benefit: browser receives HTML immediately (the skeleton), can start
+ * fetching fonts/CSS/scripts while data queries run in parallel.
+ */
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { supabase, profile, org, organizationId } =
-    await getDashboardContext();
-
-  // Branches
-  const { data: branchRows } = await supabase
-    .from("branches")
-    .select("id, name, slug, is_default")
-    .eq("organization_id", organizationId)
-    .order("name");
-
-  const branches: BranchOption[] = (branchRows ?? []).map((b) => ({
-    id: b.id,
-    name: b.name,
-    slug: b.slug,
-    is_default: b.is_default,
-  }));
-
-  const enabledFeatures = org.enabled_features ?? [];
-  const hasInventory = org.has_inventory !== false;
-  const hasCustomerCredit = org.has_customer_credit !== false;
-  const hasMultiBranch = org.has_multi_branch === true;
-  const hasVariants = org.has_variants !== false;
-  const hasBrands = org.has_brands !== false;
-  const hasCategories = org.has_categories !== false;
-  const hasEmailReports = org.has_email_reports === true;
-  const hasAuditLog = org.has_audit_log !== false;
-  const hasSuppliers = org.has_suppliers !== false;
-  const hasHr = false; // has_hr column not yet added to organizations table
-
-  const allFeatures =
-    enabledFeatures.length > 0
-      ? [
-          ...enabledFeatures,
-          ...(hasInventory ? ["_inventory"] : []),
-          ...(hasCustomerCredit ? ["_customer_credit"] : []),
-          ...(hasCategories ? ["_categories"] : []),
-          ...(hasBrands ? ["_brands"] : []),
-          ...(hasAuditLog ? ["_audit_log"] : []),
-          ...(hasSuppliers ? ["_suppliers"] : []),
-          ...(hasHr ? [FEATURE_KEYS.hr] : []),
-        ]
-      : [];
-
-  const brandConfig = (org.brand_config ?? {}) as BrandConfig;
-  const brandCSS = generateBrandCSS(brandConfig);
-
   return (
-    <>
-      {brandCSS && (
-        <style
-          id="brand-theme"
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: server-generated CSS from brand config
-          dangerouslySetInnerHTML={{ __html: brandCSS }}
-        />
-      )}
-      {brandConfig.logo_url && (
-        <link
-          rel="apple-touch-icon"
-          href={brandConfig.logo_url}
-          id="dynamic-apple-touch-icon"
-        />
-      )}
-      <BranchProvider branches={branches} userBranchId={profile.branch_id}>
-        <DashboardShell
-          organizationId={organizationId}
-          organizationName={org.name ?? null}
-          logoUrl={brandConfig.logo_url ?? null}
-          userFullName={profile.full_name}
-          enabledFeatures={allFeatures}
-          hasMultiBranch={hasMultiBranch}
-          orgSettings={{
-            hasSuppliers,
-            hasInventory,
-            hasCustomerCredit,
-            hasMultiBranch,
-            hasVariants,
-            hasBrands,
-            hasCategories,
-            hasEmailReports,
-            hasAuditLog,
-          }}
-        >
-          {children}
-        </DashboardShell>
-      </BranchProvider>
-    </>
+    <Suspense fallback={<DashboardShellSkeleton />}>
+      <DashboardFetcher>{children}</DashboardFetcher>
+    </Suspense>
   );
 }

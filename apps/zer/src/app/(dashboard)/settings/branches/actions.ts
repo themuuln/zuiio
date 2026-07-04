@@ -157,33 +157,45 @@ async function seedChartOfAccounts(
   organizationId: string,
   branchId: string,
 ): Promise<string | null> {
-  const insertedIds = new Map<string, string>();
-
-  for (const acct of DEFAULT_ACCOUNTS) {
-    const parentId = acct.parent_code
-      ? insertedIds.get(acct.parent_code)
-      : null;
-
-    const { data, error } = await serviceClient
-      .from("chart_of_accounts")
-      .insert({
+  // Batch 1: insert all root-level accounts (no parent)
+  const rootAccounts = DEFAULT_ACCOUNTS.filter((a) => !a.parent_code);
+  const { data: rootResults, error: rootError } = await serviceClient
+    .from("chart_of_accounts")
+    .insert(
+      rootAccounts.map((acct) => ({
         organization_id: organizationId,
         branch_id: branchId,
         code: acct.code,
         name: acct.name,
         type: acct.type,
-        parent_id: parentId ?? null,
+        parent_id: null,
         is_active: true,
-      })
-      .select("id")
-      .single();
+      })),
+    )
+    .select("id, code");
 
-    if (error) {
-      return error.message;
-    }
+  if (rootError) return rootError.message;
+  if (!rootResults) return "Root accounts insertion returned no rows.";
 
-    insertedIds.set(acct.code, data.id);
-  }
+  const codeToId = new Map(rootResults.map((r) => [r.code, r.id]));
+
+  // Batch 2: insert child accounts with resolved parent_id
+  const childAccounts = DEFAULT_ACCOUNTS.filter((a) => a.parent_code);
+  const { error: childError } = await serviceClient
+    .from("chart_of_accounts")
+    .insert(
+      childAccounts.map((acct) => ({
+        organization_id: organizationId,
+        branch_id: branchId,
+        code: acct.code,
+        name: acct.name,
+        type: acct.type,
+        parent_id: codeToId.get(acct.parent_code!) ?? null,
+        is_active: true,
+      })),
+    );
+
+  if (childError) return childError.message;
 
   return null;
 }

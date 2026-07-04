@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { ExportFormat } from "@/lib/export";
 import { formatExtensions } from "@/lib/export";
+import { capture } from "@zuiio/capture";
 
 interface ExportButtonProps {
   /** Base URL of the export endpoint (without format param) */
@@ -59,7 +60,7 @@ export function ExportButton({ href, filename }: ExportButtonProps) {
       const url = `${href}${separator}format=${format}`;
       const response = await fetch(url);
       if (!response.ok) {
-        console.error("Export failed", response.status, response.statusText);
+        capture(new Error(`Export failed: ${response.status} ${response.statusText}`), { context: "export button" });
         toast.error("Экспорт хийхэд алдаа гарлаа.");
         return;
       }
@@ -73,7 +74,7 @@ export function ExportButton({ href, filename }: ExportButtonProps) {
       document.body.removeChild(anchor);
       URL.revokeObjectURL(downloadUrl);
     } catch (error) {
-      console.error("Export failed:", error);
+      capture(error, { context: "export button" });
       toast.error("Экспорт хийхэд алдаа гарлаа.");
     } finally {
       setIsExporting(null);

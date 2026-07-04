@@ -262,10 +262,7 @@ export function WorkOrderDetailSheet({
                 <ServiceLineRow
                   key={svc.id}
                   name={svc.service_name}
-                  quantity={Number(svc.quantity ?? 1)}
-                  unitPrice={Number(svc.unit_price ?? 0)}
                   finalPrice={Number(svc.final_price)}
-                  readOnly
                 />
               ))}
               <div className="flex justify-between px-2 py-2 text-sm font-medium">
@@ -286,10 +283,7 @@ export function WorkOrderDetailSheet({
                 <PartLineRow
                   key={part.id}
                   name={part.part_name}
-                  quantity={Number(part.quantity ?? 1)}
-                  unitPrice={Number(part.unit_price ?? 0)}
                   finalPrice={Number(part.final_price)}
-                  readOnly
                 />
               ))}
               <div className="flex justify-between px-2 py-2 text-sm font-medium">

@@ -7,20 +7,9 @@ const SUPPORTED = ["en", "mn"];
 
 const handleI18n = createMiddleware(routing);
 
-/**
- * Parse Accept-Language header to detect preferred locale.
- * Returns null when the header is absent or indecisive.
- */
-function detectLocale(acceptLanguage: string | null): string | null {
-  if (!acceptLanguage) return null;
-  // next-intl handles the full Accept-Language weighting; we only need
-  // a coarse check for the `NEXT_LOCALE` cookie default.
-  const idxEn = acceptLanguage.indexOf("en");
-  const idxMn = acceptLanguage.indexOf("mn");
-  if (idxEn >= 0 && (idxMn < 0 || idxEn < idxMn)) return "en";
-  if (idxMn >= 0 && (idxEn < 0 || idxMn < idxEn)) return "mn";
-  return null;
-}
+/** Always use Mongolian ("mn") as the default locale on first visit.
+ * Users can switch to English via the locale switcher. */
+const DEFAULT_LOCALE = "mn";
 
 /** Set the NEXT_LOCALE cookie on a response. */
 function setLocaleCookie(res: NextResponse, locale: string): void {
@@ -49,9 +38,7 @@ export default async function proxy(request: NextRequest) {
     authResult.headers.get("x-storefront-rewrite")
   ) {
     if (!request.cookies.has("NEXT_LOCALE")) {
-      const detected =
-        detectLocale(request.headers.get("accept-language")) ?? "mn";
-      setLocaleCookie(authResult, detected);
+      setLocaleCookie(authResult, DEFAULT_LOCALE);
     }
     return authResult;
   }
@@ -59,9 +46,7 @@ export default async function proxy(request: NextRequest) {
   const i18nResponse = handleI18n(request);
 
   if (!request.cookies.has("NEXT_LOCALE")) {
-    const detected =
-      detectLocale(request.headers.get("accept-language")) ?? "mn";
-    setLocaleCookie(i18nResponse, detected);
+    setLocaleCookie(i18nResponse, DEFAULT_LOCALE);
   }
 
   return i18nResponse;

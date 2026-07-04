@@ -2,6 +2,7 @@
 
 import { requireAppContext } from "@/lib/erp";
 import type { createClient } from "@/lib/supabase/server";
+import { capture } from "@zuiio/capture";
 
 type AuditAction =
   | "created"
@@ -60,11 +61,7 @@ export async function logAuditEvent(
     });
   } catch {
     // Audit logging should never break the calling operation
-    console.error("Failed to log audit event:", {
-      action,
-      entityType,
-      entityId,
-    });
+    capture({ action, entityType, entityId }, { context: "audit: log event" });
   }
 }
 
@@ -93,10 +90,6 @@ export async function logAuditEventWithClient(
       summary: summary ?? `${action} ${entityType}`,
     });
   } catch {
-    console.error("Failed to log audit event:", {
-      action,
-      entityType,
-      entityId,
-    });
+    capture({ action, entityType, entityId }, { context: "audit: log event with client" });
   }
 }

@@ -12,9 +12,7 @@ export async function createJournalEntry(
   const ctx = await requireWriteAction("accounting.manage");
   if ("error" in ctx) return ctx;
   const { organizationId, userId, branchId } = ctx;
-  // New tables/RPCs not yet in generated types — cast as needed
-  // biome-ignore lint/suspicious/noExplicitAny: generated types don't include new accounting tables
-  const db = ctx.supabase as any;
+  const db = ctx.supabase;
 
   const entryDate = getString(formData, "entry_date");
   const description = getString(formData, "description");
@@ -89,8 +87,7 @@ export async function createJournalEntry(
     .from("journal_entries")
     .insert({
       organization_id: organizationId,
-      // biome-ignore lint/style/noNonNullAssertion: branchId non-null after scoped check
-      branch_id: branchId!,
+      branch_id: branchId,
       entry_date: entryDate,
       entry_number: entryNumber,
       description,
@@ -123,10 +120,8 @@ export async function createJournalEntry(
     ctx.supabase,
     organizationId,
     userId,
-    // biome-ignore lint/suspicious/noExplicitAny: audit entity types not in generated types
-    "created" as any,
-    // biome-ignore lint/suspicious/noExplicitAny: audit entity types not in generated types
-    "product" as any,
+    "created",
+    "product",
     journalEntry.id,
     undefined,
     `Журналын бичилт ${entryNumber} үүсгэсэн`,
@@ -143,8 +138,7 @@ export async function createAccount(
   const ctx = await requireWriteAction("accounting.manage");
   if ("error" in ctx) return ctx;
   const { organizationId, userId, branchId } = ctx;
-  // biome-ignore lint/suspicious/noExplicitAny: generated types don't include new accounting tables
-  const db = ctx.supabase as any;
+  const db = ctx.supabase;
 
   const code = getString(formData, "code");
   const name = getString(formData, "name");
@@ -179,8 +173,7 @@ export async function createAccount(
 
   const { error: insertError } = await db.from("chart_of_accounts").insert({
     organization_id: organizationId,
-    // biome-ignore lint/style/noNonNullAssertion: branchId non-null after scoped check
-    branch_id: branchId!,
+    branch_id: branchId,
     code,
     name,
     type,
@@ -196,10 +189,8 @@ export async function createAccount(
     ctx.supabase,
     organizationId,
     userId,
-    // biome-ignore lint/suspicious/noExplicitAny: audit entity types not in generated types
-    "created" as any,
-    // biome-ignore lint/suspicious/noExplicitAny: audit entity types not in generated types
-    "product" as any,
+    "created",
+    "product",
     code,
     undefined,
     `Данс "${code} - ${name}" үүсгэсэн`,
@@ -216,8 +207,7 @@ export async function updateJournalEntry(
   const ctx = await requireWriteAction("accounting.manage");
   if ("error" in ctx) return ctx;
   const { organizationId, userId, branchId, isBranchScoped } = ctx;
-  // biome-ignore lint/suspicious/noExplicitAny: generated types don't include new accounting tables
-  const db = ctx.supabase as any;
+  const db = ctx.supabase;
 
   const entryId = getString(formData, "id");
   const entryDate = getString(formData, "entry_date");
@@ -354,10 +344,8 @@ export async function updateJournalEntry(
     ctx.supabase,
     organizationId,
     userId,
-    // biome-ignore lint/suspicious/noExplicitAny: audit entity types not in generated types
-    "updated" as any,
-    // biome-ignore lint/suspicious/noExplicitAny: audit entity types not in generated types
-    "product" as any,
+    "updated",
+    "product",
     entryId,
     undefined,
     `Журналын бичилт шинэчлэгдсэн`,
@@ -371,8 +359,7 @@ export async function deleteJournalEntry(entryId: string) {
   const ctx = await requireWriteAction("accounting.manage");
   if ("error" in ctx) return ctx;
   const { organizationId, branchId, isBranchScoped } = ctx;
-  // biome-ignore lint/suspicious/noExplicitAny: generated types don't include new accounting tables
-  const db = ctx.supabase as any;
+  const db = ctx.supabase;
 
   // Lines are cascade-deleted by the FK constraint — enforce branch access if scoped
   let deleteQuery = db
@@ -402,8 +389,7 @@ export async function toggleAccountActive(
   const ctx = await requireWriteAction("accounting.manage");
   if ("error" in ctx) return ctx;
   const { organizationId, branchId, isBranchScoped } = ctx;
-  // biome-ignore lint/suspicious/noExplicitAny: generated types don't include new accounting tables
-  const db = ctx.supabase as any;
+  const db = ctx.supabase;
 
   let updateQuery = db
     .from("chart_of_accounts")

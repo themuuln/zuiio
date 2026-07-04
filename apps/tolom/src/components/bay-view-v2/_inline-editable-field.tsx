@@ -7,6 +7,8 @@ interface InlineEditableFieldProps {
   value: number;
   /** Called with parsed value on blur/Enter */
   onSave: (value: number) => void;
+  /** Called on every keystroke with the current parsed numeric value (live preview) */
+  onChange?: (value: number) => void;
   /** Format value for display (e.g. formatMNT) */
   formatDisplay?: (value: number) => string;
   /** Parse input string to number */
@@ -28,6 +30,7 @@ interface InlineEditableFieldProps {
 export function InlineEditableField({
   value,
   onSave,
+  onChange,
   formatDisplay,
   parseInput,
   type = "number",
@@ -77,7 +80,6 @@ export function InlineEditableField({
     },
     [],
   );
-
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const raw = e.target.value;
@@ -85,11 +87,14 @@ export function InlineEditableField({
         // Strip formatting and keep raw number string
         const num = parseInput(raw);
         setEditText(Number.isNaN(num) ? raw : num.toString());
+        if (!Number.isNaN(num)) onChange?.(num);
       } else {
         setEditText(raw);
+        const num = Number(raw);
+        if (!Number.isNaN(num)) onChange?.(num);
       }
     },
-    [parseInput, formatDisplay, isNumber],
+    [parseInput, formatDisplay, isNumber, onChange],
   );
 
   return (

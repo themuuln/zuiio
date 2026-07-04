@@ -4,6 +4,7 @@ import { requireActionContext } from "@/lib/action-utils";
 import { validateProductInput } from "@/lib/domain-rules";
 import { checkLowStockAndNotify } from "@/lib/notification";
 import { revalidateEntity } from "@/lib/revalidate";
+import { capture } from "@zuiio/capture";
 
 export async function updateProduct(
   _prevState: { error?: string } | undefined,
@@ -158,7 +159,7 @@ export async function updateProduct(
             .single();
 
           if (groupError || !dbGroup) {
-            console.error("Failed to create variant group:", groupError);
+            capture(groupError, { context: "products: create variant group" });
             continue;
           }
 
@@ -214,12 +215,12 @@ export async function updateProduct(
             .insert(assignments);
 
           if (assignError) {
-            console.error("Failed to create variant assignments:", assignError);
+            capture(assignError, { context: "products: create variant assignments" });
           }
         }
       }
     } catch (parseError) {
-      console.error("Failed to parse variant data:", parseError);
+      capture(parseError, { context: "products: parse variant data" });
       return {
         error:
           "Бүтээгдэхүүн шинэчлэгдсэн боловч вариантуудыг хадгалахад алдаа гарлаа.",

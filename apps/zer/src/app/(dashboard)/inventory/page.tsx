@@ -26,10 +26,7 @@ import {
 import { requireAppContext } from "@/lib/erp";
 import { formatCurrency, formatDate } from "@/lib/format";
 
-export const unstable_instant = {
-  prefetch: "static",
-  unstable_disableValidation: true,
-};
+
 
 const MOVEMENT_LABELS: Record<string, string> = {
   in: "Орлого",

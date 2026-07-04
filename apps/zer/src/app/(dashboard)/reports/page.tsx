@@ -18,14 +18,7 @@ import { getFullReport } from "@/lib/reports";
 import { DateRangeForm } from "./date-range-form";
 import { ShareDialog } from "./share-dialog";
 
-export const unstable_instant = {
-  prefetch: "static",
-  samples: [
-    { searchParams: { from: null, to: null } },
-    { searchParams: { from: "2026-01-01", to: "2026-06-19" } },
-  ],
-  unstable_disableValidation: true,
-};
+
 
 export default async function ReportsPage({
   searchParams,

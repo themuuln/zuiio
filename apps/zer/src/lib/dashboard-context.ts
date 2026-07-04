@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { capture } from "@zuiio/capture";
 
 /**
  * Per-request cached dashboard auth + profile lookup.
@@ -39,7 +40,7 @@ export const getDashboardContext = cache(async () => {
 
   if (profileError) {
     // Surface the real error so a missing column doesn't look like a login redirect
-    console.error("Dashboard context: profile query failed", profileError);
+    capture(profileError, { context: "dashboard context: profile query" });
   }
 
   if (!profile) {

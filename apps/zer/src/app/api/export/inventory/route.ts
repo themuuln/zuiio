@@ -1,27 +1,14 @@
-import { requireAppContext } from "@/lib/erp";
-import type { ExportFormat } from "@/lib/export";
-import { serveEntityExport } from "@/lib/export";
+import { capture } from "@zuiio/capture";
+import type { ServeExportConfig } from "@/lib/export/serve-export";
+import { serveExportRoute } from "@/lib/export/serve-export";
 
-const today = () => new Date().toISOString().slice(0, 10);
-
-export async function GET(request: Request) {
-  const { supabase, organizationId } = await requireAppContext();
-
-  const { searchParams } = new URL(request.url);
-  const format = (searchParams.get("format") ?? "csv") as ExportFormat;
-
-  const { data: products } = await supabase
-    .from("products")
-    .select(
-      "id, name, sku, unit, cost_price, current_stock, min_stock, categories(name), brands(name)",
-    )
-    .eq("organization_id", organizationId)
-    .is("deleted_at", null)
-    .order("name", { ascending: true });
-
-  const rows = (products ?? []).map((p) => {
-    const currentStock = p.current_stock ?? 0;
-    const minStock = p.min_stock ?? 0;
+const config: ServeExportConfig = {
+  table: "products",
+  select:
+    "id, name, sku, unit, cost_price, current_stock, min_stock, categories(name), brands(name)",
+  mapRow: (p) => {
+    const currentStock = (p.current_stock as number) ?? 0;
+    const minStock = (p.min_stock as number) ?? 0;
     return {
       name: p.name ?? "",
       sku: p.sku ?? "",
@@ -29,14 +16,13 @@ export async function GET(request: Request) {
       cost_price: p.cost_price ?? 0,
       current_stock: currentStock,
       min_stock: minStock,
-      stock_value: (p.cost_price ?? 0) * currentStock,
+      stock_value: ((p.cost_price as number) ?? 0) * currentStock,
       low_stock: currentStock < minStock ? "Тийм" : "Үгүй",
       category: (p.categories as { name: string } | null)?.name ?? "",
       brand: (p.brands as { name: string } | null)?.name ?? "",
     };
-  });
-
-  const columns = [
+  },
+  columns: [
     { header: "Бүтээгдэхүүн", key: "name" },
     { header: "SKU", key: "sku" },
     { header: "Хэмжих нэгж", key: "unit" },
@@ -47,13 +33,13 @@ export async function GET(request: Request) {
     { header: "Нөөцийн үнэ цэнэ", key: "stock_value" },
     { header: "Бага нөөцтэй эсэх", key: "low_stock" },
     { header: "Ангилал", key: "category" },
-  ];
+  ],
+  isNull: ["deleted_at"],
+  order: { column: "name", ascending: true },
+  filename: "inventory-export",
+  title: "Агуулахын үлдэгдэл",
+};
 
-  return serveEntityExport(
-    rows,
-    columns,
-    format,
-    `inventory-export-${today()}`,
-    "Агуулахын үлдэгдэл",
-  );
+export async function GET(request: Request) {
+  return serveExportRoute(request, config);
 }

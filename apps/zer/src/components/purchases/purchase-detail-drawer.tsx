@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
+import { capture, withDbCapture } from "@zuiio/capture";
 
 const STATUS_LABELS: Record<string, string> = {
   draft: "Ноорог",
@@ -54,6 +55,8 @@ type PurchaseDetailData = {
     supplier_id: string | null;
     created_by: string | null;
     created_at: string | null;
+    contacts: { name: string; phone: string | null } | null;
+    profiles: { full_name: string } | null;
   };
   items: Array<{
     id: string;
@@ -74,32 +77,53 @@ async function fetchPurchaseOrder(
 ): Promise<PurchaseDetailData | null> {
   const supabase = createClient();
 
-  const { data: order } = await supabase
-    .from("purchase_orders")
-    .select(
-      "*, contacts!purchase_orders_supplier_id_fkey(name, phone), profiles!purchase_orders_created_by_fkey(full_name)",
-    )
-    .eq("id", id)
-    .single();
-
+  const orderResult = await withDbCapture(
+    "purchase_order",
+    supabase
+      .from("purchase_orders")
+      .select(
+        "*, contacts!purchase_orders_supplier_id_fkey(name, phone), profiles!purchase_orders_created_by_fkey(full_name)",
+      )
+      .eq("id", id)
+      .single(),
+  );
+  const orderError = orderResult.error;
+  const order = orderResult.data as unknown as PurchaseDetailData["order"] | null;
   if (!order) return null;
 
-  const { data: items } = await supabase
-    .from("purchase_order_items")
-    .select("*, products(name, unit)")
-    .eq("purchase_order_id", id);
+  const { data: items, error: itemsError } = await withDbCapture(
+    "purchase_order_items",
+    supabase
+      .from("purchase_order_items")
+      .select("*, products(name, unit)")
+      .eq("purchase_order_id", id),
+  );
+
+  if (itemsError) {
+    capture(itemsError, { context: "purchase-detail: items query" });
+    return null;
+  }
 
   return {
     order: order as unknown as PurchaseDetailData["order"],
-    items: (items ?? []).map((item) => ({
+    items: (items ?? []).map((item: {
+      id: string;
+      product_id: string | null;
+      description: string | null;
+      quantity: number;
+      unit_cost: number;
+      total_cost: number | null;
+      received_quantity: number | null;
+      products: { name: string; unit: string | null } | null;
+    }) => ({
       id: item.id,
       product_id: item.product_id,
       description: item.description,
       quantity: item.quantity,
       unit_cost: item.unit_cost,
       total_cost: item.total_cost ?? 0,
-      received_quantity: item.received_quantity,
-      products: item.products as { name: string; unit: string | null } | null,
+      received_quantity: item.received_quantity ?? 0,
+      products: item.products,
     })),
     supplier: order.contacts as { name: string; phone: string | null } | null,
     createdBy: order.profiles as { full_name: string } | null,

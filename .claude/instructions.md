@@ -12,7 +12,7 @@ You are coding on the **@zuiio** monorepo. Before starting any task, you MUST re
 | `docs/stack-web.md` | Next.js 16 config, Instant Navigations, Turbopack settings | **When working on web apps** |
 | `docs/stack-mobile.md` | React Native + Expo recommended stack | **When working on mobile apps** |
 | `templates/boilerplate/README.md` | Package-by-package rationale for mobile stacks | **When scaffolding new apps** |
-| `apps/zer/AGENTS.md` | Zer-specific conventions (HR, accounting) | **When working in apps/zer** |
+| `apps/zer/AGENTS.md` | Zer-specific conventions (ERP) | **When working in apps/zer** |
 | `apps/tolom/AGENTS.md` | Tolom-specific conventions (repair shop) | **When working in apps/tolom** |
 
 ## Design system essentials (in brief)

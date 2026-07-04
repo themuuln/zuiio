@@ -1,6 +1,7 @@
 "use client";
 
 import { type UseQueryResult, useQuery } from "@tanstack/react-query";
+import { withDbCapture } from "@zuiio/capture";
 import { createClient } from "@/lib/supabase/client";
 
 /**
@@ -93,9 +94,10 @@ export function createSimpleQuery<TData>(config: SimpleQueryConfig<TData>) {
           query = (query as any)[filter.operator](filter.column, filter.value);
         }
 
-        query = query.order(orderBy, { ascending: orderDirection === "asc" });
-
-        const { data, error } = await query;
+        const { data, error } = await withDbCapture(
+          `simple_query:${table}`,
+          query.order(orderBy, { ascending: orderDirection === "asc" }),
+        );
 
         if (error) throw error;
         return data as unknown as TData[];

@@ -9,10 +9,7 @@ import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
 import { requireAppContext } from "@/lib/erp";
 
-export const unstable_instant = {
-  prefetch: "static",
-  unstable_disableValidation: true,
-};
+
 
 export default async function CustomersPage() {
   const { supabase, organizationId } = await requireAppContext();

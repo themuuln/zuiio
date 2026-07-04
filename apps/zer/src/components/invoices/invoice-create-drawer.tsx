@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { capture } from "@zuiio/capture";
 import { createInvoice } from "@/app/(dashboard)/invoices/actions";
 import type { SelectedVariant } from "@/components/products/variant-picker";
 import { buttonVariants } from "@/components/ui/button";
@@ -283,13 +284,23 @@ export function InvoiceCreateDrawer({
                   const {
                     data: { user },
                   } = await supabase.auth.getUser();
-                  if (!user) return;
-                  const { data: profile } = await supabase
+                  if (!user) {
+                    capture(new Error("No user found during invoice contact create"), { context: "invoice_create_contact" });
+                    return;
+                  }
+                  const { data: profile, error: profileError } = await supabase
                     .from("profiles")
                     .select("organization_id")
                     .eq("id", user.id)
                     .single();
-                  if (!profile?.organization_id) return;
+                  if (profileError) {
+                    capture(profileError, { context: "invoice_create_contact" });
+                    return;
+                  }
+                  if (!profile?.organization_id) {
+                    capture(new Error("No organization found for user during invoice contact create"), { context: "invoice_create_contact" });
+                    return;
+                  }
 
                   const { data: newContact, error } = await supabase
                     .from("contacts")
@@ -301,7 +312,10 @@ export function InvoiceCreateDrawer({
                     .select("id, name")
                     .single();
 
-                  if (error || !newContact) return;
+                  if (error || !newContact) {
+                    capture(error || new Error("No contact returned after insert"), { context: "invoice_create_contact" });
+                    return;
+                  }
 
                   setContacts((prev) => [...prev, newContact]);
                   setSelectedContact(newContact);

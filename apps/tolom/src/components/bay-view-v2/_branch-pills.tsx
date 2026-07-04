@@ -1,5 +1,6 @@
+"use client";
+
 import { cn } from "@/lib/utils";
-("use client");
 
 import { Building2 } from "lucide-react";
 import { hasMultipleBranches } from "@/lib/utils";

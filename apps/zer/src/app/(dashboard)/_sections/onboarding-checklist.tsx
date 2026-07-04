@@ -1,3 +1,4 @@
+import { withDbCapture } from "@zuiio/capture";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
@@ -10,20 +11,40 @@ export async function OnboardingChecklist({
 }) {
   const supabase = await createClient();
 
-  const [salesCountResult, profilesCountResult] = await Promise.all([
-    supabase
-      .from("sales")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", orgId),
-    supabase
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", orgId),
+  const [salesResult, profilesResult] = await Promise.all([
+    withDbCapture(
+      "dashboard_onboarding_sales",
+      supabase
+        .from("sales")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", orgId),
+    ).then(
+      (r) =>
+        r as unknown as {
+          data: Array<{ id: string }> | null;
+          count: number | null;
+          error: unknown;
+        },
+    ),
+    withDbCapture(
+      "dashboard_onboarding_profiles",
+      supabase
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", orgId),
+    ).then(
+      (r) =>
+        r as unknown as {
+          data: Array<{ id: string }> | null;
+          count: number | null;
+          error: unknown;
+        },
+    ),
   ]);
 
   const hasProducts = totalProducts > 0;
-  const hasSales = (salesCountResult.count ?? 0) > 0;
-  const hasTeam = (profilesCountResult.count ?? 0) > 1;
+  const hasSales = (salesResult.count ?? 0) > 0;
+  const hasTeam = (profilesResult.count ?? 0) > 1;
 
   const checklistItems = [
     { label: "Бүтээгдэхүүн нэмэх", done: hasProducts, href: "/products" },

@@ -3,6 +3,7 @@
 import { ArrowClockwise, WarningCircle } from "@phosphor-icons/react";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { capture } from "@zuiio/capture";
 
 export default function SettingsError({
   error,
@@ -12,7 +13,7 @@ export default function SettingsError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error(error);
+    capture(error, { context: "settings error boundary" });
   }, [error]);
 
   return (

@@ -7,6 +7,7 @@ import { PermissionEditor } from "@/components/roles/permission-editor";
 import { RoleForm } from "@/components/roles/role-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -56,7 +57,7 @@ export function RolesClient({ roles, rolePermissions }: RolesClientProps) {
     const result = await deleteRole(roleId);
     setDeleting(null);
     if (result?.error) {
-      alert(result.error);
+      toast.error(result.error);
     }
   };
 

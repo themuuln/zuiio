@@ -1,5 +1,6 @@
 import { ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
+import { User } from "@phosphor-icons/react/dist/ssr";
 import {
   Empty,
   EmptyDescription,
@@ -159,12 +160,19 @@ export default async function HistoryPage() {
                 </span>
                 <span className="text-xs text-muted-foreground truncate">
                   #{sale.id.slice(0, 8).toUpperCase()}
-                  {sale.contacts?.name && ` · ${sale.contacts.name}`}
-                  {sale.profiles?.full_name &&
-                    ` · 🧑 ${sale.profiles.full_name}`}
+                  {sale.contacts?.name && <> · {sale.contacts.name}</>}
+                  {sale.profiles?.full_name && (
+                    <>
+                      {" · "}
+                      <User
+                        className="mr-0.5 inline-block size-3 align-text-bottom"
+                        weight="bold"
+                      />
+                      {sale.profiles.full_name}
+                    </>
+                  )}
                 </span>
               </div>
-
               {/* Right: amount, item count, status */}
               <div className="flex flex-col items-end gap-0.5">
                 <span className="text-sm font-semibold tabular-nums">

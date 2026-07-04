@@ -3,14 +3,7 @@ import { requireAppContext } from "@/lib/erp";
 import { ExpensesContent } from "./expenses-content";
 import type { ExpenseRow } from "./expenses-table";
 
-export const unstable_instant = {
-  prefetch: "static",
-  samples: [
-    { searchParams: { branch: null } },
-    { searchParams: { branch: "sample" } },
-  ],
-  unstable_disableValidation: true,
-};
+
 
 export default async function ExpensesPage({
   searchParams,

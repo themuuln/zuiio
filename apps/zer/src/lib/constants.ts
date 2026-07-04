@@ -5,6 +5,8 @@ export const PUBLIC_ROUTES = [
   "/landing",
   "/login",
   "/register",
+  "/forgot-password",
+  "/reset-password",
   "/update-password",
   "/organization/new",
 ];

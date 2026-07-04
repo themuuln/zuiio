@@ -1,5 +1,6 @@
 import "server-only";
 import type { createClient } from "@/lib/supabase/server";
+import { capture } from "@zuiio/capture";
 
 /** Known org-setting boolean column names that are safe to pass to .select(). */
 const ALLOWED_SETTINGS = new Set([
@@ -43,11 +44,7 @@ export async function checkOrgSetting(
   if (error) {
     // Query failure (e.g. a column doesn't exist) must NOT silently enable features.
     // Log the error and deny the check — the feature will be hidden from the user.
-    console.error("[org-settings] Query failed", {
-      setting,
-      organizationId,
-      error,
-    });
+    capture(error, { context: "org-settings: check query" });
     return false;
   }
 

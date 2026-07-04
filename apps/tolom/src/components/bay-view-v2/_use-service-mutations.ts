@@ -44,9 +44,9 @@ export function useServiceMutations({
   const [addingServiceIds, setAddingServiceIds] = useState<Set<string>>(
     new Set(),
   );
-  const [confirmingServiceIds, setConfirmingServiceIds] = useState<
-    Set<string>
-  >(new Set());
+  const [confirmingServiceIds, setConfirmingServiceIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   // ── Mutation hooks ──
 
@@ -70,10 +70,7 @@ export function useServiceMutations({
       : undefined,
   });
 
-  const deleteServiceMutation = useOrgMutation<
-    unknown,
-    { serviceId: string }
-  >({
+  const deleteServiceMutation = useOrgMutation<unknown, { serviceId: string }>({
     endpoint: (vars) =>
       `/api/organizations/${orgIdRef.current}/work-orders/${workOrderId}/services?serviceId=${vars.serviceId}`,
     method: "DELETE",
@@ -94,6 +91,7 @@ export function useServiceMutations({
     invalidateKeys: branchId
       ? ([bayViewKeys.data(branchId)] as const)
       : undefined,
+    bodyFn: (vars) => vars.body,
   });
 
   // ── Optimistic add ──
@@ -127,10 +125,16 @@ export function useServiceMutations({
             created_by: null,
             created_at: new Date().toISOString(),
             name_mn: svc.name_mn ?? null,
-            catalog_item_variant_id: (svc as Record<string, unknown>)
-              .variant_id as string | null | undefined ?? null,
-            variant_label: (svc as Record<string, unknown>)
-              .variant_label as string | null | undefined ?? null,
+            catalog_item_variant_id:
+              ((svc as Record<string, unknown>).variant_id as
+                | string
+                | null
+                | undefined) ?? null,
+            variant_label:
+              ((svc as Record<string, unknown>).variant_label as
+                | string
+                | null
+                | undefined) ?? null,
           } satisfies WorkOrderService & { name_mn?: string | null },
         ],
       };
@@ -243,13 +247,12 @@ export function useServiceMutations({
           label: "Undo",
           onClick: async () => {
             try {
-              const restoredService =
-                await createServiceMutation.mutateAsync({
-                  service_catalog_id: serviceData.service_catalog_id,
-                  service_name: serviceData.service_name,
-                  quantity: serviceData.quantity,
-                  unit_price: serviceData.unit_price,
-                });
+              const restoredService = await createServiceMutation.mutateAsync({
+                service_catalog_id: serviceData.service_catalog_id,
+                service_name: serviceData.service_name,
+                quantity: serviceData.quantity,
+                unit_price: serviceData.unit_price,
+              });
               if (restoredService) {
                 setWo((prev) => {
                   if (!prev) return prev;
@@ -340,9 +343,7 @@ export function useServiceMutations({
   async function handleServiceQtySave(serviceId: string, qty: number) {
     if (serviceId.startsWith("temp-")) {
       const svc = wo?.services?.find((s) => s.id === serviceId);
-      const price = svc
-        ? Number(svc.final_price ?? svc.unit_price ?? 0)
-        : 0;
+      const price = svc ? Number(svc.final_price ?? svc.unit_price ?? 0) : 0;
       await confirmAddService(serviceId, price);
       return;
     }

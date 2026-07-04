@@ -1,3 +1,4 @@
+import { capture } from "@zuiio/capture";
 import { toCsv } from "@/lib/csv";
 import { requireAppContext } from "@/lib/erp";
 import type { ExportColumn, ExportFormat } from "@/lib/export";
@@ -67,29 +68,40 @@ const commissionStaffCols: ExportColumn[] = [
 // ── Router ───────────────────────────────────────────────────────────
 
 export async function GET(request: Request) {
-  const { supabase, organizationId } = await requireAppContext();
+  try {
+    const { supabase, organizationId } = await requireAppContext();
 
-  const { searchParams } = new URL(request.url);
-  const from =
-    searchParams.get("from") ?? new Date().toISOString().slice(0, 10);
-  const to = searchParams.get("to") ?? new Date().toISOString().slice(0, 10);
-  const format = (searchParams.get("format") ?? "csv") as ExportFormat;
+    const { searchParams } = new URL(request.url);
+    const from =
+      searchParams.get("from") ?? new Date().toISOString().slice(0, 10);
+    const to =
+      searchParams.get("to") ?? new Date().toISOString().slice(0, 10);
+    const formatParam = searchParams.get("format") ?? "csv";
 
-  const report = await getFullReport(supabase, organizationId, from, to);
+    // Validate format
+    const validFormats: ExportFormat[] = ["csv", "xlsx", "docx", "pdf"];
+    if (!validFormats.includes(formatParam as ExportFormat)) {
+      return new Response("Unsupported export format", { status: 400 });
+    }
+    const format = formatParam as ExportFormat;
 
-  const filename = `reports-export-${from}-to-${to}`;
+    const report = await getFullReport(supabase, organizationId, from, to);
 
-  switch (format) {
-    case "csv":
-      return serveCsv(report, filename, from, to);
-    case "xlsx":
-      return serveXlsx(report, filename);
-    case "docx":
-      return serveDocx(report, filename);
-    case "pdf":
-      return servePdf(report, filename);
-    default:
-      return serveCsv(report, filename, from, to);
+    const filename = `reports-export-${from}-to-${to}`;
+
+    switch (format) {
+      case "csv":
+        return serveCsv(report, filename, from, to);
+      case "xlsx":
+        return serveXlsx(report, filename);
+      case "docx":
+        return serveDocx(report, filename);
+      case "pdf":
+        return servePdf(report, filename);
+    }
+  } catch (error) {
+    capture(error, { context: "export/reports" });
+    return new Response("Export failed", { status: 500 });
   }
 }
 

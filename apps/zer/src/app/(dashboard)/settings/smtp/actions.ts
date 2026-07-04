@@ -1,10 +1,10 @@
 "use server";
 
+import { capture } from "@zuiio/capture";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/server-service";
 import { getSuperadminEmail } from "@/lib/superadmin";
-
 const _SUPERADMIN_EMAIL = process.env.SUPERADMIN_EMAIL;
 
 async function requireSuperadminAction() {
@@ -55,10 +55,16 @@ export async function toggleSmtpConfig(configId: string, isActive: boolean) {
   await requireSuperadminAction();
 
   const admin = createServiceClient();
-  await admin
+  const { error } = await admin
     .from("smtp_configs")
     .update({ is_active: isActive })
     .eq("id", configId);
 
+  if (error) {
+    capture(error);
+    return { error: error.message };
+  }
+
   revalidatePath("/settings/smtp");
+  return { success: true };
 }

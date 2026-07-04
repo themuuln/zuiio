@@ -3,6 +3,7 @@
 import { ArrowClockwise, WarningCircle } from "@phosphor-icons/react";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { capture } from "@zuiio/capture";
 
 export default function InventoryError({
   error,
@@ -12,7 +13,7 @@ export default function InventoryError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error(error);
+    capture(error, { context: "inventory error boundary" });
   }, [error]);
 
   return (

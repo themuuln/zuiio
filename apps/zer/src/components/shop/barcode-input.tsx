@@ -41,7 +41,7 @@ export function BarcodeInput({ products }: BarcodeInputProps) {
   }, []);
 
   const clearStatusAfterDelay = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    clearTimeout(timeoutRef.current ?? undefined);
     timeoutRef.current = setTimeout(() => {
       setStatus({ type: "idle" });
     }, 2000);

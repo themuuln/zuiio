@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ProductsPageClient } from "./products-page-client";
+import { capture } from "@zuiio/capture";
 
 type PublicProduct = {
   id: string;
@@ -33,17 +34,26 @@ export default async function PublicProductsPage({
 }) {
   const { slug } = await params;
   const supabase = await createClient();
-
-  const { data, error } = await supabase.rpc("get_public_products", {
-    p_slug: slug,
-  });
-
-  if (error || !data) {
-    console.error("Public products error:", error ?? "Org not found");
+  
+  try {
+    const { data, error } = await supabase.rpc("get_public_products", {
+      p_slug: slug,
+    });
+  
+    if (error) {
+      capture(error, { context: "public products: rpc" });
+      notFound();
+    }
+  
+    if (!data) {
+      notFound();
+    }
+  
+    const { organization, products } = data as unknown as PublicProductsData;
+  
+    return <ProductsPageClient organization={organization} products={products} />;
+  } catch (err) {
+    capture(err, { context: "public products" });
     notFound();
   }
-
-  const { organization, products } = data as unknown as PublicProductsData;
-
-  return <ProductsPageClient organization={organization} products={products} />;
 }

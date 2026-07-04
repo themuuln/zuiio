@@ -2,25 +2,27 @@
 
 import { requireActionContext } from "@/lib/action-utils";
 import { revalidateEntity } from "@/lib/revalidate";
-import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/supabase/types";
+
 
 export async function createEmployee(_prevState: unknown, formData: FormData) {
-  const ctx = await requireActionContext("settings.manage" as never);
+  const MINIMUM_WAGE = 792_000;
+  const ctx = await requireActionContext("settings.manage");
   if ("error" in ctx) return ctx;
-  const supabase = await createClient();
+  const { supabase } = ctx;
   const organizationId = ctx.organizationId;
 
   const fullName = formData.get("full_name")?.toString().trim();
   if (!fullName) return { error: "Нэр шаардлагатай." };
 
   const baseSalary = Number(formData.get("base_salary"));
-  if (!baseSalary || baseSalary < 792_000) {
+  if (!baseSalary || baseSalary < MINIMUM_WAGE) {
     return {
       error: "Цалин хөдөлмөрийн хөлсний доод хэмжээнээс бага байж болохгүй.",
     };
   }
 
-  const { error } = await supabase.from("employees" as never).insert({
+  const { error } = await supabase.from("employees").insert({
     organization_id: organizationId,
     full_name: fullName,
     position: formData.get("position")?.toString() || null,
@@ -33,23 +35,22 @@ export async function createEmployee(_prevState: unknown, formData: FormData) {
     salary_type: formData.get("salary_type")?.toString() || "monthly",
     bank_account: formData.get("bank_account")?.toString() || null,
     branch_id: formData.get("branch_id")?.toString() || null,
-  } as never);
+  });
 
   if (error) return { error: error.message };
-  revalidateEntity("hr" as never);
+  revalidateEntity("hr");
   return { success: true };
 }
 
 export async function updateEmployee(_prevState: unknown, formData: FormData) {
-  const ctx = await requireActionContext("settings.manage" as never);
+  const ctx = await requireActionContext("settings.manage");
   if ("error" in ctx) return ctx;
-  const supabase = await createClient();
+  const { supabase } = ctx;
 
   const id = formData.get("id")?.toString();
   if (!id) return { error: "Ажилтан тодорхойгүй байна." };
-
-  const updates: Record<string, string | number | null> = {};
-  const fields = [
+  const updates: Partial<Database["public"]["Tables"]["employees"]["Update"]> = {};
+  const stringFields = [
     "full_name",
     "position",
     "department",
@@ -57,8 +58,8 @@ export async function updateEmployee(_prevState: unknown, formData: FormData) {
     "salary_type",
     "bank_account",
     "branch_id",
-  ];
-  for (const field of fields) {
+  ] as const satisfies readonly (keyof Database["public"]["Tables"]["employees"]["Update"])[];
+  for (const field of stringFields) {
     const val = formData.get(field)?.toString();
     if (val) updates[field] = val;
   }
@@ -68,28 +69,25 @@ export async function updateEmployee(_prevState: unknown, formData: FormData) {
   if (hireDate) updates.hire_date = hireDate;
 
   const { error } = await supabase
-    .from("employees" as never)
-    .update(updates as never)
-    .eq("id" as never, id);
+    .from("employees")
+    .update(updates)
+    .eq("id", id);
 
   if (error) return { error: error.message };
-  revalidateEntity("hr" as never);
+  revalidateEntity("hr");
   return { success: true };
 }
 
 export async function deleteEmployee(formData: FormData) {
-  const ctx = await requireActionContext("settings.manage" as never);
+  const ctx = await requireActionContext("settings.manage");
   if ("error" in ctx) return ctx;
-  const supabase = await createClient();
+  const { supabase } = ctx;
 
   const id = formData.get("id")?.toString();
   if (!id) return { error: "Ажилтан тодорхойгүй байна." };
 
-  const { error } = await supabase
-    .from("employees" as never)
-    .delete()
-    .eq("id" as never, id);
+  const { error } = await supabase.from("employees").delete().eq("id", id);
   if (error) return { error: error.message };
-  revalidateEntity("hr" as never);
+  revalidateEntity("hr");
   return { success: true };
 }

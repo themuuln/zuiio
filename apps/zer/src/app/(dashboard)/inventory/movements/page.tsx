@@ -8,14 +8,7 @@ import { requireAppContext } from "@/lib/erp";
 import { checkOrgSetting } from "@/lib/org-settings";
 import { type MovementRow, MovementsContent } from "./movements-content";
 
-export const unstable_instant = {
-  prefetch: "static",
-  samples: [
-    { searchParams: { branch: null } },
-    { searchParams: { branch: "sample" } },
-  ],
-  unstable_disableValidation: true,
-};
+
 
 const PAGE_SIZE = 20;
 

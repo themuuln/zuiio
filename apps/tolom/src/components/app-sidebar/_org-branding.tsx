@@ -1,7 +1,13 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Building2, Check, CirclePlus, Store } from "lucide-react";
+import {
+  Building2,
+  Check,
+  ChevronsUpDown,
+  CirclePlus,
+  Store,
+} from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
@@ -110,6 +116,9 @@ export function OrgBranding() {
             >
               {trigger}
               {label}
+              {canShowDropdown && (
+                <ChevronsUpDown className="size-4 shrink-0 text-sidebar-foreground/40 group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:group-hover:block" />
+              )}
             </button>
           }
         />

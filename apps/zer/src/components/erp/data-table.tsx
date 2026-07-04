@@ -1,8 +1,9 @@
-"use client";
+import * as React from "react";
 
-import type * as React from "react";
+import { type ColumnDef } from "@tanstack/react-table";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable } from "@/components/ui/data-table";
 import {
   Table,
   TableBody,
@@ -11,7 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
 
 export interface Column<T> {
   header: string;
@@ -46,17 +46,7 @@ export function ErpDataTable<T extends Record<string, unknown>>({
   title,
   emptyState,
 }: DataTableProps<T>) {
-  const renderCell = (item: T, col: Column<T>) => {
-    if (typeof col.accessor === "function") {
-      return col.accessor(item);
-    }
-    const value = item[col.accessor];
-    if (value === null || value === undefined) {
-      return <span className="text-muted-foreground">-</span>;
-    }
-    return String(value);
-  };
-
+  // Loading skeleton
   if (loading) {
     return (
       <Card>
@@ -93,6 +83,7 @@ export function ErpDataTable<T extends Record<string, unknown>>({
     );
   }
 
+  // Empty state
   if (data.length === 0) {
     return (
       <ErpEmptyState
@@ -104,44 +95,52 @@ export function ErpDataTable<T extends Record<string, unknown>>({
     );
   }
 
-  return (
-    <Card>
-      {title && (
+  // Convert simple Column<T> config to TanStack ColumnDef
+  const tanstackColumns: ColumnDef<T>[] = columns.map((col) => ({
+    id: String(col.header),
+    header: col.header,
+    accessorFn: (row: T) => {
+      if (typeof col.accessor === "function") {
+        return col.accessor(row);
+      }
+      return row[col.accessor];
+    },
+    cell: ({ getValue }) => {
+      const value = getValue();
+      if (value === null || value === undefined) {
+        return <span className="text-muted-foreground">-</span>;
+      }
+      if (React.isValidElement(value)) return value;
+      return String(value);
+    },
+    enableSorting: false,
+    enableHiding: false,
+    meta: col.cellClassName
+      ? ({ cellClassName: col.cellClassName } as Record<string, unknown>)
+      : undefined,
+  }));
+
+  const table = (
+    <DataTable
+      columns={tanstackColumns}
+      data={data}
+      onRowClick={onRowClick}
+      pageSize={data.length}
+      enableSorting={false}
+      enableColumnVisibility={false}
+    />
+  );
+
+  if (title) {
+    return (
+      <Card>
         <CardHeader>
           <CardTitle>{title}</CardTitle>
         </CardHeader>
-      )}
-      <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {columns.map((col) => (
-                <TableHead key={String(col.header)} className={col.className}>
-                  {col.header}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((item) => (
-              <TableRow
-                key={keyExtractor(item)}
-                className={cn(onRowClick && "cursor-pointer hover:bg-muted/50")}
-                onClick={() => onRowClick?.(item)}
-              >
-                {columns.map((col) => (
-                  <TableCell
-                    key={String(col.header)}
-                    className={col.cellClassName}
-                  >
-                    {renderCell(item, col)}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
-  );
+        <CardContent className="p-0">{table}</CardContent>
+      </Card>
+    );
+  }
+
+  return table;
 }

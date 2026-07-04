@@ -10,10 +10,7 @@ import type { BundleRow, SimpleProductOption } from "./types";
 
 export type { BundleRow, SimpleProductOption };
 
-export const unstable_instant = {
-  prefetch: "static",
-  unstable_disableValidation: true,
-};
+
 
 export default async function BundlesPage() {
   const { supabase, organizationId } = await requireAppContext();

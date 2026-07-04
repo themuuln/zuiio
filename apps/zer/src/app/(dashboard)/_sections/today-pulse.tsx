@@ -9,6 +9,7 @@ import { PulseCard } from "@/components/dashboard/dashboard-cards";
 import { withBranchFilter } from "@/lib/branches";
 import { formatCurrency } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
+import { capture, withDbCapture } from "@zuiio/capture";
 
 export async function TodayPulse({
   orgId,
@@ -25,34 +26,44 @@ export async function TodayPulse({
 
   const [salesResult, expensesResult, pendingResult] = await Promise.all([
     withBranchFilter(
-      supabase
-        .from("sales")
-        .select("total_amount")
-        .eq("organization_id", orgId)
-        .gte("sale_date", today.toISOString())
-        .lt("sale_date", tomorrow.toISOString()),
+      withDbCapture(
+        "dashboard_today_sales",
+        supabase
+          .from("sales")
+          .select("total_amount")
+          .eq("organization_id", orgId)
+          .gte("sale_date", today.toISOString())
+          .lt("sale_date", tomorrow.toISOString()),
+      ),
       branchId,
       isBranchScoped,
     ),
     withBranchFilter(
-      supabase
-        .from("expenses")
-        .select("amount")
-        .eq("organization_id", orgId)
-        .gte("expense_date", today.toISOString())
-        .lt("expense_date", tomorrow.toISOString()),
+      withDbCapture(
+        "dashboard_today_expenses",
+        supabase
+          .from("expenses")
+          .select("amount")
+          .eq("organization_id", orgId)
+          .gte("expense_date", today.toISOString())
+          .lt("expense_date", tomorrow.toISOString()),
+      ),
       branchId,
       isBranchScoped,
     ),
-    withBranchFilter(
-      supabase
-        .from("sales")
-        .select("id", { count: "exact", head: true })
-        .eq("organization_id", orgId)
-        .eq("status", "pending"),
-      branchId,
-      isBranchScoped,
-    ),
+    (async () => {
+      const result = await withDbCapture(
+        "dashboard_today_pending",
+        supabase
+          .from("sales")
+          .select("id", { count: "exact", head: true })
+          .eq("organization_id", orgId)
+          .eq("status", "pending"),
+      );
+      // withDbCapture returns { data, error } but supabase count queries
+      // also return count at runtime — preserve it through the cast.
+      return result as unknown as { data: Array<{ id: string }> | null; count: number | null; error: unknown };
+    })()
   ]);
 
   const todaySalesTotal = (salesResult.data ?? []).reduce(

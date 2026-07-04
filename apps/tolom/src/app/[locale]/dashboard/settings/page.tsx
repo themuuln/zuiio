@@ -1,4 +1,5 @@
 "use client";
+export const instant = false;
 
 import { useQuery } from "@tanstack/react-query";
 import { Building2, Search, Settings2 } from "lucide-react";
@@ -252,7 +253,10 @@ export default function SettingsPage() {
     retry: 1,
   });
 
-  const updateOrg = useOrgMutation<Organization, { settings: Record<string, unknown> }>({
+  const updateOrg = useOrgMutation<
+    Organization,
+    { settings: Record<string, unknown> }
+  >({
     endpoint: () => `/api/organizations/${orgId ?? ""}`,
     method: "PATCH",
     queryKey: orgKeys.detail(orgId ?? ""),

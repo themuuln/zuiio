@@ -279,23 +279,7 @@ export function ServicesSection() {
               <ServiceLineRow
                 key={svc.service_catalog_id ?? `wsvc-${idx}`}
                 name={svc.name}
-                quantity={svc.quantity}
-                unitPrice={svc.base_price}
                 finalPrice={svc.final_price}
-                discountAmount={svc.discount_amount_mnt}
-                discountPercent={svc.discount_percent}
-                lastPrice={svc.last_price}
-                onQuantityChange={(qty) =>
-                  ctx.updateService(idx, "quantity", qty)
-                }
-                onPriceChange={(price) =>
-                  ctx.updateService(idx, "base_price", price)
-                }
-                onDiscountAmountChange={(amount) =>
-                  ctx.updateService(idx, "discount_amount_mnt", amount)
-                }
-                onDelete={() => ctx.removeService(idx)}
-                deleteLabel={t("remove")}
               />
             ))}
           </div>

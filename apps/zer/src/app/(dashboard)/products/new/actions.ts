@@ -3,6 +3,7 @@
 import { requireActionContext } from "@/lib/action-utils";
 import { validateProductInput } from "@/lib/domain-rules";
 import { revalidateEntity } from "@/lib/revalidate";
+import { capture } from "@zuiio/capture";
 
 export async function createProduct(
   _prevState: { error?: string } | undefined,
@@ -115,7 +116,7 @@ export async function createProduct(
             .single();
 
           if (groupError || !dbGroup) {
-            console.error("Failed to create variant group:", groupError);
+            capture(groupError, { context: "products/new: create variant group" });
             continue;
           }
 
@@ -171,12 +172,12 @@ export async function createProduct(
             .insert(assignments);
 
           if (assignError) {
-            console.error("Failed to create variant assignments:", assignError);
+            capture(assignError, { context: "products/new: create variant assignments" });
           }
         }
       }
     } catch (parseError) {
-      console.error("Failed to parse variant data:", parseError);
+      capture(parseError, { context: "products/new: parse variant data" });
       return {
         error:
           "Бүтээгдэхүүн хадгалагдсан боловч вариантуудыг хадгалахад алдаа гарлаа.",

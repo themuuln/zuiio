@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import type { AppPermission } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
+import { capture } from "@zuiio/capture";
 
 export type AppContext = Awaited<ReturnType<typeof requireAppContext>>;
 
@@ -36,7 +37,7 @@ export async function requireAppContext() {
 
   if (profileError || !profile?.organization_id) {
     if (profileError) {
-      console.error("Profile fetch error:", profileError);
+      capture(profileError, { context: "erp: requireAppContext profile fetch" });
     }
     redirect("/organization/new");
   }

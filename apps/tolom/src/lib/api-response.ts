@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { createRouteHandler } from "./api-handler";
-export { createRouteHandler };
+import { createRouteHandler, createSimpleRouteHandler } from "./api-handler";
+
+export { createRouteHandler, createSimpleRouteHandler };
 
 /**
- * Standard API response helpers.
+ * Standard API response helpers using NextResponse.
  *
  * Usage in route handlers:
  * ```ts

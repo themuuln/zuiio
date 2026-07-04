@@ -1,3 +1,4 @@
+import { capture } from "@zuiio/capture";
 import { createServerClient } from "@supabase/ssr";
 import type { User } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
@@ -32,7 +33,7 @@ export async function updateSession(request: NextRequest) {
     user = data.user;
   } catch (e) {
     // Session is invalid — treat as unauthenticated.
-    console.error("Session validation failed:", e);
+    capture(e, { context: "middleware session validation" });
   }
 
   const isPublicRoute = PUBLIC_ROUTES.some(
@@ -77,8 +78,9 @@ export async function updateSession(request: NextRequest) {
       : 0;
 
     if (redirectCount >= REDIRECT_MAX) {
-      console.error(
+      capture(
         `[redirect-loop] Breaking loop: ${request.nextUrl.pathname} (×${redirectCount + 1})`,
+        { context: "middleware redirect loop" },
       );
 
       return new NextResponse(
@@ -112,6 +114,13 @@ export async function updateSession(request: NextRequest) {
 
     // Increment redirect count
     const response = NextResponse.redirect(url);
+
+    // Forward any auth cookie changes from supabaseResponse
+    // (getUser() may have refreshed or cleared session cookies via setAll)
+    for (const cookie of supabaseResponse.headers.getSetCookie()) {
+      response.headers.append("Set-Cookie", cookie);
+    }
+
     response.cookies.set("__redirect_count", String(redirectCount + 1), {
       maxAge: REDIRECT_WINDOW_MS / 1000,
       path: "/",
@@ -129,7 +138,12 @@ export async function updateSession(request: NextRequest) {
   ) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
-    return NextResponse.redirect(url);
+    const authRedirect = NextResponse.redirect(url);
+    // Forward any auth cookie refreshes so the browser always has the latest session
+    for (const cookie of supabaseResponse.headers.getSetCookie()) {
+      authRedirect.headers.append("Set-Cookie", cookie);
+    }
+    return authRedirect;
   }
 
   // Clear the redirect counter on successful page loads (no redirect happened)

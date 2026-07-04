@@ -7,10 +7,7 @@ import { PageShell } from "@/components/erp/page-shell";
 import { requireAppContext } from "@/lib/erp";
 import { checkOrgSetting } from "@/lib/org-settings";
 
-export const unstable_instant = {
-  prefetch: "static",
-  unstable_disableValidation: true,
-};
+
 
 export type CategoryRow = {
   id: string;

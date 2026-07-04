@@ -4,6 +4,7 @@ import { ArrowClockwise, WarningCircle } from "@phosphor-icons/react";
 import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
+import { capture } from "@zuiio/capture";
 
 export default function SaleDetailError({
   error,
@@ -13,7 +14,7 @@ export default function SaleDetailError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error(error);
+    capture(error, { context: "sale detail error boundary" });
   }, [error]);
 
   return (

@@ -25,6 +25,7 @@ import {
   FONT_OPTIONS,
   getFont,
 } from "@/lib/branding";
+import { capture } from "@zuiio/capture";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { updateBrandConfig } from "./actions";
@@ -137,7 +138,7 @@ export function BrandingForm({ initialConfig }: BrandingFormProps) {
       toast.success("Лого амжилттай байршууллаа.");
     } catch (err) {
       toast.error("Лого байршуулахад алдаа гарлаа.");
-      console.error(err);
+      capture(err, { context: "branding logo upload" });
     } finally {
       setUploading(false);
     }

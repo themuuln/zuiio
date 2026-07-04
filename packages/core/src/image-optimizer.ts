@@ -5,9 +5,13 @@
  * before storing them in Supabase Storage or generating thumbnails.
  *
  * Can only run in the Node.js runtime (not Edge).
+ *
+ * @module
  */
 
-import sharp, { type OutputInfo as SharpOutputInfo } from "sharp";
+import type { OutputInfo as SharpOutputInfo } from "sharp";
+
+export type { SharpOutputInfo };
 
 export interface ImageOptimizeOptions {
   /** Max width in pixels (default: no resize) */
@@ -37,9 +41,9 @@ const DEFAULT_OPTIONS: Required<ImageOptimizeOptions> = {
  *
  * @example
  * ```ts
- * import { optimizeImage } from "@/lib/image-optimizer";
+ * import { optimizeImage } from "@zuiio/core";
  *
- * const { data, info } = await optimizeImage(fileBuffer, {
+ * const { data } = await optimizeImage(fileBuffer, {
  *   maxWidth: 1200,
  *   format: "webp",
  *   quality: 75,
@@ -52,6 +56,8 @@ export async function optimizeImage(
   input: Buffer,
   options?: ImageOptimizeOptions,
 ): Promise<{ data: Buffer; info: SharpOutputInfo }> {
+  const { default: sharp } = await import("sharp");
+
   const opts = { ...DEFAULT_OPTIONS, ...options };
   let pipeline = sharp(input);
 
@@ -59,7 +65,6 @@ export async function optimizeImage(
     pipeline = pipeline.withMetadata({});
   }
 
-  // Resize maintaining aspect ratio if either dimension exceeds limits
   pipeline = pipeline.resize({
     width: opts.maxWidth,
     height: opts.maxHeight,
@@ -67,7 +72,6 @@ export async function optimizeImage(
     withoutEnlargement: true,
   });
 
-  // Convert format with quality
   switch (opts.format) {
     case "jpeg":
       pipeline = pipeline.jpeg({ quality: opts.quality });
@@ -88,9 +92,9 @@ export async function optimizeImage(
   const outputInfo: SharpOutputInfo = {
     format: opts.format,
     size: data.length,
-    width: info.width!,
-    height: info.height!,
-    channels: info.channels!,
+    width: info.width ?? 0,
+    height: info.height ?? 0,
+    channels: info.channels ?? 4,
     premultiplied: false,
   };
 

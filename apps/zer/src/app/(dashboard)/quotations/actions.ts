@@ -6,6 +6,7 @@ import { withBranchFilter } from "@/lib/branches";
 import { createInvoiceFromSale } from "@/lib/invoicing";
 import { revalidateEntities } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
+import { capture } from "@zuiio/capture";
 
 export async function createQuotation(
   _prevState: { error?: string } | undefined,
@@ -267,7 +268,7 @@ export async function convertQuotationToSale(quotationId: string) {
       });
 
     if (movementError) {
-      console.error("Stock movement error:", movementError);
+      capture(movementError, { context: "quotations: stock movement" });
       // Continue despite stock movement error — sale is already committed
       continue;
     }
@@ -304,7 +305,7 @@ export async function convertQuotationToSale(quotationId: string) {
     .eq("organization_id", organizationId);
 
   if (updateError) {
-    console.error("Failed to update quotation status:", updateError);
+    capture(updateError, { context: "quotations: update status" });
   }
 
   // Create invoice from the sale

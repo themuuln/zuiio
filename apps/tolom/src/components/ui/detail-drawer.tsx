@@ -39,6 +39,8 @@ interface DetailDrawerRootProps {
    * "quick" — compact drawer for quick action flows (choose, confirm, pick from a list).
    */
   variant?: DetailDrawerVariant;
+  /** Force backdrop to render even when this drawer is nested inside another drawer */
+  backdropForceRender?: boolean;
 }
 
 export function DetailDrawer({
@@ -49,6 +51,7 @@ export function DetailDrawer({
   className,
   modal = true,
   variant = "detail",
+  backdropForceRender,
 }: DetailDrawerRootProps) {
   const resolvedSize = size ?? (variant === "quick" ? "sm" : "lg");
 
@@ -74,6 +77,7 @@ export function DetailDrawer({
         showCloseButton={false}
         className={cn(drawerSizeClasses[effectiveSize], className)}
         contentClassName="flex flex-col p-0 gap-0 overflow-hidden"
+        backdropForceRender={backdropForceRender}
       >
         {children}
       </DrawerContent>

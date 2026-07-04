@@ -1,18 +1,7 @@
-"use client";
+// Route renders user-specific content — legitimate cache opt-out.
+export const instant = false;
 
-import dynamic from "next/dynamic";
-import { BayViewPageSkeleton } from "@/components/bay-view-v2/_page-skeleton";
-
-const BayViewV2Client = dynamic(
-  () =>
-    import("@/components/bay-view-v2/bay-view-v2-client").then(
-      (m) => m.BayViewV2Client,
-    ),
-  {
-    ssr: false,
-    loading: () => <BayViewPageSkeleton />,
-  },
-);
+import { BayViewV2Client } from "@/components/bay-view-v2/bay-view-v2-client";
 
 export default function BayViewPage() {
   return (

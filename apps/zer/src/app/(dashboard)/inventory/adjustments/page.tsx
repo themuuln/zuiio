@@ -10,10 +10,7 @@ import {
   AdjustmentsContent,
 } from "./adjustments-content";
 
-export const unstable_instant = {
-  prefetch: "static",
-  unstable_disableValidation: true,
-};
+
 
 export default async function AdjustmentsPage() {
   const { supabase, organizationId } = await requireAppContext();

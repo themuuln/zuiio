@@ -26,11 +26,6 @@ import { RolesDrawer } from "./roles-drawer";
 import { SettingsShell } from "./settings-shell";
 import { SmtpSettings } from "./smtp-settings";
 
-export const unstable_instant = {
-  prefetch: "static",
-  unstable_disableValidation: true,
-};
-
 const SUPERADMIN_EMAIL = "zerone.offical@gmail.com";
 
 export default async function SettingsPage() {
@@ -39,19 +34,19 @@ export default async function SettingsPage() {
   const isSuperAdmin = user.email === SUPERADMIN_EMAIL;
   const canManageRoles = permissions.includes("roles.manage");
 
-  const [orgResult, profileResult, brandConfigResult] = await Promise.all([
+  const [orgResult, profileResult] = await Promise.all([
     supabase
       .from("organizations")
       .select(
-        "name, slug, company_type, currency, has_suppliers, has_inventory, has_customer_credit, has_multi_branch, has_variants, has_brands, has_categories, has_email_reports, has_audit_log",
+        "name, slug, company_type, currency, brand_config, has_suppliers, has_inventory, has_customer_credit, has_multi_branch, has_variants, has_brands, has_categories, has_email_reports, has_audit_log",
       )
       .eq("id", organizationId)
       .single(),
-    supabase.from("profiles").select("full_name").eq("id", userId).single(),
+    // Profile full_name — separate from requireAppContext's minimal profile query
     supabase
-      .from("organizations")
-      .select("brand_config")
-      .eq("id", organizationId)
+      .from("profiles")
+      .select("full_name")
+      .eq("id", userId)
       .single(),
   ]);
 
@@ -60,6 +55,7 @@ export default async function SettingsPage() {
     slug: string | null;
     company_type: string | null;
     currency: string | null;
+    brand_config: unknown;
     has_suppliers: boolean | null;
     has_inventory: boolean | null;
     has_customer_credit: boolean | null;
@@ -72,8 +68,7 @@ export default async function SettingsPage() {
     has_hr: boolean | null;
   } | null;
   const profile = profileResult.data;
-  const brandConfig = (brandConfigResult.data?.brand_config ??
-    {}) as BrandConfig;
+  const brandConfig = (org?.brand_config ?? {}) as BrandConfig;
   const featureSettings = {
     has_suppliers: org?.has_suppliers !== false,
     has_inventory: org?.has_inventory !== false,
@@ -91,12 +86,16 @@ export default async function SettingsPage() {
   const hasBrands =
     (org as { has_brands: boolean } | null)?.has_brands !== false;
 
-  const serviceSupabase = createServiceClient();
-  const presetsData = await serviceSupabase
-    .from("product_presets")
-    .select("*", { count: "exact", head: true });
-
-  const hasPresets = (presetsData.count ?? 0) > 0;
+  let hasPresets = false;
+  try {
+    const serviceSupabase = createServiceClient();
+    const presetsData = await serviceSupabase
+      .from("product_presets")
+      .select("*", { count: "exact", head: true });
+    hasPresets = (presetsData.count ?? 0) > 0;
+  } catch {
+    // Service role key not available in dev — skip preset check
+  }
 
   // Check if SMTP is configured (for conditional rendering)
   const { count: smtpCount } = await supabase

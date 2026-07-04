@@ -11,6 +11,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
+import { CartFloatingButton } from "@/components/shop/cart-floating-button";
 import type { CategoryChip } from "@/components/shop/category-chips";
 import { CategoryChips } from "@/components/shop/category-chips";
 import type { ProductCardProduct } from "@/components/shop/product-card";
@@ -78,7 +79,7 @@ export function CatalogClient({
   }, []);
 
   const clearStatusAfterDelay = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    clearTimeout(timeoutRef.current ?? undefined);
     timeoutRef.current = setTimeout(() => {
       setBarcodeStatus({ type: "idle" });
     }, 2000);
@@ -197,7 +198,7 @@ export function CatalogClient({
                 setSearchQuery(e.target.value);
                 if (barcodeStatus.type !== "idle") {
                   setBarcodeStatus({ type: "idle" });
-                  if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                  clearTimeout(timeoutRef.current ?? undefined);
                 }
               }}
               onKeyDown={(e) => {
@@ -224,6 +225,7 @@ export function CatalogClient({
                   ? "Бүтээгдэхүүнээр хайх..."
                   : "Бүтээгдэхүүн, баркод, SKU-аар хайх..."
               }
+              enterKeyHint={selectionMode === "grid" ? "search" : "done"}
               autoComplete="off"
               className={cn(
                 "h-[44px] w-full rounded-lg pl-9 pr-4 text-sm",
@@ -251,7 +253,7 @@ export function CatalogClient({
                 "border-2 border-dashed",
                 isCameraOpen && "ring-2 ring-primary/30",
               )}
-              title="Баркод скан хийх"
+              aria-label="Баркод скан хийх"
             >
               <Barcode className="size-5" weight="bold" />
             </Button>
@@ -260,7 +262,11 @@ export function CatalogClient({
 
         {/* Status feedback */}
         {showStatus && (
-          <div className="mt-2 flex items-center gap-2 text-sm">
+          <div
+            className="mt-2 flex items-center gap-2 text-sm"
+            aria-live="polite"
+            role="status"
+          >
             {barcodeStatus.type === "found" && (
               <>
                 <CheckCircle
@@ -328,6 +334,8 @@ export function CatalogClient({
           ))}
         </div>
       )}
+      {/* Floating cart button */}
+      <CartFloatingButton />
     </div>
   );
 }

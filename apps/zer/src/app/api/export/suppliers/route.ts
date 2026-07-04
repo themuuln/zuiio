@@ -1,43 +1,30 @@
-import { requireAppContext } from "@/lib/erp";
-import type { ExportFormat } from "@/lib/export";
-import { serveEntityExport } from "@/lib/export";
+import { capture } from "@zuiio/capture";
+import type { ServeExportConfig } from "@/lib/export/serve-export";
+import { serveExportRoute } from "@/lib/export/serve-export";
 
-const today = () => new Date().toISOString().slice(0, 10);
-
-export async function GET(request: Request) {
-  const { supabase, organizationId } = await requireAppContext();
-
-  const { searchParams } = new URL(request.url);
-  const format = (searchParams.get("format") ?? "csv") as ExportFormat;
-
-  const { data: suppliers } = await supabase
-    .from("contacts")
-    .select("id, name, phone, email, address, balance")
-    .eq("organization_id", organizationId)
-    .eq("type", "supplier")
-    .order("created_at", { ascending: false });
-
-  const rows = (suppliers ?? []).map((s) => ({
+const config: ServeExportConfig = {
+  table: "contacts",
+  select: "id, name, phone, email, address, balance",
+  mapRow: (s) => ({
     name: s.name ?? "",
     phone: s.phone ?? "",
     email: s.email ?? "",
     address: s.address ?? "",
     balance: s.balance ?? 0,
-  }));
-
-  const columns = [
+  }),
+  columns: [
     { header: "Нэр", key: "name" },
     { header: "Утас", key: "phone" },
     { header: "И-мэйл", key: "email" },
     { header: "Хаяг", key: "address" },
     { header: "Үлдэгдэл", key: "balance" },
-  ];
+  ],
+  eq: { type: "supplier" },
+  order: { column: "created_at" },
+  filename: "suppliers-export",
+  title: "Нийлүүлэгчид",
+};
 
-  return serveEntityExport(
-    rows,
-    columns,
-    format,
-    `suppliers-export-${today()}`,
-    "Нийлүүлэгчид",
-  );
+export async function GET(request: Request) {
+  return serveExportRoute(request, config);
 }

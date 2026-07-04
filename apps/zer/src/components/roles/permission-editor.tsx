@@ -5,6 +5,7 @@ import { setRolePermissions } from "@/app/(dashboard)/settings/roles/actions";
 import { Button } from "@/components/ui/button";
 import type { AppPermission } from "@/lib/permissions";
 import { PERMISSION_GROUPS, PERMISSION_LABELS } from "@/lib/permissions";
+import { toast } from "sonner";
 
 interface PermissionEditorProps {
   roleId: string;
@@ -53,7 +54,7 @@ export function PermissionEditor({
     ] as AppPermission[]);
     setSaving(false);
     if (result?.error) {
-      alert(result.error);
+      toast.error(result.error);
     }
   };
 

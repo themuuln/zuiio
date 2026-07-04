@@ -3,9 +3,20 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    remotePatterns: [{ protocol: "https", hostname: "hitec.pl" }],
+    remotePatterns: [
+      { protocol: "https", hostname: "hitec.pl" },
+      { protocol: "https", hostname: "*.supabase.co" },
+    ],
   },
   reactCompiler: true,
+  experimental: {
+    inlineCss: true,
+    staleTimes: {
+      dynamic: 30,
+      static: 300,
+    },
+    optimizePackageImports: ["@phosphor-icons/react"],
+  },
   transpilePackages: [
     "@zer/branding",
     "@zer/export",

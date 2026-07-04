@@ -1,12 +1,11 @@
 "use client";
 
 import { Wrench } from "lucide-react";
-import type { WorkOrderService } from "@/lib/types";
 import { ServiceLineRow } from "@/components/work-orders/line-items";
+import type { WorkOrderService } from "@/lib/types";
 import { CatalogPickerDrawer } from "./_catalog-picker-drawer";
 import type { CatalogServiceItem } from "./_drawer-types";
 import { SectionCard } from "./_section-card";
-import { WorkOrderListHeader } from "./_work-order-row";
 
 interface ServicesSectionProps {
   services: WorkOrderService[];
@@ -91,11 +90,6 @@ export function ServicesSection({
       >
         {!isEmpty && (
           <div className="-mx-1">
-            <WorkOrderListHeader
-              name={t("service")}
-              qty={t("qty")}
-              price={t("price")}
-            />
             {services?.map((svc) => (
               <ServiceLineRow
                 key={svc.id}
@@ -104,35 +98,10 @@ export function ServicesSection({
                 quantity={Number(svc.quantity ?? 1)}
                 unitPrice={Number(svc.unit_price ?? 0)}
                 finalPrice={Number(svc.final_price)}
-                discountAmount={Number(svc.discount_amount ?? 0)}
-                discountPercent={Number(svc.discount_percentage ?? 0)}
-                lastPrice={undefined}
                 locale={locale}
-                onQuantityChange={(qty) => onEditQtySave(svc.id, qty)}
-                onPriceChange={(price) => onEditPriceSave(svc.id, price)}
-                onDiscountAmountChange={
-                  onEditDiscountSave
-                    ? (amount) =>
-                        onEditDiscountSave(
-                          svc.id,
-                          amount,
-                          Number(svc.discount_percentage ?? 0),
-                        )
-                    : undefined
-                }
-                onDiscountPercentChange={
-                  onEditDiscountSave
-                    ? (percent) =>
-                        onEditDiscountSave(
-                          svc.id,
-                          Number(svc.discount_amount ?? 0),
-                          percent,
-                        )
-                    : undefined
-                }
-                onDelete={() => onRemoveService(svc.id)}
-                deleteLabel={t("removeServiceAria")}
-                t={t}
+                onEditPriceSave={onEditPriceSave}
+                onEditQtySave={onEditQtySave}
+                serviceId={svc.id}
               />
             ))}
           </div>

@@ -77,10 +77,14 @@ export default function CartPage() {
                     variant="outline"
                     onClick={() => updateQuantity(itemKey, item.quantity - 1)}
                     disabled={item.quantity <= 1}
+                    aria-label={`Багасгах: ${item.name}`}
                   >
                     <Minus className="size-3" />
                   </Button>
-                  <span className="flex h-[44px] w-[44px] items-center justify-center text-sm font-medium tabular-nums">
+                  <span
+                    className="flex h-[44px] w-[44px] items-center justify-center text-sm font-medium tabular-nums"
+                    aria-hidden="true"
+                  >
                     {item.quantity}
                   </span>
                   <Button
@@ -88,6 +92,7 @@ export default function CartPage() {
                     variant="outline"
                     onClick={() => updateQuantity(itemKey, item.quantity + 1)}
                     disabled={item.quantity >= item.maxStock}
+                    aria-label={`Нэмэх: ${item.name}`}
                   >
                     <Plus className="size-3" />
                   </Button>
@@ -96,6 +101,7 @@ export default function CartPage() {
                     variant="ghost"
                     className="ml-1 text-destructive hover:text-destructive"
                     onClick={() => removeItem(itemKey)}
+                    aria-label={`Устгах: ${item.name}`}
                   >
                     <Trash className="size-3" />
                   </Button>

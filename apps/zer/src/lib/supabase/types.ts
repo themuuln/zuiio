@@ -526,6 +526,79 @@ export type Database = {
           },
         ]
       }
+      employees: {
+        Row: {
+          id: string
+          organization_id: string
+          profile_id: string | null
+          full_name: string
+          position: string | null
+          department: string | null
+          hire_date: string
+          contract_type: string
+          base_salary: number
+          salary_type: string
+          bank_account: string | null
+          is_active: boolean
+          branch_id: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          profile_id?: string | null
+          full_name: string
+          position?: string | null
+          department?: string | null
+          hire_date: string
+          contract_type?: string
+          base_salary: number
+          salary_type?: string
+          bank_account?: string | null
+          is_active?: boolean
+          branch_id?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          profile_id?: string | null
+          full_name?: string
+          position?: string | null
+          department?: string | null
+          hire_date?: string
+          contract_type?: string
+          base_salary?: number
+          salary_type?: string
+          bank_account?: string | null
+          is_active?: boolean
+          branch_id?: string | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expenses: {
         Row: {
           amount: number

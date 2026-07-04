@@ -36,10 +36,7 @@ export async function getUserBranches(userId: string): Promise<BranchInfo[]> {
     .single();
 
   if (profileError) {
-    console.error("[branches] Profile query failed for branch access", {
-      userId,
-      error: profileError,
-    });
+    capture(profileError, { context: "branches: profile query for branch access" });
   }
 
   if (!profile?.organization_id) return [];

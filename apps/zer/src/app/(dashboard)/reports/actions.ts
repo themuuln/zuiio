@@ -2,6 +2,7 @@
 
 import { randomBytes } from "node:crypto";
 import { requireActionContext } from "@/lib/action-utils";
+import { capture } from "@zuiio/capture";
 
 export type ShareLinkState = {
   token?: string;
@@ -74,6 +75,6 @@ export async function deleteShareLink(shareId: string) {
     .eq("organization_id", organizationId);
 
   if (error) {
-    console.error("Failed to delete share link:", error);
+    capture(error, { context: "reports: delete share link" });
   }
 }

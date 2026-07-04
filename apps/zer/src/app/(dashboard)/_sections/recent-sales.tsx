@@ -1,3 +1,4 @@
+import { withDbCapture } from "@zuiio/capture";
 import { withBranchFilter } from "@/lib/branches";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -40,12 +41,15 @@ export async function RecentSales({
   const supabase = await createClient();
 
   const { data: sales } = await withBranchFilter(
-    supabase
-      .from("sales")
-      .select("id, total_amount, sale_date, status, contacts(name)")
-      .eq("organization_id", orgId)
-      .order("created_at", { ascending: false })
-      .limit(5),
+    withDbCapture(
+      "dashboard_recent_sales",
+      supabase
+        .from("sales")
+        .select("id, total_amount, sale_date, status, contacts(name)")
+        .eq("organization_id", orgId)
+        .order("created_at", { ascending: false })
+        .limit(5),
+    ),
     branchId,
     isBranchScoped,
   );

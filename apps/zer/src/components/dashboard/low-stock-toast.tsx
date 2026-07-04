@@ -3,15 +3,11 @@
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
-let lowStockToastShownInSession = false;
-
 export function LowStockToast({ count }: { count: number }) {
   const hasShownToast = useRef(false);
 
   useEffect(() => {
-    if (count > 0 && !hasShownToast.current && !lowStockToastShownInSession) {
-      hasShownToast.current = true;
-      lowStockToastShownInSession = true;
+    if (count > 0 && !hasShownToast.current) {
       toast.warning(`${count} бүтээгдэхүүний нөөц бага байна`, {
         description:
           "Бүтээгдэхүүний нөөц хэт бага түвшинд хүрсэн тул нөхөх шаардлагатай.",

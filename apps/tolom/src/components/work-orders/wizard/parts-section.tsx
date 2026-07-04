@@ -253,22 +253,7 @@ export function PartsSection() {
                 <PartLineRow
                   key={part.part_number || part.part_name || `wpart-${idx}`}
                   name={part.part_name}
-                  partNumber={part.part_number || undefined}
-                  quantity={part.quantity}
-                  unitPrice={part.unit_price}
                   finalPrice={part.final_price}
-                  lastPrice={partLast}
-                  onNameChange={(name) =>
-                    ctx.updatePart(idx, "part_name", name)
-                  }
-                  onQuantityChange={(qty) =>
-                    ctx.updatePart(idx, "quantity", qty)
-                  }
-                  onPriceChange={(price) =>
-                    ctx.updatePart(idx, "unit_price", price)
-                  }
-                  onDelete={() => ctx.removePart(idx)}
-                  deleteLabel={t("remove")}
                 />
               );
             })}

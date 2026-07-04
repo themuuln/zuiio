@@ -24,7 +24,7 @@ import { captureDbError } from "./capture";
  */
 export async function withDbCapture<T>(
   label: string,
-  promise: Promise<{ data: T | null; error: unknown }>,
+  promise: PromiseLike<{ data: T | null; error: unknown }>,
   ctx?: { orgId?: string },
 ): Promise<{ data: T | null; error: unknown }> {
   try {

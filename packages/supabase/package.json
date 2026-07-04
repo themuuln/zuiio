@@ -1,0 +1,19 @@
+{
+  "name": "@zuiio/supabase",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "@supabase/supabase-js": "^2"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.50.0",
+    "@types/node": "^26",
+    "@zuiio/config": "workspace:*",
+    "typescript": "^5"
+  }
+}

@@ -8,10 +8,7 @@ import { requireAppContext } from "@/lib/erp";
 import { checkOrgSetting } from "@/lib/org-settings";
 import { RestockContent } from "./restock-content";
 
-export const unstable_instant = {
-  prefetch: "static",
-  unstable_disableValidation: true,
-};
+
 
 export interface RestockProductRow {
   id: string;

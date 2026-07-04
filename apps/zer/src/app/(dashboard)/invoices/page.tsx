@@ -2,14 +2,7 @@ import { withBranchFilter } from "@/lib/branches";
 import { requireAppContext } from "@/lib/erp";
 import { InvoicesContent } from "./invoices-content";
 
-export const unstable_instant = {
-  prefetch: "static",
-  samples: [
-    { searchParams: { branch: null } },
-    { searchParams: { branch: "sample" } },
-  ],
-  unstable_disableValidation: true,
-};
+
 
 export default async function InvoicesPage({
   searchParams,

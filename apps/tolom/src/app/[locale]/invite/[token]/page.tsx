@@ -74,9 +74,7 @@ export default function InviteRedeemPage() {
       });
       const body = await res.json();
       if (!res.ok || !body.data) {
-        throw new Error(
-          body.error?.message ?? "Failed to accept invite",
-        );
+        throw new Error(body.error?.message ?? "Failed to accept invite");
       }
       return body.data as { organizationId: string };
     },
@@ -93,8 +91,7 @@ export default function InviteRedeemPage() {
     if (inviteQuery.error || !inviteQuery.data) {
       return {
         type: "error",
-        message:
-          inviteQuery.error?.message ?? "Failed to load invite",
+        message: inviteQuery.error?.message ?? "Failed to load invite",
       };
     }
     return {
@@ -148,7 +145,7 @@ export default function InviteRedeemPage() {
     );
   }
 
-  const { invite, isAuthenticated } = state;
+  const { invite } = state;
 
   if (accepted) {
     return (

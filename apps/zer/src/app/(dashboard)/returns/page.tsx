@@ -2,14 +2,7 @@ import { withBranchFilter } from "@/lib/branches";
 import { requireAppContext } from "@/lib/erp";
 import { ReturnsContent } from "./returns-content";
 
-export const unstable_instant = {
-  prefetch: "static",
-  samples: [
-    { searchParams: { branch: null } },
-    { searchParams: { branch: "sample" } },
-  ],
-  unstable_disableValidation: true,
-};
+
 
 export type ReturnRow = {
   id: string;

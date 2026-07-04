@@ -1,5 +1,6 @@
 "use client";
 
+import Script from "next/script";
 import { useLocale } from "next-intl";
 
 /**
@@ -10,7 +11,9 @@ export function HtmlLang() {
   const locale = useLocale();
 
   return (
-    <script
+    <Script
+      id="html-lang"
+      strategy="beforeInteractive"
       dangerouslySetInnerHTML={{
         __html: `document.documentElement.lang='${locale}'`,
       }}

@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/format";
 
+import { capture } from "@zuiio/capture";
 function formatNum(v: string | number | null | undefined): string {
   if (v === "" || v === null || v === undefined) return "";
   const n = typeof v === "string" ? parseFloat(v) : v;
@@ -678,7 +679,7 @@ export function VariantEditor({
           .getPublicUrl(filePath);
         onChange(data.publicUrl);
       } catch (err) {
-        console.error("Variant image upload failed:", err);
+        capture(err, { context: "variant-editor: image upload" });
       } finally {
         setUploading(false);
       }

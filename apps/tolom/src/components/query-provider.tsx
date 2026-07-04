@@ -44,15 +44,34 @@ function getQueryClient(): QueryClient {
 export default function QueryProvider({ children }: { children: ReactNode }) {
   const [queryClient] = useState(getQueryClient);
 
+  // Once the persister hydrates from IndexedDB, remove any stale profile
+  // queries that were persisted before the shouldDehydrateQuery filter was
+  // added. After this, the profile must always be fetched from the network.
+  const handleHydrate = () => {
+    queryClient.removeQueries({ queryKey: ["profile"] });
+  };
+
   return (
     <PersistQueryClientProvider
       client={queryClient}
+      onSuccess={handleHydrate}
       persistOptions={{
         persister: indexedDbPersister,
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
         dehydrateOptions: {
-          shouldDehydrateQuery: (query) =>
-            query.state.status === "success" && query.gcTime > 0,
+          shouldDehydrateQuery: (query) => {
+            // Never persist auth-dependent queries — profile data must always
+            // be fetched from the network to verify auth state before rendering.
+            // Without this, cached profile data causes child components to fire
+            // API calls with a stale orgId before the session is confirmed valid.
+            if (
+              Array.isArray(query.queryKey) &&
+              query.queryKey[0] === "profile"
+            ) {
+              return false;
+            }
+            return query.state.status === "success" && query.gcTime > 0;
+          },
         },
       }}
     >

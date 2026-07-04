@@ -6,7 +6,6 @@ import { PartLineRow } from "@/components/work-orders/line-items";
 import { CatalogPickerDrawer } from "./_catalog-picker-drawer";
 import type { CatalogPartItem } from "./_drawer-types";
 import { SectionCard } from "./_section-card";
-import { WorkOrderListHeader } from "./_work-order-row";
 
 interface PartsSectionProps {
   parts: WorkOrderPart[];
@@ -97,71 +96,14 @@ export function PartsSection({
       >
         {!isEmpty && (
           <div className="-mx-1">
-            <WorkOrderListHeader
-              name={t("part")}
-              qty={t("qty")}
-              price={t("price")}
-            />
             {parts?.map((part) => {
-              const catalogPartId = (part as WorkOrderPartWithSource).part_id;
-              const lowStock = lowStockMap?.[catalogPartId ?? ""];
-
               return (
                 <PartLineRow
                   key={part.id}
                   name={part.part_name}
                   nameMn={getPartDisplayName(part)}
-                  partNumber={part.part_number ?? undefined}
-                  quantity={Number(part.quantity ?? 1)}
-                  unitPrice={Number(part.unit_price ?? 0)}
                   finalPrice={Number(part.final_price)}
-                  discountAmount={Number(
-                    (part as unknown as Record<string, unknown>)
-                      .discount_amount ?? 0,
-                  )}
-                  discountPercent={Number(
-                    (part as unknown as Record<string, unknown>)
-                      .discount_percentage ?? 0,
-                  )}
-                  stockInfo={
-                    lowStock
-                      ? {
-                          quantity: lowStock.quantity,
-                          threshold: lowStock.threshold,
-                        }
-                      : null
-                  }
                   locale={locale}
-                  onQuantityChange={(qty) => onEditQtySave(part.id, qty)}
-                  onPriceChange={(price) => onEditPriceSave(part.id, price)}
-                  onDiscountAmountChange={
-                    onEditDiscountSave
-                      ? (amount) =>
-                          onEditDiscountSave(
-                            part.id,
-                            amount,
-                            Number(
-                              (part as unknown as Record<string, unknown>)
-                                .discount_percentage ?? 0,
-                            ),
-                          )
-                      : undefined
-                  }
-                  onDiscountPercentChange={
-                    onEditDiscountSave
-                      ? (percent) =>
-                          onEditDiscountSave(
-                            part.id,
-                            Number(
-                              (part as unknown as Record<string, unknown>)
-                                .discount_amount ?? 0,
-                            ),
-                            percent,
-                          )
-                      : undefined
-                  }
-                  onDelete={() => onRemovePart(part.id)}
-                  deleteLabel={t("removePartLabel")}
                 />
               );
             })}

@@ -6,6 +6,7 @@ import { formatCurrency } from "@/lib/format";
 import { sendTelegramNotification } from "@/lib/notification";
 import { getFullReport } from "@/lib/reports";
 import { createServiceClient } from "@/lib/supabase/server-service";
+import { capture } from "@zuiio/capture";
 
 /**
  * Cron job endpoint called by pg_cron via net.http_post.
@@ -134,7 +135,7 @@ export async function POST(request: Request) {
             );
             usedAi = true;
           } catch (aiErr) {
-            console.error("AI report generation failed for org", orgId, aiErr);
+            capture(aiErr, { context: "daily report: AI generation" });
           }
         }
 
@@ -184,7 +185,7 @@ export async function POST(request: Request) {
       emailSent,
     });
   } catch (err) {
-    console.error("Daily report cron error:", err);
+    capture(err, { context: "daily report cron" });
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Unknown error" },
       { status: 500 },

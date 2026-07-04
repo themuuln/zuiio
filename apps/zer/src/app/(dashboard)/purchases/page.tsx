@@ -3,14 +3,7 @@ import { requireAppContext } from "@/lib/erp";
 import { PurchasesContent } from "./purchases-content";
 import type { PurchaseRow } from "./purchases-table";
 
-export const unstable_instant = {
-  prefetch: "static",
-  samples: [
-    { searchParams: { branch: null } },
-    { searchParams: { branch: "sample" } },
-  ],
-  unstable_disableValidation: true,
-};
+
 
 export default async function PurchasesPage({
   searchParams,

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { redirect } from "@/lib/i18n/navigation";
 
 // Route renders user-specific content — legitimate cache opt-out.
@@ -19,15 +19,6 @@ export default async function RootPage() {
 
   if (existing && ["mn", "en"].includes(existing)) {
     locale = existing;
-  } else {
-    const acceptLanguage = (await headers()).get("accept-language");
-    if (acceptLanguage) {
-      const idxEn = acceptLanguage.indexOf("en");
-      const idxMn = acceptLanguage.indexOf("mn");
-      if (idxEn >= 0 && (idxMn < 0 || idxEn < idxMn)) {
-        locale = "en";
-      }
-    }
   }
 
   redirect({ href: "/", locale });

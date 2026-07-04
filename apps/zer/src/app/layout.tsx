@@ -62,7 +62,7 @@ export default function RootLayout({
         "antialiased",
         geistSans.variable,
         geistMono.variable,
-        "font-mono",
+        "font-sans",
       )}
     >
       <head>
@@ -77,7 +77,7 @@ export default function RootLayout({
           <Script
             src="//unpkg.com/react-grab/dist/index.global.js"
             crossOrigin="anonymous"
-            strategy="beforeInteractive"
+            strategy="afterInteractive"
           />
         )}
       </head>

@@ -1,4 +1,5 @@
 "use server";
+import { capture } from "@zuiio/capture";
 
 import { postExpenseToJournal } from "@/lib/accounting";
 import { requireWriteAction } from "@/lib/action-utils";
@@ -48,13 +49,17 @@ export async function createExpense(
     return { error: error.message };
   }
 
-  // Post to general ledger (fire-and-forget)
-  postExpenseToJournal(supabase, organizationId, userId, branchId, expense.id, {
-    amount,
-    expense_date: expenseDate,
-    category,
-    description,
-  }).catch(console.error);
+  // Post to general ledger (fire-and-forget with error capture)
+  try {
+    await postExpenseToJournal(supabase, organizationId, userId, branchId, expense.id, {
+      amount,
+      expense_date: expenseDate,
+      category,
+      description,
+    });
+  } catch (err) {
+    capture(err, { context: "expense: postExpenseToJournal" });
+  }
 
   revalidateEntities(["expenses"]);
   return { success: true as const, error: undefined };

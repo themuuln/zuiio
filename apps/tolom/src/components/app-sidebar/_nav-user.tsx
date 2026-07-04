@@ -1,10 +1,9 @@
 "use client";
 
-import { SettingsIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { ChevronsUpDown, LogOut, SettingsIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +19,7 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@/components/ui/item";
+import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { useProfile } from "@/lib/queries/use-profile";
 import { getInitials } from "@/lib/utils";
 
@@ -42,19 +42,25 @@ export function NavUser() {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button
-            variant="ghost"
-            className="relative size-9 rounded-full flex items-center justify-center p-0 hover:bg-accent/50 focus-visible:ring-2"
-            aria-label={t("menu")}
-          >
-            <Avatar className="size-7">
-              <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-primary">
-                {!profile ? "…" : initials}
-              </AvatarFallback>
-            </Avatar>
-          </Button>
+          <SidebarMenuButton
+            size="lg"
+            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+          />
         }
-      />
+      >
+        <Avatar className="size-7 shrink-0 rounded-md">
+          <AvatarFallback className="text-[10px] font-semibold rounded-md bg-primary/10 text-primary">
+            {!profile ? "…" : initials}
+          </AvatarFallback>
+        </Avatar>
+        <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
+          <span className="truncate font-medium">{displayName}</span>
+          <span className="truncate text-xs text-sidebar-foreground/50">
+            {displayIdentifier}
+          </span>
+        </div>
+        <ChevronsUpDown className="ml-auto size-4 shrink-0 text-sidebar-foreground/40" />
+      </DropdownMenuTrigger>
       <DropdownMenuContent
         className="min-w-56 rounded-xl"
         align="end"
@@ -85,13 +91,14 @@ export function NavUser() {
             onClick={() => router.push("/dashboard/settings")}
             className="gap-2 text-xs"
           >
-            <SettingsIcon />
+            <SettingsIcon className="size-4" />
             <span>{t("settings")}</span>
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={handleSignOut}
-            className="text-destructive focus:text-destructive gap-2 text-xs"
+            className="gap-2 text-xs text-destructive focus:text-destructive"
           >
+            <LogOut className="size-4" />
             <span>{t("signOut")}</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>

@@ -3,6 +3,7 @@ import { MembersClient } from "@/components/roles/members-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { requireAppContext } from "@/lib/erp";
 import { createServiceClient } from "@/lib/supabase/server-service";
+import { capture } from "@zuiio/capture";
 
 export default async function UsersPage() {
   const { supabase, organizationId, userId, permissions } =
@@ -29,7 +30,7 @@ export default async function UsersPage() {
     ]);
 
   if (profilesResult.status === "rejected") {
-    console.error("Profiles query failed:", profilesResult.reason);
+    capture(profilesResult.reason, { context: "settings users: profiles query" });
   }
   const profiles =
     profilesResult.status === "fulfilled"
@@ -37,7 +38,7 @@ export default async function UsersPage() {
       : [];
 
   if (authResult.status === "rejected") {
-    console.error("Auth users query failed:", authResult.reason);
+    capture(authResult.reason, { context: "settings users: auth query" });
   }
   const authUsers =
     authResult.status === "fulfilled"
@@ -45,7 +46,7 @@ export default async function UsersPage() {
       : [];
 
   if (rolesResult.status === "rejected") {
-    console.error("Roles query failed:", rolesResult.reason);
+    capture(rolesResult.reason, { context: "settings users: roles query" });
   }
   const roles =
     rolesResult.status === "fulfilled" ? (rolesResult.value.data ?? []) : [];

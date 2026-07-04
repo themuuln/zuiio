@@ -4,15 +4,15 @@
     "supabase": {
       "type": "http",
       "url": "https://mcp.supabase.com/mcp?project_ref=krrkhozadforrydffegg&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage",
+      "oauth": {
+        "clientId": "ed8d845c-61db-4d53-b6ad-4bc5aaa90957"
+      },
       "auth": {
         "type": "oauth",
         "credentialId": "mcp_oauth:profile:default:https://mcp.supabase.com/mcp?project_ref=krrkhozadforrydffegg&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage",
         "tokenUrl": "https://api.supabase.com/v1/oauth/token",
         "clientId": "ed8d845c-61db-4d53-b6ad-4bc5aaa90957",
         "resource": "https://mcp.supabase.com/mcp?project_ref=krrkhozadforrydffegg&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage"
-      },
-      "oauth": {
-        "clientId": "ed8d845c-61db-4d53-b6ad-4bc5aaa90957"
       }
     }
   }

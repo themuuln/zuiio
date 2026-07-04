@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { compressImage } from "@/lib/compress-image";
 import { createClient } from "@/lib/supabase/client";
 import { updateOrgLogo } from "./actions";
+import { capture } from "@zuiio/capture";
 
 type OrgLogoUploaderProps = {
   logoUrl: string | null;
@@ -80,12 +81,11 @@ export function OrgLogoUploader({
       toast.success("Лого амжилттай байршууллаа.");
     } catch (err) {
       toast.error("Лого байршуулахад алдаа гарлаа.");
-      console.error(err);
+      capture(err, { context: "org logo upload" });
     } finally {
       setUploading(false);
     }
   };
-
   return (
     <div className="space-y-4">
       <div>
