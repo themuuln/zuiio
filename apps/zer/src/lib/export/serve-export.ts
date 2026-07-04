@@ -55,7 +55,8 @@ export async function serveExportRoute(
   request: Request,
   config: ServeExportConfig,
 ): Promise<Response> {
-  const { supabase, organizationId } = await requireAppContext();
+  const { supabase, organizationId: _organizationId } =
+    await requireAppContext();
 
   const { searchParams } = new URL(request.url);
   const formatParam = searchParams.get("format") ?? "csv";

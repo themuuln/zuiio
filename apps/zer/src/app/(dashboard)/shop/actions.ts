@@ -69,7 +69,7 @@ export async function createShopSale(
   // --- Step 1: Validate stock for all items ---
   const productIds = items.map((i) => i.productId);
   const productMap = await fetchProductsForStock(
-    supabase as any,
+    supabase,
     organizationId,
     productIds,
   );
@@ -79,7 +79,7 @@ export async function createShopSale(
 
   const variantMap =
     variantIds.length > 0
-      ? await fetchVariantsForStock(supabase as any, variantIds)
+      ? await fetchVariantsForStock(supabase, variantIds)
       : new Map();
 
   // Check each item's stock
@@ -121,7 +121,7 @@ export async function createShopSale(
   if (customerName) {
     const phone = getString(formData, "customer_phone");
     const result = await findOrCreateContact(
-      supabase as any,
+      supabase,
       organizationId,
       "customer",
       customerName,
@@ -191,7 +191,7 @@ export async function createShopSale(
   }
 
   // --- Step 5: Insert stock_movements ---
-  const stockResult = await createStockMovements(supabase as any, {
+  const stockResult = await createStockMovements(supabase, {
     organizationId,
     branchId,
     type: "out",
@@ -218,7 +218,7 @@ export async function createShopSale(
   for (const item of items) {
     if (item.variantId) {
       const success = await decrementVariantStock(
-        supabase as any,
+        supabase,
         item.variantId,
         item.quantity,
       );
@@ -238,7 +238,7 @@ export async function createShopSale(
       }
     } else {
       const updatedProduct = await decrementProductStock(
-        supabase as any,
+        supabase,
         organizationId,
         item.productId,
         item.quantity,

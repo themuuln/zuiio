@@ -263,7 +263,7 @@ async function saveEmailConfig(values: EmailValues) {
   }
 }
 
-export function NotificationSettings({ isSuperAdmin }: Props) {
+export function NotificationSettings({ isSuperAdmin: _isSuperAdmin }: Props) {
   const queryClient = useQueryClient();
   const { notify } = useSettings();
 
@@ -295,10 +295,10 @@ export function NotificationSettings({ isSuperAdmin }: Props) {
     },
   });
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — only subscribe once on mount
   useEffect(() => {
     const { unsubscribe } = telegramWatch(() => notify());
     return unsubscribe;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const saveMutation = useMutation({
@@ -383,10 +383,10 @@ export function NotificationSettings({ isSuperAdmin }: Props) {
     },
   });
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — only subscribe once on mount
   useEffect(() => {
     const { unsubscribe } = emailWatch(() => notify());
     return unsubscribe;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const emailSaveMutation = useMutation({

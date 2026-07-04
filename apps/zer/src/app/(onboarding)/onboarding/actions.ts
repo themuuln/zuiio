@@ -39,7 +39,6 @@ export async function completeOnboarding(
   }
 
   // Update organization with enabled features, supplier setting, and mark onboarding complete
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error: updateError } = await supabase
     .from("organizations")
     .update({
@@ -54,7 +53,7 @@ export async function completeOnboarding(
       has_email_reports: hasEmailReports ?? false,
       has_audit_log: hasAuditLog ?? true,
       onboarding_completed: true,
-    } as any)
+    } as Record<string, unknown>)
     .eq("id", profile.organization_id);
 
   if (updateError) {

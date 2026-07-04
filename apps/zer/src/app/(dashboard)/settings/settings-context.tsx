@@ -71,9 +71,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     return errorCount;
   }, []);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: tick is the trigger — handlersRef is stable, no other dependency needed
   const dirtySections = useMemo(() => {
     const sections: { id: string; label: string; changes: Change[] }[] = [];
-    handlersRef.current.forEach((h) => {
+    for (const h of handlersRef.current) {
       if (h.isDirty()) {
         sections.push({
           id: h.id,
@@ -81,9 +82,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           changes: h.getChanges?.() ?? [],
         });
       }
-    });
+    }
     return sections;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tick]);
 
   const dirtyCount = dirtySections.length;
@@ -116,6 +116,7 @@ export function useRegisterSave(handler: SaveHandler) {
   const handlerRef = useRef(handler);
   handlerRef.current = handler;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — only register/unregister on mount
   useEffect(() => {
     // Store a proxy that always reads the latest handler functions via the ref.
     // Without this, dirtyCount would never update because the stored handler
@@ -132,6 +133,5 @@ export function useRegisterSave(handler: SaveHandler) {
     };
     registerSave(proxy);
     return () => unregisterSave(proxy.id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }

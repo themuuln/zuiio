@@ -8,7 +8,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import { MechanicsRow } from "@/components/bay-view-v2/_mechanic-row";
+import { MechanicDisplay } from "@/components/bay-view-v2/_mechanic-display";
 import { Button } from "@/components/ui/button";
 import {
   DrawerDescription,
@@ -168,9 +168,10 @@ export function DrawerHeaderSection({
 
           <div className="flex items-center gap-2 shrink-0">
             {wo && orgId && workOrderId && (
-              <MechanicsRow
-                woId={workOrderId}
-                leadMechanic={wo.mechanic}
+              <MechanicDisplay
+                variant="row"
+                workOrderId={workOrderId}
+                mechanic={wo.mechanic}
                 // helpers and allMechanics are structurally compatible with MechanicRef[] —
                 // `full_name` may be more optional than MechanicRef expects
                 helpers={helpers as MechanicRef[]}

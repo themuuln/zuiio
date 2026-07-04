@@ -1,4 +1,3 @@
-import { capture } from "@zuiio/capture";
 import type { ServeExportConfig } from "@/lib/export/serve-export";
 import { serveExportRoute } from "@/lib/export/serve-export";
 

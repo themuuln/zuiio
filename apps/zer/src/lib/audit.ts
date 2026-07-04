@@ -4,7 +4,7 @@ import { capture } from "@zuiio/capture";
 import { requireAppContext } from "@/lib/erp";
 import type { createClient } from "@/lib/supabase/server";
 
-type AuditAction =
+export type AuditAction =
   | "created"
   | "updated"
   | "deleted"
@@ -14,7 +14,7 @@ type AuditAction =
   | "activated"
   | "deactivated";
 
-type EntityType =
+export type EntityType =
   | "product"
   | "sale"
   | "expense"
@@ -56,7 +56,7 @@ export async function logAuditEvent(
       action,
       entity_type: entityType,
       entity_id: entityId,
-      field_changes: (fieldChanges ?? null) as any,
+      field_changes: (fieldChanges ?? null) as Record<string, unknown> | null,
       summary: summary ?? `${action} ${entityType}`,
     });
   } catch {
@@ -86,7 +86,7 @@ export async function logAuditEventWithClient(
       action,
       entity_type: entityType,
       entity_id: entityId,
-      field_changes: (fieldChanges ?? null) as any,
+      field_changes: (fieldChanges ?? null) as Record<string, unknown> | null,
       summary: summary ?? `${action} ${entityType}`,
     });
   } catch {

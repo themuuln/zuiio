@@ -48,6 +48,7 @@ export function BranchProvider({
 
   // Read localStorage after hydration to restore persisted selection.
   // This fixes VAL-USER-006: context lost on full page reloads.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — only run once after hydration
   React.useEffect(() => {
     if (!isBranchScoped && typeof window !== "undefined") {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -56,7 +57,7 @@ export function BranchProvider({
       }
     }
     // Only run once after hydration.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — only run once after hydration
   }, []);
 
   const setSelectedBranchId = React.useCallback(

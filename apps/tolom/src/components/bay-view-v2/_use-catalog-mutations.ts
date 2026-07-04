@@ -145,7 +145,7 @@ export function useCatalogMutations<T extends EntityKind>(
   async function confirmAdd(id: string, price: number) {
     const orgIdCurrent = orgIdRef.current;
     if (!orgIdCurrent || !workOrderId) return;
-    const found = find(id) as ItemWithVariants | undefined;
+    const found = find(id) as (ItemWithVariants & Item) | undefined;
     if (!found) return;
     if (isSvc) setConfirmingIds((prev) => new Set([...prev, id]));
 
@@ -206,7 +206,7 @@ export function useCatalogMutations<T extends EntityKind>(
   // ── Remove ──
   async function removeItem(id: string) {
     const orgIdCurrent = orgIdRef.current;
-    const found = find(id) as ItemWithVariants | undefined;
+    const found = find(id) as (ItemWithVariants & Item) | undefined;
     if (!orgIdCurrent || !workOrderId || !found) return;
 
     if (id.startsWith("temp-")) {

@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { prefetchDrawerData } from "@/lib/queries/use-drawer-queries";
 import { cn } from "@/lib/utils";
-import { BayCardAccent } from "./_bay-card-accent";
+import { STATUS_ACCENT, URGENCY_CRITICAL, URGENCY_WARNING } from "./_constants";
 import { BayCardEmptyState } from "./_bay-card-empty-state";
 import { BayCardOccupied } from "./_bay-card-occupied";
 import { BayCardPreview } from "./_bay-card-preview";
@@ -46,6 +46,13 @@ export const BayCard = React.memo(function BayCard({
     id: `bay-${bay.bayNumber}`,
   });
   const wo = bay.workOrder;
+  const elapsed = elapsedMinutes(wo?.started_at);
+  const urgencyClass =
+    elapsed != null && elapsed > 180
+      ? `${URGENCY_CRITICAL} animate-pulse`
+      : elapsed != null && elapsed > 120
+        ? `${URGENCY_WARNING} animate-pulse`
+        : "";
 
   const handleMouseEnter = useCallback(() => {
     if (wo?.id && orgId) {
@@ -105,9 +112,12 @@ export const BayCard = React.memo(function BayCard({
         onMouseEnter={handleMouseEnter}
       >
         {wo && (
-          <BayCardAccent
-            status={wo.status}
-            elapsedMinutes={elapsedMinutes(wo.started_at)}
+          <div
+            className={cn(
+              "h-1 w-full shrink-0 rounded-t-xl",
+              STATUS_ACCENT[wo.status] ?? "bg-muted",
+              urgencyClass,
+            )}
           />
         )}
 

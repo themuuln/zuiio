@@ -181,7 +181,7 @@ export async function updatePurchaseOrderStatus(
           const remaining =
             Number(item.quantity) - Number(item.received_quantity ?? 0);
           return {
-            product_id: item.product_id!,
+            product_id: item.product_id ?? "",
             variant_id: item.variant_id ?? null,
             quantity: remaining,
             unit_cost: item.unit_cost,

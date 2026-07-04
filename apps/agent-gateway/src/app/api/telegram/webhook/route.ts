@@ -542,9 +542,9 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     // Try device auth code redemption before general message handling
     if (text.length >= 6 && text.length <= 10) {
-      const redeemed = redeemLinkCode(text);
+      const redeemed = await redeemLinkCode(getSupabase(), text, chatId, userId);
       if (redeemed) {
-        await handleCodeLink(chatId, userId, redeemed);
+        await handleCodeLinked(chatId, redeemed);
         return NextResponse.json({ ok: true });
       }
     }
@@ -558,49 +558,20 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   // ─── Handlers ────────────────────────────────────────────────────────────────
 
-  async function handleCodeLink(
+  async function handleCodeLinked(
     chatId: number,
-    userId: number,
     payload: { orgId: string; userId: string; productType: string },
   ): Promise<void> {
     const tg = getTelegram();
-    const sb = getSupabase();
 
-    try {
-      // Deactivate existing active link
-      await sb
-        .from("telegram_links")
-        .update({ is_active: false })
-        .eq("telegram_chat_id", chatId)
-        .eq("telegram_user_id", userId)
-        .eq("is_active", true);
-
-      // Create new link
-      const { error } = await sb.from("telegram_links").insert({
-        organization_id: payload.orgId,
-        user_id: payload.userId,
-        telegram_chat_id: chatId,
-        telegram_user_id: userId,
-        is_active: true,
-        notification_preferences: { productType: payload.productType },
-      });
-
-      if (error) {
-        console.error("Code link error:", error);
-        await tg.sendMessage(chatId, "❌ Холболт үүсгэхэд алдаа гарлаа.");
-        return;
-      }
-
-      const productName = payload.productType === "tolom" ? "Tolom" : "Zer";
-      await tg.sendMessage(
-        chatId,
-        `✅ Амжилттай холбогдлоо! Та ${productName} системдээ нэвтэрлээ.\n\nОдоо асуултаа бичнэ үү. Жишээ:\n- "Өнөөдрийн борлуулалт хэд вэ?"`,
-      );
-      await onUserLinked(chatId);
-    } catch (err) {
-      console.error("Code link error:", err);
-      await tg.sendMessage(chatId, "❌ Холболт үүсгэхэд алдаа гарлаа.");
-    }
+    // Link is already created & activated by redeemLinkCode in Supabase.
+    // Just confirm to the user.
+    const productName = payload.productType === "tolom" ? "Tolom" : "Zer";
+    await tg.sendMessage(
+      chatId,
+      `✅ Амжилттай холбогдлоо! Та ${productName} системдээ нэвтэрлээ.\n\nОдоо асуултаа бичнэ үү. Жишээ:\n- "Өнөөдрийн борлуулалт хэд вэ?"`,
+    );
+    await onUserLinked(chatId);
   }
 
 

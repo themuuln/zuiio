@@ -4,7 +4,7 @@ import { UserPlus } from "lucide-react";
 import { MechanicAvatarChip } from "@/components/mechanic-avatar-chip";
 import type { BayCardMechanic, BayCardWorkOrder } from "./_bay-card-types";
 import { MechanicAssignSheet } from "./_mechanic-assign-drawer";
-import { MechanicBadge } from "./mechanic-badge";
+import { MechanicDisplay } from "./_mechanic-display";
 import { cn } from "@/lib/utils";
 
 interface BayCardMechanicsRowProps {
@@ -34,7 +34,8 @@ export function BayCardMechanicsRow({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <MechanicBadge
+      <MechanicDisplay
+        variant="badge"
         workOrderId={workOrder.id}
         mechanic={workOrder.mechanic}
         disabled={isPending || disabled}

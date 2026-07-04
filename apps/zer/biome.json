@@ -6,8 +6,14 @@
     "useIgnoreFile": true
   },
   "files": {
-    "ignoreUnknown": true,
-    "includes": ["**", "!node_modules", "!.next", "!dist", "!build"]
+    "includes": [
+      "**",
+      "!node_modules",
+      "!.next",
+      "!dist",
+      "!build",
+      "!.vitepress/cache"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -98,13 +104,15 @@
           "suspicious": {
             "noConsole": "off",
             "noExplicitAny": "off",
-            "noTemplateCurlyInString": "off"
+            "noTemplateCurlyInString": "off",
+            "noAssignInExpressions": "off"
           },
           "correctness": {
             "noUnusedImports": "off"
           },
           "complexity": {
-            "noForEach": "off"
+            "noForEach": "off",
+            "noCommaOperator": "off"
           },
           "style": {
             "useTemplate": "off"

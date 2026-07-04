@@ -79,7 +79,7 @@ export function SettingsFooter() {
                           <div className="space-y-1">
                             {section.changes.map((change, i) => (
                               <div
-                                key={i}
+                                key={change.field}
                                 className="flex items-start gap-2 text-xs"
                               >
                                 <span className="shrink-0 rounded bg-blue-100 px-1 py-0.5 font-mono text-blue-700 dark:bg-blue-900 dark:text-blue-300">

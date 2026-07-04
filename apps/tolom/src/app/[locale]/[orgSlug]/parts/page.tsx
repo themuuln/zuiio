@@ -2,10 +2,8 @@ import { notFound } from "next/navigation";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { StorefrontPage } from "./_components/storefront-page";
 
-
 // Route renders user-specific content — legitimate cache opt-out.
 export const instant = false;
-
 
 type OrgInfo = {
   id: string;
@@ -106,7 +104,9 @@ async function fetchCatalog(slug: string): Promise<CatalogData | null> {
 
   // 3. Fetch inventory balances
   const partIds = [
-    ...new Set((vehicleModels ?? []).map((r: { part_id: string }) => r.part_id)),
+    ...new Set(
+      (vehicleModels ?? []).map((r: { part_id: string }) => r.part_id),
+    ),
   ];
   const balanceMap = new Map<string, boolean>();
   if (partIds.length > 0) {
@@ -143,7 +143,8 @@ async function fetchCatalog(slug: string): Promise<CatalogData | null> {
         part_count: 0,
       });
     }
-    modelMap.get(vm.id)!.part_count++;
+    const modelMapEntry = modelMap.get(vm.id)!;
+    modelMapEntry.part_count++;
 
     if (!modelSet.has(vm.id)) {
       modelSet.set(vm.id, {
@@ -156,7 +157,8 @@ async function fetchCatalog(slug: string): Promise<CatalogData | null> {
         part_count: 0,
       });
     }
-    modelSet.get(vm.id)!.part_count++;
+    const modelSetEntry = modelSet.get(vm.id)!;
+    modelSetEntry.part_count++;
 
     const price = row.specific_price ?? part.default_price;
     const inStock = balanceMap.get(part.id) ?? false;
@@ -183,7 +185,6 @@ async function fetchCatalog(slug: string): Promise<CatalogData | null> {
     (a: ModelInfo, b: ModelInfo) =>
       a.make.localeCompare(b.make) || a.model.localeCompare(b.model),
   );
-
 
   return {
     org: { id: org.id, name: org.name, slug: org.slug, logo_url: org.logo_url },

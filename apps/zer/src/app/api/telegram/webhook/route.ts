@@ -117,7 +117,7 @@ export async function POST(request: Request) {
     .eq("id", orgId)
     .maybeSingle();
 
-  const orgName = (org?.name as string) ?? "Таны бизнес";
+  const _orgName = (org?.name as string) ?? "Таны бизнес";
 
   // ── Run AI agent ──────────────────────────────────────────────────
   try {

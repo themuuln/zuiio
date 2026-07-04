@@ -436,9 +436,8 @@ export async function logEmailResult(
     payload.smtp_config_id = smtpConfigId;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await supabase
     .from("report_email_log")
-    .insert(payload as any);
+    .insert(payload as Record<string, unknown>);
   if (error) capture(error, { context: "[email] logEmailResult" });
 }

@@ -2,11 +2,11 @@
 
 import type { BaySlotData } from "@/lib/services/bay-view-service";
 import { cn } from "@/lib/utils";
-import { BayCardAccent } from "./_bay-card-accent";
+import { STATUS_ACCENT, URGENCY_CRITICAL, URGENCY_WARNING } from "./_constants";
 import { BayCardVehicleInfo } from "./_bay-card-vehicle-info";
 import { BayNumberLabel } from "./_bay-number-label";
 import { BayStatusBadge } from "./_bay-status-badge";
-import { MechanicsRow } from "./_mechanic-row";
+import { MechanicDisplay } from "./_mechanic-display";
 import { elapsedMinutes } from "./_helpers";
 
 interface BayCardPreviewProps {
@@ -21,6 +21,12 @@ export function BayCardPreview({ bay, className }: BayCardPreviewProps) {
   if (!wo) return null;
 
   const elapsed = elapsedMinutes(wo.started_at);
+  const urgencyClass =
+    elapsed != null && elapsed > 180
+      ? `${URGENCY_CRITICAL} animate-pulse`
+      : elapsed != null && elapsed > 120
+        ? `${URGENCY_WARNING} animate-pulse`
+        : "";
 
   return (
     <div
@@ -29,7 +35,13 @@ export function BayCardPreview({ bay, className }: BayCardPreviewProps) {
         className,
       )}
     >
-      <BayCardAccent status={wo.status} elapsedMinutes={elapsed} />
+      <div
+        className={cn(
+          "h-1 w-full shrink-0 rounded-t-xl",
+          STATUS_ACCENT[wo.status] ?? "bg-muted",
+          urgencyClass,
+        )}
+      />
 
       {/* Header — matches BayCardOccupied exactly */}
       <div className="flex select-none items-center justify-between py-2.5 pl-5 pr-3">
@@ -48,9 +60,10 @@ export function BayCardPreview({ bay, className }: BayCardPreviewProps) {
           vehicle={wo.vehicle}
           startedAt={wo.started_at ?? wo.created_at}
         />
-        <MechanicsRow
-          woId={wo.id}
-          leadMechanic={wo.mechanic}
+        <MechanicDisplay
+          variant="row"
+          workOrderId={wo.id}
+          mechanic={wo.mechanic}
           helpers={wo.helpers}
           status={wo.status}
           disabled

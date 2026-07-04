@@ -121,10 +121,10 @@ export function ReportEmailSettings() {
     },
   });
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — only subscribe once on mount
   useEffect(() => {
     const { unsubscribe } = watch(() => notify());
     return unsubscribe;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const enabled = watch("enabled");

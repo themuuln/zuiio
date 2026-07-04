@@ -1,5 +1,13 @@
 import "server-only";
-import { logAuditEventWithClient } from "@/lib/audit";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { type EntityType, logAuditEventWithClient } from "@/lib/audit";
+import type { Database } from "@/lib/supabase/types";
+
+type AccountingLine = {
+  account_id: string;
+  debit_amount: number;
+  credit_amount: number;
+};
 
 /**
  * Shared journal entry creation helper.
@@ -16,7 +24,7 @@ import { logAuditEventWithClient } from "@/lib/audit";
  * 6. Logs audit event
  */
 export async function createJournalEntry(
-  supabase: any,
+  supabase: SupabaseClient<Database>,
   {
     organizationId,
     userId,
@@ -31,16 +39,12 @@ export async function createJournalEntry(
     organizationId: string;
     userId: string;
     branchId: string;
-    referenceType: string;
+    referenceType: EntityType;
     referenceId: string;
     entryDate: string;
     description: string;
     accountCodes: string[];
-    lines: Array<{
-      account_id: string;
-      debit_amount: number;
-      credit_amount: number;
-    }>;
+    lines: AccountingLine[];
   },
 ): Promise<{ success: boolean; error?: string }> {
   try {
@@ -56,7 +60,7 @@ export async function createJournalEntry(
     }
 
     const accountMap = new Map(
-      (accounts as Array<{ id: string; code: string }>).map((a: any) => [
+      (accounts as Array<{ id: string; code: string }>).map((a) => [
         a.code,
         a.id,
       ]),
@@ -64,7 +68,7 @@ export async function createJournalEntry(
 
     // Resolve account IDs from codes
     const resolvedLines = lines.map((line) => {
-      const accountId = accountMap.get(line.account_id as any);
+      const accountId = accountMap.get(line.account_id);
       if (!accountId) {
         throw new Error(`Данс олдсонгүй: ${line.account_id}`);
       }
@@ -80,14 +84,8 @@ export async function createJournalEntry(
     const entryNumber = jeData as string;
 
     // 3. Validate debits = credits
-    const totalDebits = resolvedLines.reduce(
-      (s: number, l: any) => s + l.debit_amount,
-      0,
-    );
-    const totalCredits = resolvedLines.reduce(
-      (s: number, l: any) => s + l.credit_amount,
-      0,
-    );
+    const totalDebits = resolvedLines.reduce((s, l) => s + l.debit_amount, 0);
+    const totalCredits = resolvedLines.reduce((s, l) => s + l.credit_amount, 0);
     if (Math.abs(totalDebits - totalCredits) > 0.01) {
       return { success: false, error: "Дебет ба кредит дүн тэнцүү биш байна." };
     }
@@ -114,7 +112,7 @@ export async function createJournalEntry(
     const { error: linesError } = await supabase
       .from("journal_entry_lines")
       .insert(
-        resolvedLines.map((l: any) => ({
+        resolvedLines.map((l) => ({
           journal_entry_id: journalEntry.id,
           account_id: l.account_id,
           debit_amount: l.debit_amount,
@@ -129,15 +127,18 @@ export async function createJournalEntry(
       supabase,
       organizationId,
       userId,
-      "created" as any,
-      referenceType as any,
+      "created",
+      referenceType,
       referenceId,
       undefined,
       `Журналын бичилт ${entryNumber} үүсгэсэн`,
     );
 
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err?.message ?? "Алдаа гарлаа" };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Алдаа гарлаа",
+    };
   }
 }

@@ -1,6 +1,6 @@
 import { capture } from "@zuiio/capture";
 import { NextResponse } from "next/server";
-import { getActiveSmtpConfig, sendEmail } from "@/lib/email";
+import { sendEmail } from "@/lib/email";
 import { createClient } from "@/lib/supabase/server";
 
 /**

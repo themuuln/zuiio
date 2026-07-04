@@ -8,7 +8,7 @@ import type { BayCardProps } from "./_bay-card-types";
 import { BayCardVehicleInfo } from "./_bay-card-vehicle-info";
 import { BayNumberLabel } from "./_bay-number-label";
 import { BayStatusBadge } from "./_bay-status-badge";
-import { MechanicsRow } from "./_mechanic-row";
+import { MechanicDisplay } from "./_mechanic-display";
 import { useBayCardContext } from "./_bay-card-context";
 
 import { STATUS_TRANSLATION_KEYS } from "./_constants";
@@ -92,9 +92,10 @@ export function BayCardOccupied({ bay }: BayCardOccupiedProps) {
           draggable
           draggableDisabled={isPending || isKanbanMode}
         />
-        <MechanicsRow
-          woId={wo.id}
-          leadMechanic={wo.mechanic}
+        <MechanicDisplay
+          variant="row"
+          workOrderId={wo.id}
+          mechanic={wo.mechanic}
           helpers={wo.helpers}
           status={wo.status}
           allMechanics={mechanics}
