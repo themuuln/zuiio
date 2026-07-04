@@ -20,6 +20,7 @@ import {
   fetchProductsForStock,
   fetchVariantsForStock,
 } from "@/lib/stock-utils";
+import type { Json } from "@/lib/supabase/types";
 import { getString } from "@/lib/validation";
 
 type LineItemData = {
@@ -58,10 +59,10 @@ export async function createSale(
 
   const paymentMethod = getString(formData, "payment_method") || "cash";
   const paymentSplitsRaw = formData.get("payment_splits");
-  let paymentSplits = null;
+  let paymentSplits: Json | null = null;
   if (paymentSplitsRaw) {
     try {
-      paymentSplits = JSON.parse(paymentSplitsRaw.toString());
+      paymentSplits = JSON.parse(paymentSplitsRaw.toString()) as Json;
     } catch {
       // ignore invalid JSON
     }
@@ -106,7 +107,7 @@ export async function createSale(
 
   // --- Step 1: Validate stock for all unique products ---
   const productMap = await fetchProductsForStock(
-    supabase as any,
+    supabase,
     organizationId,
     uniqueProductIds,
   );
@@ -118,10 +119,9 @@ export async function createSale(
   // --- Pre-compute variant data for use in both validation and decrement ---
   const variantItems = items.filter((i) => i.variantId);
   let variantStockMap = new Map<string, { current_stock: number | null }>();
-
   if (variantItems.length > 0) {
     const variantIds = [...new Set(variantItems.map((i) => i.variantId!))];
-    const variants = await fetchVariantsForStock(supabase as any, variantIds);
+    const variants = await fetchVariantsForStock(supabase, variantIds);
     variantStockMap = variants as Map<string, { current_stock: number | null }>;
   }
 
@@ -181,7 +181,7 @@ export async function createSale(
   if (customerName) {
     const phone = getString(formData, "customer_phone");
     const result = await findOrCreateContact(
-      supabase as any,
+      supabase,
       organizationId,
       "customer",
       customerName,
@@ -208,7 +208,7 @@ export async function createSale(
       notes: getString(formData, "notes") || null,
       created_by: userId,
       salesperson_id: salespersonId,
-    } as any)
+    })
     .select("id")
     .single();
 
@@ -248,7 +248,7 @@ export async function createSale(
 
   // --- Step 5: Insert stock_movements and decrement stock ---
   if (status !== "cancelled") {
-    const stockResult = await createStockMovements(supabase as any, {
+    const stockResult = await createStockMovements(supabase, {
       organizationId,
       branchId,
       type: "out",
@@ -287,7 +287,7 @@ export async function createSale(
       if (!product) continue;
 
       const updatedProduct = await decrementProductStock(
-        supabase as any,
+        supabase,
         organizationId,
         productId,
         totalQty,
@@ -313,7 +313,7 @@ export async function createSale(
     // --- Atomic variant stock decrement for variant items ---
     for (const item of variantItems) {
       const success = await decrementVariantStock(
-        supabase as any,
+        supabase,
         item.variantId!,
         item.quantity,
       );

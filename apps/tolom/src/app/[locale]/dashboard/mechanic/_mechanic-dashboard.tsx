@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ElapsedTimer } from "@/components/bay-view-v2/_elapsed-timer";
+import { ElapsedTimer } from "@/components/bay-view-v2/_elapsed-display";
 import type { PickupCompleteData } from "@/components/bay-view-v2/pickup-complete-dialog";
 import { PickupCompleteDialog } from "@/components/bay-view-v2/pickup-complete-dialog";
 import { ShiftReportDialog } from "@/components/bay-view-v2/shift-report-dialog";

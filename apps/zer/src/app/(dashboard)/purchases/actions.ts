@@ -284,11 +284,19 @@ export async function receivePurchaseOrderItems(
     },
   );
 
-  if (rpcError || (rpcResult && (rpcResult as any).error)) {
+  if (
+    rpcError ||
+    (rpcResult &&
+      typeof rpcResult === "object" &&
+      "error" in rpcResult &&
+      rpcResult.error)
+  ) {
     return {
       error:
         rpcError?.message ??
-        (rpcResult as any)?.error ??
+        (rpcResult && typeof rpcResult === "object" && "error" in rpcResult
+          ? String(rpcResult.error)
+          : null) ??
         "Бараа хүлээн авахад алдаа гарлаа.",
     };
   }

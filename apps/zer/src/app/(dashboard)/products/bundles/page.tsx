@@ -1,5 +1,4 @@
 import { Package, Plus } from "@phosphor-icons/react/dist/ssr";
-import Link from "next/link";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
 import { BundleCreateDrawer } from "@/components/products/bundle-create-drawer";

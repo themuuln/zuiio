@@ -98,6 +98,7 @@ export function OrgLogoUploader({
       <div className="flex items-center gap-4">
         {logoUrl ? (
           <div className="flex size-20 items-center justify-center overflow-hidden rounded-lg border bg-muted">
+            {/* biome-ignore lint/performance/noImgElement: logo preview, Image component not needed */}
             <img
               src={logoUrl}
               alt={`${organizationName} лого`}

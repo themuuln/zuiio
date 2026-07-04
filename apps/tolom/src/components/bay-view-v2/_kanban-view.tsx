@@ -11,7 +11,7 @@ import type { Vehicle, WorkOrder } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { CondensedQueueItem } from "./_condensed-queue-item";
 import { ALL_STATUSES, STATUS_COLUMN } from "./_constants";
-import { ErrorSection } from "./_error-section";
+import { ErrorSection } from "./_error-display";
 import { BayCard } from "./bay-card";
 
 // ── KanbanDropColumn (moved from _types.tsx) ───────────────────

@@ -16,7 +16,7 @@ import { prefetchDrawerData } from "@/lib/queries/use-drawer-queries";
 import type { BaySlotData } from "@/lib/services/bay-view-service";
 import { cn, formatPlateNumber } from "@/lib/utils";
 import { STATUS_BADGE_CLASS } from "./_constants";
-import { ElapsedText } from "./_elapsed-text";
+import { ElapsedText } from "./_elapsed-display";
 
 interface ListViewProps {
   bays: BaySlotData[];

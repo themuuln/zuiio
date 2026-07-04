@@ -18,7 +18,7 @@ import {
 } from "@/lib/payments/org-bank-accounts";
 import { useSelectedBranchId, useSetSelectedBranchId } from "@/lib/stores";
 import { DialogManager } from "./_dialog-manager";
-import { BayViewErrorState } from "./_error-state";
+import { BayViewErrorState } from "./_error-display";
 import { KpiCards } from "./_kpi-cards";
 import { QueueRail } from "./_queue-rail";
 import { BayViewPageSkeleton } from "./_page-skeleton";

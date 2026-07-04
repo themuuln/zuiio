@@ -535,7 +535,7 @@ export async function updateOrgFeatureSetting(
 
   const { error } = await supabase
     .from("organizations")
-    .update({ [setting]: value } as any)
+    .update({ [setting]: value } as Record<string, unknown>)
     .eq("id", organizationId);
 
   if (error) {

@@ -61,10 +61,10 @@ export function OrgInfoForm({
   });
 
   // Reactivity: subscribe to form changes without creating render-loop
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — only subscribe once on mount
   useEffect(() => {
     const { unsubscribe } = watch(() => notify());
     return unsubscribe;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const save = useCallback(async () => {

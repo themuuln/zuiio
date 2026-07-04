@@ -1,7 +1,9 @@
 "use server";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireWriteAction } from "@/lib/action-utils";
 import { revalidateEntities } from "@/lib/revalidate";
+import type { Database } from "@/lib/supabase/types";
 import { getString } from "@/lib/validation";
 
 export async function createReturn(
@@ -336,7 +338,7 @@ export async function completeReturn(returnId: string) {
  * Called when a subsequent item fails during completeReturn.
  */
 async function rollbackCompletedReturnItems(
-  supabase: any,
+  supabase: SupabaseClient<Database>,
   processedItems: Array<{
     product_id: string;
     stockDelta: number;

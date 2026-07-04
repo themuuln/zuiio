@@ -142,6 +142,7 @@ function FeatureToggle({
   });
 
   return (
+    // biome-ignore lint/a11y/noLabelWithoutControl: shadcn Checkbox renders a semantic checkbox button
     <label className="flex items-center gap-3 rounded-lg border p-3 cursor-pointer hover:bg-accent/50 transition-colors">
       <Checkbox
         defaultChecked={defaultValue}

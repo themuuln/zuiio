@@ -16,6 +16,7 @@ import { sanitizeUserInput } from "@/lib/sanitize";
 import { verifyCompactToken } from "@/lib/tokens";
 import { transcribeVoice } from "@/stt/groq";
 import { redeemLinkCode } from "@/lib/link-code";
+import { onUserLinked, onWelcome } from "@/bot-ux";
 
 // ─── Lazy singletons ────────────────────────────────────────────────────────
 
@@ -504,6 +505,41 @@ export async function POST(request: Request): Promise<NextResponse> {
       return NextResponse.json({ ok: true });
     }
 
+    if (text.startsWith("/help")) {
+      await getTelegram().sendMessage(chatId,
+        "📋 **Боломжууд**\n\n" +
+        "Би Zer болон Tolom системтэй холбогдон таны бизнесийн өгөгдөлд дүн шинжилгээ хийж, асуултанд хариулна.\n\n" +
+        "🔹 Борлуулалтын хураангуй\n" +
+        "🔹 Идэвхтэй захиалгууд\n" +
+        "🔹 Харилцагчийн мэдээлэл\n" +
+        "🔹 Санхүүгийн тайлан\n" +
+        "🔹 Зарлагын дүн шинжилгээ\n" +
+        "🔹 Цагийн хуваарь\n\n" +
+        "**Хэрэглэх заавар:**\n" +
+        "1. Zer/Tolom-ын тохиргооноос холбогдох код авах\n" +
+        "2. Кодоо энд илгээх\n" +
+        "3. Асуултаа бичих\n\n" +
+        "**Командууд:**\n" +
+        "/start — Холбогдох\n" +
+        "/help — Энэ тусламж\n" +
+        "/switch — Байгууллага солих\n" +
+        "/link — Кодоор холбогдох",
+        { parseMode: "Markdown" }
+      );
+      return NextResponse.json({ ok: true });
+    }
+
+    if (text.startsWith("/link")) {
+      await getTelegram().sendMessage(chatId,
+        "🔗 Холбогдох кодоо оруулна уу.\n\n" +
+        "Кодоо Zer эсвэл Tolom-ын **Тохиргоо → Telegram холболт** хэсгээс аваарай.\n\n" +
+        "Код жишээ: `ABCD-EFGH`",
+        { parseMode: "Markdown" }
+      );
+      return NextResponse.json({ ok: true });
+    }
+
+
     // Try device auth code redemption before general message handling
     if (text.length >= 6 && text.length <= 10) {
       const redeemed = redeemLinkCode(text);
@@ -560,6 +596,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         chatId,
         `✅ Амжилттай холбогдлоо! Та ${productName} системдээ нэвтэрлээ.\n\nОдоо асуултаа бичнэ үү. Жишээ:\n- "Өнөөдрийн борлуулалт хэд вэ?"`,
       );
+      await onUserLinked(chatId);
     } catch (err) {
       console.error("Code link error:", err);
       await tg.sendMessage(chatId, "❌ Холболт үүсгэхэд алдаа гарлаа.");
@@ -571,9 +608,17 @@ export async function POST(request: Request): Promise<NextResponse> {
     const tg = getTelegram();
     const parts = text.split(" ");
     const token = parts[1];
-
     if (!token) {
-      await tg.sendMessage(chatId, "👋 Тавтай морилно уу! Холбогдохын тулд QR код уншуулна уу.");
+      await tg.sendMessage(chatId,
+        "👋 Сайн байна уу! Zuiio AI туслах ботод тавтай морил.\n\n" +
+        "🔗 Холбогдохын тулд:\n" +
+        "1. Zer/Tolom-ын тохиргоо хэсгээс код авах\n" +
+        "2. Кодоо энд илгээх (жишээ нь: ABCD-EFGH)\n\n" +
+        "📋 Командууд:\n" +
+        "/help — Тусламж\n" +
+        "/link — Кодоор холбогдох"
+      );
+      await onWelcome(chatId);
       return;
     }
 
@@ -620,6 +665,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         chatId,
         `✅ Амжилттай холбогдлоо! Та ${productName} системдээ нэвтэрлээ.\n\nОдоо асуултаа бичнэ үү. Жишээ нь:\n- "Өнөөдрийн борлуулалт хэд вэ?"\n- "Сүүлийн 7 хоногийн хураангуй"`,
       );
+      await onUserLinked(chatId);
     } catch (err) {
       console.error("Start handler error:", err);
       await tg.sendMessage(chatId, "❌ Холболт амжилтгүй боллоо. Дахин оролдоно уу.");

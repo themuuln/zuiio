@@ -2,7 +2,7 @@
 
 import React from "react";
 import type { BaySlotData } from "@/lib/services/bay-view-service";
-import { ErrorSection } from "./_error-section";
+import { ErrorSection } from "./_error-display";
 import { BayCard } from "./bay-card";
 
 interface GridViewProps {

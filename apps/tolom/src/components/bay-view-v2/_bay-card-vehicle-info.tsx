@@ -6,7 +6,7 @@ import { VehicleMakeLogo } from "@/components/vehicles/vehicle-make-logo";
 import type { Vehicle } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { DraggableVehicleWrapper } from "./_draggable-vehicle-wrapper";
-import { ElapsedTimer } from "./_elapsed-timer";
+import { ElapsedTimer } from "./_elapsed-display";
 
 interface BayCardVehicleInfoProps {
   vehicle: Vehicle | null | undefined;

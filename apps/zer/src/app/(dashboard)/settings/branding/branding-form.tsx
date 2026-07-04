@@ -257,7 +257,7 @@ export function BrandingForm({ initialConfig }: BrandingFormProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Биеийн текст</label>
+            <span className="text-sm font-medium">Биеийн текст</span>
             <NativeSelect
               value={fontBody}
               onChange={(e) => setFontBody(e.target.value)}
@@ -273,7 +273,7 @@ export function BrandingForm({ initialConfig }: BrandingFormProps) {
             </NativeSelect>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Гарчиг</label>
+            <span className="text-sm font-medium">Гарчиг</span>
             <NativeSelect
               value={fontHeading}
               onChange={(e) => setFontHeading(e.target.value)}
@@ -372,6 +372,7 @@ export function BrandingForm({ initialConfig }: BrandingFormProps) {
           {logoUrl && (
             <div className="flex items-center gap-4">
               <div className="flex size-16 items-center justify-center overflow-hidden rounded-lg border bg-muted">
+                {/* biome-ignore lint/performance/noImgElement: static logo preview, Image component not needed */}
                 <img
                   src={logoUrl}
                   alt="Байгууллагын лого"

@@ -152,6 +152,8 @@ export function BundlesContent({
                       </Badge>
                     </TableCell>
                     <TableCell>
+                      {/* biome-ignore lint/a11y/noStaticElementInteractions: wrapper only for stopPropagation */}
+                      {/* biome-ignore lint/a11y/useKeyWithClickEvents: wrapper only for stopPropagation; actual interactive element inside */}
                       <div
                         className="flex items-center gap-1"
                         onClick={(e) => e.stopPropagation()}
