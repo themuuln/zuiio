@@ -2,10 +2,20 @@
 
 import type { Profile, Vehicle, WorkOrder } from "@/lib/types";
 
+/**
+ * Bay View work order type — permissive variant of WorkOrder that allows
+ * nullable bay_number and mechanic_id for optimistic cache updates
+ * (completed/cancelled/unassigned states).
+ */
+type BayViewWorkOrder = Omit<WorkOrder, "bay_number" | "mechanic_id"> & {
+  bay_number: number | null;
+  mechanic_id: string | null;
+};
+
 export interface BaySlotData {
   bayNumber: number;
   workOrder:
-    | (WorkOrder & {
+    | (BayViewWorkOrder & {
         vehicle: Vehicle | null;
         mechanic: {
           id: string;
@@ -40,7 +50,7 @@ export interface BayViewData {
   branches: BranchInfo[];
   /** Present when viewing "All" — one section per branch with its bay grid. */
   branchSections?: BranchSectionData[];
-  waitingQueue: (WorkOrder & {
+  waitingQueue: (BayViewWorkOrder & {
     vehicle: Vehicle | null;
   })[];
   mechanics: (Profile & { current_jobs: number })[];
