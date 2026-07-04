@@ -1,6 +1,9 @@
 import { Star } from "@phosphor-icons/react/dist/ssr";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
+// Illustrative testimonials — replace with real customer quotes before launch.
+// These represent typical use cases and roles for the target market.
+
 const testimonials = [
   {
     name: "Батбаяр С.",

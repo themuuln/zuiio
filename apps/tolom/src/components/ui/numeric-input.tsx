@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { clamp } from "@zuiio/core";
 import { cn } from "@/lib/utils";
 
-export interface NumericInputProps {
+export interface NumericInputProps extends Omit<React.ComponentProps<"input">, "value" | "onChange" | "onBlur" | "type" | "size" | "min" | "max" | "step" | "className" | "disabled" | "readOnly" | "placeholder"> {
   /** Current numeric value */
   value: number;
   /** Called with parsed number on blur / Enter */
@@ -77,6 +77,9 @@ export function NumericInput({
   autoSelect = false,
   "aria-label": ariaLabel = "Numeric",
   minWidth,
+  onFocus: externalOnFocus,
+  onKeyDown: externalOnKeyDown,
+  ...rest
 }: NumericInputProps) {
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState("");
@@ -167,6 +170,7 @@ export function NumericInput({
 
   return (
     <input
+      {...rest}
       ref={inputRef}
       type="text"
       inputMode={isInteger ? "numeric" : "decimal"}
@@ -174,9 +178,9 @@ export function NumericInput({
       placeholder={placeholder}
       disabled={disabled}
       readOnly={readOnly}
-      onFocus={handleFocus}
+      onFocus={(e) => { externalOnFocus?.(e); handleFocus(e); }}
       onBlur={handleBlur}
-      onKeyDown={handleKeyDown}
+      onKeyDown={(e) => { externalOnKeyDown?.(e); handleKeyDown(e); }}
       onChange={handleChange}
       data-slot="input"
       className={cn(

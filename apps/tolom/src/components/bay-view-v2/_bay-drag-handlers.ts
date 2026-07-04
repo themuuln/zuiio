@@ -127,6 +127,8 @@ export function useBayDragHandlers({
             bayNumber,
           ).finally(() => {
             clearPending(woId, targetWo.id);
+          }).catch((err) => {
+            reportServerError("Bay swap failed", err);
           });
           return;
         }

@@ -1,54 +1,35 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { toApiErrorResponse, UnauthorizedError } from "@/lib/errors";
-import { createClient } from "@/lib/supabase/server";
-import { ok, created } from "@/lib/api-response";
+import { createRouteHandler } from "@/lib/api-handler";
+import { ok, created, apiError } from "@/lib/api-response";
+import { capture } from "@zuiio/capture";
+export const GET = createRouteHandler(
+  async ({ params, supabase }) => {
+    const { brandId } = params;
+    const { data, error } = await supabase
+      .from("car_models")
+      .select(
+        "id, name, body_type, fuel_type, transmission, drivetrain, year_start, year_end, engine_options, is_active",
+      )
+      .eq("brand_id", brandId)
+      .eq("is_active", true)
+      .order("name");
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ brandId: string }> },
-) {
-  const { brandId } = await params;
-  const supabase = await createClient();
+    if (error) {
+      capture(error, { context: "car_models list" });
+      return apiError("INTERNAL", "Failed to fetch models", 500);
+    }
 
-  const { data, error } = await supabase
-    .from("car_models")
-    .select(
-      "id, name, body_type, fuel_type, transmission, drivetrain, year_start, year_end, engine_options, is_active",
-    )
-    .eq("brand_id", brandId)
-    .eq("is_active", true)
-    .order("name");
-
-  if (error) {
-    return NextResponse.json(
-      { error: { message: error.message } },
-      { status: 500 },
-    );
-  }
-
-  return ok(data);
-}
-
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ brandId: string }> },
-) {
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) throw new UnauthorizedError();
-
-    const { brandId } = await params;
+    return ok(data);
+  },
+  { requireOrg: false },
+);
+export const POST = createRouteHandler(
+  async ({ request, params, supabase }) => {
+    const { brandId } = params;
     const body = await request.json();
     const name = body.name?.trim();
 
     if (!name) {
-      return NextResponse.json(
-        { error: { message: "Model name is required" } },
-        { status: 400 },
-      );
+      return apiError("VALIDATION", "Model name is required", 400);
     }
 
     // Check for duplicate
@@ -77,15 +58,11 @@ export async function POST(
       .single();
 
     if (error) {
-      return NextResponse.json(
-        { error: { message: error.message } },
-        { status: 500 },
-      );
+      capture(error, { context: "car_models create" });
+      return apiError("INTERNAL", "Failed to create model", 500);
     }
 
     return created(data);
-  } catch (error) {
-    const { status, body } = toApiErrorResponse(error);
-    return NextResponse.json(body, { status });
-  }
-}
+  },
+  { requireOrg: false },
+);

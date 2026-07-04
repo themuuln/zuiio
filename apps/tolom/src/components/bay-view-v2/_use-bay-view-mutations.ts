@@ -28,6 +28,7 @@ import type { PickupCompleteData } from "./pickup-complete-dialog";
 import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
 import type { PostServiceFormData } from "./post-service-dialog";
 import { STATUS_TRANSLATION_KEYS } from "./_constants";
+import { reportServerError } from "@/lib/sentry-report-server";
 
 export interface BayViewMutationsParams {
   branchFilter: string | undefined;
@@ -155,6 +156,10 @@ export function useBayViewMutations(params: BayViewMutationsParams) {
               duration: 5000,
             },
           );
+        })
+        .catch((err) => {
+          reportServerError("Failed to update status", err);
+          toast.error("Failed to update status");
         });
         return;
       }

@@ -125,7 +125,7 @@ export function ServicesSection({
             default_price: 0,
             category: null,
             _source: "global",
-          } as CatalogServiceItem)
+          } as unknown as CatalogServiceItem)
         }
         isAdded={(svc) =>
           services?.some((s) => s.service_catalog_id === svc.id) ?? false

@@ -7,12 +7,12 @@ import { useOrgMutation } from "@zuiio/query";
 // ── Query Keys ─────────────────────────────────────────────────
 
 export const followupKeys = {
-  all: ["followups"] as const,
-  lists: () => [...followupKeys.all, "list"] as const,
-  list: (params: Record<string, unknown>) =>
-    [...followupKeys.lists(), params] as const,
-  details: () => [...followupKeys.all, "detail"] as const,
-  detail: (id: string) => [...followupKeys.details(), id] as const,
+  all: (orgId: string) => ["organizations", orgId, "followups"] as const,
+  lists: (orgId: string) => [...followupKeys.all(orgId), "list"] as const,
+  list: (orgId: string, params: Record<string, unknown>) =>
+    [...followupKeys.lists(orgId), params] as const,
+  details: (orgId: string) => [...followupKeys.all(orgId), "detail"] as const,
+  detail: (orgId: string, id: string) => [...followupKeys.details(orgId), id] as const,
 };
 
 // ── Types ──────────────────────────────────────────────────────
@@ -76,7 +76,7 @@ export function useFollowups(orgId: string, filters: FollowupFilters = {}) {
     data: FollowupData[];
     count: number;
   }>({
-    queryKey: followupKeys.list(params),
+    queryKey: followupKeys.list(orgId, params),
     queryFn: async () => {
       const searchParams = new URLSearchParams();
       if (params.customerId) searchParams.set("customerId", params.customerId);
@@ -100,7 +100,7 @@ export function useFollowups(orgId: string, filters: FollowupFilters = {}) {
 
 export function useFollowupDetail(orgId: string, followupId: string | null) {
   return useQuery<{ data: FollowupData }>({
-    queryKey: followupKeys.detail(followupId ?? ""),
+    queryKey: followupKeys.detail(orgId, followupId ?? ""),
     queryFn: async () => {
       const res = await fetch(
         `/api/organizations/${orgId}/followups/${followupId}`,
@@ -131,7 +131,7 @@ export function useCreateFollowup(orgId: string) {
   >({
     endpoint: `/api/organizations/${orgId}/followups`,
     method: "POST",
-    queryKey: followupKeys.all,
+    queryKey: followupKeys.all(orgId),
     successMessage: "Follow-up created",
   });
 }
@@ -154,7 +154,7 @@ export function useUpdateFollowup(orgId: string) {
     endpoint: (vars) =>
       `/api/organizations/${orgId}/followups/${vars.followupId}`,
     method: "PATCH",
-    queryKey: followupKeys.all,
+    queryKey: followupKeys.all(orgId),
     successMessage: "Follow-up updated",
   });
 }
@@ -164,7 +164,7 @@ export function useDeleteFollowup(orgId: string) {
     endpoint: (followupId) =>
       `/api/organizations/${orgId}/followups/${followupId}`,
     method: "DELETE",
-    queryKey: followupKeys.all,
+    queryKey: followupKeys.all(orgId),
     successMessage: "Follow-up deleted",
   });
 }

@@ -100,7 +100,7 @@ export async function createAuditLog(
           "Unable to determine organization_id: user has no organization membership",
       };
     }
-    resolvedOrgId = data;
+    resolvedOrgId = data as string;
   }
 
   const entry: AuditLogInsert = {

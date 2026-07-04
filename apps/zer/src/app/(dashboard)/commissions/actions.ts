@@ -50,10 +50,15 @@ export async function getCommissionSummary(
 ): Promise<StaffCommissionSummary[]> {
   const { supabase, branchId, isBranchScoped } = await requireAppContext();
 
-  const { data: profiles } = await supabase
+  const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
     .select("id, full_name")
     .eq("organization_id", orgId);
+
+  if (profilesError) {
+    capture(profilesError, { context: "commissions: fetch profiles in summary" });
+    return [];
+  }
 
   if (!profiles || profiles.length === 0) {
     return [];
@@ -156,8 +161,10 @@ export async function getUnpaidItems(
     .select("id, sale_id, total_price, commission_amount")
     .in("sale_id", saleIds)
     .gt("commission_amount", 0);
-
   if (error || !allItems || allItems.length === 0) {
+    if (error) {
+      capture(error, { context: "commissions: fetch unpaid items" });
+    }
     return [];
   }
 

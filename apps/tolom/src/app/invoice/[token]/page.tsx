@@ -358,24 +358,13 @@ export default function PublicInvoicePage() {
                       {invoice.customer_name}
                     </Typography.Text>
                   )}
-                  {invoice.customer_phone && (
-                    <Typography.Muted className="text-muted-foreground">
-                      {invoice.customer_phone}
-                    </Typography.Muted>
-                  )}
-                  {invoice.customer_email && (
-                    <Typography.Muted className="text-muted-foreground">
-                      {invoice.customer_email}
-                    </Typography.Muted>
-                  )}
                   {invoice.customer_address && (
                     <Typography.Muted className="text-muted-foreground">
                       {invoice.customer_address}
                     </Typography.Muted>
                   )}
                   {!invoice.customer_name &&
-                    !invoice.customer_phone &&
-                    !invoice.customer_email && (
+                    !invoice.customer_address && (
                       <Typography.Muted className="text-muted-foreground italic">
                         {t("noCustomerInfo")}
                       </Typography.Muted>

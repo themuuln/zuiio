@@ -22,11 +22,11 @@ import { captureDbError } from "./capture";
  * @param ctx — Optional extra context (orgId, etc.)
  * @returns The same shape: `{ data, error }`
  */
-export async function withDbCapture<T>(
+export async function withDbCapture<R extends { data: unknown; error: unknown }>(
   label: string,
-  promise: PromiseLike<{ data: T | null; error: unknown }>,
+  promise: PromiseLike<R>,
   ctx?: { orgId?: string },
-): Promise<{ data: T | null; error: unknown }> {
+): Promise<R> {
   try {
     const result = await promise;
 
@@ -41,6 +41,6 @@ export async function withDbCapture<T>(
     captureDbError("supabase_exception", label, e, {
       ...(ctx?.orgId ? { orgId: ctx.orgId } : {}),
     });
-    return { data: null, error: e };
+    return { data: null, error: e } as unknown as R;
   }
 }

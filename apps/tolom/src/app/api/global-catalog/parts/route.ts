@@ -1,8 +1,6 @@
-import { NextResponse } from "next/server";
 import { createSimpleRouteHandler } from "@/lib/api-handler";
 import { reportServerError } from "@/lib/sentry-report-server";
-import { ok } from "@/lib/api-response";
-
+import { ok, apiError } from "@/lib/api-response";
 export const GET = createSimpleRouteHandler(async ({ user, supabase }) => {
   console.log("[Global Catalog API] Querying as user:", user?.email);
 
@@ -17,10 +15,7 @@ export const GET = createSimpleRouteHandler(async ({ user, supabase }) => {
 
   if (error) {
     reportServerError("[Global Catalog API] Query error:", error);
-    return NextResponse.json(
-      { error: { message: error.message } },
-      { status: 500 },
-    );
+    return apiError("QUERY_ERROR", error.message, 500);
   }
 
   return ok(data);

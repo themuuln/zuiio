@@ -19,8 +19,8 @@ async function withOrg<T>(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new UnauthorizedError();
-
-  const { data: orgId } = await supabase.rpc("get_user_organization_id");
+  const { data: orgIdRaw } = await supabase.rpc("get_user_organization_id");
+  const orgId = orgIdRaw as string;
   if (!orgId) throw new UnauthorizedError("Choose an organization to continue");
 
   return fn(supabase, orgId);
@@ -36,7 +36,8 @@ async function withOrgAndUser<T>(
   } = await supabase.auth.getUser();
   if (!user) throw new UnauthorizedError();
 
-  const { data: orgId } = await supabase.rpc("get_user_organization_id");
+  const { data: orgIdRaw } = await supabase.rpc("get_user_organization_id");
+  const orgId = orgIdRaw as string;
   if (!orgId) throw new UnauthorizedError("Choose an organization to continue");
 
   return fn(supabase, orgId, user.id);

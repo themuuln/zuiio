@@ -8,6 +8,7 @@ import {
   ValidationError,
 } from "@/lib/errors";
 import { resolveBranchId, withBranchFilter } from "@/lib/supabase/with-branch";
+import { capture } from "@/lib/capture";
 import type {
   Appointment,
   AppointmentDetail,
@@ -22,9 +23,12 @@ async function getOrgId(db: SupabaseClient): Promise<string> {
   const supabase = db;
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
+  if (authError) capture(authError);
   if (!user) throw new UnauthorizedError();
-  const { data } = await supabase.rpc("get_user_organization_id");
+  const { data, error: rpcError } = await supabase.rpc("get_user_organization_id");
+  if (rpcError) capture(rpcError);
   if (!data) throw new UnauthorizedError("Choose an organization to continue");
   return data;
 }
@@ -74,7 +78,8 @@ export async function getAppointments(
   if (params?.date_from) query = query.gte("scheduled_at", params.date_from);
   if (params?.date_to) query = query.lte("scheduled_at", params.date_to);
 
-  const { data } = await query;
+  const { data, error } = await query;
+  if (error) capture(error);
   const appointments = (data ?? []) as unknown as (Appointment & {
     customer: Record<string, unknown> | null;
     vehicle: Record<string, unknown> | null;
@@ -105,7 +110,7 @@ export async function getAppointment(
   const supabase = db;
   const orgId = await getOrgId(db);
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("appointments")
     .select(
       `
@@ -120,6 +125,7 @@ export async function getAppointment(
     .eq("organization_id", orgId)
     .is("deleted_at", null)
     .single();
+  if (error) capture(error);
 
   if (!data) return null;
 
@@ -227,7 +233,7 @@ export async function updateAppointment(
   const orgId = await getOrgId(db);
   const user = (await supabase.auth.getUser()).data.user;
 
-  const { data: existingRecord } = await supabase
+  const { data: existingRecord, error: fetchError } = await supabase
     .from("appointments")
     .select(
       "id, title, scheduled_at, description, notes, mechanic_id, status, customer_id, vehicle_id",
@@ -236,6 +242,7 @@ export async function updateAppointment(
     .eq("organization_id", orgId)
     .is("deleted_at", null)
     .single();
+  if (fetchError) capture(fetchError);
 
   const updates: Record<string, unknown> = { updated_by: user?.id ?? null };
 
@@ -302,7 +309,7 @@ export async function deleteAppointment(
   const orgId = await getOrgId(db);
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
-  const { data: existingRecord } = await supabase
+  const { data: existingRecord, error: fetchError } = await supabase
     .from("appointments")
     .select(
       "id, title, scheduled_at, description, notes, mechanic_id, status, customer_id, vehicle_id",
@@ -311,6 +318,7 @@ export async function deleteAppointment(
     .eq("organization_id", orgId)
     .is("deleted_at", null)
     .single();
+  if (fetchError) capture(fetchError);
 
   const { error } = await supabase
     .from("appointments")

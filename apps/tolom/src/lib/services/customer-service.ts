@@ -78,13 +78,16 @@ const crud = createCrudService<
 
       // Check for duplicate phone (warn only — don't block)
       if (params.phone?.trim()) {
-        const { data: existing } = await ctx.db
-          .from("customers")
-          .select("id, first_name, last_name, company_name, phone")
-          .eq("organization_id", ctx.orgId)
-          .eq("phone", params.phone.trim())
-          .is("deleted_at", null)
-          .maybeSingle();
+        const { data: existing } = await withDbCapture(
+          "beforeCreate:phoneDup",
+          ctx.db
+            .from("customers")
+            .select("id, first_name, last_name, company_name, phone")
+            .eq("organization_id", ctx.orgId)
+            .eq("phone", params.phone.trim())
+            .is("deleted_at", null)
+            .maybeSingle(),
+        );
         if (existing) {
           const existingName =
             [existing.first_name, existing.last_name]
@@ -105,13 +108,16 @@ const crud = createCrudService<
 
       // Check for duplicate email (warn only — don't block)
       if (params.email?.trim()) {
-        const { data: existing } = await ctx.db
-          .from("customers")
-          .select("id, first_name, last_name, company_name, email")
-          .eq("organization_id", ctx.orgId)
-          .eq("email", params.email.trim())
-          .is("deleted_at", null)
-          .maybeSingle();
+        const { data: existing } = await withDbCapture(
+          "beforeCreate:emailDup",
+          ctx.db
+            .from("customers")
+            .select("id, first_name, last_name, company_name, email")
+            .eq("organization_id", ctx.orgId)
+            .eq("email", params.email.trim())
+            .is("deleted_at", null)
+            .maybeSingle(),
+        );
         if (existing) {
           const existingName =
             [existing.first_name, existing.last_name]
@@ -152,14 +158,17 @@ const crud = createCrudService<
         params.phone !== undefined &&
         params.phone?.trim() !== existingRecord.phone
       ) {
-        const { data: phoneDup } = await ctx.db
-          .from("customers")
-          .select("id")
-          .eq("organization_id", ctx.orgId)
-          .eq("phone", params.phone?.trim() ?? "")
-          .is("deleted_at", null)
-          .neq("id", existingRecord.id as string)
-          .maybeSingle();
+        const { data: phoneDup } = await withDbCapture(
+          "beforeUpdate:phoneDup",
+          ctx.db
+            .from("customers")
+            .select("id")
+            .eq("organization_id", ctx.orgId)
+            .eq("phone", params.phone?.trim() ?? "")
+            .is("deleted_at", null)
+            .neq("id", existingRecord.id as string)
+            .maybeSingle(),
+        );
         if (phoneDup) {
           throw new ConflictError(
             "A customer with this phone number already exists",
@@ -175,14 +184,17 @@ const crud = createCrudService<
         params.email !== undefined &&
         params.email?.trim() !== existingRecord.email
       ) {
-        const { data: emailDup } = await ctx.db
-          .from("customers")
-          .select("id")
-          .eq("organization_id", ctx.orgId)
-          .eq("email", params.email?.trim() ?? "")
-          .is("deleted_at", null)
-          .neq("id", existingRecord.id as string)
-          .maybeSingle();
+        const { data: emailDup } = await withDbCapture(
+          "beforeUpdate:emailDup",
+          ctx.db
+            .from("customers")
+            .select("id")
+            .eq("organization_id", ctx.orgId)
+            .eq("email", params.email?.trim() ?? "")
+            .is("deleted_at", null)
+            .neq("id", existingRecord.id as string)
+            .maybeSingle(),
+        );
         if (emailDup) {
           throw new ConflictError("A customer with this email already exists", {
             existingCustomerId: emailDup.id,
@@ -221,13 +233,16 @@ export async function getCustomers(
   let vehicleCounts = new Map<string, number>();
 
   if (customerIds.length > 0) {
-    const { data: counts } = await db
-      .from("vehicle_owners")
-      .select("customer_id", { count: "exact" })
-      .in("customer_id", customerIds)
-      .is("owned_until", null);
+    const { data: counts, error: countsError } = await withDbCapture(
+      "getCustomers:vehicleCounts",
+      db
+        .from("vehicle_owners")
+        .select("customer_id", { count: "exact" })
+        .in("customer_id", customerIds)
+        .is("owned_until", null),
+    );
 
-    if (counts) {
+    if (!countsError && counts) {
       const countMap = new Map<string, number>();
       for (const row of counts) {
         const cid = row.customer_id as string;
@@ -292,11 +307,14 @@ export async function getSharedCustomers(
   let vehicleCounts = new Map<string, number>();
 
   if (customerIds.length > 0) {
-    const { data: counts } = await supabase
-      .from("vehicle_owners")
-      .select("customer_id", { count: "exact" })
-      .in("customer_id", customerIds)
-      .is("owned_until", null);
+    const { data: counts } = await withDbCapture(
+      "getSharedCustomers:vehicleCounts",
+      supabase
+        .from("vehicle_owners")
+        .select("customer_id", { count: "exact" })
+        .in("customer_id", customerIds)
+        .is("owned_until", null),
+    );
 
     if (counts) {
       const countMap = new Map<string, number>();
@@ -313,10 +331,13 @@ export async function getSharedCustomers(
   const orgNames = new Map<string, string>();
 
   if (orgIds.length > 0) {
-    const { data: orgs } = await supabase
-      .from("organizations")
-      .select("id, name")
-      .in("id", orgIds);
+    const { data: orgs } = await withDbCapture(
+      "getSharedCustomers:orgNames",
+      supabase
+        .from("organizations")
+        .select("id, name")
+        .in("id", orgIds),
+    );
 
     if (orgs) {
       for (const org of orgs) {

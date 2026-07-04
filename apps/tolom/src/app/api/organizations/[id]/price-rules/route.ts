@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { ok, created } from "@/lib/api-response";
+import { ok, created, apiError } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
   createPriceRule,
@@ -48,7 +47,7 @@ export const PATCH = createRouteHandler(
     const url = new URL(request.url);
     const ruleId = url.searchParams.get("id");
     if (!ruleId) {
-      return NextResponse.json({ error: "Missing rule id" }, { status: 400 });
+      return apiError("MISSING_RULE_ID", "Missing rule id", 400);
     }
 
     const body = await request.json();
@@ -69,10 +68,10 @@ export const DELETE = createRouteHandler(
     const url = new URL(request.url);
     const ruleId = url.searchParams.get("id");
     if (!ruleId) {
-      return NextResponse.json({ error: "Missing rule id" }, { status: 400 });
+      return apiError("MISSING_RULE_ID", "Missing rule id", 400);
     }
 
     await deletePriceRule(supabase, ruleId, orgId);
-    return NextResponse.json({ success: true });
+    return ok({ success: true });
   },
 );

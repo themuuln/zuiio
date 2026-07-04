@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { capture } from "@zuiio/capture";
 import { variantKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
 
@@ -52,7 +53,10 @@ async function fetchVariantGroups(productId: string) {
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
 
-  if (groupsError) throw groupsError;
+  if (groupsError) {
+    capture(groupsError, { context: "fetchVariantGroups:groups" });
+    throw groupsError;
+  }
 
   const groupsWithOptions: VariantGroupWithOptions[] = [];
   for (const group of groups) {
@@ -63,7 +67,10 @@ async function fetchVariantGroups(productId: string) {
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true });
 
-    if (optionsError) throw optionsError;
+    if (optionsError) {
+      capture(optionsError, { context: "fetchVariantGroups:options" });
+      throw optionsError;
+    }
 
     groupsWithOptions.push({ ...group, options: options ?? [] });
   }
@@ -80,7 +87,10 @@ async function fetchVariants(productId: string) {
     .eq("product_id", productId)
     .order("created_at", { ascending: true });
 
-  if (error) throw error;
+  if (error) {
+    capture(error, { context: "fetchVariants:variants" });
+    throw error;
+  }
 
   const enriched: ProductVariant[] = [];
   for (const v of variants ?? []) {
@@ -89,7 +99,10 @@ async function fetchVariants(productId: string) {
       .select("id, option_id")
       .eq("variant_id", v.id);
 
-    if (assignError) throw assignError;
+    if (assignError) {
+      capture(assignError, { context: "fetchVariants:assignments" });
+      throw assignError;
+    }
 
     // Fetch option values
     const optionIds = assigns?.map((a) => a.option_id) ?? [];
@@ -103,7 +116,10 @@ async function fetchVariants(productId: string) {
         .order("sort_order", { ascending: true })
         .order("created_at", { ascending: true });
 
-      if (optsError) throw optsError;
+      if (optsError) {
+        capture(optsError, { context: "fetchVariants:options" });
+        throw optsError;
+      }
       optionLabels = opts?.map((o) => o.value).join(" / ") ?? "";
     }
 

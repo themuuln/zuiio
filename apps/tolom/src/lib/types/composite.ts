@@ -200,8 +200,26 @@ export type PartsCarLocationGroup =
 
 // ── Follow-ups ─────────────────────────────────────────────────
 
-type CustomerFollowupRow =
-  Database["public"]["Tables"]["customer_followups"]["Row"];
+type CustomerFollowupRow = {
+  id: string;
+  organization_id: string;
+  customer_id: string;
+  vehicle_id: string | null;
+  work_order_id: string | null;
+  estimate_id: string | null;
+  invoice_id: string | null;
+  type: string;
+  subject: string;
+  status: string;
+  due_at: string;
+  notes: string | null;
+  outcome: string | null;
+  outcome_notes: string | null;
+  assigned_to: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
 
 export type CustomerFollowup = CustomerFollowupRow & {
   customer?: {

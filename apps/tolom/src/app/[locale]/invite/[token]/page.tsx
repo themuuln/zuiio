@@ -53,7 +53,7 @@ export default function InviteRedeemPage() {
       if (!res.ok) {
         const body = await res.json();
         throw new Error(
-          (body as Record<string, unknown>)?.error?.message ??
+          ((body as { error?: { message?: string } })?.error?.message ??
             "Invite not found or expired",
         );
       }

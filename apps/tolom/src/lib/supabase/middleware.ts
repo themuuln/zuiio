@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 import { matchRoutes } from "./auth-routes";
 import { env, getSupabaseKey } from "./env";
+import { capture } from "@/lib/capture";
 
 /**
  * Detect and break redirect loops.
@@ -19,9 +20,7 @@ function guardRedirect(
     : 0;
 
   if (redirectCount >= REDIRECT_MAX) {
-    console.error(
-      `[redirect-loop] Breaking loop: ${request.nextUrl.pathname} (×${redirectCount + 1})`,
-    );
+    capture("redirect-loop", { pathname: request.nextUrl.pathname, count: redirectCount + 1 });
 
     return new NextResponse(
       `<!DOCTYPE html>

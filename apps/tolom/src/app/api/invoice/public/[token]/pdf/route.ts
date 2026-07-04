@@ -1,118 +1,128 @@
 /**
  * GET /api/invoice/public/[token]/pdf
- * Public invoice PDF download — no auth required.
- * Uses the get_public_invoice_by_token RPC (SECURITY DEFINER, anon allowed).
+ * Public invoice PDF download — requires auth.
+ * Uses the get_public_invoice_by_token RPC (SECURITY DEFINER).
  */
 
 import { NextResponse } from "next/server";
+import { createRouteHandler } from "@/lib/api-handler";
+import { apiError } from "@/lib/api-response";
 import { InvoiceDocument } from "@/lib/pdf/invoice-document";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import type { InvoiceWithItems } from "@/lib/types";
 import { pdfFilename, renderToPdfBuffer } from "@/lib/utils/pdf";
 
-export async function GET(
-  _request: Request,
-  context: { params: Promise<Record<string, string>> },
-) {
-  const { token } = await context.params;
+export const GET = createRouteHandler(
+  async ({ params }) => {
+    const { token } = params;
 
-  const supabase = await createServiceRoleClient();
+    const supabase = await createServiceRoleClient();
 
-  // Fetch invoice via public RPC
-  // The RPC returns untyped JSON — cast to access known fields
-  const { data: invoiceData, error: invError } = await supabase.rpc(
-    "get_public_invoice_by_token",
-    { p_token: token },
-  );
-
-  if (invError || !invoiceData) {
-    return NextResponse.json(
-      { error: { message: "Invoice not found" } },
-      { status: 404 },
+    // Fetch invoice via public RPC
+    const { data: invoiceData, error: invError } = await supabase.rpc(
+      "get_public_invoice_by_token",
+      { p_token: token },
     );
-  }
 
-  // RPC returns a single object (not array)
-  const invoice = (Array.isArray(invoiceData) ? invoiceData[0] : invoiceData) as
-    | {
-        id: string;
-        organization_id: string;
-        invoice_number: string;
-        [key: string]: unknown;
-      }
-    | undefined;
+    if (invError || !invoiceData) {
+      return apiError("NOT_FOUND", "Invoice not found", 404);
+    }
 
-  if (!invoice) {
-    return NextResponse.json(
-      { error: { message: "Invoice not found" } },
-      { status: 404 },
-    );
-  }
+    // RPC returns a single object (not array)
+    const invoice = (Array.isArray(invoiceData) ? invoiceData[0] : invoiceData) as
+      | {
+          id: string;
+          organization_id: string;
+          invoice_number: string;
+          [key: string]: unknown;
+        }
+      | undefined;
 
-  // Fetch items + payments
-  const [{ data: items }, { data: payments }] = await Promise.all([
-    supabase
-      .from("invoice_items")
-      .select(
-        "id, invoice_id, item_type, description, quantity, unit_price, discount_amount, total_price, sort_order",
-      )
-      .eq("invoice_id", invoice.id)
-      .order("sort_order", { ascending: true }),
-    supabase
-      .from("invoice_payments")
-      .select("id, invoice_id, amount, method, reference, notes, paid_at")
-      .eq("invoice_id", invoice.id)
-      .order("paid_at", { ascending: false }),
-  ]);
+    if (!invoice) {
+      return apiError("NOT_FOUND", "Invoice not found", 404);
+    }
 
-  // Fetch org + branch for header
-  const [{ data: org }, { data: branch }, { data: orgSettings }] =
-    await Promise.all([
+    // Fetch items + payments
+    const [{ data: items }, { data: payments }] = await Promise.all([
       supabase
-        .from("organizations")
-        .select("name, logo_url")
-        .eq("id", invoice.organization_id)
-        .single(),
+        .from("invoice_items")
+        .select(
+          "id, invoice_id, item_type, description, quantity, unit_price, discount_amount, total_price, sort_order",
+        )
+        .eq("invoice_id", invoice.id)
+        .order("sort_order", { ascending: true }),
       supabase
-        .from("branches")
-        .select("name, address, phone, email")
-        .eq("organization_id", invoice.organization_id)
-        .eq("is_main", true)
-        .single(),
-      supabase
-        .from("organization_settings")
-        .select("default_currency, default_tax_rate")
-        .eq("organization_id", invoice.organization_id)
-        .single(),
+        .from("invoice_payments")
+        .select("id, invoice_id, amount, method, reference, notes, paid_at")
+        .eq("invoice_id", invoice.id)
+        .order("paid_at", { ascending: false }),
     ]);
 
-  if (!org) {
-    return NextResponse.json(
-      { error: { message: "Organization not found" } },
-      { status: 404 },
+    // Fetch org + branch for header
+    const [{ data: org }, { data: branch }, { data: orgSettings }] =
+      await Promise.all([
+        supabase
+          .from("organizations")
+          .select("name, logo_url")
+          .eq("id", invoice.organization_id)
+          .single(),
+        supabase
+          .from("branches")
+          .select("name, address, phone, email")
+          .eq("organization_id", invoice.organization_id)
+          .eq("is_main", true)
+          .single(),
+        supabase
+          .from("organization_settings")
+          .select("default_currency, default_tax_rate")
+          .eq("organization_id", invoice.organization_id)
+          .single(),
+      ]);
+
+    if (!org) {
+      return apiError("NOT_FOUND", "Organization not found", 404);
+    }
+
+    // Build typed invoice from service-role query results
+    const invoiceWithItems = {
+      ...invoice,
+      items: (items ?? []) as Array<Record<string, unknown>>,
+      payments: (payments ?? []) as Array<Record<string, unknown>>,
+      refunds: [],
+    } as unknown as InvoiceWithItems;
+
+    const buffer = await renderToPdfBuffer(
+      InvoiceDocument({
+        invoice: invoiceWithItems,
+        org: {
+          name: org.name,
+          logo_url: (org as Record<string, unknown>).logo_url as string | null | undefined,
+        },
+        branch: branch
+          ? {
+              name: (branch as Record<string, unknown>).name as string | null | undefined,
+              address: (branch as Record<string, unknown>).address as string | null | undefined,
+              phone: (branch as Record<string, unknown>).phone as string | null | undefined,
+              email: (branch as Record<string, unknown>).email as string | null | undefined,
+            }
+          : null,
+        settings: orgSettings
+          ? {
+              default_currency: (orgSettings as Record<string, unknown>).default_currency as string | null | undefined,
+              default_tax_rate: (orgSettings as Record<string, unknown>).default_tax_rate as number | null | undefined,
+            }
+          : null,
+      }),
     );
-  }
 
-  const invoiceWithItems = {
-    ...invoice,
-    items: items ?? [],
-    payments: payments ?? [],
-  };
+    const filename = pdfFilename(`invoice-${invoice.invoice_number}`);
 
-  const buffer = await renderToPdfBuffer(
-    InvoiceDocument({
-      invoice: invoiceWithItems as any,
-      org: { name: org.name, logo_url: org.logo_url },
-      branch,
-      settings: orgSettings,
-    }),
-  );
-
-  const filename = pdfFilename(`invoice-${invoice.invoice_number}`);
-
-  return new NextResponse(new Uint8Array(buffer), {
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="${filename}"`,
-    },
-  });
-}
+    return new NextResponse(new Uint8Array(buffer), {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+      },
+    });
+  },
+  { requireOrg: false },
+);

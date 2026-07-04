@@ -1,6 +1,9 @@
 "use client";
 
 import { Check } from "@phosphor-icons/react";
+// NOTE: Prices shown are illustrative. Payment integration (card/gateway) is
+// required before this section can be used for live subscriptions.
+
 import Link from "next/link";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";

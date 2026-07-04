@@ -44,6 +44,9 @@ export function Hero() {
             </Button>
           </div>
 
+          {/* TODO: Verify these metrics against real data before launch.
+              "10,000 products", "500+ organizations", "95% satisfaction"
+              are placeholder benchmarks. */}
           {/* Trust indicators — contextual proof */}
           <div className="mt-16 grid gap-x-12 gap-y-6 border-t pt-10 sm:grid-cols-3">
             <div className="text-left">

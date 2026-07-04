@@ -17,11 +17,7 @@ interface QuickActionsProps {
 
 function parseNotes(raw: string | null): string {
   if (!raw) return "";
-  if (typeof raw === "object" && raw !== null && "content" in raw) {
-    const maybeContent = raw.content;
-    return typeof maybeContent === "string" ? maybeContent : "";
-  }
-  return String(raw);
+  return typeof raw === "string" ? raw : "";
 }
 
 export function QuickActions({

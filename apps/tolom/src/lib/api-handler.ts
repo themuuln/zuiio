@@ -115,22 +115,33 @@ export function createRouteHandler(
       const supabase = await createClient();
       const {
         data: { user },
+        error: getUserError,
       } = await supabase.auth.getUser();
+
+      if (getUserError) {
+        capture(getUserError, { method, path });
+      }
 
       if (!user) throw new UnauthorizedError();
 
       const params = await context.params;
       orgId = options?.requireOrg === false ? "" : (params.id ?? "");
 
-      // Verify org membership when orgId is present
       if (orgId) {
-        const { data: membership } = await supabase
+        const {
+          data: membership,
+          error: membershipError,
+        } = await supabase
           .from("organization_users")
           .select("organization_id")
           .eq("user_id", user.id)
           .eq("organization_id", orgId)
           .is("removed_at", null)
           .maybeSingle();
+
+        if (membershipError) {
+          capture(membershipError, { method, path, orgId });
+        }
 
         if (!membership) {
           throw new ForbiddenError("Not a member of this organization");
@@ -210,7 +221,12 @@ export function createSimpleRouteHandler(
       const supabase = await createClient();
       const {
         data: { user },
+        error: getUserError,
       } = await supabase.auth.getUser();
+
+      if (getUserError) {
+        capture(getUserError, { method, path });
+      }
 
       if (!user) throw new UnauthorizedError();
 

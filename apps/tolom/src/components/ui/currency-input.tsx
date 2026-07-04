@@ -9,7 +9,7 @@ import {
 import { parseCurrencyInput, clamp, formatCurrency } from "@zuiio/core";
 import { cn } from "@/lib/utils";
 
-export interface CurrencyInputProps {
+export interface CurrencyInputProps extends Omit<React.ComponentProps<"input">, "value" | "onChange" | "onBlur" | "type" | "size" | "min" | "max" | "className" | "disabled" | "readOnly" | "placeholder"> {
   /** Current value in MNT */
   value: number;
   /** Called with parsed number on blur / after save interaction */
@@ -78,6 +78,9 @@ export function CurrencyInput({
   showPrefix = true,
   autoSelect = true,
   "aria-label": ariaLabel = "Currency",
+  onFocus: externalOnFocus,
+  onKeyDown: externalOnKeyDown,
+  ...rest
 }: CurrencyInputProps) {
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState("");
@@ -151,15 +154,16 @@ export function CurrencyInput({
 
   const input = (
     <InputGroupInput
+      {...rest}
       type="text"
       inputMode="numeric"
       value={displayText}
       placeholder={placeholder}
       disabled={disabled}
       readOnly={readOnly}
-      onFocus={handleFocus}
+      onFocus={(e) => { externalOnFocus?.(e); handleFocus(e); }}
       onBlur={handleBlur}
-      onKeyDown={handleKeyDown}
+      onKeyDown={(e) => { externalOnKeyDown?.(e); handleKeyDown(e); }}
       onChange={handleChange}
       className={cn(
         sizeStyles[size],

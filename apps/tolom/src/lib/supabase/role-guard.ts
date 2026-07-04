@@ -1,5 +1,6 @@
 import { ForbiddenError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
+import { withDbCapture } from "@/lib/supabase/query";
 
 const ROLE_HIERARCHY: Record<string, number> = {
   Guest: 0,
@@ -25,13 +26,20 @@ export async function getUserRole(): Promise<{
     return { roleName: null, roleLevel: -1, userId: "" };
   }
 
-  const { data: membership } = await supabase
-    .from("organization_users")
-    .select("role_id, roles(name)")
-    .eq("user_id", user.id)
-    .eq("is_primary", true)
-    .is("removed_at", null)
-    .maybeSingle();
+  const { data: membership, error } = await withDbCapture(
+    "getUserRole:membership",
+    supabase
+      .from("organization_users")
+      .select("role_id, roles(name)")
+      .eq("user_id", user.id)
+      .eq("is_primary", true)
+      .is("removed_at", null)
+      .maybeSingle(),
+  );
+
+  if (error) {
+    return { roleName: null, roleLevel: -1, userId: "" };
+  }
 
   const rawRoles = membership?.roles;
   const roleName =
@@ -124,7 +132,14 @@ export async function requirePermission(
 
   query = query.is("removed_at", null);
 
-  const { data: membership } = await query.maybeSingle();
+  const { data: membership, error: membershipError } = await withDbCapture(
+    "requirePermission:membership",
+    query.maybeSingle(),
+  );
+
+  if (membershipError) {
+    throw new ForbiddenError("No role assigned");
+  }
 
   if (!membership?.role_id) {
     throw new ForbiddenError("No role assigned");
@@ -133,14 +148,23 @@ export async function requirePermission(
   const effectiveOrgId = orgId ?? membership.organization_id;
 
   // Find the permission record in this organization
-  const { data: perm } = await supabase
-    .from("permissions")
-    .select("id")
-    .eq("organization_id", effectiveOrgId)
-    .eq("resource", resource)
-    .eq("action", action)
-    .is("deleted_at", null)
-    .maybeSingle();
+  const { data: perm, error: permError } = await withDbCapture(
+    "requirePermission:perm",
+    supabase
+      .from("permissions")
+      .select("id")
+      .eq("organization_id", effectiveOrgId)
+      .eq("resource", resource)
+      .eq("action", action)
+      .is("deleted_at", null)
+      .maybeSingle(),
+  );
+
+  if (permError) {
+    throw new ForbiddenError(
+      `Permission "${resource}.${action}" not found for this organization`,
+    );
+  }
 
   if (!perm) {
     throw new ForbiddenError(
@@ -149,12 +173,21 @@ export async function requirePermission(
   }
 
   // Check the role_permissions junction table
-  const { data: rp } = await supabase
-    .from("role_permissions")
-    .select("role_id")
-    .eq("role_id", membership.role_id)
-    .eq("permission_id", perm.id)
-    .maybeSingle();
+  const { data: rp, error: rpError } = await withDbCapture(
+    "requirePermission:rp",
+    supabase
+      .from("role_permissions")
+      .select("role_id")
+      .eq("role_id", membership.role_id)
+      .eq("permission_id", perm.id)
+      .maybeSingle(),
+  );
+
+  if (rpError) {
+    throw new ForbiddenError(
+      `Missing required permission: ${resource}.${action}`,
+    );
+  }
 
   if (!rp) {
     throw new ForbiddenError(

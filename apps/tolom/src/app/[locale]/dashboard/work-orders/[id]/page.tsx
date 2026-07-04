@@ -1215,7 +1215,7 @@ export default function WorkOrderDetailPage() {
           <DialogHeader>
             <DialogTitle>{t("recordPayment")}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handlePaymentSubmit} className="flex flex-col gap-4">
+          <form onSubmit={paymentForm.handleSubmit(handlePaymentSubmit)} className="flex flex-col gap-4">
             <Field data-invalid={!!paymentForm.formState.errors.amount}>
               <FieldLabel>{t("amount")}</FieldLabel>
               <FieldContent>

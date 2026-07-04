@@ -1,45 +1,32 @@
-import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import { createRouteHandler } from "@/lib/api-handler";
 import { ok, apiError } from "@/lib/api-response";
-
 /**
  * GET /api/estimate/public/[token]
  *
- * Public endpoint — no auth required. Returns estimate data by public token.
+ * Public endpoint — requires auth. Returns estimate data by public token.
  */
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ token: string }> },
-) {
-  const { token } = await params;
-  const supabase = await createServiceRoleClient();
+export const GET = createRouteHandler(
+  async ({ params, supabase }) => {
+    const { token } = params;
 
-  // Fetch estimate by public_token (service role bypasses RLS)
-  const { data: estimate, error } = await supabase
-    .from("estimates")
-    .select(
-      `
-      id, estimate_number, status, created_at, valid_until,
-      notes, terms, subtotal, discount_amount, discount_percentage,
-      discount_total, tax_total, grand_total,
-      customer:customers(first_name, last_name, phone, email),
-      vehicle:vehicles(plate_number, make, model, year),
-      items:estimate_items(description, item_type, quantity, unit_price, discount_amount, discount_percentage, line_total, sort_order),
-      organization:organizations(name, phone, email, address)
-    `,
-    )
-    .eq("public_token", token)
-    .is("deleted_at", null)
-    .single();
+    const { data: estimateData, error } = await supabase.rpc(
+      "get_public_estimate_by_token",
+      { p_token: token },
+    );
 
-  if (error || !estimate) {
-    return apiError("NOT_FOUND", "Estimate not found", 404);
-  }
+    if (error || !estimateData) {
+      return apiError("NOT_FOUND", "Estimate not found", 404);
+    }
 
-  // Preserve the original estimate line order for customer-facing output.
-  const sortedItems = (estimate.items ?? []).sort(
-    (a: { sort_order?: number | null }, b: { sort_order?: number | null }) =>
-      Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0),
-  );
+    const estimate = estimateData as Record<string, unknown>;
 
-  return ok({ ...estimate, items: sortedItems });
-}
+    // Preserve the original estimate line order for customer-facing output.
+    const items = (estimate.items as Array<Record<string, unknown>>) ?? [];
+    const sortedItems = items.sort(
+      (a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0),
+    );
+
+    return ok({ ...estimate, items: sortedItems });
+  },
+  { requireOrg: false },
+);

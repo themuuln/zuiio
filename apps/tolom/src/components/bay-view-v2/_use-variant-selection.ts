@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { VariantSelection } from "@/components/services/variant-picker";
+import { reportServerError } from "@/lib/sentry-report-server";
 import type { CatalogPartItem, CatalogServiceItem } from "./_drawer-types";
 
 // ─── Types ──────────────────────────────────────────────────────
@@ -74,8 +75,8 @@ export function useVariantSelection({
           });
           return;
         }
-      } catch {
-        // If variant check fails, proceed as normal
+      } catch (err) {
+        reportServerError("Variant check failed for service", err);
       }
     }
     addService(svc);
@@ -124,8 +125,8 @@ export function useVariantSelection({
           });
           return;
         }
-      } catch {
-        // proceed as normal
+      } catch (err) {
+        reportServerError("Variant check failed for part", err);
       }
     }
     addPart(part);

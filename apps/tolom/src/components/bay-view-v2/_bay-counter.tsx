@@ -60,7 +60,7 @@ export function BayCounter({
               return;
             }
             setBayCountInputValue(val);
-            clearTimeout(bayCountDebounceRef.current);
+            clearTimeout(bayCountDebounceRef.current ?? undefined);
             bayCountDebounceRef.current = setTimeout(() => {
               applyBayCountChange(val);
             }, 500);

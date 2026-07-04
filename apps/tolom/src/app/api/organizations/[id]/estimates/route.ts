@@ -1,6 +1,5 @@
-import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
-import { created } from "@/lib/api-response";
+import { created, ok } from "@/lib/api-response";
 import { createEstimate, getEstimates } from "@/lib/services/estimate-service";
 import type { EstimateStatus } from "@/lib/types";
 
@@ -21,7 +20,7 @@ export const GET = createRouteHandler(
         ? Number(searchParams.get("pageSize"))
         : undefined,
     });
-    return NextResponse.json({ data: result.data, count: result.count });
+    return ok({ data: result.data, count: result.count });
   },
   { requiredPermission: { resource: "work_orders", action: "read" } },
 );

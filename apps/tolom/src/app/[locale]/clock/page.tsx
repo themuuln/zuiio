@@ -93,7 +93,7 @@ export default function ClockPage() {
 
       try {
         const data = await verifyClock.mutateAsync(inputToken);
-        setClockDirection(data.direction ?? "in");
+        setClockDirection((data.direction ?? "in") as "in" | "out");
         setMechanicName(data.mechanicName ?? null);
         setScanState("confirming");
       } catch (err) {

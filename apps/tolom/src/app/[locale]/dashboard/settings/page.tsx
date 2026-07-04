@@ -235,6 +235,7 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeSection, setActiveSection] = useState("general");
   const t = useTranslations("settings");
   const settingsSections = useMemo(() => getSettingsSections(t), [t]);
 

@@ -1,90 +1,69 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createRouteHandler } from "@/lib/api-handler";
+import { ok, apiError } from "@/lib/api-response";
 import type { OrgTheme } from "@/lib/types";
+export const GET = createRouteHandler(
+  async ({ params, supabase }) => {
+    const { id } = params;
+    const { data: org, error } = await supabase
+      .from("organizations")
+      .select("settings")
+      .eq("id", id)
+      .single();
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const supabase = await createClient();
+    if (error || !org) {
+      return apiError("NOT_FOUND", "Organization not found", 404);
+    }
 
-  const { data: org, error } = await supabase
-    .from("organizations")
-    .select("settings")
-    .eq("id", id)
-    .single();
+    const settings = org.settings as Record<string, unknown> | null;
+    const theme = (settings?.theme as OrgTheme) ?? null;
 
-  if (error || !org) {
-    return NextResponse.json(
-      { error: "Organization not found" },
-      { status: 404 },
-    );
-  }
+    return ok({
+      theme: theme ?? {
+        primaryColor: "oklch(0.205 0 0)",
+        accentColor: "oklch(0.97 0 0)",
+        radius: "0px",
+        fontFamily: "Inter, sans-serif",
+      },
+      isDefault: !theme,
+    });
+  },
+);
+export const PUT = createRouteHandler(
+  async ({ request, params, supabase }) => {
+    const { id } = params;
+    const body = await request.json();
+    const { primaryColor, accentColor, radius, fontFamily } = body;
 
-  const settings = org.settings as Record<string, unknown> | null;
-  const theme = (settings?.theme as OrgTheme) ?? null;
+    // Validate oklch format for colors
+    const oklchRegex = /^oklch\([\d.]+ [\d.]+ [\d.]+\)$/;
+    if (primaryColor && !oklchRegex.test(primaryColor)) {
+      return apiError("VALIDATION", "Invalid primaryColor format. Use oklch(L C H)", 400);
+    }
+    if (accentColor && !oklchRegex.test(accentColor)) {
+      return apiError("VALIDATION", "Invalid accentColor format. Use oklch(L C H)", 400);
+    }
 
-  return NextResponse.json({
-    theme: theme ?? {
-      primaryColor: "oklch(0.205 0 0)",
-      accentColor: "oklch(0.97 0 0)",
-      radius: "0px",
-      fontFamily: "Inter, sans-serif",
-    },
-    isDefault: !theme,
-  });
-}
+    // Build theme object (merge with existing)
+    const theme: OrgTheme = {
+      primaryColor: primaryColor ?? "oklch(0.205 0 0)",
+      accentColor: accentColor ?? "oklch(0.97 0 0)",
+      radius: radius ?? "0px",
+      fontFamily: fontFamily ?? "Inter, sans-serif",
+    };
 
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const supabase = await createClient();
+    // Update organization settings with theme
+    const { error: updateError } = await supabase
+      .from("organizations")
+      .update({
+        settings: { theme } as any,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
 
-  const body = await request.json();
-  const { primaryColor, accentColor, radius, fontFamily } = body;
+    if (updateError) {
+      return apiError("INTERNAL", "Failed to update theme", 500);
+    }
 
-  // Validate oklch format for colors
-  const oklchRegex = /^oklch\([\d.]+ [\d.]+ [\d.]+\)$/;
-  if (primaryColor && !oklchRegex.test(primaryColor)) {
-    return NextResponse.json(
-      { error: "Invalid primaryColor format. Use oklch(L C H)" },
-      { status: 400 },
-    );
-  }
-  if (accentColor && !oklchRegex.test(accentColor)) {
-    return NextResponse.json(
-      { error: "Invalid accentColor format. Use oklch(L C H)" },
-      { status: 400 },
-    );
-  }
-
-  // Build theme object (merge with existing)
-  const theme: OrgTheme = {
-    primaryColor: primaryColor ?? "oklch(0.205 0 0)",
-    accentColor: accentColor ?? "oklch(0.97 0 0)",
-    radius: radius ?? "0px",
-    fontFamily: fontFamily ?? "Inter, sans-serif",
-  };
-
-  // Update organization settings with theme
-  const { error: updateError } = await supabase
-    .from("organizations")
-    .update({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      settings: { theme } as any,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id);
-
-  if (updateError) {
-    return NextResponse.json(
-      { error: "Failed to update theme" },
-      { status: 500 },
-    );
-  }
-
-  return NextResponse.json({ theme });
-}
+    return ok({ theme });
+  },
+);

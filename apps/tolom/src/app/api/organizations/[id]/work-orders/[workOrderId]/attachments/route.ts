@@ -45,7 +45,9 @@ export const DELETE = createRouteHandler(
     const { workOrderId } = params;
     const { searchParams } = new URL(request.url);
     const attachmentId = searchParams.get("attachmentId");
+    if (!attachmentId) {
       return apiError("VALIDATION_ERROR", "attachmentId query param required", 400);
+    }
     await deleteAttachment(supabase, orgId, workOrderId, attachmentId);
     return ok(null);
   },

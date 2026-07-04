@@ -8,10 +8,12 @@ import { AiGateway, type GatewayTool, type ToolContext } from "@/providers/types
 import { stageAction, confirmAction, rejectAction } from "@/runtime/confirmation";
 import { loadSession, saveSession, MAX_SESSION_MESSAGES } from "@/state/session";
 import { checkDailyBudget, recordUsageAtomic, REQUEST_LIMITS } from "@/state/budget";
+import { withAudit } from "@/state/audit";
 import { createServiceClient } from "@/lib/supabase";
 import { deepSeekConfig, openAiConfig } from "@/lib/env";
 import { sanitizeUserInput } from "@/lib/sanitize";
 import { verifyLinkToken } from "@/lib/tokens";
+import { transcribeVoice } from "@/stt/groq";
 
 // ─── Lazy singletons ────────────────────────────────────────────────────────
 
@@ -473,9 +475,30 @@ export async function POST(request: Request): Promise<NextResponse> {
       await handleStartCommand(chatId, userId, text);
       return NextResponse.json({ ok: true });
     }
-
     if (msg.voice) {
-      await getTelegram().sendMessage(chatId, "🎤 Дууны мессеж хүлээн авлаа. Дуунаас текст рүү хөрвүүлэх удахгүй нэмэгдэнэ.");
+      const tg = getTelegram();
+      await tg.sendMessage(chatId, "Аудио хүлээн авлаа. Бичлэг тайлж байна...");
+
+      try {
+        const fileInfo = await tg.getFile(msg.voice.file_id);
+        const fileBuffer = await tg.downloadFile(fileInfo.file_path);
+        const transcribed = await transcribeVoice(fileBuffer, "voice.ogg");
+
+        if (transcribed) {
+          await handleUserMessage(chatId, userId, transcribed, chatType);
+        } else {
+          await tg.sendMessage(chatId, "Уучлаарай, дууны бичлэгийг тайлж чадсангүй. Дахин оролдоно уу.");
+        }
+      } catch (err) {
+        console.error("Voice processing error:", err);
+        await tg.sendMessage(chatId, "Уучлаарай, дууны бичлэг боловсруулахад алдаа гарлаа.");
+      }
+
+      return NextResponse.json({ ok: true });
+    }
+
+    if (text.startsWith("/switch")) {
+      await handleSwitchCommand(chatId, userId);
       return NextResponse.json({ ok: true });
     }
 
@@ -546,6 +569,46 @@ async function handleStartCommand(chatId: number, userId: number, text: string):
   }
 }
 
+async function handleSwitchCommand(chatId: number, userId: number): Promise<void> {
+  const tg = getTelegram();
+  const sb = getSupabase();
+
+  // Find all links for this chat+user
+  const { data: links } = await sb
+    .from("telegram_links")
+    .select("organization_id, is_active, notification_preferences")
+    .eq("telegram_chat_id", chatId)
+    .eq("telegram_user_id", userId)
+    .order("updated_at", { ascending: false });
+
+  if (!links || links.length === 0) {
+    await tg.sendMessage(chatId, "❌ Та ямар ч байгууллагад холбогдоогүй байна. /start командаар холбогдоно уу.");
+    return;
+  }
+
+  // Get org names
+  const orgIds = links.map((l) => l.organization_id);
+  const { data: orgs } = await sb
+    .from("organizations")
+    .select("id, name")
+    .in("id", orgIds);
+
+  const orgMap = new Map((orgs ?? []).map((o) => [o.id, o.name]));
+
+  // Build inline keyboard
+  const keyboard = links.map((l) => {
+    const orgName = orgMap.get(l.organization_id) ?? l.organization_id;
+    const active = l.is_active ? " ✅" : "";
+    return [{
+      text: `${orgName}${active}`,
+      callbackData: `switch:${l.organization_id}`,
+    }];
+  });
+
+  await tg.sendInlineKeyboard(chatId, "🏢 Байгууллагаа сонгоно уу:", keyboard);
+}
+
+
 async function handleUserMessage(chatId: number, userId: number, text: string, chatType: string): Promise<void> {
   const tg = getTelegram();
   const sb = getSupabase();
@@ -575,7 +638,8 @@ async function handleUserMessage(chatId: number, userId: number, text: string, c
   }
 
   // Select tools
-  const tools = productType === "tolom" ? tolomTools(context) : zerTools(context);
+  const rawTools = productType === "tolom" ? tolomTools(context) : zerTools(context);
+  const tools = rawTools.map((t) => withAudit(t, chatId, userId));
 
   await tg.sendMessage(chatId, "⏳ Түр хүлээнэ үү...");
 
@@ -620,7 +684,51 @@ async function handleCallbackQuery(cq: NonNullable<TelegramUpdate["callback_quer
   const userId = cq.from.id;
   const [action, nonce] = data.split(":");
 
-  if (action === "confirm") {
+  if (action === "switch") {
+    const orgId = nonce;
+    if (!orgId) {
+      await tg.answerCallbackQuery(cq.id, "❌ Алдаа гарлаа.");
+      return;
+    }
+
+    const sb = getSupabase();
+
+    // Deactivate all active links for this chat+user
+    await sb
+      .from("telegram_links")
+      .update({ is_active: false })
+      .eq("telegram_chat_id", chatId)
+      .eq("telegram_user_id", userId)
+      .eq("is_active", true);
+
+    // Activate the selected one
+    const { error } = await sb
+      .from("telegram_links")
+      .update({ is_active: true, updated_at: new Date().toISOString() })
+      .eq("telegram_chat_id", chatId)
+      .eq("telegram_user_id", userId)
+      .eq("organization_id", orgId);
+
+    if (error) {
+      console.error("Switch error:", error);
+      await tg.answerCallbackQuery(cq.id, "❌ Солиход алдаа гарлаа.");
+      return;
+    }
+
+    // Get org name for confirmation
+    const { data: org } = await sb
+      .from("organizations")
+      .select("name")
+      .eq("id", orgId)
+      .single();
+
+    await tg.editMessageText(
+      chatId,
+      messageId,
+      `✅ "${org?.name ?? orgId}" байгууллагад шилжлээ.`,
+    );
+    await tg.answerCallbackQuery(cq.id, "✅ Амжилттай.");
+  } else if (action === "confirm") {
     const staged = confirmAction(nonce, chatId, userId);
     if (!staged) {
       await tg.answerCallbackQuery(cq.id, "Энэ үйлдлийн хугацаа дууссан.");

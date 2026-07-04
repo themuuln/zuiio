@@ -19,6 +19,7 @@ import type {
   EstimateStatus,
   UpdateEstimateParams,
 } from "@/lib/types";
+import { capture } from "@/lib/capture";
 
 // ── Helpers ────────────────────────────────────────────────────
 
@@ -49,7 +50,7 @@ async function recalculateEstimateTotals(
   estimateId: string,
   orgId: string,
 ): Promise<void> {
-  const { data: items } = await db
+  const { data: items, error: itemsError } = await db
     .from("estimate_items")
     .select(
       "unit_price, quantity, discount_amount, discount_percentage, line_total",
@@ -57,12 +58,16 @@ async function recalculateEstimateTotals(
     .eq("estimate_id", estimateId)
     .eq("organization_id", orgId);
 
-  const { data: estimate } = await db
+  if (itemsError) capture(itemsError, { context: "[estimate-service] recalculateEstimateTotals" });
+
+  const { data: estimate, error: estimateError } = await db
     .from("estimates")
     .select("discount_amount, discount_percentage, tax_total")
     .eq("id", estimateId)
     .eq("organization_id", orgId)
     .single();
+
+  if (estimateError) capture(estimateError, { context: "[estimate-service] recalculateEstimateTotals" });
 
   if (!estimate) return;
 
@@ -81,7 +86,7 @@ async function recalculateEstimateTotals(
   const taxTotal = Number(estimate.tax_total ?? 0);
   const grandTotal = Math.max(lineTotals - discountTotal + taxTotal, 0);
 
-  await db
+  const { error: updateError } = await db
     .from("estimates")
     .update({
       subtotal: lineTotals,
@@ -90,6 +95,8 @@ async function recalculateEstimateTotals(
     })
     .eq("id", estimateId)
     .eq("organization_id", orgId);
+
+  if (updateError) capture(updateError, { context: "[estimate-service] recalculateEstimateTotals" });
 }
 
 // ── Get Estimates ─────────────────────────────────────────────
@@ -153,7 +160,8 @@ export async function getEstimates(
     query = query.limit(50);
   }
 
-  const { data, count } = await query;
+  const { data, count, error } = await query;
+  if (error) capture(error, { context: "[estimate-service] getEstimates" });
   return {
     data: (data ?? []) as unknown as EstimateDetail[],
     count: count ?? 0,
@@ -170,7 +178,7 @@ export async function getEstimate(
   id: string,
   orgId: string,
 ): Promise<EstimateDetail | null> {
-  const { data } = await db
+  const { data, error } = await db
     .from("estimates")
     .select(
       `
@@ -187,6 +195,7 @@ export async function getEstimate(
     .is("deleted_at", null)
     .single();
 
+  if (error) capture(error, { context: "[estimate-service] getEstimate" });
   return data as unknown as EstimateDetail | null;
 }
 
@@ -215,7 +224,8 @@ export async function createEstimate(
   if (!user) throw new UnauthorizedError();
 
   // Generate estimate number
-  const { data: estNum } = await db.rpc("generate_estimate_number");
+  const { data: estNum, error: estNumError } = await db.rpc("generate_estimate_number");
+  if (estNumError) capture(estNumError, { context: "[estimate-service] createEstimate" });
   const estimateNumber = (estNum as string) ?? `EST-${Date.now()}`;
 
   const resolvedBranchId = await resolveBranchId(db, orgId, params.branchId, {
@@ -323,7 +333,7 @@ export async function updateEstimate(
 ): Promise<EstimateDetail> {
   const user = (await db.auth.getUser()).data.user;
 
-  const { data: oldEstimate } = await db
+  const { data: oldEstimate, error: oldError } = await db
     .from("estimates")
     .select(
       "id, status, notes, terms, discount_amount, discount_percentage, tax_total",
@@ -331,6 +341,8 @@ export async function updateEstimate(
     .eq("id", id)
     .eq("organization_id", orgId)
     .single();
+
+  if (oldError) capture(oldError, { context: "[estimate-service] updateEstimate" });
 
   const updates: Record<string, unknown> = {
     updated_by: user?.id ?? null,
@@ -370,7 +382,8 @@ export async function updateEstimate(
   // If items are provided, replace all items
   if (params.items) {
     // Delete existing items
-    await db.from("estimate_items").delete().eq("estimate_id", id);
+    const { error: deleteItemsError } = await db.from("estimate_items").delete().eq("estimate_id", id);
+    if (deleteItemsError) capture(deleteItemsError, { context: "[estimate-service] updateEstimate" });
 
     // Insert new items
     const itemsToInsert = params.items.map((item, i) => ({
@@ -522,13 +535,15 @@ export async function convertEstimateToWorkOrder(
     throw new Error(woError?.message ?? "Failed to create work order");
 
   // Record initial status
-  await db.from("work_order_status_history").insert({
+  const { error: statusHistoryError } = await db.from("work_order_status_history").insert({
     work_order_id: wo.id,
     organization_id: orgId,
     status: "New",
     notes: `Created from estimate #${estimate.estimate_number}`,
     created_by: user.id,
   });
+
+  if (statusHistoryError) capture(statusHistoryError, { context: "[estimate-service] convertEstimateToWorkOrder" });
 
   // Add each estimate item as a service or part on the work order
   for (const item of estimate.items) {
@@ -561,7 +576,7 @@ export async function convertEstimateToWorkOrder(
   await recalculateWorkOrderTotals(db, wo.id);
 
   // Mark estimate as converted
-  await db
+  const { error: convertError } = await db
     .from("estimates")
     .update({
       status: "converted",
@@ -570,6 +585,8 @@ export async function convertEstimateToWorkOrder(
     })
     .eq("id", estimateId)
     .eq("organization_id", orgId);
+
+  if (convertError) capture(convertError, { context: "[estimate-service] convertEstimateToWorkOrder" });
 
   await createAuditLog({
     supabase: db,

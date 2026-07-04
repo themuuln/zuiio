@@ -93,7 +93,7 @@ export function CustomerFollowupsSection({
     data: FollowupItem[];
     count: number;
   }>({
-    queryKey: followupKeys.list({ customerId, status: "pending" }),
+    queryKey: followupKeys.list(orgId, { customerId, status: "pending" }),
     queryFn: async () => {
       const res = await fetch(
         `/api/organizations/${orgId}/followups?customerId=${customerId}&status=pending&limit=10`,

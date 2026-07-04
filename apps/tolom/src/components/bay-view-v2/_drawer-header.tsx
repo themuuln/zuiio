@@ -21,7 +21,9 @@ import { useOrgMutation } from "@zuiio/query";
 import { bayViewKeys, workOrderKeys } from "@/lib/queries/keys";
 import type { WorkOrderDetail } from "@/lib/types";
 import type { MechanicRef } from "@/lib/types/mechanic";
+import { reportServerError } from "@/lib/sentry-report-server";
 import { StatusPill } from "./status-pill";
+import { toast } from "sonner";
 
 interface DrawerHeaderProps {
   wo: WorkOrderDetail | null;
@@ -185,8 +187,9 @@ export function DrawerHeaderSection({
                     await addHelperMutation.mutateAsync({
                       mechanic_id: mechanicId,
                     });
-                  } catch {
-                    // error handled by addHelperMutation
+                  } catch (err) {
+                    reportServerError("Failed to add helper", err);
+                    toast.error("Failed to add helper");
                   }
                 }}
                 onRemoveMechanic={async (_woId) => {
@@ -194,15 +197,17 @@ export function DrawerHeaderSection({
                     await removeHelperMutation.mutateAsync({
                       mechanicId: wo.mechanic?.id ?? "",
                     });
-                  } catch {
-                    // error handled by removeHelperMutation
+                  } catch (err) {
+                    reportServerError("Failed to remove mechanic", err);
+                    toast.error("Failed to remove mechanic");
                   }
                 }}
                 onRemoveHelper={async (_woId, mechanicId) => {
                   try {
                     await removeHelperMutation.mutateAsync({ mechanicId });
-                  } catch {
-                    // error handled by removeHelperMutation
+                  } catch (err) {
+                    reportServerError("Failed to remove helper", err);
+                    toast.error("Failed to remove helper");
                   }
                 }}
               />

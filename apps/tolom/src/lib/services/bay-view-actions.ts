@@ -21,7 +21,7 @@ async function getOrgId(): Promise<string> {
   const { data, error } = await supabase.rpc("get_user_organization_id");
   if (error) throw new Error(error.message);
   if (!data) throw new Error("No organization selected");
-  return data;
+  return data as string;
 }
 
 async function withOrgClient() {
@@ -30,11 +30,25 @@ async function withOrgClient() {
   return { supabase, orgId };
 }
 
+/** Wraps a supabase query promise with withDbCapture, casting only the promise type so
+ *  TypeScript's inference doesn't get stuck on the complex PostgrestBuilder types. */
+function tracked<T>(
+  label: string,
+  promise: PromiseLike<{ data: T; error: unknown }>,
+): Promise<{ data: T; error: unknown }> {
+  return withDbCapture(label, promise as PromiseLike<{ data: T; error: unknown }>);
+}
+
 // ── Find or Create Customer ─────────────────────────────────────
 
 export async function findCustomerByPhone(phone: string) {
   const { supabase, orgId } = await withOrgClient();
-  const { data, error } = await withDbCapture(
+  const { data, error } = await tracked<{
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    phone: string | null;
+  } | null>(
     "findCustomerByPhone",
     supabase
       .from("customers")
@@ -53,7 +67,7 @@ export async function findCustomerByPhone(phone: string) {
 export async function findCustomerByPlate(plate: string) {
   const { supabase, orgId } = await withOrgClient();
 
-  const { data, error } = await withDbCapture(
+  const { data, error } = await tracked<Record<string, unknown> | null>(
     "findCustomerByPlate",
     supabase
       .from("vehicles")
@@ -110,21 +124,67 @@ export interface VehicleLookupResult {
   }[];
 }
 
+type VehicleRow = NonNullable<VehicleLookupResult["vehicle"]>;
+
+interface OwnerRow {
+  customer_id: string;
+  customers: {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    phone: string | null;
+  };
+}
+
+interface WorkOrderRow {
+  id: string;
+  status: string;
+  created_at: string;
+  complaint: string | null;
+  diagnosis: string | null;
+  notes: string | null;
+  total: number;
+  mechanic_id: string | null;
+}
+
+interface ProfileRow {
+  id: string;
+  full_name: string | null;
+}
+
+interface ServiceRow {
+  work_order_id: string;
+  service_name: string;
+  final_price: number;
+}
+
 export async function lookupVehicleByPlate(
   plate: string,
 ): Promise<VehicleLookupResult> {
   const { supabase, orgId } = await withOrgClient();
 
   // Find vehicle
-  const { data: vehicle } = await supabase
-    .from("vehicles")
-    .select(
-      "id, plate_number, make, model, year, color, vin, engine, transmission, fuel_type, odometer",
-    )
-    .eq("organization_id", orgId)
-    .eq("plate_number", plate)
-    .is("deleted_at", null)
-    .maybeSingle();
+  const { data: vehicle, error: vehicleError } = await tracked<VehicleRow | null>(
+    "lookupVehicleByPlate:vehicle",
+    supabase
+      .from("vehicles")
+      .select(
+        "id, plate_number, make, model, year, color, vin, engine, transmission, fuel_type, odometer",
+      )
+      .eq("organization_id", orgId)
+      .eq("plate_number", plate)
+      .is("deleted_at", null)
+      .maybeSingle(),
+  );
+
+  if (vehicleError) {
+    return {
+      exists: false,
+      vehicle: null,
+      customer: null,
+      serviceHistory: [],
+    };
+  }
 
   if (!vehicle) {
     // Try SmartCar.mn API to auto-fill vehicle data
@@ -165,62 +225,40 @@ export async function lookupVehicleByPlate(
   }
 
   // Get primary owner
-  const { data: owner } = await supabase
-    .from("vehicle_owners")
-    .select("customer_id, customers!inner(id, first_name, last_name, phone)")
-    .eq("organization_id", orgId)
-    .eq("vehicle_id", vehicle.id)
-    .is("owned_until", null)
-    .maybeSingle();
+  const { data: owner } = await tracked<OwnerRow | null>(
+    "lookupVehicleByPlate:owner",
+    supabase
+      .from("vehicle_owners")
+      .select("customer_id, customers!inner(id, first_name, last_name, phone)")
+      .eq("organization_id", orgId)
+      .eq("vehicle_id", vehicle.id)
+      .is("owned_until", null)
+      .maybeSingle(),
+  );
 
   const customer = owner
     ? {
-        id: (
-          owner.customers as unknown as {
-            id: string;
-            first_name: string | null;
-            last_name: string | null;
-            phone: string | null;
-          }
-        ).id,
-        first_name: (
-          owner.customers as unknown as {
-            id: string;
-            first_name: string | null;
-            last_name: string | null;
-            phone: string | null;
-          }
-        ).first_name,
-        last_name: (
-          owner.customers as unknown as {
-            id: string;
-            first_name: string | null;
-            last_name: string | null;
-            phone: string | null;
-          }
-        ).last_name,
-        phone: (
-          owner.customers as unknown as {
-            id: string;
-            first_name: string | null;
-            last_name: string | null;
-            phone: string | null;
-          }
-        ).phone,
+        id: owner.customers.id,
+        first_name: owner.customers.first_name,
+        last_name: owner.customers.last_name,
+        phone: owner.customers.phone,
       }
     : null;
 
   // Get work orders with services
-  const { data: workOrders } = await supabase
-    .from("work_orders")
-    .select(`
-      id, status, created_at, complaint, diagnosis, notes, total, mechanic_id
-    `)
-    .eq("organization_id", orgId)
-    .eq("vehicle_id", vehicle.id)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false })
-    .limit(20);
+  const { data: workOrders } = await tracked<WorkOrderRow[] | null>(
+    "lookupVehicleByPlate:workOrders",
+    supabase
+      .from("work_orders")
+      .select(`
+        id, status, created_at, complaint, diagnosis, notes, total, mechanic_id
+      `)
+      .eq("organization_id", orgId)
+      .eq("vehicle_id", vehicle.id)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(20),
+  );
 
   // Fetch mechanic names and services for each WO (parallel)
   const mechanicIds = [
@@ -232,11 +270,17 @@ export async function lookupVehicleByPlate(
   ] as string[];
   const woIds = (workOrders ?? []).map((wo) => wo.id);
   const [{ data: profiles }, { data: allServices }] = await Promise.all([
-    supabase.from("profiles").select("id, full_name").in("id", mechanicIds),
-    supabase
-      .from("work_order_services")
-      .select("work_order_id, service_name, final_price")
-      .in("work_order_id", woIds),
+    tracked<ProfileRow[] | null>(
+      "lookupVehicleByPlate:profiles",
+      supabase.from("profiles").select("id, full_name").in("id", mechanicIds),
+    ),
+    tracked<ServiceRow[] | null>(
+      "lookupVehicleByPlate:services",
+      supabase
+        .from("work_order_services")
+        .select("work_order_id, service_name, final_price")
+        .in("work_order_id", woIds),
+    ),
   ]);
 
   const mechanicNameMap = new Map(
@@ -308,6 +352,7 @@ export async function quickRegisterVehicle(params: {
 
   const { supabase, orgId } = await withOrgClient();
   const { data: { user: authUser } } = await supabase.auth.getUser();
+  if (!authUser) throw new ValidationError("Not authenticated");
 
   // Find or create customer
   let customerId: string | null = null;
@@ -333,13 +378,16 @@ export async function quickRegisterVehicle(params: {
 
   // Check if vehicle already exists → update; else create
   const trimmedPlate = params.plateNumber.trim().toUpperCase();
-  const { data: existingVehicle } = await supabase
-    .from("vehicles")
-    .select("id")
-    .eq("organization_id", orgId)
-    .eq("plate_number", trimmedPlate)
-    .is("deleted_at", null)
-    .maybeSingle();
+  const { data: existingVehicle } = await tracked<{ id: string } | null>(
+    "quickRegisterVehicle:existingVehicle",
+    supabase
+      .from("vehicles")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("plate_number", trimmedPlate)
+      .is("deleted_at", null)
+      .maybeSingle(),
+  );
 
   let vehicle;
   if (existingVehicle) {
@@ -399,7 +447,7 @@ export async function searchMechanics(search?: string) {
     query = query.ilike("full_name", `%${search.trim()}%`);
   }
 
-  const { data } = await query;
+  const { data } = await withDbCapture("searchMechanics", query);
   return data ?? [];
 }
 
@@ -423,7 +471,7 @@ export async function searchVehicles(search?: string) {
     );
   }
 
-  const { data } = await query;
+  const { data } = await withDbCapture("searchVehicles", query);
   return data ?? [];
 }
 
@@ -453,18 +501,39 @@ export async function searchVehiclesWithCustomers(search?: string) {
     );
   }
 
-  const { data } = await query;
+  const { data } = await tracked<Record<string, unknown>[] | null>(
+    "searchVehiclesWithCustomers",
+    query,
+  );
 
   // Flatten the nested structure
-  return (data ?? []).map((v) => {
-    const owner = (v as any).vehicle_owners?.[0]?.customers;
+  return (data ?? []).map((v: Record<string, unknown>) => {
+    // Shape is guaranteed by the Supabase select clause in the query above
+    const record = v as unknown as {
+      id: string;
+      plate_number: string;
+      make: string;
+      model: string;
+      year: number | null;
+      color: string | null;
+      vehicle_owners?: Array<{
+        owned_until: string | null;
+        customers: {
+          id: string;
+          first_name: string | null;
+          last_name: string | null;
+          phone: string | null;
+        } | null;
+      }> | null;
+    };
+    const owner = record.vehicle_owners?.[0]?.customers;
     return {
-      id: v.id,
-      plate_number: v.plate_number,
-      make: v.make,
-      model: v.model,
-      year: v.year,
-      color: v.color,
+      id: record.id,
+      plate_number: record.plate_number,
+      make: record.make,
+      model: record.model,
+      year: record.year,
+      color: record.color,
       customer: owner
         ? {
             id: owner.id,
@@ -537,16 +606,21 @@ export async function getVehicleServiceTimeline(
 ): Promise<VehicleLookupResult["serviceHistory"]> {
   const { supabase, orgId } = await withOrgClient();
 
-  const { data: workOrders } = await supabase
-    .from("work_orders")
-    .select(
-      "id, status, created_at, complaint, diagnosis, notes, total, mechanic_id",
-    )
-    .eq("organization_id", orgId)
-    .eq("vehicle_id", vehicleId)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false })
-    .limit(50);
+  const { data: workOrders, error: workOrdersError } = await tracked<WorkOrderRow[] | null>(
+    "getVehicleServiceTimeline:workOrders",
+    supabase
+      .from("work_orders")
+      .select(
+        "id, status, created_at, complaint, diagnosis, notes, total, mechanic_id",
+      )
+      .eq("organization_id", orgId)
+      .eq("vehicle_id", vehicleId)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(50),
+  );
+
+  if (workOrdersError) return [];
 
   const mechanicIds = [
     ...new Set(
@@ -557,11 +631,17 @@ export async function getVehicleServiceTimeline(
   ] as string[];
   const woIds = (workOrders ?? []).map((wo) => wo.id);
   const [{ data: profiles }, { data: allServices }] = await Promise.all([
-    supabase.from("profiles").select("id, full_name").in("id", mechanicIds),
-    supabase
-      .from("work_order_services")
-      .select("work_order_id, service_name, final_price")
-      .in("work_order_id", woIds),
+    tracked<ProfileRow[] | null>(
+      "getVehicleServiceTimeline:profiles",
+      supabase.from("profiles").select("id, full_name").in("id", mechanicIds),
+    ),
+    tracked<ServiceRow[] | null>(
+      "getVehicleServiceTimeline:services",
+      supabase
+        .from("work_order_services")
+        .select("work_order_id, service_name, final_price")
+        .in("work_order_id", woIds),
+    ),
   ]);
 
   const mechanicNameMap = new Map(
@@ -607,12 +687,15 @@ export async function addVehicleToQueue(params: {
   // Resolve branch: if not provided, fall back to the main branch
   let branchId = params.branchId;
   if (!branchId) {
-    const { data: mainBranch } = await supabase
-      .from("branches")
-      .select("id")
-      .eq("organization_id", orgId)
-      .eq("is_main", true)
-      .maybeSingle();
+    const { data: mainBranch } = await tracked<{ id: string } | null>(
+      "addVehicleToQueue:mainBranch",
+      supabase
+        .from("branches")
+        .select("id")
+        .eq("organization_id", orgId)
+        .eq("is_main", true)
+        .maybeSingle(),
+    );
     if (mainBranch) branchId = mainBranch.id;
   }
   if (!branchId) {
@@ -622,14 +705,17 @@ export async function addVehicleToQueue(params: {
   }
 
   // Check for duplicate active work order on this vehicle
-  const { data: activeWO } = await supabase
-    .from("work_orders")
-    .select("id, status, bay_number")
-    .eq("organization_id", orgId)
-    .eq("vehicle_id", params.vehicleId)
-    .is("deleted_at", null)
-    .not("status", "in", '("Completed","Cancelled")')
-    .maybeSingle();
+  const { data: activeWO } = await tracked<{ id: string; status: string; bay_number: string | null } | null>(
+    "addVehicleToQueue:activeWO",
+    supabase
+      .from("work_orders")
+      .select("id, status, bay_number")
+      .eq("organization_id", orgId)
+      .eq("vehicle_id", params.vehicleId)
+      .is("deleted_at", null)
+      .not("status", "in", '("Completed","Cancelled")')
+      .maybeSingle(),
+  );
 
   if (activeWO) {
     const location = activeWO.bay_number

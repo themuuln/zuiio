@@ -25,6 +25,7 @@ import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 
+import type { Customer, Vehicle } from "@/lib/types";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";

@@ -4,6 +4,7 @@ import { createAuditLog } from "@/lib/audit";
 import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
+import { capture } from "@/lib/capture";
 import { getWorkOrderDetail as _getWorkOrderDetail } from "@/lib/services/_queries/work-order-queries";
 import { resolveBranchId, withBranchFilter } from "@/lib/supabase/with-branch";
 import type {
@@ -238,22 +239,23 @@ export async function createWorkOrder(
 
   if (woError || !wo)
     throw new Error(woError?.message ?? "Failed to create work order");
-
-  await supabase.from("work_order_status_history").insert({
+  const { error: statusError } = await supabase.from("work_order_status_history").insert({
     work_order_id: wo.id,
     organization_id: orgId,
     previous_status: null,
     status: "New",
     created_by: userId,
   });
+  if (statusError) capture(statusError, { context: "[work-order-service] createWorkOrder" });
 
   if (params.mechanic_id) {
-    await supabase.from("mechanic_assignments").insert({
+    const { error: mechAssignError } = await supabase.from("mechanic_assignments").insert({
       work_order_id: wo.id,
       organization_id: orgId,
       mechanic_id: params.mechanic_id,
       assigned_by: userId,
     });
+    if (mechAssignError) capture(mechAssignError, { context: "[work-order-service] createWorkOrder" });
   }
 
   // Insert services and parts — attempt partial cleanup on failure
@@ -325,6 +327,9 @@ export async function recalculateWorkOrderTotals(
       .eq("id", workOrderId)
       .single(),
   ]);
+  if (servicesResult.error) capture(servicesResult.error, { context: "[work-order-service] recalculateWorkOrderTotals" });
+  if (partsResult.error) capture(partsResult.error, { context: "[work-order-service] recalculateWorkOrderTotals" });
+  if (woResult.error) capture(woResult.error, { context: "[work-order-service] recalculateWorkOrderTotals" });
 
   const services = servicesResult?.data ?? [];
   const parts = partsResult?.data ?? [];
@@ -353,7 +358,7 @@ export async function recalculateWorkOrderTotals(
   const discountTotal = flatDiscount + pctDiscountAmount;
   const grandTotal = Math.max(subTotal - discountTotal, 0);
 
-  await supabase
+  const { error: updateError } = await supabase
     .from("work_orders")
     .update({
       subtotal: subTotal,
@@ -361,6 +366,8 @@ export async function recalculateWorkOrderTotals(
       total: grandTotal,
     })
     .eq("id", workOrderId);
+
+  if (updateError) capture(updateError, { context: "[work-order-service] recalculateWorkOrderTotals" });
 }
 
 // ── Get Work Order Totals ──────────────────────────────────────
@@ -399,7 +406,7 @@ export async function cancelWorkOrder(
   const supabase = db;
   const userId = (await supabase.auth.getUser()).data.user?.id;
 
-  const { data: existing } = await supabase
+  const { data: existing, error: existingError } = await supabase
     .from("work_orders")
     .select("id, status")
     .eq("id", id)
@@ -407,14 +414,15 @@ export async function cancelWorkOrder(
     .is("deleted_at", null)
     .single();
 
+  if (existingError) capture(existingError, { context: "[work-order-service] cancelWorkOrder" });
+
   if (!existing) throw new NotFoundError("Work order not found");
   if (existing.status === "Completed" || existing.status === "Cancelled") {
     throw new ValidationError(
       "Cannot cancel a completed or already cancelled work order",
     );
   }
-
-  await supabase
+  const { error: updateError } = await supabase
     .from("work_orders")
     .update({
       status: "Cancelled",
@@ -423,6 +431,8 @@ export async function cancelWorkOrder(
     })
     .eq("id", id)
     .eq("organization_id", orgId);
+
+  if (updateError) capture(updateError, { context: "[work-order-service] cancelWorkOrder" });
 
   await createAuditLog({
     supabase: db,
