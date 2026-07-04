@@ -1,0 +1,21 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - heading "Tamga" [level=1] [ref=e5]
+      - paragraph [ref=e6]: Морьны нэгдсэн удирдлагын систем
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - text: Имэйл
+        - textbox "Имэйл" [ref=e9]:
+          - /placeholder: you@example.com
+      - generic [ref=e10]:
+        - text: Нууц үг
+        - textbox "Нууц үг" [ref=e11]
+      - button "Нэвтрэх" [ref=e12]
+      - paragraph [ref=e13]:
+        - text: Бүртгэлгүй бол
+        - link "бүртгүүлэх" [ref=e14] [cursor=pointer]:
+          - /url: /auth/sign-up
+  - button "Open Next.js Dev Tools" [ref=e20] [cursor=pointer]:
+    - img [ref=e21]
+  - alert [ref=e24]

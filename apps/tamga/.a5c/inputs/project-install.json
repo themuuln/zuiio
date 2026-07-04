@@ -1,0 +1,5 @@
+{
+  "projectRoot": "/Users/themuuln/coding/personal/tamga",
+  "isNewProject": false,
+  "additionalContext": "Flutter + Supabase offline-first horse management app for Mongolia. Current phase: Phase 1 - Local-First Stabilization. Using Riverpod for state, GoRouter for routing, SharedPreferences (migrating to Hive/Isar). Has Supabase migration files. VitePress docs site. Needs babysitter set up for ongoing development."
+}

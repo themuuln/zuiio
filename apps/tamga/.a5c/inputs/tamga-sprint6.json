@@ -1,0 +1,32 @@
+{
+  "process": "tamga-sprint6-release",
+  "project": "tamga",
+  "description": "Sprint 6: Release Prep — App icons, splash screen, CI/CD, build config, final polish, store listing prep",
+  "repo": "/Users/themuuln/coding/personal/tamga",
+  "branch": "main",
+  "objectives": [
+    "Generate adaptive app icons for iOS and Android",
+    "Create splash screen with brand colors",
+    "Configure release builds for both platforms",
+    "Set up production environment configuration",
+    "Fix remaining analyze warnings",
+    "Run full test suite",
+    "Prepare app store listing materials",
+    "Set version to 1.0.0+1"
+  ],
+  "constraints": [
+    "Must maintain existing functionality",
+    "Must pass all existing tests",
+    "Must follow project architecture (Clean Architecture)",
+    "Must use existing design tokens (TamgaColors)",
+    "Must support offline-first with Supabase sync"
+  ],
+  "acceptance_criteria": [
+    "App icons generated for iOS and Android",
+    "Splash screen displays correctly on both platforms",
+    "Release builds compile successfully",
+    "All tests pass",
+    "Version number set to 1.0.0+1",
+    "Store listing materials prepared"
+  ]
+}

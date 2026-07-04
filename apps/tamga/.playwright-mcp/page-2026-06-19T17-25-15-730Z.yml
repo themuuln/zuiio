@@ -1,0 +1,127 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e5]:
+      - list [ref=e7]:
+        - listitem [ref=e8]:
+          - link "T Tamga Удирдлагын самбар" [ref=e9] [cursor=pointer]:
+            - /url: /dashboard
+            - generic [ref=e11]: T
+            - generic [ref=e12]:
+              - generic [ref=e13]: Tamga
+              - generic [ref=e14]: Удирдлагын самбар
+      - generic [ref=e16]:
+        - generic [ref=e17]: Хэсгүүд
+        - list [ref=e19]:
+          - listitem [ref=e20]:
+            - link "Самбар" [ref=e21] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e22]
+              - generic [ref=e27]: Самбар
+          - listitem [ref=e28]:
+            - link "Зах зээл" [ref=e29] [cursor=pointer]:
+              - /url: /dashboard/marketplace
+              - img [ref=e30]
+              - generic [ref=e34]: Зах зээл
+          - listitem [ref=e35]:
+            - link "Сүрэг" [ref=e36] [cursor=pointer]:
+              - /url: /dashboard/herd
+              - img [ref=e37]
+              - generic [ref=e42]: Сүрэг
+          - listitem [ref=e43]:
+            - link "Эрүүл мэнд" [ref=e44] [cursor=pointer]:
+              - /url: /dashboard/health
+              - img [ref=e45]
+              - generic [ref=e47]: Эрүүл мэнд
+          - listitem [ref=e48]:
+            - link "Багууд" [ref=e49] [cursor=pointer]:
+              - /url: /dashboard/teams
+              - img [ref=e50]
+              - generic [ref=e53]: Багууд
+          - listitem [ref=e54]:
+            - link "Тайлан" [ref=e55] [cursor=pointer]:
+              - /url: /dashboard/reports
+              - img [ref=e56]
+              - generic [ref=e58]: Тайлан
+          - listitem [ref=e59]:
+            - link "Тохиргоо" [ref=e60] [cursor=pointer]:
+              - /url: /dashboard/settings
+              - img [ref=e61]
+              - generic [ref=e64]: Тохиргоо
+      - list [ref=e66]:
+        - listitem [ref=e67]:
+          - link "Тохиргоо" [ref=e68] [cursor=pointer]:
+            - /url: /dashboard/settings
+            - generic [ref=e69]: Тохиргоо
+    - main [ref=e70]:
+      - generic [ref=e71]:
+        - button "Toggle Sidebar" [ref=e73]:
+          - img
+          - generic [ref=e74]: Toggle Sidebar
+        - button "test@example.com" [ref=e76]:
+          - img
+          - generic [ref=e77]: test@example.com
+      - generic [ref=e79]:
+        - generic [ref=e80]:
+          - link "Буцах" [ref=e81] [cursor=pointer]:
+            - /url: /dashboard/marketplace
+            - img
+            - text: Буцах
+          - generic [ref=e82]:
+            - heading "Шинэ зар нэмэх" [level=1] [ref=e83]
+            - paragraph [ref=e84]: Морины зарын мэдээллийг бөглөж нийтлэх
+        - generic [ref=e85]:
+          - generic [ref=e86]:
+            - heading "1. Морь сонгох" [level=2] [ref=e88]
+            - generic [ref=e89]:
+              - combobox [ref=e90]:
+                - generic [ref=e91]: Морь сонгоно уу...
+                - img: ▼
+              - textbox [ref=e92]
+              - paragraph [ref=e93]: Танд бүртгэлтэй морь байхгүй байна. Эхлээд морь бүртгүүлнэ үү.
+          - generic [ref=e94]:
+            - heading "2. Зарын мэдээлэл" [level=2] [ref=e96]
+            - generic [ref=e97]:
+              - generic [ref=e98]:
+                - generic [ref=e99]: Гарчиг *
+                - textbox "Зарын гарчиг" [ref=e100]
+              - generic [ref=e101]:
+                - generic [ref=e102]: Тайлбар
+                - textbox "Морины дэлгэрэнгүй мэдээлэл..." [ref=e103]
+              - separator [ref=e104]
+              - generic [ref=e105]:
+                - generic [ref=e106]:
+                  - generic [ref=e107]: Үнэ *
+                  - spinbutton [ref=e108]
+                - generic [ref=e109]:
+                  - generic [ref=e110]: Валют
+                  - combobox [ref=e111]:
+                    - generic [ref=e112]: MNT
+                    - img: ▼
+                  - textbox [ref=e113]: MNT
+              - generic [ref=e114]:
+                - generic [ref=e115]: Борлуулалтын төрөл *
+                - combobox [ref=e116]:
+                  - generic [ref=e117]: Төрөл сонгоно уу...
+                  - img: ▼
+                - textbox [ref=e118]
+              - generic [ref=e119]:
+                - generic [ref=e120]: Байршил
+                - textbox "Аймаг, сум..." [ref=e121]
+          - generic [ref=e122]:
+            - heading "3. Зурагнууд" [level=2] [ref=e124]
+            - generic [ref=e125]:
+              - generic [ref=e126]:
+                - textbox "Зургийн URL оруулах..." [ref=e127]
+                - button [ref=e128]:
+                  - img
+              - paragraph [ref=e129]: Зураг нэмээгүй байна. Дээрх талбарт зургийн URL оруулан нэмнэ үү.
+          - generic [ref=e130]:
+            - heading "4. Баримт бичиг" [level=2] [ref=e132]
+            - generic [ref=e133]:
+              - textbox "Баримт бичгийн тэгүүд (таслалаар тусгаарлана)..." [ref=e134]
+              - paragraph [ref=e135]: "Жишээ нь: гэрчилгээ, вакцин, удам судал"
+          - generic [ref=e136]:
+            - button "Цуцлах" [ref=e137]
+            - button "Зар нийтлэх" [ref=e138]
+  - button "Open Next.js Dev Tools" [ref=e144] [cursor=pointer]:
+    - img [ref=e145]

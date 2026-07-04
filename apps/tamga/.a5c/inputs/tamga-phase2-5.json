@@ -1,0 +1,34 @@
+{
+  "projectRoot": "/Users/themuuln/coding/personal/tamga",
+  "sprint": 2.5,
+  "title": "Onboarding & User Roles",
+  "supabaseProjectRef": "dgoqhlcqhpabbthamtrj",
+  "supabaseUrl": "https://dgoqhlcqhpabbthamtrj.supabase.co",
+  "userTypes": [
+    {
+      "id": "casual",
+      "label": "Нэг морьтой эзэн",
+      "description": "Single horse owner, basic needs",
+      "icon": "👤"
+    },
+    {
+      "id": "breeder",
+      "label": "Үржүүлэгч / Уяач",
+      "description": "Breeder/trainer with multiple horses",
+      "icon": "🏇"
+    },
+    {
+      "id": "stable",
+      "label": "Жүчээ / Бизнес",
+      "description": "Stable/business with multiple users",
+      "icon": "🏠"
+    }
+  ],
+  "phases": [
+    "P1: Domain model update + DB schema",
+    "P2: Onboarding UI redesign (5 steps)",
+    "P3: Auth integration & profile sync",
+    "P4: Post-onboarding guided tour",
+    "P5: Onboarding tests"
+  ]
+}

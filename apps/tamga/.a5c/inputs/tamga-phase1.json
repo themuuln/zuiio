@@ -1,0 +1,21 @@
+{
+  "projectRoot": "/Users/themuuln/coding/personal/tamga",
+  "phases": ["isar", "merge", "errors", "auth"],
+  "description": "Tamga Phase 1 Local-First Stabilization",
+  "requirements": {
+    "storage": "Isar (not Hive)",
+    "testing": "Full test suite (unit, repository, widget, integration)",
+    "sequence": "Sequential: Isar → Horse merge → Error handling → Phone auth",
+    "architecture": "Clean Architecture layers preserved",
+    "constraints": [
+      "Domain layer must remain pure Dart (no Isar/Flutter imports)",
+      "Isar schemas only in data layer",
+      "SharedPreferences kept for lightweight settings only",
+      "Shared Horse model replaces both HorseRecord and LineageHorse",
+      "Result<T> wraps all repository return types",
+      "Phone + email registration with no OTP/email confirmation",
+      "Anonymous → registered migration supported",
+      "Supabase dashboard: disable email confirmation"
+    ]
+  }
+}

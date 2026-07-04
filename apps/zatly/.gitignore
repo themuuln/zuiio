@@ -1,0 +1,5 @@
+/.next/build
+/.next/cache
+/.next/dev
+/.next/diagnostics
+/node_modules

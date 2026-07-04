@@ -1,0 +1,20 @@
+{"protocolVersion":"0.1.1","runnerVersion":null,"pid":19145,"type":"start","time":0}
+{"suite":{"id":0,"platform":"vm","path":"/Users/themuuln/coding/tamga/test/features/analytics/stat_card_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading /Users/themuuln/coding/tamga/test/features/analytics/stat_card_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":0}
+{"count":1,"time":1,"type":"allSuites"}
+{"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":1124}
+{"group":{"id":2,"suiteID":0,"parentID":null,"name":"","metadata":{"skip":false,"skipReason":null},"testCount":6,"line":null,"column":null,"url":null},"type":"group","time":1125}
+{"group":{"id":3,"suiteID":0,"parentID":2,"name":"StatCard","metadata":{"skip":false,"skipReason":null},"testCount":6,"line":7,"column":3,"url":"file:///Users/themuuln/coding/tamga/test/features/analytics/stat_card_test.dart"},"type":"group","time":1125}
+{"test":{"id":4,"name":"StatCard renders label and value","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":8,"root_column":5,"root_url":"file:///Users/themuuln/coding/tamga/test/features/analytics/stat_card_test.dart"},"type":"testStart","time":1125}
+{"testID":4,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1328}
+{"test":{"id":5,"name":"StatCard renders with icon","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":24,"root_column":5,"root_url":"file:///Users/themuuln/coding/tamga/test/features/analytics/stat_card_test.dart"},"type":"testStart","time":1328}
+{"testID":5,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1342}
+{"test":{"id":6,"name":"StatCard renders with trend indicator","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":43,"root_column":5,"root_url":"file:///Users/themuuln/coding/tamga/test/features/analytics/stat_card_test.dart"},"type":"testStart","time":1342}
+{"testID":6,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1352}
+{"test":{"id":7,"name":"StatCard renders loading state","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":64,"root_column":5,"root_url":"file:///Users/themuuln/coding/tamga/test/features/analytics/stat_card_test.dart"},"type":"testStart","time":1352}
+{"testID":7,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1361}
+{"test":{"id":8,"name":"StatCard renders error state","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":77,"root_column":5,"root_url":"file:///Users/themuuln/coding/tamga/test/features/analytics/stat_card_test.dart"},"type":"testStart","time":1361}
+{"testID":8,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1369}
+{"test":{"id":9,"name":"StatCard renders empty state","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":91,"root_column":5,"root_url":"file:///Users/themuuln/coding/tamga/test/features/analytics/stat_card_test.dart"},"type":"testStart","time":1369}
+{"testID":9,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":1376}
+{"success":true,"type":"done","time":1383}

@@ -1,0 +1,23 @@
+{
+  "name": "tamga-docs",
+  "private": true,
+  "scripts": {
+    "dev": "vitepress dev docs --host 0.0.0.0 --port 4173",
+    "build": "vitepress build docs",
+    "preview": "vitepress preview docs --host 0.0.0.0 --port 4174",
+    "docs:dev": "vitepress dev docs --host 0.0.0.0 --port 4173",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs --host 0.0.0.0 --port 4174"
+  },
+  "devDependencies": {
+    "mermaid": "^11.15.0",
+    "vitepress": "^1.6.4",
+    "vitepress-mermaid-renderer": "^1.1.26",
+    "vue": "^3.5.33"
+  },
+  "dependencies": {
+    "@a5c-ai/babysitter-sdk": "^0.0.187",
+    "bcryptjs": "^3.0.3",
+    "pg": "^8.22.0"
+  }
+}

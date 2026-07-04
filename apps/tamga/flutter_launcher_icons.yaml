@@ -1,0 +1,15 @@
+flutter_launcher_icons:
+  image_path: "assets/icon/icon.png"
+
+  # iOS — generate all required sizes
+  ios: true
+  ios_development_team: ""
+  remove_alpha_ios: true
+
+  # Android — disabled until full android/ directory exists.
+  # Re-enable after `flutter create .` adds the android scaffold.
+  android: false
+  # android_adaptive_icon_foreground: "assets/icon/icon.png"
+  # android_adaptive_icon_background: "assets/icon/icon.png"
+  # min_sdk_android: 21
+  # remove_alpha_android: true

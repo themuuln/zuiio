@@ -1,21 +1,12 @@
-[submodule "apps/tamga-web"]
-	path = apps/tamga-web
-	url = https://github.com/themuuln/tamga-web.git
 [submodule "apps/khosuud"]
 	path = apps/khosuud
 	url = https://github.com/themuuln/khosuud.git
-[submodule "apps/tamga"]
-	path = apps/tamga
-	url = https://github.com/themuuln/tamga.git
 [submodule "apps/card"]
 	path = apps/card
 	url = https://github.com/themuuln/card.git
 [submodule "apps/zer-packages"]
 	path = apps/zer-packages
 	url = https://github.com/themuuln/zer-packages.git
-[submodule "apps/zatly"]
-	path = apps/zatly
-	url = https://github.com/themuuln/zatly
 [submodule "apps/tumurch"]
 	path = apps/tumurch
 	url = https://github.com/themuuln/tumurch-app
