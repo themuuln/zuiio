@@ -1,6 +1,6 @@
 import "server-only";
-import type { createClient } from "@/lib/supabase/server";
 import { capture } from "@zuiio/capture";
+import type { createClient } from "@/lib/supabase/server";
 
 /** Known org-setting boolean column names that are safe to pass to .select(). */
 const ALLOWED_SETTINGS = new Set([

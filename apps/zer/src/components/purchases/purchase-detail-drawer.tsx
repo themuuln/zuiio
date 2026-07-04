@@ -2,6 +2,7 @@
 
 import { ArrowFatDown } from "@phosphor-icons/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { capture, withDbCapture } from "@zuiio/capture";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -22,7 +23,6 @@ import {
 } from "@/components/ui/table";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
-import { capture, withDbCapture } from "@zuiio/capture";
 
 const STATUS_LABELS: Record<string, string> = {
   draft: "Ноорог",
@@ -88,7 +88,9 @@ async function fetchPurchaseOrder(
       .single(),
   );
   const orderError = orderResult.error;
-  const order = orderResult.data as unknown as PurchaseDetailData["order"] | null;
+  const order = orderResult.data as unknown as
+    | PurchaseDetailData["order"]
+    | null;
   if (!order) return null;
 
   const { data: items, error: itemsError } = await withDbCapture(
@@ -106,25 +108,27 @@ async function fetchPurchaseOrder(
 
   return {
     order: order as unknown as PurchaseDetailData["order"],
-    items: (items ?? []).map((item: {
-      id: string;
-      product_id: string | null;
-      description: string | null;
-      quantity: number;
-      unit_cost: number;
-      total_cost: number | null;
-      received_quantity: number | null;
-      products: { name: string; unit: string | null } | null;
-    }) => ({
-      id: item.id,
-      product_id: item.product_id,
-      description: item.description,
-      quantity: item.quantity,
-      unit_cost: item.unit_cost,
-      total_cost: item.total_cost ?? 0,
-      received_quantity: item.received_quantity ?? 0,
-      products: item.products,
-    })),
+    items: (items ?? []).map(
+      (item: {
+        id: string;
+        product_id: string | null;
+        description: string | null;
+        quantity: number;
+        unit_cost: number;
+        total_cost: number | null;
+        received_quantity: number | null;
+        products: { name: string; unit: string | null } | null;
+      }) => ({
+        id: item.id,
+        product_id: item.product_id,
+        description: item.description,
+        quantity: item.quantity,
+        unit_cost: item.unit_cost,
+        total_cost: item.total_cost ?? 0,
+        received_quantity: item.received_quantity ?? 0,
+        products: item.products,
+      }),
+    ),
     supplier: order.contacts as { name: string; phone: string | null } | null,
     createdBy: order.profiles as { full_name: string } | null,
   };

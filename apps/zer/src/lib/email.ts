@@ -1,6 +1,5 @@
-import { capture } from "@zuiio/capture";
-
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { capture } from "@zuiio/capture";
 import nodemailer from "nodemailer";
 import { formatCurrency } from "@/lib/format";
 import {
@@ -438,6 +437,8 @@ export async function logEmailResult(
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await supabase.from("report_email_log").insert(payload as any);
+  const { error } = await supabase
+    .from("report_email_log")
+    .insert(payload as any);
   if (error) capture(error, { context: "[email] logEmailResult" });
 }

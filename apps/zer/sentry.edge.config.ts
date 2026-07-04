@@ -1,7 +1,7 @@
-import { setCaptureHandler } from "@zuiio/capture";
-import { SupabaseClient } from "@supabase/supabase-js";
-import { supabaseIntegration } from "@supabase/sentry-js-integration";
 import * as Sentry from "@sentry/nextjs";
+import { supabaseIntegration } from "@supabase/sentry-js-integration";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { setCaptureHandler } from "@zuiio/capture";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 

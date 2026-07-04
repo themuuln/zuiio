@@ -24,16 +24,16 @@ import {
   DrawerSubmit,
 } from "@/components/ui/drawer-footer";
 import { ErrorBanner } from "@/components/ui/error-banner";
-import { purchaseKeys } from "@/lib/query/keys";
-import { useOptimisticCreate } from "@/lib/query/use-optimistic";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import {
-  LineItemRow,
   computeLineItemsTotal,
+  LineItemRow,
 } from "@/components/ui/line-item-row";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
+import { purchaseKeys } from "@/lib/query/keys";
+import { useOptimisticCreate } from "@/lib/query/use-optimistic";
 import { useVariantLineItemRemove } from "@/lib/use-variant-line-items";
 
 type SupplierOption = {

@@ -7,20 +7,21 @@ import {
   Warehouse as WarehouseIcon,
 } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { capture } from "@zuiio/capture";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { ErpDataTable } from "@/components/erp/data-table";
-import {
-  type WarehouseEditData,
-  WarehouseEditDrawer,
-} from "@/components/inventory/warehouse-edit-drawer";
 import { PageShell } from "@/components/erp/page-shell";
 import {
   type WarehouseDetailData,
   WarehouseDetailDrawer,
 } from "@/components/inventory/warehouse-detail-drawer";
+import {
+  type WarehouseEditData,
+  WarehouseEditDrawer,
+} from "@/components/inventory/warehouse-edit-drawer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,7 +36,6 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
-import { capture } from "@zuiio/capture";
 
 const warehouseSchema = z.object({
   name: z.string().min(1, "Нэр шаардлагатай"),
@@ -54,7 +54,10 @@ type Warehouse = {
 
 async function fetchWarehouses(): Promise<Warehouse[]> {
   const supabase = createClient();
-  const { data, error } = await supabase.from("warehouses").select("*").order("name");
+  const { data, error } = await supabase
+    .from("warehouses")
+    .select("*")
+    .order("name");
   if (error) capture(error, { context: "[warehouses] fetchWarehouses" });
   return data ?? [];
 }

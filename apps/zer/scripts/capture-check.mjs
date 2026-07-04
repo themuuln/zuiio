@@ -5,8 +5,7 @@
  * Exit code 1 if violations found.
  */
 
-import { readFileSync } from "node:fs";
-import { globSync } from "node:fs";
+import { globSync, readFileSync } from "node:fs";
 
 const ROOT = process.argv[2] || "src";
 let errors = 0;

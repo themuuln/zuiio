@@ -14,11 +14,11 @@ import {
 } from "@/components/products/product-edit-drawer";
 import { DataTable } from "@/components/ui/data-table";
 import { TableActionsCell } from "@/components/ui/table-actions-cell";
+import { useDeleteWithConfirm } from "@/hooks/use-delete-with-confirm";
 import { formatCurrency } from "@/lib/format";
 import { useBrands } from "@/lib/query/hooks/use-brands";
 import { useProductVariants } from "@/lib/query/hooks/use-product-variants";
 import { productKeys } from "@/lib/query/keys";
-import { useDeleteWithConfirm } from "@/hooks/use-delete-with-confirm";
 
 export type ProductRow = {
   id: string;

@@ -26,15 +26,15 @@ import {
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
-  LineItemRow,
   computeLineItemsTotal,
+  LineItemRow,
 } from "@/components/ui/line-item-row";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
-import { useVariantLineItemRemove } from "@/lib/use-variant-line-items";
 import { quotationKeys } from "@/lib/query/keys";
 import { useOptimisticCreate } from "@/lib/query/use-optimistic";
+import { useVariantLineItemRemove } from "@/lib/use-variant-line-items";
 
 const lineItemSchema = z.object({
   product_id: z.string().nullable().optional(),

@@ -1,8 +1,8 @@
 "use server";
 
 import { requireActionContext } from "@/lib/action-utils";
-import { revalidateEntity } from "@/lib/revalidate";
 import type { AppPermission } from "@/lib/permissions";
+import { revalidateEntity } from "@/lib/revalidate";
 
 export async function createRole(formData: FormData) {
   const ctx = await requireActionContext("roles.manage");

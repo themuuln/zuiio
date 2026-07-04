@@ -18,8 +18,6 @@ import { getFullReport } from "@/lib/reports";
 import { DateRangeForm } from "./date-range-form";
 import { ShareDialog } from "./share-dialog";
 
-
-
 export default async function ReportsPage({
   searchParams,
 }: {

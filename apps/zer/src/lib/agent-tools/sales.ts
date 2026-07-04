@@ -1,9 +1,9 @@
 import "server-only";
-import { capture } from "@zuiio/capture";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { startOfDay, subDays } from "date-fns";
 import type { Tool } from "@zuiio/ai-agent";
+import { capture } from "@zuiio/capture";
+import { startOfDay, subDays } from "date-fns";
 import type { Database } from "@/lib/supabase/types";
 
 /**
@@ -14,7 +14,11 @@ export function createSalesTools(
   supabase: SupabaseClient<Database>,
   orgId: string,
 ): Tool[] {
-  return [getSalesSummary(supabase, orgId), getPendingSales(supabase, orgId), getTodaySales(supabase, orgId)];
+  return [
+    getSalesSummary(supabase, orgId),
+    getPendingSales(supabase, orgId),
+    getTodaySales(supabase, orgId),
+  ];
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────
@@ -46,7 +50,8 @@ function getSalesSummary(
       },
     ],
     execute: async (args: Record<string, unknown>) => {
-      const days = typeof args.days === "number" && args.days > 0 ? args.days : 7;
+      const days =
+        typeof args.days === "number" && args.days > 0 ? args.days : 7;
       const dateStart = daysAgo(days);
 
       // Aggregate sales totals
@@ -55,11 +60,17 @@ function getSalesSummary(
         .select("total_amount, paid_amount")
         .eq("organization_id", orgId)
         .gte("sale_date", dateStart);
-      if (salesAggError) { capture(salesAggError, { context: '[agent] getSalesSummary' }); return { error: 'Query failed' }; }
+      if (salesAggError) {
+        capture(salesAggError, { context: "[agent] getSalesSummary" });
+        return { error: "Query failed" };
+      }
 
       const rows = salesAgg ?? [];
       const saleCount = rows.length;
-      const totalAmount = rows.reduce((sum, r) => sum + Number(r.total_amount), 0);
+      const totalAmount = rows.reduce(
+        (sum, r) => sum + Number(r.total_amount),
+        0,
+      );
       const totalPaid = rows.reduce(
         (sum, r) => sum + (r.paid_amount != null ? Number(r.paid_amount) : 0),
         0,
@@ -73,7 +84,10 @@ function getSalesSummary(
         )
         .eq("sales.organization_id", orgId)
         .gte("sales.sale_date", dateStart);
-      if (itemsError) { capture(itemsError, { context: '[agent] getSalesSummary' }); return { error: 'Query failed' }; }
+      if (itemsError) {
+        capture(itemsError, { context: "[agent] getSalesSummary" });
+        return { error: "Query failed" };
+      }
 
       const raw = (items ?? []) as unknown as Array<{
         quantity: number;
@@ -82,7 +96,10 @@ function getSalesSummary(
         sales: unknown;
       }>;
 
-      const productMap = new Map<string, { quantity: number; revenue: number }>();
+      const productMap = new Map<
+        string,
+        { quantity: number; revenue: number }
+      >();
       for (const item of raw) {
         const name = item.products?.name ?? "Тодорхойгүй";
         const qty = Number(item.quantity);
@@ -121,8 +138,7 @@ function getPendingSales(
 ): Tool {
   return {
     name: "getPendingSales",
-    description:
-      "Дутуу төлөлттэй борлуулалтууд (paid_amount < total_amount).",
+    description: "Дутуу төлөлттэй борлуулалтууд (paid_amount < total_amount).",
     parameters: [],
     execute: async () => {
       const { data: sales, error: salesError } = await supabase
@@ -132,7 +148,10 @@ function getPendingSales(
         .or("paid_amount.is.null,paid_amount.lt.total_amount")
         .order("sale_date", { ascending: false })
         .limit(10);
-      if (salesError) { capture(salesError, { context: '[agent] getPendingSales' }); return { error: 'Query failed' }; }
+      if (salesError) {
+        capture(salesError, { context: "[agent] getPendingSales" });
+        return { error: "Query failed" };
+      }
 
       const rows = sales ?? [];
 
@@ -180,11 +199,17 @@ function getTodaySales(
         .select("total_amount, paid_amount")
         .eq("organization_id", orgId)
         .gte("sale_date", dayStart);
-      if (salesAggError) { capture(salesAggError, { context: '[agent] getTodaySales' }); return { error: 'Query failed' }; }
+      if (salesAggError) {
+        capture(salesAggError, { context: "[agent] getTodaySales" });
+        return { error: "Query failed" };
+      }
 
       const rows = salesAgg ?? [];
       const saleCount = rows.length;
-      const totalAmount = rows.reduce((sum, r) => sum + Number(r.total_amount), 0);
+      const totalAmount = rows.reduce(
+        (sum, r) => sum + Number(r.total_amount),
+        0,
+      );
       const totalPaid = rows.reduce(
         (sum, r) => sum + (r.paid_amount != null ? Number(r.paid_amount) : 0),
         0,
@@ -198,7 +223,10 @@ function getTodaySales(
         )
         .eq("sales.organization_id", orgId)
         .gte("sales.sale_date", dayStart);
-      if (itemsError) { capture(itemsError, { context: '[agent] getTodaySales' }); return { error: 'Query failed' }; }
+      if (itemsError) {
+        capture(itemsError, { context: "[agent] getTodaySales" });
+        return { error: "Query failed" };
+      }
 
       const raw = (items ?? []) as unknown as Array<{
         quantity: number;
@@ -207,7 +235,10 @@ function getTodaySales(
         sales: unknown;
       }>;
 
-      const productMap = new Map<string, { quantity: number; revenue: number }>();
+      const productMap = new Map<
+        string,
+        { quantity: number; revenue: number }
+      >();
       for (const item of raw) {
         const name = item.products?.name ?? "Тодорхойгүй";
         const qty = Number(item.quantity);

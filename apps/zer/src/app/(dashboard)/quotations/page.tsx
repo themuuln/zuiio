@@ -2,8 +2,6 @@ import { withBranchFilter } from "@/lib/branches";
 import { requireAppContext } from "@/lib/erp";
 import { QuotationsContent } from "./quotations-content";
 
-
-
 export type QuotationRow = {
   id: string;
   quote_number: string;

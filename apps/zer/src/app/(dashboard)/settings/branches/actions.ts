@@ -1,8 +1,8 @@
 "use server";
 
 import { requireActionContext } from "@/lib/action-utils";
-import { revalidateEntity } from "@/lib/revalidate";
 import { slugify } from "@/lib/format";
+import { revalidateEntity } from "@/lib/revalidate";
 import { createServiceClient } from "@/lib/supabase/server-service";
 
 /**

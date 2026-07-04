@@ -4,12 +4,12 @@ import {
   TrendDown,
   TrendUp,
 } from "@phosphor-icons/react/dist/ssr";
+import { capture, withDbCapture } from "@zuiio/capture";
 import { addDays, startOfDay } from "date-fns";
 import { PulseCard } from "@/components/dashboard/dashboard-cards";
 import { withBranchFilter } from "@/lib/branches";
 import { formatCurrency } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
-import { capture, withDbCapture } from "@zuiio/capture";
 
 export async function TodayPulse({
   orgId,
@@ -62,8 +62,12 @@ export async function TodayPulse({
       );
       // withDbCapture returns { data, error } but supabase count queries
       // also return count at runtime — preserve it through the cast.
-      return result as unknown as { data: Array<{ id: string }> | null; count: number | null; error: unknown };
-    })()
+      return result as unknown as {
+        data: Array<{ id: string }> | null;
+        count: number | null;
+        error: unknown;
+      };
+    })(),
   ]);
 
   const todaySalesTotal = (salesResult.data ?? []).reduce(

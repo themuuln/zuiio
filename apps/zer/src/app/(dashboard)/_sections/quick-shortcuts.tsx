@@ -6,10 +6,10 @@ import {
   Warehouse,
   Warning,
 } from "@phosphor-icons/react/dist/ssr";
+import { withDbCapture } from "@zuiio/capture";
 import { ShortcutCard } from "@/components/dashboard/dashboard-cards";
 import { formatCurrency } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
-import { withDbCapture } from "@zuiio/capture";
 
 export async function QuickShortcuts({ orgId }: { orgId: string }) {
   const supabase = await createClient();

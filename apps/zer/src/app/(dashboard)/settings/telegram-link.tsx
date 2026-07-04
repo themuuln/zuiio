@@ -1,7 +1,7 @@
 import "server-only";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { TelegramLogo } from "@phosphor-icons/react/dist/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,8 +12,7 @@ import {
 } from "@/components/ui/card";
 import { QrCodeInline } from "./qr-code-inline";
 
-const GATEWAY_URL =
-  process.env.AGENT_GATEWAY_URL ?? "http://localhost:3999";
+const GATEWAY_URL = process.env.AGENT_GATEWAY_URL ?? "http://localhost:3999";
 
 interface TelegramLinkProps {
   organizationId: string;

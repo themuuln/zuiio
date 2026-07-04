@@ -3,8 +3,6 @@ import { requireAppContext } from "@/lib/erp";
 import { PurchasesContent } from "./purchases-content";
 import type { PurchaseRow } from "./purchases-table";
 
-
-
 export default async function PurchasesPage({
   searchParams,
 }: {

@@ -2,11 +2,11 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FileText, Plus } from "@phosphor-icons/react";
+import { capture } from "@zuiio/capture";
 import { useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { capture } from "@zuiio/capture";
 import { createInvoice } from "@/app/(dashboard)/invoices/actions";
 import type { SelectedVariant } from "@/components/products/variant-picker";
 import { buttonVariants } from "@/components/ui/button";
@@ -29,15 +29,15 @@ import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import {
-  LineItemRow,
   computeLineItemsTotal,
+  LineItemRow,
 } from "@/components/ui/line-item-row";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
-import { createClient } from "@/lib/supabase/client";
-import { useVariantLineItemRemove } from "@/lib/use-variant-line-items";
 import { invoiceKeys } from "@/lib/query/keys";
 import { useOptimisticCreate } from "@/lib/query/use-optimistic";
+import { createClient } from "@/lib/supabase/client";
+import { useVariantLineItemRemove } from "@/lib/use-variant-line-items";
 
 type ProductOption = {
   id: string;
@@ -285,7 +285,10 @@ export function InvoiceCreateDrawer({
                     data: { user },
                   } = await supabase.auth.getUser();
                   if (!user) {
-                    capture(new Error("No user found during invoice contact create"), { context: "invoice_create_contact" });
+                    capture(
+                      new Error("No user found during invoice contact create"),
+                      { context: "invoice_create_contact" },
+                    );
                     return;
                   }
                   const { data: profile, error: profileError } = await supabase
@@ -294,11 +297,18 @@ export function InvoiceCreateDrawer({
                     .eq("id", user.id)
                     .single();
                   if (profileError) {
-                    capture(profileError, { context: "invoice_create_contact" });
+                    capture(profileError, {
+                      context: "invoice_create_contact",
+                    });
                     return;
                   }
                   if (!profile?.organization_id) {
-                    capture(new Error("No organization found for user during invoice contact create"), { context: "invoice_create_contact" });
+                    capture(
+                      new Error(
+                        "No organization found for user during invoice contact create",
+                      ),
+                      { context: "invoice_create_contact" },
+                    );
                     return;
                   }
 
@@ -313,7 +323,10 @@ export function InvoiceCreateDrawer({
                     .single();
 
                   if (error || !newContact) {
-                    capture(error || new Error("No contact returned after insert"), { context: "invoice_create_contact" });
+                    capture(
+                      error || new Error("No contact returned after insert"),
+                      { context: "invoice_create_contact" },
+                    );
                     return;
                   }
 

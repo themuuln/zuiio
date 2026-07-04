@@ -1,6 +1,6 @@
-import { capture } from "@zuiio/capture";
 import { createServerClient } from "@supabase/ssr";
 import type { User } from "@supabase/supabase-js";
+import { capture } from "@zuiio/capture";
 import { type NextRequest, NextResponse } from "next/server";
 import { PUBLIC_ROUTES } from "@/lib/constants";
 import { getSupabaseEnv } from "./env";

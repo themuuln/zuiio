@@ -7,6 +7,7 @@ import {
   FilePdf,
   FileXls,
 } from "@phosphor-icons/react/dist/ssr";
+import { capture } from "@zuiio/capture";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -19,7 +20,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { ExportFormat } from "@/lib/export";
 import { formatExtensions } from "@/lib/export";
-import { capture } from "@zuiio/capture";
 
 interface ExportButtonProps {
   /** Base URL of the export endpoint (without format param) */
@@ -60,7 +60,10 @@ export function ExportButton({ href, filename }: ExportButtonProps) {
       const url = `${href}${separator}format=${format}`;
       const response = await fetch(url);
       if (!response.ok) {
-        capture(new Error(`Export failed: ${response.status} ${response.statusText}`), { context: "export button" });
+        capture(
+          new Error(`Export failed: ${response.status} ${response.statusText}`),
+          { context: "export button" },
+        );
         toast.error("Экспорт хийхэд алдаа гарлаа.");
         return;
       }

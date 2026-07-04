@@ -2,8 +2,6 @@ import { withBranchFilter } from "@/lib/branches";
 import { requireAppContext } from "@/lib/erp";
 import { ReturnsContent } from "./returns-content";
 
-
-
 export type ReturnRow = {
   id: string;
   return_number: string;

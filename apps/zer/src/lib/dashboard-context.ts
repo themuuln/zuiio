@@ -1,7 +1,7 @@
-import { cache } from "react";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import { capture } from "@zuiio/capture";
+import { redirect } from "next/navigation";
+import { cache } from "react";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * Per-request cached dashboard auth + profile lookup.

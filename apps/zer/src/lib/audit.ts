@@ -1,8 +1,8 @@
 "use server";
 
+import { capture } from "@zuiio/capture";
 import { requireAppContext } from "@/lib/erp";
 import type { createClient } from "@/lib/supabase/server";
-import { capture } from "@zuiio/capture";
 
 type AuditAction =
   | "created"
@@ -90,6 +90,9 @@ export async function logAuditEventWithClient(
       summary: summary ?? `${action} ${entityType}`,
     });
   } catch {
-    capture({ action, entityType, entityId }, { context: "audit: log event with client" });
+    capture(
+      { action, entityType, entityId },
+      { context: "audit: log event with client" },
+    );
   }
 }

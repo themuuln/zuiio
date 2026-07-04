@@ -2,8 +2,6 @@ import { withBranchFilter } from "@/lib/branches";
 import { requireAppContext } from "@/lib/erp";
 import { DiscountsContent } from "./discounts-content";
 
-
-
 export type DiscountRow = {
   id: string;
   name: string;

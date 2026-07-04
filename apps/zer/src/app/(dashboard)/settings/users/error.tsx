@@ -1,9 +1,9 @@
 "use client";
 
 import { ArrowClockwise, WarningCircle } from "@phosphor-icons/react";
+import { capture } from "@zuiio/capture";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { capture } from "@zuiio/capture";
 
 export default function UsersError({
   error,

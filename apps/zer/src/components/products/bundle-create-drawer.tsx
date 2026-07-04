@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { createBundle } from "@/app/(dashboard)/products/bundles/actions";
 import type { SimpleProductOption } from "@/app/(dashboard)/products/bundles/types";
+import { ProductPicker } from "@/components/products/product-picker";
 import { Button } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import {
@@ -18,7 +19,6 @@ import {
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { ProductPicker } from "@/components/products/product-picker";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import {
   Table,

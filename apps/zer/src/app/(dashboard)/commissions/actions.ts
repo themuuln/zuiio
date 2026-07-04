@@ -1,5 +1,6 @@
 "use server";
 
+import { capture } from "@zuiio/capture";
 import { revalidatePath } from "next/cache";
 import { requireActionContext } from "@/lib/action-utils";
 import { withBranchFilter } from "@/lib/branches";
@@ -11,7 +12,6 @@ import {
 } from "@/lib/commissions";
 import { requireAppContext } from "@/lib/erp";
 import type { Database } from "@/lib/supabase/types";
-import { capture } from "@zuiio/capture";
 
 type SaleItemRow = Database["public"]["Tables"]["sale_items"]["Row"];
 
@@ -56,7 +56,9 @@ export async function getCommissionSummary(
     .eq("organization_id", orgId);
 
   if (profilesError) {
-    capture(profilesError, { context: "commissions: fetch profiles in summary" });
+    capture(profilesError, {
+      context: "commissions: fetch profiles in summary",
+    });
     return [];
   }
 

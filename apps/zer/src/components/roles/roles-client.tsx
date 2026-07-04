@@ -2,12 +2,12 @@
 
 import { Plus, Trash, Users } from "@phosphor-icons/react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { deleteRole } from "@/app/(dashboard)/settings/roles/actions";
 import { PermissionEditor } from "@/components/roles/permission-editor";
 import { RoleForm } from "@/components/roles/role-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 import {
   Card,
   CardContent,

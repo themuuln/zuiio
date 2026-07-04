@@ -50,9 +50,7 @@ export function Hero() {
           {/* Trust indicators — contextual proof */}
           <div className="mt-16 grid gap-x-12 gap-y-6 border-t pt-10 sm:grid-cols-3">
             <div className="text-left">
-              <p className="text-sm font-medium">
-                Барааны бүртгэл автоматжсан
-              </p>
+              <p className="text-sm font-medium">Барааны бүртгэл автоматжсан</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 10,000 гаруй бүтээгдэхүүний нөөц, үнэ, түүхийг нэг дэлгэцээс
                 хянах боломжтой.
@@ -63,8 +61,8 @@ export function Hero() {
                 500+ байгууллага итгэж хэрэглэж байна
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Монголын жижиг дунд бизнес эрхлэгчид Zer-ийг сонгож, өдөр
-                тутмын ажлаа дижитал хэлбэрт шилжүүлсэн.
+                Монголын жижиг дунд бизнес эрхлэгчид Zer-ийг сонгож, өдөр тутмын
+                ажлаа дижитал хэлбэрт шилжүүлсэн.
               </p>
             </div>
             <div className="text-left">

@@ -7,8 +7,6 @@ import { PageShell } from "@/components/erp/page-shell";
 import { requireAppContext } from "@/lib/erp";
 import { checkOrgSetting } from "@/lib/org-settings";
 
-
-
 export type CategoryRow = {
   id: string;
   name: string;

@@ -1,3 +1,4 @@
+import { capture } from "@zuiio/capture";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +12,6 @@ import {
 } from "@/components/ui/table";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
-import { capture } from "@zuiio/capture";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Хүлээгдэж буй",
@@ -48,35 +48,35 @@ export default async function PublicInvoicePage({
       )
       .eq("token", token)
       .single();
-  
+
     if (lookupError) {
       capture(lookupError, { context: "public invoice: lookup" });
       notFound();
     }
-  
+
     if (!invoice) {
       notFound();
     }
-  
+
     const { data: items, error: itemsError } = await supabase
       .from("invoice_items")
       .select(
         "id, description, quantity, unit_price, total_price, products(name, unit)",
       )
       .eq("invoice_id", invoice.id);
-  
+
     if (itemsError) {
       capture(itemsError, { context: "public invoice: items" });
       notFound();
     }
-  
+
     const contact = invoice.contacts as {
       name: string;
       phone: string | null;
       email: string | null;
     } | null;
     const org = invoice.organizations as { name: string } | null;
-  
+
     return (
       <div className="mx-auto max-w-4xl space-y-6 p-6">
         <div className="space-y-2">
@@ -90,7 +90,7 @@ export default async function PublicInvoicePage({
             {STATUS_LABELS[invoice.status ?? ""] ?? invoice.status}
           </Badge>
         </div>
-  
+
         <Card>
           <CardHeader>
             <CardTitle>Бараанууд</CardTitle>
@@ -132,7 +132,7 @@ export default async function PublicInvoicePage({
             </Table>
           </CardContent>
         </Card>
-  
+
         <div className="flex justify-end">
           <div className="w-full max-w-sm space-y-2">
             <div className="flex justify-between border-t pt-2">
@@ -151,7 +151,7 @@ export default async function PublicInvoicePage({
             )}
           </div>
         </div>
-  
+
         {contact && (
           <Card>
             <CardHeader>
@@ -168,7 +168,7 @@ export default async function PublicInvoicePage({
             </CardContent>
           </Card>
         )}
-  
+
         {invoice.notes && (
           <Card>
             <CardHeader>

@@ -1,7 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/lib/supabase/types";
 import { capture } from "@zuiio/capture";
+import type { Database } from "@/lib/supabase/types";
 
 export type SupabaseDb = SupabaseClient<Database>;
 
@@ -76,7 +76,8 @@ export async function decrementProductStock(
     .eq("organization_id", organizationId)
     .eq("id", productId)
     .single();
-  if (fetchError) capture(fetchError, { context: "[stock-utils] decrementProductStock" });
+  if (fetchError)
+    capture(fetchError, { context: "[stock-utils] decrementProductStock" });
 
   if (!product) return null;
 
@@ -109,7 +110,10 @@ export async function decrementVariantStock(
     .select("id, current_stock")
     .eq("id", variantId)
     .single();
-  if (fetchError) capture(fetchError, { context: "[stock-utils] decrementVariantStock fetch" });
+  if (fetchError)
+    capture(fetchError, {
+      context: "[stock-utils] decrementVariantStock fetch",
+    });
 
   if (!variant) return false;
 
@@ -122,7 +126,8 @@ export async function decrementVariantStock(
     .gte("current_stock", quantity)
     .select("id")
     .maybeSingle();
-  if (error) capture(error, { context: "[stock-utils] decrementVariantStock update" });
+  if (error)
+    capture(error, { context: "[stock-utils] decrementVariantStock update" });
 
   return !!updated;
 }
@@ -142,7 +147,8 @@ export async function incrementProductStock(
     .eq("organization_id", organizationId)
     .eq("id", productId)
     .single();
-  if (fetchError) capture(fetchError, { context: "[stock-utils] incrementProductStock" });
+  if (fetchError)
+    capture(fetchError, { context: "[stock-utils] incrementProductStock" });
 
   if (!product) return false;
 

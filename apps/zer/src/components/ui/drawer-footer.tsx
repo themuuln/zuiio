@@ -14,10 +14,7 @@ export function DrawerFooter({
 }) {
   return (
     <div
-      className={cn(
-        "flex shrink-0 items-center justify-end gap-3",
-        className,
-      )}
+      className={cn("flex shrink-0 items-center justify-end gap-3", className)}
     >
       {children}
     </div>

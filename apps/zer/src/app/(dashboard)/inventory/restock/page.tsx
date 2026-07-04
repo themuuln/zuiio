@@ -8,8 +8,6 @@ import { requireAppContext } from "@/lib/erp";
 import { checkOrgSetting } from "@/lib/org-settings";
 import { RestockContent } from "./restock-content";
 
-
-
 export interface RestockProductRow {
   id: string;
   name: string;

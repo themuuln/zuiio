@@ -1,6 +1,5 @@
-import { ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr";
+import { ClockCounterClockwise, User } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
-import { User } from "@phosphor-icons/react/dist/ssr";
 import {
   Empty,
   EmptyDescription,

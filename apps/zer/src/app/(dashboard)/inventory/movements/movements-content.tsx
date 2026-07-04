@@ -18,8 +18,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 const MOVEMENT_LABELS: Record<string, string> = {
   in: "Орлого",

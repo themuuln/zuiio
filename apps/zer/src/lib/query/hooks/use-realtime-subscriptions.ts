@@ -1,7 +1,6 @@
 "use client";
 
 import { useRealtimeMulti } from "@zuiio/realtime";
-import { createClient } from "@/lib/supabase/client";
 import {
   brandKeys,
   contactKeys,
@@ -10,6 +9,7 @@ import {
   productKeys,
   saleKeys,
 } from "@/lib/query/keys";
+import { createClient } from "@/lib/supabase/client";
 
 /**
  * Sets up Supabase Realtime channels for key entities (products, sales, contacts,

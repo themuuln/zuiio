@@ -3,8 +3,6 @@ import { requireAppContext } from "@/lib/erp";
 import { ExpensesContent } from "./expenses-content";
 import type { ExpenseRow } from "./expenses-table";
 
-
-
 export default async function ExpensesPage({
   searchParams,
 }: {

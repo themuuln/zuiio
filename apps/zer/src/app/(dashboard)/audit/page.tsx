@@ -4,8 +4,6 @@ import { requireAppContext } from "@/lib/erp";
 import { checkOrgSetting } from "@/lib/org-settings";
 import { AuditContent } from "./audit-content";
 
-
-
 export type AuditLogRow = {
   id: string;
   action: string;

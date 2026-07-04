@@ -1,9 +1,9 @@
+import { capture } from "@zuiio/capture";
 import { PageShell } from "@/components/erp/page-shell";
 import { MembersClient } from "@/components/roles/members-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { requireAppContext } from "@/lib/erp";
 import { createServiceClient } from "@/lib/supabase/server-service";
-import { capture } from "@zuiio/capture";
 
 export default async function UsersPage() {
   const { supabase, organizationId, userId, permissions } =
@@ -30,7 +30,9 @@ export default async function UsersPage() {
     ]);
 
   if (profilesResult.status === "rejected") {
-    capture(profilesResult.reason, { context: "settings users: profiles query" });
+    capture(profilesResult.reason, {
+      context: "settings users: profiles query",
+    });
   }
   const profiles =
     profilesResult.status === "fulfilled"

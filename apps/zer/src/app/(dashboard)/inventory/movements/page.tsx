@@ -8,8 +8,6 @@ import { requireAppContext } from "@/lib/erp";
 import { checkOrgSetting } from "@/lib/org-settings";
 import { type MovementRow, MovementsContent } from "./movements-content";
 
-
-
 const PAGE_SIZE = 20;
 
 const VALID_TYPES = new Set(["in", "out", "adjustment"]);

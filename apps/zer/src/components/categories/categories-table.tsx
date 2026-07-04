@@ -14,8 +14,8 @@ import {
 } from "@/components/categories/category-edit-drawer";
 import { DataTable } from "@/components/ui/data-table";
 import { TableActionsCell } from "@/components/ui/table-actions-cell";
-import { categoryKeys } from "@/lib/query/keys";
 import { useDeleteWithConfirm } from "@/hooks/use-delete-with-confirm";
+import { categoryKeys } from "@/lib/query/keys";
 
 function toDetailData(category: CategoryRow): CategoryDetailData {
   return {

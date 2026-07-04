@@ -1,5 +1,6 @@
 "use client";
 
+import { capture } from "@zuiio/capture";
 import { useEffect, useState } from "react";
 import { getStaffList } from "@/app/(dashboard)/shop/actions";
 import {
@@ -10,7 +11,6 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-import { capture } from "@zuiio/capture";
 
 type StaffProfile = {
   id: string;

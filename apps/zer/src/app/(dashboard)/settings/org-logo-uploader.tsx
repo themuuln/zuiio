@@ -2,13 +2,13 @@
 
 import { Spinner, Trash, UploadSimple } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
+import { capture } from "@zuiio/capture";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { compressImage } from "@/lib/compress-image";
 import { createClient } from "@/lib/supabase/client";
 import { updateOrgLogo } from "./actions";
-import { capture } from "@zuiio/capture";
 
 type OrgLogoUploaderProps = {
   logoUrl: string | null;

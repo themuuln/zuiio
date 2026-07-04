@@ -1,10 +1,10 @@
 "use server";
 
+import { capture } from "@zuiio/capture";
 import { requireActionContext } from "@/lib/action-utils";
 import { validateProductInput } from "@/lib/domain-rules";
 import { checkLowStockAndNotify } from "@/lib/notification";
 import { revalidateEntity } from "@/lib/revalidate";
-import { capture } from "@zuiio/capture";
 
 export async function updateProduct(
   _prevState: { error?: string } | undefined,
@@ -215,7 +215,9 @@ export async function updateProduct(
             .insert(assignments);
 
           if (assignError) {
-            capture(assignError, { context: "products: create variant assignments" });
+            capture(assignError, {
+              context: "products: create variant assignments",
+            });
           }
         }
       }

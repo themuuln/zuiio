@@ -10,8 +10,6 @@ import {
   AdjustmentsContent,
 } from "./adjustments-content";
 
-
-
 export default async function AdjustmentsPage() {
   const { supabase, organizationId } = await requireAppContext();
   if (!(await checkOrgSetting(supabase, organizationId, "has_inventory")))

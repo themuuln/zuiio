@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { setRolePermissions } from "@/app/(dashboard)/settings/roles/actions";
 import { Button } from "@/components/ui/button";
 import type { AppPermission } from "@/lib/permissions";
 import { PERMISSION_GROUPS, PERMISSION_LABELS } from "@/lib/permissions";
-import { toast } from "sonner";
 
 interface PermissionEditorProps {
   roleId: string;

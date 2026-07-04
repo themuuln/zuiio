@@ -1,6 +1,5 @@
+import type { ColumnDef } from "@tanstack/react-table";
 import * as React from "react";
-
-import { type ColumnDef } from "@tanstack/react-table";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";

@@ -1,14 +1,14 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
 import { Check, ShoppingCart } from "@phosphor-icons/react";
+import { useCallback, useEffect, useState } from "react";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
 import type { SelectedVariant } from "@/components/products/variant-picker";
 import { VariantPicker } from "@/components/products/variant-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 export type ProductCardProduct = {
   id: string;

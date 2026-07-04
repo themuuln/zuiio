@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { CaretDown, Question } from "@phosphor-icons/react/dist/ssr";
+import { useState } from "react";
 
 const faqs = [
   {
@@ -42,13 +42,7 @@ const faqs = [
   },
 ];
 
-function FAQCard({
-  question,
-  answer,
-}: {
-  question: string;
-  answer: string;
-}) {
+function FAQCard({ question, answer }: { question: string; answer: string }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -102,11 +96,7 @@ export function FAQ() {
 
         <div className="grid gap-4 md:grid-cols-2">
           {faqs.map((faq) => (
-            <FAQCard
-              key={faq.id}
-              question={faq.question}
-              answer={faq.answer}
-            />
+            <FAQCard key={faq.id} question={faq.question} answer={faq.answer} />
           ))}
         </div>
       </div>

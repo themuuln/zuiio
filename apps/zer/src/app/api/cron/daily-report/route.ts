@@ -1,12 +1,12 @@
+import { generateEveningReport } from "@zuiio/ai-agent";
+import { capture } from "@zuiio/capture";
 import { startOfDay, subDays } from "date-fns";
 import { NextResponse } from "next/server";
-import { generateEveningReport } from "@zuiio/ai-agent";
 import { sendDailyReportEmail } from "@/lib/email";
 import { formatCurrency } from "@/lib/format";
 import { sendTelegramNotification } from "@/lib/notification";
 import { getFullReport } from "@/lib/reports";
 import { createServiceClient } from "@/lib/supabase/server-service";
-import { capture } from "@zuiio/capture";
 
 /**
  * Cron job endpoint called by pg_cron via net.http_post.

@@ -26,8 +26,6 @@ import {
 import { requireAppContext } from "@/lib/erp";
 import { formatCurrency, formatDate } from "@/lib/format";
 
-
-
 const MOVEMENT_LABELS: Record<string, string> = {
   in: "Орлого",
   out: "Зарлага",

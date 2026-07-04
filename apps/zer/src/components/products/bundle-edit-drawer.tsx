@@ -6,10 +6,10 @@ import { useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import type { SimpleProductOption } from "@/app/(dashboard)/products/bundles/types";
 import { updateBundle } from "@/app/(dashboard)/products/bundles/actions";
-import { buttonVariants } from "@/components/ui/button";
-import { Button } from "@/components/ui/button";
+import type { SimpleProductOption } from "@/app/(dashboard)/products/bundles/types";
+import { ProductPicker } from "@/components/products/product-picker";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   DrawerCancel,
@@ -20,7 +20,6 @@ import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { ProductPicker } from "@/components/products/product-picker";
 import {
   Table,
   TableBody,

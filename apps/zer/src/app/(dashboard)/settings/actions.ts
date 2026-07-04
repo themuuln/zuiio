@@ -1,10 +1,10 @@
 "use server";
 
+import { capture } from "@zuiio/capture";
 import { redirect } from "next/navigation";
 import { requireActionContext, requireAppContext } from "@/lib/action-utils";
 import { revalidateEntity } from "@/lib/revalidate";
 import { createServiceClient } from "@/lib/supabase/server-service";
-import { capture } from "@zuiio/capture";
 
 export async function updateOrganization(
   _prevState: { error?: string } | undefined,
@@ -394,7 +394,9 @@ export async function importProductPresetsByIds(presetIds: string[]) {
           .select("id")
           .single();
         if (brandErr) {
-          capture(brandErr, { context: "settings preset import: create brand" });
+          capture(brandErr, {
+            context: "settings preset import: create brand",
+          });
           continue;
         }
         brandId = newBrand?.id ?? null;
@@ -426,7 +428,9 @@ export async function importProductPresetsByIds(presetIds: string[]) {
           .select("id")
           .single();
         if (catErr) {
-          capture(catErr, { context: "settings preset import: create category" });
+          capture(catErr, {
+            context: "settings preset import: create category",
+          });
           continue;
         }
         categoryId = newCat?.id ?? null;
@@ -498,7 +502,6 @@ export async function updateProfile(
   revalidateEntity("settings");
   return { success: true as const };
 }
-
 
 // ─── Org Feature Settings ────────────────────────────────────────────
 

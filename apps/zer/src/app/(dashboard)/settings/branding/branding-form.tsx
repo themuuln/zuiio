@@ -2,6 +2,7 @@
 
 import { Check, Spinner, UploadSimple } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
+import { capture } from "@zuiio/capture";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,6 @@ import {
   FONT_OPTIONS,
   getFont,
 } from "@/lib/branding";
-import { capture } from "@zuiio/capture";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { updateBrandConfig } from "./actions";

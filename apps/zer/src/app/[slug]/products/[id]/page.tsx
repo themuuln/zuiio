@@ -1,11 +1,11 @@
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
+import { capture } from "@zuiio/capture";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { getCompanyTypeLabel } from "@/lib/constants";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
-import { capture } from "@zuiio/capture";
 
 type PublicProductData = {
   organization: {
@@ -36,28 +36,28 @@ export default async function PublicProductDetailPage({
 }) {
   const { slug, id } = await params;
   const supabase = await createClient();
-  
+
   try {
     const { data, error } = await supabase.rpc("get_public_product", {
       p_slug: slug,
       p_product_id: id,
     });
-  
+
     if (error) {
       capture(error, { context: "public product detail: rpc" });
       notFound();
     }
-  
+
     if (!data) {
       notFound();
     }
-  
+
     const { organization, product } = data as unknown as PublicProductData;
     const stock = Number(product.current_stock ?? 0);
     const minStock = Number(product.min_stock ?? 0);
     const isLow = stock > 0 && stock <= minStock;
     const isOut = stock <= 0;
-  
+
     return (
       <div className="mx-auto min-h-dvh max-w-3xl space-y-8 p-4 sm:p-6 lg:p-8">
         <Link
@@ -66,7 +66,7 @@ export default async function PublicProductDetailPage({
         >
           <ArrowLeft className="size-4" /> Бараа руу буцах
         </Link>
-  
+
         <div className="space-y-1">
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
             {getCompanyTypeLabel(organization.companyType)} &middot;{" "}
@@ -79,7 +79,7 @@ export default async function PublicProductDetailPage({
             <Badge variant="outline">{product.category_name}</Badge>
           )}
         </div>
-  
+
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-xl border border-border/80 bg-card/80 p-5 shadow-sm">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -94,7 +94,7 @@ export default async function PublicProductDetailPage({
               </p>
             )}
           </div>
-  
+
           <div className="rounded-xl border border-border/80 bg-card/80 p-5 shadow-sm">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Нөөц
@@ -117,7 +117,7 @@ export default async function PublicProductDetailPage({
             )}
           </div>
         </div>
-  
+
         <div className="rounded-xl border border-border/80 bg-card/80 p-5 shadow-sm">
           <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
             Дэлгэрэнгүй
@@ -150,12 +150,14 @@ export default async function PublicProductDetailPage({
             {product.created_at && (
               <>
                 <dt className="text-muted-foreground">Бүртгэсэн</dt>
-                <dd className="font-medium">{formatDate(product.created_at)}</dd>
+                <dd className="font-medium">
+                  {formatDate(product.created_at)}
+                </dd>
               </>
             )}
           </dl>
         </div>
-  
+
         <div className="border-t pt-6 text-center text-xs text-muted-foreground">
           Zer ERP &middot; {organization.name} &middot; Нээлттэй мэдээлэл
         </div>

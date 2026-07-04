@@ -6,11 +6,11 @@
  * `@zuiio/capture` directly — either works).
  */
 
+export type { CaptureContext } from "@zuiio/capture";
 export {
-  setCaptureHandler,
   capture,
   captureDbError,
   captureRedirectLoop,
+  setCaptureHandler,
   withDbCapture,
 } from "@zuiio/capture";
-export type { CaptureContext } from "@zuiio/capture";

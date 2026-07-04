@@ -69,6 +69,73 @@
           }
         }
       }
+    },
+    {
+      "includes": ["e2e/**", "playwright.config.ts", "recipes.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off",
+            "noExplicitAny": "off",
+            "noDebugger": "off",
+            "noTemplateCurlyInString": "off"
+          },
+          "correctness": {
+            "noUnusedVariables": "off",
+            "noUnusedImports": "off",
+            "noUnusedFunctionParameters": "off"
+          },
+          "style": {
+            "noNonNullAssertion": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [".vitepress/**", "docs/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off",
+            "noExplicitAny": "off",
+            "noTemplateCurlyInString": "off"
+          },
+          "correctness": {
+            "noUnusedImports": "off"
+          },
+          "complexity": {
+            "noForEach": "off"
+          },
+          "style": {
+            "useTemplate": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "scripts/**",
+        "sentry.client.config.ts",
+        "sentry.edge.config.ts",
+        "sentry.server.config.ts"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off",
+            "noExplicitAny": "off",
+            "noAssignInExpressions": "off",
+            "noImplicitAnyLet": "off"
+          },
+          "correctness": {
+            "noUnusedImports": "off"
+          },
+          "style": {
+            "noNonNullAssertion": "off",
+            "useNodejsImportProtocol": "off"
+          }
+        }
+      }
     }
   ],
   "assist": {

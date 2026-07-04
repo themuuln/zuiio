@@ -13,7 +13,7 @@ import { withAudit } from "@/state/audit";
 import { createServiceClient } from "@/lib/supabase";
 import { deepSeekConfig, openAiConfig } from "@/lib/env";
 import { sanitizeUserInput } from "@/lib/sanitize";
-import { verifyShortToken } from "@/lib/tokens";
+import { verifyCompactToken } from "@/lib/tokens";
 import { transcribeVoice } from "@/stt/groq";
 
 // ─── Lazy singletons ────────────────────────────────────────────────────────
@@ -523,13 +523,15 @@ async function handleStartCommand(chatId: number, userId: number, text: string):
     return;
   }
 
-  // Verify the short token (DB lookup)
-  const sb = getSupabase();
-  const payload = await verifyShortToken(sb, token);
+  // Verify the compact token (HMAC, stateless, fits 64-char limit)
+  const payload = verifyCompactToken(token);
   if (!payload) {
     await tg.sendMessage(chatId, "❌ Холбох токен буруу эсвэл хугацаа дууссан байна. Дахин QR код уншуулна уу.");
     return;
   }
+
+  const sb = getSupabase();
+
 
 
   try {

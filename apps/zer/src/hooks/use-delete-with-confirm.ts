@@ -1,8 +1,8 @@
 "use client";
 
+import type { QueryKey } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import type { QueryKey } from "@tanstack/react-query";
 
 interface UseDeleteWithConfirmOptions {
   /** The mutation function that performs the delete */

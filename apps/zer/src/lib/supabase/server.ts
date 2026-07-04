@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
+import { withSupabaseConsoleCapture } from "@zuiio/capture";
 import { cookies } from "next/headers";
 import { getSupabaseEnv } from "./env";
-import { withSupabaseConsoleCapture } from "@zuiio/capture";
 import type { Database } from "./types";
 
 export async function createClient() {

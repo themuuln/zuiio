@@ -4,7 +4,6 @@ import { requireActionContext } from "@/lib/action-utils";
 import { revalidateEntity } from "@/lib/revalidate";
 import type { Database } from "@/lib/supabase/types";
 
-
 export async function createEmployee(_prevState: unknown, formData: FormData) {
   const MINIMUM_WAGE = 792_000;
   const ctx = await requireActionContext("settings.manage");
@@ -49,7 +48,8 @@ export async function updateEmployee(_prevState: unknown, formData: FormData) {
 
   const id = formData.get("id")?.toString();
   if (!id) return { error: "Ажилтан тодорхойгүй байна." };
-  const updates: Partial<Database["public"]["Tables"]["employees"]["Update"]> = {};
+  const updates: Partial<Database["public"]["Tables"]["employees"]["Update"]> =
+    {};
   const stringFields = [
     "full_name",
     "position",

@@ -2,8 +2,8 @@
 
 import { randomBytes } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/lib/supabase/types";
 import { capture } from "@zuiio/capture";
+import type { Database } from "@/lib/supabase/types";
 
 /**
  * Creates an invoice from a completed sale.
@@ -31,7 +31,9 @@ export async function createInvoiceFromSale(
       .single();
 
     if (!sale) {
-      capture(new Error(`Invoice generation: sale not found: ${saleId}`), { context: "invoicing: sale lookup" });
+      capture(new Error(`Invoice generation: sale not found: ${saleId}`), {
+        context: "invoicing: sale lookup",
+      });
       return null;
     }
 
@@ -42,7 +44,9 @@ export async function createInvoiceFromSale(
       .eq("sale_id", saleId);
 
     if (!items || items.length === 0) {
-      capture(new Error(`Invoice generation: no sale items found: ${saleId}`), { context: "invoicing: items lookup" });
+      capture(new Error(`Invoice generation: no sale items found: ${saleId}`), {
+        context: "invoicing: items lookup",
+      });
       return null;
     }
 

@@ -1,9 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { capture } from "@zuiio/capture";
 import { SalesCreateDrawer } from "@/components/sales/sales-create-drawer";
 import { createClient } from "@/lib/supabase/client";
-import { capture } from "@zuiio/capture";
 
 export function QuickCreateSaleWrapper({
   organizationId,
@@ -23,7 +23,8 @@ export function QuickCreateSaleWrapper({
         .eq("organization_id", organizationId)
         .is("deleted_at", null)
         .order("name");
-      if (error) capture(error, { context: "[quick-create-sale] products query" });
+      if (error)
+        capture(error, { context: "[quick-create-sale] products query" });
       return data ?? [];
     },
   });

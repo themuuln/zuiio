@@ -1,7 +1,7 @@
+import { capture } from "@zuiio/capture";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
-import { capture } from "@zuiio/capture";
 
 export type BranchRow = Database["public"]["Tables"]["branches"]["Row"];
 
@@ -36,7 +36,9 @@ export async function getUserBranches(userId: string): Promise<BranchInfo[]> {
     .single();
 
   if (profileError) {
-    capture(profileError, { context: "branches: profile query for branch access" });
+    capture(profileError, {
+      context: "branches: profile query for branch access",
+    });
   }
 
   if (!profile?.organization_id) return [];
@@ -47,7 +49,8 @@ export async function getUserBranches(userId: string): Promise<BranchInfo[]> {
       .select("*")
       .eq("id", profile.branch_id)
       .eq("organization_id", profile.organization_id);
-    if (error) capture(error, { context: "[branches] getUserBranches scoped query" });
+    if (error)
+      capture(error, { context: "[branches] getUserBranches scoped query" });
 
     return (data ?? []) as BranchInfo[];
   }
@@ -57,7 +60,8 @@ export async function getUserBranches(userId: string): Promise<BranchInfo[]> {
     .select("*")
     .eq("organization_id", profile.organization_id)
     .order("name");
-  if (error) capture(error, { context: "[branches] getUserBranches org-wide query" });
+  if (error)
+    capture(error, { context: "[branches] getUserBranches org-wide query" });
 
   return (data ?? []) as BranchInfo[];
 }
@@ -90,7 +94,10 @@ export async function getAccessibleBranches(
       .select("*")
       .eq("id", profile.branch_id)
       .eq("organization_id", organizationId);
-    if (error) capture(error, { context: "[branches] getAccessibleBranches scoped query" });
+    if (error)
+      capture(error, {
+        context: "[branches] getAccessibleBranches scoped query",
+      });
 
     return (data ?? []) as BranchInfo[];
   }
@@ -100,7 +107,10 @@ export async function getAccessibleBranches(
     .select("*")
     .eq("organization_id", organizationId)
     .order("name");
-  if (error) capture(error, { context: "[branches] getAccessibleBranches org-wide query" });
+  if (error)
+    capture(error, {
+      context: "[branches] getAccessibleBranches org-wide query",
+    });
 
   return (data ?? []) as BranchInfo[];
 }

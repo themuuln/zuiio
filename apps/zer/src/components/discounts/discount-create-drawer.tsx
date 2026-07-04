@@ -31,9 +31,9 @@ import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { formatRouteDate } from "@/lib/format";
-import { createClient } from "@/lib/supabase/client";
 import { discountKeys } from "@/lib/query/keys";
 import { useOptimisticCreate } from "@/lib/query/use-optimistic";
+import { createClient } from "@/lib/supabase/client";
 
 const discountSchema = z.object({
   name: z.string().min(1, "Нэр шаардлагатай"),

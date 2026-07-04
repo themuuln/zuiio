@@ -319,7 +319,13 @@ export function DashboardShell({
         setSelectedBranchId(urlBranch);
       }
     }
-  }, [isBranchScoped, searchParams, branches, selectedBranchId, setSelectedBranchId]);
+  }, [
+    isBranchScoped,
+    searchParams,
+    branches,
+    selectedBranchId,
+    setSelectedBranchId,
+  ]);
 
   const handleBranchChange = (newId: string) => {
     if (newId === "__create") {

@@ -10,8 +10,6 @@ import {
 } from "@/components/suppliers/suppliers-table";
 import { requireAppContext } from "@/lib/erp";
 
-
-
 export default async function SuppliersPage() {
   const { supabase, organizationId } = await requireAppContext();
 

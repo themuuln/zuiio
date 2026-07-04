@@ -1,9 +1,9 @@
 "use server";
 
+import { capture } from "@zuiio/capture";
 import { requireActionContext } from "@/lib/action-utils";
 import { validateProductInput } from "@/lib/domain-rules";
 import { revalidateEntity } from "@/lib/revalidate";
-import { capture } from "@zuiio/capture";
 
 export async function createProduct(
   _prevState: { error?: string } | undefined,
@@ -116,7 +116,9 @@ export async function createProduct(
             .single();
 
           if (groupError || !dbGroup) {
-            capture(groupError, { context: "products/new: create variant group" });
+            capture(groupError, {
+              context: "products/new: create variant group",
+            });
             continue;
           }
 
@@ -172,7 +174,9 @@ export async function createProduct(
             .insert(assignments);
 
           if (assignError) {
-            capture(assignError, { context: "products/new: create variant assignments" });
+            capture(assignError, {
+              context: "products/new: create variant assignments",
+            });
           }
         }
       }

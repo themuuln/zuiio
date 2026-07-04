@@ -51,12 +51,19 @@ export async function createExpense(
 
   // Post to general ledger (fire-and-forget with error capture)
   try {
-    await postExpenseToJournal(supabase, organizationId, userId, branchId, expense.id, {
-      amount,
-      expense_date: expenseDate,
-      category,
-      description,
-    });
+    await postExpenseToJournal(
+      supabase,
+      organizationId,
+      userId,
+      branchId,
+      expense.id,
+      {
+        amount,
+        expense_date: expenseDate,
+        category,
+        description,
+      },
+    );
   } catch (err) {
     capture(err, { context: "expense: postExpenseToJournal" });
   }

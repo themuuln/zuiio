@@ -1,8 +1,6 @@
 import { requireAppContext } from "@/lib/erp";
 import { AccountingContent } from "./accounting-content";
 
-
-
 export default async function AccountingPage({
   searchParams,
 }: {

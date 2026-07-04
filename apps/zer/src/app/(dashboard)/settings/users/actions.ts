@@ -75,13 +75,11 @@ export async function inviteMember(formData: FormData) {
     }
 
     // Create profile with org membership
-    const { error: profileError } = await ctx.supabase
-      .from("profiles")
-      .insert({
-        id: data.user.id,
-        organization_id: ctx.organizationId,
-        full_name: null,
-      });
+    const { error: profileError } = await ctx.supabase.from("profiles").insert({
+      id: data.user.id,
+      organization_id: ctx.organizationId,
+      full_name: null,
+    });
 
     if (profileError) {
       return {

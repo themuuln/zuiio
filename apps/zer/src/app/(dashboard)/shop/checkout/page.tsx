@@ -11,6 +11,7 @@ import {
   User,
 } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { capture } from "@zuiio/capture";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -40,7 +41,6 @@ import { Separator } from "@/components/ui/separator";
 import { productKeys, saleKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import { capture } from "@zuiio/capture";
 
 type Contact = {
   id: string;
@@ -532,7 +532,10 @@ export default function CheckoutPage() {
           </button>
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-2">
-          <div id="checkout-customer-section" className="rounded-xl border border-border bg-card p-4">
+          <div
+            id="checkout-customer-section"
+            className="rounded-xl border border-border bg-card p-4"
+          >
             <CustomerPicker
               contacts={contacts}
               selectedContactId={selectedContactId}

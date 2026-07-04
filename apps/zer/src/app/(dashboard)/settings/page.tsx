@@ -24,8 +24,8 @@ import { ProfileForm } from "./profile-form";
 import { ReportEmailSettings } from "./report-email-settings";
 import { RolesDrawer } from "./roles-drawer";
 import { SettingsShell } from "./settings-shell";
-import { TelegramLink } from "./telegram-link";
 import { SmtpSettings } from "./smtp-settings";
+import { TelegramLink } from "./telegram-link";
 
 const SUPERADMIN_EMAIL = "zerone.offical@gmail.com";
 

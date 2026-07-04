@@ -1,7 +1,6 @@
 "use server";
 
 import { requireActionContext } from "@/lib/action-utils";
-import { revalidateEntity } from "@/lib/revalidate";
 import {
   type BrandConfig,
   DEFAULT_BRAND_CONFIG,
@@ -9,6 +8,7 @@ import {
   getTheme,
   isValidColorValue,
 } from "@/lib/branding";
+import { revalidateEntity } from "@/lib/revalidate";
 
 export type BrandingState = {
   error?: string;

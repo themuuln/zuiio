@@ -1,9 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { capture } from "@zuiio/capture";
 import { InvoiceCreateDrawer } from "@/components/invoices/invoice-create-drawer";
 import { createClient } from "@/lib/supabase/client";
-import { capture } from "@zuiio/capture";
 
 export function QuickCreateInvoiceWrapper({
   organizationId,
@@ -23,7 +23,8 @@ export function QuickCreateInvoiceWrapper({
         .eq("organization_id", organizationId)
         .eq("type", "customer")
         .order("name");
-      if (error) capture(error, { context: "[quick-create-invoice] contacts query" });
+      if (error)
+        capture(error, { context: "[quick-create-invoice] contacts query" });
       return data ?? [];
     },
   });
@@ -37,7 +38,8 @@ export function QuickCreateInvoiceWrapper({
         .eq("organization_id", organizationId)
         .is("deleted_at", null)
         .order("name");
-      if (error) capture(error, { context: "[quick-create-invoice] products query" });
+      if (error)
+        capture(error, { context: "[quick-create-invoice] products query" });
       return data ?? [];
     },
   });

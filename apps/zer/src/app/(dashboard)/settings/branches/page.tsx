@@ -5,8 +5,6 @@ import { requireAppContext } from "@/lib/erp";
 import { checkOrgSetting } from "@/lib/org-settings";
 import { BranchesContent } from "./branches-content";
 
-
-
 export default async function BranchesPage() {
   const { supabase, organizationId, permissions } = await requireAppContext();
   if (!(await checkOrgSetting(supabase, organizationId, "has_multi_branch")))

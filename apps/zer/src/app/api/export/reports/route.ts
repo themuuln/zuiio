@@ -74,8 +74,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const from =
       searchParams.get("from") ?? new Date().toISOString().slice(0, 10);
-    const to =
-      searchParams.get("to") ?? new Date().toISOString().slice(0, 10);
+    const to = searchParams.get("to") ?? new Date().toISOString().slice(0, 10);
     const formatParam = searchParams.get("format") ?? "csv";
 
     // Validate format

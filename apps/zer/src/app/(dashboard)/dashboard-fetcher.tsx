@@ -1,6 +1,6 @@
 import { type BranchOption, BranchProvider } from "@/lib/branch-context";
-import { FEATURE_KEYS } from "@/lib/constants";
 import { type BrandConfig, generateBrandCSS } from "@/lib/branding";
+import { FEATURE_KEYS } from "@/lib/constants";
 import { getDashboardContext } from "@/lib/dashboard-context";
 import { DashboardShell } from "./dashboard-shell";
 

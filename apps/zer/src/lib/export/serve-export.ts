@@ -101,11 +101,10 @@ export async function serveExportRoute(
       return new Response("Export failed", { status: 500 });
     }
 
-    const rows = (data as Record<string, unknown>[] ?? []).map((row) =>
+    const rows = ((data as Record<string, unknown>[]) ?? []).map((row) =>
       config.mapRow(row),
     );
-    const filename =
-      config.filename ?? `${config.table}-export-${today()}`;
+    const filename = config.filename ?? `${config.table}-export-${today()}`;
 
     return serveEntityExport(
       rows,

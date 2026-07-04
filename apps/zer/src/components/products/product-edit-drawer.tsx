@@ -1,6 +1,5 @@
 "use client";
 
-import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Barcode,
@@ -40,10 +39,14 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { PRESET_CATEGORIES } from "@/lib/constants";
+import {
+  useProductVariants,
+  useVariantGroups,
+} from "@/lib/query/hooks/use-product-variants";
 import { productKeys } from "@/lib/query/keys";
 import { useOptimisticUpdate } from "@/lib/query/use-optimistic";
-import { useProductVariants, useVariantGroups } from "@/lib/query/hooks/use-product-variants";
 
 const CameraScanner = dynamic(
   () => import("@/components/shop/camera-scanner").then((m) => m.CameraScanner),
@@ -246,7 +249,9 @@ export function ProductEditDrawer({
 
   // Load existing variant groups and variant data via TanStack Query
   const { data: groupsData } = useVariantGroups(open ? product.id : undefined);
-  const { data: variantsData } = useProductVariants(open ? product.id : undefined);
+  const { data: variantsData } = useProductVariants(
+    open ? product.id : undefined,
+  );
 
   // Sync variant groups from query data
   useEffect(() => {
@@ -474,9 +479,7 @@ export function ProductEditDrawer({
               </Combobox>
             </Field>
             <Field>
-              <FieldLabel htmlFor="edit-category_name">
-                Ангилал
-              </FieldLabel>
+              <FieldLabel htmlFor="edit-category_name">Ангилал</FieldLabel>
               <Combobox
                 name="category_name"
                 items={categoryItems}
@@ -534,9 +537,7 @@ export function ProductEditDrawer({
                   }[]
                 }
                 value={
-                  (brands ?? []).find(
-                    (b) => b.id === selectedBrandId,
-                  ) ?? null
+                  (brands ?? []).find((b) => b.id === selectedBrandId) ?? null
                 }
                 onValueChange={(
                   next: {
@@ -588,9 +589,7 @@ export function ProductEditDrawer({
 
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="edit-cost_price">
-                Өртөг үнэ
-              </FieldLabel>
+              <FieldLabel htmlFor="edit-cost_price">Өртөг үнэ</FieldLabel>
               <Controller
                 control={control}
                 name="cost_price"
@@ -604,9 +603,7 @@ export function ProductEditDrawer({
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="edit-sale_price">
-                Зарах үнэ
-              </FieldLabel>
+              <FieldLabel htmlFor="edit-sale_price">Зарах үнэ</FieldLabel>
               <Controller
                 control={control}
                 name="sale_price"
@@ -632,9 +629,7 @@ export function ProductEditDrawer({
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="edit-min_stock">
-                Доод үлдэгдэл
-              </FieldLabel>
+              <FieldLabel htmlFor="edit-min_stock">Доод үлдэгдэл</FieldLabel>
               <Input
                 id="edit-min_stock"
                 type="number"
@@ -660,10 +655,7 @@ export function ProductEditDrawer({
           inline
         />
 
-        <VariantSummaryCard
-          groups={variantGroups}
-          variantData={variantData}
-        />
+        <VariantSummaryCard groups={variantGroups} variantData={variantData} />
 
         {editMutation.error ? (
           <div className="rounded-none bg-destructive/10 px-3 py-2 text-sm text-destructive">

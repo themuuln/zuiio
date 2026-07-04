@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/server-service";
 import { getSuperadminEmail } from "@/lib/superadmin";
+
 const _SUPERADMIN_EMAIL = process.env.SUPERADMIN_EMAIL;
 
 async function requireSuperadminAction() {

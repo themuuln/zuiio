@@ -1,5 +1,5 @@
-import type { Tool } from "@zuiio/ai-agent";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Tool } from "@zuiio/ai-agent";
 import type { Database } from "@/lib/supabase/types";
 
 interface InventoryItem {
@@ -26,8 +26,7 @@ export function createInventoryTools(
 ): Tool[] {
   const getInventory: Tool = {
     name: "getInventory",
-    description:
-      "Барааны нэрээр хайх. Нөөц, үнэ мэдээллийг буцаана.",
+    description: "Барааны нэрээр хайх. Нөөц, үнэ мэдээллийг буцаана.",
     parameters: [
       {
         name: "query",
@@ -47,7 +46,9 @@ export function createInventoryTools(
 
       let dbQuery = supabase
         .from("products")
-        .select("name, sku, current_stock, min_stock, sale_price, cost_price, unit")
+        .select(
+          "name, sku, current_stock, min_stock, sale_price, cost_price, unit",
+        )
         .eq("organization_id", orgId)
         .is("deleted_at", null)
         .order("name");
@@ -83,7 +84,8 @@ export function createInventoryTools(
 
   const getLowStockItems: Tool = {
     name: "getLowStockItems",
-    description: "Бага нөөцтэй бараануудыг харуулах (current_stock <= min_stock).",
+    description:
+      "Бага нөөцтэй бараануудыг харуулах (current_stock <= min_stock).",
     parameters: [],
     execute: async () => {
       const { data, error } = await supabase

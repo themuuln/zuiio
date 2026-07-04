@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/lib/supabase/types";
 import { capture } from "@zuiio/capture";
+import type { Database } from "@/lib/supabase/types";
 
 // ─── Public Types ─────────────────────────────────────────────────────
 
@@ -94,7 +94,10 @@ export async function getFinancialSummary(
         .lte("sale_date", dateTo)
         .neq("status", "cancelled")
         .then((result) => {
-          if (result.error) capture(result.error, { context: "[reports] getFinancialSummary sales" });
+          if (result.error)
+            capture(result.error, {
+              context: "[reports] getFinancialSummary sales",
+            });
           return result;
         }),
       supabase
@@ -104,7 +107,10 @@ export async function getFinancialSummary(
         .gte("expense_date", dateFrom)
         .lte("expense_date", dateTo)
         .then((result) => {
-          if (result.error) capture(result.error, { context: "[reports] getFinancialSummary expenses" });
+          if (result.error)
+            capture(result.error, {
+              context: "[reports] getFinancialSummary expenses",
+            });
           return result;
         }),
       supabase
@@ -117,7 +123,10 @@ export async function getFinancialSummary(
         .lte("sales.sale_date", dateTo)
         .neq("sales.status", "cancelled")
         .then((result) => {
-          if (result.error) capture(result.error, { context: "[reports] getFinancialSummary sale_items" });
+          if (result.error)
+            capture(result.error, {
+              context: "[reports] getFinancialSummary sale_items",
+            });
           return result;
         }),
     ]);
@@ -164,7 +173,8 @@ export async function getProductSalesBreakdown(
     .gte("sales.sale_date", dateFrom)
     .lte("sales.sale_date", dateTo)
     .neq("sales.status", "cancelled");
-  if (error) capture(error, { context: "[reports] getProductSalesBreakdown items" });
+  if (error)
+    capture(error, { context: "[reports] getProductSalesBreakdown items" });
 
   const rawItems = (items ?? []) as unknown as SaleItemForProductSales[];
 
@@ -222,7 +232,10 @@ export async function getExpenseBreakdownByCategory(
     .eq("organization_id", organizationId)
     .gte("expense_date", dateFrom)
     .lte("expense_date", dateTo);
-  if (error) capture(error, { context: "[reports] getExpenseBreakdownByCategory expenses" });
+  if (error)
+    capture(error, {
+      context: "[reports] getExpenseBreakdownByCategory expenses",
+    });
 
   const raw = expenses ?? [];
   const categoryMap = new Map<string, { count: number; total: number }>();
@@ -262,7 +275,8 @@ export async function getStockMovementsSummary(
     .eq("organization_id", organizationId)
     .gte("created_at", dateFrom)
     .lte("created_at", dateTo);
-  if (error) capture(error, { context: "[reports] getStockMovementsSummary movements" });
+  if (error)
+    capture(error, { context: "[reports] getStockMovementsSummary movements" });
 
   const raw = movements ?? [];
   const summary: StockMovementsSummary = { in: 0, out: 0, adjustment: 0 };
@@ -338,7 +352,10 @@ export async function getCommissionSummaryReport(
     .neq("sales.status", "cancelled")
     .not("sales.salesperson_id", "is", null)
     .gt("commission_amount", 0);
-  if (error) capture(error, { context: "[reports] getCommissionSummaryReport commissionItems" });
+  if (error)
+    capture(error, {
+      context: "[reports] getCommissionSummaryReport commissionItems",
+    });
 
   if (!commissionItems || commissionItems.length === 0) {
     return { totalEarned: 0, totalPaid: 0, totalUnpaid: 0, staffBreakdown: [] };
@@ -382,14 +399,20 @@ export async function getCommissionSummaryReport(
       .from("commission_payout_items")
       .select("sale_item_id, commission_amount")
       .in("sale_item_id", allItemIds);
-    if (payoutError) capture(payoutError, { context: "[reports] getCommissionSummaryReport payoutItems" });
+    if (payoutError)
+      capture(payoutError, {
+        context: "[reports] getCommissionSummaryReport payoutItems",
+      });
 
     // Step 2: Fetch sale_items joined with sales to get the salesperson_id mapping
     const { data: saleItemStaff, error: staffError } = await supabase
       .from("sale_items")
       .select("id, sales!inner(salesperson_id)")
       .in("id", allItemIds);
-    if (staffError) capture(staffError, { context: "[reports] getCommissionSummaryReport saleItemStaff" });
+    if (staffError)
+      capture(staffError, {
+        context: "[reports] getCommissionSummaryReport saleItemStaff",
+      });
 
     if (payoutItems && saleItemStaff) {
       // Build sale_item_id -> salesperson_id mapping

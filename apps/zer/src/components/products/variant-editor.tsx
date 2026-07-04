@@ -9,6 +9,7 @@ import {
   Trash,
   X,
 } from "@phosphor-icons/react";
+import { capture } from "@zuiio/capture";
 import { useCallback, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -21,7 +22,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/format";
 
-import { capture } from "@zuiio/capture";
 function formatNum(v: string | number | null | undefined): string {
   if (v === "" || v === null || v === undefined) return "";
   const n = typeof v === "string" ? parseFloat(v) : v;

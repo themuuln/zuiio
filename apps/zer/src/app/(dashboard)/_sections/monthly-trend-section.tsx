@@ -1,8 +1,8 @@
 import { withDbCapture } from "@zuiio/capture";
 import { addDays, startOfDay, subDays } from "date-fns";
+import { MonthlyTrendChart } from "@/components/dashboard/monthly-trend-chart-dynamic";
 import { withBranchFilter } from "@/lib/branches";
 import { createClient } from "@/lib/supabase/server";
-import { MonthlyTrendChart } from "@/components/dashboard/monthly-trend-chart-dynamic";
 import type { DashboardData } from "../dashboard-client";
 
 export async function MonthlyTrendSection({

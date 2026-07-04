@@ -25,9 +25,9 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { formatCurrency, formatRouteDate } from "@/lib/format";
-import { useVariantLineItemRemove } from "@/lib/use-variant-line-items";
 import { returnKeys } from "@/lib/query/keys";
 import { useOptimisticCreate } from "@/lib/query/use-optimistic";
+import { useVariantLineItemRemove } from "@/lib/use-variant-line-items";
 
 const lineItemSchema = z.object({
   product_id: z.string().min(1, "Бараа сонгоно уу"),

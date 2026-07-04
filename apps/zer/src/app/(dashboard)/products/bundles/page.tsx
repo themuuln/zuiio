@@ -10,8 +10,6 @@ import type { BundleRow, SimpleProductOption } from "./types";
 
 export type { BundleRow, SimpleProductOption };
 
-
-
 export default async function BundlesPage() {
   const { supabase, organizationId } = await requireAppContext();
 

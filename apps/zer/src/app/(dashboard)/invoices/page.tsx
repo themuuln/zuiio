@@ -2,8 +2,6 @@ import { withBranchFilter } from "@/lib/branches";
 import { requireAppContext } from "@/lib/erp";
 import { InvoicesContent } from "./invoices-content";
 
-
-
 export default async function InvoicesPage({
   searchParams,
 }: {
