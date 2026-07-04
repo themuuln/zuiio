@@ -77,7 +77,9 @@ export function BayCardFooter({
       label: "Complete",
     },
   ];
-  const targetStatus = statusButtonTarget[workOrder.status];
+  const targetStatus = statusActions.find(
+    (a) => a.status === workOrder.status,
+  )?.targetStatus;
   const btnBg = targetStatus ? STATUS_BTN_SOLID[targetStatus] : "";
 
   return (
@@ -107,7 +109,6 @@ export function BayCardFooter({
       <div className="ml-auto flex items-center gap-1">
         <DropdownMenu>
           <DropdownMenuTrigger
-            nativeButton={false}
             onClick={(e) => e.stopPropagation()}
             render={
               <Button

@@ -1,6 +1,8 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { useOrgMutation } from "@zuiio/query";
+import { createOrgQuery } from "@/lib/queries/factory";
 import {
   Car,
   ChevronDown,
@@ -11,7 +13,6 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 import { ExportButton } from "@/components/export-button";
 import { ListToolbar } from "@/components/list-toolbar";
 import {
@@ -57,6 +58,8 @@ import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { cn } from "@/lib/utils";
 import { HighlightText } from "@/lib/utils/search-utils";
 import { VehicleModelFormSheet } from "./_vehicle-model-form-drawer";
+
+const fetchVehicleModels = createOrgQuery<VehicleModelItem[]>("/vehicle-models");
 
 interface VehicleModelItem {
   id: string;
@@ -141,12 +144,7 @@ export default function VehicleModelsPage() {
     refetch,
   } = useQuery({
     queryKey: vehicleModelKeys.list(orgId ?? ""),
-    queryFn: async () => {
-      const r = await fetch(`/api/organizations/${orgId}/vehicle-models`);
-      const d = await r.json();
-      if (d.error) throw new Error(d.error.message);
-      return (d.data ?? []) as VehicleModelItem[];
-    },
+    queryFn: () => fetchVehicleModels(orgId ?? ""),
     enabled: !!orgId,
     staleTime: 5 * 60_000,
   });
@@ -161,7 +159,6 @@ export default function VehicleModelsPage() {
     Record<string, Set<string>>
   >({});
 
-  const queryClient = useQueryClient();
 
   // ── Sheet state ────────────────────────────────────────────────
 
@@ -175,50 +172,17 @@ export default function VehicleModelsPage() {
 
   // ── Delete mutation ────────────────────────────────────────────
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const r = await fetch(
-        `/api/organizations/${orgId}/vehicle-models/${id}`,
-        { method: "DELETE" },
-      );
-      const d = await r.json();
-      if (d.error) throw new Error(d.error.message);
-    },
-    onMutate: async (id) => {
-      await queryClient.cancelQueries({
-        queryKey: vehicleModelKeys.list(orgId ?? ""),
-      });
-      const previous = queryClient.getQueryData<VehicleModelItem[]>(
-        vehicleModelKeys.list(orgId ?? ""),
-      );
-      queryClient.setQueryData<VehicleModelItem[]>(
-        vehicleModelKeys.list(orgId ?? ""),
-        (old) => (old ?? []).filter((item) => item.id !== id),
-      );
-      return { previous };
-    },
-    onError: (_err, _vars, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(
-          vehicleModelKeys.list(orgId ?? ""),
-          context.previous,
-        );
-      }
-      toast.error(_err instanceof Error ? _err.message : t("deleteFailed"));
-    },
-    onSuccess: () => toast.success(t("vehicleDeleted")),
-    onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: vehicleModelKeys.list(orgId ?? ""),
-      });
-    },
+  const deleteMutation = useOrgMutation<void, { id: string }>({
+    endpoint: (vars) => `/api/organizations/${orgId}/vehicle-models/${vars.id}`,
+    method: "DELETE",
+    queryKey: ['organizations', orgId, 'vehicle-models'],
+    successMessage: "Model deleted",
+    onSuccess: () => setDeleteItem(null),
   });
 
   const confirmDelete = () => {
     if (!orgId || !deleteItem) return;
-    deleteMutation.mutate(deleteItem.id, {
-      onSettled: () => setDeleteItem(null),
-    });
+    deleteMutation.mutate({ id: deleteItem.id });
   };
 
   // ── Tree expansion helpers ────────────────────────────────────

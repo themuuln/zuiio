@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import { closeDay, getDayCloseStatus } from "@/lib/services/day-close-service";
 
@@ -8,7 +8,7 @@ export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
     searchParams.get("date") ?? new Date().toISOString().split("T")[0];
 
   const status = await getDayCloseStatus(supabase, orgId, date);
-  return NextResponse.json({ data: status });
+  return ok(status);
 });
 
 export const POST = createRouteHandler(
@@ -18,6 +18,6 @@ export const POST = createRouteHandler(
     const userId = user.id;
 
     const result = await closeDay(supabase, orgId, userId, date);
-    return NextResponse.json({ data: result });
+  return ok(result);
   },
 );

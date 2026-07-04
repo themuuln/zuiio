@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { apiError, ok } from "@/lib/api-response";
 import {
   checkAdminRole,
   createCampaign,
@@ -9,33 +9,17 @@ import {
 export const GET = createRouteHandler(async ({ supabase }) => {
   const hasAccess = await checkAdminRole(supabase, "marketing_manager");
   if (!hasAccess) {
-    return NextResponse.json(
-      {
-        error: {
-          code: "FORBIDDEN",
-          message: "Marketing manager access required",
-        },
-      },
-      { status: 403 },
-    );
+    return apiError("FORBIDDEN", "Marketing manager access required", 403);
   }
 
   const campaigns = await listCampaigns(supabase);
-  return NextResponse.json({ data: campaigns });
+  return ok(campaigns);
 });
 
 export const POST = createRouteHandler(async ({ supabase, request }) => {
   const hasAccess = await checkAdminRole(supabase, "marketing_manager");
   if (!hasAccess) {
-    return NextResponse.json(
-      {
-        error: {
-          code: "FORBIDDEN",
-          message: "Marketing manager access required",
-        },
-      },
-      { status: 403 },
-    );
+    return apiError("FORBIDDEN", "Marketing manager access required", 403);
   }
 
   const body = (await request.json()) as {
@@ -45,15 +29,7 @@ export const POST = createRouteHandler(async ({ supabase, request }) => {
   };
 
   if (!body.name || !body.type) {
-    return NextResponse.json(
-      {
-        error: {
-          code: "VALIDATION_ERROR",
-          message: "name and type are required",
-        },
-      },
-      { status: 400 },
-    );
+    return apiError("VALIDATION_ERROR", "name and type are required", 400);
   }
 
   // Get current admin user ID
@@ -69,5 +45,5 @@ export const POST = createRouteHandler(async ({ supabase, request }) => {
     created_by: adminUser?.id,
   });
 
-  return NextResponse.json({ data: campaign });
+  return ok(campaign);
 });

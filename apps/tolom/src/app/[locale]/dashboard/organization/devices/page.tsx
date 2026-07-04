@@ -2,8 +2,7 @@
 
 import { Smartphone, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
+import { useState } from "react";
 import { DeviceRegistrationDialog } from "@/components/bay-view-v2/device-registration-dialog";
 import {
   AlertDialog,
@@ -33,21 +32,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Typography } from "@/components/ui/typography";
+import { useDeleteClockDevice } from "@/lib/queries/use-clock-devices";
+import { useClockDevices } from "@/lib/queries/use-clock-devices";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-
-// ── Types ───────────────────────────────────────────────────
-
-interface DeviceInfo {
-  deviceId: string;
-  mechanicId: string;
-  mechanicName: string | null;
-  deviceName: string | null;
-  deviceFingerprint: string;
-  lastUsedAt: string | null;
-  createdAt: string;
-  revokedAt: string | null;
-  isActive: boolean;
-}
 
 // ── Page ─────────────────────────────────────────────────────────
 
@@ -56,53 +43,25 @@ export default function DevicesPage() {
   const { data: orgInfo } = useCurrentOrg();
   const orgId = orgInfo?.orgId ?? "";
 
-  const [devices, setDevices] = useState<DeviceInfo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: devices = [],
+    isLoading,
+    error,
+    refetch,
+  } = useClockDevices(orgId);
+
+  const deleteDevice = useDeleteClockDevice(orgId);
+
   const [showRegisterDialog, setShowRegisterDialog] = useState(false);
   const [revokingId, setRevokingId] = useState<string | null>(null);
-  const [revoking, setRevoking] = useState(false);
-
-  const loadDevices = useCallback(async () => {
-    if (!orgId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/organizations/${orgId}/clock/devices`);
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      setDevices(json.data ?? []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load devices");
-    } finally {
-      setLoading(false);
-    }
-  }, [orgId]);
-
-  useEffect(() => {
-    loadDevices();
-  }, [loadDevices]);
 
   const handleRevoke = async () => {
     if (!revokingId) return;
-    setRevoking(true);
     try {
-      const res = await fetch(`/api/organizations/${orgId}/clock/devices`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceId: revokingId }),
-      });
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      toast.success(t("deviceManagement.revoked"));
+      await deleteDevice.mutateAsync({ deviceId: revokingId });
       setRevokingId(null);
-      loadDevices();
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : t("common.somethingWentWrong"),
-      );
-    } finally {
-      setRevoking(false);
+    } catch {
+      // Toast handled by useOrgMutation
     }
   };
 
@@ -113,7 +72,7 @@ export default function DevicesPage() {
 
   // ── Loading state ───────────────────────────────────────────
 
-  if (loading && devices.length === 0) {
+  if (isLoading && devices.length === 0) {
     return (
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
@@ -156,9 +115,9 @@ export default function DevicesPage() {
         </div>
         <div className="rounded-lg border p-6">
           <Typography.Text className="text-destructive">
-            {error}
+            {error.message}
           </Typography.Text>
-          <Button onClick={loadDevices} variant="outline" className="mt-4">
+          <Button onClick={() => refetch()} variant="outline" className="mt-4">
             {t("common.retry")}
           </Button>
         </div>
@@ -186,7 +145,7 @@ export default function DevicesPage() {
       </div>
 
       {/* Empty state */}
-      {!loading && devices.length === 0 && (
+      {!isLoading && devices.length === 0 && (
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
@@ -279,15 +238,17 @@ export default function DevicesPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={revoking}>
+            <AlertDialogCancel disabled={deleteDevice.isPending}>
               {t("common.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              disabled={revoking}
+              disabled={deleteDevice.isPending}
               onClick={handleRevoke}
             >
-              {revoking ? t("common.saving") : t("deviceManagement.revoke")}
+              {deleteDevice.isPending
+                ? t("common.saving")
+                : t("deviceManagement.revoke")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

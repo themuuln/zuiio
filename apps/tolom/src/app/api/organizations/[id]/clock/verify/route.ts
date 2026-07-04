@@ -1,15 +1,11 @@
-import { NextResponse } from "next/server";
-import { createRouteHandler } from "@/lib/api-handler";
+import { ok, apiError, createRouteHandler } from "@/lib/api-response"
 import { verifyAndClaimClockToken } from "@/lib/services/qr-token-service";
 
 export const POST = createRouteHandler(
   async ({ request, orgId, user, supabase }) => {
     const body = (await request.json()) as { rawToken: string };
     if (!body.rawToken) {
-      return NextResponse.json(
-        { error: { code: "BAD_REQUEST", message: "rawToken is required" } },
-        { status: 400 },
-      );
+      return apiError("BAD_REQUEST", "rawToken is required", 400);
     }
 
     const verified = await verifyAndClaimClockToken(
@@ -18,15 +14,7 @@ export const POST = createRouteHandler(
       user.id,
     );
     if (!verified.valid) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "INVALID_TOKEN",
-            message: verified.reason ?? "Token is invalid or expired",
-          },
-        },
-        { status: 400 },
-      );
+      return apiError("INVALID_TOKEN", verified.reason ?? "Token is invalid or expired", 400);
     }
 
     // Step 1: Verify only — return direction and mechanic name for phone confirmation
@@ -37,12 +25,10 @@ export const POST = createRouteHandler(
       .eq("id", user.id)
       .single();
 
-    return NextResponse.json({
-      data: {
-        direction: verified.actionType === "clock_in" ? "in" : "out",
-        actionType: verified.actionType,
-        mechanicName: profile?.full_name ?? null,
-      },
+    return ok({
+      direction: verified.actionType === "clock_in" ? "in" : "out",
+      actionType: verified.actionType,
+      mechanicName: profile?.full_name ?? null,
     });
   },
 );

@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { createRouteHandler } from "@/lib/api-handler";
+import { created, apiError, createRouteHandler } from "@/lib/api-response"
 import { registerDevice } from "@/lib/services/qr-token-service";
 
 export const POST = createRouteHandler(
@@ -10,15 +9,7 @@ export const POST = createRouteHandler(
       deviceName?: string;
     };
     if (!body.registrationToken || !body.deviceFingerprint) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "BAD_REQUEST",
-            message: "registrationToken and deviceFingerprint are required",
-          },
-        },
-        { status: 400 },
-      );
+      return apiError("BAD_REQUEST", "registrationToken and deviceFingerprint are required", 400);
     }
 
     const device = await registerDevice(
@@ -28,10 +19,7 @@ export const POST = createRouteHandler(
       body.deviceFingerprint,
       body.deviceName,
     );
-    return NextResponse.json(
-      { data: { deviceId: device.deviceId } },
-      { status: 201 },
-    );
+    return created({ deviceId: device.deviceId });
   },
   { rateLimit: true },
 );

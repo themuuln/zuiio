@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { apiError, created } from "@/lib/api-response";
 import { createPortalRouteHandler } from "@/lib/portal-auth";
 
 /**
@@ -13,15 +13,7 @@ export const POST = createPortalRouteHandler(
 
     // Validate
     if (!body.vehicle_id) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "VALIDATION",
-            message: "Vehicle is required",
-          },
-        },
-        { status: 400 },
-      );
+      return apiError("VALIDATION", "Vehicle is required", 400);
     }
 
     // Create appointment directly (cannot reuse createAppointment which calls getOrgId())
@@ -42,21 +34,13 @@ export const POST = createPortalRouteHandler(
       .single();
 
     if (error) {
-      return NextResponse.json(
-        { error: { code: "ERROR", message: "Failed to create booking" } },
-        { status: 500 },
-      );
+      return apiError("ERROR", "Failed to create booking", 500);
     }
 
-    return NextResponse.json(
-      {
-        data: {
-          id: appointment.id,
-          message:
-            "Booking request submitted. The shop will contact you to confirm.",
-        },
-      },
-      { status: 201 },
-    );
+    return created({
+      id: appointment.id,
+      message:
+        "Booking request submitted. The shop will contact you to confirm.",
+    });
   },
 );

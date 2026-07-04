@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, created } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import { ValidationError } from "@/lib/errors";
 import {
@@ -13,7 +13,7 @@ export const GET = createRouteHandler(
     const { searchParams } = new URL(request.url);
     const status = (searchParams.get("status") as InvoiceStatus) ?? undefined;
     const invoices = await getInvoices(supabase, orgId, { status });
-    return NextResponse.json({ data: invoices });
+    return ok(invoices);
   },
   { requiredPermission: { resource: "invoices", action: "read" } },
 );
@@ -30,7 +30,7 @@ export const POST = createRouteHandler(
         body,
         user.id,
       );
-      return NextResponse.json({ data: invoice }, { status: 201 });
+      return created(invoice);
     }
 
     // Work-order-based invoice
@@ -50,7 +50,7 @@ export const POST = createRouteHandler(
         userId: user.id,
       },
     );
-    return NextResponse.json({ data: invoice }, { status: 201 });
+    return created(invoice);
   },
   {
     rateLimit: true,

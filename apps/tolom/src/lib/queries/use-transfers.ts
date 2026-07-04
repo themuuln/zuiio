@@ -42,6 +42,7 @@ export function useTransfers(
       });
     },
     enabled: !!orgId,
+    staleTime: 30_000,
   });
 }
 
@@ -56,6 +57,7 @@ export function useTransfer(
       return fetchTransfer(orgId, { params: undefined });
     },
     enabled: !!orgId && !!transferId,
+    staleTime: 30_000,
   });
 }
 

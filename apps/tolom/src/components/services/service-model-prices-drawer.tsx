@@ -402,32 +402,31 @@ export function ServiceModelPricesSheet({
                           min={0}
                           placeholder={String(defaultPrice)}
                           value={Number(value) || 0}
-                          onChange={(val) => handlePriceChange(vm.id, String(val))}
+                          onChange={(val) =>
+                            handlePriceChange(vm.id, String(val))
+                          }
                           className={`h-8 w-24 tabular-nums ${
                             isChanged ? "border-primary" : ""
                           }`}
                           size="sm"
                         />
-                          {hasExisting && !isChanged && (
-                            <Button
-                              variant="ghost"
-                              size="icon-xs"
-                              onClick={() => {
-                                setLocalPrices((prev) => ({
-                                  ...prev,
-                                  [vm.id]: "",
-                                }));
-                                setChangedIds((prev) =>
-                                  new Set(prev).add(vm.id),
-                                );
-                              }}
-                              aria-label={t("resetToDefault")}
-                              title={t("resetToDefaultTitle")}
-                            >
-                              <Trash2 className="size-3.5 text-destructive" />
-                            </Button>
-                          )}
-                        </div>
+                        {hasExisting && !isChanged && (
+                          <Button
+                            variant="ghost"
+                            size="icon-xs"
+                            onClick={() => {
+                              setLocalPrices((prev) => ({
+                                ...prev,
+                                [vm.id]: "",
+                              }));
+                              setChangedIds((prev) => new Set(prev).add(vm.id));
+                            }}
+                            aria-label={t("resetToDefault")}
+                            title={t("resetToDefaultTitle")}
+                          >
+                            <Trash2 className="size-3.5 text-destructive" />
+                          </Button>
+                        )}
                       </div>
                     );
                   })}

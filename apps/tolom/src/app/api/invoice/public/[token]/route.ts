@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSimpleRouteHandler } from "@/lib/api-handler";
+import { ok } from "@/lib/api-response";
 
 /**
  * Public invoice endpoint — requires auth.
@@ -19,8 +20,5 @@ export const GET = createSimpleRouteHandler(async ({ request, supabase }) => {
       { status: 404 },
     );
   }
-
-  return NextResponse.json({
-    data: invoice,
-  });
+  return ok(invoice);
 });

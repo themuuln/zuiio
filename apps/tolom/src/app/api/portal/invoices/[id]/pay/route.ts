@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api-response";
 import { createPortalRouteHandler } from "@/lib/portal-auth";
 import { recordPayment } from "@/lib/services/invoice-service";
 
@@ -8,14 +9,10 @@ export const POST = createPortalRouteHandler(
     const { invoiceId } = body;
 
     if (!invoiceId || !body.amount) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "Invoice ID and amount are required",
-          },
-        },
-        { status: 400 },
+      return apiError(
+        "VALIDATION_ERROR",
+        "Invoice ID and amount are required",
+        400,
       );
     }
 
@@ -28,35 +25,20 @@ export const POST = createPortalRouteHandler(
       .single();
 
     if (!invoice) {
-      return NextResponse.json(
-        { error: { code: "NOT_FOUND", message: "Invoice not found" } },
-        { status: 404 },
-      );
+      return apiError("NOT_FOUND", "Invoice not found", 404);
     }
 
     // Verify the invoice belongs to this customer
     if (invoice.customer_id !== customer.id) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "FORBIDDEN",
-            message: "Invoice does not belong to you",
-          },
-        },
-        { status: 403 },
-      );
+      return apiError("FORBIDDEN", "Invoice does not belong to you", 403);
     }
 
     // Verify invoice is payable
     if (invoice.status === "paid" || invoice.status === "cancelled") {
-      return NextResponse.json(
-        {
-          error: {
-            code: "INVALID_STATE",
-            message: "This invoice is already paid or cancelled",
-          },
-        },
-        { status: 400 },
+      return apiError(
+        "INVALID_STATE",
+        "This invoice is already paid or cancelled",
+        400,
       );
     }
 

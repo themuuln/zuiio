@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import { receivePurchaseOrder } from "@/lib/services/purchase-order-service";
 
@@ -9,7 +9,7 @@ export const POST = createRouteHandler(
       params.purchaseOrderId,
       orgId,
     );
-    return NextResponse.json({ data: po });
+    return ok(po);
   },
   { rateLimit: true, subscription: true },
 );

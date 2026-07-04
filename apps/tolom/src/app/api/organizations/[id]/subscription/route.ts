@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import { ValidationError } from "@/lib/errors";
 import {
@@ -10,7 +10,7 @@ import {
 
 export const GET = createRouteHandler(async ({ orgId, supabase }) => {
   const subscription = await getOrganizationSubscription(supabase, orgId);
-  return NextResponse.json({ data: subscription });
+  return ok(subscription);
 });
 
 export const PATCH = createRouteHandler(
@@ -19,12 +19,12 @@ export const PATCH = createRouteHandler(
 
     if (body.action === "start-trial") {
       const subscription = await createSubscription(supabase, orgId);
-      return NextResponse.json({ data: subscription });
+      return ok(subscription);
     }
 
     if (body.action === "renew") {
       const subscription = await renewSubscription(supabase, orgId);
-      return NextResponse.json({ data: subscription });
+      return ok(subscription);
     }
 
     if (!body.planType) {
@@ -32,7 +32,7 @@ export const PATCH = createRouteHandler(
     }
 
     const subscription = await updateSubscription(supabase, orgId, body);
-    return NextResponse.json({ data: subscription });
+    return ok(subscription);
   },
   { rateLimit: true },
 );

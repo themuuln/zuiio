@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import { ForbiddenError, ValidationError } from "@/lib/errors";
 import {
@@ -135,7 +135,7 @@ export const GET = createRouteHandler(
 
     if (type === "mechanics") {
       const mechanics = await getMechanicsList(supabase, orgId, branchId);
-      return NextResponse.json({ data: mechanics });
+      return ok(mechanics);
     }
 
     if (type === "dashboard") {
@@ -149,7 +149,7 @@ export const GET = createRouteHandler(
           dateTo: dateToParam,
           branchId,
         });
-        return NextResponse.json({ data: dashboard });
+        return ok(dashboard);
       }
 
       // Backward compat with period string
@@ -162,7 +162,7 @@ export const GET = createRouteHandler(
         period,
         branchId,
       );
-      return NextResponse.json({ data: dashboard });
+      return ok(dashboard);
     }
 
     const mid = effectiveMid;
@@ -176,7 +176,7 @@ export const GET = createRouteHandler(
           date,
           branchId,
         );
-        return NextResponse.json({ data: report });
+        return ok(report);
       }
       case "custom": {
         const report = await getCustomReport(
@@ -187,7 +187,7 @@ export const GET = createRouteHandler(
           dateTo,
           branchId,
         );
-        return NextResponse.json({ data: report });
+        return ok(report);
       }
       case "weekly": {
         const report = await getWeeklyReport(
@@ -197,7 +197,7 @@ export const GET = createRouteHandler(
           date,
           branchId,
         );
-        return NextResponse.json({ data: report });
+        return ok(report);
       }
       case "monthly": {
         const [year, month] = date.split("-").map(Number);
@@ -209,7 +209,7 @@ export const GET = createRouteHandler(
           month,
           branchId,
         );
-        return NextResponse.json({ data: report });
+        return ok(report);
       }
       case "eod": {
         const summary = await getEndOfDaySummary(
@@ -219,11 +219,11 @@ export const GET = createRouteHandler(
           branchId,
           mid || null,
         );
-        return NextResponse.json({ data: summary });
+        return ok(summary);
       }
       case "timeline": {
         const timeline = await getDailyTimeline(supabase, orgId, branchId);
-        return NextResponse.json({ data: timeline });
+        return ok(timeline);
       }
       case "mechanic-trend": {
         if (!effectiveMid) {
@@ -244,7 +244,7 @@ export const GET = createRouteHandler(
           endDate,
           branchId,
         );
-        return NextResponse.json({ data: trend });
+        return ok(trend);
       }
       // ── ERP-Grade endpoints ────────────────────────────────
       case "insights": {
@@ -255,7 +255,7 @@ export const GET = createRouteHandler(
           dateTo,
           branchId,
         );
-        return NextResponse.json({ data: insights });
+        return ok(insights);
       }
       case "forecast": {
         const periodType =
@@ -268,7 +268,7 @@ export const GET = createRouteHandler(
           date,
           branchId,
         );
-        return NextResponse.json({ data: forecast });
+        return ok(forecast);
       }
       case "targets": {
         const periodType =
@@ -281,7 +281,7 @@ export const GET = createRouteHandler(
           date,
           branchId,
         );
-        return NextResponse.json({ data: targets });
+        return ok(targets);
       }
       case "retention": {
         const retention = await getCustomerRetention(
@@ -291,7 +291,7 @@ export const GET = createRouteHandler(
           dateTo,
           branchId,
         );
-        return NextResponse.json({ data: retention });
+        return ok(retention);
       }
       case "pnl": {
         const pnl = await getPnLSummary(
@@ -301,7 +301,7 @@ export const GET = createRouteHandler(
           dateTo,
           branchId,
         );
-        return NextResponse.json({ data: pnl });
+        return ok(pnl);
       }
       case "service-breakdown": {
         const breakdown = await getServiceBreakdown(
@@ -311,7 +311,7 @@ export const GET = createRouteHandler(
           dateTo,
           branchId,
         );
-        return NextResponse.json({ data: breakdown });
+        return ok(breakdown);
       }
       case "branch-comparison": {
         const comparison = await getBranchComparison(
@@ -320,7 +320,7 @@ export const GET = createRouteHandler(
           dateFrom,
           dateTo,
         );
-        return NextResponse.json({ data: comparison });
+        return ok(comparison);
       }
       default:
         throw new ValidationError(
@@ -355,7 +355,7 @@ export const POST = createRouteHandler(
       period_end,
       Number(target_revenue),
     );
-    return NextResponse.json({ data: target });
+    return ok(target);
   },
   { requiredPermission: { resource: "reports", action: "read" } },
 );

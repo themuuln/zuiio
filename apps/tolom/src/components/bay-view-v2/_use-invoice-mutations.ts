@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useOrgMutation } from "@zuiio/query";
+import { bayViewKeys, workOrderKeys } from "@/lib/queries/keys";
 import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
 import {
   getWorkOrderParts,
@@ -18,6 +20,8 @@ import type { PostServiceFormData } from "./_schema";
 interface UseInvoiceMutationsParams {
   workOrderId: string | null;
   orgIdRef: React.MutableRefObject<string | null>;
+  orgId: string | undefined;
+  branchId: string | undefined;
   wo: WorkOrderDetail | null;
   setWo: React.Dispatch<React.SetStateAction<WorkOrderDetail | null>>;
   fetchWo: (silent?: boolean, orgIdOverride?: string) => Promise<void>;
@@ -31,6 +35,8 @@ interface UseInvoiceMutationsParams {
 export function useInvoiceMutations({
   workOrderId,
   orgIdRef,
+  orgId,
+  branchId,
   wo,
   setWo,
   fetchWo,
@@ -72,6 +78,37 @@ export function useInvoiceMutations({
     }>
   >([]);
 
+  // ── Mutation hooks ──
+
+  const createInvoiceMutation = useOrgMutation<
+    { invoice_number: string; public_token: string },
+    { work_order_id: string }
+  >({
+    endpoint: () => `/api/organizations/${orgIdRef.current}/invoices`,
+    method: "POST",
+    queryKey: workOrderKeys.all(orgId ?? ""),
+    invalidateKeys: branchId
+      ? ([bayViewKeys.data(branchId)] as const)
+      : undefined,
+  });
+
+  const statusMutation = useOrgMutation<
+    unknown,
+    { status: string; notes?: string }
+  >({
+    endpoint: (vars) =>
+      `/api/organizations/${orgIdRef.current}/work-orders/${workOrderId}`,
+    method: "PATCH",
+    queryKey: workOrderKeys.all(orgId ?? ""),
+    invalidateKeys: branchId
+      ? ([bayViewKeys.data(branchId)] as const)
+      : undefined,
+    onSuccess: (_data, _vars) => {
+      fetchWo(true);
+      onRefresh();
+    },
+  });
+
   // ── Computed ──
 
   const canInvoice: boolean =
@@ -80,24 +117,17 @@ export function useInvoiceMutations({
   // ── Generate invoice ──
 
   async function generateInvoice() {
-    const orgId = orgIdRef.current;
-    if (!orgId || !workOrderId) return;
+    const orgIdCurrent = orgIdRef.current;
+    if (!orgIdCurrent || !workOrderId) return;
     setCreatingInvoice(true);
     try {
-      const res = await fetch(`/api/organizations/${orgId}/invoices`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ work_order_id: workOrderId }),
+      const result = await createInvoiceMutation.mutateAsync({
+        work_order_id: workOrderId,
       });
-      const json = await res.json();
-      if (json.error) {
-        toast.error(json.error.message);
-      } else {
-        toast.dismiss();
-        toast.success(`Invoice ${json.data.invoice_number} created`);
-        setInvoicePublicToken(json.data.public_token);
-        window.open(`/invoice/${json.data.public_token}`, "_blank");
-      }
+      toast.dismiss();
+      toast.success(`Invoice ${result.invoice_number} created`);
+      setInvoicePublicToken(result.public_token);
+      window.open(`/invoice/${result.public_token}`, "_blank");
     } catch {
       toast.error("Failed to create invoice");
     } finally {
@@ -120,8 +150,8 @@ export function useInvoiceMutations({
       // Use status hook's changeStatus — but we can't call it directly.
       // The barrel orchestrates cross-hook calls; this path fires a status
       // update inlined here so the post-service flow stays self-contained.
-      const orgId = orgIdRef.current;
-      if (!orgId || !workOrderId) return;
+      const orgIdCurrent = orgIdRef.current;
+      if (!orgIdCurrent || !workOrderId) return;
       const prevWo = wo;
       setWo((prev) =>
         prev
@@ -129,30 +159,11 @@ export function useInvoiceMutations({
           : prev,
       );
 
-      fetch(
-        `/api/organizations/${orgId}/work-orders/${workOrderId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "Ready for Pickup" }),
-        },
-      )
-        .then((r) => r.json())
-        .then((json) => {
-          if (json.error) {
-            if (prevWo) setWo(prevWo);
-            toast.error(
-              json.error.message ?? "Failed to update status",
-            );
-          } else {
-            fetchWo(true);
-            onRefresh();
-          }
-        })
-        .catch(() => {
-          if (prevWo) setWo(prevWo);
-          toast.error("Failed to update status");
-        });
+      try {
+        await statusMutation.mutateAsync({ status: "Ready for Pickup" });
+      } catch {
+        if (prevWo) setWo(prevWo);
+      }
     }
   }
 
@@ -178,74 +189,56 @@ export function useInvoiceMutations({
     setPostFormServices([]);
     setPostFormParts([]);
 
-    Promise.all([
-      savePostServiceData({
+    try {
+      await savePostServiceData({
         workOrderId,
         vehicleId: wo.vehicle_id as string,
         odometerReading: data.odometerReading,
         recommendations: data.recommendations,
         mechanicNotes: data.mechanicNotes,
-      }),
-      orgIdRef.current
-        ? fetch(
-            `/api/organizations/${orgIdRef.current}/work-orders/${workOrderId}`,
-            {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                status: "Ready for Pickup",
-                notes: data.mechanicNotes || undefined,
-              }),
-            },
-          ).then((r) => r.json())
-        : Promise.reject(new Error("No org ID")),
-    ])
-      .then(async ([_, statusJson]) => {
-        if (statusJson.error) {
-          if (prevWo) setWo(prevWo);
-          toast.error(
-            statusJson.error.message ?? "Failed to update status",
-          );
-          return;
-        }
-
-        const orgId = orgIdRef.current;
-        const grandTotal =
-          (prevWo?.services?.reduce(
-            (s, svc) => s + Number(svc.final_price),
-            0,
-          ) ?? 0) +
-          (prevWo?.parts?.reduce((s, p) => s + Number(p.final_price), 0) ??
-            0);
-
-        if (orgId && grandTotal > 0) {
-          try {
-            await createInvoiceAndRecordPayment(
-              orgId,
-              workOrderId,
-              data.paymentMethod,
-              paymentMethodFees[data.paymentMethod] ?? 0,
-              transferBanks,
-              data.transferBankId,
-            );
-          } catch (err) {
-            toast.warning(
-              err instanceof Error
-                ? err.message
-                : "Ready — but payment could not be recorded",
-            );
-          }
-        }
-
-        fetchWo(true);
-        toast.dismiss();
-        toast.success("Ready for Pickup — recommendations saved");
-        onRefresh();
-      })
-      .catch(() => {
-        if (prevWo) setWo(prevWo);
-        toast.error("Failed to save post-service data");
       });
+
+      await statusMutation.mutateAsync({
+        status: "Ready for Pickup",
+        notes: data.mechanicNotes || undefined,
+      });
+
+      const orgIdCurrent = orgIdRef.current;
+      const grandTotal =
+        (prevWo?.services?.reduce(
+          (s, svc) => s + Number(svc.final_price),
+          0,
+        ) ?? 0) +
+        (prevWo?.parts?.reduce((s, p) => s + Number(p.final_price), 0) ??
+          0);
+
+      if (orgIdCurrent && grandTotal > 0) {
+        try {
+          await createInvoiceAndRecordPayment(
+            orgIdCurrent,
+            workOrderId,
+            data.paymentMethod,
+            paymentMethodFees[data.paymentMethod] ?? 0,
+            transferBanks,
+            data.transferBankId,
+          );
+        } catch (err) {
+          toast.warning(
+            err instanceof Error
+              ? err.message
+              : "Ready — but payment could not be recorded",
+          );
+        }
+      }
+
+      fetchWo(true);
+      toast.dismiss();
+      toast.success("Ready for Pickup — recommendations saved");
+      onRefresh();
+    } catch {
+      if (prevWo) setWo(prevWo);
+      toast.error("Failed to save post-service data");
+    }
   }
 
   // ── Return ──

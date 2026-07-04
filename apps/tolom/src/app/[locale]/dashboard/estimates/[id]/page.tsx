@@ -1,6 +1,5 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   ArrowRight,
@@ -38,10 +37,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
 import { useRouter } from "@/lib/i18n/navigation";
-import { estimateKeys } from "@/lib/queries/keys";
 import {
   useConvertEstimate,
+  useDuplicateEstimate,
   useEstimateDetail,
+  useSendEstimate,
+  useUpdateEstimate,
   useUpdateEstimateStatus,
 } from "@/lib/queries/use-estimates";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
@@ -123,7 +124,7 @@ export default function EstimateDetailPage() {
   const params = useParams();
   const estimateId = params.id as string;
   const router = useRouter();
-  const queryClient = useQueryClient();
+
   const { data: org } = useCurrentOrg();
   const orgId = org?.orgId;
 
@@ -131,11 +132,11 @@ export default function EstimateDetailPage() {
   const estimate = estimateQuery.data;
   const updateStatus = useUpdateEstimateStatus(orgId);
   const convertEstimate = useConvertEstimate(orgId);
+  const updateEstimate = useUpdateEstimate(orgId);
+  const duplicateEstimateMut = useDuplicateEstimate(orgId);
+  const sendEstimateMut = useSendEstimate(orgId);
 
   const [isEditing, setIsEditing] = useState(false);
-  const [savingEdits, setSavingEdits] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [duplicating, setDuplicating] = useState(false);
   const [editLines, setEditLines] = useState<EditableLine[]>([]);
   const [editDiscountAmount, setEditDiscountAmount] = useState(0);
   const [editDiscountPercent, setEditDiscountPercent] = useState(0);
@@ -199,18 +200,6 @@ export default function EstimateDetailPage() {
     setEditLines((current) => current.filter((line) => line.id !== id));
   };
 
-  const refreshEstimate = async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({
-        queryKey: estimateKeys.detail(orgId ?? "", estimateId),
-      }),
-      queryClient.invalidateQueries({
-        queryKey: estimateKeys.all(orgId ?? ""),
-      }),
-    ]);
-    await estimateQuery.refetch();
-  };
-
   const saveEdits = async () => {
     if (!orgId) return;
     if (editLines.length === 0) {
@@ -222,109 +211,60 @@ export default function EstimateDetailPage() {
       return;
     }
 
-    setSavingEdits(true);
-    try {
-      const res = await fetch(
-        `/api/organizations/${orgId}/estimates/${estimateId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            valid_until: editValidUntil || null,
-            notes: editNotes.trim() || null,
-            terms: editTerms.trim() || null,
-            discount_amount: editDiscountAmount,
-            discount_percentage: editDiscountPercent,
-            tax_total: editTaxTotal,
-            items: editLines.map((line, index) => ({
-              item_type: line.item_type,
-              source_service_id: line.source_service_id ?? null,
-              source_part_id: line.source_part_id ?? null,
-              description: line.description.trim(),
-              quantity: line.quantity,
-              unit_price: line.unit_price,
-              discount_amount: line.discount_amount,
-              discount_percentage: line.discount_percentage,
-              sort_order: index,
-            })),
-          }),
-        },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      setIsEditing(false);
-      toast.success(t("saved"));
-      await refreshEstimate();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("failedToSave"));
-    } finally {
-      setSavingEdits(false);
-    }
+    await updateEstimate.mutateAsync({
+      id: estimateId,
+      valid_until: editValidUntil || null,
+      notes: editNotes.trim() || null,
+      terms: editTerms.trim() || null,
+      discount_amount: editDiscountAmount,
+      discount_percentage: editDiscountPercent,
+      tax_total: editTaxTotal,
+      items: editLines.map((line, index) => ({
+        item_type: line.item_type,
+        source_service_id: line.source_service_id ?? null,
+        source_part_id: line.source_part_id ?? null,
+        description: line.description.trim(),
+        quantity: line.quantity,
+        unit_price: line.unit_price,
+        discount_amount: line.discount_amount,
+        discount_percentage: line.discount_percentage,
+        sort_order: index,
+      })),
+    });
+    setIsEditing(false);
   };
 
   const duplicateEstimate = async () => {
     if (!orgId || !estimate) return;
-    setDuplicating(true);
-    try {
-      const res = await fetch(`/api/organizations/${orgId}/estimates`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customer_id: estimate.customer_id,
-          vehicle_id: estimate.vehicle_id,
-          branchId: estimate.branch_id,
-          status: "draft",
-          valid_until: estimate.valid_until,
-          notes: estimate.notes ?? undefined,
-          terms: estimate.terms ?? undefined,
-          discount_amount: Number(estimate.discount_amount ?? 0),
-          discount_percentage: Number(estimate.discount_percentage ?? 0),
-          tax_total: Number(estimate.tax_total ?? 0),
-          items: (estimate.items ?? []).map((item, index) => ({
-            item_type: item.item_type,
-            source_service_id: item.source_service_id ?? null,
-            source_part_id: item.source_part_id ?? null,
-            description: item.description,
-            quantity: Number(item.quantity ?? 1),
-            unit_price: Number(item.unit_price ?? 0),
-            discount_amount: Number(item.discount_amount ?? 0),
-            discount_percentage: Number(item.discount_percentage ?? 0),
-            sort_order: index,
-          })),
-        }),
-      });
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      toast.success(t("estimateDuplicated"));
-      router.push(`/dashboard/estimates/${json.data.id}`);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : t("failedToDuplicate"),
-      );
-    } finally {
-      setDuplicating(false);
-    }
+    const result = await duplicateEstimateMut.mutateAsync({
+      customer_id: estimate.customer_id,
+      vehicle_id: estimate.vehicle_id,
+      branchId: estimate.branch_id,
+      status: "draft",
+      valid_until: estimate.valid_until,
+      notes: estimate.notes ?? undefined,
+      terms: estimate.terms ?? undefined,
+      discount_amount: Number(estimate.discount_amount ?? 0),
+      discount_percentage: Number(estimate.discount_percentage ?? 0),
+      tax_total: Number(estimate.tax_total ?? 0),
+      items: (estimate.items ?? []).map((item, index) => ({
+        item_type: item.item_type,
+        source_service_id: item.source_service_id ?? null,
+        source_part_id: item.source_part_id ?? null,
+        description: item.description,
+        quantity: Number(item.quantity ?? 1),
+        unit_price: Number(item.unit_price ?? 0),
+        discount_amount: Number(item.discount_amount ?? 0),
+        discount_percentage: Number(item.discount_percentage ?? 0),
+        sort_order: index,
+      })),
+    });
+    router.push(`/dashboard/estimates/${result.id}`);
   };
 
   const sendEstimate = async () => {
     if (!orgId) return;
-    setSending(true);
-    try {
-      const res = await fetch(
-        `/api/organizations/${orgId}/estimates/${estimateId}/send`,
-        {
-          method: "POST",
-        },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      toast.success(t("estimateSent"));
-      await refreshEstimate();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("failedToSend"));
-    } finally {
-      setSending(false);
-    }
+    await sendEstimateMut.mutateAsync({ id: estimateId });
   };
 
   const copyPublicLink = async () => {
@@ -437,8 +377,8 @@ export default function EstimateDetailPage() {
                 <Button variant="outline" onClick={() => setIsEditing(false)}>
                   {t("cancel")}
                 </Button>
-                <Button onClick={saveEdits} disabled={savingEdits}>
-                  {savingEdits ? t("saving") : t("saveChanges")}
+                <Button onClick={saveEdits} disabled={updateEstimate.isPending}>
+                  {updateEstimate.isPending ? t("saving") : t("saveChanges")}
                 </Button>
               </>
             ) : (
@@ -446,7 +386,7 @@ export default function EstimateDetailPage() {
                 <Button
                   variant="outline"
                   onClick={duplicateEstimate}
-                  disabled={duplicating}
+                  disabled={duplicateEstimateMut.isPending}
                 >
                   <Copy className="size-4" />
                   {t("duplicate")}
@@ -885,9 +825,9 @@ export default function EstimateDetailPage() {
                 <div className="flex flex-col gap-2">
                   {estimate.status === "draft" ? (
                     <>
-                      <Button onClick={sendEstimate} disabled={sending}>
+                      <Button onClick={sendEstimate} disabled={sendEstimateMut.isPending}>
                         <Send className="size-4" />
-                        {sending ? t("sending") : t("sendToCustomer")}
+                        {sendEstimateMut.isPending ? t("sending") : t("sendToCustomer")}
                       </Button>
                       <Button
                         variant="outline"

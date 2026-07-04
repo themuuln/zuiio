@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 
@@ -36,7 +37,7 @@ export const PATCH = createRouteHandler(
     if (error) throw error;
     if (!data) throw new NotFoundError("Diagnosis label not found");
 
-    return NextResponse.json({ data });
+    return ok(data);
   },
 );
 

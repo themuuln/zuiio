@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import { approveTransfer } from "@/lib/services/transfer-service";
 
@@ -11,7 +11,7 @@ export const POST = createRouteHandler(
       orgId,
       user.id,
     );
-    return NextResponse.json({ data: transfer });
+    return ok(transfer);
   },
   { requiredPermission: { resource: "inventory", action: "update" } },
 );

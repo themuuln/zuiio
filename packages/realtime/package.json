@@ -6,14 +6,15 @@
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
-  "dependencies": {
+  "peerDependencies": {
     "@tanstack/react-query": "^5.101.2",
-    "react": "^19.2.7"
+    "react": "^19.2.0"
   },
   "devDependencies": {
-    "@zuiio/config": "workspace:*",
-    "@supabase/supabase-js": "^2",
+    "@tanstack/react-query": "^5.101.2",
     "@types/react": "^19",
+    "@zuiio/config": "workspace:*",
+    "react": "^19.2.0",
     "typescript": "^5"
   }
 }

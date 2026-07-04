@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import { publishPartsCarPartsToCatalog } from "@/lib/services/parts-cars-service";
 
@@ -10,7 +10,7 @@ export const POST = createRouteHandler(
       user.id,
       params.carId,
     );
-    return NextResponse.json({ data: result });
+    return ok(result);
   },
   { rateLimit: true, subscription: true },
 );

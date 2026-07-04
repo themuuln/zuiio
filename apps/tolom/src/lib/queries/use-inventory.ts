@@ -103,6 +103,7 @@ export function usePartCategories(orgId: string | undefined) {
       return json.data as { id: string; name: string }[];
     },
     enabled: !!orgId,
+    staleTime: 5 * 60_000,
   });
 }
 
@@ -147,6 +148,7 @@ export function useInventoryMovements(
         },
       }),
     enabled: !!orgId,
+    staleTime: 30_000,
   });
 }
 
@@ -155,6 +157,7 @@ export function useSuppliers(orgId: string | undefined) {
     queryKey: inventoryKeys.suppliers(orgId ?? ""),
     queryFn: () => fetchSuppliers(orgId ?? ""),
     enabled: !!orgId,
+    staleTime: 5 * 60_000,
   });
 }
 
@@ -227,6 +230,7 @@ export function usePartsCar(
     queryKey: inventoryKeys.partsCar(orgId ?? "", carId ?? ""),
     queryFn: () => fetchPartCar(orgId ?? ""),
     enabled: !!orgId && !!carId,
+    staleTime: 30_000,
   });
 }
 
@@ -243,6 +247,7 @@ export function usePartsCarParts(
     queryKey: inventoryKeys.partsCarParts(orgId ?? "", carId ?? ""),
     queryFn: () => fetchCarParts(orgId ?? ""),
     enabled: !!orgId && !!carId,
+    staleTime: 30_000,
   });
 }
 

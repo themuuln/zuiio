@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
   deleteExpenseCategory,
@@ -16,7 +16,7 @@ export const PATCH = createRouteHandler(
       body,
       user.id,
     );
-    return NextResponse.json({ data: category });
+    return ok(category);
   },
   {
     rateLimit: true,
@@ -29,7 +29,7 @@ export const DELETE = createRouteHandler(
   async ({ request, orgId, params, user, supabase }) => {
     const { categoryId } = params;
     await deleteExpenseCategory(supabase, categoryId, orgId, user.id);
-    return NextResponse.json({ data: null });
+    return ok(null);
   },
   {
     rateLimit: true,

@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { sendEstimateEmail } from "@/lib/services/email-service";
+import { ok, apiError } from "@/lib/api-response";
 import {
   getEstimate,
   updateEstimateStatus,
@@ -15,24 +15,12 @@ export const POST = createRouteHandler(
   async ({ params, supabase, orgId }) => {
     const estimate = await getEstimate(supabase, params.estimateId, orgId);
     if (!estimate) {
-      return NextResponse.json(
-        { error: { code: "NOT_FOUND", message: "Estimate not found" } },
-        { status: 404 },
-      );
+      return apiError("NOT_FOUND", "Estimate not found", 404);
     }
 
     if (!estimate.customer?.email) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "NO_EMAIL",
-            message: "Customer has no email address",
-          },
-        },
-        { status: 400 },
-      );
+      return apiError("NO_EMAIL", "Customer has no email address", 400);
     }
-
     // Fetch org info
     const { data: org } = await supabase
       .from("organizations")
@@ -75,7 +63,7 @@ export const POST = createRouteHandler(
       await updateEstimateStatus(supabase, params.estimateId, orgId, "sent");
     }
 
-    return NextResponse.json({ data: { sent: true } });
+    return ok({ sent: true });
   },
   { requiredPermission: { resource: "work_orders", action: "update" } },
 );

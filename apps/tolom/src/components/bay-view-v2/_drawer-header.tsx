@@ -16,6 +16,9 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { MongolianLicensePlate } from "@/components/vehicles/license-plate";
+import { VehicleMakeLogo } from "@/components/vehicles/vehicle-make-logo";
+import { useOrgMutation } from "@zuiio/query";
+import { bayViewKeys, workOrderKeys } from "@/lib/queries/keys";
 import type { WorkOrderDetail } from "@/lib/types";
 import type { MechanicRef } from "@/lib/types/mechanic";
 import { StatusPill } from "./status-pill";
@@ -62,6 +65,34 @@ export function DrawerHeaderSection({
   setShowCustomerPicker,
   t,
 }: DrawerHeaderProps) {
+  // ── Mutation hooks for helper operations ──
+
+  const addHelperMutation = useOrgMutation<
+    unknown,
+    { mechanic_id: string }
+  >({
+    endpoint: () =>
+      `/api/organizations/${orgId}/work-orders/${workOrderId}/helpers`,
+    method: "POST",
+    queryKey: workOrderKeys.all(orgId),
+    onSuccess: () => {
+      onHelpersChange();
+    },
+  });
+
+  const removeHelperMutation = useOrgMutation<
+    unknown,
+    { mechanicId: string }
+  >({
+    endpoint: (vars) =>
+      `/api/organizations/${orgId}/work-orders/${workOrderId}/helpers?mechanicId=${vars.mechanicId}`,
+    method: "DELETE",
+    queryKey: workOrderKeys.all(orgId),
+    onSuccess: () => {
+      onHelpersChange();
+    },
+  });
+
   // Ensure the assigned mechanic is always in the list, even if they
   // don't have the "mechanic" role in organization_users.
   const effectiveMechanics = (() => {
@@ -151,40 +182,28 @@ export function DrawerHeaderSection({
                 }}
                 onAddHelper={async (_woId, mechanicId) => {
                   try {
-                    await fetch(
-                      `/api/organizations/${orgId}/work-orders/${workOrderId}/helpers`,
-                      {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ mechanic_id: mechanicId }),
-                      },
-                    );
+                    await addHelperMutation.mutateAsync({
+                      mechanic_id: mechanicId,
+                    });
                   } catch {
-                    // error handled by caller
+                    // error handled by addHelperMutation
                   }
-                  onHelpersChange?.();
                 }}
                 onRemoveMechanic={async (_woId) => {
                   try {
-                    await fetch(
-                      `/api/organizations/${orgId}/work-orders/${workOrderId}/helpers?mechanicId=${wo.mechanic?.id ?? ""}`,
-                      { method: "DELETE" },
-                    );
+                    await removeHelperMutation.mutateAsync({
+                      mechanicId: wo.mechanic?.id ?? "",
+                    });
                   } catch {
-                    // error handled by caller
+                    // error handled by removeHelperMutation
                   }
-                  onHelpersChange?.();
                 }}
                 onRemoveHelper={async (_woId, mechanicId) => {
                   try {
-                    await fetch(
-                      `/api/organizations/${orgId}/work-orders/${workOrderId}/helpers?mechanicId=${mechanicId}`,
-                      { method: "DELETE" },
-                    );
+                    await removeHelperMutation.mutateAsync({ mechanicId });
                   } catch {
-                    // error handled by caller
+                    // error handled by removeHelperMutation
                   }
-                  onHelpersChange?.();
                 }}
               />
             )}

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, apiError } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 
 export const GET = createRouteHandler(async ({ orgId, supabase }) => {
@@ -24,10 +24,7 @@ export const GET = createRouteHandler(async ({ orgId, supabase }) => {
     .order("total", { ascending: false });
 
   if (error) {
-    return NextResponse.json(
-      { error: { code: "QUERY_FAILED", message: error.message } },
-      { status: 500 },
-    );
+    return apiError("QUERY_FAILED", error.message, 500);
   }
 
   const revenueMap = new Map<
@@ -75,5 +72,5 @@ export const GET = createRouteHandler(async ({ orgId, supabase }) => {
     .sort((a, b) => b.totalRevenue - a.totalRevenue)
     .slice(0, 5);
 
-  return NextResponse.json({ data: { customers } });
+  return ok({ customers });
 });

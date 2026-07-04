@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import { getSessions } from "@/lib/services/cash-register-service";
 
@@ -23,5 +23,5 @@ export const GET = createRouteHandler(async ({ orgId, supabase, request }) => {
     offset,
   });
 
-  return NextResponse.json({ data: result });
+  return ok(result);
 });

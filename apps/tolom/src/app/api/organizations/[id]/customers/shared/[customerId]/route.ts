@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { createRouteHandler } from "@/lib/api-handler";
+import { ok, createRouteHandler } from "@/lib/api-response"
 import {
   getSharedCustomer,
   getSharedCustomerVehicles,
@@ -15,5 +14,5 @@ export const GET = createRouteHandler(async ({ orgId, params, supabase }) => {
     getSharedCustomer(supabase, customerId, orgId),
     getSharedCustomerVehicles(supabase, customerId, orgId),
   ]);
-  return NextResponse.json({ data: { ...customer, vehicles } });
+  return ok({ ...customer, vehicles });
 });

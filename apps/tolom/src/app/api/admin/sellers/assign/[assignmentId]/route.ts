@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { apiError, ok } from "@/lib/api-response";
 import {
   checkSuperAdmin,
   removeSellerAssignment,
@@ -8,17 +8,9 @@ import {
 export const DELETE = createRouteHandler(async ({ supabase, params }) => {
   const isSuperAdmin = await checkSuperAdmin(supabase);
   if (!isSuperAdmin) {
-    return NextResponse.json(
-      {
-        error: {
-          code: "FORBIDDEN",
-          message: "Super admin access required",
-        },
-      },
-      { status: 403 },
-    );
+    return apiError("FORBIDDEN", "Super admin access required", 403);
   }
 
   await removeSellerAssignment(supabase, params.assignmentId);
-  return NextResponse.json({ data: { success: true } });
+  return ok({ success: true });
 });

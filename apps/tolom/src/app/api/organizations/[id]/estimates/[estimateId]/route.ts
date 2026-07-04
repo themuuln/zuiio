@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { ok, apiError, noContent } from "@/lib/api-response";
 import {
   deleteEstimate,
   getEstimate,
@@ -10,12 +10,9 @@ export const GET = createRouteHandler(
   async ({ params, supabase, orgId }) => {
     const estimate = await getEstimate(supabase, params.estimateId, orgId);
     if (!estimate) {
-      return NextResponse.json(
-        { error: { code: "NOT_FOUND", message: "Estimate not found" } },
-        { status: 404 },
-      );
+      return apiError("NOT_FOUND", "Estimate not found", 404);
     }
-    return NextResponse.json({ data: estimate });
+    return ok(estimate);
   },
   { requiredPermission: { resource: "work_orders", action: "read" } },
 );
@@ -29,7 +26,7 @@ export const PATCH = createRouteHandler(
       orgId,
       body,
     );
-    return NextResponse.json({ data: estimate });
+    return ok(estimate);
   },
   {
     rateLimit: true,
@@ -40,7 +37,7 @@ export const PATCH = createRouteHandler(
 export const DELETE = createRouteHandler(
   async ({ request, params, orgId, supabase }) => {
     await deleteEstimate(supabase, params.estimateId, orgId);
-    return NextResponse.json({ data: null });
+    return noContent();
   },
   {
     rateLimit: true,

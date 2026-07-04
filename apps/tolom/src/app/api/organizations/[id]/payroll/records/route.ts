@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { createRouteHandler } from "@/lib/api-handler";
+import { ok, apiError, createRouteHandler } from "@/lib/api-response"
 import { getPayrollRecords } from "@/lib/services/payroll-service";
 
 export const GET = createRouteHandler(
@@ -10,10 +9,7 @@ export const GET = createRouteHandler(
     const branchId = searchParams.get("branch_id");
 
     if (!year || !month || month < 1 || month > 12) {
-      return NextResponse.json(
-        { error: { message: "Valid year and month (1-12) are required" } },
-        { status: 400 },
-      );
+      return apiError("BAD_REQUEST", "Valid year and month (1-12) are required", 400);
     }
 
     const records = await getPayrollRecords(
@@ -23,7 +19,7 @@ export const GET = createRouteHandler(
       month,
       branchId,
     );
-    return NextResponse.json({ data: records });
+    return ok(records);
   },
   { requiredPermission: { resource: "payroll", action: "read" } },
 );

@@ -3,6 +3,8 @@
 import { FileText, Pencil } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useOrgMutation } from "@zuiio/query";
+import { workOrderKeys } from "@/lib/queries/keys";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Typography } from "@/components/ui/typography";
@@ -22,8 +24,8 @@ type EditableField = "complaint" | "diagnosis" | "notes";
 function parseNotes(raw: unknown): string {
   if (!raw) return "";
   if (typeof raw === "object" && raw !== null && "content" in raw) {
-    const content = raw.content;
-    return typeof content === "string" ? content : "";
+    const maybeContent = raw.content;
+    return typeof maybeContent === "string" ? maybeContent : "";
   }
   return String(raw);
 }
@@ -40,6 +42,23 @@ export function NotesSection({
   const [editingField, setEditingField] = useState<EditableField | null>(null);
   const [editValue, setEditValue] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const saveFieldMutation = useOrgMutation<
+    unknown,
+    Record<string, string | null>
+  >({
+    endpoint: () =>
+      `/api/organizations/${orgId}/work-orders/${workOrderId}`,
+    method: "PATCH",
+    queryKey: workOrderKeys.all(orgId),
+    onSuccess: () => {
+      toast.dismiss();
+      toast.success(t("saved") ?? "Saved");
+      setEditingField(null);
+      setEditValue("");
+      onUpdated();
+    },
+  });
 
   if (!complaint && !diagnosis && !notes) return null;
 
@@ -60,25 +79,7 @@ export function NotesSection({
     try {
       const body: Record<string, string | null> = {};
       body[field] = editValue.trim() || null;
-
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${workOrderId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        },
-      );
-      const json = await res.json();
-      if (json.error) {
-        toast.error(json.error.message ?? t("failedToSave"));
-        return;
-      }
-      toast.dismiss();
-      toast.success(t("saved") ?? "Saved");
-      setEditingField(null);
-      setEditValue("");
-      onUpdated();
+      await saveFieldMutation.mutateAsync(body);
     } catch {
       toast.error(t("failedToSave"));
     } finally {

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, apiError } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
   cancelFollowup,
@@ -16,13 +16,10 @@ export const GET = createRouteHandler(
     const followup = await getFollowup(supabase, params.followupId, orgId);
 
     if (!followup) {
-      return NextResponse.json(
-        { error: { code: "NOT_FOUND", message: "Follow-up not found" } },
-        { status: 404 },
-      );
+      return apiError("NOT_FOUND", "Follow-up not found", 404);
     }
 
-    return NextResponse.json({ data: followup });
+    return ok(followup);
   },
   { requiredPermission: { resource: "customers", action: "read" } },
 );
@@ -61,7 +58,7 @@ export const PATCH = createRouteHandler(
       );
     }
 
-    return NextResponse.json({ data: followup });
+    return ok(followup);
   },
   { requiredPermission: { resource: "customers", action: "update" } },
 );
@@ -72,7 +69,7 @@ export const PATCH = createRouteHandler(
 export const DELETE = createRouteHandler(
   async ({ params, supabase, orgId }) => {
     await deleteFollowup(supabase, params.followupId, orgId);
-    return NextResponse.json({ data: { deleted: true } });
+    return ok({ deleted: true });
   },
   { requiredPermission: { resource: "customers", action: "update" } },
 );

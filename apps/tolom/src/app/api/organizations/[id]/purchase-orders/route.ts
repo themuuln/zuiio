@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { ok, created } from "@/lib/api-response";
 import {
   createPurchaseOrder,
   getPurchaseOrders,
@@ -7,14 +7,14 @@ import {
 
 export const GET = createRouteHandler(async ({ orgId, supabase }) => {
   const orders = await getPurchaseOrders(supabase, orgId);
-  return NextResponse.json({ data: orders });
+  return ok(orders);
 });
 
 export const POST = createRouteHandler(
   async ({ request, orgId, user, supabase }) => {
     const body = await request.json();
     const order = await createPurchaseOrder(supabase, orgId, body, user.id);
-    return NextResponse.json({ data: order }, { status: 201 });
+    return created(order);
   },
   { rateLimit: true, subscription: true },
 );

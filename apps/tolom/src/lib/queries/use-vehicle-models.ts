@@ -16,7 +16,7 @@ export function useMakes(
     queryKey: vehicleModelKeys.makes(orgId ?? ""),
     queryFn: () => fetchMakes(orgId!, { params: { mode: "makes" } }),
     enabled: !!orgId,
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
   });
 }
 
@@ -36,6 +36,6 @@ export function useModelsByMake(
       return [...new Set(models.map((m) => m.model))];
     },
     enabled: !!orgId && !!make.trim(),
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
   });
 }

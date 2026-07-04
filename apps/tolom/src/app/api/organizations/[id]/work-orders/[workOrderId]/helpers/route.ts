@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { createRouteHandler } from "@/lib/api-handler";
+import { ok, created, apiError, createRouteHandler } from "@/lib/api-response"
 import {
   assignHelperToWorkOrder,
   removeHelperFromWorkOrder,
@@ -12,15 +11,7 @@ export const POST = createRouteHandler(
     const body = await request.json();
     const mechanicId = body?.mechanic_id;
     if (!mechanicId || typeof mechanicId !== "string") {
-      return NextResponse.json(
-        {
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "mechanic_id is required",
-          },
-        },
-        { status: 400 },
-      );
+      return apiError("VALIDATION_ERROR", "mechanic_id is required", 400);
     }
     await assignHelperToWorkOrder(
       supabase,
@@ -29,7 +20,7 @@ export const POST = createRouteHandler(
       mechanicId,
       user.id,
     );
-    return NextResponse.json({ data: null }, { status: 201 });
+    return created(null);
   },
   {
     rateLimit: true,
@@ -44,18 +35,10 @@ export const DELETE = createRouteHandler(
     const { searchParams } = new URL(request.url);
     const mechanicId = searchParams.get("mechanicId");
     if (!mechanicId) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "mechanicId query param required",
-          },
-        },
-        { status: 400 },
-      );
+      return apiError("VALIDATION_ERROR", "mechanicId query param required", 400);
     }
     await removeHelperFromWorkOrder(supabase, orgId, workOrderId, mechanicId);
-    return NextResponse.json({ data: null });
+    return ok(null);
   },
   {
     rateLimit: true,
@@ -70,18 +53,10 @@ export const PUT = createRouteHandler(
     const body = await request.json();
     const { mechanic_ids } = body;
     if (!Array.isArray(mechanic_ids) || mechanic_ids.length === 0) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "mechanic_ids array is required",
-          },
-        },
-        { status: 400 },
-      );
+      return apiError("VALIDATION_ERROR", "mechanic_ids array is required", 400);
     }
     await reorderWorkOrderHelpers(supabase, orgId, workOrderId, mechanic_ids);
-    return NextResponse.json({ data: null });
+    return ok(null);
   },
   {
     rateLimit: true,

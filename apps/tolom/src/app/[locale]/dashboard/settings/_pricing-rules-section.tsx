@@ -1,10 +1,11 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { useOrgMutation } from "@zuiio/query";
+import { createOrgQuery } from "@/lib/queries/factory";
 import { Pencil, Plus, Tags, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
-import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
@@ -213,9 +214,31 @@ function operatorDescription(op: string, value: number): string {
   }
 }
 
+const fetchPriceRules = createOrgQuery<PriceRule[]>("/price-rules");
+
+function buildPriceRuleBody(form: RuleForm) {
+  const { conditions, description } = buildConditions(
+    form.conditions_type,
+    form,
+  );
+  return {
+    name: form.name,
+    description: form.description,
+    apply_to: form.apply_to,
+    conditions,
+    conditions_description: description,
+    operator: form.operator,
+    value: Number(form.value),
+    priority: Number(form.priority),
+    part_category: form.part_category || null,
+    service_category: form.service_category || null,
+    part_name_pattern: form.part_name_pattern || null,
+    service_name_pattern: form.service_name_pattern || null,
+  };
+}
+
 export function PricingRulesSection({ orgId }: { orgId: string }) {
   const t = useTranslations("settings");
-  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<PriceRule | null>(null);
   const [form, setForm] = useState<RuleForm>(DEFAULT_FORM);
@@ -223,118 +246,62 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
 
   const { data: rules, isLoading } = useQuery({
     queryKey: priceRuleKeys.all(orgId),
-    queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/price-rules`);
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return (json.data ?? []) as PriceRule[];
-    },
+    queryFn: () => fetchPriceRules(orgId),
     enabled: !!orgId,
   });
 
-  const saveMutation = useMutation({
-    mutationFn: async (data: { id?: string; form: RuleForm }) => {
-      const { conditions, description } = buildConditions(
-        data.form.conditions_type,
-        data.form,
-      );
-      const body = {
-        name: data.form.name,
-        description: data.form.description,
-        apply_to: data.form.apply_to,
-        conditions,
-        conditions_description: description,
-        operator: data.form.operator,
-        value: Number(data.form.value),
-        priority: Number(data.form.priority),
-        part_category: data.form.part_category || null,
-        service_category: data.form.service_category || null,
-        part_name_pattern: data.form.part_name_pattern || null,
-        service_name_pattern: data.form.service_name_pattern || null,
-      };
 
-      if (data.id) {
-        const res = await fetch(
-          `/api/organizations/${orgId}/price-rules?id=${data.id}`,
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          },
-        );
-        const json = await res.json();
-        if (json.error) throw new Error(json.error.message);
-        return json.data;
-      } else {
-        const res = await fetch(`/api/organizations/${orgId}/price-rules`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-        const json = await res.json();
-        if (json.error) throw new Error(json.error.message);
-        return json.data;
-      }
-    },
+  const createPriceRule = useOrgMutation<PriceRule, RuleForm>({
+    endpoint: `/api/organizations/${orgId}/price-rules`,
+    method: "POST",
+    queryKey: priceRuleKeys.all(orgId),
+    bodyFn: (form) => buildPriceRuleBody(form),
+    successMessage: t("savePriceRule"),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: priceRuleKeys.all(orgId) });
       setDialogOpen(false);
       setEditingRule(null);
       setForm(DEFAULT_FORM);
-      toast.success(t("savePriceRule"));
-    },
-    onError: (err: Error) => {
-      toast.error(err.message);
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/price-rules?id=${id}`,
-        {
-          method: "DELETE",
-        },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-    },
+  const updatePriceRule = useOrgMutation<
+    PriceRule,
+    { id: string; form: RuleForm }
+  >({
+    endpoint: (vars) =>
+      `/api/organizations/${orgId}/price-rules?id=${vars.id}`,
+    method: "PATCH",
+    queryKey: priceRuleKeys.all(orgId),
+    bodyFn: (vars) => buildPriceRuleBody(vars.form),
+    successMessage: t("savePriceRule"),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: priceRuleKeys.all(orgId) });
+      setDialogOpen(false);
+      setEditingRule(null);
+      setForm(DEFAULT_FORM);
+    },
+  });
+
+  const deletePriceRule = useOrgMutation<unknown, string>({
+    endpoint: (id) => `/api/organizations/${orgId}/price-rules?id=${id}`,
+    method: "DELETE",
+    queryKey: priceRuleKeys.all(orgId),
+    successMessage: t("deletePriceRule"),
+    onSuccess: () => {
       setDeleteConfirm(null);
-      toast.success(t("deletePriceRule"));
-    },
-    onError: (err: Error) => {
-      toast.error(err.message);
     },
   });
 
-  const toggleMutation = useMutation({
-    mutationFn: async ({
-      id,
-      is_active,
-    }: {
-      id: string;
-      is_active: boolean;
-    }) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/price-rules?id=${id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ is_active }),
-        },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: priceRuleKeys.all(orgId) });
-    },
-    onError: (err: Error) => {
-      toast.error(err.message);
-    },
+  const togglePriceRule = useOrgMutation<
+    unknown,
+    { id: string; is_active: boolean }
+  >({
+    endpoint: (vars) =>
+      `/api/organizations/${orgId}/price-rules?id=${vars.id}`,
+    method: "PATCH",
+    queryKey: priceRuleKeys.all(orgId),
+    bodyFn: (vars) => ({ is_active: vars.is_active }),
   });
+
 
   const openNew = useCallback(() => {
     setEditingRule(null);
@@ -467,7 +434,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
                 <Switch
                   checked={rule.is_active}
                   onCheckedChange={(checked) =>
-                    toggleMutation.mutate({ id: rule.id, is_active: checked })
+                    togglePriceRule.mutate({ id: rule.id, is_active: checked })
                   }
                 />
                 <Button
@@ -750,10 +717,18 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
             {t("cancel")}
           </Button>
           <Button
-            onClick={() => saveMutation.mutate({ id: editingRule?.id, form })}
-            disabled={!form.name || saveMutation.isPending}
+            onClick={() => {
+              if (editingRule) {
+                updatePriceRule.mutate({ id: editingRule.id, form });
+              } else {
+                createPriceRule.mutate(form);
+              }
+            }}
+            disabled={
+              !form.name || createPriceRule.isPending || updatePriceRule.isPending
+            }
           >
-            {saveMutation.isPending
+            {createPriceRule.isPending || updatePriceRule.isPending
               ? t("saving")
               : editingRule
                 ? t("updateRule")
@@ -781,11 +756,11 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
             <Button
               variant="destructive"
               onClick={() => {
-                if (deleteConfirm) deleteMutation.mutate(deleteConfirm);
+                if (deleteConfirm) deletePriceRule.mutate(deleteConfirm);
               }}
-              disabled={deleteMutation.isPending}
+              disabled={deletePriceRule.isPending}
             >
-              {deleteMutation.isPending ? t("saving") : t("delete")}
+              {deletePriceRule.isPending ? t("saving") : t("delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

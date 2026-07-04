@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { createRouteHandler } from "@/lib/api-handler";
+import { ok, createRouteHandler } from "@/lib/api-response"
 import { getMechanicsList } from "@/lib/services/report-service/mechanics";
 import { getWorkOrder } from "@/lib/services/work-order-service";
 import { getServices } from "@/lib/services/service-catalog-service";
@@ -140,19 +139,17 @@ export const GET = createRouteHandler(
       })(),
     ]);
 
-    return NextResponse.json({
-      data: {
-        workOrder,
-        servicesCatalog,
-        partsCatalog,
-        globalServices: (globalServicesResult.data ??
-          []) as GlobalServiceCatalog[],
-        globalParts: (globalPartsResult.data ?? []) as GlobalPartCatalog[],
-        balances,
-        thresholds,
-        mechanics,
-        priceMemory: priceHistoryResult,
-      },
+    return ok({
+      workOrder,
+      servicesCatalog,
+      partsCatalog,
+      globalServices: (globalServicesResult.data ??
+        []) as GlobalServiceCatalog[],
+      globalParts: (globalPartsResult.data ?? []) as GlobalPartCatalog[],
+      balances,
+      thresholds,
+      mechanics,
+      priceMemory: priceHistoryResult,
     });
   },
   { subscription: true },

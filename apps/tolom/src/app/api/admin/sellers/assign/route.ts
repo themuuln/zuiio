@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { apiError, ok } from "@/lib/api-response";
 import {
   assignSellerToOrg,
   checkSuperAdmin,
@@ -8,10 +8,7 @@ import {
 export const POST = createRouteHandler(async ({ supabase, request }) => {
   const isSuperAdmin = await checkSuperAdmin(supabase);
   if (!isSuperAdmin) {
-    return NextResponse.json(
-      { error: { code: "FORBIDDEN", message: "Super admin access required" } },
-      { status: 403 },
-    );
+    return apiError("FORBIDDEN", "Super admin access required", 403);
   }
 
   const body = (await request.json()) as {
@@ -20,14 +17,10 @@ export const POST = createRouteHandler(async ({ supabase, request }) => {
   };
 
   if (!body.seller_id || !body.organization_id) {
-    return NextResponse.json(
-      {
-        error: {
-          code: "VALIDATION_ERROR",
-          message: "seller_id and organization_id are required",
-        },
-      },
-      { status: 400 },
+    return apiError(
+      "VALIDATION_ERROR",
+      "seller_id and organization_id are required",
+      400,
     );
   }
 
@@ -36,5 +29,5 @@ export const POST = createRouteHandler(async ({ supabase, request }) => {
     body.seller_id,
     body.organization_id,
   );
-  return NextResponse.json({ data: assignment });
+  return ok(assignment);
 });

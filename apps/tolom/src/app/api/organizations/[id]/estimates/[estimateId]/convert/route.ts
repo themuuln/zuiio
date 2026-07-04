@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { convertEstimateToWorkOrder } from "@/lib/services/estimate-service";
+import { created } from "@/lib/api-response";
 
 /**
  * POST /api/organizations/[id]/estimates/[estimateId]/convert
@@ -16,7 +16,7 @@ export const POST = createRouteHandler(
       params.estimateId,
       orgId,
     );
-    return NextResponse.json({ data: workOrder }, { status: 201 });
+    return created(workOrder);
   },
   {
     subscription: true,

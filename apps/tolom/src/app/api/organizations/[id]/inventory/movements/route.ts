@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, created } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
   createMovement,
@@ -19,14 +19,14 @@ export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
     undefined,
     branchId,
   );
-  return NextResponse.json({ data: movements });
+  return ok(movements);
 });
 
 export const POST = createRouteHandler(
   async ({ request, orgId, user, supabase }) => {
     const body = await request.json();
     const movement = await createMovement(supabase, orgId, body, user.id);
-    return NextResponse.json({ data: movement }, { status: 201 });
+    return created(movement);
   },
   {
     rateLimit: true,

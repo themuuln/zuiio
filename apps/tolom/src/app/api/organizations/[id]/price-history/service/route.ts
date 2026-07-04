@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 
 export const GET = createRouteHandler(async ({ supabase, orgId, request }) => {
@@ -22,5 +22,5 @@ export const GET = createRouteHandler(async ({ supabase, orgId, request }) => {
   const { data, error } = await query;
   if (error) throw new Error(error.message);
 
-  return NextResponse.json({ data: data ?? [] });
+  return ok(data ?? []);
 });

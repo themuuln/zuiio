@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, created } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import { transliterateMongolianPlate } from "@/lib/form-validation";
 import {
@@ -22,14 +22,14 @@ export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
     ? await searchByPlate(supabase, orgId, search)
     : await getVehicles(supabase, orgId, { customerId, branchId });
 
-  return NextResponse.json({ data: vehicles });
+  return ok(vehicles);
 });
 
 export const POST = createRouteHandler(
   async ({ request, orgId, user, supabase }) => {
     const body = await request.json();
     const vehicle = await createVehicle(supabase, orgId, body, user.id);
-    return NextResponse.json({ data: vehicle }, { status: 201 });
+    return created(vehicle);
   },
   { rateLimit: true, subscription: true },
 );

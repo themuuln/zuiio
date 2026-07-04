@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { createRouteHandler } from "@/lib/api-handler";
+import { ok, createRouteHandler } from "@/lib/api-response"
 import {
   getOrganization,
   updateOrganization,
@@ -11,7 +10,7 @@ import {
  */
 export const GET = createRouteHandler(async ({ orgId, supabase }) => {
   const org = await getOrganization(supabase, orgId);
-  return NextResponse.json({ data: org });
+  return ok(org);
 });
 
 /**
@@ -22,7 +21,7 @@ export const PATCH = createRouteHandler(
   async ({ request, orgId, supabase }) => {
     const body = await request.json();
     const org = await updateOrganization(supabase, orgId, body);
-    return NextResponse.json({ data: org });
+    return ok(org);
   },
   { rateLimit: true, subscription: true },
 );

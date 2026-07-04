@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useRef, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ import {
 import { Typography } from "@/components/ui/typography";
 import { Link } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { customerKeys } from "@/lib/queries/keys";
 
 type PreviewRow = Record<string, string>;
 
@@ -206,6 +208,48 @@ export default function ImportCustomersPage() {
     totalRows: number;
   } | null>(null);
 
+  const queryClient = useQueryClient();
+  const importMutation = useMutation({
+    mutationFn: async () => {
+      if (!orgId || !previewRef.current) throw new Error("No data");
+      const formData = new FormData();
+      const blob = new Blob([fileContentRef.current], { type: "text/csv" });
+      formData.append("file", blob, previewRef.current.filename);
+
+      const res = await fetch(
+        `/api/organizations/${orgId}/customers/import`,
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
+
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      return json.data as {
+        imported: number;
+        errors: { row: number; message: string }[];
+      };
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({
+        queryKey: customerKeys.all(orgId ?? ""),
+      });
+      setState({
+        status: "done",
+        imported: result.imported,
+        errors: result.errors,
+      });
+      if (result.imported > 0) {
+        toast.success(t("import.success", { count: result.imported }));
+      }
+    },
+    onError: (err) => {
+      setState({ status: "error", message: err.message });
+      toast.error(t("import.failed"));
+    },
+  });
+
   const handleFile = useCallback(
     async (file: File | undefined) => {
       if (!file) return;
@@ -272,50 +316,13 @@ export default function ImportCustomersPage() {
     [handleFile],
   );
 
-  const handleImport = useCallback(async () => {
+  const handleImport = useCallback(() => {
     if (!orgId || !previewRef.current) return;
 
     const total = previewRef.current.totalRows;
-    const filename = previewRef.current.filename;
-
     setState({ status: "importing", total, current: 0 });
-
-    try {
-      const formData = new FormData();
-      const blob = new Blob([fileContentRef.current], { type: "text/csv" });
-      formData.append("file", blob, filename);
-
-      const res = await fetch(`/api/organizations/${orgId}/customers/import`, {
-        method: "POST",
-        body: formData,
-      });
-
-      const json = await res.json();
-
-      if (json.error) {
-        setState({ status: "error", message: json.error.message });
-        return;
-      }
-
-      const result = json.data as {
-        imported: number;
-        errors: { row: number; message: string }[];
-      };
-
-      setState({
-        status: "done",
-        imported: result.imported,
-        errors: result.errors,
-      });
-
-      if (result.imported > 0) {
-        toast.success(t("import.success", { count: result.imported }));
-      }
-    } catch {
-      setState({ status: "error", message: t("import.failed") });
-      toast.error(t("import.failed"));
-    }
-  }, [orgId, t]);
+    importMutation.mutate();
+  }, [orgId, importMutation]);
 
   const handleDownloadTemplate = useCallback(() => {
     const blob = new Blob([CSV_TEMPLATE], { type: "text/csv" });

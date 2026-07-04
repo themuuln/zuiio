@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 
 export const GET = createRouteHandler(async ({ supabase, orgId, request }) => {
   const url = new URL(request.url);
   const customerId = url.searchParams.get("customer_id");
-  if (!customerId) return NextResponse.json({ data: null });
+  if (!customerId) return ok(null);
 
   const { data: ownedVehicles, error: oError } = await supabase
     .from("vehicle_owners")
@@ -48,12 +48,10 @@ export const GET = createRouteHandler(async ({ supabase, orgId, request }) => {
     .limit(1)
     .maybeSingle();
 
-  return NextResponse.json({
-    data: {
-      vehicles: customerVehicles,
-      lastVehicleId: vehicleIds.includes(lastVehicle?.vehicle_id ?? "")
-        ? (lastVehicle?.vehicle_id ?? null)
-        : (customerVehicles[0]?.id ?? null),
-    },
+  return ok({
+    vehicles: customerVehicles,
+    lastVehicleId: vehicleIds.includes(lastVehicle?.vehicle_id ?? "")
+      ? (lastVehicle?.vehicle_id ?? null)
+      : (customerVehicles[0]?.id ?? null),
   });
 });

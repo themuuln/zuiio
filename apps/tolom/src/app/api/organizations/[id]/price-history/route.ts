@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 
 interface PriceEntry {
@@ -72,5 +72,5 @@ export const GET = createRouteHandler(async ({ supabase, orgId }) => {
     };
   }
 
-  return NextResponse.json({ data: { services: serviceMap, parts: partMap } });
+  return ok({ services: serviceMap, parts: partMap });
 });

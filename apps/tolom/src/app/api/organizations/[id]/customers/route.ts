@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { createRouteHandler } from "@/lib/api-handler";
+import { ok, created, createRouteHandler } from "@/lib/api-response"
 import {
   createCustomer,
   getCustomers,
@@ -27,7 +26,7 @@ export const GET = createRouteHandler(
         search: searchQuery,
         ...commonOptions,
       });
-      return NextResponse.json({ data: result });
+      return ok(result);
     }
 
     const result = searchQuery
@@ -37,7 +36,7 @@ export const GET = createRouteHandler(
           ...commonOptions,
         });
 
-    return NextResponse.json({ data: result });
+    return ok(result);
   },
   { requiredPermission: { resource: "customers", action: "read" } },
 );
@@ -46,7 +45,7 @@ export const POST = createRouteHandler(
   async ({ request, orgId, user, supabase }) => {
     const body = await request.json();
     const customer = await createCustomer(supabase, orgId, body, user.id);
-    return NextResponse.json({ data: customer }, { status: 201 });
+    return created(customer);
   },
   {
     rateLimit: true,

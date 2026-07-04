@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, created } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
   createService,
@@ -10,7 +10,7 @@ export const GET = createRouteHandler(
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category") ?? undefined;
     const services = await getServices(supabase, orgId, category);
-    return NextResponse.json({ data: services });
+    return ok(services);
   },
   { requiredPermission: { resource: "services", action: "read" } },
 );
@@ -19,7 +19,7 @@ export const POST = createRouteHandler(
   async ({ request, orgId, supabase }) => {
     const body = await request.json();
     const service = await createService(supabase, orgId, body);
-    return NextResponse.json({ data: service }, { status: 201 });
+    return created(service);
   },
   {
     rateLimit: true,

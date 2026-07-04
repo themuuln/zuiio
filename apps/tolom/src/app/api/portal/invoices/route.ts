@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { createPortalRouteHandler } from "@/lib/portal-auth";
 
 export const GET = createPortalRouteHandler(async ({ customer, supabase }) => {
@@ -12,7 +12,7 @@ export const GET = createPortalRouteHandler(async ({ customer, supabase }) => {
     ).data?.map((v) => v.vehicle_id) ?? [];
 
   if (vehicleIds.length === 0) {
-    return NextResponse.json({ data: [] });
+    return ok([]);
   }
 
   const workOrderIds =
@@ -25,7 +25,7 @@ export const GET = createPortalRouteHandler(async ({ customer, supabase }) => {
     ).data?.map((wo) => wo.id) ?? [];
 
   if (workOrderIds.length === 0) {
-    return NextResponse.json({ data: [] });
+    return ok([]);
   }
 
   const { data: invoices, error: invoicesError } = await supabase
@@ -58,5 +58,5 @@ export const GET = createPortalRouteHandler(async ({ customer, supabase }) => {
     }));
   }
 
-  return NextResponse.json({ data: invoicesWithItems });
+  return ok(invoicesWithItems);
 });

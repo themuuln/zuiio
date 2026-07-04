@@ -21,7 +21,9 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { orgKeys } from "@/lib/queries/keys";
+import { createOrgQuery } from "@/lib/queries/factory";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
+import { useOrgMutation } from "@zuiio/query";
 import type { Organization } from "@/lib/types";
 import { setCookie } from "@/lib/utils";
 import { AppearanceCustomization } from "./_appearance-customization";
@@ -46,6 +48,8 @@ import {
 import { SettingsSubSidebar } from "./_settings-sub-sidebar";
 import { TelegramSection } from "./_telegram-section";
 import { VehicleNicheForm } from "./_vehicle-niche-form";
+
+const fetchOrgDetail = createOrgQuery<Organization>("");
 
 function SectionHeading({
   icon: Icon,
@@ -221,23 +225,17 @@ function renderSectionContent(
 
   return <DataExportSection orgId={options.orgId} />;
 }
-
 export default function SettingsPage() {
   const { replace } = useRouter();
   const currentLocale = useLocale();
   const { theme, setTheme } = useTheme();
   const [form, setForm] = useState<SettingsForm>(DEFAULT_FORM);
   const orgSyncedRef = useRef(false);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const t = useTranslations("settings");
   const settingsSections = useMemo(() => getSettingsSections(t), [t]);
-
-  const [activeSection, setActiveSection] = useState<string>(
-    settingsSections[0]?.value ?? "",
-  );
 
   const orgInfoQuery = useCurrentOrg();
   const orgId = orgInfoQuery.data?.orgId;
@@ -248,16 +246,32 @@ export default function SettingsPage() {
     refetch,
   } = useQuery({
     queryKey: orgKeys.detail(orgId ?? ""),
-    queryFn: async () => {
-      const response = await fetch(`/api/organizations/${orgId}`);
-      const json = await response.json();
-      if (json.error) throw new Error(json.error.message);
-      if (!json.data) throw new Error("No organization found");
-      return json.data as Organization;
-    },
+    queryFn: () => fetchOrgDetail(orgId ?? ""),
     enabled: !!orgId,
     staleTime: 30_000,
     retry: 1,
+  });
+
+  const updateOrg = useOrgMutation<Organization, { settings: Record<string, unknown> }>({
+    endpoint: () => `/api/organizations/${orgId ?? ""}`,
+    method: "PATCH",
+    queryKey: orgKeys.detail(orgId ?? ""),
+    successMessage: t("saved"),
+    onSuccess: (data) => {
+      const updated = buildFormFromOrganization(data);
+      setForm(updated);
+      void refetch();
+
+      if (updated.language !== currentLocale) {
+        setCookie("NEXT_LOCALE", updated.language, 365);
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+      }
+    },
+    onError: (err) => {
+      setError(err.message);
+    },
   });
 
   if (organization && !orgSyncedRef.current) {
@@ -282,74 +296,39 @@ export default function SettingsPage() {
       return;
     }
 
-    setSaving(true);
     setError(null);
     setSuccessMessage(null);
 
+    const nextSettings = {
+      ...(organization.settings as Record<string, unknown>),
+      invoice_prefix: form.invoicePrefix.trim() || DEFAULT_FORM.invoicePrefix,
+      default_currency:
+        form.defaultCurrency.trim() || DEFAULT_FORM.defaultCurrency,
+      default_tax_rate: Number(form.defaultTaxRate) || 0,
+      nuat_enabled: form.nuatEnabled,
+      ndsh_enabled: form.ndshEnabled,
+      ndsh_employer_rate: Number(form.ndshEmployerRate) || 11.5,
+      ndsh_employee_rate: Number(form.ndshEmployeeRate) || 10,
+      einvoice_enabled: form.einvoiceEnabled,
+      einvoice_api_key: form.einvoiceApiKey || undefined,
+      einvoice_merchant_id: form.einvoiceMerchantId || undefined,
+      einvoice_endpoint: form.einvoiceEndpoint || undefined,
+      timezone: form.timezone.trim() || DEFAULT_FORM.timezone,
+      date_format: form.dateFormat.trim() || DEFAULT_FORM.dateFormat,
+      language: form.language || DEFAULT_FORM.language,
+      brand_color: form.brandColor.trim() || undefined,
+    };
+
     try {
-      const nextSettings = {
-        ...(organization.settings as Record<string, unknown>),
-        invoice_prefix: form.invoicePrefix.trim() || DEFAULT_FORM.invoicePrefix,
-        default_currency:
-          form.defaultCurrency.trim() || DEFAULT_FORM.defaultCurrency,
-        default_tax_rate: Number(form.defaultTaxRate) || 0,
-        nuat_enabled: form.nuatEnabled,
-        ndsh_enabled: form.ndshEnabled,
-        ndsh_employer_rate: Number(form.ndshEmployerRate) || 11.5,
-        ndsh_employee_rate: Number(form.ndshEmployeeRate) || 10,
-        einvoice_enabled: form.einvoiceEnabled,
-        einvoice_api_key: form.einvoiceApiKey || undefined,
-        einvoice_merchant_id: form.einvoiceMerchantId || undefined,
-        einvoice_endpoint: form.einvoiceEndpoint || undefined,
-        timezone: form.timezone.trim() || DEFAULT_FORM.timezone,
-        date_format: form.dateFormat.trim() || DEFAULT_FORM.dateFormat,
-        language: form.language || DEFAULT_FORM.language,
-        brand_color: form.brandColor.trim() || undefined,
-      };
-
-      const response = await fetch(`/api/organizations/${organization.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          settings: nextSettings,
-        }),
-      });
-
-      const json = await response.json();
-
-      if (!response.ok || json.error || !json.data) {
-        const errorMessage = json.error?.message ?? "Failed to save settings";
-        toast.error(errorMessage);
-        setError(errorMessage);
-        return;
-      }
-
-      const updated = buildFormFromOrganization(json.data);
-      setForm(updated);
-      void refetch();
-      toast.success(t("saved"));
-
-      if (updated.language !== currentLocale) {
-        setCookie("NEXT_LOCALE", updated.language, 365);
-        setTimeout(() => {
-          window.location.reload();
-        }, 100);
-        return;
-      }
-
+      await updateOrg.mutateAsync({ settings: nextSettings });
       setSuccessMessage(t("saved"));
     } catch (caughtError) {
       const message =
         caughtError instanceof Error
           ? caughtError.message
           : "Failed to save settings";
-      toast.error(message);
       setError(message);
     }
-
-    setSaving(false);
   }
 
   const filteredSections = useMemo(() => {
@@ -540,7 +519,7 @@ export default function SettingsPage() {
                   orgId: orgId ?? "",
                   organization,
                   preview,
-                  saving,
+                  saving: updateOrg.isPending,
                   setForm,
                   setTheme,
                   successMessage,

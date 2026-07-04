@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, created, apiError } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
   getCurrentSession,
@@ -16,7 +16,7 @@ export const GET = createRouteHandler(async ({ orgId, supabase, request }) => {
     branchId || undefined,
   );
 
-  return NextResponse.json({ data: session });
+  return ok(session);
 });
 
 // POST /api/organizations/[id]/cash-register — open new session
@@ -26,15 +26,7 @@ export const POST = createRouteHandler(
     const { opening_balance, branch_id } = body;
 
     if (opening_balance === undefined || opening_balance === null) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "Opening balance is required",
-          },
-        },
-        { status: 400 },
-      );
+      return apiError("VALIDATION_ERROR", "Opening balance is required", 400);
     }
 
     const session = await openSession(
@@ -45,7 +37,7 @@ export const POST = createRouteHandler(
       branch_id,
     );
 
-    return NextResponse.json({ data: session }, { status: 201 });
+    return created(session);
   },
   { rateLimit: true },
 );

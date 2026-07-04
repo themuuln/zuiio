@@ -12,6 +12,7 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useOrgMutation } from "@zuiio/query";
 import { z } from "zod";
 import { SearchInput } from "@/components/search-input";
 import { Badge } from "@/components/ui/badge";
@@ -112,7 +113,6 @@ export function NewEstimateSheet({
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [lines, setLines] = useState<QuoteLine[]>([]);
-  const [savingState, setSavingState] = useState<"draft" | "sent" | null>(null);
 
   // Get org tax rate for auto-calculation
   const defaultTaxRate =
@@ -148,6 +148,18 @@ export function NewEstimateSheet({
       taxTotal: 0,
     },
   });
+  const createEstimate = useOrgMutation<{ id: string }, Record<string, unknown>>({
+    endpoint: `/api/organizations/${orgId}/estimates`,
+    method: "POST",
+    queryKey: ["organizations", orgId, "estimates"],
+    successMessage: t("quoteCreated"),
+    errorMessage: t("failedToSave"),
+    onSuccess: (data) => {
+      onOpenChange(false);
+      router.push(`/dashboard/estimates/${data.id}`);
+    },
+  });
+
 
   const addServiceLine = (service: {
     id: string;
@@ -302,47 +314,30 @@ export function NewEstimateSheet({
       return;
     }
 
-    setSavingState(status);
-
-    try {
-      const values = form.getValues();
-      const res = await fetch(`/api/organizations/${orgId}/estimates`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customer_id: customer.id,
-          vehicle_id: vehicle.id,
-          branchId,
-          status,
-          notes: values.notes?.trim() || undefined,
-          terms: values.terms?.trim() || undefined,
-          valid_until: values.valid_until || undefined,
-          discount_amount: discountAmount,
-          discount_percentage: discountPercent,
-          tax_total: effectiveTax,
-          items: lines.map((line, index) => ({
-            item_type: line.item_type,
-            source_service_id: line.source_service_id ?? null,
-            source_part_id: line.source_part_id ?? null,
-            description: line.description.trim(),
-            quantity: line.quantity,
-            unit_price: line.unit_price,
-            discount_amount: line.discount_amount,
-            discount_percentage: line.discount_percentage,
-            sort_order: index,
-          })),
-        }),
-      });
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      toast.success(t("quoteCreated"));
-      onOpenChange(false);
-      router.push(`/dashboard/estimates/${json.data.id}`);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("failedToSave"));
-    } finally {
-      setSavingState(null);
-    }
+    const values = form.getValues();
+    createEstimate.mutate({
+      customer_id: customer.id,
+      vehicle_id: vehicle.id,
+      branchId,
+      status,
+      notes: values.notes?.trim() || undefined,
+      terms: values.terms?.trim() || undefined,
+      valid_until: values.valid_until || undefined,
+      discount_amount: discountAmount,
+      discount_percentage: discountPercent,
+      tax_total: effectiveTax,
+      items: lines.map((line, index) => ({
+        item_type: line.item_type,
+        source_service_id: line.source_service_id ?? null,
+        source_part_id: line.source_part_id ?? null,
+        description: line.description.trim(),
+        quantity: line.quantity,
+        unit_price: line.unit_price,
+        discount_amount: line.discount_amount,
+        discount_percentage: line.discount_percentage,
+        sort_order: index,
+      })),
+    });
   };
 
   return (
@@ -651,19 +646,19 @@ export function NewEstimateSheet({
           <Button
             variant="outline"
             onClick={() => handleSave("draft")}
-            disabled={savingState !== null || lines.length === 0}
+            disabled={createEstimate.isPending || lines.length === 0}
             className="flex-1"
           >
             <Save className="size-4" />
-            {savingState === "draft" ? t("saving") : t("saveAsDraft")}
+            {createEstimate.isPending ? t("saving") : t("saveAsDraft")}
           </Button>
           <Button
             onClick={() => handleSave("sent")}
-            disabled={savingState !== null || lines.length === 0}
+            disabled={createEstimate.isPending || lines.length === 0}
             className="flex-1"
           >
             <Send className="size-4" />
-            {savingState === "sent" ? t("creatingQuote") : t("createQuote")}
+            {createEstimate.isPending ? t("creatingQuote") : t("createQuote")}
           </Button>
         </DetailDrawer.Footer>
       </DetailDrawer>

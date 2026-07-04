@@ -45,6 +45,53 @@ interface RouteHandlerOptions {
   subscription?: boolean;
 }
 
+interface SimpleHandlerContext {
+  request: NextRequest;
+  user: User;
+  supabase: SupabaseClient;
+}
+
+type SimpleRouteHandler = (ctx: SimpleHandlerContext) => Promise<NextResponse>;
+
+interface SimpleHandlerOptions {
+  /** Apply mutation rate limiting (60 req/min) to this route */
+  rateLimit?: boolean;
+}
+
+// ── Shared error handling ──────────────────────────────────────
+
+function handleError(
+  error: unknown,
+  start: number,
+  method: string,
+  path: string,
+  orgId?: string,
+) {
+  const { status, body, headers } = toApiErrorResponse(error);
+  const duration = Math.round(performance.now() - start);
+
+  logger.error(
+    { method, path, status, duration, err: error },
+    "API request failed",
+  );
+
+  if (status >= 500) {
+    capture(error, {
+      context: `[api] ${method} ${path}`,
+      method,
+      path,
+      status,
+      orgId,
+    });
+  }
+
+  const authHeaders = new Headers(headers);
+  if (status === 401) {
+    authHeaders.set("X-Auth-Required", "true");
+  }
+  return NextResponse.json(body, { status, headers: authHeaders });
+}
+
 // ── Route Handler Factory ─────────────────────────────────────
 
 /**
@@ -53,14 +100,6 @@ interface RouteHandlerOptions {
  *  2. Authenticates the user
  *  3. Extracts orgId from route params
  *  4. Wraps everything in try/catch with consistent error handling
- *
- * Usage:
- * ```ts
- * export const GET = createRouteHandler(async ({ orgId, params, supabase }) => {
- *   const data = await getCustomers(supabase, orgId);
- *   return NextResponse.json({ data });
- * });
- * ```
  */
 export function createRouteHandler(
   handler: RouteHandler,
@@ -68,6 +107,9 @@ export function createRouteHandler(
 ) {
   return async (request: NextRequest, context: RouteContext) => {
     const start = performance.now();
+    const method = request.method;
+    const path = request.nextUrl.pathname;
+    let orgId = "";
 
     try {
       const supabase = await createClient();
@@ -78,7 +120,7 @@ export function createRouteHandler(
       if (!user) throw new UnauthorizedError();
 
       const params = await context.params;
-      const orgId = options?.requireOrg === false ? "" : (params.id ?? "");
+      orgId = options?.requireOrg === false ? "" : (params.id ?? "");
 
       // Verify org membership when orgId is present
       if (orgId) {
@@ -111,21 +153,8 @@ export function createRouteHandler(
 
       // Apply mutation rate limiting
       if (options?.rateLimit) {
-        const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-        const rateCheck = await mutationRateLimiter.check(ip);
-        if (!rateCheck.allowed) {
-          return NextResponse.json(
-            { error: { code: "RATE_LIMITED", message: "Too many requests" } },
-            {
-              status: 429,
-              headers: {
-                "Retry-After": String(
-                  Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
-                ),
-              },
-            },
-          );
-        }
+        const rateResponse = await checkRateLimit(request);
+        if (rateResponse) return rateResponse;
       }
 
       // Check active subscription
@@ -144,8 +173,8 @@ export function createRouteHandler(
       const duration = Math.round(performance.now() - start);
       logger.info(
         {
-          method: request.method,
-          path: request.nextUrl.pathname,
+          method,
+          path,
           status: response.status,
           duration,
           userId: user.id,
@@ -156,58 +185,26 @@ export function createRouteHandler(
 
       return response;
     } catch (error) {
-      const { status, body, headers } = toApiErrorResponse(error);
-      const duration = Math.round(performance.now() - start);
-      logger.error(
-        {
-          method: request.method,
-          path: request.nextUrl.pathname,
-          status,
-          duration,
-          err: error,
-        },
-        "API request failed",
-      );
-      if (status >= 500) {
-        capture(error, {
-          context: `[api] ${request.method} ${request.nextUrl.pathname}`,
-          method: request.method,
-          path: request.nextUrl.pathname,
-          status,
-        });
-      }
-      const authHeaders = new Headers(headers);
-      if (status === 401) {
-        authHeaders.set("X-Auth-Required", "true");
-      }
-      return NextResponse.json(body, { status, headers: authHeaders });
+      return handleError(error, start, method, path, orgId || undefined);
     }
   };
 }
 
 // ── Simpler variant for routes without org context ──────────────
 
-interface SimpleHandlerContext {
-  request: NextRequest;
-  user: User;
-  supabase: SupabaseClient;
-}
-
-type SimpleRouteHandler = (ctx: SimpleHandlerContext) => Promise<NextResponse>;
-
 /**
  * For routes that don't need orgId extraction (profile, org list, etc.)
  *
- * Usage:
- * ```ts
- * export const GET = createSimpleRouteHandler(async ({ user, supabase }) => {
- *   return NextResponse.json({ data: user });
- * });
- * ```
+ * Also supports `{ rateLimit: true }` for mutation-heavy routes.
  */
-export function createSimpleRouteHandler(handler: SimpleRouteHandler) {
+export function createSimpleRouteHandler(
+  handler: SimpleRouteHandler,
+  options?: SimpleHandlerOptions,
+) {
   return async (request: NextRequest) => {
     const start = performance.now();
+    const method = request.method;
+    const path = request.nextUrl.pathname;
 
     try {
       const supabase = await createClient();
@@ -217,13 +214,18 @@ export function createSimpleRouteHandler(handler: SimpleRouteHandler) {
 
       if (!user) throw new UnauthorizedError();
 
+      if (options?.rateLimit) {
+        const rateResponse = await checkRateLimit(request);
+        if (rateResponse) return rateResponse;
+      }
+
       const response = await handler({ request, user, supabase });
 
       const duration = Math.round(performance.now() - start);
       logger.info(
         {
-          method: request.method,
-          path: request.nextUrl.pathname,
+          method,
+          path,
           status: response.status,
           duration,
           userId: user.id,
@@ -233,32 +235,31 @@ export function createSimpleRouteHandler(handler: SimpleRouteHandler) {
 
       return response;
     } catch (error) {
-      const { status, body, headers } = toApiErrorResponse(error);
-      const duration = Math.round(performance.now() - start);
-      logger.error(
-        {
-          method: request.method,
-          path: request.nextUrl.pathname,
-          status,
-          duration,
-          err: error,
-        },
-        "Simple API request failed",
-      );
-      if (status >= 500) {
-        capture(error, {
-          context: `[api] ${request.method} ${request.nextUrl.pathname}`,
-          method: request.method,
-          path: request.nextUrl.pathname,
-          status,
-          orgId: undefined,
-        });
-      }
-      const authHeaders = new Headers(headers);
-      if (status === 401) {
-        authHeaders.set("X-Auth-Required", "true");
-      }
-      return NextResponse.json(body, { status, headers: authHeaders });
+      return handleError(error, start, method, path);
     }
   };
+}
+
+// ── Internal helpers ───────────────────────────────────────────
+
+/**
+ * Check rate limit and return a 429 response if exceeded.
+ */
+async function checkRateLimit(request: NextRequest) {
+  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+  const rateCheck = await mutationRateLimiter.check(ip);
+  if (!rateCheck.allowed) {
+    return NextResponse.json(
+      { error: { code: "RATE_LIMITED", message: "Too many requests" } },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(
+            Math.ceil((rateCheck.resetAt - Date.now()) / 1000),
+          ),
+        },
+      },
+    );
+  }
+  return null;
 }

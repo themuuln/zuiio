@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, created } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import { ValidationError } from "@/lib/errors";
 
@@ -16,7 +16,7 @@ export const GET = createRouteHandler(
 
     if (error) throw error;
 
-    return NextResponse.json({ data: data ?? [] });
+    return ok(data ?? []);
   },
   { requiredPermission: { resource: "diagnosis_labels", action: "read" } },
 );
@@ -59,7 +59,7 @@ export const POST = createRouteHandler(
 
     if (error) throw error;
 
-    return NextResponse.json({ data }, { status: 201 });
+    return created(data);
   },
   { requiredPermission: { resource: "diagnosis_labels", action: "create" } },
 );

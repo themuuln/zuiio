@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { createRouteHandler } from "@/lib/api-handler";
+import { ok, created, apiError, createRouteHandler } from "@/lib/api-response"
 import {
   createAttachment,
   deleteAttachment,
@@ -14,7 +13,7 @@ export const GET = createRouteHandler(
   async ({ params, orgId, supabase }) => {
     const { workOrderId } = params;
     const data = await getAttachments(supabase, orgId, workOrderId);
-    return NextResponse.json({ data });
+    return ok(data);
   },
   {
     subscription: true,
@@ -32,7 +31,7 @@ export const POST = createRouteHandler(
       workOrderId,
       body,
     );
-    return NextResponse.json({ data: attachment }, { status: 201 });
+    return created(attachment);
   },
   {
     rateLimit: true,
@@ -46,19 +45,9 @@ export const DELETE = createRouteHandler(
     const { workOrderId } = params;
     const { searchParams } = new URL(request.url);
     const attachmentId = searchParams.get("attachmentId");
-    if (!attachmentId) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "attachmentId query param required",
-          },
-        },
-        { status: 400 },
-      );
-    }
+      return apiError("VALIDATION_ERROR", "attachmentId query param required", 400);
     await deleteAttachment(supabase, orgId, workOrderId, attachmentId);
-    return NextResponse.json({ data: null });
+    return ok(null);
   },
   {
     rateLimit: true,

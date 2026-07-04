@@ -13,6 +13,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { useOrgMutation } from "@zuiio/query";
+import { bayViewKeys, workOrderKeys } from "@/lib/queries/keys";
 import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
 import type { WorkOrderDetail } from "@/lib/types";
 import { useServiceMutations } from "./_use-service-mutations";
@@ -26,6 +28,7 @@ import type { PaymentMethodFees } from "./_payment-fees";
 interface UseDrawerMutationsParams {
   workOrderId: string | null;
   orgIdRef: React.MutableRefObject<string | null>;
+  orgId: string | undefined;
   wo: WorkOrderDetail | null;
   setWo: React.Dispatch<React.SetStateAction<WorkOrderDetail | null>>;
   fetchWo: (silent?: boolean, orgIdOverride?: string) => Promise<void>;
@@ -60,6 +63,7 @@ interface UseDrawerMutationsParams {
 export function useDrawerMutations({
   workOrderId,
   orgIdRef,
+  orgId,
   wo,
   setWo,
   fetchWo,
@@ -67,6 +71,7 @@ export function useDrawerMutations({
   onOpenChange,
   paymentMethodFees,
   transferBanks,
+  branchId,
   assignMechanicMutation,
   assignCustomerMutation,
 }: UseDrawerMutationsParams) {
@@ -84,7 +89,15 @@ export function useDrawerMutations({
     handleServicePriceSave,
     handleServiceQtySave,
     handleServiceDiscountSave,
-  } = useServiceMutations({ workOrderId, orgIdRef, wo, setWo, onRefresh });
+  } = useServiceMutations({
+    workOrderId,
+    orgIdRef,
+    orgId,
+    branchId,
+    wo,
+    setWo,
+    onRefresh,
+  });
 
   const {
     partSearch,
@@ -97,7 +110,15 @@ export function useDrawerMutations({
     handlePartPriceSave,
     handlePartQtySave,
     handlePartDiscountSave,
-  } = usePartMutations({ workOrderId, orgIdRef, wo, setWo, onRefresh });
+  } = usePartMutations({
+    workOrderId,
+    orgIdRef,
+    orgId,
+    branchId,
+    wo,
+    setWo,
+    onRefresh,
+  });
 
   const {
     confirmStatus,
@@ -110,6 +131,8 @@ export function useDrawerMutations({
   } = useStatusMutations({
     workOrderId,
     orgIdRef,
+    orgId,
+    branchId,
     wo,
     setWo,
     fetchWo,
@@ -135,6 +158,8 @@ export function useDrawerMutations({
   } = useInvoiceMutations({
     workOrderId,
     orgIdRef,
+    orgId,
+    branchId,
     wo,
     setWo,
     fetchWo,
@@ -148,14 +173,33 @@ export function useDrawerMutations({
   const [saving, setSaving] = useState(false);
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
 
+  // ── Fallback mutations (used when pre-built hooks not provided) ──
+
+  const patchWorkOrderMutation = useOrgMutation<
+    unknown,
+    Record<string, unknown>
+  >({
+    endpoint: () =>
+      `/api/organizations/${orgIdRef.current}/work-orders/${workOrderId}`,
+    method: "PATCH",
+    queryKey: workOrderKeys.all(orgId ?? ""),
+    invalidateKeys: branchId
+      ? ([bayViewKeys.data(branchId)] as const)
+      : undefined,
+    onSuccess: () => {
+      fetchWo(true);
+      onRefresh();
+    },
+  });
+
   // ── Mechanic assignment ──
 
   async function assignMechanic(
     mechanicId: string,
     fullName?: string | null,
   ) {
-    const orgId = orgIdRef.current;
-    if (!orgId || !workOrderId) return;
+    const orgIdCurrent = orgIdRef.current;
+    if (!orgIdCurrent || !workOrderId) return;
     const prevWo = wo;
 
     // Optimistic: update drawer state immediately
@@ -182,18 +226,11 @@ export function useDrawerMutations({
           mechanicId,
         });
       } else {
-        const res = await fetch(
-          `/api/organizations/${orgId}/work-orders/${workOrderId}`,
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ mechanic_id: mechanicId || null }),
-          },
-        );
-        const json = await res.json();
-        if (json.error) throw new Error(json.error.message);
+        await patchWorkOrderMutation.mutateAsync({
+          mechanic_id: mechanicId || null,
+        });
       }
-      await fetchWo(true);
+      fetchWo(true);
       onRefresh();
       toast.dismiss();
       toast.success(mechanicId ? "Mechanic assigned" : "Mechanic removed");
@@ -215,8 +252,8 @@ export function useDrawerMutations({
     customerId: string | null,
     customerName?: string | null,
   ) {
-    const orgId = orgIdRef.current;
-    if (!orgId || !workOrderId) return;
+    const orgIdCurrent = orgIdRef.current;
+    if (!orgIdCurrent || !workOrderId) return;
     const prevWo = wo;
 
     setWo((prev) => {
@@ -242,21 +279,11 @@ export function useDrawerMutations({
           customerName,
         });
       } else {
-        const res = await fetch(
-          `/api/organizations/${orgId}/work-orders/${workOrderId}`,
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ customer_id: customerId }),
-          },
-        );
-        const json = await res.json();
-        if (json.error)
-          throw new Error(
-            json.error.message ?? "Failed to assign customer",
-          );
+        await patchWorkOrderMutation.mutateAsync({
+          customer_id: customerId,
+        });
       }
-      await fetchWo(true);
+      fetchWo(true);
       onRefresh();
       toast.dismiss();
       if (customerId) {

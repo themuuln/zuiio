@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { ok, created } from "@/lib/api-response";
 import {
   createServiceSchedule,
   getServiceSchedules,
@@ -15,7 +15,7 @@ export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
     vehicleId,
     branchId,
   );
-  return NextResponse.json({ data: schedules });
+  return ok(schedules);
 });
 
 export const POST = createRouteHandler(
@@ -27,7 +27,7 @@ export const POST = createRouteHandler(
       user.id,
       body,
     );
-    return NextResponse.json({ data: schedule }, { status: 201 });
+    return created(schedule);
   },
   { rateLimit: true, subscription: true },
 );

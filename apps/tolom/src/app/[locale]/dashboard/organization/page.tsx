@@ -20,7 +20,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
+import { createOrgQuery } from "@/lib/queries/factory";
+import { useOrgMutation } from "@zuiio/query";
 import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -56,6 +57,9 @@ const orgEditSchema = z.object({
 
 type OrgEditValues = z.infer<typeof orgEditSchema>;
 
+const fetchOrgDetail = createOrgQuery<Organization>("");
+const fetchSubscription = createOrgQuery<SubscriptionPlanInfo>("/subscription");
+
 export default function OrganizationPage() {
   const t = useTranslations();
   const orgT = useTranslations("organization");
@@ -67,17 +71,9 @@ export default function OrganizationPage() {
     data: organization,
     isLoading: orgLoading,
     error: orgError,
-    refetch: refetchOrg,
   } = useQuery({
     queryKey: orgKeys.detail(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}`);
-      const json = await res.json();
-      if (!res.ok || json.error) {
-        throw new Error(json.error?.message ?? "Failed to load organization");
-      }
-      return json.data as Organization;
-    },
+    queryFn: () => fetchOrgDetail(orgId ?? ""),
     enabled: !!orgId,
     staleTime: 30_000,
   });
@@ -88,14 +84,7 @@ export default function OrganizationPage() {
     error: subError,
   } = useQuery({
     queryKey: orgKeys.subscription(orgId ?? ""),
-    queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/subscription`);
-      const json = await res.json();
-      if (!res.ok || json.error) {
-        throw new Error(json.error?.message ?? "Failed to load subscription");
-      }
-      return json.data as SubscriptionPlanInfo;
-    },
+    queryFn: () => fetchSubscription(orgId ?? ""),
     enabled: !!orgId,
     staleTime: 30_000,
   });
@@ -110,7 +99,19 @@ export default function OrganizationPage() {
 
   const watchedLogoUrl = form.watch("logoUrl");
   const [editing, setEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+
+  const updateOrg = useOrgMutation<unknown, { name: string; logoUrl: string | null }>({
+    endpoint: () => `/api/organizations/${orgId}`,
+    method: "PATCH",
+    queryKey: orgKeys.detail(orgId ?? ""),
+    bodyFn: (vars) => vars,
+    successMessage: orgT("orgUpdated"),
+    errorMessage: orgT("failedToUpdateOrg"),
+    onSuccess: () => {
+      form.reset();
+      setEditing(false);
+    },
+  });
 
   useEffect(() => {
     if (!organization || editing) return;
@@ -122,35 +123,11 @@ export default function OrganizationPage() {
 
   const handleSave = async () => {
     if (!orgId) return;
-
-    setIsSaving(true);
     const values = form.getValues();
-
-    try {
-      const res = await fetch(`/api/organizations/${orgId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: values.name,
-          logoUrl: values.logoUrl || null,
-        }),
-      });
-      const json = await res.json();
-
-      if (!res.ok || json.error) {
-        throw new Error(json.error?.message ?? orgT("failedToUpdateOrg"));
-      }
-
-      toast.success(orgT("orgUpdated"));
-      await refetchOrg();
-      setEditing(false);
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : orgT("failedToUpdateOrg"),
-      );
-    } finally {
-      setIsSaving(false);
-    }
+    await updateOrg.mutateAsync({
+      name: values.name,
+      logoUrl: values.logoUrl || null,
+    });
   };
 
   const handleCancel = () => {
@@ -463,16 +440,16 @@ export default function OrganizationPage() {
                 </Field>
 
                 <div className="flex gap-2 pt-2">
-                  <Button type="submit" disabled={isSaving} size="sm">
-                    <Save className="mr-1 size-3.5" />
-                    {isSaving ? orgT("saving") : orgT("saved")}
+                  <Button type="submit" disabled={updateOrg.isPending} size="sm">
+                  <Save className="mr-1 size-3.5" />
+                    {updateOrg.isPending ? orgT("saving") : orgT("saved")}
                   </Button>
                   <Button
                     type="button"
                     onClick={handleCancel}
                     variant="outline"
                     size="sm"
-                    disabled={isSaving}
+                    disabled={updateOrg.isPending}
                   >
                     <X className="mr-1 size-3.5" />
                     {orgT("cancel")}

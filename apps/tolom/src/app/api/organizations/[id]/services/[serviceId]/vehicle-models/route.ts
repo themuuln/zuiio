@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, created, apiError } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
   deleteServiceVehicleModelPrice,
@@ -13,7 +13,7 @@ import {
 export const GET = createRouteHandler(async ({ orgId, params, supabase }) => {
   const { serviceId } = params;
   const rows = await getServiceVehicleModels(supabase, orgId, serviceId);
-  return NextResponse.json({ data: rows });
+  return ok(rows);
 });
 
 /**
@@ -27,10 +27,7 @@ export const POST = createRouteHandler(
     const body = await request.json();
 
     if (!body.vehicle_model_id) {
-      return NextResponse.json(
-        { error: { message: "vehicle_model_id is required" } },
-        { status: 400 },
-      );
+      return apiError("BAD_REQUEST", "vehicle_model_id is required", 400);
     }
 
     const row = await upsertServiceVehicleModelPrice(
@@ -41,7 +38,7 @@ export const POST = createRouteHandler(
       body.specific_price != null ? Number(body.specific_price) : null,
     );
 
-    return NextResponse.json({ data: row }, { status: 201 });
+    return created(row);
   },
   { rateLimit: true, subscription: true },
 );
@@ -57,10 +54,7 @@ export const DELETE = createRouteHandler(
     const body = await request.json();
 
     if (!body.vehicle_model_id) {
-      return NextResponse.json(
-        { error: { message: "vehicle_model_id is required" } },
-        { status: 400 },
-      );
+      return apiError("BAD_REQUEST", "vehicle_model_id is required", 400);
     }
 
     await deleteServiceVehicleModelPrice(
@@ -70,7 +64,7 @@ export const DELETE = createRouteHandler(
       body.vehicle_model_id,
     );
 
-    return NextResponse.json({ data: null });
+    return ok(null);
   },
   { rateLimit: true, subscription: true },
 );

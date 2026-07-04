@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { backfillSchedulesFromHistory } from "@/lib/services/service-reminder-service";
+import { ok } from "@/lib/api-response";
 
 export const POST = createRouteHandler(
   async ({ request, orgId, supabase }) => {
     const synced = await backfillSchedulesFromHistory(supabase, orgId);
-    return NextResponse.json({ data: { synced } });
+    return ok({ synced });
   },
   { rateLimit: true, subscription: true },
 );

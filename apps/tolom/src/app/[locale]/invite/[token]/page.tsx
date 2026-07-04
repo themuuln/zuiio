@@ -3,7 +3,8 @@
 import { CheckCircle, Loader2, LogIn, Wrench, XCircle } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,7 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
-import type { ApiResponse } from "@/lib/types";
+import { useProfile } from "@/lib/queries/use-profile";
 
 interface InviteData {
   id: string;
@@ -41,68 +42,70 @@ export default function InviteRedeemPage() {
   const params = useParams();
   const { push } = useRouter();
   const token = params.token as string;
-  const [state, setState] = useState<PageState>({ type: "loading" });
-  const [accepting, setAccepting] = useState(false);
   const [accepted, setAccepted] = useState(false);
-  const [acceptError, setAcceptError] = useState<string | null>(null);
 
-  const loadInvite = useCallback(async () => {
-    setState({ type: "loading" });
-    try {
+  const inviteQuery = useQuery({
+    queryKey: ["invite", token],
+    queryFn: async () => {
       const res = await fetch(`/api/invites/${token}`, {
         cache: "no-store",
       });
       if (!res.ok) {
-        const body = (await res.json()) as ApiResponse<unknown>;
-        throw new Error(body.error?.message ?? "Invite not found or expired");
+        const body = await res.json();
+        throw new Error(
+          (body as Record<string, unknown>)?.error?.message ??
+            "Invite not found or expired",
+        );
       }
-      const body = (await res.json()) as ApiResponse<InviteData>;
+      const body = await res.json();
       if (!body.data) throw new Error("Invite not found");
+      return body.data as InviteData;
+    },
+    enabled: !!token,
+  });
 
-      const profileRes = await fetch("/api/profile");
-      const isAuthenticated = profileRes.ok;
+  const profileQuery = useProfile();
+  const isAuthenticated = !!profileQuery.data;
 
-      setState({
-        type: "loaded",
-        invite: body.data,
-        isAuthenticated,
-      });
-    } catch (err) {
-      setState({
-        type: "error",
-        message: err instanceof Error ? err.message : "Failed to load invite",
-      });
-    }
-  }, [token]);
-
-  useEffect(() => {
-    loadInvite();
-  }, [loadInvite]);
-
-  const handleAccept = async () => {
-    setAccepting(true);
-    setAcceptError(null);
-    try {
+  const acceptMutation = useMutation({
+    mutationFn: async () => {
       const res = await fetch(`/api/invites/${token}/redeem`, {
         method: "POST",
       });
-      const body = (await res.json()) as ApiResponse<{
-        organizationId: string;
-      }>;
+      const body = await res.json();
       if (!res.ok || !body.data) {
-        throw new Error(body.error?.message ?? "Failed to accept invite");
+        throw new Error(
+          body.error?.message ?? "Failed to accept invite",
+        );
       }
+      return body.data as { organizationId: string };
+    },
+    onSuccess: () => {
       setAccepted(true);
       setTimeout(() => {
         push("/dashboard");
       }, 1500);
-    } catch (err) {
-      setAcceptError(
-        err instanceof Error ? err.message : "Failed to accept invite",
-      );
-    } finally {
-      setAccepting(false);
+    },
+  });
+
+  const state: PageState = (() => {
+    if (inviteQuery.isLoading) return { type: "loading" };
+    if (inviteQuery.error || !inviteQuery.data) {
+      return {
+        type: "error",
+        message:
+          inviteQuery.error?.message ?? "Failed to load invite",
+      };
     }
+    return {
+      type: "loaded",
+      invite: inviteQuery.data,
+      isAuthenticated,
+    };
+  })();
+
+  const handleAccept = () => {
+    acceptMutation.mutate();
   };
 
   if (state.type === "loading") {
@@ -208,9 +211,9 @@ export default function InviteRedeemPage() {
             </div>
           </div>
 
-          {acceptError && (
+          {acceptMutation.error && (
             <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              {acceptError}
+              {acceptMutation.error.message}
             </div>
           )}
         </CardContent>
@@ -219,9 +222,9 @@ export default function InviteRedeemPage() {
             <Button
               className="w-full"
               onClick={handleAccept}
-              disabled={accepting}
+              disabled={acceptMutation.isPending}
             >
-              {accepting ? (
+              {acceptMutation.isPending ? (
                 <Loader2 className="mr-2 size-4 animate-spin" />
               ) : null}
               {t("acceptButton")}

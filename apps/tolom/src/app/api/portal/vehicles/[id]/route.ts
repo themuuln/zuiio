@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { NotFoundError } from "@/lib/errors";
 import { createPortalRouteHandler } from "@/lib/portal-auth";
 
@@ -85,12 +85,10 @@ export const GET = createPortalRouteHandler(
       parts: (parts[wo.id] ?? []) as Record<string, unknown>[],
     }));
 
-    return NextResponse.json({
-      data: {
-        vehicle,
-        workOrders,
-        upcomingServices: upcomingServicesResult.data ?? [],
-      },
+    return ok({
+      vehicle,
+      workOrders,
+      upcomingServices: upcomingServicesResult.data ?? [],
     });
   },
 );

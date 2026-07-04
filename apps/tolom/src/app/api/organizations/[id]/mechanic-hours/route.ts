@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import { createClient } from "@/lib/supabase/server";
 
@@ -46,5 +46,5 @@ export const GET = createRouteHandler(async ({ request, orgId }) => {
     }))
     .sort((a, b) => b.total_hours - a.total_hours);
 
-  return NextResponse.json({ data: result });
+  return ok(result);
 });

@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import { ok, apiError } from "@/lib/api-response";
 
 /**
  * GET /api/estimate/public/[token]
@@ -32,10 +32,7 @@ export async function GET(
     .single();
 
   if (error || !estimate) {
-    return NextResponse.json(
-      { error: { code: "NOT_FOUND", message: "Estimate not found" } },
-      { status: 404 },
-    );
+    return apiError("NOT_FOUND", "Estimate not found", 404);
   }
 
   // Preserve the original estimate line order for customer-facing output.
@@ -44,7 +41,5 @@ export async function GET(
       Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0),
   );
 
-  return NextResponse.json({
-    data: { ...estimate, items: sortedItems },
-  });
+  return ok({ ...estimate, items: sortedItems });
 }

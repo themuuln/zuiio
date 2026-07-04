@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, created } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import { createTransfer, getTransfers } from "@/lib/services/transfer-service";
 
@@ -15,14 +15,14 @@ export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
     page,
     pageSize,
   });
-  return NextResponse.json({ data: result });
+  return ok(result);
 });
 
 export const POST = createRouteHandler(
   async ({ request, orgId, user, supabase }) => {
     const body = await request.json();
     const transfer = await createTransfer(supabase, orgId, body, user.id);
-    return NextResponse.json({ data: transfer }, { status: 201 });
+    return created(transfer);
   },
   {
     subscription: true,

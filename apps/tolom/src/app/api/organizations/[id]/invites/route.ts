@@ -1,3 +1,4 @@
+import { ok, created } from "@/lib/api-response";
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
@@ -9,14 +10,14 @@ import {
 
 export const GET = createRouteHandler(async ({ orgId }) => {
   const invites = await getOrgInvites(orgId);
-  return NextResponse.json({ data: invites });
+  return ok(invites);
 });
 
 export const POST = createRouteHandler(
   async ({ request, orgId, user, supabase }) => {
     const body = await request.json();
     const invite = await createInvite(supabase, orgId, body, user.id);
-    return NextResponse.json({ data: invite }, { status: 201 });
+    return created(invite);
   },
   { rateLimit: true, subscription: true },
 );

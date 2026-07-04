@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import { createClient } from "@/lib/supabase/server";
 
@@ -21,7 +21,7 @@ export const GET = createRouteHandler(async ({ request, orgId }) => {
   if (endDate) woQuery = woQuery.lte("completed_at", `${endDate}T23:59:59`);
 
   const { data: workOrders } = await woQuery;
-  if (!workOrders?.length) return NextResponse.json({ data: [] });
+  if (!workOrders?.length) return ok([]);
 
   const woIds = workOrders.map((w) => w.id);
 
@@ -31,7 +31,7 @@ export const GET = createRouteHandler(async ({ request, orgId }) => {
     .select("mechanic_id, commission_amount")
     .in("work_order_id", woIds);
 
-  if (!commissions?.length) return NextResponse.json({ data: [] });
+  if (!commissions?.length) return ok([]);
 
   // Aggregate per mechanic
   const commMap = new Map<string, number>();
@@ -63,5 +63,5 @@ export const GET = createRouteHandler(async ({ request, orgId }) => {
     }))
     .sort((a, b) => b.total_commission - a.total_commission);
 
-  return NextResponse.json({ data: result });
+  return ok(result);
 });

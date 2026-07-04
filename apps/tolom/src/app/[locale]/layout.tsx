@@ -15,8 +15,7 @@ import { routing } from "@/lib/i18n/routing";
 import { MutationQueueProvider } from "@/lib/offline/mutation-queue-provider";
 import "../globals.css";
 
-// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
-// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+// Route renders user-specific content — legitimate cache opt-out.
 export const instant = false;
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tolom.app";

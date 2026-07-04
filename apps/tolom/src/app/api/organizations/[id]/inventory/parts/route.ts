@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, created, apiError } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
   createPart,
@@ -9,7 +9,7 @@ import {
 export const GET = createRouteHandler(
   async ({ orgId, supabase }) => {
     const parts = await getPartsCatalog(supabase, orgId);
-    return NextResponse.json({ data: parts });
+    return ok(parts);
   },
   { requiredPermission: { resource: "inventory", action: "read" } },
 );
@@ -18,7 +18,7 @@ export const POST = createRouteHandler(
   async ({ request, orgId, user, supabase }) => {
     const body = await request.json();
     const part = await createPart(supabase, orgId, body, user.id);
-    return NextResponse.json({ data: part }, { status: 201 });
+    return created(part);
   },
   {
     rateLimit: true,
@@ -32,14 +32,11 @@ export const PATCH = createRouteHandler(
     const { searchParams } = new URL(request.url);
     const itemId = searchParams.get("partId") ?? searchParams.get("id");
     if (!itemId) {
-      return NextResponse.json(
-        { error: { message: "partId required" } },
-        { status: 400 },
-      );
+      return apiError("VALIDATION", "partId required", 400);
     }
     const body = await request.json();
     const part = await updatePart(supabase, itemId, orgId, body);
-    return NextResponse.json({ data: part });
+    return ok(part);
   },
   { rateLimit: true, subscription: true },
 );

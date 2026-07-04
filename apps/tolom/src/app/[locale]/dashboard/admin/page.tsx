@@ -1,6 +1,5 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Check,
   Loader2,
@@ -12,14 +11,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
-import type { AdminOrg } from "@/lib/services/admin-service";
+import { useAdminMe, useAdminOrganizations, useUpdateOrgPlan, useExtendTrial } from "@/lib/queries/use-admin";
 
 const PLAN_COLORS: Record<string, string> = {
   starter: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
@@ -42,78 +40,35 @@ const PLAN_OPTIONS = ["starter", "pro", "business", "enterprise"];
 
 export default function AdminPage() {
   const t = useTranslations();
-  const queryClient = useQueryClient();
-  const [savingOrgId, setSavingOrgId] = useState<string | null>(null);
+  const updatePlan = useUpdateOrgPlan();
+  const extendTrial = useExtendTrial();
 
-  const { data: meData, isLoading: meLoading } = useQuery({
-    queryKey: ["admin", "me"],
-    queryFn: async () => {
-      const res = await fetch("/api/admin/me");
-      const json = await res.json();
-      return json.data;
-    },
-  });
+  const { data: meData, isLoading: meLoading } = useAdminMe();
 
   const isSuperAdmin = meData?.isSuperAdmin === true;
   const role = meData?.role;
 
-  const { data: orgs = [], isLoading: orgsLoading } = useQuery<AdminOrg[]>({
-    queryKey: ["admin", "organizations"],
-    queryFn: async () => {
-      const res = await fetch("/api/admin/organizations");
-      const json = await res.json();
-      return json.data ?? [];
-    },
-    enabled: isSuperAdmin,
-  });
+  const { data: orgs = [], isLoading: orgsLoading } = useAdminOrganizations();
 
   const loading = meLoading || (isSuperAdmin && orgsLoading);
 
   async function handlePlanChange(orgId: string, planType: string) {
-    setSavingOrgId(orgId);
     try {
-      const res = await fetch(
-        `/api/admin/organizations/${orgId}/subscription`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ planType, status: "active" }),
-        },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      queryClient.invalidateQueries({ queryKey: ["admin", "organizations"] });
-      toast.success(t("admin.updatedTo", { plan: planType }));
+      await updatePlan.mutateAsync({ orgId, planType });
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : t("admin.failedToUpdate"),
       );
-    } finally {
-      setSavingOrgId(null);
     }
   }
 
   async function handleExtendTrial(orgId: string) {
-    setSavingOrgId(orgId);
     try {
-      const res = await fetch(
-        `/api/admin/organizations/${orgId}/subscription`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "extend" }),
-        },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      queryClient.invalidateQueries({ queryKey: ["admin", "organizations"] });
-      toast.success(t("admin.trialReset"));
+      await extendTrial.mutateAsync({ orgId });
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : t("admin.failedToResetTrial"),
       );
-    } finally {
-      setSavingOrgId(null);
     }
   }
 
@@ -325,13 +280,13 @@ export default function AdminPage() {
                             : "outline"
                         }
                         disabled={
-                          savingOrgId === org.id ||
+                          updatePlan.isPending ||
                           org.subscription?.plan_type === plan
                         }
                         onClick={() => handlePlanChange(org.id, plan)}
                         className="h-7 text-[11px] px-2 capitalize"
                       >
-                        {savingOrgId === org.id ? (
+                        {updatePlan.isPending ? (
                           <Loader2 className="size-3 animate-spin" />
                         ) : org.subscription?.plan_type === plan ? (
                           <Check className="size-3" />
@@ -343,12 +298,12 @@ export default function AdminPage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      disabled={savingOrgId === org.id}
+                      disabled={extendTrial.isPending}
                       onClick={() => handleExtendTrial(org.id)}
                       className="h-7 text-[11px] px-2"
                       title={t("admin.resetTrial")}
                     >
-                      {savingOrgId === org.id ? (
+                      {extendTrial.isPending ? (
                         <Loader2 className="size-3 animate-spin" />
                       ) : (
                         <RefreshCw className="size-3" />

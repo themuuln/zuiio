@@ -89,7 +89,7 @@ export function MechanicSwitcher() {
           render={
             <SidebarMenuButton
               size="sm"
-              className="h-7 px-1 aria-expanded:bg-sidebar-accent aria-expanded:text-sidebar-accent-foreground"
+              className="h-7 px-1 transition-colors duration-150 aria-expanded:bg-sidebar-accent aria-expanded:text-sidebar-accent-foreground"
             />
           }
         >
@@ -115,7 +115,7 @@ export function MechanicSwitcher() {
           align="end"
           sideOffset={4}
         >
-          <div className="px-2 py-1.5 text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+          <div className="px-2 py-1.5 text-[10px] font-semibold text-sidebar-foreground/40 uppercase tracking-wider">
             Switch Mechanic
           </div>
           {mechanics.length === 0 && (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Loader2,
   Mail,
@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { useAdminMe } from "@/lib/queries/use-admin";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,11 +34,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 
-interface AdminMe {
-  isAdmin: boolean;
-  isSuperAdmin: boolean;
-  role: string | null;
-}
 
 interface Campaign {
   id: string;
@@ -76,16 +72,7 @@ export default function MarketingPage() {
     name: "",
     type: "email",
   });
-  const [creating, setCreating] = useState(false);
-
-  const { data: meData, isLoading: meLoading } = useQuery<AdminMe>({
-    queryKey: ["admin", "me"],
-    queryFn: async () => {
-      const res = await fetch("/api/admin/me");
-      const json = await res.json();
-      return json.data;
-    },
-  });
+  const { data: adminMe, isLoading: adminMeLoading } = useAdminMe();
 
   const { data: campaigns = [], isLoading: campaignsLoading } = useQuery<
     Campaign[]
@@ -96,51 +83,60 @@ export default function MarketingPage() {
       const json = await res.json();
       return json.data ?? [];
     },
-    enabled: meData?.isAdmin === true,
+    enabled: adminMe?.isAdmin === true,
   });
 
-  const loading = meLoading || campaignsLoading;
-  const isAdmin = meData?.isAdmin === true;
-
-  const handleCreate = useCallback(async () => {
-    if (!newCampaign.name) return;
-    setCreating(true);
-    try {
+  const createMutation = useMutation({
+    mutationFn: async (campaign: { name: string; type: string }) => {
       const res = await fetch("/api/admin/marketing/campaigns", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newCampaign),
+        body: JSON.stringify(campaign),
       });
       const json = await res.json();
       if (json.error) throw new Error(json.error.message);
+      return json;
+    },
+    onSuccess: () => {
       toast.success("Campaign created");
       queryClient.invalidateQueries({ queryKey: ["admin", "campaigns"] });
       setShowCreateDialog(false);
       setNewCampaign({ name: "", type: "email" });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to create");
-    } finally {
-      setCreating(false);
-    }
-  }, [newCampaign, queryClient]);
-
-  const handleDelete = useCallback(
-    async (campaignId: string) => {
-      try {
-        const res = await fetch(
-          `/api/admin/marketing/campaigns/${campaignId}`,
-          { method: "DELETE" },
-        );
-        const json = await res.json();
-        if (json.error) throw new Error(json.error.message);
-        toast.success("Campaign deleted");
-        queryClient.invalidateQueries({ queryKey: ["admin", "campaigns"] });
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Failed to delete");
-      }
     },
-    [queryClient],
-  );
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to create");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (campaignId: string) => {
+      const res = await fetch(`/api/admin/marketing/campaigns/${campaignId}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      return json;
+    },
+    onSuccess: () => {
+      toast.success("Campaign deleted");
+      queryClient.invalidateQueries({ queryKey: ["admin", "campaigns"] });
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to delete");
+    },
+  });
+
+  const loading = adminMeLoading || campaignsLoading;
+  const isAdmin = adminMe?.isAdmin === true;
+
+  const handleCreate = useCallback(() => {
+    if (!newCampaign.name) return;
+    createMutation.mutate(newCampaign);
+  }, [newCampaign, createMutation]);
+
+  const handleDelete = useCallback((campaignId: string) => {
+    deleteMutation.mutate(campaignId);
+  }, [deleteMutation]);
 
   if (loading) {
     return (
@@ -330,9 +326,9 @@ export default function MarketingPage() {
           </Button>
           <Button
             onClick={handleCreate}
-            disabled={!newCampaign.name || creating}
+            disabled={!newCampaign.name || createMutation.isPending}
           >
-            {creating && <Loader2 className="size-4 mr-1 animate-spin" />}
+            {createMutation.isPending && <Loader2 className="size-4 mr-1 animate-spin" />}
             Create
           </Button>
         </DetailDrawer.Footer>

@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { createRouteHandler } from "@/lib/api-handler";
+import { ok, created, apiError, createRouteHandler } from "@/lib/api-response"
 import {
   addPartToWorkOrder,
   removePartFromWorkOrder,
@@ -16,7 +15,7 @@ export const POST = createRouteHandler(
     const { workOrderId } = params;
     const body = await parseBody(request, addWorkOrderPartSchema);
     const part = await addPartToWorkOrder(supabase, workOrderId, orgId, body);
-    return NextResponse.json({ data: part }, { status: 201 });
+    return created(part);
   },
   {
     rateLimit: true,
@@ -31,17 +30,8 @@ export const PATCH = createRouteHandler(
     const { searchParams } = new URL(request.url);
     const partId = searchParams.get("partId");
     const body = await parseBody(request, updatePartPriceSchema);
-
     if (!partId) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "partId query param required",
-          },
-        },
-        { status: 400 },
-      );
+      return apiError("VALIDATION_ERROR", "partId query param required", 400);
     }
 
     const updateParams: { final_price?: number; quantity?: number } = {};
@@ -59,7 +49,7 @@ export const PATCH = createRouteHandler(
       );
     }
 
-    return NextResponse.json({ data: null });
+    return ok(null);
   },
   {
     rateLimit: true,
@@ -73,21 +63,12 @@ export const DELETE = createRouteHandler(
     const { workOrderId } = params;
     const { searchParams } = new URL(request.url);
     const partId = searchParams.get("partId");
-
     if (!partId) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "partId query param required",
-          },
-        },
-        { status: 400 },
-      );
+      return apiError("VALIDATION_ERROR", "partId query param required", 400);
     }
 
     await removePartFromWorkOrder(supabase, partId, workOrderId, orgId);
-    return NextResponse.json({ data: null });
+    return ok(null);
   },
   {
     rateLimit: true,

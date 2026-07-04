@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { useOrgMutation } from "@zuiio/query";
+import { bayViewKeys, workOrderKeys } from "@/lib/queries/keys";
 import type { WorkOrderDetail, WorkOrderPart } from "@/lib/types";
 import type { CatalogPartItem } from "./_drawer-types";
 
@@ -10,6 +12,8 @@ import type { CatalogPartItem } from "./_drawer-types";
 interface UsePartMutationsParams {
   workOrderId: string | null;
   orgIdRef: React.MutableRefObject<string | null>;
+  orgId: string | undefined;
+  branchId: string | undefined;
   wo: WorkOrderDetail | null;
   setWo: React.Dispatch<React.SetStateAction<WorkOrderDetail | null>>;
   onRefresh: () => void;
@@ -27,6 +31,8 @@ type PartWithVariants = WorkOrderPart & {
 export function usePartMutations({
   workOrderId,
   orgIdRef,
+  orgId,
+  branchId,
   wo,
   setWo,
   onRefresh,
@@ -36,6 +42,54 @@ export function usePartMutations({
   const [partSearch, setPartSearch] = useState("");
   const [showAddPart, setShowAddPart] = useState(false);
   const [addingPartIds, setAddingPartIds] = useState<Set<string>>(new Set());
+
+  // ── Mutation hooks ──
+
+  const createPartMutation = useOrgMutation<
+    WorkOrderPart,
+    {
+      part_id: string | null;
+      part_name: string;
+      quantity: number;
+      unit_price: number;
+      catalog_item_variant_id?: string | null;
+      variant_label?: string | null;
+    }
+  >({
+    endpoint: () =>
+      `/api/organizations/${orgIdRef.current}/work-orders/${workOrderId}/parts`,
+    method: "POST",
+    queryKey: workOrderKeys.all(orgId ?? ""),
+    invalidateKeys: branchId
+      ? ([bayViewKeys.data(branchId)] as const)
+      : undefined,
+  });
+
+  const deletePartMutation = useOrgMutation<
+    unknown,
+    { partId: string }
+  >({
+    endpoint: (vars) =>
+      `/api/organizations/${orgIdRef.current}/work-orders/${workOrderId}/parts?partId=${vars.partId}`,
+    method: "DELETE",
+    queryKey: workOrderKeys.all(orgId ?? ""),
+    invalidateKeys: branchId
+      ? ([bayViewKeys.data(branchId)] as const)
+      : undefined,
+  });
+
+  const updatePartMutation = useOrgMutation<
+    unknown,
+    { partId: string; body: Record<string, unknown> }
+  >({
+    endpoint: (vars) =>
+      `/api/organizations/${orgIdRef.current}/work-orders/${workOrderId}/parts?partId=${vars.partId}`,
+    method: "PATCH",
+    queryKey: workOrderKeys.all(orgId ?? ""),
+    invalidateKeys: branchId
+      ? ([bayViewKeys.data(branchId)] as const)
+      : undefined,
+  });
 
   // ── Optimistic add ──
 
@@ -82,46 +136,22 @@ export function usePartMutations({
   // ── Confirm add (API call, replace temp with real) ──
 
   async function confirmAddPart(partId: string, price: number) {
-    const orgId = orgIdRef.current;
-    if (!orgId || !workOrderId) return;
+    const orgIdCurrent = orgIdRef.current;
+    if (!orgIdCurrent || !workOrderId) return;
     const part = wo?.parts?.find((p) => p.id === partId);
     if (!part) return;
+
+    const partWithVariants = part as PartWithVariants;
     try {
-      const partWithVariants = part as PartWithVariants;
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${workOrderId}/parts`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            part_id: partWithVariants.part_id ?? null,
-            part_name: part.part_name,
-            quantity: part.quantity ?? 1,
-            unit_price: price,
-            catalog_item_variant_id:
-              partWithVariants.catalog_item_variant_id ?? null,
-            variant_label: partWithVariants.variant_label ?? null,
-          }),
-        },
-      );
-      const json = await res.json();
-      if (json.error) {
-        toast.error(json.error.message ?? "Failed to add part");
-        setWo((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            parts: (prev.parts ?? []).filter((p) => p.id !== partId),
-          };
-        });
-        setAddingPartIds((prev) => {
-          const next = new Set(prev);
-          next.delete(partId);
-          return next;
-        });
-        return;
-      }
-      const newPart = json.data;
+      const newPart = await createPartMutation.mutateAsync({
+        part_id: partWithVariants.part_id ?? null,
+        part_name: part.part_name,
+        quantity: part.quantity ?? 1,
+        unit_price: price,
+        catalog_item_variant_id:
+          partWithVariants.catalog_item_variant_id ?? null,
+        variant_label: partWithVariants.variant_label ?? null,
+      });
       setWo((prev) => {
         if (!prev) return prev;
         return {
@@ -159,9 +189,9 @@ export function usePartMutations({
   // ── Remove ──
 
   async function removePart(partId: string) {
-    const orgId = orgIdRef.current;
+    const orgIdCurrent = orgIdRef.current;
     const part = wo?.parts?.find((p) => p.id === partId);
-    if (!orgId || !workOrderId || !part) return;
+    if (!orgIdCurrent || !workOrderId || !part) return;
 
     if (partId.startsWith("temp-")) {
       setWo((prev) => {
@@ -192,43 +222,28 @@ export function usePartMutations({
     });
 
     try {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${workOrderId}/parts?partId=${partId}`,
-        { method: "DELETE" },
-      );
-      const json = await res.json();
-      if (json.error) {
-        toast.error(json.error.message ?? "Failed to remove part");
-        setWo((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            parts: [...(prev.parts ?? []), part],
-          };
-        });
-        return;
-      }
+      await deletePartMutation.mutateAsync({ partId });
 
       toast("Part removed", {
         action: {
           label: "Undo",
           onClick: async () => {
             try {
-              const addRes = await fetch(
-                `/api/organizations/${orgId}/work-orders/${workOrderId}/parts`,
-                {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(partData),
-                },
-              );
-              const addJson = await addRes.json();
-              if (addJson.data) {
+              const restoredPart = await createPartMutation.mutateAsync({
+                part_id: partWithVariants.part_id ?? null,
+                part_name: partData.part_name,
+                quantity: partData.quantity,
+                unit_price: partData.unit_price,
+                catalog_item_variant_id:
+                  partWithVariants.catalog_item_variant_id ?? null,
+                variant_label: partWithVariants.variant_label ?? null,
+              });
+              if (restoredPart) {
                 setWo((prev) => {
                   if (!prev) return prev;
                   return {
                     ...prev,
-                    parts: [...(prev.parts ?? []), addJson.data],
+                    parts: [...(prev.parts ?? []), restoredPart],
                   };
                 });
                 onRefresh();
@@ -261,8 +276,8 @@ export function usePartMutations({
       return;
     }
 
-    const orgId = orgIdRef.current;
-    if (!orgId || !workOrderId) return;
+    const orgIdCurrent = orgIdRef.current;
+    if (!orgIdCurrent || !workOrderId) return;
     const numVal = price;
     if (Number.isNaN(numVal) || numVal < 0) {
       toast.error("Invalid price");
@@ -283,30 +298,10 @@ export function usePartMutations({
     });
 
     try {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${workOrderId}/parts?partId=${partId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ final_price: numVal }),
-        },
-      );
-      const json = await res.json();
-      if (json.error) {
-        toast.error(json.error.message ?? "Failed to update price");
-        if (oldPrice !== null) {
-          setWo((prev) => {
-            if (!prev) return prev;
-            return {
-              ...prev,
-              parts: (prev.parts ?? []).map((p) =>
-                p.id === partId ? { ...p, final_price: oldPrice } : p,
-              ),
-            };
-          });
-        }
-        return;
-      }
+      await updatePartMutation.mutateAsync({
+        partId,
+        body: { final_price: numVal },
+      });
       toast.dismiss();
       toast.success("Price updated");
       onRefresh();
@@ -338,8 +333,8 @@ export function usePartMutations({
       return;
     }
 
-    const orgId = orgIdRef.current;
-    if (!orgId || !workOrderId) return;
+    const orgIdCurrent = orgIdRef.current;
+    if (!orgIdCurrent || !workOrderId) return;
     const numVal = qty;
     if (Number.isNaN(numVal) || numVal < 1) {
       toast.error("Quantity must be at least 1");
@@ -367,34 +362,10 @@ export function usePartMutations({
     });
 
     try {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${workOrderId}/parts?partId=${partId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ quantity: numVal }),
-        },
-      );
-      const json = await res.json();
-      if (json.error) {
-        toast.error(json.error.message ?? "Failed to update quantity");
-        setWo((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            parts: (prev.parts ?? []).map((p) =>
-              p.id === partId
-                ? {
-                    ...p,
-                    quantity: oldQty ?? 1,
-                    final_price: oldFinalPrice ?? 0,
-                  }
-                : p,
-            ),
-          };
-        });
-        return;
-      }
+      await updatePartMutation.mutateAsync({
+        partId,
+        body: { quantity: numVal },
+      });
       toast.dismiss();
       toast.success("Quantity updated");
       onRefresh();
@@ -425,8 +396,8 @@ export function usePartMutations({
     discountAmount: number,
     discountPercent: number,
   ) {
-    const orgId = orgIdRef.current;
-    if (!orgId || !workOrderId) return;
+    const orgIdCurrent = orgIdRef.current;
+    if (!orgIdCurrent || !workOrderId) return;
 
     const originalPart = wo?.parts?.find((p) => p.id === partId);
     const oldAmount = originalPart?.discount_amount ?? 0;
@@ -454,40 +425,13 @@ export function usePartMutations({
     });
 
     try {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${workOrderId}/parts?partId=${partId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            discount_amount: discountAmount,
-            discount_percentage: discountPercent,
-          }),
+      await updatePartMutation.mutateAsync({
+        partId,
+        body: {
+          discount_amount: discountAmount,
+          discount_percentage: discountPercent,
         },
-      );
-      const json = await res.json();
-      if (json.error) {
-        setWo((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            parts: (prev.parts ?? []).map((p) =>
-              p.id === partId
-                ? {
-                    ...p,
-                    discount_amount: oldAmount,
-                    discount_percentage: oldPercent,
-                    final_price:
-                      Number(p.unit_price ?? 0) * Number(p.quantity ?? 1) -
-                      Number(oldAmount),
-                  }
-                : p,
-            ),
-          };
-        });
-        toast.error(json.error.message ?? "Failed to update discount");
-        return;
-      }
+      });
       toast.dismiss();
       toast.success("Discount updated");
       onRefresh();

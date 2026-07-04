@@ -94,6 +94,7 @@ export function useFollowups(orgId: string, filters: FollowupFilters = {}) {
       if (!res.ok) throw new Error("Failed to fetch follow-ups");
       return res.json();
     },
+    staleTime: 30_000,
   });
 }
 
@@ -108,6 +109,7 @@ export function useFollowupDetail(orgId: string, followupId: string | null) {
       return res.json();
     },
     enabled: !!followupId,
+    staleTime: 30_000,
   });
 }
 

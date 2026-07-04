@@ -124,7 +124,10 @@ export default function MovementsPage() {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     try {
+      await createMovement.mutateAsync({
         quantity: quantity,
+        part_id: form.get("part_id") as string,
+        movement_type: form.get("movement_type") as string,
         unit_cost: unitCost || undefined,
         reference_type: (form.get("reference_type") as string) || undefined,
         reference_id: (form.get("reference_id") as string) || undefined,

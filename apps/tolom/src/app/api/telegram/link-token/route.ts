@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
-import { NextResponse } from "next/server";
 import { createSimpleRouteHandler } from "@/lib/api-handler";
 import { NotFoundError } from "@/lib/errors";
+import { ok, apiError } from "@/lib/api-response";
 
 const TELEGRAM_BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME ?? "tolom_bot";
 
@@ -33,17 +33,12 @@ export const POST = createSimpleRouteHandler(async ({ user, supabase }) => {
   });
 
   if (error) {
-    return NextResponse.json(
-      { error: { code: "DB_ERROR", message: "Failed to generate link token" } },
-      { status: 500 },
-    );
+    return apiError("DB_ERROR", "Failed to generate link token", 500);
   }
 
-  return NextResponse.json({
-    data: {
-      token: rawToken,
-      expires_in_minutes: 15,
-      bot_deep_link: `https://t.me/${TELEGRAM_BOT_USERNAME}?start=${rawToken}`,
-    },
+  return ok({
+    token: rawToken,
+    expires_in_minutes: 15,
+    bot_deep_link: `https://t.me/${TELEGRAM_BOT_USERNAME}?start=${rawToken}`,
   });
 });

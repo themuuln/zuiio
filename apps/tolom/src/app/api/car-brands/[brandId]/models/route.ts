@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { toApiErrorResponse, UnauthorizedError } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
+import { ok, created } from "@/lib/api-response";
 
 export async function GET(
   _request: NextRequest,
@@ -25,7 +26,7 @@ export async function GET(
     );
   }
 
-  return NextResponse.json({ data });
+  return ok(data);
 }
 
 export async function POST(
@@ -60,7 +61,7 @@ export async function POST(
       .maybeSingle();
 
     if (existing) {
-      return NextResponse.json({ data: existing });
+      return ok(existing);
     }
 
     const { data, error } = await supabase
@@ -82,7 +83,7 @@ export async function POST(
       );
     }
 
-    return NextResponse.json({ data }, { status: 201 });
+    return created(data);
   } catch (error) {
     const { status, body } = toApiErrorResponse(error);
     return NextResponse.json(body, { status });

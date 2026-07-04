@@ -1,6 +1,5 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Clock3, ShieldCheck, UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
@@ -17,12 +16,23 @@ import {
 } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
 import { useProfile } from "@/lib/queries/use-profile";
-import type { ApiResponse, UserProfile } from "@/lib/types";
+import {
+  useMembers,
+  useInvites,
+  useRoles,
+  useCreateInvite,
+  useUpdateMemberRole,
+  useUpdateMember,
+  useCancelInvite,
+  useResendInvite,
+  useRemoveMember,
+} from "@/lib/queries/use-members";
+import { useBranches } from "@/lib/queries/use-branches";
+import type { UserProfile } from "@/lib/types";
 import { EditMemberSheet } from "./_edit-member-drawer";
 import { InviteSheet } from "./_invite-drawer";
 import { MemberList } from "./_member-list";
 import { PendingInvites } from "./_pending-invites";
-import type { InviteWithEmail } from "./types";
 
 interface Role {
   id: string;
@@ -37,72 +47,30 @@ interface Branch {
 export default function MembersPage() {
   const commonT = useTranslations("common");
   const t = useTranslations("organization.memberManagement");
-  const queryClient = useQueryClient();
 
   const { data: profile } = useProfile();
   const orgId = profile?.organizationId ?? "";
 
   const [inviteSheetOpen, setInviteSheetOpen] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [savingEdit, setSavingEdit] = useState(false);
   const [editingMember, setEditingMember] = useState<
     (UserProfile & { fullName: string | null; phone: string | null }) | null
   >(null);
 
-  const membersQuery = useQuery<UserProfile[]>({
-    queryKey: ["organizations", orgId, "members"],
-    queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/users`);
-      const body = (await res.json()) as ApiResponse<UserProfile[]>;
-      if (!res.ok || body.error) {
-        throw new Error(body.error?.message ?? "Failed to load members");
-      }
-      return body.data ?? [];
-    },
-    enabled: !!orgId,
-  });
+  // Queries
+  const membersQuery = useMembers(orgId);
+  const invitesQuery = useInvites(orgId);
+  const rolesQuery = useRoles(orgId);
+  const branchesQuery = useBranches(orgId);
 
-  const invitesQuery = useQuery<InviteWithEmail[]>({
-    queryKey: ["organizations", orgId, "invites"],
-    queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/invites`);
-      const body = (await res.json()) as ApiResponse<InviteWithEmail[]>;
-      if (!res.ok || body.error) {
-        throw new Error(body.error?.message ?? "Failed to load invites");
-      }
-      return body.data ?? [];
-    },
-    enabled: !!orgId,
-  });
-
-  const rolesQuery = useQuery<Role[]>({
-    queryKey: ["organizations", orgId, "roles"],
-    queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/roles`);
-      const body = (await res.json()) as ApiResponse<Role[]>;
-      if (!res.ok || body.error) {
-        throw new Error(body.error?.message ?? "Failed to load roles");
-      }
-      return body.data ?? [];
-    },
-    enabled: !!orgId,
-  });
-
-  const branchesQuery = useQuery<Branch[]>({
-    queryKey: ["organizations", orgId, "branches"],
-    queryFn: async () => {
-      const res = await fetch(`/api/organizations/${orgId}/branches`);
-      const body = (await res.json()) as ApiResponse<Branch[]>;
-      if (!res.ok || body.error) {
-        throw new Error(body.error?.message ?? "Failed to load branches");
-      }
-      return body.data ?? [];
-    },
-    enabled: !!orgId,
-  });
+  // Mutations
+  const createInvite = useCreateInvite(orgId);
+  const updateRole = useUpdateMemberRole(orgId);
+  const updateMember = useUpdateMember(orgId);
+  const cancelInvite = useCancelInvite(orgId);
+  const resendInvite = useResendInvite(orgId);
+  const removeMemberMutation = useRemoveMember(orgId);
 
   const members = membersQuery.data ?? [];
-  const _allInvites = invitesQuery.data ?? [];
   const roles = rolesQuery.data ?? [];
   const branches = branchesQuery.data ?? [];
   const invites = useMemo(
@@ -120,59 +88,17 @@ export default function MembersPage() {
   const invitePanelError =
     invitesQuery.error instanceof Error ? invitesQuery.error.message : null;
 
-  const invalidateMembers = async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({
-        queryKey: ["organizations", orgId, "members"],
-      }),
-      queryClient.invalidateQueries({
-        queryKey: ["organizations", orgId, "invites"],
-      }),
-    ]);
-  };
-
   const handleInvite = async (data: { email: string; roleId: string }) => {
     if (!data.email.trim()) return;
-    setSending(true);
-    try {
-      const res = await fetch(`/api/organizations/${orgId}/invites`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: data.email.trim(),
-          roleId: data.roleId || undefined,
-        }),
-      });
-      const body = (await res.json()) as ApiResponse<unknown>;
-      if (!res.ok || body.error) {
-        throw new Error(body.error?.message ?? "Failed to create invite");
-      }
-      toast.success(t("inviteSent"));
-      setInviteSheetOpen(false);
-      await invalidateMembers();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to invite user");
-    } finally {
-      setSending(false);
-    }
+    await createInvite.mutateAsync({
+      email: data.email.trim(),
+      roleId: data.roleId || undefined,
+    });
+    setInviteSheetOpen(false);
   };
 
   const handleRoleChange = async (userId: string, roleId: string) => {
-    try {
-      const res = await fetch(`/api/organizations/${orgId}/users/${userId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roleId }),
-      });
-      const body = (await res.json()) as ApiResponse<unknown>;
-      if (!res.ok || body.error) {
-        throw new Error(body.error?.message ?? "Failed to update role");
-      }
-      toast.success(t("roleUpdated"));
-      await invalidateMembers();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update role");
-    }
+    await updateRole.mutateAsync({ userId, roleId });
   };
 
   const handleSaveMember = async (
@@ -184,72 +110,22 @@ export default function MembersPage() {
       branchId?: string;
     },
   ) => {
-    setSavingEdit(true);
-    try {
-      const res = await fetch(`/api/organizations/${orgId}/users/${memberId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName: data.fullName || null,
-          phone: data.phone || null,
-          roleId: data.roleId,
-          branchId: data.branchId || null,
-        }),
-      });
-      const body = (await res.json()) as ApiResponse<unknown>;
-      if (!res.ok || body.error) {
-        throw new Error(body.error?.message ?? "Failed to update member");
-      }
-      toast.success(t("saved"));
-      setEditingMember(null);
-      await invalidateMembers();
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to update member",
-      );
-    } finally {
-      setSavingEdit(false);
-    }
+    await updateMember.mutateAsync({
+      userId: memberId,
+      fullName: data.fullName,
+      phone: data.phone,
+      roleId: data.roleId,
+      branchId: data.branchId,
+    });
+    setEditingMember(null);
   };
 
   const handleCancelInvite = async (inviteId: string) => {
-    try {
-      const res = await fetch(`/api/organizations/${orgId}/invites`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ inviteId }),
-      });
-      const body = (await res.json()) as ApiResponse<unknown>;
-      if (!res.ok || body.error) {
-        throw new Error(body.error?.message ?? "Failed to cancel invite");
-      }
-      toast.success(t("inviteCancelled"));
-      await invalidateMembers();
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to cancel invite",
-      );
-    }
+    await cancelInvite.mutateAsync({ inviteId });
   };
 
   const handleResendInvite = async (inviteId: string) => {
-    try {
-      const res = await fetch(`/api/organizations/${orgId}/invites`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ inviteId, action: "resend" }),
-      });
-      const body = (await res.json()) as ApiResponse<unknown>;
-      if (!res.ok || body.error) {
-        throw new Error(body.error?.message ?? "Failed to resend invite");
-      }
-      toast.success(t("inviteResent"));
-      await invalidateMembers();
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to resend invite",
-      );
-    }
+    await resendInvite.mutateAsync({ inviteId });
   };
 
   const copyInviteLink = async (token: string) => {
@@ -264,23 +140,7 @@ export default function MembersPage() {
   };
 
   const removeMember = async (userId: string) => {
-    try {
-      const res = await fetch(`/api/organizations/${orgId}/users`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId }),
-      });
-      const body = (await res.json()) as ApiResponse<unknown>;
-      if (!res.ok || body.error) {
-        throw new Error(body.error?.message ?? "Failed to remove member");
-      }
-      toast.success(t("memberRemoved"));
-      await invalidateMembers();
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to remove member",
-      );
-    }
+    await removeMemberMutation.mutateAsync({ userId });
   };
 
   return (
@@ -321,7 +181,7 @@ export default function MembersPage() {
       <InviteSheet
         open={inviteSheetOpen}
         onOpenChange={setInviteSheetOpen}
-        sending={sending}
+        sending={createInvite.isPending}
         onSubmit={handleInvite}
         roles={roles}
         defaultRoleId={roles[0]?.id ?? ""}
@@ -402,7 +262,7 @@ export default function MembersPage() {
           roles={roles}
           branches={branches}
           onSave={handleSaveMember}
-          saving={savingEdit}
+          saving={updateMember.isPending}
           t={t}
         />
       )}

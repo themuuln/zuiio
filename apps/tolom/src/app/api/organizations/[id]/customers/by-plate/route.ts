@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { createRouteHandler } from "@/lib/api-handler";
+import { ok, createRouteHandler } from "@/lib/api-response"
 import { transliterateMongolianPlate } from "@/lib/form-validation";
 import type { Customer } from "@/lib/types";
 
@@ -8,7 +7,7 @@ export const GET = createRouteHandler(async ({ supabase, orgId, request }) => {
   const rawPlate = url.searchParams.get("plate")?.trim();
   const plate = rawPlate ? transliterateMongolianPlate(rawPlate) : undefined;
 
-  if (!plate) return NextResponse.json({ data: [] });
+  if (!plate) return ok([]);
 
   const plateQuery = `%${plate}%`;
 
@@ -35,5 +34,5 @@ export const GET = createRouteHandler(async ({ supabase, orgId, request }) => {
     if (customer) customerMap.set(customer.id, customer);
   }
 
-  return NextResponse.json({ data: Array.from(customerMap.values()) });
+  return ok(Array.from(customerMap.values()));
 });

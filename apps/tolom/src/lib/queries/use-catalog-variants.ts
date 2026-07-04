@@ -43,7 +43,7 @@ export function useVariantGroups(
         applies_to: appliesTo,
       }),
     enabled: !!orgId,
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
   });
 }
 
@@ -96,7 +96,7 @@ export function useVariantOptions(orgId: string | undefined, groupId?: string) {
         group_id: groupId,
       }),
     enabled: !!orgId,
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
   });
 }
 

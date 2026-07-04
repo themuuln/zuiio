@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { createRouteHandler } from "@/lib/api-handler";
+import { ok, created, createRouteHandler } from "@/lib/api-response"
 import {
   createWorkOrder,
   getWorkOrders,
@@ -23,7 +22,7 @@ export const GET = createRouteHandler(
     };
 
     const workOrders = await getWorkOrders(supabase, orgId, filters);
-    return NextResponse.json({ data: workOrders });
+    return ok(workOrders);
   },
   { requiredPermission: { resource: "work_orders", action: "read" } },
 );
@@ -32,7 +31,7 @@ export const POST = createRouteHandler(
   async ({ request, orgId, supabase }) => {
     const body = await parseBody(request, createWorkOrderSchema);
     const workOrder = await createWorkOrder(supabase, orgId, body);
-    return NextResponse.json({ data: workOrder }, { status: 201 });
+    return created(workOrder);
   },
   {
     rateLimit: true,

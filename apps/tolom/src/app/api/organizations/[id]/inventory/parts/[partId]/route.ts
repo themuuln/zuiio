@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
   deletePart,
@@ -9,7 +9,7 @@ import {
 export const GET = createRouteHandler(async ({ params, supabase, orgId }) => {
   const { partId } = params;
   const part = await getPart(supabase, partId, orgId);
-  return NextResponse.json({ data: part });
+  return ok(part);
 });
 
 export const PATCH = createRouteHandler(
@@ -17,7 +17,7 @@ export const PATCH = createRouteHandler(
     const { partId } = params;
     const body = await request.json();
     const part = await updatePart(supabase, partId, orgId, body);
-    return NextResponse.json({ data: part });
+    return ok(part);
   },
   { rateLimit: true, subscription: true },
 );
@@ -26,7 +26,7 @@ export const DELETE = createRouteHandler(
   async ({ request, orgId, params, supabase }) => {
     const { partId } = params;
     await deletePart(supabase, partId, orgId);
-    return NextResponse.json({ data: null });
+    return ok(null);
   },
   { rateLimit: true, subscription: true },
 );

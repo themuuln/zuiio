@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
   deleteVehicle,
@@ -13,9 +13,7 @@ export const GET = createRouteHandler(async ({ orgId, params, supabase }) => {
     getVehicle(supabase, vehicleId, orgId),
     getVehicleServiceHistory(supabase, orgId, vehicleId),
   ]);
-  return NextResponse.json({
-    data: { ...vehicle, service_history: serviceHistory },
-  });
+  return ok({ ...vehicle, service_history: serviceHistory });
 });
 
 export const PATCH = createRouteHandler(
@@ -29,7 +27,7 @@ export const PATCH = createRouteHandler(
       body,
       user.id,
     );
-    return NextResponse.json({ data: vehicle });
+    return ok(vehicle);
   },
   { rateLimit: true, subscription: true },
 );
@@ -38,7 +36,7 @@ export const DELETE = createRouteHandler(
   async ({ request, orgId, params, user, supabase }) => {
     const { vehicleId } = params;
     await deleteVehicle(supabase, vehicleId, orgId, user.id);
-    return NextResponse.json({ data: null });
+    return ok(null);
   },
   { rateLimit: true, subscription: true },
 );

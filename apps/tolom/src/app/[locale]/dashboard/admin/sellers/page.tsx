@@ -1,8 +1,8 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Building2, Loader2, Plus, ShieldAlert, Users, X } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,12 +23,8 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
+import { useAdminMe } from "@/lib/queries/use-admin";
 
-interface AdminMe {
-  isAdmin: boolean;
-  isSuperAdmin: boolean;
-  role: string | null;
-}
 
 interface Org {
   id: string;
@@ -50,16 +46,8 @@ export default function SellersPage() {
   const queryClient = useQueryClient();
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [selectedOrgId, setSelectedOrgId] = useState<string>("");
-  const [assigning, setAssigning] = useState(false);
 
-  const { data: meData, isLoading: meLoading } = useQuery<AdminMe>({
-    queryKey: ["admin", "me"],
-    queryFn: async () => {
-      const res = await fetch("/api/admin/me");
-      const json = await res.json();
-      return json.data;
-    },
-  });
+  const { data: meData, isLoading: meLoading } = useAdminMe();
 
   const { data: sellerData, isLoading: sellersLoading } = useQuery({
     queryKey: ["admin", "sellers"],
@@ -71,50 +59,51 @@ export default function SellersPage() {
     enabled: meData?.isAdmin === true,
   });
 
+  const assignMutation = useMutation({
+    mutationFn: async (orgId: string) => {
+      const res = await fetch("/api/admin/sellers/assign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ organization_id: orgId }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      return json;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "sellers"] });
+      setShowAssignDialog(false);
+      setSelectedOrgId("");
+      toast.success("Organization assigned");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to assign");
+    },
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: async (assignmentId: string) => {
+      const res = await fetch(`/api/admin/sellers/assign/${assignmentId}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      return json;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "sellers"] });
+      toast.success("Assignment removed");
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : "Failed to remove");
+    },
+  });
+
   const loading = meLoading || sellersLoading;
   const isAdmin = meData?.isAdmin === true;
   const isSuperAdmin = meData?.isSuperAdmin === true;
   const organizations: Org[] = sellerData?.organizations ?? [];
   const assignments: Assignment[] = sellerData?.assignments ?? [];
-
-  const handleAssign = useCallback(async () => {
-    if (!selectedOrgId) return;
-    setAssigning(true);
-    try {
-      const res = await fetch("/api/admin/sellers/assign", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ organization_id: selectedOrgId }),
-      });
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      toast.success("Organization assigned");
-      queryClient.invalidateQueries({ queryKey: ["admin", "sellers"] });
-      setShowAssignDialog(false);
-      setSelectedOrgId("");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to assign");
-    } finally {
-      setAssigning(false);
-    }
-  }, [selectedOrgId, queryClient]);
-
-  const handleRemove = useCallback(
-    async (assignmentId: string) => {
-      try {
-        const res = await fetch(`/api/admin/sellers/assign/${assignmentId}`, {
-          method: "DELETE",
-        });
-        const json = await res.json();
-        if (json.error) throw new Error(json.error.message);
-        toast.success("Assignment removed");
-        queryClient.invalidateQueries({ queryKey: ["admin", "sellers"] });
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Failed to remove");
-      }
-    },
-    [queryClient],
-  );
 
   if (loading) {
     return (
@@ -237,7 +226,7 @@ export default function SellersPage() {
                           variant="ghost"
                           size="sm"
                           className="h-7 text-xs"
-                          onClick={() => handleRemove(assignment.id)}
+                          onClick={() => removeMutation.mutate(assignment.id)}
                         >
                           <X className="size-3" />
                         </Button>
@@ -284,8 +273,8 @@ export default function SellersPage() {
           <Button variant="outline" onClick={() => setShowAssignDialog(false)}>
             Cancel
           </Button>
-          <Button onClick={handleAssign} disabled={!selectedOrgId || assigning}>
-            {assigning && <Loader2 className="size-4 mr-1 animate-spin" />}
+          <Button onClick={() => assignMutation.mutate(selectedOrgId)} disabled={!selectedOrgId || assignMutation.isPending}>
+            {assignMutation.isPending && <Loader2 className="size-4 mr-1 animate-spin" />}
             Assign
           </Button>
         </DetailDrawer.Footer>

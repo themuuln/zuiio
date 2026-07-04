@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { createRouteHandler } from "@/lib/api-handler";
+import { ok, createRouteHandler } from "@/lib/api-response"
 import {
   getInventoryBalances,
   getWeightedAverageCosts,
@@ -16,5 +15,5 @@ export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
     ...b,
     avg_unit_cost: avgCosts[b.part_id ?? ""] ?? b.default_price ?? 0,
   }));
-  return NextResponse.json({ data });
+  return ok(data);
 });

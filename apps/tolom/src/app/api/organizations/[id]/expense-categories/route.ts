@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, created } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
   createExpenseCategory,
@@ -10,7 +10,7 @@ export const GET = createRouteHandler(
   async ({ orgId, user, supabase }) => {
     await seedDefaultExpenseCategories(supabase, orgId, user.id);
     const categories = await getCategories(supabase, orgId);
-    return NextResponse.json({ data: categories });
+    return ok(categories);
   },
   { requiredPermission: { resource: "expense_categories", action: "read" } },
 );
@@ -24,7 +24,7 @@ export const POST = createRouteHandler(
       body,
       user.id,
     );
-    return NextResponse.json({ data: category }, { status: 201 });
+    return created(category);
   },
   {
     rateLimit: true,

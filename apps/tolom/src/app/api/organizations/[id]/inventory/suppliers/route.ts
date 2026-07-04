@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, created, apiError } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
   createSupplier,
@@ -10,7 +10,7 @@ import {
 export const GET = createRouteHandler(
   async ({ orgId, supabase }) => {
     const suppliers = await getSuppliers(supabase, orgId);
-    return NextResponse.json({ data: suppliers });
+    return ok(suppliers);
   },
   { requiredPermission: { resource: "inventory", action: "read" } },
 );
@@ -19,7 +19,7 @@ export const POST = createRouteHandler(
   async ({ request, orgId, user, supabase }) => {
     const body = await request.json();
     const supplier = await createSupplier(supabase, orgId, body, user.id);
-    return NextResponse.json({ data: supplier }, { status: 201 });
+    return created(supplier);
   },
   {
     rateLimit: true,
@@ -33,14 +33,11 @@ export const PATCH = createRouteHandler(
     const { searchParams } = new URL(request.url);
     const itemId = searchParams.get("supplierId") ?? searchParams.get("id");
     if (!itemId) {
-      return NextResponse.json(
-        { error: { message: "supplierId required" } },
-        { status: 400 },
-      );
+      return apiError("VALIDATION", "supplierId required", 400);
     }
     const body = await request.json();
     const supplier = await updateSupplier(supabase, itemId, orgId, body);
-    return NextResponse.json({ data: supplier });
+    return ok(supplier);
   },
   { rateLimit: true, subscription: true },
 );
@@ -50,13 +47,10 @@ export const DELETE = createRouteHandler(
     const { searchParams } = new URL(request.url);
     const itemId = searchParams.get("supplierId") ?? searchParams.get("id");
     if (!itemId) {
-      return NextResponse.json(
-        { error: { message: "supplierId required" } },
-        { status: 400 },
-      );
+      return apiError("VALIDATION", "supplierId required", 400);
     }
     await deleteSupplier(supabase, itemId, orgId);
-    return NextResponse.json({ data: { success: true } });
+    return ok({ success: true });
   },
   { rateLimit: true, subscription: true },
 );

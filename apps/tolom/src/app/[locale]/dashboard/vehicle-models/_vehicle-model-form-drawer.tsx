@@ -1,10 +1,9 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useOrgMutation } from "@zuiio/query";
 import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
@@ -25,7 +24,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
-import { vehicleModelKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 
 // ── Types ──────────────────────────────────────────────────────
@@ -95,7 +93,6 @@ export function VehicleModelFormSheet({
   const commonT = useTranslations("common");
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
-  const queryClient = useQueryClient();
 
   const [showDetails, setShowDetails] = useState(false);
 
@@ -163,140 +160,40 @@ export function VehicleModelFormSheet({
   const watchedModel = form.watch("model");
   const watchedBodyType = form.watch("bodyType");
 
-  const addMutation = useMutation({
-    mutationFn: async (data: VehicleModelValues) => {
-      if (!orgId) throw new Error(commonT("somethingWentWrong"));
-      const r = await fetch(`/api/organizations/${orgId}/vehicle-models`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          make: data.make.trim(),
-          model: data.model.trim(),
-          generation: data.generation?.trim() || null,
-          year_start: data.yearStart ? Number(data.yearStart) : null,
-          year_end: data.yearEnd ? Number(data.yearEnd) : null,
-          engine: data.engine?.trim() || null,
-          body_type: data.bodyType || null,
-        }),
-      });
-      const d = await r.json();
-      if (d.error) throw new Error(d.error.message);
-      return d.data as VehicleModelItem;
-    },
-    onMutate: async (data) => {
-      await queryClient.cancelQueries({
-        queryKey: vehicleModelKeys.list(orgId ?? ""),
-      });
-      const previous = queryClient.getQueryData<VehicleModelItem[]>(
-        vehicleModelKeys.list(orgId ?? ""),
-      );
-      const optimistic: VehicleModelItem = {
-        id: `temp-${Date.now()}`,
-        make: data.make.trim(),
-        model: data.model.trim(),
-        generation: data.generation?.trim() || null,
-        year_start: data.yearStart ? Number(data.yearStart) : null,
-        year_end: data.yearEnd ? Number(data.yearEnd) : null,
-        engine: data.engine?.trim() || null,
-        body_type: data.bodyType || null,
-      };
-      queryClient.setQueryData<VehicleModelItem[]>(
-        vehicleModelKeys.list(orgId ?? ""),
-        (old) => [...(old ?? []), optimistic],
-      );
-      return { previous };
-    },
-    onError: (err, _vars, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(
-          vehicleModelKeys.list(orgId ?? ""),
-          context.previous,
-        );
-      }
-      toast.error(
-        err instanceof Error ? err.message : commonT("somethingWentWrong"),
-      );
-    },
+  const addMutation = useOrgMutation<VehicleModelItem, VehicleModelValues>({
+    endpoint: `/api/organizations/${orgId}/vehicle-models`,
+    queryKey: ['organizations', orgId, 'vehicle-models'],
+    method: "POST",
+    bodyFn: (data) => ({
+      make: data.make.trim(),
+      model: data.model.trim(),
+      generation: data.generation?.trim() || null,
+      year_start: data.yearStart ? Number(data.yearStart) : null,
+      year_end: data.yearEnd ? Number(data.yearEnd) : null,
+      engine: data.engine?.trim() || null,
+      body_type: data.bodyType || null,
+    }),
+    successMessage: t("vehicleCreated"),
     onSuccess: () => {
-      toast.success(t("vehicleCreated"));
       onOpenChange(false);
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: vehicleModelKeys.list(orgId ?? ""),
-      });
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: async (data: VehicleModelValues) => {
-      if (!orgId || !item) throw new Error(commonT("somethingWentWrong"));
-      const r = await fetch(
-        `/api/organizations/${orgId}/vehicle-models/${item.id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            make: data.make.trim(),
-            model: data.model.trim(),
-            generation: data.generation?.trim() || null,
-            year_start: data.yearStart ? Number(data.yearStart) : null,
-            year_end: data.yearEnd ? Number(data.yearEnd) : null,
-            engine: data.engine?.trim() || null,
-            body_type: data.bodyType || null,
-          }),
-        },
-      );
-      const d = await r.json();
-      if (d.error) throw new Error(d.error.message);
-      return d.data as VehicleModelItem;
-    },
-    onMutate: async (data) => {
-      await queryClient.cancelQueries({
-        queryKey: vehicleModelKeys.list(orgId ?? ""),
-      });
-      const previous = queryClient.getQueryData<VehicleModelItem[]>(
-        vehicleModelKeys.list(orgId ?? ""),
-      );
-      queryClient.setQueryData<VehicleModelItem[]>(
-        vehicleModelKeys.list(orgId ?? ""),
-        (old) =>
-          (old ?? []).map((entry) =>
-            entry.id === item?.id
-              ? {
-                  ...entry,
-                  make: data.make.trim(),
-                  model: data.model.trim(),
-                  generation: data.generation?.trim() || null,
-                  year_start: data.yearStart ? Number(data.yearStart) : null,
-                  year_end: data.yearEnd ? Number(data.yearEnd) : null,
-                  engine: data.engine?.trim() || null,
-                  body_type: data.bodyType || null,
-                }
-              : entry,
-          ),
-      );
-      return { previous };
-    },
-    onError: (err, _vars, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(
-          vehicleModelKeys.list(orgId ?? ""),
-          context.previous,
-        );
-      }
-      toast.error(
-        err instanceof Error ? err.message : commonT("somethingWentWrong"),
-      );
-    },
+  const updateMutation = useOrgMutation<VehicleModelItem, VehicleModelValues & { id: string }>({
+    endpoint: (vars) => `/api/organizations/${orgId}/vehicle-models/${vars.id}`,
+    queryKey: ['organizations', orgId, 'vehicle-models'],
+    bodyFn: ({ id: _id, ...data }) => ({
+      make: data.make.trim(),
+      model: data.model.trim(),
+      generation: data.generation?.trim() || null,
+      year_start: data.yearStart ? Number(data.yearStart) : null,
+      year_end: data.yearEnd ? Number(data.yearEnd) : null,
+      engine: data.engine?.trim() || null,
+      body_type: data.bodyType || null,
+    }),
+    successMessage: t("vehicleUpdated"),
     onSuccess: () => {
-      toast.success(t("vehicleUpdated"));
       onOpenChange(false);
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: vehicleModelKeys.list(orgId ?? ""),
-      });
     },
   });
 
@@ -304,7 +201,7 @@ export function VehicleModelFormSheet({
 
   const handleSave = form.handleSubmit((data) => {
     if (mode === "edit") {
-      updateMutation.mutate(data);
+      updateMutation.mutate({ ...data, id: item!.id });
       return;
     }
     addMutation.mutate(data);

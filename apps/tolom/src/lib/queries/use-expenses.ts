@@ -45,6 +45,7 @@ export function useExpenses(
         params: Object.keys(filters).length ? filters : undefined,
       }),
     enabled: !!orgId,
+    staleTime: 30_000,
   });
 }
 
@@ -60,6 +61,7 @@ export function useExpense(
     queryKey: expenseKeys.detail(orgId ?? "", expenseId ?? ""),
     queryFn: () => fetchExpense(orgId!),
     enabled: !!orgId && !!expenseId,
+    staleTime: 30_000,
   });
 }
 
@@ -80,6 +82,7 @@ export function useExpenseStats(
         },
       }),
     enabled: !!orgId,
+    staleTime: 60_000,
   });
 }
 
@@ -93,6 +96,7 @@ export function useExpenseCategories(orgId: string | undefined) {
     queryKey: expenseKeys.categories(orgId ?? ""),
     queryFn: () => fetchExpenseCategories(orgId!),
     enabled: !!orgId,
+    staleTime: 5 * 60_000,
   });
 }
 

@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { createPublicBookingHandler } from "@/lib/public-booking-handler";
 import { submitBookingRequest } from "@/lib/services/booking-service";
+import { apiError, created } from "@/lib/api-response";
 
 /**
  * POST /api/booking/[token]
@@ -16,24 +16,13 @@ export const POST = createPublicBookingHandler(
 
     // ── Validation ─────────────────────────────────────────────
     if (!body.name?.trim()) {
-      return NextResponse.json(
-        { error: { code: "VALIDATION", message: "Name is required" } },
-        { status: 400 },
-      );
+      return apiError("VALIDATION", "Name is required", 400);
     }
     if (!body.phone?.trim()) {
-      return NextResponse.json(
-        { error: { code: "VALIDATION", message: "Phone number is required" } },
-        { status: 400 },
-      );
+      return apiError("VALIDATION", "Phone number is required", 400);
     }
     if (!body.plate?.trim()) {
-      return NextResponse.json(
-        {
-          error: { code: "VALIDATION", message: "Vehicle plate is required" },
-        },
-        { status: 400 },
-      );
+      return apiError("VALIDATION", "Vehicle plate is required", 400);
     }
 
     // ── Submit booking ──────────────────────────────────────────
@@ -46,15 +35,10 @@ export const POST = createPublicBookingHandler(
       requestedDate: body.requestedDate,
     });
 
-    return NextResponse.json(
-      {
-        data: {
-          id: result.appointmentId,
-          message:
-            "Booking request submitted. The shop will contact you to confirm.",
-        },
-      },
-      { status: 201 },
-    );
+    return created({
+      id: result.appointmentId,
+      message:
+        "Booking request submitted. The shop will contact you to confirm.",
+    });
   },
 );

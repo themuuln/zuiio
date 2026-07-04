@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { ValidationError } from "@/lib/errors";
 import { receivePurchaseOrder } from "@/lib/services/inventory-service";
+import { ok, apiError } from "@/lib/api-response";
 
 export const GET = createRouteHandler(async ({ supabase, params, orgId }) => {
   const { purchaseOrderId } = params;
@@ -24,13 +24,10 @@ export const GET = createRouteHandler(async ({ supabase, params, orgId }) => {
     .single();
 
   if (error || !po) {
-    return NextResponse.json(
-      { error: { code: "NOT_FOUND", message: "Purchase order not found" } },
-      { status: 404 },
-    );
+    return apiError("NOT_FOUND", "Purchase order not found", 404);
   }
 
-  return NextResponse.json({ data: po });
+  return ok(po);
 });
 
 export const PATCH = createRouteHandler(
@@ -61,13 +58,10 @@ export const PATCH = createRouteHandler(
       .single();
 
     if (error || !po) {
-      return NextResponse.json(
-        { error: { code: "NOT_FOUND", message: "Purchase order not found" } },
-        { status: 404 },
-      );
+      return apiError("NOT_FOUND", "Purchase order not found", 404);
     }
 
-    return NextResponse.json({ data: po });
+    return ok(po);
   },
   { rateLimit: true, subscription: true },
 );
@@ -79,7 +73,7 @@ export const POST = createRouteHandler(
 
     if (body.action === "receive") {
       const po = await receivePurchaseOrder(supabase, purchaseOrderId, orgId);
-      return NextResponse.json({ data: po });
+      return ok(po);
     }
 
     throw new ValidationError("Unsupported action. Use action: 'receive'.");

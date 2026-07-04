@@ -3,7 +3,6 @@
 import { Info, Shield } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
-import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,6 +10,8 @@ import { Switch } from "@/components/ui/switch";
 import { Typography } from "@/components/ui/typography";
 import type { Organization } from "@/lib/types";
 import { SettingsBlock, SettingsGroup, SettingsRow } from "./_settings-layout";
+import { useOrgMutation } from "@zuiio/query";
+import { orgKeys } from "@/lib/queries/keys";
 
 interface DataSharingFormProps {
   organization: Organization | undefined;
@@ -25,44 +26,29 @@ export function DataSharingForm({
   const [sharingEnabled, setSharingEnabled] = useState(
     organization?.sharing_enabled ?? false,
   );
-  const [saving, setSaving] = useState(false);
+
+  const toggleSharing = useOrgMutation<unknown, { enabled: boolean }>({
+    endpoint: () => `/api/organizations/${organization?.id}`,
+    method: "PATCH",
+    queryKey: orgKeys.detail(organization?.id ?? ""),
+    bodyFn: (vars) => ({ sharingEnabled: vars.enabled }),
+    successMessage: (vars) =>
+      vars.enabled
+        ? t("dataSharingEnabledToast")
+        : t("dataSharingDisabledToast"),
+    errorMessage: t("dataSharingFailedToast"),
+    onSuccess: (_, vars) => {
+      setSharingEnabled(vars.enabled);
+      onRefetch();
+    },
+  });
 
   const handleToggle = useCallback(
-    async (checked: boolean) => {
+    (checked: boolean) => {
       if (!organization) return;
-
-      setSaving(true);
-      try {
-        const res = await fetch(`/api/organizations/${organization.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sharingEnabled: checked }),
-        });
-
-        const json = await res.json();
-        if (!res.ok || json.error) {
-          throw new Error(
-            json.error?.message ?? "Failed to update sharing settings",
-          );
-        }
-
-        setSharingEnabled(checked);
-        onRefetch();
-        toast.success(
-          checked
-            ? t("dataSharingEnabledToast")
-            : t("dataSharingDisabledToast"),
-        );
-      } catch (err) {
-        const message =
-          err instanceof Error ? err.message : t("dataSharingFailedToast");
-        toast.error(message);
-        setSharingEnabled(!checked);
-      } finally {
-        setSaving(false);
-      }
+      toggleSharing.mutate({ enabled: checked });
     },
-    [organization, onRefetch, t],
+    [organization, toggleSharing],
   );
 
   if (!organization) {
@@ -85,7 +71,7 @@ export function DataSharingForm({
           <Switch
             checked={sharingEnabled}
             onCheckedChange={handleToggle}
-            disabled={saving}
+            disabled={toggleSharing.isPending}
           />
         </SettingsRow>
       </SettingsGroup>

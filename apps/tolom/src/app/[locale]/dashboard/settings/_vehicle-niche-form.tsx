@@ -1,6 +1,6 @@
 "use client";
 
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useQueries } from "@tanstack/react-query";
 import {
   Car,
   CarFront,
@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,11 +21,14 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Typography } from "@/components/ui/typography";
+import { useOrgMutation } from "@zuiio/query";
 import {
   type CarBrand,
   type CarModel,
   carCatalogKeys,
+  useCarBrands,
 } from "@/lib/queries/use-car-catalog";
+import { orgKeys } from "@/lib/queries/keys";
 import type { Organization } from "@/lib/types";
 import { SettingsBlock, SettingsGroup, SettingsRow } from "./_settings-layout";
 
@@ -64,8 +66,17 @@ export function VehicleNicheForm({
 }: VehicleNicheFormProps) {
   const t = useTranslations("settings");
   const [niche, setNiche] = useState<NicheSettings>(DEFAULT_NICHE);
-  const [saving, setSaving] = useState(false);
   const [expandedBrands, setExpandedBrands] = useState<Set<string>>(new Set());
+
+  const saveNiche = useOrgMutation<unknown, { settings: Record<string, unknown> }>({
+    endpoint: () => `/api/organizations/${organization?.id ?? ""}`,
+    method: "PATCH",
+    queryKey: orgKeys.detail(organization?.id ?? ""),
+    successMessage: t("nicheSavedToast"),
+    onSuccess: () => {
+      onRefetch();
+    },
+  });
 
   // Initialize from org settings
   useEffect(() => {
@@ -73,20 +84,8 @@ export function VehicleNicheForm({
       setNiche(readNiche(organization));
     }
   }, [organization]);
-
   // Fetch all brands (unfiltered — we show all for selection)
-  const { data: allBrands = [], isLoading: brandsLoading } = useQuery({
-    queryKey: carCatalogKeys.brands(),
-    queryFn: async (): Promise<CarBrand[]> => {
-      const res = await fetch("/api/car-brands");
-      const json = await res.json();
-      if (!res.ok)
-        throw new Error(json.error?.message ?? "Failed to fetch brands");
-      return json.data;
-    },
-    staleTime: 1000 * 60 * 60 * 24,
-  });
-
+  const { data: allBrands = [], isLoading: brandsLoading } = useCarBrands();
   // Fetch models for expanded brands
   const expandedBrandIds = useMemo(
     () => [...expandedBrands].filter((id) => niche.brand_ids.includes(id)),
@@ -191,43 +190,19 @@ export function VehicleNicheForm({
   const handleSave = useCallback(async () => {
     if (!organization) return;
 
-    setSaving(true);
-    try {
-      const currentSettings =
-        (organization.settings as Record<string, unknown>) ?? {};
-      const nextSettings = {
-        ...currentSettings,
-        vehicle_niche: {
-          enabled: niche.enabled,
-          brand_ids: niche.brand_ids,
-          model_ids: niche.model_ids,
-        },
-      };
+    const currentSettings =
+      (organization.settings as Record<string, unknown>) ?? {};
+    const nextSettings = {
+      ...currentSettings,
+      vehicle_niche: {
+        enabled: niche.enabled,
+        brand_ids: niche.brand_ids,
+        model_ids: niche.model_ids,
+      },
+    };
 
-      const res = await fetch(`/api/organizations/${organization.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ settings: nextSettings }),
-      });
-
-      const json = await res.json();
-      if (!res.ok || json.error) {
-        throw new Error(
-          json.error?.message ?? "Failed to save vehicle niche settings",
-        );
-      }
-
-      onRefetch();
-      toast.success(t("nicheSavedToast"));
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to save settings";
-      toast.error(message);
-    } finally {
-      setSaving(false);
-    }
-  }, [organization, niche, onRefetch, t]);
-
+    await saveNiche.mutateAsync({ settings: nextSettings });
+  }, [organization, niche, saveNiche]);
   if (!organization) {
     return (
       <SettingsBlock>
@@ -250,7 +225,7 @@ export function VehicleNicheForm({
             onCheckedChange={(checked) =>
               setNiche((prev) => ({ ...prev, enabled: checked }))
             }
-            disabled={saving}
+            disabled={saveNiche.isPending}
           />
         </SettingsRow>
       </SettingsGroup>
@@ -333,7 +308,7 @@ export function VehicleNicheForm({
                 variant="outline"
                 size="sm"
                 onClick={selectAllBrands}
-                disabled={saving}
+                disabled={saveNiche.isPending}
               >
                 Select all
               </Button>
@@ -342,7 +317,7 @@ export function VehicleNicheForm({
                 variant="outline"
                 size="sm"
                 onClick={invertBrands}
-                disabled={saving}
+                disabled={saveNiche.isPending}
               >
                 Invert
               </Button>
@@ -357,7 +332,7 @@ export function VehicleNicheForm({
                     model_ids: [],
                   }))
                 }
-                disabled={saving}
+                disabled={saveNiche.isPending}
               >
                 Clear all
               </Button>
@@ -370,15 +345,15 @@ export function VehicleNicheForm({
         <Button
           size="sm"
           onClick={handleSave}
-          disabled={saving}
+          disabled={saveNiche.isPending}
           className="gap-2"
         >
-          {saving ? (
+          {saveNiche.isPending ? (
             <Loader2 className="size-4 animate-spin" />
           ) : (
             <Wrench className="size-4" />
           )}
-          {saving ? "Saving..." : "Save niche settings"}
+          {saveNiche.isPending ? "Saving..." : "Save niche settings"}
         </Button>
       </div>
 

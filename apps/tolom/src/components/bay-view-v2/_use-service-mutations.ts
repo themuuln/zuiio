@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { useOrgMutation } from "@zuiio/query";
+import { bayViewKeys, workOrderKeys } from "@/lib/queries/keys";
 import type { WorkOrderDetail, WorkOrderService } from "@/lib/types";
 import type { CatalogServiceItem } from "./_drawer-types";
 
@@ -10,6 +12,8 @@ import type { CatalogServiceItem } from "./_drawer-types";
 interface UseServiceMutationsParams {
   workOrderId: string | null;
   orgIdRef: React.MutableRefObject<string | null>;
+  orgId: string | undefined;
+  branchId: string | undefined;
   wo: WorkOrderDetail | null;
   setWo: React.Dispatch<React.SetStateAction<WorkOrderDetail | null>>;
   onRefresh: () => void;
@@ -27,6 +31,8 @@ type ServiceWithVariants = WorkOrderService & {
 export function useServiceMutations({
   workOrderId,
   orgIdRef,
+  orgId,
+  branchId,
   wo,
   setWo,
   onRefresh,
@@ -41,6 +47,54 @@ export function useServiceMutations({
   const [confirmingServiceIds, setConfirmingServiceIds] = useState<
     Set<string>
   >(new Set());
+
+  // ── Mutation hooks ──
+
+  const createServiceMutation = useOrgMutation<
+    WorkOrderService,
+    {
+      service_catalog_id: string | null;
+      service_name: string;
+      quantity: number;
+      unit_price: number;
+      catalog_item_variant_id?: string | null;
+      variant_label?: string | null;
+    }
+  >({
+    endpoint: () =>
+      `/api/organizations/${orgIdRef.current}/work-orders/${workOrderId}/services`,
+    method: "POST",
+    queryKey: workOrderKeys.all(orgId ?? ""),
+    invalidateKeys: branchId
+      ? ([bayViewKeys.data(branchId)] as const)
+      : undefined,
+  });
+
+  const deleteServiceMutation = useOrgMutation<
+    unknown,
+    { serviceId: string }
+  >({
+    endpoint: (vars) =>
+      `/api/organizations/${orgIdRef.current}/work-orders/${workOrderId}/services?serviceId=${vars.serviceId}`,
+    method: "DELETE",
+    queryKey: workOrderKeys.all(orgId ?? ""),
+    invalidateKeys: branchId
+      ? ([bayViewKeys.data(branchId)] as const)
+      : undefined,
+  });
+
+  const updateServiceMutation = useOrgMutation<
+    unknown,
+    { serviceId: string; body: Record<string, unknown> }
+  >({
+    endpoint: (vars) =>
+      `/api/organizations/${orgIdRef.current}/work-orders/${workOrderId}/services?serviceId=${vars.serviceId}`,
+    method: "PATCH",
+    queryKey: workOrderKeys.all(orgId ?? ""),
+    invalidateKeys: branchId
+      ? ([bayViewKeys.data(branchId)] as const)
+      : undefined,
+  });
 
   // ── Optimistic add ──
 
@@ -88,47 +142,23 @@ export function useServiceMutations({
   // ── Confirm add (API call, replace temp with real) ──
 
   async function confirmAddService(serviceId: string, price: number) {
-    const orgId = orgIdRef.current;
-    if (!orgId || !workOrderId) return;
+    const orgIdCurrent = orgIdRef.current;
+    if (!orgIdCurrent || !workOrderId) return;
     const svc = wo?.services?.find((s) => s.id === serviceId);
     if (!svc) return;
+
     setConfirmingServiceIds((prev) => new Set([...prev, serviceId]));
     try {
       const svcWithVariants = svc as ServiceWithVariants;
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${workOrderId}/services`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            service_catalog_id: svcWithVariants.service_catalog_id ?? null,
-            service_name: svc.service_name,
-            quantity: svc.quantity ?? 1,
-            unit_price: price,
-            catalog_item_variant_id:
-              svcWithVariants.catalog_item_variant_id ?? null,
-            variant_label: svcWithVariants.variant_label ?? null,
-          }),
-        },
-      );
-      const json = await res.json();
-      if (json.error) {
-        toast.error(json.error.message ?? "Failed to add service");
-        setWo((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            services: (prev.services ?? []).filter((s) => s.id !== serviceId),
-          };
-        });
-        setAddingServiceIds((prev) => {
-          const next = new Set(prev);
-          next.delete(serviceId);
-          return next;
-        });
-        return;
-      }
-      const newService = json.data;
+      const newService = await createServiceMutation.mutateAsync({
+        service_catalog_id: svcWithVariants.service_catalog_id ?? null,
+        service_name: svc.service_name,
+        quantity: svc.quantity ?? 1,
+        unit_price: price,
+        catalog_item_variant_id:
+          svcWithVariants.catalog_item_variant_id ?? null,
+        variant_label: svcWithVariants.variant_label ?? null,
+      });
       setWo((prev) => {
         if (!prev) return prev;
         return {
@@ -172,9 +202,9 @@ export function useServiceMutations({
   // ── Remove ──
 
   async function removeService(serviceId: string) {
-    const orgId = orgIdRef.current;
+    const orgIdCurrent = orgIdRef.current;
     const service = wo?.services?.find((s) => s.id === serviceId);
-    if (!orgId || !workOrderId || !service) return;
+    if (!orgIdCurrent || !workOrderId || !service) return;
 
     if (serviceId.startsWith("temp-")) {
       setWo((prev) => {
@@ -206,43 +236,26 @@ export function useServiceMutations({
     });
 
     try {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${workOrderId}/services?serviceId=${serviceId}`,
-        { method: "DELETE" },
-      );
-      const json = await res.json();
-      if (json.error) {
-        toast.error(json.error.message ?? "Failed to remove service");
-        setWo((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            services: [...(prev.services ?? []), service],
-          };
-        });
-        return;
-      }
+      await deleteServiceMutation.mutateAsync({ serviceId });
 
       toast("Service removed", {
         action: {
           label: "Undo",
           onClick: async () => {
             try {
-              const addRes = await fetch(
-                `/api/organizations/${orgId}/work-orders/${workOrderId}/services`,
-                {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(serviceData),
-                },
-              );
-              const addJson = await addRes.json();
-              if (addJson.data) {
+              const restoredService =
+                await createServiceMutation.mutateAsync({
+                  service_catalog_id: serviceData.service_catalog_id,
+                  service_name: serviceData.service_name,
+                  quantity: serviceData.quantity,
+                  unit_price: serviceData.unit_price,
+                });
+              if (restoredService) {
                 setWo((prev) => {
                   if (!prev) return prev;
                   return {
                     ...prev,
-                    services: [...(prev.services ?? []), addJson.data],
+                    services: [...(prev.services ?? []), restoredService],
                   };
                 });
                 onRefresh();
@@ -275,8 +288,8 @@ export function useServiceMutations({
       return;
     }
 
-    const orgId = orgIdRef.current;
-    if (!orgId || !workOrderId) return;
+    const orgIdCurrent = orgIdRef.current;
+    if (!orgIdCurrent || !workOrderId) return;
     const numVal = price;
     if (Number.isNaN(numVal) || numVal < 0) {
       toast.error("Invalid price");
@@ -299,30 +312,10 @@ export function useServiceMutations({
     });
 
     try {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${workOrderId}/services?serviceId=${serviceId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ final_price: numVal }),
-        },
-      );
-      const json = await res.json();
-      if (json.error) {
-        toast.error(json.error.message ?? "Failed to update price");
-        if (oldPrice !== null) {
-          setWo((prev) => {
-            if (!prev) return prev;
-            return {
-              ...prev,
-              services: (prev.services ?? []).map((s) =>
-                s.id === serviceId ? { ...s, final_price: oldPrice } : s,
-              ),
-            };
-          });
-        }
-        return;
-      }
+      await updateServiceMutation.mutateAsync({
+        serviceId,
+        body: { final_price: numVal },
+      });
       toast.dismiss();
       toast.success("Price updated");
       onRefresh();
@@ -354,8 +347,8 @@ export function useServiceMutations({
       return;
     }
 
-    const orgId = orgIdRef.current;
-    if (!orgId || !workOrderId) return;
+    const orgIdCurrent = orgIdRef.current;
+    if (!orgIdCurrent || !workOrderId) return;
     const numVal = qty;
     if (Number.isNaN(numVal) || numVal < 1) {
       toast.error("Quantity must be at least 1");
@@ -383,34 +376,10 @@ export function useServiceMutations({
     });
 
     try {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${workOrderId}/services?serviceId=${serviceId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ quantity: numVal }),
-        },
-      );
-      const json = await res.json();
-      if (json.error) {
-        toast.error(json.error.message ?? "Failed to update quantity");
-        setWo((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            services: (prev.services ?? []).map((s) =>
-              s.id === serviceId
-                ? {
-                    ...s,
-                    quantity: oldQty ?? 1,
-                    final_price: oldFinalPrice ?? 0,
-                  }
-                : s,
-            ),
-          };
-        });
-        return;
-      }
+      await updateServiceMutation.mutateAsync({
+        serviceId,
+        body: { quantity: numVal },
+      });
       toast.dismiss();
       toast.success("Quantity updated");
       onRefresh();
@@ -441,8 +410,8 @@ export function useServiceMutations({
     discountAmount: number,
     discountPercent: number,
   ) {
-    const orgId = orgIdRef.current;
-    if (!orgId || !workOrderId) return;
+    const orgIdCurrent = orgIdRef.current;
+    if (!orgIdCurrent || !workOrderId) return;
 
     const originalService = wo?.services?.find((s) => s.id === serviceId);
     const oldAmount = originalService?.discount_amount ?? 0;
@@ -470,41 +439,13 @@ export function useServiceMutations({
     });
 
     try {
-      const res = await fetch(
-        `/api/organizations/${orgId}/work-orders/${workOrderId}/services?serviceId=${serviceId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            discount_amount: discountAmount,
-            discount_percentage: discountPercent,
-          }),
+      await updateServiceMutation.mutateAsync({
+        serviceId,
+        body: {
+          discount_amount: discountAmount,
+          discount_percentage: discountPercent,
         },
-      );
-      const json = await res.json();
-      if (json.error) {
-        setWo((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            services: (prev.services ?? []).map((s) =>
-              s.id === serviceId
-                ? {
-                    ...s,
-                    discount_amount: oldAmount,
-                    discount_percentage: oldPercent,
-                    final_price:
-                      Number(s.unit_price ?? 0) *
-                        Number(s.quantity ?? 1) -
-                      Number(oldAmount),
-                  }
-                : s,
-            ),
-          };
-        });
-        toast.error(json.error.message ?? "Failed to update discount");
-        return;
-      }
+      });
       toast.dismiss();
       toast.success("Discount updated");
       onRefresh();

@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import type { Customer } from "@/lib/types";
 
 export const GET = createRouteHandler(async ({ supabase, orgId, request }) => {
   const url = new URL(request.url);
   const vehicleId = url.searchParams.get("vehicle_id");
-  if (!vehicleId) return NextResponse.json({ data: null });
+  if (!vehicleId) return ok(null);
 
   const [ownerResult, { data: lastWo, error: woError }] = await Promise.all([
     supabase
@@ -29,7 +29,7 @@ export const GET = createRouteHandler(async ({ supabase, orgId, request }) => {
 
   if (ownerResult.error) throw new Error(ownerResult.error.message);
   if (woError) throw new Error(woError.message);
-  if (!lastWo) return NextResponse.json({ data: null });
+  if (!lastWo) return ok(null);
 
   const owner =
     (ownerResult.data?.customers as Customer | null | undefined) ?? null;
@@ -47,13 +47,11 @@ export const GET = createRouteHandler(async ({ supabase, orgId, request }) => {
       .eq("organization_id", orgId),
   ]);
 
-  return NextResponse.json({
-    data: {
-      services: services ?? [],
-      parts: parts ?? [],
-      mechanic_id: lastWo.mechanic_id,
-      notes: lastWo.notes,
-      owner,
-    },
+  return ok({
+    services: services ?? [],
+    parts: parts ?? [],
+    mechanic_id: lastWo.mechanic_id,
+    notes: lastWo.notes,
+    owner,
   });
 });

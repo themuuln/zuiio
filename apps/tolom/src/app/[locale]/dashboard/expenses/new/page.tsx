@@ -212,6 +212,7 @@ export default function NewExpensePage() {
                   className="mb-1 block text-sm font-medium"
                 >
                   {t("amount")} <span className="text-destructive">*</span>
+                </Label>
                 <CurrencyInput
                   id="amount"
                   value={Number(form.amount) || 0}

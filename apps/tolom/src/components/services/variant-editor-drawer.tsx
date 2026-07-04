@@ -407,29 +407,28 @@ function VariantRow({
           </Typography.Muted>
         )}
       </div>
-          <CurrencyInput
-            min={0}
-            key={`${variant.id}-${variant.price}`}
-            value={currentPrice}
-            onChange={(val) => onPriceChange(variant.id, String(val))}
-            className={`h-8 w-24 tabular-nums ${
-              variant.price != null && variant.price !== defaultPrice
-                ? "border-primary"
-                : ""
-            }`}
-            size="sm"
-            autoSelect
-          />
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => onDelete(variant.id)}
-            disabled={isSaving}
-            aria-label="Delete variant"
-          >
-            <Trash2 className="size-3.5 text-destructive" />
-          </Button>
-      </div>
+      <CurrencyInput
+        min={0}
+        key={`${variant.id}-${variant.price}`}
+        value={currentPrice}
+        onChange={(val) => onPriceChange(variant.id, String(val))}
+        className={`h-8 w-24 tabular-nums ${
+          variant.price != null && variant.price !== defaultPrice
+            ? "border-primary"
+            : ""
+        }`}
+        size="sm"
+        autoSelect
+      />
+      <Button
+        variant="ghost"
+        size="icon-xs"
+        onClick={() => onDelete(variant.id)}
+        disabled={isSaving}
+        aria-label="Delete variant"
+      >
+        <Trash2 className="size-3.5 text-destructive" />
+      </Button>
     </div>
   );
 }

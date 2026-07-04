@@ -57,6 +57,7 @@ export function useBayViewMutations(params: BayViewMutationsParams) {
     t,
     paymentMethodFees,
     transferBanks,
+    dialogs,
     pending: pendingState,
   } = params;
 

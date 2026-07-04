@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { created } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import { ValidationError } from "@/lib/errors";
 import { recordPayment } from "@/lib/services/invoice-service";
@@ -19,7 +19,7 @@ export const POST = createRouteHandler(
       notes: body.notes ?? undefined,
     });
 
-    return NextResponse.json({ data: payments }, { status: 201 });
+    return created(payments);
   },
   { rateLimit: true, subscription: true },
 );

@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { createRouteHandler } from "@/lib/api-handler";
+import { ok, createRouteHandler } from "@/lib/api-response"
 import { getUsageTrends } from "@/lib/services/inventory-reports-service";
 
 export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
@@ -9,5 +8,5 @@ export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
     : undefined;
   const branchId = searchParams.get("branch_id") ?? undefined;
   const data = await getUsageTrends(supabase, orgId, months, branchId);
-  return NextResponse.json({ data });
+  return ok(data);
 });

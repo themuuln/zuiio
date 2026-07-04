@@ -7,6 +7,7 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -22,6 +23,8 @@ import {
   resolveOrgTransferBanks,
 } from "@/lib/payments/org-bank-accounts";
 import { workOrderKeys } from "@/lib/queries/keys";
+import { useOrgMutation } from "@zuiio/query";
+import { bayViewKeys } from "@/lib/queries/keys";
 import { useDrawerQueries } from "@/lib/queries/use-drawer-queries";
 import { useOrgSettings } from "@/lib/queries/use-org-settings";
 import {
@@ -51,23 +54,32 @@ const sectionLoading = (h: string) => () => (
 );
 
 const WorkOrderServicesSection = dynamic(
-  () => import("./_work-order-services-section").then((m) => m.WorkOrderServicesSection),
+  () =>
+    import("./_work-order-services-section").then(
+      (m) => m.WorkOrderServicesSection,
+    ),
   { ssr: false, loading: sectionLoading("24") },
 );
 const WorkOrderPartsSection = dynamic(
-  () => import("./_work-order-parts-section").then((m) => m.WorkOrderPartsSection),
+  () =>
+    import("./_work-order-parts-section").then((m) => m.WorkOrderPartsSection),
   { ssr: false, loading: sectionLoading("24") },
 );
 const WorkOrderNotesSection = dynamic(
-  () => import("./_work-order-notes-section").then((m) => m.WorkOrderNotesSection),
+  () =>
+    import("./_work-order-notes-section").then((m) => m.WorkOrderNotesSection),
   { ssr: false, loading: sectionLoading("16") },
 );
 const WorkOrderTimelineSection = dynamic(
-  () => import("./_work-order-timeline-section").then((m) => m.WorkOrderTimelineSection),
+  () =>
+    import("./_work-order-timeline-section").then(
+      (m) => m.WorkOrderTimelineSection,
+    ),
   { ssr: false, loading: sectionLoading("32") },
 );
 const WorkOrderQuickActions = dynamic(
-  () => import("./_work-order-quick-actions").then((m) => m.WorkOrderQuickActions),
+  () =>
+    import("./_work-order-quick-actions").then((m) => m.WorkOrderQuickActions),
   { ssr: false },
 );
 
@@ -141,6 +153,18 @@ export function WorkOrderDetailDrawer({
     [orgId, workOrderId, queryClient],
   );
 
+  // ── Computed totals ──
+
+  const servicesTotal = useMemo(
+    () => wo?.services?.reduce((s, svc) => s + Number(svc.final_price), 0) ?? 0,
+    [wo?.services],
+  );
+  const partsTotal = useMemo(
+    () => wo?.parts?.reduce((s, p) => s + Number(p.final_price), 0) ?? 0,
+    [wo?.parts],
+  );
+  const grandTotal = servicesTotal + partsTotal;
+
   // ── Mutations layer ──
 
   const {
@@ -186,6 +210,7 @@ export function WorkOrderDetailDrawer({
   } = useDrawerMutations({
     workOrderId,
     orgIdRef,
+    orgId,
     wo,
     setWo,
     fetchWo,
@@ -196,6 +221,30 @@ export function WorkOrderDetailDrawer({
     branchId: branchFilter,
     assignMechanicMutation: drawerAssignMechanicMutation,
     assignCustomerMutation: drawerAssignCustomerMutation,
+  });
+
+  // ── Inline mutations for complete / ready-for-pickup ──
+
+  const completeMutation = useOrgMutation<
+    unknown,
+    { status: string; notes?: string }
+  >({
+    endpoint: () =>
+      `/api/organizations/${orgIdRef.current}/work-orders/${workOrderId}`,
+    method: "PATCH",
+    queryKey: workOrderKeys.all(orgId ?? ""),
+    invalidateKeys: branchFilter
+      ? ([bayViewKeys.data(branchFilter)] as const)
+      : undefined,
+  });
+
+  const nuatMutation = useOrgMutation<unknown, { nuat_enabled: boolean }>({
+    endpoint: () => `/api/organizations/${orgId}/work-orders/${workOrderId}`,
+    method: "PATCH",
+    queryKey: workOrderKeys.all(orgId ?? ""),
+    invalidateKeys: branchFilter
+      ? ([bayViewKeys.data(branchFilter)] as const)
+      : undefined,
   });
 
   // ── Local-only state ──
@@ -288,26 +337,11 @@ export function WorkOrderDetailDrawer({
       return;
     }
 
-    // Step 2: Update status to Completed — handled separately so a PATCH failure
-    // doesn't lose the already-saved completion data.
-    // saveCompletionData is idempotent, so retrying is safe.
+    // Step 2: Update status to Completed via useOrgMutation
     try {
-      const res = await fetch(
-        `/api/organizations/${orgIdVal}/work-orders/${workOrderId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "Completed" }),
-        },
-      );
-      const json = await res.json();
-
-      if (json.error) {
-        toast.error(
-          `${t("completionDataSaved")} ${json.error.message ?? t("failedToComplete")}`,
-        );
-        return;
-      }
+      await completeMutation.mutateAsync({
+        status: "Completed",
+      });
 
       await fetchWo(true);
       toast.dismiss();
@@ -319,10 +353,8 @@ export function WorkOrderDetailDrawer({
         onOpenChange(false);
       }, 1500);
       onRefresh();
-    } catch (err) {
-      toast.error(
-        `${t("completionDataSaved")} ${err instanceof Error ? err.message : t("failedToComplete")}`,
-      );
+    } catch {
+      toast.error(`${t("completionDataSaved")} ${t("failedToComplete")}`);
     }
   }
 
@@ -367,23 +399,10 @@ export function WorkOrderDetailDrawer({
         mechanicNotes: data.mechanicNotes,
       });
 
-      const statusJson = await fetch(
-        `/api/organizations/${orgIdVal}/work-orders/${workOrderId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            status: "Ready for Pickup",
-            notes: data.mechanicNotes || undefined,
-          }),
-        },
-      ).then((r) => r.json());
-
-      if (statusJson.error) {
-        if (prevWo) setWo(prevWo);
-        toast.error(statusJson.error.message ?? "Failed to update status");
-        return;
-      }
+      await completeMutation.mutateAsync({
+        status: "Ready for Pickup",
+        notes: data.mechanicNotes || undefined,
+      });
 
       if (orgIdVal && grandTotal > 0) {
         try {
@@ -415,23 +434,6 @@ export function WorkOrderDetailDrawer({
       toast.error("Failed to save post-service data");
     }
   }
-
-  // ── Compute totals ──
-
-  const servicesTotal =
-    wo?.services?.reduce((s, svc) => s + Number(svc.final_price), 0) ?? 0;
-  const partsTotal =
-    wo?.parts?.reduce((s, p) => s + Number(p.final_price), 0) ?? 0;
-  const grandTotal = servicesTotal + partsTotal;
-  const handleServiceDrawerOpenChange = (nextOpen: boolean) => {
-    setShowAddService(nextOpen);
-    if (!nextOpen) setServiceSearch("");
-  };
-  const handlePartDrawerOpenChange = (nextOpen: boolean) => {
-    setShowAddPart(nextOpen);
-    if (!nextOpen) setPartSearch("");
-  };
-
   // ── Render ──
 
   return (
@@ -645,20 +647,9 @@ export function WorkOrderDetailDrawer({
                                 );
 
                                 try {
-                                  const res = await fetch(
-                                    `/api/organizations/${orgId}/work-orders/${workOrderId}`,
-                                    {
-                                      method: "PATCH",
-                                      headers: {
-                                        "Content-Type": "application/json",
-                                      },
-                                      body: JSON.stringify({
-                                        nuat_enabled: checked,
-                                      }),
-                                    },
-                                  );
-                                  if (!res.ok)
-                                    throw new Error("Failed to update");
+                                  await nuatMutation.mutateAsync({
+                                    nuat_enabled: checked,
+                                  });
                                   toast.success(
                                     checked
                                       ? "НӨАТ идэвхижүүлэв"

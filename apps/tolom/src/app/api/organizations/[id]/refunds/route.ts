@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, created } from "@/lib/api-response";
 import type { z } from "zod";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
@@ -29,7 +29,7 @@ export const GET = createRouteHandler(
     // Handle /refunds/stats endpoint
     if (searchParams.get("action") === "stats") {
       const stats = await getRefundStats(supabase, orgId);
-      return NextResponse.json({ data: stats });
+      return ok(stats);
     }
 
     const status = searchParams.get("status") as
@@ -50,7 +50,7 @@ export const GET = createRouteHandler(
       limit,
       offset,
     });
-    return NextResponse.json({ data: refunds });
+    return ok(refunds);
   },
   { requiredPermission: { resource: "refunds", action: "read" } },
 );
@@ -68,7 +68,7 @@ export const POST = createRouteHandler(
       notes: params.notes,
     });
 
-    return NextResponse.json({ data: refunds }, { status: 201 });
+    return created(refunds);
   },
   {
     rateLimit: true,

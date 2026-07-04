@@ -3,11 +3,12 @@
 import { Camera, Loader2, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { useOrgMutation } from "@zuiio/query";
 
 interface OrgLogoUploadProps {
   orgId: string;
@@ -22,8 +23,19 @@ export default function OrgLogoUpload({
   orgName,
   onLogoChange,
 }: OrgLogoUploadProps) {
-  const [uploading, setUploading] = useState(false);
   const t = useTranslations("organization");
+
+  const updateLogo = useOrgMutation({
+    endpoint: `/api/organizations/${orgId}`,
+    method: "PATCH",
+    queryKey: ["organizations", orgId],
+    bodyFn: (vars: { logoUrl: string | null }) => ({ logoUrl: vars.logoUrl }),
+    onSuccess: (data, vars) => {
+      onLogoChange(vars.logoUrl);
+      toast.dismiss();
+      toast.success(vars.logoUrl ? t("logo.uploaded") : t("logo.removed"));
+    },
+  });
 
   async function uploadFile(file: File) {
     if (file.size > 5 * 1024 * 1024) {
@@ -37,7 +49,6 @@ export default function OrgLogoUpload({
       return;
     }
 
-    setUploading(true);
     try {
       const supabase = createClient();
       const filePath = `${orgId}/logo`;
@@ -54,24 +65,9 @@ export default function OrgLogoUpload({
 
       if (!urlData?.publicUrl) throw new Error(t("logo.uploadFailed"));
 
-      const res = await fetch(`/api/organizations/${orgId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ logoUrl: urlData.publicUrl }),
-      });
-
-      const json = await res.json();
-      if (!res.ok || json.error) {
-        throw new Error(json.error?.message ?? t("logo.saveFailed"));
-      }
-
-      onLogoChange(urlData.publicUrl);
-      toast.dismiss();
-      toast.success(t("logo.uploaded"));
+      updateLogo.mutate({ logoUrl: urlData.publicUrl });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("logo.uploadFailed"));
-    } finally {
-      setUploading(false);
     }
   }
 
@@ -92,35 +88,19 @@ export default function OrgLogoUpload({
       "image/svg+xml": [".svg"],
     },
     maxFiles: 1,
-    disabled: uploading,
+    disabled: updateLogo.isPending,
     noClick: true,
     noKeyboard: true,
   });
 
   async function handleRemove() {
-    setUploading(true);
     try {
       const supabase = createClient();
       await supabase.storage.from("org-logos").remove([`${orgId}/logo`]);
 
-      const res = await fetch(`/api/organizations/${orgId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ logoUrl: null }),
-      });
-
-      const json = await res.json();
-      if (!res.ok || json.error) {
-        throw new Error(json.error?.message ?? t("logo.removeFailed"));
-      }
-
-      onLogoChange(null);
-      toast.dismiss();
-      toast.success(t("logo.removed"));
+      updateLogo.mutate({ logoUrl: null });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("logo.removeFailed"));
-    } finally {
-      setUploading(false);
     }
   }
 
@@ -132,7 +112,7 @@ export default function OrgLogoUpload({
           isDragActive
             ? "border-primary bg-primary/10"
             : "border-border bg-muted"
-        } ${uploading ? "cursor-default" : "cursor-pointer"}`}
+        } ${updateLogo.isPending ? "cursor-default" : "cursor-pointer"}`}
       >
         <input {...getInputProps()} />
         {logoUrl ? (
@@ -154,7 +134,7 @@ export default function OrgLogoUpload({
             Drop
           </div>
         )}
-        {uploading && (
+        {updateLogo.isPending && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/60">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
@@ -166,7 +146,7 @@ export default function OrgLogoUpload({
           variant="outline"
           size="sm"
           onClick={() => document.getElementById("org-dropzone-input")?.click()}
-          disabled={uploading}
+          disabled={updateLogo.isPending}
         >
           <Camera className="mr-1.5 size-3.5" />
           {logoUrl ? t("logo.changeLogo") : t("logo.uploadLogo")}
@@ -177,7 +157,7 @@ export default function OrgLogoUpload({
             variant="ghost"
             size="sm"
             onClick={handleRemove}
-            disabled={uploading}
+            disabled={updateLogo.isPending}
             className="text-muted-foreground"
           >
             <Trash2 className="mr-1.5 size-3.5" />

@@ -80,7 +80,7 @@ export async function getPartsCatalog(
 
   const { data: assignments } = await supabase
     .from("vehicle_model_parts")
-    .select("part_id, count")
+    .select("part_id")
     .eq("organization_id", orgId);
 
   const popularityMap: Record<string, number> = {};

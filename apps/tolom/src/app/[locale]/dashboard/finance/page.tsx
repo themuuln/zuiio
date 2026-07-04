@@ -16,7 +16,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { toast } from "sonner";
 import { BranchSelect } from "@/components/branch-select";
@@ -70,6 +70,11 @@ import { useExpenseStats, useExpenses } from "@/lib/queries/use-expenses";
 import { useOrgSettings } from "@/lib/queries/use-org-settings";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId, useSetSelectedBranchId } from "@/lib/stores";
+import {
+  useInvoiceStats,
+  useInvoices,
+  useSendInvoiceEmail,
+} from "@/lib/queries/use-invoices";
 import type { DashboardData } from "@/lib/types";
 import { formatCurrency, formatMNT, hasMultipleBranches } from "@/lib/utils";
 import { HighlightText } from "@/lib/utils/search-utils";
@@ -205,39 +210,6 @@ interface InvoiceStats {
   outstanding: number;
 }
 
-interface InvoiceDataState {
-  loading: boolean;
-  stats: InvoiceStats | null;
-  invoices: InvoiceListItem[];
-}
-
-type InvoiceDataAction =
-  | { type: "FETCH_START" }
-  | {
-      type: "FETCH_SUCCESS";
-      stats: InvoiceStats | null;
-      invoices: InvoiceListItem[];
-    }
-  | { type: "FETCH_DONE" };
-
-function invoiceDataReducer(
-  state: InvoiceDataState,
-  action: InvoiceDataAction,
-): InvoiceDataState {
-  switch (action.type) {
-    case "FETCH_START":
-      return { ...state, loading: true };
-    case "FETCH_SUCCESS":
-      return {
-        ...state,
-        loading: false,
-        stats: action.stats,
-        invoices: action.invoices,
-      };
-    case "FETCH_DONE":
-      return { ...state, loading: false };
-  }
-}
 
 function InvoicesTab({ orgId }: { orgId: string | null }) {
   const t = useTranslations("finance");
@@ -248,73 +220,29 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
     status: filter,
     setStatus: setFilter,
   } = useTableFilters("finance-invoices");
-  const [invoiceData, dispatchInvoice] = useReducer(invoiceDataReducer, {
-    loading: true,
-    stats: null,
-    invoices: [],
-  } satisfies InvoiceDataState);
-  const { loading, stats, invoices } = invoiceData;
-  const [sendingId, setSendingId] = useState<string | null>(null);
-
-  const fetchInvoices = useCallback(
-    async (oid: string, statusFilter: string) => {
-      dispatchInvoice({ type: "FETCH_START" });
-      try {
-        const [statsJson, listJson] = await Promise.all([
-          fetch(`/api/organizations/${oid}/invoices?type=stats`).then((r) =>
-            r.json(),
-          ),
-          fetch(
-            `/api/organizations/${oid}/invoices${statusFilter ? `?status=${statusFilter}` : ""}`,
-          ).then((r) => r.json()),
-        ]);
-        dispatchInvoice({
-          type: "FETCH_SUCCESS",
-          stats: statsJson.data ?? null,
-          invoices: listJson.data ?? [],
-        });
-      } catch {
-        toast.error(t("failedToLoadInvoices"));
-        dispatchInvoice({ type: "FETCH_DONE" });
-      }
-    },
-    [t],
+  const { data: statsData, isLoading: statsLoading } = useInvoiceStats(orgId ?? undefined);
+  const stats = statsData as InvoiceStats | undefined;
+  const { data: invoices, isLoading: invoicesLoading } = useInvoices(
+    orgId ?? undefined,
+    filter,
   );
+  const sendEmail = useSendInvoiceEmail(orgId ?? undefined);
 
-  useEffect(() => {
-    if (orgId) fetchInvoices(orgId, filter);
-  }, [orgId, filter, fetchInvoices]);
+  const isLoading = statsLoading || (invoicesLoading && !invoices);
 
   const handleSendEmail = useCallback(
-    async (invoiceId: string, invoiceNumber: string) => {
+    async (invoiceId: string, _invoiceNumber: string) => {
       if (!orgId) return;
-      setSendingId(invoiceId);
       try {
-        const res = await fetch(
-          `/api/organizations/${orgId}/invoices/${invoiceId}`,
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "send_email" }),
-          },
-        );
-        const json = await res.json();
-        if (json.error) {
-          toast.error(json.error.message ?? t("failedToSendEmail"));
-        } else {
-          toast.success(t("invoiceSentEmail", { number: invoiceNumber }));
-          if (orgId) fetchInvoices(orgId, filter);
-        }
+        await sendEmail.mutateAsync({ invoiceId });
       } catch {
-        toast.error(t("failedToSendInvoiceEmail"));
-      } finally {
-        setSendingId(null);
+        // Toast handled by useOrgMutation via successMessage/error handling
       }
     },
-    [orgId, fetchInvoices, filter, t],
+    [orgId, sendEmail],
   );
 
-  const filtered = useFuzzySearch(invoices, search, {
+  const filtered = useFuzzySearch(invoices ?? [], search, {
     keys: ["invoice_number", "customer_name", "vehicle_plate"],
     threshold: 0.4,
     minQueryLength: 1,
@@ -337,7 +265,6 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
     { key: "issued_at", label: t("date"), format: "date" },
   ];
 
-  const isLoading = loading && !stats;
 
   return (
     <div className="flex flex-col gap-6">
@@ -416,7 +343,7 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
         actions={
           <div className="flex gap-2">
             <ExportButton
-              data={invoices}
+              data={invoices ?? []}
               columns={invoiceExportColumns}
               filename={`invoices-${now.toISOString().split("T")[0]}.xlsx`}
               sheetName={t("invoicesSheet")}
@@ -542,7 +469,7 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
                               onClick={() =>
                                 handleSendEmail(inv.id, inv.invoice_number)
                               }
-                              disabled={sendingId === inv.id}
+                              disabled={sendEmail.isPending}
                               title={
                                 inv.customer_email
                                   ? t("sendInvoiceTo", {
@@ -551,7 +478,7 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
                                   : t("noCustomerEmail")
                               }
                             >
-                              {sendingId === inv.id ? (
+                              {sendEmail.isPending ? (
                                 <Loader2 className="size-3.5 animate-spin" />
                               ) : (
                                 <Mail className="size-3.5" />

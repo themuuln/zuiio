@@ -3,15 +3,6 @@ import { requireAppContext } from "@/lib/erp";
 import { SalesContent } from "./sales-content";
 import type { SaleRow } from "./sales-table";
 
-export const unstable_instant = {
-  prefetch: "static",
-  samples: [
-    { searchParams: { branch: null } },
-    { searchParams: { branch: "sample" } },
-  ],
-  unstable_disableValidation: true,
-};
-
 export default async function SalesPage({
   searchParams,
 }: {

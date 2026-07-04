@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSimpleRouteHandler } from "@/lib/api-handler";
+import { ok } from "@/lib/api-response";
 
 export const GET = createSimpleRouteHandler(async ({ supabase }) => {
   const { data, error } = await supabase
@@ -17,6 +18,5 @@ export const GET = createSimpleRouteHandler(async ({ supabase }) => {
       { status: 500 },
     );
   }
-
-  return NextResponse.json({ data });
+  return ok(data);
 });

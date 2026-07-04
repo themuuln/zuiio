@@ -2,8 +2,8 @@
 
 import { History, Send } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import { toast } from "sonner";
+import { useOrgMutation } from "@zuiio/query";
 import { Button } from "@/components/ui/button";
 
 interface ActionButtonsProps {
@@ -18,66 +18,38 @@ export function ActionButtons({
   onSendComplete,
 }: ActionButtonsProps) {
   const t = useTranslations();
-  const [syncing, setSyncing] = useState(false);
-  const [sending, setSending] = useState(false);
 
-  const handleSync = async () => {
-    if (!orgId) return;
-    setSyncing(true);
-    try {
-      const res = await fetch(
-        `/api/organizations/${orgId}/service-reminders/sync-history`,
-        { method: "POST" },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
+  const syncMutation = useOrgMutation<{ data: { synced: number } }, void>({
+    endpoint: `/api/organizations/${orgId}/service-reminders/sync-history`,
+    method: "POST",
+    queryKey: ["organizations", orgId, "service-reminders"],
+    onSuccess: (data) => {
       toast.dismiss();
-      toast.success(t("serviceReminders.synced", { count: json.data.synced }));
+      toast.success(t("serviceReminders.synced", { count: data.data.synced }));
       onSyncComplete?.();
-    } catch (err) {
-      toast.dismiss();
-      toast.error(
-        err instanceof Error ? err.message : t("serviceReminders.failedToSync"),
-      );
-    } finally {
-      setSyncing(false);
-    }
-  };
+    },
+  });
 
-  const handleSend = async () => {
-    if (!orgId) return;
-    setSending(true);
-    try {
-      const res = await fetch(
-        `/api/organizations/${orgId}/service-reminders/send-pending`,
-        { method: "POST" },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
+  const sendMutation = useOrgMutation<{ data: { sent: number } }, void>({
+    endpoint: `/api/organizations/${orgId}/service-reminders/send-pending`,
+    method: "POST",
+    queryKey: ["organizations", orgId, "service-reminders"],
+    onSuccess: (data) => {
       toast.dismiss();
-      toast.success(
-        t("serviceReminders.sentReminders", { count: json.data.sent }),
-      );
+      toast.success(t("serviceReminders.sentReminders", { count: data.data.sent }));
       onSendComplete?.();
-    } catch (err) {
-      toast.dismiss();
-      toast.error(
-        err instanceof Error ? err.message : t("serviceReminders.failedToSend"),
-      );
-    } finally {
-      setSending(false);
-    }
-  };
+    },
+  });
 
   return (
     <>
       <Button
         variant="outline"
         size="sm"
-        onClick={handleSync}
-        disabled={syncing || !orgId}
+        onClick={() => syncMutation.mutate()}
+        disabled={syncMutation.isPending || !orgId}
       >
-        <History className={`size-4 ${syncing ? "animate-spin" : ""}`} />
+        <History className={`size-4 ${syncMutation.isPending ? "animate-spin" : ""}`} />
         <span className="hidden sm:inline ml-1.5">
           {t("serviceReminders.syncFromHistory")}
         </span>
@@ -85,10 +57,10 @@ export function ActionButtons({
       <Button
         variant="outline"
         size="sm"
-        onClick={handleSend}
-        disabled={sending || !orgId}
+        onClick={() => sendMutation.mutate()}
+        disabled={sendMutation.isPending || !orgId}
       >
-        <Send className={`size-4 ${sending ? "animate-spin" : ""}`} />
+        <Send className={`size-4 ${sendMutation.isPending ? "animate-spin" : ""}`} />
         <span className="hidden sm:inline ml-1.5">
           {t("serviceReminders.sendPendingReminders")}
         </span>

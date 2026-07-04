@@ -18,6 +18,7 @@
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-active: var(--sidebar-active);
   --color-sidebar: var(--sidebar);
   --color-chart-10: var(--chart-10);
   --color-chart-9: var(--chart-9);
@@ -50,6 +51,7 @@
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
   --animate-marquee: marquee 30s linear infinite;
   --animate-pulse-border: pulse-border 1.5s ease-in-out infinite;
+  --animate-status-pulse: status-dot-pulse 3s ease-in-out infinite;
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -97,6 +99,7 @@
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-active: oklch(0.488 0.243 264.376 / 10%);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
   --background: oklch(1 0 0);
@@ -133,6 +136,7 @@
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-active: oklch(0.488 0.243 264.376 / 20%);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
@@ -390,3 +394,44 @@
 [data-base-ui-portal] > [data-base-ui-inert]:first-child {
   pointer-events: none;
 }
+
+/* ── Sidebar active state — left accent bar ──────── */
+[data-slot="sidebar-menu-button"][data-active="true"] {
+  box-shadow: inset 3px 0 0 0 var(--sidebar-primary);
+  background-color: var(--sidebar-active);
+  font-weight: 500;
+}
+[data-slot="sidebar-menu-button"][data-active="true"] svg {
+  color: var(--sidebar-primary);
+}
+
+/* ── Sidebar group labels ─────────────────────────── */
+[data-slot="sidebar-group"]:has([data-slot="sidebar-group-label"]) {
+  padding-top: 0;
+}
+
+[data-slot="sidebar-group-label"] {
+  padding: 0 12px 4px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: opacity var(--duration-fast, 120ms) ease;
+}
+
+[data-slot="sidebar-group-label"]:empty {
+  display: none;
+}
+
+
+/* ── Sidebar collapsed hover overlay ───────────────── */
+[data-slot="sidebar"][data-hover-expanded="true"] [data-slot="sidebar-inner"] {
+  box-shadow: 0 0 0 1px var(--sidebar-border), 0 8px 32px oklch(0 0 0 / 12%);
+  border-radius: 0;
+}
+
+/* ── Sidebar separator refinement ──────────────────── */
+[data-slot="sidebar-separator"] {
+  margin: 0 12px;
+  width: auto;
+  opacity: 0.5;
+}
+

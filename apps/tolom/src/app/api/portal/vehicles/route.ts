@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { createPortalRouteHandler } from "@/lib/portal-auth";
 
 export const GET = createPortalRouteHandler(async ({ customer, supabase }) => {
@@ -13,7 +13,7 @@ export const GET = createPortalRouteHandler(async ({ customer, supabase }) => {
   const vehicleIds = ownerships?.map((o) => o.vehicle_id) ?? [];
 
   if (vehicleIds.length === 0) {
-    return NextResponse.json({ data: [] });
+    return ok([]);
   }
 
   const { data: vehicles, error } = await supabase
@@ -27,5 +27,5 @@ export const GET = createPortalRouteHandler(async ({ customer, supabase }) => {
 
   if (error) throw error;
 
-  return NextResponse.json({ data: vehicles });
+  return ok(vehicles);
 });

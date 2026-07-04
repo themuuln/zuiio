@@ -11,7 +11,7 @@ dashboard/
 ├── error.tsx                # Error boundary — reports to Sentry, shows retry UI
 ├── loading.tsx              # Loading skeleton (PageShellSkeleton with 4 cards)
 ├── actions.ts               # Server action — getDashboardStats (org-scoped)
-├── _auth-wrapper.tsx        # Auth gate — useRequireAuth, preload screen, SubscriptionGuard
+├── _auth-wrapper.tsx        # Auth gate — useRequireAuth, query prewarm, SubscriptionGuard
 ├── _charts.tsx              # Dynamic import wrapper for ChartsSection (SSR disabled)
 ├── _charts-content.tsx      # Charts — revenue trend area chart + WO status donut (also exports MechanicTrendChart)
 ├── _global-dialogs.tsx      # Lazy-loaded global sheets (customer, vehicle, expense, WO, supplier, PO, appointment, parts car)
@@ -49,7 +49,7 @@ dashboard/
 - `MechanicTrendChart` (dynamic) — Weekly mechanic trend bar chart (exported separately for reuse).
 - `KpiCard` — Stat card with accent color bar, icon, and value.
 - `RecentWorkOrdersTable` — Table of recent WOs with export button. Rows are clickable (navigates to WO detail).
-- `AuthWrapper` — Wraps all dashboard pages. Handles auth, subscription guard, and IndexedDB preload.
+- `AuthWrapper` — Wraps all dashboard pages. Handles auth, subscription guard, and query prewarm (IndexedDB offline caching).
 - `GlobalDialogs` — Renders all lazy-loaded global sheets (new customer, vehicle, expense, WO, supplier, PO, appointment, parts car). State managed via `usePageHeader()`.
 
 ## Data Flow
@@ -80,7 +80,7 @@ dashboard/
 ## Dependencies
 
 - Shared: `BranchSelect`, `Card`, `Badge`, `Skeleton`, `Typography`, `ExportButton`, `DateRangePicker`, `PageShellSkeleton`
-- Hooks: `useCurrentUserRole`, `useSelectedBranchGuard`, `useRequireAuth`, `usePreloadStatus`
+- Hooks: `useCurrentUserRole`, `useSelectedBranchGuard`, `useRequireAuth`
 - Stores: `useSelectedBranchId`, `useSetSelectedBranchId` from `@/lib/stores`
 - Charts: Recharts (`AreaChart`, `PieChart`, `BarChart`, `LineChart`), `ChartContainer` from shadcn
 - Sub-route pages inherit the dashboard layout (sidebar, auth, brand theme, global dialogs)

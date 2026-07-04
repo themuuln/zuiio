@@ -1,10 +1,8 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -24,11 +22,15 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
-import { appointmentKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useSelectedBranchId } from "@/lib/stores";
-import type { Appointment, AppointmentStatus } from "@/lib/types";
+import type { Appointment } from "@/lib/types";
 import { AppointmentCreateSheet } from "@/components/appointments/create-drawer";
+import {
+  useAppointments,
+  useDeleteAppointment,
+  useUpdateAppointmentStatus,
+} from "@/lib/queries/use-appointments";
 
 // ── Status helpers ────────────────────────────────────────────
 
@@ -43,7 +45,7 @@ function formatTime(iso: string) {
 
 export default function AppointmentsPage() {
   const t = useTranslations("appointments");
-  const queryClient = useQueryClient();
+
   const { data: org } = useCurrentOrg();
   const [statusFilter, setStatusFilter] = useState("all");
   const [createOpen, setCreateOpen] = useState(false);
@@ -53,68 +55,18 @@ export default function AppointmentsPage() {
 
   const today = new Date().toISOString().split("T")[0];
 
-  // Fetch appointments
-  const { data: appointments, isLoading } = useQuery({
-    queryKey: appointmentKeys.list(orgId, today, branchFilter),
-    queryFn: async () => {
-      const params = new URLSearchParams({ date: today });
-      if (branchFilter) params.set("branch_id", branchFilter);
-      const res = await fetch(
-        `/api/organizations/${orgId}/appointments?${params.toString()}`,
-      );
-      const json = await res.json();
-      return (json.data ?? []) as Appointment[];
-    },
-    enabled: !!orgId,
-  });
+  const { data: appointmentsData, isLoading } = useAppointments(
+    orgId,
+    today,
+    branchFilter,
+  );
 
-  // Update appointment status
-  const statusMutation = useMutation({
-    mutationFn: async ({
-      id,
-      status,
-    }: {
-      id: string;
-      status: AppointmentStatus;
-    }) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/appointments/${id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status }),
-        },
-      );
-      if (!res.ok) throw new Error("Failed to update status");
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["appointments"] });
-      toast.success(t("updated"));
-    },
-    onError: () => toast.error(t("failedToUpdate")),
-  });
+  const statusMutation = useUpdateAppointmentStatus(orgId);
 
-  // Delete appointment
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/appointments/${id}`,
-        {
-          method: "DELETE",
-        },
-      );
-      if (!res.ok) throw new Error("Failed to delete");
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["appointments"] });
-      toast.success(t("cancelled"));
-    },
-    onError: () => toast.error(t("failedToCancel")),
-  });
+  const deleteMutation = useDeleteAppointment(orgId);
 
-  // Filter
-  const filtered = (appointments ?? []).filter((a) =>
+  const appointments = (appointmentsData ?? []) as Appointment[];
+  const filtered = appointments.filter((a) =>
     statusFilter === "all" ? true : a.status === statusFilter,
   );
 
@@ -206,7 +158,7 @@ export default function AppointmentsPage() {
                   onValueChange={(v) =>
                     statusMutation.mutate({
                       id: appointment.id,
-                      status: (v ?? "scheduled") as AppointmentStatus,
+                      status: (v ?? "scheduled") as any,
                     })
                   }
                 >
@@ -234,7 +186,7 @@ export default function AppointmentsPage() {
                   variant="ghost"
                   size="sm"
                   className="text-destructive"
-                  onClick={() => deleteMutation.mutate(appointment.id)}
+                  onClick={() => deleteMutation.mutate({ id: appointment.id })}
                 >
                   {t("commonCancel")}
                 </Button>
@@ -249,7 +201,6 @@ export default function AppointmentsPage() {
         onOpenChange={setCreateOpen}
         orgId={orgId}
         onCreated={() => {
-          queryClient.invalidateQueries({ queryKey: ["appointments"] });
           setCreateOpen(false);
         }}
       />

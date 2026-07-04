@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import { getServiceModelPriceCounts } from "@/lib/services/service-catalog-service";
 
@@ -9,5 +9,5 @@ import { getServiceModelPriceCounts } from "@/lib/services/service-catalog-servi
  */
 export const GET = createRouteHandler(async ({ orgId, supabase }) => {
   const counts = await getServiceModelPriceCounts(supabase, orgId);
-  return NextResponse.json({ data: counts });
+  return ok(counts);
 });

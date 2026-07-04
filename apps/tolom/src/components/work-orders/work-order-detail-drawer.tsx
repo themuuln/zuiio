@@ -16,7 +16,7 @@ import {
 } from "@/components/work-orders/line-items";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+import { badgeVariants } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import {
@@ -169,21 +169,16 @@ export function WorkOrderDetailSheet({
           </DetailDrawer.Title>
           <DropdownMenu>
             <DropdownMenuTrigger
-              nativeButton={false}
-              render={
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "gap-1.5 cursor-pointer hover:opacity-80 transition-opacity",
-                    STATUS_COLORS[wo.status] ??
-                      "bg-gray-500/15 text-gray-500 border-gray-500/30",
-                  )}
-                >
-                  {wo.status}
-                  <ArrowUpDown className="size-3 opacity-60" />
-                </Badge>
-              }
-            />
+              className={cn(
+                badgeVariants({ variant: "outline" }),
+                "gap-1.5 cursor-pointer hover:opacity-80 transition-opacity",
+                STATUS_COLORS[wo.status] ??
+                  "bg-gray-500/15 text-gray-500 border-gray-500/30",
+              )}
+            >
+              {wo.status}
+              <ArrowUpDown className="size-3 opacity-60" />
+            </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[160px]">
               <DropdownMenuGroup>
                 {STATUS_OPTIONS.flatMap((s) =>

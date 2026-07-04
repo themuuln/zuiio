@@ -12,6 +12,9 @@ import { Typography } from "@/components/ui/typography";
 import { Link, useRouter } from "@/lib/i18n/navigation";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { formatCurrency } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { createOrgQuery } from "@/lib/queries/factory";
+import { reportKeys } from "@/lib/queries/keys";
 
 interface TaxReportItem {
   id: string;
@@ -53,32 +56,35 @@ export default function TaxReportPage() {
     firstDay.toISOString().split("T")[0],
   );
   const [endDate, setEndDate] = useState(lastDay.toISOString().split("T")[0]);
-  const [loading, setLoading] = useState(false);
-  const [report, setReport] = useState<{
+
+  const fetchTaxReport = createOrgQuery<{
     summary: TaxReportSummary;
     items: TaxReportItem[];
-  } | null>(null);
+  }>("/reports/tax");
 
-  const fetchReport = async () => {
+  const {
+    data: report,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: reportKeys.summary(orgId, "tax", `${startDate}_${endDate}`),
+    queryFn: () =>
+      fetchTaxReport(orgId, {
+        params: { startDate, endDate },
+      }),
+    enabled: !!orgId && !!startDate && !!endDate,
+    placeholderData: (previousData) => previousData,
+  });
+
+  const handleGenerate = () => {
     if (!orgId) return;
     if (!startDate || !endDate) {
       toast.error(t("selectDateRange"));
       return;
     }
-
-    setLoading(true);
-    try {
-      const res = await fetch(
-        `/api/organizations/${orgId}/reports/tax?startDate=${startDate}&endDate=${endDate}`,
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      setReport(json.data);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("failedToLoad"));
-    } finally {
-      setLoading(false);
-    }
+    refetch();
   };
 
   const exportCSV = () => {
@@ -156,12 +162,27 @@ export default function TaxReportPage() {
                 className="w-40"
               />
             </div>
-            <Button onClick={fetchReport} disabled={loading}>
-              {loading ? t("generating") : t("generateReport")}
+            <Button onClick={handleGenerate} disabled={isLoading}>
+              {isLoading ? t("generating") : t("generateReport")}
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      {/* Error State */}
+      {isError && (
+        <Card>
+          <CardContent className="flex flex-col items-center gap-3 py-8">
+            <Typography.Text className="text-destructive">
+              {error?.message ?? t("failedToLoad")}
+            </Typography.Text>
+            <Button variant="outline" onClick={() => refetch()}>
+              {commonT("retry")}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
 
       {/* Report Summary */}
       {report && (
@@ -316,7 +337,7 @@ export default function TaxReportPage() {
       )}
 
       {/* Empty State */}
-      {!report && !loading && (
+      {!report && !isLoading && !isError && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FileText className="size-12 text-muted-foreground/40 mb-4" />

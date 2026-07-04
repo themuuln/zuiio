@@ -12,6 +12,7 @@ export function useDiagnosisLabels(orgId: string | undefined) {
     queryKey: diagnosisLabelKeys.list(orgId ?? ""),
     queryFn: () => fetchDiagnosisLabels(orgId!),
     enabled: !!orgId,
+    staleTime: 5 * 60_000,
   });
 }
 

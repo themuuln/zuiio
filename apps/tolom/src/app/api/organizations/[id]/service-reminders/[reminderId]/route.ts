@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { ok, noContent } from "@/lib/api-response";
 import {
   deleteServiceSchedule,
   getServiceSchedule,
@@ -9,7 +9,7 @@ import {
 export const GET = createRouteHandler(async ({ params, supabase }) => {
   const { reminderId } = params;
   const schedule = await getServiceSchedule(supabase, reminderId);
-  return NextResponse.json({ data: schedule });
+  return ok(schedule);
 });
 
 export const PATCH = createRouteHandler(
@@ -23,7 +23,7 @@ export const PATCH = createRouteHandler(
       user.id,
       body,
     );
-    return NextResponse.json({ data: schedule });
+    return ok(schedule);
   },
   { rateLimit: true, subscription: true },
 );
@@ -32,7 +32,7 @@ export const DELETE = createRouteHandler(
   async ({ request, orgId, params, supabase }) => {
     const { reminderId } = params;
     await deleteServiceSchedule(supabase, reminderId, orgId);
-    return NextResponse.json({ data: null });
+    return noContent();
   },
   { rateLimit: true, subscription: true },
 );

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ok, apiError } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 
 export const GET = createRouteHandler(async ({ orgId, supabase }) => {
@@ -8,13 +9,10 @@ export const GET = createRouteHandler(async ({ orgId, supabase }) => {
     .eq("organization_id", orgId);
 
   if (error) {
-    return NextResponse.json(
-      { error: { code: "FETCH_ERROR", message: error.message } },
-      { status: 500 },
-    );
+    return apiError("FETCH_ERROR", error.message, 500);
   }
 
-  return NextResponse.json({ data: data ?? [] });
+  return ok(data ?? []);
 });
 
 export const PATCH = createRouteHandler(
@@ -25,12 +23,7 @@ export const PATCH = createRouteHandler(
     };
 
     if (!body.flag_key) {
-      return NextResponse.json(
-        {
-          error: { code: "VALIDATION_ERROR", message: "flag_key is required" },
-        },
-        { status: 400 },
-      );
+      return apiError("VALIDATION_ERROR", "flag_key is required", 400);
     }
 
     // Upsert: insert if not exists, update if exists
@@ -48,10 +41,7 @@ export const PATCH = createRouteHandler(
         .eq("id", existing.id);
 
       if (error) {
-        return NextResponse.json(
-          { error: { code: "UPDATE_ERROR", message: error.message } },
-          { status: 500 },
-        );
+        return apiError("UPDATE_ERROR", error.message, 500);
       }
     } else {
       const { error } = await supabase.from("feature_flags").insert({
@@ -61,10 +51,7 @@ export const PATCH = createRouteHandler(
       });
 
       if (error) {
-        return NextResponse.json(
-          { error: { code: "INSERT_ERROR", message: error.message } },
-          { status: 500 },
-        );
+        return apiError("INSERT_ERROR", error.message, 500);
       }
     }
 

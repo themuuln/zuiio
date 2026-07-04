@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type { OrgTheme } from "@/lib/types";
 
 interface OrgThemeContextType {
@@ -31,32 +32,39 @@ export function OrgThemeProvider({
   );
 
   // Fetch theme on mount / org change
+  const { data: themeData } = useQuery({
+    queryKey: ["organizations", orgId, "theme"],
+    queryFn: async () => {
+      if (!orgId) return null;
+      const res = await fetch(`/api/organizations/${orgId}/theme`);
+      const data = await res.json();
+      return data.theme ?? null;
+    },
+    enabled: !!orgId,
+  });
+
   useEffect(() => {
-    if (!orgId) {
-      setThemeState(null);
-      return;
+    if (themeData) {
+      setThemeState(themeData);
     }
+  }, [themeData]);
 
-    fetch(`/api/organizations/${orgId}/theme`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.theme) {
-          setThemeState(data.theme);
-        }
-      })
-      .catch(console.error);
-  }, [orgId]);
-
-  const setTheme = (newTheme: OrgTheme) => {
-    setThemeState(newTheme);
-
-    // Persist to API
-    if (orgId) {
-      fetch(`/api/organizations/${orgId}/theme`, {
+  const saveTheme = useMutation({
+    mutationFn: async (newTheme: OrgTheme) => {
+      if (!orgId) return;
+      const res = await fetch(`/api/organizations/${orgId}/theme`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newTheme),
-      }).catch(console.error);
+      });
+      if (!res.ok) throw new Error("Failed to save theme");
+    },
+  });
+
+  const setTheme = (newTheme: OrgTheme) => {
+    setThemeState(newTheme);
+    if (orgId) {
+      saveTheme.mutate(newTheme);
     }
   };
 

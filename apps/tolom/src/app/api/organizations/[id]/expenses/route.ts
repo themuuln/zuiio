@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, created } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
   createExpense,
@@ -17,7 +17,7 @@ export const GET = createRouteHandler(
 
     if (type === "stats") {
       const stats = await getExpenseStats(supabase, orgId, branchId);
-      return NextResponse.json({ data: stats });
+      return ok(stats);
     }
 
     const q = searchParams.get("q") ?? undefined;
@@ -46,7 +46,7 @@ export const GET = createRouteHandler(
       overdue,
       branchId,
     });
-    return NextResponse.json({ data: expenses });
+    return ok(expenses);
   },
   { requiredPermission: { resource: "expenses", action: "read" } },
 );
@@ -55,7 +55,7 @@ export const POST = createRouteHandler(
   async ({ request, orgId, user, supabase }) => {
     const body = await request.json();
     const expense = await createExpense(supabase, orgId, body, user.id);
-    return NextResponse.json({ data: expense }, { status: 201 });
+    return created(expense);
   },
   {
     rateLimit: true,

@@ -3,8 +3,7 @@
  * No sidebar, no nav — just centered content for mobile use.
  */
 
-// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
-// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+// Route renders user-specific content — legitimate cache opt-out.
 export const instant = false;
 
 export default function ClockLayout(

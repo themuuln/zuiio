@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { NotFoundError } from "@/lib/errors";
 import { createPortalRouteHandler } from "@/lib/portal-auth";
 
@@ -83,14 +83,12 @@ export const GET = createPortalRouteHandler(
       }));
     }
 
-    return NextResponse.json({
-      data: {
-        ...workOrder,
-        services: servicesResult.data ?? [],
-        parts: partsResult.data ?? [],
-        status_history: statusHistoryResult.data ?? [],
-        invoices: invoiceWithItems,
-      },
+    return ok({
+      ...workOrder,
+      services: servicesResult.data ?? [],
+      parts: partsResult.data ?? [],
+      status_history: statusHistoryResult.data ?? [],
+      invoices: invoiceWithItems,
     });
   },
 );

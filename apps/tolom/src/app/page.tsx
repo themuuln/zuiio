@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { cookies, headers } from "next/headers";
 import { redirect } from "@/lib/i18n/navigation";
 
-// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
-// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+// Route renders user-specific content — legitimate cache opt-out.
 export const instant = false;
 
 export const metadata: Metadata = {

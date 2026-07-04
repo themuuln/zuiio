@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useOrgMutation } from "@zuiio/query";
 import { CarFront, Pencil, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
@@ -37,6 +37,7 @@ import type { ExportColumn } from "@/lib/export";
 import { serviceKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import { useServiceLastUsedPrices } from "@/lib/queries/use-price-memory";
+import { useServiceCatalog } from "@/lib/queries/use-work-order-detail";
 import { useServiceModelPriceCounts } from "@/lib/queries/use-service-vehicle-models";
 import type { ServiceCatalog } from "@/lib/types";
 import { formatMNT } from "@/lib/utils";
@@ -49,7 +50,6 @@ export default function ServicesPage() {
   const now = useClientNow();
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
-  const queryClient = useQueryClient();
 
   const { data: modelPriceCounts = {} } = useServiceModelPriceCounts(orgId);
 
@@ -58,17 +58,7 @@ export default function ServicesPage() {
     isLoading: loading,
     error: queryError,
     refetch,
-  } = useQuery({
-    queryKey: serviceKeys.list(orgId ?? ""),
-    queryFn: async () => {
-      const r = await fetch(`/api/organizations/${orgId}/services`);
-      const d = await r.json();
-      if (d.error) throw new Error(d.error.message);
-      return (d.data ?? []) as ServiceCatalog[];
-    },
-    enabled: !!orgId,
-    staleTime: 30_000,
-  });
+  } = useServiceCatalog(orgId);
 
   const error = queryError ? queryError.message : null;
 
@@ -105,49 +95,19 @@ export default function ServicesPage() {
 
   // ── Delete mutation ──
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const r = await fetch(`/api/organizations/${orgId}/services/${id}`, {
-        method: "DELETE",
-      });
-      const d = await r.json();
-      if (d.error) throw new Error(d.error.message);
-    },
-    onMutate: async (id) => {
-      await queryClient.cancelQueries({
-        queryKey: serviceKeys.list(orgId ?? ""),
-      });
-      const previous = queryClient.getQueryData<ServiceCatalog[]>(
-        serviceKeys.list(orgId ?? ""),
-      );
-      queryClient.setQueryData<ServiceCatalog[]>(
-        serviceKeys.list(orgId ?? ""),
-        (old) => (old ?? []).filter((s) => s.id !== id),
-      );
-      return { previous };
-    },
-    onError: (_err, _vars, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(
-          serviceKeys.list(orgId ?? ""),
-          context.previous,
-        );
-      }
-      toast.error(st("failedToDelete"));
-    },
-    onSuccess: () => toast.success(st("serviceDeleted")),
-    onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: serviceKeys.list(orgId ?? ""),
-      });
-    },
+  const deleteMutation = useOrgMutation<unknown, { id: string }>({
+    endpoint: (vars) => `/api/organizations/${orgId}/services/${vars.id}`,
+    method: "DELETE",
+    queryKey: serviceKeys.all(orgId ?? ""),
+    successMessage: "Service deleted",
   });
 
   const confirmDelete = () => {
     if (!orgId || !serviceToDelete) return;
-    deleteMutation.mutate(serviceToDelete.id, {
-      onSettled: () => setServiceToDelete(null),
-    });
+    deleteMutation.mutate(
+      { id: serviceToDelete.id },
+      { onSettled: () => setServiceToDelete(null) },
+    );
   };
 
   // ── Category + search filter ──

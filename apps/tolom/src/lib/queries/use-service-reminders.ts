@@ -93,6 +93,7 @@ export function useServiceSchedule(
     queryKey: serviceReminderKeys.detail(orgId ?? "", id),
     queryFn: () => fetchSchedule(orgId!),
     enabled: !!orgId && !!id,
+    staleTime: 30_000,
   });
 }
 

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, apiError } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 
 export const GET = createRouteHandler(async ({ orgId, supabase }) => {
@@ -9,11 +9,8 @@ export const GET = createRouteHandler(async ({ orgId, supabase }) => {
     .is("deleted_at", null);
 
   if (error) {
-    return NextResponse.json(
-      { error: { code: "FETCH_ERROR", message: error.message } },
-      { status: 500 },
-    );
+      return apiError("FETCH_ERROR", error.message, 500);
   }
 
-  return NextResponse.json({ data: roles ?? [] });
+  return ok(roles ?? []);
 });

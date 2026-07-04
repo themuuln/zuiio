@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, created, apiError } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
   createPurchaseOrder,
@@ -16,14 +16,14 @@ export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
     undefined,
     branchId,
   );
-  return NextResponse.json({ data: pos });
+  return ok(pos);
 });
 
 export const POST = createRouteHandler(
   async ({ request, orgId, user, supabase }) => {
     const body = await request.json();
     const po = await createPurchaseOrder(supabase, orgId, body, user.id);
-    return NextResponse.json({ data: po }, { status: 201 });
+    return created(po);
   },
   {
     rateLimit: true,
@@ -37,14 +37,11 @@ export const PATCH = createRouteHandler(
     const { searchParams } = new URL(request.url);
     const poId = searchParams.get("poId") ?? searchParams.get("id");
     if (!poId) {
-      return NextResponse.json(
-        { error: { message: "poId required" } },
-        { status: 400 },
-      );
+      return apiError("VALIDATION", "poId required", 400);
     }
     const body = await request.json();
     const po = await updatePurchaseOrder(supabase, poId, orgId, body);
-    return NextResponse.json({ data: po });
+    return ok(po);
   },
   { rateLimit: true, subscription: true },
 );

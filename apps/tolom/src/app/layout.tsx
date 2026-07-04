@@ -9,8 +9,7 @@ import ThemeProvider from "@/components/theme-provider";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
-// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
-// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+// Route renders user-specific content — legitimate cache opt-out.
 export const instant = false;
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });

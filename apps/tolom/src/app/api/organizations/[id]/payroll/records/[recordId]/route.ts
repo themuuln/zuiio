@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { createRouteHandler } from "@/lib/api-handler";
+import { ok, apiError, createRouteHandler } from "@/lib/api-response"
 import { updatePayrollRecordStatus } from "@/lib/services/payroll-service";
 
 export const PATCH = createRouteHandler(
@@ -9,10 +8,7 @@ export const PATCH = createRouteHandler(
     const recordId = params.recordId;
 
     if (!action || !["approve", "pay"].includes(action)) {
-      return NextResponse.json(
-        { error: { message: "action must be 'approve' or 'pay'" } },
-        { status: 400 },
-      );
+      return apiError("BAD_REQUEST", "action must be 'approve' or 'pay'", 400);
     }
 
     const status = action === "pay" ? "paid" : "approved";
@@ -22,7 +18,7 @@ export const PATCH = createRouteHandler(
       recordId,
       status,
     );
-    return NextResponse.json({ data: record });
+    return ok(record);
   },
   { requiredPermission: { resource: "payroll", action: "write" } },
 );

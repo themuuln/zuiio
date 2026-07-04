@@ -1,14 +1,14 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { Eye, Shield, ShieldCheck, ShieldHalf, Wrench } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
-import { useProfile } from "@/lib/queries/use-profile";
-import type { ApiResponse } from "@/lib/types";
+import { createOrgQuery } from "@/lib/queries/factory";
+import { useCurrentOrg } from "@/lib/queries/use-organization";
 
 interface Role {
   id: string;
@@ -36,62 +36,33 @@ const roleColors: Record<string, string> = {
     "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900/50",
 };
 
+const fetchRoles = createOrgQuery<Role[]>("/roles");
+
 export default function RolesPage() {
   const t = useTranslations("organization.roles");
-  const { data: profile } = useProfile();
-  const orgId = profile?.organizationId ?? "";
-
-  const { data: roles = [], isLoading: loading } = useQuery<Role[]>({
-    queryKey: ["organizations", orgId, "roles-with-counts"],
-    queryFn: async () => {
-      const [rolesRes, usersRes] = await Promise.all([
-        fetch(`/api/organizations/${orgId}/roles`),
-        fetch(`/api/organizations/${orgId}/users`),
-      ]);
-
-      const rolesBody = (await rolesRes.json()) as ApiResponse<Role[]>;
-      const usersBody = (await usersRes.json()) as ApiResponse<
-        { roleName: string | null }[]
-      >;
-
-      if (!rolesBody.data) return [];
-
-      const roleCounts: Record<string, number> = {};
-      if (usersBody.data) {
-        for (const u of usersBody.data) {
-          const rn = u.roleName ?? "Unassigned";
-          roleCounts[rn] = (roleCounts[rn] ?? 0) + 1;
-        }
-      }
-
-      return rolesBody.data.map((r) => ({
-        id: r.id,
-        name: r.name,
-        description: r.description ?? null,
-        is_system: (r as unknown as Record<string, unknown>).is_system === true,
-        memberCount: roleCounts[r.name] ?? 0,
-      }));
-    },
+  const { data: orgInfo } = useCurrentOrg();
+  const orgId = orgInfo?.orgId ?? "";
+  const { data: roles = [], isLoading: loading } = useQuery({
+    queryKey: ["organizations", orgId, "roles"],
+    queryFn: () => fetchRoles(orgId),
     enabled: !!orgId,
-    staleTime: 60_000,
   });
 
   if (loading) {
     return (
       <div className="flex flex-col gap-6">
-        <div>
-          <Skeleton className="h-8 w-32" />
-          <Skeleton className="mt-1 h-4 w-48" />
-        </div>
+        <Typography.H1 className="text-2xl font-semibold tracking-tight">
+          {t("title")}
+        </Typography.H1>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={`skeleton-${i}`}>
+          {[1, 2, 3, 4].map((n) => (
+            <Card key={n}>
               <CardHeader>
-                <Skeleton className="h-5 w-28" />
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-4 w-48" />
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-4 w-full mb-2" />
-                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-24" />
               </CardContent>
             </Card>
           ))}
@@ -102,67 +73,43 @@ export default function RolesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <Typography.H1 className="text-2xl font-semibold tracking-tight">
-          {t("title")}
-        </Typography.H1>
-        <Typography.Muted className="text-muted-foreground">
-          {t("subtitle")}
-        </Typography.Muted>
-      </div>
+      <Typography.H1 className="text-2xl font-semibold tracking-tight">
+        {t("title")}
+      </Typography.H1>
 
-      {roles.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center py-12">
-            <Shield className="size-10 text-muted-foreground/40 mb-3" />
-            <Typography.Muted className="text-sm text-muted-foreground">
-              {t("noRoles")}
-            </Typography.Muted>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {roles.map((role) => {
-            const Icon = roleIcons[role.name] ?? Shield;
-            const colorClass = roleColors[role.name] ?? "bg-card";
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {roles.map((role) => {
+          const Icon = roleIcons[role.name] ?? Shield;
+          const colorClass = roleColors[role.name] ?? "";
 
-            return (
-              <Card
-                key={role.id}
-                className={`border ${colorClass} transition-colors`}
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Icon className="size-4" />
-                    {role.name}
-                    {role.is_system && (
-                      <Badge
-                        variant="outline"
-                        className="ml-auto text-[10px] uppercase tracking-wider"
-                      >
-                        {t("system")}
-                      </Badge>
-                    )}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-2">
-                  <Typography.Muted className="text-sm text-muted-foreground">
-                    {role.description || t("noDescription")}
-                  </Typography.Muted>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span className="font-medium tabular-nums">
-                      {role.memberCount}
-                    </span>
-                    <span>
-                      {role.memberCount === 1 ? t("member") : t("members")}
-                    </span>
+          return (
+            <Card key={role.id}>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`flex size-10 items-center justify-center rounded-lg border ${colorClass}`}
+                  >
+                    <Icon className="size-5" />
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                  <div>
+                    <CardTitle className="text-base">{role.name}</CardTitle>
+                    <p className="text-xs text-muted-foreground">
+                      {role.description ?? "\u2014"}
+                    </p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2 text-sm">
+                  <Badge variant="secondary">
+                    {t("memberCount", { count: role.memberCount })}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, apiError } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import { closeSession } from "@/lib/services/cash-register-service";
 
@@ -9,15 +9,7 @@ export const POST = createRouteHandler(
     const { closing_balance, note } = body;
 
     if (closing_balance === undefined || closing_balance === null) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "Closing balance is required",
-          },
-        },
-        { status: 400 },
-      );
+      return apiError("VALIDATION_ERROR", "Closing balance is required", 400);
     }
 
     const session = await closeSession(
@@ -29,7 +21,7 @@ export const POST = createRouteHandler(
       note,
     );
 
-    return NextResponse.json({ data: session });
+    return ok(session);
   },
   { rateLimit: true },
 );

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, created } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
   addPartsCarPart,
@@ -7,7 +7,7 @@ import {
 
 export const GET = createRouteHandler(async ({ orgId, params, supabase }) => {
   const parts = await getPartsCarParts(supabase, orgId, params.carId);
-  return NextResponse.json({ data: parts });
+  return ok(parts);
 });
 
 export const POST = createRouteHandler(
@@ -20,7 +20,7 @@ export const POST = createRouteHandler(
       params.carId,
       body,
     );
-    return NextResponse.json({ data: part }, { status: 201 });
+    return created(part);
   },
   { rateLimit: true, subscription: true },
 );

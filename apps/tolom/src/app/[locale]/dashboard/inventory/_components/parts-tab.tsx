@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   ClipboardList,
@@ -43,6 +43,7 @@ import { useClientNow } from "@/hooks/use-client-now";
 import type { ExportColumn } from "@/lib/export";
 import { Link } from "@/lib/i18n/navigation";
 import { inventoryKeys } from "@/lib/queries/keys";
+import { useSaveThreshold } from "@/lib/queries/use-thresholds";
 import {
   useGlobalPartsCatalog,
   useInventoryBalances,
@@ -154,36 +155,14 @@ export function PartsTab({
     return map;
   }, [parts]);
 
-  const saveThreshold = useMutation({
-    mutationFn: async ({
-      partId,
-      minimumQuantity,
-    }: {
-      partId: string;
-      minimumQuantity: number;
-    }) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/inventory/thresholds`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            part_id: partId,
-            minimum_quantity: minimumQuantity,
-          }),
-        },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: inventoryKeys.thresholds(orgId) });
-      toast.success(t("inventory.thresholdSaved"));
-      setEditingThreshold(null);
-    },
-    onError: (err: Error) => toast.error(err.message),
-  });
+  const saveThreshold = useSaveThreshold(orgId);
+  const handleSaveThreshold = async (
+    partId: string,
+    minimumQuantity: number,
+  ) => {
+    await saveThreshold.mutateAsync({ partId, minimumQuantity });
+    setEditingThreshold(null);
+  };
 
   const handleSort = useCallback(
     (key: SortKey) => {
@@ -578,11 +557,10 @@ export function PartsTab({
                                 variant="default"
                                 size="sm"
                                 onClick={() =>
-                                  saveThreshold.mutate({
-                                    partId: part.id,
-                                    minimumQuantity:
-                                      Number(thresholdValue) || 0,
-                                  })
+                                  handleSaveThreshold(
+                                    part.id,
+                                    Number(thresholdValue) || 0,
+                                  )
                                 }
                               >
                                 Save

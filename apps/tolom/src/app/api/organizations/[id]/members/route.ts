@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { invalidateReportCache } from "@/lib/cache/server";
 import { ValidationError } from "@/lib/errors";
 import { normalizeMongolianPhone } from "@/lib/form-validation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import { created } from "@/lib/api-response";
 
 interface AddMemberParams {
   email?: string;
@@ -213,18 +213,7 @@ export const POST = createRouteHandler(
     // Invalidate mechanics list cache so admin sees the new member immediately
     invalidateReportCache(orgId);
 
-    return NextResponse.json(
-      {
-        data: {
-          userId,
-          identifier: inputIdentifier,
-          email: authEmail,
-          fullName: fullName.trim(),
-          isNewUser: !existingUser,
-        },
-      },
-      { status: 201 },
-    );
+    return created({ userId, identifier: inputIdentifier, email: authEmail, fullName: fullName.trim(), isNewUser: !existingUser });
   },
   {
     rateLimit: true,

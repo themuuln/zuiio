@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import {
   Check,
   Copy,
@@ -15,26 +16,29 @@ import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { SettingsBlock } from "./_settings-layout";
 
+interface TelegramLinkResponse {
+  data: {
+    bot_deep_link: string;
+  };
+}
+
 export function TelegramSection() {
   const [deepLink, setDeepLink] = useState<string | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const t = useTranslations("settings");
 
-  async function generateLink() {
-    setLoading(true);
-    try {
+  const generateLinkMutation = useMutation({
+    mutationFn: async (): Promise<string> => {
       const res = await fetch("/api/telegram/link-token", { method: "POST" });
-      const json = await res.json();
-
-      if (json.error) {
-        toast.error(json.error.message);
-        return;
+      const json: TelegramLinkResponse = await res.json();
+      if (!res.ok || json.error) {
+        throw new Error(json.error?.message ?? "Failed to generate link");
       }
-
-      const link = json.data.bot_deep_link;
+      return json.data.bot_deep_link;
+    },
+    onSuccess: async (link) => {
       setDeepLink(link);
       setQrDataUrl(null);
       const dataUrl = await QRCode.toDataURL(link, {
@@ -43,12 +47,11 @@ export function TelegramSection() {
       });
       setQrDataUrl(dataUrl);
       toast.success(t("linkTokenGenerated"));
-    } catch (err) {
+    },
+    onError: (err) => {
       toast.error(err instanceof Error ? err.message : t("failedToGenerate"));
-    } finally {
-      setLoading(false);
-    }
-  }
+    },
+  });
 
   async function copyLink() {
     if (!deepLink) return;
@@ -113,8 +116,12 @@ export function TelegramSection() {
         </ol>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Button size="sm" onClick={generateLink} disabled={loading}>
-            {loading ? (
+          <Button
+            size="sm"
+            onClick={() => generateLinkMutation.mutate()}
+            disabled={generateLinkMutation.isPending}
+          >
+            {generateLinkMutation.isPending ? (
               <>
                 <RefreshCw className="mr-1.5 size-3.5 animate-spin" />
                 {t("generating")}

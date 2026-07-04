@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import { createFollowup, listFollowups } from "@/lib/services/followup-service";
 
@@ -45,7 +46,7 @@ export const POST = createRouteHandler(
       created_by: body.created_by,
     });
 
-    return NextResponse.json({ data: followup });
+    return ok(followup);
   },
   { requiredPermission: { resource: "customers", action: "update" } },
 );

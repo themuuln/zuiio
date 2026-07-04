@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ok, created } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
   createPriceRule,
@@ -17,11 +18,11 @@ export const GET = createRouteHandler(async ({ supabase, orgId, request }) => {
 
   if (ruleId) {
     const rule = await getPriceRule(supabase, ruleId);
-    return NextResponse.json({ data: rule });
+    return ok(rule);
   }
 
   const rules = await getPriceRules(supabase, orgId);
-  return NextResponse.json({ data: rules });
+  return ok(rules);
 });
 
 // ── POST /api/organizations/[id]/price-rules ─────────────────
@@ -32,12 +33,12 @@ export const POST = createRouteHandler(
     if (body.action === "resolve") {
       // Price resolution endpoint
       const result = await resolvePrice(supabase, orgId, body.input);
-      return NextResponse.json({ data: result });
+      return ok(result);
     }
 
     // Create rule
     const rule = await createPriceRule(supabase, orgId, body, user?.id ?? null);
-    return NextResponse.json({ data: rule }, { status: 201 });
+    return created(rule);
   },
 );
 
@@ -58,7 +59,7 @@ export const PATCH = createRouteHandler(
       body,
       user?.id ?? null,
     );
-    return NextResponse.json({ data: rule });
+    return ok(rule);
   },
 );
 

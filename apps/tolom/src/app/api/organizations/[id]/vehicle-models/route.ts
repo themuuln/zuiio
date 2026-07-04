@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { ok, created } from "@/lib/api-response";
 import {
   createVehicleModel,
   getDistinctMakes,
@@ -12,7 +12,7 @@ export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
 
   if (mode === "makes") {
     const makes = await getDistinctMakes(supabase, orgId);
-    return NextResponse.json({ data: makes });
+    return ok(makes);
   }
 
   const models = make
@@ -20,14 +20,14 @@ export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
         (m) => m.make.toLowerCase() === make.toLowerCase(),
       )
     : await getVehicleModels(supabase, orgId);
-  return NextResponse.json({ data: models });
+  return ok(models);
 });
 
 export const POST = createRouteHandler(
   async ({ request, orgId, supabase }) => {
     const body = await request.json();
     const model = await createVehicleModel(supabase, orgId, body);
-    return NextResponse.json({ data: model }, { status: 201 });
+    return created(model);
   },
   { rateLimit: true, subscription: true },
 );

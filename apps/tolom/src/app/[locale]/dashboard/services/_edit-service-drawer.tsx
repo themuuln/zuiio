@@ -1,10 +1,8 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useOrgMutation } from "@zuiio/query";
 import { Dices, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { z } from "zod";
 
 import { VariantEditorSheet } from "@/components/services/variant-editor-drawer";
@@ -67,7 +65,6 @@ export function EditServiceSheet({
   const commonT = useTranslations("common");
   const orgQuery = useCurrentOrg();
   const orgId = orgQuery.data?.orgId;
-  const queryClient = useQueryClient();
 
   const [categoryInput, setCategoryInput] = useState("");
   const [showVariants, setShowVariants] = useState(false);
@@ -99,74 +96,20 @@ export function EditServiceSheet({
 
   const watchedCategory = form.watch("category");
 
-  const updateMutation = useMutation({
-    mutationFn: async (data: EditServiceValues) => {
-      if (!orgId || !service) return;
-      const r = await fetch(
-        `/api/organizations/${orgId}/services/${service.id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: data.name.trim(),
-            name_mn: data.nameMn?.trim() || null,
-            default_price: parseFloat(data.defaultPrice) || 0,
-            category: data.category?.trim() || null,
-            description: data.description?.trim() || null,
-          }),
-        },
-      );
-      const d = await r.json();
-      if (d.error) throw new Error(d.error.message);
-      return d.data as ServiceCatalog;
-    },
-    onMutate: async (data) => {
-      await queryClient.cancelQueries({
-        queryKey: serviceKeys.list(orgId ?? ""),
-      });
-      const previous = queryClient.getQueryData<ServiceCatalog[]>(
-        serviceKeys.list(orgId ?? ""),
-      );
-      queryClient.setQueryData<ServiceCatalog[]>(
-        serviceKeys.list(orgId ?? ""),
-        (old) =>
-          (old ?? []).map((s) =>
-            s.id === service?.id
-              ? {
-                  ...s,
-                  name: data.name.trim(),
-                  name_mn: data.nameMn?.trim() || null,
-                  default_price: parseFloat(data.defaultPrice) || 0,
-                  category: data.category?.trim() || null,
-                  description: data.description?.trim() || null,
-                }
-              : s,
-          ),
-      );
-      return { previous };
-    },
-    onError: (_err, _vars, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(
-          serviceKeys.list(orgId ?? ""),
-          context.previous,
-        );
-      }
-      toast.error(t("failedToUpdate"));
-    },
+  const updateMutation = useOrgMutation<ServiceCatalog, { serviceId: string; data: EditServiceValues }>({
+    endpoint: (vars) => `/api/organizations/${orgId}/services/${vars.serviceId}`,
+    method: "PATCH",
+    queryKey: serviceKeys.all(orgId ?? ""),
+    bodyFn: (vars) => vars.data,
     onSuccess: () => {
-      toast.success(t("serviceUpdated"));
       onOpenChange(false);
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: serviceKeys.list(orgId ?? ""),
-      });
+      form.reset();
     },
   });
 
   const handleSave = form.handleSubmit((data) => {
-    updateMutation.mutate(data);
+    if (!service) return;
+    updateMutation.mutate({ serviceId: service.id, data });
   });
 
   const handleOpenChange = (open: boolean) => {

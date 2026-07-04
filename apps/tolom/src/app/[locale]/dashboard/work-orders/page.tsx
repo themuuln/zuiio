@@ -1,10 +1,9 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ClipboardList, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
+import { useOrgMutation } from "@zuiio/query";
 import { ExportButton } from "@/components/export-button";
 import { type FilterChip, FilterChips } from "@/components/filter-chips";
 import { ListPageShell } from "@/components/list-page-shell";
@@ -165,7 +164,7 @@ export default function WorkOrdersPage() {
   const t = useTranslations();
   const tWorkOrders = useTranslations("workOrders");
   const now = useClientNow();
-  const queryClient = useQueryClient();
+
   const { setDetailWorkOrderId } = usePageHeader();
   const {
     search,
@@ -239,26 +238,11 @@ export default function WorkOrdersPage() {
 
   const updateStatus = useUpdateWorkOrderStatus(org?.orgId);
 
-  const cancelWorkOrder = useMutation({
-    mutationFn: async (woId: string) => {
-      const res = await fetch(
-        `/api/organizations/${org?.orgId}/work-orders/${woId}`,
-        {
-          method: "DELETE",
-        },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: workOrderKeys.all(org?.orgId ?? ""),
-      });
-      toast.success(t("workOrders.cancelledSuccess"));
-    },
-    onError: (err: Error) => {
-      toast.error(err.message);
-    },
+  const cancelWorkOrder = useOrgMutation<unknown, { id: string }>({
+    endpoint: (vars) => `/api/organizations/${org?.orgId}/work-orders/${vars.id}`,
+    method: "DELETE",
+    queryKey: workOrderKeys.all(org?.orgId ?? ""),
+    successMessage: "Work order deleted",
   });
 
   const list = orders ?? [];
@@ -526,7 +510,7 @@ export default function WorkOrdersPage() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                if (cancelTarget) cancelWorkOrder.mutate(cancelTarget);
+                if (cancelTarget) cancelWorkOrder.mutate({ id: cancelTarget });
                 setCancelTarget(null);
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"

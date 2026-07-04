@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { createRouteHandler } from "@/lib/api-handler";
+import { ok, apiError, createRouteHandler } from "@/lib/api-response"
 import { listPayRates, upsertPayRate } from "@/lib/services/payroll-service";
 
 export const GET = createRouteHandler(
@@ -7,7 +6,7 @@ export const GET = createRouteHandler(
     const { searchParams } = new URL(request.url);
     const branchId = searchParams.get("branch_id");
     const rates = await listPayRates(supabase, orgId, branchId);
-    return NextResponse.json({ data: rates });
+    return ok(rates);
   },
   { requiredPermission: { resource: "payroll", action: "read" } },
 );
@@ -17,14 +16,7 @@ export const PUT = createRouteHandler(
     const body = await request.json();
     const { mechanicId, hourlyRate, effectiveFrom } = body;
     if (!mechanicId || !hourlyRate || !effectiveFrom) {
-      return NextResponse.json(
-        {
-          error: {
-            message: "mechanicId, hourlyRate, and effectiveFrom are required",
-          },
-        },
-        { status: 400 },
-      );
+      return apiError("BAD_REQUEST", "mechanicId, hourlyRate, and effectiveFrom are required", 400);
     }
     const rate = await upsertPayRate(
       supabase,
@@ -33,7 +25,7 @@ export const PUT = createRouteHandler(
       hourlyRate,
       effectiveFrom,
     );
-    return NextResponse.json({ data: rate });
+    return ok(rate);
   },
   { requiredPermission: { resource: "payroll", action: "write" } },
 );

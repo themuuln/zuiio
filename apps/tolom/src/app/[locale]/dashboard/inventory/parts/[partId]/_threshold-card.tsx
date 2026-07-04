@@ -1,6 +1,5 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Check, Pencil } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -10,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSaveThreshold, thresholdKeys } from "@/lib/queries/use-thresholds";
 import { inventoryKeys } from "@/lib/queries/keys";
 
 interface ThresholdCardProps {
@@ -28,34 +28,24 @@ export function ThresholdCard({
   isLoading,
 }: ThresholdCardProps) {
   const t = useTranslations("inventory");
-  const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(currentMinimum);
 
-  const saveThreshold = useMutation({
-    mutationFn: async (minimumQuantity: number) => {
-      const res = await fetch(
-        `/api/organizations/${orgId}/inventory/thresholds`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            part_id: partId,
-            minimum_quantity: minimumQuantity,
-          }),
-        },
-      );
-      const json = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      return json.data;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: inventoryKeys.thresholds(orgId) });
-      toast.success(t("inventory.thresholdSaved"));
+  const saveThreshold = useSaveThreshold(orgId);
+
+  const handleSave = async () => {
+    try {
+      await saveThreshold.mutateAsync({
+        partId,
+        minimumQuantity: value,
+      });
       setEditing(false);
-    },
-    onError: (err: Error) => toast.error(err.message),
-  });
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to save threshold",
+      );
+    }
+  };
 
   const isLow = onHand < currentMinimum && onHand > 0;
   const isOut = onHand <= 0;
@@ -94,7 +84,7 @@ export function ThresholdCard({
             <Button
               variant="default"
               size="sm"
-              onClick={() => saveThreshold.mutate(value || 0)}
+              onClick={handleSave}
               disabled={saveThreshold.isPending}
             >
               <Check className="size-4" />

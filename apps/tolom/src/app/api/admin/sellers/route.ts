@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { apiError, ok } from "@/lib/api-response";
 import {
   checkAdminRole,
   listOrganizations,
@@ -9,10 +9,7 @@ import {
 export const GET = createRouteHandler(async ({ supabase }) => {
   const hasAccess = await checkAdminRole(supabase, "seller");
   if (!hasAccess) {
-    return NextResponse.json(
-      { error: { code: "FORBIDDEN", message: "Seller access required" } },
-      { status: 403 },
-    );
+    return apiError("FORBIDDEN", "Seller access required", 403);
   }
 
   // Get current admin user
@@ -22,29 +19,22 @@ export const GET = createRouteHandler(async ({ supabase }) => {
     .maybeSingle();
 
   if (!adminUser) {
-    return NextResponse.json(
-      { error: { code: "NOT_FOUND", message: "Admin user not found" } },
-      { status: 404 },
-    );
+    return apiError("NOT_FOUND", "Admin user not found", 404);
   }
 
   // Super admins see all orgs, sellers see only assigned orgs
   if (adminUser.role === "super_admin") {
     const orgs = await listOrganizations(supabase);
-    return NextResponse.json({
-      data: { organizations: orgs, assignments: [] },
-    });
+    return ok({ organizations: orgs, assignments: [] });
   }
 
   const assignments = await listSellerAssignments(supabase, adminUser.id);
-  return NextResponse.json({
-    data: {
-      organizations: assignments.map((a) => ({
-        id: a.organization_id,
-        name: a.organization_name,
-        slug: a.organization_slug,
-      })),
-      assignments,
-    },
+  return ok({
+    organizations: assignments.map((a) => ({
+      id: a.organization_id,
+      name: a.organization_name,
+      slug: a.organization_slug,
+    })),
+    assignments,
   });
 });

@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { createRouteHandler } from "@/lib/api-handler";
+import { ok, created, apiError, createRouteHandler } from "@/lib/api-response"
 import {
   addServiceToWorkOrder,
   removeServiceFromWorkOrder,
@@ -21,7 +20,7 @@ export const POST = createRouteHandler(
       orgId,
       body,
     );
-    return NextResponse.json({ data: service }, { status: 201 });
+    return created(service);
   },
   {
     rateLimit: true,
@@ -36,17 +35,8 @@ export const PATCH = createRouteHandler(
     const { searchParams } = new URL(request.url);
     const serviceId = searchParams.get("serviceId");
     const body = await parseBody(request, updateServicePriceSchema);
-
     if (!serviceId) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "serviceId query param required",
-          },
-        },
-        { status: 400 },
-      );
+      return apiError("VALIDATION_ERROR", "serviceId query param required", 400);
     }
 
     const updateParams: { final_price?: number; quantity?: number } = {};
@@ -64,7 +54,7 @@ export const PATCH = createRouteHandler(
       );
     }
 
-    return NextResponse.json({ data: null });
+    return ok(null);
   },
   {
     rateLimit: true,
@@ -78,21 +68,12 @@ export const DELETE = createRouteHandler(
     const { workOrderId } = params;
     const { searchParams } = new URL(request.url);
     const serviceId = searchParams.get("serviceId");
-
     if (!serviceId) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "serviceId query param required",
-          },
-        },
-        { status: 400 },
-      );
+      return apiError("VALIDATION_ERROR", "serviceId query param required", 400);
     }
 
     await removeServiceFromWorkOrder(supabase, serviceId, workOrderId, orgId);
-    return NextResponse.json({ data: null });
+    return ok(null);
   },
   {
     rateLimit: true,

@@ -51,6 +51,7 @@ import {
   useDeleteCommissionRule,
   useUpdateCommissionRule,
 } from "@/lib/queries/use-commission-rules";
+import { useMechanicsList } from "@/lib/queries/use-work-order-detail";
 import type { MechanicCommissionRule } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -405,35 +406,18 @@ export function CommissionRulesSection({ orgId }: CommissionRulesSectionProps) {
   const [editingRule, setEditingRule] = useState<MechanicCommissionRule | null>(
     null,
   );
-  const [mechanics, setMechanics] = useState<MechanicOption[]>([]);
-  const [mechanicsLoading, setMechanicsLoading] = useState(false);
+  const { data: mechanics = [], isLoading: mechanicsLoading } = useMechanicsList(orgId);
 
   function openAddDialog() {
     setEditingRule(null);
-    fetchMechanics();
     setDialogOpen(true);
   }
 
   function openEditDialog(rule: MechanicCommissionRule) {
     setEditingRule(rule);
-    fetchMechanics();
     setDialogOpen(true);
   }
 
-  async function fetchMechanics() {
-    setMechanicsLoading(true);
-    try {
-      const res = await fetch(
-        `/api/organizations/${orgId}/reports?type=mechanics`,
-      );
-      const json = await res.json();
-      setMechanics(json.data ?? []);
-    } catch {
-      // Silently fail - mechanics list is optional UX
-    } finally {
-      setMechanicsLoading(false);
-    }
-  }
 
   async function handleDelete(ruleId: string) {
     if (!confirm(t("confirmDeleteMessage"))) return;

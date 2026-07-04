@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, created, apiError } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
   bulkGenerateVariants,
@@ -58,12 +58,12 @@ export const POST = createRouteHandler(
           | "both"
           | undefined;
         const groups = await getVariantGroups(supabase, orgId, appliesTo);
-        return NextResponse.json({ data: groups });
+        return ok(groups);
       }
 
       case "get-group": {
         const group = await getVariantGroup(supabase, body.id);
-        return NextResponse.json({ data: group });
+        return ok(group);
       }
 
       case "create-group": {
@@ -73,7 +73,7 @@ export const POST = createRouteHandler(
           applies_to: body.applies_to,
           sort_order: body.sort_order,
         });
-        return NextResponse.json({ data: group }, { status: 201 });
+        return created(group);
       }
 
       case "update-group": {
@@ -83,23 +83,23 @@ export const POST = createRouteHandler(
           applies_to: body.applies_to,
           sort_order: body.sort_order,
         });
-        return NextResponse.json({ data: group });
+        return ok(group);
       }
 
       case "delete-group": {
         await deleteVariantGroup(supabase, body.id, orgId);
-        return NextResponse.json({ data: null });
+        return ok(null);
       }
 
       // ── Options ──
       case "list-options": {
         const options = await getVariantOptions(supabase, orgId, body.group_id);
-        return NextResponse.json({ data: options });
+        return ok(options);
       }
 
       case "get-option": {
         const option = await getVariantOption(supabase, body.id);
-        return NextResponse.json({ data: option });
+        return ok(option);
       }
 
       case "create-option": {
@@ -109,7 +109,7 @@ export const POST = createRouteHandler(
           label_mn: body.label_mn,
           sort_order: body.sort_order,
         });
-        return NextResponse.json({ data: option }, { status: 201 });
+        return created(option);
       }
 
       case "update-option": {
@@ -118,12 +118,12 @@ export const POST = createRouteHandler(
           label_mn: body.label_mn,
           sort_order: body.sort_order,
         });
-        return NextResponse.json({ data: option });
+        return ok(option);
       }
 
       case "delete-option": {
         await deleteVariantOption(supabase, body.id, orgId);
-        return NextResponse.json({ data: null });
+        return ok(null);
       }
 
       // ── Item Variants ──
@@ -134,7 +134,7 @@ export const POST = createRouteHandler(
           body.entity_type as "service" | "part",
           body.entity_id,
         );
-        return NextResponse.json({ data: items });
+        return ok(items);
       }
 
       case "create-item": {
@@ -154,7 +154,7 @@ export const POST = createRouteHandler(
           },
           user?.id ?? null,
         );
-        return NextResponse.json({ data: item }, { status: 201 });
+        return created(item);
       }
 
       case "update-item": {
@@ -174,12 +174,12 @@ export const POST = createRouteHandler(
           },
           user?.id ?? null,
         );
-        return NextResponse.json({ data: item });
+        return ok(item);
       }
 
       case "delete-item": {
         await deleteItemVariant(supabase, body.id, orgId, user?.id ?? null);
-        return NextResponse.json({ data: null });
+        return ok(null);
       }
 
       case "bulk-items": {
@@ -192,14 +192,11 @@ export const POST = createRouteHandler(
           body.get_price ? createPriceCallback(body.get_price) : undefined,
           user?.id ?? null,
         );
-        return NextResponse.json({ data: items });
+        return ok(items);
       }
 
       default:
-        return NextResponse.json(
-          { error: { message: `Unknown action: ${action}` } },
-          { status: 400 },
-        );
+        return apiError("BAD_REQUEST", `Unknown action: ${action}`, 400);
     }
   },
 );

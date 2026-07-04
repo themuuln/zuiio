@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, apiError } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
   getStoreCreditBalance,
@@ -15,15 +15,7 @@ export const GET = createRouteHandler(
     const invoiceId = searchParams.get("invoice_id");
 
     if (!customerId && !invoiceId) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "BAD_REQUEST",
-            message: "customer_id or invoice_id is required",
-          },
-        },
-        { status: 400 },
-      );
+      return apiError("BAD_REQUEST", "customer_id or invoice_id is required", 400);
     }
 
     if (invoiceId) {
@@ -33,7 +25,7 @@ export const GET = createRouteHandler(
         invoiceId,
         orgId,
       );
-      return NextResponse.json({ data });
+      return ok(data);
     }
 
     const balance = await getStoreCreditBalance(supabase, customerId!, orgId);
@@ -51,9 +43,7 @@ export const GET = createRouteHandler(
       );
     }
 
-    return NextResponse.json({
-      data: { balance, transactions },
-    });
+    return ok({ balance, transactions });
   },
   { requiredPermission: { resource: "customers", action: "read" } },
 );

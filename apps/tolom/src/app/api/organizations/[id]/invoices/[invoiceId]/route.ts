@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, apiError } from "@/lib/api-response";
 import { z } from "zod";
 import { createRouteHandler } from "@/lib/api-handler";
 import { NotFoundError, ValidationError } from "@/lib/errors";
@@ -73,7 +73,7 @@ const setTaxSchema = z.object({
 export const GET = createRouteHandler(async ({ params, supabase }) => {
   const { invoiceId } = params;
   const invoice = await getInvoice(supabase, invoiceId);
-  return NextResponse.json({ data: invoice });
+  return ok(invoice);
 });
 
 export const PATCH = createRouteHandler(
@@ -87,12 +87,12 @@ export const PATCH = createRouteHandler(
         invoiceId,
         orgId,
       );
-      return NextResponse.json({ data: result });
+      return ok(result);
     }
 
     if (body.action === "mark_emailed") {
       const invoice = await markInvoiceEmailed(supabase, invoiceId, orgId);
-      return NextResponse.json({ data: invoice });
+      return ok(invoice);
     }
 
     if (body.status) {
@@ -104,7 +104,7 @@ export const PATCH = createRouteHandler(
         parsed.status,
         parsed.notes,
       );
-      return NextResponse.json({ data: invoice });
+      return ok(invoice);
     }
 
     if (body.action === "record_payment") {
@@ -115,7 +115,7 @@ export const PATCH = createRouteHandler(
         reference: parsed.reference,
         notes: parsed.notes,
       });
-      return NextResponse.json({ data: payments });
+      return ok(payments);
     }
 
     if (body.action === "add_item") {
@@ -126,7 +126,7 @@ export const PATCH = createRouteHandler(
         orgId,
         parsed.item,
       );
-      return NextResponse.json({ data: item });
+      return ok(item);
     }
 
     if (body.action === "update_item") {
@@ -138,13 +138,13 @@ export const PATCH = createRouteHandler(
         orgId,
         parsed.item,
       );
-      return NextResponse.json({ data: item });
+      return ok(item);
     }
 
     if (body.action === "remove_item") {
       const parsed = validate(removeItemSchema, body);
       await removeInvoiceItem(supabase, parsed.itemId, invoiceId, orgId);
-      return NextResponse.json({ data: null });
+      return ok(null);
     }
 
     if (body.action === "set_tax") {
@@ -170,13 +170,10 @@ export const PATCH = createRouteHandler(
         )
         .single();
 
-      return NextResponse.json({ data: updated });
+      return ok(updated);
     }
 
-    return NextResponse.json(
-      { error: { code: "INVALID_REQUEST", message: "No valid action" } },
-      { status: 400 },
-    );
+    return apiError("INVALID_REQUEST", "No valid action", 400);
   },
   { rateLimit: true, subscription: true },
 );
@@ -185,7 +182,7 @@ export const DELETE = createRouteHandler(
   async ({ request, orgId, params, supabase }) => {
     const { invoiceId } = params;
     await deleteInvoice(supabase, invoiceId, orgId);
-    return NextResponse.json({ data: null });
+    return ok(null);
   },
   { rateLimit: true, subscription: true },
 );

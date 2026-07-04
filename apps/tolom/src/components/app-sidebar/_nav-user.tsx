@@ -41,7 +41,6 @@ export function NavUser() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        nativeButton={false}
         render={
           <Button
             variant="ghost"

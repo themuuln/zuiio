@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { created } from "@/lib/api-response";
 import { createEstimate, getEstimates } from "@/lib/services/estimate-service";
 import type { EstimateStatus } from "@/lib/types";
 
@@ -29,7 +30,7 @@ export const POST = createRouteHandler(
   async ({ request, orgId, supabase }) => {
     const body = await request.json();
     const estimate = await createEstimate(supabase, orgId, body);
-    return NextResponse.json({ data: estimate }, { status: 201 });
+    return created(estimate);
   },
   {
     rateLimit: true,

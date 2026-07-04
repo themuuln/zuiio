@@ -12,6 +12,7 @@ export function useCommissionRules(orgId: string | undefined) {
     queryKey: commissionKeys.list(orgId ?? ""),
     queryFn: () => fetchCommissionRules(orgId!),
     enabled: !!orgId,
+    staleTime: 5 * 60_000,
   });
 }
 

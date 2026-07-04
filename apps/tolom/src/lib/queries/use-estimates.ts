@@ -1,4 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useOrgMutation } from "@zuiio/query";
 import { toast } from "sonner";
 import type { EstimateDetail, EstimateStatus } from "@/lib/types";
 import { estimateKeys } from "./keys";
@@ -232,5 +233,87 @@ export function useConvertEstimate(orgId: string | undefined) {
     onError: (err: Error) => {
       toast.error(err.message ?? "Failed to convert estimate");
     },
+  });
+}
+
+// ── Update Estimate ─────────────────────────────────────────────
+
+export interface UpdateEstimateParams {
+  id: string;
+  valid_until: string | null;
+  notes: string | null;
+  terms: string | null;
+  discount_amount: number;
+  discount_percentage: number;
+  tax_total: number;
+  items: Array<{
+    item_type: string;
+    source_service_id: string | null;
+    source_part_id: string | null;
+    description: string;
+    quantity: number;
+    unit_price: number;
+    discount_amount: number;
+    discount_percentage: number;
+    sort_order: number;
+  }>;
+}
+
+export function useUpdateEstimate(orgId: string | undefined) {
+  return useOrgMutation<EstimateDetail, UpdateEstimateParams>({
+    endpoint: (vars) => `/api/organizations/${orgId}/estimates/${vars.id}`,
+    method: "PATCH",
+    queryKey: estimateKeys.all(orgId ?? ""),
+    bodyFn: (vars) => {
+      const { id, ...body } = vars;
+      return body;
+    },
+    successMessage: "Estimate updated",
+  });
+}
+
+// ── Duplicate Estimate ──────────────────────────────────────────
+
+export interface DuplicateEstimateParams {
+  customer_id: string | null;
+  vehicle_id: string | null;
+  branchId: string | null;
+  status: string;
+  valid_until: string | null;
+  notes: string | null | undefined;
+  terms: string | null | undefined;
+  discount_amount: number;
+  discount_percentage: number;
+  tax_total: number;
+  items: Array<{
+    item_type: string;
+    source_service_id: string | null;
+    source_part_id: string | null;
+    description: string;
+    quantity: number;
+    unit_price: number;
+    discount_amount: number;
+    discount_percentage: number;
+    sort_order: number;
+  }>;
+}
+
+export function useDuplicateEstimate(orgId: string | undefined) {
+  return useOrgMutation<{ id: string }, DuplicateEstimateParams>({
+    endpoint: `/api/organizations/${orgId}/estimates`,
+    method: "POST",
+    queryKey: estimateKeys.all(orgId ?? ""),
+    successMessage: "Estimate duplicated",
+  });
+}
+
+// ── Send Estimate ───────────────────────────────────────────────
+
+export function useSendEstimate(orgId: string | undefined) {
+  return useOrgMutation<unknown, { id: string }>({
+    endpoint: (vars) => `/api/organizations/${orgId}/estimates/${vars.id}/send`,
+    method: "POST",
+    queryKey: estimateKeys.all(orgId ?? ""),
+    successMessage: "Estimate sent",
   });
 }

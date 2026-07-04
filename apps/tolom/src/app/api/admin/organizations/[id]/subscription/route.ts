@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { ok } from "@/lib/api-response";
 import { ForbiddenError } from "@/lib/errors";
 import { mutationRateLimiter } from "@/lib/rate-limit";
 import {
@@ -38,10 +39,10 @@ export const PATCH = createRouteHandler(
 
     if (body.action === "extend") {
       const subscription = await extendSubscriptionTrial(supabase, orgId);
-      return NextResponse.json({ data: subscription });
+      return ok(subscription);
     }
 
     const subscription = await updateOrgSubscription(supabase, orgId, body);
-    return NextResponse.json({ data: subscription });
+    return ok(subscription);
   },
 );

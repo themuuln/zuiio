@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { created, apiError } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import { addCashOut } from "@/lib/services/cash-register-service";
 
@@ -9,28 +9,10 @@ export const POST = createRouteHandler(
     const { amount, description } = body;
 
     if (!amount || Number(amount) <= 0) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "Amount must be positive",
-          },
-        },
-        { status: 400 },
-      );
+      return apiError("VALIDATION_ERROR", "Amount must be positive", 400);
     }
 
-    if (!description?.trim()) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "Description is required",
-          },
-        },
-        { status: 400 },
-      );
-    }
+      return apiError("VALIDATION_ERROR", "Description is required", 400);
 
     const entry = await addCashOut(
       supabase,
@@ -41,7 +23,7 @@ export const POST = createRouteHandler(
       description,
     );
 
-    return NextResponse.json({ data: entry }, { status: 201 });
+    return created(entry);
   },
   { rateLimit: true },
 );

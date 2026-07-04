@@ -75,11 +75,14 @@ export function OrgBranding() {
 
   const label = (
     <div className="grid min-w-0 flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden group-data-[collapsible=icon]:group-hover:grid">
-      <span className="truncate text-sm font-semibold" suppressHydrationWarning>
+      <span
+        className="truncate text-sm font-semibold transition-opacity duration-200"
+        suppressHydrationWarning
+      >
         {name}
       </span>
       <span
-        className="truncate text-[10px] text-sidebar-foreground/50"
+        className="truncate text-[10px] text-sidebar-foreground/50 transition-opacity duration-200"
         suppressHydrationWarning
       >
         {canSwitchBranches ? activeBranchName : "\u00a0"}

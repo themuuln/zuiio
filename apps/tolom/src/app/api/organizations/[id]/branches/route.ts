@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { ok, created } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import { createBranch, getBranches } from "@/lib/services/branch-service";
 
 export const GET = createRouteHandler(
   async ({ orgId, supabase }) => {
     const branches = await getBranches(supabase, orgId);
-    return NextResponse.json({ data: branches });
+    return ok(branches);
   },
   { requiredPermission: { resource: "branches", action: "read" } },
 );
@@ -14,7 +14,7 @@ export const POST = createRouteHandler(
   async ({ request, orgId, supabase }) => {
     const body = await request.json();
     const branch = await createBranch(supabase, orgId, body);
-    return NextResponse.json({ data: branch }, { status: 201 });
+    return created(branch);
   },
   {
     rateLimit: true,

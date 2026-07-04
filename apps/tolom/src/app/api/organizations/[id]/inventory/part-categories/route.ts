@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { createRouteHandler } from "@/lib/api-handler";
+import { ok, created, apiError, createRouteHandler } from "@/lib/api-response"
 import {
   createPartCategory,
   getPartCategories,
@@ -8,7 +7,7 @@ import {
 export const GET = createRouteHandler(
   async ({ orgId, supabase }) => {
     const categories = await getPartCategories(supabase, orgId);
-    return NextResponse.json({ data: categories });
+    return ok(categories);
   },
   { requiredPermission: { resource: "inventory", action: "read" } },
 );
@@ -17,10 +16,7 @@ export const POST = createRouteHandler(
   async ({ request, orgId, user, supabase }) => {
     const body = await request.json();
     if (!body.name?.trim()) {
-      return NextResponse.json(
-        { error: { message: "Category name is required" } },
-        { status: 400 },
-      );
+      return apiError("BAD_REQUEST", "Category name is required", 400);
     }
     const category = await createPartCategory(
       supabase,
@@ -28,7 +24,7 @@ export const POST = createRouteHandler(
       body.name,
       user.id,
     );
-    return NextResponse.json({ data: category }, { status: 201 });
+    return created(category);
   },
   { requiredPermission: { resource: "inventory", action: "create" } },
 );

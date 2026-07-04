@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { createSimpleRouteHandler } from "@/lib/api-handler";
+import { ok, created, apiError } from "@/lib/api-response";
 
 export const GET = createSimpleRouteHandler(async ({ supabase }) => {
   const { data, error } = await supabase
@@ -9,13 +9,10 @@ export const GET = createSimpleRouteHandler(async ({ supabase }) => {
     .order("name");
 
   if (error) {
-    return NextResponse.json(
-      { error: { message: error.message } },
-      { status: 500 },
-    );
+    return apiError("SERVER_ERROR", error.message, 500);
   }
 
-  return NextResponse.json({ data });
+  return ok(data);
 });
 
 export const POST = createSimpleRouteHandler(async ({ request, supabase }) => {
@@ -23,10 +20,7 @@ export const POST = createSimpleRouteHandler(async ({ request, supabase }) => {
   const name = body.name?.trim();
 
   if (!name) {
-    return NextResponse.json(
-      { error: { message: "Brand name is required" } },
-      { status: 400 },
-    );
+    return apiError("VALIDATION", "Brand name is required", 400);
   }
 
   // Check for duplicate
@@ -38,7 +32,7 @@ export const POST = createSimpleRouteHandler(async ({ request, supabase }) => {
     .maybeSingle();
 
   if (existing) {
-    return NextResponse.json({ data: existing });
+    return ok(existing);
   }
 
   const { data, error } = await supabase
@@ -48,11 +42,8 @@ export const POST = createSimpleRouteHandler(async ({ request, supabase }) => {
     .single();
 
   if (error) {
-    return NextResponse.json(
-      { error: { message: error.message } },
-      { status: 500 },
-    );
+    return apiError("SERVER_ERROR", error.message, 500);
   }
 
-  return NextResponse.json({ data }, { status: 201 });
+  return created(data);
 });

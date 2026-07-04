@@ -1,11 +1,11 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useOrgMutation } from "@zuiio/query";
 import { ArrowLeft, CarFront, Loader2, User } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Suspense, useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
 import { SearchInput } from "@/components/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,9 +26,9 @@ import { usePageHeader } from "@/hooks/use-page-header";
 import { inputProps } from "@/lib/form-ux";
 import { isValidMongolianPlate } from "@/lib/form-validation";
 import { Link, useRouter } from "@/lib/i18n/navigation";
-import { customerKeys } from "@/lib/queries/keys";
+import { customerKeys, vehicleKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
-import type { Customer } from "@/lib/types";
+import type { Customer, CreateVehicleParams, Vehicle } from "@/lib/types";
 
 type VehicleFormState = {
   plateNumber: string;
@@ -104,7 +104,6 @@ function NewVehicleForm() {
     staleTime: 30_000,
   });
 
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<VehicleFormState>(initialForm);
@@ -120,6 +119,21 @@ function NewVehicleForm() {
       setSelectedCustomer(preselectedCustomer);
     }
   }, [preselectedCustomer, selectedCustomer]);
+
+  const createVehicle = useOrgMutation<Vehicle, CreateVehicleParams>({
+    endpoint: `/api/organizations/${orgId}/vehicles`,
+    method: "POST",
+    queryKey: vehicleKeys.all(orgId ?? ""),
+    successMessage: t("vehicleCreated"),
+    errorMessage: t("failedToCreate"),
+    onSuccess: (data) => {
+      replace("/dashboard/vehicles");
+      setDetailVehicleId(data.id);
+    },
+    onError: (error) => {
+      setError(error.message);
+    },
+  });
 
   const searchCustomers = useCallback(
     async (query: string) => {
@@ -193,37 +207,14 @@ function NewVehicleForm() {
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
-    setSaving(true);
     setError(null);
 
-    try {
-      const response = await fetch(`/api/organizations/${orgId}/vehicles`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          customerId: selectedCustomer.id,
-          year: form.year ? Number(form.year) : undefined,
-          odometer: form.odometer ? Number(form.odometer) : undefined,
-        }),
-      });
-      const json = await response.json();
-
-      if (json.error) {
-        toast.error(json.error.message);
-        setError(json.error.message);
-        return;
-      }
-
-      toast.success(t("vehicleCreated"));
-      replace("/dashboard/vehicles");
-      setDetailVehicleId(json.data.id);
-    } catch {
-      toast.error(t("failedToCreate"));
-      setError(t("failedToCreate"));
-    } finally {
-      setSaving(false);
-    }
+    await createVehicle.mutateAsync({
+      ...form,
+      customerId: selectedCustomer.id,
+      year: form.year ? Number(form.year) : undefined,
+      odometer: form.odometer ? Number(form.odometer) : undefined,
+    });
   };
 
   if (orgQuery.isLoading) {
@@ -739,13 +730,13 @@ function NewVehicleForm() {
           >
             {t("cancel")}
           </Button>
-          <Button type="submit" size="default" disabled={saving}>
-            {saving ? (
+          <Button type="submit" size="default" disabled={createVehicle.isPending}>
+            {createVehicle.isPending ? (
               <Loader2 className="size-4 animate-spin" />
             ) : (
               <CarFront className="size-4" />
             )}
-            {saving ? t("saving") : t("createVehicle")}
+            {createVehicle.isPending ? t("saving") : t("createVehicle")}
           </Button>
         </div>
       </form>

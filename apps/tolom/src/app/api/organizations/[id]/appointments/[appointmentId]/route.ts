@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok, apiError } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
   deleteAppointment,
@@ -10,12 +10,9 @@ export const GET = createRouteHandler(
   async ({ params, supabase }) => {
     const appointment = await getAppointment(supabase, params.appointmentId);
     if (!appointment) {
-      return NextResponse.json(
-        { error: { code: "NOT_FOUND", message: "Appointment not found" } },
-        { status: 404 },
-      );
+      return apiError("NOT_FOUND", "Appointment not found", 404);
     }
-    return NextResponse.json({ data: appointment });
+    return ok(appointment);
   },
   { requiredPermission: { resource: "customers", action: "read" } },
 );
@@ -28,7 +25,7 @@ export const PATCH = createRouteHandler(
       params.appointmentId,
       body,
     );
-    return NextResponse.json({ data: appointment });
+    return ok(appointment);
   },
   {
     rateLimit: true,
@@ -39,7 +36,7 @@ export const PATCH = createRouteHandler(
 export const DELETE = createRouteHandler(
   async ({ request, params, supabase }) => {
     await deleteAppointment(supabase, params.appointmentId);
-    return NextResponse.json({ data: null });
+    return ok(null);
   },
   {
     rateLimit: true,

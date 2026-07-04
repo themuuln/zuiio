@@ -118,6 +118,7 @@ export default function NewPartsCarPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
+              <Field>
                 <NumericInput
                   id="year"
                   value={year}
@@ -170,14 +171,14 @@ export default function NewPartsCarPage() {
               <FieldLabel htmlFor="purchase_cost">
                 {partsCarsT("purchaseCost")}
               </FieldLabel>
-                <CurrencyInput
-                  id="purchase_cost"
-                  value={purchaseCost}
-                  onChange={setPurchaseCost}
-                  showPrefix={false}
-                  min={0}
-                  placeholder="12,000,000"
-                />
+              <CurrencyInput
+                id="purchase_cost"
+                value={purchaseCost}
+                onChange={setPurchaseCost}
+                showPrefix={false}
+                min={0}
+                placeholder="12,000,000"
+              />
             </Field>
 
             <Field>

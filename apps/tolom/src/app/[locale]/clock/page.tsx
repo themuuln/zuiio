@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import { Camera, CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
@@ -41,6 +42,48 @@ export default function ClockPage() {
 
   const scannerId = "qr-scanner-element";
 
+  const verifyClock = useMutation({
+    mutationFn: async (inputToken: string) => {
+      const res = await fetch(
+        `/api/organizations/${profile?.organizationId}/clock/verify`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ rawToken: inputToken }),
+        },
+      );
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error?.message ?? t("clock.error"));
+      }
+      return json.data as { direction: string; mechanicName: string | null };
+    },
+  });
+
+  const clockInOut = useMutation({
+    mutationFn: async ({
+      endpoint,
+      token: tk,
+    }: {
+      endpoint: string;
+      token: string;
+    }) => {
+      const res = await fetch(
+        `/api/organizations/${profile?.organizationId}/me/time/${endpoint}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: tk }),
+        },
+      );
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error?.message ?? t("clock.error"));
+      }
+      return json;
+    },
+  });
+
   // ── Callback shared by QR scan and manual entry ──────────────
 
   const verifyToken = useCallback(
@@ -49,32 +92,18 @@ export default function ClockPage() {
       setToken(inputToken);
 
       try {
-        const res = await fetch(
-          `/api/organizations/${profile?.organizationId}/clock/verify`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ rawToken: inputToken }),
-          },
-        );
-
-        const json = await res.json();
-
-        if (!res.ok) {
-          setApiError(json.error?.message ?? t("clock.error"));
-          setScanState("error");
-          return;
-        }
-
-        setClockDirection(json.data?.direction ?? "in");
-        setMechanicName(json.data?.mechanicName ?? null);
+        const data = await verifyClock.mutateAsync(inputToken);
+        setClockDirection(data.direction ?? "in");
+        setMechanicName(data.mechanicName ?? null);
         setScanState("confirming");
-      } catch {
-        setApiError(t("clock.error"));
+      } catch (err) {
+        setApiError(
+          err instanceof Error ? err.message : t("clock.error"),
+        );
         setScanState("error");
       }
     },
-    [profile?.organizationId, t],
+    [profile?.organizationId, verifyClock, t],
   );
 
   const handleScanResult = useCallback(
@@ -140,22 +169,7 @@ export default function ClockPage() {
 
     try {
       const endpoint = clockDirection === "in" ? "clock-in" : "clock-out";
-      const res = await fetch(
-        `/api/organizations/${profile.organizationId}/me/time/${endpoint}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token }),
-        },
-      );
-
-      const json = await res.json();
-
-      if (!res.ok) {
-        setApiError(json.error?.message ?? t("clock.error"));
-        setScanState("error");
-        return;
-      }
+      await clockInOut.mutateAsync({ endpoint, token });
 
       const now = new Date();
       const timeStr = now.toLocaleTimeString([], {

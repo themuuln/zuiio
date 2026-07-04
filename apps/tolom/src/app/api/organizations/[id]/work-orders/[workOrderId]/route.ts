@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { createRouteHandler } from "@/lib/api-handler";
+import { ok, apiError, createRouteHandler } from "@/lib/api-response"
 import {
   cancelWorkOrder,
   getWorkOrder,
@@ -14,7 +13,7 @@ export const GET = createRouteHandler(
   async ({ params, orgId, supabase }) => {
     const { workOrderId } = params;
     const wo = await getWorkOrder(supabase, workOrderId);
-    return NextResponse.json({ data: wo });
+    return ok(wo);
   },
   { subscription: true },
 );
@@ -44,14 +43,11 @@ export const PATCH = createRouteHandler(
         .eq("organization_id", orgId);
 
       if (error) {
-        return NextResponse.json(
-          { error: { code: "UPDATE_FAILED", message: error.message } },
-          { status: 500 },
-        );
+      return apiError("UPDATE_FAILED", error.message, 500);
       }
 
       const wo = await getWorkOrder(supabase, workOrderId);
-      return NextResponse.json({ data: wo });
+      return ok(wo);
     }
 
     if (body.status) {
@@ -63,7 +59,7 @@ export const PATCH = createRouteHandler(
         body.notes ?? undefined,
         body.loss_reason ?? undefined,
       );
-      return NextResponse.json({ data: wo });
+      return ok(wo);
     }
 
     if (body.mechanic_id !== undefined) {
@@ -73,7 +69,7 @@ export const PATCH = createRouteHandler(
         orgId,
         body.mechanic_id as string,
       );
-      return NextResponse.json({ data: assignment });
+      return ok(assignment);
     }
 
     if (body.nuat_enabled !== undefined) {
@@ -88,14 +84,11 @@ export const PATCH = createRouteHandler(
         .eq("organization_id", orgId);
 
       if (error) {
-        return NextResponse.json(
-          { error: { code: "UPDATE_FAILED", message: error.message } },
-          { status: 500 },
-        );
+      return apiError("UPDATE_FAILED", error.message, 500);
       }
 
       const wo = await getWorkOrder(supabase, workOrderId);
-      return NextResponse.json({ data: wo });
+      return ok(wo);
     }
 
     if (body.customer_id !== undefined) {
@@ -110,20 +103,14 @@ export const PATCH = createRouteHandler(
         .eq("organization_id", orgId);
 
       if (error) {
-        return NextResponse.json(
-          { error: { code: "UPDATE_FAILED", message: error.message } },
-          { status: 500 },
-        );
+      return apiError("UPDATE_FAILED", error.message, 500);
       }
 
       const wo = await getWorkOrder(supabase, workOrderId);
-      return NextResponse.json({ data: wo });
+      return ok(wo);
     }
 
-    return NextResponse.json(
-      { error: { code: "INVALID_REQUEST", message: "No valid action" } },
-      { status: 400 },
-    );
+      return apiError("INVALID_REQUEST", "No valid action", 400);
   },
   {
     rateLimit: true,
@@ -136,7 +123,7 @@ export const DELETE = createRouteHandler(
   async ({ request, params, orgId, supabase }) => {
     const { workOrderId } = params;
     await cancelWorkOrder(supabase, workOrderId, orgId);
-    return NextResponse.json({ data: null });
+    return ok(null);
   },
   {
     rateLimit: true,

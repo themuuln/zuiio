@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { createRouteHandler } from "@/lib/api-handler";
 import {
   deleteExpense,
@@ -10,7 +10,7 @@ export const GET = createRouteHandler(
   async ({ orgId, params, supabase }) => {
     const { expenseId } = params;
     const expense = await getExpense(supabase, expenseId, orgId);
-    return NextResponse.json({ data: expense });
+    return ok(expense);
   },
   { requiredPermission: { resource: "expenses", action: "read" } },
 );
@@ -26,7 +26,7 @@ export const PATCH = createRouteHandler(
       body,
       user.id,
     );
-    return NextResponse.json({ data: expense });
+    return ok(expense);
   },
   {
     rateLimit: true,
@@ -39,7 +39,7 @@ export const DELETE = createRouteHandler(
   async ({ request, orgId, params, user, supabase }) => {
     const { expenseId } = params;
     await deleteExpense(supabase, expenseId, orgId, user.id);
-    return NextResponse.json({ data: null });
+    return ok(null);
   },
   {
     rateLimit: true,

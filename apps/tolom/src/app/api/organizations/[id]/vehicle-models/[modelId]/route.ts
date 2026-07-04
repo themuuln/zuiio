@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
+import { ok, noContent } from "@/lib/api-response";
 import {
   deleteVehicleModel,
   updateVehicleModel,
@@ -10,7 +10,7 @@ export const PATCH = createRouteHandler(
     const { modelId } = params;
     const body = await request.json();
     const model = await updateVehicleModel(supabase, modelId, orgId, body);
-    return NextResponse.json({ data: model });
+    return ok(model);
   },
   { rateLimit: true, subscription: true },
 );
@@ -19,7 +19,7 @@ export const DELETE = createRouteHandler(
   async ({ request, orgId, params, supabase }) => {
     const { modelId } = params;
     await deleteVehicleModel(supabase, modelId, orgId);
-    return NextResponse.json({ data: null });
+    return noContent();
   },
   { rateLimit: true, subscription: true },
 );
