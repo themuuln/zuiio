@@ -30,6 +30,9 @@ export async function createStockMovement(
   if (validationError) {
     return { error: validationError };
   }
+  if (!branchId) {
+    return { error: "Салбар сонгоогүй байна." };
+  }
 
   // Verify product exists and belongs to this organization
   const { data: product, error: productError } = await supabase
@@ -48,7 +51,7 @@ export async function createStockMovement(
     .from("stock_movements")
     .insert({
       organization_id: organizationId,
-      branch_id: branchId!,
+      branch_id: branchId,
       product_id: productId,
       type,
       quantity,

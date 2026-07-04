@@ -17,6 +17,9 @@ export async function createBatchAdjustment(
   const ctx = await requireWriteAction("stock_movements.create");
   if ("error" in ctx) return ctx;
   const { supabase, organizationId, userId, branchId } = ctx;
+  if (!branchId) {
+    return { error: "Салбар сонгоогүй байна." };
+  }
 
   const notes = formData.get("notes") as string | null;
   const itemsJson = formData.get("items") as string | null;
@@ -45,7 +48,7 @@ export async function createBatchAdjustment(
     "process_batch_adjustment",
     {
       p_org_id: organizationId,
-      p_branch_id: branchId!,
+      p_branch_id: branchId,
       p_user_id: userId,
       p_items: items
         .filter((item) => item.quantity !== 0)
@@ -60,11 +63,13 @@ export async function createBatchAdjustment(
     },
   );
 
-  if (rpcError || (rpcResult && (rpcResult as any).error)) {
+  if (rpcError || (rpcResult && typeof rpcResult === "object" && "error" in rpcResult && rpcResult.error)) {
     return {
       error:
         rpcError?.message ??
-        (rpcResult as any)?.error ??
+        (rpcResult && typeof rpcResult === "object" && "error" in rpcResult
+          ? String(rpcResult.error)
+          : null) ??
         "Тохируулга хадгалахад алдаа гарлаа.",
     };
   }

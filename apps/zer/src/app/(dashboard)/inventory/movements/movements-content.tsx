@@ -95,17 +95,22 @@ export function MovementsContent({
     };
   }
 
-  function getPageNumbers(): (number | "ellipsis")[] {
+  function getPageNumbers(): { id: string; value: number | "ellipsis" }[] {
     if (totalPages <= 7) {
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
+      return Array.from({ length: totalPages }, (_, i) => ({
+        id: `page-${i + 1}`,
+        value: i + 1,
+      }));
     }
-    const pages: (number | "ellipsis")[] = [1];
-    if (currentPage > 3) pages.push("ellipsis");
+    const pages: { id: string; value: number | "ellipsis" }[] = [
+      { id: "page-1", value: 1 },
+    ];
+    if (currentPage > 3) pages.push({ id: "ellipsis-start", value: "ellipsis" });
     const start = Math.max(2, currentPage - 1);
     const end = Math.min(totalPages - 1, currentPage + 1);
-    for (let i = start; i <= end; i++) pages.push(i);
-    if (currentPage < totalPages - 2) pages.push("ellipsis");
-    pages.push(totalPages);
+    for (let i = start; i <= end; i++) pages.push({ id: `page-${i}`, value: i });
+    if (currentPage < totalPages - 2) pages.push({ id: "ellipsis-end", value: "ellipsis" });
+    pages.push({ id: `page-${totalPages}`, value: totalPages });
     return pages;
   }
 
@@ -241,30 +246,30 @@ export function MovementsContent({
             )}
 
             <div className="hidden items-center gap-1 sm:flex">
-              {getPageNumbers().map((p, idx) =>
-                p === "ellipsis" ? (
+              {getPageNumbers().map((p) =>
+                p.value === "ellipsis" ? (
                   <span
-                    key={`e-${idx}`}
+                    key={p.id}
                     className="flex size-7 items-center justify-center text-xs text-muted-foreground"
                   >
                     ...
                   </span>
                 ) : (
                   <Link
-                    key={p}
+                    key={p.id}
                     href={buildHref({
-                      page: String(p),
+                      page: String(p.value),
                       type: currentType,
                     })}
                     className={cn(
                       buttonVariants({
-                        variant: p === currentPage ? "default" : "outline",
+                        variant: p.value === currentPage ? "default" : "outline",
                         size: "xs",
                       }),
                       "min-w-7",
                     )}
                   >
-                    {p}
+                    {p.value}
                   </Link>
                 ),
               )}

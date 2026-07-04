@@ -38,7 +38,7 @@ export default async function AdjustmentsPage() {
   >();
 
   for (const m of movements ?? []) {
-    const ref = m.reference!;
+    const ref = m.reference ?? "";
     if (!batchMap.has(ref)) {
       batchMap.set(ref, {
         created_at: m.created_at ?? new Date().toISOString(),

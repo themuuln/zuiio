@@ -17,7 +17,7 @@ if (!Element.prototype.scrollIntoView) {
 
 // Polyfill window.matchMedia (required by next-themes)
 if (!globalThis.window) {
-  (globalThis as any).window = globalThis;
+  (globalThis as { window: typeof globalThis }).window = globalThis;
 }
 Object.defineProperty(window, "matchMedia", {
   writable: true,

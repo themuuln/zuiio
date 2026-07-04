@@ -53,15 +53,88 @@ export async function TelegramLink({
     .limit(1);
 
   const linkedAccount = links?.[0] ?? null;
-
-  // Fetch a new link token for QR display (not used if already linked)
   const linkToken = linkedAccount
     ? null
     : await fetchLinkToken(organizationId, userId, "zer");
 
+  // tg:// native scheme for more reliable mobile deep linking
   const deeplinkUrl = linkToken
-    ? `https://t.me/zuiio_bot?start=${encodeURIComponent(linkToken)}`
+    ? `tg://resolve?domain=zuiio_bot&start=${encodeURIComponent(linkToken)}`
     : null;
+  const startCommand = linkToken ? `/start ${linkToken}` : null;
+
+  // Build the content based on state
+  let content: React.ReactNode;
+
+  if (linkedAccount) {
+    content = (
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 text-sm">
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
+            ✅ Холбогдсон
+          </span>
+          {linkedAccount.telegram_username && (
+            <span className="text-muted-foreground">
+              @{linkedAccount.telegram_username}
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Та @zuiio_bot бот руу мессеж бичиж өгөгдлөө харах боломжтой.
+          <br />
+          Холбогдсон:{" "}
+          {new Date(linkedAccount.linked_at).toLocaleDateString()}
+        </p>
+        <Button variant="outline" size="sm" asChild>
+          <a
+            href="https://t.me/zuiio_bot"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            @zuiio_bot нээх
+          </a>
+        </Button>
+      </div>
+    );
+  } else if (deeplinkUrl && startCommand) {
+    content = (
+      <div className="space-y-4">
+        <QrCodeInline
+          value={deeplinkUrl}
+          startCommand={startCommand}
+          size={200}
+        />
+        <Button variant="outline" size="sm" asChild>
+          <a
+            href="https://t.me/zuiio_bot"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <TelegramLogo className="size-4" weight="fill" />
+            @zuiio_bot нээх
+          </a>
+        </Button>
+      </div>
+    );
+  } else {
+    content = (
+      <div className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          QR код үүсгэх боломжгүй байна. Хуудсыг дахин ачааллаад оролдоно уу.
+        </p>
+        <Button variant="outline" size="sm" asChild>
+          <a
+            href="https://t.me/zuiio_bot"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <TelegramLogo className="size-4" weight="fill" />
+            @zuiio_bot нээх
+          </a>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <Card>
@@ -75,76 +148,7 @@ export async function TelegramLink({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {linkedAccount ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm">
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
-                ✅ Холбогдсон
-              </span>
-              {linkedAccount.telegram_username && (
-                <span className="text-muted-foreground">
-                  @{linkedAccount.telegram_username}
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Та @zuiio_bot бот руу мессеж бичиж өгөгдлөө харах боломжтой.
-              <br />
-              Холбогдсон:{" "}
-              {new Date(linkedAccount.linked_at).toLocaleDateString()}
-            </p>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" asChild>
-                <a
-                  href="https://t.me/zuiio_bot"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  @zuiio_bot нээх
-                </a>
-              </Button>
-            </div>
-          </div>
-        ) : deeplinkUrl ? (
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Дараах QR кодыг утасны камераар уншуулж Telegram-тай холбогдоно
-              уу.
-            </p>
-            <QrCodeInline value={deeplinkUrl} size={200} />
-            <p className="text-xs text-muted-foreground">
-              Эсвэл доорх товчийг дарж @zuiio_bot руу очиж /start командыг
-              илгээнэ үү.
-            </p>
-            <Button variant="outline" size="sm" asChild>
-              <a
-                href="https://t.me/zuiio_bot"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <TelegramLogo className="size-4" weight="fill" />
-                @zuiio_bot нээх
-              </a>
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              QR код үүсгэх боломжгүй байна. Гар утасны камераар дахин оролдоно
-              уу.
-            </p>
-            <Button variant="outline" size="sm" asChild>
-              <a
-                href="https://t.me/zuiio_bot"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <TelegramLogo className="size-4" weight="fill" />
-                @zuiio_bot нээх
-              </a>
-            </Button>
-          </div>
-        )}
+        {content}
       </CardContent>
     </Card>
   );

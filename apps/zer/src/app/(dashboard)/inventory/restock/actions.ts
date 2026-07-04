@@ -4,6 +4,8 @@ import { capture } from "@zuiio/capture";
 import { postPurchaseToJournal } from "@/lib/accounting";
 import { requireWriteAction } from "@/lib/action-utils";
 import { revalidateEntities } from "@/lib/revalidate";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/types";
 
 interface RestockItem {
   product_id: string;
@@ -18,7 +20,7 @@ interface SupplierOrder {
 }
 
 async function processSingleOrder(
-  supabase: any,
+  supabase: SupabaseClient<Database>,
   organizationId: string,
   userId: string,
   branchId: string,
@@ -99,9 +101,13 @@ async function processSingleOrder(
     },
   );
 
-  if (rpcError || (rpcResult && (rpcResult as any).error)) {
+  if (rpcError || (rpcResult && typeof rpcResult === "object" && "error" in rpcResult && rpcResult.error)) {
     const errorMsg =
-      rpcError?.message ?? (rpcResult as any)?.error ?? "Алдаа гарлаа";
+      rpcError?.message ??
+      (rpcResult && typeof rpcResult === "object" && "error" in rpcResult
+        ? String(rpcResult.error)
+        : null) ??
+      "Алдаа гарлаа";
     // Rollback: delete the purchase order and its items
     await supabase.from("purchase_orders").delete().eq("id", purchaseOrder.id);
     return { created: false, error: `Бараа хүлээн авахад алдаа: ${errorMsg}` };
@@ -135,18 +141,26 @@ export async function batchCreatePurchaseOrders(
   if ("error" in ctx) return ctx;
   const { supabase, organizationId, userId, branchId } = ctx;
 
+  if (!branchId) {
+    return {
+      success: false,
+      error: "Салбар сонгоогүй байна.",
+      createdCount: 0,
+    };
+  }
+
   // Process supplier orders in parallel since they are independent
   const results = await Promise.all(
     supplierOrders
       .filter((o) => o.items.length > 0)
       .map((order) =>
-        processSingleOrder(supabase, organizationId, userId, branchId!, order),
+        processSingleOrder(supabase, organizationId, userId, branchId, order),
       ),
   );
 
   const errors = results
     .filter((r) => !r.created)
-    .map((r) => r.error!)
+    .map((r) => r.error ?? undefined)
     .filter(Boolean);
   const createdCount = results.filter((r) => r.created).length;
 

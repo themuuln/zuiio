@@ -101,7 +101,7 @@ export function HowItWorksSection() {
 }
 
 export function WorkflowSection() {
-  const t = useTranslations("home");
+  const t = useTranslations("home") as (key: string) => string;
 
   return (
     <section className="border-t px-4 py-16 sm:px-6 sm:py-24">
@@ -130,10 +130,10 @@ export function WorkflowSection() {
                     <Icon className="size-5 text-primary" />
                   </div>
                   <CardTitle className="text-base">
-                    {(t as any)(`${pillar.key}Title`)}
+                    {t(`${pillar.key}Title`)}
                   </CardTitle>
                   <CardDescription>
-                    {(t as any)(`${pillar.key}Desc`)}
+                    {t(`${pillar.key}Desc`)}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-3 pt-0">
@@ -143,7 +143,7 @@ export function WorkflowSection() {
                         <Check className="size-3 text-primary" />
                       </div>
                       <Typography.Muted className="text-sm text-muted-foreground">
-                        {(t as any)(`${pillar.key}Point${item}`)}
+                        {t(`${pillar.key}Point${item}`)}
                       </Typography.Muted>
                     </div>
                   ))}
@@ -158,7 +158,7 @@ export function WorkflowSection() {
 }
 
 export function DifferentiatorsSection() {
-  const t = useTranslations("home");
+  const t = useTranslations("home") as (key: string) => string;
 
   return (
     <section className="border-t bg-muted/20 px-4 py-16 sm:px-6 sm:py-24">
@@ -184,10 +184,10 @@ export function DifferentiatorsSection() {
                     <Icon className="size-5 text-primary" />
                   </div>
                   <CardTitle className="text-lg">
-                    {(t as any)(`${item.key}Title`)}
+                    {t(`${item.key}Title`)}
                   </CardTitle>
                   <CardDescription className="text-sm leading-6">
-                    {(t as any)(`${item.key}Desc`)}
+                    {t(`${item.key}Desc`)}
                   </CardDescription>
                 </CardHeader>
               </Card>
@@ -200,7 +200,7 @@ export function DifferentiatorsSection() {
 }
 
 export function TestimonialsSection() {
-  const t = useTranslations("home");
+  const t = useTranslations("home") as (key: string) => string;
 
   return (
     <section className="border-b px-4 py-16 sm:px-6 sm:py-24">
@@ -223,20 +223,20 @@ export function TestimonialsSection() {
               </CardHeader>
               <CardContent>
                 <blockquote className="text-sm leading-relaxed text-muted-foreground">
-                  &ldquo;{(t as any)(`testimonial${i}`)}&rdquo;
+                  &ldquo;{t(`testimonial${i}`)}&rdquo;
                 </blockquote>
               </CardContent>
               <CardFooter className="border-t pt-4">
                 <div className="flex items-center gap-3">
                   <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
-                    {(t as any)(`testimonial${i}Author`).charAt(0)}
+                    {t(`testimonial${i}Author`).charAt(0)}
                   </div>
                   <div>
                     <div className="text-sm font-medium">
-                      {(t as any)(`testimonial${i}Author`)}
+                      {t(`testimonial${i}Author`)}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {(t as any)(`testimonial${i}Role`)}
+                      {t(`testimonial${i}Role`)}
                     </div>
                   </div>
                 </div>
@@ -252,7 +252,7 @@ export function TestimonialsSection() {
 const MONTHLY_PRICES = [299000, 699000, 1590000];
 
 export function PricingSection() {
-  const t = useTranslations("home");
+  const t = useTranslations("home") as (key: string) => string;
   const [annual, setAnnual] = useState(false);
 
   return (
@@ -299,9 +299,9 @@ export function PricingSection() {
         </div>
         <div className="mt-12 grid gap-6 lg:grid-cols-3">
           {PRICING_TIERS.map((tier, index) => {
-            const name = (t as any)(`${tier.key}Name`);
-            const price = (t as any)(`${tier.key}Price`);
-            const desc = (t as any)(`${tier.key}Desc`);
+            const name = t(`${tier.key}Name`);
+            const price = t(`${tier.key}Price`);
+            const desc = t(`${tier.key}Desc`);
             const monthlyPrice = MONTHLY_PRICES[index];
             const annualPrice = Math.round(monthlyPrice * 12 * 0.8);
 

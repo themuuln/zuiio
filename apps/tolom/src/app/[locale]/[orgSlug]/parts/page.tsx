@@ -41,6 +41,30 @@ type PartInfo = {
   vehicle_model_id: string;
 };
 
+type VehicleModelJoin = {
+  id: string;
+  make: string;
+  model: string;
+  generation: string | null;
+  year_start: number | null;
+  year_end: number | null;
+  is_active: boolean | null;
+  deleted_at: string | null;
+  organization_id: string | null;
+};
+
+type PartsCatalogJoin = {
+  id: string;
+  name: string;
+  name_mn: string | null;
+  part_number: string | null;
+  category: string | null;
+  default_price: number | null;
+  is_active: boolean | null;
+  deleted_at: string | null;
+  image_url: string | null;
+};
+
 type CatalogData = {
   org: OrgInfo;
   brands: BrandInfo[];
@@ -82,7 +106,7 @@ async function fetchCatalog(slug: string): Promise<CatalogData | null> {
 
   // 3. Fetch inventory balances
   const partIds = [
-    ...new Set((vehicleModels ?? []).map((r: any) => r.part_id)),
+    ...new Set((vehicleModels ?? []).map((r: { part_id: string }) => r.part_id)),
   ];
   const balanceMap = new Map<string, boolean>();
   if (partIds.length > 0) {
@@ -96,20 +120,18 @@ async function fetchCatalog(slug: string): Promise<CatalogData | null> {
       balanceMap.set(b.part_id, current || (b.quantity_on_hand ?? 0) > 0);
     }
   }
-
   // 4. Build response
-  const makeSet = new Map<string, Map<string, any>>();
-  const modelSet = new Map<string, any>();
+  const makeSet = new Map<string, Map<string, ModelInfo>>();
+  const modelSet = new Map<string, ModelInfo>();
   const parts: PartInfo[] = [];
-
   for (const row of vehicleModels ?? []) {
-    const vm = row.vehicle_models as any;
-    const part = row.parts_catalog as any;
+    const vm = row.vehicle_models as VehicleModelJoin;
+    const part = row.parts_catalog as PartsCatalogJoin;
     if (!vm?.is_active || vm?.deleted_at) continue;
     if (!part?.is_active || part?.deleted_at) continue;
 
     if (!makeSet.has(vm.make)) makeSet.set(vm.make, new Map());
-    const modelMap = makeSet.get(vm.make)!;
+    const modelMap = makeSet.get(vm.make) ?? new Map();
     if (!modelMap.has(vm.id)) {
       modelMap.set(vm.id, {
         id: vm.id,
@@ -121,7 +143,7 @@ async function fetchCatalog(slug: string): Promise<CatalogData | null> {
         part_count: 0,
       });
     }
-    modelMap.get(vm.id).part_count++;
+    modelMap.get(vm.id)!.part_count++;
 
     if (!modelSet.has(vm.id)) {
       modelSet.set(vm.id, {
@@ -134,7 +156,7 @@ async function fetchCatalog(slug: string): Promise<CatalogData | null> {
         part_count: 0,
       });
     }
-    modelSet.get(vm.id).part_count++;
+    modelSet.get(vm.id)!.part_count++;
 
     const price = row.specific_price ?? part.default_price;
     const inStock = balanceMap.get(part.id) ?? false;
@@ -158,9 +180,10 @@ async function fetchCatalog(slug: string): Promise<CatalogData | null> {
   brands.sort((a, b) => a.make.localeCompare(b.make));
 
   const models: ModelInfo[] = [...modelSet.values()].sort(
-    (a: any, b: any) =>
+    (a: ModelInfo, b: ModelInfo) =>
       a.make.localeCompare(b.make) || a.model.localeCompare(b.model),
   );
+
 
   return {
     org: { id: org.id, name: org.name, slug: org.slug, logo_url: org.logo_url },

@@ -4,7 +4,7 @@ import {
   TrendDown,
   TrendUp,
 } from "@phosphor-icons/react/dist/ssr";
-import { capture, withDbCapture } from "@zuiio/capture";
+import { withDbCapture } from "@zuiio/capture";
 import { addDays, startOfDay } from "date-fns";
 import { PulseCard } from "@/components/dashboard/dashboard-cards";
 import { withBranchFilter } from "@/lib/branches";

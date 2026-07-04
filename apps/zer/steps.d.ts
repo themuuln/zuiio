@@ -7,6 +7,6 @@ declare namespace CodeceptJS {
   interface Methods extends Playwright {}
   interface I extends WithTranslation<Methods> {}
   namespace Translation {
-    type Actions = {};
+    type Actions = Record<string, never>;
   }
 }
