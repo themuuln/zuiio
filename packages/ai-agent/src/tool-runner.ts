@@ -169,9 +169,9 @@ export async function runWithTools(opts: RunWithToolsOpts): Promise<string> {
    );
   }
 
-  // Track any text content in this response
-  if (message.content) {
-   lastContent = message.content;
+  // Track any text content in this response (supports reasoning models)
+  if (message.content || (message as Record<string, unknown>).reasoning_content) {
+   lastContent = (message.content || (message as Record<string, unknown>).reasoning_content) as string;
   }
 
   // No tool calls → we're done
