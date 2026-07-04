@@ -8,6 +8,22 @@ import { requireAppContext } from "@/lib/erp";
 import { checkOrgSetting } from "@/lib/org-settings";
 import { RestockContent } from "./restock-content";
 
+interface ProductQueryRow {
+  id: string;
+  name: string;
+  sku: string | null;
+  unit: string | null;
+  cost_price: number | null;
+  current_stock: number | null;
+  min_stock: number | null;
+  categories: { name: string } | null;
+}
+
+interface PurchaseOrderRef {
+  supplier_id: string;
+  contacts: { name: string } | null;
+}
+
 export interface RestockProductRow {
   id: string;
   name: string;
@@ -61,14 +77,16 @@ export default async function RestockPage() {
     }),
   );
 
-  const products = (productsResult.data ?? []).filter((p: any) => {
-    const currentStock = p.current_stock ?? 0;
-    const minStock = p.min_stock ?? 0;
-    return currentStock < minStock;
-  });
+  const products = (productsResult.data ?? []).filter(
+    (p: { current_stock: number | null; min_stock: number | null }) => {
+      const currentStock = p.current_stock ?? 0;
+      const minStock = p.min_stock ?? 0;
+      return currentStock < minStock;
+    },
+  );
 
   // Get last supplier used per product from recent purchase orders
-  const productIds = products.map((p: any) => p.id);
+  const productIds = products.map((p: ProductQueryRow) => p.id);
   const lastSupplierMap: Record<string, { id: string; name: string } | null> =
     {};
 
@@ -85,7 +103,7 @@ export default async function RestockPage() {
       for (const item of recentItems) {
         const pid = item.product_id;
         if (pid && !lastSupplierMap[pid]) {
-          const po = item.purchase_orders as any;
+          const po = item.purchase_orders as PurchaseOrderRef;
           lastSupplierMap[pid] = {
             id: po.supplier_id,
             name: po.contacts?.name ?? "",
@@ -95,7 +113,7 @@ export default async function RestockPage() {
     }
   }
 
-  const tableData: RestockProductRow[] = products.map((p: any) => {
+  const tableData: RestockProductRow[] = products.map((p: ProductQueryRow) => {
     const lastSupplier = lastSupplierMap[p.id] ?? null;
     return {
       id: p.id,

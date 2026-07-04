@@ -11,7 +11,7 @@ import {
   savePostServiceData,
 } from "@/lib/services/post-service-service";
 import type { WorkOrderDetail } from "@/lib/types";
-import { createInvoiceAndRecordPayment } from "./_helpers";
+import { createInvoiceAndRecordPayment } from "./_payment-helpers";
 import type { PaymentMethodFees } from "./_payment-fees";
 import type { PostServiceFormData } from "./_schema";
 

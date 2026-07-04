@@ -139,7 +139,8 @@ export function DiscountsContent({ discounts }: { discounts: DiscountRow[] }) {
               header: "",
               className: "w-12",
               accessor: (d: DiscountRow) => (
-                // biome-ignore lint/a11y/noStaticElementInteractions: wrapper only for stopPropagation; actual interactive element is DiscountEditDrawer's trigger button
+                // biome-ignore lint/a11y/noStaticElementInteractions: wrapper only for stopPropagation
+                // biome-ignore lint/a11y/useKeyWithClickEvents: wrapper only for stopPropagation; actual interactive element is DiscountEditDrawer trigger
                 <div onClick={(e) => e.stopPropagation()}>
                   <DiscountEditDrawer discount={toEditData(d)} />
                 </div>

@@ -105,11 +105,14 @@ export function MovementsContent({
     const pages: { id: string; value: number | "ellipsis" }[] = [
       { id: "page-1", value: 1 },
     ];
-    if (currentPage > 3) pages.push({ id: "ellipsis-start", value: "ellipsis" });
+    if (currentPage > 3)
+      pages.push({ id: "ellipsis-start", value: "ellipsis" });
     const start = Math.max(2, currentPage - 1);
     const end = Math.min(totalPages - 1, currentPage + 1);
-    for (let i = start; i <= end; i++) pages.push({ id: `page-${i}`, value: i });
-    if (currentPage < totalPages - 2) pages.push({ id: "ellipsis-end", value: "ellipsis" });
+    for (let i = start; i <= end; i++)
+      pages.push({ id: `page-${i}`, value: i });
+    if (currentPage < totalPages - 2)
+      pages.push({ id: "ellipsis-end", value: "ellipsis" });
     pages.push({ id: `page-${totalPages}`, value: totalPages });
     return pages;
   }
@@ -263,7 +266,8 @@ export function MovementsContent({
                     })}
                     className={cn(
                       buttonVariants({
-                        variant: p.value === currentPage ? "default" : "outline",
+                        variant:
+                          p.value === currentPage ? "default" : "outline",
                         size: "xs",
                       }),
                       "min-w-7",

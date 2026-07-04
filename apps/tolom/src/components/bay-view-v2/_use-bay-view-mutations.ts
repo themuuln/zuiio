@@ -196,7 +196,7 @@ export function useBayViewMutations(params: BayViewMutationsParams) {
       updateStatusMutation.mutate({ woId: p.woId, status: p.newStatus });
 
       if (orgId && p.totalCost > 0) {
-        const { createInvoiceAndRecordPayment } = await import("./_helpers");
+        const { createInvoiceAndRecordPayment } = await import("./_payment-helpers");
         try {
           await createInvoiceAndRecordPayment(
             orgId,

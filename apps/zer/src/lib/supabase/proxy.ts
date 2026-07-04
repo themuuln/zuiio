@@ -16,13 +16,13 @@ export async function updateSession(request: NextRequest) {
         return request.cookies.getAll();
       },
       setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => {
+        for (const { name, value } of cookiesToSet) {
           request.cookies.set(name, value);
-        });
+        }
         supabaseResponse = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) => {
+        for (const { name, value, options } of cookiesToSet) {
           supabaseResponse.cookies.set(name, value, options);
-        });
+        }
       },
     },
   });

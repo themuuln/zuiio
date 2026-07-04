@@ -62,10 +62,11 @@ async function bulkCreateProducts(items: BulkValues["items"]) {
     .eq("id", user.id)
     .single();
 
-  if (!profile?.organization_id) throw new Error("Байгууллага олдсонгүй");
+  const orgId = profile?.organization_id;
+  if (!orgId) throw new Error("Байгууллага олдсонгүй");
 
   const products = items.map((item) => ({
-    organization_id: profile.organization_id!,
+    organization_id: orgId,
     barcode: item.barcode,
     name: item.name,
     sale_price: item.sale_price,

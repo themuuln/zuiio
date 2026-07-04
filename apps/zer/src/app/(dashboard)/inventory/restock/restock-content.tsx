@@ -3,7 +3,6 @@
 import { ShoppingCart } from "@phosphor-icons/react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -23,7 +22,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatCurrency } from "@/lib/format";
 import { batchCreatePurchaseOrders } from "./actions";
 import type { RestockProductRow, SupplierOption } from "./page";
 
@@ -301,14 +299,12 @@ export function RestockContent({
 }
 
 function ProductSupplierCombobox({
-  productId,
   suppliers,
   value,
   onChange,
   query,
   onQueryChange,
 }: {
-  productId: string;
   suppliers: SupplierOption[];
   value: string;
   onChange: (supplierId: string) => void;

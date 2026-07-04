@@ -15,7 +15,7 @@ export async function createBundle(
 ) {
   const ctx = await requireWriteAction("products.create");
   if ("error" in ctx) return ctx;
-  const { supabase, organizationId, userId } = ctx;
+  const { supabase, organizationId } = ctx;
 
   const name = formData.get("name") as string | null;
   const sku = formData.get("sku") as string | null;
@@ -55,13 +55,14 @@ export async function createBundle(
       .select("id, cost_price")
       .in(
         "id",
-        variantItems.map((i) => i.variant_id!),
+        variantItems.map((i) => i.variant_id as string),
       );
     const variantMap = new Map(
       (variants || []).map((v) => [v.id, v.cost_price ?? 0]),
     );
     for (const item of variantItems) {
-      costPrice += (variantMap.get(item.variant_id!) ?? 0) * item.quantity;
+      costPrice +=
+        (variantMap.get(item.variant_id as string) ?? 0) * item.quantity;
     }
   }
 
@@ -187,13 +188,14 @@ export async function updateBundle(
         .select("id, cost_price")
         .in(
           "id",
-          variantItems.map((i) => i.variant_id!),
+          variantItems.map((i) => i.variant_id as string),
         );
       const variantMap = new Map(
         (variants || []).map((v) => [v.id, v.cost_price ?? 0]),
       );
       for (const item of variantItems) {
-        costPrice += (variantMap.get(item.variant_id!) ?? 0) * item.quantity;
+        costPrice +=
+          (variantMap.get(item.variant_id as string) ?? 0) * item.quantity;
       }
     }
 

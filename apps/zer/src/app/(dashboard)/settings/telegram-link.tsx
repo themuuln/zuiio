@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { QrCodeInline } from "./qr-code-inline";
+import { LinkCodeDisplay } from "./link-code-display";
 
 const GATEWAY_URL = process.env.AGENT_GATEWAY_URL ?? "http://localhost:3999";
 
@@ -20,20 +20,23 @@ interface TelegramLinkProps {
   supabase: SupabaseClient;
 }
 
-async function fetchLinkToken(
+async function fetchLinkCode(
   orgId: string,
   userId: string,
   productType: string,
-): Promise<string | null> {
+): Promise<{ code: string; formatted: string } | null> {
   try {
-    const res = await fetch(`${GATEWAY_URL}/api/link/generate`, {
+    const res = await fetch(`${GATEWAY_URL}/api/link/code`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ orgId, userId, productType }),
     });
     if (!res.ok) return null;
-    const { token } = await res.json();
-    return token ?? null;
+    const data = await res.json();
+    if (data.code && data.formatted) {
+      return { code: data.code, formatted: data.formatted };
+    }
+    return null;
   } catch {
     return null;
   }
@@ -53,17 +56,10 @@ export async function TelegramLink({
     .limit(1);
 
   const linkedAccount = links?.[0] ?? null;
-  const linkToken = linkedAccount
+  const linkCode = linkedAccount
     ? null
-    : await fetchLinkToken(organizationId, userId, "zer");
+    : await fetchLinkCode(organizationId, userId, "zer");
 
-  // tg:// native scheme for more reliable mobile deep linking
-  const deeplinkUrl = linkToken
-    ? `tg://resolve?domain=zuiio_bot&start=${encodeURIComponent(linkToken)}`
-    : null;
-  const startCommand = linkToken ? `/start ${linkToken}` : null;
-
-  // Build the content based on state
   let content: React.ReactNode;
 
   if (linkedAccount) {
@@ -82,8 +78,7 @@ export async function TelegramLink({
         <p className="text-xs text-muted-foreground">
           Та @zuiio_bot бот руу мессеж бичиж өгөгдлөө харах боломжтой.
           <br />
-          Холбогдсон:{" "}
-          {new Date(linkedAccount.linked_at).toLocaleDateString()}
+          Холбогдсон: {new Date(linkedAccount.linked_at).toLocaleDateString()}
         </p>
         <Button variant="outline" size="sm" asChild>
           <a
@@ -96,31 +91,15 @@ export async function TelegramLink({
         </Button>
       </div>
     );
-  } else if (deeplinkUrl && startCommand) {
+  } else if (linkCode) {
     content = (
-      <div className="space-y-4">
-        <QrCodeInline
-          value={deeplinkUrl}
-          startCommand={startCommand}
-          size={200}
-        />
-        <Button variant="outline" size="sm" asChild>
-          <a
-            href="https://t.me/zuiio_bot"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <TelegramLogo className="size-4" weight="fill" />
-            @zuiio_bot нээх
-          </a>
-        </Button>
-      </div>
+      <LinkCodeDisplay code={linkCode.formatted} expiresInMinutes={10} />
     );
   } else {
     content = (
       <div className="space-y-3">
         <p className="text-sm text-muted-foreground">
-          QR код үүсгэх боломжгүй байна. Хуудсыг дахин ачааллаад оролдоно уу.
+          Код үүсгэх боломжгүй байна. Хуудсыг дахин ачааллаад оролдоно уу.
         </p>
         <Button variant="outline" size="sm" asChild>
           <a
@@ -147,9 +126,7 @@ export async function TelegramLink({
           Telegram боттой холбогдон өгөгдлөө натурал хэлээр асуух
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        {content}
-      </CardContent>
+      <CardContent>{content}</CardContent>
     </Card>
   );
 }

@@ -1,13 +1,17 @@
 "use server";
 
 import { randomBytes } from "node:crypto";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { requireWriteAction } from "@/lib/action-utils";
 import { logAuditEventWithClient } from "@/lib/audit";
 import { withBranchFilter } from "@/lib/branches";
 import { findOrCreateContact } from "@/lib/contact-utils";
 import { revalidateEntities } from "@/lib/revalidate";
+import type { Database } from "@/lib/supabase/types";
 import { getString } from "@/lib/validation";
+
+type SupabaseDb = SupabaseClient<Database>;
 
 export type InvoiceShareState = {
   token?: string;
@@ -22,6 +26,10 @@ export async function createInvoice(
   if ("error" in ctx) return ctx;
   const { supabase, organizationId, userId, branchId } = ctx;
 
+  if (!branchId) {
+    return { error: "Салбар сонгоогүй байна." };
+  }
+
   let contactId = formData.get("contact_id") as string;
   const newContactName = getString(formData, "new_contact_name");
   const issueDate = formData.get("issue_date") as string;
@@ -33,7 +41,7 @@ export async function createInvoice(
   if (newContactName && !contactId) {
     const phone = getString(formData, "new_contact_phone");
     const result = await findOrCreateContact(
-      supabase as any,
+      supabase as SupabaseDb,
       organizationId,
       "customer",
       newContactName,
@@ -77,7 +85,7 @@ export async function createInvoice(
     .from("invoices")
     .insert({
       organization_id: organizationId,
-      branch_id: branchId!,
+      branch_id: branchId,
       invoice_number: invoiceNumber,
       contact_id: contactId || null,
       issue_date: issueDate || new Date().toISOString().slice(0, 10),

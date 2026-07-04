@@ -1,10 +1,9 @@
 "use server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { capture } from "@zuiio/capture";
-
 import { postPurchaseToJournal } from "@/lib/accounting";
 import { requireWriteAction } from "@/lib/action-utils";
 import { revalidateEntities } from "@/lib/revalidate";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
 
 interface RestockItem {
@@ -101,7 +100,13 @@ async function processSingleOrder(
     },
   );
 
-  if (rpcError || (rpcResult && typeof rpcResult === "object" && "error" in rpcResult && rpcResult.error)) {
+  if (
+    rpcError ||
+    (rpcResult &&
+      typeof rpcResult === "object" &&
+      "error" in rpcResult &&
+      rpcResult.error)
+  ) {
     const errorMsg =
       rpcError?.message ??
       (rpcResult && typeof rpcResult === "object" && "error" in rpcResult

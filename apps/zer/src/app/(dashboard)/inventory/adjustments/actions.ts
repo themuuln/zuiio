@@ -63,7 +63,13 @@ export async function createBatchAdjustment(
     },
   );
 
-  if (rpcError || (rpcResult && typeof rpcResult === "object" && "error" in rpcResult && rpcResult.error)) {
+  if (
+    rpcError ||
+    (rpcResult &&
+      typeof rpcResult === "object" &&
+      "error" in rpcResult &&
+      rpcResult.error)
+  ) {
     return {
       error:
         rpcError?.message ??

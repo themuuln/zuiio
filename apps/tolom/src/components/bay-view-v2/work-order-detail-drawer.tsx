@@ -36,7 +36,7 @@ import { DrawerHeaderSection } from "./_drawer-header";
 import { DrawerLoading, DrawerSkeleton } from "./_drawer-loading";
 import type { WorkOrderDetailDrawerProps } from "./_drawer-types";
 import { UnsavedWarning } from "./_drawer-unsaved-warning";
-import { createInvoiceAndRecordPayment } from "./_helpers";
+import { createInvoiceAndRecordPayment } from "./_payment-helpers";
 import { resolvePaymentMethodFees } from "./_payment-fees";
 import { useDrawerMutations } from "./_use-drawer-mutations";
 import { useVariantSelection } from "./_use-variant-selection";

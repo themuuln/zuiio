@@ -241,6 +241,8 @@ export default function WarehousesPage() {
             header: "",
             className: "w-12",
             accessor: (wh: Warehouse) => (
+              // biome-ignore lint/a11y/noStaticElementInteractions: wrapper only for stopPropagation
+              // biome-ignore lint/a11y/useKeyWithClickEvents: wrapper only for stopPropagation; actual interactive element is WarehouseEditDrawer trigger
               <div onClick={(e) => e.stopPropagation()}>
                 <WarehouseEditDrawer warehouse={toEditData(wh)} />
               </div>

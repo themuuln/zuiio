@@ -15,6 +15,7 @@ import { deepSeekConfig, openAiConfig } from "@/lib/env";
 import { sanitizeUserInput } from "@/lib/sanitize";
 import { verifyCompactToken } from "@/lib/tokens";
 import { transcribeVoice } from "@/stt/groq";
+import { redeemLinkCode } from "@/lib/link-code";
 
 // ─── Lazy singletons ────────────────────────────────────────────────────────
 
@@ -503,50 +504,43 @@ export async function POST(request: Request): Promise<NextResponse> {
       return NextResponse.json({ ok: true });
     }
 
+    // Try device auth code redemption before general message handling
+    if (text.length >= 6 && text.length <= 10) {
+      const redeemed = redeemLinkCode(text);
+      if (redeemed) {
+        await handleCodeLink(chatId, userId, redeemed);
+        return NextResponse.json({ ok: true });
+      }
+    }
+
     await handleUserMessage(chatId, userId, text, chatType);
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("Webhook error:", err);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
-}
 
-// ─── Handlers ────────────────────────────────────────────────────────────────
+  // ─── Handlers ────────────────────────────────────────────────────────────────
 
-async function handleStartCommand(chatId: number, userId: number, text: string): Promise<void> {
-  const tg = getTelegram();
-  const parts = text.split(" ");
-  const token = parts[1];
+  async function handleCodeLink(
+    chatId: number,
+    userId: number,
+    payload: { orgId: string; userId: string; productType: string },
+  ): Promise<void> {
+    const tg = getTelegram();
+    const sb = getSupabase();
 
-  if (!token) {
-    await tg.sendMessage(chatId, "👋 Тавтай морилно уу! Холбогдохын тулд QR код уншуулна уу.");
-    return;
-  }
+    try {
+      // Deactivate existing active link
+      await sb
+        .from("telegram_links")
+        .update({ is_active: false })
+        .eq("telegram_chat_id", chatId)
+        .eq("telegram_user_id", userId)
+        .eq("is_active", true);
 
-  // Verify the compact token (HMAC, stateless, fits 64-char limit)
-  const payload = verifyCompactToken(token);
-  if (!payload) {
-    await tg.sendMessage(chatId, "❌ Холбох токен буруу эсвэл хугацаа дууссан байна. Дахин QR код уншуулна уу.");
-    return;
-  }
-
-  const sb = getSupabase();
-
-
-
-  try {
-    // Deactivate any existing active link for this chat+user
-    await sb
-      .from("telegram_links")
-      .update({ is_active: false })
-      .eq("telegram_chat_id", chatId)
-      .eq("telegram_user_id", userId)
-      .eq("is_active", true);
-
-    // Create the new link
-    const { error: linkErr } = await sb
-      .from("telegram_links")
-      .insert({
+      // Create new link
+      const { error } = await sb.from("telegram_links").insert({
         organization_id: payload.orgId,
         user_id: payload.userId,
         telegram_chat_id: chatId,
@@ -555,201 +549,262 @@ async function handleStartCommand(chatId: number, userId: number, text: string):
         notification_preferences: { productType: payload.productType },
       });
 
-    if (linkErr) {
-      console.error("Link error:", linkErr);
-      await tg.sendMessage(chatId, "❌ Холболт үүсгэхэд алдаа гарлаа. Дахин оролдоно уу.");
+      if (error) {
+        console.error("Code link error:", error);
+        await tg.sendMessage(chatId, "❌ Холболт үүсгэхэд алдаа гарлаа.");
+        return;
+      }
+
+      const productName = payload.productType === "tolom" ? "Tolom" : "Zer";
+      await tg.sendMessage(
+        chatId,
+        `✅ Амжилттай холбогдлоо! Та ${productName} системдээ нэвтэрлээ.\n\nОдоо асуултаа бичнэ үү. Жишээ:\n- "Өнөөдрийн борлуулалт хэд вэ?"`,
+      );
+    } catch (err) {
+      console.error("Code link error:", err);
+      await tg.sendMessage(chatId, "❌ Холболт үүсгэхэд алдаа гарлаа.");
+    }
+  }
+
+
+  async function handleStartCommand(chatId: number, userId: number, text: string): Promise<void> {
+    const tg = getTelegram();
+    const parts = text.split(" ");
+    const token = parts[1];
+
+    if (!token) {
+      await tg.sendMessage(chatId, "👋 Тавтай морилно уу! Холбогдохын тулд QR код уншуулна уу.");
       return;
     }
 
-    const productName = payload.productType === "tolom" ? "Tolom" : "Zer";
-    await tg.sendMessage(
-      chatId,
-      `✅ Амжилттай холбогдлоо! Та ${productName} системдээ нэвтэрлээ.\n\nОдоо асуултаа бичнэ үү. Жишээ нь:\n- "Өнөөдрийн борлуулалт хэд вэ?"\n- "Сүүлийн 7 хоногийн хураангуй"`,
-    );
-  } catch (err) {
-    console.error("Start handler error:", err);
-    await tg.sendMessage(chatId, "❌ Холболт амжилтгүй боллоо. Дахин оролдоно уу.");
-  }
-}
-
-async function handleSwitchCommand(chatId: number, userId: number): Promise<void> {
-  const tg = getTelegram();
-  const sb = getSupabase();
-
-  // Find all links for this chat+user
-  const { data: links } = await sb
-    .from("telegram_links")
-    .select("organization_id, is_active, notification_preferences")
-    .eq("telegram_chat_id", chatId)
-    .eq("telegram_user_id", userId)
-    .order("updated_at", { ascending: false });
-
-  if (!links || links.length === 0) {
-    await tg.sendMessage(chatId, "❌ Та ямар ч байгууллагад холбогдоогүй байна. /start командаар холбогдоно уу.");
-    return;
-  }
-
-  // Get org names
-  const orgIds = links.map((l) => l.organization_id);
-  const { data: orgs } = await sb
-    .from("organizations")
-    .select("id, name")
-    .in("id", orgIds);
-
-  const orgMap = new Map((orgs ?? []).map((o) => [o.id, o.name]));
-
-  // Build inline keyboard
-  const keyboard = links.map((l) => {
-    const orgName = orgMap.get(l.organization_id) ?? l.organization_id;
-    const active = l.is_active ? " ✅" : "";
-    return [{
-      text: `${orgName}${active}`,
-      callbackData: `switch:${l.organization_id}`,
-    }];
-  });
-
-  await tg.sendInlineKeyboard(chatId, "🏢 Байгууллагаа сонгоно уу:", keyboard);
-}
-
-
-async function handleUserMessage(chatId: number, userId: number, text: string, chatType: string): Promise<void> {
-  const tg = getTelegram();
-  const sb = getSupabase();
-
-  let context: ToolContext;
-  let productType: "tolom" | "zer";
-
-  try {
-    const resolved = await resolveOrgFromChatUser(sb, chatId, userId);
-    context = { orgId: resolved.context.orgId, userId: resolved.context.userId, supabase: sb };
-    productType = resolved.context.productType;
-
-    await sb.from("telegram_links").update({ updated_at: new Date().toISOString() })
-      .eq("telegram_chat_id", chatId)
-      .eq("telegram_user_id", userId)
-      .eq("is_active", true);
-  } catch (err) {
-    await tg.sendMessage(chatId, err instanceof Error ? err.message : "Таны Telegram холбогдоогүй байна. Эхлээд QR код уншуулна уу.");
-    return;
-  }
-
-  // Check budget
-  const budget = await checkDailyBudget(sb, context.orgId);
-  if (!budget.allowed) {
-    await tg.sendMessage(chatId, budget.reason!);
-    return;
-  }
-
-  // Rate limiting — check per-org message frequency
-  const rateLimit = checkRateLimit(context.orgId, RATE_LIMITS.messagesPerMinute);
-  if (!rateLimit.allowed) {
-    await tg.sendMessage(chatId, `⏳ Хэт олон хүсэлт илгээсэн байна. ${Math.ceil(rateLimit.resetInMs / 1000)} секундын дараа дахин оролдоно уу.`);
-    return;
-  }
-
-
-  // Select tools
-  const rawTools = productType === "tolom" ? tolomTools(context) : zerTools(context);
-  const tools = rawTools.map((t) => withAudit(t, chatId, userId));
-
-  await tg.sendMessage(chatId, "⏳ Түр хүлээнэ үү...");
-
-  try {
-    // Load prior conversation for context-aware responses
-    const session = await loadSession(sb, context.orgId, chatId, userId);
-
-    const sanitizedText = sanitizeUserInput(text);
-    const response = await getProviders().runWithTools({
-      system: systemPromptFor(productType, context.orgId, chatType),
-      userMessage: sanitizedText,
-      tools,
-      context,
-      maxRounds: REQUEST_LIMITS.maxToolRounds,
-      conversationHistory: session.messages.length > 0 ? session.messages : undefined,
-    });
-
-    await tg.sendMessage(chatId, response);
-
-    // Build updated message list and trim before saving
-    const updatedMessages = [
-      ...session.messages,
-      { role: "user" as const, content: sanitizedText },
-      { role: "assistant" as const, content: response },
-    ];
-    const trimmed = updatedMessages.length > MAX_SESSION_MESSAGES
-      ? updatedMessages.slice(updatedMessages.length - MAX_SESSION_MESSAGES)
-      : updatedMessages;
-    await saveSession(sb, context.orgId, chatId, userId, trimmed, session.tokenCount + 500);
-    await recordUsageAtomic(sb, context.orgId, 500);
-  } catch (err) {
-    console.error("Agent error:", err);
-    await tg.sendMessage(chatId, "Уучлаарай, алдаа гарлаа. Дахин оролдоно уу.");
-  }
-}
-
-async function handleCallbackQuery(cq: NonNullable<TelegramUpdate["callback_query"]>): Promise<void> {
-  const tg = getTelegram();
-  const data = cq.data ?? "";
-  const chatId = cq.message?.chat.id ?? 0;
-  const messageId = cq.message?.message_id ?? 0;
-  const userId = cq.from.id;
-  const [action, nonce] = data.split(":");
-
-  if (action === "switch") {
-    const orgId = nonce;
-    if (!orgId) {
-      await tg.answerCallbackQuery(cq.id, "❌ Алдаа гарлаа.");
+    // Verify the compact token (HMAC, stateless, fits 64-char limit)
+    const payload = verifyCompactToken(token);
+    if (!payload) {
+      await tg.sendMessage(chatId, "❌ Холбох токен буруу эсвэл хугацаа дууссан байна. Дахин QR код уншуулна уу.");
       return;
     }
 
     const sb = getSupabase();
 
-    // Deactivate all active links for this chat+user
-    await sb
+
+
+    try {
+      // Deactivate any existing active link for this chat+user
+      await sb
+        .from("telegram_links")
+        .update({ is_active: false })
+        .eq("telegram_chat_id", chatId)
+        .eq("telegram_user_id", userId)
+        .eq("is_active", true);
+
+      // Create the new link
+      const { error: linkErr } = await sb
+        .from("telegram_links")
+        .insert({
+          organization_id: payload.orgId,
+          user_id: payload.userId,
+          telegram_chat_id: chatId,
+          telegram_user_id: userId,
+          is_active: true,
+          notification_preferences: { productType: payload.productType },
+        });
+
+      if (linkErr) {
+        console.error("Link error:", linkErr);
+        await tg.sendMessage(chatId, "❌ Холболт үүсгэхэд алдаа гарлаа. Дахин оролдоно уу.");
+        return;
+      }
+
+      const productName = payload.productType === "tolom" ? "Tolom" : "Zer";
+      await tg.sendMessage(
+        chatId,
+        `✅ Амжилттай холбогдлоо! Та ${productName} системдээ нэвтэрлээ.\n\nОдоо асуултаа бичнэ үү. Жишээ нь:\n- "Өнөөдрийн борлуулалт хэд вэ?"\n- "Сүүлийн 7 хоногийн хураангуй"`,
+      );
+    } catch (err) {
+      console.error("Start handler error:", err);
+      await tg.sendMessage(chatId, "❌ Холболт амжилтгүй боллоо. Дахин оролдоно уу.");
+    }
+  }
+
+  async function handleSwitchCommand(chatId: number, userId: number): Promise<void> {
+    const tg = getTelegram();
+    const sb = getSupabase();
+
+    // Find all links for this chat+user
+    const { data: links } = await sb
       .from("telegram_links")
-      .update({ is_active: false })
+      .select("organization_id, is_active, notification_preferences")
       .eq("telegram_chat_id", chatId)
       .eq("telegram_user_id", userId)
-      .eq("is_active", true);
+      .order("updated_at", { ascending: false });
 
-    // Activate the selected one
-    const { error } = await sb
-      .from("telegram_links")
-      .update({ is_active: true, updated_at: new Date().toISOString() })
-      .eq("telegram_chat_id", chatId)
-      .eq("telegram_user_id", userId)
-      .eq("organization_id", orgId);
-
-    if (error) {
-      console.error("Switch error:", error);
-      await tg.answerCallbackQuery(cq.id, "❌ Солиход алдаа гарлаа.");
+    if (!links || links.length === 0) {
+      await tg.sendMessage(chatId, "❌ Та ямар ч байгууллагад холбогдоогүй байна. /start командаар холбогдоно уу.");
       return;
     }
 
-    // Get org name for confirmation
-    const { data: org } = await sb
+    // Get org names
+    const orgIds = links.map((l) => l.organization_id);
+    const { data: orgs } = await sb
       .from("organizations")
-      .select("name")
-      .eq("id", orgId)
-      .single();
+      .select("id, name")
+      .in("id", orgIds);
 
-    await tg.editMessageText(
-      chatId,
-      messageId,
-      `✅ "${org?.name ?? orgId}" байгууллагад шилжлээ.`,
-    );
-    await tg.answerCallbackQuery(cq.id, "✅ Амжилттай.");
-  } else if (action === "confirm") {
-    const staged = confirmAction(nonce, chatId, userId);
-    if (!staged) {
-      await tg.answerCallbackQuery(cq.id, "Энэ үйлдлийн хугацаа дууссан.");
+    const orgMap = new Map((orgs ?? []).map((o) => [o.id, o.name]));
+
+    // Build inline keyboard
+    const keyboard = links.map((l) => {
+      const orgName = orgMap.get(l.organization_id) ?? l.organization_id;
+      const active = l.is_active ? " ✅" : "";
+      return [{
+        text: `${orgName}${active}`,
+        callbackData: `switch:${l.organization_id}`,
+      }];
+    });
+
+    await tg.sendInlineKeyboard(chatId, "🏢 Байгууллагаа сонгоно уу:", keyboard);
+  }
+
+
+  async function handleUserMessage(chatId: number, userId: number, text: string, chatType: string): Promise<void> {
+    const tg = getTelegram();
+    const sb = getSupabase();
+
+    let context: ToolContext;
+    let productType: "tolom" | "zer";
+
+    try {
+      const resolved = await resolveOrgFromChatUser(sb, chatId, userId);
+      context = { orgId: resolved.context.orgId, userId: resolved.context.userId, supabase: sb };
+      productType = resolved.context.productType;
+
+      await sb.from("telegram_links").update({ updated_at: new Date().toISOString() })
+        .eq("telegram_chat_id", chatId)
+        .eq("telegram_user_id", userId)
+        .eq("is_active", true);
+    } catch (err) {
+      await tg.sendMessage(chatId, err instanceof Error ? err.message : "Таны Telegram холбогдоогүй байна. Эхлээд QR код уншуулна уу.");
       return;
     }
-    await tg.editMessageText(chatId, messageId, `✅ Баталгаажууллаа: ${staged.summary}`);
-    await tg.answerCallbackQuery(cq.id, "✅ Амжилттай.");
-  } else if (action === "reject") {
-    rejectAction(nonce);
-    await tg.editMessageText(chatId, messageId, "❌ Цуцаллаа.");
-    await tg.answerCallbackQuery(cq.id, "❌ Цуцаллаа.");
+
+    // Check budget
+    const budget = await checkDailyBudget(sb, context.orgId);
+    if (!budget.allowed) {
+      await tg.sendMessage(chatId, budget.reason!);
+      return;
+    }
+
+    // Rate limiting — check per-org message frequency
+    const rateLimit = checkRateLimit(context.orgId, RATE_LIMITS.messagesPerMinute);
+    if (!rateLimit.allowed) {
+      await tg.sendMessage(chatId, `⏳ Хэт олон хүсэлт илгээсэн байна. ${Math.ceil(rateLimit.resetInMs / 1000)} секундын дараа дахин оролдоно уу.`);
+      return;
+    }
+
+
+    // Select tools
+    const rawTools = productType === "tolom" ? tolomTools(context) : zerTools(context);
+    const tools = rawTools.map((t) => withAudit(t, chatId, userId));
+
+    await tg.sendMessage(chatId, "⏳ Түр хүлээнэ үү...");
+
+    try {
+      // Load prior conversation for context-aware responses
+      const session = await loadSession(sb, context.orgId, chatId, userId);
+
+      const sanitizedText = sanitizeUserInput(text);
+      const response = await getProviders().runWithTools({
+        system: systemPromptFor(productType, context.orgId, chatType),
+        userMessage: sanitizedText,
+        tools,
+        context,
+        maxRounds: REQUEST_LIMITS.maxToolRounds,
+        conversationHistory: session.messages.length > 0 ? session.messages : undefined,
+      });
+
+      await tg.sendMessage(chatId, response);
+
+      // Build updated message list and trim before saving
+      const updatedMessages = [
+        ...session.messages,
+        { role: "user" as const, content: sanitizedText },
+        { role: "assistant" as const, content: response },
+      ];
+      const trimmed = updatedMessages.length > MAX_SESSION_MESSAGES
+        ? updatedMessages.slice(updatedMessages.length - MAX_SESSION_MESSAGES)
+        : updatedMessages;
+      await saveSession(sb, context.orgId, chatId, userId, trimmed, session.tokenCount + 500);
+      await recordUsageAtomic(sb, context.orgId, 500);
+    } catch (err) {
+      console.error("Agent error:", err);
+      await tg.sendMessage(chatId, "Уучлаарай, алдаа гарлаа. Дахин оролдоно уу.");
+    }
+  }
+
+  async function handleCallbackQuery(cq: NonNullable<TelegramUpdate["callback_query"]>): Promise<void> {
+    const tg = getTelegram();
+    const data = cq.data ?? "";
+    const chatId = cq.message?.chat.id ?? 0;
+    const messageId = cq.message?.message_id ?? 0;
+    const userId = cq.from.id;
+    const [action, nonce] = data.split(":");
+
+    if (action === "switch") {
+      const orgId = nonce;
+      if (!orgId) {
+        await tg.answerCallbackQuery(cq.id, "❌ Алдаа гарлаа.");
+        return;
+      }
+
+      const sb = getSupabase();
+
+      // Deactivate all active links for this chat+user
+      await sb
+        .from("telegram_links")
+        .update({ is_active: false })
+        .eq("telegram_chat_id", chatId)
+        .eq("telegram_user_id", userId)
+        .eq("is_active", true);
+
+      // Activate the selected one
+      const { error } = await sb
+        .from("telegram_links")
+        .update({ is_active: true, updated_at: new Date().toISOString() })
+        .eq("telegram_chat_id", chatId)
+        .eq("telegram_user_id", userId)
+        .eq("organization_id", orgId);
+
+      if (error) {
+        console.error("Switch error:", error);
+        await tg.answerCallbackQuery(cq.id, "❌ Солиход алдаа гарлаа.");
+        return;
+      }
+
+      // Get org name for confirmation
+      const { data: org } = await sb
+        .from("organizations")
+        .select("name")
+        .eq("id", orgId)
+        .single();
+
+      await tg.editMessageText(
+        chatId,
+        messageId,
+        `✅ "${org?.name ?? orgId}" байгууллагад шилжлээ.`,
+      );
+      await tg.answerCallbackQuery(cq.id, "✅ Амжилттай.");
+    } else if (action === "confirm") {
+      const staged = confirmAction(nonce, chatId, userId);
+      if (!staged) {
+        await tg.answerCallbackQuery(cq.id, "Энэ үйлдлийн хугацаа дууссан.");
+        return;
+      }
+      await tg.editMessageText(chatId, messageId, `✅ Баталгаажууллаа: ${staged.summary}`);
+      await tg.answerCallbackQuery(cq.id, "✅ Амжилттай.");
+    } else if (action === "reject") {
+      rejectAction(nonce);
+      await tg.editMessageText(chatId, messageId, "❌ Цуцаллаа.");
+      await tg.answerCallbackQuery(cq.id, "❌ Цуцаллаа.");
+    }
   }
 }
