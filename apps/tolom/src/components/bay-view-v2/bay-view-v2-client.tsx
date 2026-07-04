@@ -72,6 +72,10 @@ export function BayViewV2Client() {
     transferBanks,
     dialogs,
     pending,
+    pendingWoIds: bayViewData.pendingWoIds,
+    markPending: bayViewData.markPending,
+    clearPending: bayViewData.clearPending,
+    setActiveDrag: bayViewData.setActiveDrag,
   });
 
   // ── Bay count (needs data and a mutation ref) ──

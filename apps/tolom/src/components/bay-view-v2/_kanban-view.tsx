@@ -49,17 +49,18 @@ const STATUS_COLUMNS = ALL_STATUSES.filter(
   (s) => s !== "Completed" && s !== "Cancelled",
 );
 
+import type { BayViewWorkOrder } from "@/lib/services/bay-view-service";
 interface KanbanViewProps {
   searchedBays: BaySlotData[];
   assignableBays: BaySlotData[];
-  queue: (WorkOrder & { vehicle: Vehicle | null })[];
+  queue: (BayViewWorkOrder & { vehicle: Vehicle | null })[];
   pendingWoIds: Record<string, boolean>;
   onStatusChange: (woId: string, status: string) => void;
   onRemoveFromBay: (woId: string) => void;
   onOpenDetail: (woId: string) => void;
   onAssignClick: (bayNumber: number) => void;
   onNoEmptyBays: () => void;
-  onQueueItemClick: (wo: WorkOrder & { vehicle: Vehicle | null }) => void;
+  onQueueItemClick: (wo: BayViewWorkOrder & { vehicle: Vehicle | null }) => void;
   onRemoveHelper: (woId: string, mechId: string) => Promise<void>;
   onPauseTimer?: (woId: string) => void;
   onAddNote?: (woId: string) => void;

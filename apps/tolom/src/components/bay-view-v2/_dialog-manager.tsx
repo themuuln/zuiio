@@ -60,7 +60,7 @@ export interface DialogManagerProps {
   handleEmptyBayQueueSelect: (workOrderId: string) => void;
   // Refresh / translation
   onRefresh: () => Promise<void>;
-  t: (key: string, values?: Record<string, unknown>) => string;
+  t: (key: string, params?: Record<string, string | number | Date>) => string;
   // Mutation refs passed to child components
   assignMechanicMutation: {
     mutateAsync: (vars: { woId: string; mechanicId: string }) => Promise<void>;

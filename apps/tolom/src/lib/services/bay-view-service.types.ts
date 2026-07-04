@@ -7,7 +7,7 @@ import type { Profile, Vehicle, WorkOrder } from "@/lib/types";
  * nullable bay_number and mechanic_id for optimistic cache updates
  * (completed/cancelled/unassigned states).
  */
-type BayViewWorkOrder = Omit<WorkOrder, "bay_number" | "mechanic_id"> & {
+export type BayViewWorkOrder = Omit<WorkOrder, "bay_number" | "mechanic_id"> & {
   bay_number: number | null;
   mechanic_id: string | null;
 };

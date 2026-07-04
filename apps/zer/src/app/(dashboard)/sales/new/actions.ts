@@ -369,7 +369,7 @@ export async function createSale(
         unit_price: item.unitPrice,
         variant_id: item.variantId ?? null,
       })),
-    ).catch(console.error);
+    ).catch((err) => capture(err, { context: "post_sale_to_journal" }));
   }
 
   await logAuditEventWithClient(

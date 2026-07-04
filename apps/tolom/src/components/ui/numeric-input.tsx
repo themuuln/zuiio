@@ -178,7 +178,7 @@ export function NumericInput({
       placeholder={placeholder}
       disabled={disabled}
       readOnly={readOnly}
-      onFocus={(e) => { externalOnFocus?.(e); handleFocus(e); }}
+      onFocus={(e) => { externalOnFocus?.(e); handleFocus(); }}
       onBlur={handleBlur}
       onKeyDown={(e) => { externalOnKeyDown?.(e); handleKeyDown(e); }}
       onChange={handleChange}

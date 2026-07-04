@@ -7,7 +7,7 @@
     "build": "next build",
     "analyze": "next experimental-analyze",
     "start": "next start",
-    "lint": "biome check",
+    "lint": "biome check src/ && node scripts/capture-check.mjs",
     "format": "biome format --write",
     "validate:types": "tsc --noEmit --incremental",
     "validate:lint": "biome check src/",

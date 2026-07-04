@@ -147,7 +147,7 @@ export function VariantEditorSheet({
   const variantGroups = useMemo(() => {
     const groupNames = new Set<string>();
     for (const v of variants) {
-      const vd = v.variant_data as Record<string, string>;
+      const vd = v.variant_data as unknown as Record<string, string>;
       for (const key of Object.keys(vd)) {
         groupNames.add(key);
       }
@@ -380,7 +380,7 @@ function VariantRow({
   isSaving: boolean;
   compact?: boolean;
 }) {
-  const vd = variant.variant_data as Record<string, string>;
+  const vd = variant.variant_data as unknown as Record<string, string>;
   const dimDisplay = Object.entries(vd)
     .map(([k, v]) => `${k}: ${v}`)
     .join(", ");
@@ -441,7 +441,7 @@ function groupVariantsByDimension(
   // Get the first dimension key for grouping
   const groups: Record<string, CatalogItemVariant[]> = {};
   for (const v of variants) {
-    const vd = v.variant_data as Record<string, string>;
+    const vd = v.variant_data as unknown as Record<string, string>;
     const keys = Object.keys(vd);
     const firstKey = keys[0] ?? "Other";
     if (!groups[firstKey]) groups[firstKey] = [];

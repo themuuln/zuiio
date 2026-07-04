@@ -37,7 +37,12 @@
     "enabled": true,
     "rules": {
       "recommended": true,
+      "correctness": {
+        "noUnusedVariables": "error",
+        "noUnusedImports": "error"
+      },
       "style": {
+        "noNonNullAssertion": "warn",
         "noRestrictedImports": {
           "level": "error",
           "options": {
@@ -47,11 +52,23 @@
               }
             }
           }
-        }
+        },
+        "useTemplate": "error"
       },
       "suspicious": {
+        "noConsole": {
+          "level": "error",
+          "options": {
+            "allow": ["warn", "error"]
+          }
+        },
+        "noExplicitAny": "error",
         "noUnknownAtRules": "off",
-        "noArrayIndexKey": "off"
+        "noArrayIndexKey": "off",
+        "noDebugger": "error"
+      },
+      "complexity": {
+        "noForEach": "error"
       },
       "a11y": {
         "noLabelWithoutControl": "off"

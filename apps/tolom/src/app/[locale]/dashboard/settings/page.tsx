@@ -1,5 +1,4 @@
 "use client";
-export const instant = false;
 
 import { useQuery } from "@tanstack/react-query";
 import { Building2, Search, Settings2 } from "lucide-react";
@@ -175,7 +174,7 @@ function renderSectionContent(
         setTheme={options.setTheme}
         preview={options.preview}
         savedBrandColor={
-          (options.organization.settings as Record<string, unknown>)
+          (options.organization.settings as unknown as Record<string, unknown>)
             ?.brand_color as string | undefined
         }
       />
@@ -305,7 +304,7 @@ export default function SettingsPage() {
     setSuccessMessage(null);
 
     const nextSettings = {
-      ...(organization.settings as Record<string, unknown>),
+      ...(organization.settings as unknown as Record<string, unknown>),
       invoice_prefix: form.invoicePrefix.trim() || DEFAULT_FORM.invoicePrefix,
       default_currency:
         form.defaultCurrency.trim() || DEFAULT_FORM.defaultCurrency,

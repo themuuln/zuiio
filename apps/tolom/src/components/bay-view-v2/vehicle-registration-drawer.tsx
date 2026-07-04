@@ -802,7 +802,6 @@ export function VehicleRegistrationDrawer({
                     <Field data-invalid={!!form.formState.errors.year}>
                       <FieldContent>
                         <NumericInput
-                          {...form.register("year")}
                           value={formValues.year ? parseInt(formValues.year, 10) : 0}
                           onChange={(val) => form.setValue("year", val?.toString() ?? "", { shouldValidate: true })}
                           onBlur={() => form.trigger("year")}
@@ -866,7 +865,6 @@ export function VehicleRegistrationDrawer({
                       <Field data-invalid={!!form.formState.errors.odometer}>
                         <FieldContent>
                         <NumericInput
-                          {...form.register("odometer")}
                           value={formValues.odometer ? parseInt(formValues.odometer, 10) : 0}
                           onChange={(val) => form.setValue("odometer", val?.toString() ?? "", { shouldValidate: true })}
                           onBlur={() => form.trigger("odometer")}

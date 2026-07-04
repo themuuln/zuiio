@@ -300,6 +300,60 @@ supabase migration new <name> # Create migration file
 supabase gen types typescript --linked > src/lib/database.types.ts  # Regen types
 ```
 
+
+
+---
+
+## 🚨 ENFORCED RULES (block `npm run lint`)
+
+These rules are checked by `npm run lint` and **block CI**. Do not suppress or bypass them.
+
+### Rule 1: Never `console.error` in catch blocks — use `capture()` instead
+
+```ts
++ // ❌ BLOCKED by lint
+catch (e) { console.error('Query failed:', e); }
+.catch(console.error)
+
++ // ✅ Required
+catch (e) { capture(e, { context: 'my_func' }); }
+.catch((e) => capture(e, { context: 'my_func' }));
+```
+
+The script `scripts/capture-check.mjs` runs as part of `npm run lint` and scans every `.ts`/`.tsx` file. Any `console.error` preceded by `catch` within 3 lines is a violation. Use `capture()` from `@zuiio/capture`.
+
+### Rule 2: Every Supabase query must use `withDbCapture()`
+
+```ts
++ // ❌ Silent error swallowing
+const { data } = await supabase.from('products').select('*');
+
++ // ✅ Required
+const { data, error } = await withDbCapture('products_list',
+  supabase.from('products').select('*')
+);
+```
+
+### Rule 3: Server Actions use `ctx.supabase` from `requireActionContext()`, never `createClient()`
+
+```ts
++ // ❌
+const supabase = await createClient();
+
++ // ✅
+const { supabase } = ctx;
+```
+
+### Rule 4: Never `as any` or `as never` — extend generated types
+
+```ts
++ // ❌ BLOCKED (biome lint)
+const db = ctx.supabase as any;
+
++ // ✅
+const db: SupabaseClient<Database> = ctx.supabase;
+```
+
 ---
 
 ## Coding Standards

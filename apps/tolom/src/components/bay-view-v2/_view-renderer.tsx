@@ -2,8 +2,8 @@
 
 import { Building2 } from "lucide-react";
 import React from "react";
-import type { BaySlotData } from "@/lib/services/bay-view-service";
-import type { Vehicle, WorkOrder } from "@/lib/types";
+import type { BaySlotData, BayViewWorkOrder } from "@/lib/services/bay-view-service";
+import type { Vehicle } from "@/lib/types";
 import { GridView } from "./_grid-view";
 import { KanbanView } from "./_kanban-view";
 import { ListView } from "./_list-view";
@@ -20,7 +20,7 @@ interface BayViewViewsProps {
   viewMode: ViewMode;
   searchedBranchSections: BranchSection[] | undefined;
   searchedBays: BaySlotData[];
-  filteredQueue: (WorkOrder & { vehicle: Vehicle | null })[];
+  filteredQueue: (BayViewWorkOrder & { vehicle: Vehicle | null })[];
   pendingWoIds: Record<string, boolean>;
   readyWosCount: number;
   batchCompletePending: boolean;
@@ -32,7 +32,7 @@ interface BayViewViewsProps {
     initialAction?: "add-service" | "add-part",
   ) => void;
   onAssignClick: (bayNumber: number) => void;
-  onQueueItemClick: (wo: WorkOrder & { vehicle: Vehicle | null }) => void;
+  onQueueItemClick: (wo: BayViewWorkOrder & { vehicle: Vehicle | null }) => void;
   onRemoveHelper: (woId: string, mechId: string) => Promise<void>;
   onAssignMechanic: (woId: string, mechanicId: string) => Promise<void>;
   onRemoveMechanic: (woId: string) => Promise<void>;

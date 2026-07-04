@@ -22,7 +22,7 @@ import { bayViewKeys, workOrderKeys } from "@/lib/queries/keys";
 import type { WorkOrderDetail } from "@/lib/types";
 import type { MechanicRef } from "@/lib/types/mechanic";
 import { reportServerError } from "@/lib/sentry-report-server";
-import { StatusPill } from "./status-pill";
+import { StatusPill } from "./_status-pill";
 import { toast } from "sonner";
 
 interface DrawerHeaderProps {

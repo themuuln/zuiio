@@ -2,7 +2,8 @@
 
 import { Clock } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { Vehicle, WorkOrder } from "@/lib/types";
+import type { Vehicle } from "@/lib/types";
+import type { BayViewWorkOrder } from "@/lib/services/bay-view-service";
 import { formatPlateNumber } from "@/lib/utils";
 
 /** Compute wait time text and urgency from a created_at timestamp. */
@@ -17,7 +18,7 @@ function _getWaitTime(createdAt: string): { text: string; urgent: boolean } {
 }
 
 interface CondensedQueueItemProps {
-  workOrder: WorkOrder & { vehicle: Vehicle | null };
+  workOrder: BayViewWorkOrder & { vehicle: Vehicle | null };
   onClick: () => void;
 }
 

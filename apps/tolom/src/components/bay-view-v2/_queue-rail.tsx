@@ -4,11 +4,12 @@ import { ArrowRight, Car, X } from "lucide-react";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import type { BayViewWorkOrder } from "@/lib/services/bay-view-service";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn, formatPlateNumber } from "@/lib/utils";
 import { ElapsedText } from "./_elapsed-text";
 
-type QueueItem = WorkOrder & { vehicle: Vehicle | null };
+type QueueItem = BayViewWorkOrder & { vehicle: Vehicle | null };
 
 interface QueueRailProps {
   items: QueueItem[];

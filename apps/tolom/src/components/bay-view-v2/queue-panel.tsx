@@ -24,16 +24,17 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Typography } from "@/components/ui/typography";
 import { useFuzzySearch } from "@zuiio/hooks";
+import type { BayViewWorkOrder } from "@/lib/services/bay-view-service";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { cn, formatPlateNumber } from "@/lib/utils";
 import { HighlightText } from "@/lib/utils/search-utils";
 
 interface QueueItemProps {
-  workOrder: WorkOrder & { vehicle: Vehicle | null };
+  workOrder: BayViewWorkOrder & { vehicle: Vehicle | null };
   isPending?: boolean;
   onQuickAssign?: (workOrderId: string) => void;
   mechanicName?: string | null;
-  onItemClick?: (workOrder: WorkOrder & { vehicle: Vehicle | null }) => void;
+  onItemClick?: (workOrder: BayViewWorkOrder & { vehicle: Vehicle | null }) => void;
   searchQuery?: string;
   availableBays?: number[];
   onAssignToBay?: (workOrderId: string, bayNumber: number) => void;
@@ -226,11 +227,11 @@ function QueueItem({
 }
 
 interface QueuePanelProps {
-  items: (WorkOrder & { vehicle: Vehicle | null })[];
+  items: (BayViewWorkOrder & { vehicle: Vehicle | null })[];
   pendingWoIds?: Record<string, boolean>;
   onQuickAssign?: (workOrderId: string) => void;
   mechanics?: { id: string; full_name: string | null }[];
-  onItemClick?: (workOrder: WorkOrder & { vehicle: Vehicle | null }) => void;
+  onItemClick?: (workOrder: BayViewWorkOrder & { vehicle: Vehicle | null }) => void;
   availableBays?: number[];
   onAssignToBay?: (workOrderId: string, bayNumber: number) => void;
 }
@@ -262,7 +263,7 @@ export const QueuePanel = React.memo(function QueuePanel({
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
-  type EnrichedWO = (WorkOrder & { vehicle: Vehicle | null }) & {
+  type EnrichedWO = (BayViewWorkOrder & { vehicle: Vehicle | null }) & {
     _mechanicName?: string | null;
   };
 

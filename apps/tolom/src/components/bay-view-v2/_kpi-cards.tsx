@@ -20,7 +20,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import type { BaySlotData, ShiftReport } from "@/lib/services/bay-view-service";
+import type { BaySlotData, BayViewWorkOrder, ShiftReport } from "@/lib/services/bay-view-service";
 import type { Vehicle, WorkOrder } from "@/lib/types";
 import { formatMNT, formatPlateNumber } from "@/lib/utils";
 import { elapsedMinutes } from "./_helpers";
@@ -33,7 +33,7 @@ interface TrendDelta {
   revenuePerLaborHour: number;
 }
 
-type QueueItem = WorkOrder & { vehicle: Vehicle | null };
+type QueueItem = BayViewWorkOrder & { vehicle: Vehicle | null };
 
 interface KpiCardsProps {
   shiftReport: ShiftReport | null;

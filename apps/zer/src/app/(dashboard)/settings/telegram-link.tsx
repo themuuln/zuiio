@@ -1,7 +1,7 @@
 import "server-only";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { TelegramLogo } from "@phosphor-icons/react/dist/ssr";
-import { createServiceClient } from "@/lib/supabase/server-service";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { QrCodeInline } from "./qr-code-inline";
 
 const GATEWAY_URL =
   process.env.AGENT_GATEWAY_URL ?? "http://localhost:3999";
@@ -17,14 +18,33 @@ const GATEWAY_URL =
 interface TelegramLinkProps {
   organizationId: string;
   userId: string;
+  supabase: SupabaseClient;
+}
+
+async function fetchLinkToken(
+  orgId: string,
+  userId: string,
+  productType: string,
+): Promise<string | null> {
+  try {
+    const res = await fetch(`${GATEWAY_URL}/api/link/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orgId, userId, productType }),
+    });
+    if (!res.ok) return null;
+    const { token } = await res.json();
+    return token ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function TelegramLink({
   organizationId,
   userId,
+  supabase,
 }: TelegramLinkProps) {
-  const supabase = createServiceClient();
-
   const { data: links } = await supabase
     .from("telegram_agent_links")
     .select("telegram_username, linked_at")
@@ -34,7 +54,15 @@ export async function TelegramLink({
     .limit(1);
 
   const linkedAccount = links?.[0] ?? null;
-  const qrPageUrl = `${GATEWAY_URL}/link?orgId=${encodeURIComponent(organizationId)}&userId=${encodeURIComponent(userId)}&productType=zer`;
+
+  // Fetch a new link token for QR display (not used if already linked)
+  const linkToken = linkedAccount
+    ? null
+    : await fetchLinkToken(organizationId, userId, "zer");
+
+  const deeplinkUrl = linkToken
+    ? `https://t.me/zuiio_bot?start=${encodeURIComponent(linkToken)}`
+    : null;
 
   return (
     <Card>
@@ -68,12 +96,6 @@ export async function TelegramLink({
             </p>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" asChild>
-                <a href={qrPageUrl} target="_blank" rel="noopener noreferrer">
-                  <TelegramLogo className="size-4" weight="fill" />
-                  Дахин холбох
-                </a>
-              </Button>
-              <Button variant="outline" size="sm" asChild>
                 <a
                   href="https://t.me/zuiio_bot"
                   target="_blank"
@@ -84,30 +106,44 @@ export async function TelegramLink({
               </Button>
             </div>
           </div>
+        ) : deeplinkUrl ? (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Дараах QR кодыг утасны камераар уншуулж Telegram-тай холбогдоно
+              уу.
+            </p>
+            <QrCodeInline value={deeplinkUrl} size={200} />
+            <p className="text-xs text-muted-foreground">
+              Эсвэл доорх товчийг дарж @zuiio_bot руу очиж /start командыг
+              илгээнэ үү.
+            </p>
+            <Button variant="outline" size="sm" asChild>
+              <a
+                href="https://t.me/zuiio_bot"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <TelegramLogo className="size-4" weight="fill" />
+                @zuiio_bot нээх
+              </a>
+            </Button>
+          </div>
         ) : (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Telegram боттой холбогдон өөрийн Zer өгөгдлөө натурал хэлээр
-              асуух боломжтой. Дараах холбоосоор QR код уншуулж холбогдоно
+              QR код үүсгэх боломжгүй байна. Гар утасны камераар дахин оролдоно
               уу.
             </p>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Button asChild>
-                <a href={qrPageUrl} target="_blank" rel="noopener noreferrer">
-                  <TelegramLogo className="size-4" weight="fill" />
-                  Telegram-тэй холбох
-                </a>
-              </Button>
-              <Button variant="outline" size="sm" asChild>
-                <a
-                  href="https://t.me/zuiio_bot"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  @zuiio_bot нээх
-                </a>
-              </Button>
-            </div>
+            <Button variant="outline" size="sm" asChild>
+              <a
+                href="https://t.me/zuiio_bot"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <TelegramLogo className="size-4" weight="fill" />
+                @zuiio_bot нээх
+              </a>
+            </Button>
           </div>
         )}
       </CardContent>

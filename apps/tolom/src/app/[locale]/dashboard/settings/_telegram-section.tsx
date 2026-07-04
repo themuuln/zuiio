@@ -20,6 +20,9 @@ interface TelegramLinkResponse {
   data: {
     bot_deep_link: string;
   };
+  error?: {
+    message?: string;
+  };
 }
 
 export function TelegramSection() {

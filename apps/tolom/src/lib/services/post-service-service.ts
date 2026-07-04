@@ -145,7 +145,7 @@ export async function savePostServiceData(
   if (recommendationRows.length > 0) {
     const { error: recError } = await supabase
       .from("service_recommendations")
-      .insert(recommendationRows);
+      .insert(recommendationRows as unknown as Record<string, unknown>[]);
 
     if (recError)
       throw new AppError(
@@ -354,7 +354,7 @@ export async function saveCompletionData(
   } else {
     const { error } = await supabase
       .from("service_completion_data")
-      .insert(row);
+      .insert(row as unknown as Record<string, unknown>);
     if (error)
       throw new AppError(
         `Failed to save completion data: ${error.message}`,

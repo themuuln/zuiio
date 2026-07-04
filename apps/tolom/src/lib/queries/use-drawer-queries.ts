@@ -111,8 +111,8 @@ function mergeServices(
           ),
           is_active: true,
           estimated_duration_minutes: gs.estimated_duration_minutes,
-          interval_km: null,
-          interval_months: null,
+          interval_km: undefined,
+          interval_months: undefined,
           _source: "global" as const,
         };
       }),

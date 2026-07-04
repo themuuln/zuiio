@@ -2,6 +2,7 @@
 
 import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core";
 import { useCallback } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { toast } from "sonner";
 import {
   useAddHelperToWorkOrder,
@@ -16,8 +17,8 @@ import {
   useUpdateBayCount,
   useUpdateBayViewStatus,
 } from "@/lib/queries/use-bay-view";
-import type { BayViewData } from "@/lib/services/bay-view-service";
-import type { Vehicle, WorkOrder } from "@/lib/types";
+import type { BayViewData, BayViewWorkOrder } from "@/lib/services/bay-view-service";
+import type { Vehicle } from "@/lib/types";
 import { formatPlateNumber } from "@/lib/utils";
 import type { ActiveDragState } from "./_types";
 import { useBayDragHandlers } from "./_bay-drag-handlers";
@@ -37,8 +38,9 @@ export interface BayViewMutationsParams {
   pendingWoIds: Record<string, boolean>;
   markPending: (...ids: string[]) => void;
   clearPending: (...ids: string[]) => void;
+  setActiveDrag: Dispatch<SetStateAction<ActiveDragState | null>>;
   fetchData: () => Promise<void>;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number | Date>) => string;
   paymentMethodFees: PaymentMethodFees;
   transferBanks: ResolvedTransferBank[];
   dialogs: BayViewDialogsState;
@@ -271,7 +273,7 @@ export function useBayViewMutations(params: BayViewMutationsParams) {
   );
 
   const handleQueueItemClick = useCallback(
-    (wo: WorkOrder & { vehicle: Vehicle | null }) => {
+    (wo: BayViewWorkOrder & { vehicle: Vehicle | null }) => {
       const id = wo.id;
       openDetail(id);
       const params = new URLSearchParams(window.location.search);

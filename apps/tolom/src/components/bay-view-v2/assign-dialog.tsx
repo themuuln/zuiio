@@ -38,7 +38,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Typography } from "@/components/ui/typography";
 import { NewVehicleSheet } from "@/components/vehicles/new-vehicle-drawer";
 import { reportError } from "@/lib/sentry-report";
-import type { Vehicle, WorkOrder } from "@/lib/types";
+import type { Vehicle } from "@/lib/types";
+import type { BayViewWorkOrder } from "@/lib/services/bay-view-service";
 import { cn, formatPlateNumber } from "@/lib/utils";
 
 interface MechanicItem extends SortableItem {
@@ -125,7 +126,7 @@ interface AssignDialogProps {
   onOpenChange: (open: boolean) => void;
   bayNumber: number;
   branchId?: string;
-  queue: (WorkOrder & { vehicle: Vehicle | null })[];
+  queue: (BayViewWorkOrder & { vehicle: Vehicle | null })[];
   mechanics: { id: string; full_name: string | null }[];
   onAssign: (workOrderId: string, mechanicId?: string) => Promise<void>;
 }

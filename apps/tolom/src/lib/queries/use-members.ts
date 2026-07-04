@@ -1,4 +1,6 @@
 "use client";
+import type { OrgInvite } from "@/lib/types";
+
 
 import { type UseQueryResult, useQuery } from "@tanstack/react-query";
 import { createOrgQuery } from "./factory";
@@ -9,24 +11,23 @@ import { useOrgMutation } from "@zuiio/query";
 export interface UserProfile {
   id: string;
   email: string;
-  full_name: string | null;
+  fullName: string | null;
   phone: string | null;
-  role_id: string;
-  role_name: string;
-  branch_id: string | null;
-  branch_name: string | null;
+  roleId: string;
+  roleName: string;
+  branchId: string | null;
+  branchName: string | null;
+  username: string | null;
+  avatarUrl: string | null;
+  organizationId: string | null;
+  organizationName: string | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 
-export interface InviteWithEmail {
-  id: string;
-  email: string;
-  role_id: string | null;
-  status: string;
-  created_at: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
+export interface InviteWithEmail extends OrgInvite {
+  organization_name?: string;
+  inviter_name?: string | null;
 }
 
 export interface Role {

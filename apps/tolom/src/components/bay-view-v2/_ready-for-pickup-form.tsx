@@ -93,6 +93,7 @@ export function ReadyForPickupForm({
 
   const paymentMethod = form.watch("paymentMethod");
   const transferBankId = form.watch("transferBankId");
+  const odometerValue = Number(form.watch("odometer")) || 0;
   const feePercent = paymentMethodFees[paymentMethod] ?? 0;
   const feeAmount = useMemo(
     () => computePaymentFeeAmount(grandTotal, paymentMethod, paymentMethodFees),
@@ -178,6 +179,7 @@ export function ReadyForPickupForm({
             <FieldContent>
               <div className="relative max-w-full">
                 <NumericInput
+                  value={odometerValue}
                   placeholder={t("postServiceOdometerPlaceholder")}
                   className="h-10 pr-10"
                   min={0}
@@ -189,7 +191,7 @@ export function ReadyForPickupForm({
                 </span>
               </div>
             </FieldContent>
-          </Field>
+            </Field>
 
           {/* Mechanic notes */}
           <Field>

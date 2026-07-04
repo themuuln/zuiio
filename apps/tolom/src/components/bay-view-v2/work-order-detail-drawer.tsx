@@ -27,6 +27,7 @@ import {
   savePostServiceData,
 } from "@/lib/services/post-service-service";
 import type { WorkOrderDetail } from "@/lib/types/composite";
+import type { MechanicRef } from "@/lib/types/mechanic";
 import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import { CustomerPickerModal } from "./_customer-picker-modal";
@@ -45,9 +46,10 @@ import type { PickupCompleteData } from "./pickup-complete-form";
 
 const WorkOrderQuickActions = dynamic(
   () =>
-    import("./_work-order-quick-actions").then((m) => m.WorkOrderQuickActions),
+    import("./_quick-actions").then((m) => m.QuickActions),
   { ssr: false },
 );
+
 
 // ── Drawer ───────────────────────────────────────────────────
 
@@ -441,7 +443,7 @@ export function WorkOrderDetailDrawer({
             wo={wo}
             loading={isLoading && !hasLoadedOnce}
             mechanics={mechanics}
-            helpers={wo?.helpers ?? []}
+            helpers={(wo?.helpers ?? []) as unknown as MechanicRef[]}
             orgId={orgId ?? ""}
             workOrderId={workOrderId ?? ""}
             saving={saving}

@@ -29,6 +29,7 @@ import { Typography } from "@/components/ui/typography";
 import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
 import { getDefaultTransferBank } from "@/lib/payments/org-bank-accounts";
 import type { BaySlotData } from "@/lib/services/bay-view-service";
+import { computeNextDueDate, computeNextDueKm, formatDate } from "./_helpers";
 import type {
   EnrichedServiceItem,
   WorkOrderPartItem,
@@ -67,33 +68,6 @@ interface Props {
   onConfirm: (data: PostServiceFormData) => Promise<void>;
 }
 
-function computeNextDueDate(months: number | null): string | null {
-  if (!months) return null;
-  const d = new Date();
-  d.setMonth(d.getMonth() + months);
-  return d.toISOString().split("T")[0];
-}
-
-function computeNextDueKm(
-  km: number | null,
-  odometer: number | null,
-): number | null {
-  if (!km || !odometer) return null;
-  return odometer + km;
-}
-
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function formatKm(km: number): string {
-  return km.toLocaleString("en-US");
-}
 
 export function PostServiceDialog({
   open,

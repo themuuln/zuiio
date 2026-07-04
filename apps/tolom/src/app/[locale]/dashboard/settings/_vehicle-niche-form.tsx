@@ -51,7 +51,7 @@ const DEFAULT_NICHE: NicheSettings = {
 
 function readNiche(org: Organization | undefined): NicheSettings {
   if (!org?.settings) return DEFAULT_NICHE;
-  const s = org.settings as Record<string, unknown>;
+  const s = org.settings as unknown as Record<string, unknown>;
   const niche = s.vehicle_niche as Partial<NicheSettings> | undefined;
   return {
     enabled: niche?.enabled ?? false,
@@ -191,7 +191,7 @@ export function VehicleNicheForm({
     if (!organization) return;
 
     const currentSettings =
-      (organization.settings as Record<string, unknown>) ?? {};
+      (organization.settings as unknown as Record<string, unknown>) ?? {};
     const nextSettings = {
       ...currentSettings,
       vehicle_niche: {

@@ -62,7 +62,7 @@ export function VariantPicker({
   const dimensionMap = useMemo(() => {
     const dims = new Map<string, Set<string>>();
     for (const v of variants) {
-      const vd = v.variant_data as Record<string, string>;
+      const vd = v.variant_data as unknown as Record<string, string>;
       for (const [key, val] of Object.entries(vd)) {
         if (!dims.has(key)) dims.set(key, new Set());
         dims.get(key)?.add(val);
@@ -80,7 +80,7 @@ export function VariantPicker({
     const match = variants.find((v) => v.id === value.variantId);
     if (!match) return null;
     return {
-      variantData: match.variant_data as Record<string, string>,
+      variantData: match.variant_data as unknown as Record<string, string>,
       price: match.price ?? defaultPrice,
       label: match.variant_label,
       variantId: match.id,
@@ -100,7 +100,7 @@ export function VariantPicker({
   const matchingVariant = useMemo(() => {
     if (Object.keys(selections).length === 0) return null;
     return variants.find((v) => {
-      const vd = v.variant_data as Record<string, string>;
+      const vd = v.variant_data as unknown as Record<string, string>;
       if (Object.keys(vd).length !== Object.keys(selections).length)
         return false;
       for (const [key, val] of Object.entries(selections)) {
@@ -126,7 +126,7 @@ export function VariantPicker({
 
     // Find matching variant
     const match = variants.find((v) => {
-      const vd = v.variant_data as Record<string, string>;
+      const vd = v.variant_data as unknown as Record<string, string>;
       if (Object.keys(vd).length !== Object.keys(next).length) return false;
       for (const [key, val] of Object.entries(next)) {
         if (vd[key] !== val) return false;

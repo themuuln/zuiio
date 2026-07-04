@@ -8,14 +8,15 @@ import { Button } from "@/components/ui/button";
 import { DrawerClose } from "@/components/ui/drawer";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { Separator } from "@/components/ui/separator";
-import type { Vehicle, WorkOrder } from "@/lib/types";
+import type { Vehicle } from "@/lib/types";
+import type { BayViewWorkOrder } from "@/lib/services/bay-view-service";
 import { cn, formatPlateNumber } from "@/lib/utils";
 
 interface EmptyBayActionDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   bayNumber: number;
-  queue: (WorkOrder & { vehicle: Vehicle | null })[];
+  queue: (BayViewWorkOrder & { vehicle: Vehicle | null })[];
   onSelectRegister: () => void;
   onSelectQueueItem: (workOrderId: string) => void;
   onSelectRegisterAndAssign: () => void;

@@ -53,6 +53,7 @@ export function AddScheduleDialog({
   const [form, setForm] = useState({
     vehicle_id: "",
     service_catalog_id: "",
+    service_name: "",
     interval_months: 0,
     interval_km: 0,
     last_service_date: "",

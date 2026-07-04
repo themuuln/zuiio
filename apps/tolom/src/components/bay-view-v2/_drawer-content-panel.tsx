@@ -18,25 +18,25 @@ const sectionLoading = (h: string) => () => (
 
 const WorkOrderServicesSection = dynamic(
   () =>
-    import("./_work-order-services-section").then(
-      (m) => m.WorkOrderServicesSection,
+    import("./_services-section").then(
+      (m) => m.ServicesSection,
     ),
   { ssr: false, loading: sectionLoading("24") },
 );
 const WorkOrderPartsSection = dynamic(
   () =>
-    import("./_work-order-parts-section").then((m) => m.WorkOrderPartsSection),
+    import("./_parts-section").then((m) => m.PartsSection),
   { ssr: false, loading: sectionLoading("24") },
 );
 const WorkOrderNotesSection = dynamic(
   () =>
-    import("./_work-order-notes-section").then((m) => m.WorkOrderNotesSection),
+    import("./_notes-section").then((m) => m.NotesSection),
   { ssr: false, loading: sectionLoading("16") },
 );
 const WorkOrderTimelineSection = dynamic(
   () =>
-    import("./_work-order-timeline-section").then(
-      (m) => m.WorkOrderTimelineSection,
+    import("./_status-timeline").then(
+      (m) => m.StatusTimeline,
     ),
   { ssr: false, loading: sectionLoading("32") },
 );

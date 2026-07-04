@@ -61,7 +61,7 @@ export function ThresholdCard({
             variant="ghost"
             size="xs"
             onClick={() => {
-              setValue(String(currentMinimum));
+              setValue(currentMinimum);
               setEditing(true);
             }}
           >

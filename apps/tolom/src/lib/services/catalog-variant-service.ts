@@ -379,7 +379,7 @@ export async function createItemVariant(
       entity_type: params.entity_type,
       entity_id: params.entity_id,
       variant_label: params.variant_label.trim(),
-      variant_data: params.variant_data as Record<string, unknown>,
+      variant_data: params.variant_data as unknown as Record<string, unknown>,
       price: params.price ?? null,
       cost: params.cost ?? null,
       sku: params.sku?.trim() ?? null,
@@ -647,7 +647,7 @@ export async function resolveVariantPrice(
 
   // Find exact match by comparing variant_data
   const match = (data as unknown as CatalogItemVariant[]).find((v) => {
-    const vd = v.variant_data as Record<string, unknown>;
+    const vd = v.variant_data as unknown as Record<string, unknown>;
     if (Object.keys(vd).length !== Object.keys(variantData).length)
       return false;
     for (const [key, value] of Object.entries(variantData)) {

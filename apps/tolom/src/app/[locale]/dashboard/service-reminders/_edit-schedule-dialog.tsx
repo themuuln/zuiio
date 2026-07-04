@@ -41,6 +41,7 @@ export function EditScheduleDialog({
 }: EditScheduleDialogProps) {
   const t = useTranslations();
   const [form, setForm] = useState({
+    service_name: "",
     interval_months: 0,
     interval_km: 0,
     notes: "",

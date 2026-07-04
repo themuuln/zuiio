@@ -181,6 +181,68 @@ npm run lint && npx tsc --noEmit && npm run build   # Gate build on lint + types
 npm run test                                           # Tests after build
 ```
 
+
+## 🚨 ENFORCED RULES (block `npm run lint`)
+
+These rules are checked by `npm run lint` and **block CI**.
+
+### Rule 1: Never `console.error` in catch blocks — use `capture()`/`reportServerError()` instead
+
+```ts
++ // ❌ BLOCKED by lint
+catch (e) { console.error('Query failed:', e); }
+.catch(console.error)
+
++ // ✅ Required (import from @/lib/sentry-report-server)
+catch (e) { reportServerError('my_func', e); }
+.catch((e) => reportServerError('my_func', e));
+```
+
+The script `scripts/capture-check.mjs` runs as part of `npm run lint` and scans every `.ts`/`.tsx` file. Any `console.error` preceded by `catch` within 3 lines is a violation.
+
+### Rule 2: All API routes must use the `api-handler` wrapper
+
+Never write raw `NextResponse.json()` or `createClient()` in an API route file. Use `createRouteHandler` or `createSimpleRouteHandler` from `@/lib/supabase/api-handler`.
+
+```ts
++ // ❌ BLOCKED
+export async function GET(req: NextRequest) {
+  const supabase = await createClient();
+  return NextResponse.json({ data });
+}
+
++ // ✅ Required
+export const GET = createRouteHandler({ authorize: true }, async (ctx) => {
+  const { supabase, orgId } = ctx;
+  return ok({ data });
+});
+```
+
+### Rule 3: Every Supabase query must capture errors
+
+```ts
++ // ❌ Silent error swallowing
+const { data } = await supabase.from('products').select('*');
+
++ // ✅ Required
+const { data, error } = await supabase.from('products').select('*');
+if (error) { reportServerError('products_query', error); return apiError('QUERY_ERROR', error.message, 500); }
+```
+
+### Rule 4: Use `DetailDrawer` for side panels, not raw `Sheet`/`Dialog`
+
+```ts
++ // ❌ Bypasses project pattern
+<Sheet><SheetContent>...</SheetContent></Sheet>
+
++ // ✅ Required
+<DetailDrawer>
+  <DetailDrawer.Header>...</DetailDrawer.Header>
+  <DetailDrawer.Body>...</DetailDrawer.Body>
+  <DetailDrawer.Footer>...</DetailDrawer.Footer>
+</DetailDrawer>
+```
+
 For CI/production readiness, the full chain: `npm run lint && npx tsc --noEmit && npm run build && npm run test`.
 
 ### Testing Speed

@@ -134,7 +134,7 @@ export async function createPurchaseOrder(
       order_date: orderDate || new Date().toISOString().slice(0, 10),
       status: "draft",
     },
-  ).catch(console.error);
+  ).catch((err) => capture(err, { context: "post_purchase_to_journal" }));
 
   revalidateEntities(["purchases"]);
   return { success: true as const, error: undefined };

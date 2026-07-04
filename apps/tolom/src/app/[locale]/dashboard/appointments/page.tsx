@@ -65,7 +65,7 @@ export default function AppointmentsPage() {
 
   const deleteMutation = useDeleteAppointment(orgId);
 
-  const appointments = (appointmentsData ?? []) as Appointment[];
+  const appointments = (appointmentsData ?? []) as unknown as Appointment[];
   const filtered = appointments.filter((a) =>
     statusFilter === "all" ? true : a.status === statusFilter,
   );

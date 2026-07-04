@@ -226,6 +226,7 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
     orgId ?? undefined,
     filter,
   );
+  const invoiceListItems = (invoices ?? []) as unknown as InvoiceListItem[];
   const sendEmail = useSendInvoiceEmail(orgId ?? undefined);
 
   const isLoading = statsLoading || (invoicesLoading && !invoices);
@@ -242,7 +243,7 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
     [orgId, sendEmail],
   );
 
-  const filtered = useFuzzySearch(invoices ?? [], search, {
+  const filtered = useFuzzySearch(invoiceListItems, search, {
     keys: ["invoice_number", "customer_name", "vehicle_plate"],
     threshold: 0.4,
     minQueryLength: 1,
@@ -343,7 +344,7 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
         actions={
           <div className="flex gap-2">
             <ExportButton
-              data={invoices ?? []}
+              data={invoiceListItems}
               columns={invoiceExportColumns}
               filename={`invoices-${now.toISOString().split("T")[0]}.xlsx`}
               sheetName={t("invoicesSheet")}

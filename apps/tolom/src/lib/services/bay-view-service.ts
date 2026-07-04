@@ -13,6 +13,7 @@ import type { Profile } from "@/lib/types";
 import type {
   BaySlotData,
   BayViewData,
+  BayViewWorkOrder,
   BranchInfo,
   BranchSectionData,
   ShiftReport,
@@ -26,6 +27,7 @@ export type { UpdateStatusParams } from "./bay-view-service.types";
 export type {
   BaySlotData,
   BayViewData,
+  BayViewWorkOrder,
   BranchInfo,
   BranchSectionData,
   ShiftReport,

@@ -207,6 +207,7 @@ export default async function SettingsPage() {
       <TelegramLink
         organizationId={organizationId}
         userId={userId}
+        supabase={supabase}
       />
 
       {/* Roles & Permissions */}
