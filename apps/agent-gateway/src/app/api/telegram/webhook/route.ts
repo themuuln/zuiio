@@ -539,10 +539,9 @@ export async function POST(request: Request): Promise<NextResponse> {
       return NextResponse.json({ ok: true });
     }
 
-
     // Try device auth code redemption before general message handling
     if (text.length >= 6 && text.length <= 10) {
-      const redeemed = redeemLinkCode(text);
+      const redeemed = await redeemLinkCode(getSupabase(), text);
       if (redeemed) {
         await handleCodeLinked(chatId, redeemed);
         return NextResponse.json({ ok: true });

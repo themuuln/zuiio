@@ -3,11 +3,13 @@
 import {
   CheckCircle2,
   History,
+  HistoryIcon,
   Package,
   RotateCcw,
   User,
   Wrench,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
@@ -22,16 +24,26 @@ import type {
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
+  STATUS_DOT,
   STATUS_TIMELINE_DOT,
   STATUS_TIMELINE_TEXT,
   STATUS_TRANSLATION_KEYS,
 } from "./_constants";
+import type { ServiceHistoryEntry } from "./_vehicle-registration-schema";
 
-interface StatusTimelineProps {
-  statusHistory: WorkOrderStatusHistory[];
-  serviceHistory: WorkOrderServiceHistoryEntry[];
-  t: (key: string) => string;
-}
+// ── Types ───────────────────────────────────────────────────
+
+type StatusTimelineProps =
+  | {
+      mode: "status";
+      statusHistory: WorkOrderStatusHistory[];
+      serviceHistory: WorkOrderServiceHistoryEntry[];
+      t: (key: string) => string;
+    }
+  | {
+      mode: "service";
+      history: ServiceHistoryEntry[];
+    };
 
 interface DedupedEntry {
   status: string;
@@ -42,6 +54,8 @@ interface DedupedEntry {
   notes: string | null;
   id: string;
 }
+
+// ── Constants ───────────────────────────────────────────────
 
 const STATUS_FLOW = [
   "New",
@@ -55,6 +69,8 @@ const TIME_FORMAT = new Intl.DateTimeFormat([], {
   hour: "2-digit",
   minute: "2-digit",
 });
+
+// ── Helpers ─────────────────────────────────────────────────
 
 function isForwardTransition(
   status: string,
@@ -70,7 +86,7 @@ function isForwardTransition(
 function formatTimeRange(isoStart: string, isoEnd: string): string {
   const start = new Date(isoStart);
   const end = new Date(isoEnd);
-  return `${TIME_FORMAT.format(start)} – ${TIME_FORMAT.format(end)}`;
+  return `${TIME_FORMAT.format(start)} \u2013 ${TIME_FORMAT.format(end)}`;
 }
 
 function formatDate(iso: string): string {
@@ -121,11 +137,121 @@ function deduplicateHistory(history: WorkOrderStatusHistory[]): DedupedEntry[] {
   return result.reverse();
 }
 
-export function StatusTimeline({
-  statusHistory,
-  serviceHistory,
-  t,
-}: StatusTimelineProps) {
+// ── Service entry renderer (mode="service") ─────────────────
+
+function ServiceTimelineEntry({
+  entry,
+  isLast,
+}: {
+  entry: ServiceHistoryEntry;
+  isLast: boolean;
+}) {
+  const t = useTranslations("bayView");
+  const dotColor = STATUS_DOT[entry.status] ?? "bg-slate-400";
+
+  return (
+    <div key={entry.work_order_id} className="relative flex gap-3 pb-4">
+      {!isLast && (
+        <div className="absolute left-3 top-5 bottom-0 w-0.5 bg-border" />
+      )}
+
+      <div className="relative z-10 mt-1 shrink-0">
+        <div
+          className={`size-5 ${dotColor} ring-2 ring-background flex items-center justify-center`}
+        >
+          {entry.status === "Completed" ? (
+            <CheckCircle2 className="size-3 text-white" />
+          ) : (
+            <div className="size-2 bg-white" />
+          )}
+        </div>
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs font-semibold capitalize">
+            {entry.status}
+          </span>
+          <span className="text-xs text-muted-foreground shrink-0">
+            {formatDate(entry.created_at)} {formatTime(entry.created_at)}
+          </span>
+        </div>
+
+        {entry.complaint && (
+          <Typography.Muted className="text-xs text-muted-foreground mt-1 line-clamp-2">
+            {entry.complaint}
+          </Typography.Muted>
+        )}
+
+        {entry.services.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {entry.services.map((s) => (
+              <span
+                key={`${s.name}-${s.price}`}
+                className="inline-flex items-center gap-1 bg-blue-500/10 px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400"
+              >
+                <Wrench className="size-3" />
+                {s.name}
+              </span>
+            ))}
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+          {entry.total > 0 && (
+            <span className="font-medium text-foreground/80">
+              {entry.total.toLocaleString()}\u20AE
+            </span>
+          )}
+          {entry.mechanic_name && (
+            <span className="flex items-center gap-1">
+              <User className="size-3" />
+              {entry.mechanic_name}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Component ──────────────────────────────────────────
+
+export function StatusTimeline(props: StatusTimelineProps) {
+  // ── mode = "service" ──
+  if (props.mode === "service") {
+    const t = useTranslations("bayView");
+    const { history } = props;
+
+    if (history.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-10 text-muted-foreground/50">
+          <HistoryIcon className="size-10 mb-2" />
+          <Typography.Text className="text-sm">
+            {t("noServiceHistory")}
+          </Typography.Text>
+          <Typography.Text className="text-xs mt-1">
+            {t("serviceRecordsHere")}
+          </Typography.Text>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col gap-0">
+        {history.map((entry, idx) => (
+          <ServiceTimelineEntry
+            key={entry.work_order_id}
+            entry={entry}
+            isLast={idx === history.length - 1}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  // ── mode = "status" ──
+  const { statusHistory, serviceHistory, t } = props;
   const hasStatusHistory = (statusHistory ?? []).length > 0;
   const hasServiceHistory = (serviceHistory ?? []).length > 0;
   const deduped = hasStatusHistory ? deduplicateHistory(statusHistory) : [];
@@ -257,7 +383,7 @@ export function StatusTimeline({
                           {isBackward && (
                             <RotateCcw className="inline size-3 mr-1 -mt-px" />
                           )}
-                          {h.previous_status} {"→"} {statusLabel}
+                          {h.previous_status} {"\u2192"} {statusLabel}
                         </Typography.Muted>
                       ) : null}
                       {h.notes ? (
@@ -330,7 +456,7 @@ export function StatusTimeline({
                                   </span>
                                   {service.price > 0 ? (
                                     <span className="font-mono text-muted-foreground/80 tabular-nums">
-                                      {service.price.toLocaleString()}₮
+                                      {service.price.toLocaleString()}\u20AE
                                     </span>
                                   ) : null}
                                 </span>
@@ -342,7 +468,7 @@ export function StatusTimeline({
                                 <p className="text-xs">{service.name}</p>
                                 {service.price > 0 ? (
                                   <p className="text-[10px] text-muted-foreground mt-0.5">
-                                    {service.price.toLocaleString()}₮
+                                    {service.price.toLocaleString()}\u20AE
                                   </p>
                                 ) : null}
                               </TooltipContent>
@@ -378,7 +504,7 @@ export function StatusTimeline({
                                   ) : null}
                                   {part.price > 0 ? (
                                     <span className="font-mono text-muted-foreground/80 tabular-nums">
-                                      {part.price.toLocaleString()}₮
+                                      {part.price.toLocaleString()}\u20AE
                                     </span>
                                   ) : null}
                                 </span>
@@ -393,7 +519,7 @@ export function StatusTimeline({
                                     {part.quantity > 1
                                       ? `${part.quantity} × `
                                       : ""}
-                                    {part.price.toLocaleString()}₮
+                                    {part.price.toLocaleString()}\u20AE
                                   </p>
                                 ) : null}
                               </TooltipContent>
@@ -411,7 +537,7 @@ export function StatusTimeline({
                             {t("workOrderTotal")}
                           </span>
                           <span className="font-semibold text-foreground/90 tabular-nums">
-                            {entry.total.toLocaleString()}₮
+                            {entry.total.toLocaleString()}\u20AE
                           </span>
                         </div>
                       ) : (

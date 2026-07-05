@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createLinkCode } from "@/lib/link-code";
+import { createServiceClient } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,15 +24,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { code, formatted } = createLinkCode(
+    const supabase = createServiceClient();
+    const result = await createLinkCode(
+      supabase,
       body.orgId,
       body.userId,
       body.productType,
     );
 
+    if (!result) {
+      return NextResponse.json(
+        { error: "Code generation failed" },
+        { status: 500 },
+      );
+    }
+
     return NextResponse.json({
-      code,
-      formatted,
+      code: result.code,
+      formatted: result.formatted,
       expiresInMinutes: 10,
     });
   } catch (err) {

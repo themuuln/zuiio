@@ -29,7 +29,7 @@ import { Typography } from "@/components/ui/typography";
 import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
 import { getDefaultTransferBank } from "@/lib/payments/org-bank-accounts";
 import type { BaySlotData } from "@/lib/services/bay-view-service";
-import { computeNextDueDate, computeNextDueKm, formatDate } from "./_helpers";
+import { computeNextDueDate, computeNextDueKm, formatDate, formatKm } from "./_helpers";
 import type {
   EnrichedServiceItem,
   WorkOrderPartItem,

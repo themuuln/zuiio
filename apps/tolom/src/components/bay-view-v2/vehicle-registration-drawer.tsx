@@ -10,7 +10,6 @@ import {
   MessageSquarePlus,
   Search,
   User,
-  Wrench,
   Zap,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -40,19 +39,15 @@ import { ColorSelect } from "@/components/vehicles/color-select";
 import { formatPlateInput } from "@/lib/form-ux";
 import { transliterateMongolianPlate } from "@/lib/form-validation";
 import { useForm, zodResolver } from "@/lib/hooks/use-form";
-import { formatMNT } from "@/lib/utils";
-import { STATUS_DOT } from "./_constants";
 import {
   EMPTY_LOOKUP,
-  formatDate,
-  formatTime,
   type LookupResult,
   resolveQueueIds,
   type SearchVehicleResult,
   type VehicleRegistrationFormValues,
   vehicleRegistrationSchema,
 } from "./_vehicle-registration-schema";
-
+import { StatusTimeline } from "./_status-timeline";
 // ── Types ──────────────────────────────────────────────────
 
 interface Props {
@@ -64,102 +59,6 @@ interface Props {
   branchId?: string;
 }
 
-// ── Service Timeline ───────────────────────────────────────
-
-function ServiceTimeline({
-  history,
-}: {
-  history: LookupResult["serviceHistory"];
-}) {
-  const t = useTranslations("bayView");
-  if (history.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-10 text-muted-foreground/50">
-        <HistoryIcon className="size-10 mb-2" />
-        <Typography.Text className="text-sm">
-          {t("noServiceHistory")}
-        </Typography.Text>
-        <Typography.Text className="text-xs mt-1">
-          {t("serviceRecordsHere")}
-        </Typography.Text>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-0">
-      {history.map((entry, idx) => {
-        const dotColor = STATUS_DOT[entry.status] ?? "bg-slate-400";
-        const isLast = idx === history.length - 1;
-
-        return (
-          <div key={entry.work_order_id} className="relative flex gap-3 pb-4">
-            {!isLast && (
-              <div className="absolute left-3 top-5 bottom-0 w-0.5 bg-border" />
-            )}
-
-            <div className="relative z-10 mt-1 shrink-0">
-              <div
-                className={`size-5 ${dotColor} ring-2 ring-background flex items-center justify-center`}
-              >
-                {entry.status === "Completed" ? (
-                  <CheckCircle2 className="size-3 text-white" />
-                ) : (
-                  <div className="size-2 bg-white" />
-                )}
-              </div>
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-semibold capitalize">
-                  {entry.status}
-                </span>
-                <span className="text-xs text-muted-foreground shrink-0">
-                  {formatDate(entry.created_at)} {formatTime(entry.created_at)}
-                </span>
-              </div>
-
-              {entry.complaint && (
-                <Typography.Muted className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                  {entry.complaint}
-                </Typography.Muted>
-              )}
-
-              {entry.services.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {entry.services.map((s) => (
-                    <span
-                      key={`${s.name}-${s.price}`}
-                      className="inline-flex items-center gap-1 bg-blue-500/10 px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400"
-                    >
-                      <Wrench className="size-3" />
-                      {s.name}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                {entry.total > 0 && (
-                  <span className="font-medium text-foreground/80">
-                    {formatMNT(entry.total)}
-                  </span>
-                )}
-                {entry.mechanic_name && (
-                  <span className="flex items-center gap-1">
-                    <User className="size-3" />
-                    {entry.mechanic_name}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 // ── Main Component ─────────────────────────────────────────
 
@@ -1108,7 +1007,7 @@ export function VehicleRegistrationDrawer({
                     )}
                   </div>
                 )}
-                <ServiceTimeline history={lookupResult.serviceHistory} />
+                <StatusTimeline mode="service" history={lookupResult.serviceHistory} />
               </ScrollArea>
             ) : (
               <div className="flex flex-col items-center justify-center py-16 text-muted-foreground/40">

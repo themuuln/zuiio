@@ -17,8 +17,7 @@ import { useOrgMutation } from "@zuiio/query";
 import { bayViewKeys, workOrderKeys } from "@/lib/queries/keys";
 import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
 import type { WorkOrderDetail } from "@/lib/types";
-import { useServiceMutations } from "./_use-service-mutations";
-import { usePartMutations } from "./_use-part-mutations";
+import { useCatalogMutations } from "./_use-catalog-mutations";
 import { useStatusMutations } from "./_use-status-mutations";
 import { useInvoiceMutations } from "./_use-invoice-mutations";
 import type { PaymentMethodFees } from "./_payment-fees";
@@ -89,7 +88,8 @@ export function useDrawerMutations({
     handleServicePriceSave,
     handleServiceQtySave,
     handleServiceDiscountSave,
-  } = useServiceMutations({
+  } = useCatalogMutations({
+    entity: "service",
     workOrderId,
     orgIdRef,
     orgId,
@@ -110,7 +110,8 @@ export function useDrawerMutations({
     handlePartPriceSave,
     handlePartQtySave,
     handlePartDiscountSave,
-  } = usePartMutations({
+  } = useCatalogMutations({
+    entity: "part",
     workOrderId,
     orgIdRef,
     orgId,

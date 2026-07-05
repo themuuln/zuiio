@@ -237,6 +237,7 @@ export function DrawerContentPanel({
                 style={{ "--stagger": 3 } as React.CSSProperties}
               >
                 <WorkOrderTimelineSection
+                  mode="status"
                   statusHistory={wo.status_history ?? []}
                   serviceHistory={wo.service_history ?? []}
                   t={t}
