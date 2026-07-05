@@ -6,17 +6,16 @@ import React, { useCallback, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { prefetchDrawerData } from "@/lib/queries/use-drawer-queries";
 import { cn } from "@/lib/utils";
-import { STATUS_ACCENT, URGENCY_CRITICAL, URGENCY_WARNING } from "./_constants";
-import { Plus } from "lucide-react";
-import { BayCardOccupied } from "./_bay-card-occupied";
 import { BayCardProvider } from "./_bay-card-context";
+import { BayCardEmptyState } from "./_bay-card-empty-state";
+import { BayCardOccupied } from "./_bay-card-occupied";
+import type { BayCardProps } from "./_bay-card-types";
 import { BayCardVehicleInfo } from "./_bay-card-vehicle-info";
 import { BayNumberLabel } from "./_bay-number-label";
 import { BayStatusBadge } from "./_bay-status-badge";
-import { MechanicDisplay } from "./_mechanic-display";
+import { STATUS_ACCENT, URGENCY_CRITICAL, URGENCY_WARNING } from "./_constants";
 import { elapsedMinutes } from "./_helpers";
-
-import type { BayCardProps } from "./_bay-card-types";
+import { MechanicDisplay } from "./_mechanic-display";
 
 export type { BayCardProps } from "./_bay-card-types";
 

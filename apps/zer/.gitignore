@@ -83,3 +83,55 @@ docs/.vitepress/cache/
 
 # zer-docs (separate git repo)
 /zer-docs/
+# AI agent / IDE config directories
+.adal/
+.agents/
+.aider-desk/
+.augment/
+.bob/
+.claude/
+.codeartsdoer/
+.codebuddy/
+.codemaker/
+.codestudio/
+.continue/
+.cortex/
+.documentizer/
+.factory/
+.forge/
+.github/
+.iflow/
+.junie/
+.kilocode/
+.kiro/
+.kode/
+.mcpjam/
+.mux/
+.neovate/
+.omp/
+.opencode/
+.openhands/
+.pi/
+.pochi/
+.qoder/
+.qwen/
+.roo/
+.rovodev/
+.senpi/
+.tabnine/
+.trae/
+.vibe/
+.vscode/
+.windsurf/
+.zencoder/
+
+# transient artifacts
+/console
+/errors
+/keyboard
+/snapshot
+*.png
+*-snapshot.md
+/tests.json
+codecept.conf.ts
+steps.d.ts
