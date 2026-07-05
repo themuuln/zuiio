@@ -18,10 +18,11 @@
     "sonner": "^2.0.7"
   },
   "devDependencies": {
-    "@types/node": "^26.0.1",
+    "@types/node": "^26.1.0",
     "@types/react": "^19.2.17",
     "husky": "^9.1.7",
-    "lint-staged": "^17.0.8"
+    "lint-staged": "^17.0.8",
+    "vitest": "^4.1.9"
   },
   "lint-staged": {
     "apps/zer/src/**/*.{ts,tsx}": [
