@@ -4,15 +4,9 @@
 [submodule "apps/card"]
 	path = apps/card
 	url = https://github.com/themuuln/card.git
-[submodule "apps/zer-packages"]
-	path = apps/zer-packages
-	url = https://github.com/themuuln/zer-packages.git
 [submodule "apps/tumurch"]
 	path = apps/tumurch
 	url = https://github.com/themuuln/tumurch.git
-[submodule "apps/zerbu"]
-	path = apps/zerbu
-	url = https://github.com/themuuln/zerbu.git
 [submodule "apps/zoa"]
 	path = apps/zoa
 	url = https://github.com/themuuln/zoa.git
@@ -46,9 +40,6 @@
 [submodule "apps/zer"]
 	path = apps/zer
 	url = https://github.com/themuuln/zer.git
-[submodule "apps/gym-locker"]
-	path = apps/gym-locker
-	url = https://github.com/themuuln/gym-locker.git
 [submodule "apps/tamga"]
 	path = apps/tamga
 	url = https://github.com/themuuln/tamga.git
