@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd ../.. && pnpm install --filter agent-gateway... && cd apps/agent-gateway && pnpm build",
+  "installCommand": "pnpm install --filter agent-gateway...",
+  "outputDirectory": ".next",
+  "framework": "nextjs"
+}
