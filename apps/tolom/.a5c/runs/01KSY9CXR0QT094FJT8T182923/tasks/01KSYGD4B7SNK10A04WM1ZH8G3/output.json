@@ -1,7 +1,0 @@
-{
-  "status": "completed",
-  "buildPassing": true,
-  "changes": [],
-  "buildError": null,
-  "note": "Items #72 (realtime) and #73 (PDF download) already implemented in codebase."
-}

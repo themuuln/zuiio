@@ -1,6 +1,0 @@
-{
-  "status": "failed",
-  "buildPassing": false,
-  "changes": [],
-  "buildError": "Agent timed out during research. Dashboard fixes not implemented."
-}

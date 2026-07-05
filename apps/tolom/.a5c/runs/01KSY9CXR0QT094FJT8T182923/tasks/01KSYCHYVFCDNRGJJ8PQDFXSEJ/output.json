@@ -1,6 +1,0 @@
-{
-  "status": "completed",
-  "buildPassing": true,
-  "changes": ["src/app/[locale]/dashboard/inventory/_components/movements-tab.tsx"],
-  "buildError": null
-}

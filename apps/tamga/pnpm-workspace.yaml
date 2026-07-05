@@ -1,9 +1,0 @@
-packages:
-  - "apps/*"
-
-allowBuilds:
-  '@google/genai': true
-  esbuild: true
-  koffi: true
-  protobufjs: true
-  puppeteer: true

@@ -9,7 +9,7 @@
 	url = https://github.com/themuuln/zer-packages.git
 [submodule "apps/tumurch"]
 	path = apps/tumurch
-	url = https://github.com/themuuln/tumurch-app
+	url = https://github.com/themuuln/tumurch.git
 [submodule "apps/zerbu"]
 	path = apps/zerbu
 	url = https://github.com/themuuln/zerbu.git
@@ -31,3 +31,33 @@
 [submodule "apps/zunch"]
 	path = apps/zunch
 	url = https://github.com/themuuln/zunch.git
+[submodule "apps/agent-gateway"]
+	path = apps/agent-gateway
+	url = https://github.com/themuuln/agent-gateway.git
+[submodule "apps/website"]
+	path = apps/website
+	url = https://github.com/themuuln/zuii-web.git
+[submodule "apps/zer-commission"]
+	path = apps/zer-commission
+	url = https://github.com/themuuln/zer-commission.git
+[submodule "apps/tolom"]
+	path = apps/tolom
+	url = https://github.com/themuuln/tolom.git
+[submodule "apps/zer"]
+	path = apps/zer
+	url = https://github.com/themuuln/zer.git
+[submodule "apps/gym-locker"]
+	path = apps/gym-locker
+	url = https://github.com/themuuln/gym-locker.git
+[submodule "apps/tamga"]
+	path = apps/tamga
+	url = https://github.com/themuuln/tamga.git
+[submodule "apps/tamga-web"]
+	path = apps/tamga-web
+	url = https://github.com/themuuln/tamga-web.git
+[submodule "apps/zatly"]
+	path = apps/zatly
+	url = https://github.com/themuuln/zatly.git
+[submodule "apps/zer-app"]
+	path = apps/zer-app
+	url = https://github.com/themuuln/zer-app.git

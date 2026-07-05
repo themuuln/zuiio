@@ -1,8 +1,0 @@
-{
-  "projectRoot": "/Users/themuuln/coding/personal/tamga",
-  "phases": ["cloud-repos", "sync-engine", "auth-tests", "horse-screens", "health-crud", "event-crud", "tests"],
-  "sprint": 2,
-  "description": "Sprint 2: Core Features MVP — Cloud repositories, sync engine, CRUD screens, full test suite",
-  "supabaseProject": "dgoqhlcqhpabbthamtrj",
-  "supabaseUrl": "https://dgoqhlcqhpabbthamtrj.supabase.co"
-}

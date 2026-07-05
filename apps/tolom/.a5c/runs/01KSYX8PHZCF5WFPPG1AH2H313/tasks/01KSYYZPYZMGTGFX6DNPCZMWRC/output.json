@@ -1,1 +1,0 @@
-{"files": ["src/components/bay-view-v2/device-registration-dialog.tsx", "src/app/[locale]/dashboard/organization/devices/page.tsx", "src/messages/en.json", "src/messages/mn.json"], "keysAdded": ["deviceRegistration.* (9 keys)", "deviceManagement.* (7 keys)"]}
