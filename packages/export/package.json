@@ -2,19 +2,17 @@
   "name": "@zuiio/export",
   "version": "0.1.0",
   "private": true,
-  "description": "Shared table export utilities — CSV, XLSX, DOCX, PDF generation",
-  "license": "MIT",
   "type": "module",
-  "main": "./src/index.ts",
-  "dependencies": {
-    "@pdf-lib/fontkit": "^1.1.1",
-    "docx": "^9.7.1",
-    "exceljs": "^4.4.0",
-    "pdf-lib": "^1.17.1"
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "exceljs": "^4"
   },
   "devDependencies": {
     "@zuiio/config": "workspace:*",
-    "@types/node": "^22",
+    "@types/node": "^20",
+    "exceljs": "^4",
     "typescript": "^5"
   }
 }

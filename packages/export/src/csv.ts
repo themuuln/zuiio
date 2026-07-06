@@ -1,44 +1,37 @@
-import type { ExportColumn } from "./types";
+export interface CsvColumn<T> {
+  header: string;
+  accessor: (row: T) => string | number | boolean | null | undefined;
+}
 
-/**
- * Sanitize a CSV cell value to prevent formula injection (CSV injection attack).
- * Prefixes dangerous leading characters (=, +, -, @) with a single quote.
- */
-function sanitizeCsvCell(str: string): string {
-  if (/^[=+\-@]/.test(str)) {
-    return `'${str}`;
+function escapeCsv(
+  value: string | number | boolean | null | undefined,
+): string {
+  if (value === null || value === undefined) return "";
+  const str = String(value);
+  if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+    return `"${str.replace(/"/g, '""')}"`;
   }
   return str;
 }
 
-/**
- * Convert an array of objects to a CSV string.
- *
- * @param rows   Array of data objects
- * @param columns  Column definitions (header + key)
- * @returns CSV string with header row followed by data rows
- */
-export function toCsv(
-  rows: Record<string, unknown>[],
-  columns: ExportColumn[],
-): string {
-  const headerRow = columns.map((c) => c.header).join(",");
+export function toCSV<T>(rows: T[], columns: CsvColumn<T>[]): string {
+  const header = columns.map((c) => escapeCsv(c.header)).join(",");
+  const body = rows
+    .map((row) => columns.map((c) => escapeCsv(c.accessor(row))).join(","))
+    .join("\n");
+  return `${header}\n${body}`;
+}
 
-  const dataRows = rows.map((row) =>
-    columns
-      .map((c) => {
-        const value = row[c.key];
-        if (value === null || value === undefined) return "";
-        const str = sanitizeCsvCell(String(value));
-        // Escape quotes and wrap in quotes if the value contains commas,
-        // double-quotes, or newlines
-        if (str.includes(",") || str.includes('"') || str.includes("\n")) {
-          return `"${str.replace(/"/g, '""')}"`;
-        }
-        return str;
-      })
-      .join(","),
-  );
+export function downloadCSV(csv: string, filename: string): void {
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+  downloadBlob(blob, filename.endsWith(".csv") ? filename : `${filename}.csv`);
+}
 
-  return `${headerRow}\n${dataRows.join("\n")}`;
+export function downloadBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
 }

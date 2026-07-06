@@ -49,20 +49,18 @@ export interface FormState {
  * Usage:
  * ```ts
  * type CreateSaleResult = ActionResult<{ saleId: string }>;
- * // → { success: true; data: { saleId: string } }
- * //   | { success: false; error: string; fieldErrors?: Record<string, string[]> }
+ * // → { success: true; data: { saleId: string } } | { success: false; error: string; fieldErrors?: Record<string, string[]> }
  * ```
  */
 export type ActionResult<T = void> =
   | { success: true; data: T }
   | { success: false; error: string; fieldErrors?: Record<string, string[]> };
 
-/** Create a successful action result. */
+/** Convenience constructors for ActionResult */
 export function ok<T>(data: T): ActionResult<T> {
   return { success: true, data };
 }
 
-/** Create an error action result. */
 export function err(
   error: string,
   fieldErrors?: Record<string, string[]>,

@@ -23,6 +23,32 @@ export interface DiscountResult {
   description: string;
 }
 
+function matchesSelectedProducts(
+  items: DiscountParams["items"],
+  conditions: DiscountCondition[],
+): boolean {
+  const productConditionValues = new Set(
+    conditions
+      .filter((c) => c.condition_type === "product")
+      .map((c) => c.condition_value),
+  );
+  return items.some((item) => productConditionValues.has(item.productId));
+}
+
+function matchesSelectedCategories(
+  items: DiscountParams["items"],
+  conditions: DiscountCondition[],
+): boolean {
+  const categoryConditionValues = new Set(
+    conditions
+      .filter((c) => c.condition_type === "category")
+      .map((c) => c.condition_value),
+  );
+  return items.some(
+    (item) => item.categoryId && categoryConditionValues.has(item.categoryId),
+  );
+}
+
 function getApplicableSubtotal(
   items: DiscountParams["items"],
   appliesTo: string,
@@ -128,5 +154,5 @@ export function calculateDiscount(params: DiscountParams): DiscountResult {
   return { discountAmount, totalAfterDiscount, description };
 }
 
-export { getApplicableSubtotal as matchesSelectedProducts };
-export { getApplicableSubtotal as matchesSelectedCategories };
+// Keep matchesSelectedProducts/Categories exported for direct use
+export { matchesSelectedProducts, matchesSelectedCategories };

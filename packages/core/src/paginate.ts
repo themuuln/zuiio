@@ -9,12 +9,10 @@ export function paginate(page: number, pageSize: number): PageRange {
   return { from, to: from + pageSize - 1 };
 }
 
-/** Total page count for pagination. */
 export function totalPages(totalCount: number, pageSize: number): number {
   return Math.ceil(totalCount / pageSize);
 }
 
-/** Whether there is another page after the current one. */
 export function hasNextPage(
   page: number,
   totalCount: number,

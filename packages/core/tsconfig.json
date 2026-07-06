@@ -1,8 +1,7 @@
 {
-  "extends": "@zuiio/config/tsconfig",
+  "extends": "@zer/config/tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "src"
   },
   "include": ["src"]
 }

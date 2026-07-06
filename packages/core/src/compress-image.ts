@@ -2,7 +2,6 @@ const MAX_DIMENSION = 1024;
 const QUALITY = 0.85;
 const OUTPUT_FORMAT = "image/webp";
 
-/** Client-side image compressor — resizes to MAX_DIMENSION, converts to WEBP. */
 export async function compressImage(file: File): Promise<File> {
   if (file.type === "image/svg+xml") return file;
 
@@ -16,6 +15,7 @@ export async function compressImage(file: File): Promise<File> {
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
+  // biome-ignore lint/style/noNonNullAssertion: 2d context is always available
   const ctx = canvas.getContext("2d")!;
   ctx.drawImage(bitmap, 0, 0, width, height);
   bitmap.close();

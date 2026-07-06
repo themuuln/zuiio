@@ -46,8 +46,8 @@ Each app has its own `AGENTS.md` with app-specific rules. Read them when working
 |---------|-------|-------------|--------------|
 | `branding` | Framework-agnostic | OKLch design tokens, globals.css source of truth | — |
 | `config` | Build | Shared tsconfig extended by all packages | — |
-| `core` | Framework-agnostic | Formatting, validation, errors, timezone, domain rules, UUID, form validation | date-fns |
-| `hooks` | React | Generic hooks: useDebounce, useDisclosure, useCopyToClipboard, etc. | react |
+| `core` | Framework-agnostic | Formatting, validation, errors, timezone, domain rules, UUID, form validation, **lookup utilities: `createLookup()` `createAggregatedLookup()`** (O(1) Map builders replacing array.find) | date-fns |
+| `hooks` | React | `useDebounce` `useDisclosure` `useCopyToClipboard` `useFuzzySearch` `useOnlineStatus` `useLocalStorage` `useIntersectionObserver`, **`useLookup()` `useAggregatedLookup()`** (memoized Map hooks) | react |
 | `query` | React/Next | React Query provider + optimistic CRUD hooks (FormData + JSON) | @tanstack/react-query, react |
 | `realtime` | React/Next | Supabase Realtime hooks: useRealtime, useRealtimeMulti | @supabase/supabase-js, @tanstack/react-query, react |
 | `ui` | React | HighlightText, toastRetry, form input props, Mongolian phone/plate formatting | react, sonner |
@@ -81,6 +81,7 @@ All apps consume `@zuiio/*` packages via `workspace:*` protocol inside this mono
 2. **React hook** → `@zuiio/hooks` (generic) or `@zuiio/query` (TanStack Query)
 3. **Mongolian business logic** → `@zuiio/core/src/domain-rules.ts` (validation) or `@zuiio/hr` (payroll)
 4. **UI component** → Not here. UI lives in each project's `src/components/`. Only pure utilities go in `@zuiio/ui`
+5. **⚠️ After adding any new export:** Update the Packages table above — add the new function/hook name to its package's Description column so agents discover it without reading every source file. Also add or update a `README.md` in the package root.
 
 ### Package structure
 

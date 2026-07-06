@@ -3,7 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useRef } from "react";
 
-export function QueryProvider({ children }: { children: any }) {
+export function QueryProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useRef<QueryClient>(
     new QueryClient({
       defaultOptions: {

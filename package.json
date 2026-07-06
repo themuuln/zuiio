@@ -8,7 +8,8 @@
     "dev:zer": "cd apps/zer && pnpm dev",
     "dev:tolom": "cd apps/tolom && pnpm dev",
     "typecheck": "tsc --noEmit",
-    "prepare": "husky"
+    "prepare": "husky",
+    "mcp:init": "npx tsx scripts/mcp-init.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.50.0",

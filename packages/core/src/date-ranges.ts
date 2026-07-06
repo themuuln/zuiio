@@ -1,14 +1,15 @@
-/**
- * Date-range helpers for report filters.
- * All functions return { from: string, to: string } in "yyyy-MM-dd" format.
- */
-
 import {
-  endOfMonth, endOfQuarter, endOfYear,
-  startOfMonth, startOfQuarter, startOfYear,
-  subMonths, subQuarters, subYears,
+  endOfMonth,
+  endOfQuarter,
+  endOfYear,
+  format,
+  startOfMonth,
+  startOfQuarter,
+  startOfYear,
+  subMonths,
+  subQuarters,
+  subYears,
 } from "date-fns";
-import { format } from "date-fns";
 
 export interface DateRange {
   from: string;
@@ -46,7 +47,6 @@ export function lastYear(now = new Date()): DateRange {
   return { from: fmt(startOfYear(prev)), to: fmt(endOfYear(prev)) };
 }
 
-/** Last N days (including today). */
 export function lastNDays(n: number, now = new Date()): DateRange {
   const from = new Date(now);
   from.setDate(from.getDate() - n + 1);

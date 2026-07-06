@@ -1,10 +1,7 @@
 {
-  "extends": "@zuiio/config/tsconfig",
+  "extends": "../config/tsconfig.base.json",
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "paths": {
-      "@zuiio/supabase": ["./src/index.ts"]
-    }
+    "outDir": "./dist"
   },
   "include": ["src"]
 }

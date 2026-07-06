@@ -8,25 +8,12 @@
     ".": "./src/index.ts"
   },
   "peerDependencies": {
-    "@tanstack/react-query": "^5.101.2",
-    "react": "^19.2.0",
+    "@tanstack/react-query": "^5",
+    "react": "^19",
     "sonner": "^2"
   },
-  "dependencies": {
-    "@zuiio/hooks": "workspace:*",
-    "@zuiio/offline": "workspace:*"
-  },
   "devDependencies": {
-    "@testing-library/react": "^16",
-    "@types/node": "^26",
-    "@types/react": "^19",
     "@zuiio/config": "workspace:*",
-    "jsdom": "^26",
-    "typescript": "^5",
-    "vitest": "^3"
-  },
-  "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "typescript": "^5"
   }
 }
