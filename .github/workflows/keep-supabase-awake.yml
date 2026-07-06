@@ -68,19 +68,29 @@ jobs:
             KEY=$(echo "$project" | jq -r '.anon_key')
             TOTAL=$((TOTAL + 1))
 
-            # Hit the REST API with the anon key to generate DB activity
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-              "https://${REF}.supabase.co/rest/v1/" \
+            # Hit the REST API profiles table — built-in Supabase Auth table,
+            # returns 200 with a valid anon key and generates DB activity.
+            # No Authorization header needed; apikey is sufficient.
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+              "https://${REF}.supabase.co/rest/v1/profiles" \
               -H "apikey: ${KEY}" \
-              -H "Authorization: Bearer ${KEY}" \
-              < /dev/null)
+              --connect-timeout 10 \
+              --max-time 15 \
+              2>/dev/null) || HTTP_CODE="000"
 
-            if [ "$STATUS" = "200" ]; then
+            if [ "$HTTP_CODE" = "200" ]; then
               echo "✓ ${REF} — awake (HTTP 200)"
+            elif [ "$HTTP_CODE" = "000" ]; then
+              echo "✗ ${REF} — unreachable (DNS failure — project likely paused)"
+              FAILED=$((FAILED + 1))
+            elif [ "$HTTP_CODE" = "401" ]; then
+              echo "✗ ${REF} — HTTP 401 (wrong anon key)"
+              FAILED=$((FAILED + 1))
             else
-              echo "✗ ${REF} — HTTP ${STATUS}"
+              echo "✗ ${REF} — HTTP ${HTTP_CODE}"
               FAILED=$((FAILED + 1))
             fi
+
           done < /tmp/supabase-projects.txt
 
           echo "---"
