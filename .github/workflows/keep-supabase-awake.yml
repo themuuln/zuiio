@@ -1,0 +1,89 @@
+# Keep Supabase Free-Tier Projects Awake
+#
+# Supabase pauses free-plan projects after ~7 days of insufficient database
+# activity. This workflow pings every known project's REST API once daily to
+# generate legitimate activity and prevent auto-pausing.
+#
+# ── Setup ─────────────────────────────────────────────────────────────────
+# 1. Go to GitHub repo → Settings → Secrets and variables → Actions
+# 2. Add a repository secret named SUPABASE_PROJECTS with this shape:
+#
+#    [
+#      {"ref":"krrkhozadforrydffegg","anon_key":"eyJ..."},
+#      {"ref":"fhzuolncswccxkcqzclg","anon_key":"eyJ..."},
+#      ...
+#    ]
+#
+#    The anon key is the "publishable" / "anon" key from
+#    Supabase Dashboard → Project Settings → API. It is safe to share
+#    (it ships inside client apps) but should still be kept in Secrets.
+#
+# 3. Commit this file. The workflow runs daily at 06:00 UTC.
+#
+# ── Ref map ────────────────────────────────────────────────────────────────
+# krrkhozadforrydffegg  — zer / zer-app / agent-gateway
+# fhzuolncswccxkcqzclg  — tolom
+# kycpnpoaowcvxrauodgi  — zill
+# rjzrnuddfjwbmxacclga  — khosuud
+# gtacoxsmlkkofeqcvlqw  — zerbu
+# oxnvbgdlhrgzzuyrnebf  — tumurch
+# ijeuxmgktfqtukpmnenh  — zatly
+# dgoqhlcqhpabbthamtrj  — tamga
+# jzmnaovcbwjitxfjxxcu  — zunch
+# ragiqcisavdryiqckrrb  — card (no committed env yet)
+# --------------------------------------------------------------------------
+
+name: Keep Supabase Projects Awake
+
+on:
+  schedule:
+    # Daily at 06:00 UTC — more than enough to stay active
+    - cron: '0 6 * * *'
+  # Allow manual trigger from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping all Supabase projects
+        env:
+          PROJECTS_JSON: ${{ secrets.SUPABASE_PROJECTS }}
+        run: |
+          if [ -z "$PROJECTS_JSON" ]; then
+            echo "::error::SUPABASE_PROJECTS secret is not set."
+            echo "::error::Go to Settings → Secrets and variables → Actions and add it."
+            echo "::error::Format: [{\"ref\":\"xxx\",\"anon_key\":\"eyJ...\"},...]"
+            exit 1
+          fi
+
+          # Write to temp file to avoid subshell scoping
+          echo "$PROJECTS_JSON" | jq -c '.[]' > /tmp/supabase-projects.txt
+
+          TOTAL=0
+          FAILED=0
+
+          while read -r project; do
+            REF=$(echo "$project" | jq -r '.ref')
+            KEY=$(echo "$project" | jq -r '.anon_key')
+            TOTAL=$((TOTAL + 1))
+
+            # Hit the REST API with the anon key to generate DB activity
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              "https://${REF}.supabase.co/rest/v1/" \
+              -H "apikey: ${KEY}" \
+              -H "Authorization: Bearer ${KEY}")
+
+            if [ "$STATUS" = "200" ]; then
+              echo "✓ ${REF} — awake (HTTP 200)"
+            else
+              echo "✗ ${REF} — HTTP ${STATUS}"
+              FAILED=$((FAILED + 1))
+            fi
+          done < /tmp/supabase-projects.txt
+
+          echo "---"
+          echo "Pinged ${TOTAL} project(s), ${FAILED} failed."
+          if [ "$FAILED" -gt 0 ]; then
+            exit 1
+          fi
