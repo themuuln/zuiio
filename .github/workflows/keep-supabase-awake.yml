@@ -72,7 +72,8 @@ jobs:
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
               "https://${REF}.supabase.co/rest/v1/" \
               -H "apikey: ${KEY}" \
-              -H "Authorization: Bearer ${KEY}")
+              -H "Authorization: Bearer ${KEY}" \
+              < /dev/null)
 
             if [ "$STATUS" = "200" ]; then
               echo "✓ ${REF} — awake (HTTP 200)"
