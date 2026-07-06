@@ -56,7 +56,7 @@ export async function chatCompletion(
 
  const json = await response.json();
  const message = json.choices?.[0]?.message;
- const content: string | undefined = message?.content || message?.reasoning_content;
+const content: string | undefined = message?.content;
  if (!content) {
   throw new Error("DeepSeek API returned empty response");
  }

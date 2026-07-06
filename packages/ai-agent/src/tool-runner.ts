@@ -169,10 +169,10 @@ export async function runWithTools(opts: RunWithToolsOpts): Promise<string> {
    );
   }
 
-  // Track any text content in this response (supports reasoning models)
-  const rawMsg = message as unknown as Record<string, unknown>;
-  if (message.content || rawMsg.reasoning_content) {
-   lastContent = (message.content || rawMsg.reasoning_content) as string;
+  // Track text content — NEVER use reasoning_content as response fallback
+  // (reasoning_content is the model's chain-of-thought, not the final answer)
+  if (message.content) {
+   lastContent = message.content;
   }
 
   // No tool calls → we're done
