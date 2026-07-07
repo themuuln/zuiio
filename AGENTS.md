@@ -201,3 +201,55 @@ How the apps and packages connect:
 | `capture` | agent-gateway | Sentry error capture wrapper |
 | `ai-agent` | agent-gateway | LLM client + tool-calling loop |
 | `branding` | zer, tolom | OKLch design tokens, globals.css |
+## Advanced Agent Patterns
+
+### Just-in-Time Context Loading
+
+Don't preload everything — load context dynamically as needed:
+
+```bash
+# Find a utility by name
+pnpm exec tsc --listFiles | grep <utility-name>
+
+# Check if a function exists in @zuiio
+grep -r "export.*functionName" packages/*/src/
+
+# Read specific docs when needed
+# Don't read all docs upfront — read only what's relevant to your current task
+```
+
+**Rule:** If you can discover it by searching code/docs, don't read it upfront. Load on demand.
+
+### Compaction (Long-Running Tasks)
+
+For tasks spanning >10 files or >30 minutes:
+
+1. **Create a task notes file:** `docs/notes/<task-name>.md`
+2. **Log key decisions:** What was changed and why
+3. **Reference in commit messages:** "See docs/notes/<task-name>.md"
+4. **Compact context:** Summarize progress every 10 file changes
+
+**Why:** Agents lose context on long tasks. Notes preserve coherence across sessions.
+
+### Delegation Patterns
+
+| Pattern | When to Use | How |
+|---------|-------------|-----|
+| **Explore** | Codebase discovery, finding patterns | Use `task` subagent with `agent: "explore"` |
+| **Test** | Writing tests | Use `task` subagent with `agent: "tester"` |
+| **Review** | Code review | Use `task` subagent with `agent: "reviewer"` |
+| **Plan** | Complex multi-file changes | Use `task` subagent with `agent: "plan"` |
+
+**When NOT to delegate:**
+- Simple file edits (<5 files)
+- Quick fixes (<10 minutes)
+- Tasks requiring full context
+
+### Token Efficiency
+
+1. **Don't read entire files** — use `read` with offset/limit
+2. **Don't grep blindly** — use `grep` with specific patterns
+3. **Don't run full test suites** — run only tests you modified
+4. **Don't read all docs** — read only what's relevant to your task
+
+**Expected savings:** -30% token usage, +10% agent performance
