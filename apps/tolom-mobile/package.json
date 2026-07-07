@@ -1,0 +1,48 @@
+{
+  "name": "tolom-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "dev": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "lint": "biome check",
+    "format": "biome format --write",
+    "validate:types": "tsc --noEmit",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^14.0.0",
+    "@react-navigation/native": "^7.0.0",
+    "@supabase/supabase-js": "^2.110.0",
+    "@tanstack/react-query": "^5.0.0",
+    "@zuiio/auth": "workspace:*",
+    "@zuiio/branding": "workspace:*",
+    "@zuiio/core": "workspace:*",
+    "@zuiio/hooks": "workspace:*",
+    "@zuiio/query": "workspace:*",
+    "@zuiio/supabase": "workspace:*",
+    "expo": "~52.0.0",
+    "expo-font": "~13.0.0",
+    "expo-router": "~4.0.0",
+    "expo-secure-store": "~14.0.0",
+    "expo-splash-screen": "~0.29.0",
+    "expo-status-bar": "~2.0.0",
+    "nativewind": "^4.0.0",
+    "react": "18.3.1",
+    "react-native": "0.76.0",
+    "react-native-gesture-handler": "~2.20.0",
+    "react-native-reanimated": "~3.16.0",
+    "react-native-safe-area-context": "4.12.0",
+    "react-native-screens": "~4.1.0",
+    "tailwindcss": "^3.4.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.16",
+    "@types/react": "~18.3.0",
+    "jest": "^29.0.0",
+    "typescript": "^5.9.3"
+  }
+}
