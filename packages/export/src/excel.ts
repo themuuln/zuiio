@@ -1,4 +1,8 @@
-import type { CsvColumn } from "./csv";
+/** Column definition with typed accessor — used by Excel export. */
+interface CsvColumn<T> {
+  header: string;
+  accessor: (row: T) => string | number | boolean | null | undefined;
+}
 
 export interface ExcelOptions {
   sheetName?: string;

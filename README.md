@@ -1,6 +1,6 @@
-# @zuiio — Mongolian Business Software
+# @zuiio — Mongolian Software and Apps
 
-**Private monorepo** serving two Mongolian business apps: **Zer** (SMB ERP) and **Tolom** (auto repair shop management), plus the **Zuiio company website**.
+**Private monorepo** for Zuiio, a Mongolian software and app company building both organization tools and consumer products. The portfolio includes B2B systems such as ERP, POS, CRM, service management, gym/workout operations, and shop workflows, plus consumer apps such as **Tamga**, **Tumurch**, and future lifestyle products.
 
 ```
 zuiio/

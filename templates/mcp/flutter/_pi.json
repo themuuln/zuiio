@@ -1,0 +1,32 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "url": "https://mcp.supabase.com/mcp?project_ref={{PROJECT_REF}}&read_only=false&features={{SUPABASE_FEATURES}}",
+      "auth": "oauth",
+      "oauth": {
+        "grantType": "authorization_code",
+        "authorizationUrl": "https://api.supabase.com/v1/oauth/authorize",
+        "tokenUrl": "https://api.supabase.com/v1/oauth/token",
+        "clientId": "9002aaf9-04b7-4757-8fb8-0d9fa91b44bf",
+        "scopes": [
+          "organizations:read",
+          "projects:read",
+          "projects:write",
+          "database:write",
+          "database:read",
+          "analytics:read",
+          "secrets:read",
+          "edge_functions:read",
+          "edge_functions:write",
+          "environment:read",
+          "environment:write",
+          "storage:read"
+        ]
+      }
+    },
+    "dart": {
+      "command": "dart",
+      "args": ["mcp-server", "--force-roots-fallback"]
+    }
+  }
+}

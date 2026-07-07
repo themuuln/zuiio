@@ -2,7 +2,7 @@
 
 ## What we're building
 
-zuiio is a family of software products — SaaS platforms and consumer applications — built under one coherent brand. Every product shares the same design language, engineering standards, and philosophy, but ships independently and serves its own users.
+zuiio is a family of software products — B2B platforms and consumer applications — built under one coherent brand. Business products cover ERP, POS, CRM, service management, gym/workout operations, and shop workflows for organizations. Consumer products include apps such as Tamga, Tumurch, and future lifestyle products. Every product shares the same design language, engineering standards, and philosophy, but ships independently and serves its own users.
 
 ## Why it exists
 
@@ -27,12 +27,14 @@ Most software is either too generic to be useful or too narrow to grow. We build
 
 ## Products
 
-Each product lives under `apps/` and shares the `@zuiio` package ecosystem.
+Each product lives under `apps/` or a sibling product repo and shares the `@zuiio` package ecosystem where it helps.
 
-| Product | Status | Description |
-|---------|--------|-------------|
-| Customer App | scaffolded | React Native + Expo mobile app (consumer-facing) |
-| _(web product)_ | planning | Next.js web app (SaaS) |
+| Product | Audience | Description |
+|---------|----------|-------------|
+| Zer | Organizations | ERP/POS operations for Mongolian SMEs. |
+| Tolom | Organizations | Auto repair shop management. |
+| Tumurch | Consumers + organizations | Client workout and calorie tracking, plus ERP/CRM/shop workflows for organizations. |
+| Tamga | Consumers | Consumer app under the Zuiio product family. |
 
 ---
 

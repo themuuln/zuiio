@@ -1,0 +1,15 @@
+{
+  "qualityThreshold": 80,
+  "testCoverage": 60,
+  "linting": {
+    "tool": "biome",
+    "command": "biome check",
+    "configFile": "biome.json"
+  },
+  "formatting": {
+    "tool": "biome",
+    "command": "biome format --write"
+  },
+  "commitChecks": ["biome check"],
+  "deployGates": ["biome check", "next build"]
+}

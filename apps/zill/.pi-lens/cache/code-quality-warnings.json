@@ -1,0 +1,41 @@
+{
+  "generatedAt": "2026-05-27T10:50:41.496Z",
+  "scope": "turn_delta",
+  "sessionId": "lens-mpnsz866-17c960b1",
+  "turnIndex": 267,
+  "projectSeqStart": 159,
+  "projectSeqEnd": 164,
+  "deltaOnly": true,
+  "files": [
+    {
+      "filePath": "/Users/themuuln/coding/personal/zill/src/app/api/force-unlock/route.ts",
+      "displayPath": "src/app/api/force-unlock/route.ts",
+      "fileSeq": 7,
+      "warnings": [
+        {
+          "id": "cq:14ed98eec9",
+          "filePath": "/Users/themuuln/coding/personal/zill/src/app/api/force-unlock/route.ts",
+          "displayPath": "src/app/api/force-unlock/route.ts",
+          "line": 35,
+          "column": 7,
+          "severity": "warning",
+          "tool": "no-complex-conditionals",
+          "rule": "no-complex-conditionals",
+          "message": "Condition has 3 logical operators (max: 2) — extract sub-conditions to named variables",
+          "category": "maintainability",
+          "origin": "dispatch"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "warnings": 1,
+    "files": 1,
+    "topRules": [
+      {
+        "rule": "no-complex-conditionals",
+        "count": 1
+      }
+    ]
+  }
+}

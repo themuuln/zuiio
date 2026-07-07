@@ -412,14 +412,24 @@ function radiusLines(radius: number): string[] {
 }
 
 export function contrastForeground(cssColor: string): string | undefined {
-  if (!/^#[0-9a-fA-F]{6}$/.test(cssColor)) return undefined;
+  // Hex — compute luminance from RGB channels
+  if (/^#[0-9a-fA-F]{6}$/.test(cssColor)) {
+    const c = cssColor.replace("#", "");
+    const r = parseInt(c.slice(0, 2), 16) / 255;
+    const g = parseInt(c.slice(2, 4), 16) / 255;
+    const b = parseInt(c.slice(4, 6), 16) / 255;
+    const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+    return luminance > 0.5 ? "oklch(0.15 0.02 0)" : "oklch(0.98 0.01 0)";
+  }
 
-  const c = cssColor.replace("#", "");
-  const r = parseInt(c.slice(0, 2), 16) / 255;
-  const g = parseInt(c.slice(2, 4), 16) / 255;
-  const b = parseInt(c.slice(4, 6), 16) / 255;
-  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-  return luminance > 0.5 ? "oklch(0.15 0.02 0)" : "oklch(0.98 0.01 0)";
+  // Oklch — L value directly represents perceived lightness
+  const oklchMatch = cssColor.match(/^oklch\(([\d.]+)\s/);
+  if (oklchMatch) {
+    const l = parseFloat(oklchMatch[1]);
+    return l > 0.5 ? "oklch(0.15 0.02 0)" : "oklch(0.98 0.01 0)";
+  }
+
+  return undefined;
 }
 
 const VALID_COLOR_RE =

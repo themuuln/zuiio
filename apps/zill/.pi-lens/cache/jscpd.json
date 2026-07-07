@@ -1,0 +1,32 @@
+{
+  "success": true,
+  "clones": [
+    {
+      "fileA": "src/app/join/[id]/item-select.tsx",
+      "startA": 452,
+      "fileB": "src/app/join/[id]/item-select.tsx",
+      "startB": 338,
+      "lines": 28,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/confirm-selection/route.ts",
+      "startA": 2,
+      "fileB": "src/app/api/save-selection/route.ts",
+      "startB": 2,
+      "lines": 8,
+      "tokens": 0
+    },
+    {
+      "fileA": "src/app/api/confirm-selection/route.ts",
+      "startA": 9,
+      "fileB": "src/app/api/save-selection/route.ts",
+      "startB": 10,
+      "lines": 14,
+      "tokens": 0
+    }
+  ],
+  "duplicatedLines": 47,
+  "totalLines": 3957,
+  "percentage": 1.19
+}

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json",
+  "mcpServers": {
+    "next-devtools": {
+      "command": "npx",
+      "args": ["next-devtools-mcp"]
+    },
+    "sentry": {
+      "command": "npx",
+      "args": ["@sentry/mcp-server@latest"],
+      "env": {
+        "SENTRY_ACCESS_TOKEN": "${SENTRY_ACCESS_TOKEN}"
+      }
+    },
+    "vercel": {
+      "transport": "streamable-http",
+      "url": "https://mcp.vercel.com",
+      "headers": {
+        "Authorization": "Bearer ${VERCEL_TOKEN}"
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref={{PROJECT_REF}}&features={{SUPABASE_FEATURES}}",
+      "auth": {
+        "type": "oauth",
+        "credentialId": "mcp_oauth:profile:default:https://mcp.supabase.com/mcp?project_ref={{PROJECT_REF}}&features={{SUPABASE_FEATURES}}",
+        "tokenUrl": "https://api.supabase.com/v1/oauth/token",
+        "clientId": "039a5278-a8f9-4f42-aa5b-73b7eb6759d6",
+        "resource": "https://mcp.supabase.com/mcp?project_ref={{PROJECT_REF}}&features={{SUPABASE_FEATURES}}"
+      },
+      "oauth": {
+        "clientId": "039a5278-a8f9-4f42-aa5b-73b7eb6759d6"
+      }
+    }
+  }
+}

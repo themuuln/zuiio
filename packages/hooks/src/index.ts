@@ -3,3 +3,7 @@ export * from "./use-debounce";
 export * from "./use-disclosure";
 export * from "./use-intersection-observer";
 export * from "./use-local-storage";
+export * from "./use-fuzzy-search";
+export * from "./use-lookup";
+export * from "./use-online-status";
+export * from "./use-table-filters";

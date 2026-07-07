@@ -1,0 +1,449 @@
+{
+  "version": 1,
+  "projectRoot": "/Users/themuuln/coding/personal/zill",
+  "generatedAt": "2026-05-27T10:50:40.725Z",
+  "seq": 67,
+  "files": {
+    "/Users/themuuln/coding/personal/zill/eslint.config.mjs": {
+      "path": "/Users/themuuln/coding/personal/zill/eslint.config.mjs",
+      "mtimeMs": 1779852213744.5828,
+      "size": 465,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/next.config.ts": {
+      "path": "/Users/themuuln/coding/personal/zill/next.config.ts",
+      "mtimeMs": 1779852213769.0896,
+      "size": 133,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/postcss.config.mjs": {
+      "path": "/Users/themuuln/coding/personal/zill/postcss.config.mjs",
+      "mtimeMs": 1779852213820.4429,
+      "size": 94,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/app/actions.ts": {
+      "path": "/Users/themuuln/coding/personal/zill/src/app/actions.ts",
+      "mtimeMs": 1779868599443.3296,
+      "size": 2363,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/app/api/confirm-selection/route.ts": {
+      "path": "/Users/themuuln/coding/personal/zill/src/app/api/confirm-selection/route.ts",
+      "mtimeMs": 1779869634275.967,
+      "size": 974,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/app/api/create-split/route.ts": {
+      "path": "/Users/themuuln/coding/personal/zill/src/app/api/create-split/route.ts",
+      "mtimeMs": 1779868599197.8877,
+      "size": 1376,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/app/api/save-selection/route.ts": {
+      "path": "/Users/themuuln/coding/personal/zill/src/app/api/save-selection/route.ts",
+      "mtimeMs": 1779869633937.1226,
+      "size": 1077,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/app/globals.css": {
+      "path": "/Users/themuuln/coding/personal/zill/src/app/globals.css",
+      "mtimeMs": 1779864459001.0867,
+      "size": 2034,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/app/join/[id]/identity-select.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/app/join/[id]/identity-select.tsx",
+      "mtimeMs": 1779869634280.4856,
+      "size": 3714,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/app/join/[id]/item-select.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/app/join/[id]/item-select.tsx",
+      "mtimeMs": 1779869634308.449,
+      "size": 15429,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/app/join/[id]/page.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/app/join/[id]/page.tsx",
+      "mtimeMs": 1779869634300.067,
+      "size": 2182,
+      "imports": [
+        "/Users/themuuln/coding/personal/zill/src/app/join/[id]/identity-select.tsx",
+        "/Users/themuuln/coding/personal/zill/src/app/join/[id]/item-select.tsx"
+      ],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/app/layout.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/app/layout.tsx",
+      "mtimeMs": 1779864584242.1711,
+      "size": 1141,
+      "imports": [
+        "/Users/themuuln/coding/personal/zill/src/app/globals.css"
+      ],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/app/page.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/app/page.tsx",
+      "mtimeMs": 1779868599498.1082,
+      "size": 6185,
+      "imports": [
+        "/Users/themuuln/coding/personal/zill/src/app/actions.ts"
+      ],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/app/split/[id]/page.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/app/split/[id]/page.tsx",
+      "mtimeMs": 1779868599240.0032,
+      "size": 1048,
+      "imports": [
+        "/Users/themuuln/coding/personal/zill/src/app/split/[id]/review-gate.tsx",
+        "/Users/themuuln/coding/personal/zill/src/app/split/[id]/share-screen.tsx"
+      ],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/app/split/[id]/share-screen.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/app/split/[id]/share-screen.tsx",
+      "mtimeMs": 1779869634069.7173,
+      "size": 7395,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/app/split/new/page.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/app/split/new/page.tsx",
+      "mtimeMs": 1779868599469.42,
+      "size": 820,
+      "imports": [
+        "/Users/themuuln/coding/personal/zill/src/app/split/new/split-form.tsx"
+      ],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/app/split/new/split-form.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/app/split/new/split-form.tsx",
+      "mtimeMs": 1779868599569.4028,
+      "size": 8627,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/components/ui/avatar.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/components/ui/avatar.tsx",
+      "mtimeMs": 1779864479013.906,
+      "size": 3038,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/components/ui/badge.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/components/ui/badge.tsx",
+      "mtimeMs": 1779864479049.9573,
+      "size": 1925,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/components/ui/button.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/components/ui/button.tsx",
+      "mtimeMs": 1779864441984.2488,
+      "size": 3197,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/components/ui/card.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/components/ui/card.tsx",
+      "mtimeMs": 1779864478936.7642,
+      "size": 2641,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/components/ui/dialog.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/components/ui/dialog.tsx",
+      "mtimeMs": 1779864479233.8918,
+      "size": 4075,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/components/ui/input.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/components/ui/input.tsx",
+      "mtimeMs": 1779864478976.6687,
+      "size": 1040,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/components/ui/separator.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/components/ui/separator.tsx",
+      "mtimeMs": 1779864479085.1152,
+      "size": 545,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/components/ui/sheet.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/components/ui/sheet.tsx",
+      "mtimeMs": 1779864479280.4358,
+      "size": 4433,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/components/ui/sonner.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/components/ui/sonner.tsx",
+      "mtimeMs": 1779864479142.7556,
+      "size": 1226,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/lib/calc.ts": {
+      "path": "/Users/themuuln/coding/personal/zill/src/lib/calc.ts",
+      "mtimeMs": 1779870671070.9268,
+      "size": 3464,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/lib/store.ts": {
+      "path": "/Users/themuuln/coding/personal/zill/src/lib/store.ts",
+      "mtimeMs": 1779869634272.272,
+      "size": 3954,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/lib/utils.ts": {
+      "path": "/Users/themuuln/coding/personal/zill/src/lib/utils.ts",
+      "mtimeMs": 1779864442029.9658,
+      "size": 166,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/app/api/force-unlock/route.ts": {
+      "path": "/Users/themuuln/coding/personal/zill/src/app/api/force-unlock/route.ts",
+      "mtimeMs": 1779870692791.0347,
+      "size": 1132,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/app/split/[id]/review-gate.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/app/split/[id]/review-gate.tsx",
+      "mtimeMs": 1779870801429.7864,
+      "size": 21295,
+      "imports": [
+        "/Users/themuuln/coding/personal/zill/src/app/split/[id]/celebration-reveal.tsx",
+        "/Users/themuuln/coding/personal/zill/src/app/split/[id]/review-summary.tsx",
+        "/Users/themuuln/coding/personal/zill/src/app/split/[id]/rounding-step.tsx",
+        "/Users/themuuln/coding/personal/zill/src/app/split/[id]/settlement-step.tsx"
+      ],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/lib/split-status.ts": {
+      "path": "/Users/themuuln/coding/personal/zill/src/lib/split-status.ts",
+      "mtimeMs": 1779871276756.1543,
+      "size": 1133,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/app/split/[id]/review-summary.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/app/split/[id]/review-summary.tsx",
+      "mtimeMs": 1779871330633.5593,
+      "size": 4407,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/app/split/[id]/celebration-reveal.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/app/split/[id]/celebration-reveal.tsx",
+      "mtimeMs": 1779871346379.786,
+      "size": 3469,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/app/split/[id]/rounding-step.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/app/split/[id]/rounding-step.tsx",
+      "mtimeMs": 1779871364774.9856,
+      "size": 3980,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/app/split/[id]/settlement-step.tsx": {
+      "path": "/Users/themuuln/coding/personal/zill/src/app/split/[id]/settlement-step.tsx",
+      "mtimeMs": 1779871388222.6316,
+      "size": 7322,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/app/api/delete-split/route.ts": {
+      "path": "/Users/themuuln/coding/personal/zill/src/app/api/delete-split/route.ts",
+      "mtimeMs": 1779873847241.697,
+      "size": 917,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/lib/db.ts": {
+      "path": "/Users/themuuln/coding/personal/zill/src/lib/db.ts",
+      "mtimeMs": 1779874006021.2913,
+      "size": 3895,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/lib/supabase/client.ts": {
+      "path": "/Users/themuuln/coding/personal/zill/src/lib/supabase/client.ts",
+      "mtimeMs": 1779878326202.3372,
+      "size": 219,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/lib/supabase/middleware.ts": {
+      "path": "/Users/themuuln/coding/personal/zill/src/lib/supabase/middleware.ts",
+      "mtimeMs": 1779878399374.1719,
+      "size": 259,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/lib/supabase/server.ts": {
+      "path": "/Users/themuuln/coding/personal/zill/src/lib/supabase/server.ts",
+      "mtimeMs": 1779878326277.1067,
+      "size": 942,
+      "imports": [],
+      "lastSeq": 0
+    },
+    "/Users/themuuln/coding/personal/zill/src/lib/supabase/admin.ts": {
+      "path": "/Users/themuuln/coding/personal/zill/src/lib/supabase/admin.ts",
+      "mtimeMs": 1779878853722.9292,
+      "size": 452,
+      "imports": [],
+      "lastSeq": 0
+    }
+  },
+  "symbols": {},
+  "reverseDeps": {
+    "/Users/themuuln/coding/personal/zill/eslint.config.mjs": [],
+    "/Users/themuuln/coding/personal/zill/next.config.ts": [],
+    "/Users/themuuln/coding/personal/zill/postcss.config.mjs": [],
+    "/Users/themuuln/coding/personal/zill/src/app/actions.ts": [
+      "/Users/themuuln/coding/personal/zill/src/app/page.tsx"
+    ],
+    "/Users/themuuln/coding/personal/zill/src/app/api/confirm-selection/route.ts": [],
+    "/Users/themuuln/coding/personal/zill/src/app/api/create-split/route.ts": [],
+    "/Users/themuuln/coding/personal/zill/src/app/api/delete-split/route.ts": [],
+    "/Users/themuuln/coding/personal/zill/src/app/api/force-unlock/route.ts": [],
+    "/Users/themuuln/coding/personal/zill/src/app/api/save-selection/route.ts": [],
+    "/Users/themuuln/coding/personal/zill/src/app/globals.css": [
+      "/Users/themuuln/coding/personal/zill/src/app/layout.tsx"
+    ],
+    "/Users/themuuln/coding/personal/zill/src/app/join/[id]/identity-select.tsx": [
+      "/Users/themuuln/coding/personal/zill/src/app/join/[id]/page.tsx"
+    ],
+    "/Users/themuuln/coding/personal/zill/src/app/join/[id]/item-select.tsx": [
+      "/Users/themuuln/coding/personal/zill/src/app/join/[id]/page.tsx"
+    ],
+    "/Users/themuuln/coding/personal/zill/src/app/join/[id]/page.tsx": [],
+    "/Users/themuuln/coding/personal/zill/src/app/layout.tsx": [],
+    "/Users/themuuln/coding/personal/zill/src/app/page.tsx": [],
+    "/Users/themuuln/coding/personal/zill/src/app/split/[id]/celebration-reveal.tsx": [
+      "/Users/themuuln/coding/personal/zill/src/app/split/[id]/review-gate.tsx"
+    ],
+    "/Users/themuuln/coding/personal/zill/src/app/split/[id]/page.tsx": [],
+    "/Users/themuuln/coding/personal/zill/src/app/split/[id]/review-gate.tsx": [
+      "/Users/themuuln/coding/personal/zill/src/app/split/[id]/page.tsx"
+    ],
+    "/Users/themuuln/coding/personal/zill/src/app/split/[id]/review-summary.tsx": [
+      "/Users/themuuln/coding/personal/zill/src/app/split/[id]/review-gate.tsx"
+    ],
+    "/Users/themuuln/coding/personal/zill/src/app/split/[id]/rounding-step.tsx": [
+      "/Users/themuuln/coding/personal/zill/src/app/split/[id]/review-gate.tsx"
+    ],
+    "/Users/themuuln/coding/personal/zill/src/app/split/[id]/settlement-step.tsx": [
+      "/Users/themuuln/coding/personal/zill/src/app/split/[id]/review-gate.tsx"
+    ],
+    "/Users/themuuln/coding/personal/zill/src/app/split/[id]/share-screen.tsx": [
+      "/Users/themuuln/coding/personal/zill/src/app/split/[id]/page.tsx"
+    ],
+    "/Users/themuuln/coding/personal/zill/src/app/split/new/page.tsx": [],
+    "/Users/themuuln/coding/personal/zill/src/app/split/new/split-form.tsx": [
+      "/Users/themuuln/coding/personal/zill/src/app/split/new/page.tsx"
+    ],
+    "/Users/themuuln/coding/personal/zill/src/components/ui/avatar.tsx": [],
+    "/Users/themuuln/coding/personal/zill/src/components/ui/badge.tsx": [],
+    "/Users/themuuln/coding/personal/zill/src/components/ui/button.tsx": [],
+    "/Users/themuuln/coding/personal/zill/src/components/ui/card.tsx": [],
+    "/Users/themuuln/coding/personal/zill/src/components/ui/dialog.tsx": [],
+    "/Users/themuuln/coding/personal/zill/src/components/ui/input.tsx": [],
+    "/Users/themuuln/coding/personal/zill/src/components/ui/separator.tsx": [],
+    "/Users/themuuln/coding/personal/zill/src/components/ui/sheet.tsx": [],
+    "/Users/themuuln/coding/personal/zill/src/components/ui/sonner.tsx": [],
+    "/Users/themuuln/coding/personal/zill/src/lib/calc.ts": [],
+    "/Users/themuuln/coding/personal/zill/src/lib/db.ts": [],
+    "/Users/themuuln/coding/personal/zill/src/lib/split-status.ts": [],
+    "/Users/themuuln/coding/personal/zill/src/lib/store.ts": [],
+    "/Users/themuuln/coding/personal/zill/src/lib/supabase/admin.ts": [],
+    "/Users/themuuln/coding/personal/zill/src/lib/supabase/client.ts": [],
+    "/Users/themuuln/coding/personal/zill/src/lib/supabase/middleware.ts": [],
+    "/Users/themuuln/coding/personal/zill/src/lib/supabase/server.ts": [],
+    "/Users/themuuln/coding/personal/zill/src/lib/utils.ts": []
+  },
+  "cachedExports": [],
+  "projectRulesScan": {
+    "rules": [],
+    "hasCustomRules": false
+  },
+  "projectIndex": {
+    "entryCount": 55
+  },
+  "startupScan": {
+    "cwd": "/Users/themuuln/coding/personal/zill",
+    "scanRoot": "/Users/themuuln/coding/personal/zill",
+    "projectRoot": "/Users/themuuln/coding/personal/zill",
+    "canWarmCaches": true,
+    "sourceFileCount": 25
+  },
+  "languageProfile": {
+    "present": {
+      "jsts": true,
+      "python": false,
+      "go": false,
+      "rust": false,
+      "cxx": false,
+      "cmake": false,
+      "fish": false,
+      "shell": false,
+      "json": false,
+      "markdown": false,
+      "css": false,
+      "yaml": false,
+      "sql": false,
+      "ruby": false,
+      "html": false,
+      "docker": false,
+      "php": false,
+      "powershell": false,
+      "prisma": false,
+      "csharp": false,
+      "fsharp": false,
+      "java": false,
+      "kotlin": false,
+      "swift": false,
+      "dart": false,
+      "lua": false,
+      "zig": false,
+      "haskell": false,
+      "elixir": false,
+      "gleam": false,
+      "ocaml": false,
+      "clojure": false,
+      "terraform": false,
+      "nix": false,
+      "toml": false
+    },
+    "configured": {
+      "jsts": true
+    },
+    "counts": {
+      "jsts": 27
+    },
+    "detectedKinds": [
+      "jsts"
+    ]
+  }
+}

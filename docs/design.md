@@ -248,7 +248,14 @@ Always include: what goes here + single primary action CTA. Never just an icon.
 
 ## Product Naming
 
-`zuiio [Product]` — e.g. `zuiio ERP`, `zuiio Pay`, `zuiio Docs`
+Use the parent brand as `Zuiio`. Public product names should be clear enough to stand alone, with “by Zuiio” used when the parent brand needs to be explicit.
+
+Examples:
+
+- `Zer by Zuiio`
+- `Tolom by Zuiio`
+- `Tumurch by Zuiio`
+- `Tamga by Zuiio`
 
 Each product:
 
@@ -258,11 +265,11 @@ Each product:
 
 | Product | Accent hue | Example |
 |---------|------------|---------|
-| Core / default | `195` (teal) | zuiio |
-| ERP / operations | `165` (green) | zuiio ERP |
-| Finance / pay | `225` (blue) | zuiio Pay |
-| Analytics | `80` (amber) | zuiio Insights |
-| Developer | `285` (purple) | zuiio Dev |
+| Core / default | `195` (teal) | Zuiio |
+| ERP / operations | `165` (green) | Zer by Zuiio |
+| Repair / service | `225` (blue) | Tolom by Zuiio |
+| Fitness / wellness | `80` (amber) | Tumurch by Zuiio |
+| Lifestyle / consumer | `285` (purple) | Tamga by Zuiio |
 
 ---
 
