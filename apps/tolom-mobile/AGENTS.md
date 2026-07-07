@@ -4,7 +4,7 @@ React Native (Expo) mobile app for Tolom ERP/CRM. Connects to the same Supabase 
 
 ## Stack
 
-- **Framework**: Expo SDK 52 + Expo Router 4
+- **Framework**: Expo SDK 57 + Expo Router (file-based routing)
 - **UI**: NativeWind (Tailwind CSS for React Native)
 - **State**: TanStack Query v5 + @zuiio/query
 - **Auth**: @zuiio/auth + expo-secure-store
