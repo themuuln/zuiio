@@ -14,7 +14,6 @@
     "test": "jest"
   },
   "dependencies": {
-    "@expo/vector-icons": "^14.0.0",
     "@supabase/supabase-js": "^2.110.0",
     "@tanstack/react-query": "^5.0.0",
     "@zuiio/auth": "workspace:*",

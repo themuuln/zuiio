@@ -7,12 +7,11 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Tolom</Text>
-      {state.status === "authenticated" && (
-        <Text style={styles.subtitle}>Welcome back!</Text>
-      )}
-      {state.status === "unauthenticated" && (
-        <Text style={styles.subtitle}>Please sign in</Text>
-      )}
+      <Text style={styles.status}>
+        {state.status === "loading" && "Loading..."}
+        {state.status === "authenticated" && "Signed in"}
+        {state.status === "unauthenticated" && "Not signed in"}
+      </Text>
     </View>
   );
 }
@@ -22,16 +21,16 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#fff",
   },
   title: {
     fontSize: 32,
     fontWeight: "bold",
-    color: "#7C3AED",
+    color: "#000",
   },
-  subtitle: {
-    fontSize: 16,
-    color: "#6B7280",
+  status: {
+    fontSize: 14,
+    color: "#666",
     marginTop: 8,
   },
 });
