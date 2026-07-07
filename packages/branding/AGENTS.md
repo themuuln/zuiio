@@ -36,3 +36,11 @@ All colors use OKLch color space for perceptual uniformity:
 - **No JavaScript exports**: Pure CSS custom properties
 - **Framework-agnostic**: Works with Tailwind v4, plain CSS, or any framework
 - **Apps extend**: Each app can override tokens in its own CSS, but should reference these as defaults
+
+## Tasks (Agent Router)
+
+Use this section to find the right context for your task.
+
+### Common tasks
+
+- See README.md for usage examples and API reference

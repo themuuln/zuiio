@@ -50,3 +50,11 @@ const { inputMode } = inputProps("code", { inputMode: "numeric" });
 - `HighlightText` wraps output in `<span>`; pass `className` for styling.
 - `searchByFields` is substring only — for fuzzy search use `useFuzzySearch` from `@zuiio/hooks`.
 - `inputProps` matches case-insensitively with partial matching (`"plateNumber"` → `"plate"`).
+
+## Tasks (Agent Router)
+
+Use this section to find the right context for your task.
+
+### Common tasks
+
+- See README.md for usage examples and API reference

@@ -76,3 +76,21 @@ normalizeMongolianPlate("4444 una");     // "4444УНА"
 ## Dependencies
 
 `date-fns` (date manipulation), `clsx` + `tailwind-merge` (class merging via `cn()`). The `image-optimizer` module additionally requires `sharp` (Node.js only). Zero React dependency.
+
+## Tasks (Agent Router)
+
+Use this section to find the right context for your task.
+
+### Common tasks
+
+- **Format currency** → `formatCurrency()` from `format` module
+- **Validate Mongolian phone** → `isValidMongolianPhone()` from `domain-rules`
+- **Normalize plate** → `normalizeMongolianPlate()` from `domain-rules`
+- **Create lookup map** → `createLookup()` or `createAggregatedLookup()` from `lookup`
+- **Throw structured error** → Use `AppError` hierarchy from `errors`
+- **Flatten Zod errors** → `flattenFieldErrors()` from `form-validation`
+- **Paginate Supabase query** → `paginate()` from `paginate`
+- **Rate limit API** → `createRateLimiter()` from `rate-limit`
+- **Format Ulaanbaatar date** → `formatInUB()` from `timezone`
+- **Compress image (browser)** → `compressImage()` from `compress-image`
+- **Compress image (server)** → `optimizeImage()` from `image-optimizer`

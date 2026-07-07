@@ -74,3 +74,18 @@ const debounced = useDebounce(searchQuery, 300);
 - One hook per file, kebab-case filename matching the export.
 - `useLookup` delegates to `@zuiio/core`'s `createLookup` — do not reimplement the map logic here.
 - All hooks accept a single options object where applicable.
+
+## Tasks (Agent Router)
+
+Use this section to find the right context for your task.
+
+### Common tasks
+
+- **Debounce input** → `useDebounce()` 
+- **Toggle visibility** → `useDisclosure()`
+- **Copy to clipboard** → `useCopyToClipboard()`
+- **Fuzzy search** → `useFuzzySearch()`
+- **Check online status** → `useOnlineStatus()`
+- **Persist to localStorage** → `useLocalStorage()`
+- **Detect intersection** → `useIntersectionObserver()`
+- **Memoized lookup** → `useLookup()` or `useAggregatedLookup()`

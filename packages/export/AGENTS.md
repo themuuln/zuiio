@@ -56,3 +56,11 @@ pdf.ts     — toPdfAsync, toPdfMultiSectionAsync
 excel.ts   — toExcelBuffer<T>, downloadExcel (dynamic exceljs import)
 index.ts   — barrel re-export
 ```
+
+## Tasks (Agent Router)
+
+Use this section to find the right context for your task.
+
+### Common tasks
+
+- See README.md for usage examples and API reference

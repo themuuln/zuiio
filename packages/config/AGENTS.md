@@ -32,3 +32,11 @@ Every package extends this config:
 - **All packages must extend** `@zuiio/config/tsconfig`
 - **Never modify** `tsconfig.base.json` without updating all consumers
 - **Type-check all packages**: `pnpm exec tsc --noEmit` from monorepo root
+
+## Tasks (Agent Router)
+
+Use this section to find the right context for your task.
+
+### Common tasks
+
+- See README.md for usage examples and API reference

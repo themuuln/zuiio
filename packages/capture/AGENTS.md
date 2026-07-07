@@ -43,3 +43,11 @@ createServerClient(url, key, { global: { fetch: withSupabaseConsoleCapture() } }
 - Replace `console.error(err)` in error paths with `capture(err, { context: "..." })`.
 - Use `withDbCapture` for every Supabase query — no manual try/catch.
 - Never call Sentry directly — go through this package so the handler stays swappable.
+
+## Tasks (Agent Router)
+
+Use this section to find the right context for your task.
+
+### Common tasks
+
+- See README.md for usage examples and API reference

@@ -54,3 +54,11 @@ const { items, summary } = computePayrollRun({
 - **PIT allowance**: scales inversely with salary (₮20k at ≤₮500k down to ₮10k at ≤₮3M); high-income >₮120M/yr uses 15–20% progressive rates
 - **Night overtime**: additive 0.4× on top of base multiplier (weekday night = 1.9×)
 - **Validation messages** are in Mongolian (Cyrillic) — UI should use `message` directly
+
+## Tasks (Agent Router)
+
+Use this section to find the right context for your task.
+
+### Common tasks
+
+- See README.md for usage examples and API reference

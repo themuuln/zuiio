@@ -76,3 +76,16 @@ const { mutate } = useOrgMutation<Service, CreateVars>({
 - Toasts via `sonner`. Configurable via `successMessage`, `errorMessage`, `onErrorToast`.
 - Offline queue requires `MutationQueueProvider` from `@zuiio/offline`.
 - Type exports: `OrgMutationConfig`, `OptimisticContext`, `QueuedResult`.
+
+## Tasks (Agent Router)
+
+Use this section to find the right context for your task.
+
+### Common tasks
+
+- **Wrap app in QueryProvider** → `QueryProvider` from `provider`
+- **Create optimistic mutation** → `useOptimisticCreate()` 
+- **Update optimistic mutation** → `useOptimisticUpdate()`
+- **Delete optimistic mutation** → `useOptimisticDelete()`
+- **Create org-scoped mutation** → `useOrgMutation()`
+- **Invalidate queries** → Use `queryClient.invalidateQueries()` with entity keys

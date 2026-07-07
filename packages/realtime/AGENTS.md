@@ -46,3 +46,11 @@ useRealtimeMulti({
 - `queryKeys` in `useRealtime` accepts a single array or array-of-arrays (auto-normalized).
 - `enabled` defaults to `true` — always pass `!!entityId` to avoid subscribing before data is ready.
 - Channels are cleaned up on unmount; no manual unsubscribe needed.
+
+## Tasks (Agent Router)
+
+Use this section to find the right context for your task.
+
+### Common tasks
+
+- See README.md for usage examples and API reference

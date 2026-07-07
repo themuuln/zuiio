@@ -78,3 +78,11 @@ mutationFn: withOfflineQueue({
 - FIFO replay, up to `maxRetries` (default 3), exponential backoff.
 - Online detection via `@zuiio/hooks` `useOnlineStatus` (`navigator.onLine`).
 - Toasts via `sonner`. Peer deps: `@tanstack/react-query`, `@tanstack/react-query-persist-client`, `react`, `sonner`.
+
+## Tasks (Agent Router)
+
+Use this section to find the right context for your task.
+
+### Common tasks
+
+- See README.md for usage examples and API reference
