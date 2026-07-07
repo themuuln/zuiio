@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { View, Text, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
+import { Button, Input, Card, CardHeader, CardTitle, CardContent } from "@/components/ui";
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -42,96 +43,49 @@ export default function SignupScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tolom</Text>
-      <Text style={styles.subtitle}>Create your account</Text>
-
-      <View style={styles.form}>
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          editable={!loading}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          editable={!loading}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm Password"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-          editable={!loading}
-        />
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleSignup}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>
-            {loading ? "Creating account..." : "Sign Up"}
+    <View className="flex-1 justify-center items-center p-5 bg-background">
+      <Card className="w-full max-w-sm">
+        <CardHeader>
+          <CardTitle>Tolom</CardTitle>
+          <Text className="text-sm text-muted-foreground">
+            Create your account
           </Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
-        <Text style={styles.link}>Already have an account? Sign in</Text>
-      </TouchableOpacity>
+        </CardHeader>
+        <CardContent className="gap-3">
+          <Input
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            editable={!loading}
+          />
+          <Input
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            editable={!loading}
+          />
+          <Input
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry
+            editable={!loading}
+          />
+          <Button
+            title={loading ? "Creating account..." : "Sign Up"}
+            onPress={handleSignup}
+            disabled={loading}
+          />
+          <Button
+            title="Already have an account? Sign in"
+            variant="ghost"
+            onPress={() => router.push("/(auth)/login")}
+          />
+        </CardContent>
+      </Card>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-    backgroundColor: "#fff",
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#000",
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#666",
-    marginTop: 8,
-    marginBottom: 32,
-  },
-  form: {
-    width: "100%",
-    gap: 12,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#000",
-    padding: 12,
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: "#000",
-    padding: 12,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  link: {
-    color: "#666",
-    marginTop: 16,
-  },
-});
