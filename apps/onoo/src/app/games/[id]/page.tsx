@@ -9,6 +9,7 @@ import {
   formatGameTime,
   statusLabel,
 } from "../../lib/data";
+import { LiveGameCenter } from "./components/live-game-center";
 
 type GamePageProps = { params: Promise<{ id: string }> };
 
@@ -112,39 +113,23 @@ export default async function GameDetailPage({ params }: GamePageProps) {
         </CardContent>
       </Card>
 
-      {/* Play-by-play (live only) */}
-      {isLive && playByPlay.length > 0 && (
-        <section aria-labelledby="pbp-heading">
-          <h2 id="pbp-heading" className="text-xl font-semibold mb-3">
-            Тоглолтын явц
-          </h2>
-          <Card>
-            <CardContent className="p-0">
-              <div className="divide-y max-h-96 overflow-y-auto">
-                {playByPlay.map((event) => (
-                  <div
-                    key={event.id}
-                    className="flex items-center gap-3 px-4 py-3 text-sm"
-                  >
-                    <span className="w-12 shrink-0 text-center text-xs text-muted-foreground tabular-nums">
-                      {event.period}р {Math.floor(event.clock_seconds / 60)}:
-                      {(event.clock_seconds % 60)
-                        .toString()
-                        .padStart(2, "0")}
-                    </span>
-                    <Badge variant="outline" className="shrink-0 text-xs">
-                      {event.team_short}
-                    </Badge>
-                    <span className="font-medium">{event.player_name}</span>
-                    <span className="text-muted-foreground">
-                      {event.detail}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </section>
+      {/* Live Game Center (live only) */}
+      {isLive && (
+        <LiveGameCenter
+          gameId={game.id}
+          homeTeamSeasonId={game.home_team_season_id}
+          awayTeamSeasonId={game.away_team_season_id}
+          initialEvents={playByPlay as any}
+          rosters={[] as any}
+          sportConfig={{
+            periods: 4,
+            period_minutes: 10,
+            overtime_minutes: 5,
+            fouls_to_bonus: 5,
+            personal_foul_limit: 5,
+            players_on_court: 5,
+          }}
+        />
       )}
 
       {/* Box score (final/verified) */}

@@ -19,6 +19,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Оноо — Спортын тоо баримт",
   description: "Сагсан бөмбөгийн лигийн тоглолтууд, шалгуур, статистик.",
+  manifest: "/manifest.json",
+  themeColor: "#0a0a0a",
 };
 
 export default function RootLayout({
