@@ -410,6 +410,23 @@ export default function TrackerPage() {
     (r) => !awayOnCourt.includes(r.player_id)
   );
 
+  // Handle undo (soft delete last event)
+  const handleUndo = useCallback(async () => {
+    if (events.length === 0) return;
+
+    const lastEvent = events[events.length - 1];
+    if (!lastEvent) return;
+
+    // Update local state
+    setEvents((prev) => prev.slice(0, -1));
+
+    // Soft delete in Supabase
+    await supabase
+      .from("stat_events")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", lastEvent.id);
+  }, [events, supabase]);
+
   const isSetup = game.status === "scheduled";
   const isLive = game.status === "live";
 
@@ -717,6 +734,13 @@ export default function TrackerPage() {
         </div>
 
         {/* Away Team */}
+              <button
+                onClick={handleUndo}
+                disabled={events.length === 0}
+                className="mt-2 w-full rounded bg-red-600 p-2 text-sm hover:bg-red-700 disabled:opacity-50"
+              >
+                Цуцлах (Undo)
+              </button>
         <div className="flex w-1/3 flex-col border-l border-gray-700">
           <div className="bg-gray-800 p-2 text-center font-bold">
             {awayTeam.name}
