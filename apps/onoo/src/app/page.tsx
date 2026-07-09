@@ -209,13 +209,13 @@ export default async function HomePage() {
                       </Link>
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums">
-                      {row.wins}
+                      {row.w}
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums">
-                      {row.losses}
+                      {row.l}
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums">
-                      {row.win_pct.toFixed(3)}
+                      {((row.w / (row.w + row.l)) * 100).toFixed(1) + "%"}
                     </td>
                   </tr>
                 ))}

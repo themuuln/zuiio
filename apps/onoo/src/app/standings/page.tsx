@@ -77,16 +77,16 @@ export default async function StandingsPage() {
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-center tabular-nums font-semibold">
-                    {row.wins}
+                    {row.w}
                   </td>
                   <td className="px-4 py-3 text-center tabular-nums">
-                    {row.losses}
+                    {row.l}
                   </td>
                   <td className="px-4 py-3 text-center tabular-nums">
-                    {row.win_pct.toFixed(3)}
+                    {((row.w / (row.w + row.l)) * 100).toFixed(3)}
                   </td>
                   <td className="px-4 py-3 text-center tabular-nums text-muted-foreground">
-                    {row.gb ?? 0}
+                    {0}
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums">
                     {row.points_for ?? 0}
@@ -97,18 +97,18 @@ export default async function StandingsPage() {
                   <td className="px-4 py-3 text-center text-sm">
                     <span
                       className={
-                        row.streak?.startsWith("W")
+                        "-"?.startsWith("W")
                           ? "text-green-600 font-medium"
-                          : row.streak?.startsWith("L")
+                          : "-"?.startsWith("L")
                             ? "text-red-500 font-medium"
                             : ""
                       }
                     >
-                      {row.streak ?? "—"}
+                      {"—"}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center tabular-nums text-muted-foreground">
-                    {row.last10 ?? "—"}
+                    {"—"}
                   </td>
                 </tr>
               ))}

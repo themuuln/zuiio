@@ -115,7 +115,7 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
                       {latestSeason.pts?.toFixed(1)}
                     </td>
                     <td className="px-3 py-2.5 text-right tabular-nums">
-                      {latestSeason.mpg?.toFixed(1)}
+                      {latestSeason.seconds_played?.toFixed(1)}
                     </td>
                     <td className="px-3 py-2.5 text-right tabular-nums">
                       {((latestSeason.oreb ?? 0) + (latestSeason.dreb ?? 0)).toFixed(1)}
@@ -133,7 +133,7 @@ export default async function PlayerPage({ params }: PlayerPageProps) {
                       {latestSeason.tov?.toFixed(1)}
                     </td>
                     <td className="px-3 py-2.5 text-right tabular-nums text-muted-foreground">
-                      {latestSeason.mpg?.toFixed(1)}
+                      {latestSeason.seconds_played?.toFixed(1)}
                     </td>
                   </tr>
                 </tbody>

@@ -45,10 +45,10 @@ export default async function TeamPage({ params }: TeamPageProps) {
                 <>
                   <span aria-hidden="true">·</span>
                   <span>
-                    {standings.wins}-{standings.losses}
+                    {standings.w}-{standings.l}
                   </span>
                   <span aria-hidden="true">·</span>
-                  <span>{standings.win_pct.toFixed(3)}</span>
+                  <span>{((standings.w / (standings.w + standings.l)) * 100).toFixed(3)}</span>
                 </>
               )}
             </div>
@@ -63,12 +63,12 @@ export default async function TeamPage({ params }: TeamPageProps) {
             Шалгуур
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <StatCard label="Ялагдал" value={`${standings.wins}`} />
-            <StatCard label="Оноотой" value={`${standings.losses}`} />
-            <StatCard label="Хувь" value={standings.win_pct.toFixed(3)} />
+            <StatCard label="Ялагдал" value={`${standings.w}`} />
+            <StatCard label="Оноотой" value={`${standings.l}`} />
+            <StatCard label="Хувь" value={((standings.w / (standings.w + standings.l)) * 100).toFixed(3)} />
             <StatCard
               label="Зөрүү"
-              value={`${standings.gb ?? 0}`}
+              value={`${0}`}
             />
           </div>
         </section>
