@@ -48,16 +48,16 @@
 | T-027 | ✅ | Home page live section |
 | T-028 | ✅ | Undo functionality |
 
-### Phase 3 — Mobile + Depth 🔄 In Progress
+### Phase 3 — Mobile + Depth ✅ Complete
 
 | Task | Status | Description |
 |------|--------|-------------|
 | T-030 | ✅ | Scaffold `apps/onoo-app` (Expo) |
 | T-031 | ✅ | Mobile screens (home, game, standings, leaders, team, player) |
 | T-032 | ✅ | Follows + push notifications |
-| T-033 | 🔲 | Auth phone OTP + athlete claim flow |
-| T-034 | 🔲 | Advanced stats module + shot chart input |
-| T-035 | 🔲 | Exports (PDF box score, CSV endpoints) |
+| T-033 | ✅ | Auth phone OTP + athlete claim flow |
+| T-034 | ✅ | Advanced stats module + shot chart input |
+| T-035 | ✅ | Exports (PDF box score, CSV endpoints) |
 
 ---
 
@@ -165,9 +165,9 @@
 - [x] T-030: Scaffold Expo app with tab navigation
 - [ ] T-031: Mobile screens (reuse `@onoo/core` derive)
 - [x] T-032: Follows table + push notifications
-- [ ] T-033: Phone OTP auth + athlete claim
-- [ ] T-034: Advanced stats + shot chart
-- [ ] T-035: PDF/CSV exports
+- [x] T-033: Phone OTP auth + athlete claim
+- [x] T-034: Advanced stats + shot chart
+- [x] T-035: PDF/CSV exports
 
 ### Future Enhancements
 
