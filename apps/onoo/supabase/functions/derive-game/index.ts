@@ -1,9 +1,13 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// @deno-types="npm:@onoo/core@0.1.0"
+import { deriveBoxScore } from "@onoo/core/stats";
+import type { StatEvent, GameRoster, SportConfig } from "@onoo/core/types";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 serve(async (req: Request) => {
@@ -36,6 +40,26 @@ serve(async (req: Request) => {
       );
     }
 
+    // Create anon client to verify JWT
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+    const userClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      anonKey,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const {
+      data: { user },
+      error: authError,
+    } = await userClient.auth.getUser();
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Get game
     const { data: game, error: gameError } = await supabase
       .from("games")
@@ -64,15 +88,39 @@ serve(async (req: Request) => {
       );
     }
 
+    // Verify user is scorekeeper or league admin
+    if (mode === "finalize") {
+      const { data: isScorekeeper } = await supabase.rpc("is_game_scorekeeper", {
+        p_game_id: game_id,
+      });
+      const { data: isAdmin } = await supabase.rpc("is_league_admin", {
+        p_league_id: game.competition_id,
+      });
+      if (!isScorekeeper && !isAdmin) {
+        return new Response(
+          JSON.stringify({ error: "Only scorekeeper or league admin can finalize" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } else {
+      // verify requires league admin
+      const { data: isAdmin } = await supabase.rpc("is_league_admin", {
+        p_league_id: game.competition_id,
+      });
+      if (!isAdmin) {
+        return new Response(
+          JSON.stringify({ error: "Only league admin can verify" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     // Get non-deleted stat events
     const { data: events, error: eventsError } = await supabase
       .from("stat_events")
       .select("*")
       .eq("game_id", game_id)
-      .is("deleted_at", null)
-      .order("period", { ascending: true })
-      .order("clock_seconds", { ascending: false })
-      .order("local_seq", { ascending: true });
+      .is("deleted_at", null);
 
     if (eventsError) {
       return new Response(
@@ -94,7 +142,7 @@ serve(async (req: Request) => {
       .eq("key", "basketball_5x5")
       .single();
 
-    const sportConfig = sport?.config ?? {
+    const sportConfig: SportConfig = sport?.config ?? {
       periods: 4,
       period_minutes: 10,
       overtime_minutes: 5,
@@ -103,29 +151,64 @@ serve(async (req: Request) => {
       players_on_court: 5,
     };
 
-    // TODO: Import and run deriveBoxScore from @onoo/core
-    // For now, compute basic scores from events
-    let homeScore = 0;
-    let awayScore = 0;
-    const warnings: string[] = [];
+    // Run deriveBoxScore from @onoo/core
+    const result = deriveBoxScore({
+      events: (events ?? []) as StatEvent[],
+      rosters: (rosters ?? []) as GameRoster[],
+      sportConfig,
+    });
 
-    for (const event of events ?? []) {
-      if (event.event_type === "shot_2pt_made") {
-        if (event.team_season_id === game.home_team_season_id) homeScore += 2;
-        else awayScore += 2;
-      } else if (event.event_type === "shot_3pt_made") {
-        if (event.team_season_id === game.home_team_season_id) homeScore += 3;
-        else awayScore += 3;
-      } else if (event.event_type === "ft_made") {
-        if (event.team_season_id === game.home_team_season_id) homeScore += 1;
-        else awayScore += 1;
-      }
-    }
+    // Get home/away scores
+    const homeScore = result.homeAwayScore[game.home_team_season_id] ?? 0;
+    const awayScore = result.homeAwayScore[game.away_team_season_id] ?? 0;
+
+    // Prepare player stats for RPC
+    const playerStats = result.players.map((p) => ({
+      player_id: p.playerId,
+      team_season_id: p.teamSeasonId,
+      seconds_played: p.secondsPlayed,
+      pts: p.pts,
+      fgm: p.fgm,
+      fga: p.fga,
+      tpm: p.tpm,
+      tpa: p.tpa,
+      ftm: p.ftm,
+      fta: p.fta,
+      oreb: p.oreb,
+      dreb: p.dreb,
+      ast: p.ast,
+      stl: p.stl,
+      blk: p.blk,
+      tov: p.tov,
+      pf: p.pf,
+    }));
+
+    // Prepare team stats for RPC
+    const teamStats = result.teams.map((t) => ({
+      team_season_id: t.teamSeasonId,
+      pts: t.pts,
+      fgm: t.fgm,
+      fga: t.fga,
+      tpm: t.tpm,
+      tpa: t.tpa,
+      ftm: t.ftm,
+      fta: t.fta,
+      oreb: t.oreb,
+      dreb: t.dreb,
+      team_reb: t.teamReb,
+      ast: t.ast,
+      stl: t.stl,
+      blk: t.blk,
+      tov: t.tov,
+      pf: t.pf,
+    }));
 
     // Apply derived stats via RPC
     const newStatus = mode === "finalize" ? "final" : "verified";
     const { error: rpcError } = await supabase.rpc("apply_derived_stats", {
       p_game_id: game_id,
+      p_player_stats: playerStats,
+      p_team_stats: teamStats,
       p_home_score: homeScore,
       p_away_score: awayScore,
       p_status: newStatus,
@@ -145,14 +228,20 @@ serve(async (req: Request) => {
 
     // Audit log
     await supabase.from("audit_log").insert({
+      actor_id: user.id,
       action: `derive-game:${mode}`,
-      entity_type: "game",
+      entity: "game",
       entity_id: game_id,
-      payload: { home_score: homeScore, away_score: awayScore },
+      detail: { home_score: homeScore, away_score: awayScore, warnings: result.warnings },
     });
 
     return new Response(
-      JSON.stringify({ ok: true, home_score: homeScore, away_score: awayScore, warnings }),
+      JSON.stringify({
+        ok: true,
+        home_score: homeScore,
+        away_score: awayScore,
+        warnings: result.warnings,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
