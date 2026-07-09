@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
@@ -17,11 +18,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  themeColor: "#0a0a0a",
+};
+
 export const metadata: Metadata = {
   title: "Оноо — Спортын тоо баримт",
   description: "Сагсан бөмбөгийн лигийн тоглолтууд, шалгуур, статистик.",
   manifest: "/manifest.json",
-  themeColor: "#0a0a0a",
 };
 
 export default function RootLayout({
