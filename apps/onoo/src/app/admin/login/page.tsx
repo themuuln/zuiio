@@ -6,8 +6,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState(process.env.NODE_ENV === "development" ? "admin@onoo.mn" : "");
+  const [password, setPassword] = useState(process.env.NODE_ENV === "development" ? "admin123" : "");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
