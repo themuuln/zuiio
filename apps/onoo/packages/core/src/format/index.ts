@@ -47,7 +47,7 @@ export function formatPlayerName(
 
 interface EventLike {
   event_type: string;
-  payload: Record<string, unknown>;
+  payload: unknown;
 }
 
 const EVENT_LABELS_MN: Record<string, string> = {
@@ -111,7 +111,7 @@ export function describeEvent(
   const base = labels[event.event_type] ?? event.event_type;
 
   // Add context for specific events
-  if (event.event_type === "substitution") {
+  if (event.event_type === "substitution" && event.payload) {
     const p = event.payload as { in_player_id?: string; out_player_id?: string };
     if (p.in_player_id && p.out_player_id) {
       return locale === "mn"
@@ -120,7 +120,7 @@ export function describeEvent(
     }
   }
 
-  if (event.event_type === "foul_personal") {
+  if (event.event_type === "foul_personal" && event.payload) {
     const p = event.payload as { foul_type?: string };
     if (p.foul_type) {
       const foulLabel = locale === "mn"

@@ -150,7 +150,7 @@ export function LiveGameCenter({
                     {formatClock(event.clock_seconds)}
                   </span>
                   <span className="flex-1 text-sm">
-                    {describeEvent(event as any, "mn")}
+                    {describeEvent(event, "mn")}
                   </span>
                 </div>
               ))
