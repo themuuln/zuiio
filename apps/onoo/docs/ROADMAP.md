@@ -171,16 +171,16 @@
 
 ### Future Enhancements
 
-- [ ] Shot chart visualization (x,y coordinates on court)
-- [ ] Advanced stats (PER, usage rate, true shooting %)
-- [ ] Season-over-season comparisons
-- [ ] Team analytics dashboard
-- [ ] Player comparison tool
-- [ ] Historical data import
-- [ ] Multi-language support (English)
-- [ ] Real-time notifications (web push)
-- [ ] Offline mode (PWA service worker)
-- [ ] Data export (CSV, PDF)
+- [x] Shot chart visualization (x,y coordinates on court)
+- [x] Advanced stats (PER, usage rate, true shooting %)
+- [x] Season-over-season comparisons
+- [x] Team analytics dashboard
+- [x] Player comparison tool
+- [x] Historical data import
+- [x] Multi-language support (English)
+- [x] Real-time notifications (web push)
+- [x] Offline mode (PWA service worker)
+- [x] Data export (CSV, PDF)
 
 ---
 
