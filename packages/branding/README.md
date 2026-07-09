@@ -4,7 +4,7 @@ OKLch design tokens, pre-built shadcn themes, and a CSS generator for multi-tena
 
 ## CSS Import
 
-The package ships a `globals.css` with the default violet/teal brand palette, shadcn semantic tokens, dark mode, typography, motion, and shadow scales. Import it in your app's root layout or global CSS:
+The package ships a `globals.css` with the Electric Indigo brand palette, shadcn semantic tokens, dark mode, typography, motion, and shadow scales. Import it in your app's root layout or global CSS:
 
 ```css
 @import "@zuiio/branding/globals.css";
@@ -18,12 +18,11 @@ Tailwind v4 is required — the file uses `@theme inline` for token registration
 
 | Token | Value | Use |
 |---|---|---|
-| `--brand-violet` | `oklch(0.50 0.26 275)` | Primary brand |
-| `--brand-violet-light` | `oklch(0.65 0.22 275)` | Hover / emphasis |
-| `--brand-violet-dim` | `oklch(0.38 0.24 275)` | Dark accents |
-| `--brand-teal` | `oklch(0.70 0.16 195)` | Accent / success |
-| `--brand-teal-light` | `oklch(0.82 0.12 195)` | Light accent |
-
+| `--brand-indigo` | `oklch(0.52 0.22 265)` | Primary brand |
+| `--brand-indigo-light` | `oklch(0.62 0.16 265)` | Hover / emphasis |
+| `--brand-indigo-dim` | `oklch(0.38 0.18 265)` | Dark accents |
+| `--brand-teal` | `oklch(0.65 0.15 175)` | Accent / success |
+| `--brand-teal-light` | `oklch(0.78 0.12 175)` | Light accent |
 ### Semantic (shadcn)
 
 `background`, `foreground`, `card`, `popover`, `primary`, `secondary`, `muted`, `accent`, `destructive`, `border`, `input`, `ring` — each with a `-foreground` counterpart. All values are OKLch with a subtle violet hue offset.
@@ -40,10 +39,9 @@ Five chart colors: `--color-chart-1` through `--color-chart-5`.
 
 | Token | Font |
 |---|---|
-| `--font-sans` | Geist Sans → system-ui |
-| `--font-mono` | Geist Mono → ui-monospace |
-| `--font-display` | Instrument Serif → Georgia |
-
+| `--font-sans` | SF Pro Display → Inter → system-ui |
+| `--font-mono` | JetBrains Mono → ui-monospace |
+| `--font-display` | SF Pro Display → Inter → system-ui |
 ### Motion
 
 | Token | Value |

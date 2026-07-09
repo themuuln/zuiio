@@ -125,6 +125,25 @@ packages/<name>/
 - **React packages**: `react` + `@types/react` in `devDependencies` (consumers provide React 19)
 - **No circular deps** between packages
 
+### Library & Framework Docs
+
+**Always use current docs** for any library/package/framework question. Do NOT rely on training data — it may be outdated.
+
+```bash
+# Find the library
+npx ctx7@latest library <name> "<your question>"
+
+# Fetch docs
+npx ctx7@latest docs <libraryId> "<your question>"
+```
+
+**Key docs to fetch:**
+- Next.js 16.3: `npx ctx7@latest docs /vercel/next.js "your question"`
+- Supabase SSR: `npx ctx7@latest docs /supabase/ssr "your question"`
+- TanStack Query: `npx ctx7@latest docs /tanstack/query "your question"`
+- shadcn/ui: `npx ctx7@latest docs /shadcn-ui "your question"`
+
+**Why:** APIs change fast. Next.js 16 deprecated `middleware.ts` → `proxy.ts`. Supabase SSR changed cookie patterns. Training data is 6+ months stale.
 ## Commands
 
 ```bash

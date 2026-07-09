@@ -1,0 +1,236 @@
+"use client";
+
+import { useParams } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { toast } from "sonner";
+import { ArrowLeft, Trophy, MapPin, Calendar } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { gamesApi, type GameRow } from "@/app/admin/_lib/api";
+
+function statusBadgeVariant(status: string) {
+  switch (status) {
+    case "scheduled":
+      return "secondary";
+    case "live":
+      return "destructive";
+    case "final":
+      return "outline";
+    case "verified":
+      return "default";
+    case "official":
+      return "default";
+    case "cancelled":
+      return "secondary";
+    default:
+      return "secondary";
+  }
+}
+
+function statusLabel(status: string) {
+  switch (status) {
+    case "scheduled":
+      return "Товлосон";
+    case "live":
+      return "Дүрэлзүүлсэн";
+    case "final":
+      return "Дууссан";
+    case "verified":
+      return "Баталгаажуулсан";
+    case "official":
+      return "Албан ёс";
+    case "cancelled":
+      return "Цуцалсан";
+    default:
+      return status;
+  }
+}
+
+function getTeamName(
+  game: GameRow,
+  side: "home" | "away"
+): string {
+  const ts = side === "home" ? game.home_team_season : game.away_team_season;
+  return ts?.teams?.name ?? "Тодорхойгүй";
+}
+
+export default function GameDetailPage() {
+  const params = useParams<{ id: string }>();
+  const queryClient = useQueryClient();
+
+  const { data: game, isPending, isError } = useQuery({
+    queryKey: ["admin", "game", params.id],
+    queryFn: () => gamesApi.get(params.id),
+  });
+
+  async function updateStatus(newStatus: string) {
+    if (!game) return;
+    try {
+      await gamesApi.updateStatus(game.id, newStatus);
+      toast.success("Төлөв шинэчлэгдлээ");
+      queryClient.invalidateQueries({ queryKey: ["admin", "game", game.id] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "games"] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Алдаа гарлаа");
+    }
+  }
+
+  if (isPending) {
+    return (
+      <div className="space-y-6">
+        <a
+          href="/admin/games"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" />
+          Буцах
+        </a>
+        <p className="text-muted-foreground">Ачаалж байна...</p>
+      </div>
+    );
+  }
+
+  if (isError || !game) {
+    return (
+      <div className="space-y-6">
+        <a
+          href="/admin/games"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" />
+          Буцах
+        </a>
+        <Card>
+          <CardContent className="py-10 text-center text-muted-foreground">
+            Тоглолт олдсонгүй
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const homeName = getTeamName(game, "home");
+  const awayName = getTeamName(game, "away");
+  const hasScore =
+    game.home_score !== null && game.away_score !== null;
+
+  return (
+    <div className="space-y-6">
+      <a
+        href="/admin/games"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="size-4" />
+        Буцах
+      </a>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">
+            {homeName} vs {awayName}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex items-center gap-2 text-sm">
+              <Trophy className="size-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Уралдаан:</span>
+              <span>{game.competitions?.name ?? "Тодорхойгүй"}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <MapPin className="size-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Талбай:</span>
+              <span>
+                {game.venues
+                  ? `${game.venues.name}${game.venues.city ? `, ${game.venues.city}` : ""}`
+                  : "Тодорхойгүй"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Calendar className="size-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Огноо:</span>
+              <span>
+                {format(new Date(game.scheduled_at), "yyyy-MM-dd HH:mm")}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground">Төлөв:</span>
+              <Badge
+                variant={statusBadgeVariant(game.status) as "default" | "secondary" | "destructive" | "outline"}
+                className={
+                  game.status === "official"
+                    ? "bg-green-600 text-white hover:bg-green-700"
+                    : undefined
+                }
+              >
+                {statusLabel(game.status)}
+              </Badge>
+            </div>
+          </div>
+
+          {hasScore && (
+            <div className="flex items-center justify-center gap-4 rounded-lg bg-muted py-6">
+              <span className="text-3xl font-bold">{game.home_score}</span>
+              <span className="text-xl text-muted-foreground">-</span>
+              <span className="text-3xl font-bold">{game.away_score}</span>
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-2 pt-2">
+            {game.status === "scheduled" && (
+              <Button
+                onClick={() => updateStatus("live")}
+              >
+                Тоглолт эхлүүлэх
+              </Button>
+            )}
+            {game.status === "final" && (
+              <Button
+                onClick={() => updateStatus("verified")}
+              >
+                Баталгаажуулах
+              </Button>
+            )}
+            {game.status === "verified" && (
+              <Button
+                onClick={() => updateStatus("official")}
+              >
+                Албан ёс болгох
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Тоглогчдын жагсаалт</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Тоглогчдын жагсаалт удахгүй нэмэгдэнэ
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Хариуцагчид</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Хариуцагчид удахгүй нэмэгдэнэ
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

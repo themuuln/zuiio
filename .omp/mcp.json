@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json",
+  "mcpServers": {
+    "supabase-onoo": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=iyhujghadlymroihxyiy&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage",
+      "auth": {
+        "type": "oauth",
+        "credentialId": "mcp_oauth:profile:default:https://mcp.supabase.com/mcp?project_ref=iyhujghadlymroihxyiy&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage",
+        "tokenUrl": "https://api.supabase.com/v1/oauth/token",
+        "clientId": "2428ce29-2e5d-44db-94be-1f6771ebd579",
+        "resource": "https://mcp.supabase.com/mcp?project_ref=iyhujghadlymroihxyiy&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage"
+      },
+      "oauth": {
+        "clientId": "2428ce29-2e5d-44db-94be-1f6771ebd579"
+      }
+    }
+  }
+}
