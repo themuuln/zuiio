@@ -12,6 +12,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="games"
+        options={{
+          title: "Тоглолт",
+          tabBarIcon: ({ color }) => <Text style={{ color }}>🏀</Text>,
+        }}
+      />
+      <Tabs.Screen
         name="standings"
         options={{
           title: "Шалгуур",
@@ -19,10 +26,24 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="games"
+        name="leaders"
         options={{
-          title: "Тоглолт",
-          tabBarIcon: ({ color }) => <Text style={{ color }}>🏀</Text>,
+          title: "Шилдэг",
+          tabBarIcon: ({ color }) => <Text style={{ color }}>⭐</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="follows"
+        options={{
+          title: "Дагасан",
+          tabBarIcon: ({ color }) => <Text style={{ color }}>❤️</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Профайл",
+          tabBarIcon: ({ color }) => <Text style={{ color }}>👤</Text>,
         }}
       />
     </Tabs>
