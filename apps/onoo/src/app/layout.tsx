@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
 import { Providers } from "@/lib/providers";
+import { OfflineIndicator } from "@/components/offline-indicator";
 import { SiteNav } from "./components/site-nav";
 import { SiteFooter } from "./components/site-footer";
 
@@ -38,6 +39,7 @@ export default function RootLayout({
             <SiteNav />
             <div className="flex-1">{children}</div>
             <SiteFooter />
+        <OfflineIndicator />
           </Providers>
         </Suspense>
       </body>

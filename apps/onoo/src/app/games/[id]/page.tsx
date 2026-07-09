@@ -144,6 +144,13 @@ export default async function GameDetailPage({ params }: GamePageProps) {
           ← Буцах
         </Link>
       </div>
+
+      {/* Export Buttons */}
+      <div className="flex gap-2">
+        <a href={`/api/export?gameId=${game.id}&type=boxscore`} className="text-sm text-primary hover:underline" download>CSV татаж авах</a>
+        <span className="text-muted-foreground">|</span>
+        <a href={`/api/export/pdf?gameId=${game.id}`} className="text-sm text-primary hover:underline" target="_blank">PDF татаж авах</a>
+      </div>
     </main>
   );
 }
@@ -245,5 +252,6 @@ async function BoxScoreSection({ gameId }: { gameId: string }) {
         </CardContent>
       </Card>
     </section>
+
   );
 }
