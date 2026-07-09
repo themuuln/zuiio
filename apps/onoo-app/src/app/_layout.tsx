@@ -11,6 +11,7 @@ export default function RootLayout() {
         <Stack.Screen name="game/[id]" options={{ title: "Тоглолт" }} />
         <Stack.Screen name="team/[slug]" options={{ title: "Баг" }} />
         <Stack.Screen name="player/[id]" options={{ title: "Тоглогч" }} />
+        <Stack.Screen name="claim" options={{ title: "Тоглогчоор баталгаажуулах" }} />
       </Stack>
     </Providers>
   );
