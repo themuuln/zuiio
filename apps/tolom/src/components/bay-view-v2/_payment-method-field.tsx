@@ -10,17 +10,10 @@ import {
   FieldError,
   FieldLabel,
 } from "@/components/ui/field";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { cn, formatMNT } from "@/lib/utils";
 import { Typography } from "@/components/ui/typography";
 import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
 import { getDefaultTransferBank } from "@/lib/payments/org-bank-accounts";
-import { formatMNT } from "@/lib/utils";
 import {
   computePaymentFeeAmount,
   computePaymentTotal,
@@ -77,31 +70,32 @@ export function PaymentMethodField({
           {t("paymentMethod")}
         </FieldLabel>
         <FieldContent>
-          <Select
-            value={value}
-            onValueChange={(val) => onChange(val as BayPaymentMethod)}
-          >
-            <SelectTrigger className="h-10" aria-label={t("paymentMethod")}>
-              <SelectValue>{t(PAYMENT_METHOD_LABEL_KEY[value])}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {PAYMENT_METHODS.map((method) => {
-                const methodFee = fees[method] ?? 0;
-                return (
-                  <SelectItem key={method} value={method}>
-                    <span className="flex items-center gap-2">
-                      {t(PAYMENT_METHOD_LABEL_KEY[method])}
-                      {methodFee > 0 && (
-                        <span className="text-[10px] text-muted-foreground">
-                          (+{methodFee}%)
-                        </span>
-                      )}
+          <div className="flex items-center gap-px rounded-lg border border-border/50 bg-muted/40 p-0.5">
+            {PAYMENT_METHODS.map((method) => {
+              const methodFee = fees[method] ?? 0;
+              const isActive = value === method;
+              return (
+                <button
+                  key={method}
+                  type="button"
+                  onClick={() => onChange(method)}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-[color,background-color] duration-200 cursor-pointer",
+                    isActive
+                      ? "bg-background text-foreground border border-border/30 shadow-sm"
+                      : "text-muted-foreground/60 hover:bg-muted/60 hover:text-foreground/80",
+                  )}
+                >
+                  {t(PAYMENT_METHOD_LABEL_KEY[method])}
+                  {methodFee > 0 && (
+                    <span className="text-[10px] text-muted-foreground">
+                      (+{methodFee}%)
                     </span>
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+                  )}
+                </button>
+              );
+            })}
+          </div>
 
           {subtotal > 0 && (
             <div className="mt-2 rounded-lg border border-border/60 bg-muted/20 px-3 py-2 text-xs flex flex-col gap-1">

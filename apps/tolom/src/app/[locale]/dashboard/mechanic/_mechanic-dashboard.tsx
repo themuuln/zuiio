@@ -545,8 +545,8 @@ export function MechanicDashboard({
       });
       await updateStatus.mutateAsync({ woId, status: "Completed" });
       toast.success(t("mechanic.completed"));
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       toast.error(t("mechanic.failedToComplete"));
     } finally {
       setPendingPickupComplete(null);

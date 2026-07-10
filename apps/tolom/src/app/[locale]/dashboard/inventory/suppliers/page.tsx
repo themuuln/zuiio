@@ -54,8 +54,8 @@ export default function SuppliersPage() {
       try {
         await deleteSupplier.mutateAsync(id);
         toast.success(t("supplierDeleted"));
-      } catch {
-        reportServerError("Unexpected error");
+      } catch (error) {
+        reportServerError("Unexpected error", error);
         toast.error(t("failedToDelete"));
       }
     },

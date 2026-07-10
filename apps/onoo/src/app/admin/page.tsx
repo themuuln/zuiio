@@ -26,7 +26,7 @@ export default function AdminDashboardPage() {
       fetch("/admin/api/games").then((r) => r.json() as Promise<GameRow[]>),
   });
 
-  const finalGames = games?.filter((g) => g.status === "final") ?? [];
+  const finalGames = games?.filter((g) => g.status === "final_pending_review") ?? [];
   const scheduledCount = games?.filter((g) => g.status === "scheduled").length ?? 0;
 
   return (

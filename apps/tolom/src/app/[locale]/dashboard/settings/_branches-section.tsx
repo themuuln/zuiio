@@ -69,8 +69,8 @@ export function BranchesSection({ orgId }: BranchesSectionProps) {
           ? t("financeSeparateEnabledToast")
           : t("financeSeparateDisabledToast"),
       );
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       toast.error(t("financeSeparateFailedToast"));
     }
   };

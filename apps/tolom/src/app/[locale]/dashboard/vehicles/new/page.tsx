@@ -152,8 +152,8 @@ function NewVehicleForm() {
         const response = await fetch(url);
         const json = await response.json();
         setCustomerResults(Array.isArray(json.data) ? json.data : []);
-      } catch {
-        reportServerError("Unexpected error");
+      } catch (error) {
+        reportServerError("Unexpected error", error);
         setError("Failed to search customers");
       } finally {
         setCustomerSearching(false);

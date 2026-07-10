@@ -106,6 +106,21 @@ export function VariantPicker({
 
     return availability;
   }, [activeVariants, groups, selections, variants]);
+  // Sum current_stock across all active variants that include each option
+  const stockByOption = useMemo<Record<string, number>>(() => {
+    const stock: Record<string, number> = {};
+    if (!groups || !variants) return stock;
+
+    for (const group of groups) {
+      for (const option of group.options) {
+        stock[option.id] = activeVariants
+          .filter((variant) => variant.option_ids.includes(option.id))
+          .reduce((sum, variant) => sum + (variant.current_stock ?? 0), 0);
+      }
+    }
+
+    return stock;
+  }, [activeVariants, groups, variants]);
 
   // Keep only selections that still lead to at least one active variant
   useEffect(() => {
@@ -233,16 +248,6 @@ export function VariantPicker({
                           [group.id]: option.id,
                         }))
                       }
-                      className={cn(
-                        "relative flex min-h-11 items-center gap-1.5 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all duration-150",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-                        "active:scale-[0.98]",
-                        isSelected
-                          ? "border-primary bg-primary/10 text-primary shadow-sm"
-                          : isAvailable
-                            ? "border-border bg-background text-foreground hover:border-primary/40 hover:bg-primary/5"
-                            : "border-border/60 bg-muted/30 text-muted-foreground/50 cursor-default",
-                      )}
                     >
                       {isSelected && (
                         <Check
@@ -258,6 +263,11 @@ export function VariantPicker({
                       >
                         {option.value}
                       </span>
+                      {isAvailable && !isSelected && (
+                        <span className="ml-0.5 text-[10px] text-muted-foreground/70">
+                          {stockByOption[option.id] ?? 0} ш
+                        </span>
+                      )}
                     </button>
                   );
                 })}
@@ -486,6 +496,11 @@ export function VariantPicker({
                         >
                           {option.value}
                         </span>
+                        {isAvailable && !isSelected && (
+                          <span className="ml-auto shrink-0 text-[10px] text-muted-foreground/70">
+                            {stockByOption[option.id] ?? 0} ш
+                          </span>
+                        )}
                       </button>
                     );
                   })}

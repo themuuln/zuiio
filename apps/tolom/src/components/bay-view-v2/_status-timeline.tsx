@@ -259,7 +259,7 @@ export function StatusTimeline(props: StatusTimelineProps) {
   const deduped = hasStatusHistory ? deduplicateHistory(statusHistory) : [];
 
   return (
-    <section className="rounded-xl ring-1 ring-foreground/10 bg-card/40 p-3">
+    <section className="rounded-xl bg-card/40 p-3">
       <div className="flex flex-col gap-1 mb-3">
         <div className="flex items-center gap-2">
           <div className="flex items-center justify-center size-5 rounded-md bg-sky-500/10">

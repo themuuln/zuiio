@@ -22,3 +22,19 @@ export const EVENT_TYPES = {
 } as const;
 
 export type EventTypeKey = keyof typeof EVENT_TYPES;
+
+export interface RulesetEventDictionary {
+  version: string;
+  enabledEventTypes: readonly EventTypeKey[];
+}
+
+/**
+ * A game stores the ruleset version it started under. Do not validate events
+ * against a mutable league-wide dictionary.
+ */
+export function isEventAllowedByRuleset(
+  eventType: EventTypeKey,
+  ruleset: RulesetEventDictionary,
+): boolean {
+  return ruleset.enabledEventTypes.includes(eventType);
+}

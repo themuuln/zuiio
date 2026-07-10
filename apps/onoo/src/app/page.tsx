@@ -138,8 +138,8 @@ export default async function HomePage() {
                       </span>
                     </div>
                     <div className="text-center shrink-0">
-                      {game.status === "final" ||
-                      game.status === "verified" ? (
+                      {game.status === "final_pending_review" ||
+                      game.status === "league_verified" ? (
                         <span className="text-lg font-bold tabular-nums">
                           {game.home_score} — {game.away_score}
                         </span>

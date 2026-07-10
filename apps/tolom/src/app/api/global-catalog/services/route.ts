@@ -14,4 +14,4 @@ export const GET = createSimpleRouteHandler(async ({ supabase }) => {
     return apiError("QUERY_ERROR", error.message, 500);
   }
   return ok(data);
-});
+}, { requireAuth: false });

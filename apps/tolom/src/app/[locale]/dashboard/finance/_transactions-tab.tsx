@@ -39,8 +39,8 @@ function formatDate(iso: string) {
       month: "short",
       day: "numeric",
     });
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    reportServerError("Unexpected error", error);
     return iso;
   }
 }

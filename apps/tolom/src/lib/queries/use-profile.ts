@@ -1,6 +1,8 @@
 "use client";
 
 import { type UseQueryResult, useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+import type { PermissionAction } from "@/lib/supabase/role-guard";
 import { profileKeys } from "./keys";
 
 export interface UserProfile {
@@ -15,9 +17,8 @@ export interface UserProfile {
   branchId: string | null;
   roleId: string | null;
   roleName: string | null;
+  permissionNames: string[];
 }
-
-type RoleName = "Org Owner" | "Manager" | "Mechanic" | "Guest" | null;
 
 /**
  * Single source of truth for the current user's profile.
@@ -44,6 +45,7 @@ export function useProfile(): UseQueryResult<UserProfile | null, Error> {
         branchId: d.branchId ?? d.data?.branchId ?? null,
         roleId: d.roleId ?? null,
         roleName: d.roleName ?? null,
+        permissionNames: d.permissionNames ?? d.data?.permissionNames ?? [],
       };
     },
     staleTime: 5 * 60_000,
@@ -69,29 +71,42 @@ export function useCurrentOrg() {
 }
 
 /**
- * Derived hook: current user's role and role-based flags.
+ * Derived hook: current user's role and permission-based access.
  */
 export function useCurrentUserRole() {
   const query = useProfile();
   const profile = query.data;
 
-  const roleName: RoleName =
-    profile?.roleName === "Org Owner" ||
-    profile?.roleName === "Manager" ||
-    profile?.roleName === "Mechanic" ||
-    profile?.roleName === "Guest"
-      ? profile.roleName
-      : null;
+  const permissionSet = useMemo(
+    () => new Set(profile?.permissionNames ?? []),
+    [profile?.permissionNames],
+  );
+
+  const isOrgOwner = profile?.roleName === "Org Owner";
+  const isMechanic = profile?.roleName === "Mechanic";
+
+  /**
+   * Check whether the current user has a specific permission.
+   * Uses the exact `resource.action` name from the permission catalog.
+   */
+  const hasPermission = (
+    resource: string,
+    action: PermissionAction,
+  ): boolean => {
+    return permissionSet.has(`${resource}.${action}`);
+  };
 
   return {
     ...query,
     profile,
-    role: roleName,
+    role: profile?.roleName ?? null,
     loading: query.isLoading,
-    isOrgOwner: roleName === "Org Owner",
-    isAdmin: roleName === "Org Owner",
-    isManager: roleName === "Manager",
-    isMechanic: roleName === "Mechanic",
-    isGuest: roleName === "Guest",
+    isOrgOwner,
+    isAdmin: isOrgOwner,
+    isManager: false, // deprecated — use hasPermission instead
+    isMechanic,
+    isGuest: profile?.roleName === "Guest",
+    permissionNames: profile?.permissionNames ?? [],
+    hasPermission,
   };
 }

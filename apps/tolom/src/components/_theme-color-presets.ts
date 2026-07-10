@@ -337,8 +337,8 @@ export function oklchToHex(oklch: string): string {
     const g = Math.round(128 + 127 * Math.cos(((hue - 120) * Math.PI) / 180));
     const b = Math.round(128 + 127 * Math.cos(((hue - 240) * Math.PI) / 180));
     return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    reportServerError("Unexpected error", error);
     return "#000000";
   }
 }

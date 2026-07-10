@@ -104,8 +104,8 @@ export function BookingRequestForm({
       }
 
       onSuccess(json.data?.message ?? t("submitSuccess"));
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       setSubmitError(t("networkError"));
     } finally {
       setSending(false);

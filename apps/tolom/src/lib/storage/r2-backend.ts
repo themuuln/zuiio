@@ -99,8 +99,8 @@ export const r2Backend: StorageBackend = {
 
     try {
       await client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       return; // Object doesn't exist — no-op
     }
 

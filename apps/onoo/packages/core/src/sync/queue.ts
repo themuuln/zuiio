@@ -1,5 +1,31 @@
 import type { StatEvent } from "../types/index.js";
 
+export interface JournalOperation {
+  operationId: string;
+  trackerSessionId: string;
+  sequenceNo: number;
+  kind: "record_event" | "void_event" | "replacement_event";
+  payload: Record<string, unknown>;
+  status: "queued" | "acknowledged" | "rejected";
+  rejectionReason?: string;
+}
+
+export interface JournalAck {
+  operationId: string;
+  acknowledgedSequenceNo: number;
+}
+
+export interface JournalState {
+  operations: readonly JournalOperation[];
+  lastAcknowledgedSequenceNo: number;
+}
+
+export interface SyncHealth {
+  queueDepth: number;
+  lastAcknowledgedSequenceNo: number;
+  status: "offline" | "syncing" | "healthy" | "error";
+}
+
 /**
  * A single pending operation in the offline queue.
  *

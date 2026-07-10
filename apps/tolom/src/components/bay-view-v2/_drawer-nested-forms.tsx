@@ -58,6 +58,7 @@ export function DrawerNestedForms({
       >
         <DrawerContent
           showCloseButton={false}
+          backdropForceRender={true}
           className="sm:max-w-md"
           contentClassName="flex flex-col gap-0 border-border/80 shadow-2xl"
         >

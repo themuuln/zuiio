@@ -56,6 +56,8 @@ function makeEvent(
   return {
     id: `evt-${eventSeq}`,
     game_id: GAME_ID,
+    tracker_session_id: 'session-1',
+    operation_id: `operation-${eventSeq}`,
     client_id: `client-${eventSeq}`,
     local_seq: eventSeq,
     team_season_id: null,
@@ -63,6 +65,9 @@ function makeEvent(
     payload: {},
     created_by: null,
     created_at: '2026-01-01T00:00:00Z',
+    voided_at: null,
+    voided_by: null,
+    void_reason: null,
     deleted_at: null,
     superseded_by: null,
     ...overrides,

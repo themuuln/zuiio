@@ -32,7 +32,7 @@ export function TeamSwitcher() {
   const t = useTranslations();
   const { isMobile } = useSidebar();
   const { data: orgInfo } = useCurrentOrg();
-  const { isMechanic, isAdmin, isManager } = useCurrentUserRole();
+  const { isMechanic, hasPermission } = useCurrentUserRole();
 
   const selectedBranchId = useSelectedBranchId();
   const setSelectedBranchId = useSetSelectedBranchId();
@@ -40,7 +40,7 @@ export function TeamSwitcher() {
   const [addBranchOpen, setAddBranchOpen] = useState(false);
 
   const name = orgInfo?.orgName ?? "TOLOM";
-  const canSwitchBranches = isAdmin || isManager;
+  const canSwitchBranches = hasPermission("branches", "read");
   const canShowDropdown = canSwitchBranches && !isMechanic;
   const selectedBranch = branches.find((b) => b.id === selectedBranchId);
   const activeBranchName = selectedBranch?.name ?? t("dashboard.allBranches");
@@ -97,7 +97,7 @@ export function TeamSwitcher() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setAddBranchOpen(true)}>
                   <CirclePlus className="size-4" />
-                  <span>{t("branches.addBranch")}</span>
+                  <span>{t("common.addBranch")}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             )}

@@ -42,6 +42,7 @@ import { reportServerError } from "@/lib/sentry-report-server";
 import type { BayViewWorkOrder } from "@/lib/services/bay-view-service";
 import type { Vehicle } from "@/lib/types";
 import { cn, formatPlateNumber } from "@/lib/utils";
+import { useVehicleSearch, type VehicleSearchResult } from "@/lib/queries/use-vehicle-search";
 
 interface MechanicItem extends SortableItem {
   id: string;
@@ -107,20 +108,6 @@ function SortableMechanicRow({
   );
 }
 
-interface VehicleSearchResult {
-  id: string;
-  plate_number: string;
-  make: string;
-  model: string;
-  year: number | null;
-  color: string | null;
-  customer?: {
-    id: string;
-    first_name: string | null;
-    last_name: string | null;
-    phone: string | null;
-  } | null;
-}
 
 interface AssignDialogProps {
   open: boolean;
@@ -150,8 +137,6 @@ export function AssignDialog({
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
-  const [searchResults, setSearchResults] = useState<VehicleSearchResult[]>([]);
-  const [searchLoading, setSearchLoading] = useState(false);
   const [creatingWorkOrder, setCreatingWorkOrder] = useState(false);
   const [showNewVehicle, setShowNewVehicle] = useState(false);
   const [showNewCustomer, setShowNewCustomer] = useState(false);
@@ -169,18 +154,50 @@ export function AssignDialog({
       ...mechanics.filter((m) => !assignedIds.has(m.id)),
     ];
   }, [assignedMechanics, mechanics]);
+  // ── Vehicle search: React Query (cached server results) ──
+  const vehicleSearch = useVehicleSearch(search, {
+    enabled: searchFocused && !!search.trim(),
+  });
+
+  // ── Vehicle search: client-side queue filtering (instant) ──
+  const queueSearchResults = useMemo(() => {
+    if (!search.trim()) return [];
+    const q = search.toLowerCase();
+    return queue
+      .filter((wo) => {
+        const v = wo.vehicle;
+        if (!v) return false;
+        return (
+          v.plate_number?.toLowerCase().includes(q) ||
+          v.make?.toLowerCase().includes(q) ||
+          v.model?.toLowerCase().includes(q)
+        );
+      })
+      .map((wo) => ({
+        id: wo.vehicle!.id,
+        plate_number: wo.vehicle!.plate_number,
+        make: wo.vehicle!.make ?? "",
+        model: wo.vehicle!.model ?? "",
+        year: wo.vehicle!.year,
+        color: wo.vehicle!.color,
+        customer: null,
+        _fromQueue: true as const,
+        _workOrderId: wo.id,
+      }));
+  }, [search, queue]);
+
+  // ── Merge: queue results first (instant), then cached server results ──
+  const mergedSearchResults = useMemo(() => {
+    const serverResults = vehicleSearch.data ?? [];
+    const queueIds = new Set(queueSearchResults.map((r) => r.id));
+    const dedupedServer = serverResults.filter((r) => !queueIds.has(r.id));
+    return [...queueSearchResults, ...dedupedServer];
+  }, [queueSearchResults, vehicleSearch.data]);
+
 
   const searchRef = useRef<HTMLInputElement>(null);
   const blurTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Cleanup timers on unmount
-  useEffect(() => {
-    return () => {
-      clearTimeout(blurTimerRef.current);
-      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-    };
-  }, []);
 
   // Reset state when dialog opens
   useEffect(() => {
@@ -189,37 +206,12 @@ export function AssignDialog({
       setSelectedVehicle(null);
       setAssignedMechanics([]);
       setSearch("");
-      setSearchResults([]);
       setSaving(false);
       setCreatingWorkOrder(false);
       setTimeout(() => searchRef.current?.focus(), 100);
     }
   }, [open]);
 
-  // Vehicle search (debounced)
-  const handleSearch = useCallback(async (term: string) => {
-    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-
-    if (!term.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
-    searchTimerRef.current = setTimeout(async () => {
-      setSearchLoading(true);
-      try {
-        const { searchVehiclesWithCustomers } = await import(
-          "@/lib/services/bay-view-actions"
-        );
-        const results = await searchVehiclesWithCustomers(term);
-        setSearchResults(results);
-      } catch {
-        setSearchResults([]);
-      } finally {
-        setSearchLoading(false);
-      }
-    }, 300);
-  }, []);
 
   // Check if a vehicle already has a work order in the queue
   const findWorkOrderForVehicle = useCallback(
@@ -233,7 +225,6 @@ export function AssignDialog({
     async (vehicle: VehicleSearchResult) => {
       setSelectedVehicle(vehicle);
       setSearch("");
-      setSearchResults([]);
       setSearchFocused(false);
 
       // Check if vehicle already has a work order in queue
@@ -363,10 +354,7 @@ export function AssignDialog({
                   <Input
                     ref={searchRef}
                     value={search}
-                    onChange={(e) => {
-                      setSearch(e.target.value);
-                      handleSearch(e.target.value);
-                    }}
+                    onChange={(e) => setSearch(e.target.value)}
                     onFocus={() => {
                       clearTimeout(blurTimerRef.current);
                       setSearchFocused(true);
@@ -379,23 +367,22 @@ export function AssignDialog({
                     onKeyDown={(e) => {
                       if (e.key === "Escape") {
                         setSearch("");
-                        setSearchResults([]);
                         setSearchFocused(false);
                       }
                     }}
                     placeholder="Search by plate, make, or model..."
                     className="h-9 text-xs pl-2"
                   />
-                  {searchLoading && (
+                  {vehicleSearch.isFetching && (
                     <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground animate-spin" />
                   )}
                 </div>
 
                 {/* Search results dropdown */}
-                {searchFocused && search.trim() && searchResults.length > 0 && (
+                {searchFocused && search.trim() && mergedSearchResults.length > 0 && (
                   <ScrollArea className="max-h-[180px] mt-1">
                     <div className="flex flex-col gap-1">
-                      {searchResults.map((vehicle) => {
+                      {mergedSearchResults.map((vehicle) => {
                         const inQueue = findWorkOrderForVehicle(vehicle.id);
                         return (
                           <Button
@@ -451,8 +438,8 @@ export function AssignDialog({
                 {/* No results */}
                 {searchFocused &&
                   search.trim() &&
-                  !searchLoading &&
-                  searchResults.length === 0 && (
+                  !vehicleSearch.isFetching &&
+                  mergedSearchResults.length === 0 && (
                     <Typography.Muted className="text-xs text-muted-foreground/60 text-center py-4">
                       No vehicles found
                     </Typography.Muted>

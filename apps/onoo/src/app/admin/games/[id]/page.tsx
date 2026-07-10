@@ -20,11 +20,11 @@ function statusBadgeVariant(status: string) {
   switch (status) {
     case "scheduled":
       return "secondary";
-    case "live":
+    case "live_provisional":
       return "destructive";
-    case "final":
+    case "final_pending_review":
       return "outline";
-    case "verified":
+    case "league_verified":
       return "default";
     case "official":
       return "default";
@@ -39,11 +39,11 @@ function statusLabel(status: string) {
   switch (status) {
     case "scheduled":
       return "Товлосон";
-    case "live":
+    case "live_provisional":
       return "Дүрэлзүүлсэн";
-    case "final":
+    case "final_pending_review":
       return "Дууссан";
-    case "verified":
+    case "league_verified":
       return "Баталгаажуулсан";
     case "official":
       return "Албан ёс";
@@ -187,19 +187,19 @@ export default function GameDetailPage() {
           <div className="flex flex-wrap gap-2 pt-2">
             {game.status === "scheduled" && (
               <Button
-                onClick={() => updateStatus("live")}
+                onClick={() => updateStatus("live_provisional")}
               >
                 Тоглолт эхлүүлэх
               </Button>
             )}
-            {game.status === "final" && (
+            {game.status === "final_pending_review" && (
               <Button
-                onClick={() => updateStatus("verified")}
+                onClick={() => updateStatus("league_verified")}
               >
                 Баталгаажуулах
               </Button>
             )}
-            {game.status === "verified" && (
+            {game.status === "league_verified" && (
               <Button
                 onClick={() => updateStatus("official")}
               >

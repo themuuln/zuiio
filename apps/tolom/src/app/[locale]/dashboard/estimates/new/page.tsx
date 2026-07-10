@@ -242,8 +242,8 @@ export default function NewEstimatePage() {
       );
       const json = await res.json();
       setServices(json.data ?? []);
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       setServices([]);
     } finally {
       setSearchingServices(false);
@@ -264,8 +264,8 @@ export default function NewEstimatePage() {
       );
       const json = await res.json();
       setParts(json.data ?? []);
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       setParts([]);
     } finally {
       setSearchingParts(false);

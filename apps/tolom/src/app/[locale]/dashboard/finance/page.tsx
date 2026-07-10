@@ -55,8 +55,8 @@ function formatInvoiceDate(iso: string): string {
       month: "short",
       day: "numeric",
     });
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    reportServerError("Unexpected error", error);
     return iso;
   }
 }
@@ -239,8 +239,8 @@ function InvoicesTab({ orgId }: { orgId: string | null }) {
       if (!orgId) return;
       try {
         await sendEmail.mutateAsync({ invoiceId });
-      } catch {
-        reportServerError("Unexpected error");
+      } catch (error) {
+        reportServerError("Unexpected error", error);
         // Toast handled by useOrgMutation via successMessage/error handling
       }
     },

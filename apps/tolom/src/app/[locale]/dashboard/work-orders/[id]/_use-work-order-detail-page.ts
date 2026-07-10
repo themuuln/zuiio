@@ -265,8 +265,8 @@ export function useWorkOrderDetailPage() {
         wo?.vehicle?.model,
       );
       unitPrice = prices[0] ?? svc.default_price ?? 0;
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       // fallback
     }
     const prev = queryClient.getQueryData<WorkOrderDetail>(detailKey);
@@ -432,8 +432,8 @@ export function useWorkOrderDetailPage() {
             unit_price: svc.unit_price,
           },
         });
-      } catch {
-        reportServerError("Unexpected error");
+      } catch (error) {
+        reportServerError("Unexpected error", error);
         hasError = true;
       }
     }
@@ -447,8 +447,8 @@ export function useWorkOrderDetailPage() {
             unit_price: part.unit_price,
           },
         });
-      } catch {
-        reportServerError("Unexpected error");
+      } catch (error) {
+        reportServerError("Unexpected error", error);
         hasError = true;
       }
     }

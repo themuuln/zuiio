@@ -12,17 +12,8 @@ import type {
   WorkOrderStatusDistribution,
 } from "@/lib/types";
 import { generateInsights } from "./insights";
-import { getPreviousPeriodSummary } from "./profitability";
-import {
-  getCustomerAcquisitionTrendBatched,
-  getRecentWorkOrdersBatched,
-  getRevenueTrendBatched,
-  getServiceCategoryBreakdownBatched,
-  getTechnicianPerformanceBatched,
-  getTopServicesBatched,
-} from "./queries";
 
-// ── Dashboard (optimized: ~10 queries instead of ~236) ──────
+// ── Dashboard (single RPC call instead of ~18 queries) ──────
 
 export async function getDashboardData(
   db: SupabaseClient,
@@ -37,7 +28,7 @@ export async function getDashboardData(
 ): Promise<DashboardData> {
   const supabase = db;
 
-  // Normalize params: support both string period and object with dateFrom/dateTo
+  // Normalize params
   const resolvedPeriod =
     typeof periodOrOpts === "string" ? periodOrOpts : "all";
   const resolvedBranchId =
@@ -45,299 +36,90 @@ export async function getDashboardData(
       ? periodOrOpts.branchId
       : branchId;
 
-  const today = new Date().toISOString().split("T")[0];
-  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split("T")[0];
-  const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split("T")[0];
-
-  // When dateFrom/dateTo provided as object, use those directly
-  let dateFrom: string;
-  let dateTo: string | null;
+  let dateFrom: string | undefined;
+  let dateTo: string | undefined;
   if (typeof periodOrOpts === "object") {
     dateFrom = periodOrOpts.dateFrom;
     dateTo = periodOrOpts.dateTo;
-  } else {
-    dateFrom =
-      periodOrOpts === "today"
-        ? today
-        : periodOrOpts === "week"
-          ? weekAgo
-          : periodOrOpts === "month"
-            ? monthAgo
-            : "2000-01-01";
-    dateTo = null; // no upper bound for period-based filters
   }
-  const dayCount = dateTo
-    ? Math.ceil(
-        (new Date(dateTo).getTime() - new Date(dateFrom).getTime()) /
-          (24 * 60 * 60 * 1000),
-      ) + 1
-    : typeof periodOrOpts === "string"
-      ? periodOrOpts === "today"
-        ? 1
-        : periodOrOpts === "week"
-          ? 7
-          : 30
-      : 30;
 
-  // ── Batch 1: All work-orders data in parallel ──────────
-  const [
-    completedWos,
-    activeWos,
-    statusData,
-    recentIds,
-    summaryCust,
-    summaryVehicles,
-    allCompletedWos,
-  ] = await Promise.all([
-    // Completed WOs in period (for revenue)
-    (() => {
-      let q = withBranchFilter(
-        supabase
-          .from("work_orders")
-          .select("id")
-          .eq("organization_id", orgId)
-          .eq("status", "Completed")
-          .gte("updated_at", `${dateFrom}T00:00:00`)
-          .is("deleted_at", null),
-        resolvedBranchId,
-      );
-      if (dateTo) {
-        q = q.lte("updated_at", `${dateTo}T23:59:59`);
-      }
-      return q;
-    })(),
-
-    // Active WOs
-    withBranchFilter(
-      supabase
-        .from("work_orders")
-        .select("id")
-        .eq("organization_id", orgId)
-        .not("status", "in", '("Completed","Cancelled")')
-        .is("deleted_at", null),
-      resolvedBranchId,
-    ),
-
-    // All WO statuses for distribution
-    withBranchFilter(
-      supabase
-        .from("work_orders")
-        .select("status")
-        .eq("organization_id", orgId)
-        .is("deleted_at", null),
-      resolvedBranchId,
-    ),
-
-    // Recent 10 WO ids (we'll batch-fetch details)
-    withBranchFilter(
-      supabase
-        .from("work_orders")
-        .select("id")
-        .eq("organization_id", orgId)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false })
-        .limit(10),
-      resolvedBranchId,
-    ),
-
-    // Total customers
-    withBranchFilter(
-      supabase
-        .from("customers")
-        .select("id", { count: "exact", head: true })
-        .eq("organization_id", orgId)
-        .is("deleted_at", null),
-      resolvedBranchId,
-    ),
-
-    // Total vehicles
-    withBranchFilter(
-      supabase
-        .from("vehicles")
-        .select("id", { count: "exact", head: true })
-        .eq("organization_id", orgId)
-        .is("deleted_at", null),
-      resolvedBranchId,
-    ),
-
-    // All completed WOs ever (for tech perf and categories)
-    withBranchFilter(
-      supabase
-        .from("work_orders")
-        .select("id")
-        .eq("organization_id", orgId)
-        .eq("status", "Completed")
-        .is("deleted_at", null),
-      resolvedBranchId,
-    ),
-  ]);
-
-  // ── Batch 2: Services + Parts for revenue ──────────────
-  const completedWoIds = (completedWos.data ?? []).map(
-    (w: { id: string }) => w.id,
+  // Single RPC call replaces ~18 PostgREST queries
+  const { data, error } = await withDbCapture(
+    "getFullDashboardData",
+    supabase.rpc("get_full_dashboard_data", {
+      p_org_id: orgId,
+      p_period: resolvedPeriod,
+      p_branch_id: resolvedBranchId,
+      p_date_from: dateFrom ?? null,
+      p_date_to: dateTo ?? null,
+    }),
   );
-  const allCompletedIds = (allCompletedWos.data ?? []).map(
-    (w: { id: string }) => w.id,
-  );
-  const recentWoIds = (recentIds.data ?? []).map((w: { id: string }) => w.id);
 
-  const [servicesData, partsData] = await Promise.all([
-    completedWoIds.length > 0
-      ? supabase
-          .from("work_order_services")
-          .select(
-            "final_price, discount_amount, service_name, work_order_id, unit_cost, quantity",
-          )
-          .in("work_order_id", completedWoIds)
-      : {
-          data: [] as {
-            final_price: number;
-            unit_cost: number | null;
-            quantity: number;
-            work_order_id: string;
-          }[],
-        },
-
-    completedWoIds.length > 0
-      ? supabase
-          .from("work_order_parts")
-          .select(
-            "final_price, discount_amount, part_name, work_order_id, unit_cost, quantity",
-          )
-          .in("work_order_id", completedWoIds)
-      : {
-          data: [] as {
-            final_price: number;
-            unit_cost: number | null;
-            quantity: number;
-            work_order_id: string;
-          }[],
-        },
-  ]);
-
-  const allServices = servicesData.data ?? [];
-  const allParts = partsData.data ?? [];
-
-  const serviceRevenue = allServices.reduce(
-    (sum, s) => sum + Number((s as Record<string, unknown>).final_price),
-    0,
-  );
-  const serviceCost = allServices.reduce(
-    (sum, s) =>
-      sum +
-      Number((s as Record<string, unknown>).unit_cost ?? 0) *
-        Number((s as Record<string, unknown>).quantity),
-    0,
-  );
-  const partsRevenue = allParts.reduce(
-    (sum, p) => sum + Number((p as Record<string, unknown>).final_price),
-    0,
-  );
-  const partsCost = allParts.reduce(
-    (sum, p) =>
-      sum +
-      Number((p as Record<string, unknown>).unit_cost ?? 0) *
-        Number((p as Record<string, unknown>).quantity),
-    0,
-  );
-  const totalRevenue = serviceRevenue + partsRevenue;
-  const totalCost = serviceCost + partsCost;
-  const grossProfit = totalRevenue - totalCost;
-  const marginPercent =
-    totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
-
-  // ── Summary ───────────────────────────────────────────
-  const summary = {
-    totalRevenue,
-    activeWorkOrders: activeWos.data?.length ?? 0,
-    completedToday: 0, // computed below
-    newCustomersToday: 0,
-    avgRepairOrderValue:
-      (completedWos.data?.length ?? 0) > 0
-        ? Math.round((totalRevenue / (completedWos.data?.length ?? 1)) * 100) /
-          100
-        : 0,
-    partsRevenue,
-    serviceRevenue,
-    grossProfit,
-    marginPercent,
-    totalCustomers: summaryCust.count ?? 0,
-    totalVehicles: summaryVehicles.count ?? 0,
-  };
-
-  // ── Status Distribution ───────────────────────────────
-  const statusMap = new Map<string, number>();
-  for (const wo of statusData.data ?? []) {
-    statusMap.set(wo.status, (statusMap.get(wo.status) ?? 0) + 1);
+  if (error) {
+    throw new Error(error.message);
   }
-  const workOrderStatusDistribution: WorkOrderStatusDistribution[] = Array.from(
-    statusMap.entries(),
-  ).map(([status, count]) => ({
-    status,
-    count,
-  }));
 
-  // ── Parallel: Revenue Trend, Top Services, Tech Perf, Recent WOs, Categories, Acquisition, Prev Period ──
-  const [
-    revenueTrend,
-    topServices,
-    technicianPerformance,
-    recentWorkOrders,
-    serviceCategoryBreakdown,
-    customerAcquisitionTrend,
-    prevSummary,
-  ] = await Promise.all([
-    getRevenueTrendBatched(supabase, orgId, dayCount, resolvedBranchId),
-    getTopServicesBatched(supabase, completedWoIds),
-    getTechnicianPerformanceBatched(
-      supabase,
-      orgId,
-      allCompletedIds,
-      resolvedBranchId,
-    ),
-    getRecentWorkOrdersBatched(supabase, recentWoIds),
-    getServiceCategoryBreakdownBatched(supabase, orgId, allCompletedIds),
-    getCustomerAcquisitionTrendBatched(supabase, orgId, resolvedBranchId),
-    getPreviousPeriodSummary(supabase, orgId, resolvedPeriod, resolvedBranchId),
-  ]);
+  const result = data as Record<string, unknown>;
 
-  // Combine into a DashboardSummary shape for comparison
-  const summaryComparison: DashboardSummary | null = prevSummary
+  const summary = result["summary"] as Record<string, number>;
+  const summaryComparison = result["summaryComparison"] as Record<string, number> | null;
+  const statusDist = result["workOrderStatusDistribution"] as WorkOrderStatusDistribution[];
+  const revenueTrend = result["revenueTrend"] as DashboardData["revenueTrend"];
+  const topServices = result["topServices"] as DashboardData["topServices"];
+  const techPerf = result["technicianPerformance"] as DashboardData["technicianPerformance"];
+  const recentOrders = result["recentWorkOrders"] as DashboardData["recentWorkOrders"];
+  const categoryBreakdown = result["serviceCategoryBreakdown"] as DashboardData["serviceCategoryBreakdown"];
+  const acquisitionTrend = result["customerAcquisitionTrend"] as DashboardData["customerAcquisitionTrend"];
+
+  // Build comparison shape for insights
+  const comparison: DashboardSummary | null = summaryComparison
     ? {
-        ...prevSummary,
-        activeWorkOrders: 0,
-        totalCustomers: 0,
-        totalVehicles: 0,
-        grossProfit: 0,
-        marginPercent: 0,
+        totalRevenue: summaryComparison["total_revenue"] ?? 0,
+        activeWorkOrders: summaryComparison["active_work_orders"] ?? 0,
+        completedToday: summaryComparison["completed_today"] ?? 0,
+        newCustomersToday: summaryComparison["new_customers_today"] ?? 0,
+        avgRepairOrderValue: summaryComparison["avg_repair_order_value"] ?? 0,
+        partsRevenue: summaryComparison["parts_revenue"] ?? 0,
+        serviceRevenue: summaryComparison["service_revenue"] ?? 0,
+        grossProfit: summaryComparison["gross_profit"] ?? 0,
+        marginPercent: summaryComparison["margin_percent"] ?? 0,
+        totalCustomers: summaryComparison["total_customers"] ?? 0,
+        totalVehicles: summaryComparison["total_vehicles"] ?? 0,
       }
     : null;
 
-  // ── Insights ────────────────────────────────────────────
-  const insights = generateInsights(
-    summary,
-    summaryComparison,
-    workOrderStatusDistribution,
-  );
-
-  const dashboardData: DashboardData = {
-    summary,
-    summaryComparison,
-    insights,
-    workOrderStatusDistribution,
-    revenueTrend,
-    topServices,
-    technicianPerformance,
-    recentWorkOrders,
-    serviceCategoryBreakdown,
-    customerAcquisitionTrend,
+  const fullSummary: DashboardSummary = {
+    totalRevenue: summary["totalRevenue"] ?? 0,
+    activeWorkOrders: summary["activeWorkOrders"] ?? 0,
+    completedToday: summary["completedToday"] ?? 0,
+    newCustomersToday: summary["newCustomersToday"] ?? 0,
+    avgRepairOrderValue: summary["avgRepairOrderValue"] ?? 0,
+    partsRevenue: summary["partsRevenue"] ?? 0,
+    serviceRevenue: summary["serviceRevenue"] ?? 0,
+    grossProfit: summary["grossProfit"] ?? 0,
+    marginPercent: summary["marginPercent"] ?? 0,
+    totalCustomers: summary["totalCustomers"] ?? 0,
+    totalVehicles: summary["totalVehicles"] ?? 0,
   };
 
-  return dashboardData;
+  const insights = generateInsights(
+    fullSummary,
+    comparison,
+    statusDist,
+  );
+
+  return {
+    summary: fullSummary,
+    summaryComparison: comparison,
+    insights,
+    workOrderStatusDistribution: statusDist,
+    revenueTrend,
+    topServices,
+    technicianPerformance: techPerf,
+    recentWorkOrders: recentOrders,
+    serviceCategoryBreakdown: categoryBreakdown,
+    customerAcquisitionTrend: acquisitionTrend,
+  };
 }
 
 // ── Daily Timeline ──────────────────────────────────────────
@@ -681,3 +463,4 @@ export async function getDashboardMetricsFast(
   if (error) throw new Error(error.message);
   return (data as Record<string, unknown>) ?? {};
 }
+

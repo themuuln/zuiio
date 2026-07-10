@@ -31,6 +31,31 @@ export const SubstitutionPayload = z.object({
 
 export const EmptyPayload = z.object({});
 
+export const VoidEventPayload = z.object({
+  event_id: z.string().uuid(),
+  reason: z.string().trim().min(1).max(500),
+});
+
+export const ReplacementEventPayload = z.object({
+  supersedes_event_id: z.string().uuid(),
+  operation_id: z.string().uuid(),
+});
+
+export const SourceSubmissionPayload = z.object({
+  source_type: z.enum(['tracker_journal', 'official_score_sheet', 'manual_box_score', 'import']),
+  evidence_url: z.string().url().optional(),
+  rights_confirmed: z.boolean(),
+  normalized_payload: z.record(z.string(), z.unknown()),
+  confidence: z.number().min(0).max(1).optional(),
+  idempotency_key: z.string().uuid(),
+});
+
+export const TrackerSessionPayload = z.object({
+  tracker_session_id: z.string().uuid(),
+  operation_id: z.string().uuid(),
+  local_seq: z.number().int().positive(),
+});
+
 // --- Discriminated map: event type → payload schema ---
 
 const payloadSchemas = {

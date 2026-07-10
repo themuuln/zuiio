@@ -282,8 +282,8 @@ export default function EstimateDetailPage() {
         `${window.location.origin}/estimate/${renderEstimate.public_token}`,
       );
       toast.success(t("linkCopied"));
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       toast.error(t("failedToSave"));
     }
   };

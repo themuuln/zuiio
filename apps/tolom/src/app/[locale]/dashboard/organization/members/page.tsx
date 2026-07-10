@@ -125,8 +125,8 @@ export default function MembersPage() {
         `${window.location.origin}/invite/${token}`,
       );
       toast.success(t("linkCopied"));
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       toast.error(t("copyFailed"));
     }
   };

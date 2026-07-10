@@ -42,7 +42,7 @@ export function SectionCard({
   children,
 }: SectionCardProps) {
   return (
-    <section className="rounded-xl ring-1 ring-foreground/10 bg-card/40 p-3">
+    <section className="rounded-xl bg-card/40 p-3">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-1.5">

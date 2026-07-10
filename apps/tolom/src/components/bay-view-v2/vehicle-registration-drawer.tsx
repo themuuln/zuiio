@@ -618,16 +618,8 @@ export function VehicleRegistrationDrawer({
             )}
 
             {lookupDone && !lookupResult.exists && (
-              <div
-                className={`px-4 py-2 text-xs ${
-                  lookupResult.smartcarFound
-                    ? "bg-info/10 dark:bg-info/20 border border-info/30 dark:border-info/40 text-info dark:text-info"
-                    : "bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400"
-                }`}
-              >
-                {lookupResult.smartcarFound
-                  ? t("vehicleFoundSmartcar")
-                  : t("vehicleNotFound")}
+              <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 px-4 py-2 text-xs text-amber-600 dark:text-amber-400">
+                {t("vehicleNotFound")}
               </div>
             )}
 
@@ -983,22 +975,21 @@ export function VehicleRegistrationDrawer({
           )}
 
           {/* ── Bottom: Timeline ─────────────────────────────── */}
-          <div className="w-full">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="flex items-center justify-center size-8 bg-amber-500/10">
-                <HistoryIcon className="size-4 text-amber-500" />
-              </div>
-              <span className="text-sm font-semibold">
-                {t("serviceTimeline")}
-              </span>
-              {lookupResult.serviceHistory.length > 0 && (
-                <span className="bg-muted px-2 py-1 text-xs font-semibold text-muted-foreground">
-                  {lookupResult.serviceHistory.length}
+          {lookupDone && lookupResult.exists && (
+            <div className="w-full">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center justify-center size-8 bg-amber-500/10">
+                  <HistoryIcon className="size-4 text-amber-500" />
+                </div>
+                <span className="text-sm font-semibold">
+                  {t("serviceTimeline")}
                 </span>
-              )}
-            </div>
-
-            {lookupDone ? (
+                {lookupResult.serviceHistory.length > 0 && (
+                  <span className="bg-muted px-2 py-1 text-xs font-semibold text-muted-foreground">
+                    {lookupResult.serviceHistory.length}
+                  </span>
+                )}
+              </div>
               <ScrollArea className="max-h-[420px] pr-1">
                 {lookupResult.vehicle && (
                   <div className="mb-4 bg-muted/30 border border-border/60 p-3">
@@ -1033,18 +1024,8 @@ export function VehicleRegistrationDrawer({
                   history={lookupResult.serviceHistory}
                 />
               </ScrollArea>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground/40">
-                <Car className="size-12 mb-3" />
-                <Typography.Text className="text-sm font-medium">
-                  {t("enterPlateAbove")}
-                </Typography.Text>
-                <Typography.Text className="text-xs mt-1">
-                  {t("timelineWillAppear")}
-                </Typography.Text>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </DetailDrawer.Body>
 

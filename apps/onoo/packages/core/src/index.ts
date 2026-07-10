@@ -6,3 +6,4 @@ export * from "./format";
 export * from "./i18n/stats";
 export * from "./events";
 export * from "./sync";
+export * from "./stats/derive";

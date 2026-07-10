@@ -1,13 +1,17 @@
 {
   "name": "@zuiio/export",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
   },
   "peerDependencies": {
     "exceljs": "^4"
+  },
+  "dependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
+    "docx": "^9.7.1",
+    "pdf-lib": "^1.17.1"
   },
   "devDependencies": {
     "@zuiio/config": "workspace:*",

@@ -426,8 +426,8 @@ export default function ExpensesPage() {
               month: "short",
               day: "numeric",
             });
-          } catch {
-            reportServerError("Unexpected error");
+          } catch (error) {
+            reportServerError("Unexpected error", error);
             return expense.expense_date;
           }
         })();

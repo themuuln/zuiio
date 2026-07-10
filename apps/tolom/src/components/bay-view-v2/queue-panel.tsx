@@ -104,11 +104,12 @@ function QueueItem({
   }, [workOrder.created_at]);
 
   return (
-    <button
+    <div
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      type="button"
+      role="button"
+      tabIndex={0}
       style={style}
       onClick={() => onItemClick?.(workOrder)}
       onKeyDown={(e) => {
@@ -223,7 +224,7 @@ function QueueItem({
           {waitInfo.text}
         </span>
       </div>
-    </button>
+    </div>
   );
 }
 

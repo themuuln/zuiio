@@ -17,4 +17,4 @@ export const GET = createSimpleRouteHandler(async ({ supabase }) => {
   }
 
   return ok(data);
-});
+}, { requireAuth: false });

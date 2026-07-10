@@ -60,7 +60,7 @@ function TableSkeleton({ rows = 5 }: { rows?: number }) {
 
 export default function CustomersLoading() {
   return (
-    <div className="tablet-touch flex flex-col gap-6 tablet:gap-6 tablet:px-2">
+    <div className="tablet-touch flex flex-col gap-6 tablet:gap-6">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <Skeleton className="h-8 w-48" />

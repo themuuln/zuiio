@@ -245,8 +245,8 @@ export default function EodClosePage() {
       }
 
       setIsConfirmOpen(false);
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       toast.error(t("eodClose.toastCloseDayError"));
     }
   };

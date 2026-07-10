@@ -165,8 +165,8 @@ export const GET = createRouteHandler(async ({ orgId, supabase }) => {
         }
       }
     }
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    reportServerError("Unexpected error", error);
     // Gracefully degrade — email will be null if service role isn't configured
   }
 

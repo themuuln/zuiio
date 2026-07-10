@@ -175,7 +175,7 @@ export function DrawerFooter({
 
       {/* Primary status flow + secondary actions */}
       <div className="flex items-center gap-2">
-        {/* Status actions */}
+        {/* Primary status actions */}
         {actions.map((action) => {
           const Icon = action.icon;
           const isDefault = (action.variant ?? "default") === "default";
@@ -183,7 +183,7 @@ export function DrawerFooter({
             <Button
               key={action.key}
               variant={isDefault ? "default" : "outline"}
-              className="flex-1 md:flex-initial md:px-5 h-9 text-xs font-semibold"
+              className="h-9 px-4 text-xs font-semibold"
               onClick={action.onClick}
               disabled={saving}
             >
@@ -193,52 +193,59 @@ export function DrawerFooter({
           );
         })}
 
-        {/* Invoice */}
-        {canInvoice &&
-          (invoicePublicToken ? (
-            <InvoiceQrPopover
-              url={`${window.location.origin}/invoice/${invoicePublicToken}`}
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 px-3 text-xs"
-                onClick={() =>
-                  window.open(
-                    `${window.location.origin}/invoice/${invoicePublicToken}`,
-                    "_blank",
-                  )
-                }
-              >
-                <FileText className="size-4" />
-                {t("invoice")}
-              </Button>
-            </InvoiceQrPopover>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 px-3 text-xs"
-              onClick={onCreateInvoice}
-              disabled={saving || creatingInvoice}
-            >
-              <FileText className="size-4" />
-              {creatingInvoice ? t("creating") : t("createInvoice")}
-            </Button>
-          ))}
+        {/* Secondary actions — right-aligned */}
+        {(canInvoice || canCancel) && (
+          <div className="ml-auto flex items-center gap-1.5">
+            {/* Invoice */}
+            {canInvoice &&
+              (invoicePublicToken ? (
+                <InvoiceQrPopover
+                  url={`${window.location.origin}/invoice/${invoicePublicToken}`}
+                >
+                  <Button
+                    variant="outline"
+                    className="h-9 px-3 text-xs"
+                    onClick={() =>
+                      window.open(
+                        `${window.location.origin}/invoice/${invoicePublicToken}`,
+                        "_blank",
+                      )
+                    }
+                  >
+                    <FileText className="size-4" />
+                    {t("invoice")}
+                  </Button>
+                </InvoiceQrPopover>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="h-9 px-3 text-xs"
+                  onClick={onCreateInvoice}
+                  disabled={saving || creatingInvoice}
+                >
+                  <FileText className="size-4" />
+                  {creatingInvoice ? t("creating") : t("createInvoice")}
+                </Button>
+              ))}
 
-        {/* Cancel */}
-        {canCancel && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onChangeStatus("Cancelled")}
-            disabled={saving}
-            className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive"
-          >
-            <X className="size-3.5" />
-            {t("cancel")}
-          </Button>
+            {/* Divider before cancel */}
+            {canInvoice && canCancel && (
+              <div className="w-px h-5 bg-border" />
+            )}
+
+            {/* Cancel */}
+            {canCancel && (
+              <Button
+                variant="ghost"
+                onClick={() => onChangeStatus("Cancelled")}
+                disabled={saving}
+                className="h-9 px-2.5 text-xs text-muted-foreground hover:text-destructive"
+              >
+                <X className="size-3.5" />
+                {t("cancel")}
+              </Button>
+            )}
+          </div>
         )}
       </div>
     </div>

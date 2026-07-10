@@ -12,22 +12,26 @@ import { dashboardKeys } from "./keys";
  */
 const fetchDashboard = createOrgQuery<DashboardData>("/reports");
 
+export type DashboardPeriod = "today" | "week" | "month" | "all";
+
 interface UseDashboardOptions {
   dateFrom?: string;
   dateTo?: string;
   branchId?: string | null;
+  /** Preset period — enables previous-period comparison and insights on the API side. Ignored when dateFrom/dateTo are set. */
+  period?: DashboardPeriod;
 }
 
 export function useDashboard(
   orgId: string | undefined,
   options: UseDashboardOptions = {},
 ): UseQueryResult<DashboardData, Error> {
-  const { dateFrom, dateTo, branchId } = options;
+  const { dateFrom, dateTo, branchId, period } = options;
 
   return useQuery({
     queryKey: dashboardKeys.summary(
       orgId ?? "",
-      dateFrom && dateTo ? `${dateFrom}_${dateTo}` : "all",
+      dateFrom && dateTo ? `${dateFrom}_${dateTo}` : (period ?? "all"),
       branchId,
     ),
     queryFn: async () => {
@@ -41,11 +45,15 @@ export function useDashboard(
       if (dateFrom && dateTo) {
         params.date_from = dateFrom;
         params.date_to = dateTo;
+      } else if (period) {
+        params.period = period;
       }
       return fetchDashboard(orgId, { params });
     },
     enabled: !!orgId,
-    staleTime: 60_000,
-    retry: 1,
+    staleTime: 300_000, // 5 min — realtime keeps it fresh
+    // No automatic retry — the UI shows a retry button via refetchDashboard().
+    retry: 0,
   });
 }
+

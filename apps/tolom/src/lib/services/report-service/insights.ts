@@ -31,11 +31,11 @@ export function generateInsights(
         : 100;
     if (revChange > 0) {
       insights.push(
-        `Revenue is ₮${formatNum(revChange)} (▲${revPct}%) above the previous ${prevSummary.totalRevenue > 0 ? "period" : "period — great start!"}`,
+        `Орлого өмнөх үеээс ₮${formatNum(revChange)} (▲${revPct}%) нэмэгдсэн`,
       );
     } else {
       insights.push(
-        `Revenue is ₮${formatNum(Math.abs(revChange))} (▼${Math.abs(revPct)}%) below the previous period`,
+        `Орлого өмнөх үеээс ₮${formatNum(Math.abs(revChange))} (▼${Math.abs(revPct)}%) буурсан`,
       );
     }
   }
@@ -43,7 +43,7 @@ export function generateInsights(
   // Active WOs
   if (summary.activeWorkOrders > 5) {
     insights.push(
-      `You have ${summary.activeWorkOrders} active work orders — ${summary.activeWorkOrders > 10 ? "consider assigning more mechanics" : "keep up the momentum"}`,
+      `${summary.activeWorkOrders} идэвхтэй ажлын захиалга байна — ${summary.activeWorkOrders > 10 ? "нэмэлт засварчин тохируулахыг зөвлөж байна" : "идэвхээ хадгалж байна"}`,
     );
   }
 
@@ -57,11 +57,11 @@ export function generateInsights(
     if (Math.abs(aroPct) >= 5) {
       if (aroChange > 0) {
         insights.push(
-          `Average repair order value is ▲${aroPct}% higher — customers are spending more per visit`,
+          `Дундаж засварын захиалгын үнэ ▲${aroPct}%-иар өндөр байна — зочид илүү зарцуулж байна`,
         );
       } else {
         insights.push(
-          `Average repair order value is ▼${Math.abs(aroPct)}% lower — consider reviewing service pricing`,
+          `Дундаж засварын захиалгын үнэ ▼${Math.abs(aroPct)}%-иар бага байна — үйлчилгээний үнийг шалгахыг зөвлөж байна`,
         );
       }
     }
@@ -77,11 +77,11 @@ export function generateInsights(
     );
     if (servicePct > 70) {
       insights.push(
-        `Services make up ${servicePct}% of revenue — high margin work is driving your business`,
+        `Үйлчилгээ нь орлогын ${servicePct}% байна — өндөр ашигтай ажил таны бизнесийг урагшлуулж байна`,
       );
     } else if (partsPct > 60) {
       insights.push(
-        `Parts make up ${partsPct}% of revenue — watch parts margins to maintain profitability`,
+        `Эд хэрэгсэл нь орлогын ${partsPct}% байна — ашгийг хадгалахын тулд эд хэрэгсэлийн ашигт байдалд анхаарлаа хандуулаарай`,
       );
     }
   }
@@ -96,12 +96,12 @@ export function generateInsights(
 
   if (readyCount > 3) {
     insights.push(
-      `${readyCount} vehicles ready for pickup — send reminders to free up space`,
+      `${readyCount} тээврийн хэрэгсэл авахад бэлэн байна — зайн эзэлхүүн чөлөөлөхийн тулд сануулга илгээнэ үү`,
     );
   }
   if (diagnosingCount > inProgressCount && diagnosingCount > 3) {
     insights.push(
-      `More vehicles in diagnosis than in progress — consider streamlining the diagnosis process`,
+      `Ажиллагаанд байгаагаас илүү олон тээврийн хэрэгсэл шалгалтанд байна — шалгалтын процессыг хялбарчлахыг зөвлөж байна`,
     );
   }
 
@@ -141,11 +141,10 @@ export async function generateReportInsights(
     insights.push({
       id: `insight-${++insightId}`,
       severity: "info",
-      title: "No activity this period",
-      message: "There were no completed work orders in this period.",
-      action: "Check if there are pending work orders that need completion.",
+      title: "Энэ үед идэвх байсангүй",
+      message: "Энэ үед дууссан ажлын захиалга байсангүй.",
+      action: "Дуусгах шаардлагатай хүлээгдэж буй ажлын захиалга байгаа эсэхийг шалгана уу.",
     });
-    return insights;
   }
 
   // Fetch previous period data (same duration, immediately before)
@@ -247,22 +246,22 @@ export async function generateReportInsights(
       insights.push({
         id: `insight-${++insightId}`,
         severity: "positive",
-        title: `Revenue up ${revChange.toFixed(1)}%`,
-        message: `${formatCurrencyHelper(curTotalRev)} vs ${formatCurrencyHelper(prevTotalRev)} in the previous period.`,
+        title: `Орлого ${revChange.toFixed(1)}%-иар өссөн`,
+        message: `${formatCurrencyHelper(curTotalRev)} өмнөх үедээ ${formatCurrencyHelper(prevTotalRev)} байсан.`,
         metric_value: curTotalRev,
         comparison_value: prevTotalRev,
         action:
-          "Great momentum — consider increasing marketing to sustain growth.",
+          "Сайн явц — өсөлтийг хадгалахын тулд маркетинг нэмэгдүүлэхийг зөвлөж байна.",
       });
     } else if (revChange < -10) {
       insights.push({
         id: `insight-${++insightId}`,
         severity: "danger",
-        title: `Revenue down ${Math.abs(revChange).toFixed(1)}%`,
-        message: `${formatCurrencyHelper(curTotalRev)} vs ${formatCurrencyHelper(prevTotalRev)} in the previous period.`,
+        title: `Орлого ${Math.abs(revChange).toFixed(1)}%-иар буурсан`,
+        message: `${formatCurrencyHelper(curTotalRev)} өмнөх үедээ ${formatCurrencyHelper(prevTotalRev)} байсан.`,
         metric_value: curTotalRev,
         comparison_value: prevTotalRev,
-        action: "Review marketing channels and customer follow-up pipeline.",
+        action: "Маркетингийн суваг болон харилцагчийн дараагийн арга хэмжээг шалгана уу.",
       });
     }
   }
@@ -273,14 +272,14 @@ export async function generateReportInsights(
     insights.push({
       id: `insight-${++insightId}`,
       severity: marginDelta > 0 ? "positive" : "warning",
-      title: `Margin ${marginDelta > 0 ? "improved" : "dropped"} by ${Math.abs(marginDelta).toFixed(1)}pp`,
-      message: `Gross margin: ${curMargin.toFixed(1)}% vs ${prevMargin.toFixed(1)}% previous.`,
+      title: `Ашиг ${marginDelta > 0 ? "сайжирсан" : "буурсан"} ${Math.abs(marginDelta).toFixed(1)} хувиар`,
+      message: `Нийт ашиг: ${curMargin.toFixed(1)}% өмнөх ${prevMargin.toFixed(1)}%.`,
       metric_value: curMargin,
       comparison_value: prevMargin,
       action:
         marginDelta > 0
-          ? "Cost control is improving — maintain supplier negotiation pressure."
-          : "Check parts pricing and labor rate alignment. Discount abuse may be a factor.",
+          ? "Зардлын хяналт сайжирч байна — нийлүүлэгчтэй хэлэлцэх даралтыг хадгалаарай."
+          : "Эд хэрэгсэлийн үнэ болон хөлсний тохиргоог шалгана уу. Хөнгөлөлтийн зүй бус хэрэглээ нөлөөлж болзошгүй.",
     });
   }
 
@@ -291,11 +290,11 @@ export async function generateReportInsights(
       insights.push({
         id: `insight-${++insightId}`,
         severity: "warning",
-        title: "Parts-heavy revenue mix",
-        message: `Parts are ${Math.round(partsRatio * 100)}% of labor revenue. Industry target is 40-50%.`,
+        title: "Эд хэрэгсэлд илүү их орлого ногдож байна",
+        message: `Эд хэрэгсэл нь хөлсний орлогын ${Math.round(partsRatio * 100)}% байна. Салбарын зорилтот түвшин 40-50%.`,
         metric_value: partsRatio,
         action:
-          "Review parts markup strategy. Consider value-added services to balance the mix.",
+          "Эд хэрэгсэлд нэмэгдсэн үнийн бодлогыг шалгана уу. Харьцааг тэнцвэржүүлэх нэмэлт үйлчилгээг хэрэглүүлэхийг зөвлөж байна.",
       });
     }
   }
@@ -308,18 +307,18 @@ export async function generateReportInsights(
       insights.push({
         id: `insight-${++insightId}`,
         severity: "warning",
-        title: `Job volume down ${Math.abs(woChange).toFixed(0)}%`,
-        message: `${currentWoIds.length} jobs vs ${prevWoIds.length} in previous period.`,
+        title: `${Math.abs(woChange).toFixed(0)}%-иар ажлын ачаалал буурсан`,
+        message: `${currentWoIds.length} ажил өмнөх үедээ ${prevWoIds.length} байсан.`,
         metric_value: currentWoIds.length,
         comparison_value: prevWoIds.length,
-        action: "Check appointment pipeline and customer follow-up lists.",
+        action: "Цаг захиалгын урсгал болон харилцагчийн дараагийн жагсаалтыг шалгана уу.",
       });
     } else if (woChange > 15) {
       insights.push({
         id: `insight-${++insightId}`,
         severity: "positive",
-        title: `Job volume up ${woChange.toFixed(0)}%`,
-        message: `${currentWoIds.length} jobs vs ${prevWoIds.length} in previous period.`,
+        title: `${woChange.toFixed(0)}%-иар ажлын ачаалал өссөн`,
+        message: `${currentWoIds.length} ажил өмнөх үедээ ${prevWoIds.length} байсан.`,
         metric_value: currentWoIds.length,
         comparison_value: prevWoIds.length,
       });
@@ -329,7 +328,7 @@ export async function generateReportInsights(
   // Top service insight
   const svcMap = new Map<string, { count: number; revenue: number }>();
   for (const s of curServices.data ?? []) {
-    const name = (s.service_name as string) ?? "Unknown";
+    const name = (s.service_name as string) ?? "Тодорхойгүй";
     const existing = svcMap.get(name) ?? { count: 0, revenue: 0 };
     existing.count++;
     existing.revenue += Number(s.final_price);
@@ -347,8 +346,8 @@ export async function generateReportInsights(
     insights.push({
       id: `insight-${++insightId}`,
       severity: "info",
-      title: `Top service: ${topName}`,
-      message: `${formatCurrencyHelper(topRev)} revenue (${topPct}% of total) from ${topServices[0][1].count} jobs.`,
+      title: `${topName} нь тэргүүлэх үйлчилгээ`,
+      message: `${topServices[0][1].count} ажлаас ${formatCurrencyHelper(topRev)} орлого (${topPct}% нийт орлогоос).`,
       metric_value: topRev,
     });
   }

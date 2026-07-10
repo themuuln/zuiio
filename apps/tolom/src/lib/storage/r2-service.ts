@@ -151,8 +151,8 @@ export async function deleteR2Object(key: string): Promise<boolean> {
 
   try {
     await client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    reportServerError("Unexpected error", error);
     return false; // Object doesn't exist
   }
 
@@ -187,8 +187,8 @@ export async function resolveR2Url(
   const key = r2KeyFromStoragePath(value);
   try {
     return await generatePresignedDownloadUrl(key);
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    reportServerError("Unexpected error", error);
     return null; // Return null so UI shows empty state, not broken image
   }
 }

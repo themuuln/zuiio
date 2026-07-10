@@ -97,8 +97,8 @@ export function CustomerSelect({
         form.reset();
         setShowQuick(false);
       }
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       setCreateError(tc("networkError"));
     }
   });

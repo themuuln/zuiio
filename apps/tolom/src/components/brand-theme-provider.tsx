@@ -35,8 +35,8 @@ function oklchToHex(oklch: string): string | null {
       128 + 127 * Math.cos(((h - 240) * Math.PI) / 180) * c * 2,
     );
     return `#${Math.max(0, Math.min(255, r)).toString(16).padStart(2, "0")}${Math.max(0, Math.min(255, g)).toString(16).padStart(2, "0")}${Math.max(0, Math.min(255, b)).toString(16).padStart(2, "0")}`;
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    reportServerError("Unexpected error", error);
     return null;
   }
 }

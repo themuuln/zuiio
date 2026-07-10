@@ -48,8 +48,8 @@ export function useDraftSave(
       const draft = JSON.parse(raw) as WizardDraft;
       if (!draft || typeof draft.savedAt !== "number") return;
       setDraftData(draft);
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       // ignore
     }
   }, [orgId]);
@@ -72,8 +72,8 @@ export function useDraftSave(
     autoSaveTimerRef.current = setTimeout(() => {
       try {
         localStorage.setItem(DRAFT_KEY(orgId), JSON.stringify(draft));
-      } catch {
-        reportServerError("Unexpected error");
+      } catch (error) {
+        reportServerError("Unexpected error", error);
         // localStorage full
       }
     }, 2000);
@@ -97,8 +97,8 @@ export function useDraftSave(
     if (!orgId) return;
     try {
       localStorage.removeItem(DRAFT_KEY(orgId));
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       /* ignore */
     }
     setDraftData(null);

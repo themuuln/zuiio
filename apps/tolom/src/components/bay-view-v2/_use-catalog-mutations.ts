@@ -229,8 +229,8 @@ export function useCatalogMutations<T extends EntityKind>(
         next.delete(id);
         return next;
       });
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       toast.error(`Failed to add ${lb}`);
       updateCol(setWo, ck, (all) => all.filter((i) => i.id !== id));
       setAddingIds((prev) => {
@@ -328,8 +328,8 @@ export function useCatalogMutations<T extends EntityKind>(
                 );
                 onRefresh();
               }
-            } catch {
-              reportServerError("Unexpected error");
+            } catch (error) {
+              reportServerError("Unexpected error", error);
               toast.error(`Failed to restore ${lb}`);
             }
           },
@@ -337,8 +337,8 @@ export function useCatalogMutations<T extends EntityKind>(
         duration: 5000,
       });
       onRefresh();
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       toast.error(`Failed to remove ${lb}`);
       updateCol(setWo, ck, (all) => all.concat([found as unknown as Item]));
     }
@@ -399,8 +399,8 @@ export function useCatalogMutations<T extends EntityKind>(
       toast.dismiss();
       toast.success("Price updated");
       onRefresh();
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       toast.error("Failed to update price");
       if (oldUnitPrice !== null || oldFinalPrice !== null) {
         updateCol(setWo, ck, (all) =>
@@ -462,8 +462,8 @@ export function useCatalogMutations<T extends EntityKind>(
       toast.dismiss();
       toast.success("Quantity updated");
       onRefresh();
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       toast.error("Failed to update quantity");
       updateCol(setWo, ck, (all) =>
         all.map((i) =>
@@ -519,8 +519,8 @@ export function useCatalogMutations<T extends EntityKind>(
       toast.dismiss();
       toast.success("Discount updated");
       onRefresh();
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       updateCol(setWo, ck, (all) =>
         all.map((i) => {
           if (i.id !== id) return i;

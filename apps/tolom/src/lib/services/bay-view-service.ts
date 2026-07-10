@@ -7,7 +7,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidateTag } from "next/cache";
 import { cacheTags } from "@/lib/cache/keys";
 import { capture } from "@/lib/capture";
-import { NotFoundError, ValidationError } from "@/lib/errors";
+import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { createWorkOrder } from "@/lib/services/work-order-service";
 import { withBranchFilter } from "@/lib/supabase/with-branch";
@@ -33,6 +33,21 @@ export type {
   BranchSectionData,
   ShiftReport,
 };
+
+// ── Error helpers ────────────────────────────────────────────
+
+/**
+ * Check if a Supabase query error indicates Postgres permission denied (42501).
+ * When this code appears, the current DB role lacks EXECUTE on a function
+ * referenced by an RLS policy — typically because the user's organization role
+ * doesn't have the required permissions.
+ */
+function isPermissionError(err: unknown): boolean {
+  if (typeof err !== "object" || err === null) return false;
+  if (!("code" in err)) return false;
+  const code = err.code;
+  return typeof code === "string" && code === "42501";
+}
 
 // ── Helpers for multi-branch sections ─────────────────────────
 
@@ -127,6 +142,18 @@ async function fetchBayViewData(
   if (memberQueryErr)
     capture(memberQueryErr, { context: "[bay-view-service] fetchBayViewData" });
 
+  // Check for Postgres permission-denied errors (42501) — the user's DB role
+  // doesn't have access. Surface a clear ForbiddenError instead of silent empty data.
+  if (
+    isPermissionError(branchesErr) ||
+    isPermissionError(activeWOsErr) ||
+    isPermissionError(memberQueryErr)
+  ) {
+    throw new ForbiddenError(
+      "Your role doesn't have access to view bay view data. Contact your organization owner.",
+    );
+  }
+
   const workOrders = activeWOs ?? [];
 
   // Derive branches and bay count from batch 1 results
@@ -216,6 +243,17 @@ async function fetchBayViewData(
   if (extraErr)
     capture(extraErr, { context: "[bay-view-service] fetchBayViewData" });
 
+  // Defensive: check for 42501 on any batch 2 queries
+  if (
+    isPermissionError(helpersErr) ||
+    isPermissionError(woMechErr) ||
+    isPermissionError(mechErr) ||
+    isPermissionError(extraErr)
+  ) {
+    throw new ForbiddenError(
+      "Your role doesn't have access to view bay view data. Contact your organization owner.",
+    );
+  }
   // Build mechanic lookup map
   const mechanicMap = new Map<
     string,

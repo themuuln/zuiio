@@ -67,8 +67,8 @@ export function TelegramSection() {
       setCopied(true);
       toast.success(t("copiedToClipboard"));
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       toast.error(t("failedToCopy"));
     }
   }

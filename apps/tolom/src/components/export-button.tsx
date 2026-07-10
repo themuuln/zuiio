@@ -46,8 +46,8 @@ export function ExportButton<T>({
         title,
       });
       toast.success(t("exportSuccess", { label }));
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       toast.error(t("exportFailed", { label }));
     }
   };

@@ -164,8 +164,8 @@ export async function requestPasswordReset(
           ),
         });
       }
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       // Silent catch — never reveal whether the identifier exists
     }
   }

@@ -16,8 +16,8 @@ export const POST = createSimpleRouteHandler(async ({ request, supabase }) => {
   try {
     const body = await request.json().catch(() => ({}));
     orgName = body?.orgName ?? undefined;
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    reportServerError("Unexpected error", error);
     // no body or invalid JSON — proceed without orgName override
   }
 

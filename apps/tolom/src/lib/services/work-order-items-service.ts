@@ -79,8 +79,8 @@ export async function addServiceToWorkOrder(
         .limit(1)
         .maybeSingle();
       lastSoldPrice = lastEntry?.unit_price ?? null;
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       // Price history lookup is non-critical — continue without it
     }
   }
@@ -146,8 +146,8 @@ export async function addServiceToWorkOrder(
       final_price: finalPrice,
       created_by: user?.id ?? null,
     });
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    reportServerError("Unexpected error", error);
     // Price history insert is non-critical
   }
 
@@ -221,8 +221,8 @@ export async function addPartToWorkOrder(
       .limit(1)
       .maybeSingle();
     lastSoldPrice = lastPartEntry?.unit_price ?? null;
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    reportServerError("Unexpected error", error);
     // Price history lookup is non-critical — continue without it
   }
 
@@ -286,8 +286,8 @@ export async function addPartToWorkOrder(
       final_price: finalPrice,
       created_by: user?.id ?? null,
     });
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    reportServerError("Unexpected error", error);
     // Price history insert is non-critical
   }
 
@@ -441,8 +441,8 @@ export async function updateWorkOrderServicePrice(
         created_by: user?.id ?? null,
       });
     }
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    reportServerError("Unexpected error", error);
     // Price history insert is non-critical
   }
 }
@@ -601,8 +601,8 @@ export async function updateWorkOrderPartPrice(
         created_by: user?.id ?? null,
       });
     }
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    reportServerError("Unexpected error", error);
     // Price history insert is non-critical
   }
 }

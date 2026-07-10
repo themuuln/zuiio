@@ -63,7 +63,7 @@ export function createOrgQuery<T>(
     const cacheKeyParams = fetchOpts?.cacheKeyParams;
 
     // Try network first
-    if (navigator.onLine) {
+    if (typeof indexedDB !== "undefined" && navigator.onLine) {
       try {
         const res = await fetch(url);
         // Redirect to login on expired session (server sets X-Auth-Required on 401)
@@ -90,7 +90,7 @@ export function createOrgQuery<T>(
         // Cache to IndexedDB for offline use (strip query params so all
         // variants of the same endpoint share one cache entry,
         // unless cacheKeyParams are provided for type-specific caching)
-        if (store && typeof window !== "undefined") {
+        if (store && typeof indexedDB !== "undefined") {
           const baseCacheKey = buildCacheKey(orgId, path, cacheKeyParams);
           cacheToIndexedDB(store, orgId, baseCacheKey, data).catch(() => {
             // Silently ignore cache write failures
@@ -100,7 +100,7 @@ export function createOrgQuery<T>(
         return data;
       } catch (err) {
         // Network failed — try IndexedDB fallback (strip query params)
-        if (store && typeof window !== "undefined") {
+        if (store && typeof indexedDB !== "undefined") {
           const baseCacheKey = buildCacheKey(orgId, path, cacheKeyParams);
           const cached = await getFromIndexedDB<T>(store, baseCacheKey);
           if (cached !== null) return cached;
@@ -110,7 +110,7 @@ export function createOrgQuery<T>(
     }
 
     // Offline — read from IndexedDB (strip query params)
-    if (store && typeof window !== "undefined") {
+    if (store && typeof indexedDB !== "undefined") {
       const baseCacheKey = buildCacheKey(orgId, path, cacheKeyParams);
       const cached = await getFromIndexedDB<T>(store, baseCacheKey);
       if (cached !== null) return cached;

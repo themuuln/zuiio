@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, Plus, User } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { z } from "zod";
 import { SearchInput } from "@/components/search-input";
@@ -36,6 +37,7 @@ export function CustomerPickerModal({
   const [customerSearch, setCustomerSearch] = useState("");
   const [showQuick, setShowQuick] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const t = useTranslations("workOrderDetail");
 
   const customerQuickSchema = z.object({
     first_name: z.string().min(1, "First name is required"),
@@ -93,11 +95,23 @@ export function CustomerPickerModal({
         setShowQuick(false);
         onOpenChange(false);
       }
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       setCreateError("Network error");
     }
   });
+
+  const initials = (c: Customer) => {
+    const name = [c.first_name, c.last_name].filter(Boolean).join(" ");
+    if (!name) return "\u2014";
+    const parts = name.split(" ");
+    return parts.length >= 2
+      ? `${parts[0]![0]}${parts[1]![0]}`
+      : name.slice(0, 2);
+  };
+
+  const hasSearched = customerSearch.length > 0;
+  const noResults = hasSearched && !isFetching && customers.length === 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -110,22 +124,23 @@ export function CustomerPickerModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <User className="size-4" />
-            Select Customer
+            {t("selectCustomer")}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-3 -mt-2">
+        <div className="flex flex-col gap-3">
           <SearchInput
             id="customer-picker-search"
-            placeholder="Search by name or phone..."
+            placeholder={t("searchByNameOrPhone")}
             loading={isFetching}
             onSearch={handleSearch}
             debounceMs={400}
             focusShortcut={false}
           />
 
-          {customerSearch && customers.length > 0 && (
-            <div className="flex flex-col gap-1 border rounded-lg overflow-hidden max-h-60 overflow-y-auto">
+          {/* Search results */}
+          {hasSearched && customers.length > 0 && (
+            <div className="flex flex-col gap-0.5 border rounded-lg overflow-hidden max-h-60 overflow-y-auto">
               {customers.map((c) => (
                 <button
                   key={c.id}
@@ -136,14 +151,15 @@ export function CustomerPickerModal({
                   }}
                   className="flex items-center gap-3 w-full p-3 text-left hover:bg-muted/50 transition-colors min-h-[48px]"
                 >
-                  <User className="size-5 shrink-0 text-muted-foreground" />
-                  <div>
-                    <span className="font-medium text-sm">
-                      {[c.first_name, c.last_name].filter(Boolean).join(" ") ||
-                        "No name"}
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+                    {initials(c)}
+                  </span>
+                  <div className="min-w-0">
+                    <span className="font-medium text-sm block truncate">
+                      {[c.first_name, c.last_name].filter(Boolean).join(" ") || t("newCustomer")}
                     </span>
                     {c.phone && (
-                      <span className="ml-2 text-xs text-muted-foreground">
+                      <span className="text-xs text-muted-foreground">
                         {c.phone}
                       </span>
                     )}
@@ -153,14 +169,30 @@ export function CustomerPickerModal({
             </div>
           )}
 
+          {/* Empty state */}
+          {noResults && (
+            <div className="flex flex-col items-center gap-1 py-4 text-center">
+              <User className="size-6 text-muted-foreground/50" />
+              <span className="text-sm text-muted-foreground">
+                {t("noCustomersFound")}
+              </span>
+            </div>
+          )}
+
+          {/* Divider */}
+          {hasSearched && customers.length > 0 && (
+            <div className="border-t border-border" />
+          )}
+
+          {/* Quick create */}
           {!showQuick && (
             <Button
               variant="outline"
               onClick={() => setShowQuick(true)}
-              className="w-full justify-start gap-2 border-dashed"
+              className="w-full justify-start gap-2"
             >
               <Plus className="size-4" />
-              Quick create customer
+              {t("quickCreateCustomer")}
             </Button>
           )}
 
@@ -170,12 +202,12 @@ export function CustomerPickerModal({
               onSubmit={handleQuickCreate}
             >
               <Typography.Text className="text-sm font-medium">
-                New Customer
+                {t("newCustomer")}
               </Typography.Text>
               <Field data-invalid={!!form.formState.errors.first_name}>
                 <FieldContent>
                   <Input
-                    placeholder="e.g. Bat"
+                    placeholder={t("firstNamePlaceholder")}
                     aria-invalid={!!form.formState.errors.first_name}
                     className="h-11"
                     {...inputProps("firstName")}
@@ -192,7 +224,7 @@ export function CustomerPickerModal({
               <Field>
                 <FieldContent>
                   <Input
-                    placeholder="e.g. Erdene"
+                    placeholder={t("lastNamePlaceholder")}
                     className="h-11"
                     {...inputProps("lastName")}
                     {...form.register("last_name")}
@@ -202,7 +234,7 @@ export function CustomerPickerModal({
               <Field data-invalid={!!form.formState.errors.phone}>
                 <FieldContent>
                   <Input
-                    placeholder="e.g. 99112233"
+                    placeholder={t("phonePlaceholder")}
                     type="tel"
                     className="h-11"
                     aria-invalid={!!form.formState.errors.phone}
@@ -241,7 +273,7 @@ export function CustomerPickerModal({
                     form.reset();
                   }}
                 >
-                  Cancel
+                  {t("cancel")}
                 </Button>
                 <Button
                   type="submit"
@@ -252,8 +284,8 @@ export function CustomerPickerModal({
                   }
                 >
                   {form.formState.isSubmitting
-                    ? "Creating..."
-                    : "Create & Select"}
+                    ? "..."
+                    : t("createAndSelect")}
                 </Button>
               </div>
             </form>

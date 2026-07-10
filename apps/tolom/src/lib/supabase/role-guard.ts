@@ -209,8 +209,10 @@ export async function hasPermission(
   try {
     await requirePermission(resource, action, orgId);
     return true;
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    if (!(error instanceof ForbiddenError)) {
+      reportServerError("Unexpected error", error);
+    }
     return false;
   }
 }

@@ -10,7 +10,6 @@ import {
   getDailyReport,
   getDailyTimeline,
   getDashboardData,
-  getDashboardMetricsFast,
   getEndOfDaySummary,
   getFinanceSummaryFast,
   getMechanicLeaderboardFast,
@@ -25,20 +24,11 @@ import {
   setRevenueTarget,
 } from "@/lib/services/report-service";
 import { hasPermission } from "@/lib/supabase/role-guard";
-// ── Role hierarchy (mirrors role-guard.ts) ──
-const ROLE_HIERARCHY: Record<string, number> = {
-  Guest: 0,
-  Mechanic: 1,
-  Manager: 2,
-  "Org Owner": 3,
-};
 
-// ── Report types mechanics may access without reports.read permission ──
-// "timeline": today's activity feed (non-financial, operational)
-// "eod": end-of-day summary (filtered to self when no reports.read)
-// "mechanic-trend": own performance trend (filtered to self when no reports.read)
-// "mechanics": list of mechanics (names only, non-financial)
-const MECHANIC_SAFE_TYPES = new Set([
+// ── Report types accessible with work_orders.read (self-scoped) ──
+// These types are operational, not financial, and are scoped to the
+// authenticated user's own mechanic data when reports.read is absent.
+const SELF_SERVICE_REPORT_TYPES = new Set([
   "custom",
   "timeline",
   "eod",
@@ -47,71 +37,30 @@ const MECHANIC_SAFE_TYPES = new Set([
 ]);
 
 /**
- * Resolves the user's role name for a specific organization.
- * This is org-scoped (unlike getUserRole in role-guard.ts which checks
- * the primary org), so it works correctly for multi-org users.
- */
-async function getRoleInOrg(
-  supabase: SupabaseClient,
-  userId: string,
-  orgId: string,
-): Promise<string | null> {
-  const { data: membership } = await supabase
-    .from("organization_users")
-    .select("role_id, roles(name)")
-    .eq("user_id", userId)
-    .eq("organization_id", orgId)
-    .is("removed_at", null)
-    .maybeSingle();
-
-  const rawRoles = membership?.roles;
-  if (rawRoles === null || rawRoles === undefined) return null;
-  return Array.isArray(rawRoles)
-    ? (rawRoles[0]?.name ?? null)
-    : ((rawRoles as unknown as { name: string }).name ?? null);
-}
-
-/**
- * Checks that the user's role level for the given org is >= the minimum.
- * Throws ForbiddenError otherwise.
- */
-async function requireRoleInOrg(
-  supabase: SupabaseClient,
-  userId: string,
-  orgId: string,
-  minimumRole: "Mechanic" | "Manager" | "Org Owner",
-): Promise<void> {
-  const roleName = await getRoleInOrg(supabase, userId, orgId);
-  const roleLevel = ROLE_HIERARCHY[roleName ?? ""] ?? -1;
-  const requiredLevel = ROLE_HIERARCHY[minimumRole];
-  if (roleLevel < requiredLevel) {
-    throw new ForbiddenError("Insufficient permissions");
-  }
-}
-
-/**
- * Authorizes access to a report type.
+ * Authorizes access to a report type using the permission system.
  *
- * - Users with reports.read permission → full access to all types.
- * - Users without reports.read can only access MECHANIC_SAFE_TYPES,
- *   with at least Mechanic role in the current org.
+ * - Users with `reports.read` → full access to all report types.
+ * - Users with `work_orders.read` but no `reports.read` → access only
+ *   to SELF_SERVICE_REPORT_TYPES, forced to their own mechanic ID.
+ * - Otherwise → ForbiddenError.
  */
 async function authorizeReportAccess(
   type: string,
   orgId: string,
-  userId: string,
-  supabase: SupabaseClient,
-): Promise<void> {
+): Promise<"full" | "self-service"> {
   if (await hasPermission("reports", "read", orgId)) {
-    return; // full access
+    return "full";
   }
 
-  if (!MECHANIC_SAFE_TYPES.has(type)) {
-    throw new ForbiddenError("Missing required permission: reports.read");
+  if (SELF_SERVICE_REPORT_TYPES.has(type)) {
+    // Self-service types still require work_orders.read
+    if (!(await hasPermission("work_orders", "read", orgId))) {
+      throw new ForbiddenError("Missing required permission: work_orders.read");
+    }
+    return "self-service";
   }
 
-  // Mechanic-safe types still require at least Mechanic role in THIS org
-  await requireRoleInOrg(supabase, userId, orgId, "Mechanic");
+  throw new ForbiddenError("Missing required permission: reports.read");
 }
 
 export const GET = createRouteHandler(
@@ -120,8 +69,8 @@ export const GET = createRouteHandler(
     const type = searchParams.get("type") ?? "daily";
     const requestedMechanicId = searchParams.get("mechanic");
 
-    // Per-type authorization
-    await authorizeReportAccess(type, orgId, user.id, supabase);
+    // Per-type authorization — returns "full" or "self-service"
+    const accessLevel = await authorizeReportAccess(type, orgId);
 
     const branchParam = searchParams.get("branch");
     const branchId = branchParam && branchParam !== "all" ? branchParam : null;
@@ -130,10 +79,10 @@ export const GET = createRouteHandler(
     const dateFrom = searchParams.get("date_from") ?? date;
     const dateTo = searchParams.get("date_to") ?? date;
 
-    // ── Enforce self-access for mechanic-specific types ──
-    // Without reports.read, a mechanic can only access their own data
-    const hasReportsRead = await hasPermission("reports", "read", orgId);
-    const effectiveMid = hasReportsRead ? (requestedMechanicId ?? "") : user.id; // force self-access when no reports.read
+    // ── Enforce self-access for self-service types ──
+    // Without reports.read, a user can only access their own data
+    const effectiveMid =
+      accessLevel === "full" ? (requestedMechanicId ?? "") : user.id;
 
     if (type === "mechanics") {
       const mechanics = await getMechanicsList(supabase, orgId, branchId);
@@ -143,17 +92,11 @@ export const GET = createRouteHandler(
     if (type === "dashboard") {
       const dateFromParam = searchParams.get("date_from");
       const dateToParam = searchParams.get("date_to");
-      if (
-        searchParams.get("fast") === "true" &&
-        !dateFromParam &&
-        !dateToParam
-      ) {
-        const metrics = await getDashboardMetricsFast(supabase, orgId);
-        return ok(metrics);
-      }
+      const period =
+        (searchParams.get("period") as "today" | "week" | "month" | "all") ??
+        "all";
 
       if (dateFromParam && dateToParam) {
-        // Custom date range — pass as object
         const dashboard = await getDashboardData(supabase, orgId, {
           dateFrom: dateFromParam,
           dateTo: dateToParam,
@@ -162,10 +105,6 @@ export const GET = createRouteHandler(
         return ok(dashboard);
       }
 
-      // Backward compat with period string
-      const period =
-        (searchParams.get("period") as "today" | "week" | "month" | "all") ??
-        "all";
       const dashboard = await getDashboardData(
         supabase,
         orgId,

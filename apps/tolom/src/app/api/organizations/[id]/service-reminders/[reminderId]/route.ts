@@ -1,16 +1,18 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { noContent, ok } from "@/lib/api-response";
 import {
-
   deleteServiceSchedule,
   getServiceSchedule,
   updateServiceSchedule,
 } from "@/lib/services/service-reminder-service";
-export const GET = createRouteHandler(async ({ params, supabase }) => {
-  const { reminderId } = params;
-  const schedule = await getServiceSchedule(supabase, reminderId);
-  return ok(schedule);
-});
+export const GET = createRouteHandler(
+  async ({ params, supabase }) => {
+    const { reminderId } = params;
+    const schedule = await getServiceSchedule(supabase, reminderId);
+    return ok(schedule);
+  },
+  { requiredPermission: { resource: "service_reminders", action: "read" } },
+);
 
 export const PATCH = createRouteHandler(
   async ({ request, orgId, params, user, supabase }) => {
@@ -25,7 +27,11 @@ export const PATCH = createRouteHandler(
     );
     return ok(schedule);
   },
-  { rateLimit: true, subscription: true },
+  {
+    rateLimit: true,
+    subscription: true,
+    requiredPermission: { resource: "service_reminders", action: "update" },
+  },
 );
 
 export const DELETE = createRouteHandler(
@@ -34,5 +40,9 @@ export const DELETE = createRouteHandler(
     await deleteServiceSchedule(supabase, reminderId, orgId);
     return noContent();
   },
-  { rateLimit: true, subscription: true },
+  {
+    rateLimit: true,
+    subscription: true,
+    requiredPermission: { resource: "service_reminders", action: "delete" },
+  },
 );

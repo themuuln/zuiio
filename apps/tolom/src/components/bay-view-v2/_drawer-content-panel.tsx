@@ -136,18 +136,18 @@ export function DrawerContentPanel({
   return (
     <>
       {/* Scrollable sections area */}
-      <div className="relative flex-1 overflow-y-auto min-h-0">
+      <div className="relative flex-1 overflow-y-auto min-h-0 lg:overflow-hidden">
         <VehicleMakeLogo
           make={wo.vehicle?.make}
           size="70%"
           className="absolute inset-0 m-auto pointer-events-none select-none text-primary/[0.03]"
           aria-hidden
         />
-        <div className="relative px-3 py-2">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <div className="relative px-3 py-2 lg:h-full">
+          <div className="grid grid-cols-1 lg:grid-cols-3 lg:h-full gap-3">
             {/* Left column: services, parts, notes */}
-            <div className="lg:col-span-2">
-              <div className="flex flex-col gap-3 min-h-0 flex-1 overflow-y-auto">
+            <div className="lg:col-span-2 lg:overflow-y-auto lg:min-h-0">
+              <div className="flex flex-col divide-y divide-border/40">
                 <div
                   className="[animation:fade-slide-in_300ms_ease-out-quart_backwards]"
                   style={{ "--stagger": 0 } as React.CSSProperties}
@@ -205,11 +205,21 @@ export function DrawerContentPanel({
                     />
                   </div>
                 ) : null}
+                {/* Opened date */}
+                {wo.created_at && (
+                  <div className="flex items-center justify-end pt-1">
+                    <span className="text-[10px] text-muted-foreground/50">
+                      {t("openedDate", {
+                        date: new Date(wo.created_at).toLocaleDateString(),
+                      })}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Right column: timeline */}
-            <div className="flex flex-col gap-3 lg:sticky lg:top-3 self-start">
+            <div className="flex flex-col gap-3 lg:border-l lg:border-border/40 lg:pl-4 lg:overflow-y-auto lg:min-h-0">
               <div
                 className="[animation:fade-slide-in_300ms_ease-out-quart_backwards]"
                 style={{ "--stagger": 3 } as React.CSSProperties}
@@ -223,21 +233,11 @@ export function DrawerContentPanel({
               </div>
             </div>
           </div>
-          {/* Opened date */}
-          {wo.created_at && (
-            <div className="flex items-center justify-end pt-1">
-              <span className="text-[10px] text-muted-foreground/50">
-                {t("openedDate", {
-                  date: new Date(wo.created_at).toLocaleDateString(),
-                })}
-              </span>
-            </div>
-          )}
         </div>
       </div>
 
       {/* НӨАТ + Totals — floating above drawer footer */}
-      <div>
+      <div className="px-3 py-2">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           <div className="lg:col-span-2 flex flex-col gap-3 shrink-0">
             <div className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2">

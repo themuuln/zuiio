@@ -1,6 +1,11 @@
 // Event dictionary, payload validation, canonical ordering
 
-export { EVENT_TYPES, type EventTypeKey } from './dictionary';
+export {
+  EVENT_TYPES,
+  isEventAllowedByRuleset,
+  type EventTypeKey,
+  type RulesetEventDictionary,
+} from './dictionary';
 export {
   validateEvent,
   ShotMadePayload,
@@ -9,5 +14,9 @@ export {
   FoulPersonalPayload,
   SubstitutionPayload,
   EmptyPayload,
+  VoidEventPayload,
+  ReplacementEventPayload,
+  SourceSubmissionPayload,
+  TrackerSessionPayload,
 } from './payloads';
 export { sortEvents } from './ordering';

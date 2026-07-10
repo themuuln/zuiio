@@ -104,8 +104,8 @@ function formatDate(iso: string | null | undefined): string {
       month: "short",
       day: "numeric",
     });
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    reportServerError("Unexpected error", error);
     return iso;
   }
 }
@@ -214,8 +214,8 @@ export default function PublicInvoicePage() {
           setOrgName(json.data.organization_name);
         }
       }
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       setError(t("loadError"));
     } finally {
       setLoading(false);

@@ -203,8 +203,8 @@ export async function parseBody<T>(
   let body: unknown;
   try {
     body = await request.json();
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    reportServerError("Unexpected error", error);
     throw new ValidationError("Invalid JSON in request body");
   }
 

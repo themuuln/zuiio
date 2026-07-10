@@ -52,8 +52,8 @@ export async function POST(request: NextRequest) {
   let payload: SentryAlertPayload;
   try {
     payload = (await request.json()) as SentryAlertPayload;
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    reportServerError("Unexpected error", error);
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 

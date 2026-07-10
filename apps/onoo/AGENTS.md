@@ -105,6 +105,17 @@ See `docs/ROADMAP.md` for full table list. Key tables:
 - `game_team_stats` — derived per-team totals
 - `standings` — league standings
 
+## V2 Trusted-Record Rules
+
+- Onoo is in a **web-first paid-pilot** phase. Mobile, push/follows, claims, consumer analytics, and broad historical import scope are frozen.
+- The lifecycle is `scheduled → live_provisional → final_pending_review → league_verified → official`. Commands enforce every transition.
+- `stat_events` are journal entries. Do not delete or rewrite them; use void/replacement operations and retain provenance.
+- Source submissions and game revisions are the approval boundary. Derived tables are rebuildable projections, never a browser or import destination.
+- Direct writes to `stat_events`, `games.status`, `game_player_stats`, `game_team_stats`, `season_player_stats`, or `standings` are prohibited outside reviewed database commands.
+- Public pages read curated `v_public_*` views only. Do not add mock fallbacks.
+- Every tracker mutation must persist locally before network delivery and use an idempotency key, session ID, and monotonic local sequence.
+- Privileged database functions require explicit authorization, an empty `search_path`, revoked `PUBLIC` execution, and narrow grants.
+
 ## Commands
 
 ```bash

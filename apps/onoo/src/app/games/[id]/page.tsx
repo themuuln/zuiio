@@ -30,10 +30,10 @@ export default async function GameDetailPage({ params }: GamePageProps) {
   if (!game) notFound();
 
   const isFinal =
-    game.status === "final" ||
-    game.status === "verified" ||
+    game.status === "final_pending_review" ||
+    game.status === "league_verified" ||
     game.status === "official";
-  const isLive = game.status === "live";
+  const isLive = game.status === "live_provisional";
   const playByPlay = isLive ? await getPlayByPlay(game.id) : [];
 
   return (

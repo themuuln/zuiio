@@ -41,9 +41,9 @@ export default function DashboardClientShell({
             <SidebarInset className="min-h-0 min-w-0 w-auto">
               <GlobalDialogs />
               <div className="relative min-h-0 flex-1 overflow-hidden">
-                <div className="min-h-0 min-w-0 h-full flex flex-col overflow-y-auto overflow-x-hidden">
+                <div className="min-h-0 min-w-0 h-full flex flex-col overflow-hidden">
                   <DashboardHeader />
-                  <div className="min-h-0 flex-1 px-4 pb-6 pt-4 md:px-6">
+                  <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6 pt-4 md:px-6">
                     {children}
                   </div>
                 </div>

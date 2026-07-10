@@ -220,8 +220,8 @@ export async function lookupVehicleByPlate(
           serviceHistory: [],
         };
       }
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       // SmartCar lookup failure is non-fatal — just return empty
     }
 
@@ -233,17 +233,32 @@ export async function lookupVehicleByPlate(
     };
   }
 
-  // Get primary owner
-  const { data: owner } = await tracked<OwnerRow | null>(
-    "lookupVehicleByPlate:owner",
-    supabase
-      .from("vehicle_owners")
-      .select("customer_id, customers!inner(id, first_name, last_name, phone)")
-      .eq("organization_id", orgId)
-      .eq("vehicle_id", vehicle.id)
-      .is("owned_until", null)
-      .maybeSingle(),
-  );
+  // Get primary owner and work orders in parallel
+  const [{ data: owner }, { data: workOrders }] = await Promise.all([
+    tracked<OwnerRow | null>(
+      "lookupVehicleByPlate:owner",
+      supabase
+        .from("vehicle_owners")
+        .select("customer_id, customers!inner(id, first_name, last_name, phone)")
+        .eq("organization_id", orgId)
+        .eq("vehicle_id", vehicle.id)
+        .is("owned_until", null)
+        .maybeSingle(),
+    ),
+    tracked<WorkOrderRow[] | null>(
+      "lookupVehicleByPlate:workOrders",
+      supabase
+        .from("work_orders")
+        .select(`
+          id, status, bay_number, created_at, complaint, diagnosis, notes, total, mechanic_id
+        `)
+        .eq("organization_id", orgId)
+        .eq("vehicle_id", vehicle.id)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false })
+        .limit(20),
+    ),
+  ]);
 
   const customer = owner
     ? {
@@ -253,21 +268,6 @@ export async function lookupVehicleByPlate(
         phone: owner.customers.phone,
       }
     : null;
-
-  // Get work orders with services
-  const { data: workOrders } = await tracked<WorkOrderRow[] | null>(
-    "lookupVehicleByPlate:workOrders",
-    supabase
-      .from("work_orders")
-      .select(`
-        id, status, bay_number, created_at, complaint, diagnosis, notes, total, mechanic_id
-      `)
-      .eq("organization_id", orgId)
-      .eq("vehicle_id", vehicle.id)
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false })
-      .limit(20),
-  );
 
   // Fetch mechanic names and services for each WO (parallel)
   const mechanicIds = [

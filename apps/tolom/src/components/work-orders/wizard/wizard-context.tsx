@@ -419,8 +419,8 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
       const draft = JSON.parse(raw) as WizardDraft;
       if (!draft || typeof draft.savedAt !== "number") return;
       setDraftData(draft);
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       // Invalid or inaccessible draft — ignore silently
     }
   }, [orgId]);
@@ -772,8 +772,8 @@ export function WizardProvider({ children, onCreated }: WizardProviderProps) {
         onSuccess: (data) => {
           try {
             localStorage.removeItem(DRAFT_KEY(orgId));
-          } catch {
-            reportServerError("Unexpected error");
+          } catch (error) {
+            reportServerError("Unexpected error", error);
             /* ignore */
           }
           toast.dismiss();

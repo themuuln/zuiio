@@ -16,6 +16,7 @@ Before coding, load these shared design system docs from the `@zuiio` monorepo (
 | `../../docs/vision.md` | Overall zuiio product vision and how we build |
 | `../../docs/stack-web.md` | Next.js 16 stack, Instant Navigations, Turbopack config |
 | `../../.claude/instructions.md` | Design essentials quick reference + common patterns |
+| `docs/ux-laws-reference.md` | UX laws, heuristics, cognitive biases — 150+ principles with formulas and examples |
 
 **Always read `VISION.md` first** — it is the single source of truth for project direction, architecture, goals, and principles. This file (AGENTS.md) covers operational rules and coding specifics. When in doubt, defer to VISION.md.
 
@@ -43,9 +44,9 @@ Before coding, load these shared design system docs from the `@zuiio` monorepo (
 
 | When Task Is... | Load These Skills |
 |-----------------|-------------------|
-| **New component/page** | `tolom-anti-slop` → `design-system` → `accessibility` → `code-standards` → `responsive-design` |
-| **New form** | `tolom-anti-slop` → `design-system` → `accessibility` → `code-standards` → `testing-patterns` |
-| **New dialog/sheet/modal** | `tolom-anti-slop` → `design-system` → `accessibility` → `code-standards` |
+| **New component/page** | `tolom-anti-slop` → `design-system` → `ux-laws` → `accessibility` → `code-standards` → `responsive-design` |
+| **New form** | `tolom-anti-slop` → `design-system` → `ux-laws` → `accessibility` → `code-standards` → `testing-patterns` |
+| **New dialog/sheet/modal** | `tolom-anti-slop` → `design-system` → `ux-laws` → `accessibility` → `code-standards` |
 | **New service function** | `supabase-patterns` → `code-standards` → `testing-patterns` |
 | **New API route** | `supabase-patterns` → `code-standards` → `error-handling` → `testing-patterns` |
 | **New migration** | `supabase-patterns` → `testing-patterns` |
@@ -53,14 +54,14 @@ Before coding, load these shared design system docs from the `@zuiio` monorepo (
 | **Writing tests** | `testing-patterns` |
 | **Fixing a bug** | `code-standards` (read relevant section) |
 | **Optimizing performance** | `performance` |
-| **Responsive/layout work** | `tolom-anti-slop` → `responsive-design` → `design-system` |
-| **Theme/visual changes** | `tolom-anti-slop` → `design-system` |
-| **Accessibility audit** | `accessibility` |
+| **Responsive/layout work** | `tolom-anti-slop` → `ux-laws` → `responsive-design` → `design-system` |
+| **Theme/visual changes** | `tolom-anti-slop` → `ux-laws` → `design-system` |
+| **Accessibility audit** | `ux-laws` → `accessibility` |
 | **Toast/notification work** | `error-handling` |
-| **Design cleanup / anti-slop removal** | `tolom-anti-slop` → `impeccable` → `redesign-existing-projects` → `design-taste-frontend` |
-| **Visual polish / UI refinement** | `tolom-anti-slop` → `impeccable` (polish) → `design-system` |
-| **Design audit / critique** | `tolom-anti-slop` → `impeccable` (critique) → `design-system` |
-| **Redesign existing page/feature** | `tolom-anti-slop` → `impeccable` → `redesign-existing-projects` → `design-system` |
+| **Design cleanup / anti-slop removal** | `tolom-anti-slop` → `ux-laws` → `impeccable` → `redesign-existing-projects` → `design-taste-frontend` |
+| **Visual polish / UI refinement** | `tolom-anti-slop` → `ux-laws` → `impeccable` (polish) → `design-system` |
+| **Design audit / critique** | `tolom-anti-slop` → `ux-laws` → `impeccable` (critique) → `design-system` |
+| **Redesign existing page/feature** | `tolom-anti-slop` → `ux-laws` → `impeccable` → `redesign-existing-projects` → `design-system` |
 | **Database queries** | `supabase-patterns` |
 | **PR review / audit** | **Manual:** `/skill:codebase-review` |
 
@@ -70,11 +71,11 @@ When multiple skills apply, load them in the listed order. Earlier skills set co
 
 ### Per-Task Examples
 
-**"Add a customer form"** → `design-system` + `accessibility` + `code-standards` + `testing-patterns`
+**"Add a customer form"** → `design-system` + `ux-laws` + `accessibility` + `code-standards` + `testing-patterns`
 
 **"Create invoice refund endpoint"** → `supabase-patterns` + `code-standards` + `error-handling` + `testing-patterns`
 
-**"Fix bay view layout on iPad"** → `responsive-design` + `design-system`
+**"Fix bay view layout on iPad"** → `ux-laws` + `responsive-design` + `design-system`
 
 **"Add optimistic update to work order status"** → `optimistic-ui` + `error-handling` + `supabase-patterns`
 

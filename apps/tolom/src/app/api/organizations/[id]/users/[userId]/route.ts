@@ -15,5 +15,5 @@ export const PATCH = createRouteHandler(
     });
     return ok({ success: true });
   },
-  { rateLimit: true, subscription: true },
+  { rateLimit: true, subscription: true, minimumRole: "Org Owner" },
 );

@@ -234,6 +234,7 @@ function buildMockGames(dateStr: string): (Game & {
     {
       id: "70000000-0000-0000-0000-000000000001",
       competition_id: COMPETITION_ID,
+      ruleset_id: "default",
       home_team_season_id: "30000000-0000-0000-0000-000000000001",
       away_team_season_id: "40000000-0000-0000-0000-000000000001",
       venue_id: VENUE_ID,
@@ -242,6 +243,8 @@ function buildMockGames(dateStr: string): (Game & {
       current_period: 0,
       home_score: null,
       away_score: null,
+      current_revision_number: 0,
+      published_at: null,
       created_at: "2026-09-01T00:00:00Z",
       home_name: "Хасын одод",
       home_short: "ХАС",
@@ -255,14 +258,17 @@ function buildMockGames(dateStr: string): (Game & {
     {
       id: "70000000-0000-0000-0000-000000000002",
       competition_id: COMPETITION_ID,
+      ruleset_id: "default",
       home_team_season_id: "30000000-0000-0000-0000-000000000001",
       away_team_season_id: "40000000-0000-0000-0000-000000000001",
       venue_id: VENUE_ID,
       scheduled_at: `${dateStr}T15:00:00+08:00`,
-      status: "final" as const,
+      status: "final_pending_review" as const,
       current_period: 4,
       home_score: 87,
       away_score: 82,
+      current_revision_number: 1,
+      published_at: null,
       created_at: "2026-09-01T00:00:00Z",
       home_name: "Хасын одод",
       home_short: "ХАС",
@@ -280,14 +286,17 @@ function buildMockGames(dateStr: string): (Game & {
     baseGames.unshift({
       id: "70000000-0000-0000-0000-000000000003",
       competition_id: COMPETITION_ID,
+      ruleset_id: "default",
       home_team_season_id: "40000000-0000-0000-0000-000000000001",
       away_team_season_id: "30000000-0000-0000-0000-000000000001",
       venue_id: VENUE_ID,
       scheduled_at: `${dateStr}T19:30:00+08:00`,
-      status: "live" as const,
+      status: "live_provisional" as const,
       current_period: 3,
       home_score: 54,
       away_score: 51,
+      current_revision_number: 0,
+      published_at: null,
       created_at: "2026-09-01T00:00:00Z",
       home_name: "Тэнгэрийн зүүд",
       home_short: "ТЭЗ",
@@ -814,7 +823,7 @@ export async function getGamesByDate(dateStr: string): Promise<GameWithTeams[]> 
 export async function getLiveGames(): Promise<GameWithTeams[]> {
   const today = new Date().toISOString().slice(0, 10);
   const allGames = await getGamesByDate(today);
-  return allGames.filter((g) => g.status === "live");
+  return allGames.filter((g) => g.status === "live_provisional");
 }
 
 export async function getGameById(
@@ -958,7 +967,7 @@ export function statusLabel(status: string): string {
 }
 
 export function statusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
-  if (status === "live") return "destructive";
-  if (status === "final" || status === "verified") return "secondary";
+  if (status === "live_provisional") return "destructive";
+  if (status === "final_pending_review" || status === "league_verified") return "secondary";
   return "outline";
 }

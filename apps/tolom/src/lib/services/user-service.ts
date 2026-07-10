@@ -221,13 +221,20 @@ export async function updateUserRole(
   // Verify the role belongs to this organization
   const { data: role } = await supabase
     .from("roles")
-    .select("id")
+    .select("id, name, is_system")
     .eq("id", roleId)
     .eq("organization_id", orgId)
+    .is("deleted_at", null)
     .maybeSingle();
 
   if (!role) {
     throw new NotFoundError("Role not found in this organization");
+  }
+
+  if (role.name === "Org Owner") {
+    throw new ForbiddenError(
+      "Cannot assign Org Owner role through member update",
+    );
   }
 
   const { error } = await supabase
@@ -447,8 +454,28 @@ export async function getCurrentUserProfile(
       `)
       .eq("user_id", user.id)
       .eq("is_primary", true)
+      .is("removed_at", null)
       .maybeSingle(),
   ]);
+
+  // Fetch permissions for the active role in parallel with org name
+  const rolePermsPromise = membership?.role_id
+    ? supabase
+        .from("role_permissions")
+        .select("permissions!inner(name)")
+        .eq("role_id", membership.role_id)
+    : Promise.resolve({ data: null });
+
+  const [{ data: rolePerms }] = await Promise.all([rolePermsPromise]);
+
+  const permissionNames = (rolePerms ?? [])
+    .map((rp) => {
+      const perm = Array.isArray(rp.permissions)
+        ? rp.permissions[0]
+        : (rp.permissions as unknown as { name: string } | null);
+      return perm?.name ?? null;
+    })
+    .filter(Boolean) as string[];
 
   let orgName: string | null = null;
   if (membership) {
@@ -481,5 +508,6 @@ export async function getCurrentUserProfile(
     branchId: membership?.branch_id ?? null,
     roleId: membership?.role_id ?? null,
     roleName: membershipRole?.name ?? null,
+    permissionNames,
   };
 }

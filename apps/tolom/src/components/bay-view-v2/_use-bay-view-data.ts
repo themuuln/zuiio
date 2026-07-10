@@ -82,10 +82,16 @@ export function useBayViewData(
     refetchInterval: anySurfaceOpen ? false : 300_000,
   });
 
+  const loading = bayQuery.isLoading;
   const data = bayQuery.data ?? null;
   const shiftReport = shiftQuery.data ?? null;
-  const loading = bayQuery.isLoading;
   const error = bayQuery.error instanceof Error ? bayQuery.error.message : null;
+  const errorName =
+    bayQuery.error instanceof Error ? bayQuery.error.name : null;
+  const isAccessDenied =
+    errorName === "AppError" &&
+    error !== null &&
+    error.includes("doesn't have access");
 
   const fetchData = useCallback(async () => {
     await bayQuery.refetch();
@@ -216,11 +222,11 @@ export function useBayViewData(
   );
 
   return {
-    // Data
-    data,
-    shiftReport,
     loading,
     error,
+    isAccessDenied,
+    data,
+    shiftReport,
     fetchData,
     // UI state
     myJobsOnly,

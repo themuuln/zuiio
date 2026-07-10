@@ -26,9 +26,12 @@ export function reportServerError(
     logger.error(context ?? {}, message);
   }
 
-  // Route through @zuiio/capture to telemetry handler (Sentry)
+  // When message is generic but error is specific, derive context from the error
+  const contextMessage = message === "Unexpected error" && error
+    ? (error instanceof Error ? error.message : String(error))
+    : message;
   capture(error ?? new Error(message), {
-    context: `[server] ${message}`,
+    context: `[server] ${contextMessage}`,
     ...context,
   });
 }

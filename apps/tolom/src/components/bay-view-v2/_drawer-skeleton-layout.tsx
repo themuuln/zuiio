@@ -16,9 +16,9 @@ export function DrawerSkeletonLayout() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
             {/* Left column: services, parts, notes */}
             <div className="lg:col-span-2">
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col divide-y divide-border/40">
                 {/* ── Services section skeleton ── */}
-                <div className="rounded-xl ring-1 ring-foreground/10 bg-card/40 p-3">
+                <div className="rounded-xl bg-card/40 p-3">
                   <div className="flex items-center justify-between mb-3">
                     <Skeleton className="h-3.5 w-20" />
                     <Skeleton className="h-3.5 w-8 rounded-full" />
@@ -31,7 +31,7 @@ export function DrawerSkeletonLayout() {
                 </div>
 
                 {/* ── Parts section skeleton ── */}
-                <div className="rounded-xl ring-1 ring-foreground/10 bg-card/40 p-3">
+                <div className="rounded-xl bg-card/40 p-3">
                   <div className="flex items-center justify-between mb-3">
                     <Skeleton className="h-3.5 w-14" />
                     <Skeleton className="h-3.5 w-8 rounded-full" />
@@ -43,8 +43,8 @@ export function DrawerSkeletonLayout() {
             </div>
 
             {/* Right column: timeline */}
-            <div className="flex flex-col gap-3 lg:sticky lg:top-3 self-start">
-              <div className="rounded-xl ring-1 ring-foreground/10 bg-card/40 p-3">
+            <div className="flex flex-col gap-3 lg:sticky lg:top-3 self-start lg:border-l lg:border-border/40 lg:pl-4">
+              <div className="rounded-xl bg-card/40 p-3">
                 <div className="flex items-center gap-2 mb-3">
                   <Skeleton className="size-2 rounded-full" />
                   <Skeleton className="h-3 w-16" />
@@ -64,7 +64,7 @@ export function DrawerSkeletonLayout() {
       </div>
 
       {/* ── VAT + Totals skeleton (matches DrawerContentPanel totals area) ── */}
-      <div>
+      <div className="px-3 py-2">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           <div className="lg:col-span-2 flex flex-col gap-3 shrink-0">
             <div className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2">

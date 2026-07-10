@@ -1,7 +1,6 @@
 {
   "name": "@zuiio/realtime",
   "version": "0.1.0",
-  "private": true,
   "description": "Supabase Realtime hooks for React Query cache invalidation",
   "license": "MIT",
   "type": "module",

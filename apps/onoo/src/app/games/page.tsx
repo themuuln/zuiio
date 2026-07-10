@@ -44,10 +44,10 @@ export default async function GamesPage({
                 <CardContent className="flex items-center gap-4 py-4 px-6">
                   {/* Time / Status */}
                   <div className="w-16 shrink-0 text-center">
-                    {game.status === "live" ? (
+                    {game.status === "live_provisional" ? (
                       <Badge variant="destructive">Шууд</Badge>
-                    ) : game.status === "final" ||
-                      game.status === "verified" ? (
+                    ) : game.status === "final_pending_review" ||
+                      game.status === "league_verified" ? (
                       <span className="text-xs text-muted-foreground">
                         Дууссан
                       </span>
@@ -77,12 +77,12 @@ export default async function GamesPage({
 
                   {/* Score / Status */}
                   <div className="w-20 shrink-0 text-center">
-                    {game.status === "final" ||
-                    game.status === "verified" ? (
+                    {game.status === "final_pending_review" ||
+                    game.status === "league_verified" ? (
                       <span className="text-lg font-bold tabular-nums">
                         {game.home_score} — {game.away_score}
                       </span>
-                    ) : game.status === "live" ? (
+                    ) : game.status === "live_provisional" ? (
                       <span className="text-lg font-bold tabular-nums text-red-500">
                         {game.home_score ?? 0} — {game.away_score ?? 0}
                       </span>

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { NotFoundError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 import type {
   Customer,
   DiagnosisLabel,
@@ -36,7 +37,13 @@ export async function getWorkOrderDetail(
   if (orgId) query = query.eq("organization_id", orgId);
   const { data: wo, error: woError } = await query.single();
 
-  if (woError || !wo) throw new NotFoundError("Work order not found");
+  if (woError || !wo) {
+    logger.error(
+      { workOrderId: id, orgId, woError: woError ?? null, hasData: !!wo },
+      "getWorkOrderDetail: work order not found or query failed",
+    );
+    throw new NotFoundError("Work order not found");
+  }
 
   // Fetch related data in parallel
   const [

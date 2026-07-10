@@ -80,8 +80,8 @@ export function NotesSection({
       const body: Record<string, string | null> = {};
       body[field] = editValue.trim() || null;
       await saveFieldMutation.mutateAsync(body);
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       toast.error(t("failedToSave"));
     } finally {
       setSaving(false);
@@ -144,7 +144,7 @@ export function NotesSection({
   }
 
   return (
-    <section className="rounded-xl ring-1 ring-foreground/10 bg-card/40 p-3">
+    <section className="rounded-xl bg-card/40 p-3">
       <div className="flex items-center gap-2 mb-3">
         <FileText className="size-3.5 text-muted-foreground/70" />
         <span className="text-xs font-semibold text-muted-foreground">

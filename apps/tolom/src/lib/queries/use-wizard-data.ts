@@ -115,8 +115,8 @@ export async function fetchVehicleServicePrice(
         return Number(json.data.price);
       }
     }
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    reportServerError("Unexpected error", error);
     // Fall through to history
   }
 
@@ -134,8 +134,8 @@ export async function fetchVehicleServicePrice(
     const data = (json.data ?? []) as VehicleServicePriceEntry[];
     if (data.length === 0) return null;
     return data[0].unit_price ?? data[0].final_price ?? null;
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    reportServerError("Unexpected error", error);
     return null;
   }
 }
@@ -177,8 +177,8 @@ export async function fetchVehiclePartPrice(
         return Number(json.data.price);
       }
     }
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    reportServerError("Unexpected error", error);
     // Fall through to history
   }
 
@@ -196,8 +196,8 @@ export async function fetchVehiclePartPrice(
     const data = (json.data ?? []) as VehiclePartPriceEntry[];
     if (data.length === 0) return null;
     return data[0].unit_price ?? data[0].final_price ?? null;
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    reportServerError("Unexpected error", error);
     return null;
   }
 }

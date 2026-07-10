@@ -2,7 +2,7 @@
  * Basketball stats derivation engine.
  *
  * Pure TypeScript — no React / DOM / Supabase runtime.
- * Processes a pre-filtered (deleted_at == null) event stream into
+ * Processes a pre-filtered (voided_at == null) event stream into
  * per-player box-score lines, per-team aggregates, and home/away scores.
  */
 
@@ -473,4 +473,27 @@ export function deriveBoxScore(input: {
     homeAwayScore,
     warnings,
   };
+}
+
+export interface ApprovedRevisionJournal {
+  revisionId: string;
+  state: "approved";
+  sourceSubmissionId: string;
+  events: StatEvent[];
+}
+
+/**
+ * Projection entry point for V2. Callers must supply the approved revision,
+ * never an arbitrary raw event query.
+ */
+export function deriveApprovedRevision(input: {
+  revision: ApprovedRevisionJournal;
+  roster: GameRoster[];
+  config: SportConfig;
+}) {
+  return deriveBoxScore({
+    events: input.revision.events.filter((event) => event.voided_at == null),
+    rosters: input.roster,
+    sportConfig: input.config,
+  });
 }

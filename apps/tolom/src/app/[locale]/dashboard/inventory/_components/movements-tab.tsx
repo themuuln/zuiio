@@ -248,8 +248,8 @@ export function MovementsTab({
       );
       const d = await r.json();
       setParts(d.data ?? []);
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       setParts([]);
     }
   }

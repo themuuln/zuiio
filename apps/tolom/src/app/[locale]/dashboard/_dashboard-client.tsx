@@ -1,24 +1,40 @@
 "use client";
 
-import { Clock, DollarSign, TrendingUp, Users } from "lucide-react";
+import {
+  Car,
+  Clock,
+  DollarSign,
+  Lightbulb,
+  PiggyBank,
+  Plus,
+  TrendingUp,
+  UserPlus,
+  Users,
+} from "lucide-react";
 import dynamicImport from "next/dynamic";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Typography } from "@/components/ui/typography";
 import { useCurrentUserRole } from "@/hooks/use-current-user-role";
+import { usePageHeader } from "@/hooks/use-page-header";
 import { useSelectedBranchGuard } from "@/hooks/use-selected-branch-guard";
 import type { ExportColumn } from "@/lib/export";
 import { useRealtimeMulti } from "@/lib/hooks/use-realtime-multi";
 import { useRouter } from "@/lib/i18n/navigation";
 import { dashboardKeys } from "@/lib/queries/keys";
-import { useDashboard } from "@/lib/queries/use-dashboard";
+import {
+  type DashboardPeriod,
+  useDashboard,
+} from "@/lib/queries/use-dashboard";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { WorkOrderDetail } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import { KpiCard } from "./_kpi-cards";
+import { LowStockCard } from "./_low-stock-card";
 import { RecentWorkOrdersTable } from "./_recent-work-orders";
 import { SectionHeader } from "./_section-header";
 
@@ -40,9 +56,38 @@ const ChartsSection = dynamicImport(() => import("./_charts"), {
   ),
 });
 
+const PERIODS: DashboardPeriod[] = ["today", "week", "month", "all"];
+const PERIOD_LABEL_KEYS: Record<DashboardPeriod, string> = {
+  today: "dashboard.periodToday",
+  week: "dashboard.periodWeek",
+  month: "dashboard.periodMonth",
+  all: "dashboard.periodAll",
+};
+const PERIOD_STORAGE_KEY = "dashboard-period";
+
+interface KpiTrend {
+  direction: "up" | "down" | "neutral";
+  value: string;
+}
+
+/** Percent change vs previous period, or null when there is no baseline. */
+function computeTrend(
+  current: number,
+  previous: number | null | undefined,
+): KpiTrend | null {
+  if (previous == null || previous <= 0) return null;
+  const pct = Math.round(((current - previous) / previous) * 100);
+  if (!Number.isFinite(pct)) return null;
+  return {
+    direction: pct > 0 ? "up" : pct < 0 ? "down" : "neutral",
+    value: `${pct > 0 ? "+" : ""}${pct}%`,
+  };
+}
+
 export default function DashboardPage() {
   const t = useTranslations();
   const router = useRouter();
+  const { openSheet } = usePageHeader();
   const { isMechanic, loading: roleLoading } = useCurrentUserRole();
 
   // Redirect mechanics to bay view
@@ -54,7 +99,37 @@ export default function DashboardPage() {
   // React Query hooks
   const { data: org, isPending: orgLoading, error: orgError } = useCurrentOrg();
   const orgId = org?.orgId;
-  useSelectedBranchGuard(orgId);
+  // Skip branch selection and dashboard queries for mechanics
+  // (they get redirected to bay view, and these APIs return 403).
+  // Also skip while role is still loading — we need to know if user
+  // is a mechanic before firing these queries.
+  const effectiveOrgId = roleLoading
+    ? undefined
+    : isMechanic
+      ? undefined
+      : orgId;
+  useSelectedBranchGuard(effectiveOrgId);
+
+  // Period selector — "month" gives previous-period trends and insights by default
+  const [period, setPeriod] = useState<DashboardPeriod>("month");
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(PERIOD_STORAGE_KEY);
+      if (stored && PERIODS.includes(stored as DashboardPeriod)) {
+        setPeriod(stored as DashboardPeriod);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+  const changePeriod = useCallback((next: DashboardPeriod) => {
+    setPeriod(next);
+    try {
+      localStorage.setItem(PERIOD_STORAGE_KEY, next);
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   // Realtime: refresh dashboard when core tables change
   useRealtimeMulti({
@@ -87,16 +162,14 @@ export default function DashboardPage() {
       },
     ],
   });
-
   const {
     data,
     isPending: dashboardLoading,
     isFetching: dashboardFetching,
     error: dashboardError,
     refetch: refetchDashboard,
-  } = useDashboard(orgId, {
-    dateFrom: undefined,
-    dateTo: undefined,
+  } = useDashboard(effectiveOrgId, {
+    period,
     branchId: null,
   });
 
@@ -107,7 +180,9 @@ export default function DashboardPage() {
   }, [data]);
 
   const isDataLoading = !data || dashboardFetching;
-
+  const summary = data?.summary ?? null;
+  const comparison = data?.summaryComparison ?? null;
+  const insights = data?.insights ?? [];
   const workOrders = data?.recentWorkOrders ?? [];
 
   // Redirect when org not selected
@@ -163,11 +238,74 @@ export default function DashboardPage() {
     [t],
   );
 
-  const summary = data?.summary ?? null;
   const hasError = !!(orgError || (dashboardError && !hasLoadedOnce));
   const errorText = orgError
     ? "Failed to load organization"
     : (dashboardError?.message ?? null);
+
+  const revenueTrendKpi = computeTrend(
+    summary?.totalRevenue ?? 0,
+    comparison?.totalRevenue,
+  );
+  const aroTrendKpi = computeTrend(
+    summary?.avgRepairOrderValue ?? 0,
+    comparison?.avgRepairOrderValue,
+  );
+  const vsPrevLabel = t("dashboard.vsPrevPeriod");
+
+  const totalRevenue = summary?.totalRevenue ?? 0;
+  const servicePct =
+    totalRevenue > 0
+      ? Math.round(((summary?.serviceRevenue ?? 0) / totalRevenue) * 100)
+      : 0;
+  const partsPct =
+    totalRevenue > 0
+      ? Math.round(((summary?.partsRevenue ?? 0) / totalRevenue) * 100)
+      : 0;
+
+  const secondaryStats: {
+    key: string;
+    label: string;
+    value: string;
+    sub: string | null;
+    icon: typeof PiggyBank;
+    loading: boolean;
+  }[] = [
+    {
+      key: "grossProfit",
+      label: t("dashboard.grossProfit"),
+      value: formatCurrency(summary?.grossProfit ?? 0),
+      sub: t("dashboard.marginLabel", {
+        percent: Math.round(summary?.marginPercent ?? 0),
+      }),
+      icon: PiggyBank,
+      loading: isDataLoading,
+    },
+    {
+      key: "serviceRevenue",
+      label: t("dashboard.serviceRevenue"),
+      value: formatCurrency(summary?.serviceRevenue ?? 0),
+      sub: t("dashboard.ofRevenue", { percent: servicePct }),
+      icon: TrendingUp,
+      loading: isDataLoading,
+    },
+    {
+      key: "partsRevenue",
+      label: t("dashboard.partsRevenue"),
+      value: formatCurrency(summary?.partsRevenue ?? 0),
+      sub: t("dashboard.ofRevenue", { percent: partsPct }),
+      icon: DollarSign,
+      loading: isDataLoading,
+    },
+    {
+      key: "totalVehicles",
+      label: t("dashboard.totalVehicles"),
+      value: String(summary?.totalVehicles ?? 0),
+      sub: null,
+      icon: Car,
+      loading: isDataLoading,
+    },
+  ];
 
   // ── Always render page structure, skeleton-load values ──
   return (
@@ -190,13 +328,52 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Simple header */}
-      <div>
-        <Typography.H2 className="m-0">{t("dashboard.welcome")}</Typography.H2>
-        <Typography.Muted className="mt-1">
-          {t("dashboard.subtitle")}
-        </Typography.Muted>
+      {/* Header: greeting + period selector + quick actions */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <Typography.H2 className="m-0">
+            {t("dashboard.welcome")}
+          </Typography.H2>
+          <Typography.Muted className="mt-1">
+            {t("dashboard.subtitle")}
+          </Typography.Muted>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <ToggleGroup
+            variant="outline"
+            size="sm"
+            value={[period]}
+            onValueChange={(values) => {
+              const next = values[0] as DashboardPeriod | undefined;
+              if (next && next !== period) changePeriod(next);
+            }}
+            className="gap-1"
+          >
+            {PERIODS.map((p) => (
+              <ToggleGroupItem key={p} value={p}>
+                {t(PERIOD_LABEL_KEYS[p])}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => openSheet("newCustomer")}
+            >
+              <UserPlus className="size-4" />
+              {t("dashboard.newCustomer")}
+            </Button>
+            <Button size="sm" onClick={() => openSheet("newWorkOrder")}>
+              <Plus className="size-4" />
+              {t("dashboard.newWorkOrder")}
+            </Button>
+          </div>
+        </div>
       </div>
+
+      {/* Inventory alert — renders only when parts are low/out of stock */}
+      {orgId && <LowStockCard orgId={orgId} />}
 
       {/* 4 KPI cards — always visible, skeleton shows for values while loading */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
@@ -206,6 +383,8 @@ export default function DashboardPage() {
           icon={DollarSign}
           loading={isDataLoading}
           accentKey="totalRevenue"
+          trend={revenueTrendKpi}
+          comparisonLabel={revenueTrendKpi ? vsPrevLabel : undefined}
         />
         <KpiCard
           label={t("dashboard.activeWorkOrders")}
@@ -227,8 +406,58 @@ export default function DashboardPage() {
           icon={TrendingUp}
           loading={isDataLoading}
           accentKey="avgRepairOrder"
+          trend={aroTrendKpi}
+          comparisonLabel={aroTrendKpi ? vsPrevLabel : undefined}
         />
       </div>
+
+      {/* Secondary metrics strip: profit, revenue mix, fleet size */}
+      <Card className="overflow-hidden py-0">
+        <CardContent className="grid grid-cols-2 gap-px bg-border p-0 lg:grid-cols-4">
+          {secondaryStats.map((stat) => (
+            <div key={stat.key} className="flex flex-col gap-1 bg-card p-4">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <stat.icon className="size-3.5" aria-hidden="true" />
+                {stat.label}
+              </div>
+              {stat.loading ? (
+                <Skeleton className="h-6 w-24" />
+              ) : (
+                <div className="text-lg font-semibold tracking-tight tabular-nums">
+                  {stat.value}
+                </div>
+              )}
+              {!stat.loading && stat.sub && (
+                <span className="text-xs text-muted-foreground">
+                  {stat.sub}
+                </span>
+              )}
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Smart insights — only when the API produced comparisons */}
+      {insights.length > 0 && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="flex gap-3 p-4">
+            <Lightbulb
+              className="mt-0.5 size-5 shrink-0 text-amber-500"
+              aria-hidden="true"
+            />
+            <div className="flex flex-col gap-1.5">
+              <Typography.Text className="text-sm font-medium">
+                {t("dashboard.insights")}
+              </Typography.Text>
+              <ul className="flex list-none flex-col gap-1 text-sm text-muted-foreground">
+                {insights.map((insight) => (
+                  <li key={insight}>{insight}</li>
+                ))}
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Charts — use dynamic import's own loading skeleton */}
       {data ? (

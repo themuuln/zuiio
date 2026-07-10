@@ -63,8 +63,8 @@ export default function DevicesPage() {
     try {
       await deleteDevice.mutateAsync({ deviceId: revokingId });
       setRevokingId(null);
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       // Toast handled by useOrgMutation
     }
   };

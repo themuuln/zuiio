@@ -90,7 +90,7 @@ export function ReceiptDrawer({
       description={saleId ? `#${saleId.slice(0, 8).toUpperCase()}` : undefined}
       panelWidth="28rem"
     >
-      <ReceiptContent />
+      <ReceiptContent saleId={saleId} orgId={orgId} />
     </SlideInDrawer>
   );
 }

@@ -111,8 +111,8 @@ export function RefundsTab({ orgId }: RefundsTabProps) {
     if (!confirm(t("refund.confirmCancel"))) return;
     try {
       await cancelRefund.mutateAsync(refundId);
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       // Error handled by mutation
     }
   };

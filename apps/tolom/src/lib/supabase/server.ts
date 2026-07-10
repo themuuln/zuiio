@@ -1,7 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { withSupabaseConsoleCapture } from "@zuiio/capture";
 import { cookies } from "next/headers";
-import { reportServerError } from "@/lib/sentry-report-server";
 import type { Database } from "@/lib/types";
 import { env, getSupabaseKey } from "./env";
 
@@ -14,10 +13,17 @@ export async function createClient() {
   try {
     cookieStore = await cookies();
   } catch {
-    reportServerError("Unexpected error");
     // During prerendering with Cache Components, cookies() rejects when the
-    // prerender is complete. Return a client with empty cookies — auth will fail
-    // gracefully (UnauthorizedError), which is correct for prerendered routes.
+    // prerender is complete. Return a client with a noop fetch that resolves
+    // synchronously to an empty JSON response — supabase's internal _useSession
+    // calls fetch() which would otherwise outlive the prerender and cause
+    // HANGING_PROMISE_REJECTION.
+    const noopFetch: typeof fetch = async () =>
+      new Response(JSON.stringify({ data: { user: null }, error: null }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+
     return createServerClient<Database>(
       env("NEXT_PUBLIC_SUPABASE_URL"),
       getSupabaseKey(),
@@ -29,7 +35,7 @@ export async function createClient() {
           setAll() {},
         },
         global: {
-          fetch: withSupabaseConsoleCapture(),
+          fetch: noopFetch,
         },
       },
     );
@@ -44,7 +50,6 @@ export async function createClient() {
           try {
             return cookieStore.getAll();
           } catch {
-            reportServerError("Unexpected error");
             return [];
           }
         },
@@ -54,7 +59,6 @@ export async function createClient() {
               cookieStore.set(name, value, options);
             }
           } catch {
-            reportServerError("Unexpected error");
             // Ignored — middleware handles session refresh.
           }
         },

@@ -43,6 +43,15 @@ export async function register() {
     });
 
     process.on("uncaughtException", (error) => {
+      // ECONNRESET / "aborted" is an expected HTTP lifecycle event:
+      // the client disconnects mid-flight (e.g. navigating away from a
+      // slow page). It is NOT a real crash — suppress it.
+      if (
+        error instanceof Error &&
+        (error.code === "ECONNRESET" || error.message === "aborted")
+      ) {
+        return;
+      }
       handleProcessError("uncaughtException", error);
       // Give Sentry a tick to flush, then let the process exit naturally.
       setImmediate(() => process.exit(1));

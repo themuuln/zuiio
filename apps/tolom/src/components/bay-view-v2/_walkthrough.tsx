@@ -56,8 +56,8 @@ export function BayViewWalkthrough() {
   const hasVisited = useCallback(() => {
     try {
       return localStorage.getItem(STORAGE_KEY) === "true";
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       return false;
     }
   }, []);
@@ -151,8 +151,8 @@ export function BayViewWalkthrough() {
     setVisible(false);
     try {
       localStorage.setItem(STORAGE_KEY, "true");
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       // silent
     }
   };

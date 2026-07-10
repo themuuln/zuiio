@@ -103,7 +103,6 @@ export function BayViewV2Client() {
   });
   const keyboardSensor = useSensor(KeyboardSensor);
   const sensors = useSensors(pointerSensor, touchSensor, keyboardSensor);
-
   // ── Loading / error ──
   const isLoading = bayViewData.loading && !bayViewData.data;
   const hasError = !!(bayViewData.error && !bayViewData.data);
@@ -124,9 +123,28 @@ export function BayViewV2Client() {
       onDragCancel={mutations.onDragCancel}
     >
       <BayViewTickProvider>
-        <div className="flex h-full flex-1 flex-col overflow-hidden">
+        <div className="flex h-full flex-1 flex-col">
+          {/* ── Access denied warning (supersedes generic error) ── */}
+          {bayViewData.isAccessDenied && (
+            <div className="flex items-center justify-between border-b border-amber-400/30 bg-amber-50/80 px-4 py-2">
+              <span className="text-sm text-amber-800">
+                {t("accessDenied") ??
+                  "Таны эрхээр bay view-г харах боломжгүй байна. Байгууллагын эзэмшигчтэй холбогдоно уу."}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => bayViewData.fetchData()}
+                className="rounded-lg"
+              >
+                {t("retry")}
+              </Button>
+            </div>
+          )}
+
+
           {/* ── Inline error banner ── */}
-          {hasError && (
+          {hasError && !bayViewData.isAccessDenied && (
             <div className="flex items-center justify-between border-b border-destructive/20 bg-destructive/5 px-4 py-2">
               <span className="text-sm text-destructive">
                 {bayViewData.error
@@ -226,8 +244,8 @@ export function BayViewV2Client() {
           )}
 
           {/* ── Bay Views / Queue Rail ── */}
-          <div className="flex min-h-0 flex-1 overflow-hidden bg-transparent">
-            <div className="flex-1 overflow-y-auto">
+          <div className="flex min-h-0 flex-1 bg-transparent">
+            <div className="flex-1">
               {isLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
                   {[1, 2, 3, 4, 5, 6].map((i) => (

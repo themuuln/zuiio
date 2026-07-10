@@ -109,8 +109,8 @@ export function RefundDialog({
       form.reset();
       setStep("form");
       onOpenChange(false);
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       // Error handled by mutation
     }
   };

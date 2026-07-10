@@ -29,6 +29,33 @@ export type SeasonPlayerStats = Tables<"season_player_stats">;
 export type Standings = Tables<"standings">;
 export type AuditLog = Tables<"audit_log">;
 
+export type BasketballRuleset = Tables<"basketball_rulesets">;
+export type TrackerSession = Tables<"tracker_sessions">;
+export type SourceSubmission = Tables<"source_submissions">;
+export type GameRevision = Tables<"game_revisions">;
+export type CorrectionRecord = Tables<"correction_records">;
+export type PlayerAlias = Tables<"player_aliases">;
+export type PlayerMergeHistory = Tables<"player_merge_history">;
+
+export type SourceType =
+  | "tracker_journal"
+  | "official_score_sheet"
+  | "manual_box_score"
+  | "import";
+
+/** Alias for GameStatus — use GameStatus for new code. */
+export type GameLifecycleState = GameStatus;
+
+export type CommandStatus = "queued" | "acknowledged" | "rejected";
+
+export interface TrustedRecordProvenance {
+  sourceSubmissionId: string;
+  revisionId: string;
+  revisionNumber: number;
+  approvedAt: string;
+  approvedBy: string;
+}
+
 // Sport config schema (parsed from sports.config JSONB)
 export const SportConfigSchema = z.object({
   periods: z.number(),

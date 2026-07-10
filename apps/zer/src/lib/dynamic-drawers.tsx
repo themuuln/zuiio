@@ -1,3 +1,4 @@
+"use client";
 import dynamic from "next/dynamic";
 
 // Shared loading fallback — renders a skeleton that matches roughly the drawer trigger button size

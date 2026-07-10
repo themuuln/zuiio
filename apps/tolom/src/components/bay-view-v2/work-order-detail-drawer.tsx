@@ -2,8 +2,6 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useOrgMutation } from "@zuiio/query";
-import { User, UserPlus } from "lucide-react";
-import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import {
   useCallback,
@@ -46,11 +44,6 @@ import { resolvePaymentMethodFees } from "./_payment-fees";
 import { createInvoiceAndRecordPayment } from "./_payment-helpers";
 import { useDrawerMutations } from "./_use-drawer-mutations";
 import { useVariantSelection } from "./_use-variant-selection";
-
-const WorkOrderQuickActions = dynamic(
-  () => import("./_quick-actions").then((m) => m.QuickActions),
-  { ssr: false },
-);
 
 // ── Drawer ───────────────────────────────────────────────────
 
@@ -430,68 +423,9 @@ export function WorkOrderDetailDrawer({
           onClose={() => handleOpenChange(false)}
           showBack={showPostServiceForm}
           onBack={handleCancelPostService}
+          onShowCustomerPicker={() => setShowCustomerPicker(true)}
           t={t}
         />
-        {/* Customer — shown near top for visibility; skeleton while loading */}
-        {wo ? (
-          <div className="px-3 py-1.5 border-b border-border/60 flex items-center gap-2 text-xs">
-            {wo.customer ? (
-              <>
-                <User className="size-3.5 text-muted-foreground/60 shrink-0" />
-                <span className="font-medium text-foreground/80 truncate">
-                  {[wo.customer.first_name, wo.customer.last_name]
-                    .filter(Boolean)
-                    .join(" ") ||
-                    wo.customer.phone ||
-                    t("unknownCustomer")}
-                </span>
-                {wo.customer.phone &&
-                  [wo.customer.first_name, wo.customer.last_name]
-                    .filter(Boolean)
-                    .join(" ") && (
-                    <span className="text-muted-foreground/60 font-mono">
-                      {wo.customer.phone}
-                    </span>
-                  )}
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  className="ml-auto shrink-0"
-                  onClick={() => setShowCustomerPicker(true)}
-                  aria-label="Change customer"
-                >
-                  <UserPlus className="size-3" />
-                </Button>
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowCustomerPicker(true)}
-                className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <UserPlus className="size-3.5" />
-                {t("selectCustomer")}
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="px-3 py-1.5 border-b border-border/60 flex items-center gap-2 text-xs">
-            <Skeleton className="size-3.5 rounded-full" />
-            <Skeleton className="h-3 w-28" />
-            <Skeleton className="h-3 w-20 ml-auto" />
-          </div>
-        )}
-
-        {/* Quick actions — visible once data is available */}
-        {wo && orgId && workOrderId && (
-          <WorkOrderQuickActions
-            workOrderId={workOrderId}
-            orgId={orgId}
-            existingNotes={wo.notes}
-            onNoteAdded={() => fetchWo(true)}
-            t={t}
-          />
-        )}
 
         {/* Content — PPR pattern: always render structure, skeleton-load values */}
         <div

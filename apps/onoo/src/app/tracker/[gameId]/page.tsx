@@ -12,6 +12,7 @@ import type {
   SportConfig,
   BoxScoreLine,
   TeamBoxScoreLine,
+  Json,
 } from "@onoo/core/types";
 import { EventQueue } from "@onoo/core/sync";
 
@@ -207,6 +208,8 @@ export default function TrackerPage() {
       const newEvent: StatEvent = {
         id: clientId,
         game_id: gameId,
+        tracker_session_id: "local",
+        operation_id: clientId,
         client_id: clientId,
         local_seq: localSeq,
         event_type: eventType,
@@ -214,10 +217,12 @@ export default function TrackerPage() {
         clock_seconds: clockSeconds,
         team_season_id: teamSeasonId,
         player_id: playerId,
-        payload: payload as any,
-        created_by: null,
+        payload: payload satisfies Record<string, unknown> as unknown as Json,
+        created_by: "local",
         created_at: new Date().toISOString(),
-        deleted_at: null,
+        voided_at: null,
+        voided_by: null,
+        void_reason: null,
         superseded_by: null,
       };
 
@@ -230,6 +235,8 @@ export default function TrackerPage() {
       // Save to Supabase
       const { error } = await supabase.from("stat_events").insert({
         game_id: gameId,
+        tracker_session_id: "local",
+        operation_id: clientId,
         client_id: clientId,
         local_seq: localSeq,
         event_type: eventType,
@@ -237,7 +244,8 @@ export default function TrackerPage() {
         clock_seconds: clockSeconds,
         team_season_id: teamSeasonId,
         player_id: playerId,
-        payload: payload as any,
+        payload: payload satisfies Record<string, unknown> as unknown as Json,
+        created_by: "local",
       });
 
       if (error) {
@@ -428,7 +436,7 @@ export default function TrackerPage() {
   }, [events, supabase]);
 
   const isSetup = game.status === "scheduled";
-  const isLive = game.status === "live";
+  const isLive = game.status === "live_provisional";
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-900 text-white">

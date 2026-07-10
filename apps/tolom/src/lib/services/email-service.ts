@@ -128,8 +128,8 @@ function formatDate(iso: string | null | undefined): string {
       month: "short",
       day: "numeric",
     });
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    reportServerError("Unexpected error", error);
     return iso;
   }
 }
@@ -596,8 +596,8 @@ export async function testEmailConfig(): Promise<boolean> {
       await transporter.verify();
     }
     return true;
-  } catch {
-    reportServerError("Unexpected error");
+  } catch (error) {
+    reportServerError("Unexpected error", error);
     return false;
   }
 }

@@ -63,14 +63,18 @@ function SelectContent({
   align = "center",
   alignOffset = 0,
   alignItemWithTrigger = true,
+  container,
   ...props
 }: SelectPrimitive.Popup.Props &
   Pick<
     SelectPrimitive.Positioner.Props,
     "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger"
-  >) {
+  > & {
+    /** Portal container element — pass the Drawer content ref to render inside drawers */
+    container?: HTMLElement | null;
+  }) {
   return (
-    <SelectPrimitive.Portal>
+    <SelectPrimitive.Portal container={container}>
       <SelectPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}

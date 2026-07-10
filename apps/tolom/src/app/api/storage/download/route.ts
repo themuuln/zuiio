@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { apiError, createSimpleRouteHandler, ok } from "@/lib/api-response";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { getStorage } from "@/lib/storage/storage-factory";
@@ -9,8 +11,16 @@ import { getStorage } from "@/lib/storage/storage-factory";
  */
 export const GET = createSimpleRouteHandler(
   async ({ request }) => {
-    const { searchParams } = new URL(request.url);
-    const key = searchParams.get("key");
+    let key: string | null = null;
+    try {
+      key = request.nextUrl.searchParams.get("key");
+    } catch {
+      // During prerendering with Cache Components, accessing request.nextUrl
+      // triggers NEXT_PRERENDER_INTERRUPTED. Return a fallback — the route
+      // is dynamic and this prerendering result is discarded.
+      return ok({ url: "" });
+    }
+
     if (!key) {
       return apiError("VALIDATION_ERROR", "key query param required", 400);
     }

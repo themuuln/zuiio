@@ -56,8 +56,8 @@ export function BayCounter({
 
     try {
       await applyBayCountChange(next);
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       setBayCountInputValue(bayCount);
     }
   }

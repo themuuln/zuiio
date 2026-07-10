@@ -244,7 +244,36 @@ export interface UserProfile {
   branchId: string | null;
   roleId: string | null;
   roleName: string | null;
+  /** Effective permission names for the current role. Empty array when unauthenticated or role has no permissions. */
+  permissionNames?: string[];
 }
+
+// ── RBAC Role Management ──────────────────────────────────────
+
+export interface PermissionRecord {
+  id: string;
+  name: string;
+  resource: string;
+  action: string;
+  description: string | null;
+}
+
+export interface ManagedRole {
+  id: string;
+  name: string;
+  description: string | null;
+  is_system: boolean;
+  member_count: number;
+  permissions: PermissionRecord[];
+}
+
+export interface CreateRoleParams {
+  name: string;
+  description: string | null;
+  permissionIds: string[];
+}
+
+export interface UpdateRoleParams extends CreateRoleParams {}
 
 // ── Global Reference Catalogs ──────────────────────────────────
 

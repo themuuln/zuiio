@@ -6,6 +6,10 @@ import { deriveBoxScore } from "@onoo/core/stats";
 import { sortEvents } from "@onoo/core/events";
 import { formatClock, describeEvent } from "@onoo/core/format";
 import type { StatEvent, GameRoster, SportConfig } from "@onoo/core/types";
+interface RealtimePayload {
+  eventType: string;
+  new: Record<string, unknown>;
+}
 
 interface LiveGameCenterProps {
   gameId: string;
@@ -41,17 +45,21 @@ export function LiveGameCenter({
           table: "stat_events",
           filter: `game_id=eq.${gameId}`,
         },
-        (payload) => {
+        (payload: RealtimePayload) => {
           if (payload.eventType === "INSERT") {
             const newEvent = payload.new as StatEvent;
-            if (!newEvent.deleted_at) {
+            if (newEvent.voided_at == null) {
               setEvents((prev) => [...prev, newEvent]);
             }
           } else if (payload.eventType === "UPDATE") {
             const updatedEvent = payload.new as StatEvent;
-            setEvents((prev) =>
-              prev.map((e) => (e.id === updatedEvent.id ? updatedEvent : e))
-            );
+            if (updatedEvent.voided_at != null) {
+              setEvents((prev) => prev.filter((e) => e.id !== updatedEvent.id));
+            } else {
+              setEvents((prev) =>
+                prev.map((e) => (e.id === updatedEvent.id ? updatedEvent : e))
+              );
+            }
           }
         }
       )
@@ -64,13 +72,13 @@ export function LiveGameCenter({
 
   // Derive box score
   const derived = deriveBoxScore({
-    events: events.filter((e) => !e.deleted_at),
+    events: events.filter((e) => e.voided_at == null),
     rosters,
     sportConfig,
   });
 
   // Get sorted events for play-by-play
-  const sortedEvents = sortEvents(events.filter((e) => !e.deleted_at));
+  const sortedEvents = sortEvents(events.filter((e) => e.voided_at == null));
 
   // Get team stats
   const homeTeamStats = derived.teams.find((t) => t.teamSeasonId === homeTeamSeasonId);

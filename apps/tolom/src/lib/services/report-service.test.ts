@@ -626,8 +626,6 @@ function dashboardBuilders(
           { status: "Ready for Pickup" },
         ]),
     e([{ id: "wo-1" }]),
-    b<unknown[]>([], 10),
-    b<unknown[]>([], 8),
     e([{ id: "wo-1" }, { id: "wo-2" }]),
 
     e([

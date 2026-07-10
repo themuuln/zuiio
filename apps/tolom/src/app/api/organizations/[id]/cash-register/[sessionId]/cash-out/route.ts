@@ -26,5 +26,8 @@ export const POST = createRouteHandler(
 
     return created(entry);
   },
-  { rateLimit: true },
+  {
+    rateLimit: true,
+    requiredPermission: { resource: "cash_register", action: "update" },
+  },
 );

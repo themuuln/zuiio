@@ -10,17 +10,21 @@ export async function validateTurnstile(
   token: string | null | undefined,
   remoteIp?: string,
 ): Promise<{ success: boolean; error?: string }> {
-  if (!token) {
-    return { success: false, error: "Missing Turnstile token" };
+  // Always skip in development — the widget isn't rendered there
+  if (process.env.NODE_ENV === "development") {
+    return { success: true };
   }
 
   const secretKey = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY;
   if (!secretKey) {
-    // Fail open in development when secret is not set
-    if (process.env.NODE_ENV === "development") {
-      return { success: true };
+    if (!token) {
+      return { success: false, error: "Missing Turnstile token" };
     }
     return { success: false, error: "Bot protection not configured" };
+  }
+
+  if (!token) {
+    return { success: false, error: "Missing Turnstile token" };
   }
 
   const formData = new URLSearchParams();

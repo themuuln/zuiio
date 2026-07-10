@@ -24,12 +24,14 @@ import { useAvailableFeatures } from "./use-available-features";
 export interface NavSubItem {
   labelKey: string;
   href: string;
+  requiredPermission?: { resource: string; action: string };
 }
 
 export interface NavItem {
   labelKey: string;
   href: string;
   icon: LucideIcon;
+  requiredPermission?: { resource: string; action: string };
   children?: NavSubItem[];
 }
 
@@ -38,6 +40,7 @@ export interface NavGroup {
   icon: LucideIcon;
   children: NavItem[];
   isCollapsible?: boolean;
+  requiredPermission?: { resource: string; action: string };
 }
 
 export interface NavBreadcrumb {
@@ -63,26 +66,31 @@ const navGroups: NavGroup[] = [
   {
     labelKey: "nav.group.shopFloor",
     icon: Wrench,
+    requiredPermission: { resource: "work_orders", action: "read" },
     children: [
       {
         labelKey: "nav.bayView",
         href: "/dashboard/bay-view",
         icon: LayoutGrid,
+        requiredPermission: { resource: "work_orders", action: "read" },
       },
       {
         labelKey: "nav.workOrders",
         href: "/dashboard/work-orders",
         icon: ClipboardList,
+        requiredPermission: { resource: "work_orders", action: "read" },
       },
       {
         labelKey: "nav.services",
         href: "/dashboard/services",
         icon: Sparkles,
+        requiredPermission: { resource: "services", action: "read" },
       },
       {
         labelKey: "nav.appointments",
         href: "/dashboard/appointments",
         icon: CalendarDays,
+        requiredPermission: { resource: "appointments", action: "read" },
       },
     ],
     isCollapsible: false,
@@ -90,24 +98,19 @@ const navGroups: NavGroup[] = [
   {
     labelKey: "nav.group.customers",
     icon: Users,
+    requiredPermission: { resource: "customers", action: "read" },
     children: [
       {
         labelKey: "nav.customers",
         href: "/dashboard/customers",
         icon: Users,
-        children: [
-          { labelKey: "nav.customers", href: "/dashboard/customers" },
-          { labelKey: "nav.newCustomer", href: "/dashboard/customers/new" },
-          {
-            labelKey: "nav.importCustomers",
-            href: "/dashboard/customers/import",
-          },
-        ],
+        requiredPermission: { resource: "customers", action: "read" },
       },
       {
         labelKey: "nav.serviceReminders",
         href: "/dashboard/service-reminders",
         icon: Bell,
+        requiredPermission: { resource: "service_reminders", action: "read" },
       },
     ],
     isCollapsible: false,
@@ -115,40 +118,53 @@ const navGroups: NavGroup[] = [
   {
     labelKey: "nav.group.inventory",
     icon: Package,
+    requiredPermission: { resource: "inventory", action: "read" },
     children: [
       {
         labelKey: "nav.inventoryParts",
         href: "/dashboard/inventory",
         icon: Package,
+        requiredPermission: { resource: "inventory", action: "read" },
         children: [
-          { labelKey: "nav.inventoryParts", href: "/dashboard/inventory" },
+          {
+            labelKey: "nav.inventoryParts",
+            href: "/dashboard/inventory",
+            requiredPermission: { resource: "inventory", action: "read" },
+          },
           {
             labelKey: "nav.inventoryAlerts",
             href: "/dashboard/inventory/alerts",
+            requiredPermission: { resource: "inventory", action: "read" },
           },
           {
             labelKey: "nav.inventoryMovements",
             href: "/dashboard/inventory/movements",
+            requiredPermission: { resource: "inventory", action: "read" },
           },
           {
             labelKey: "nav.inventoryTransfers",
             href: "/dashboard/inventory/transfers",
+            requiredPermission: { resource: "inventory", action: "read" },
           },
           {
             labelKey: "nav.inventoryPurchaseOrders",
             href: "/dashboard/inventory/purchase-orders",
+            requiredPermission: { resource: "inventory", action: "read" },
           },
           {
             labelKey: "nav.inventorySuppliers",
             href: "/dashboard/inventory/suppliers",
+            requiredPermission: { resource: "inventory", action: "read" },
           },
           {
             labelKey: "nav.inventoryPartsCars",
             href: "/dashboard/inventory/parts-cars",
+            requiredPermission: { resource: "inventory", action: "read" },
           },
           {
             labelKey: "nav.inventoryValuation",
             href: "/dashboard/inventory/valuation",
+            requiredPermission: { resource: "inventory", action: "read" },
           },
         ],
       },
@@ -158,31 +174,55 @@ const navGroups: NavGroup[] = [
   {
     labelKey: "nav.group.finances",
     icon: DollarSign,
+    requiredPermission: { resource: "invoices", action: "read" },
     children: [
       {
         labelKey: "nav.finance",
         href: "/dashboard/finance",
         icon: DollarSign,
+        requiredPermission: { resource: "invoices", action: "read" },
       },
       {
         labelKey: "nav.reports",
         href: "/dashboard/reports",
         icon: BarChart3,
+        requiredPermission: { resource: "reports", action: "read" },
         children: [
-          { labelKey: "nav.reports", href: "/dashboard/reports" },
-          { labelKey: "nav.taxReport", href: "/dashboard/reports/tax" },
+          {
+            labelKey: "nav.reports",
+            href: "/dashboard/reports",
+            requiredPermission: { resource: "reports", action: "read" },
+          },
+          {
+            labelKey: "nav.taxReport",
+            href: "/dashboard/reports/tax",
+            requiredPermission: { resource: "reports", action: "read" },
+          },
         ],
       },
       {
         labelKey: "nav.expenses",
         href: "/dashboard/expenses",
         icon: DollarSign,
+        requiredPermission: { resource: "expenses", action: "read" },
         children: [
-          { labelKey: "nav.expenses", href: "/dashboard/expenses" },
-          { labelKey: "nav.newExpense", href: "/dashboard/expenses/new" },
+          {
+            labelKey: "nav.expenses",
+            href: "/dashboard/expenses",
+            requiredPermission: { resource: "expenses", action: "read" },
+          },
+          {
+            labelKey: "nav.newExpense",
+            href: "/dashboard/expenses/new",
+            requiredPermission: { resource: "expenses", action: "create" },
+          },
           {
             labelKey: "nav.expenseCategories",
             href: "/dashboard/expenses/categories",
+            requiredPermission: {
+              resource: "expense_categories",
+              action: "read",
+            },
           },
         ],
       },
@@ -190,20 +230,35 @@ const navGroups: NavGroup[] = [
         labelKey: "nav.estimates",
         href: "/dashboard/estimates",
         icon: DollarSign,
+        requiredPermission: { resource: "work_orders", action: "read" },
         children: [
-          { labelKey: "nav.estimates", href: "/dashboard/estimates" },
-          { labelKey: "nav.newEstimate", href: "/dashboard/estimates/new" },
+          {
+            labelKey: "nav.estimates",
+            href: "/dashboard/estimates",
+            requiredPermission: { resource: "work_orders", action: "read" },
+          },
+          {
+            labelKey: "nav.newEstimate",
+            href: "/dashboard/estimates/new",
+            requiredPermission: { resource: "work_orders", action: "create" },
+          },
         ],
       },
       {
         labelKey: "nav.cashRegister",
         href: "/dashboard/cash-register",
         icon: DollarSign,
+        requiredPermission: { resource: "cash_register", action: "read" },
         children: [
-          { labelKey: "nav.cashRegister", href: "/dashboard/cash-register" },
+          {
+            labelKey: "nav.cashRegister",
+            href: "/dashboard/cash-register",
+            requiredPermission: { resource: "cash_register", action: "read" },
+          },
           {
             labelKey: "nav.cashRegisterHistory",
             href: "/dashboard/cash-register/history",
+            requiredPermission: { resource: "cash_register", action: "read" },
           },
         ],
       },
@@ -211,11 +266,13 @@ const navGroups: NavGroup[] = [
         labelKey: "nav.endOfDay",
         href: "/dashboard/eod-close",
         icon: DollarSign,
+        requiredPermission: { resource: "day_close", action: "read" },
       },
       {
         labelKey: "nav.payroll",
         href: "/dashboard/payroll",
         icon: DollarSign,
+        requiredPermission: { resource: "payroll", action: "read" },
       },
     ],
     isCollapsible: false,
@@ -230,7 +287,12 @@ const settingsItems: NavItem[] = [
     href: "/dashboard/organization",
     icon: Building2,
   },
-  { labelKey: "nav.settings", href: "/dashboard/settings", icon: Settings },
+  {
+    labelKey: "nav.settings",
+    href: "/dashboard/settings",
+    icon: Settings,
+    requiredPermission: { resource: "settings", action: "read" },
+  },
 ];
 
 const sections: NavSection[] = [
@@ -248,7 +310,12 @@ const sections: NavSection[] = [
 
 export function useNavigation() {
   const pathname = usePathname();
-  const { isMechanic, loading: roleLoading } = useCurrentUserRole();
+  const {
+    isMechanic,
+    isOrgOwner,
+    hasPermission,
+    loading: roleLoading,
+  } = useCurrentUserRole();
   const { isFeatureEnabled, loading: featuresLoading } = useAvailableFeatures();
 
   const mechanicHomeItem: NavItem = {
@@ -257,8 +324,28 @@ export function useNavigation() {
     icon: LayoutGrid,
   };
 
-  // ── Filter nav items based on role (only once role is known) ──
   const isDefinitelyMechanic = !roleLoading && isMechanic;
+
+  // ── Permission-based filtering ──
+  const isPermissionAllowed = (perm?: {
+    resource: string;
+    action: string;
+  }): boolean => {
+    if (!perm) return true;
+    // Org Owner always has access
+    if (isOrgOwner) return true;
+    return hasPermission(
+      perm.resource,
+      perm.action as
+        | "read"
+        | "create"
+        | "update"
+        | "delete"
+        | "manage"
+        | "invite"
+        | "write",
+    );
+  };
 
   // Map nav groups/items to feature keys so they can be gated
   const navFeatureMap: Record<string, FeatureKey | undefined> = {
@@ -269,17 +356,23 @@ export function useNavigation() {
 
   const isFeatureAllowed = (href: string): boolean => {
     const featureKey = navFeatureMap[href];
-    if (!featureKey) return true; // no feature gate = always visible
+    if (!featureKey) return true;
     return isFeatureEnabled(featureKey);
   };
 
-  const isGroupAllowed = (groupLabelKey: string): boolean => {
+  const isGroupAllowed = (
+    groupLabelKey: string,
+    groupPerm?: { resource: string; action: string },
+  ): boolean => {
+    // Permission gate first
+    if (groupPerm && !isPermissionAllowed(groupPerm)) return false;
+    // Then feature gate
     const featureKey = navFeatureMap[groupLabelKey];
     if (!featureKey) return true;
     return isFeatureEnabled(featureKey);
   };
 
-  // For mechanics: only show Bay View (primary) + Work Orders / Services
+  // For mechanics: only show shop-floor items with mechanic safe items
   let filteredNavGroups = isDefinitelyMechanic
     ? navGroups
         .filter((g) => g.labelKey === "nav.group.shopFloor")
@@ -289,19 +382,28 @@ export function useNavigation() {
         }))
     : navGroups;
 
-  // Apply feature-flag filtering (after role filtering)
+  // Apply permission filtering then feature-flag filtering
   filteredNavGroups = filteredNavGroups
-    .filter((g) => isGroupAllowed(g.labelKey))
+    .filter((g) => isGroupAllowed(g.labelKey, g.requiredPermission))
     .map((g) => ({
       ...g,
-      children: g.children.filter((c) => isFeatureAllowed(c.href)),
+      children: g.children.filter(
+        (c) =>
+          isPermissionAllowed(c.requiredPermission) && isFeatureAllowed(c.href),
+      ),
     }))
-    .filter((g) => g.children.length > 0); // hide empty groups
+    .filter((g) => g.children.length > 0);
 
   const filteredPrimaryItems = isDefinitelyMechanic
     ? [mechanicHomeItem]
     : primaryItems.filter((item) => isFeatureAllowed(item.href));
-  const filteredSettingsItems = isDefinitelyMechanic ? [] : settingsItems;
+
+  const filteredSettingsItems = isDefinitelyMechanic
+    ? []
+    : settingsItems.filter((s) =>
+        s.requiredPermission ? isPermissionAllowed(s.requiredPermission) : true,
+      );
+
   const filteredUtilityItems = utilityItems;
 
   // Flatten NavItems including nested children for search/active matching
@@ -334,11 +436,7 @@ export function useNavigation() {
     if (href === "/dashboard") {
       return pathname === "/dashboard";
     }
-    // Exact match — unambiguous
     if (pathname === href) return true;
-    // Prefix match — only if no other nav item is a better (longer) match.
-    // This prevents parent items like /dashboard/inventory from highlighting
-    // when on a child page like /dashboard/inventory/valuation.
     if (pathname.startsWith(`${href}/`)) {
       return !filteredAllItems.some(
         (item) =>
@@ -357,7 +455,6 @@ export function useNavigation() {
       )
     : sections;
 
-  // Stable fallback — never null
   const fallbackItem = isDefinitelyMechanic
     ? mechanicHomeItem
     : primaryItems[0];
@@ -369,10 +466,8 @@ export function useNavigation() {
 
   const resolvedCurrentGroup =
     filteredNavGroups.find((group) => {
-      // Check direct children
       if (group.children.some((item) => item.href === resolvedCurrentItem.href))
         return true;
-      // Check nested children (sub-items)
       return group.children.some((item) =>
         item.children?.some((sub) => sub.href === resolvedCurrentItem.href),
       );
@@ -380,10 +475,8 @@ export function useNavigation() {
 
   const resolvedCurrentSection =
     filteredSections.find((section) => {
-      // Check direct children
       if (section.items.some((item) => item.href === resolvedCurrentItem.href))
         return true;
-      // Check nested children
       return section.items.some((item) =>
         item.children?.some((sub) => sub.href === resolvedCurrentItem.href),
       );

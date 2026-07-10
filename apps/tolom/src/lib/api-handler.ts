@@ -8,7 +8,6 @@ import {
 } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import { mutationRateLimiter } from "@/lib/rate-limit";
-import { reportServerError } from "@/lib/sentry-report-server";
 import { requireActiveSubscription } from "@/lib/services/subscription-enforcement";
 import {
   type PermissionAction,
@@ -73,10 +72,17 @@ function handleError(
   const { status, body, headers } = toApiErrorResponse(error);
   const duration = Math.round(performance.now() - start);
 
-  logger.error(
-    { method, path, status, duration, err: error },
-    "API request failed",
-  );
+  if (status >= 500) {
+    logger.error(
+      { method, path, status, duration, err: error },
+      "API request failed",
+    );
+  } else {
+    logger.warn(
+      { method, path, status, duration },
+      "API request failed",
+    );
+  }
 
   if (status >= 500) {
     capture(error, {
@@ -121,9 +127,7 @@ export function createRouteHandler(
         error: getUserError,
       } = await supabase.auth.getUser();
 
-      if (getUserError) {
-        capture(getUserError, { method, path });
-      }
+
 
       if (!user) throw new UnauthorizedError();
 
@@ -196,7 +200,6 @@ export function createRouteHandler(
 
       return response;
     } catch (error) {
-      reportServerError("Unexpected error", error);
       return handleError(error, start, method, path, orgId || undefined);
     }
   };
@@ -228,9 +231,7 @@ export function createSimpleRouteHandler(
       if (requireAuth) {
         const { data, error: getUserError } = await supabase.auth.getUser();
 
-        if (getUserError) {
-          capture(getUserError, { method, path });
-        }
+
 
         if (!data.user) throw new UnauthorizedError();
         user = data.user;
@@ -257,7 +258,6 @@ export function createSimpleRouteHandler(
 
       return response;
     } catch (error) {
-      reportServerError("Unexpected error", error);
       return handleError(error, start, method, path);
     }
   };

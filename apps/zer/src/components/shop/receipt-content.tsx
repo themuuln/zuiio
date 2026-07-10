@@ -60,10 +60,17 @@ export type SaleData = {
   profiles: { full_name: string | null } | null;
 };
 
-export function ReceiptContent() {
+export function ReceiptContent({
+  saleId,
+  orgId,
+}: {
+  saleId?: string;
+  orgId?: string;
+} = {}) {
   const params = useParams<{ id: string }>();
-  const id = params.id;
+  const id = saleId ?? params.id;
   const { organizationId } = useOrgSettings();
+  const effectiveOrgId = orgId ?? organizationId;
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: saleKeys.detail(id),
@@ -74,7 +81,7 @@ export function ReceiptContent() {
         supabase
           .from("organizations")
           .select("name")
-          .eq("id", organizationId)
+          .eq("id", effectiveOrgId)
           .single(),
         supabase
           .from("sales")
@@ -82,7 +89,7 @@ export function ReceiptContent() {
             "id, total_amount, paid_amount, payment_method, status, sale_date, created_at, contact_id, contacts(name), salesperson_id, profiles!sales_salesperson_id_fkey(full_name)",
           )
           .eq("id", id)
-          .eq("organization_id", organizationId)
+          .eq("organization_id", effectiveOrgId)
           .single(),
         supabase
           .from("sale_items")

@@ -32,8 +32,8 @@ export function NewUserSetup({ copy }: { copy: NewUserSetupCopy }) {
         throw new Error(resBody?.error?.message ?? "Setup failed");
       }
       window.location.reload();
-    } catch {
-      reportServerError("Unexpected error");
+    } catch (error) {
+      reportServerError("Unexpected error", error);
       setState("error");
     } finally {
       setIsSubmitting(false);

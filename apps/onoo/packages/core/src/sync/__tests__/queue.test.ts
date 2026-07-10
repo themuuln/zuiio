@@ -7,6 +7,8 @@ function makeEvent(overrides: Partial<StatEvent> = {}): StatEvent {
   return {
     id: 'evt-1',
     game_id: 'game-1',
+    tracker_session_id: 'session-1',
+    operation_id: 'operation-1',
     client_id: 'client-1',
     local_seq: 0,
     event_type: 'shot_2pt_made',
@@ -17,6 +19,9 @@ function makeEvent(overrides: Partial<StatEvent> = {}): StatEvent {
     payload: {},
     created_by: null,
     created_at: '2026-01-01T00:00:00Z',
+    voided_at: null,
+    voided_by: null,
+    void_reason: null,
     deleted_at: null,
     superseded_by: null,
     ...overrides,

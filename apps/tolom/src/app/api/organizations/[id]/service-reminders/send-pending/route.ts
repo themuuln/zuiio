@@ -6,5 +6,9 @@ export const POST = createRouteHandler(
     const sent = await sendPendingReminders(supabase, orgId);
     return ok({ sent });
   },
-  { rateLimit: true, subscription: true },
+  {
+    rateLimit: true,
+    subscription: true,
+    requiredPermission: { resource: "service_reminders", action: "manage" },
+  },
 );
