@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KST778VD09K7M5KGP60FJK1G",
+  "taskId": "initialize-a5c-infra",
+  "invocationKey": "project-install:S000011:initialize-a5c-infra",
+  "status": "ok",
+  "result": {
+    "packageJsonCreated": true,
+    "packageJsonPath": ".a5c/package.json",
+    "qualityGates": {
+      "commitChecks": ["biome check", "tsc --noEmit", "vitest run"],
+      "deployGates": ["biome check", "vitest run", "next build"],
+      "formatting": "biome format --write",
+      "linting": "biome check",
+      "qualityThreshold": 80,
+      "testCoverage": {
+        "branches": 30,
+        "functions": 50,
+        "lines": 40,
+        "statements": 40
+      }
+    },
+    "qualityGatesPath": ".a5c/quality-gates.json",
+    "sdkInstalled": true
+  },
+  "startedAt": "2026-05-29T16:00:02.437Z",
+  "finishedAt": "2026-05-29T16:00:02.437Z",
+  "value": {
+    "packageJsonCreated": true,
+    "packageJsonPath": ".a5c/package.json",
+    "qualityGates": {
+      "commitChecks": ["biome check", "tsc --noEmit", "vitest run"],
+      "deployGates": ["biome check", "vitest run", "next build"],
+      "formatting": "biome format --write",
+      "linting": "biome check",
+      "qualityThreshold": 80,
+      "testCoverage": {
+        "branches": 30,
+        "functions": 50,
+        "lines": 40,
+        "statements": 40
+      }
+    },
+    "qualityGatesPath": ".a5c/quality-gates.json",
+    "sdkInstalled": true
+  }
+}

@@ -1,0 +1,165 @@
+name: Sentry Auto-Fix
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_url:
+        description: "Sentry issue URL (e.g., https://themuuln.sentry.io/issues/123)"
+        required: true
+        type: string
+  repository_dispatch:
+    types: [sentry-issue]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+env:
+  SENTRY_ORG: themuuln
+  SENTRY_PROJECT: javascript-nextjs
+
+jobs:
+  analyze-and-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      # ── Parse issue info from dispatch payload or manual URL ──
+      - name: Parse Sentry issue
+        id: parse
+        run: |
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            ISSUE_ID="${{ github.event.client_payload.issue_id }}"
+            ISSUE_TITLE="${{ github.event.client_payload.title }}"
+          else
+            ISSUE_URL="${{ github.event.inputs.issue_url }}"
+            ISSUE_ID="${ISSUE_URL##*/}"
+            ISSUE_TITLE="Sentry issue #${ISSUE_ID}"
+          fi
+          echo "issue_id=${ISSUE_ID}" >> "$GITHUB_OUTPUT"
+          echo "issue_title=${ISSUE_TITLE}" >> "$GITHUB_OUTPUT"
+
+      # ── Fetch full issue details from Sentry API ──
+      - name: Fetch Sentry issue details
+        id: sentry
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          ISSUE_ID="${{ steps.parse.outputs.issue_id }}"
+          if [ -z "$ISSUE_ID" ]; then
+            echo "No issue ID provided"
+            exit 1
+          fi
+
+          RESPONSE=$(curl -s \
+            -H "Authorization: Bearer ${SENTRY_AUTH_TOKEN}" \
+            "https://sentry.io/api/0/projects/${SENTRY_ORG}/${SENTRY_PROJECT}/issues/${ISSUE_ID}/")
+
+          echo "issue_json<<DELIM" >> "$GITHUB_OUTPUT"
+          echo "${RESPONSE}" >> "$GITHUB_OUTPUT"
+          echo "DELIM" >> "$GITHUB_OUTPUT"
+
+          TITLE=$(echo "$RESPONSE" | jq -r '.title // "Unknown error"')
+          echo "title=${TITLE}" >> "$GITHUB_OUTPUT"
+
+          CULPRIT=$(echo "$RESPONSE" | jq -r '.culprit // "unknown"')
+          echo "culprit=${CULPRIT}" >> "$GITHUB_OUTPUT"
+
+          LEVEL=$(echo "$RESPONSE" | jq -r '.level // "error"')
+          echo "level=${LEVEL}" >> "$GITHUB_OUTPUT"
+
+          COUNT=$(echo "$RESPONSE" | jq -r '.count // 0')
+          echo "count=${COUNT}" >> "$GITHUB_OUTPUT"
+
+          FIRST_SEEN=$(echo "$RESPONSE" | jq -r '.firstSeen // "unknown"')
+          echo "first_seen=${FIRST_SEEN}" >> "$GITHUB_OUTPUT"
+
+          LAST_SEEN=$(echo "$RESPONSE" | jq -r '.lastSeen // "unknown"')
+          echo "last_seen=${LAST_SEEN}" >> "$GITHUB_OUTPUT"
+
+      # ── Create detail-rich GitHub issue ──
+      - name: Create GitHub issue
+        id: issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_TITLE="${{ steps.parse.outputs.issue_title }}"
+          SENTRY_TITLE="${{ steps.sentry.outputs.title }}"
+          CULPRIT="${{ steps.sentry.outputs.culprit }}"
+          COUNT="${{ steps.sentry.outputs.count }}"
+          LEVEL="${{ steps.sentry.outputs.level }}"
+          FIRST_SEEN="${{ steps.sentry.outputs.first_seen }}"
+          LAST_SEEN="${{ steps.sentry.outputs.last_seen }}"
+
+          BODY=$(cat <<BODY
+          ## 🐛 Sentry Error: ${SENTRY_TITLE}
+
+          | Field | Value |
+          |-------|-------|
+          | **Level** | ${LEVEL} |
+          | **Events** | ${COUNT} |
+          | **Location** | ${CULPRIT} |
+          | **First seen** | ${FIRST_SEEN} |
+          | **Last seen** | ${LAST_SEEN} |
+
+          ### Stack Trace
+
+          \`\`\`
+          ${{ steps.sentry.outputs.issue_json }} | jq -r '.latestEvent.entries[] | select(.type=="exception") | .data.values[].stacktrace.frames[] | "\(.filename):\(.lineno) — \(.function)"' 2>/dev/null || echo "Stack trace details available in Sentry"
+          \`\`\`
+
+          ### Auto-Fix Analysis
+
+          This issue was automatically created from a Sentry alert.
+          Review the error in Sentry and create a fix.
+          BODY
+          )
+
+          gh issue create \
+            --title "[Sentry] ${SENTRY_TITLE}" \
+            --label "bug,sentry" \
+            --body "${BODY}"
+
+      # ── Attempt automated fix (requires droid exec) ──
+      - name: Attempt automated fix
+        env:
+          FACTORY_API_KEY: ${{ secrets.FACTORY_API_KEY }}
+          SENTRY_ISSUE_ID: ${{ steps.parse.outputs.issue_id }}
+        run: |
+          if [ -z "$FACTORY_API_KEY" ]; then
+            echo "No FACTORY_API_KEY set — skipping automated fix."
+            echo "Set up FACTORY_API_KEY as a GitHub secret to enable auto-fix PRs."
+            exit 0
+          fi
+
+          ISSUE_JSON='${{ steps.sentry.outputs.issue_json }}'
+          TITLE=$(echo "$ISSUE_JSON" | jq -r '.title // "Unknown error"')
+          CULPRIT=$(echo "$ISSUE_JSON" | jq -r '.culprit // ""')
+
+          # Create feature branch
+          BRANCH="fix/sentry-${SENTRY_ISSUE_ID}"
+          git checkout -b "$BRANCH"
+
+          # Invoke droid exec to analyze and fix
+          npx -y @factory-ai/cli exec \
+            --auto high \
+            "A Sentry error was detected: '${TITLE}' in '${CULPRIT}'. Fix it." \
+            --context "Sentry issue: https://${SENTRY_ORG}.sentry.io/issues/${SENTRY_ISSUE_ID}/"
+
+          # Commit and push
+          git add -A
+          git diff --cached --quiet || (
+            git commit -m "fix: ${TITLE} (Sentry #${SENTRY_ISSUE_ID})"
+            git push origin "$BRANCH"
+            gh pr create \
+              --title "fix: ${TITLE}" \
+              --body "Automated fix for Sentry issue #${SENTRY_ISSUE_ID}.
+
+          **Error**: ${TITLE}
+          **Location**: ${CULPRIT}
+          **Sentry**: https://${SENTRY_ORG}.sentry.io/issues/${SENTRY_ISSUE_ID}/" \
+              --label "sentry,auto-fix"
+          )

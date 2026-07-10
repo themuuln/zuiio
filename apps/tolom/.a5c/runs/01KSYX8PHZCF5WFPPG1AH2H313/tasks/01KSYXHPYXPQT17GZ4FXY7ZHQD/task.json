@@ -1,0 +1,86 @@
+{
+  "agent": {
+    "name": "general-purpose",
+    "outputSchema": {
+      "properties": {
+        "files": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "serviceExports": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "files",
+        "serviceExports"
+      ],
+      "type": "object"
+    },
+    "prompt": {
+      "context": {
+        "existingService": "src/lib/services/time-tracking-service.ts",
+        "project": "TOLOM",
+        "serviceDir": "src/lib/services/"
+      },
+      "instructions": [
+        "Read src/lib/services/time-tracking-service.ts for the existing service patterns",
+        "Read src/lib/api-handler.ts for route handler patterns",
+        "Read src/lib/supabase/server.ts for createClient pattern",
+        "Read src/lib/cache/keys.ts for revalidation tag patterns",
+        "Create src/lib/services/qr-token-service.ts with:",
+        "",
+        "1. generateClockToken(orgId, mechanicId, actionType):",
+        "   - Calls the generate_clock_token RPC via supabase.rpc()",
+        "   - Returns { rawToken, sessionId, expiresAt }",
+        "   - The raw token is the value the QR code will encode",
+        "",
+        "2. verifyAndClaimClockToken(rawToken, mechanicId):",
+        "   - Calls the verify_clock_token RPC via supabase.rpc()",
+        "   - Returns { valid, sessionId, actionType }",
+        "",
+        "3. registerDevice(orgId):",
+        "   - Calls register_mechanic_device RPC",
+        "   - Returns { success, deviceId }",
+        "",
+        "4. getRegisteredDevices(orgId, mechanicId?):",
+        "   - Queries mechanic_devices table (server-side, not RPC)",
+        "   - Returns list of registered devices with status",
+        "",
+        "5. revokeDevice(deviceId):",
+        "   - Updates mechanic_devices SET revoked_at = now()",
+        "   - Admin-only — checks role before executing",
+        "",
+        "Follow the exact patterns from time-tracking-service.ts:",
+        "- Use createClient() from @/lib/supabase/server",
+        "- Add revalidateTag for cache invalidation",
+        "- Export TypeScript interfaces for the return types",
+        "- Proper error handling with typed errors"
+      ],
+      "outputFormat": "JSON with { files: string[], serviceExports: string[] }",
+      "role": "Backend Developer",
+      "task": "Create the QR token service layer"
+    }
+  },
+  "io": {
+    "inputJsonPath": "tasks/01KSYXHPYXPQT17GZ4FXY7ZHQD/input.json",
+    "outputJsonPath": "tasks/01KSYXHPYXPQT17GZ4FXY7ZHQD/output.json"
+  },
+  "kind": "agent",
+  "labels": [
+    "api",
+    "services"
+  ],
+  "title": "Create QR token service",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KSYXHPYXPQT17GZ4FXY7ZHQD",
+  "taskId": "create-qr-token-service",
+  "invocationKey": "feature/qr-clock-in:S000006:create-qr-token-service",
+  "stepId": "S000006",
+  "inputs": {}
+}

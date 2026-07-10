@@ -1,0 +1,16 @@
+{
+  "type": "RUN_CREATED",
+  "recordedAt": "2026-06-02T04:46:07.596Z",
+  "data": {
+    "runId": "01KT3AEF65XD7R055ESFVZFTT9",
+    "processId": "permissions-suite",
+    "entrypoint": {
+      "importPath": "../../processes/permissions-suite.mjs",
+      "exportName": "process"
+    },
+    "harness": "pi",
+    "inputsRef": "inputs.json",
+    "prompt": "Implement full permissions suite for TOLOM — fix permission_action enum bug (missing 'write'), backfill existing orgs with latest permissions, create PLAN_FEATURES mapping, wire feature_flags into sidebar and API, add role/permission CRUD APIs, build permission matrix UI, fix RLS policies, gate unguarded API routes, add feature toggle UI."
+  },
+  "checksum": "3f4f62126b386fcf74dfbee10595d17db2bb9c5091bc96195cdba332131f803a"
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KST7VYC97XK7PM81904HP90Y",
+  "taskId": "__sdk.breakpoint",
+  "invocationKey": "project-install:S000014:__sdk.breakpoint",
+  "status": "ok",
+  "result": {
+    "approved": true,
+    "response": "Approve & save — profile looks good."
+  },
+  "startedAt": "2026-05-29T16:09:28.770Z",
+  "finishedAt": "2026-05-29T16:09:28.770Z",
+  "value": {
+    "approved": true,
+    "response": "Approve & save — profile looks good."
+  }
+}

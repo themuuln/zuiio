@@ -1,0 +1,62 @@
+{
+  "agent": {
+    "name": "general-purpose",
+    "outputSchema": {
+      "required": [
+        "i18nKeysAdded",
+        "navEntryAdded"
+      ],
+      "type": "object"
+    },
+    "prompt": {
+      "context": {
+        "orgId": "org-id-from-context"
+      },
+      "instructions": [
+        "1. Create `src/messages/en.json` entries for all EOD page strings:",
+        "   - 'eodClose.title': 'End of Day Summary'",
+        "   - 'eodClose.print': 'Print Report'",
+        "   - 'eodClose.closeDay': 'Close Day'",
+        "   - 'eodClose.dayClosed': 'Day Closed ✓'",
+        "   - 'eodClose.streak': '{count}-day streak'",
+        "   - 'eodClose.revenue': 'Total Revenue'",
+        "   - 'eodClose.cash': 'Cash'",
+        "   - 'eodClose.card': 'Card'",
+        "   - 'eodClose.bankTransfer': 'Bank Transfer'",
+        "   - 'eodClose.other': 'Other'",
+        "   - 'eodClose.completedJobs': 'Completed Today'",
+        "   - 'eodClose.openJobs': 'Open Jobs'",
+        "   - 'eodClose.unpaidInvoices': 'Unpaid Invoices'",
+        "   - 'eodClose.lowStock': 'Low Stock'",
+        "   - 'eodClose.bestMechanic': 'Best Mechanic'",
+        "   - 'eodClose.biggestIssue': 'Biggest Issue'",
+        "   - 'eodClose.noIssues': 'No outstanding issues'",
+        "",
+        "2. Add same keys to `src/messages/mn.json` with Mongolian translations",
+        "",
+        "3. Find the sidebar/dashboard navigation config and add a link to /dashboard/eod-close",
+        "   - Look for navigation config likely in src/lib/navigation.ts or similar",
+        "   - Add entry with icon ClipboardList, label 'End of Day', href /dashboard/eod-close",
+        "",
+        "4. Verify build passes"
+      ],
+      "outputFormat": "JSON with i18n keys added and navigation entry",
+      "role": "Frontend developer — TOLOM i18n + navigation",
+      "task": "Add sidebar navigation link and i18n strings for the EOD close page."
+    }
+  },
+  "io": {
+    "inputJsonPath": "tasks/01KSWX60GEYP01TD96P4BDSJCQ/input.json",
+    "outputJsonPath": "tasks/01KSWX60GEYP01TD96P4BDSJCQ/output.json"
+  },
+  "kind": "agent",
+  "title": "Add navigation and i18n strings",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KSWX60GEYP01TD96P4BDSJCQ",
+  "taskId": "add-navigation-i18n",
+  "invocationKey": "feature/eod-close-ritual:S000004:add-navigation-i18n",
+  "stepId": "S000004",
+  "inputs": {
+    "orgId": "org-id-from-context"
+  }
+}

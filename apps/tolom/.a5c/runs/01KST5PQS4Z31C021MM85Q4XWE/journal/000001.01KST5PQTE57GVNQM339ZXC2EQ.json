@@ -1,0 +1,16 @@
+{
+  "type": "RUN_CREATED",
+  "recordedAt": "2026-05-29T15:30:05.774Z",
+  "data": {
+    "runId": "01KST5PQS4Z31C021MM85Q4XWE",
+    "processId": "project-install",
+    "entrypoint": {
+      "importPath": "../../../../../../../.a5c/process-library/babysitter-repo/library/cradle/project-install.js",
+      "exportName": "process"
+    },
+    "harness": "pi",
+    "inputsRef": "inputs.json",
+    "prompt": "Set up babysitter for the TOLOM project. Analyze the repo, build a project profile, and configure tools."
+  },
+  "checksum": "f1ede6dfc96a8479458b9c563fb8f46b06d9b163967d0b128867a7b7c7017fef"
+}

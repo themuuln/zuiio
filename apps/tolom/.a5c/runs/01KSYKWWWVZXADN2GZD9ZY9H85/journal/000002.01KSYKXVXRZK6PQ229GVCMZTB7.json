@@ -1,0 +1,21 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-31T08:55:37.144Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KSYKXVW5NYHJYB2H5S3VDT53",
+    "invocationKey": "inventory-improvement:S000001:execute-inventory-phase",
+    "invocationHash": "0f26544ed31ed373cb81bc3f0bcd1fc1fec63c32b93797b200c17f5d65011b47",
+    "stepId": "S000001",
+    "taskId": "execute-inventory-phase",
+    "kind": "agent",
+    "label": "inventory",
+    "taskDefRef": "tasks/01KSYKXVW5NYHJYB2H5S3VDT53/task.json",
+    "labels": [
+      "inventory",
+      "implementation",
+      "phase-real-time-balances"
+    ]
+  },
+  "checksum": "4598258051c5764377e891916e7c7dde62cfde2600436286ba200952826146f7"
+}

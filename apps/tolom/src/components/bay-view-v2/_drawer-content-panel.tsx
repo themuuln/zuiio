@@ -1,0 +1,276 @@
+"use client";
+
+import dynamic from "next/dynamic";
+import { useLocale, useTranslations } from "next-intl";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { VehicleMakeLogo } from "@/components/vehicles/vehicle-make-logo";
+import { TotalsSummary } from "@/components/work-orders/line-items";
+import type { WorkOrderDetail } from "@/lib/types/composite";
+import { DrawerFooter } from "./_drawer-footer";
+import type { CatalogPartItem, CatalogServiceItem } from "./_drawer-types";
+
+// ── Dynamic imports (code-split heavy sections) ────────────────
+
+const sectionLoading = (h: string) => () => (
+  <div className={`h-${h} animate-pulse rounded-lg bg-muted/10`} />
+);
+
+const WorkOrderServicesSection = dynamic(
+  () => import("./_services-section").then((m) => m.ServicesSection),
+  { ssr: false, loading: sectionLoading("24") },
+);
+const WorkOrderPartsSection = dynamic(
+  () => import("./_parts-section").then((m) => m.PartsSection),
+  { ssr: false, loading: sectionLoading("24") },
+);
+const WorkOrderNotesSection = dynamic(
+  () => import("./_notes-section").then((m) => m.NotesSection),
+  { ssr: false, loading: sectionLoading("16") },
+);
+const WorkOrderTimelineSection = dynamic(
+  () => import("./_status-timeline").then((m) => m.StatusTimeline),
+  { ssr: false, loading: sectionLoading("32") },
+);
+
+// ── Props ───────────────────────────────────────────────────────
+
+export interface DrawerContentPanelProps {
+  wo: WorkOrderDetail;
+  orgId: string;
+  workOrderId: string;
+  catalog: CatalogServiceItem[];
+  partsCatalog: CatalogPartItem[];
+  serviceSearch: string;
+  showAddService: boolean;
+  isFullScreen?: boolean;
+  onServiceSearchChange: (val: string) => void;
+  onAddServiceOpenChange: (open: boolean) => void;
+  onAddService: (svc: CatalogServiceItem) => void;
+  onEditServicePriceSave: (id: string, price: number) => Promise<void>;
+  onEditServiceQtySave: (id: string, qty: number) => Promise<void>;
+  partSearch: string;
+  showAddPart: boolean;
+  onPartSearchChange: (val: string) => void;
+  onAddPartOpenChange: (open: boolean) => void;
+  onAddPart: (part: CatalogPartItem) => void;
+  onEditPartPriceSave: (id: string, price: number) => Promise<void>;
+  onEditPartQtySave: (partId: string, qty: number) => Promise<void>;
+  onNotesUpdated: () => void;
+  // Totals
+  taxRate: number;
+  // VAT toggle
+  nuatEnabled: boolean;
+  onNuatToggle: (checked: boolean) => Promise<void>;
+  // Footer props
+  saving: boolean;
+  confirmStatus: string | null;
+  statusNotes: string;
+  creatingInvoice: boolean;
+  canCancel: boolean;
+  canInvoice: boolean;
+  invoicePublicToken: string | null;
+  onChangeStatus: (status: string, notes?: string) => Promise<void>;
+  onConfirmCancel: () => void;
+  onStatusNotesChange: (val: string) => void;
+  onMarkReady: () => Promise<void>;
+  onComplete: () => void;
+  onCreateInvoice: () => Promise<void>;
+}
+
+// ── Component ───────────────────────────────────────────────────
+
+export function DrawerContentPanel({
+  wo,
+  orgId,
+  workOrderId,
+  catalog,
+  partsCatalog,
+  serviceSearch,
+  showAddService,
+  isFullScreen,
+  onServiceSearchChange,
+  onAddServiceOpenChange,
+  onAddService,
+  onEditServicePriceSave,
+  onEditServiceQtySave,
+  partSearch,
+  showAddPart,
+  onPartSearchChange,
+  onAddPartOpenChange,
+  onAddPart,
+  onEditPartPriceSave,
+  onEditPartQtySave,
+  onNotesUpdated,
+  taxRate,
+  nuatEnabled,
+  onNuatToggle,
+  saving,
+  confirmStatus,
+  statusNotes,
+  creatingInvoice,
+  canCancel,
+  canInvoice,
+  invoicePublicToken,
+  onChangeStatus,
+  onConfirmCancel,
+  onStatusNotesChange,
+  onMarkReady,
+  onComplete,
+  onCreateInvoice,
+}: DrawerContentPanelProps) {
+  const t = useTranslations("bayView");
+  const locale = useLocale();
+
+  const servicesTotal =
+    wo.services?.reduce((s, svc) => s + Number(svc.final_price), 0) ?? 0;
+  const partsTotal =
+    wo.parts?.reduce((s, p) => s + Number(p.final_price), 0) ?? 0;
+  const grandTotal = servicesTotal + partsTotal;
+  const discountTotal = wo.discount_total ?? 0;
+
+  return (
+    <>
+      {/* Scrollable sections area */}
+      <div className="relative flex-1 overflow-y-auto min-h-0">
+        <VehicleMakeLogo
+          make={wo.vehicle?.make}
+          size="70%"
+          className="absolute inset-0 m-auto pointer-events-none select-none text-primary/[0.03]"
+          aria-hidden
+        />
+        <div className="relative px-3 py-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+            {/* Left column: services, parts, notes */}
+            <div className="lg:col-span-2">
+              <div className="flex flex-col gap-3 min-h-0 flex-1 overflow-y-auto">
+                <div
+                  className="[animation:fade-slide-in_300ms_ease-out-quart_backwards]"
+                  style={{ "--stagger": 0 } as React.CSSProperties}
+                >
+                  <WorkOrderServicesSection
+                    services={wo.services ?? []}
+                    catalog={catalog}
+                    serviceSearch={serviceSearch}
+                    showAddService={showAddService}
+                    locale={locale}
+                    isFullScreen={isFullScreen}
+                    onServiceSearchChange={onServiceSearchChange}
+                    onAddServiceOpenChange={onAddServiceOpenChange}
+                    onAddService={onAddService}
+                    onEditPriceSave={onEditServicePriceSave}
+                    onEditQtySave={onEditServiceQtySave}
+                    t={t}
+                  />
+                </div>
+
+                <div
+                  className="[animation:fade-slide-in_300ms_ease-out-quart_backwards]"
+                  style={{ "--stagger": 1 } as React.CSSProperties}
+                >
+                  <WorkOrderPartsSection
+                    parts={wo.parts ?? []}
+                    partsCatalog={partsCatalog}
+                    partSearch={partSearch}
+                    showAddPart={showAddPart}
+                    locale={locale}
+                    onPartSearchChange={onPartSearchChange}
+                    onAddPartOpenChange={onAddPartOpenChange}
+                    onAddPart={onAddPart}
+                    onEditPriceSave={onEditPartPriceSave}
+                    onEditQtySave={onEditPartQtySave}
+                    t={t}
+                  />
+                </div>
+
+                {orgId && workOrderId ? (
+                  <div
+                    className="[animation:fade-slide-in_300ms_ease-out-quart_backwards]"
+                    style={{ "--stagger": 2 } as React.CSSProperties}
+                  >
+                    <WorkOrderNotesSection
+                      complaint={wo.complaint}
+                      diagnosis={wo.diagnosis}
+                      notes={wo.notes}
+                      orgId={orgId}
+                      workOrderId={workOrderId}
+                      onUpdated={onNotesUpdated}
+                      t={t}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            {/* Right column: timeline */}
+            <div className="flex flex-col gap-3 lg:sticky lg:top-3 self-start">
+              <div
+                className="[animation:fade-slide-in_300ms_ease-out-quart_backwards]"
+                style={{ "--stagger": 3 } as React.CSSProperties}
+              >
+                <WorkOrderTimelineSection
+                  mode="status"
+                  statusHistory={wo.status_history ?? []}
+                  serviceHistory={wo.service_history ?? []}
+                  t={t}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* НӨАТ + Totals — floating above drawer footer */}
+      <div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+          <div className="lg:col-span-2 flex flex-col gap-3 shrink-0">
+            <div className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2">
+              <div className="flex flex-col">
+                <Label className="text-xs font-medium">
+                  {locale === "en" ? "VAT" : "НӨАТ"}
+                </Label>
+                <span className="text-[10px] text-muted-foreground">
+                  {locale === "en"
+                    ? "Value Added Tax"
+                    : "Нэмэгдсэн Өртөгт Татвар"}
+                </span>
+              </div>
+              <Switch checked={nuatEnabled} onCheckedChange={onNuatToggle} />
+            </div>
+            <TotalsSummary
+              servicesTotal={servicesTotal}
+              partsTotal={partsTotal}
+              grandTotal={grandTotal}
+              serviceCount={wo.services?.length ?? 0}
+              partCount={wo.parts?.length ?? 0}
+              discountTotal={discountTotal}
+              taxRate={taxRate}
+              nuatEnabled={nuatEnabled}
+              locale={locale}
+              t={t}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <DrawerFooter
+        wo={wo}
+        invoicePublicToken={invoicePublicToken}
+        saving={saving}
+        confirmStatus={confirmStatus}
+        statusNotes={statusNotes}
+        creatingInvoice={creatingInvoice}
+        canCancel={canCancel}
+        canInvoice={canInvoice}
+        onChangeStatus={onChangeStatus}
+        onConfirmCancel={onConfirmCancel}
+        onStatusNotesChange={onStatusNotesChange}
+        onMarkReady={onMarkReady}
+        onComplete={onComplete}
+        onCreateInvoice={onCreateInvoice}
+        t={t}
+      />
+    </>
+  );
+}

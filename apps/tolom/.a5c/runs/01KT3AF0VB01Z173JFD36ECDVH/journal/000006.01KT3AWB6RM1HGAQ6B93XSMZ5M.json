@@ -1,0 +1,16 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-06-02T04:53:42.232Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KT3AWB3SE7R3NJ66W5A0F960",
+    "invocationKey": "permissions-suite:S000003:execute-phase",
+    "invocationHash": "407fd8f6c7a364fa91790e698ce7534d290af589cc62473ed4ba66fe5df0d6a0",
+    "stepId": "S000003",
+    "taskId": "execute-phase",
+    "kind": "agent",
+    "label": "Execute phase: Feature flags API + sidebar gating",
+    "taskDefRef": "tasks/01KT3AWB3SE7R3NJ66W5A0F960/task.json"
+  },
+  "checksum": "de520d63f689b85593cf8457272ae225699646a44e0642b38ac57d07f465ea59"
+}

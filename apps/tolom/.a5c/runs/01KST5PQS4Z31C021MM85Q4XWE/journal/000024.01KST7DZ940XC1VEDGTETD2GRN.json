@@ -1,0 +1,17 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-29T16:00:15.652Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KST7DZ7ZXVVYFT4ZG40F08RN",
+    "invocationKey": "project-install:S000012:__sdk.breakpoint",
+    "invocationHash": "c9cf2adfd93be989cf37d10f8aff2785c515f280b80a99b3e75b257591c014b8",
+    "stepId": "S000012",
+    "taskId": "__sdk.breakpoint",
+    "kind": "breakpoint",
+    "label": "breakpoint",
+    "taskDefRef": "tasks/01KST7DZ7ZXVVYFT4ZG40F08RN/task.json",
+    "labels": ["breakpoint"]
+  },
+  "checksum": "cb86dc5f2daf398f112b64fa11e55ce496d5392aafbc76331f4a79be251bba2f"
+}

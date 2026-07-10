@@ -1,0 +1,65 @@
+{
+  "agent": {
+    "name": "general-purpose",
+    "outputSchema": {
+      "required": [
+        "pagePath",
+        "pageCreated"
+      ],
+      "type": "object"
+    },
+    "prompt": {
+      "context": {
+        "orgId": "org-id-from-context"
+      },
+      "instructions": [
+        "Create `src/app/[locale]/dashboard/eod-close/page.tsx` — a dedicated 'End of Day Close' ritual page.",
+        "The page fetches from:",
+        "- `GET /api/organizations/[orgId]/reports?type=eod&date=<today>` (extended EOD data)",
+        "- `GET /api/organizations/[orgId]/day-close?date=<today>` (streak + close status)",
+        "Layout — a clean, single-scroll page optimized for print (use @media print CSS):",
+        "",
+        "1. **Header** — 'End of Day Summary' title, today's date, streak badge (🔥 N-day streak), Print button, Close Day button (only if not already closed)",
+        "2. **Revenue Section** — Large prominent total revenue + payment method breakdown:",
+        "   - Total Revenue (large number)",
+        "   - Cash | Card | Bank Transfer | Other (horizontal bar or grid of mini-cards showing amounts)",
+        "3. **Jobs Section** — Two columns:",
+        "   - Completed Today (number + check icon)",
+        "   - Open Jobs (number, clickable → links to /dashboard/work-orders)",
+        "4. **Unpaid Invoices** — Card showing count + total amount, with link to invoices page",
+        "5. **Low Stock Alert** — Reuse `LowStockCard` component from `@/app/[locale]/dashboard/_low-stock-card`",
+        "6. **Best Mechanic** — Card showing mechanic name, revenue generated today, jobs completed. With a small crown/trophy icon.",
+        "7. **Biggest Issue** — Card showing the oldest open job: customer name, description, days open. If none, show 'No outstanding issues 🎉'",
+        "8. **Close Day Button** — Green prominent button 'Close Day ✓' (if not already closed) or 'Day Closed ✓' (if already closed).",
+        "   - On click: POST to /api/organizations/[orgId]/day-close, then refetch",
+        "   - Shows streak counter update on close",
+        "9. **Printable Report** — CSS @media print rules: hide buttons, sidebar, nav; show clean report layout",
+        "10. **Use shadcn components:** Button, Card, CardContent, Badge, Separator, Skeleton, Typography",
+        "    - Use semantic tailwind tokens (bg-background, text-foreground, etc.)",
+        "    - Use gap-* not space-y-*, size-* for equal w/h",
+        "11. **Loading state:** Show skeleton cards while data loads",
+        "12. **Empty state:** Handle no-data case gracefully",
+        "13. **Use 'use client'** — this is an interactive page",
+        "14. **Use `useTranslations()`** with t() for all strings",
+        "Verify the page builds without errors."
+      ],
+      "outputFormat": "JSON with page structure summary and file paths",
+      "role": "Frontend developer — TOLOM Next.js 16 + shadcn/ui + Tailwind",
+      "task": "Build the end-of-day close ritual page with all KPIs, close button, streak badge, and printable format."
+    }
+  },
+  "io": {
+    "inputJsonPath": "tasks/01KSWX06FT40P4X1WNSJX6MNSZ/input.json",
+    "outputJsonPath": "tasks/01KSWX06FT40P4X1WNSJX6MNSZ/output.json"
+  },
+  "kind": "agent",
+  "title": "Build EOD close ritual page",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KSWX06FT40P4X1WNSJX6MNSZ",
+  "taskId": "build-eod-close-page",
+  "invocationKey": "feature/eod-close-ritual:S000003:build-eod-close-page",
+  "stepId": "S000003",
+  "inputs": {
+    "orgId": "org-id-from-context"
+  }
+}

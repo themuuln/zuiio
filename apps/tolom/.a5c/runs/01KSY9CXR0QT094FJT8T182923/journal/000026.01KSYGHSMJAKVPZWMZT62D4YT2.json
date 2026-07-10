@@ -1,0 +1,16 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-31T07:56:35.858Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KSYGHSKTJV4C2M1V1NEA8WPX",
+    "invocationKey": "tolom-ux-improvements:S000013:execute-phase",
+    "invocationHash": "8aff6676274a52ad7dd588e56d8c0cc8553d918ebdf84e38353241b24af4c9e5",
+    "stepId": "S000013",
+    "taskId": "execute-phase",
+    "kind": "agent",
+    "label": "Execute phase: Auth UX fixes",
+    "taskDefRef": "tasks/01KSYGHSKTJV4C2M1V1NEA8WPX/task.json"
+  },
+  "checksum": "96f700a2b7de4ddf4028e9ca14bde960c2f2fc6e68b4735af93fd925606cad25"
+}

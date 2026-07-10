@@ -1,0 +1,7 @@
+{
+  "status": "completed",
+  "buildPassing": true,
+  "changes": ["src/app/[locale]/page.tsx", "src/app/[locale]/_landing-sections.tsx", "src/messages/en.json", "src/messages/mn.json"],
+  "buildError": null,
+  "note": "All 4 landing items (#18 screenshots, #19 social proof, #21 Mongolian badges, #22 annual toggle) already implemented by previous agent. Build passes."
+}

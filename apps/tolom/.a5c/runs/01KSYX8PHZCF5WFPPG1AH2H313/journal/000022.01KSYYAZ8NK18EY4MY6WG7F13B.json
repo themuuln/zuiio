@@ -1,0 +1,20 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-31T11:57:32.309Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KSYYAZ7Q40DH0MH886C16Q85",
+    "invocationKey": "feature/qr-clock-in:S000011:verify-build",
+    "invocationHash": "8023552af53215e4a738e3cc7420465a77d46a088c8c80cf36d9a9dd2c01e4e2",
+    "stepId": "S000011",
+    "taskId": "verify-build",
+    "kind": "shell",
+    "label": "build",
+    "taskDefRef": "tasks/01KSYYAZ7Q40DH0MH886C16Q85/task.json",
+    "labels": [
+      "build",
+      "verify"
+    ]
+  },
+  "checksum": "8cf170b95cb29c84660a27a89cc6df495b90570a6c0d3d5fcfb37205292a4a57"
+}

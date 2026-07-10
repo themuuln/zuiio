@@ -1,0 +1,33 @@
+
+[api]
+max_rows = 1000
+
+[db.pooler]
+enabled = true
+pool_mode = "transaction"
+default_pool_size = 15
+max_client_conn = 100
+
+[functions.expire-subscriptions]
+enabled = true
+verify_jwt = false
+import_map = "./functions/expire-subscriptions/deno.json"
+entrypoint = "./functions/expire-subscriptions/index.ts"
+
+[functions.check-service-reminders]
+enabled = true
+verify_jwt = false
+import_map = "./functions/check-service-reminders/deno.json"
+entrypoint = "./functions/check-service-reminders/index.ts"
+
+[functions.telegram-webhook]
+enabled = true
+verify_jwt = false
+import_map = "./functions/telegram-webhook/deno.json"
+entrypoint = "./functions/telegram-webhook/index.ts"
+
+[functions.telegram-notify-owners]
+enabled = true
+verify_jwt = false
+import_map = "./functions/telegram-notify-owners/deno.json"
+entrypoint = "./functions/telegram-notify-owners/index.ts"

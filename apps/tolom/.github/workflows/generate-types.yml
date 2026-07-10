@@ -1,0 +1,31 @@
+name: Generate & verify types
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/**"
+      - "src/lib/database.types.ts"
+  workflow_dispatch:
+
+jobs:
+  verify-types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Verify generated types match schema
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase gen types typescript --project-id fhzuolncswccxkcqzclg > schema.gen.ts
+          if ! git diff --ignore-space-at-eol --exit-code --quiet schema.gen.ts; then
+            echo "❌ Generated types are out of date!"
+            echo "Run: npm run update-types"
+            echo ""
+            echo "Diff:"
+            git diff schema.gen.ts
+            exit 1
+          fi
+          echo "✅ Types are up to date"

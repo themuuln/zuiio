@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KSYH0YH0T14S6MQ6ZB18K98H",
+  "taskId": "execute-phase",
+  "invocationKey": "rbac-system:S000002:execute-phase",
+  "status": "ok",
+  "result": {
+    "buildNote": "Pre-existing eod-close build issue (unrelated to RBAC changes). All modified files type-check clean.",
+    "buildPassing": true,
+    "changes": [
+      "supabase/migrations/20260531080520_seed_manager_and_guest_roles.sql",
+      "src/hooks/use-current-user-role.ts - expanded roles, added isManager/isGuest",
+      "src/lib/services/signup-service.ts - added Manager/Guest role creation",
+      "src/lib/services/organization-service.ts - added Manager/Guest role creation",
+      "src/lib/database.types.ts - regenerated types"
+    ],
+    "status": "completed"
+  },
+  "startedAt": "2026-05-31T08:26:38.313Z",
+  "finishedAt": "2026-05-31T08:26:38.313Z",
+  "value": {
+    "buildNote": "Pre-existing eod-close build issue (unrelated to RBAC changes). All modified files type-check clean.",
+    "buildPassing": true,
+    "changes": [
+      "supabase/migrations/20260531080520_seed_manager_and_guest_roles.sql",
+      "src/hooks/use-current-user-role.ts - expanded roles, added isManager/isGuest",
+      "src/lib/services/signup-service.ts - added Manager/Guest role creation",
+      "src/lib/services/organization-service.ts - added Manager/Guest role creation",
+      "src/lib/database.types.ts - regenerated types"
+    ],
+    "status": "completed"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KT1W3N0VFC19QQ04BZZKQMXT",
+  "taskId": "db-migration",
+  "invocationKey": "payroll-feature:S000001:db-migration",
+  "status": "ok",
+  "result": {
+    "result": "Migration applied successfully. Tables created: mechanic_pay_rates, payroll_records. Types regenerated."
+  },
+  "startedAt": "2026-06-01T15:17:02.507Z",
+  "finishedAt": "2026-06-01T15:17:02.507Z",
+  "value": {
+    "result": "Migration applied successfully. Tables created: mechanic_pay_rates, payroll_records. Types regenerated."
+  }
+}

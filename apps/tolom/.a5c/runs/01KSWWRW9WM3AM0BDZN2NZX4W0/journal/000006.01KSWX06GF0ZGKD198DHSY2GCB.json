@@ -1,0 +1,16 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-30T16:55:41.839Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KSWX06FT40P4X1WNSJX6MNSZ",
+    "invocationKey": "feature/eod-close-ritual:S000003:build-eod-close-page",
+    "invocationHash": "56fdcd726feb23b33720f85e8b1a387d0c2edcafdf867d6189a94360d5935d22",
+    "stepId": "S000003",
+    "taskId": "build-eod-close-page",
+    "kind": "agent",
+    "label": "Build EOD close ritual page",
+    "taskDefRef": "tasks/01KSWX06FT40P4X1WNSJX6MNSZ/task.json"
+  },
+  "checksum": "02f138142e6fa5b81351c0e05240507f89201b39c7af14318af8f305b904ab3b"
+}

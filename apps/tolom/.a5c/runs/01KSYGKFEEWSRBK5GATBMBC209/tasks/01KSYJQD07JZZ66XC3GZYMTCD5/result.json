@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KSYJQD07JZZ66XC3GZYMTCD5",
+  "taskId": "execute-phase",
+  "invocationKey": "rbac-system:S000006:execute-phase",
+  "status": "ok",
+  "result": {
+    "buildPassing": true,
+    "changes": [
+      "supabase/migrations/20260531083632_seed_permissions.sql - seed_org_permissions() and seed_org_role_permissions() functions, auto-seed trigger",
+      "src/lib/database.types.ts - regenerated types"
+    ],
+    "status": "completed"
+  },
+  "startedAt": "2026-05-31T08:40:37.461Z",
+  "finishedAt": "2026-05-31T08:40:37.461Z",
+  "value": {
+    "buildPassing": true,
+    "changes": [
+      "supabase/migrations/20260531083632_seed_permissions.sql - seed_org_permissions() and seed_org_role_permissions() functions, auto-seed trigger",
+      "src/lib/database.types.ts - regenerated types"
+    ],
+    "status": "completed"
+  }
+}

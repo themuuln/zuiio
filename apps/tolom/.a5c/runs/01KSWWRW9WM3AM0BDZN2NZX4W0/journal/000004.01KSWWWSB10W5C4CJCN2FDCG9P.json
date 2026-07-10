@@ -1,0 +1,16 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-30T16:53:50.049Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KSWWWSA952R3ZMXW97MX2K0M",
+    "invocationKey": "feature/eod-close-ritual:S000002:create-day-close-tracking",
+    "invocationHash": "7181b6939031a15926091bcf57a9a9476d336b53e4f5682211e5894159627e08",
+    "stepId": "S000002",
+    "taskId": "create-day-close-tracking",
+    "kind": "agent",
+    "label": "Create day-close tracking system",
+    "taskDefRef": "tasks/01KSWWWSA952R3ZMXW97MX2K0M/task.json"
+  },
+  "checksum": "240224cc90966b6a44964fe9b845f87cb1e340670a509976316662b5294a970c"
+}

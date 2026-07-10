@@ -1,0 +1,19 @@
+{
+  "io": {
+    "inputJsonPath": "tasks/01KT1WMGRT9WPMX72WDN0VXX96/input.json",
+    "outputJsonPath": "tasks/01KT1WMGRT9WPMX72WDN0VXX96/output.json"
+  },
+  "kind": "shell",
+  "shell": {
+    "command": "cd /Users/themuuln/coding/personal/tolom/tolom && npx tsc --noEmit --incremental 2>&1; echo \"EXIT:$?\""
+  },
+  "title": "Type check",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KT1WMGRT9WPMX72WDN0VXX96",
+  "taskId": "build-verify",
+  "invocationKey": "payroll-feature:S000007:build-verify",
+  "stepId": "S000007",
+  "inputs": {
+    "input": {}
+  }
+}

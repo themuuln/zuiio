@@ -1,0 +1,20 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-31T12:28:09.899Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KSZ031RQQWQRMTHJB7M9X1X4",
+    "invocationKey": "feature/qr-clock-in:S000020:run-tests",
+    "invocationHash": "a9b72511e9712c4e131b4984153c46ced7883c88452d89fe7937ec81552eacb2",
+    "stepId": "S000020",
+    "taskId": "run-tests",
+    "kind": "shell",
+    "label": "test",
+    "taskDefRef": "tasks/01KSZ031RQQWQRMTHJB7M9X1X4/task.json",
+    "labels": [
+      "test",
+      "verify"
+    ]
+  },
+  "checksum": "745eb65c8ffa7c488f2a2840ee953c0231ab5a95b7d40893b909d727db5a717f"
+}

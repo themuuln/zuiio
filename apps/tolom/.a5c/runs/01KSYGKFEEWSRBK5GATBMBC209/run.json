@@ -1,0 +1,15 @@
+{
+  "runId": "01KSYGKFEEWSRBK5GATBMBC209",
+  "request": "rbac-system",
+  "processId": "rbac-system",
+  "harness": "pi",
+  "entrypoint": {
+    "importPath": "../../processes/rbac-system.mjs",
+    "exportName": "process"
+  },
+  "processPath": "../../processes/rbac-system.mjs",
+  "layoutVersion": "2026.01-storage-preview",
+  "createdAt": "2026-05-31T07:57:30.973Z",
+  "prompt": "Build a full RBAC system for TOLOM: rename Admin→Org Owner, seed Manager & Guest roles, add middleware role checks, build guest invoice portal, build org roles management UI, seed permissions & RLS policies, add app-layer permission checks. 5 roles: Super Admin (platform), Org Owner, Manager, Mechanic, Guest.",
+  "completionProof": "cdd5b0476394c51873fc695664c7fa79"
+}

@@ -1,0 +1,1 @@
+{"status":"completed","buildPassing":true,"changes":["Final quality gate - all 16 changed files pass LSP diagnostics with 0 errors","Migrations: 3 new (rename_admin, seed_roles, seed_permissions)","Files modified: hook, 3 services, middleware, auth-routes, role-guard, api-handler, roles page, 6 API routes","Types regenerated after each migration"]}

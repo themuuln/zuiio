@@ -1,0 +1,16 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-31T08:46:29.163Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KSYKD4RQP5S4PMKM4J52DB7T",
+    "invocationKey": "rbac-system:S000008:execute-phase",
+    "invocationHash": "a1e1aa884810c728029aac7f8d4b6c30e6839ae7b3e31d446467738eb864e6e4",
+    "stepId": "S000008",
+    "taskId": "execute-phase",
+    "kind": "agent",
+    "label": "Execute phase: Final build verification",
+    "taskDefRef": "tasks/01KSYKD4RQP5S4PMKM4J52DB7T/task.json"
+  },
+  "checksum": "4e866a7e9eed735ef8bf15c2d759a6d38ed60d1e9045091835e38e11a6e2e3df"
+}

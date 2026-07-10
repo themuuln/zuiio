@@ -1,0 +1,8 @@
+{
+  "projectRoot": "/Users/themuuln/coding/personal/tolom/tolom",
+  "supabaseProjectId": "tlqvnwfhqclsfutkbqxn",
+  "planInputs": {
+    "focus": "full-permissions-suite",
+    "handleExistingOrgs": "backfill-migration"
+  }
+}

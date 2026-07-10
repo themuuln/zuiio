@@ -1,0 +1,15 @@
+{
+  "runId": "01KSYKWWWVZXADN2GZD9ZY9H85",
+  "request": "inventory-improvement",
+  "processId": "inventory-improvement",
+  "harness": "pi",
+  "entrypoint": {
+    "importPath": "../../processes/inventory-improvement.mjs",
+    "exportName": "process"
+  },
+  "processPath": "../../processes/inventory-improvement.mjs",
+  "layoutVersion": "2026.01-storage-preview",
+  "createdAt": "2026-05-31T08:55:05.395Z",
+  "prompt": "Improve inventory management in TOLOM with targeted wins: 1) real-time stock balances (replace 5-min cron), 2) dedicated part detail page, 3) work order stock integration, 4) basic inventory reports, 5) UI polish",
+  "completionProof": "1f47b852c7b60e706cc1703621ba4b98"
+}

@@ -1,0 +1,110 @@
+{
+  "agent": {
+    "name": "general-purpose",
+    "outputSchema": {
+      "properties": {
+        "buildPassing": {
+          "type": "boolean"
+        },
+        "error": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "completed",
+            "failed"
+          ],
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "summary",
+        "buildPassing"
+      ],
+      "type": "object"
+    },
+    "prompt": {
+      "context": {
+        "conventions": {
+          "apiPattern": "All API routes use api-handler.ts wrapper with ApiResponse<T>",
+          "branchNaming": "feat/phase2/<module>-<description>",
+          "i18n": "Update both mn.json and en.json for any UI string change",
+          "importConvention": "Import types from @/lib/types, never from @/lib/database.types",
+          "queryPattern": "React Query hooks in src/lib/queries/, services in src/lib/services/",
+          "uiRules": "Use shadcn components, semantic color tokens, gap-* over space-y-*, size-* over w-* h-*"
+        },
+        "description": "Auto-deduct parts from inventory when a work order is marked complete or parts are used. Create inventory_movements for each part consumed and update balances in real-time.",
+        "phaseId": "work-order-integration",
+        "projectProfile": "TOLOM auto repair SaaS — Next.js 16, Supabase, shadcn/ui, React Query, Zustand",
+        "repoRoot": "/Users/themuuln/coding/personal/tolom/tolom"
+      },
+      "instructions": [
+        "You are executing phase 3: Work Order Inventory Integration",
+        "",
+        "GOAL: Auto-deduct parts from inventory when a work order is completed.",
+        "",
+        "Current state:",
+        "- Work orders have line items (parts tab in the work order wizard)",
+        "- But completing a work order does NOT create inventory_movements for the parts used",
+        "- This means stock levels don't decrease when parts are consumed in a job",
+        "",
+        "What to do:",
+        "1. Read the work order completion logic in src/lib/services/work-order-service.ts",
+        "2. In the work order 'completed' or 'finalized' status transition:",
+        "   a. Query all parts/line items associated with the work order",
+        "   b. For each part, create an inventory_movement with movement_type='sale', reference_type='work_order', reference_id=work_order_id",
+        "   c. Use the same createMovement logic from inventory-service.ts",
+        "3. Make sure this runs in a transaction or uses proper error handling — if stock deduction fails, the work order completion should be atomic or at least logged",
+        "4. Handle partial usage: if a line item only uses some of the quantity, deduct only the used quantity",
+        "5. Add the inventory revalidation keys to the work order mutation's onSuccess",
+        "6. Update hooks in src/lib/queries/use-work-orders.ts as needed",
+        "7. Verify: npm run lint && npm run build passes",
+        "8. Run the relevant tests: npm run test",
+        "9. Return structured result",
+        "",
+        "=== General Instructions ===",
+        "1. Read the affected files first before making changes",
+        "2. Apply changes — write new files, edit existing ones",
+        "3. After implementation, run: npm run lint && npm run build",
+        "4. If build fails, diagnose and fix until it passes",
+        "5. If TypeScript regeneration needed, run: supabase gen types typescript --linked > src/lib/database.types.ts",
+        "6. Update both i18n files (mn.json + en.json) for any user-visible strings",
+        "7. Run the tests: npm run test if phase affects service files with tests",
+        "8. Return structured result with { status: 'completed'|'failed', summary: string, buildPassing: boolean, error?: string }",
+        "9. Keep the scope TIGHT — this is a quick targeted win, not a full redesign"
+      ],
+      "outputFormat": "JSON",
+      "role": "Full-stack developer",
+      "task": "Execute phase 3/5: Work Order Inventory Integration"
+    }
+  },
+  "io": {
+    "inputJsonPath": "tasks/01KSYNV2YVN3KW1XHBPMA9D5NA/input.json",
+    "outputJsonPath": "tasks/01KSYNV2YVN3KW1XHBPMA9D5NA/result.json"
+  },
+  "kind": "agent",
+  "labels": [
+    "implementation",
+    "inventory",
+    "phase-work-order-integration"
+  ],
+  "title": "Phase 3: Work Order Inventory Integration",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KSYNV2YVN3KW1XHBPMA9D5NA",
+  "taskId": "execute-inventory-phase",
+  "invocationKey": "inventory-improvement:S000005:execute-inventory-phase",
+  "stepId": "S000005",
+  "inputs": {
+    "phase": {
+      "description": "Auto-deduct parts from inventory when a work order is marked complete or parts are used. Create inventory_movements for each part consumed and update balances in real-time.",
+      "id": "work-order-integration",
+      "title": "Work Order Inventory Integration"
+    },
+    "phaseIndex": 3,
+    "totalPhases": 5
+  }
+}

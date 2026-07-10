@@ -1,0 +1,57 @@
+name: Sync Env to Vercel
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  sync-env:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Push env vars to Vercel API
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          VERCEL_PROJECT_ID="prj_8ptuuZXIH0gKvAISDhKxtEm5wHo0"
+          VERCEL_TEAM_ID="team_gpvntVuvgulKYbPElyfplj50"
+          API="https://api.vercel.com/v9/projects/${VERCEL_PROJECT_ID}/env?teamId=${VERCEL_TEAM_ID}"
+
+          upsert_env() {
+            local key="$1" value="$2"
+            local file="/tmp/env-${key}.json"
+
+            {
+              printf '%s' '{"key":"'
+              printf '%s' "$key"
+              printf '%s' '","value":"'
+              printf '%s' "$value"
+              printf '%s' '","target":["production"]'
+              printf '%s' ',"type":"encrypted"}'
+            } > "$file"
+
+            curl -sf -X POST "$API" \
+              -H "Authorization: Bearer $VERCEL_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "@$file" \
+              && echo "  ok $key" \
+              || echo "  fail $key"
+          }
+
+          upsert_env "NEXT_PUBLIC_SUPABASE_URL" \
+            "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}"
+          upsert_env "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY" \
+            "${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}"
+          upsert_env "NEXT_PUBLIC_SUPABASE_ANON_KEY" \
+            "${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}"
+          upsert_env "SUPABASE_SERVICE_ROLE_KEY" \
+            "${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
+          upsert_env "RESEND_API_KEY" \
+            "${{ secrets.RESEND_API_KEY }}"
+          upsert_env "SMTP_HOST" "${{ secrets.SMTP_HOST }}"
+          upsert_env "SMTP_PORT" "${{ secrets.SMTP_PORT }}"
+          upsert_env "SMTP_SECURE" "${{ secrets.SMTP_SECURE }}"
+          upsert_env "SMTP_USER" "${{ secrets.SMTP_USER }}"
+          upsert_env "SMTP_PASS" "${{ secrets.SMTP_PASS }}"
+          upsert_env "EMAIL_FROM" "${{ secrets.EMAIL_FROM }}"

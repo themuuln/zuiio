@@ -1,0 +1,35 @@
+{
+  "kind": "breakpoint",
+  "metadata": {
+    "label": "breakpoint",
+    "payload": {
+      "expert": "owner",
+      "question": "Phase 3: Create mobile web scanner page:\n• /clock/scan page — camera viewfinder + QR scanning via html5-qrcode\n• Device registration confirmation flow\n• Install html5-qrcode dependency\n\nProceed with Phase 3?",
+      "tags": [
+        "ui",
+        "mobile"
+      ],
+      "title": "Phase 3 — Phone UI"
+    },
+    "requestedAt": "2026-05-31T11:50:16.708Z"
+  },
+  "title": "breakpoint",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KSYXXNW5HDN8YDH2VT2YQ563",
+  "taskId": "__sdk.breakpoint",
+  "invocationKey": "feature/qr-clock-in:S000009:__sdk.breakpoint",
+  "stepId": "S000009",
+  "inputs": {
+    "label": "breakpoint",
+    "payload": {
+      "expert": "owner",
+      "question": "Phase 3: Create mobile web scanner page:\n• /clock/scan page — camera viewfinder + QR scanning via html5-qrcode\n• Device registration confirmation flow\n• Install html5-qrcode dependency\n\nProceed with Phase 3?",
+      "tags": [
+        "ui",
+        "mobile"
+      ],
+      "title": "Phase 3 — Phone UI"
+    },
+    "requestedAt": "2026-05-31T11:50:16.708Z"
+  }
+}

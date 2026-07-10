@@ -1,0 +1,116 @@
+{
+  "agent": {
+    "name": "general-purpose",
+    "outputSchema": {
+      "properties": {
+        "buildPassing": {
+          "type": "boolean"
+        },
+        "error": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "completed",
+            "failed"
+          ],
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "summary",
+        "buildPassing"
+      ],
+      "type": "object"
+    },
+    "prompt": {
+      "context": {
+        "conventions": {
+          "apiPattern": "All API routes use api-handler.ts wrapper with ApiResponse<T>",
+          "branchNaming": "feat/phase2/<module>-<description>",
+          "i18n": "Update both mn.json and en.json for any UI string change",
+          "importConvention": "Import types from @/lib/types, never from @/lib/database.types",
+          "queryPattern": "React Query hooks in src/lib/queries/, services in src/lib/services/",
+          "uiRules": "Use shadcn components, semantic color tokens, gap-* over space-y-*, size-* over w-* h-*"
+        },
+        "description": "Improved movement recording form, bulk threshold editing, alert-to-PO workflow refinement, better empty/loading/error states, and consistent action patterns.",
+        "phaseId": "ui-polish",
+        "projectProfile": "TOLOM auto repair SaaS — Next.js 16, Supabase, shadcn/ui, React Query, Zustand",
+        "repoRoot": "/Users/themuuln/coding/personal/tolom/tolom"
+      },
+      "instructions": [
+        "You are executing phase 5: UI & UX Polish",
+        "",
+        "GOAL: Fix usability friction points — better movement recording, bulk operations, alert-to-PO UX.",
+        "",
+        "Current state:",
+        "- Movement recording is via a slide-over or modal, could be smoother",
+        "- Thresholds are edited inline per-part (clunky for bulk changes)",
+        "- Alert page shows shortage items but doesn't link well to creating POs",
+        "- Search/sort on global catalog works but UX could improve",
+        "",
+        "What to do:",
+        "1. Fix the Movement recording flow (movements-tab.tsx):",
+        "   - Add movement type as a quick-select filter chip at top",
+        "   - Make the 'Record Movement' form show validation errors inline",
+        "   - Show the current balance for the selected part BEFORE recording the movement",
+        "2. Improve threshold editing on parts-tab.tsx:",
+        "   - Add a 'Set Default Threshold' button that applies to all parts without individual thresholds",
+        "   - Show a quick summary: 'X parts have no threshold set' with a link to set defaults",
+        "3. Improve Alerts → PO flow:",
+        "   - When clicking 'Create PO' from alerts page, pre-fill the PO with the out-of-stock/low-stock items",
+        "   - Add a 'Select All' checkbox on alerts to create a bulk PO",
+        "4. General UI consistency:",
+        "   - Ensure all inventory pages use the same Button component patterns (no raw buttons)",
+        "   - Check dark mode rendering of badges and status colors",
+        "   - Add loading skeleton for the inventory page main content (not just table)",
+        "5. Update i18n files as needed",
+        "6. Verify: npm run lint && npm run build passes",
+        "7. Return structured result",
+        "",
+        "=== General Instructions ===",
+        "1. Read the affected files first before making changes",
+        "2. Apply changes — write new files, edit existing ones",
+        "3. After implementation, run: npm run lint && npm run build",
+        "4. If build fails, diagnose and fix until it passes",
+        "5. If TypeScript regeneration needed, run: supabase gen types typescript --linked > src/lib/database.types.ts",
+        "6. Update both i18n files (mn.json + en.json) for any user-visible strings",
+        "7. Run the tests: npm run test if phase affects service files with tests",
+        "8. Return structured result with { status: 'completed'|'failed', summary: string, buildPassing: boolean, error?: string }",
+        "9. Keep the scope TIGHT — this is a quick targeted win, not a full redesign"
+      ],
+      "outputFormat": "JSON",
+      "role": "Full-stack developer",
+      "task": "Execute phase 5/5: UI & UX Polish"
+    }
+  },
+  "io": {
+    "inputJsonPath": "tasks/01KSYQSRAFFXGSEPNK3TYG9R8Q/input.json",
+    "outputJsonPath": "tasks/01KSYQSRAFFXGSEPNK3TYG9R8Q/result.json"
+  },
+  "kind": "agent",
+  "labels": [
+    "implementation",
+    "inventory",
+    "phase-ui-polish"
+  ],
+  "title": "Phase 5: UI & UX Polish",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KSYQSRAFFXGSEPNK3TYG9R8Q",
+  "taskId": "execute-inventory-phase",
+  "invocationKey": "inventory-improvement:S000009:execute-inventory-phase",
+  "stepId": "S000009",
+  "inputs": {
+    "phase": {
+      "description": "Improved movement recording form, bulk threshold editing, alert-to-PO workflow refinement, better empty/loading/error states, and consistent action patterns.",
+      "id": "ui-polish",
+      "title": "UI & UX Polish"
+    },
+    "phaseIndex": 5,
+    "totalPhases": 5
+  }
+}

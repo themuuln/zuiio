@@ -1,0 +1,16 @@
+{
+  "type": "EFFECT_REQUESTED",
+  "recordedAt": "2026-05-31T08:34:36.698Z",
+  "data": {
+    "harness": "pi",
+    "effectId": "01KSYJQD07JZZ66XC3GZYMTCD5",
+    "invocationKey": "rbac-system:S000006:execute-phase",
+    "invocationHash": "5f24bb846789498bae8c7a3dde5f57cec22835a62531366a0943ed0f7cad25b1",
+    "stepId": "S000006",
+    "taskId": "execute-phase",
+    "kind": "agent",
+    "label": "Execute phase: Seed permissions & RLS policies",
+    "taskDefRef": "tasks/01KSYJQD07JZZ66XC3GZYMTCD5/task.json"
+  },
+  "checksum": "94bcb5bbe602267bf1a7ade47858a71f782d00cc4357dd423af215dd16ff3a12"
+}

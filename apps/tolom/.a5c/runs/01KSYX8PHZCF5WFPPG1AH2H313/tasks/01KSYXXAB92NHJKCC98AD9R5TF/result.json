@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KSYXXAB92NHJKCC98AD9R5TF",
+  "taskId": "verify-build",
+  "invocationKey": "feature/qr-clock-in:S000008:verify-build",
+  "status": "ok",
+  "result": {
+    "errors": [],
+    "passes": true
+  },
+  "startedAt": "2026-05-31T11:50:10.653Z",
+  "finishedAt": "2026-05-31T11:50:10.653Z",
+  "value": {
+    "errors": [],
+    "passes": true
+  }
+}

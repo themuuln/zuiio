@@ -1,0 +1,238 @@
+{
+  "name": "TOLOM",
+  "description": "Vertical operating system for auto service businesses — multi-tenant SaaS platform for garage management covering CRM, work orders, inventory, finance, and reporting.",
+  "stack": {
+    "framework": "Next.js 16",
+    "runtime": "Node.js",
+    "language": "TypeScript",
+    "database": "PostgreSQL (Supabase)",
+    "auth": "Supabase Auth",
+    "orm": "Supabase JS v2 + @supabase/ssr",
+    "styling": "Tailwind CSS v4 + shadcn/ui v4",
+    "state": [
+      "React Query v5",
+      "Zustand v5",
+      "nuqs v2",
+      "react-hook-form v7"
+    ],
+    "testing": [
+      "vitest",
+      "Playwright",
+      "MSW"
+    ],
+    "hosting": "Vercel",
+    "monitoring": "Sentry",
+    "i18n": "next-intl (mn.json + en.json)",
+    "validation": "Zod v4",
+    "tables": "@tanstack/react-table v8",
+    "charts": "Recharts v3",
+    "email": "Resend + @react-email/render",
+    "pdf": "@react-pdf/renderer",
+    "export": "ExcelJS",
+    "search": "Fuse.js (fuzzy)",
+    "dnd": "@dnd-kit (core + sortable + modifiers)",
+    "qr": "html5-qrcode",
+    "offline": "idb (IndexedDB)",
+    "pwa": "@ducanh2912/next-pwa",
+    "compiler": "babel-plugin-react-compiler"
+  },
+  "modules": [
+    {
+      "name": "bay-view",
+      "path": "dashboard/bay-view",
+      "status": "active",
+      "description": "Garage bay/workstation view for tracking active jobs"
+    },
+    {
+      "name": "bay-view-v2",
+      "path": "dashboard/bay-view-v2",
+      "status": "active",
+      "description": "Bay view v2 with mechanic panel, pickup completion, and improved layout"
+    },
+    {
+      "name": "customers",
+      "path": "dashboard/customers",
+      "status": "active",
+      "description": "Customer CRM with notes, vehicle ownership, and service history"
+    },
+    {
+      "name": "vehicles",
+      "path": "dashboard/vehicles",
+      "status": "active",
+      "description": "Vehicle records with plate number, VIN, make/model, and service schedules"
+    },
+    {
+      "name": "work-orders",
+      "path": "dashboard/work-orders",
+      "status": "active",
+      "description": "Multi-step work order wizard with line items, mechanic assignment, and status tracking"
+    },
+    {
+      "name": "services",
+      "path": "dashboard/services",
+      "status": "active",
+      "description": "Service catalog with default pricing, price memory, and interval-based scheduling"
+    },
+    {
+      "name": "inventory",
+      "path": "dashboard/inventory",
+      "status": "active",
+      "description": "Ledger-based inventory with stock movements, low-stock alerts, and purchase orders"
+    },
+    {
+      "name": "finance",
+      "path": "dashboard/finance",
+      "status": "active",
+      "description": "Invoices, payments, and revenue reporting"
+    },
+    {
+      "name": "estimates",
+      "path": "dashboard/estimates",
+      "status": "active",
+      "description": "Estimates/quotes workflow with line items and customer approval"
+    },
+    {
+      "name": "expenses",
+      "path": "dashboard/expenses",
+      "status": "active",
+      "description": "Business expense tracking and categorization"
+    },
+    {
+      "name": "mechanic",
+      "path": "dashboard/mechanic",
+      "status": "active",
+      "description": "Mechanic dashboard with clock in/out, assigned work orders, and status updates"
+    },
+    {
+      "name": "mechanic-performance",
+      "path": "dashboard/mechanic-performance",
+      "status": "active",
+      "description": "Cross-mechanic performance reports, leaderboard, and commission tracking"
+    },
+    {
+      "name": "reports",
+      "path": "dashboard/reports",
+      "status": "active",
+      "description": "Business intelligence dashboards with KPIs and period-based analytics"
+    },
+    {
+      "name": "service-reminders",
+      "path": "dashboard/service-reminders",
+      "status": "live",
+      "description": "Vehicle service interval tracking with cron-driven reminder system"
+    },
+    {
+      "name": "organization",
+      "path": "dashboard/organization",
+      "status": "active",
+      "description": "Multi-tenant org settings, branch management, and user roles"
+    },
+    {
+      "name": "settings",
+      "path": "dashboard/settings",
+      "status": "active",
+      "description": "Application settings, theme, and user preferences"
+    },
+    {
+      "name": "vehicle-models",
+      "path": "dashboard/vehicle-models",
+      "status": "active",
+      "description": "Global reference catalogs for car brands, models, and engine types"
+    },
+    {
+      "name": "admin",
+      "path": "dashboard/admin",
+      "status": "active",
+      "description": "System admin panel for global settings and management"
+    },
+    {
+      "name": "appointments",
+      "path": "dashboard/appointments",
+      "status": "active",
+      "description": "Appointment booking and scheduling system"
+    },
+    {
+      "name": "eod-close",
+      "path": "dashboard/eod-close",
+      "status": "active",
+      "description": "End-of-day closing summary with streak tracking"
+    },
+    {
+      "name": "guide",
+      "path": "dashboard/guide",
+      "status": "active",
+      "description": "In-app guide and onboarding documentation"
+    },
+    {
+      "name": "payroll",
+      "path": "dashboard/payroll",
+      "status": "active",
+      "description": "Payroll management and commission export"
+    }
+  ],
+  "phases": {
+    "current": "Phase 3 in progress (~75%), Phase 4 started (~40%)",
+    "completed": [
+      "Phase 0 — Foundation (100%)",
+      "Phase 1 — Tablet-First Startup CRM (~95%)",
+      "Phase 2 — Inventory + Staff Control (~90%)"
+    ],
+    "inProgress": [
+      "Phase 3 — Payments + Reminders + Reports (~75%)",
+      "Phase 4 — Multi-Branch + Accounting (~40%)"
+    ],
+    "upcoming": [
+      "Phase 5 — Mechanic Mobile App (Flutter)",
+      "Phase 6 — Platform Expansion (~15% started)"
+    ]
+  },
+  "database": {
+    "rls": true,
+    "migrations": "supabase/migrations",
+    "typeGeneration": "supabase gen types typescript --linked",
+    "typeImportConvention": "@/lib/types (never import from database.types directly)",
+    "multiTenancy": "organization_id + branch_id on every table",
+    "requiredColumns": [
+      "id",
+      "organization_id",
+      "branch_id",
+      "created_by",
+      "updated_by",
+      "created_at",
+      "updated_at",
+      "deleted_at"
+    ]
+  },
+  "methodology": {
+    "approach": "evolutionary",
+    "principles": [
+      "Build multi-tenant from day one",
+      "RLS on all tables without exception",
+      "Inventory must be ledger-based, never direct quantity updates",
+      "Never hard-delete financial records",
+      "Feature flags and settings over hard-coding",
+      "One core product + configuration, not custom builds per client"
+    ],
+    "commitStyle": "atomic, one logical change per commit",
+    "branchNaming": "feat/<phase>/<module>-<description>"
+  },
+  "painPoints": [
+    {
+      "area": "schema drift",
+      "description": "TypeScript types must be regenerated after every migration. Importing from database.types.ts directly breaks on regeneration — all imports must go through @/lib/types.",
+      "mitigation": "biome.json noRestrictedImports rule + AGENTS.md convention"
+    },
+    {
+      "area": "i18n parity",
+      "description": "Both mn.json and en.json must be updated together. Missing translations cause fallback keys to appear in the UI.",
+      "mitigation": "AGENTS.md rule requires dual-file updates for any UI string change"
+    }
+  ],
+  "testCredentials": {
+    "role": "Admin",
+    "email": "Mtuya1355@gmail.com"
+  },
+  "repoRoot": "/Users/themuuln/coding/personal/tolom/tolom",
+  "branch": "main",
+  "updatedAt": "2026-06-10"
+}

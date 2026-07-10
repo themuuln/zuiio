@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KSZ031RQQWQRMTHJB7M9X1X4",
+  "taskId": "run-tests",
+  "invocationKey": "feature/qr-clock-in:S000020:run-tests",
+  "status": "ok",
+  "result": {
+    "errors": [],
+    "passes": true
+  },
+  "startedAt": "2026-05-31T12:28:28.523Z",
+  "finishedAt": "2026-05-31T12:28:28.523Z",
+  "value": {
+    "errors": [],
+    "passes": true
+  }
+}

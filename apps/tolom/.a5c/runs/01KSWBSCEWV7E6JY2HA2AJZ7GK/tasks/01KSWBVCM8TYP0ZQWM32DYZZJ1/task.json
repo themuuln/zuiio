@@ -1,0 +1,60 @@
+{
+  "agent": {
+    "name": "general-purpose",
+    "outputSchema": {
+      "properties": {
+        "changes": {
+          "type": "array"
+        },
+        "code": {
+          "type": "string"
+        },
+        "filePath": {
+          "type": "string"
+        },
+        "hookName": {
+          "type": "string"
+        }
+      },
+      "required": ["hookName", "code", "filePath"],
+      "type": "object"
+    },
+    "prompt": {
+      "context": {
+        "orgId": "00000000-0000-0000-0000-000000000001",
+        "project": "TOLOM - auto repair SaaS Next.js app"
+      },
+      "instructions": [
+        "Read src/lib/queries/use-inventory.ts to understand existing patterns",
+        "Read src/lib/queries/keys.ts to understand query key patterns",
+        "Read src/lib/types/inventory.ts:43-53 for UpdatePartParams type",
+        "Read src/lib/services/inventory-service.ts:199-221 for updatePart service",
+        "Create a useUpdatePart mutation hook following the exact pattern of useUpdateSupplier",
+        "The hook should call PATCH /api/organizations/${orgId}/inventory/parts/${partId}",
+        "Invalidate partsCatalog and inventoryBalances query keys on success",
+        "Include onMutate for optimistic update (cancel queries, snapshot, setQueryData)",
+        "Include onError rollback using the snapshot context",
+        "Export a selector hook for granular re-renders if needed",
+        "Return the hook function and the mutation object"
+      ],
+      "outputFormat": "JSON",
+      "role": "Frontend Developer",
+      "task": "Create a useUpdatePart React Query mutation hook in src/lib/queries/use-inventory.ts"
+    }
+  },
+  "io": {
+    "inputJsonPath": "tasks/01KSWBVCM8TYP0ZQWM32DYZZJ1/input.json",
+    "outputJsonPath": "tasks/01KSWBVCM8TYP0ZQWM32DYZZJ1/result.json"
+  },
+  "kind": "agent",
+  "labels": ["feature", "mutation", "parts", "react-query"],
+  "title": "Create useUpdatePart mutation hook",
+  "schemaVersion": "2026.01.tasks-v1",
+  "effectId": "01KSWBVCM8TYP0ZQWM32DYZZJ1",
+  "taskId": "create-update-part-hook",
+  "invocationKey": "feature/edit-parts-catalog:S000001:create-update-part-hook",
+  "stepId": "S000001",
+  "inputs": {
+    "orgId": "00000000-0000-0000-0000-000000000001"
+  }
+}

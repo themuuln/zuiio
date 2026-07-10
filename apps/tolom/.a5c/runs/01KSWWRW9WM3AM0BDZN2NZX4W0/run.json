@@ -1,0 +1,15 @@
+{
+  "runId": "01KSWWRW9WM3AM0BDZN2NZX4W0",
+  "request": "feature/eod-close-ritual",
+  "processId": "feature/eod-close-ritual",
+  "harness": "pi",
+  "entrypoint": {
+    "importPath": "../../processes/eod-close-ritual.js",
+    "exportName": "process"
+  },
+  "processPath": "../../processes/eod-close-ritual.js",
+  "layoutVersion": "2026.01-storage-preview",
+  "createdAt": "2026-05-30T16:51:42.030Z",
+  "prompt": "Implement the end-of-day close ritual: extend EOD service with payment methods/open jobs/unpaid invoices/best mechanic/biggest issue, add day-close tracking with streak counter, build the dedicated EOD close page, add nav links and i18n, add printable report",
+  "completionProof": "d0fc7e67150dbe21ecb56ae2bbb711c5"
+}

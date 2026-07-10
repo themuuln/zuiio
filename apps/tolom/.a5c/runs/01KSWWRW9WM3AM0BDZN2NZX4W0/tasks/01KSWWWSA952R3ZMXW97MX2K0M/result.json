@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "2026.01.results-v1",
+  "effectId": "01KSWWWSA952R3ZMXW97MX2K0M",
+  "taskId": "create-day-close-tracking",
+  "invocationKey": "feature/eod-close-ritual:S000002:create-day-close-tracking",
+  "status": "ok",
+  "result": {
+    "migrationApplied": true,
+    "streakEnabled": true
+  },
+  "startedAt": "2026-05-30T16:55:23.866Z",
+  "finishedAt": "2026-05-30T16:55:23.866Z",
+  "value": {
+    "migrationApplied": true,
+    "streakEnabled": true
+  }
+}
