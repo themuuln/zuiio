@@ -81,13 +81,13 @@ When multiple skills apply, load them in the listed order. Earlier skills set co
 
 **"Write tests for expense service"** → `testing-patterns` + `supabase-patterns`
 
-**"Add dark mode toggle"** → `design-system` + `accessibility` + `code-standards`
+**"Add dark mode toggle"** → `design-system` + `ux-laws` + `accessibility` + `code-standards`
 
 **"Clean up this AI slop website"** → `impeccable` (critique) → `redesign-existing-projects` → `design-taste-frontend`
 
-**"Polish this interface / make it look premium"** → `impeccable` (polish) → `design-system`
+**"Polish this interface / make it look premium"** → `impeccable` (polish) → `ux-laws` → `design-system`
 
-**"Audit my UI for issues"** → `impeccable` (critique) → `design-system`
+**"Audit my UI for issues"** → `impeccable` (critique) → `ux-laws` → `design-system`
 
 ---
 
@@ -824,6 +824,7 @@ Before writing ANY UI/component/layout code, complete these steps:
 1. Read DESIGN_SYSTEM.md (tokens, components, violation patterns — machine-readable)
 2. Read DESIGN.md (full rationale, do's and don'ts)
 3. Read PRODUCT.md (brand personality, anti-references, design principles)
+4. Read docs/ux-laws-reference.md — Quick Reference Card (section 20) for the 10 laws + accessibility checklist
 ```
 
 ### Step 2: Write a Design Plan
@@ -832,6 +833,7 @@ Before code, answer in plain text:
 - Which tokens will I use? (list exact Tailwind classes)
 - Which existing component can I reuse or extend?
 - What anti-patterns am I avoiding? (name 2-3 specific ones)
+- Which UX laws apply? (reference 2-3 from the Quick Reference Card)
 
 ### Step 3: Self-Critique
 Run the plan through the Slop Test from `tolom-anti-slop` skill. If it fails, revise before coding.
