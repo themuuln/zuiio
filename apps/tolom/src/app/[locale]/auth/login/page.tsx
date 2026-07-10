@@ -1,5 +1,7 @@
 "use client";
 
+import { Suspense } from "react";
+
 import { Turnstile } from "@marsidev/react-turnstile";
 import { Eye, EyeOff, Loader2, LogIn } from "lucide-react";
 import { useSearchParams } from "next/navigation";
@@ -8,6 +10,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ErrorBoundary } from "@/components/error-boundary";
 import {
   Field,
   FieldError,
@@ -24,7 +27,36 @@ import { login } from "./actions";
 const DEV_EMAIL = process.env.NEXT_PUBLIC_DEV_EMAIL ?? "";
 const DEV_PASSWORD = process.env.NEXT_PUBLIC_DEV_PASSWORD ?? "";
 
+// ── Outer wrapper: Suspense for useSearchParams ──────────────
+
+/**
+ * Suspense boundary is REQUIRED by Next.js for any component using
+ * `useSearchParams()`. Without it, the page forces full client-side
+ * rendering and can crash on hydration when search params are absent.
+ */
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginFormSkeleton />}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+/** Minimal skeleton shown while Suspense resolves search params. */
+function LoginFormSkeleton() {
+  return (
+    <div className="flex flex-col gap-4 animate-pulse" aria-hidden>
+      <div className="h-12 bg-muted/30 rounded-md" />
+      <div className="h-8 bg-muted/30 rounded-md" />
+      <div className="h-8 bg-muted/30 rounded-md" />
+      <div className="h-8 w-24 bg-muted/30 rounded-md mx-auto" />
+    </div>
+  );
+}
+
+// ── Main login form ──────────────────────────────────────────
+
+function LoginForm() {
   const t = useTranslations("auth.login");
   const authT = useTranslations("auth");
   const locale = useLocale();
@@ -236,18 +268,41 @@ export default function LoginPage() {
                 {authT("signUp")}
               </Link>
             </Typography.Muted>
-          </Field>
-          {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY &&
-            process.env.NODE_ENV !== "development" && (
-              <Turnstile
-                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-                onSuccess={(token: string) => setTurnstileToken(token)}
+
+            {/* Turnstile — isolated in ErrorBoundary so a script failure never
+                crashes the entire form or blocks users from logging in */}
+            <ErrorBoundary>
+              <TurnstileField
+                onToken={setTurnstileToken}
                 onExpire={() => setTurnstileToken(null)}
-                options={{ appearance: "interaction-only" }}
               />
-            )}
+            </ErrorBoundary>
+          </Field>
         </FieldGroup>
       </form>
     </div>
+  );
+}
+
+// ── Turnstile sub-component (isolated for error resilience) ──
+
+/** Turnstile CAPTCHA — only rendered in production when site key is set. */
+function TurnstileField({
+  onToken,
+  onExpire,
+}: {
+  onToken: (token: string) => void;
+  onExpire: () => void;
+}) {
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  if (!siteKey || process.env.NODE_ENV === "development") return null;
+
+  return (
+    <Turnstile
+      siteKey={siteKey}
+      onSuccess={onToken}
+      onExpire={onExpire}
+      options={{ appearance: "interaction-only" }}
+    />
   );
 }
