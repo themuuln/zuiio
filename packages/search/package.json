@@ -1,0 +1,19 @@
+{
+  "name": "@zuiio/search",
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./sql": "./src/sql-template.sql"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5",
+    "@supabase/supabase-js": "^2",
+    "react": "^18 || ^19"
+  },
+  "devDependencies": {
+    "@zuiio/config": "workspace:*",
+    "typescript": "^5"
+  }
+}

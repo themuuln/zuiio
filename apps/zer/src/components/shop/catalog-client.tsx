@@ -7,7 +7,7 @@ import {
   Package,
   XCircle,
 } from "@phosphor-icons/react";
-import { useAggregatedLookup, useLookup } from "@zuiio/hooks";
+import { useAggregatedLookup, useDebounce, useLookup } from "@zuiio/hooks";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useProductSearch } from "@/lib/query/hooks/use-product-search";
 import { cn } from "@/lib/utils";
 
 const CameraScanner = dynamic(
@@ -73,6 +74,7 @@ export function CatalogClient({
     type: "idle",
   });
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const debouncedQuery = useDebounce(searchQuery, 300);
 
   // Auto-focus on mount
   useEffect(() => {
@@ -96,6 +98,7 @@ export function CatalogClient({
     (i) => i.productId,
     (i) => i.quantity,
   );
+  const { data: serverResults } = useProductSearch(debouncedQuery);
 
   const handleBarcodeMatch = (barcode: string) => {
     const trimmed = barcode.trim();
@@ -163,16 +166,24 @@ export function CatalogClient({
   };
 
   const filteredProducts = useMemo(() => {
-    let result = products;
+    // Server-scored results when query is active (≥2 chars, debounced)
+    if (serverResults && debouncedQuery.length >= 2) {
+      let result = serverResults;
+      if (selectedCategoryId) {
+        result = result.filter(
+          (product) => product.category_id === selectedCategoryId,
+        );
+      }
+      return result;
+    }
 
-    // Category filter
+    // Fallback: client-side filter for empty/short queries (shows all products)
+    let result = products;
     if (selectedCategoryId) {
       result = result.filter(
         (product) => product.category_id === selectedCategoryId,
       );
     }
-
-    // Search filter by name, SKU, or barcode (case-insensitive)
     const query = searchQuery.toLowerCase().trim();
     if (query) {
       result = result.filter(
@@ -182,9 +193,14 @@ export function CatalogClient({
           product.barcode?.toLowerCase().includes(query),
       );
     }
-
     return result;
-  }, [products, searchQuery, selectedCategoryId]);
+  }, [
+    products,
+    searchQuery,
+    debouncedQuery,
+    serverResults,
+    selectedCategoryId,
+  ]);
 
   const isEmpty = products.length === 0;
   const hasNoResults = !isEmpty && filteredProducts.length === 0;
