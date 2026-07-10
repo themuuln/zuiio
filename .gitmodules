@@ -34,9 +34,6 @@
 [submodule "apps/zer-commission"]
 	path = apps/archive/zer-commission
 	url = https://github.com/themuuln/zer-commission.git
-[submodule "apps/tolom"]
-	path = apps/tolom
-	url = https://github.com/themuuln/tolom.git
 [submodule "apps/zer"]
 	path = apps/zer
 	url = https://github.com/themuuln/zer.git
