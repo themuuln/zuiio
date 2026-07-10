@@ -1,6 +1,0 @@
-{
-  "buildCommand": "pnpm --filter tolom build",
-  "installCommand": "corepack enable && pnpm install --frozen-lockfile",
-  "outputDirectory": "apps/tolom/.next",
-  "framework": "nextjs"
-}
