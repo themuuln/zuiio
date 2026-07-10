@@ -1,5 +1,5 @@
 {
-  "extends": "@zer/config/tsconfig.base.json",
+  "extends": "@zuiio/config/tsconfig",
   "compilerOptions": {
     "rootDir": "src"
   },
