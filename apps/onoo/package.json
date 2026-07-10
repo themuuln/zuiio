@@ -15,6 +15,7 @@
     "@sentry/nextjs": "^10.64.0",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.110.1",
+    "@tanstack/react-query": "^5.75.5",
     "@tanstack/react-table": "^8.21.3",
     "@onoo/core": "workspace:*",
 
