@@ -3,9 +3,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
-  turbopack: {
-    root: "/Users/themuuln/.workspace/zuiio/",
-  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "hitec.pl" },
