@@ -1,0 +1,282 @@
+/* ── shadcn-inspired theme (black/white/zinc) ────────────────────── */
+
+:root {
+  /* ── Base ── */
+  --vp-c-white: #ffffff;
+  --vp-c-black: #000000;
+
+  /* ── Neutral palette ── */
+  --vp-c-neutral: var(--vp-c-black);
+  --vp-c-neutral-inverse: var(--vp-c-white);
+
+  /* ── Backgrounds ── */
+  --vp-c-bg: #ffffff;
+  --vp-c-bg-alt: #fafafa;
+  --vp-c-bg-elv: #ffffff;
+  --vp-c-bg-soft: #f4f4f5;
+
+  /* ── Borders ── */
+  --vp-c-border: #e4e4e7;
+  --vp-c-gutter: #e4e4e7;
+  --vp-c-divider: #e4e4e7;
+
+  /* ── Text ── */
+  --vp-c-text-1: #09090b;
+  --vp-c-text-2: #71717a;
+  --vp-c-text-3: #a1a1aa;
+
+  /* ── Brand (black = primary) ── */
+  --vp-c-brand-1: #09090b;
+  --vp-c-brand-2: #27272a;
+  --vp-c-brand-3: #3f3f46;
+  --vp-c-brand-soft: rgba(9, 9, 11, 0.06);
+  --vp-c-brand: var(--vp-c-brand-1);
+
+  /* ── Indigo → neutral ── */
+  --vp-c-indigo-1: #09090b;
+  --vp-c-indigo-2: #27272a;
+  --vp-c-indigo-3: #3f3f46;
+  --vp-c-indigo-soft: rgba(9, 9, 11, 0.06);
+
+  /* ── Gray ── */
+  --vp-c-gray-1: #e4e4e7;
+  --vp-c-gray-soft: rgba(113, 113, 122, 0.12);
+
+  /* ── Semantic ── */
+  --vp-c-default-1: var(--vp-c-gray-1);
+  --vp-c-tip-1: var(--vp-c-brand-1);
+  --vp-c-tip-2: var(--vp-c-brand-2);
+  --vp-c-tip-3: var(--vp-c-brand-3);
+  --vp-c-tip-soft: var(--vp-c-brand-soft);
+  --vp-c-note-1: var(--vp-c-brand-1);
+  --vp-c-note-2: var(--vp-c-brand-2);
+  --vp-c-note-3: var(--vp-c-brand-3);
+  --vp-c-note-soft: var(--vp-c-brand-soft);
+
+  /* ── Green / success ── */
+  --vp-c-green-soft: rgba(34, 197, 94, 0.12);
+
+  /* ── Red / danger ── */
+  --vp-c-red-soft: rgba(239, 68, 68, 0.12);
+
+  /* ── Yellow / warning ── */
+  --vp-c-yellow-soft: rgba(234, 179, 8, 0.12);
+
+  /* ── Purple / important ── */
+  --vp-c-purple-soft: rgba(168, 85, 247, 0.12);
+
+  /* ── Sponsor ── */
+  --vp-c-sponsor: #db2777;
+
+  /* ── Buttons: brand ── */
+  --vp-button-brand-border: transparent;
+  --vp-button-brand-text: #ffffff;
+  --vp-button-brand-bg: #09090b;
+  --vp-button-brand-hover-text: #ffffff;
+  --vp-button-brand-hover-bg: #27272a;
+  --vp-button-brand-active-text: #ffffff;
+  --vp-button-brand-active-bg: #3f3f46;
+
+  /* ── Buttons: alt ── */
+  --vp-button-alt-border: #e4e4e7;
+  --vp-button-alt-text: #09090b;
+  --vp-button-alt-bg: #ffffff;
+  --vp-button-alt-hover-text: #09090b;
+  --vp-button-alt-hover-bg: #f4f4f5;
+  --vp-button-alt-hover-border: #d4d4d8;
+  --vp-button-alt-active-text: #09090b;
+
+  /* ── Home hero ── */
+  --vp-home-hero-name-color: #09090b;
+
+  /* ── Nav ── */
+  --vp-nav-bg-color: rgba(255, 255, 255, 0.85);
+  --vp-nav-logo-height: 24px;
+
+  /* ── Sidebar ── */
+  --vp-sidebar-bg-color: #fafafa;
+
+  /* ── Code ── */
+  --vp-code-color: #09090b;
+  --vp-code-link-color: #09090b;
+  --vp-code-link-hover-color: #27272a;
+  --vp-code-block-bg: #f4f4f5;
+  --vp-code-lang-color: #a1a1aa;
+  --vp-code-line-number-color: #a1a1aa;
+  --vp-code-copy-code-bg: #f4f4f5;
+  --vp-code-copy-code-hover-bg: #ffffff;
+  --vp-code-copy-code-border-color: #e4e4e7;
+  --vp-code-copy-code-hover-border-color: #d4d4d8;
+  --vp-code-copy-code-active-text: #71717a;
+
+  /* ── Input ── */
+  --vp-input-bg-color: #f4f4f5;
+  --vp-input-switch-bg-color: #e4e4e7;
+}
+
+/* ── Dark mode ──────────────────────────────────────────────────── */
+.dark {
+  /* ── Neutral ── */
+  --vp-c-neutral: var(--vp-c-white);
+  --vp-c-neutral-inverse: var(--vp-c-black);
+
+  /* ── Backgrounds ── */
+  --vp-c-bg: #09090b;
+  --vp-c-bg-alt: #18181b;
+  --vp-c-bg-elv: #18181b;
+  --vp-c-bg-soft: #27272a;
+
+  /* ── Borders ── */
+  --vp-c-border: #27272a;
+  --vp-c-gutter: #27272a;
+  --vp-c-divider: #27272a;
+
+  /* ── Text ── */
+  --vp-c-text-1: #fafafa;
+  --vp-c-text-2: #a1a1aa;
+  --vp-c-text-3: #71717a;
+
+  /* ── Brand ── */
+  --vp-c-brand-1: #fafafa;
+  --vp-c-brand-2: #e4e4e7;
+  --vp-c-brand-3: #d4d4d8;
+  --vp-c-brand-soft: rgba(250, 250, 250, 0.08);
+  --vp-c-brand: var(--vp-c-brand-1);
+
+  /* ── Indigo ── */
+  --vp-c-indigo-1: #fafafa;
+  --vp-c-indigo-2: #e4e4e7;
+  --vp-c-indigo-3: #d4d4d8;
+  --vp-c-indigo-soft: rgba(250, 250, 250, 0.08);
+
+  /* ── Gray ── */
+  --vp-c-gray-1: #3f3f46;
+  --vp-c-gray-soft: rgba(161, 161, 170, 0.1);
+
+  /* ── Green ── */
+  --vp-c-green-soft: rgba(34, 197, 94, 0.16);
+
+  /* ── Red ── */
+  --vp-c-red-soft: rgba(239, 68, 68, 0.2);
+
+  /* ── Yellow ── */
+  --vp-c-yellow-soft: rgba(234, 179, 8, 0.16);
+
+  /* ── Purple ── */
+  --vp-c-purple-soft: rgba(168, 85, 247, 0.16);
+
+  /* ── Buttons: brand ── */
+  --vp-button-brand-border: transparent;
+  --vp-button-brand-text: #09090b;
+  --vp-button-brand-bg: #fafafa;
+  --vp-button-brand-hover-text: #09090b;
+  --vp-button-brand-hover-bg: #e4e4e7;
+  --vp-button-brand-active-text: #09090b;
+  --vp-button-brand-active-bg: #d4d4d8;
+
+  /* ── Buttons: alt ── */
+  --vp-button-alt-border: #27272a;
+  --vp-button-alt-text: #fafafa;
+  --vp-button-alt-bg: transparent;
+  --vp-button-alt-hover-text: #fafafa;
+  --vp-button-alt-hover-bg: #27272a;
+  --vp-button-alt-hover-border: #3f3f46;
+  --vp-button-alt-active-text: #fafafa;
+
+  /* ── Home hero ── */
+  --vp-home-hero-name-color: #fafafa;
+
+  /* ── Nav ── */
+  --vp-nav-bg-color: rgba(9, 9, 11, 0.85);
+
+  /* ── Sidebar ── */
+  --vp-sidebar-bg-color: #18181b;
+
+  /* ── Code ── */
+  --vp-code-color: #fafafa;
+  --vp-code-link-color: #fafafa;
+  --vp-code-link-hover-color: #e4e4e7;
+  --vp-code-block-bg: #18181b;
+  --vp-code-lang-color: #71717a;
+  --vp-code-line-number-color: #71717a;
+  --vp-code-copy-code-bg: #27272a;
+  --vp-code-copy-code-hover-bg: #18181b;
+  --vp-code-copy-code-border-color: #27272a;
+  --vp-code-copy-code-hover-border-color: #3f3f46;
+  --vp-code-copy-code-active-text: #a1a1aa;
+
+  /* ── Input ── */
+  --vp-input-bg-color: #27272a;
+  --vp-input-switch-bg-color: #3f3f46;
+}
+
+/* ── Additional refinements ─────────────────────────────────────── */
+
+/* Subtler sidebar active item */
+.vp-sidebar .active .text {
+  font-weight: 600;
+}
+
+/* Cleaner custom blocks (info, tip, warning, danger) */
+.custom-block {
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.custom-block-title {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Tables — match shadcn table style */
+.vp-doc table {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--vp-c-border);
+}
+
+.vp-doc th {
+  background: var(--vp-c-bg-soft);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--vp-c-border);
+}
+
+.vp-doc td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--vp-c-border);
+}
+
+.vp-doc tr:last-child td {
+  border-bottom: none;
+}
+
+/* Inline code — neutral bg, no brand color */
+.vp-doc :not(pre) > code {
+  background: var(--vp-c-bg-soft);
+  color: var(--vp-c-text-1);
+  border: 1px solid var(--vp-c-border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.85em;
+}
+
+/* Badges */
+.vp-badge {
+  border-radius: 4px;
+}
+
+/* Backdrop (mobile nav overlay) */
+.vp-backdrop-bg-color {
+  --vp-backdrop-bg-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Focus ring */
+*:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 2px;
+  border-radius: 2px;
+}

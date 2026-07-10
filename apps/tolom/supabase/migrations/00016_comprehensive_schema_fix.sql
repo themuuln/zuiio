@@ -1,0 +1,16 @@
+alter table customers add column if not exists company_name text;
+alter table customers add column if not exists contact_person text;
+alter table customers add column if not exists last_visit_at timestamp with time zone;
+alter table customers add column if not exists tags text[];
+alter table vehicles add column if not exists chassis_number text;
+alter table vehicles add column if not exists license_expiry_at date;
+alter table vehicles add column if not exists next_service_at date;
+alter table work_orders add column if not exists complaint text;
+alter table work_orders add column if not exists diagnosis text;
+alter table work_orders add column if not exists mechanic_notes text;
+alter table work_orders add column if not exists discount_amount numeric(12,2) not null default 0;
+alter table work_orders add column if not exists discount_percentage numeric(5,2) not null default 0;
+alter table service_catalog add column if not exists branch_id uuid;
+alter table service_catalog add column if not exists estimated_duration_minutes integer;
+alter table mechanic_assignments add column if not exists created_by uuid references auth.users(id);
+alter table mechanic_assignments add column if not exists created_at timestamp with time zone not null default now();
