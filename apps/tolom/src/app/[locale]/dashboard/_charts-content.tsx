@@ -104,7 +104,9 @@ function formatDate(dateStr: string): string {
 
 export default function ChartsSection({ data }: { data: DashboardData }) {
   const t = useTranslations();
-  const { revenueTrend, workOrderStatusDistribution } = data;
+  // Cached/partial payloads may lack these fields at runtime despite the type
+  const revenueTrend = data.revenueTrend ?? [];
+  const workOrderStatusDistribution = data.workOrderStatusDistribution ?? [];
 
   const revenueConfig = useMemo(
     () => ({
