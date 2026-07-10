@@ -1,8 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "regions": ["iad1"],
-  "framework": "nextjs",
+  "framework": null,
   "installCommand": "cd ../.. && corepack enable && pnpm install --frozen-lockfile",
   "buildCommand": "cd ../.. && pnpm exec turbo run build --filter=zer",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "rootDirectory": "apps/zer"
 }
