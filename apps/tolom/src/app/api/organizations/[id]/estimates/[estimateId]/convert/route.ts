@@ -2,6 +2,8 @@ import { createRouteHandler } from "@/lib/api-handler";
 import { created } from "@/lib/api-response";
 import { convertEstimateToWorkOrder } from "@/lib/services/estimate-service";
 
+export { dynamic } from "@/lib/api-handler";
+
 /**
  * POST /api/organizations/[id]/estimates/[estimateId]/convert
  *

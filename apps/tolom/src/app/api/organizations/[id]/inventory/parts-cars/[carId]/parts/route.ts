@@ -1,9 +1,12 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { created, ok } from "@/lib/api-response";
 import {
+
   addPartsCarPart,
   getPartsCarParts,
 } from "@/lib/services/parts-cars-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 export const GET = createRouteHandler(async ({ orgId, params, supabase }) => {
   const parts = await getPartsCarParts(supabase, orgId, params.carId);

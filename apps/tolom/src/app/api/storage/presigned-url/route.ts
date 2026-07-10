@@ -2,9 +2,12 @@ import { z } from "zod";
 import { apiError, createSimpleRouteHandler, ok } from "@/lib/api-response";
 import { reportServerError } from "@/lib/sentry-report-server";
 import {
+
   generatePresignedUploadUrl,
   validateUploadRequest,
 } from "@/lib/storage/r2-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 const presignedUrlSchema = z.object({
   fileName: z.string().min(1),

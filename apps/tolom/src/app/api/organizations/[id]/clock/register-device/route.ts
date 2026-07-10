@@ -1,6 +1,8 @@
 import { apiError, created, createRouteHandler } from "@/lib/api-response";
 import { registerDevice } from "@/lib/services/qr-token-service";
 
+export { dynamic } from "@/lib/api-handler";
+
 export const POST = createRouteHandler(
   async ({ request, orgId, supabase }) => {
     const body = (await request.json()) as {

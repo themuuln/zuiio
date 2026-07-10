@@ -3,6 +3,8 @@ import { createRouteHandler } from "@/lib/api-handler";
 import { ok } from "@/lib/api-response";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 
+export { dynamic } from "@/lib/api-handler";
+
 export const PATCH = createRouteHandler(
   async ({ request, params, orgId, supabase }) => {
     const body = await request.json();

@@ -1,6 +1,7 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, created, ok } from "@/lib/api-response";
 import {
+
   bulkGenerateVariants,
   createItemVariant,
   createVariantGroup,
@@ -17,6 +18,8 @@ import {
   updateVariantGroup,
   updateVariantOption,
 } from "@/lib/services/catalog-variant-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 /**
  * POST /api/organizations/:id/catalog-variants

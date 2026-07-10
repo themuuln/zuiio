@@ -2,6 +2,8 @@ import { createRouteHandler } from "@/lib/api-handler";
 import { ok } from "@/lib/api-response";
 import { getClockStatus } from "@/lib/services/time-tracking-service";
 
+export { dynamic } from "@/lib/api-handler";
+
 export const GET = createRouteHandler(async ({ orgId, user, supabase }) => {
   const status = await getClockStatus(supabase, orgId, user.id);
   return ok(status);

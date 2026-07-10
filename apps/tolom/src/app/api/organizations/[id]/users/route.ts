@@ -4,6 +4,8 @@ import { created, ok } from "@/lib/api-response";
 import { createInvite } from "@/lib/services/invite-service";
 import { getOrganizationUsers, removeUser } from "@/lib/services/user-service";
 
+export { dynamic } from "@/lib/api-handler";
+
 export const GET = createRouteHandler(async ({ orgId, supabase }) => {
   const users = await getOrganizationUsers(supabase, orgId);
   return ok(users);

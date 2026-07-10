@@ -10,6 +10,8 @@ import { getOrganization } from "@/lib/services/organization-service";
 import { getWorkOrder } from "@/lib/services/work-order-service";
 import { pdfFilename, renderToPdfBuffer } from "@/lib/utils/pdf";
 
+export { dynamic } from "@/lib/api-handler";
+
 export const GET = createRouteHandler(
   async ({ params, supabase, orgId }) => {
     const workOrderId = params.workOrderId;

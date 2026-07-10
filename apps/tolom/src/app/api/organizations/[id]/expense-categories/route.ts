@@ -1,10 +1,13 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { created, ok } from "@/lib/api-response";
 import {
+
   createExpenseCategory,
   getExpenseCategories as getCategories,
   seedDefaultExpenseCategories,
 } from "@/lib/services/expense-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 export const GET = createRouteHandler(
   async ({ orgId, user, supabase }) => {

@@ -1,6 +1,8 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { ok } from "@/lib/api-response";
 
+export { dynamic } from "@/lib/api-handler";
+
 interface PriceEntry {
   unit_price: number;
   created_at: string;

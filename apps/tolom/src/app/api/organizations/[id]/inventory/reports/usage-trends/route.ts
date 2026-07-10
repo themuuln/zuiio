@@ -1,6 +1,8 @@
 import { createRouteHandler, ok } from "@/lib/api-response";
 import { getUsageTrends } from "@/lib/services/inventory-reports-service";
 
+export { dynamic } from "@/lib/api-handler";
+
 export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
   const { searchParams } = new URL(request.url);
   const months = searchParams.get("months")

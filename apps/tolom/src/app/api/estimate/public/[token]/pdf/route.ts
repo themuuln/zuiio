@@ -4,6 +4,8 @@ import { apiError } from "@/lib/api-response";
 import { EstimateDocument } from "@/lib/pdf/estimate-document";
 import { pdfFilename, renderToPdfBuffer } from "@/lib/utils/pdf";
 
+export { dynamic } from "@/lib/api-handler";
+
 /**
  * GET /api/estimate/public/[token]/pdf
  *

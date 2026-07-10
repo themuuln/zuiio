@@ -1,10 +1,13 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, created, ok } from "@/lib/api-response";
 import {
+
   createPurchaseOrder,
   getPurchaseOrders,
   updatePurchaseOrder,
 } from "@/lib/services/purchase-order-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
   const { searchParams } = new URL(request.url);

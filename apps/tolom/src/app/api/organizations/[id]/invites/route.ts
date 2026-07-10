@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { created, ok } from "@/lib/api-response";
 import {
+
   cancelInvite,
   createInvite,
   getOrgInvites,
   resendInvite,
 } from "@/lib/services/invite-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 export const GET = createRouteHandler(async ({ orgId }) => {
   const invites = await getOrgInvites(orgId);

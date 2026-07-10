@@ -1,8 +1,11 @@
 import { apiError, createRouteHandler, ok } from "@/lib/api-response";
 import {
+
   getRegisteredDevices,
   revokeDevice,
 } from "@/lib/services/qr-token-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
   const mechanicId =

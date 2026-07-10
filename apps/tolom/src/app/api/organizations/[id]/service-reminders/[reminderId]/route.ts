@@ -1,10 +1,13 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { noContent, ok } from "@/lib/api-response";
 import {
+
   deleteServiceSchedule,
   getServiceSchedule,
   updateServiceSchedule,
 } from "@/lib/services/service-reminder-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 export const GET = createRouteHandler(async ({ params, supabase }) => {
   const { reminderId } = params;

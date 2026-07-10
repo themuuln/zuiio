@@ -2,6 +2,8 @@ import { createRouteHandler } from "@/lib/api-handler";
 import { ok } from "@/lib/api-response";
 import { closeDay, getDayCloseStatus } from "@/lib/services/day-close-service";
 
+export { dynamic } from "@/lib/api-handler";
+
 export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
   const { searchParams } = new URL(request.url);
   const date =

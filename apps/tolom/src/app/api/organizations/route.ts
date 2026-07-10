@@ -1,9 +1,12 @@
 import { createSimpleRouteHandler } from "@/lib/api-handler";
 import { created, ok } from "@/lib/api-response";
 import {
+
   createOrganization,
   getUserOrganization,
 } from "@/lib/services/organization-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 export const GET = createSimpleRouteHandler(async ({ user, supabase }) => {
   const org = await getUserOrganization(supabase, user.id);

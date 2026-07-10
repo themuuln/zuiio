@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { requirePermission } from "@/lib/supabase/role-guard";
 
+export { dynamic } from "@/lib/api-handler";
+
 /**
  * Backward-compat redirect for old `?type=` inventory API.
  * New paths:

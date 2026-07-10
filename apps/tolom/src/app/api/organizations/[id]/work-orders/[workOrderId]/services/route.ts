@@ -5,10 +5,13 @@ import {
   updateWorkOrderServicePrice,
 } from "@/lib/services/work-order-items-service";
 import {
+
   addWorkOrderServiceSchema,
   parseBody,
   updateServicePriceSchema,
 } from "@/lib/validation/work-orders";
+
+export { dynamic } from "@/lib/api-handler";
 
 export const POST = createRouteHandler(
   async ({ request, params, orgId, supabase }) => {

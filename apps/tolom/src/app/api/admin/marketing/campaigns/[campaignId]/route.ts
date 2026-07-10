@@ -1,10 +1,13 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
 import {
+
   checkAdminRole,
   deleteCampaign,
   updateCampaign,
 } from "@/lib/services/admin-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 export const PATCH = createRouteHandler(
   async ({ supabase, request, params }) => {

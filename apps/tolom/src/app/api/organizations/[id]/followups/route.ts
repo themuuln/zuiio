@@ -3,6 +3,8 @@ import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
 import { createFollowup, listFollowups } from "@/lib/services/followup-service";
 
+export { dynamic } from "@/lib/api-handler";
+
 /**
  * GET /api/organizations/[id]/followups
  * List follow-ups with optional filters.

@@ -2,6 +2,8 @@ import { apiError, createSimpleRouteHandler, ok } from "@/lib/api-response";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { getStorage } from "@/lib/storage/storage-factory";
 
+export { dynamic } from "@/lib/api-handler";
+
 /**
  * DELETE /api/storage/object?key=<storage-path-or-url>
  *

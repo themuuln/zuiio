@@ -1,10 +1,13 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, created, ok } from "@/lib/api-response";
 import {
+
   deleteServiceVehicleModelPrice,
   getServiceVehicleModels,
   upsertServiceVehicleModelPrice,
 } from "@/lib/services/service-catalog-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 /**
  * GET /api/organizations/:id/services/:serviceId/vehicle-models

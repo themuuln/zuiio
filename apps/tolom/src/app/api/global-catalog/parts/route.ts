@@ -1,6 +1,9 @@
 import { createSimpleRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
 import { reportServerError } from "@/lib/sentry-report-server";
+
+export { dynamic } from "@/lib/api-handler";
+
 export const GET = createSimpleRouteHandler(async ({ supabase }) => {
   const { data, error } = await supabase
     .from("global_parts_catalog")

@@ -1,10 +1,13 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, created, ok } from "@/lib/api-response";
 import {
+
   createPart,
   getPartsCatalog,
   updatePart,
 } from "@/lib/services/inventory-service";
+
+export { dynamic } from "@/lib/api-handler";
 // Storage URLs are now public — no resolution needed
 
 export const GET = createRouteHandler(

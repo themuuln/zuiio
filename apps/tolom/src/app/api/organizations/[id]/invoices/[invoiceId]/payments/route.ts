@@ -3,6 +3,8 @@ import { created } from "@/lib/api-response";
 import { ValidationError } from "@/lib/errors";
 import { recordPayment } from "@/lib/services/invoice-service";
 
+export { dynamic } from "@/lib/api-handler";
+
 export const POST = createRouteHandler(
   async ({ request, orgId, params, supabase }) => {
     const { invoiceId } = params;

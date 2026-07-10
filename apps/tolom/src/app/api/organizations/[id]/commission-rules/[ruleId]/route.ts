@@ -3,6 +3,8 @@ import { createRouteHandler } from "@/lib/api-handler";
 import { ok } from "@/lib/api-response";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 
+export { dynamic } from "@/lib/api-handler";
+
 export const GET = createRouteHandler(async ({ params, orgId, supabase }) => {
   const { data, error } = await supabase
     .from("mechanic_commission_rules")

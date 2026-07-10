@@ -7,6 +7,8 @@ import {
 } from "@/lib/services/store-credit-service";
 import { createClient } from "@/lib/supabase/server";
 
+export { dynamic } from "@/lib/api-handler";
+
 export const GET = createRouteHandler(
   async ({ request, orgId }) => {
     const supabase = await createClient();

@@ -26,6 +26,8 @@ import {
 } from "@/lib/services/report-service";
 import { hasPermission } from "@/lib/supabase/role-guard";
 
+export { dynamic } from "@/lib/api-handler";
+
 // ── Role hierarchy (mirrors role-guard.ts) ──
 const ROLE_HIERARCHY: Record<string, number> = {
   Guest: 0,

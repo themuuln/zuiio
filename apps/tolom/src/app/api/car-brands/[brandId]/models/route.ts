@@ -1,6 +1,9 @@
 import { capture } from "@zuiio/capture";
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, created, ok } from "@/lib/api-response";
+
+export { dynamic } from "@/lib/api-handler";
+
 export const GET = createRouteHandler(
   async ({ params, supabase }) => {
     const { brandId } = params;

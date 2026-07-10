@@ -2,6 +2,8 @@ import { createSimpleRouteHandler } from "@/lib/api-handler";
 import { ok } from "@/lib/api-response";
 import { getAdminUser } from "@/lib/services/admin-service";
 
+export { dynamic } from "@/lib/api-handler";
+
 export const GET = createSimpleRouteHandler(async ({ supabase }) => {
   const user = await getAdminUser(supabase);
   return ok({

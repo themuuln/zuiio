@@ -3,6 +3,7 @@ import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import {
+
   addInvoiceItem,
   deleteInvoice,
   getInvoice,
@@ -13,6 +14,8 @@ import {
   updateInvoiceItem,
   updateInvoiceStatus,
 } from "@/lib/services/invoice-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 // ── Zod schemas for each PATCH action ────────────────────────
 // Zod errors are caught in the route handler and re-thrown as

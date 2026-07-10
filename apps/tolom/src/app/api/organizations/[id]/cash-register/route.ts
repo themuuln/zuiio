@@ -1,9 +1,12 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, created, ok } from "@/lib/api-response";
 import {
+
   getCurrentSession,
   openSession,
 } from "@/lib/services/cash-register-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 // GET /api/organizations/[id]/cash-register — get current session
 export const GET = createRouteHandler(async ({ orgId, supabase, request }) => {

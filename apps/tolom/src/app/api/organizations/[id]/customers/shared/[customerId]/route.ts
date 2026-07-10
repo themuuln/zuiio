@@ -1,8 +1,11 @@
 import { createRouteHandler, ok } from "@/lib/api-response";
 import {
+
   getSharedCustomer,
   getSharedCustomerVehicles,
 } from "@/lib/services/customer-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 /**
  * GET /api/organizations/[id]/customers/shared/[customerId]

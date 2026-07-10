@@ -1,11 +1,14 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { ok } from "@/lib/api-response";
 import {
+
   deleteVehicle,
   getVehicle,
   getVehicleServiceHistory,
   updateVehicle,
 } from "@/lib/services/vehicle-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 export const GET = createRouteHandler(async ({ orgId, params, supabase }) => {
   const { vehicleId } = params;

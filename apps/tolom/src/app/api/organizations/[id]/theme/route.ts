@@ -1,6 +1,9 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
 import type { OrgTheme } from "@/lib/types";
+
+export { dynamic } from "@/lib/api-handler";
+
 export const GET = createRouteHandler(async ({ params, supabase }) => {
   const { id } = params;
   const { data: org, error } = await supabase

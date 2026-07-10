@@ -3,6 +3,8 @@ import { apiError, ok } from "@/lib/api-response";
 import { authRateLimiter } from "@/lib/rate-limit";
 import { redeemInvite } from "@/lib/services/invite-service";
 
+export { dynamic } from "@/lib/api-handler";
+
 export const POST = createSimpleRouteHandler(
   async ({ request, user, supabase }) => {
     const ip = request.headers.get("x-forwarded-for") ?? "unknown";

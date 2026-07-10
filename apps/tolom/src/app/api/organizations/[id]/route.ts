@@ -4,6 +4,8 @@ import {
   updateOrganization,
 } from "@/lib/services/organization-service";
 
+export { dynamic } from "@/lib/api-handler";
+
 /**
  * GET /api/organizations/[id]
  * Returns a single organization by ID.

@@ -6,6 +6,8 @@ import {
 import type { WorkOrderStatus } from "@/lib/types";
 import { createWorkOrderSchema, parseBody } from "@/lib/validation/work-orders";
 
+export { dynamic } from "@/lib/api-handler";
+
 export const GET = createRouteHandler(
   async ({ request, orgId, supabase }) => {
     const { searchParams } = new URL(request.url);

@@ -9,6 +9,8 @@ import { getServices } from "@/lib/services/service-catalog-service";
 import { getWorkOrder } from "@/lib/services/work-order-service";
 import type { GlobalPartCatalog, GlobalServiceCatalog } from "@/lib/types";
 
+export { dynamic } from "@/lib/api-handler";
+
 /**
  * Consolidated drawer detail endpoint.
  *

@@ -1,10 +1,13 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
 import {
+
   checkAdminRole,
   createCampaign,
   listCampaigns,
 } from "@/lib/services/admin-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 export const GET = createRouteHandler(async ({ supabase }) => {
   const hasAccess = await checkAdminRole(supabase, "marketing_manager");

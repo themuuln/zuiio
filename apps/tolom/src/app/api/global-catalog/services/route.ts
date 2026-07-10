@@ -1,5 +1,8 @@
 import { createSimpleRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
+
+export { dynamic } from "@/lib/api-handler";
+
 export const GET = createSimpleRouteHandler(async ({ supabase }) => {
   const { data, error } = await supabase
     .from("global_services_catalog")

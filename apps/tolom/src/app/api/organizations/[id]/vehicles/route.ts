@@ -2,11 +2,14 @@ import { createRouteHandler } from "@/lib/api-handler";
 import { created, ok } from "@/lib/api-response";
 import { transliterateMongolianPlate } from "@/lib/form-validation";
 import {
+
   createVehicle,
   getVehicles,
   getVehiclesFast,
   searchByPlate,
 } from "@/lib/services/vehicle-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
   const searchRaw =

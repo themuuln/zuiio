@@ -1,10 +1,13 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { created, ok } from "@/lib/api-response";
 import {
+
   createVehicleModel,
   getDistinctMakes,
   getVehicleModels,
 } from "@/lib/services/vehicle-models-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
   const make = request.nextUrl.searchParams.get("make") ?? undefined;

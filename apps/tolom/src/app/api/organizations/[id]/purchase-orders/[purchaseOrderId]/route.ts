@@ -3,6 +3,8 @@ import { apiError, ok } from "@/lib/api-response";
 import { ValidationError } from "@/lib/errors";
 import { receivePurchaseOrder } from "@/lib/services/inventory-service";
 
+export { dynamic } from "@/lib/api-handler";
+
 export const GET = createRouteHandler(async ({ supabase, params, orgId }) => {
   const { purchaseOrderId } = params;
 

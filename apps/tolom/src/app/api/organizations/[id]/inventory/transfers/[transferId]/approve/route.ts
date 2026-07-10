@@ -2,6 +2,8 @@ import { createRouteHandler } from "@/lib/api-handler";
 import { ok } from "@/lib/api-response";
 import { approveTransfer } from "@/lib/services/transfer-service";
 
+export { dynamic } from "@/lib/api-handler";
+
 export const POST = createRouteHandler(
   async ({ params, orgId, user, supabase }) => {
     const { transferId } = params as { transferId: string };

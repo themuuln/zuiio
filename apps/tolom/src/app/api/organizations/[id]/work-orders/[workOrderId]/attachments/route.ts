@@ -5,9 +5,12 @@ import {
   getAttachments,
 } from "@/lib/services/attachment-service";
 import {
+
   createAttachmentSchema,
   parseBody,
 } from "@/lib/validation/work-orders";
+
+export { dynamic } from "@/lib/api-handler";
 export const GET = createRouteHandler(
   async ({ params, orgId, supabase }) => {
     const { workOrderId } = params;

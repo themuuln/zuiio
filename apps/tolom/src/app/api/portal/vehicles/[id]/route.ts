@@ -2,6 +2,8 @@ import { ok } from "@/lib/api-response";
 import { NotFoundError } from "@/lib/errors";
 import { createPortalRouteHandler } from "@/lib/portal-auth";
 
+export { dynamic } from "@/lib/api-handler";
+
 export const GET = createPortalRouteHandler(
   async ({ customer, supabase, params }) => {
     const vehicleId = params.id;

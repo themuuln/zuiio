@@ -3,6 +3,8 @@ import { apiError, createSimpleRouteHandler, ok } from "@/lib/api-response";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { getStorage } from "@/lib/storage/storage-factory";
 
+export { dynamic } from "@/lib/api-handler";
+
 const uploadMetadataSchema = z.object({
   orgId: z.string().uuid(),
   fileName: z.string().min(1),

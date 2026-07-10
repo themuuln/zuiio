@@ -8,6 +8,8 @@ import {
 } from "@/lib/services/invoice-service";
 import type { InvoiceStatus } from "@/lib/types";
 
+export { dynamic } from "@/lib/api-handler";
+
 export const GET = createRouteHandler(
   async ({ request, orgId, supabase }) => {
     const { searchParams } = new URL(request.url);

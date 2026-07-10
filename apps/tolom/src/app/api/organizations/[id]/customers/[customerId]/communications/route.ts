@@ -1,8 +1,11 @@
 import { created, createRouteHandler, ok } from "@/lib/api-response";
 import {
+
   createCustomerCommunication,
   getCustomerCommunications,
 } from "@/lib/services/communication-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 export const GET = createRouteHandler(async ({ orgId, params, supabase }) => {
   const { customerId } = params;

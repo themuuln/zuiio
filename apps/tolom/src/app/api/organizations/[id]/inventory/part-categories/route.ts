@@ -1,8 +1,11 @@
 import { apiError, created, createRouteHandler, ok } from "@/lib/api-response";
 import {
+
   createPartCategory,
   getPartCategories,
 } from "@/lib/services/inventory-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 export const GET = createRouteHandler(
   async ({ orgId, supabase }) => {

@@ -1,12 +1,15 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
 import {
+
   cancelFollowup,
   completeFollowup,
   deleteFollowup,
   getFollowup,
   updateFollowup,
 } from "@/lib/services/followup-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 /**
  * GET /api/organizations/[id]/followups/[followupId]

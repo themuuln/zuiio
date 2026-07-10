@@ -5,9 +5,12 @@ import {
   updateCustomer,
 } from "@/lib/services/customer-service";
 import {
+
   getCustomerVehicles,
   getCustomerWorkOrders,
 } from "@/lib/services/vehicle-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 export const GET = createRouteHandler(async ({ supabase, orgId, params }) => {
   const { customerId } = params;

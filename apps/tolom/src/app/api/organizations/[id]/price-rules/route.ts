@@ -1,6 +1,7 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, created, ok } from "@/lib/api-response";
 import {
+
   createPriceRule,
   deletePriceRule,
   getPriceRule,
@@ -8,6 +9,8 @@ import {
   resolvePrice,
   updatePriceRule,
 } from "@/lib/services/price-rules-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 // ── GET /api/organizations/[id]/price-rules ──────────────────
 // List all price rules for the organization

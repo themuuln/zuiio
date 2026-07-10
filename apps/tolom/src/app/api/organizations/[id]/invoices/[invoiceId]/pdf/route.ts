@@ -10,6 +10,8 @@ import { getInvoice } from "@/lib/services/invoice-service";
 import { getOrganization } from "@/lib/services/organization-service";
 import { pdfFilename, renderToPdfBuffer } from "@/lib/utils/pdf";
 
+export { dynamic } from "@/lib/api-handler";
+
 export const GET = createRouteHandler(async ({ params, supabase }) => {
   const invoiceId = params.invoiceId;
 

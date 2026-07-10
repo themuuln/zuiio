@@ -1,9 +1,12 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { ok } from "@/lib/api-response";
 import {
+
   deleteExpenseCategory,
   updateExpenseCategory,
 } from "@/lib/services/expense-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 export const PATCH = createRouteHandler(
   async ({ request, orgId, params, user, supabase }) => {

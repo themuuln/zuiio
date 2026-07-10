@@ -4,6 +4,8 @@ import { EstimateDocument } from "@/lib/pdf/estimate-document";
 import { getEstimate } from "@/lib/services/estimate-service";
 import { pdfFilename, renderToPdfBuffer } from "@/lib/utils/pdf";
 
+export { dynamic } from "@/lib/api-handler";
+
 export const GET = createRouteHandler(
   async ({ params, supabase, orgId }) => {
     const estimate = await getEstimate(supabase, params.estimateId, orgId);

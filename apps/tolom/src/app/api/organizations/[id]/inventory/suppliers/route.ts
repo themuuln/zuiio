@@ -1,11 +1,14 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, created, ok } from "@/lib/api-response";
 import {
+
   createSupplier,
   deleteSupplier,
   getSuppliers,
   updateSupplier,
 } from "@/lib/services/supplier-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 export const GET = createRouteHandler(
   async ({ orgId, supabase }) => {

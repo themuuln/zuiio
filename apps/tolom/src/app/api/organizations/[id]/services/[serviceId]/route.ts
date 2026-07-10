@@ -1,10 +1,13 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { ok } from "@/lib/api-response";
 import {
+
   deleteService,
   getService,
   updateService,
 } from "@/lib/services/service-catalog-service";
+
+export { dynamic } from "@/lib/api-handler";
 
 export const GET = createRouteHandler(async ({ params, supabase }) => {
   const { serviceId } = params;

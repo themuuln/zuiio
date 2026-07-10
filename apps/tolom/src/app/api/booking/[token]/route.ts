@@ -2,6 +2,8 @@ import { apiError, created } from "@/lib/api-response";
 import { createPublicBookingHandler } from "@/lib/public-booking-handler";
 import { submitBookingRequest } from "@/lib/services/booking-service";
 
+export { dynamic } from "@/lib/api-handler";
+
 /**
  * POST /api/booking/[token]
  *
