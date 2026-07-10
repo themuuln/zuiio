@@ -1,6 +1,6 @@
 {
   "installCommand": "corepack enable && pnpm install --frozen-lockfile",
-  "buildCommand": "cd ../.. && pnpm --filter tolom build",
+  "buildCommand": "turbo run build --filter=tolom",
   "outputDirectory": ".next",
   "framework": "nextjs"
 }
