@@ -1,0 +1,32 @@
+# Exclude heavy dirs
+node_modules/
+.next/
+.vercel/
+.git/
+
+# Exclude other apps (onoo will install its own deps)
+apps/agent-gateway/
+apps/hamuga/
+apps/safetica-presentation/
+apps/eset-safetica/
+apps/agent-gateway-standalone/
+apps/agent-gateway-zuiio/
+apps/tamga/
+apps/tourist/
+apps/zraf-web/
+apps/themuuln/
+apps/resume-generator/
+apps/learn-hono/
+apps/cv/
+apps/mst-supply-qr/
+apps/mortfolio/
+apps/zatbot/
+apps/zer/
+apps/zuiio/
+apps/zuiio-website/
+apps/zunch/
+
+# Exclude test/agent/tooling dirs
+.agents/
+*.md
+!README.md
