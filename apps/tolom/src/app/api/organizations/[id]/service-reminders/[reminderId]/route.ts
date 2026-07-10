@@ -6,9 +6,6 @@ import {
   getServiceSchedule,
   updateServiceSchedule,
 } from "@/lib/services/service-reminder-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(async ({ params, supabase }) => {
   const { reminderId } = params;
   const schedule = await getServiceSchedule(supabase, reminderId);

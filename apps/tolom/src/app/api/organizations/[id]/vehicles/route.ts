@@ -8,9 +8,6 @@ import {
   getVehiclesFast,
   searchByPlate,
 } from "@/lib/services/vehicle-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
   const searchRaw =
     request.nextUrl.searchParams.get("q") ??

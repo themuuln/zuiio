@@ -6,9 +6,6 @@ import {
   getEstimate,
   updateEstimateStatus,
 } from "@/lib/services/estimate-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 /**
  * POST /api/organizations/[id]/estimates/[estimateId]/send
  *

@@ -1,9 +1,6 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
 import { closeSession } from "@/lib/services/cash-register-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 // POST /api/organizations/[id]/cash-register/[sessionId]/close — close session
 export const POST = createRouteHandler(
   async ({ orgId, user, supabase, params, request }) => {

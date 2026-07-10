@@ -1,9 +1,6 @@
 import { apiError, createSimpleRouteHandler, ok } from "@/lib/api-response";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { getStorage } from "@/lib/storage/storage-factory";
-
-export { dynamic } from "@/lib/api-handler";
-
 /**
  * GET /api/storage/download?key=<storage-path-or-url>
  *

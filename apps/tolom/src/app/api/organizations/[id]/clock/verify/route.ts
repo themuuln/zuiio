@@ -1,8 +1,5 @@
 import { apiError, createRouteHandler, ok } from "@/lib/api-response";
 import { verifyAndClaimClockToken } from "@/lib/services/qr-token-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const POST = createRouteHandler(async ({ request, user, supabase }) => {
   const body = (await request.json()) as { rawToken: string };
   if (!body.rawToken) {

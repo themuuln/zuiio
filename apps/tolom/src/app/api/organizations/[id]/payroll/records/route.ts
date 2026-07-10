@@ -1,8 +1,5 @@
 import { apiError, createRouteHandler, ok } from "@/lib/api-response";
 import { getPayrollRecords } from "@/lib/services/payroll-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(
   async ({ request, orgId, supabase }) => {
     const { searchParams } = new URL(request.url);

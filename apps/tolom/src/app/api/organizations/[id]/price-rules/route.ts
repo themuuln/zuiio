@@ -9,9 +9,6 @@ import {
   resolvePrice,
   updatePriceRule,
 } from "@/lib/services/price-rules-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 // ── GET /api/organizations/[id]/price-rules ──────────────────
 // List all price rules for the organization
 export const GET = createRouteHandler(async ({ supabase, orgId, request }) => {

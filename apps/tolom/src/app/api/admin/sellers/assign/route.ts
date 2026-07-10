@@ -5,9 +5,6 @@ import {
   assignSellerToOrg,
   checkSuperAdmin,
 } from "@/lib/services/admin-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const POST = createRouteHandler(async ({ supabase, request }) => {
   const isSuperAdmin = await checkSuperAdmin(supabase);
   if (!isSuperAdmin) {

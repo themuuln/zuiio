@@ -1,8 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { lookupPlate, type SmartCarVehicle } from "@/lib/smartcar/browser";
-
-export { dynamic } from "@/lib/api-handler";
-
 // ---------------------------------------------------------------------------
 // In-memory cache (survives across requests in the same server process).
 // For production, swap with Redis or Upstash.

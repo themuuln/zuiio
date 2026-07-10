@@ -8,9 +8,6 @@ import {
   renewSubscription,
   updateSubscription,
 } from "@/lib/services/subscription-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(async ({ orgId, supabase }) => {
   const subscription = await getOrganizationSubscription(supabase, orgId);
   return ok(subscription);

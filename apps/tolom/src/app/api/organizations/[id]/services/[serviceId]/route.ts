@@ -6,9 +6,6 @@ import {
   getService,
   updateService,
 } from "@/lib/services/service-catalog-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(async ({ params, supabase }) => {
   const { serviceId } = params;
   const service = await getService(supabase, serviceId);

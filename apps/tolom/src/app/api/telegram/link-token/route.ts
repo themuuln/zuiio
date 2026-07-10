@@ -1,9 +1,6 @@
 import { createSimpleRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
 import { NotFoundError } from "@/lib/errors";
-
-export { dynamic } from "@/lib/api-handler";
-
 const AGENT_GATEWAY_URL =
   process.env.AGENT_GATEWAY_URL ?? "https://agent-gateway-delta.vercel.app";
 

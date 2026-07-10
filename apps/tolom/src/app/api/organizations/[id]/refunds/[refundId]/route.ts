@@ -1,9 +1,6 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { ok } from "@/lib/api-response";
 import { cancelRefund } from "@/lib/services/refund-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const PATCH = createRouteHandler(
   async ({ orgId, params, supabase }) => {
     const { refundId } = params;

@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSimpleRouteHandler } from "@/lib/api-handler";
 import { ok } from "@/lib/api-response";
-
-export { dynamic } from "@/lib/api-handler";
-
 /**
  * Public invoice endpoint — requires auth.
  * Returns invoice data by public_token.

@@ -2,9 +2,6 @@ import { createRouteHandler } from "@/lib/api-handler";
 import { created, ok } from "@/lib/api-response";
 import { createEstimate, getEstimates } from "@/lib/services/estimate-service";
 import type { EstimateStatus } from "@/lib/types";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(
   async ({ request, supabase, orgId }) => {
     const { searchParams } = new URL(request.url);

@@ -1,9 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { reportServerError } from "@/lib/sentry-report-server";
-
-export { dynamic } from "@/lib/api-handler";
-
 interface VehicleModelRow {
   id: string;
   make: string;

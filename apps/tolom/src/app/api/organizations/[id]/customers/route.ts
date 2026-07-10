@@ -7,9 +7,6 @@ import {
   getSharedCustomers,
   searchCustomers,
 } from "@/lib/services/customer-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(
   async ({ request, orgId, supabase }) => {
     const searchQuery = request.nextUrl.searchParams.get("q") ?? undefined;

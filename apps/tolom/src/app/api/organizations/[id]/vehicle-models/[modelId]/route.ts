@@ -5,9 +5,6 @@ import {
   deleteVehicleModel,
   updateVehicleModel,
 } from "@/lib/services/vehicle-models-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const PATCH = createRouteHandler(
   async ({ request, orgId, params, supabase }) => {
     const { modelId } = params;

@@ -1,9 +1,6 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { ok } from "@/lib/api-response";
 import { getSessions } from "@/lib/services/cash-register-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 // GET /api/organizations/[id]/cash-register/sessions — list sessions
 export const GET = createRouteHandler(async ({ orgId, supabase, request }) => {
   const { searchParams } = new URL(request.url);

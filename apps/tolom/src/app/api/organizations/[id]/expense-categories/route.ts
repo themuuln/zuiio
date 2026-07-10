@@ -6,9 +6,6 @@ import {
   getExpenseCategories as getCategories,
   seedDefaultExpenseCategories,
 } from "@/lib/services/expense-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(
   async ({ orgId, user, supabase }) => {
     await seedDefaultExpenseCategories(supabase, orgId, user.id);

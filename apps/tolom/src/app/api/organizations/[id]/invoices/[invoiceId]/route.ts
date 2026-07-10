@@ -14,9 +14,6 @@ import {
   updateInvoiceItem,
   updateInvoiceStatus,
 } from "@/lib/services/invoice-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 // ── Zod schemas for each PATCH action ────────────────────────
 // Zod errors are caught in the route handler and re-thrown as
 // ValidationError so the standard error handler returns 400.

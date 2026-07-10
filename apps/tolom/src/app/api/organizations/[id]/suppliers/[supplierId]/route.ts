@@ -6,9 +6,6 @@ import {
   getSupplier,
   updateSupplier,
 } from "@/lib/services/inventory-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(async ({ orgId, params, supabase }) => {
   const { supplierId } = params;
   const supplier = await getSupplier(supabase, supplierId, orgId);

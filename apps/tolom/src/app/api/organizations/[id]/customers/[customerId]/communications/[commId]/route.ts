@@ -1,8 +1,5 @@
 import { createRouteHandler, ok } from "@/lib/api-response";
 import { deleteCustomerCommunication } from "@/lib/services/communication-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const DELETE = createRouteHandler(
   async ({ orgId, params, user, supabase }) => {
     const { customerId, commId } = params;

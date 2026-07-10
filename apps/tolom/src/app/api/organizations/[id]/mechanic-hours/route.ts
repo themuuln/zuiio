@@ -1,9 +1,6 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { ok } from "@/lib/api-response";
 import { createClient } from "@/lib/supabase/server";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(async ({ request, orgId }) => {
   const { searchParams } = new URL(request.url);
   const startDate = searchParams.get("startDate");

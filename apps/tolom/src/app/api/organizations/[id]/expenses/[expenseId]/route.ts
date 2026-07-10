@@ -6,9 +6,6 @@ import {
   getExpense,
   updateExpense,
 } from "@/lib/services/expense-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(
   async ({ orgId, params, supabase }) => {
     const { expenseId } = params;

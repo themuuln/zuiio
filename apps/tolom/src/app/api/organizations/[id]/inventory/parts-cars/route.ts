@@ -5,9 +5,6 @@ import {
   createPartsCar,
   getPartsCars,
 } from "@/lib/services/parts-cars-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(async ({ orgId, supabase }) => {
   const cars = await getPartsCars(supabase, orgId);
   return ok(cars);

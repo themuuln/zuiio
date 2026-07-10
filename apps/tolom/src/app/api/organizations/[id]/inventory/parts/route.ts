@@ -6,8 +6,6 @@ import {
   getPartsCatalog,
   updatePart,
 } from "@/lib/services/inventory-service";
-
-export { dynamic } from "@/lib/api-handler";
 // Storage URLs are now public — no resolution needed
 
 export const GET = createRouteHandler(

@@ -2,9 +2,6 @@ import { NextResponse } from "next/server";
 import { apiError, ok } from "@/lib/api-response";
 import { createPortalRouteHandler } from "@/lib/portal-auth";
 import { recordPayment } from "@/lib/services/invoice-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const POST = createPortalRouteHandler(
   async ({ request, customer, supabase }) => {
     const body = await request.json();

@@ -6,9 +6,6 @@ import {
   getPart,
   updatePart,
 } from "@/lib/services/inventory-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(async ({ params, supabase, orgId }) => {
   const { partId } = params;
   const part = await getPart(supabase, partId, orgId);

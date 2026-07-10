@@ -11,9 +11,6 @@ import { InvoiceDocument } from "@/lib/pdf/invoice-document";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import type { InvoiceWithItems } from "@/lib/types";
 import { pdfFilename, renderToPdfBuffer } from "@/lib/utils/pdf";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(
   async ({ params }) => {
     const { token } = params;

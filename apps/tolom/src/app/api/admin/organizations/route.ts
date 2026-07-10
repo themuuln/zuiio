@@ -6,9 +6,6 @@ import {
   checkSuperAdmin,
   listOrganizations,
 } from "@/lib/services/admin-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createSimpleRouteHandler(async ({ supabase }) => {
   const isSuperAdmin = await checkSuperAdmin(supabase);
   if (!isSuperAdmin) throw new ForbiddenError();

@@ -1,8 +1,5 @@
 import { apiError, created } from "@/lib/api-response";
 import { createPortalRouteHandler } from "@/lib/portal-auth";
-
-export { dynamic } from "@/lib/api-handler";
-
 /**
  * POST /api/portal/bookings
  *

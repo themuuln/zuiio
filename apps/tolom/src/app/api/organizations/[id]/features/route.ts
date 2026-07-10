@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(async ({ orgId, supabase }) => {
   const { data, error } = await supabase
     .from("feature_flags")

@@ -18,9 +18,6 @@ import {
   updateVariantGroup,
   updateVariantOption,
 } from "@/lib/services/catalog-variant-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 /**
  * POST /api/organizations/:id/catalog-variants
  *

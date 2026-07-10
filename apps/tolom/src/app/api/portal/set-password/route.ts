@@ -5,9 +5,6 @@ import { ConflictError, ValidationError } from "@/lib/errors";
 import { authRateLimiter } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
-
-export { dynamic } from "@/lib/api-handler";
-
 /**
  * POST /api/portal/set-password
  *

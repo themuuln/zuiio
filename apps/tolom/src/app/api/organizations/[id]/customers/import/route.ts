@@ -1,9 +1,6 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
 import { importCustomers } from "@/lib/services/customer-import-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const POST = createRouteHandler(
   async ({ request, orgId, user, supabase }) => {
     const formData = await request.formData();

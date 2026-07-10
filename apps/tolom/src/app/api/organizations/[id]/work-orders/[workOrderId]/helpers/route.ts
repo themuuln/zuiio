@@ -5,9 +5,6 @@ import {
   removeHelperFromWorkOrder,
   reorderWorkOrderHelpers,
 } from "@/lib/services/bay-view-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const POST = createRouteHandler(
   async ({ request, params, orgId, supabase, user }) => {
     const { workOrderId } = params;

@@ -8,9 +8,6 @@ import {
   getOrgInvites,
   resendInvite,
 } from "@/lib/services/invite-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(async ({ orgId }) => {
   const invites = await getOrgInvites(orgId);
   return ok(invites);

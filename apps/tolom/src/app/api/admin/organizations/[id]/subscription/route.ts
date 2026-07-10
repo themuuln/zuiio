@@ -10,9 +10,6 @@ import {
   extendSubscriptionTrial,
   updateOrgSubscription,
 } from "@/lib/services/admin-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 async function guard(request: Request, supabase: SupabaseClient) {
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
   const rateCheck = await mutationRateLimiter.check(ip);

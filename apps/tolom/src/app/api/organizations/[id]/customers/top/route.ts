@@ -1,8 +1,5 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(async ({ orgId, supabase }) => {
   const { data: rows, error } = await supabase
     .from("work_orders")

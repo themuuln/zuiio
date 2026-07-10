@@ -1,9 +1,6 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { ok } from "@/lib/api-response";
 import type { Customer } from "@/lib/types";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(async ({ supabase, orgId, request }) => {
   const url = new URL(request.url);
   const vehicleId = url.searchParams.get("vehicle_id");

@@ -6,9 +6,6 @@ import {
   generatePresignedUploadUrl,
   validateUploadRequest,
 } from "@/lib/storage/r2-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 const presignedUrlSchema = z.object({
   fileName: z.string().min(1),
   mimeType: z.string().min(1),

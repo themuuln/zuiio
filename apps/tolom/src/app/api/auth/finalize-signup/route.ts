@@ -3,9 +3,6 @@ import { apiError, ok } from "@/lib/api-response";
 import { authRateLimiter } from "@/lib/rate-limit";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { finalizeSignup } from "@/lib/services/signup-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const POST = createSimpleRouteHandler(async ({ request, supabase }) => {
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
   const rateCheck = await authRateLimiter.check(ip);

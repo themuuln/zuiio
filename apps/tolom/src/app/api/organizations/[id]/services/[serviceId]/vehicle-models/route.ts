@@ -6,9 +6,6 @@ import {
   getServiceVehicleModels,
   upsertServiceVehicleModelPrice,
 } from "@/lib/services/service-catalog-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 /**
  * GET /api/organizations/:id/services/:serviceId/vehicle-models
  * Returns all vehicle model service pricing entries for this service.

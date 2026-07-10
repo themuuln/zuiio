@@ -5,9 +5,6 @@ import {
   createService,
   getServices,
 } from "@/lib/services/service-catalog-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(
   async ({ request, orgId, supabase }) => {
     const { searchParams } = new URL(request.url);

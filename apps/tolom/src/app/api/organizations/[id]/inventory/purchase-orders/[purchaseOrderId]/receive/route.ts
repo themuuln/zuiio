@@ -1,9 +1,6 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { ok } from "@/lib/api-response";
 import { receivePurchaseOrder } from "@/lib/services/purchase-order-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const POST = createRouteHandler(
   async ({ params, orgId, supabase }) => {
     const po = await receivePurchaseOrder(

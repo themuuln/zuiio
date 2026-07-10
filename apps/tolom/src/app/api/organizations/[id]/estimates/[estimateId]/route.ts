@@ -6,9 +6,6 @@ import {
   getEstimate,
   updateEstimate,
 } from "@/lib/services/estimate-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(
   async ({ params, supabase, orgId }) => {
     const estimate = await getEstimate(supabase, params.estimateId, orgId);

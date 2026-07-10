@@ -4,9 +4,6 @@ import {
   getRegisteredDevices,
   revokeDevice,
 } from "@/lib/services/qr-token-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
   const mechanicId =
     request.nextUrl.searchParams.get("mechanicId") ?? undefined;

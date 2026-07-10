@@ -1,9 +1,6 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { ok } from "@/lib/api-response";
 import { getReminderLogs } from "@/lib/services/service-reminder-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
   const { searchParams } = new URL(request.url);
   const vehicleId = searchParams.get("vehicle_id") ?? undefined;

@@ -16,9 +16,6 @@ import {
   requireRole,
 } from "@/lib/supabase/role-guard";
 import { createClient } from "@/lib/supabase/server";
-/** Route segment config: force all API routes to be dynamic (no prerendering). */
-export const dynamic = "force-dynamic" as const;
-
 // ── Types ─────────────────────────────────────────────────────
 
 interface RouteContext {

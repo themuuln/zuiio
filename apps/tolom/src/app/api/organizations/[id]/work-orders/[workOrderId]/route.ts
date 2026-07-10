@@ -8,9 +8,6 @@ import {
   updateWorkOrderStatus,
 } from "@/lib/services/work-order-workflow";
 import { parseBody, updateWorkOrderSchema } from "@/lib/validation/work-orders";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(
   async ({ params, orgId, supabase }) => {
     const { workOrderId } = params;

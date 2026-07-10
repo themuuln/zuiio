@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { createRouteHandler } from "@/lib/api-handler";
 import { ValidationError } from "@/lib/errors";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const PATCH = createRouteHandler(
   async ({ request, orgId, supabase }) => {
     const { updates } = await request.json();

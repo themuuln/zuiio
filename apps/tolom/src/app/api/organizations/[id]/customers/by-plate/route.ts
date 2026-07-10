@@ -1,9 +1,6 @@
 import { createRouteHandler, ok } from "@/lib/api-response";
 import { transliterateMongolianPlate } from "@/lib/form-validation";
 import type { Customer } from "@/lib/types";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(async ({ supabase, orgId, request }) => {
   const url = new URL(request.url);
   const rawPlate = url.searchParams.get("plate")?.trim();

@@ -8,9 +8,6 @@ import {
   getFollowup,
   updateFollowup,
 } from "@/lib/services/followup-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 /**
  * GET /api/organizations/[id]/followups/[followupId]
  */

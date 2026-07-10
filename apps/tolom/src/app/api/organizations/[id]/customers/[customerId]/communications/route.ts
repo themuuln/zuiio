@@ -4,9 +4,6 @@ import {
   createCustomerCommunication,
   getCustomerCommunications,
 } from "@/lib/services/communication-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(async ({ orgId, params, supabase }) => {
   const { customerId } = params;
   const communications = await getCustomerCommunications(

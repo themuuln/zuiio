@@ -7,9 +7,6 @@ import {
   recordRefund,
 } from "@/lib/services/refund-service";
 import { recordRefundSchema } from "@/lib/validation/refunds";
-
-export { dynamic } from "@/lib/api-handler";
-
 function validate<T>(schema: z.ZodSchema<T>, data: unknown): T {
   const result = schema.safeParse(data);
   if (!result.success) {

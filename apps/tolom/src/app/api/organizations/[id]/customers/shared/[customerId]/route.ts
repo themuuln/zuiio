@@ -4,9 +4,6 @@ import {
   getSharedCustomer,
   getSharedCustomerVehicles,
 } from "@/lib/services/customer-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 /**
  * GET /api/organizations/[id]/customers/shared/[customerId]
  * Returns a read-only view of a customer from a sharing-enabled org.

@@ -2,9 +2,6 @@ import { capture } from "@zuiio/capture";
 import { NextResponse } from "next/server";
 import { createSimpleRouteHandler } from "@/lib/api-handler";
 import { apiError } from "@/lib/api-response";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createSimpleRouteHandler(
   async ({ supabase }) => {
     const { data, error } = await supabase.rpc("get_public_stats");

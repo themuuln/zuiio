@@ -6,9 +6,6 @@ import {
   deleteCampaign,
   updateCampaign,
 } from "@/lib/services/admin-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const PATCH = createRouteHandler(
   async ({ supabase, request, params }) => {
     const hasAccess = await checkAdminRole(supabase, "marketing_manager");

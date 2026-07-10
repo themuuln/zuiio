@@ -5,9 +5,6 @@ import {
   getCurrentSession,
   openSession,
 } from "@/lib/services/cash-register-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 // GET /api/organizations/[id]/cash-register — get current session
 export const GET = createRouteHandler(async ({ orgId, supabase, request }) => {
   const { searchParams } = new URL(request.url);

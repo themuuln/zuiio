@@ -6,9 +6,6 @@ import {
   listOrganizations,
   listSellerAssignments,
 } from "@/lib/services/admin-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(async ({ supabase }) => {
   const hasAccess = await checkAdminRole(supabase, "seller");
   if (!hasAccess) {

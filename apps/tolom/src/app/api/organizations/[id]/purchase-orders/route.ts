@@ -5,9 +5,6 @@ import {
   createPurchaseOrder,
   getPurchaseOrders,
 } from "@/lib/services/inventory-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(async ({ orgId, supabase }) => {
   const orders = await getPurchaseOrders(supabase, orgId);
   return ok(orders);

@@ -1,8 +1,5 @@
 import { apiError, createRouteHandler, ok } from "@/lib/api-response";
 import { calculateMonthlyPayroll } from "@/lib/services/payroll-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const POST = createRouteHandler(
   async ({ request, orgId, supabase }) => {
     const body = await request.json();

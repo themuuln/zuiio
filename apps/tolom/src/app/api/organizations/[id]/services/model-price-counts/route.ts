@@ -1,9 +1,6 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { ok } from "@/lib/api-response";
 import { getServiceModelPriceCounts } from "@/lib/services/service-catalog-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 /**
  * GET /api/organizations/:id/services/model-price-counts
  * Returns a map of service_catalog_id → count of models with custom prices.

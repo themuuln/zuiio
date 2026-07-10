@@ -5,9 +5,6 @@ import {
   createMovement,
   getInventoryMovements,
 } from "@/lib/services/inventory-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(async ({ request, orgId, supabase }) => {
   const { searchParams } = new URL(request.url);
   const movementType = searchParams.get("movement_type") ?? undefined;

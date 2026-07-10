@@ -6,9 +6,6 @@ import {
   getAppointment,
   updateAppointment,
 } from "@/lib/services/appointment-service";
-
-export { dynamic } from "@/lib/api-handler";
-
 export const GET = createRouteHandler(
   async ({ params, supabase }) => {
     const appointment = await getAppointment(supabase, params.appointmentId);
