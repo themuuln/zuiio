@@ -1,7 +1,9 @@
 {
-  "extends": "@zer/config/tsconfig.base.json",
+  "extends": "../config/tsconfig.json",
   "compilerOptions": {
-    "rootDir": "src"
+    "outDir": "./dist",
+    "rootDir": "./src"
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/image-optimizer.ts"]
 }
