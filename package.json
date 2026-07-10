@@ -1,29 +1,29 @@
 {
   "name": "zuiio",
   "private": true,
+  "packageManager": "pnpm@11.10.0",
   "scripts": {
-    "lint": "biome check",
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "dev:website": "turbo run dev --filter=website",
+    "dev:zer": "turbo run dev --filter=zer",
+    "dev:tolom": "turbo run dev --filter=tolom",
+    "dev:agent-gateway": "turbo run dev --filter=agent-gateway",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
     "format": "biome format --write",
-    "dev:website": "cd apps/website && pnpm dev",
-    "dev:zer": "cd apps/zer && pnpm dev",
-    "dev:tolom": "cd apps/tolom && pnpm dev",
-    "typecheck": "tsc --noEmit",
     "prepare": "husky",
     "mcp:init": "npx tsx scripts/mcp-init.ts"
   },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.50.0",
-    "@tanstack/react-query": "^5.101.2",
-    "@tanstack/react-query-persist-client": "^5.101.2",
-    "react": "^19.2.7",
-    "sonner": "^2.0.7"
-  },
   "devDependencies": {
-    "@types/node": "^26.1.0",
-    "@types/react": "^19.2.17",
+    "@biomejs/biome": "catalog:",
+    "@types/node": "^26.1.1",
+    "@types/react": "catalog:",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",
-    "vitest": "^4.1.9"
+    "turbo": "^2.10.4",
+    "vitest": "catalog:"
   },
   "lint-staged": {
     "apps/zer/src/**/*.{ts,tsx}": [
