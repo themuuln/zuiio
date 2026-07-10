@@ -1,0 +1,417 @@
+"use server";
+
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { requireWriteAction } from "@/lib/action-utils";
+import { revalidateEntities } from "@/lib/revalidate";
+import type { Database } from "@/lib/supabase/types";
+import { getString } from "@/lib/validation";
+import { capture } from "@zuiio/capture";
+
+export async function createReturn(
+  _prevState: { error?: string } | undefined,
+  formData: FormData,
+) {
+  const ctx = await requireWriteAction("returns.create");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId, userId, branchId } = ctx;
+
+  const type = getString(formData, "type");
+  const referenceType = getString(formData, "reference_type") || null;
+  const referenceId = getString(formData, "reference_id") || null;
+  const contactId = getString(formData, "contact_id") || null;
+  const returnDate = getString(formData, "return_date");
+  const reason = getString(formData, "reason") || null;
+  const itemsJson = getString(formData, "items");
+
+  if (!type || !["sales_return", "purchase_return"].includes(type)) {
+    return { error: "Буцаалтын төрөл сонгоно уу." };
+  }
+
+  if (!itemsJson) {
+    return { error: "Барааны мэдээлэл шаардлагатай." };
+  }
+
+  let items: Array<{
+    product_id: string;
+    quantity: number;
+    unit_price: number;
+    reason?: string;
+    variant_id?: string;
+  }>;
+  try {
+    items = JSON.parse(itemsJson);
+  } catch (e) {
+    capture(e, { context: "returns: parse items" });
+    return { error: "Барааны мэдээллийн формат буруу байна." };
+  }
+
+  if (!items.length) {
+    return { error: "Дор хаяж нэг бараа оруулна уу." };
+  }
+
+  // Validate reference exists
+  if (referenceId) {
+    if (type === "sales_return") {
+      const { data: sale, error: saleError } = await supabase
+        .from("sales")
+        .select("id")
+        .eq("organization_id", organizationId)
+        .eq("id", referenceId)
+        .single();
+
+      if (saleError) {
+        capture(saleError, { context: "returns: validate sale reference" });
+      }
+
+      if (!sale) {
+        return { error: "Сонгосон борлуулалт олдсонгүй." };
+      }
+    } else if (
+      type === "purchase_return" &&
+      referenceType === "purchase_order"
+    ) {
+      const { data: po, error: poError } = await supabase
+        .from("purchase_orders")
+        .select("id")
+        .eq("organization_id", organizationId)
+        .eq("id", referenceId)
+        .single();
+
+      if (poError) {
+        capture(poError, { context: "returns: validate po reference" });
+      }
+
+      if (!po) {
+        return { error: "Сонгосон захиалга олдсонгүй." };
+      }
+    }
+  }
+
+  const { data: returnNum, error: returnNumError } = await supabase.rpc("generate_return_number");
+  if (returnNumError) {
+    capture(returnNumError, { context: "returns: generate return number" });
+    return { error: "Буцаалтын дугаар үүсгэхэд алдаа гарлаа." };
+  }
+  const returnNumber = returnNum as string;
+
+  const totalAmount = items.reduce(
+    (sum, item) => sum + item.quantity * item.unit_price,
+    0,
+  );
+
+  // Insert return header
+  const { data: returnRecord, error: returnError } = await supabase
+    .from("returns")
+    .insert({
+      organization_id: organizationId,
+      branch_id: branchId!,
+      return_number: returnNumber,
+      return_date: returnDate || new Date().toISOString().slice(0, 10),
+      type,
+      reference_type: referenceType,
+      reference_id: referenceId,
+      contact_id: contactId,
+      status: "draft",
+      total_amount: totalAmount,
+      reason,
+      created_by: userId,
+    })
+    .select("id")
+    .single();
+
+  if (returnError) {
+    capture(returnError, { context: "createReturn: insert return" });
+    return { error: `Буцаалт үүсгэхэд алдаа гарлаа: ${returnError.message}` };
+  }
+
+  // Insert return items
+  const returnItems = items.map((item) => ({
+    return_id: returnRecord.id,
+    product_id: item.product_id,
+    quantity: item.quantity,
+    unit_price: item.unit_price,
+    total_price: item.quantity * item.unit_price,
+    reason: item.reason || null,
+    variant_id: item.variant_id ?? null,
+  }));
+
+  const { error: itemsError } = await supabase
+    .from("return_items")
+    .insert(returnItems);
+
+  if (itemsError) {
+    // Rollback
+    await supabase.from("returns").delete().eq("id", returnRecord.id);
+    return {
+      error: `Барааны мэдээлэл хадгалахад алдаа гарлаа: ${itemsError.message}`,
+    };
+  }
+
+  revalidateEntities(["returns"]);
+  return { success: true as const, error: undefined };
+}
+
+export async function completeReturn(returnId: string) {
+  const ctx = await requireWriteAction("returns.update");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId, userId, branchId, isBranchScoped } = ctx;
+
+  // Fetch the return with items — enforce branch access if scoped
+  let fetchQuery = supabase
+    .from("returns")
+    .select("*, return_items(*)")
+    .eq("organization_id", organizationId)
+    .eq("id", returnId);
+
+  if (isBranchScoped && branchId) {
+    fetchQuery = fetchQuery.eq("branch_id", branchId);
+  }
+
+  const { data: returnRecord, error: returnError } = await fetchQuery.single();
+
+  if (returnError || !returnRecord) {
+    return { error: "Буцаалт олдсонгүй." };
+  }
+
+  if (returnRecord.status !== "draft") {
+    return { error: "Зөвхөн ноорог төлөвтэй буцаалтыг гүйцэтгэх боломжтой." };
+  }
+
+  const items = returnRecord.return_items as Array<{
+    id: string;
+    product_id: string;
+    quantity: number;
+    unit_price: number;
+  }>;
+
+  if (!items.length) {
+    return { error: "Буцаалтад бараа ороогүй байна." };
+  }
+
+  // Track successfully processed items for rollback on partial failure
+  const processedItems: Array<{
+    product_id: string;
+    stockDelta: number;
+    wasStockUpdated: boolean;
+    prevStock: number;
+  }> = [];
+  const errors: string[] = [];
+
+  for (const item of items) {
+    // Create reverse stock movement
+    const movementType = returnRecord.type === "sales_return" ? "in" : "out";
+    const movementQuantity = item.quantity;
+
+    const { error: movementError } = await supabase
+      .from("stock_movements")
+      .insert({
+        organization_id: organizationId,
+        branch_id: branchId!,
+        product_id: item.product_id,
+        type: movementType,
+        quantity: movementQuantity,
+        unit_cost: item.unit_price,
+        reference: `return:${returnId}`,
+        notes:
+          returnRecord.type === "sales_return"
+            ? "Борлуулалтын буцаалт - агуулах руу буцах"
+            : "Худалдан авалтын буцаалт - нийлүүлэгч рүү буцах",
+        created_by: userId,
+      });
+
+    if (movementError) {
+      errors.push(
+        `Барааны хөдөлгөөн бүртгэхэд алдаа: ${movementError.message}`,
+      );
+      await rollbackCompletedReturnItems(supabase, processedItems, returnId);
+      return { error: errors.join("; ") };
+    }
+
+    // Update product current_stock
+    const { data: product, error: productError } = await supabase
+      .from("products")
+      .select("current_stock")
+      .eq("organization_id", organizationId)
+      .eq("id", item.product_id)
+      .single();
+
+    if (productError) {
+      capture(productError, { context: "returns: fetch product stock" });
+    }
+
+    const prevStock = product ? Number(product.current_stock ?? 0) : 0;
+    let wasStockUpdated = false;
+
+    if (product) {
+      const stockDelta =
+        returnRecord.type === "sales_return"
+          ? item.quantity // add stock back
+          : -item.quantity; // remove stock (return to supplier)
+
+      const updateQuery = supabase
+        .from("products")
+        .update({ current_stock: Math.max(0, prevStock + stockDelta) })
+        .eq("organization_id", organizationId)
+        .eq("id", item.product_id);
+
+      // Guard against underselling on purchase returns (stock going down)
+      if (stockDelta < 0) {
+        updateQuery.gte("current_stock", Math.abs(stockDelta));
+      }
+
+      const { data: updated, error: stockError } = await updateQuery
+        .select("current_stock")
+        .maybeSingle();
+
+      if (stockError) {
+        errors.push(`Үлдэгдэл шинэчлэхэд алдаа: ${stockError.message}`);
+        await rollbackCompletedReturnItems(supabase, processedItems, returnId);
+        return { error: errors.join("; ") };
+      }
+
+      // If the .gte() guard prevented the update, updated will be null/no row returned.
+      if (!updated) {
+        errors.push(
+          `Бараа (ID: ${item.product_id}) - агуулахын үлдэгдэл хүрэлцэхгүй байна. Зөвхөн ${prevStock} ширхэг үлдэгдэлтэй.`,
+        );
+        await rollbackCompletedReturnItems(supabase, processedItems, returnId);
+        return { error: errors.join("; ") };
+      }
+
+      wasStockUpdated = true;
+      processedItems.push({
+        product_id: item.product_id,
+        stockDelta,
+        wasStockUpdated,
+        prevStock,
+      });
+    }
+
+    // If purchase return with reference to purchase order, update received_quantity
+    if (
+      returnRecord.type === "purchase_return" &&
+      returnRecord.reference_type === "purchase_order" &&
+      returnRecord.reference_id
+    ) {
+      const { data: poItem, error: poItemError } = await supabase
+        .from("purchase_order_items")
+        .select("id, received_quantity")
+        .eq("purchase_order_id", returnRecord.reference_id)
+        .eq("product_id", item.product_id)
+        .maybeSingle();
+
+      if (poItemError) {
+        capture(poItemError, { context: "returns: fetch po item" });
+      }
+
+      if (poItem) {
+        const newReceivedQty = Math.max(
+          0,
+          Number(poItem.received_quantity ?? 0) - item.quantity,
+        );
+        const { error: poUpdateError } = await supabase
+          .from("purchase_order_items")
+          .update({ received_quantity: newReceivedQty })
+          .eq("id", poItem.id);
+
+        if (poUpdateError) {
+          errors.push(
+            `Захиалгын хүлээн авсан тоо шинэчлэхэд алдаа: ${poUpdateError.message}`,
+          );
+          await rollbackCompletedReturnItems(
+            supabase,
+            processedItems,
+            returnId,
+          );
+          return { error: errors.join("; ") };
+        }
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    await rollbackCompletedReturnItems(supabase, processedItems, returnId);
+    return { error: errors.join("; ") };
+  }
+
+  // Update return status to completed — enforce branch access if scoped
+  let completeQuery = supabase
+    .from("returns")
+    .update({ status: "completed" })
+    .eq("id", returnId)
+    .eq("organization_id", organizationId);
+
+  if (isBranchScoped && branchId) {
+    completeQuery = completeQuery.eq("branch_id", branchId);
+  }
+
+  const { error: updateError } = await completeQuery;
+
+  if (updateError) {
+    capture(updateError, { context: "completeReturn: update status" });
+    return { error: `Төлөв шинэчлэхэд алдаа гарлаа: ${updateError.message}` };
+  }
+
+  revalidateEntities(["returns", "inventory", "products"]);
+  return { success: true as const, error: undefined };
+}
+
+/**
+ * Rollback completed return items by reverting stock movements and product stock.
+ * Called when a subsequent item fails during completeReturn.
+ */
+async function rollbackCompletedReturnItems(
+  supabase: SupabaseClient<Database>,
+  processedItems: Array<{
+    product_id: string;
+    stockDelta: number;
+    wasStockUpdated: boolean;
+    prevStock: number;
+  }>,
+  returnId: string,
+) {
+  for (const item of processedItems) {
+    if (item.wasStockUpdated) {
+      // Revert product stock to previous value.
+      // RLS handles organization_id scoping via the authenticated user.
+      await supabase
+        .from("products")
+        .update({ current_stock: item.prevStock })
+        .eq("id", item.product_id);
+    }
+
+    // Delete the stock movement we created.
+    // RLS handles organization_id scoping via the authenticated user.
+    await supabase
+      .from("stock_movements")
+      .delete()
+      .eq("reference", `return:${returnId}`)
+      .eq("product_id", item.product_id);
+  }
+}
+
+export async function cancelReturn(returnId: string) {
+  const ctx = await requireWriteAction("returns.update");
+  if ("error" in ctx) return ctx;
+  const { supabase, organizationId, branchId, isBranchScoped } = ctx;
+
+  let query = supabase
+    .from("returns")
+    .update({ status: "cancelled" })
+    .eq("organization_id", organizationId)
+    .eq("id", returnId);
+
+  if (isBranchScoped && branchId) {
+    query = query.eq("branch_id", branchId);
+  }
+
+  const { error } = await query;
+
+  if (error) {
+    capture(error, { context: "cancelReturn: update status" });
+    return { error: `Цуцлахад алдаа гарлаа: ${error.message}` };
+  }
+
+  revalidateEntities(["returns"]);
+  return { success: true as const, error: undefined };
+}

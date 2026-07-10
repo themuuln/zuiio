@@ -1,0 +1,368 @@
+"use client";
+import { Check, ShoppingCart } from "@phosphor-icons/react";
+import { memo, useEffect, useRef, useState } from "react";
+import { useCart } from "@/app/(dashboard)/shop/cart-context";
+import type { SelectedVariant } from "@/components/products/variant-picker";
+import { VariantPicker } from "@/components/products/variant-picker";
+import { Badge } from "@/components/ui/badge";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
+import { DrawerFooter } from "@/components/ui/drawer-footer";
+import { OptimizedImage } from "@/components/ui/optimized-image";
+import { useVariantGroups } from "@/lib/query/hooks/use-product-variants";
+import { cn } from "@/lib/utils";
+
+export type ProductCardProduct = {
+  id: string;
+  name: string;
+  sale_price: number | null;
+  current_stock: number | null;
+  unit: string | null;
+  sku: string | null;
+  barcode: string | null;
+  category_id: string | null;
+  image_url: string | null;
+  brand_name: string | null;
+  brand_logo_url: string | null;
+};
+
+export const ProductCard = memo(function ProductCard({
+  product,
+  variant = "card",
+  cartQuantity = 0,
+}: {
+  product: ProductCardProduct;
+  variant?: "card" | "tile";
+  cartQuantity?: number;
+}) {
+  const { addItem } = useCart();
+  const [justAdded, setJustAdded] = useState(false);
+  const [selectedVariant, setSelectedVariant] = useState<SelectedVariant | null>(null);
+  const [variantDialogOpen, setVariantDialogOpen] = useState(false);
+
+  // Lazy detection: does this product have variant groups?
+  // IntersectionObserver triggers fetch only when card enters viewport
+  const detectorRef = useRef<HTMLDivElement>(null);
+  const [detectorEnabled, setDetectorEnabled] = useState(false);
+
+  useEffect(() => {
+    const el = detectorRef.current;
+    if (!el || detectorEnabled) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setDetectorEnabled(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [detectorEnabled]);
+
+  const { data: variantGroups } = useVariantGroups(
+    detectorEnabled ? product.id : undefined,
+  );
+  const hasVariants = !!variantGroups && variantGroups.length > 0;
+  // Reset state when product changes
+  useEffect(() => {
+    setVariantDialogOpen(false);
+    setJustAdded(false);
+    setSelectedVariant(null);
+  }, [product.id]);
+
+  // Show "added" feedback briefly
+  useEffect(() => {
+    if (justAdded) {
+      const t = setTimeout(() => setJustAdded(false), 1200);
+      return () => clearTimeout(t);
+    }
+  }, [justAdded]);
+
+  const price = Number(product.sale_price ?? 0);
+  const stock = Number(product.current_stock ?? 0);
+  const unit = product.unit ?? "ш";
+  const isOutOfStock = stock <= 0;
+
+  const addButtonContent = justAdded ? (
+    <>
+      <Check className="size-4" weight="bold" />
+      Сагсанд нэмлээ
+    </>
+  ) : isOutOfStock ? (
+    "Дууссан"
+  ) : hasVariants ? (
+    "Вариант сонгох"
+  ) : (
+    <>
+      <ShoppingCart className="size-4" weight="bold" />
+      {cartQuantity > 0 ? "Дахин нэмэх" : "Нэмэх"}
+    </>
+  );
+
+  const handleAddToCart = () => {
+    if (isOutOfStock) return;
+    if (hasVariants) {
+      setVariantDialogOpen(true);
+      return;
+    }
+    addItem({
+      productId: product.id,
+      name: product.name,
+      unitPrice: price,
+      unit,
+      maxStock: stock,
+    });
+    setJustAdded(true);
+  };
+
+  const handleVariantSelected = (variant: SelectedVariant | null) => {
+    setSelectedVariant(variant);
+  };
+
+  const handleAddToCartFromDrawer = () => {
+    if (!selectedVariant) return;
+    addItem({
+      productId: product.id,
+      name: product.name,
+      unitPrice: Number(selectedVariant.sale_price ?? product.sale_price ?? 0),
+      unit,
+      maxStock: Number(selectedVariant.current_stock ?? product.current_stock ?? 0),
+      variantId: selectedVariant.variant_id,
+      variantLabels: selectedVariant.option_labels,
+      variantOptionIds: selectedVariant.option_ids,
+    });
+    setSelectedVariant(null);
+    setVariantDialogOpen(false);
+    setJustAdded(true);
+  };
+
+  const isTile = variant === "tile";
+  const previewImage = selectedVariant?.image_url ?? product.image_url;
+
+  return (
+    <div data-slot="product-card-wrapper">
+      {/* Hidden detector for lazy variant group fetch */}
+      <div ref={detectorRef} className="h-0" />
+
+      <Card
+        className={cn(
+          "flex flex-col gap-0 overflow-hidden py-0 transition-all",
+          isOutOfStock && "opacity-60",
+          justAdded && "ring-2 ring-primary/30",
+        )}
+      >
+        {/* Image */}
+        <div
+          className={cn(
+            "relative flex items-center justify-center overflow-hidden bg-muted/30",
+            isOutOfStock && "bg-muted/10",
+            isTile ? "aspect-[4/3]" : "aspect-square",
+          )}
+        >
+          {product.image_url ? (
+            <OptimizedImage
+              src={product.image_url}
+              alt={product.name}
+              className={cn(
+                "h-full w-full object-cover transition-opacity duration-300",
+                !isTile && "group-hover:scale-105",
+                isOutOfStock && "opacity-50",
+              )}
+              aspectRatio={isTile ? "1/1" : "4/3"}
+            />
+          ) : (
+            <span
+              className={cn(
+                "font-bold text-muted-foreground/30",
+                isTile ? "text-5xl" : "text-3xl",
+              )}
+              aria-hidden="true"
+            >
+              {product.name.charAt(0)}
+            </span>
+          )}
+
+          {/* Out of stock badge */}
+          {isOutOfStock && (
+            <Badge
+              variant="outline"
+              className="absolute left-2 top-2 border-destructive/40 text-destructive"
+            >
+              Дууссан
+            </Badge>
+          )}
+
+          {/* Cart quantity badge */}
+          {!isOutOfStock && cartQuantity > 0 && (
+            <Badge className="absolute right-2 top-2 gap-1 bg-primary px-2 py-0.5 text-[11px] text-primary-foreground shadow-sm">
+              <ShoppingCart className="size-3" weight="fill" />
+              {cartQuantity}
+            </Badge>
+          )}
+
+          {/* Just-added check overlay */}
+          {justAdded && (
+            <div className="absolute inset-0 flex items-center justify-center bg-primary/10 backdrop-blur-[1px]">
+              <div className="flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
+                <Check className="size-5" weight="bold" />
+              </div>
+            </div>
+          )}
+        </div>
+
+        <CardContent
+          className={cn(
+            "flex flex-1 flex-col gap-1.5",
+            isTile ? "px-3 pb-3 pt-2" : "px-3 py-3",
+          )}
+        >
+          {/* Name */}
+          <h3
+            className={cn(
+              "line-clamp-2 font-medium leading-tight",
+              isTile ? "text-sm" : "text-sm",
+            )}
+          >
+            {product.name}
+          </h3>
+
+          {isTile ? (
+            <>
+              {/* Simplified tile: price + stock */}
+              <p className="mt-auto text-lg font-bold text-primary">
+                {price.toLocaleString()}₮
+              </p>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <span>
+                  Үлдэгдэл {stock} {unit}
+                </span>
+                {stock > 0 && stock <= 5 && (
+                  <span className="text-amber-600">(Дуусах дөхсөн)</span>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Brand */}
+              {product.brand_name && (
+                <div className="flex items-center gap-1.5">
+                  {product.brand_logo_url ? (
+                    <OptimizedImage
+                      src={product.brand_logo_url}
+                      alt={`${product.brand_name} брэндийн лого`}
+                      width={16}
+                      height={16}
+                      className="size-4 rounded object-contain"
+                    />
+                  ) : null}
+                  <span className="text-[11px] text-muted-foreground">
+                    {product.brand_name}
+                  </span>
+                </div>
+              )}
+              <p className="mt-auto text-base font-semibold text-primary">
+                {price.toLocaleString()}₮
+              </p>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <span>
+                  Үлдэгдэл {stock} {unit}
+                </span>
+                {stock > 0 && stock <= 5 && (
+                  <span className="text-amber-600">(Дуусах дөхсөн)</span>
+                )}
+              </div>
+            </>
+          )}
+
+          <Button
+            size="sm"
+            className={cn(
+              "mt-2 h-[44px] w-full gap-2 text-sm font-semibold transition-all",
+              justAdded && "bg-emerald-600 hover:bg-emerald-600",
+              hasVariants &&
+                "border border-dashed border-border bg-muted/40 text-foreground disabled:opacity-100",
+            )}
+            disabled={isOutOfStock}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAddToCart();
+            }}
+          >
+            {addButtonContent}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Variant Selection Drawer */}
+      <SlideInDrawer
+        open={variantDialogOpen}
+        onOpenChange={(open) => {
+          setVariantDialogOpen(open);
+          if (!open) setSelectedVariant(null);
+        }}
+        title={product.name}
+        footer={
+          <DrawerFooter>
+            <button
+              type="button"
+              disabled={!selectedVariant}
+              onClick={handleAddToCartFromDrawer}
+              className={cn(
+                buttonVariants({ variant: "default", size: "lg" }),
+                "w-full gap-2",
+              )}
+            >
+              <ShoppingCart className="size-4" weight="bold" />
+              {selectedVariant ? (
+                <>
+                  Сагсанд хийх
+                  <span className="font-bold">
+                    · {Number(selectedVariant.sale_price ?? product.sale_price ?? 0).toLocaleString()}₮
+                  </span>
+                </>
+              ) : (
+                "Хувилбар сонгоно уу"
+              )}
+            </button>
+          </DrawerFooter>
+        }
+      >
+        <div className="space-y-5">
+          {/* Product preview */}
+          <div className="flex items-start gap-3 rounded-lg bg-muted/30 p-3">
+            {previewImage ? (
+              <OptimizedImage
+                src={previewImage}
+                alt={product.name}
+                className="size-14 shrink-0 rounded-md object-cover"
+                width={56}
+                height={56}
+              />
+            ) : (
+              <div className="flex size-14 shrink-0 items-center justify-center rounded-md bg-muted text-lg font-bold text-muted-foreground/30">
+                {product.name.charAt(0)}
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{product.name}</p>
+              <p className="text-lg font-bold text-primary">
+                {selectedVariant
+                  ? Number(selectedVariant.sale_price ?? product.sale_price ?? 0).toLocaleString()
+                  : price.toLocaleString()}₮
+              </p>
+            </div>
+          </div>
+
+          <VariantPicker
+            productId={product.id}
+            onSelect={handleVariantSelected}
+            dialogMode
+          />
+        </div>
+      </SlideInDrawer>
+    </div>
+  );
+});

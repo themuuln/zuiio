@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": ["iad1"],
+  "framework": "nextjs",
+  "installCommand": "cd ../.. && corepack enable && git submodule update --init --recursive && pnpm install --frozen-lockfile",
+  "buildCommand": "cd ../.. && pnpm exec turbo run build --filter=zer",
+  "outputDirectory": ".next"
+}
