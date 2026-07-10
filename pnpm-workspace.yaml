@@ -53,3 +53,4 @@ minimumReleaseAgeExclude:
   - expo@57.0.4
   - '@expo/ui@57.0.4'
   - expo-router@57.0.4
+  - '@zuiio/*'
