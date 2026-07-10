@@ -1,57 +1,33 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { withDbCapture } from "@zuiio/capture";
+import { useRpcSearch } from "@zuiio/search";
 import type { ProductCardProduct } from "@/components/shop/product-card";
-import { searchKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
 
-const MIN_QUERY_LENGTH = 2;
-const DEBOUNCE_MS = 300;
-const MAX_QUERY_LENGTH = 100;
+const mapToProduct = (row: Record<string, unknown>): ProductCardProduct => ({
+  id: row.id as string,
+  name: row.name as string,
+  sale_price: row.sale_price as number | null,
+  current_stock: row.current_stock as number | null,
+  unit: row.unit as string | null,
+  sku: row.sku as string | null,
+  barcode: row.barcode as string | null,
+  category_id: row.category_id as string | null,
+  image_url: row.image_url as string | null,
+  brand_name: row.brand_name as string | null,
+  brand_logo_url: row.brand_logo_url as string | null,
+});
 
+/**
+ * Zer-specific product search hook.
+ * Thin wrapper around useRpcSearch from @zuiio/search.
+ */
 export function useProductSearch(query: string) {
   const supabase = createClient();
-  const trimmed = query.toLowerCase().trim().slice(0, MAX_QUERY_LENGTH);
 
-  return useQuery({
-    queryKey: searchKeys.products(trimmed),
-    queryFn: async (): Promise<ProductCardProduct[]> => {
-      try {
-        const { data, error } = await withDbCapture(
-          "search_products",
-          // @ts-expect-error -- search_products added via migration, types not yet regenerated
-          supabase.rpc("search_products", {
-            p_query: trimmed,
-            p_limit: 50,
-          }),
-        );
-        if (error) throw error;
-        return ((data as unknown as ProductCardProduct[]) ?? []).map((p) => ({
-          id: p.id as string,
-          name: p.name as string,
-          sale_price: p.sale_price as number | null,
-          current_stock: p.current_stock as number | null,
-          unit: p.unit as string | null,
-          sku: p.sku as string | null,
-          barcode: p.barcode as string | null,
-          category_id: p.category_id as string | null,
-          image_url: p.image_url as string | null,
-          brand_name: p.brand_name as string | null,
-          brand_logo_url: p.brand_logo_url as string | null,
-        }));
-      } catch {
-        // Graceful degradation: return empty array so catalog-client
-        // falls back to client-side filtering via the serverResults null check
-        return [];
-      }
-    },
-    enabled: trimmed.length >= MIN_QUERY_LENGTH,
-    staleTime: 30_000,
-    placeholderData: (prev) => prev,
-    retry: 1,
-    retryDelay: 500,
+  return useRpcSearch<ProductCardProduct>(query, {
+    supabase,
+    rpcFunction: "search_products",
+    mapResult: mapToProduct,
   });
 }
-
-export { DEBOUNCE_MS, MIN_QUERY_LENGTH };

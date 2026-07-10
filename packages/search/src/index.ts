@@ -16,5 +16,8 @@ export {
   DEFAULT_STALE_TIME,
 } from "./defaults";
 
+// Keys
+export { searchKeys } from "./keys";
+
 // Hook
 export { useRpcSearch } from "./use-rpc-search";

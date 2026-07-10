@@ -122,7 +122,3 @@ export const roleKeys = {
   lists: (orgId: string) => ["roles", "list", orgId] as const,
   detail: (id: string) => ["roles", "detail", id] as const,
 };
-export const searchKeys = {
-  all: ["search"] as const,
-  products: (query: string) => [...searchKeys.all, "products", query] as const,
-};

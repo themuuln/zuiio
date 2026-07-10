@@ -48,6 +48,7 @@
     "@zuiio/hooks": "workspace:*",
     "@zuiio/hr": "workspace:*",
     "@zuiio/query": "workspace:*",
+    "@zuiio/search": "workspace:*",
     "@zuiio/realtime": "workspace:*",
     "@zuiio/supabase": "workspace:*",
     "class-variance-authority": "^0.7.1",

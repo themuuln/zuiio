@@ -721,9 +721,6 @@ importers:
       date-fns:
         specifier: ^4.4.0
         version: 4.4.0
-      date-fns-tz:
-        specifier: ^3.2.0
-        version: 3.2.0(date-fns@4.4.0)
       embla-carousel-react:
         specifier: ^8.6.0
         version: 8.6.0(react@19.2.7)
@@ -1318,6 +1315,9 @@ importers:
       '@zuiio/realtime':
         specifier: workspace:*
         version: link:../../packages/realtime
+      '@zuiio/search':
+        specifier: workspace:*
+        version: link:../../packages/search
       '@zuiio/supabase':
         specifier: workspace:*
         version: link:../../packages/supabase
@@ -1995,15 +1995,15 @@ importers:
 
   packages/core:
     dependencies:
+      '@date-fns/tz':
+        specifier: ^1.0.0
+        version: 1.5.0
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
       date-fns:
         specifier: ^4.4.0
         version: 4.4.0
-      date-fns-tz:
-        specifier: ^3.2.0
-        version: 3.2.0(date-fns@4.4.0)
       sharp:
         specifier: ^0.34.5
         version: 0.34.5
@@ -2162,6 +2162,25 @@ importers:
       react:
         specifier: ^19.2.0
         version: 19.2.7
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
+  packages/search:
+    dependencies:
+      '@supabase/supabase-js':
+        specifier: ^2
+        version: 2.110.2
+      '@tanstack/react-query':
+        specifier: ^5
+        version: 5.101.2(react@19.2.7)
+      react:
+        specifier: ^18 || ^19
+        version: 19.2.7
+    devDependencies:
+      '@zuiio/config':
+        specifier: workspace:*
+        version: link:../config
       typescript:
         specifier: ^5
         version: 5.9.3
