@@ -1,1 +1,0 @@
-{"routesCreated": ["src/app/api/organizations/[id]/clock/qr/route.ts", "src/app/api/organizations/[id]/clock/verify/route.ts", "src/app/api/organizations/[id]/clock/register-device/route.ts", "src/app/api/organizations/[id]/clock/devices/route.ts", "src/app/api/organizations/[id]/clock/generate-registration/route.ts"], "routes": []}

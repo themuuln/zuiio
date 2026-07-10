@@ -1,7 +1,0 @@
-{
-  "regions": ["sin1"],
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "installCommand": "cd ../.. && npx pnpm@9 install --no-frozen-lockfile --filter tolom...",
-  "framework": "nextjs"
-}

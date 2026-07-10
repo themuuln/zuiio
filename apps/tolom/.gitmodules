@@ -1,6 +1,0 @@
-[submodule "packages/zuiio"]
-	path = packages/zuiio
-	url = https://github.com/themuuln/zuiio.git
-[submodule "packages/zer"]
-	path = packages/zer
-	url = https://github.com/themuuln/zer.git

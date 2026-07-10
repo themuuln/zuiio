@@ -1,1 +1,0 @@
-{"status":"completed","buildPassing":true,"changes":["supabase/migrations/20260531083632_seed_permissions.sql - seed_org_permissions() and seed_org_role_permissions() functions, auto-seed trigger","src/lib/database.types.ts - regenerated types"]}

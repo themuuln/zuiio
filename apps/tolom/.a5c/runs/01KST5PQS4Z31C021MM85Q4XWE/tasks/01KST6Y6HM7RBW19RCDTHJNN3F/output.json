@@ -1,6 +1,0 @@
-{
-  "approved": true,
-  "response": "Skip CI/CD integration for now. Existing GitHub Actions CI is sufficient.",
-  "configured": false,
-  "skippedReason": "User chose to skip — existing CI pipeline is solid"
-}
