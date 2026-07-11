@@ -46,6 +46,11 @@ const nextConfig: NextConfig = {
     "playwright-core",
     "@aws-sdk/client-s3",
     "@aws-sdk/s3-request-presigner",
+    // Heavy native/binary packages — keep out of the server bundle
+    "@react-pdf/renderer",
+    "nodemailer",
+    "exceljs",
+    "sharp",
   ],
 
   images: {
@@ -172,12 +177,8 @@ export default withPWA(
 
     // Only print logs for uploading source maps in CI
     silent: !process.env.CI,
-
-    // For all available options, see:
-    // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
-
-    // Upload a larger set of source maps for prettier stack traces (increases build time)
-    widenClientFileUpload: true,
+    // Disabled: reduces source map upload size and build time significantly
+    widenClientFileUpload: false,
 
     webpack: {
       // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)

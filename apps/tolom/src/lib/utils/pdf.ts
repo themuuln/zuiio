@@ -7,7 +7,7 @@
  *   // buffer is a NodeBuffer — send as attachment or save to storage
  */
 
-import { type DocumentProps, renderToBuffer } from "@react-pdf/renderer";
+import type { DocumentProps } from "@react-pdf/renderer";
 import type { ReactElement } from "react";
 
 /**
@@ -22,6 +22,8 @@ import type { ReactElement } from "react";
 export async function renderToPdfBuffer(
   element: ReactElement<DocumentProps>,
 ): Promise<Buffer> {
+  // Dynamic import: only loads the ~5MB @react-pdf/renderer when PDF is actually needed.
+  const { renderToBuffer } = await import("@react-pdf/renderer");
   const buffer = await renderToBuffer(element);
   return buffer as Buffer;
 }

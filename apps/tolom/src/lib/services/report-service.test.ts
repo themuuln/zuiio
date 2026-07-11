@@ -392,7 +392,7 @@ describe("getWeeklyReport", () => {
 describe("getMonthlyReport", () => {
   it("returns monthly totals", async () => {
     setupFromMock(mockClient, [
-      b([{ id: "wo-1" }, { id: "wo-2" }, { id: "wo-3" }]),
+      b([{ id: "wo-1", created_at: "2025-01-10T08:00:00Z" }, { id: "wo-2", created_at: "2025-01-15T09:00:00Z" }, { id: "wo-3", created_at: "2025-01-20T10:00:00Z" }]),
       b([
         { final_price: 100, discount_amount: 10, work_order_id: "wo-1" },
         { final_price: 200, discount_amount: 0, work_order_id: "wo-2" },

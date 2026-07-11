@@ -457,7 +457,7 @@ export async function getMonthlyReport(
 
   let query = supabase
     .from("work_orders")
-    .select("id")
+    .select("id, created_at")
     .eq("organization_id", orgId)
     .gte("created_at", `${startDate}T00:00:00`)
     .lte("created_at", `${endDate}T23:59:59`)
@@ -472,7 +472,15 @@ export async function getMonthlyReport(
   }
 
   const { data: workOrders } = await query;
-  const woIds = (workOrders ?? []).map((w) => w.id);
+  const woIds: string[] = [];
+  const woDateMap = new Map<string, string[]>(); // date → woIds
+  for (const w of workOrders ?? []) {
+    woIds.push(w.id);
+    const dateStr = (w.created_at as string).slice(0, 10);
+    const arr = woDateMap.get(dateStr) ?? [];
+    arr.push(w.id);
+    woDateMap.set(dateStr, arr);
+  }
 
   const [servicesData, partsData] = await Promise.all([
     woIds.length > 0
@@ -546,32 +554,93 @@ export async function getMonthlyReport(
     }
   }
 
+  // Build weekly breakdown locally from already-fetched data (~175 fewer DB queries)
   const weeklyBreakdown: WeeklyReport[] = [];
-  const firstDay = new Date(year, month - 1, 1);
-  const lastDayDate = new Date(year, month, 0);
-  const weekStart = new Date(firstDay);
-  const dayOfWeek = weekStart.getDay();
-  const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  weekStart.setDate(weekStart.getDate() + daysToMonday);
+  const monthStart = new Date(year, month - 1, 1);
+  const monthEndDate = new Date(year, month, 0);
+  // Align to Monday
+  const alignedStart = new Date(monthStart);
+  const dow = alignedStart.getDay();
+  alignedStart.setDate(alignedStart.getDate() - (dow === 0 ? 6 : dow - 1));
 
-  while (weekStart <= lastDayDate) {
-    const ws = weekStart.toISOString().split("T")[0];
-    const weeklyReport = await getWeeklyReport(
-      db,
-      orgId,
-      mechanicId,
-      ws,
-      branchId,
-    );
-    const weekEndDate = new Date(weekStart);
+  for (
+    let ws = new Date(alignedStart);
+    ws <= monthEndDate;
+    ws.setDate(ws.getDate() + 7)
+  ) {
+    const weekEndDate = new Date(ws);
     weekEndDate.setDate(weekEndDate.getDate() + 6);
+    // Skip weeks outside the target month
     if (
-      weekEndDate.getMonth() === month - 1 ||
-      weekStart.getMonth() === month - 1
+      weekEndDate.getMonth() !== month - 1 &&
+      ws.getMonth() !== month - 1
     ) {
-      weeklyBreakdown.push(weeklyReport);
+      continue;
     }
-    weekStart.setDate(weekStart.getDate() + 7);
+    const wsStr = ws.toISOString().slice(0, 10);
+    const weStr = weekEndDate.toISOString().slice(0, 10);
+    const dailyBreakdown: DailyReport[] = [];
+    let wTotalRevenue = 0;
+    let wTotalDiscounts = 0;
+    let wServicesCount = 0;
+    let wPartsCount = 0;
+    let wWoCount = 0;
+    for (let d = new Date(ws); d <= weekEndDate && d <= monthEndDate; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().slice(0, 10);
+      const dayWoIds = woDateMap.get(dateStr) ?? [];
+      let dayRevenue = 0;
+      let dayDiscounts = 0;
+      let dayServices = 0;
+      let dayParts = 0;
+      for (const woId of dayWoIds) {
+        const data = woDataMap.get(woId);
+        if (!data) continue;
+        dayServices += data.services.length;
+        dayParts += data.parts.length;
+        for (const s of data.services) {
+          dayRevenue += Number((s as Record<string, unknown>).final_price);
+          dayDiscounts += Number((s as Record<string, unknown>).discount_amount ?? 0);
+        }
+        for (const p of data.parts) {
+          dayRevenue += Number((p as Record<string, unknown>).final_price);
+          dayDiscounts += Number((p as Record<string, unknown>).discount_amount ?? 0);
+        }
+      }
+      wTotalRevenue += dayRevenue;
+      wTotalDiscounts += dayDiscounts;
+      wServicesCount += dayServices;
+      wPartsCount += dayParts;
+      wWoCount += dayWoIds.length;
+      dailyBreakdown.push({
+        date: dateStr,
+        mechanic_id: mechanicId ?? "",
+        mechanic_name: mechanicName,
+        work_orders_completed: dayWoIds.length,
+        services_count: dayServices,
+        parts_count: dayParts,
+        total_revenue: dayRevenue,
+        total_discounts: dayDiscounts,
+        work_orders: [],
+        comparison: null,
+        profitability: null,
+        mechanic_kpis: [],
+      });
+    }
+    weeklyBreakdown.push({
+      week_start: wsStr,
+      week_end: weStr,
+      mechanic_id: mechanicId ?? "",
+      mechanic_name: mechanicName,
+      work_orders_completed: wWoCount,
+      services_count: wServicesCount,
+      parts_count: wPartsCount,
+      total_revenue: wTotalRevenue,
+      total_discounts: wTotalDiscounts,
+      daily_breakdown: dailyBreakdown,
+      comparison: null,
+      profitability: null,
+      mechanic_kpis: [],
+    });
   }
 
   const [profitability, comparison, mechanicKpis] = await Promise.all([

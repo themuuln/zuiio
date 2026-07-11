@@ -243,38 +243,47 @@ export async function calculateMonthlyPayroll(
     nameMap.set(p.id, p.full_name ?? "Unknown");
   }
 
-  const records: PayrollRecord[] = [];
+  // Batch-fetch pay rates for all mechanics (1 query instead of N)
+  const { data: ratesData } = await supabase
+    .from("mechanic_pay_rates")
+    .select("mechanic_id, hourly_rate, effective_from")
+    .eq("organization_id", orgId)
+    .in("mechanic_id", mechanicIds)
+    .lte("effective_from", periodEnd)
+    .or(`effective_to.gte.${periodStart},effective_to.is.null`)
+    .order("effective_from", { ascending: false });
 
+  // Pick the latest rate per mechanic (first seen = most recent due to ordering)
+  const rateMap = new Map<string, number>();
+  for (const r of ratesData ?? []) {
+    if (!rateMap.has(r.mechanic_id)) {
+      rateMap.set(r.mechanic_id, Number(r.hourly_rate));
+    }
+  }
+
+  // Batch-fetch existing payroll records (1 query instead of N)
+  const { data: existingRecords } = await supabase
+    .from("payroll_records")
+    .select("id, mechanic_id, status, paid_at")
+    .eq("organization_id", orgId)
+    .in("mechanic_id", mechanicIds)
+    .eq("period_start", periodStart);
+
+  const existingMap = new Map<string, { id: string; status: string; paid_at: string | null }>();
+  for (const rec of existingRecords ?? []) {
+    existingMap.set(rec.mechanic_id, rec);
+  }
+
+  // Build records — per-mechanic upserts still need individual writes
+  const records: PayrollRecord[] = [];
   for (const mechanicId of mechanicIds) {
     const totalHours = hoursMap.get(mechanicId) ?? 0;
-
-    // Get the effective hourly rate for this period
-    const { data: rateData } = await supabase
-      .from("mechanic_pay_rates")
-      .select("hourly_rate")
-      .eq("organization_id", orgId)
-      .eq("mechanic_id", mechanicId)
-      .lte("effective_from", periodEnd)
-      .or(`effective_to.gte.${periodStart},effective_to.is.null`)
-      .order("effective_from", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const hourlyRate = Number(rateData?.hourly_rate ?? 0);
+    const hourlyRate = rateMap.get(mechanicId) ?? 0;
     const grossPay = Math.round(totalHours * hourlyRate * 100) / 100;
-
-    // Check if a record already exists (to preserve status/paid_at)
-    const { data: existing } = await supabase
-      .from("payroll_records")
-      .select("id, status, paid_at")
-      .eq("organization_id", orgId)
-      .eq("mechanic_id", mechanicId)
-      .eq("period_start", periodStart)
-      .maybeSingle();
+    const existing = existingMap.get(mechanicId);
 
     let record: PayrollRecord | null;
     if (existing) {
-      // Update computed fields only — preserve status and paid_at
       const { data: updated } = await supabase
         .from("payroll_records")
         .update({
@@ -288,7 +297,6 @@ export async function calculateMonthlyPayroll(
         .single();
       record = updated;
     } else {
-      // Insert new record with draft status
       const { data: inserted } = await supabase
         .from("payroll_records")
         .insert({
