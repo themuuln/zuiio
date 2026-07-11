@@ -30,7 +30,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "**/*.mts",
-    ".next/dev/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
@@ -42,6 +42,8 @@
     "vitest.setup.ts",
     "src/**/__tests__",
     "src/**/*.test.ts",
-    "src/**/*.test.tsx"
+    "src/**/*.test.tsx",
+    "recipes.ts",
+    "codecept.conf.ts"
   ]
 }
