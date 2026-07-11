@@ -1,7 +1,7 @@
+import { z } from "zod";
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, created, ok } from "@/lib/api-response";
 import {
-
   bulkGenerateVariants,
   createItemVariant,
   createVariantGroup,
@@ -18,6 +18,33 @@ import {
   updateVariantGroup,
   updateVariantOption,
 } from "@/lib/services/catalog-variant-service";
+
+/** Zod schema for the dispatcher body — validates action + common fields. */
+const CatalogVariantBody = z
+  .object({
+    action: z.string(),
+    id: z.string().optional(),
+    name: z.string().optional(),
+    name_mn: z.string().optional(),
+    applies_to: z.enum(["service", "part", "both"]).optional(),
+    sort_order: z.number().optional(),
+    group_id: z.string().optional(),
+    label: z.string().optional(),
+    label_mn: z.string().optional(),
+    entity_type: z.enum(["service", "part"]).optional(),
+    entity_id: z.string().optional(),
+    variant_label: z.string().optional(),
+    variant_data: z.record(z.string(), z.string()).optional(),
+    price: z.number().optional(),
+    cost: z.number().optional(),
+    sku: z.string().optional(),
+    barcode: z.string().optional(),
+    is_active: z.boolean().optional(),
+    dimension_options: z.record(z.string(), z.array(z.string())).optional(),
+    get_price: z.record(z.string(), z.number()).optional(),
+  })
+  .passthrough();
+
 /**
  * POST /api/organizations/:id/catalog-variants
  *
@@ -46,27 +73,35 @@ import {
  */
 export const POST = createRouteHandler(
   async ({ request, orgId, supabase, user }) => {
-    const body = await request.json();
-    const { action } = body;
+    const parsed = CatalogVariantBody.safeParse(
+      await request.json().catch(() => ({})),
+    );
+    if (!parsed.success || !parsed.data.action) {
+      return apiError("INVALID_BODY", "Missing or invalid 'action' field", 400);
+    }
+    const body = parsed.data;
 
-    switch (action) {
+    switch (body.action) {
       // ── Groups ──
       case "list-groups": {
-        const appliesTo = body.applies_to as
-          | "service"
-          | "part"
-          | "both"
-          | undefined;
+        const appliesTo = body.applies_to;
         const groups = await getVariantGroups(supabase, orgId, appliesTo);
         return ok(groups);
       }
 
       case "get-group": {
+        if (!body.id) return apiError("INVALID_BODY", "Missing 'id'", 400);
         const group = await getVariantGroup(supabase, body.id);
         return ok(group);
       }
 
       case "create-group": {
+        if (!body.name || !body.applies_to)
+          return apiError(
+            "INVALID_BODY",
+            "Missing 'name' or 'applies_to'",
+            400,
+          );
         const group = await createVariantGroup(supabase, orgId, {
           name: body.name,
           name_mn: body.name_mn,
@@ -77,6 +112,7 @@ export const POST = createRouteHandler(
       }
 
       case "update-group": {
+        if (!body.id) return apiError("INVALID_BODY", "Missing 'id'", 400);
         const group = await updateVariantGroup(supabase, body.id, orgId, {
           name: body.name,
           name_mn: body.name_mn,
@@ -87,6 +123,7 @@ export const POST = createRouteHandler(
       }
 
       case "delete-group": {
+        if (!body.id) return apiError("INVALID_BODY", "Missing 'id'", 400);
         await deleteVariantGroup(supabase, body.id, orgId);
         return ok(null);
       }
@@ -98,11 +135,14 @@ export const POST = createRouteHandler(
       }
 
       case "get-option": {
+        if (!body.id) return apiError("INVALID_BODY", "Missing 'id'", 400);
         const option = await getVariantOption(supabase, body.id);
         return ok(option);
       }
 
       case "create-option": {
+        if (!body.group_id || !body.label)
+          return apiError("INVALID_BODY", "Missing 'group_id' or 'label'", 400);
         const option = await createVariantOption(supabase, orgId, {
           group_id: body.group_id,
           label: body.label,
@@ -113,6 +153,7 @@ export const POST = createRouteHandler(
       }
 
       case "update-option": {
+        if (!body.id) return apiError("INVALID_BODY", "Missing 'id'", 400);
         const option = await updateVariantOption(supabase, body.id, orgId, {
           label: body.label,
           label_mn: body.label_mn,
@@ -122,22 +163,31 @@ export const POST = createRouteHandler(
       }
 
       case "delete-option": {
+        if (!body.id) return apiError("INVALID_BODY", "Missing 'id'", 400);
         await deleteVariantOption(supabase, body.id, orgId);
         return ok(null);
       }
 
       // ── Item Variants ──
       case "list-items": {
+        if (!body.entity_id)
+          return apiError("INVALID_BODY", "Missing 'entity_id'", 400);
         const items = await getItemVariants(
           supabase,
           orgId,
-          body.entity_type as "service" | "part",
+          body.entity_type ?? "service",
           body.entity_id,
         );
         return ok(items);
       }
 
       case "create-item": {
+        if (!body.entity_type || !body.entity_id || !body.variant_label)
+          return apiError(
+            "INVALID_BODY",
+            "Missing 'entity_type', 'entity_id', or 'variant_label'",
+            400,
+          );
         const item = await createItemVariant(
           supabase,
           orgId,
@@ -158,6 +208,7 @@ export const POST = createRouteHandler(
       }
 
       case "update-item": {
+        if (!body.id) return apiError("INVALID_BODY", "Missing 'id'", 400);
         const item = await updateItemVariant(
           supabase,
           body.id,
@@ -178,11 +229,18 @@ export const POST = createRouteHandler(
       }
 
       case "delete-item": {
+        if (!body.id) return apiError("INVALID_BODY", "Missing 'id'", 400);
         await deleteItemVariant(supabase, body.id, orgId, user?.id ?? null);
         return ok(null);
       }
 
       case "bulk-items": {
+        if (!body.entity_type || !body.entity_id || !body.dimension_options)
+          return apiError(
+            "INVALID_BODY",
+            "Missing 'entity_type', 'entity_id', or 'dimension_options'",
+            400,
+          );
         const items = await bulkGenerateVariants(
           supabase,
           orgId,
@@ -196,7 +254,11 @@ export const POST = createRouteHandler(
       }
 
       default:
-        return apiError("BAD_REQUEST", `Unknown action: ${action}`, 400);
+        return apiError(
+          "BAD_REQUEST",
+          `Unknown action: ${String(body.action)}`,
+          400,
+        );
     }
   },
 );
