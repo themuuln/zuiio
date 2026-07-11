@@ -493,6 +493,11 @@ Every Supabase schema change **MUST** be applied to the remote project before th
 3. Verify with `mcp__supabase_list_migrations` that the new migration appears in the applied list
 
 If the Supabase MCP tools are unavailable or return auth errors, **stop and ask the user to re-authenticate** via `supabase login` + `supabase link --project-ref <ref>` before continuing. Do not skip remote deployment — unapplied migrations produce `[supabase] 400` errors with `column does not exist` (SQLCODE 42703) on every affected page load.
+### Type Generation Auth
+
+After every migration, types **MUST** be regenerated: `supabase gen types typescript --project-id <ref> > src/lib/database.types.ts`
+
+If `supabase gen types` fails with a 403 or auth error, **stop immediately and ask the user to run `supabase login`** in their terminal. Do NOT attempt workarounds (manual type patching, MCP queries, type stubs). The CLI auth must be fixed first — a corrupted or missing types file breaks every `.from()` call at build time.
 
 ---
 
