@@ -20,17 +20,17 @@ export type SelectedVariant = {
 };
 
 export function VariantPicker({
- productId,
- onSelect,
- onHasVariants,
- onActionLabelChange,
- dialogMode = false,
+  productId,
+  onSelect,
+  onHasVariants,
+  onActionLabelChange,
+  dialogMode = false,
 }: {
- productId: string;
- onSelect: (variant: SelectedVariant | null) => void;
- onHasVariants?: (hasVariants: boolean) => void;
- onActionLabelChange?: (label: string | null) => void;
- dialogMode?: boolean;
+  productId: string;
+  onSelect: (variant: SelectedVariant | null) => void;
+  onHasVariants?: (hasVariants: boolean) => void;
+  onActionLabelChange?: (label: string | null) => void;
+  dialogMode?: boolean;
 }) {
   const [enabled, setEnabled] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -233,8 +233,7 @@ export function VariantPicker({
               <div className="flex flex-wrap gap-2">
                 {group.options.map((option) => {
                   const isSelected = selections[group.id] === option.id;
-                  const isAvailable =
-                    availabilityByOption[option.id] ?? true;
+                  const isAvailable = availabilityByOption[option.id] ?? true;
 
                   return (
                     <button
@@ -256,11 +255,7 @@ export function VariantPicker({
                           aria-hidden="true"
                         />
                       )}
-                      <span
-                        className={cn(
-                          !isAvailable && "line-through",
-                        )}
-                      >
+                      <span className={cn(!isAvailable && "line-through")}>
                         {option.value}
                       </span>
                       {isAvailable && !isSelected && (
@@ -357,7 +352,9 @@ export function VariantPicker({
                   ? `Дараагийн алхам: ${nextGroup.name}`
                   : "Сонголтоо өөрчлөөд дахин шалгана уу"}
             </span>
-            <span className="shrink-0">{groups.length - selectedCount} үлдсэн</span>
+            <span className="shrink-0">
+              {groups.length - selectedCount} үлдсэн
+            </span>
           </div>
         </div>
       </div>
@@ -474,7 +471,10 @@ export function VariantPicker({
                         )}
                       >
                         {isSelected ? (
-                          <Check className="size-3.5 shrink-0 text-primary" weight="bold" />
+                          <Check
+                            className="size-3.5 shrink-0 text-primary"
+                            weight="bold"
+                          />
                         ) : isAvailable ? (
                           <span
                             aria-hidden="true"

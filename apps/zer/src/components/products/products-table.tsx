@@ -15,16 +15,16 @@ import {
   type ProductEditData,
   ProductEditDrawer,
 } from "@/components/products/product-edit-drawer";
+import { buttonVariants } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { TableActionsCell } from "@/components/ui/table-actions-cell";
 import { useDeleteWithConfirm } from "@/hooks/use-delete-with-confirm";
 import { formatCurrency } from "@/lib/format";
 import { useBrands } from "@/lib/query/hooks/use-brands";
 import { useProductVariants } from "@/lib/query/hooks/use-product-variants";
 import { productKeys } from "@/lib/query/keys";
-import { OptimizedImage } from "@/components/ui/optimized-image";
 import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
 
 export type ProductRow = {
   id: string;
@@ -253,7 +253,7 @@ export function ProductsTable({
         enableHiding: false,
       },
     ],
-    [brands, handleDelete, deletePending],
+    [handleDelete, deletePending],
   );
 
   const searchParams = useSearchParams();
@@ -320,10 +320,10 @@ export function ProductsTable({
           )}
 
           <div className="hidden items-center gap-1 sm:flex">
-            {getPageNumbers().map((page, idx) =>
+            {getPageNumbers().map((page) =>
               page === "ellipsis" ? (
                 <span
-                  key={`ellipsis-${idx}`}
+                  key="ellipsis"
                   className="flex size-7 items-center justify-center text-xs text-muted-foreground"
                 >
                   ...
@@ -366,19 +366,26 @@ export function ProductsTable({
       )}
 
       <ProductDetailDrawer
-        product={selectedProduct ? toDetailData(selectedProduct) : ({} as ProductDetailData)}
+        product={
+          selectedProduct
+            ? toDetailData(selectedProduct)
+            : ({} as ProductDetailData)
+        }
         open={!!selectedProduct}
         onOpenChange={(open) => {
           if (!open) setSelectedProduct(null);
         }}
         onEdit={() => selectedProduct && setEditProduct(selectedProduct)}
         onDelete={() =>
-          selectedProduct && handleDelete(selectedProduct.id, selectedProduct.name)
+          selectedProduct &&
+          handleDelete(selectedProduct.id, selectedProduct.name)
         }
         isDeletePending={deletePending}
       />
       <ProductEditDrawer
-        product={editProduct ? toEditData(editProduct) : ({} as ProductEditData)}
+        product={
+          editProduct ? toEditData(editProduct) : ({} as ProductEditData)
+        }
         brands={brands ?? []}
         open={!!editProduct}
         onOpenChange={(open) => {

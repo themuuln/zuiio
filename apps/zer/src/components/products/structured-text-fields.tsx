@@ -1,0 +1,80 @@
+"use client";
+
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+
+export interface StructuredTextValues {
+  description: string;
+  additional_info: string;
+  usage_instructions: string;
+  care_instructions: string;
+}
+
+interface StructuredTextFieldsProps {
+  values: StructuredTextValues;
+  onChange: (values: StructuredTextValues) => void;
+}
+
+const FIELDS = [
+  {
+    key: "description" as const,
+    label: "Тайлбар",
+    placeholder: "Бүтээгдэхүүний ерөнхий тайлбар...",
+    maxLength: 2000,
+  },
+  {
+    key: "additional_info" as const,
+    label: "Нэмэлт мэдээлэл",
+    placeholder: "Бүтээгдэхүүний нэмэлт мэдээлэл...",
+    maxLength: 2000,
+  },
+  {
+    key: "usage_instructions" as const,
+    label: "Хэрэглэх заавар",
+    placeholder: "Хэрхэн хэрэглэх талаар...",
+    maxLength: 2000,
+  },
+  {
+    key: "care_instructions" as const,
+    label: "Арчилгаа",
+    placeholder: "Хадгалах, арчлах заавар...",
+    maxLength: 2000,
+  },
+] as const;
+
+export function StructuredTextFields({
+  values,
+  onChange,
+}: StructuredTextFieldsProps) {
+  return (
+    <div className="space-y-4">
+      <Label className="text-base font-semibold">Дэлгэрэнгүй мэдээлэл</Label>
+      <div className="grid gap-4">
+        {FIELDS.map((field) => (
+          <div key={field.key} className="space-y-1">
+            <Label
+              htmlFor={`text-${field.key}`}
+              className="text-xs text-muted-foreground"
+            >
+              {field.label}
+            </Label>
+            <Textarea
+              id={`text-${field.key}`}
+              value={values[field.key]}
+              onChange={(e) =>
+                onChange({ ...values, [field.key]: e.target.value })
+              }
+              placeholder={field.placeholder}
+              maxLength={field.maxLength}
+              rows={3}
+              className="resize-y"
+            />
+            <p className="text-right text-[10px] text-muted-foreground">
+              {values[field.key].length}/{field.maxLength}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

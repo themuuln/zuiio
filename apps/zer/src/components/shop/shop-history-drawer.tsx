@@ -1,12 +1,11 @@
 "use client";
 
-import { capture } from "@zuiio/capture";
 import { ClockCounterClockwise, User } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
+import { capture } from "@zuiio/capture";
 import { createContext, useContext, useState } from "react";
-import { SaleDetailDrawer } from "@/components/sales/sale-detail-drawer";
 import type { SaleDetailData } from "@/components/sales/sale-detail-drawer";
-import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
+import { SaleDetailDrawer } from "@/components/sales/sale-detail-drawer";
 import {
   Empty,
   EmptyDescription,
@@ -14,6 +13,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { saleKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";

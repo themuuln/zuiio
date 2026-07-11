@@ -1,16 +1,16 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { capture } from "@zuiio/capture";
 import { useEffect } from "react";
-import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import {
   ReceiptContent,
   type SaleData,
   type SaleItem,
 } from "@/components/shop/receipt-content";
+import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { saleKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
-import { capture } from "@zuiio/capture";
 
 export interface ReceiptDrawerProps {
   saleId: string;
@@ -31,7 +31,7 @@ export function ReceiptDrawer({
   open,
   onOpenChange,
 }: ReceiptDrawerProps) {
-  const { data, isLoading } = useQuery({
+  const { data } = useQuery({
     queryKey: saleKeys.detail(saleId),
     enabled: open,
     queryFn: async (): Promise<ReceiptData> => {
@@ -39,7 +39,11 @@ export function ReceiptDrawer({
 
       try {
         const [orgResult, saleResult, itemsResult] = await Promise.all([
-          supabase.from("organizations").select("name").eq("id", orgId).single(),
+          supabase
+            .from("organizations")
+            .select("name")
+            .eq("id", orgId)
+            .single(),
           supabase
             .from("sales")
             .select(

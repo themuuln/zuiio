@@ -139,173 +139,169 @@ export function BundleCreateDrawer({
   };
 
   return (
-    <>
-      <SlideInDrawer
-        open={open}
-        onOpenChange={setOpen}
-        title="Шинэ багц"
-        description="Олон бүтээгдэхүүнийг нэгтгэн багц үүсгэх"
-        trigger={trigger}
-        panelWidth="32rem"
-        footer={
-          <DrawerFooter>
-            <DrawerCancel onClick={handleCancel} />
-            <DrawerSubmit
-              form="bundle-form"
-              isPending={isSubmitting || bundleMutation.isPending}
-              label="Багц үүсгэх"
-              loadingLabel="Үүсгэж байна..."
-            />
-          </DrawerFooter>
-        }
+    <SlideInDrawer
+      open={open}
+      onOpenChange={setOpen}
+      title="Шинэ багц"
+      description="Олон бүтээгдэхүүнийг нэгтгэн багц үүсгэх"
+      trigger={trigger}
+      panelWidth="32rem"
+      footer={
+        <DrawerFooter>
+          <DrawerCancel onClick={handleCancel} />
+          <DrawerSubmit
+            form="bundle-form"
+            isPending={isSubmitting || bundleMutation.isPending}
+            label="Багц үүсгэх"
+            loadingLabel="Үүсгэж байна..."
+          />
+        </DrawerFooter>
+      }
+    >
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        id="bundle-form"
+        className="space-y-5"
       >
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          id="bundle-form"
-          className="space-y-5"
-        >
-          <ErrorBanner error={bundleMutation.error} />
+        <ErrorBanner error={bundleMutation.error} />
 
-          {/* Basic Info */}
-          <FieldGroup>
-            <Field>
-              <FieldLabel>Багцын нэр</FieldLabel>
-              <Input placeholder="Жнь: Чихэртэй хөтөч" {...register("name")} />
-              {errors.name && (
-                <p className="text-xs text-destructive">
-                  {errors.name.message}
-                </p>
+        {/* Basic Info */}
+        <FieldGroup>
+          <Field>
+            <FieldLabel>Багцын нэр</FieldLabel>
+            <Input placeholder="Жнь: Чихэртэй хөтөч" {...register("name")} />
+            {errors.name && (
+              <p className="text-xs text-destructive">{errors.name.message}</p>
+            )}
+          </Field>
+          <Field>
+            <FieldLabel>SKU (optional)</FieldLabel>
+            <Input placeholder="BNDL-001" {...register("sku")} />
+          </Field>
+        </FieldGroup>
+
+        <FieldGroup>
+          <Field>
+            <FieldLabel>Борлуулалтын үнэ</FieldLabel>
+            <Controller
+              control={control}
+              name="sale_price"
+              render={({ field }) => (
+                <CurrencyInput
+                  value={field.value ?? 0}
+                  onChange={(val: number) => field.onChange(val)}
+                />
               )}
-            </Field>
-            <Field>
-              <FieldLabel>SKU (optional)</FieldLabel>
-              <Input placeholder="BNDL-001" {...register("sku")} />
-            </Field>
-          </FieldGroup>
+            />
+          </Field>
+        </FieldGroup>
 
-          <FieldGroup>
-            <Field>
-              <FieldLabel>Борлуулалтын үнэ</FieldLabel>
-              <Controller
-                control={control}
-                name="sale_price"
-                render={({ field }) => (
-                  <CurrencyInput
-                    value={field.value ?? 0}
-                    onChange={(val: number) => field.onChange(val)}
-                  />
-                )}
-              />
-            </Field>
-          </FieldGroup>
+        <FieldGroup>
+          <Field>
+            <FieldLabel>Тайлбар (optional)</FieldLabel>
+            <Textarea
+              placeholder="Багцын тайлбар"
+              {...register("description")}
+            />
+          </Field>
+        </FieldGroup>
 
-          <FieldGroup>
-            <Field>
-              <FieldLabel>Тайлбар (optional)</FieldLabel>
-              <Textarea
-                placeholder="Багцын тайлбар"
-                {...register("description")}
-              />
-            </Field>
-          </FieldGroup>
+        {/* Bundle Items */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium">Багцын бараанууд</h3>
 
-          {/* Bundle Items */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium">Багцын бараанууд</h3>
+          {errors.items?.message && (
+            <p className="text-xs text-destructive">{errors.items.message}</p>
+          )}
 
-            {errors.items?.message && (
-              <p className="text-xs text-destructive">{errors.items.message}</p>
-            )}
-
-            {fields.length > 0 && (
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Бүтээгдэхүүн</TableHead>
-                      <TableHead className="w-24 text-right">
-                        Тоо хэмжээ
-                      </TableHead>
-                      <TableHead className="w-10" />
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {fields.map((field, index) => {
-                      return (
-                        <TableRow key={field.id}>
-                          <TableCell>
-                            <Controller
-                              control={control}
-                              name={`items.${index}.product_id`}
-                              render={({ field: pField }) => (
-                                <ProductPicker
-                                  products={products}
-                                  value={pField.value}
-                                  onValueChange={(productId) =>
-                                    pField.onChange(productId)
-                                  }
-                                  excludeIds={selectedIds}
-                                  placeholder="Бараа сонгох"
-                                  className="h-8"
-                                />
-                              )}
-                            />
-                            {errors.items?.[index]?.product_id && (
-                              <p className="text-xs text-destructive">
-                                {errors.items[index]?.product_id?.message}
-                              </p>
+          {fields.length > 0 && (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Бүтээгдэхүүн</TableHead>
+                    <TableHead className="w-24 text-right">
+                      Тоо хэмжээ
+                    </TableHead>
+                    <TableHead className="w-10" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {fields.map((field, index) => {
+                    return (
+                      <TableRow key={field.id}>
+                        <TableCell>
+                          <Controller
+                            control={control}
+                            name={`items.${index}.product_id`}
+                            render={({ field: pField }) => (
+                              <ProductPicker
+                                products={products}
+                                value={pField.value}
+                                onValueChange={(productId) =>
+                                  pField.onChange(productId)
+                                }
+                                excludeIds={selectedIds}
+                                placeholder="Бараа сонгох"
+                                className="h-8"
+                              />
                             )}
-                          </TableCell>
-                          <TableCell>
-                            <Controller
-                              control={control}
-                              name={`items.${index}.quantity`}
-                              render={({ field: qField }) => (
-                                <Input
-                                  type="number"
-                                  step="any"
-                                  min="0.01"
-                                  className="h-8 text-right"
-                                  value={qField.value}
-                                  onChange={(e) =>
-                                    qField.onChange(Number(e.target.value) || 0)
-                                  }
-                                />
-                              )}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="size-8"
-                              onClick={() => remove(index)}
-                            >
-                              <Trash className="size-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
+                          />
+                          {errors.items?.[index]?.product_id && (
+                            <p className="text-xs text-destructive">
+                              {errors.items[index]?.product_id?.message}
+                            </p>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Controller
+                            control={control}
+                            name={`items.${index}.quantity`}
+                            render={({ field: qField }) => (
+                              <Input
+                                type="number"
+                                step="any"
+                                min="0.01"
+                                className="h-8 text-right"
+                                value={qField.value}
+                                onChange={(e) =>
+                                  qField.onChange(Number(e.target.value) || 0)
+                                }
+                              />
+                            )}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="size-8"
+                            onClick={() => remove(index)}
+                          >
+                            <Trash className="size-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
 
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={() => append({ product_id: "", quantity: 1 })}
-            >
-              <Plus className="mr-1.5 size-3.5" />
-              Бараа нэмэх
-            </Button>
-          </div>
-        </form>
-      </SlideInDrawer>
-    </>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={() => append({ product_id: "", quantity: 1 })}
+          >
+            <Plus className="mr-1.5 size-3.5" />
+            Бараа нэмэх
+          </Button>
+        </div>
+      </form>
+    </SlideInDrawer>
   );
 }

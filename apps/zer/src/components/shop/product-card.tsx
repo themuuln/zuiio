@@ -7,9 +7,9 @@ import { VariantPicker } from "@/components/products/variant-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { DrawerFooter } from "@/components/ui/drawer-footer";
 import { OptimizedImage } from "@/components/ui/optimized-image";
+import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
 import { useVariantGroups } from "@/lib/query/hooks/use-product-variants";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +38,8 @@ export const ProductCard = memo(function ProductCard({
 }) {
   const { addItem } = useCart();
   const [justAdded, setJustAdded] = useState(false);
-  const [selectedVariant, setSelectedVariant] = useState<SelectedVariant | null>(null);
+  const [selectedVariant, setSelectedVariant] =
+    useState<SelectedVariant | null>(null);
   const [variantDialogOpen, setVariantDialogOpen] = useState(false);
 
   // Lazy detection: does this product have variant groups?
@@ -71,7 +72,7 @@ export const ProductCard = memo(function ProductCard({
     setVariantDialogOpen(false);
     setJustAdded(false);
     setSelectedVariant(null);
-  }, [product.id]);
+  }, []);
 
   // Show "added" feedback briefly
   useEffect(() => {
@@ -129,7 +130,9 @@ export const ProductCard = memo(function ProductCard({
       name: product.name,
       unitPrice: Number(selectedVariant.sale_price ?? product.sale_price ?? 0),
       unit,
-      maxStock: Number(selectedVariant.current_stock ?? product.current_stock ?? 0),
+      maxStock: Number(
+        selectedVariant.current_stock ?? product.current_stock ?? 0,
+      ),
       variantId: selectedVariant.variant_id,
       variantLabels: selectedVariant.option_labels,
       variantOptionIds: selectedVariant.option_ids,
@@ -320,7 +323,11 @@ export const ProductCard = memo(function ProductCard({
                 <>
                   Сагсанд хийх
                   <span className="font-bold">
-                    · {Number(selectedVariant.sale_price ?? product.sale_price ?? 0).toLocaleString()}₮
+                    ·{" "}
+                    {Number(
+                      selectedVariant.sale_price ?? product.sale_price ?? 0,
+                    ).toLocaleString()}
+                    ₮
                   </span>
                 </>
               ) : (
@@ -350,8 +357,11 @@ export const ProductCard = memo(function ProductCard({
               <p className="truncate text-sm font-medium">{product.name}</p>
               <p className="text-lg font-bold text-primary">
                 {selectedVariant
-                  ? Number(selectedVariant.sale_price ?? product.sale_price ?? 0).toLocaleString()
-                  : price.toLocaleString()}₮
+                  ? Number(
+                      selectedVariant.sale_price ?? product.sale_price ?? 0,
+                    ).toLocaleString()
+                  : price.toLocaleString()}
+                ₮
               </p>
             </div>
           </div>

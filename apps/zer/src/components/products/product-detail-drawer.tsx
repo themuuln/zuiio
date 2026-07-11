@@ -15,11 +15,11 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { InfoRow } from "@/components/ui/info-row";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { formatCurrency } from "@/lib/format";
 import { productKeys } from "@/lib/query/keys";
 import { useOptimisticDelete } from "@/lib/query/use-optimistic";
 import { cn } from "@/lib/utils";
-import { OptimizedImage } from "@/components/ui/optimized-image";
 
 export type ProductDetailData = {
   id: string;
@@ -137,7 +137,12 @@ export function ProductDetailDrawer({
         {/* Image gallery */}
         {images.length > 0 && (
           <div className="group relative aspect-square w-full overflow-hidden rounded-lg bg-muted/30">
-            <OptimizedImage src={images[imgIndex]} alt={product.name} className="h-full w-full object-cover" aspectRatio="1/1" />
+            <OptimizedImage
+              src={images[imgIndex]}
+              alt={product.name}
+              className="h-full w-full object-cover"
+              aspectRatio="1/1"
+            />
             {images.length > 1 && (
               <>
                 <button
