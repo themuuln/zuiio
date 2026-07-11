@@ -25,6 +25,7 @@ allowBuilds:
   "@parcel/watcher": true
   '@percy/core': true
   "@sentry/cli": true
+  '@shopify/react-native-skia': true
   "@swc/core": true
   argon2: true
   core-js: true

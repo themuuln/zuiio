@@ -33,7 +33,7 @@ Each product lives under `apps/` or a sibling product repo and shares the `@zuii
 |---------|----------|-------------|
 | Zer | Organizations | ERP/POS operations for Mongolian SMEs. |
 | Tolom | Organizations | Auto repair shop management. |
-| Tumurch | Consumers + organizations | Client workout and calorie tracking, plus ERP/CRM/shop workflows for organizations. |
+| Tumurch | Consumers + organizations | All-in-one gym platform: Hevy-level workout logging and coaching, plus gym operations (reception, memberships, billing, shop/POS, inventory, access control). Calorie tracking and health ecosystem integration planned. Built with React Native + Expo. |
 | Tamga | Consumers | Consumer app under the Zuiio product family. |
 
 ---
