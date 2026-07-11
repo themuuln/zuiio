@@ -1,27 +1,28 @@
 {
-  "name": "@zuiio/supabase",
-  "version": "0.1.0",
-  "type": "module",
-  "exports": {
-    ".": "./src/index.ts",
-    "./auth": "./src/auth.ts",
-    "./errors": "./src/errors.ts",
-    "./query": "./src/query.ts",
-    "./storage": "./src/storage.ts",
-    "./turnstile": "./src/turnstile.ts",
-    "./r2-storage": "./src/r2-storage.ts",
-    "./workers-ai": "./src/workers-ai.ts"
-  },
-  "peerDependencies": {
-    "@supabase/supabase-js": "^2"
-  },
-  "devDependencies": {
-    "@supabase/supabase-js": "^2",
-    "@zuiio/config": "workspace:*",
-    "typescript": "^5"
-  },
-  "dependencies": {
-    "@aws-sdk/client-s3": "^3.1081.0",
-    "@aws-sdk/s3-request-presigner": "^3.1081.0"
-  }
+	"name": "@zuiio/supabase",
+	"version": "0.1.0",
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./auth": "./src/auth.ts",
+		"./errors": "./src/errors.ts",
+		"./query": "./src/query.ts",
+		"./storage": "./src/storage.ts",
+		"./turnstile": "./src/turnstile.ts",
+		"./r2-storage": "./src/r2-storage.ts",
+		"./workers-ai": "./src/workers-ai.ts"
+	},
+	"peerDependencies": {
+		"@supabase/supabase-js": "^2"
+	},
+	"devDependencies": {
+		"@supabase/supabase-js": "^2",
+		"@typescript/native": "npm:typescript@^7.0.2",
+		"@zuiio/config": "workspace:*",
+		"typescript": "npm:@typescript/typescript6@^6.0.2"
+	},
+	"dependencies": {
+		"@aws-sdk/client-s3": "^3.1081.0",
+		"@aws-sdk/s3-request-presigner": "^3.1081.0"
+	}
 }

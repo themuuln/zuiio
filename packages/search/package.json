@@ -1,20 +1,21 @@
 {
-  "name": "@zuiio/search",
-  "version": "0.1.0",
-  "license": "MIT",
-  "type": "module",
-  "exports": {
-    ".": "./src/index.ts",
-    "./sql": "./src/sql-template.sql"
-  },
-  "peerDependencies": {
-    "@tanstack/react-query": "^5",
-    "@supabase/supabase-js": "^2",
-    "@zuiio/hooks": "workspace:*",
-    "react": "^18 || ^19"
-  },
-  "devDependencies": {
-    "@zuiio/config": "workspace:*",
-    "typescript": "^5"
-  }
+	"name": "@zuiio/search",
+	"version": "0.1.0",
+	"license": "MIT",
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./sql": "./src/sql-template.sql"
+	},
+	"peerDependencies": {
+		"@tanstack/react-query": "^5",
+		"@supabase/supabase-js": "^2",
+		"@zuiio/hooks": "workspace:*",
+		"react": "^18 || ^19"
+	},
+	"devDependencies": {
+		"@typescript/native": "npm:typescript@^7.0.2",
+		"@zuiio/config": "workspace:*",
+		"typescript": "npm:@typescript/typescript6@^6.0.2"
+	}
 }

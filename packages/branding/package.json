@@ -1,18 +1,19 @@
 {
-  "name": "@zuiio/branding",
-  "version": "0.1.0",
-  "license": "MIT",
-  "type": "module",
-  "scripts": {
-    "test": "vitest run"
-  },
-  "exports": {
-    ".": "./src/index.ts",
-    "./globals.css": "./globals.css"
-  },
-  "devDependencies": {
-    "@zuiio/config": "workspace:*",
-    "typescript": "^5",
-    "vitest": "catalog:"
-  }
+	"name": "@zuiio/branding",
+	"version": "0.1.0",
+	"license": "MIT",
+	"type": "module",
+	"scripts": {
+		"test": "vitest run"
+	},
+	"exports": {
+		".": "./src/index.ts",
+		"./globals.css": "./globals.css"
+	},
+	"devDependencies": {
+		"@typescript/native": "npm:typescript@^7.0.2",
+		"@zuiio/config": "workspace:*",
+		"typescript": "npm:@typescript/typescript6@^6.0.2",
+		"vitest": "catalog:"
+	}
 }

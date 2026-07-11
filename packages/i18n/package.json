@@ -1,12 +1,13 @@
 {
-  "name": "@zuiio/i18n",
-  "version": "0.1.0",
-  "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
-  "devDependencies": {
-    "@zuiio/config": "workspace:*",
-    "typescript": "^5"
-  }
+	"name": "@zuiio/i18n",
+	"version": "0.1.0",
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"devDependencies": {
+		"@typescript/native": "npm:typescript@^7.0.2",
+		"@zuiio/config": "workspace:*",
+		"typescript": "npm:@typescript/typescript6@^6.0.2"
+	}
 }

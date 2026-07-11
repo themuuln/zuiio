@@ -1,19 +1,22 @@
 {
-  "name": "@zuiio/capture",
-  "version": "0.1.0",
-  "description": "Unified error capture layer — wraps Sentry + console.error with Supabase query error helpers",
-  "license": "MIT",
-  "type": "module",
-  "types": "./src/index.ts",
-  "exports": {
-    ".": "./src/index.ts"
-  },
-  "files": ["dist"],
-  "scripts": {
-    "build": "tsc"
-  },
-  "devDependencies": {
-    "@zuiio/config": "workspace:*",
-    "typescript": "^5"
-  }
+	"name": "@zuiio/capture",
+	"version": "0.1.0",
+	"description": "Unified error capture layer — wraps Sentry + console.error with Supabase query error helpers",
+	"license": "MIT",
+	"type": "module",
+	"types": "./src/index.ts",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsc"
+	},
+	"devDependencies": {
+		"@typescript/native": "npm:typescript@^7.0.2",
+		"@zuiio/config": "workspace:*",
+		"typescript": "npm:@typescript/typescript6@^6.0.2"
+	}
 }

@@ -1,24 +1,25 @@
 {
-  "name": "@zuiio/ui",
-  "version": "0.1.0",
-  "description": "Shared UI components and utilities — InlineEditableField, search highlighting, toast helpers, form input mappings",
-  "license": "MIT",
-  "type": "module",
-  "main": "./src/index.ts",
-  "devDependencies": {
-    "@testing-library/react": "^16.3.2",
-    "@testing-library/user-event": "^14.6.1",
-    "@vitejs/plugin-react": "^6.0.3",
-    "@zuiio/config": "workspace:*",
-    "@types/react": "catalog:",
-    "jsdom": "^29.1.1",
-    "react": "catalog:",
-    "sonner": "^2",
-    "typescript": "^5",
-    "vitest": "catalog:"
-  },
-  "peerDependencies": {
-    "react": "^19",
-    "sonner": "^2"
-  }
+	"name": "@zuiio/ui",
+	"version": "0.1.0",
+	"description": "Shared UI components and utilities — InlineEditableField, search highlighting, toast helpers, form input mappings",
+	"license": "MIT",
+	"type": "module",
+	"main": "./src/index.ts",
+	"devDependencies": {
+		"@testing-library/react": "^16.3.2",
+		"@testing-library/user-event": "^14.6.1",
+		"@types/react": "catalog:",
+		"@typescript/native": "npm:typescript@^7.0.2",
+		"@vitejs/plugin-react": "^6.0.3",
+		"@zuiio/config": "workspace:*",
+		"jsdom": "^29.1.1",
+		"react": "catalog:",
+		"sonner": "^2",
+		"typescript": "npm:@typescript/typescript6@^6.0.2",
+		"vitest": "catalog:"
+	},
+	"peerDependencies": {
+		"react": "^19",
+		"sonner": "^2"
+	}
 }
