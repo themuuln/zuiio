@@ -4,11 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "NODE_OPTIONS='--max-old-space-size=12288' next build",
     "start": "next start",
     "lint": "biome check",
     "format": "biome format --write",
-    "validate:types": "tsc --noEmit"
+    "validate:types": "NODE_OPTIONS='--max-old-space-size=8192' tsc --noEmit --incremental"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
