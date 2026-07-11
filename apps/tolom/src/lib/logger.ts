@@ -1,125 +1,99 @@
 /**
- * Structured server-side logger using pino.
+ * Minimal structured logger — replaces pino.
  *
- * Provides request-scoped logging with context serialization.
- * Automatically picks the right transport based on NODE_ENV.
- *
- * In all non-Edge server environments, error-level logs are persisted to
- * logs/error.log so agents can discover recent errors without
- * searching through full output.
- *
- * Browser safety: this module is also imported by client components
- * (via sentry-report-server → bay-drag-handlers). pino.transport()
- * only exists in the Node.js pino entry — browser bundles skip it.
+ * Production: JSON to stdout (Vercel captures this natively).
+ * Development: formatted text to stdout.
+ * No worker threads, no external transports, no build fragility.
  */
-
-import pino from "pino";
 
 const isProduction = process.env.NODE_ENV === "production";
-const isEdge = process.env.NEXT_RUNTIME === "edge";
-const rootLevel = process.env.LOG_LEVEL ?? (isProduction ? "info" : "debug");
 
-// pino.transport only exists on the server entry of pino.
-// In browser bundles (pino/browser.js), it's a plain function without .transport.
-const hasServerTransport = typeof pino.transport === "function";
-
-/**
- * Build the transport pipeline.
- *
- * Browser / Edge runtime → no transport (browser serialization in pinoOptions).
- * Server (production)    → JSON stdout + error file.
- * Server (development)   → pino-pretty stdout + error file.
- */
-let transport: pino.DestinationStream | undefined;
-
-// Persist transport across HMR to avoid accumulating WriteStream listeners
-// (pino.transport() creates a WriteStream; every re-evaluation on hot reload
-//  would add more listeners, triggering MaxListenersExceededWarning).
-const GLOBAL_TRANSPORT_KEY = "__pino_transport__";
-
-if (hasServerTransport && !isEdge) {
-  const cached = (globalThis as Record<string, unknown>)[GLOBAL_TRANSPORT_KEY];
-  if (cached instanceof Object && "write" in cached) {
-    transport = cached as pino.DestinationStream;
-  } else {
-    const targets: pino.TransportTargetOptions[] = [];
-
-    // Persist error+ logs to a file so agents can discover recent errors
-    // without scanning the full output stream.
-    // Use a relative path — pino resolves it from process.cwd() automatically.
-    targets.push({
-      target: "pino/file",
-      level: "error",
-      options: {
-        destination: "logs/error.log",
-        mkdir: true,
-      },
-    });
-
-    // Primary stdout output
-    if (isProduction) {
-      targets.push({ target: "pino/file", level: rootLevel });
-    } else {
-      targets.push({
-        target: "pino-pretty",
-        level: rootLevel,
-        options: {
-          colorize: true,
-          translateTime: "HH:MM:ss",
-          ignore: "pid,hostname",
-          singleLine: true,
-        },
-      });
-    }
-
-    transport = pino.transport({ targets });
-    (globalThis as Record<string, unknown>)[GLOBAL_TRANSPORT_KEY] = transport;
-  }
-}
-
-const pinoOptions: pino.LoggerOptions = {
-  level: rootLevel,
-  ...(isEdge
-    ? {
-        browser: {
-          // Edge runtime uses a simpler serialization path
-          asObject: true,
-          serialize: true,
-        },
-      }
-    : {}),
-  redact: {
-    paths: [
-      "req.headers.authorization",
-      "req.headers.cookie",
-      "body.password",
-      "body.token",
-      "body.secret",
-    ],
-    censor: "[REDACTED]",
-  },
-  serializers: {
-    req: pino.stdSerializers.req,
-    res: pino.stdSerializers.res,
-    err: pino.stdSerializers.err,
-  },
+/** Fields to redact from structured output. */
+const REDACTED_FIELDS: Record<string, true> = {
+  authorization: true,
+  cookie: true,
+  password: true,
+  token: true,
+  secret: true,
 };
 
-/**
- * The singleton pino logger instance.
- *
- * On the server: uses multi-transport (stdout + error file).
- * On client/Edge: uses browser-compatible pino (no transport).
- */
-export const logger = pino(pinoOptions, transport);
+function redactValue(value: unknown): unknown {
+  if (typeof value !== "object" || value === null) return value;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+    out[k] = REDACTED_FIELDS[k] ? "[REDACTED]" : v;
+  }
+  return out;
+}
+
+function formatMessage(
+  level: string,
+  context: Record<string, unknown> | undefined,
+  message: string,
+): string {
+  if (isProduction) {
+    // Structured JSON — Vercel runtime logs parse this
+    const entry: Record<string, unknown> = {
+      level,
+      time: new Date().toISOString(),
+      msg: message,
+    };
+    if (context && Object.keys(context).length > 0) {
+      Object.assign(entry, redactValue(context));
+    }
+    return JSON.stringify(entry);
+  }
+
+  // Dev: human-readable
+  const prefix = level === "info" ? "" : `[${level.toUpperCase()}] `;
+  const ctx = context ? ` ${JSON.stringify(redactValue(context))}` : "";
+  return `${prefix}${message}${ctx}`;
+}
+
+type LogFn = (
+  contextOrMessage: Record<string, unknown> | string,
+  message?: string,
+) => void;
+
+interface Logger {
+  info: LogFn;
+  warn: LogFn;
+  error: LogFn;
+  debug: LogFn;
+  child: (context: Record<string, unknown>) => Logger;
+}
+
+function createLogger(baseContext?: Record<string, unknown>): Logger {
+  const merge = (ctx: Record<string, unknown> | undefined) =>
+    baseContext ? { ...baseContext, ...ctx } : ctx;
+
+  const log = (
+    level: string,
+    fn: typeof console.log,
+  ): LogFn =>
+    (ctxOrMsg, msg?) => {
+      if (typeof ctxOrMsg === "string") {
+        fn(formatMessage(level, baseContext, ctxOrMsg));
+      } else {
+        fn(formatMessage(level, merge(ctxOrMsg), msg ?? ""));
+      }
+    };
+
+  return {
+    info: log("info", console.log),
+    warn: log("warn", console.warn),
+    error: log("error", console.error),
+    debug: log("debug", console.debug),
+    child: (context) => createLogger(merge(context)),
+  };
+}
 
 /**
- * Create a child logger with bound context.
+ * Singleton logger instance.
  *
- * Usage:
- *   const log = logger.child({ service: "customer-import" });
- *   log.info({ rows: 150 }, "import complete");
+ * Production: structured JSON to stdout.
+ * Development: formatted text to stdout.
  */
-export function createLogger(context: Record<string, unknown>) {
-  return logger.child(context);
-}
+export const logger: Logger = createLogger();
+
+export { createLogger };
