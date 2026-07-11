@@ -1,7 +1,6 @@
 "use client";
 
 import { Clock } from "lucide-react";
-import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useBayViewTick } from "./_tick-context";
 
@@ -20,21 +19,15 @@ export function ElapsedText({
   startedAt: string | null | undefined;
   className?: string;
 }) {
-  const [display, setDisplay] = useState("");
-  useEffect(() => {
-    if (!startedAt) {
-      setDisplay("");
-      return;
-    }
-    const ms = new Date(startedAt).getTime();
-    const tick = () => {
-      const minutes = Math.floor((Date.now() - ms) / 60000);
-      setDisplay(formatElapsed(minutes));
-    };
-    tick();
-    const interval = setInterval(tick, 30000);
-    return () => clearInterval(interval);
-  }, [startedAt]);
+  const tick = useBayViewTick();
+
+  if (!startedAt || tick === null) {
+    return <span className={className}>—</span>;
+  }
+
+  const minutes = Math.floor((tick - new Date(startedAt).getTime()) / 60000);
+  const display = minutes >= 0 ? formatElapsed(minutes) : "—";
+
   return <span className={className}>{display}</span>;
 }
 

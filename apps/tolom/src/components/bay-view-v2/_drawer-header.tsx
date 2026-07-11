@@ -10,6 +10,7 @@ import {
   UserPlus,
   X,
 } from "lucide-react";
+import { memo, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { MechanicDisplay } from "@/components/bay-view-v2/_mechanic-display";
 import { Button } from "@/components/ui/button";
@@ -50,7 +51,7 @@ interface DrawerHeaderProps {
   t: (key: string, params?: Record<string, string | number | Date>) => string;
 }
 
-export function DrawerHeaderSection({
+function DrawerHeaderSectionInner({
   wo,
   loading,
   mechanics,
@@ -93,7 +94,7 @@ export function DrawerHeaderSection({
 
   // Ensure the assigned mechanic is always in the list, even if they
   // don't have the "mechanic" role in organization_users.
-  const effectiveMechanics = (() => {
+  const effectiveMechanics = useMemo(() => {
     if (!wo?.mechanic_id || !wo.mechanic) return mechanics;
     const alreadyIncluded = mechanics.some((m) => m.id === wo.mechanic_id);
     if (alreadyIncluded) return mechanics;
@@ -104,7 +105,53 @@ export function DrawerHeaderSection({
       },
       ...mechanics,
     ];
-  })();
+  }, [wo?.mechanic_id, wo?.mechanic, mechanics, t]);
+  // ── Stable callbacks for MechanicDisplay ──
+  const handleAssignMechanic = useCallback(
+    async (_woId: string, mechanicId: string) => {
+      const mech = effectiveMechanics.find((m) => m.id === mechanicId);
+      await onAssignMechanic(mechanicId, mech?.full_name);
+    },
+    [effectiveMechanics, onAssignMechanic],
+  );
+
+  const handleAddHelper = useCallback(
+    async (_woId: string, mechanicId: string) => {
+      try {
+        await addHelperMutation.mutateAsync({ mechanic_id: mechanicId });
+      } catch (err) {
+        reportServerError("Failed to add helper", err);
+        toast.error("Failed to add helper");
+      }
+    },
+    [addHelperMutation],
+  );
+
+  const handleRemoveMechanic = useCallback(
+    async (_woId: string) => {
+      try {
+        await removeHelperMutation.mutateAsync({
+          mechanicId: wo?.mechanic?.id ?? "",
+        });
+      } catch (err) {
+        reportServerError("Failed to remove mechanic", err);
+        toast.error("Failed to remove mechanic");
+      }
+    },
+    [removeHelperMutation, wo?.mechanic?.id],
+  );
+
+  const handleRemoveHelper = useCallback(
+    async (_woId: string, mechanicId: string) => {
+      try {
+        await removeHelperMutation.mutateAsync({ mechanicId });
+      } catch (err) {
+        reportServerError("Failed to remove helper", err);
+        toast.error("Failed to remove helper");
+      }
+    },
+    [removeHelperMutation],
+  );
 
   return (
     <DrawerHeader className="border-b border-border px-3 py-2.5 text-left shrink-0">
@@ -236,40 +283,10 @@ export function DrawerHeaderSection({
               helpers={helpers as MechanicRef[]}
               status={wo.status}
               allMechanics={effectiveMechanics}
-              onAssignMechanic={async (_woId, mechanicId) => {
-                const mech = effectiveMechanics.find(
-                  (m) => m.id === mechanicId,
-                );
-                await onAssignMechanic(mechanicId, mech?.full_name);
-              }}
-              onAddHelper={async (_woId, mechanicId) => {
-                try {
-                  await addHelperMutation.mutateAsync({
-                    mechanic_id: mechanicId,
-                  });
-                } catch (err) {
-                  reportServerError("Failed to add helper", err);
-                  toast.error("Failed to add helper");
-                }
-              }}
-              onRemoveMechanic={async (_woId) => {
-                try {
-                  await removeHelperMutation.mutateAsync({
-                    mechanicId: wo.mechanic?.id ?? "",
-                  });
-                } catch (err) {
-                  reportServerError("Failed to remove mechanic", err);
-                  toast.error("Failed to remove mechanic");
-                }
-              }}
-              onRemoveHelper={async (_woId, mechanicId) => {
-                try {
-                  await removeHelperMutation.mutateAsync({ mechanicId });
-                } catch (err) {
-                  reportServerError("Failed to remove helper", err);
-                  toast.error("Failed to remove helper");
-                }
-              }}
+              onAssignMechanic={handleAssignMechanic}
+              onAddHelper={handleAddHelper}
+              onRemoveMechanic={handleRemoveMechanic}
+              onRemoveHelper={handleRemoveHelper}
             />
           )}
           <div className="flex items-center gap-2 shrink-0">
@@ -314,3 +331,4 @@ export function DrawerHeaderSection({
     </DrawerHeader>
   );
 }
+export const DrawerHeaderSection = memo(DrawerHeaderSectionInner);

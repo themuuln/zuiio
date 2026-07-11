@@ -1,6 +1,7 @@
 "use client";
 
 import { UserPlus } from "lucide-react";
+import React from "react";
 import { MechanicAvatarChip } from "@/components/mechanic-avatar-chip";
 import { cn } from "@/lib/utils";
 import type { BayCardMechanic, BayCardWorkOrder } from "./_bay-card-types";
@@ -19,7 +20,7 @@ interface BayCardMechanicsRowProps {
   onAddHelper?: (woId: string, mechanicId: string) => Promise<void>;
 }
 
-export function BayCardMechanicsRow({
+function BayCardMechanicsRowInner({
   workOrder,
   isPending = false,
   disabled = false,
@@ -97,3 +98,4 @@ export function BayCardMechanicsRow({
     </div>
   );
 }
+export const BayCardMechanicsRow = React.memo(BayCardMechanicsRowInner);

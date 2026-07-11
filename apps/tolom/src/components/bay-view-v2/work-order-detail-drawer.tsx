@@ -13,15 +13,14 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { VariantSelectionDialog } from "@/components/services/variant-selection-dialog";
-import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   normalizeOrgTransferBankAccounts,
   resolveOrgTransferBanks,
 } from "@/lib/payments/org-bank-accounts";
 import { bayViewKeys, workOrderKeys } from "@/lib/queries/keys";
 import {
+  type DrawerDetailResponse,
   drawerDetailKeys,
   useDrawerQueries,
 } from "@/lib/queries/use-drawer-queries";
@@ -75,25 +74,93 @@ export function WorkOrderDetailDrawer({
     error,
   } = useDrawerQueries(workOrderId);
 
-  const paymentMethodFees = resolvePaymentMethodFees(
-    orgSettings?.payment_method_fees,
+  const paymentMethodFees = useMemo(
+    () => resolvePaymentMethodFees(orgSettings?.payment_method_fees),
+    [orgSettings?.payment_method_fees],
   );
-  const transferBanks = resolveOrgTransferBanks(
-    normalizeOrgTransferBankAccounts(orgSettings?.transfer_bank_accounts),
+  const transferBanks = useMemo(
+    () =>
+      resolveOrgTransferBanks(
+        normalizeOrgTransferBankAccounts(orgSettings?.transfer_bank_accounts),
+      ),
+    [orgSettings?.transfer_bank_accounts],
   );
 
   // PPR: render layout skeleton immediately, no spinner. Once data loads,
   // wo becomes non-null and the shell preserves on refetches.
 
-  // fetchWo: refetch the work order detail query
+  // fetchWo: refetch the work order detail query.
+  // Before refetching, we snapshot any unconfirmed temp items (added via
+  // addItem() but not yet persisted through confirmAdd()) so they survive
+  // the server-response cache overwrite.
   const fetchWo = useCallback(
     async (silent = false) => {
       if (!orgId || !workOrderId) return;
       const key = drawerDetailKeys.all(orgId, workOrderId);
+
+      // Snapshot temp items currently in the cache
+      const prevData = queryClient.getQueryData<DrawerDetailResponse>(key);
+      const tempServices =
+        prevData?.workOrder?.services?.filter((s) =>
+          String(s.id).startsWith("temp-"),
+        ) ?? [];
+      const tempParts =
+        prevData?.workOrder?.parts?.filter((p) =>
+          String(p.id).startsWith("temp-"),
+        ) ?? [];
+      const hasTempItems = tempServices.length > 0 || tempParts.length > 0;
+
       if (silent) {
         await queryClient.invalidateQueries({ queryKey: key });
       } else {
         await queryClient.refetchQueries({ queryKey: key });
+      }
+
+      // Merge temp items back into the fresh server data
+      if (hasTempItems) {
+        queryClient.setQueryData<DrawerDetailResponse>(key, (fresh) => {
+          if (!fresh?.workOrder) return fresh;
+
+          // Deduplicate: skip temp items whose real counterpart was
+          // already confirmed during the refetch window
+          const freshSvcIds = new Set(
+            fresh.workOrder.services
+              ?.map((s) => s.service_catalog_id)
+              .filter(Boolean) ?? [],
+          );
+          const freshPartIds = new Set(
+            fresh.workOrder.parts?.map((p) => p.part_id).filter(Boolean) ?? [],
+          );
+          const freshPartNames = new Set(
+            fresh.workOrder.parts?.map((p) => p.part_name).filter(Boolean) ??
+              [],
+          );
+
+          const survivingServices = tempServices.filter(
+            (s) =>
+              !s.service_catalog_id || !freshSvcIds.has(s.service_catalog_id),
+          );
+          const survivingParts = tempParts.filter(
+            (p) =>
+              (p.part_id ? !freshPartIds.has(p.part_id) : true) &&
+              (p.part_name ? !freshPartNames.has(p.part_name) : true),
+          );
+
+          if (survivingServices.length === 0 && survivingParts.length === 0)
+            return fresh;
+
+          return {
+            ...fresh,
+            workOrder: {
+              ...fresh.workOrder,
+              services: [
+                ...(fresh.workOrder.services ?? []),
+                ...survivingServices,
+              ],
+              parts: [...(fresh.workOrder.parts ?? []), ...survivingParts],
+            },
+          };
+        });
       }
     },
     [orgId, workOrderId, queryClient],
@@ -380,6 +447,57 @@ export function WorkOrderDetailDrawer({
     },
     [setWo, nuatMutation],
   );
+  // ── Stable callbacks for sub-components ──
+  const handleHelpersChange = useCallback(() => {
+    void fetchWo(true);
+    onRefresh();
+  }, [fetchWo, onRefresh]);
+
+  const handleToggleFullScreen = useCallback(
+    () => setIsFullScreen((f) => !f),
+    [],
+  );
+
+  const handleClose = useCallback(
+    () => handleOpenChange(false),
+    [handleOpenChange],
+  );
+
+  const handleShowCustomerPicker = useCallback(
+    () => setShowCustomerPicker(true),
+    [],
+  );
+
+  const handleNotesUpdated = useCallback(() => {
+    void fetchWo(true);
+  }, [fetchWo]);
+
+  const handleConfirmCancel = useCallback(() => {
+    setConfirmStatus(null);
+    setStatusNotes("");
+  }, [setConfirmStatus, setStatusNotes]);
+
+  const handleReadyFormClose = useCallback(() => setShowReadyForm(false), []);
+  const handleKeepEditing = useCallback(
+    () => setShowUnsavedWarning(false),
+    [setShowUnsavedWarning],
+  );
+
+  const handleCustomerSelect = useCallback(
+    (customer: { id: string }) => {
+      assignCustomer(customer.id);
+    },
+    [assignCustomer],
+  );
+
+  const handleVariantDialogClose = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        setPendingVariantItem(null);
+      }
+    },
+    [setPendingVariantItem],
+  );
 
   // ── Render ──
 
@@ -387,7 +505,7 @@ export function WorkOrderDetailDrawer({
     <>
       <DetailDrawer
         open={open}
-        onOpenChange={(nextOpen) => handleOpenChange(nextOpen)}
+        onOpenChange={handleOpenChange}
         className={cn(
           isFullScreen
             ? "!max-w-full !w-full"
@@ -414,15 +532,12 @@ export function WorkOrderDetailDrawer({
           isAddingService={isConfirming}
           isFullScreen={isFullScreen}
           onAssignMechanic={assignMechanic}
-          onHelpersChange={() => {
-            void fetchWo(true);
-            onRefresh();
-          }}
-          onToggleFullScreen={() => setIsFullScreen((f) => !f)}
-          onClose={() => handleOpenChange(false)}
+          onHelpersChange={handleHelpersChange}
+          onToggleFullScreen={handleToggleFullScreen}
+          onClose={handleClose}
           showBack={showPostServiceForm}
           onBack={handleCancelPostService}
-          onShowCustomerPicker={() => setShowCustomerPicker(true)}
+          onShowCustomerPicker={handleShowCustomerPicker}
           t={t}
         />
 
@@ -467,7 +582,7 @@ export function WorkOrderDetailDrawer({
               onEditPartQtySave={handlePartQtySave}
               lastAddedServiceId={lastAddedServiceId}
               lastAddedPartId={lastAddedPartId}
-              onNotesUpdated={() => fetchWo(true)}
+              onNotesUpdated={handleNotesUpdated}
               nuatEnabled={wo.nuat_enabled ?? false}
               onNuatToggle={handleNuatToggle}
               taxRate={orgSettings?.default_tax_rate ?? 0}
@@ -479,10 +594,7 @@ export function WorkOrderDetailDrawer({
               canInvoice={canInvoice}
               invoicePublicToken={invoicePublicToken}
               onChangeStatus={changeStatus}
-              onConfirmCancel={() => {
-                setConfirmStatus(null);
-                setStatusNotes("");
-              }}
+              onConfirmCancel={handleConfirmCancel}
               onStatusNotesChange={setStatusNotes}
               onMarkReady={handleMarkReady}
               onComplete={handleDirectComplete}
@@ -494,7 +606,7 @@ export function WorkOrderDetailDrawer({
         <UnsavedWarning
           show={showUnsavedWarning}
           onDiscard={handleDiscard}
-          onKeepEditing={() => setShowUnsavedWarning(false)}
+          onKeepEditing={handleKeepEditing}
           onSaveAndClose={handleSaveAndClose}
         />
 
@@ -510,7 +622,7 @@ export function WorkOrderDetailDrawer({
           grandTotal={grandTotal}
           paymentMethodFees={paymentMethodFees}
           transferBanks={transferBanks}
-          onReadyFormClose={() => setShowReadyForm(false)}
+          onReadyFormClose={handleReadyFormClose}
           onReadyForPickupSubmit={handleReadyForPickupSubmit}
         />
       </DetailDrawer>
@@ -521,9 +633,7 @@ export function WorkOrderDetailDrawer({
           orgId={orgId}
           open={showCustomerPicker}
           onOpenChange={setShowCustomerPicker}
-          onSelect={(customer) => {
-            assignCustomer(customer.id);
-          }}
+          onSelect={handleCustomerSelect}
         />
       )}
 
@@ -531,9 +641,7 @@ export function WorkOrderDetailDrawer({
       {pendingVariantItem && (
         <VariantSelectionDialog
           open={!!pendingVariantItem}
-          onOpenChange={(_open: boolean) => {
-            setPendingVariantItem(null);
-          }}
+          onOpenChange={handleVariantDialogClose}
           entityType={pendingVariantItem.entityType}
           entityId={pendingVariantItem.entityId}
           entityName={pendingVariantItem.entityName}

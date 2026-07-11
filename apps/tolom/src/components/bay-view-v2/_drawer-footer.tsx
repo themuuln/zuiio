@@ -7,6 +7,7 @@ import {
   FileText,
   X,
 } from "lucide-react";
+import { useMemo } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -119,12 +120,16 @@ export function DrawerFooter({
   onCreateInvoice,
   t,
 }: DrawerFooterProps) {
-  const actions = getStatusActions(
-    wo,
-    () => onChangeStatus("Diagnosing"),
-    () => onChangeStatus("In Progress"),
-    onMarkReady,
-    onComplete,
+  const actions = useMemo(
+    () =>
+      getStatusActions(
+        wo,
+        () => onChangeStatus("Diagnosing"),
+        () => onChangeStatus("In Progress"),
+        onMarkReady,
+        onComplete,
+      ),
+    [wo, onChangeStatus, onMarkReady, onComplete],
   );
 
   return (
@@ -175,27 +180,9 @@ export function DrawerFooter({
 
       {/* Primary status flow + secondary actions */}
       <div className="flex items-center gap-2">
-        {/* Primary status actions */}
-        {actions.map((action) => {
-          const Icon = action.icon;
-          const isDefault = (action.variant ?? "default") === "default";
-          return (
-            <Button
-              key={action.key}
-              variant={isDefault ? "default" : "outline"}
-              className="h-9 px-4 text-xs font-semibold"
-              onClick={action.onClick}
-              disabled={saving}
-            >
-              <Icon className="size-4" />
-              {t(action.labelKey)}
-            </Button>
-          );
-        })}
-
-        {/* Secondary actions — right-aligned */}
+        {/* Secondary actions — left-aligned */}
         {(canInvoice || canCancel) && (
-          <div className="ml-auto flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5">
             {/* Invoice */}
             {canInvoice &&
               (invoicePublicToken ? (
@@ -229,9 +216,7 @@ export function DrawerFooter({
               ))}
 
             {/* Divider before cancel */}
-            {canInvoice && canCancel && (
-              <div className="w-px h-5 bg-border" />
-            )}
+            {canInvoice && canCancel && <div className="w-px h-5 bg-border" />}
 
             {/* Cancel */}
             {canCancel && (
@@ -247,6 +232,26 @@ export function DrawerFooter({
             )}
           </div>
         )}
+
+        {/* Primary status actions — right-aligned */}
+        <div className="ml-auto flex items-center gap-2">
+          {actions.map((action) => {
+            const Icon = action.icon;
+            const isDefault = (action.variant ?? "default") === "default";
+            return (
+              <Button
+                key={action.key}
+                variant={isDefault ? "default" : "outline"}
+                className="h-9 px-4 text-xs font-semibold"
+                onClick={action.onClick}
+                disabled={saving}
+              >
+                <Icon className="size-4" />
+                {t(action.labelKey)}
+              </Button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

@@ -148,6 +148,51 @@ export const BayCard = React.memo(function BayCard({
     };
   }, [transform, isDragging]);
 
+  const handleCardClick = useCallback(() => {
+    if (wo) onOpenDetail(wo.id);
+  }, [wo, onOpenDetail]);
+
+  const providerValue = useMemo(
+    () => ({
+      woId: wo?.id ?? "",
+      status: wo?.status ?? "",
+      isPending,
+      isKanbanMode,
+      mechanics,
+      onStatusChange,
+      onRemoveFromBay,
+      onOpenDetail,
+      onRemoveHelper,
+      onAssignMechanic,
+      onRemoveMechanic,
+      onAddHelper,
+      onReorderMechanics,
+      onPauseTimer,
+      onAddNote,
+      onQuickAddService,
+      onQuickAddParts,
+    }),
+    [
+      wo?.id,
+      wo?.status,
+      isPending,
+      isKanbanMode,
+      mechanics,
+      onStatusChange,
+      onRemoveFromBay,
+      onOpenDetail,
+      onRemoveHelper,
+      onAssignMechanic,
+      onRemoveMechanic,
+      onAddHelper,
+      onReorderMechanics,
+      onPauseTimer,
+      onAddNote,
+      onQuickAddService,
+      onQuickAddParts,
+    ],
+  );
+
   return (
     <section
       ref={setNodeRef}
@@ -176,7 +221,7 @@ export const BayCard = React.memo(function BayCard({
           isDragging && "opacity-50",
           isPending && "pointer-events-none opacity-55",
         )}
-        onClick={() => wo && onOpenDetail(wo.id)}
+        onClick={handleCardClick}
         onMouseEnter={handleMouseEnter}
       >
         {wo && (
@@ -190,27 +235,7 @@ export const BayCard = React.memo(function BayCard({
         )}
 
         {wo ? (
-          <BayCardProvider
-            value={{
-              woId: wo.id,
-              status: wo.status,
-              isPending,
-              isKanbanMode,
-              mechanics,
-              onStatusChange,
-              onRemoveFromBay,
-              onOpenDetail,
-              onRemoveHelper,
-              onAssignMechanic,
-              onRemoveMechanic,
-              onAddHelper,
-              onReorderMechanics,
-              onPauseTimer,
-              onAddNote,
-              onQuickAddService,
-              onQuickAddParts,
-            }}
-          >
+          <BayCardProvider value={providerValue}>
             <BayCardOccupied bay={bay} />
           </BayCardProvider>
         ) : (
