@@ -1,134 +1,243 @@
-# TOLOM — UI/UX Flow Fix Plan
+# Tolom i18n Improvement Plan
 
-## Context
-
-The TOLOM app (garage operating system) has significant UI/UX issues throughout the user flow. The code was built with functionality as the primary concern, resulting in inconsistent patterns, poor tablet UX, missing core features from the MASTER_PLAN (like price memory display), and navigation/information architecture problems.
-
-This plan addresses **Phase 1 tablet-first startup CRM** issues only — aligning with the MASTER_PLAN scope.
-
-## Approach
-
-Address issues in 4 rounds of increasing depth, each building on the previous:
-
-1. **Round A: Fix the homepage + auth flow + nav IA** (highest user-facing impact)
-2. **Round B: Fix the core work order flow** (tablet UX + price memory)
-3. **Round C: Fix feedback/consistency/trust signals** (loading, errors, confirmations)
-4. **Round D: Polish and accessibility**
-
-Within each round, touch the highest-priority pages first.
+**Created:** 2026-07-11
+**Status:** Awaiting prioritization
 
 ---
 
-## Files to Modify
+## Current State
 
-| File | Round | Why |
-|------|-------|-----|
-| `src/app/[locale]/page.tsx` | A | Default Next.js homepage — wrong |
-| `src/app/[locale]/dashboard/layout.tsx` | A | Nav IA — hide vehicle-models, rename sections |
-| `src/app/[locale]/dashboard/finance/page.tsx` | A | Empty shell — remove from nav or fill |
-| `src/app/[locale]/dashboard/work-orders/new/page.tsx` | B | 6-step wizard too heavy; no price memory shown |
-| `src/app/[locale]/dashboard/work-orders/[id]/page.tsx` | B, C | Status without confirmation; no notes on transition; no undo |
-| `src/app/[locale]/dashboard/work-orders/page.tsx` | B | List improvements |
-| `src/app/[locale]/dashboard/vehicles/[id]/page.tsx` | B | Progressive disclosure for fields |
-| `src/app/[locale]/dashboard/customers/new/page.tsx` | B | Quick-create from WO flow |
-| `src/app/[locale]/dashboard/vehicles/new/page.tsx` | B | Quick-create from WO flow |
-| `src/app/[locale]/dashboard/page.tsx` | B, C | Daily goal to backend, mechanic workload |
-| `src/components/price-display.tsx` | B | New — reusable last-sold-price + price hint |
-| `src/components/ui/input.tsx` | C | Verify consistency |
-| `src/components/status-badge.tsx` | C | Fix dark mode variant duplication |
-| All page files with error/loading | C | Standardize patterns |
-| All page files with button sizing | D | Touch target audit |
+| Metric | Value |
+|--------|-------|
+| Library | next-intl@4.13.1 (latest stable) |
+| Locales | `mn` (default), `en` |
+| Namespaces | 49 |
+| Leaf keys | 3,964 |
+| `useTranslations()` without namespace | 666 calls / 255 files |
+| `useTranslations()` with namespace | 331 calls / 200 files |
+| ICU plural usage | 5 keys |
+| Keys needing ICU plural conversion | 52 keys |
+| Message file size | ~4,143 lines per locale |
 
 ---
 
-## Reuse
+## Completed
 
-| Existing Utility | File Path | Use It For |
-|-----------------|-----------|------------|
-| `SearchInput` | `src/components/search-input.tsx` | Reuse pattern (already done in customer list, replicate to WO list) |
-| `MechanicSelect` | `src/components/mechanic-select.tsx` | Already used — good |
-| `StatusBadge` | `src/components/status-badge.tsx` | Use everywhere, remove local `_statusBadge` duplicates |
-| `Button` | `src/components/ui/button.tsx` | Already used but audit `size` prop usage |
-| `Input` | `src/components/ui/input.tsx` | Use consistently, replace raw `<input>` |
-| `formatCurrency` | `src/lib/utils.ts` | Already used — good |
-| `useCurrentOrg` | `src/lib/queries/use-organization.ts` | Reuse pattern across more pages |
+- [x] Enable type-safe messages (`createMessagesDeclaration` + `AppConfig` augmentation)
+- [x] Remove type-cast hacks (`as (key: string) => string`) — 10 occurrences
+- [x] Add `common.statusLabels` for work order statuses (MN + EN)
+- [x] Rewrite `StatusBadge` to use `useTranslations()` instead of hardcoded English
+- [x] Update StatusBadge tests to use `renderWithProviders` + i18n wrapper
 
 ---
 
-## Steps
+## Phase 1: Namespace All `useTranslations()` Calls
 
-### Round A — Homepage + Nav IA
+**Effort:** Medium (~255 files)
+**Impact:** High — makes translation scoping clear
 
-- [ ] **A1**: Redirect authenticated users from `/` to `/dashboard`; show a basic landing for unauthenticated (or just redirect everyone to `/auth/login`)
-- [ ] **A2**: Remove "Vehicle Models" from sidebar `mainItems`, move it under a sub-section or into Settings
-- [ ] **A3**: Merge "Organization" and "Settings" sidebar items into a single "Settings" group with sub-items (or move Organization under Settings)
-- [ ] **A4**: Either implement a basic Finance page (show revenue summary, unpaid work orders) OR hide/remove the nav item entirely — an empty page is worse than no page
-- [ ] **A5**: Group sidebar into logical sections: **Operations** (Dashboard, Work Orders, Customers, Vehicles, Bay View) | **Settings** (Settings, Organization) | remove Vehicle Models from top level
+Every `useTranslations()` call without a namespace searches the entire 3,964-key dictionary. Adding namespaces makes it clear which keys belong to which feature.
 
-### Round B — Core Work Order Flow
+### What to do
+- Find every `useTranslations()` call without a namespace argument
+- Determine which namespace the keys belong to (grep for the key in `en.json`)
+- Add the namespace: `useTranslations()` → `useTranslations("bayView")`
 
-- [ ] **B1**: Collapse the 6-step wizard into a single-page scrollable form with logical sections:
-  - Top row: customer search + vehicle search side by side (compact)
-  - Quick-create inline for customer (don't show separate page)
-  - Quick-create inline for vehicle
-  - Services section: catalog browser with category filter + "last sold price" shown beside each service
-  - Parts section: manual entry with last-sold-price hint
-  - Mechanic selector
-  - Notes field
-  - Grand total + Create button always visible (sticky footer)
-- [ ] **B2**: Build `PriceDisplay` component that shows: current editable price + "(last: ₮XXX)" hint in muted text, with color coding if price differs from catalog default
-- [ ] **B3**: Add plate-number auto-complete to vehicle search (search as you type in the WO form)
-- [ ] **B4**: Pre-fill form when customer selected — auto-load their last used vehicle and last service set
-- [ ] **B5**: Quick-create customer: inline form (name + phone) that creates and selects in 2 steps, not 6
-- [ ] **B6**: Quick-create vehicle: inline form (plate + make/model) that creates and selects in 2 steps
-- [ ] **B7**: Add "Save Draft" button that stores to localStorage (so accidental navigation doesn't lose data)
-- [ ] **B8**: Replace raw `<input>` elements in service lines with `Input` component for styling consistency
+### Example
+```tsx
+// Before: unclear where keys come from
+const t = useTranslations();
+t("statusNew");
 
-### Round B — Work Order Detail
+// After: scoped to namespace
+const t = useTranslations("bayView");
+t("statusNew");
+```
 
-- [ ] **B9**: Add status change confirmation dialog (especially for "Completed" and "Cancelled")
-- [ ] **B10**: Add a notes textarea when changing status — capture mechanic's handover notes
-- [ ] **B11**: Add undo snackbar/toast when deleting a service or part (show "Deleted Oil Change — Undo" for 5s)
-- [ ] **B12**: Replace the inline add-service search with a scrollable catalog grid that shows categories as tabs — faster for tablet
-- [ ] **B13**: Show "last sold price" column in both services and parts lists on the detail page
-- [ ] **B14**: Add inline editing for service quantity and price (instead of separate form)
-
-### Round B — Price Memory
-
-- [ ] **B15**: Ensure every price input field in WO new + detail shows the "last sold price" hint from `price_history`
-- [ ] **B16**: Add price history tooltip or dropdown when clicking the hint
-- [ ] **B17**: Ensure price history is saved on EVERY service/part addition (verify backend saves it)
-
-### Round C — Feedback & Consistency
-
-- [ ] **C1**: Standardize all list loading states to use `<Skeleton>` with proper layout (match customer list pattern which uses TanStack Query + Skeleton)
-- [ ] **C2**: Standardize error display: prefer inline error card with retry button + toast for destructive failures
-- [ ] **C3**: Add confirmation before all destructive actions (delete customer, delete vehicle, delete service from catalog, cancel work order)
-- [ ] **C4**: Move daily goal from localStorage to backend (org settings API) — shared across all users
-- [ ] **C5**: Add mechanic workload summary to dashboard (how many WOs per mechanic, who's free)
-- [ ] **C6**: Fix the duplicate `_statusBadge` function in work-order detail — use the imported `StatusBadge` component consistently
-
-### Round D — Polish & Tablet UX
-
-- [ ] **D1**: Audit every interactive element for minimum 44px touch target on tablet (check `h-9` buttons, inline icon buttons, select elements)
-- [ ] **D2**: Add breadcrumbs to all depth >1 pages (e.g., Work Orders > #12345)
-- [ ] **D3**: Add `aria-label` to all icon-only buttons
-- [ ] **D4**: Add subtle transitions for: status badge changes, step progression, modal open/close
-- [ ] **D5**: Add a global search in the header (search customers/vehicles/WOs from anywhere)
-- [ ] **D6**: Clean up form field consistency — replace all raw `<input type="text">` and `<textarea>` with proper `Input`/`Textarea` components
-- [ ] **D7**: Add pull-to-refresh on list pages (customers, vehicles, work orders)
+### Tracking
+- [ ] Run `grep -rn "useTranslations()" src --include='*.tsx' --include='*.ts'` to get the full list
+- [ ] Process file by file, adding appropriate namespace
+- [ ] Verify with `pnpm run validate` (lint + type-check)
+- [ ] Run `npx vitest run` to catch regressions
 
 ---
 
-## Verification
+## Phase 2: Split Monolithic Message Files into Per-Namespace Files
 
-1. **Auth flow**: Start from `/` → should redirect to login or dashboard. Signup → login → dashboard.
-2. **Homepage**: Unauthenticated users see a basic page; authenticated users land on dashboard.
-3. **New WO flow (tablet)**: Create a WO in ≤5 taps (select customer → vehicle → pick service → assign mechanic → create). No page transitions during creation.
-4. **Price memory**: When adding a service that was used before, the last sold price appears in muted text beside the price input.
-5. **Status transitions**: Changing status shows a confirmation + optional notes field. Cancelled requires confirmation.
-6. **Undo**: Deleting a service/part shows an undo toast.
-7. **Sidebar**: Only relevant Phase 1 items visible. Vehicle Models is behind Settings.
-8. **Touch targets**: Every interactive element ≥44px on viewports <1024px.
-9. **Consistency**: All forms use `Input` component. All lists show skeletons during load. All errors show inline card + toast.
-10. **Daily goal**: Shared across all users (stored in backend), not per-browser.
+**Effort:** High (all message files + i18n/request.ts + all imports)
+**Impact:** High — cleaner diffs, per-feature editing, lazy loading potential
+
+### Target structure
+```
+src/messages/
+├── en/
+│   ├── _index.ts          # re-exports all namespaces
+│   ├── app.json
+│   ├── auth.json
+│   ├── bayView.json       # largest: ~720 keys
+│   ├── common.json        # ~250 keys
+│   ├── customers.json
+│   ├── dashboard.json
+│   ├── finance.json
+│   ├── home.json
+│   ├── inventory.json     # ~500 keys
+│   ├── mechanic.json
+│   ├── mechanicPerformance.json
+│   ├── nav.json
+│   ├── organization.json
+│   ├── pricing.json
+│   ├── reports.json
+│   ├── services.json      # ~298 keys
+│   ├── settings.json      # ~564 keys
+│   ├── vehicles.json
+│   ├── workOrderDetail.json
+│   ├── workOrders.json
+│   ├── workOrderWizard.json
+│   └── ... (49 files total)
+├── mn/
+│   ├── _index.ts
+│   ├── app.json
+│   ├── auth.json
+│   └── ... (mirrors en/)
+```
+
+### What to do
+1. For each namespace in `en.json`, extract to `en/{namespace}.json`
+2. Do the same for `mn.json`
+3. Create `en/_index.ts` that imports and merges all namespaces
+4. Update `src/lib/i18n/request.ts` to load from `_index.ts`
+5. Verify all `useTranslations("namespace")` calls still resolve
+6. Run full test suite
+
+### `_index.ts` pattern
+```ts
+import app from "./app.json";
+import auth from "./auth.json";
+import bayView from "./bayView.json";
+import common from "./common.json";
+// ... all namespaces
+
+const messages = { app, auth, bayView, common, ... };
+export default messages;
+```
+
+---
+
+## Phase 3: Convert `{count}` Interpolation to ICU Plural Forms
+
+**Effort:** Small (~52 keys, ~1 hour)
+**Impact:** Medium — correct Mongolian grammar
+
+52 keys use simple `{count} pending` instead of proper ICU plural syntax. Mongolian has a 2-form plural system (`one` + `other`), same as English.
+
+### Keys to convert (sample)
+```json
+// Before (wrong grammar for plural counts):
+"pendingCount": "{count} хүлээгдэж байна"
+
+// After (proper ICU plural):
+"pendingCount": "{count, plural, one {# хүлээгдэж байна} other {# хүлээгдэж байна}}"
+```
+
+### Key list
+- `common.pendingCount`
+- `mechanic.jobCount`
+- `bayView.moreInQueue`
+- `bayView.batchComplete`
+- `bayView.batchCompleteConfirmDesc`
+- `bayView.batchCompleteSuccess`
+- `bayView.activeJobsCount`
+- `inventory.variantCount`
+- `inventory.thresholdSet`
+- `inventory.partsNoThreshold`
+- `services.serviceCount`
+- ... and 41 more (run `grep -n '{count}' src/messages/en.json` for full list)
+
+---
+
+## Phase 4: Translation Completeness Script
+
+**Effort:** Small (~30 minutes)
+**Impact:** High — visibility into what's done and what's missing
+
+Create `scripts/i18n/completeness.mjs` that reports:
+- Keys in `en.json` but missing in `mn.json`
+- Keys in `mn.json` but missing in `en.json`
+- Keys where both locales have identical values (likely untranslated)
+- Completion percentage per namespace
+- Overall completion percentage
+
+### Usage
+```bash
+pnpm i18n:completeness
+```
+
+### Output (example)
+```
+Translation Completeness Report
+================================
+
+Overall: 98.2% (3,892 / 3,964 keys translated)
+
+By Namespace:
+  bayView          99.4% (716/720)
+  common           97.2% (243/250)
+  inventory        100.0% (500/500)
+  settings         98.6% (556/564)
+  ...
+
+Missing translations (mn.json):
+  bayView.queueEmpty (line 45)
+  bayView.noBays (line 89)
+  ...
+
+Identical values (possibly untranslated):
+  common.error: "Error" / "Error" (line 147)
+  home.heroSubtitle: "..." / "..." (line 234)
+  ...
+```
+
+---
+
+## Phase 5: Key Ordering Alignment
+
+**Effort:** Small (automated)
+**Impact:** Low — cleaner diffs
+
+Both `en.json` and `mn.json` have the same keys but in different order. Sorting both identically makes manual edits and git diffs much cleaner.
+
+### What to do
+- [ ] Create a script that sorts both JSON files by key (canonical order)
+- [ ] Run once and commit
+- [ ] Add to CI: fail if keys are out of order
+
+---
+
+## Dependencies Between Phases
+
+```
+Phase 1 (namespace calls)
+  ↓
+Phase 2 (split files) — requires Phase 1 to be complete
+  ↓
+Phase 4 (completeness script) — easier after split
+Phase 3 (ICU plurals) — independent, can do anytime
+Phase 5 (key ordering) — independent, can do anytime
+```
+
+---
+
+## Quick Wins (can do right now)
+
+| Task | Time | Impact |
+|------|------|--------|
+| ICU plurals for 52 keys | ~1 hour | Correct grammar |
+| Translation completeness script | ~30 min | Visibility |
+| Key ordering alignment | ~5 min (automated) | Cleaner diffs |
+
+## Big Wins (need planning)
+
+| Task | Time | Impact |
+|------|------|--------|
+| Namespace all 666 calls | ~half day | Clear scoping |
+| Split 49 namespaces into files | ~half day | Better workflow |
