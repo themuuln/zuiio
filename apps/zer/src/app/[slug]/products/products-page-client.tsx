@@ -142,23 +142,26 @@ export function ProductsPageClient({
         </div>
       )}
 
-      {/* Main layout: sidebar + grid */}
+      {/* Fixed sidebar — positioned outside flow */}
+      <aside className="pointer-events-auto fixed left-[max(2rem,calc(50%-38rem))] top-20 z-10 hidden h-[calc(100dvh-5rem)] w-60 overflow-y-auto border-r border-border/60 py-6 pr-6 lg:block">
+        <SidebarFilters
+          search={search}
+          setSearch={setSearch}
+          categoryFilter={categoryFilter}
+          setCategoryFilter={setCategoryFilter}
+          stockFilter={stockFilter}
+          setStockFilter={setStockFilter}
+          categories={categories}
+          products={products}
+          hasFilters={hasFilters}
+          clearFilters={clearFilters}
+        />
+      </aside>
+
+      {/* Main layout: spacer + grid */}
       <div className="mx-auto flex w-full max-w-7xl flex-1 gap-0 px-4 sm:px-6 lg:gap-8 lg:px-8">
-        {/* Desktop sidebar */}
-        <aside className="hidden w-60 shrink-0 border-r border-border/60 py-6 pr-6 lg:block">
-          <SidebarFilters
-            search={search}
-            setSearch={setSearch}
-            categoryFilter={categoryFilter}
-            setCategoryFilter={setCategoryFilter}
-            stockFilter={stockFilter}
-            setStockFilter={setStockFilter}
-            categories={categories}
-            products={products}
-            hasFilters={hasFilters}
-            clearFilters={clearFilters}
-          />
-        </aside>
+        {/* Spacer for fixed sidebar */}
+        <div className="hidden w-60 shrink-0 lg:block" />
 
         {/* Product grid */}
         <main className="flex-1 py-6">
