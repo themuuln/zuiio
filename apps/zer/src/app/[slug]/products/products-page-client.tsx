@@ -60,7 +60,7 @@ export function ProductsPageClient({
     });
   }, [products, search, categoryFilter, stockFilter]);
 
-  const hasFilters = search || categoryFilter || stockFilter !== "all";
+  const hasFilters = !!(search || categoryFilter || stockFilter !== "all");
 
   const clearFilters = () => {
     setSearch("");
