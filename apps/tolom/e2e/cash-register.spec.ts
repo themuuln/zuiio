@@ -72,9 +72,10 @@ test.describe("Cash Register (Mocked)", () => {
   });
 
   test.describe("Sidebar Navigation", () => {
-    test("has Cash Register link in sidebar", async ({ page }) => {
+    test("has Cash Register in sidebar", async ({ page }) => {
+      // Sidebar uses buttons, not links
       await expect(
-        page.getByRole("link", { name: /cash register/i }).first(),
+        page.getByRole("button", { name: /cash register/i }).first(),
       ).toBeVisible();
     });
   });

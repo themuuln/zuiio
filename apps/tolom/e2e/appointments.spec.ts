@@ -13,8 +13,9 @@ test.describe("Appointments (Mocked)", () => {
   });
 
   test.describe("Page Structure", () => {
-    test("loads the appointments page with heading", async ({ page }) => {
-      await expect(page.getByRole("heading", { level: 1 })).toBeVisible({
+    test("loads the appointments page", async ({ page }) => {
+      // Appointments page has a breadcrumb, not an h1
+      await expect(page.getByRole("navigation", { name: "breadcrumb" })).toBeVisible({
         timeout: 10_000,
       });
     });
@@ -31,7 +32,7 @@ test.describe("Appointments (Mocked)", () => {
 
   test.describe("View Mode", () => {
     test("has list and calendar view options", async ({ page }) => {
-      await expect(page.getByRole("heading", { level: 1 })).toBeVisible({
+      await expect(page.getByRole("navigation", { name: "breadcrumb" })).toBeVisible({
         timeout: 10_000,
       });
 
@@ -44,13 +45,15 @@ test.describe("Appointments (Mocked)", () => {
     test("switching to calendar view does not crash", async ({ page }) => {
       const calBtn = page.getByRole("button", { name: /calendar/i }).first();
       await calBtn.click();
-      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      // Page should still be functional after view switch
+      await expect(page.getByRole("navigation", { name: "breadcrumb" })).toBeVisible();
     });
   });
 
   test.describe("Status Filtering", () => {
     test("shows status filter control", async ({ page }) => {
-      await expect(page.getByRole("heading", { level: 1 })).toBeVisible({
+      // The status filter is a combobox/select
+      await expect(page.getByRole("combobox").first()).toBeVisible({
         timeout: 10_000,
       });
     });
@@ -62,16 +65,18 @@ test.describe("Appointments (Mocked)", () => {
       await mockSupabaseREST(page);
       await mockAppointments(page, []);
       await page.goto("/dashboard/appointments");
-      await expect(page.getByRole("heading", { level: 1 })).toBeVisible({
+      // Empty state shows "No appointments" text
+      await expect(page.getByText(/no appointments/i)).toBeVisible({
         timeout: 10_000,
       });
     });
   });
 
   test.describe("Sidebar Navigation", () => {
-    test("has Appointments link in sidebar", async ({ page }) => {
+    test("has Appointments in sidebar", async ({ page }) => {
+      // Sidebar uses buttons, not links
       await expect(
-        page.getByRole("link", { name: /appointment/i }).first(),
+        page.getByRole("button", { name: /appointment/i }).first(),
       ).toBeVisible();
     });
   });

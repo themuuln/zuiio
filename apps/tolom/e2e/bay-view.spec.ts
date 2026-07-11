@@ -98,10 +98,11 @@ test.describe("Bay View (Mocked)", () => {
       await waitForBayViewReady(page);
 
       // These pills render client-side — not API-dependent
-      await expect(page.getByRole("button", { name: "Бүгд" })).toBeVisible({
+      // Use exact match to avoid "Шинэ" matching "Шинэчлэх" (Refresh)
+      await expect(page.getByRole("button", { name: "Бүгд", exact: true })).toBeVisible({
         timeout: 5000,
       });
-      await expect(page.getByRole("button", { name: "Шинэ" })).toBeVisible({
+      await expect(page.getByRole("button", { name: "Шинэ", exact: true })).toBeVisible({
         timeout: 5000,
       });
     });
@@ -109,7 +110,8 @@ test.describe("Bay View (Mocked)", () => {
     test("clicking a status pill does not crash the page", async ({ page }) => {
       await waitForBayViewReady(page);
 
-      const newFilter = page.getByRole("button", { name: "Шинэ" });
+      // Use exact match to avoid matching "Шинэчлэх" (Refresh)
+      const newFilter = page.getByRole("button", { name: "Шинэ", exact: true });
       await expect(newFilter).toBeVisible({ timeout: 5000 });
       await newFilter.click();
       await page.waitForTimeout(500);
@@ -184,27 +186,28 @@ test.describe("Bay View (Mocked)", () => {
   });
 
   test.describe("Sidebar Navigation", () => {
-    test("sidebar has link to bay view", async ({ page }) => {
+    test("sidebar has bay view in navigation", async ({ page }) => {
       await waitForBayViewReady(page);
 
+      // Sidebar uses buttons, not links
       await expect(
         page
           .getByRole("complementary")
-          .getByRole("link", { name: "Засварын булан" }),
+          .getByRole("button", { name: "Засварын булан" }),
       ).toBeVisible({ timeout: 5000 });
     });
   });
 
   test.describe("Alternative Route", () => {
-    test("navigates to bay-view-v2 route and loads", async ({ page }) => {
+    test("navigates to bay-view-v3 route and loads", async ({ page }) => {
       await mockBayView(page);
-      await page.goto("/dashboard/bay-view-v2");
+      await page.goto("/dashboard/bay-view-v3");
       await waitForBayViewReady(page);
     });
 
-    test("bay-view-v2 shows bay regions with data", async ({ page }) => {
+    test("bay-view-v3 shows bay regions with data", async ({ page }) => {
       await mockBayView(page);
-      await page.goto("/dashboard/bay-view-v2");
+      await page.goto("/dashboard/bay-view-v3");
       await waitForBayViewReady(page);
       await expect(
         page.getByRole("region", { name: /bay \d/i }).first(),
