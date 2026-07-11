@@ -9,13 +9,13 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
+import { ProductDetailDrawer } from "@/components/products/product-detail-drawer";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getCompanyTypeLabel } from "@/lib/constants";
 import { formatCurrency } from "@/lib/format";
 import type { OrgMeta, PublicCategory, PublicProduct } from "./page";
-import { ProductDetailDrawer } from "./product-detail-drawer";
 
 const STOCK_FILTERS = [
   { value: "all", label: "Бүгд" },
