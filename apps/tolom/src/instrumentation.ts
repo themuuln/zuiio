@@ -62,7 +62,9 @@ export async function register() {
       // slow page). It is NOT a real crash — suppress it.
       if (
         error instanceof Error &&
-        (error.code === "ECONNRESET" || error.code === "EPIPE" || error.message === "aborted")
+        ((error as NodeJS.ErrnoException).code === "ECONNRESET" ||
+          (error as NodeJS.ErrnoException).code === "EPIPE" ||
+          error.message === "aborted")
       ) {
         return;
       }

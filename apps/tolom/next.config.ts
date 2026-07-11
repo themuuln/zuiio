@@ -42,7 +42,11 @@ const nextConfig: NextConfig = {
     reference: { stale: 3600, revalidate: 600, expire: 7200 },
   },
 
-  serverExternalPackages: ["playwright-core"],
+  serverExternalPackages: [
+    "playwright-core",
+    "@aws-sdk/client-s3",
+    "@aws-sdk/s3-request-presigner",
+  ],
 
   images: {
     formats: ["image/avif", "image/webp"],
