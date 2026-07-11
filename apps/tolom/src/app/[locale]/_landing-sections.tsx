@@ -101,7 +101,7 @@ export function HowItWorksSection() {
 }
 
 export function WorkflowSection() {
-  const t = useTranslations("home") as (key: string) => string;
+  const t = useTranslations("home");
 
   return (
     <section className="border-t px-4 py-16 sm:px-6 sm:py-24">
@@ -156,7 +156,7 @@ export function WorkflowSection() {
 }
 
 export function DifferentiatorsSection() {
-  const t = useTranslations("home") as (key: string) => string;
+  const t = useTranslations("home");
 
   return (
     <section className="border-t bg-muted/20 px-4 py-16 sm:px-6 sm:py-24">
@@ -198,7 +198,7 @@ export function DifferentiatorsSection() {
 }
 
 export function TestimonialsSection() {
-  const t = useTranslations("home") as (key: string) => string;
+  const t = useTranslations("home");
 
   return (
     <section className="border-b px-4 py-16 sm:px-6 sm:py-24">
@@ -250,7 +250,7 @@ export function TestimonialsSection() {
 const MONTHLY_PRICES = [299000, 699000, 1590000];
 
 export function PricingSection() {
-  const t = useTranslations("home") as (key: string) => string;
+  const t = useTranslations("home");
   const [annual, setAnnual] = useState(false);
 
   return (

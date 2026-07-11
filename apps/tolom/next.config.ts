@@ -3,7 +3,9 @@ import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
-const withNextIntl = createNextIntlPlugin("./src/lib/i18n/request.ts");
+const withNextIntl = createNextIntlPlugin("./src/lib/i18n/request.ts", {
+  createMessagesDeclaration: "./src/messages/en.json",
+});
 
 const nextConfig: NextConfig = {
   // @zuiio/* packages export raw .ts source — transpile them.

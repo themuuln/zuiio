@@ -149,7 +149,15 @@
     "new": "Шинэ",
     "operations": "Үйл ажиллагаа",
     "financial": "Санхүү",
-    "inventory": "Бараа материал"
+    "inventory": "Бараа материал",
+    "statusLabels": {
+      "new": "Шинэ",
+      "diagnosing": "Шалгаж байна",
+      "inProgress": "Ажиллаж байна",
+      "readyForPickup": "Авч болно",
+      "completed": "Дууссан",
+      "cancelled": "Цуцалсан"
+    }
   },
   "auth": {
     "setup": {
@@ -801,6 +809,7 @@
     "workOrderDrawerDescription": "Энэ ажлын захиалгын үйлчилгээ, сэлбэг, тэмдэглэл, төлөвийг нэг дороос удирдана.",
     "addServiceDrawerDescription": "Үйлчилгээний каталогоос хайх эсвэл энэ ажлын захиалгад шинэ үйлчилгээ нэмнэ үү.",
     "addPartDrawerDescription": "Сэлбэгийн каталогоос хайх эсвэл энэ ажлын захиалгад шинэ сэлбэг нэмнэ үү.",
+    "filterAll": "Бүгд",
     "completedCelebration": "Дууслаа!",
     "mechanicEmptyDescription": "Механикч нэмж эсвэл бүртгүүлж Засварын булангаас ажил томилохоо эхлээрэй.",
     "noParts": "Сэлбэг байхгүй",

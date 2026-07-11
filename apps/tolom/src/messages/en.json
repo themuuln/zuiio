@@ -149,7 +149,15 @@
     "new": "New",
     "operations": "Operations",
     "financial": "Financial",
-    "inventory": "Inventory"
+    "inventory": "Inventory",
+    "statusLabels": {
+      "new": "New",
+      "diagnosing": "Diagnosing",
+      "inProgress": "In Progress",
+      "readyForPickup": "Ready for Pickup",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    }
   },
   "auth": {
     "setup": {
@@ -801,6 +809,7 @@
     "workOrderDrawerDescription": "Review services, parts, notes, and status for this work order.",
     "addServiceDrawerDescription": "Search the service catalog or add a custom service to this work order.",
     "addPartDrawerDescription": "Search the parts catalog or add a custom part to this work order.",
+    "filterAll": "All",
     "completedCelebration": "Completed!",
     "mechanicEmptyDescription": "Add or register mechanics to start assigning work from Bay View.",
     "noParts": "No parts",
