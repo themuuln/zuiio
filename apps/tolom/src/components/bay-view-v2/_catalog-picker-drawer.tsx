@@ -1,7 +1,7 @@
 "use client";
 
+import { X } from "lucide-react";
 import { useLocale } from "next-intl";
-import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import type { CatalogItem } from "./_catalog-combobox";
 import { CatalogCombobox } from "./_catalog-combobox";
@@ -21,6 +21,7 @@ interface CatalogPickerDrawerProps<T extends CatalogItem> {
   noMatchMessage: string;
   addAsNewLabel: string;
   closeLabel: string;
+  filterAllLabel: string;
 }
 
 export function CatalogPickerDrawer<T extends CatalogItem>({
@@ -38,6 +39,7 @@ export function CatalogPickerDrawer<T extends CatalogItem>({
   noMatchMessage,
   addAsNewLabel,
   closeLabel,
+  filterAllLabel,
 }: CatalogPickerDrawerProps<T>) {
   const locale = useLocale();
 
@@ -48,7 +50,18 @@ export function CatalogPickerDrawer<T extends CatalogItem>({
       size="5xl"
       backdropForceRender
     >
-      <DetailDrawer.Header>
+      <DetailDrawer.Header
+        actions={
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            aria-label={closeLabel}
+            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <X className="size-4" />
+          </button>
+        }
+      >
         <DetailDrawer.Title className="text-2xl tracking-tight">
           {title}
         </DetailDrawer.Title>
@@ -57,7 +70,7 @@ export function CatalogPickerDrawer<T extends CatalogItem>({
         </DetailDrawer.Description>
       </DetailDrawer.Header>
 
-      <DetailDrawer.Body>
+      <DetailDrawer.Body className="p-0">
         <CatalogCombobox
           items={items}
           search={search}
@@ -70,20 +83,9 @@ export function CatalogPickerDrawer<T extends CatalogItem>({
           addAsNewLabel={addAsNewLabel}
           locale={locale}
           resultsMode="inline"
+          filterAllLabel={filterAllLabel}
         />
       </DetailDrawer.Body>
-
-      <DetailDrawer.Footer>
-        <DetailDrawer.FooterActions justify="end">
-          <Button
-            variant="outline"
-            size="default"
-            onClick={() => onOpenChange(false)}
-          >
-            {closeLabel}
-          </Button>
-        </DetailDrawer.FooterActions>
-      </DetailDrawer.Footer>
     </DetailDrawer>
   );
 }

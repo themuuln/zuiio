@@ -142,7 +142,6 @@ export function BayViewV2Client() {
             </div>
           )}
 
-
           {/* ── Inline error banner ── */}
           {hasError && !bayViewData.isAccessDenied && (
             <div className="flex items-center justify-between border-b border-destructive/20 bg-destructive/5 px-4 py-2">

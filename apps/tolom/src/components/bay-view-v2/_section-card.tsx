@@ -27,6 +27,8 @@ interface SectionCardProps {
   onToggleAdd: () => void;
   /** Section content */
   children: ReactNode;
+  /** Optional extra classes for the add button */
+  addButtonClassName?: string;
 }
 
 export function SectionCard({
@@ -40,6 +42,7 @@ export function SectionCard({
   addLabel,
   onToggleAdd,
   children,
+  addButtonClassName,
 }: SectionCardProps) {
   return (
     <section className="rounded-xl bg-card/40 p-3">
@@ -80,7 +83,7 @@ export function SectionCard({
       <Button
         variant="outline"
         onClick={onToggleAdd}
-        className="mt-2 w-full border-dashed text-xs h-9 gap-2 text-muted-foreground hover:text-foreground transition-colors"
+        className={`mt-2 w-full border-dashed text-xs h-9 gap-2 text-muted-foreground hover:text-foreground transition-colors ${addButtonClassName ?? ""}`}
       >
         <Plus className="size-4" />
         {addLabel}

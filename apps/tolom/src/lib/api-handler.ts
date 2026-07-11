@@ -186,7 +186,12 @@ export function createRouteHandler(
       });
 
       const duration = Math.round(performance.now() - start);
-      logger.info(
+      const logFn = response.status >= 500
+        ? logger.error
+        : response.status >= 400
+          ? logger.warn
+          : logger.info;
+      logFn(
         {
           method,
           path,
@@ -245,7 +250,12 @@ export function createSimpleRouteHandler(
       const response = await handler({ request, user: user as User, supabase });
 
       const duration = Math.round(performance.now() - start);
-      logger.info(
+      const logFn = response.status >= 500
+        ? logger.error
+        : response.status >= 400
+          ? logger.warn
+          : logger.info;
+      logFn(
         {
           method,
           path,

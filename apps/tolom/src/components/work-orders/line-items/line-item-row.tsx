@@ -2,7 +2,7 @@
 
 import { parseCurrencyInput } from "@zuiio/core";
 import { useCallback, useState } from "react";
-import { InlineEditableField } from "@/components/bay-view-v2/_inline-editable-field";
+import { InlineEditableField } from "@zuiio/ui";
 import { Typography } from "@/components/ui/typography";
 import { cn, formatCurrency } from "@/lib/utils";
 

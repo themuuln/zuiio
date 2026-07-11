@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { InlineEditableField } from "./_inline-editable-field";
+import { InlineEditableField } from "./inline-editable-field";
 
 function formatMnt(value: number) {
   return `₮${value.toLocaleString("en-US")}`;

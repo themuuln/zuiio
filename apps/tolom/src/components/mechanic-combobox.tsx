@@ -207,7 +207,7 @@ export function MechanicCombobox({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={searchPlaceholder}
-              className="h-9 pl-8 pr-3 text-sm"
+              className="h-9 py-1.5 pl-8 pr-3 text-sm"
               onKeyDown={(e) => {
                 if (e.key === "Escape") {
                   setSearch("");

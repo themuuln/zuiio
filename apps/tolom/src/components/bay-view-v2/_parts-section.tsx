@@ -84,6 +84,7 @@ export function PartsSection({
         emptyMessage={t("noParts")}
         isEmpty={isEmpty}
         addLabel={t("addPart")}
+        addButtonClassName="!bg-info/8 !border-info/35 !text-info hover:!bg-info/12 hover:!border-info/50"
         onToggleAdd={() => onAddPartOpenChange(true)}
       >
         {!isEmpty && (
@@ -144,6 +145,7 @@ export function PartsSection({
         noMatchMessage={t("noMatchPart")}
         addAsNewLabel={t("addAsNew")}
         closeLabel={t("close")}
+        filterAllLabel={t("filterAll")}
       />
     </>
   );

@@ -232,27 +232,13 @@ export function MechanicDisplay({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {mechanic ? (
+      {mechanic && (
         <MechanicBadgeContent
           mechanic={mechanic}
           isHelper={false}
           status={status}
           isDragging={false}
         />
-      ) : (
-        <div
-          className={cn(
-            "flex items-center justify-center rounded-full bg-muted/30 text-muted-foreground/40",
-            "size-8",
-          )}
-        >
-          <User className="size-4" />
-        </div>
-      )}
-      {!mechanic && (
-        <span className="select-none text-xs font-bold text-muted-foreground/50">
-          Unassigned tech
-        </span>
       )}
       {!isPreview &&
         helpers.map((helper) => (
@@ -274,12 +260,12 @@ export function MechanicDisplay({
             trigger={
               <span
                 className={cn(
-                  "inline-flex size-6 items-center justify-center rounded-full border border-dashed transition-[color,background-color,border-color,transform] duration-200",
+                  "inline-flex size-8 items-center justify-center rounded-full border border-dashed transition-[color,background-color,border-color,transform] duration-200",
                   "text-muted-foreground/40 hover:text-primary hover:border-primary/50 hover:bg-primary/10",
                   "active:scale-95",
                 )}
               >
-                <UserPlus className="size-3" />
+                <UserPlus className="size-4" />
               </span>
             }
             mechanics={allMechanics}

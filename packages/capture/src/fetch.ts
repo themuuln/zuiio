@@ -23,7 +23,7 @@ export function withSupabaseConsoleCapture(): typeof fetch {
             ? input.href
             : input.url;
       console.error(
-        `[supabase] ${response.status} ${response.statusText} — ${url}`,
+        `\x1b[31m[supabase] ${response.status} ${response.statusText} — ${url}\x1b[0m`,
       );
     }
 

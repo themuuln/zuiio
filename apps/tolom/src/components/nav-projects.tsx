@@ -48,7 +48,7 @@ export function NavProjects({
                     size="sm"
                   >
                     <Icon className="size-4 shrink-0" />
-                    <span>{t(item.labelKey)}</span>
+                    <span className="truncate">{t(item.labelKey)}</span>
                   </SidebarMenuButton>
                 </ViewTransition>
               </SidebarMenuItem>

@@ -1,14 +1,14 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { memo, useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { memo, useMemo } from "react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { VehicleMakeLogo } from "@/components/vehicles/vehicle-make-logo";
 import { TotalsSummary } from "@/components/work-orders/line-items";
-import type { WorkOrderDetail } from "@/lib/types/composite";
 import type { WorkOrderPart, WorkOrderService } from "@/lib/types";
+import type { WorkOrderDetail } from "@/lib/types/composite";
 import { DrawerFooter } from "./_drawer-footer";
 import type { CatalogPartItem, CatalogServiceItem } from "./_drawer-types";
 

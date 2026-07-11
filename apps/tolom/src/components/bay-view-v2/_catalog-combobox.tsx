@@ -1,5 +1,7 @@
 "use client";
 
+import { useMemo, useState } from "react";
+
 import { Command as CommandPrimitive } from "cmdk";
 import { Check, Plus, Search } from "lucide-react";
 
@@ -53,6 +55,8 @@ interface CatalogComboboxProps<T extends CatalogItem> {
   showDropdown?: boolean;
   /** Whether to render results as a popover or an inline list */
   resultsMode?: "popover" | "inline";
+  /** Label for the "All" filter chip */
+  filterAllLabel?: string;
 }
 
 /** Tailwind text color class per match quality tier. */
@@ -151,28 +155,87 @@ function NameDisplay({ item, locale }: { item: CatalogItem; locale: string }) {
   return locale === "mn" && item.name_mn ? item.name_mn : item.name;
 }
 
-/**
- * Extracts a display category label from the item.
- */
-function getCategoryLabel(category: string | null | undefined): string {
-  if (!category) return "Бусад";
+// ── Category translations ─────────────────────────────────────
+const CATEGORY_MN: Record<string, string> = {
+  "AC & Heating": "А/C ба халаалт",
+  "AC System": "А/C систем",
+  "Additional": "Нэмэлт",
+  "Body": "Бие",
+  "Brakes": "Тоормос",
+  "Cleaning": "Цэвэрлэгээ",
+  "Diagnostics": "Оношлогоо",
+  "Electrical": "Цахилгаан",
+  "Engine": "Хөдөлгүүр",
+  "Exhaust": "Угаалтын систем",
+  "Fluids": "Шингэнүүд",
+  "Fuel System": "Түлшний систем",
+  "Inspection": "Шалгалт",
+  "Maintenance": "Үйлчилгээ",
+  "Miscellaneous": "Бусад",
+  "Oil Change": "Тос солих",
+  "Other": "Бусад",
+  "Performance": "Гүйцэтгэл",
+  "Steering": "Удирдлага",
+  "Suspension": "Өлгүүр",
+  "Tires": "Дугуй",
+  "Transmission": "Хүрд хувиргагч",
+  "Wheels": "Дугуй",
+  "Window": "Цонх",
+};
+// Simple hash → color class for category chips (no maps, no helpers)
+const CHIP_PALETTE = [
+  "bg-sky-500/15 text-sky-400",
+  "bg-emerald-500/15 text-emerald-400",
+  "bg-violet-500/15 text-violet-400",
+  "bg-amber-500/15 text-amber-400",
+  "bg-rose-500/15 text-rose-400",
+  "bg-teal-500/15 text-teal-400",
+  "bg-purple-500/15 text-purple-400",
+  "bg-orange-500/15 text-orange-400",
+  "bg-cyan-500/15 text-cyan-400",
+  "bg-fuchsia-500/15 text-fuchsia-400",
+  "bg-lime-500/15 text-lime-400",
+  "bg-indigo-500/15 text-indigo-400",
+];
+
+function chipColor(label: string): string {
+  let h = 0;
+  for (let i = 0; i < label.length; i++) h = (h * 31 + label.charCodeAt(i)) | 0;
+  return CHIP_PALETTE[Math.abs(h) % CHIP_PALETTE.length];
+}
+
+// Build a lowercase → translation index for case-insensitive matching
+const CATEGORY_MN_LOWER = new Map(
+  Object.entries(CATEGORY_MN).map(([k, v]) => [k.toLowerCase(), v]),
+);
+
+function getCategoryLabel(
+  category: string | null | undefined,
+  locale?: string,
+): string {
+  if (!category) return locale === "mn" ? "Бусад" : "Other";
+  if (locale === "mn") {
+    return CATEGORY_MN_LOWER.get(category.toLowerCase()) ?? category;
+  }
   return category;
 }
 
 function groupByCategory<T extends CatalogItem>(
   items: T[],
+  locale?: string,
 ): { category: string; items: T[] }[] {
   const map = new Map<string, T[]>();
   for (const item of items) {
-    const cat = getCategoryLabel(item.category);
+    const cat = getCategoryLabel(item.category, locale);
     if (!map.has(cat)) map.set(cat, []);
     map.get(cat)?.push(item);
   }
+  const otherLabel = locale === "mn" ? "Бусад" : "Other";
   return Array.from(map.entries())
     .map(([category, catItems]) => ({ category, items: catItems }))
     .sort((a, b) => {
-      if (a.category === "Бусад") return 1;
-      if (b.category === "Бусад") return -1;
+      if (a.category === otherLabel) return 1;
+      if (b.category === otherLabel) return -1;
       return a.category.localeCompare(b.category);
     });
 }
@@ -190,6 +253,7 @@ function InlineCatalogResults<T extends CatalogItem>({
   addAsNewLabel,
   locale,
   placeholder,
+  filterAllLabel,
 }: {
   items: T[];
   search: string;
@@ -201,7 +265,24 @@ function InlineCatalogResults<T extends CatalogItem>({
   addAsNewLabel: string;
   locale: string;
   placeholder: string;
+  filterAllLabel?: string;
 }) {
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  // Extract unique categories from items
+  const categories = useMemo(() => {
+    const otherLabel = locale === "mn" ? "Бусад" : "Other";
+    const cats = new Set<string>();
+    for (const item of items) {
+      cats.add(getCategoryLabel(item.category, locale));
+    }
+    return Array.from(cats).sort((a, b) => {
+      if (a === otherLabel) return 1;
+      if (b === otherLabel) return -1;
+      return a.localeCompare(b);
+    });
+  }, [items, locale]);
+
   const hasItems = items.length > 0;
 
   // Genuinely empty catalog — nothing at all
@@ -216,20 +297,62 @@ function InlineCatalogResults<T extends CatalogItem>({
     );
   }
 
-  const grouped = groupByCategory(items);
+  const categoryFiltered = selectedCategory
+    ? items.filter(
+        (item) => getCategoryLabel(item.category, locale) === selectedCategory,
+      )
+    : items;
+  const grouped = groupByCategory(categoryFiltered, locale);
 
   return (
     <Command shouldFilter className="flex size-full flex-col overflow-hidden">
       {/* Search input */}
-      <div className="relative px-3 pt-3 pb-1.5">
-        <Search className="pointer-events-none absolute left-6 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground/30" />
-        <CommandPrimitive.Input
-          value={search}
-          onValueChange={onSearchChange}
-          placeholder={placeholder}
-          className="h-10 w-full rounded-lg border border-border/80 bg-background pl-10 pr-3 text-sm outline-none placeholder:text-muted-foreground/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-        />
+      <div className="px-3 pt-3 pb-1.5">
+        <div className="relative flex items-center">
+          <Search className="pointer-events-none absolute left-3 z-10 size-4 text-muted-foreground/30" />
+          <CommandPrimitive.Input
+            value={search}
+            onValueChange={onSearchChange}
+            placeholder={placeholder}
+            autoFocus
+            className="h-10 w-full rounded-lg border border-border/80 bg-background pl-10 pr-3 text-sm outline-none placeholder:text-muted-foreground/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          />
+        </div>
       </div>
+      {/* Category filter chips */}
+      {categories.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto px-3 pt-1 pb-2 no-scrollbar">
+          <button
+            type="button"
+            onClick={() => setSelectedCategory(null)}
+            className={cn(
+              "shrink-0 rounded-full border px-3 py-1 text-sm font-medium transition-colors",
+              selectedCategory === null
+                ? "border-foreground/15 bg-foreground/8 text-foreground"
+                : "border-border text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+            )}
+          >
+            {filterAllLabel ?? "Бүгд"}
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() =>
+                setSelectedCategory((prev) => (prev === cat ? null : cat))
+              }
+              className={cn(
+                "shrink-0 rounded-full px-3 py-1 text-sm font-medium transition-colors",
+                selectedCategory === cat
+                  ? chipColor(cat)
+                  : "bg-muted/50 text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+              )}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Results list */}
       <CommandList className="no-scrollbar max-h-none flex-1 overflow-y-auto px-1.5 pb-1.5">
@@ -386,6 +509,7 @@ export function CatalogCombobox<T extends CatalogItem>({
   locale = "en",
   showDropdown = true,
   resultsMode = "popover",
+  filterAllLabel,
 }: CatalogComboboxProps<T>) {
   const q = search.toLowerCase();
   const hasSearch = search.trim().length > 0;
@@ -414,6 +538,7 @@ export function CatalogCombobox<T extends CatalogItem>({
         addAsNewLabel={addAsNewLabel}
         locale={locale}
         placeholder={placeholder}
+        filterAllLabel={filterAllLabel}
       />
     );
   }

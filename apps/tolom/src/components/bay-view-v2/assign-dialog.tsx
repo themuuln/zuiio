@@ -37,12 +37,15 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Typography } from "@/components/ui/typography";
 import { NewVehicleSheet } from "@/components/vehicles/new-vehicle-drawer";
+import {
+  useVehicleSearch,
+  type VehicleSearchResult,
+} from "@/lib/queries/use-vehicle-search";
 import { reportError } from "@/lib/sentry-report";
 import { reportServerError } from "@/lib/sentry-report-server";
 import type { BayViewWorkOrder } from "@/lib/services/bay-view-service";
 import type { Vehicle } from "@/lib/types";
 import { cn, formatPlateNumber } from "@/lib/utils";
-import { useVehicleSearch, type VehicleSearchResult } from "@/lib/queries/use-vehicle-search";
 
 interface MechanicItem extends SortableItem {
   id: string;
@@ -107,7 +110,6 @@ function SortableMechanicRow({
     </div>
   );
 }
-
 
 interface AssignDialogProps {
   open: boolean;
@@ -194,10 +196,8 @@ export function AssignDialog({
     return [...queueSearchResults, ...dedupedServer];
   }, [queueSearchResults, vehicleSearch.data]);
 
-
   const searchRef = useRef<HTMLInputElement>(null);
   const blurTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-
 
   // Reset state when dialog opens
   useEffect(() => {
@@ -211,7 +211,6 @@ export function AssignDialog({
       setTimeout(() => searchRef.current?.focus(), 100);
     }
   }, [open]);
-
 
   // Check if a vehicle already has a work order in the queue
   const findWorkOrderForVehicle = useCallback(
@@ -379,61 +378,63 @@ export function AssignDialog({
                 </div>
 
                 {/* Search results dropdown */}
-                {searchFocused && search.trim() && mergedSearchResults.length > 0 && (
-                  <ScrollArea className="max-h-[180px] mt-1">
-                    <div className="flex flex-col gap-1">
-                      {mergedSearchResults.map((vehicle) => {
-                        const inQueue = findWorkOrderForVehicle(vehicle.id);
-                        return (
-                          <Button
-                            key={vehicle.id}
-                            variant="ghost"
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              handleSelectVehicle(vehicle);
-                            }}
-                            onTouchStart={(e) => {
-                              e.preventDefault();
-                              handleSelectVehicle(vehicle);
-                            }}
-                            className="w-full justify-start gap-2 px-3 py-2 h-auto text-left"
-                          >
-                            <div className="flex size-8 items-center justify-center bg-muted text-muted-foreground shrink-0">
-                              <Car className="size-4" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <Typography.Text className="text-xs font-medium truncate">
-                                  {formatPlateNumber(vehicle.plate_number)}
-                                </Typography.Text>
-                                {vehicle.year && (
-                                  <span className="text-xs text-muted-foreground">
-                                    {vehicle.year}
-                                  </span>
-                                )}
-                                {inQueue && (
-                                  <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                                    In queue
-                                  </span>
-                                )}
+                {searchFocused &&
+                  search.trim() &&
+                  mergedSearchResults.length > 0 && (
+                    <ScrollArea className="max-h-[180px] mt-1">
+                      <div className="flex flex-col gap-1">
+                        {mergedSearchResults.map((vehicle) => {
+                          const inQueue = findWorkOrderForVehicle(vehicle.id);
+                          return (
+                            <Button
+                              key={vehicle.id}
+                              variant="ghost"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                handleSelectVehicle(vehicle);
+                              }}
+                              onTouchStart={(e) => {
+                                e.preventDefault();
+                                handleSelectVehicle(vehicle);
+                              }}
+                              className="w-full justify-start gap-2 px-3 py-2 h-auto text-left"
+                            >
+                              <div className="flex size-8 items-center justify-center bg-muted text-muted-foreground shrink-0">
+                                <Car className="size-4" />
                               </div>
-                              <Typography.Muted className="text-xs text-muted-foreground truncate">
-                                {vehicle.make} {vehicle.model}
-                                {vehicle.customer && (
-                                  <>
-                                    {" "}
-                                    · {vehicle.customer.first_name}{" "}
-                                    {vehicle.customer.last_name}
-                                  </>
-                                )}
-                              </Typography.Muted>
-                            </div>
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  </ScrollArea>
-                )}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <Typography.Text className="text-xs font-medium truncate">
+                                    {formatPlateNumber(vehicle.plate_number)}
+                                  </Typography.Text>
+                                  {vehicle.year && (
+                                    <span className="text-xs text-muted-foreground">
+                                      {vehicle.year}
+                                    </span>
+                                  )}
+                                  {inQueue && (
+                                    <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                                      In queue
+                                    </span>
+                                  )}
+                                </div>
+                                <Typography.Muted className="text-xs text-muted-foreground truncate">
+                                  {vehicle.make} {vehicle.model}
+                                  {vehicle.customer && (
+                                    <>
+                                      {" "}
+                                      · {vehicle.customer.first_name}{" "}
+                                      {vehicle.customer.last_name}
+                                    </>
+                                  )}
+                                </Typography.Muted>
+                              </div>
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
+                  )}
 
                 {/* No results */}
                 {searchFocused &&

@@ -82,6 +82,7 @@ export function ServicesSection({
         emptyMessage={t("noServicesYet")}
         isEmpty={isEmpty}
         addLabel={t("addService")}
+        addButtonClassName="!bg-success/8 !border-success/35 !text-success hover:!bg-success/12 hover:!border-success/50"
         onToggleAdd={() => onAddServiceOpenChange(true)}
       >
         {!isEmpty && (
@@ -134,6 +135,7 @@ export function ServicesSection({
         noMatchMessage={t("noMatchService")}
         addAsNewLabel={t("addAsNew")}
         closeLabel={t("close")}
+        filterAllLabel={t("filterAll")}
       />
     </>
   );

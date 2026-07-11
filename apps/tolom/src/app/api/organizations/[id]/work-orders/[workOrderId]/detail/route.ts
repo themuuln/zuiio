@@ -145,12 +145,22 @@ export const GET = createRouteHandler(
 
         return { services, parts };
       })(),
-      // 10. Org settings (tax rate, payment method fees, transfer banks)
-      supabase
-        .from("organizations")
-        .select("default_tax_rate, payment_method_fees, transfer_bank_accounts")
-        .eq("id", orgId)
-        .single(),
+      // 10. Org settings — stored in the `settings` JSON column, not as top-level columns
+      (async () => {
+        const { data } = await supabase
+          .from("organizations")
+          .select("settings")
+          .eq("id", orgId)
+          .single();
+        const s = (data?.settings ?? {}) as Record<string, unknown>;
+        return {
+          data: {
+            default_tax_rate: (s.default_tax_rate as number | null) ?? null,
+            payment_method_fees: (s.payment_method_fees as Record<string, number> | null) ?? null,
+            transfer_bank_accounts: (s.transfer_bank_accounts as unknown[] | null) ?? null,
+          },
+        };
+      })(),
     ]);
     return ok({
       workOrder,

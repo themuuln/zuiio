@@ -17,7 +17,7 @@ import type {
 } from "@/lib/types";
 import { useCurrentOrg } from "./use-organization";
 
-interface DrawerDetailResponse {
+export interface DrawerDetailResponse {
   workOrder: WorkOrderDetail;
   servicesCatalog: ServiceCatalog[];
   partsCatalog: PartsCatalogItem[];

@@ -156,7 +156,8 @@ export function CustomerPickerModal({
                   </span>
                   <div className="min-w-0">
                     <span className="font-medium text-sm block truncate">
-                      {[c.first_name, c.last_name].filter(Boolean).join(" ") || t("newCustomer")}
+                      {[c.first_name, c.last_name].filter(Boolean).join(" ") ||
+                        t("newCustomer")}
                     </span>
                     {c.phone && (
                       <span className="text-xs text-muted-foreground">
@@ -283,9 +284,7 @@ export function CustomerPickerModal({
                     !form.watch("first_name").trim()
                   }
                 >
-                  {form.formState.isSubmitting
-                    ? "..."
-                    : t("createAndSelect")}
+                  {form.formState.isSubmitting ? "..." : t("createAndSelect")}
                 </Button>
               </div>
             </form>

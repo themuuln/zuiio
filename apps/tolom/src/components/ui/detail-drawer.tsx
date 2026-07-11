@@ -204,7 +204,7 @@ DetailDrawer.Body = function DetailDrawerBodyComponent({
   className,
 }: DetailDrawerBodyProps) {
   return (
-    <div className={cn("flex-1 overflow-y-auto px-4 py-4", className)}>
+    <div className={cn("flex-1 overflow-y-auto px-3 py-3", className)}>
       {children}
     </div>
   );

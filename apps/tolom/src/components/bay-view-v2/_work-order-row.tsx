@@ -4,7 +4,7 @@ import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { formatMNT } from "@/lib/utils";
-import { InlineEditableField } from "./_inline-editable-field";
+import { InlineEditableField } from "@zuiio/ui";
 
 /** Strip ₮ prefix and non-digit characters for price parsing */
 function parseMNT(raw: string): number {

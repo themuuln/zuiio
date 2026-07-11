@@ -53,7 +53,7 @@ export function NavMain({
     <>
       {/* Primary items (Dashboard) */}
       {primaryItems.length > 0 && (
-        <SidebarGroup className="px-0">
+        <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
               {primaryItems.map((item) => (
@@ -72,7 +72,7 @@ export function NavMain({
       {/* Nav groups with collapsible sub-items */}
       {groups.map((group) => {
         return (
-          <SidebarGroup key={group.labelKey} className="px-0">
+          <SidebarGroup key={group.labelKey}>
             <SidebarGroupContent>
               <SidebarMenu>
                 {group.children.map((item) =>
@@ -124,7 +124,7 @@ function NavItemRow({
           tooltip={t(item.labelKey)}
         >
           <Icon className="size-4 shrink-0" />
-          <span>{t(item.labelKey)}</span>
+          <span className="truncate">{t(item.labelKey)}</span>
         </SidebarMenuButton>
       </ViewTransition>
     </SidebarMenuItem>
@@ -164,7 +164,7 @@ function CollapsibleNavItem({
             tooltip={t(item.labelKey)}
           >
             <Icon className="size-4 shrink-0" />
-            <span>{t(item.labelKey)}</span>
+            <span className="truncate">{t(item.labelKey)}</span>
             <ChevronRight className="ml-auto size-4 shrink-0 text-sidebar-foreground/40 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           </SidebarMenuButton>
         </ViewTransition>
@@ -181,7 +181,7 @@ function CollapsibleNavItem({
                     className="w-full cursor-pointer"
                   >
                     <Icon className="size-4 shrink-0 text-sidebar-foreground/40" />
-                    <span>{t(subItem.labelKey)}</span>
+                    <span className="truncate">{t(subItem.labelKey)}</span>
                   </SidebarMenuSubButton>
                 </ViewTransition>
               </SidebarMenuSubItem>
