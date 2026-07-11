@@ -158,7 +158,7 @@ export function ChangeStatusSheet({
   };
 
   return (
-    <DetailDrawer open={open} onOpenChange={onOpenChange} size="sm">
+    <DetailDrawer open={open} onOpenChange={onOpenChange}>
       <DetailDrawer.Header>
         <DetailDrawer.Title>{t("changeStatus")}</DetailDrawer.Title>
         <DetailDrawer.Description>

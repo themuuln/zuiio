@@ -7,6 +7,7 @@
 		"build": "NODE_OPTIONS='--max-old-space-size=8192' next build",
 		"analyze": "next experimental-analyze",
 		"start": "next start",
+		"clean:dev": "rm -rf .next/cache/turbopack .next/dev/cache/turbopack",
 		"lint": "biome check src/ && node scripts/capture-check.mjs && node scripts/radius-check.mjs && node scripts/design-slop-check.mjs",
 		"format": "biome check --write",
 		"validate:types": "tsc --noEmit --incremental",

@@ -32,14 +32,13 @@ export function CatalogPickerDrawer<T extends CatalogItem>({
   placeholder,
   noMatchMessage,
   addAsNewLabel,
-  locale,
   filterAllLabel,
 }: CatalogPickerDrawerProps<T>) {
+  const locale = useLocale();
   return (
     <DetailDrawer
       open={open}
       onOpenChange={onOpenChange}
-      size="5xl"
       backdropForceRender
     >
       <DetailDrawer.Body className="p-0">

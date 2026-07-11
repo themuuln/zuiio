@@ -48,7 +48,7 @@ export function OfflineQueueIndicator() {
         </Badge>
       </button>
 
-      <DetailDrawer open={open} onOpenChange={setOpen} size="sm">
+      <DetailDrawer open={open} onOpenChange={setOpen}>
         <DetailDrawer.Header>
           <DetailDrawer.Title>{t("offlineQueue")}</DetailDrawer.Title>
         </DetailDrawer.Header>

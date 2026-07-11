@@ -83,7 +83,7 @@ export function MechanicRegistrationDialog({
   });
 
   return (
-    <DetailDrawer open={open} onOpenChange={handleOpenChange} size="sm">
+    <DetailDrawer open={open} onOpenChange={handleOpenChange}>
       <DetailDrawer.Header>
         <DetailDrawer.Title className="flex items-center gap-2 text-base">
           <Wrench className="size-4 text-sky-500" />

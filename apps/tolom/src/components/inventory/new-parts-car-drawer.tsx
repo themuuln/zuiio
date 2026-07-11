@@ -113,7 +113,7 @@ export function NewPartsCarSheet({
   });
 
   return (
-    <DetailDrawer open={open} onOpenChange={handleOpenChange} size="xl">
+    <DetailDrawer open={open} onOpenChange={handleOpenChange}>
       <DetailDrawer.Header>
         <div className="flex items-center gap-3">
           <div className="flex items-center justify-center size-10 shrink-0 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">

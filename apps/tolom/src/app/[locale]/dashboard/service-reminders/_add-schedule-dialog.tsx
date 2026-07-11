@@ -138,7 +138,7 @@ export function AddScheduleDialog({
         <Plus className="mr-2 size-4" />
         {t("serviceReminders.addSchedule")}
       </Button>
-      <DetailDrawer open={open} onOpenChange={setOpen} size="lg">
+      <DetailDrawer open={open} onOpenChange={setOpen}>
         <DetailDrawer.Header>
           <DetailDrawer.Title>
             {t("serviceReminders.addNewSchedule")}

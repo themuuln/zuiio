@@ -456,7 +456,7 @@ export function PricingRulesSection({ orgId }: { orgId: string }) {
       )}
 
       {/* Edit/Create Dialog */}
-      <DetailDrawer open={dialogOpen} onOpenChange={setDialogOpen} size="lg">
+      <DetailDrawer open={dialogOpen} onOpenChange={setDialogOpen}>
         <DetailDrawer.Header>
           <DetailDrawer.Title>
             {editingRule ? t("editPriceRule") : t("createPriceRule")}

@@ -10,37 +10,15 @@ import {
   DrawerTitle,
   DrawerVirtualKeyboardProvider,
 } from "@/components/ui/drawer";
-import { logger } from "@/lib/logger";
 import { cn } from "@/lib/utils";
-
-type DrawerSize = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl";
-type DetailDrawerVariant = "detail" | "quick";
-
-const drawerSizeClasses: Record<DrawerSize, string> = {
-  sm: "sm:max-w-sm",
-  md: "sm:max-w-md",
-  lg: "sm:max-w-lg",
-  xl: "sm:max-w-xl",
-  "2xl": "sm:max-w-2xl",
-  "3xl": "sm:max-w-3xl",
-  "4xl": "sm:max-w-4xl",
-  "5xl": "sm:max-w-5xl",
-};
 
 interface DetailDrawerRootProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   children: React.ReactNode;
-  /** Width of the drawer on desktop (default: "lg" for detail, "sm" for quick) */
-  size?: DrawerSize;
   className?: string;
   /** Whether clicking the backdrop closes the drawer (default: true) */
   modal?: boolean;
-  /**
-   * "detail" (default) — full-featured drawer with Divider/Section sub-components.
-   * "quick" — compact drawer for quick action flows (choose, confirm, pick from a list).
-   */
-  variant?: DetailDrawerVariant;
   /** Force backdrop to render even when this drawer is nested inside another drawer */
   backdropForceRender?: boolean;
   /** Swipe direction for dismissing the drawer (default: "right") */
@@ -70,10 +48,8 @@ export function DetailDrawer({
   open,
   onOpenChange,
   children,
-  size,
   className,
   modal = true,
-  variant = "detail",
   direction = "right",
   backdropForceRender,
   swipeDirection,
@@ -82,18 +58,6 @@ export function DetailDrawer({
   viewportClassName,
   backdropClassName,
 }: DetailDrawerRootProps) {
-  const resolvedSize = size ?? (variant === "quick" ? "sm" : "lg");
-  if (variant === "quick" && !["sm", "md"].includes(resolvedSize)) {
-    logger.warn(
-      `DetailDrawer variant="quick" does not support size="${resolvedSize}". Defaulting to "sm".`,
-    );
-  }
-
-  const effectiveSize =
-    variant === "quick" && !["sm", "md"].includes(resolvedSize)
-      ? "sm"
-      : resolvedSize;
-
   return (
     <Drawer
       open={open}
@@ -104,7 +68,7 @@ export function DetailDrawer({
       <DrawerVirtualKeyboardProvider>
         <DrawerContent
           showCloseButton={false}
-          className={cn(drawerSizeClasses[effectiveSize], className)}
+          className={className}
           contentClassName={cn(
             "flex flex-col p-0 gap-0 overflow-hidden",
             contentClassName,
@@ -112,6 +76,7 @@ export function DetailDrawer({
           viewportClassName={viewportClassName}
           backdropForceRender={backdropForceRender}
           backdropClassName={backdropClassName}
+          direction={direction}
         >
           {children}
         </DrawerContent>

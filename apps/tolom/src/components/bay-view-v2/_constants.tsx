@@ -47,6 +47,8 @@ export const STATUS_DOT: Record<string, string> = {};
 export const STATUS_BG: Record<string, string> = {};
 /** Border accent — column top border */
 export const STATUS_BORDER: Record<string, string> = {};
+/** Left accent border — timeline entries */
+export const STATUS_BORDER_LEFT: Record<string, string> = {};
 /** Filter chip — active state bg */
 export const STATUS_FILTER_ACTIVE: Record<string, string> = {};
 /** Pill — standalone status pill */
@@ -82,6 +84,7 @@ for (const [key, def] of Object.entries(STATUSES)) {
   STATUS_BTN_SOLID[key] = solidFillBtn(hue, weight);
 
   STATUS_BORDER[key] = borderTop(hue, weight);
+  STATUS_BORDER_LEFT[key] = STATUS_HEX[key] ?? '#94a3b8';
   STATUS_FILTER_ACTIVE[key] = lightBg(hue, weight);
   STATUS_COLUMN[key] = `${borderTop(hue, weight)} ${tintBg(hue, weight)}`;
   STATUS_STEPPER[key] = solidFill(hue, weight);

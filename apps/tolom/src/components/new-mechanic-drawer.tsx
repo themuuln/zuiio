@@ -121,7 +121,7 @@ function MechanicCredentialsView({
   };
 
   return (
-    <DetailDrawer open={open} onOpenChange={onOpenChange} size="2xl">
+    <DetailDrawer open={open} onOpenChange={onOpenChange}>
       <DrawerHeader>
         <DrawerTitle className="flex items-center gap-2 text-base">
           <CheckCircle className="size-4 text-emerald-500" />
@@ -297,7 +297,7 @@ export function NewMechanicSheet({
 
   // Show form
   return (
-    <DetailDrawer open={open} onOpenChange={handleOpenChange} size="2xl">
+    <DetailDrawer open={open} onOpenChange={handleOpenChange}>
       <DrawerHeader>
         <DrawerTitle className="flex items-center gap-2 text-base">
           <UserPlus className="size-4" />

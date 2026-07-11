@@ -159,7 +159,7 @@ export function VariantEditorSheet({
   const hasSingleDimension = variantGroups.length <= 1;
 
   return (
-    <DetailDrawer open={open} onOpenChange={onOpenChange} size="lg">
+    <DetailDrawer open={open} onOpenChange={onOpenChange}>
       <DetailDrawer.Header bordered={false}>
         <div className="flex items-center justify-between">
           <DrawerTitle>{t("manageVariants")}</DrawerTitle>

@@ -80,7 +80,7 @@ export function ConfigSheet({ orgId }: ConfigSheetProps) {
       <Button variant="outline" size="icon-xs" onClick={() => setOpen(true)}>
         <Settings className="size-4" />
       </Button>
-      <DetailDrawer open={open} onOpenChange={setOpen} size="md">
+      <DetailDrawer open={open} onOpenChange={setOpen}>
         <DetailDrawer.Header>
           <DetailDrawer.Title>
             {t("serviceReminders.configTitle")}

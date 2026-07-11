@@ -66,8 +66,6 @@ export function EmptyBayActionDrawer({
     <DetailDrawer
       open={open}
       onOpenChange={onOpenChange}
-      size="md"
-      variant="quick"
     >
       {/* ── Header ──────────────────────────────────────────── */}
       <DetailDrawer.Header bordered={false} className="p-6 pb-4">

@@ -233,7 +233,7 @@ export function ServiceModelPricesSheet({
 
   return (
     <>
-      <DetailDrawer open={open} onOpenChange={handleCloseAttempt} size="lg">
+      <DetailDrawer open={open} onOpenChange={handleCloseAttempt}>
         <DetailDrawer.Header bordered={false}>
           <div className="flex items-center justify-between">
             <DrawerTitle>{t("modelSpecificPrices")}</DrawerTitle>

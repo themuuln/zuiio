@@ -373,7 +373,7 @@ export function VehicleDetailSheet({
   const notFound = open && !loading && !vehicle && !error;
 
   return (
-    <DetailDrawer open={open} onOpenChange={handleOpenChange} size="2xl">
+    <DetailDrawer open={open} onOpenChange={handleOpenChange}>
       <DrawerHeader className="px-4 py-3 border-b border-border shrink-0">
         <DetailSheetHeader
           icon={Pencil}

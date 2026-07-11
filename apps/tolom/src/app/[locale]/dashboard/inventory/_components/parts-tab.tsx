@@ -9,6 +9,7 @@ import {
   Package,
   Pencil,
   Plus,
+  Loader2,
   Star,
 } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -423,7 +424,7 @@ export function PartsTab({
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="px-4 py-3 text-left">
+                    <TableHead className="px-3 py-1.5 text-left">
                       <SortKeyHeader
                         label="Name"
                         sortKey="name"
@@ -432,7 +433,7 @@ export function PartsTab({
                         onSort={handleSort}
                       />
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-left">
+                    <TableHead className="px-3 py-1.5 text-left">
                       <SortKeyHeader
                         label="Popularity"
                         sortKey="popularity"
@@ -442,7 +443,7 @@ export function PartsTab({
                         icon={Star}
                       />
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-left">
+                    <TableHead className="px-3 py-1.5 text-left">
                       <SortKeyHeader
                         label="Category"
                         sortKey="category"
@@ -451,7 +452,7 @@ export function PartsTab({
                         onSort={handleSort}
                       />
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-right">
+                    <TableHead className="px-3 py-1.5 text-right">
                       <SortKeyHeader
                         label="Default Price"
                         sortKey="price"
@@ -460,7 +461,7 @@ export function PartsTab({
                         onSort={handleSort}
                       />
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-right">
+                    <TableHead className="px-3 py-1.5 text-right">
                       <SortKeyHeader
                         label="On Hand"
                         sortKey="stock"
@@ -469,13 +470,13 @@ export function PartsTab({
                         onSort={handleSort}
                       />
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-center font-medium text-muted-foreground">
+                    <TableHead className="px-3 py-1.5 text-center font-medium text-muted-foreground">
                       Status
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-center font-medium text-muted-foreground">
+                    <TableHead className="px-3 py-1.5 text-center font-medium text-muted-foreground">
                       Min
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
+                    <TableHead className="px-3 py-1.5 text-left font-medium text-muted-foreground">
                       Part #
                     </TableHead>
                     <TableHead className="w-14" />
@@ -492,7 +493,7 @@ export function PartsTab({
                         key={part.id}
                         className="border-b border-border transition-colors hover:bg-muted/30"
                       >
-                        <TableCell className="px-4 py-3 font-medium">
+                        <TableCell className="px-3 py-1.5 font-medium">
                           <Link
                             href={`/dashboard/inventory/parts/${part.id}`}
                             className="hover:underline text-foreground"
@@ -502,7 +503,7 @@ export function PartsTab({
                               : part.name}
                           </Link>
                         </TableCell>
-                        <TableCell className="px-4 py-3">
+                        <TableCell className="px-3 py-1.5">
                           {part.popularity_score != null && (
                             <Badge variant="outline" className="gap-1">
                               {part.popularity_score >= 80 ? (
@@ -512,16 +513,16 @@ export function PartsTab({
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-muted-foreground">
+                        <TableCell className="px-3 py-1.5 text-muted-foreground">
                           {part.category ?? "—"}
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-right tabular-nums">
+                        <TableCell className="px-3 py-1.5 text-right tabular-nums">
                           {part.default_price
                             ? formatMNT(part.default_price)
                             : "—"}
                         </TableCell>
                         <TableCell
-                          className={`px-4 py-3 text-right font-semibold tabular-nums ${
+                          className={`px-3 py-1.5 text-right font-semibold tabular-nums ${
                             status === "out"
                               ? "text-destructive"
                               : status === "low"
@@ -531,7 +532,7 @@ export function PartsTab({
                         >
                           {qty} {part.unit}
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-center">
+                        <TableCell className="px-3 py-1.5 text-center">
                           <Badge variant="outline" className="gap-1">
                             {status === "out" && (
                               <AlertTriangle className="size-3" />
@@ -543,7 +544,7 @@ export function PartsTab({
                                 : t("inStock")}
                           </Badge>
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-center">
+                        <TableCell className="px-3 py-1.5 text-center">
                           {editingThreshold === part.id ? (
                             <div className="flex items-center justify-center gap-1">
                               <NumericInput
@@ -582,10 +583,10 @@ export function PartsTab({
                             </Button>
                           )}
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-muted-foreground font-mono text-xs">
+                        <TableCell className="px-3 py-1.5 text-muted-foreground font-mono text-xs">
                           {part.part_number ?? "—"}
                         </TableCell>
-                        <TableCell className="px-1 py-3">
+                        <TableCell className="px-1 py-1.5">
                           <div className="flex items-center gap-1">
                             <Button
                               variant="ghost"
@@ -643,7 +644,7 @@ export function PartsTab({
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="px-4 py-3 text-left">
+                    <TableHead className="px-3 py-1.5 text-left">
                       <SortKeyHeader
                         label="Name"
                         sortKey="name"
@@ -652,7 +653,7 @@ export function PartsTab({
                         onSort={handleGlobalSort}
                       />
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-left">
+                    <TableHead className="px-3 py-1.5 text-left">
                       <SortKeyHeader
                         label="Category"
                         sortKey="category"
@@ -661,16 +662,16 @@ export function PartsTab({
                         onSort={handleGlobalSort}
                       />
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
+                    <TableHead className="px-3 py-1.5 text-left font-medium text-muted-foreground">
                       Unit
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
+                    <TableHead className="px-3 py-1.5 text-left font-medium text-muted-foreground">
                       Part #
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-left font-medium text-muted-foreground">
+                    <TableHead className="px-3 py-1.5 text-left font-medium text-muted-foreground">
                       Status in My Org
                     </TableHead>
-                    <TableHead className="w-44 px-4 py-3 text-center font-medium text-muted-foreground" />
+                    <TableHead className="w-44 px-3 py-1.5 text-center font-medium text-muted-foreground" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -681,7 +682,7 @@ export function PartsTab({
                         key={gp.id}
                         className="border-b border-border transition-colors hover:bg-muted/30"
                       >
-                        <TableCell className="px-4 py-3 font-medium">
+                        <TableCell className="px-3 py-1.5 font-medium">
                           <div className="flex flex-col">
                             <span>
                               {locale === "mn" && gp.name_mn
@@ -705,16 +706,16 @@ export function PartsTab({
                             </div>
                           )}
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-muted-foreground">
+                        <TableCell className="px-3 py-1.5 text-muted-foreground">
                           {gp.category ?? "—"}
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-muted-foreground">
+                        <TableCell className="px-3 py-1.5 text-muted-foreground">
                           {gp.unit}
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-muted-foreground font-mono text-xs">
+                        <TableCell className="px-3 py-1.5 text-muted-foreground font-mono text-xs">
                           {gp.part_number ?? "—"}
                         </TableCell>
-                        <TableCell className="px-4 py-3">
+                        <TableCell className="px-3 py-1.5">
                           {localPart ? (
                             <div className="flex flex-col gap-1 items-start">
                               <Badge variant="secondary">
@@ -732,7 +733,7 @@ export function PartsTab({
                             </span>
                           )}
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-center">
+                        <TableCell className="px-3 py-1.5 text-center">
                           <Button
                             variant="outline"
                             size="sm"
@@ -787,6 +788,8 @@ export function PartsTab({
         </DetailDrawer.Header>
         <DetailDrawer.Body>
           <PartForm
+            formId="add-part-drawer-form"
+            hideActions
             initialData={forkingData ?? undefined}
             onSuccess={() => {
               qc.invalidateQueries({ queryKey: inventoryKeys.parts(orgId) });
@@ -805,6 +808,29 @@ export function PartsTab({
             }}
           />
         </DetailDrawer.Body>
+        <DetailDrawer.Footer>
+          <DetailDrawer.FooterActions>
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                setShowAddPart(false);
+                setForkingData(null);
+              }}
+            >
+              {commonT("cancel")}
+            </Button>
+            <Button
+              type="submit"
+              form="add-part-drawer-form"
+              className="flex-1 gap-2"
+              size="lg"
+            >
+              {forkingData ? commonT("save") : commonT("create")}
+            </Button>
+          </DetailDrawer.FooterActions>
+        </DetailDrawer.Footer>
       </DetailDrawer>
 
       {/* Edit Part Drawer */}
@@ -825,6 +851,8 @@ export function PartsTab({
         <DetailDrawer.Body>
           {editingPart && (
             <PartForm
+              formId="edit-part-drawer-form"
+              hideActions
               partId={editingPart.id}
               initialData={{
                 name: editingPart.name,
@@ -841,6 +869,26 @@ export function PartsTab({
             />
           )}
         </DetailDrawer.Body>
+        <DetailDrawer.Footer>
+          <DetailDrawer.FooterActions>
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={() => setEditingPart(null)}
+            >
+              {commonT("cancel")}
+            </Button>
+            <Button
+              type="submit"
+              form="edit-part-drawer-form"
+              className="flex-1 gap-2"
+              size="lg"
+            >
+              {commonT("save")}
+            </Button>
+          </DetailDrawer.FooterActions>
+        </DetailDrawer.Footer>
       </DetailDrawer>
 
       {/* View Part Drawer — Enhanced with summary + actions */}

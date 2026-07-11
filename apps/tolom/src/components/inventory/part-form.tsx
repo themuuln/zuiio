@@ -54,6 +54,8 @@ export type PartFormProps = {
   initialData?: Partial<CreatePartParams>;
   partId?: string; // when present, switches to update mode
   readOnly?: boolean; // display-only mode, no submit button
+  hideActions?: boolean; // when true, don't render inline buttons (for drawer footer usage)
+  formId?: string; // set form id so external submit buttons can connect via form="id"
   onSuccess?: (part: PartsCatalogItem) => void;
   onCancel?: () => void;
 };
@@ -63,6 +65,8 @@ export function PartForm({
   initialData,
   partId,
   readOnly = false,
+  hideActions = false,
+  formId,
   onSuccess,
   onCancel,
 }: PartFormProps) {
@@ -181,7 +185,7 @@ export function PartForm({
   });
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-4">
+    <form id={formId} onSubmit={onSubmit} className="flex flex-col gap-4">
       {/* ── Mode Toggle Tabs (hidden in readOnly) ── */}
       {!readOnly && (
         <Tabs
@@ -425,7 +429,7 @@ export function PartForm({
       </FieldGroup>
 
       {/* Action buttons (hidden in readOnly mode) */}
-      {!readOnly && (
+      {!readOnly && !hideActions && (
         <div className="flex flex-col-reverse gap-2 mt-4 sm:flex-row sm:justify-end">
           {onCancel && (
             <Button

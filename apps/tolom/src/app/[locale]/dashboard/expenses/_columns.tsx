@@ -230,6 +230,7 @@ export const columns: ColumnDef<ExpenseWithCategory>[] = [
   },
   {
     accessorKey: "amount",
+    meta: { align: "right" } as const,
     header: ({ column }) => <ExpenseAmountHeader column={column} />,
     cell: ({ row }) => (
       <span className="text-sm font-semibold tabular-nums">

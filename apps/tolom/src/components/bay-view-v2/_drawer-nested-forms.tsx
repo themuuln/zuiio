@@ -1,6 +1,6 @@
 "use client";
 
-import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { DetailDrawer } from "@/components/ui/detail-drawer";
 import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
 import type { WorkOrderDetail } from "@/lib/types/composite";
 import type { PaymentMethodFees } from "./_payment-fees";
@@ -49,30 +49,23 @@ export function DrawerNestedForms({
   return (
     <>
       {/* Ready for Pickup form drawer */}
-      <Drawer
+      <DetailDrawer
         open={showReadyForm}
         onOpenChange={(next) => {
           if (!next) onReadyFormClose();
         }}
-        swipeDirection="right"
+        backdropForceRender
       >
-        <DrawerContent
-          showCloseButton={false}
-          backdropForceRender={true}
-          className="sm:max-w-md"
-          contentClassName="flex flex-col gap-0 border-border/80 shadow-2xl"
-        >
-          <ReadyForPickupForm
-            vehiclePlate={vehiclePlate}
-            currentOdometer={currentOdometer}
-            grandTotal={grandTotal}
-            paymentMethodFees={paymentMethodFees}
-            transferBanks={transferBanks}
-            onConfirm={onReadyForPickupSubmit}
-            onBack={onReadyFormClose}
-          />
-        </DrawerContent>
-      </Drawer>
+        <ReadyForPickupForm
+          vehiclePlate={vehiclePlate}
+          currentOdometer={currentOdometer}
+          grandTotal={grandTotal}
+          paymentMethodFees={paymentMethodFees}
+          transferBanks={transferBanks}
+          onConfirm={onReadyForPickupSubmit}
+          onBack={onReadyFormClose}
+        />
+      </DetailDrawer>
     </>
   );
 }

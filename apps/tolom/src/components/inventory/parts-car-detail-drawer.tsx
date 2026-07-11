@@ -213,7 +213,7 @@ export function PartsCarDetailSheet({
   const canAddParts = car?.status === "disassembling";
 
   return (
-    <DetailDrawer open={open} onOpenChange={onOpenChange} size="2xl">
+    <DetailDrawer open={open} onOpenChange={onOpenChange}>
       <DrawerHeader className="px-4 py-3 border-b border-border shrink-0">
         <DetailSheetHeader
           icon={Car}

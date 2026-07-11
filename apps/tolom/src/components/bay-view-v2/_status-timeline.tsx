@@ -5,7 +5,6 @@ import {
   History,
   HistoryIcon,
   Package,
-  RotateCcw,
   User,
   Wrench,
 } from "lucide-react";
@@ -25,9 +24,8 @@ import type {
 import { cn, formatCurrency } from "@/lib/utils";
 import {
   STATUS_DOT,
-  STATUS_TIMELINE_DOT,
-  STATUS_TIMELINE_TEXT,
   STATUS_TRANSLATION_KEYS,
+  STATUS_BORDER_LEFT,
 } from "./_constants";
 import type { ServiceHistoryEntry } from "./_vehicle-registration-schema";
 
@@ -72,16 +70,6 @@ const TIME_FORMAT = new Intl.DateTimeFormat([], {
 
 // ── Helpers ─────────────────────────────────────────────────
 
-function isForwardTransition(
-  status: string,
-  previousStatus: string | null,
-): boolean {
-  if (!previousStatus) return true;
-  const toIdx = STATUS_FLOW.indexOf(status);
-  const fromIdx = STATUS_FLOW.indexOf(previousStatus);
-  if (toIdx === -1 || fromIdx === -1) return true;
-  return toIdx > fromIdx;
-}
 
 function formatTimeRange(isoStart: string, isoEnd: string): string {
   const start = new Date(isoStart);
@@ -102,6 +90,22 @@ function formatTime(iso: string): string {
     minute: "2-digit",
   });
 }
+
+function formatRelativeTime(iso: string): string {
+  const now = Date.now();
+  const then = new Date(iso).getTime();
+  const diffMs = now - then;
+  const sec = Math.floor(diffMs / 1000);
+  const min = Math.floor(sec / 60);
+  const hr = Math.floor(min / 60);
+  const day = Math.floor(hr / 24);
+  if (sec < 60) return "одоо";
+  if (min < 60) return `${min} мин өмнө`;
+  if (hr < 24) return `${hr} цагийн өмнө`;
+  if (day < 7) return `${day} өдрийн өмнө`;
+  return formatDate(iso);
+}
+
 
 function deduplicateHistory(history: WorkOrderStatusHistory[]): DedupedEntry[] {
   // Sort ASC for grouping, then reverse for display
@@ -259,26 +263,21 @@ export function StatusTimeline(props: StatusTimelineProps) {
   const deduped = hasStatusHistory ? deduplicateHistory(statusHistory) : [];
 
   return (
-    <section className="rounded-xl bg-card/40 p-3">
-      <div className="flex flex-col gap-1 mb-3">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center size-5 rounded-md bg-sky-500/10">
-            <History className="size-3 text-sky-500" />
-          </div>
-          <h3
-            id="status-timeline-title"
-            className="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
-          >
-            {t("statusTimeline")}
-          </h3>
+    <section className="rounded-xl bg-card/40 py-3">
+      <div className="flex items-center gap-2 mb-3 px-3">
+        <div className="flex items-center justify-center size-5 rounded-md bg-sky-500/10">
+          <History className="size-3 text-sky-500" />
         </div>
-        <p className="text-xs text-muted-foreground/60 leading-normal pl-1">
-          {t("statusTimelineDescription")}
-        </p>
+        <h3
+          id="status-timeline-title"
+          className="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+        >
+          {t("statusTimeline")}
+        </h3>
       </div>
 
       {!hasStatusHistory && !hasServiceHistory ? (
-        <div className="flex flex-col items-center justify-center py-5 text-muted-foreground/50">
+        <div className="flex flex-col items-center justify-center py-5 px-3 text-muted-foreground/50">
           <div className="flex items-center justify-center size-8 rounded-full bg-muted/40 mb-2">
             <History className="size-4 opacity-60" />
           </div>
@@ -289,108 +288,46 @@ export function StatusTimeline(props: StatusTimelineProps) {
       ) : (
         <div className="mt-2 flex flex-col gap-4">
           {hasStatusHistory ? (
-            <div className="flex flex-col gap-0 pl-1">
+            <div className="flex flex-col gap-0 px-3">
               {deduped.map((h, idx) => {
-                const isLast = idx === deduped.length - 1;
-                const dotClass =
-                  STATUS_TIMELINE_DOT[h.status] ??
-                  "bg-slate-500 ring-slate-500/20";
-                const textClass =
-                  STATUS_TIMELINE_TEXT[h.status] ??
-                  "text-slate-600 dark:text-slate-400";
+                const isFirst = idx === 0;
+                const isDuped = h.count > 1;
                 const statusLabel = STATUS_TRANSLATION_KEYS[h.status]
                   ? t(STATUS_TRANSLATION_KEYS[h.status])
                   : h.status;
-                const forward = isForwardTransition(
-                  h.status,
-                  h.previous_status,
-                );
-                const isBackward = !forward && h.previous_status !== null;
-                const isDuped = h.count > 1;
 
                 return (
                   <div
                     key={h.id}
-                    className="relative flex gap-3 pb-4 last:pb-0"
-                  >
-                    {!isLast && (
-                      <div className="absolute left-2 top-6 bottom-0 w-0.5 bg-border/60" />
+                    style={{ borderLeftColor: STATUS_BORDER_LEFT[h.status] ?? "#94a3b8" }}
+                    className={cn(
+                      "flex items-baseline justify-between gap-2 py-1.5 border-l-2 pl-2.5 -ml-0.5",
+                      isFirst ? "border-b border-border/40 pb-2.5 mb-0.5" : "",
                     )}
-                    <div className="relative z-10 mt-1 shrink-0">
-                      {isBackward ? (
-                        // Backwards: dashed orange-tinted ring
-                        <div
-                          className={cn(
-                            "flex size-5 items-center justify-center rounded-full ring-4 ring-orange-400/20 border border-dashed border-orange-400/60 transition-[color,background-color,border-color,box-shadow] duration-300",
-                          )}
-                        >
-                          <RotateCcw className="size-3 text-orange-500" />
-                        </div>
-                      ) : (
-                        // Forward: solid colored dot
-                        <div
-                          className={cn(
-                            "flex size-5 items-center justify-center rounded-full ring-4 transition-[color,background-color,border-color,box-shadow] duration-300",
-                            dotClass,
-                          )}
-                        >
-                          {h.status === "Completed" ||
-                          h.status === "Ready for Pickup" ? (
-                            <CheckCircle2 className="size-3 text-white" />
-                          ) : (
-                            <div className="size-1.5 rounded-full bg-white" />
-                          )}
-                        </div>
+                  >
+                    <span
+                      className={cn(
+                        "min-w-0 truncate",
+                        isFirst
+                          ? "text-sm font-semibold text-foreground"
+                          : "text-sm text-muted-foreground",
                       )}
-                    </div>
-                    <div className="flex min-w-0 flex-1 flex-col gap-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <span
-                          className={cn(
-                            "text-xs font-semibold tracking-tight",
-                            isBackward
-                              ? "text-orange-600 dark:text-orange-400"
-                              : textClass,
-                          )}
+                    >
+                      {statusLabel}
+                      {isDuped && (
+                        <Badge
+                          variant="secondary"
+                          className="ml-1.5 text-xs px-1 py-0 h-4 font-mono"
                         >
-                          {statusLabel}
-                          {isDuped && (
-                            <Badge
-                              variant="secondary"
-                              className="ml-1.5 text-xs px-1 py-1 h-4 font-mono"
-                            >
-                              ×{h.count}
-                            </Badge>
-                          )}
-                        </span>
-                        <span className="shrink-0 font-mono text-xs text-muted-foreground/60">
-                          {formatDate(h.first_at)}
-                          {isDuped
-                            ? ` ${formatTimeRange(h.first_at, h.last_at)}`
-                            : ` ${formatTime(h.first_at)}`}
-                        </span>
-                      </div>
-                      {h.previous_status && h.previous_status !== h.status ? (
-                        <span
-                          className={cn(
-                            "text-xs uppercase tracking-wide leading-relaxed",
-                            isBackward
-                              ? "text-orange-500/70 dark:text-orange-400/60"
-                              : "text-muted-foreground/70",
-                          )}
-                        >
-                          {isBackward && (
-                            <RotateCcw className="inline size-3 mr-1 -mt-px" />
-                          )}
-                          {h.previous_status} {"\u2192"} {statusLabel}
-                        </span>
-                      ) : null}
-                      {h.notes ? (
-                        <Typography.Muted className="mt-1 break-words rounded-lg border border-border/40 bg-muted/40 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-                          {h.notes}
-                        </Typography.Muted>
-                      ) : null}
-                    </div>
+                          ×{h.count}
+                        </Badge>
+                      )}
+                    </span>
+                    <span className="shrink-0 text-xs text-muted-foreground/60 tabular-nums whitespace-nowrap">
+                      {isDuped
+                        ? `${formatRelativeTime(h.first_at)} · ${formatTimeRange(h.first_at, h.last_at)}`
+                        : formatRelativeTime(h.first_at)}
+                    </span>
                   </div>
                 );
               })}

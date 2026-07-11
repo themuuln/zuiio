@@ -251,7 +251,7 @@ function CreateFollowupDialog({
   );
 
   return (
-    <DetailDrawer open onOpenChange={onClose} size="md">
+    <DetailDrawer open onOpenChange={onClose}>
       <DetailDrawer.Header>
         <DetailDrawer.Title>Schedule Follow-up</DetailDrawer.Title>
       </DetailDrawer.Header>

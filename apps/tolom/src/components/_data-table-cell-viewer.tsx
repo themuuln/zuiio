@@ -43,7 +43,7 @@ export function TableCellViewer({ item }: { item: TableCellViewerItem }) {
       >
         {item.header}
       </Button>
-      <DetailDrawer open={open} onOpenChange={setOpen} size="lg">
+      <DetailDrawer open={open} onOpenChange={setOpen}>
         <DetailDrawer.Header>
           <DetailDrawer.Title>{item.header}</DetailDrawer.Title>
           <DetailDrawer.Description>

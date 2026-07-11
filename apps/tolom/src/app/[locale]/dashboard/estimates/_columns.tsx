@@ -205,6 +205,7 @@ export function createColumns(
     {
       id: "grand_total",
       accessorKey: "grand_total",
+      meta: { align: "right" } as const,
       header: ({ column }) => {
         const t = useTranslations("estimates");
         return <DataTableColumnHeader column={column} title={t("total")} />;

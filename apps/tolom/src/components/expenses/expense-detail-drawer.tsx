@@ -156,7 +156,7 @@ export function ExpenseDetailSheet({
   const overdue = expense ? isOverdue(expense) : false;
 
   return (
-    <DetailDrawer open={open} onOpenChange={handleOpenChange} size="2xl">
+    <DetailDrawer open={open} onOpenChange={handleOpenChange}>
       <DetailDrawer.Header>
         <DetailSheetHeader
           icon={Pencil}

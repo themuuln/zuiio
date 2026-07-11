@@ -93,7 +93,7 @@ export function TransferDetailSheet({
 
   if (loadingState) {
     return (
-      <DetailDrawer open={open} onOpenChange={onOpenChange} size="2xl">
+      <DetailDrawer open={open} onOpenChange={onOpenChange}>
         <div className="flex items-center justify-center py-20">
           <Loader2 className="size-6 animate-spin text-muted-foreground" />
         </div>
@@ -158,7 +158,7 @@ export function TransferDetailSheet({
   }
 
   return (
-    <DetailDrawer open={open} onOpenChange={onOpenChange} size="2xl">
+    <DetailDrawer open={open} onOpenChange={onOpenChange}>
       <DetailDrawer.Header>
         <DetailDrawer.Title className="flex items-center gap-2">
           {t("transferDetail")}

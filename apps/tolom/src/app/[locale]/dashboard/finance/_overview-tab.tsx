@@ -289,6 +289,7 @@ function TopServicesTable({ services }: { services: TopService[] }) {
       },
       {
         accessorKey: "count",
+        meta: { align: "right" } as const,
         header: ({ column }) => (
           <DataTableColumnHeader
             column={column}
@@ -301,6 +302,7 @@ function TopServicesTable({ services }: { services: TopService[] }) {
       },
       {
         accessorKey: "revenue",
+        meta: { align: "right" } as const,
         header: ({ column }) => (
           <DataTableColumnHeader
             column={column}

@@ -110,7 +110,7 @@ export function EditMemberSheet({
   });
 
   return (
-    <DetailDrawer open={open} onOpenChange={onOpenChange} size="md">
+    <DetailDrawer open={open} onOpenChange={onOpenChange}>
       <DetailDrawer.Header>
         <DetailDrawer.Title>{t("editTitle")}</DetailDrawer.Title>
         <DetailDrawer.Description>

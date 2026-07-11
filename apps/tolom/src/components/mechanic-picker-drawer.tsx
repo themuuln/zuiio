@@ -28,8 +28,6 @@ export function MechanicPickerDrawer({
     <DetailDrawer
       open={open}
       onOpenChange={onOpenChange}
-      variant="quick"
-      size="sm"
     >
       <DrawerHeader className="border-b border-border/50 px-4 py-3 space-y-0">
         <DrawerTitle className="text-sm">{title}</DrawerTitle>

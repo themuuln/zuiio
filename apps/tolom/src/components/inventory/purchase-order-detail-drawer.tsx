@@ -104,7 +104,7 @@ export function PurchaseOrderDetailSheet({
   const canOrder = po?.status === "draft";
 
   return (
-    <DetailDrawer open={open} onOpenChange={onOpenChange} size="2xl">
+    <DetailDrawer open={open} onOpenChange={onOpenChange}>
       <DrawerHeader className="px-4 py-3 border-b border-border shrink-0">
         <DetailSheetHeader
           icon={Truck}

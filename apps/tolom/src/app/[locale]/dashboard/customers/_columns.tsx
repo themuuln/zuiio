@@ -123,6 +123,7 @@ export const columns: ColumnDef<CustomerRow>[] = [
   {
     id: "total_visits",
     accessorKey: "total_visits",
+    meta: { align: "right" } as const,
     header: ({ column }) => {
       const t = useTranslations("customers");
       return <DataTableColumnHeader column={column} title={t("visits")} />;

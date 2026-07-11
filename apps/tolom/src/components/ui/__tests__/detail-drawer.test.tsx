@@ -74,7 +74,7 @@ describe("DetailDrawer", () => {
 
   it("renders proper width class when size is specified", () => {
     const { $ } = renderDrawer(
-      <DetailDrawer open size="2xl" onOpenChange={() => {}}>
+      <DetailDrawer open onOpenChange={() => {}}>
         <DetailDrawer.Header>
           <DetailDrawer.Title>Wide Drawer</DetailDrawer.Title>
         </DetailDrawer.Header>

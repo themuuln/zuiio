@@ -221,7 +221,7 @@ export function DeviceRegistrationDialog({ open, onOpenChange, orgId }: Props) {
   // ── Render ─────────────────────────────────────────────
 
   return (
-    <DetailDrawer open={open} onOpenChange={handleOpenChange} size="sm">
+    <DetailDrawer open={open} onOpenChange={handleOpenChange}>
       <DetailDrawer.Header>
         <DetailDrawer.Title className="flex items-center gap-2 text-base">
           <Smartphone className="size-4 text-info" />

@@ -139,7 +139,7 @@ export function RefundDialog({
   };
 
   return (
-    <DetailDrawer open={open} onOpenChange={handleOpenChange} size="md">
+    <DetailDrawer open={open} onOpenChange={handleOpenChange}>
       <DetailDrawer.Header>
         <DetailDrawer.Title className="flex items-center gap-2">
           <RotateCcw className="size-5" />

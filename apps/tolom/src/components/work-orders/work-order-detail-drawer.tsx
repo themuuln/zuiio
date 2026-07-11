@@ -104,7 +104,7 @@ export function WorkOrderDetailSheet({
   // ── Loading state ──────────────────────────────────────────
   if (isLoading || !wo) {
     return (
-      <DetailDrawer open={open} onOpenChange={onOpenChange} size="3xl">
+      <DetailDrawer open={open} onOpenChange={onOpenChange}>
         <DetailDrawer.Header>
           <DetailDrawer.Title>
             <Skeleton className="h-5 w-48" />
@@ -124,7 +124,7 @@ export function WorkOrderDetailSheet({
   // ── Error state ────────────────────────────────────────────
   if (error || !orgId) {
     return (
-      <DetailDrawer open={open} onOpenChange={onOpenChange} size="3xl">
+      <DetailDrawer open={open} onOpenChange={onOpenChange}>
         <DetailDrawer.Header>
           <DetailDrawer.Title>Error</DetailDrawer.Title>
         </DetailDrawer.Header>
@@ -159,7 +159,7 @@ export function WorkOrderDetailSheet({
     : "—";
 
   return (
-    <DetailDrawer open={open} onOpenChange={onOpenChange} size="3xl">
+    <DetailDrawer open={open} onOpenChange={onOpenChange}>
       {/* Header */}
       <DetailDrawer.Header>
         <div className="flex items-center justify-between">

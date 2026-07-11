@@ -133,7 +133,7 @@ export function SupplierDetailSheet({
   const notFound = open && !suppliersLoading && !supplier;
 
   return (
-    <DetailDrawer open={open} onOpenChange={handleOpenChange} size="2xl">
+    <DetailDrawer open={open} onOpenChange={handleOpenChange}>
       <DetailDrawer.Header>
         <DetailSheetHeader
           icon={Pencil}

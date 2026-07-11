@@ -222,7 +222,7 @@ export function PostServiceDialog({
   const isComplete = newStatus === "Completed";
 
   return (
-    <DetailDrawer open={open} onOpenChange={onOpenChange} size="md">
+    <DetailDrawer open={open} onOpenChange={onOpenChange}>
       <DetailDrawer.Header>
         <DetailDrawer.Title className="flex items-center gap-2 text-base">
           <Car className="size-4 text-muted-foreground" />

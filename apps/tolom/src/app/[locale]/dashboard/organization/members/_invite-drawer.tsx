@@ -85,7 +85,7 @@ export function InviteSheet({
   const handleFormSubmit = form.handleSubmit(handleSubmit);
 
   return (
-    <DetailDrawer open={open} onOpenChange={onOpenChange} size="md">
+    <DetailDrawer open={open} onOpenChange={onOpenChange}>
       <DetailDrawer.Header>
         <DetailDrawer.Title>{t("inviteNew")}</DetailDrawer.Title>
         <DetailDrawer.Description>

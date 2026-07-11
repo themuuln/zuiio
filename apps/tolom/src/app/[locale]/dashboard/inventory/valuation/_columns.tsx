@@ -45,6 +45,7 @@ export const columns: ColumnDef<ValuationRow>[] = [
   {
     id: "on_hand",
     accessorKey: "quantity_on_hand",
+    meta: { align: "right" } as const,
     header: ({ column }) => {
       const t = useTranslations("inventory");
       return <DataTableColumnHeader column={column} title={t("onHand")} />;
@@ -58,6 +59,7 @@ export const columns: ColumnDef<ValuationRow>[] = [
   {
     id: "avg_cost",
     accessorKey: "avgUnitCost",
+    meta: { align: "right" } as const,
     header: ({ column }) => {
       const t = useTranslations("inventory");
       return <DataTableColumnHeader column={column} title={t("avgUnitCost")} />;
@@ -71,6 +73,7 @@ export const columns: ColumnDef<ValuationRow>[] = [
   {
     id: "total_value",
     accessorKey: "totalValue",
+    meta: { align: "right" } as const,
     header: ({ column }) => {
       const t = useTranslations("inventory");
       return <DataTableColumnHeader column={column} title={t("totalValue")} />;

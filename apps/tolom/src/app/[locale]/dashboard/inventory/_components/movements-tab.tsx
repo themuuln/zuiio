@@ -154,6 +154,7 @@ export function MovementsTab({
       },
       {
         accessorKey: "quantity",
+        meta: { align: "right" } as const,
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title={t("qty")} />
         ),
@@ -165,6 +166,7 @@ export function MovementsTab({
       },
       {
         accessorKey: "unit_cost",
+        meta: { align: "right" } as const,
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title={t("unitCost")} />
         ),

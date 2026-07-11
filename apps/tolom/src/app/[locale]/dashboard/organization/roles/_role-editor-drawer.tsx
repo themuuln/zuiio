@@ -121,7 +121,7 @@ export function RoleEditorDrawer({
   const showDelete = isEditMode && !role.is_system && onDelete;
 
   return (
-    <DetailDrawer open={open} onOpenChange={onOpenChange} size="lg">
+    <DetailDrawer open={open} onOpenChange={onOpenChange}>
       <DetailDrawer.Header>
         <DetailDrawer.Title>
           {isEditMode ? t("editTitle") : t("createTitle")}

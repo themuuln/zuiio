@@ -346,7 +346,7 @@ export function NewEstimateSheet({
 
   return (
     <>
-      <DetailDrawer open={open} onOpenChange={onOpenChange} size="2xl">
+      <DetailDrawer open={open} onOpenChange={onOpenChange}>
         <DetailDrawer.Header>
           <DetailDrawer.Title>{t("newQuoteTitle")}</DetailDrawer.Title>
           <DetailDrawer.Description>

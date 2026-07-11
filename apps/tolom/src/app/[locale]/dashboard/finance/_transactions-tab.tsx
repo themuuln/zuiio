@@ -212,6 +212,7 @@ export function TransactionsTab({
       },
       {
         id: "grand_total",
+        meta: { align: "right" } as const,
         accessorFn: (row) => {
           const svc = row.services.reduce(
             (s, x) => s + Number(x.final_price),

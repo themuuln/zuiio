@@ -248,7 +248,7 @@ export default function MovementsPage() {
         </CardContent>
       </Card>
 
-      <DetailDrawer open={showDialog} onOpenChange={setShowDialog} size="lg">
+      <DetailDrawer open={showDialog} onOpenChange={setShowDialog}>
         <DetailDrawer.Header>
           <DetailDrawer.Title>{t("newMovement")}</DetailDrawer.Title>
         </DetailDrawer.Header>

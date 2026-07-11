@@ -63,7 +63,7 @@ export function VariantSelectionDialog({
   };
 
   return (
-    <DetailDrawer open={open} onOpenChange={onOpenChange} size="lg">
+    <DetailDrawer open={open} onOpenChange={onOpenChange}>
       <DetailDrawer.Header>
         <DetailDrawer.Title className="flex items-center gap-2">
           <Wrench className="size-5 text-muted-foreground" />

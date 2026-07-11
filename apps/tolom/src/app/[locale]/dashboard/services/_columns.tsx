@@ -85,6 +85,7 @@ export function createColumns(
     {
       id: "default_price",
       accessorKey: "default_price",
+      meta: { align: "right" } as const,
       header: ({ column }) => {
         const t = useTranslations("services");
         return <DataTableColumnHeader column={column} title={t("price")} />;
@@ -97,6 +98,7 @@ export function createColumns(
     },
     {
       id: "last_used_price",
+      meta: { align: "right" } as const,
       header: () => {
         const t = useTranslations("services");
         return (

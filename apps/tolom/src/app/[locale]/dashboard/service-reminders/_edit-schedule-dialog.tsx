@@ -90,7 +90,7 @@ export function EditScheduleDialog({
   };
 
   return (
-    <DetailDrawer open={open} onOpenChange={onOpenChange} size="lg">
+    <DetailDrawer open={open} onOpenChange={onOpenChange}>
       <DetailDrawer.Header>
         <DetailDrawer.Title>
           {t("serviceReminders.editSchedule")}

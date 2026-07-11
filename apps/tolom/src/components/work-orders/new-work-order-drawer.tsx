@@ -121,7 +121,7 @@ export function NewWorkOrderSheet({
   const t = useTranslations("workOrders");
 
   return (
-    <DetailDrawer open={open} onOpenChange={onOpenChange} size="xl">
+    <DetailDrawer open={open} onOpenChange={onOpenChange}>
       <DetailDrawer.Header>
         <DetailDrawer.Title>{t("newWorkOrder")}</DetailDrawer.Title>
       </DetailDrawer.Header>

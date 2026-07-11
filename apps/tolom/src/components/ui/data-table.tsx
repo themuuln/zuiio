@@ -335,11 +335,11 @@ export function DataTable<TData, TValue>({
       {/* ── Table ──────────────────────────────────────────── */}
       <div
         className={cn(
-          insideCard ? "overflow-hidden" : "overflow-hidden rounded-sm border",
+          insideCard ? "overflow-clip" : "overflow-clip rounded-sm border",
           renderMobileCard && "hidden md:block",
         )}
       >
-        <Table className="[&_thead_tr]:bg-muted/30">
+        <Table className="[&_thead_tr]:bg-muted/30 [&_thead]:sticky [&_thead]:top-0 [&_thead]:z-10 [&_thead]:bg-background">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -348,6 +348,15 @@ export function DataTable<TData, TValue>({
                     <TableHead
                       key={header.id}
                       colSpan={header.colSpan}
+                      aria-sort={
+                        header.column.getIsSorted() === "asc"
+                          ? "ascending"
+                          : header.column.getIsSorted() === "desc"
+                            ? "descending"
+                            : header.column.getCanSort()
+                              ? "none"
+                              : undefined
+                      }
                       className={cn(
                         header.column.columnDef.meta?.align === "right" &&
                           "text-right",
@@ -381,7 +390,7 @@ export function DataTable<TData, TValue>({
                     onRowClick?.(row.original);
                   }}
                   className={cn(
-                    "transition-colors even:bg-muted/[.04]",
+                    "transition-colors even:bg-muted/[.04] hover:bg-muted/50",
                     onRowClick && "cursor-pointer",
                   )}
                 >
@@ -456,7 +465,7 @@ export function DataTableColumnHeader<TData>({
         variant="ghost"
         size="sm"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="-ml-2 h-8 px-2 text-sm font-medium text-muted-foreground hover:text-foreground data-[state=open]:text-foreground"
+        className="-ml-2 border-0 px-2 text-sm font-medium text-muted-foreground hover:text-foreground data-[state=open]:text-foreground focus-visible:ring-0"
       >
         <span>{title}</span>
         {column.getIsSorted() === "asc" ? (
@@ -464,7 +473,7 @@ export function DataTableColumnHeader<TData>({
         ) : column.getIsSorted() === "desc" ? (
           <SortDesc className="ml-1 size-3.5" />
         ) : (
-          <ArrowUpDown className="ml-1 size-3.5 shrink-0 text-muted-foreground" />
+          <ArrowUpDown className="ml-1 size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover/button:opacity-100" />
         )}
       </Button>
     </div>
