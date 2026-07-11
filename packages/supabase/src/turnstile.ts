@@ -17,10 +17,8 @@ export async function validateTurnstile(
 
   const secretKey = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY;
   if (!secretKey) {
-    if (!token) {
-      return { success: false, error: "Missing Turnstile token" };
-    }
-    return { success: false, error: "Bot protection not configured" };
+    // No secret key configured = Turnstile not set up — skip validation
+    return { success: true };
   }
 
   if (!token) {
