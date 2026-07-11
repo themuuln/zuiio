@@ -60,7 +60,7 @@ const nextConfig: NextConfig = {
     // Turbopack: persistent cache for faster successive builds
     turbopackFileSystemCacheForBuild: true,
     // Experimental Rust React Compiler (faster than Babel variant)
-    turbopackRustReactCompiler: true,
+    turbopackRustReactCompiler: process.env.NODE_ENV === "development",
     // View Transitions API for smooth page navigation animations
     viewTransition: true,
   },
