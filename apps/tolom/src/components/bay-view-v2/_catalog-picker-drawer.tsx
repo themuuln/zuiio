@@ -1,6 +1,5 @@
 "use client";
 
-import { X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import type { CatalogItem } from "./_catalog-combobox";
@@ -9,8 +8,6 @@ import { CatalogCombobox } from "./_catalog-combobox";
 interface CatalogPickerDrawerProps<T extends CatalogItem> {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  title: string;
-  description: string;
   items: T[];
   search: string;
   onSearchChange: (value: string) => void;
@@ -20,15 +17,12 @@ interface CatalogPickerDrawerProps<T extends CatalogItem> {
   placeholder: string;
   noMatchMessage: string;
   addAsNewLabel: string;
-  closeLabel: string;
   filterAllLabel: string;
 }
 
 export function CatalogPickerDrawer<T extends CatalogItem>({
   open,
   onOpenChange,
-  title,
-  description,
   items,
   search,
   onSearchChange,
@@ -38,11 +32,9 @@ export function CatalogPickerDrawer<T extends CatalogItem>({
   placeholder,
   noMatchMessage,
   addAsNewLabel,
-  closeLabel,
+  locale,
   filterAllLabel,
 }: CatalogPickerDrawerProps<T>) {
-  const locale = useLocale();
-
   return (
     <DetailDrawer
       open={open}
@@ -50,26 +42,6 @@ export function CatalogPickerDrawer<T extends CatalogItem>({
       size="5xl"
       backdropForceRender
     >
-      <DetailDrawer.Header
-        actions={
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            aria-label={closeLabel}
-            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            <X className="size-4" />
-          </button>
-        }
-      >
-        <DetailDrawer.Title className="text-2xl tracking-tight">
-          {title}
-        </DetailDrawer.Title>
-        <DetailDrawer.Description className="max-w-2xl text-base leading-7 text-muted-foreground/85">
-          {description}
-        </DetailDrawer.Description>
-      </DetailDrawer.Header>
-
       <DetailDrawer.Body className="p-0">
         <CatalogCombobox
           items={items}

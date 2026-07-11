@@ -112,8 +112,6 @@ export function ServicesSection({
       <CatalogPickerDrawer
         open={showAddService}
         onOpenChange={onAddServiceOpenChange}
-        title={t("addService")}
-        description={t("addServiceDrawerDescription")}
         items={catalog}
         search={serviceSearch}
         onSearchChange={onServiceSearchChange}
@@ -134,7 +132,6 @@ export function ServicesSection({
         placeholder={t("searchServices")}
         noMatchMessage={t("noMatchService")}
         addAsNewLabel={t("addAsNew")}
-        closeLabel={t("close")}
         filterAllLabel={t("filterAll")}
       />
     </>

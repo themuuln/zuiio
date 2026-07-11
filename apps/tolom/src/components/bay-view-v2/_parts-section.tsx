@@ -115,8 +115,6 @@ export function PartsSection({
       <CatalogPickerDrawer
         open={showAddPart}
         onOpenChange={onAddPartOpenChange}
-        title={t("addPart")}
-        description={t("addPartDrawerDescription")}
         items={partsCatalog}
         search={partSearch}
         onSearchChange={onPartSearchChange}
@@ -144,7 +142,6 @@ export function PartsSection({
         placeholder={t("searchParts")}
         noMatchMessage={t("noMatchPart")}
         addAsNewLabel={t("addAsNew")}
-        closeLabel={t("close")}
         filterAllLabel={t("filterAll")}
       />
     </>
