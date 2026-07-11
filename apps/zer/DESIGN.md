@@ -1,3 +1,116 @@
+---
+colors:
+  primary:
+    violet: "oklch(0.50 0.26 275)"
+    violet-light: "oklch(0.65 0.22 275)"
+    violet-dim: "oklch(0.38 0.24 275)"
+    violet-glow: "oklch(0.50 0.26 275 / 0.12)"
+  accent:
+    teal: "oklch(0.70 0.16 195)"
+    teal-light: "oklch(0.82 0.12 195)"
+    teal-glow: "oklch(0.70 0.16 195 / 0.1)"
+  gradient:
+    brand: "linear-gradient(135deg, oklch(0.50 0.26 275), oklch(0.70 0.16 195))"
+    brand-subtle: "linear-gradient(135deg, oklch(0.50 0.26 275 / 0.08), oklch(0.70 0.16 195 / 0.06))"
+  semantic:
+    background: "oklch(0.98 0.005 80)"
+    foreground: "oklch(0.13 0.003 80)"
+    card: "oklch(0.98 0.005 80)"
+    card-foreground: "oklch(0.13 0.003 80)"
+    popover: "oklch(0.98 0.005 80)"
+    popover-foreground: "oklch(0.13 0.003 80)"
+    primary: "oklch(0.70 0.16 195)"
+    primary-foreground: "oklch(0.13 0.003 80)"
+    secondary: "oklch(0.96 0.008 80)"
+    secondary-foreground: "oklch(0.13 0.003 80)"
+    muted: "oklch(0.96 0.008 80)"
+    muted-foreground: "oklch(0.55 0.008 80)"
+    accent: "oklch(0.96 0.02 195)"
+    accent-foreground: "oklch(0.22 0.12 195)"
+    destructive: "oklch(0.6 0.22 25)"
+    destructive-foreground: "oklch(1 0 0)"
+    border: "oklch(0.92 0.01 80)"
+    input: "oklch(0.92 0.01 80)"
+    ring: "oklch(0.70 0.16 195)"
+  charts:
+    chart-1: "oklch(0.70 0.16 195)"
+    chart-2: "oklch(0.65 0.18 145)"
+    chart-3: "oklch(0.75 0.18 85)"
+    chart-4: "oklch(0.6 0.22 25)"
+    chart-5: "oklch(0.6 0.15 240)"
+typography:
+  ui: "Geist Sans"
+  display: "Instrument Serif"
+  code: "Geist Mono"
+  scale:
+    base: "16px"
+    ratio: 1.25
+    sizes: ["12px", "14px", "16px", "20px", "24px", "32px", "40px", "48px"]
+spacing:
+  base: 4
+  unit: "px"
+  scale: [4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96]
+radius:
+  sm: "4px"
+  md: "8px"
+  lg: "12px"
+  xl: "16px"
+  full: "9999px"
+surfaces:
+  z-index:
+    base: 0
+    raised: 10
+    sticky: 20
+    floating: 30
+    overlay: 40
+    top: 50
+motion:
+  never-animate: ["width", "height"]
+  prefer: ["transform", "opacity"]
+  respect-reduced-motion: true
+  durations:
+    micro: "150ms"
+    standard: "250ms"
+    slow: "400ms"
+products:
+  core:
+    accent-hue: 195
+    color: "teal"
+  zer:
+    accent-hue: 165
+    color: "green"
+  tolom:
+    accent-hue: 225
+    color: "blue"
+  tumurch:
+    accent-hue: 80
+    color: "amber"
+  tamga:
+    accent-hue: 285
+    color: "purple"
+icons:
+  library: "@phosphor-icons/react"
+  default-weight: "regular"
+  active-weight: "fill"
+components:
+  style: "shadcn new-york"
+  forms:
+    layout: "vertical"
+    pattern: "Label -> Input -> Helper/Error"
+  overlays:
+    form-edit: "Sheet (right side)"
+    confirm: "Dialog (center)"
+    mobile-action: "Drawer (bottom)"
+    quick-info: "Popover"
+  empty-states:
+    requirement: "What goes here + single primary action CTA"
+  loading:
+    content: "Skeleton"
+    actions: "Spinner"
+voice:
+  tone: ["concise", "direct", "human", "confident"]
+  language: "mn_MN"
+---
 # Zer Design System
 
 ## 1. Atmosphere & Identity

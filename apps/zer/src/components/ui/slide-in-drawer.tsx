@@ -37,6 +37,13 @@ interface SlideInDrawerProps {
    * @default false
    */
   disablePointerDismissal?: boolean;
+  /**
+   * Direction the drawer slides in from.
+   * `right` (default): slides from right edge.
+   * `bottom`: slides up from bottom edge (Dribbble-style).
+   * @default "right"
+   */
+  direction?: "right" | "bottom";
 }
 
 export function SlideInDrawer({
@@ -52,6 +59,7 @@ export function SlideInDrawer({
   handle,
   modal = true,
   disablePointerDismissal = false,
+  direction = "right",
 }: SlideInDrawerProps) {
   const bleedPadding =
     "pr-[calc(1.5rem+3rem)] supports-[-webkit-touch-callout:none]:pr-6";
@@ -59,14 +67,29 @@ export function SlideInDrawer({
   const content = (
     <>
       <Drawer.Backdrop className="[--backdrop-opacity:0.1] z-40 [--bleed:3rem] dark:[--backdrop-opacity:0.4] fixed inset-0 min-h-dvh bg-black opacity-[calc(var(--backdrop-opacity)*(1-var(--drawer-swipe-progress)))] transition-opacity duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:duration-0 data-ending-style:opacity-0 data-starting-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:absolute" />
-      <Drawer.Viewport className="[--viewport-padding:0px] z-50 supports-[-webkit-touch-callout:none]:[--viewport-padding:0.625rem] fixed inset-0 flex items-stretch justify-end p-(--viewport-padding)">
+      <Drawer.Viewport
+        className={cn(
+          "[--viewport-padding:0px] z-50 supports-[-webkit-touch-callout:none]:[--viewport-padding:0.625rem] fixed inset-0 flex p-(--viewport-padding)",
+          direction === "bottom"
+            ? "items-end justify-center"
+            : "items-stretch justify-end",
+        )}
+      >
         <Drawer.Popup
           className={cn(
-            `[--bleed:3rem] supports-[-webkit-touch-callout:none]:[--bleed:0px] h-full -mr-[3rem] border-l border-border bg-white text-foreground outline-none shadow-lg overscroll-contain touch-auto [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:select-none data-ending-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-starting-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:mr-0 supports-[-webkit-touch-callout:none]:border dark:bg-popover dark:text-popover-foreground dark:shadow-none`,
-            `w-[calc(var(--panel-width)+var(--bleed))] max-w-[calc(100vw-3rem+3rem)] supports-[-webkit-touch-callout:none]:max-w-[calc(100vw-3rem)]`,
+            direction === "bottom"
+              ? `[--bleed:0px] w-full h-[90dvh] border-t border-border bg-white text-foreground outline-none shadow-lg overscroll-contain touch-auto [transform:translateY(var(--drawer-swipe-movement-y))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:select-none data-ending-style:[transform:translateY(100%)] data-starting-style:[transform:translateY(100%)] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] rounded-t-2xl dark:bg-popover dark:text-popover-foreground dark:shadow-none overflow-hidden`
+              : `[--bleed:3rem] supports-[-webkit-touch-callout:none]:[--bleed:0px] h-full -mr-[3rem] border-l border-border bg-white text-foreground outline-none shadow-lg overscroll-contain touch-auto [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:select-none data-ending-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-starting-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:mr-0 supports-[-webkit-touch-callout:none]:border dark:bg-popover dark:text-popover-foreground dark:shadow-none`,
+            direction === "bottom"
+              ? "w-full max-w-none"
+              : `w-[calc(var(--panel-width)+var(--bleed))] max-w-[calc(100vw-3rem+3rem)] supports-[-webkit-touch-callout:none]:max-w-[calc(100vw-3rem)]`,
             className,
           )}
-          style={{ "--panel-width": panelWidth } as React.CSSProperties}
+          style={
+            direction === "bottom"
+              ? undefined
+              : ({ "--panel-width": panelWidth } as React.CSSProperties)
+          }
         >
           <Drawer.Content className="mx-auto w-full flex flex-col h-full min-w-0 overflow-x-hidden">
             {/* Full-width header */}
@@ -111,12 +134,13 @@ export function SlideInDrawer({
 
   return (
     <Drawer.Root
-      swipeDirection="right"
+      swipeDirection={direction === "bottom" ? "down" : "right"}
       open={open}
       onOpenChange={onOpenChange}
       handle={handle}
       modal={modal}
       disablePointerDismissal={disablePointerDismissal}
+      {...(direction === "bottom" ? { snapPoints: [0.9] } : {})}
     >
       {trigger && (
         <Drawer.Trigger render={<Slot.Root />}>{trigger}</Drawer.Trigger>

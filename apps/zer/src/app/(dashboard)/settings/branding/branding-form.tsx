@@ -1,6 +1,11 @@
 "use client";
 
-import { Check, Spinner, UploadSimple } from "@phosphor-icons/react";
+import {
+  ArrowsCounterClockwise,
+  Check,
+  Spinner,
+  UploadSimple,
+} from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
 import { capture } from "@zuiio/capture";
 import { useState } from "react";
@@ -18,6 +23,7 @@ import {
   NativeSelect,
   NativeSelectOption,
 } from "@/components/ui/native-select";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import {
   BRAND_THEMES,
   type BrandConfig,
@@ -26,7 +32,6 @@ import {
   FONT_OPTIONS,
   getFont,
 } from "@/lib/branding";
-import { OptimizedImage } from "@/components/ui/optimized-image";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { updateBrandConfig } from "./actions";
@@ -41,6 +46,7 @@ export function BrandingForm({ initialConfig }: BrandingFormProps) {
   const [logoUrl, setLogoUrl] = useState<string | null>(initialConfig.logo_url);
   const [uploading, setUploading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [showAllThemes, setShowAllThemes] = useState(false);
 
   // Custom color overrides
   const [customColors, setCustomColors] = useState<{
@@ -70,7 +76,21 @@ export function BrandingForm({ initialConfig }: BrandingFormProps) {
     if (key === "--accent" && customColors.accent) return customColors.accent;
     return activeTheme?.light[key] ?? "";
   }
+  const zuiioTheme = BRAND_THEMES.find((t) => t.name === "zuiio");
+  const advancedThemes = BRAND_THEMES.filter((t) => t.name !== "zuiio");
+  const VISIBLE_ADVANCED = 6;
+  const hasMoreThemes = advancedThemes.length > VISIBLE_ADVANCED;
+  const visibleThemes = showAllThemes
+    ? advancedThemes
+    : advancedThemes.slice(0, VISIBLE_ADVANCED);
 
+  function resetToDefault() {
+    setSelectedTheme("zuiio");
+    setCustomColors({ primary: "", secondary: "", accent: "" });
+    setRadius(0.5);
+    setFontBody("");
+    setFontHeading("");
+  }
   const mutation = useMutation({
     mutationFn: async (data: { removeLogo?: boolean }) => {
       setSaveSuccess(false);
@@ -202,9 +222,48 @@ export function BrandingForm({ initialConfig }: BrandingFormProps) {
             дэвсгэр, хүрээ, хажуу самбарын өнгүүдийг тодорхойлно.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {/* Zuiio default — prominent card */}
+          {zuiioTheme && (
+            <button
+              type="button"
+              onClick={() => setSelectedTheme("zuiio")}
+              className={cn(
+                "flex w-full items-center gap-4 rounded-lg border-2 p-4 text-left transition-colors hover:bg-accent",
+                selectedTheme === "zuiio"
+                  ? "border-primary ring-2 ring-primary"
+                  : "border-muted",
+              )}
+            >
+              <div className="flex -space-x-2">
+                <div
+                  className="size-8 rounded-full border-2 border-background"
+                  style={{ backgroundColor: zuiioTheme.light["--primary"] }}
+                />
+                <div
+                  className="size-8 rounded-full border-2 border-background"
+                  style={{ backgroundColor: zuiioTheme.light["--secondary"] }}
+                />
+                <div
+                  className="size-8 rounded-full border-2 border-background"
+                  style={{ backgroundColor: zuiioTheme.light["--accent"] }}
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold">Zuiio стандарт</p>
+                <p className="text-xs text-muted-foreground">
+                  Зүйо брэндийн анхны өнгө. Энэ бол стандарт тохиргоо.
+                </p>
+              </div>
+              {selectedTheme === "zuiio" && (
+                <Check className="size-5 shrink-0 text-primary" />
+              )}
+            </button>
+          )}
+
+          {/* Advanced presets */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-            {BRAND_THEMES.map((theme) => (
+            {visibleThemes.map((theme) => (
               <ThemeCard
                 key={theme.name}
                 theme={theme}
@@ -213,6 +272,19 @@ export function BrandingForm({ initialConfig }: BrandingFormProps) {
               />
             ))}
           </div>
+
+          {/* Progressive disclosure toggle */}
+          {hasMoreThemes && (
+            <button
+              type="button"
+              onClick={() => setShowAllThemes((v) => !v)}
+              className="w-full rounded-md border border-dashed p-2 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              {showAllThemes
+                ? "Хураах"
+                : `Бусад сэдвүүд (${advancedThemes.length - VISIBLE_ADVANCED})`}
+            </button>
+          )}
         </CardContent>
       </Card>
 
@@ -448,7 +520,7 @@ export function BrandingForm({ initialConfig }: BrandingFormProps) {
         </CardContent>
       </Card>
 
-      {/* Save */}
+      {/* Save & Reset */}
       <div className="flex items-center gap-3">
         <Button
           onClick={() => mutation.mutate({})}
@@ -463,6 +535,10 @@ export function BrandingForm({ initialConfig }: BrandingFormProps) {
           ) : (
             "Хадгалах"
           )}
+        </Button>
+        <Button variant="outline" size="sm" onClick={resetToDefault}>
+          <ArrowsCounterClockwise className="size-4" />
+          Анхны хэлбэртээ буцаах
         </Button>
         {saveSuccess && (
           <span className="flex items-center gap-1 text-sm text-emerald-600 dark:text-emerald-500">

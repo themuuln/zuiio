@@ -13,11 +13,11 @@ All colors use OKLch for perceptual uniformity. Format: `oklch(L C H)`.
 
 | Token | Light | Dark |
 |-------|-------|------|
-| `--color-background` | `oklch(0.99 0.003 275)` | `oklch(0.10 0.018 275)` |
-| `--color-foreground` | `oklch(0.12 0.018 275)` | `oklch(0.96 0.005 275)` |
-| `--color-primary` | `oklch(0.50 0.26 275)` | `oklch(0.65 0.22 275)` |
-| `--color-destructive` | `oklch(0.55 0.22 20)` | `oklch(0.60 0.20 20)` |
-| `--color-border` | `oklch(0.90 0.010 275)` | `oklch(0.22 0.022 275)` |
+| `--color-background` | `oklch(0.98 0.005 80)` | `oklch(0.13 0.003 80)` |
+| `--color-foreground` | `oklch(0.13 0.003 80)` | `oklch(0.98 0.005 80)` |
+| `--color-primary` | `oklch(0.70 0.16 195)` | `oklch(0.82 0.12 195)` |
+| `--color-destructive` | `oklch(0.60 0.22 25)` | `oklch(0.65 0.22 25)` |
+| `--color-border` | `oklch(0.92 0.01 80)` | `oklch(1 0 0 / 10%)` |
 
 Full set: `background`, `foreground`, `card`, `popover`, `primary`, `secondary`, `muted`, `accent`, `destructive`, `border`, `input`, `ring` + `-foreground` pairs + sidebar tokens. **Rule:** Never use raw hex/rgb. Always reference CSS variables or OKLch.
 

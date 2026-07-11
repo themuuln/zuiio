@@ -102,14 +102,14 @@ export function usePrewarm(orgId: string | undefined) {
       // Customers — most visited page after bay view
       queryClient.prefetchQuery({
         queryKey: customerKeys.list(orgId, ""),
-        queryFn: () => fetchCustomers(orgId, { params: { pageSize: "1000" } }),
+        queryFn: () => fetchCustomers(orgId, { params: { pageSize: "200" } }),
         staleTime: 5 * 60 * 1000,
       }),
 
       // Vehicles — second most visited
       queryClient.prefetchQuery({
         queryKey: vehicleKeys.list(orgId, "", null),
-        queryFn: () => fetchVehicles(orgId, { params: { pageSize: "1000" } }),
+        queryFn: () => fetchVehicles(orgId, { params: { pageSize: "200" } }),
         staleTime: 5 * 60 * 1000,
       }),
 
@@ -117,7 +117,7 @@ export function usePrewarm(orgId: string | undefined) {
       queryClient.prefetchQuery({
         queryKey: inventoryKeys.parts(orgId),
         queryFn: () =>
-          fetchPartsCatalog(orgId, { params: { pageSize: "1000" } }),
+          fetchPartsCatalog(orgId, { params: { pageSize: "200" } }),
         staleTime: 5 * 60 * 1000,
       }),
 

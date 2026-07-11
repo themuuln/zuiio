@@ -4,6 +4,10 @@
   "packageManager": "pnpm@11.10.0",
   "scripts": {
     "build": "turbo run build",
+    "build:zer": "turbo run build --filter=zer",
+    "build:tolom": "turbo run build --filter=tolom",
+    "build:website": "turbo run build --filter=@zuiio/website",
+    "build:packages": "turbo run build --filter='./packages/*'",
     "dev": "turbo run dev",
     "dev:website": "turbo run dev --filter=website",
     "dev:zer": "turbo run dev --filter=zer",
@@ -11,10 +15,13 @@
     "dev:agent-gateway": "turbo run dev --filter=agent-gateway",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
+    "check": "turbo run typecheck lint --continue",
     "test": "turbo run test",
     "format": "biome format --write",
     "prepare": "husky",
-    "mcp:init": "npx tsx scripts/mcp-init.ts"
+    "mcp:init": "npx tsx scripts/mcp-init.ts",
+    "design:check": "bash scripts/design-quality-check.sh",
+    "design:score": "echo 'OPTIK skills: use /score in Claude Code or Cursor'"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",
@@ -22,8 +29,9 @@
     "@types/react": "catalog:",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",
-    "turbo": "^2.10.4",
     "next": "catalog:",
+    "optik-design": "^1.0.0",
+    "turbo": "^2.10.4",
     "vitest": "catalog:"
   },
   "lint-staged": {

@@ -94,8 +94,7 @@ export function useBayViewData(
     error.includes("doesn't have access");
 
   const fetchData = useCallback(async () => {
-    await bayQuery.refetch();
-    await shiftQuery.refetch();
+    await Promise.all([bayQuery.refetch(), shiftQuery.refetch()]);
   }, [bayQuery, shiftQuery]);
 
   // ── Derived data ─────────────────────────────────────────────

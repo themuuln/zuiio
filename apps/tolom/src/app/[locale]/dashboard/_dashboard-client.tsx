@@ -141,21 +141,6 @@ export default function DashboardPage() {
         filter: `organization_id=eq.${orgId}`,
       },
       {
-        table: "invoices",
-        queryKey: dashboardKeys.all(orgId ?? "", null),
-        filter: `organization_id=eq.${orgId}`,
-      },
-      {
-        table: "work_order_services",
-        queryKey: dashboardKeys.all(orgId ?? "", null),
-        filter: `organization_id=eq.${orgId}`,
-      },
-      {
-        table: "work_order_parts",
-        queryKey: dashboardKeys.all(orgId ?? "", null),
-        filter: `organization_id=eq.${orgId}`,
-      },
-      {
         table: "customers",
         queryKey: dashboardKeys.all(orgId ?? "", null),
         filter: `organization_id=eq.${orgId}`,

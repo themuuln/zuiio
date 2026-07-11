@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "NODE_OPTIONS='--max-old-space-size=12288' next build",
+    "build": "NODE_OPTIONS='--max-old-space-size=8192' next build",
     "analyze": "next experimental-analyze",
     "start": "next start",
     "lint": "biome check src/ && node scripts/capture-check.mjs && node scripts/radius-check.mjs && node scripts/design-slop-check.mjs",

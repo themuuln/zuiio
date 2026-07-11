@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+export const instant = false;
 
 import { apiError, createSimpleRouteHandler, ok } from "@/lib/api-response";
 import { reportServerError } from "@/lib/sentry-report-server";

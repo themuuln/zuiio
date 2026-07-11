@@ -22,7 +22,7 @@ export default function RootLayout({ children }) {
 
 ## Optimistic Hooks
 
-Two families — **FormData** (for Server Action / `createClientAction` patterns) and **JSON** (for `fetch` / JSON payloads). Both snapshot the cache before mutation and restore on error.
+Accept `FormData` via `mutationFn`. Snapshot the cache before mutation and restore on error. For typed variables (non-FormData), use `useOrgMutation` instead.
 
 ```tsx
 "use client";
@@ -76,18 +76,21 @@ function ServiceList({ orgId }: { orgId: string }) {
 }
 ```
 
-**JSON variants** (`useOptimisticCreateJson`, `useOptimisticUpdateJson`, `useOptimisticDeleteJson`) mirror the same API but accept typed variables instead of `FormData`:
+### useOptimisticUpsert
+
+Insert or update: if the item (identified by `getId`) exists in cache, merge the partial from `buildOptimistic`; otherwise prepend the full item.
 
 ```tsx
-const create = useOptimisticCreateJson<Service>({
-  mutationFn: async (vars) => api.createService(vars),
+const upsert = useOptimisticUpsert<Service>({
+  mutationFn: async (fd) => upsertService(fd),
   queryKey: () => serviceKeys.list(orgId),
-  buildOptimistic: (vars) => ({
-    id: crypto.randomUUID(),
-    ...vars,
+  getId: (item) => item.id,
+  getIdFormData: (fd) => fd.get("id") as string,
+  buildOptimistic: (fd, existingItem) => ({
+    name: fd.get("name") as string,
+    ...(existingItem ? {} : { id: crypto.randomUUID() }),
   }),
 });
-// call: create.mutate({ name: "Oil Change" })
 ```
 
 ## Org Mutation Factory
@@ -138,36 +141,48 @@ if (isQueuedResult(result)) {
 
 Creates a `QueryClient` with `staleTime: 30s`, `gcTime: 5min`. Client lives in a `useRef` to survive re-renders.
 
-### useOptimisticCreate / useOptimisticCreateJson
+### useOptimisticCreate
 
 | Parameter | Type | Description |
 |---|---|---|
-| `mutationFn` | `(formData: FormData \| TVariables) => Promise<unknown>` | Server action or fetch call |
+| `mutationFn` | `(formData: FormData) => Promise<unknown>` | Server action or fetch call |
 | `queryKey` | `() => readonly string[]` | Cache key factory (function) |
-| `buildOptimistic` | `(formData \| vars) => TItem` | Returns temp item to prepend |
+| `buildOptimistic` | `(formData) => TItem` | Returns temp item to prepend |
 
 Returns `UseMutationResult`. Call via `mutate(data, { onSuccess })`.
 
-### useOptimisticUpdate / useOptimisticUpdateJson
+### useOptimisticUpdate
 
 | Parameter | Type | Description |
 |---|---|---|
-| `mutationFn` | `(formData: FormData \| TVariables) => Promise<unknown>` | Server action or fetch call |
+| `mutationFn` | `(formData: FormData) => Promise<unknown>` | Server action or fetch call |
 | `queryKey` | `() => readonly string[]` | Cache key factory (function) |
-| `getId` | `(formData \| vars) => string` | Extract item ID to match |
-| `buildOptimistic` | `(formData \| vars) => Partial<TItem>` | Partial to merge into cached item |
+| `getId` | `(formData) => string` | Extract item ID to match |
+| `buildOptimistic` | `(formData) => Partial<TItem>` | Partial to merge into cached item |
 
 Returns `UseMutationResult`.
 
-### useOptimisticDelete / useOptimisticDeleteJson
+### useOptimisticDelete
 
 | Parameter | Type | Description |
 |---|---|---|
-| `mutationFn` | `(formData: FormData \| TVariables) => Promise<unknown>` | Server action or fetch call |
+| `mutationFn` | `(formData: FormData) => Promise<unknown>` | Server action or fetch call |
 | `queryKey` | `() => readonly string[]` | Cache key factory (function) |
-| `getId` | `(formData \| vars) => string` | Extract item ID to remove |
+| `getId` | `(formData) => string` | Extract item ID to remove |
 
 Returns `UseMutationResult`. Matches both `id` and `productId` fields.
+
+### useOptimisticUpsert
+
+| Parameter | Type | Description |
+|---|---|---|
+| `mutationFn` | `(formData: FormData) => Promise<unknown>` | Server action or fetch call |
+| `queryKey` | `() => readonly string[]` | Cache key factory (function) |
+| `getId` | `(item: TItem) => string \| number` | Extract item ID from cache item |
+| `getIdFormData` | `(formData: FormData) => string \| number` | Extract item ID from form data |
+| `buildOptimistic` | `(formData, existingItem?) => Partial<TItem>` | Returns partial to merge (update) or full item to prepend (create) |
+
+Returns `UseMutationResult`. Merges into cached item if found, prepends if not.
 
 ### useOrgMutation / useOfflineJsonMutation
 
@@ -209,15 +224,12 @@ Returns `UseMutationResult<TResponse, Error, TVariables>`.
 | `OptimisticCreateConfig` | Config shape for `useOptimisticCreate` |
 | `OptimisticUpdateConfig` | Config shape for `useOptimisticUpdate` |
 | `OptimisticDeleteConfig` | Config shape for `useOptimisticDelete` |
-| `OptimisticCreateJsonConfig` | Config shape for JSON variant of create |
-| `OptimisticUpdateJsonConfig` | Config shape for JSON variant of update |
-| `OptimisticDeleteJsonConfig` | Config shape for JSON variant of delete |
 
 ## Conventions
 
 - All hooks are `"use client"`. They depend on the React Query client from `QueryProvider`.
 - **Rollback is automatic** — every optimistic hook snapshots the cache before mutation and restores on error.
-- **FormData vs. JSON**: Use `useOptimisticCreate` (FormData) for Server Action patterns, `useOptimisticCreateJson` (typed vars) for `fetch`-based mutations.
+- For typed variables (non-FormData), use `useOrgMutation` instead of the optimistic hooks.
 - `useOrgMutation` invalidates `queryKey` prefix on settle. Use `optimisticQueryKey` when the exact cache key differs from the invalidation prefix.
 - When multiple mutations share a `queryKey`, use `mutationKey` to prevent one mutation's refetch from clearing another's optimistic state.
 - Toasts via `sonner`. Configurable via `successMessage`, `errorMessage`, `onErrorToast`.

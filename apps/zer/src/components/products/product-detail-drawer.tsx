@@ -107,6 +107,7 @@ export function ProductDetailDrawer({
       trigger={children}
       title={product.name}
       description="Бүтээгдэхүүний дэлгэрэнгүй мэдээлэл"
+      direction="bottom"
     >
       <div className="space-y-6">
         {/* Edit/Delete action buttons */}

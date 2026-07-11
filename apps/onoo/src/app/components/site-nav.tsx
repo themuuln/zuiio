@@ -4,6 +4,7 @@ const NAV_ITEMS = [
   { href: "/", label: "Нүүр хуудас" },
   { href: "/games", label: "Тоглолтууд" },
   { href: "/standings", label: "Шалгуур" },
+  { href: "/players", label: "Тоглогчид" },
   { href: "/leaders", label: "Тэргүүлэгчид" },
 ];
 

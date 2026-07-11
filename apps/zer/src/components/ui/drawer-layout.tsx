@@ -23,6 +23,13 @@ interface DrawerLayoutProps {
    */
   handle?: Drawer.Handle<unknown>;
   /**
+   * Direction the drawer slides in from.
+   * `right` (default): slides from right edge.
+   * `bottom`: slides up from bottom edge (Dribbble-style).
+   * @default "right"
+   */
+  direction?: "right" | "bottom";
+  /**
    * Determines if the drawer enters a modal state when open.
    * `true`: focus trapped, scroll locked, pointer interactions disabled outside.
    * `false`: user can interact with the rest of the document.
@@ -52,6 +59,7 @@ export function DrawerLayout({
   className,
   nested = false,
   handle,
+  direction = "right",
   modal = true,
   disablePointerDismissal = false,
   title,
@@ -64,7 +72,7 @@ export function DrawerLayout({
 
   return (
     <Drawer.Root
-      swipeDirection="right"
+      swipeDirection={direction === "bottom" ? "down" : "right"}
       open={open}
       onOpenChange={onOpenChange}
       handle={handle}
@@ -86,15 +94,22 @@ export function DrawerLayout({
         />
         <Drawer.Viewport
           className={cn(
-            "[--viewport-padding:0px] fixed inset-0 flex items-stretch justify-end p-(--viewport-padding)",
+            "[--viewport-padding:0px] fixed inset-0 flex p-(--viewport-padding)",
+            direction === "bottom"
+              ? "items-end justify-center"
+              : "items-stretch justify-end",
             nested ? "z-[70]" : "z-50",
             "supports-[-webkit-touch-callout:none]:[--viewport-padding:0.625rem]",
           )}
         >
           <Drawer.Popup
             className={cn(
-              "[--bleed:3rem] supports-[-webkit-touch-callout:none]:[--bleed:0px] h-full -mr-[3rem] border-l border-border bg-white text-foreground outline-none overscroll-contain touch-auto [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:select-none data-ending-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-starting-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:mr-0 supports-[-webkit-touch-callout:none]:border supports-[-webkit-touch-callout:none]:pr-6 dark:bg-popover dark:text-popover-foreground dark:shadow-none",
-              `w-[calc(${panelWidth}+3rem)] max-w-[calc(100vw-3rem+3rem)] supports-[-webkit-touch-callout:none]:w-[${panelWidth}] supports-[-webkit-touch-callout:none]:max-w-[calc(100vw-3rem)]`,
+              direction === "bottom"
+                ? "[--bleed:3rem] supports-[-webkit-touch-callout:none]:[--bleed:0px] w-full -mb-[3rem] border-t border-border bg-white text-foreground outline-none overscroll-contain touch-auto [transform:translateY(var(--drawer-swipe-movement-y))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:select-none data-ending-style:[transform:translateY(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-starting-style:[transform:translateY(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:mb-0 supports-[-webkit-touch-callout:none]:border supports-[-webkit-touch-callout:none]:pb-6 dark:bg-popover dark:text-popover-foreground dark:shadow-none rounded-t-2xl max-h-[85vh]"
+                : "[--bleed:3rem] supports-[-webkit-touch-callout:none]:[--bleed:0px] h-full -mr-[3rem] border-l border-border bg-white text-foreground outline-none overscroll-contain touch-auto [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:select-none data-ending-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-starting-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:mr-0 supports-[-webkit-touch-callout:none]:border supports-[-webkit-touch-callout:none]:pr-6 dark:bg-popover dark:text-popover-foreground dark:shadow-none",
+              direction === "bottom"
+                ? `h-auto max-h-[85vh]`
+                : `w-[calc(${panelWidth}+3rem)] max-w-[calc(100vw-3rem+3rem)] supports-[-webkit-touch-callout:none]:w-[${panelWidth}] supports-[-webkit-touch-callout:none]:max-w-[calc(100vw-3rem)]`,
               nested
                 ? "shadow-2xl dark:shadow-2xl dark:shadow-black/50"
                 : "shadow-lg",

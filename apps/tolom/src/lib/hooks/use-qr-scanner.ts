@@ -1,6 +1,6 @@
 "use client";
 
-import { Html5Qrcode } from "html5-qrcode";
+import type { Html5Qrcode } from "html5-qrcode";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { reportServerError } from "@/lib/sentry-report-server";
 
@@ -38,6 +38,8 @@ export function useQrScanner(): UseQrScannerResult {
       setError(null);
 
       try {
+        // Dynamic import: html5-qrcode is heavy and only needed when scanning starts
+        const { Html5Qrcode } = await import("html5-qrcode");
         const scanner = new Html5Qrcode(elementId);
         scannerRef.current = scanner;
 

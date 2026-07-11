@@ -153,3 +153,80 @@ export function useOptimisticUpdate<TItem extends Record<string, unknown>>({
     },
   });
 }
+/**
+ * Optimistic upsert: if the item (identified by `getId`) exists in cache, merge
+ * the partial from `buildOptimistic`; otherwise prepend the full item.
+ * Rolls back on error.
+ */
+export function useOptimisticUpsert<TItem extends Record<string, unknown>>({
+  mutationFn,
+  queryKey,
+  getId,
+  getIdFormData,
+  buildOptimistic,
+}: {
+  mutationFn: (formData: FormData) => Promise<unknown>;
+  queryKey: () => readonly string[];
+  getId: (item: TItem) => string | number;
+  getIdFormData: (formData: FormData) => string | number;
+  buildOptimistic: (
+    formData: FormData,
+    existingItem: TItem | undefined,
+  ) => Partial<TItem>;
+}) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn,
+    onMutate: async (formData) => {
+      await queryClient.cancelQueries({ queryKey: queryKey() });
+
+      const previous = queryClient.getQueriesData<TItem[]>({
+        queryKey: queryKey(),
+      });
+
+      const targetId = String(getIdFormData(formData));
+
+      // Find existing item in cache
+      let existingItem: TItem | undefined;
+      for (const [, data] of previous) {
+        if (!data) continue;
+        const found = data.find((item) => String(getId(item)) === targetId);
+        if (found) {
+          existingItem = found;
+          break;
+        }
+      }
+
+      const optimisticData = buildOptimistic(formData, existingItem);
+
+      for (const [key, data] of previous) {
+        if (!data) continue;
+        const idx = data.findIndex((item) => String(getId(item)) === targetId);
+        if (idx >= 0) {
+          const updated = [...data];
+          updated[idx] = { ...updated[idx], ...optimisticData } as TItem;
+          queryClient.setQueryData(key, updated);
+        } else {
+          queryClient.setQueryData(key, [
+            optimisticData as TItem,
+            ...data,
+          ]);
+        }
+      }
+
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        for (const [key, data] of context.previous) {
+          queryClient.setQueryData(key, data);
+        }
+      }
+      toast.error("Алдаа гарлаа. Дахин оролдоно уу.");
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKey() });
+    },
+  });
+}

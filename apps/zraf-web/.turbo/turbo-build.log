@@ -1,2 +1,2 @@
-$ next build
+$ NODE_OPTIONS='--max-old-space-size=12288' next build
 [ELIFECYCLE] Command failed.

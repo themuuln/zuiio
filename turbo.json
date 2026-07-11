@@ -3,8 +3,14 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "inputs": ["src/**", "app/**", "pages/**", "next.config.*", "tsconfig.json", "package.json", "tailwind.config.*"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"],
       "env": [
+        "NEXT_PUBLIC_SENTRY_DSN",
+        "SENTRY_AUTH_TOKEN",
+        "SENTRY_DSN"
+      ],
+      "passThroughEnv": [
         "AGENT_GATEWAY_URL",
         "RESEND_API_KEY",
         "SUPABASE_SERVICE_ROLE_KEY",
@@ -25,10 +31,7 @@
         "EMAIL_FROM",
         "SMTP_USER",
         "SMTP_SECURE",
-        "SMTP_PASS",
-        "SENTRY_AUTH_TOKEN",
-        "SENTRY_DSN",
-        "NEXT_PUBLIC_SENTRY_DSN"
+        "SMTP_PASS"
       ]
     },
     "dev": {
@@ -36,13 +39,14 @@
       "persistent": true
     },
     "typecheck": {
-      "dependsOn": ["^build"]
+      "inputs": ["src/**", "app/**", "pages/**", "tsconfig.json", "package.json"]
     },
     "lint": {
-      "dependsOn": ["^build"]
+      "inputs": ["src/**", "app/**", "pages/**", "package.json", "biome.json"]
     },
     "test": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "tests/**", "package.json", "vitest.config.*"]
     }
   }
 }

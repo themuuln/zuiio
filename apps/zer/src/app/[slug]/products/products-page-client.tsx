@@ -8,7 +8,6 @@ import {
   Package,
   X,
 } from "@phosphor-icons/react";
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -16,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { getCompanyTypeLabel } from "@/lib/constants";
 import { formatCurrency } from "@/lib/format";
 import type { OrgMeta, PublicCategory, PublicProduct } from "./page";
+import { ProductDetailDrawer } from "./product-detail-drawer";
 
 const STOCK_FILTERS = [
   { value: "all", label: "Бүгд" },
@@ -187,16 +187,16 @@ export function ProductsPageClient({
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {filtered.map((product) => (
-                <Link
+                <ProductDetailDrawer
                   key={product.id}
-                  href={`/${organization.slug}/products/${product.id}`}
-                  className="group block"
+                  product={product}
+                  organization={organization}
                 >
                   <ProductCard
                     product={product}
                     currency={organization.currency}
                   />
-                </Link>
+                </ProductDetailDrawer>
               ))}
             </div>
           )}

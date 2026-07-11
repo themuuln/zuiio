@@ -10,7 +10,7 @@ Optimistic mutation primitives for TanStack Query v5 + React 19. Peers: `@zuiio/
 |---|---|
 | `QueryProvider` | Wraps `QueryClientProvider` with sensible defaults (`staleTime: 30s`, `gcTime: 5min`). Client lives in a `useRef` to survive re-renders. |
 
-### Optimistic Hooks (FormData)
+### Optimistic Hooks
 
 Accept `FormData` via `mutationFn`. Use for `Server Action`-style mutations with `createClientAction`.
 
@@ -19,16 +19,7 @@ Accept `FormData` via `mutationFn`. Use for `Server Action`-style mutations with
 | `useOptimisticCreate<T>` | Prepend new item to list cache on mutate, rollback on error. |
 | `useOptimisticUpdate<T>` | Merge partial into cached item by `getId`, rollback on error. |
 | `useOptimisticDelete` | Remove item from list cache by `getId`, rollback on error. |
-
-### Optimistic Hooks (JSON)
-
-Same API as above but accepts `TVariables` directly (not `FormData`). Use for JSON `fetch` mutations.
-
-| Hook | Description |
-|---|---|
-| `useOptimisticCreateJson<T>` | Prepend with JSON variables. |
-| `useOptimisticUpdateJson<T>` | Merge with JSON variables. |
-| `useOptimisticDeleteJson` | Remove with JSON variables. |
+| `useOptimisticUpsert<T>` | Insert or update: merge if cached item matches, prepend if not. |
 
 ### Org Mutation Factory
 
@@ -72,6 +63,7 @@ const { mutate } = useOrgMutation<Service, CreateVars>({
 
 - All hooks are `"use client"`. They depend on the React Query client from `QueryProvider`.
 - Rollback is automatic — every optimistic hook snapshots the cache before mutation and restores on error.
+- For typed variables (non-FormData), use `useOrgMutation` instead.
 - `useOrgMutation` invalidates `queryKey` prefix on settle. Use `optimisticQueryKey` when the exact cache key differs from the invalidation prefix.
 - Toasts via `sonner`. Configurable via `successMessage`, `errorMessage`, `onErrorToast`.
 - Offline queue requires `MutationQueueProvider` from `@zuiio/offline`.
@@ -87,5 +79,6 @@ Use this section to find the right context for your task.
 - **Create optimistic mutation** → `useOptimisticCreate()` 
 - **Update optimistic mutation** → `useOptimisticUpdate()`
 - **Delete optimistic mutation** → `useOptimisticDelete()`
+- **Upsert optimistic mutation** → `useOptimisticUpsert()`
 - **Create org-scoped mutation** → `useOrgMutation()`
 - **Invalidate queries** → Use `queryClient.invalidateQueries()` with entity keys

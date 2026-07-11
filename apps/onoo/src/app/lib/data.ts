@@ -916,6 +916,21 @@ export async function getLeaders(): Promise<SeasonPlayerStatRow[]> {
   return MOCK_SEASON_PLAYER_STATS;
 }
 
+export async function getPlayers(): Promise<SeasonPlayerStatRow[]> {
+  const data = await trySupabase(async () => {
+    const supabase = await createClient();
+    const { data: rows, error } = await supabase
+      .from("v_public_leaders")
+      .select("*")
+      .order("player_name");
+
+    if (error || !rows) return null;
+    return rows as SeasonPlayerStatRow[];
+  });
+
+  return data ?? MOCK_SEASON_PLAYER_STATS;
+}
+
 export async function getPlayByPlay(gameId: string) {
   if (gameId === "70000000-0000-0000-0000-000000000003") {
     return MOCK_PLAY_BY_PLAY;

@@ -9,6 +9,68 @@ export type BrandTheme = {
 
 export const BRAND_THEMES: BrandTheme[] = [
   {
+    name: "zuiio",
+    label: "Zuiio",
+    light: {
+      "--background": "oklch(0.98 0.005 80)",
+      "--foreground": "oklch(0.13 0.003 80)",
+      "--card": "oklch(0.98 0.005 80)",
+      "--card-foreground": "oklch(0.13 0.003 80)",
+      "--popover": "oklch(0.98 0.005 80)",
+      "--popover-foreground": "oklch(0.13 0.003 80)",
+      "--primary": "oklch(0.70 0.16 195)",
+      "--primary-foreground": "oklch(0.13 0.003 80)",
+      "--secondary": "oklch(0.96 0.008 80)",
+      "--secondary-foreground": "oklch(0.13 0.003 80)",
+      "--muted": "oklch(0.96 0.008 80)",
+      "--muted-foreground": "oklch(0.55 0.008 80)",
+      "--accent": "oklch(0.96 0.02 195)",
+      "--accent-foreground": "oklch(0.22 0.12 195)",
+      "--destructive": "oklch(0.6 0.22 25)",
+      "--destructive-foreground": "oklch(1 0 0)",
+      "--border": "oklch(0.92 0.01 80)",
+      "--input": "oklch(0.92 0.01 80)",
+      "--ring": "oklch(0.70 0.16 195)",
+      "--sidebar": "oklch(0.13 0.003 80)",
+      "--sidebar-foreground": "oklch(0.98 0.005 80)",
+      "--sidebar-primary": "oklch(0.70 0.16 195)",
+      "--sidebar-primary-foreground": "oklch(0.13 0.003 80)",
+      "--sidebar-accent": "oklch(0.2 0.004 80)",
+      "--sidebar-accent-foreground": "oklch(0.98 0.005 80)",
+      "--sidebar-border": "oklch(0.92 0.01 80)",
+      "--sidebar-ring": "oklch(0.70 0.16 195)",
+    },
+    dark: {
+      "--background": "oklch(0.13 0.003 80)",
+      "--foreground": "oklch(0.98 0.005 80)",
+      "--card": "oklch(0.2 0.004 80)",
+      "--card-foreground": "oklch(0.98 0.005 80)",
+      "--popover": "oklch(0.2 0.004 80)",
+      "--popover-foreground": "oklch(0.98 0.005 80)",
+      "--primary": "oklch(0.82 0.12 195)",
+      "--primary-foreground": "oklch(0.13 0.003 80)",
+      "--secondary": "oklch(0.3 0.005 80)",
+      "--secondary-foreground": "oklch(0.98 0.005 80)",
+      "--muted": "oklch(0.3 0.005 80)",
+      "--muted-foreground": "oklch(0.7 0.01 80)",
+      "--accent": "oklch(0.70 0.16 195 / 15%)",
+      "--accent-foreground": "oklch(0.9 0.04 195)",
+      "--destructive": "oklch(0.65 0.22 25)",
+      "--destructive-foreground": "oklch(0.13 0.003 80)",
+      "--border": "oklch(1 0 0 / 10%)",
+      "--input": "oklch(1 0 0 / 15%)",
+      "--ring": "oklch(0.82 0.12 195)",
+      "--sidebar": "oklch(0.13 0.003 80)",
+      "--sidebar-foreground": "oklch(0.98 0.005 80)",
+      "--sidebar-primary": "oklch(0.82 0.12 195)",
+      "--sidebar-primary-foreground": "oklch(0.13 0.003 80)",
+      "--sidebar-accent": "oklch(0.2 0.004 80)",
+      "--sidebar-accent-foreground": "oklch(0.98 0.005 80)",
+      "--sidebar-border": "oklch(1 0 0 / 10%)",
+      "--sidebar-ring": "oklch(0.82 0.12 195)",
+    },
+  },
+  {
     name: "neutral",
     label: "Стандарт",
     light: {
@@ -388,8 +450,8 @@ export type BrandConfig = {
 };
 
 export const DEFAULT_BRAND_CONFIG: BrandConfig = {
-  theme: "neutral",
-  radius: 0.625,
+  theme: "zuiio",
+  radius: 0.5,
   logo_url: null,
 };
 
@@ -409,6 +471,41 @@ function radiusLines(radius: number): string[] {
     `  --radius-3xl: ${r * 2.2}rem;`,
     `  --radius-4xl: ${r * 2.6}rem;`,
   ];
+}
+/**
+ * Merge partial/nullable config with defaults.
+ * Empty or null inputs resolve to the Zuiio default preset.
+ * Unknown preset names fall back to "zuiio".
+ */
+export function resolveBrandConfig(
+  input: Partial<BrandConfig> | null | undefined,
+): BrandConfig {
+  const base = { ...DEFAULT_BRAND_CONFIG };
+  if (!input) return base;
+  const theme = input.theme && getTheme(input.theme) ? input.theme : base.theme;
+  const radius =
+    typeof input.radius === "number" && input.radius >= 0 && input.radius <= 2
+      ? input.radius
+      : base.radius;
+  const logo_url =
+    "logo_url" in input ? (input.logo_url ?? null) : base.logo_url;
+  const custom_colors: BrandConfig["custom_colors"] = {};
+  if (input.custom_colors) {
+    for (const [key, val] of Object.entries(input.custom_colors)) {
+      if (val && isValidColorValue(val)) {
+        custom_colors[key as keyof typeof custom_colors] = val;
+      }
+    }
+  }
+  const font_body =
+    input.font_body && getFont(input.font_body)
+      ? input.font_body
+      : undefined;
+  const font_heading =
+    input.font_heading && getFont(input.font_heading)
+      ? input.font_heading
+      : undefined;
+  return { theme, radius, logo_url, custom_colors, font_body, font_heading };
 }
 
 export function contrastForeground(cssColor: string): string | undefined {
@@ -539,18 +636,20 @@ function customColorLines(
     if (hex) {
       if (!isValidColorValue(hex)) continue;
       lines.push(`  ${key.var}: ${hex};`);
-      lines.push(`  ${key.fg}: ${contrastForeground(hex)};`);
+      const fg = contrastForeground(hex);
+      if (fg) lines.push(`  ${key.fg}: ${fg};`);
     }
   }
   return lines;
 }
 
-export function generateBrandCSS(config: BrandConfig): string {
-  const theme = getTheme(config.theme);
+export function generateBrandCSS(config: BrandConfig | null | undefined): string {
+  const resolved = resolveBrandConfig(config);
+  const theme = getTheme(resolved.theme);
   if (!theme) return "";
 
-  const customOverrides = config.custom_colors
-    ? customColorLines(config.custom_colors)
+  const customOverrides = resolved.custom_colors
+    ? customColorLines(resolved.custom_colors)
     : [];
 
   const seenUrls = new Set<string>();
@@ -558,8 +657,8 @@ export function generateBrandCSS(config: BrandConfig): string {
   let bodyFamily: string | undefined;
   let headingFamily: string | undefined;
 
-  if (config.font_body) {
-    const font = getFont(config.font_body);
+  if (resolved.font_body) {
+    const font = getFont(resolved.font_body);
     if (font) {
       bodyFamily = font.family;
       if (!seenUrls.has(font.cssImportUrl)) {
@@ -568,8 +667,8 @@ export function generateBrandCSS(config: BrandConfig): string {
       }
     }
   }
-  if (config.font_heading && config.font_heading !== config.font_body) {
-    const font = getFont(config.font_heading);
+  if (resolved.font_heading && resolved.font_heading !== resolved.font_body) {
+    const font = getFont(resolved.font_heading);
     if (font) {
       headingFamily = font.family;
       if (!seenUrls.has(font.cssImportUrl)) {
@@ -596,8 +695,8 @@ export function generateBrandCSS(config: BrandConfig): string {
   for (const [key, value] of Object.entries(theme.light)) {
     lines.push(`  ${key}: ${value};`);
   }
-  if (config.radius != null) {
-    lines.push(...radiusLines(config.radius));
+  if (resolved.radius != null) {
+    lines.push(...radiusLines(resolved.radius));
   }
   lines.push(...customOverrides);
   lines.push(...fontLines);
@@ -607,8 +706,8 @@ export function generateBrandCSS(config: BrandConfig): string {
   for (const [key, value] of Object.entries(theme.dark)) {
     lines.push(`  ${key}: ${value};`);
   }
-  if (config.radius != null) {
-    lines.push(...radiusLines(config.radius));
+  if (resolved.radius != null) {
+    lines.push(...radiusLines(resolved.radius));
   }
   lines.push(...customOverrides);
   lines.push("}");
