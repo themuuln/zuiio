@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.supabase.co" },
     ],
   },
-  reactCompiler: true,
+  reactCompiler: process.env.NODE_ENV === "development",
   experimental: {
     inlineCss: true,
     staleTimes: {
@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
     viewTransition: true,
   },
   cacheLife: {
-    realtime: { stale: 30, revalidate: 10, expire: 60 },
+    realtime: { stale: 120, revalidate: 60, expire: 300 },
     frequent: { stale: 60, revalidate: 30, expire: 300 },
     standard: { stale: 300, revalidate: 60, expire: 600 },
     reference: { stale: 3600, revalidate: 600, expire: 7200 },

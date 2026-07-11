@@ -10,18 +10,18 @@ Sentry.init({
     process.env.NEXT_PUBLIC_SENTRY_DSN ||
     "https://f432265ac8a6824ede3d3ee81b29ecc6@o4511472318939136.ingest.de.sentry.io/4511472327917648",
 
-  // 15% in production, 100% in dev for full debugging.
-  tracesSampleRate: process.env.NODE_ENV === "production" ? 0.15 : 1.0,
+  // 5% in production (reduced from 15% to cut CPU overhead), 100% in dev.
+  tracesSampleRate: process.env.NODE_ENV === "production" ? 0.05 : 1.0,
 
   // Enable logs to be sent to Sentry
   enableLogs: true,
 
   // Enable sending user PII (Personally Identifiable Information)
-  sendDefaultPii: true,
+  sendDefaultPii: process.env.NODE_ENV !== "production",
 
   integrations: [
     supabaseIntegration(SupabaseClient, Sentry, {
-      tracing: true,
+      tracing: false,
       breadcrumbs: true,
       errors: true,
     }),

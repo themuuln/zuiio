@@ -24,7 +24,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  reactCompiler: true,
+  reactCompiler: process.env.NODE_ENV === "development",
 
   // ── Next.js 16.3: Instant Navigations ──────────────────────
   cacheComponents: true,
@@ -33,7 +33,7 @@ const nextConfig: NextConfig = {
   // ── Cache lifetime profiles (used with 'use cache' directive) ──
   cacheLife: {
     // Real-time: bay view, cash register balance, work order detail
-    realtime: { stale: 30, revalidate: 10, expire: 60 },
+    realtime: { stale: 120, revalidate: 60, expire: 300 },
     // Frequent: work orders, inventory balances, invoices
     frequent: { stale: 60, revalidate: 30, expire: 300 },
     // Standard: customers, vehicles, reports, expenses, dashboards
@@ -109,7 +109,7 @@ const nextConfig: NextConfig = {
 
 const withPWA = withPWAInit({
   dest: "public",
-  disable: process.env.NODE_ENV === "development",
+  disable: process.env.NODE_ENV === "development" || process.env.ENABLE_PWA !== "true",
   register: true,
   scope: "/",
   sw: "sw.js",
