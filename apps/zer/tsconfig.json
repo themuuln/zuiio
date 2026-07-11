@@ -43,7 +43,6 @@
     "src/**/__tests__",
     "src/**/*.test.ts",
     "src/**/*.test.tsx",
-    "recipes.ts",
     "codecept.conf.ts"
   ]
 }
