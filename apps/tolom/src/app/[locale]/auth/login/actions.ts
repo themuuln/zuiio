@@ -1,6 +1,5 @@
 "use server";
 
-import { validateTurnstile } from "@zuiio/supabase";
 import type { ActionState } from "@/lib/form-validation";
 import {
   flattenFieldErrors,
@@ -30,12 +29,6 @@ export async function login(
   formData: FormData,
 ): Promise<LoginState> {
   try {
-    const turnstileToken = formData.get("turnstileToken") as string | null;
-    const turnstile = await validateTurnstile(turnstileToken);
-    if (!turnstile.success) {
-      return { formError: turnstile.error };
-    }
-
     const raw = {
       identifier: (formData.get("identifier") as string)?.trim() || "",
       password: (formData.get("password") as string) || "",

@@ -1,6 +1,5 @@
 "use client";
 
-import { Turnstile } from "@marsidev/react-turnstile";
 import { AlertCircle, Car, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -23,7 +22,6 @@ export default function CustomerLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const fieldErrors = state?.fieldErrors ?? {};
 
   const prevFormError = useRef(state?.formError);
@@ -51,11 +49,6 @@ export default function CustomerLoginPage() {
         <CardContent>
           <form action={formAction} className="flex flex-col gap-4">
             <input type="hidden" name="redirectTo" value={redirectTo} />
-            <input
-              type="hidden"
-              name="turnstileToken"
-              value={turnstileToken ?? ""}
-            />
 
             <Field>
               <FieldLabel htmlFor="email">
@@ -104,16 +97,6 @@ export default function CustomerLoginPage() {
                 {state.formError}
               </FieldError>
             )}
-
-            {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY &&
-              process.env.NODE_ENV !== "development" && (
-                <Turnstile
-                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-                  onSuccess={(token: string) => setTurnstileToken(token)}
-                  onExpire={() => setTurnstileToken(null)}
-                  options={{ appearance: "interaction-only" }}
-                />
-              )}
 
             <Button type="submit" className="w-full" disabled={isPending}>
               {isPending && <Loader2 className="size-4 animate-spin mr-1.5" />}

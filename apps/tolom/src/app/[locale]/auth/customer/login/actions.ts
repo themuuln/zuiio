@@ -1,6 +1,5 @@
 "use server";
 
-import { validateTurnstile } from "@zuiio/supabase";
 import { redirect } from "next/navigation";
 import type { ActionState } from "@/lib/form-validation";
 import { flattenFieldErrors } from "@/lib/form-validation";
@@ -18,11 +17,6 @@ export async function customerLogin(
     password: (formData.get("password") as string) || "",
   };
   const redirectTo = (formData.get("redirectTo") as string) || "/portal";
-  const turnstileToken = formData.get("turnstileToken") as string | null;
-  const turnstile = await validateTurnstile(turnstileToken);
-  if (!turnstile.success) {
-    return { formError: turnstile.error };
-  }
 
   const parsed = customerLoginSchema.safeParse(raw);
   if (!parsed.success) {

@@ -1,6 +1,5 @@
 "use client";
 
-import { Turnstile } from "@marsidev/react-turnstile";
 import { Eye, EyeOff, Loader2, UserPlus } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -45,8 +44,6 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
 
   return (
     <div className="flex flex-col gap-6">
@@ -74,11 +71,6 @@ export default function SignupPage() {
         {redirectTo && (
           <input type="hidden" name="redirectTo" value={redirectTo} />
         )}
-        <input
-          type="hidden"
-          name="turnstileToken"
-          value={turnstileToken ?? ""}
-        />
         <FieldGroup>
           {state?.formError && (
             <FieldError key={state.formError}>{state.formError}</FieldError>
@@ -218,14 +210,6 @@ export default function SignupPage() {
               </Link>
             </Typography.Muted>
           </Field>
-          {turnstileSiteKey && process.env.NODE_ENV !== "development" && (
-            <Turnstile
-              siteKey={turnstileSiteKey}
-              onSuccess={(token) => setTurnstileToken(token)}
-              onExpire={() => setTurnstileToken(null)}
-              options={{ appearance: "interaction-only" }}
-            />
-          )}
         </FieldGroup>
       </form>
     </div>

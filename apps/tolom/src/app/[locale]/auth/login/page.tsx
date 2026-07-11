@@ -2,7 +2,6 @@
 
 import { Suspense } from "react";
 
-import { Turnstile } from "@marsidev/react-turnstile";
 import { Eye, EyeOff, Loader2, LogIn } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -10,7 +9,6 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ErrorBoundary } from "@/components/error-boundary";
 import {
   Field,
   FieldError,
@@ -64,7 +62,6 @@ function LoginForm() {
   const [identifier, setIdentifier] = useState(DEV_EMAIL);
   const [password, setPassword] = useState(DEV_PASSWORD);
   const formRef = useRef<HTMLFormElement>(null);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   // Dev auto-submit: log in automatically when dev credentials are set
   useEffect(() => {
@@ -137,11 +134,6 @@ function LoginForm() {
         {redirectTo && (
           <input type="hidden" name="redirectTo" value={redirectTo} />
         )}
-        <input
-          type="hidden"
-          name="turnstileToken"
-          value={turnstileToken ?? ""}
-        />
         <FieldGroup className="gap-3.5">
           {state?.formError && (
             <FieldError className="border border-destructive/20 bg-destructive/5 px-2.5 py-1.5 text-[10px] font-mono">
@@ -268,41 +260,9 @@ function LoginForm() {
                 {authT("signUp")}
               </Link>
             </Typography.Muted>
-
-            {/* Turnstile — isolated in ErrorBoundary so a script failure never
-                crashes the entire form or blocks users from logging in */}
-            <ErrorBoundary>
-              <TurnstileField
-                onToken={setTurnstileToken}
-                onExpire={() => setTurnstileToken(null)}
-              />
-            </ErrorBoundary>
           </Field>
         </FieldGroup>
       </form>
     </div>
-  );
-}
-
-// ── Turnstile sub-component (isolated for error resilience) ──
-
-/** Turnstile CAPTCHA — only rendered in production when site key is set. */
-function TurnstileField({
-  onToken,
-  onExpire,
-}: {
-  onToken: (token: string) => void;
-  onExpire: () => void;
-}) {
-  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
-  if (!siteKey || process.env.NODE_ENV === "development") return null;
-
-  return (
-    <Turnstile
-      siteKey={siteKey}
-      onSuccess={onToken}
-      onExpire={onExpire}
-      options={{ appearance: "interaction-only" }}
-    />
   );
 }

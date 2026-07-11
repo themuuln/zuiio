@@ -1,6 +1,5 @@
 "use server";
 
-import { validateTurnstile } from "@zuiio/supabase";
 import { redirect } from "next/navigation";
 // biome-ignore lint/style/noRestrictedImports: TablesInsert is only defined in database.types
 import type { TablesInsert } from "@/lib/database.types";
@@ -109,12 +108,6 @@ export async function signup(
   }
 
   try {
-    const turnstileToken = formData.get("turnstileToken") as string | null;
-    const turnstile = await validateTurnstile(turnstileToken);
-    if (!turnstile.success) {
-      return { formError: turnstile.error };
-    }
-
     // Use service-role to create user with email_confirm: true
     const { data, error } = await serviceRole.auth.admin.createUser({
       email: authEmail,
