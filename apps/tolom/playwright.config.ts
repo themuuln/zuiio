@@ -9,6 +9,9 @@ const baseURL = `http://localhost:${PORT}`;
  * @see https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
+  /* Global timeout — 60s for dev mode (pages compile on first visit) */
+  timeout: 60_000,
+  expect: { timeout: 15_000 },
   testDir: "./e2e",
   testMatch: "**/*.spec.ts",
 
@@ -74,12 +77,12 @@ export default defineConfig({
     // },
   ],
 
-  /* Use production build for E2E — eliminates lazy compilation overhead.
-     First request drops from ~9s (dev) to ~100ms (prod). */
+  /* Use dev server for E2E — faster startup than production build.
+     For CI, switch back to: npm run build && npm run start */
   webServer: {
-    command: `PORT=${PORT} npm run build && PORT=${PORT} npm run start`,
+    command: `PORT=${PORT} npm run dev`,
     url: baseURL,
-    timeout: 180_000,
+    timeout: 60_000,
     reuseExistingServer: true,
   },
 });

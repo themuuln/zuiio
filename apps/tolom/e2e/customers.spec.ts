@@ -3,7 +3,7 @@ import { mockOrganizations, mockProfile, mockSupabaseREST } from "./mocks";
 import { expect, test } from "./test-extensions";
 
 // Mocked APIs — fast, no cold starts. 10s is generous.
-test.setTimeout(10_000);
+test.setTimeout(60_000);
 
 // All customer tests use English locale for stable English text selectors
 

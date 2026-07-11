@@ -7,7 +7,7 @@ import {
 } from "./mocks";
 import { expect, test } from "./test-extensions";
 
-test.setTimeout(15_000);
+test.setTimeout(60_000);
 
 test.describe("Mechanic Dashboard (Mocked)", () => {
   test.beforeEach(async ({ page }) => {

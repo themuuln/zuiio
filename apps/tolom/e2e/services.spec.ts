@@ -2,7 +2,7 @@ import { setEnglishLocale } from "./helpers";
 import { mockServices, mockSupabaseREST } from "./mocks";
 import { expect, test } from "./test-extensions";
 
-test.setTimeout(15_000);
+test.setTimeout(60_000);
 
 test.describe("Services (Mocked)", () => {
   test.beforeEach(async ({ page }) => {

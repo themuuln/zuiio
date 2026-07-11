@@ -3,7 +3,7 @@ import { setEnglishLocale } from "./helpers";
 import { mockCrudMutations, mockCustomers, mockSupabaseREST } from "./mocks";
 import { expect, test } from "./test-extensions";
 
-test.setTimeout(15_000);
+test.setTimeout(60_000);
 
 test.describe("Customers CRUD (Mocked)", () => {
   test.beforeEach(async ({ page }) => {

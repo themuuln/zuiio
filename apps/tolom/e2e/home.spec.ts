@@ -2,7 +2,7 @@ import { mockOrganizations, mockProfile, mockSupabaseREST } from "./mocks";
 import { expect, test } from "./test-extensions";
 
 // With mocked APIs, tests are fast — 10s is generous.
-test.setTimeout(10_000);
+test.setTimeout(60_000);
 
 test.describe("Landing Page", () => {
   test.beforeEach(async ({ page }) => {

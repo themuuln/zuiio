@@ -3,7 +3,7 @@ import { mockBayView } from "./mocks";
 import { expect, test } from "./test-extensions";
 
 // With mocked APIs, tests are fast — no cold starts. 15s is generous.
-test.setTimeout(15_000);
+test.setTimeout(60_000);
 
 /** Wait for the bay view to finish loading (skeleton replaced with live content) */
 async function waitForBayViewReady(page: Page) {

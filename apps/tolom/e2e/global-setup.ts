@@ -56,15 +56,20 @@ export default async function globalSetup(_config: FullConfig) {
     // Auth file doesn't exist — need to login
   }
 
-  if (!process.env.CI) {
-    process.stdout.write("🌱 Seeding E2E test data...\n");
+  // Skip seeding for remote Supabase — only seed local instances
+  const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").toLowerCase();
+  const isLocalSupabase =
+    supabaseUrl.includes("localhost") || supabaseUrl.includes("127.0.0.1");
+  if (!process.env.CI && isLocalSupabase) {
+    process.stdout.write("🌱 Seeding E2E test data (local Supabase)...\n");
     execSync("bun supabase/seed-e2e.ts", {
       stdio: "inherit",
       cwd: process.cwd(),
     });
+  } else if (!process.env.CI) {
+    process.stdout.write("⏭️  Skipping seed — using remote Supabase\n");
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey =
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;

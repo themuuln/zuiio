@@ -3,7 +3,7 @@ import { setEnglishLocale } from "./helpers";
 import { mockBayView, mockSupabaseREST } from "./mocks";
 import { expect, test } from "./test-extensions";
 
-test.setTimeout(20_000);
+test.setTimeout(60_000);
 
 test.describe("Responsive Layouts (Mocked)", () => {
   test("bay view loads on desktop", async ({ page }) => {
