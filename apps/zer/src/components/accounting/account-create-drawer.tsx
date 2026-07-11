@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "@phosphor-icons/react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Resolver, useForm } from "react-hook-form";
 import { z } from "zod";
 import { createAccount } from "@/app/(dashboard)/accounting/actions";
 import { buttonVariants } from "@/components/ui/button";
@@ -74,7 +74,7 @@ export function AccountCreateDrawer({
       return result;
     },
     queryKey: accountKeys.all,
-    buildOptimistic: (formData) => ({
+    buildOptimistic: (formData: FormData) => ({
       id: `opt-${Date.now()}`,
       code: formData.get("code")?.toString() ?? "",
       name: formData.get("name")?.toString() ?? "",
@@ -92,8 +92,8 @@ export function AccountCreateDrawer({
     reset,
     formState: { errors, isSubmitting },
   } = useForm<AccountValues>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(accountSchema) as any,
+    // zodResolver returns Resolver<FieldValues>; narrow to our schema type
+    resolver: zodResolver(accountSchema) as Resolver<AccountValues>,
     defaultValues: {
       code: "",
       name: "",
