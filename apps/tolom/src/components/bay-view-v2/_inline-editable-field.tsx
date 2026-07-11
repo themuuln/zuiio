@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 interface InlineEditableFieldProps {
   /** Current display value */
@@ -44,6 +44,7 @@ export function InlineEditableField({
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState("");
   const commitRef = useRef(value);
+  const cursorRef = useRef<number | null>(null);
 
   // Auto-focus on mount for newly added items
   useEffect(() => {
@@ -58,21 +59,25 @@ export function InlineEditableField({
 
   const displayText = formatDisplay ? formatDisplay(value) : String(value);
 
-  // Keep the raw text while editing so cursor position and partial edits remain
-  // stable. Formatting on every keystroke rewrites the input value and can turn
-  // a leading-digit edit like 50000 -> 70000 into a full replacement of "7".
   const inputValue = editing ? editText : displayText;
 
   const handleFocus = useCallback(() => {
-    setEditText(String(value));
+    setEditText(formatDisplay ? formatDisplay(value) : String(value));
     setEditing(true);
-  }, [value]);
+  }, [value, formatDisplay]);
 
   useEffect(() => {
     if (!editing) {
       commitRef.current = value;
     }
   }, [editing, value]);
+  // Restore cursor after React re-renders the re-formatted input value.
+  useLayoutEffect(() => {
+    if (editing && cursorRef.current !== null && inputRef.current) {
+      inputRef.current.setSelectionRange(cursorRef.current, cursorRef.current);
+      cursorRef.current = null;
+    }
+  }, [editing, editText]);
 
   const handleSave = useCallback(() => {
     setEditing(false);
@@ -101,11 +106,36 @@ export function InlineEditableField({
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const raw = e.target.value;
-      setEditText(raw);
       const num = parseInput ? parseInput(raw) : Number(raw);
+
+      if (formatDisplay && !Number.isNaN(num)) {
+        // Reformat so commas/₮ stay visible during editing.
+        const formatted = formatDisplay(num);
+        // Map cursor by digit count — preserves position when commas shift.
+        const rawBeforeCursor = raw.slice(0, e.target.selectionStart ?? 0);
+        const digitsBefore = (rawBeforeCursor.match(/\d/g) || []).length;
+        let pos = 0;
+        let count = 0;
+        for (let i = 0; i < formatted.length; i++) {
+          if (/\d/.test(formatted[i])) {
+            count++;
+            if (count > digitsBefore) {
+              pos = i;
+              break;
+            }
+          }
+          pos = i + 1;
+        }
+        if (count <= digitsBefore) pos = formatted.length;
+        cursorRef.current = pos;
+        setEditText(formatted);
+      } else {
+        setEditText(raw);
+      }
+
       if (!Number.isNaN(num)) onChange?.(num);
     },
-    [parseInput, onChange],
+    [formatDisplay, parseInput, onChange],
   );
 
   return (

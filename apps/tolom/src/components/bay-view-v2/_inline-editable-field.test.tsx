@@ -38,7 +38,7 @@ function EditableCurrencyField({
 }
 
 describe("InlineEditableField", () => {
-  it("keeps raw numeric text stable while editing the leading digit", async () => {
+  it("keeps formatted text visible while editing the leading digit", async () => {
     const onChange = vi.fn();
     const onSave = vi.fn();
     const user = userEvent.setup();
@@ -51,12 +51,12 @@ describe("InlineEditableField", () => {
     expect(input.value).toBe("₮50,000");
 
     await user.click(input);
-    expect(input.value).toBe("50000");
+    expect(input.value).toBe("₮50,000");
 
-    input.setSelectionRange(0, 1);
+    input.setSelectionRange(1, 2);
     await user.keyboard("7");
 
-    expect(input.value).toBe("70000");
+    expect(input.value).toBe("₮70,000");
     expect(onChange).toHaveBeenLastCalledWith(70000);
 
     await user.tab();
