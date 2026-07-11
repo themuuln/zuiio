@@ -153,7 +153,7 @@ export function OrderTemplateDrawer({
       if (result?.error) throw new Error(result.error);
       return result;
     },
-    queryKey: orderTemplateKeys.all(),
+    queryKey: orderTemplateKeys.all,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- library type mismatch
     buildOptimistic: (formData: FormData) => ({
       id: `opt-${Date.now()}`,

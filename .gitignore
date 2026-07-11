@@ -12,3 +12,4 @@ web-build/
 *.tsbuildinfo
 expo-env.d.ts
 .vercel
+/apps/tamga/.dart_tool

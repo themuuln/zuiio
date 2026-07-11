@@ -182,23 +182,23 @@ const CATEGORY_MN: Record<string, string> = {
   "Wheels": "Дугуй",
   "Window": "Цонх",
 };
-// Simple hash → color class for category chips (no maps, no helpers)
-const CHIP_PALETTE = [
-  "bg-sky-500/15 text-sky-400",
-  "bg-emerald-500/15 text-emerald-400",
-  "bg-violet-500/15 text-violet-400",
-  "bg-amber-500/15 text-amber-400",
-  "bg-rose-500/15 text-rose-400",
-  "bg-teal-500/15 text-teal-400",
-  "bg-purple-500/15 text-purple-400",
-  "bg-orange-500/15 text-orange-400",
-  "bg-cyan-500/15 text-cyan-400",
-  "bg-fuchsia-500/15 text-fuchsia-400",
-  "bg-lime-500/15 text-lime-400",
-  "bg-indigo-500/15 text-indigo-400",
+// Simple hash → full color class tuple for category chips
+const CHIP_PALETTE: { sel: string; unsel: string }[] = [
+  { sel: "bg-sky-500/15 text-sky-400 border-sky-500/30",    unsel: "bg-sky-500/8 text-sky-400/60 border-sky-500/15" },
+  { sel: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30", unsel: "bg-emerald-500/8 text-emerald-400/60 border-emerald-500/15" },
+  { sel: "bg-violet-500/15 text-violet-400 border-violet-500/30", unsel: "bg-violet-500/8 text-violet-400/60 border-violet-500/15" },
+  { sel: "bg-amber-500/15 text-amber-400 border-amber-500/30",  unsel: "bg-amber-500/8 text-amber-400/60 border-amber-500/15" },
+  { sel: "bg-rose-500/15 text-rose-400 border-rose-500/30",    unsel: "bg-rose-500/8 text-rose-400/60 border-rose-500/15" },
+  { sel: "bg-teal-500/15 text-teal-400 border-teal-500/30",    unsel: "bg-teal-500/8 text-teal-400/60 border-teal-500/15" },
+  { sel: "bg-purple-500/15 text-purple-400 border-purple-500/30", unsel: "bg-purple-500/8 text-purple-400/60 border-purple-500/15" },
+  { sel: "bg-orange-500/15 text-orange-400 border-orange-500/30", unsel: "bg-orange-500/8 text-orange-400/60 border-orange-500/15" },
+  { sel: "bg-cyan-500/15 text-cyan-400 border-cyan-500/30",    unsel: "bg-cyan-500/8 text-cyan-400/60 border-cyan-500/15" },
+  { sel: "bg-fuchsia-500/15 text-fuchsia-400 border-fuchsia-500/30", unsel: "bg-fuchsia-500/8 text-fuchsia-400/60 border-fuchsia-500/15" },
+  { sel: "bg-lime-500/15 text-lime-400 border-lime-500/30",    unsel: "bg-lime-500/8 text-lime-400/60 border-lime-500/15" },
+  { sel: "bg-indigo-500/15 text-indigo-400 border-indigo-500/30", unsel: "bg-indigo-500/8 text-indigo-400/60 border-indigo-500/15" },
 ];
 
-function chipColor(label: string): string {
+function chipColor(label: string): { sel: string; unsel: string } {
   let h = 0;
   for (let i = 0; i < label.length; i++) h = (h * 31 + label.charCodeAt(i)) | 0;
   return CHIP_PALETTE[Math.abs(h) % CHIP_PALETTE.length];
@@ -334,23 +334,24 @@ function InlineCatalogResults<T extends CatalogItem>({
           >
             {filterAllLabel ?? "Бүгд"}
           </button>
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() =>
-                setSelectedCategory((prev) => (prev === cat ? null : cat))
-              }
-              className={cn(
-                "shrink-0 rounded-full px-3 py-1 text-sm font-medium transition-colors",
-                selectedCategory === cat
-                  ? chipColor(cat)
-                  : "bg-muted/50 text-muted-foreground hover:bg-accent/50 hover:text-foreground",
-              )}
-            >
-              {cat}
-            </button>
-          ))}
+          {categories.map((cat) => {
+            const { sel, unsel } = chipColor(cat);
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() =>
+                  setSelectedCategory((prev) => (prev === cat ? null : cat))
+                }
+                className={cn(
+                  "shrink-0 rounded-full border px-3 py-1 text-sm font-medium transition-colors",
+                  selectedCategory === cat ? sel : unsel,
+                )}
+              >
+                {cat}
+              </button>
+            );
+          })}
         </div>
       )}
 

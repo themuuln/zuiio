@@ -26,6 +26,7 @@ export function useProductSearch(query: string) {
   const supabase = createClient();
 
   return useRpcSearch<ProductCardProduct>(query, {
+    // @ts-expect-error -- search package uses generic SupabaseClient<unknown>; Zer's typed client is runtime-compatible
     supabase,
     rpcFunction: "search_products",
     mapResult: mapToProduct,

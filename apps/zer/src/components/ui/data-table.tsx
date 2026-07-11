@@ -21,7 +21,6 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import * as React from "react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -203,6 +202,7 @@ export function DataTable<TData, TValue>({
   const table = useReactTable({
     data,
     columns: tableColumns,
+    getCoreRowModel: getCoreRowModel(),
     ...tablePlugins,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -223,7 +223,7 @@ export function DataTable<TData, TValue>({
       .rows.map((r) => r.original) as TData[];
     onRowSelectionChange(selectedRows);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rowSelection, onRowSelectionChange]);
+  }, [onRowSelectionChange, table.getSelectedRowModel]);
 
   React.useEffect(() => {
     table.setPageSize(pageSize);
@@ -377,6 +377,8 @@ export function DataTable<TData, TValue>({
                     >
                       {header.isPlaceholder ? null : (
                         <div
+                          role="button"
+                          tabIndex={0}
                           className={cn(
                             "flex items-center gap-1",
                             canSort && "cursor-pointer hover:text-foreground",
@@ -384,6 +386,16 @@ export function DataTable<TData, TValue>({
                           onClick={
                             canSort
                               ? header.column.getToggleSortingHandler()
+                              : undefined
+                          }
+                          onKeyDown={
+                            canSort
+                              ? (e) => {
+                                  if (e.key === "Enter" || e.key === " ")
+                                    header.column.getToggleSortingHandler()?.(
+                                      e,
+                                    );
+                                }
                               : undefined
                           }
                         >

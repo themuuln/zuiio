@@ -1,18 +1,16 @@
 "use client";
 
 import {
-  ArrowRight,
   Info,
   Leaf,
   MagnifyingGlassPlus,
-  Package,
   Scroll,
   StackSimple,
 } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
-import { BottomSheetDrawer } from "@/components/ui/bottom-sheet-drawer";
 import { formatCurrency, formatDate } from "@/lib/format";
 import type { OrgMeta, PublicProduct } from "./page";
 
@@ -75,7 +73,7 @@ export function ProductDetailDrawer({
   const isLow = stock > 0 && stock <= minStock;
   const isOut = stock <= 0;
   const images = product.images ?? [];
-  const hasAttributes = product.attributes?.length > 0;
+  const hasAttributes = (product.attributes?.length ?? 0) > 0;
   const hasVariants = product.variants && product.variants.length > 0;
   const hasStorytelling =
     product.description ||
@@ -85,16 +83,20 @@ export function ProductDetailDrawer({
 
   return (
     <>
-      <div onClick={() => setOpen(true)} className="cursor-pointer">
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="cursor-pointer"
+      >
         {children}
-      </div>
+      </button>
 
-      <BottomSheetDrawer
+      <BottomSheet
         open={open}
         onOpenChange={setOpen}
         title={product.name}
         description={organization.name}
-        height="90dvh"
+        maxHeight="90dvh"
         footer={
           <div className="flex gap-2">
             <Button
@@ -148,13 +150,13 @@ export function ProductDetailDrawer({
             {hasAttributes && (
               <Badge variant="outline" className="gap-1">
                 <Info className="size-3" />
-                {product.attributes!.length} шинж чанар
+                {product.attributes?.length} шинж чанар
               </Badge>
             )}
             {hasVariants && (
               <Badge variant="outline" className="gap-1">
                 <StackSimple className="size-3" />
-                {product.variants!.length} вариант
+                {product.variants?.length} вариант
               </Badge>
             )}
           </div>
@@ -203,7 +205,7 @@ export function ProductDetailDrawer({
                 Шинж чанар
               </h3>
               <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-                {product.attributes!.map((attr) => (
+                {product.attributes?.map((attr) => (
                   <div key={attr.slug ?? attr.name} className="contents">
                     <dt className="text-muted-foreground">{attr.name}</dt>
                     <dd className="font-medium text-right">
@@ -297,7 +299,7 @@ export function ProductDetailDrawer({
             </dl>
           </div>
         </div>
-      </BottomSheetDrawer>
+      </BottomSheet>
     </>
   );
 }

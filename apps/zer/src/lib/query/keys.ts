@@ -11,6 +11,7 @@ export const productKeys = {
   all: () => ["products"] as const,
   lists: (orgId: string) => ["products", "list", orgId] as const,
   detail: (id: string) => ["products", "detail", id] as const,
+  definitions: () => ["products", "definitions"] as const,
 };
 
 export const saleKeys = {
@@ -121,4 +122,7 @@ export const roleKeys = {
   all: () => ["roles"] as const,
   lists: (orgId: string) => ["roles", "list", orgId] as const,
   detail: (id: string) => ["roles", "detail", id] as const,
+};
+export const orderTemplateKeys = {
+  all: () => ["order_templates"] as const,
 };

@@ -304,6 +304,8 @@ export function VariantPicker({
     );
   }
 
+  if (!groups) return <div ref={ref} className="h-0" />;
+
   return (
     <div className="rounded-2xl border border-border/70 bg-muted/20 p-3.5">
       <div className="space-y-2.5">
