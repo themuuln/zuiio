@@ -669,18 +669,21 @@ export type Database = {
           id: string;
           name: string;
           organization_id: string;
+          slug: string;
         };
         Insert: {
           created_at?: string | null;
           id?: string;
           name: string;
           organization_id: string;
+          slug?: string;
         };
         Update: {
           created_at?: string | null;
           id?: string;
           name?: string;
           organization_id?: string;
+          slug?: string;
         };
         Relationships: [
           {
