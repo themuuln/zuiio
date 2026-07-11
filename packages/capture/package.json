@@ -4,13 +4,9 @@
   "description": "Unified error capture layer — wraps Sentry + console.error with Supabase query error helpers",
   "license": "MIT",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "types": "./src/index.ts",
   "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
+    ".": "./src/index.ts"
   },
   "files": ["dist"],
   "scripts": {
