@@ -23,7 +23,7 @@ export function useBayViewData(
   _pending: BayViewPendingState,
 ) {
   const searchParams = useSearchParams();
-  const _woIdFromUrl = searchParams.get("woId");
+  const woIdFromUrl = searchParams.get("woId");
 
   // ── UI state ─────────────────────────────────────────────────
   const [pendingWoIds, setPendingWoIds] = useState<Record<string, boolean>>({});
@@ -92,6 +92,14 @@ export function useBayViewData(
     errorName === "AppError" &&
     error !== null &&
     error.includes("doesn't have access");
+  // ── Auto-open drawer from URL param (e.g. after refresh with ?woId=xxx) ──
+  const hasAutoOpenedRef = useRef(false);
+  useEffect(() => {
+    if (woIdFromUrl && data && !hasAutoOpenedRef.current) {
+      hasAutoOpenedRef.current = true;
+      dialogs.openDetail(woIdFromUrl);
+    }
+  }, [woIdFromUrl, data, dialogs]);
 
   const fetchData = useCallback(async () => {
     await Promise.all([bayQuery.refetch(), shiftQuery.refetch()]);

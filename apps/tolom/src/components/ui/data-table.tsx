@@ -456,7 +456,7 @@ export function DataTableColumnHeader<TData>({
         variant="ghost"
         size="sm"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="-ml-2 h-8 px-2 text-sm font-medium text-foreground hover:bg-accent hover:text-accent-foreground data-[state=open]:bg-accent"
+        className="-ml-2 h-8 px-2 text-sm font-medium text-muted-foreground hover:text-foreground data-[state=open]:text-foreground"
       >
         <span>{title}</span>
         {column.getIsSorted() === "asc" ? (
