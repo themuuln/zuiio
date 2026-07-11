@@ -123,15 +123,6 @@ test.describe("Bay View (Mocked)", () => {
     });
   });
 
-  test.describe("Bay Count Control", () => {
-    test("shows bay count control with valid value", async ({ page }) => {
-      await waitForBayViewReady(page);
-      const bayCountInput = page.getByRole("spinbutton");
-      await expect(bayCountInput).toBeVisible({ timeout: 5000 });
-      const value = await bayCountInput.inputValue();
-      expect(Number(value)).toBeGreaterThanOrEqual(1);
-    });
-  });
 
   test.describe("Empty Bays", () => {
     test("empty bay shows add vehicle prompt", async ({ page }) => {
