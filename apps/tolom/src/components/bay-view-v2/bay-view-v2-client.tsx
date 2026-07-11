@@ -164,7 +164,7 @@ export function BayViewV2Client() {
 
           {/* ── Toolbar ── */}
           {isLoading ? (
-            <div className="flex items-center gap-2 border-b border-border/40 px-4 py-3">
+            <div className="flex items-center gap-2 border-b border-border/40 px-3 py-1.5">
               <Skeleton className="h-8 w-48 rounded-lg" />
               <Skeleton className="h-8 w-24 rounded-lg" />
               <Skeleton className="hidden sm:block h-8 w-20 rounded-lg" />
@@ -210,7 +210,7 @@ export function BayViewV2Client() {
 
           {/* ── KPI Cards ── */}
           {isLoading ? (
-            <div className="flex items-center gap-4 px-4 py-1.5 border-b border-border/30 shrink-0">
+            <div className="flex items-center gap-4 px-3 py-1.5 border-b border-border/30 shrink-0">
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}

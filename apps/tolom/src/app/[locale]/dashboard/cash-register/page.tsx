@@ -4,5 +4,9 @@ import { CashRegisterClient } from "./_cash-register-client";
 export const instant = false;
 
 export default function CashRegisterPage() {
-  return <CashRegisterClient />;
+  return (
+    <div className="px-4 pt-4 pb-6 md:px-6">
+      <CashRegisterClient />
+    </div>
+  );
 }

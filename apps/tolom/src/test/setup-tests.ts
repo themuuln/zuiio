@@ -1,3 +1,5 @@
+// Polyfill IndexedDB for jsdom — required by @zuiio/query factory's offline cache
+import "fake-indexeddb/auto";
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach, vi } from "vitest";
@@ -7,6 +9,25 @@ import { afterEach, vi } from "vitest";
 vi.mock("@/lib/audit", () => ({
   createAuditLog: vi.fn(),
   logAuditAfter: vi.fn(),
+}));
+
+// Mock @/lib/offline/idb-store so the factory's IndexedDB operations are
+// instant in tests (fake-indexeddb works but openDB + upgrade is slow).
+vi.mock("@/lib/offline/idb-store", () => ({
+  putRecord: vi.fn().mockResolvedValue(undefined),
+  putRecords: vi.fn().mockResolvedValue(undefined),
+  putListResponse: vi.fn().mockResolvedValue(undefined),
+  getListResponse: vi.fn().mockResolvedValue(null),
+  getOrgRecords: vi.fn().mockResolvedValue([]),
+  getRecord: vi.fn().mockResolvedValue(null),
+  getRecordsByIds: vi.fn().mockResolvedValue([]),
+  deleteRecord: vi.fn().mockResolvedValue(undefined),
+  deleteRecords: vi.fn().mockResolvedValue(undefined),
+  getOrgListResponses: vi.fn().mockResolvedValue([]),
+  clearOrgData: vi.fn().mockResolvedValue(undefined),
+  clearAllData: vi.fn().mockResolvedValue(undefined),
+  getStorageEstimate: vi.fn().mockResolvedValue({ usage: 0, quota: 0 }),
+  STORES: [],
 }));
 
 // Polyfills required by cmdk (Command component) in jsdom

@@ -106,7 +106,7 @@ export default function SellersPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 px-4 pt-4 pb-6 md:px-6">
         <Skeleton className="h-8 w-48" />
         <div className="grid gap-4 md:grid-cols-3">
           {[1, 2, 3].map((i) => (
@@ -132,7 +132,7 @@ export default function SellersPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 px-4 pt-4 pb-6 md:px-6">
       <div className="flex items-center justify-between">
         <div>
           <Typography.H1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">

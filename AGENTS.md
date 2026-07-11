@@ -87,6 +87,63 @@ All apps consume `@zuiio/*` packages via `workspace:*` protocol inside this mono
 - Use the `next-dev-loop` skill (installed in each app's `.agents/skills/`): verify with `agent-browser` (real Chrome view).
 - Check four things: compiles, runs without errors, behaves as intended, no regressions in React tree.
 - Requires: `next dev` running with Turbopack, and `agent-browser >= 0.31.1` (`npm i -g agent-browser@latest`).
+## Build & Performance
+
+### Package manager
+
+- **pnpm ONLY** — never suggest switching to Bun or npm
+- Bun has 5+ critical monorepo bugs (dedup failures, hangs, workspace compatibility) that break this codebase
+- pnpm's content-addressable store saves 68% disk vs npm/Bun in this 18-package monorepo
+- pnpm v12 (Rust engine) is coming and will match Bun's install speed — wait for it
+
+### Build commands
+
+- **Never run `pnpm build`** (builds all 17 packages/apps — slow, most are legacy)
+- **Always use filtered builds:** `pnpm build:zer`, `pnpm build:tolom`, `pnpm build:website`
+- For CI full builds: `pnpm turbo run build --filter='./apps/*' --filter='./packages/*'`
+- Package tsc builds (ai-agent, capture, core) are fast (~2s each); Next.js `next build` is the bottleneck
+
+### turbo.json rules
+
+- **DO NOT add env vars** to the `env` list unless they affect build output (NEXT_PUBLIC_*, Sentry plugin)
+- Server-only vars (POSTGRES_*, SMTP_*, SUPABASE_*) go in `passThroughEnv` — they're passed through but don't break cache
+- The current `env` list has exactly 3 vars: `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_DSN`
+- Adding unrelated vars to `env` invalidates cache for ALL packages — this is the #1 cause of slow rebuilds
+- `typecheck` and `lint` run in parallel (no `^build` dependency) — use `pnpm check` to run both
+
+### Next.js build config
+
+- Every app's `package.json` build script MUST include: `NODE_OPTIONS='--max-old-space-size=12288' next build`
+- Without this, large builds (zer, tolom) can OOM on 8GB machines
+- Turbopack is the default bundler in Next.js 16 — do NOT force Webpack unless there's a specific plugin reason
+- Sentry wrapping (`withSentryConfig`) adds ~10-30s to build — only use where error tracking is critical (zer, tolom already have it)
+- PWA plugin (`withPWA`) only on zer — do NOT add to other apps
+
+### What slows builds down
+
+- **Sentry source map upload** — adds 10-30s per app; only include `SENTRY_AUTH_TOKEN` in env if building for deploy
+- **Barrel file imports** (`export * from "./index"`) — can force Next.js to analyze entire packages; use named imports instead
+- **Missing NODE_OPTIONS** — causes OOM kills on large builds, which look like "build took forever" but are actually crashes
+- **Full `turbo run build`** — builds ALL 17 packages including legacy ones with broken builds; always use `--filter`
+
+### Quick reference
+
+```bash
+# Build just one app (fastest — only builds that app + its deps)
+pnpm build:zer
+pnpm build:tolom
+pnpm build:website
+
+# Typecheck + lint in parallel (no build needed)
+pnpm check
+
+# Full build (CI only — builds everything that can build)
+pnpm turbo run build --filter='./apps/*' --filter='./packages/*'
+
+# See what turbo would build without running it
+pnpm turbo run build --filter=zer --dry
+```
+
 
 ## Conventions
 

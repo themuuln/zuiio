@@ -120,6 +120,7 @@ export default function ValuationPage() {
     ) : undefined;
 
   return (
+    <div className="px-4 pt-4 pb-6 md:px-6">
     <DataTablePage
       title={t("valuationTitle")}
       description={t("valuationSubtitle")}
@@ -176,5 +177,6 @@ export default function ValuationPage() {
         </div>
       )}
     />
+    </div>
   );
 }

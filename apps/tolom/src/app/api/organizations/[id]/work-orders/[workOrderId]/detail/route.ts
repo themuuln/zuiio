@@ -30,6 +30,7 @@ export const GET = createRouteHandler(
       thresholds,
       mechanics,
       priceHistoryResult,
+      orgSettingsResult,
     ] = await Promise.all([
       // 1. Work order detail (the primary data)
       getWorkOrder(supabase, workOrderId, orgId),
@@ -78,14 +79,16 @@ export const GET = createRouteHandler(
               "service_catalog_id, service_name, unit_price, vehicle_make, vehicle_model, created_at",
             )
             .eq("organization_id", orgId)
-            .order("created_at", { ascending: false }),
+            .order("created_at", { ascending: false })
+            .limit(20),
           supabase
             .from("part_price_history")
             .select(
               "part_name, unit_price, vehicle_make, vehicle_model, created_at",
             )
             .eq("organization_id", orgId)
-            .order("created_at", { ascending: false }),
+            .order("created_at", { ascending: false })
+            .limit(20),
         ]);
 
         // Deduplicate services: index by catalog ID AND by name (fallback for global services)
@@ -142,8 +145,13 @@ export const GET = createRouteHandler(
 
         return { services, parts };
       })(),
+      // 10. Org settings (tax rate, payment method fees, transfer banks)
+      supabase
+        .from("organizations")
+        .select("default_tax_rate, payment_method_fees, transfer_bank_accounts")
+        .eq("id", orgId)
+        .single(),
     ]);
-
     return ok({
       workOrder,
       servicesCatalog,
@@ -155,6 +163,7 @@ export const GET = createRouteHandler(
       thresholds,
       mechanics,
       priceMemory: priceHistoryResult,
+      orgSettings: orgSettingsResult.data,
     });
   },
   { subscription: true },

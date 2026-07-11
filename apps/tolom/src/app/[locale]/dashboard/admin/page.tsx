@@ -82,7 +82,7 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 px-4 pt-4 pb-6 md:px-6">
         <div>
           <Skeleton className="h-8 w-48" />
           <Skeleton className="mt-2 h-5 w-64" />
@@ -116,7 +116,7 @@ export default function AdminPage() {
   const trialOrgs = orgs.filter((o) => o.subscription?.trial).length;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 px-4 pt-4 pb-6 md:px-6">
       <div className="flex items-center justify-between">
         <div>
           <Typography.H1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">

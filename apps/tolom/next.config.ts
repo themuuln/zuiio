@@ -8,6 +8,7 @@ const withNextIntl = createNextIntlPlugin("./src/lib/i18n/request.ts");
 const nextConfig: NextConfig = {
   // @zuiio/* packages export raw .ts source — transpile them.
   transpilePackages: [
+    "@zuiio/branding",
     "@zuiio/core",
     "@zuiio/hooks",
     "@zuiio/offline",

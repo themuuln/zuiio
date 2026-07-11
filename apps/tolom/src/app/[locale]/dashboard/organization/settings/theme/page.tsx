@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { OrgThemeSettings } from "@/components/org-theme-settings";
+import { BrandSettings } from "@/components/org-theme-settings";
 import { Typography } from "@/components/ui/typography";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 
@@ -14,7 +14,7 @@ export default function ThemeSettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="px-4 pt-4 pb-6 md:px-6 space-y-6">
       <div>
         <Typography.H2>{t("title")}</Typography.H2>
         <Typography.Text className="text-muted-foreground">
@@ -22,7 +22,7 @@ export default function ThemeSettingsPage() {
         </Typography.Text>
       </div>
 
-      <OrgThemeSettings />
+      <BrandSettings orgId={orgInfo.orgId} />
     </div>
   );
 }

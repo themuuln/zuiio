@@ -252,7 +252,7 @@ export default function EodClosePage() {
   };
 
   return (
-    <>
+    <div className="px-4 pt-4 pb-6 md:px-6">
       {fullPageError && (
         <div className="flex items-center gap-2 rounded-lg border border-destructive/50 bg-destructive/5 p-4">
           <AlertTriangle className="size-4 text-destructive" />
@@ -743,6 +743,6 @@ export default function EodClosePage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 }

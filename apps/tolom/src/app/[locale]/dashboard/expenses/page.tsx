@@ -355,6 +355,7 @@ export default function ExpensesPage() {
   );
 
   return (
+    <div className="px-4 pt-4 pb-6 md:px-6">
     <DataTablePage
       title={t("nav.expenses")}
       description={
@@ -488,5 +489,6 @@ export default function ExpensesPage() {
         );
       }}
     />
+    </div>
   );
 }

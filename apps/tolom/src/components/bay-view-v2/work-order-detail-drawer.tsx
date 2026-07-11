@@ -25,7 +25,6 @@ import {
   drawerDetailKeys,
   useDrawerQueries,
 } from "@/lib/queries/use-drawer-queries";
-import { useOrgSettings } from "@/lib/queries/use-org-settings";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { savePostServiceData } from "@/lib/services/post-service-service";
 import type { WorkOrderDetail } from "@/lib/types/composite";
@@ -71,11 +70,11 @@ export function WorkOrderDetailDrawer({
     catalog,
     partsCatalog,
     mechanics,
+    orgSettings,
     isLoading,
     error,
   } = useDrawerQueries(workOrderId);
 
-  const { settings: orgSettings } = useOrgSettings(orgId ?? undefined);
   const paymentMethodFees = resolvePaymentMethodFees(
     orgSettings?.payment_method_fees,
   );

@@ -61,7 +61,7 @@ export default function MechanicPage() {
 
   if (roleLoading) {
     return (
-      <div className="tablet-touch flex flex-col gap-6">
+      <div className="px-4 pt-4 pb-6 md:px-6 tablet-touch flex flex-col gap-6">
         <div>
           <Skeleton className="h-7 w-44" />
           <Skeleton className="mt-1.5 h-4 w-56" />
@@ -84,7 +84,7 @@ export default function MechanicPage() {
 
   if (!isMechanic && !isAdmin && !roleLoading) {
     return (
-      <div className="tablet-touch flex flex-col items-center justify-center py-20 gap-4">
+      <div className="px-4 pt-4 pb-6 md:px-6 tablet-touch flex flex-col items-center justify-center py-20 gap-4">
         <div className="flex size-14 items-center justify-center rounded-2xl bg-muted/50">
           <Wrench className="size-7 text-muted-foreground" />
         </div>
@@ -102,7 +102,7 @@ export default function MechanicPage() {
 
   if (isAdmin) {
     return (
-      <>
+      <div className="px-4 pt-4 pb-6 md:px-6">
         {mechanicsLoading ? (
           <div className="tablet-touch flex flex-col gap-6">
             <div>
@@ -234,12 +234,12 @@ export default function MechanicPage() {
             if (!open) mechanicsQuery.refetch();
           }}
         />
-      </>
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="px-4 pt-4 pb-6 md:px-6">
       <MechanicDashboard
         userId={profile?.id ?? ""}
         orgId={profile?.organizationId ?? ""}
@@ -254,6 +254,6 @@ export default function MechanicPage() {
           if (!open) mechanicsQuery.refetch();
         }}
       />
-    </>
+    </div>
   );
 }

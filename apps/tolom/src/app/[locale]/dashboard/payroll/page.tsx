@@ -225,7 +225,7 @@ export default function PayrollPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6 pb-8">
+    <div className="flex flex-col gap-6 pb-8 px-4 pt-4 pb-6 md:px-6">
       <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-3">

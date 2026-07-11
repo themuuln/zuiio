@@ -33,6 +33,7 @@
   "common": {
     "save": "Хадгалах",
     "cancel": "Цуцлах",
+    "close": "Хаах",
     "delete": "Устгах",
     "edit": "Засах",
     "create": "Үүсгэх",
@@ -1283,7 +1284,9 @@
     "transferStatusReceived": "Хүлээн авсан",
     "transferStatusCompleted": "Дууссан",
     "transferStatusCancelled": "Цуцлагдсан",
-    "selectBranch": "Салбар сонгох"
+    "selectBranch": "Салбар сонгох",
+    "minThreshold": "Хамгийн бага нөөц",
+    "viewFull": "Бүрэн харах"
   },
   "services": {
     "tabMyServices": "Манай үйлчилгээ",

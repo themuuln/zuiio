@@ -72,6 +72,7 @@ export default function SuppliersPage() {
   );
 
   return (
+    <div className="px-4 pt-4 pb-6 md:px-6">
     <DataTablePage
       title={t("suppliersTitle")}
       description={t("suppliersSubtitle")}
@@ -127,5 +128,6 @@ export default function SuppliersPage() {
         </Link>
       }
     />
+    </div>
   );
 }

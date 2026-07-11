@@ -57,6 +57,13 @@ interface DetailDrawerRootProps {
   viewportClassName?: string;
   /** Passed to DrawerContent's backdropClassName — custom class for the backdrop overlay */
   backdropClassName?: string;
+  /**
+   * Direction the drawer slides in from.
+   * `right` (default): slides from right edge.
+   * `bottom`: slides up from bottom edge (Dribbble-style).
+   * @default "right"
+   */
+  direction?: "right" | "bottom";
 }
 
 export function DetailDrawer({
@@ -67,6 +74,7 @@ export function DetailDrawer({
   className,
   modal = true,
   variant = "detail",
+  direction = "right",
   backdropForceRender,
   swipeDirection,
   nestedContent,
@@ -90,7 +98,7 @@ export function DetailDrawer({
     <Drawer
       open={open}
       onOpenChange={onOpenChange}
-      swipeDirection={swipeDirection ?? "right"}
+      swipeDirection={direction === "bottom" ? "down" : (swipeDirection ?? "right")}
       modal={modal}
     >
       <DrawerVirtualKeyboardProvider>

@@ -100,7 +100,7 @@ export const Toolbar = React.memo(function Toolbar({
   return (
     <div
       data-slot="bay-view-toolbar"
-      className="sticky top-0 z-40 flex-shrink-0 border-b border-border/40 bg-background/80 backdrop-blur-md p-3 select-none"
+      className="sticky top-0 z-40 flex-shrink-0 border-b border-border/40 bg-background/80 backdrop-blur-md px-3 py-1.5 select-none"
     >
       {/* Primary row — always visible */}
       <div className="flex items-center gap-2 flex-wrap">

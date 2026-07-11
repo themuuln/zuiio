@@ -166,7 +166,7 @@ export default function CategoriesPage() {
     (orgLoading || (isPending && !categories)) && !hasLoadedOnce;
 
   return (
-    <div className="flex flex-col gap-6 tablet:gap-6">
+    <div className="px-4 pt-4 pb-6 md:px-6 flex flex-col gap-6 tablet:gap-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

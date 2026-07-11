@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createMockSupabaseClient } from "@/test/mocks/supabase";
 
@@ -605,116 +606,68 @@ describe("getEndOfDaySummary", () => {
 
 // ── getDashboardData ──────────────────────────────────────────
 
-function dashboardBuilders(
-  options: { withPrevPeriod?: boolean; emptyStatus?: boolean } = {},
+/** Shape returned by the get_full_dashboard_data RPC. */
+function rpcDashboardResponse(
+  opts: { withPrevPeriod?: boolean } = {},
 ) {
-  const { withPrevPeriod = false, emptyStatus = false } = options;
-  const e = <T = unknown>(data?: T) => b<T>(data);
-
-  const dataBuilders: ReturnType<typeof createQueryBuilder>[] = [
-    e([{ id: "wo-1" }, { id: "wo-2" }]),
-    e([{ id: "wo-3" }, { id: "wo-4" }]),
-    emptyStatus
-      ? e([])
-      : e([
-          { status: "Completed" },
-          { status: "In Progress" },
-          { status: "Diagnosing" },
-          { status: "Ready for Pickup" },
-          { status: "Ready for Pickup" },
-          { status: "Ready for Pickup" },
-          { status: "Ready for Pickup" },
-        ]),
-    e([{ id: "wo-1" }]),
-    e([{ id: "wo-1" }, { id: "wo-2" }]),
-
-    e([
-      {
-        final_price: 150,
-        discount_amount: 0,
-        name: "Oil Change",
-        work_order_id: "wo-1",
+  const { withPrevPeriod = false } = opts;
+  return {
+    data: {
+      summary: {
+        totalRevenue: 580,
+        activeWorkOrders: 2,
+        completedToday: 1,
+        newCustomersToday: 0,
+        avgRepairOrderValue: 290,
+        partsRevenue: 230,
+        serviceRevenue: 350,
+        grossProfit: 200,
+        marginPercent: 34,
+        totalCustomers: 10,
+        totalVehicles: 8,
       },
-      {
-        final_price: 200,
-        discount_amount: 10,
-        name: "Brakes",
-        work_order_id: "wo-2",
-      },
-    ]),
-    e([
-      {
-        final_price: 80,
-        discount_amount: 0,
-        part_name: "Filter",
-        work_order_id: "wo-1",
-      },
-      {
-        final_price: 150,
-        discount_amount: 0,
-        part_name: "Brake Pads",
-        work_order_id: "wo-2",
-      },
-    ]),
-
-    e([
-      { id: "wo-1", updated_at: "2025-01-15T10:00:00Z" },
-      { id: "wo-2", updated_at: "2025-01-14T10:00:00Z" },
-    ]),
-    e([{ final_price: 150, work_order_id: "wo-1" }]),
-    e([{ final_price: 80, work_order_id: "wo-1" }]),
-
-    e([
-      { name: "Oil Change", final_price: 150 },
-      { name: "Brakes", final_price: 200 },
-    ]),
-
-    e([{ user_id: "m-1" }, { user_id: "m-2" }]),
-    e([
-      { id: "m-1", full_name: "Mech One" },
-      { id: "m-2", full_name: "Mech Two" },
-    ]),
-    e([
-      { id: "wo-1", mechanic_id: "m-1" },
-      { id: "wo-2", mechanic_id: "m-2" },
-    ]),
-    e([
-      { final_price: 150, work_order_id: "wo-1" },
-      { final_price: 200, work_order_id: "wo-2" },
-    ]),
-    e([
-      { final_price: 80, work_order_id: "wo-1" },
-      { final_price: 150, work_order_id: "wo-2" },
-    ]),
-
-    e([
-      { id: "wo-1", customer_id: "c-1", vehicle_id: "v-1", mechanic_id: "m-1" },
-    ]),
-    e([{ id: "ws-1", work_order_id: "wo-1" }]),
-    e([{ id: "wp-1", work_order_id: "wo-1" }]),
-    e([{ id: "h-1", work_order_id: "wo-1", status: "Completed" }]),
-    e([{ id: "c-1", first_name: "John", last_name: "Doe" }]),
-    e([{ id: "v-1", plate_number: "ABC123" }]),
-    e([{ id: "m-1", full_name: "Mech One" }]),
-
-    e([{ id: "sc-1", category: "Maintenance" }]),
-    e([{ service_catalog_id: "sc-1", final_price: 150 }]),
-
-    e([{ created_at: "2025-01-15T10:00:00Z" }]),
-  ];
-
-  if (withPrevPeriod) {
-    dataBuilders.push(
-      e([{ id: "wo-p1" }, { id: "wo-p2" }]),
-      e([{ final_price: 100, work_order_id: "wo-p1" }]),
-      e([{ final_price: 50, work_order_id: "wo-p1" }]),
-    );
-  }
-
-  // Extra padding for parallel query edge cases
-  for (let pad = 0; pad < 15; pad++) dataBuilders.push(e([]));
-
-  return dataBuilders;
+      summaryComparison: withPrevPeriod
+        ? {
+            total_revenue: 400,
+            active_work_orders: 3,
+            completed_today: 2,
+            new_customers_today: 1,
+            avg_repair_order_value: 200,
+            parts_revenue: 150,
+            service_revenue: 250,
+            gross_profit: 150,
+            margin_percent: 37,
+            total_customers: 8,
+            total_vehicles: 6,
+          }
+        : null,
+      workOrderStatusDistribution: [
+        { status: "Completed", count: 3 },
+        { status: "In Progress", count: 1 },
+      ],
+      revenueTrend: [
+        { date: "2025-01-14", revenue: 200 },
+        { date: "2025-01-15", revenue: 380 },
+      ],
+      topServices: [
+        { name: "Oil Change", count: 2, revenue: 300 },
+      ],
+      technicianPerformance: [
+        { mechanic_id: "m-1", name: "Mech One", completed: 5, revenue: 500 },
+      ],
+      recentWorkOrders: [
+        { id: "wo-1", status: "Completed", customer_name: "John Doe" },
+      ],
+      serviceCategoryBreakdown: [
+        { category: "Maintenance", count: 3, revenue: 450 },
+      ],
+      customerAcquisitionTrend: [
+        { date: "2025-01-14", new_customers: 1 },
+        { date: "2025-01-15", new_customers: 0 },
+      ],
+    },
+    error: null,
+  };
 }
 
 describe("getDashboardData", () => {
@@ -722,15 +675,14 @@ describe("getDashboardData", () => {
     period: "today" | "week" | "month" | "all" = "month",
     withPrev = true,
   ) {
-    const builders = dashboardBuilders({
-      withPrevPeriod: withPrev,
-      emptyStatus: false,
-    });
-    let i = 0;
-    mockClient.from = vi
+    mockClient.rpc = vi
       .fn()
-      .mockImplementation(() => builders[i++] ?? createQueryBuilder());
-    return getDashboardData(mockClient as any, "org-1", period);
+      .mockResolvedValue(rpcDashboardResponse({ withPrevPeriod: withPrev }));
+    return getDashboardData(
+      mockClient as unknown as SupabaseClient,
+      "org-1",
+      period,
+    );
   }
 
   it("returns DashboardData with all expected properties", async () => {
@@ -752,10 +704,6 @@ describe("getDashboardData", () => {
     expect(result.summary.partsRevenue).toBe(230);
     expect(result.summary.serviceRevenue).toBe(350);
 
-    // Sub-queries run in parallel through Promise.all — exact mock
-    // builder consumption order is non-deterministic for deeply nested
-    // queries. Structural properties that should always be populated
-    // from the mock regardless of ordering:
     expect(result.workOrderStatusDistribution.length).toBeGreaterThan(0);
     expect(result.revenueTrend.length).toBeGreaterThan(0);
     expect(result.topServices.length).toBeGreaterThan(0);
@@ -767,23 +715,46 @@ describe("getDashboardData", () => {
   it("generates insights when compared to previous period", async () => {
     const result = await runDashboard("month", true);
 
-    // Insights exist when summaryComparison has data
     expect(Array.isArray(result.insights)).toBe(true);
 
-    // If summaryComparison is available, check specific insight strings
     if (result.summaryComparison && result.summary.totalRevenue > 0) {
       expect(result.insights.length).toBeGreaterThan(0);
     }
   });
 
   it("handles empty data gracefully", async () => {
-    const mc = createMockSupabaseClient();
-    mc.from = vi.fn().mockImplementation(() => createQueryBuilder());
-    vi.mocked(createClient).mockResolvedValue(
-      mc as unknown as Awaited<ReturnType<typeof createClient>>,
-    );
+    mockClient.rpc = vi.fn().mockResolvedValue({
+      data: {
+        summary: {
+          totalRevenue: 0,
+          activeWorkOrders: 0,
+          completedToday: 0,
+          newCustomersToday: 0,
+          avgRepairOrderValue: 0,
+          partsRevenue: 0,
+          serviceRevenue: 0,
+          grossProfit: 0,
+          marginPercent: 0,
+          totalCustomers: 0,
+          totalVehicles: 0,
+        },
+        summaryComparison: null,
+        workOrderStatusDistribution: [],
+        revenueTrend: [],
+        topServices: [],
+        technicianPerformance: [],
+        recentWorkOrders: [],
+        serviceCategoryBreakdown: [],
+        customerAcquisitionTrend: [],
+      },
+      error: null,
+    });
 
-    const result = await getDashboardData(mockClient as any, "org-1", "all");
+    const result = await getDashboardData(
+      mockClient as unknown as SupabaseClient,
+      "org-1",
+      "all",
+    );
 
     expect(result.summary.totalRevenue).toBe(0);
     expect(result.summary.activeWorkOrders).toBe(0);
@@ -797,20 +768,19 @@ describe("getDashboardData", () => {
   it("supports period filtering (today, week, month, all)", async () => {
     const periods = ["today", "week", "month", "all"] as const;
 
-    // react-doctor: async-await-in-loop - sequential required (vi.clearAllMocks per iteration)
     for (const period of periods) {
       vi.clearAllMocks();
-      const mc = createMockSupabaseClient();
-      const builders = dashboardBuilders({ withPrevPeriod: period !== "all" });
-      let i = 0;
-      mc.from = vi
+      mockClient.rpc = vi
         .fn()
-        .mockImplementation(() => builders[i++] ?? createQueryBuilder());
-      vi.mocked(createClient).mockResolvedValue(
-        mc as unknown as Awaited<ReturnType<typeof createClient>>,
-      );
+        .mockResolvedValue(
+          rpcDashboardResponse({ withPrevPeriod: period !== "all" }),
+        );
 
-      const result = await getDashboardData(mockClient as any, "org-1", period);
+      const result = await getDashboardData(
+        mockClient as unknown as SupabaseClient,
+        "org-1",
+        period,
+      );
 
       expect(result.summary).toBeDefined();
       expect(result.workOrderStatusDistribution).toBeDefined();
@@ -818,19 +788,24 @@ describe("getDashboardData", () => {
     }
   });
 
-  it("uses batched queries for performance", async () => {
-    vi.clearAllMocks();
-    const builders = dashboardBuilders({ withPrevPeriod: true });
-    let i = 0;
-    mockClient.from = vi
+  it("calls the RPC with correct period parameter", async () => {
+    mockClient.rpc = vi
       .fn()
-      .mockImplementation(() => builders[i++] ?? createQueryBuilder());
+      .mockResolvedValue(rpcDashboardResponse({ withPrevPeriod: true }));
 
-    await getDashboardData(mockClient as any, "org-1", "month");
+    await getDashboardData(
+      mockClient as unknown as SupabaseClient,
+      "org-1",
+      "month",
+    );
 
-    const fromCalls = mockClient.from.mock.calls.map((c: string[]) => c[0]);
-    const woCalls = fromCalls.filter((t: string) => t === "work_orders");
-    expect(woCalls.length).toBeGreaterThanOrEqual(4);
+    expect(mockClient.rpc).toHaveBeenCalledWith(
+      "get_full_dashboard_data",
+      expect.objectContaining({
+        p_org_id: "org-1",
+        p_period: "month",
+      }),
+    );
   });
 
   it("averages repair order value correctly", async () => {

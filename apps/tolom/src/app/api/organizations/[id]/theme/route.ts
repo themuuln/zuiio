@@ -1,73 +1,140 @@
+import {
+  type BrandConfig,
+  DEFAULT_BRAND_CONFIG,
+  getFont,
+  getTheme,
+  isValidColorValue,
+  resolveBrandConfig,
+} from "@zuiio/branding";
 import { createRouteHandler } from "@/lib/api-handler";
 import { apiError, ok } from "@/lib/api-response";
-import type { OrgTheme } from "@/lib/types";
-export const GET = createRouteHandler(async ({ params, supabase }) => {
-  const { id } = params;
-  const { data: org, error } = await supabase
-    .from("organizations")
-    .select("settings")
-    .eq("id", id)
-    .single();
+import {
+  readOrganizationBrandConfig,
+  writeOrganizationBrandConfig,
+} from "@/lib/organization-branding";
 
-  if (error || !org) {
-    return apiError("NOT_FOUND", "Organization not found", 404);
-  }
+export const GET = createRouteHandler(
+  async ({ orgId, supabase }) => {
+    const { data: org, error } = await supabase
+      .from("organizations")
+      .select("settings")
+      .eq("id", orgId)
+      .single();
 
-  const settings = org.settings as Record<string, unknown> | null;
-  const theme = (settings?.theme as OrgTheme) ?? null;
+    if (error || !org) {
+      return apiError("NOT_FOUND", "Organization not found", 404);
+    }
 
-  return ok({
-    theme: theme ?? {
-      primaryColor: "oklch(0.205 0 0)",
-      accentColor: "oklch(0.97 0 0)",
-      radius: "0px",
-      fontFamily: "Inter, sans-serif",
-    },
-    isDefault: !theme,
-  });
-});
-export const PUT = createRouteHandler(async ({ request, params, supabase }) => {
-  const { id } = params;
-  const body = await request.json();
-  const { primaryColor, accentColor, radius, fontFamily } = body;
+    const branding = readOrganizationBrandConfig(org.settings);
+    const isDefault =
+      JSON.stringify(branding) === JSON.stringify(DEFAULT_BRAND_CONFIG);
 
-  // Validate oklch format for colors
-  const oklchRegex = /^oklch\([\d.]+ [\d.]+ [\d.]+\)$/;
-  if (primaryColor && !oklchRegex.test(primaryColor)) {
-    return apiError(
-      "VALIDATION",
-      "Invalid primaryColor format. Use oklch(L C H)",
-      400,
-    );
-  }
-  if (accentColor && !oklchRegex.test(accentColor)) {
-    return apiError(
-      "VALIDATION",
-      "Invalid accentColor format. Use oklch(L C H)",
-      400,
-    );
-  }
+    return ok({ branding, isDefault });
+  },
+  {
+    requiredPermission: { resource: "settings", action: "read" },
+  },
+);
 
-  // Build theme object (merge with existing)
-  const theme: OrgTheme = {
-    primaryColor: primaryColor ?? "oklch(0.205 0 0)",
-    accentColor: accentColor ?? "oklch(0.97 0 0)",
-    radius: radius ?? "0px",
-    fontFamily: fontFamily ?? "Inter, sans-serif",
-  };
+export const PUT = createRouteHandler(
+  async ({ request, orgId, supabase }) => {
+    let body: Record<string, unknown>;
+    try {
+      body = await request.json();
+    } catch {
+      return apiError("VALIDATION", "Invalid JSON body", 400);
+    }
 
-  // Update organization settings with theme
-  const { error: updateError } = await supabase
-    .from("organizations")
-    .update({
-      settings: { theme } as Record<string, unknown>,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id);
+    // --- Validate inputs ---
+    const preset = body.theme;
+    if (preset != null && typeof preset === "string" && !getTheme(preset)) {
+      return apiError("VALIDATION", `Unknown theme preset: ${preset}`, 400);
+    }
 
-  if (updateError) {
-    return apiError("INTERNAL", "Failed to update theme", 500);
-  }
+    const colors = body.custom_colors as
+      | Record<string, unknown>
+      | null
+      | undefined;
+    if (colors) {
+      for (const [key, val] of Object.entries(colors)) {
+        if (val != null && typeof val === "string" && !isValidColorValue(val)) {
+          return apiError(
+            "VALIDATION",
+            `Invalid color value for ${key}: ${val}`,
+            400,
+          );
+        }
+      }
+    }
 
-  return ok({ theme });
-});
+    const radius = body.radius;
+    if (radius != null) {
+      if (typeof radius !== "number" || radius < 0 || radius > 2) {
+        return apiError(
+          "VALIDATION",
+          "Radius must be a number between 0 and 2",
+          400,
+        );
+      }
+    }
+
+    const fontBody = body.font_body;
+    if (fontBody != null && typeof fontBody === "string" && !getFont(fontBody)) {
+      return apiError("VALIDATION", `Unknown body font: ${fontBody}`, 400);
+    }
+
+    const fontHeading = body.font_heading;
+    if (
+      fontHeading != null &&
+      typeof fontHeading === "string" &&
+      !getFont(fontHeading)
+    ) {
+      return apiError("VALIDATION", `Unknown heading font: ${fontHeading}`, 400);
+    }
+
+    // --- Read current settings (preserve unrelated keys) ---
+    const { data: org, error: readError } = await supabase
+      .from("organizations")
+      .select("settings")
+      .eq("id", orgId)
+      .single();
+
+    if (readError || !org) {
+      return apiError("NOT_FOUND", "Organization not found", 404);
+    }
+
+    // Build BrandConfig from validated input (ignore logo_url — Tolom uses OrgLogoUpload)
+    const config: BrandConfig = resolveBrandConfig({
+      theme:
+        preset != null && typeof preset === "string" ? preset : undefined,
+      radius: typeof radius === "number" ? radius : undefined,
+      custom_colors:
+        colors && typeof colors === "object"
+          ? (colors as BrandConfig["custom_colors"])
+          : undefined,
+      font_body: typeof fontBody === "string" ? fontBody : undefined,
+      font_heading: typeof fontHeading === "string" ? fontHeading : undefined,
+      logo_url: undefined, // Tolom manages logo via OrgLogoUpload → organizations.logo_url
+    });
+
+    const nextSettings = writeOrganizationBrandConfig(org.settings, config);
+
+    const { error: updateError } = await supabase
+      .from("organizations")
+      .update({
+        settings: nextSettings as Record<string, unknown>,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", orgId);
+
+    if (updateError) {
+      return apiError("INTERNAL", "Failed to update theme", 500);
+    }
+
+    return ok({ branding: config });
+  },
+  {
+    requiredPermission: { resource: "settings", action: "update" },
+    rateLimit: true,
+  },
+);

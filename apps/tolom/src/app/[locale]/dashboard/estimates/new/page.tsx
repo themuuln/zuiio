@@ -329,7 +329,7 @@ export default function NewEstimatePage() {
 
   return (
     <>
-      <div className="mx-auto flex max-w-7xl flex-col gap-6 pb-8">
+      <div className="px-4 pt-4 pb-6 md:px-6 mx-auto flex max-w-7xl flex-col gap-6 pb-8">
         <div className="flex flex-col gap-5 pb-2 xl:flex-row xl:items-start xl:justify-between">
           <div className="space-y-3">
             <Button variant="ghost" size="sm" onClick={() => router.back()}>

@@ -104,7 +104,7 @@ export default function NewPurchaseOrderPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-3xl">
+    <div className="px-4 pt-4 pb-6 md:px-6 flex flex-col gap-6 max-w-3xl">
       <div className="flex items-center gap-3">
         <Button
           variant="ghost"

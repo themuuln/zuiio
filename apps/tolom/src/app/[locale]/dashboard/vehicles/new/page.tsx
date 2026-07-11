@@ -752,8 +752,10 @@ function NewVehicleForm() {
 
 export default function NewVehiclePage() {
   return (
-    <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-      <NewVehicleForm />
-    </Suspense>
+    <div className="px-4 pt-4 pb-6 md:px-6">
+      <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+        <NewVehicleForm />
+      </Suspense>
+    </div>
   );
 }

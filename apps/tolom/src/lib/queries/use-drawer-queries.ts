@@ -17,8 +17,6 @@ import type {
 } from "@/lib/types";
 import { useCurrentOrg } from "./use-organization";
 
-// ── Shape of the consolidated API response ─────────────────────
-
 interface DrawerDetailResponse {
   workOrder: WorkOrderDetail;
   servicesCatalog: ServiceCatalog[];
@@ -32,6 +30,11 @@ interface DrawerDetailResponse {
     services: Record<string, PriceMemoryEntry>;
     parts: Record<string, PriceMemoryEntry>;
   };
+  orgSettings: {
+    default_tax_rate: number | null;
+    payment_method_fees: Record<string, number> | null;
+    transfer_bank_accounts: unknown[] | null;
+  } | null;
 }
 
 // ── Match quality helper ───────────────────────────────────────
@@ -236,6 +239,11 @@ interface UseDrawerQueriesResult {
   partsCatalog: CatalogPartItem[];
   lowStockMap: Record<string, { quantity: number; threshold: number }>;
   mechanics: Array<{ id: string; full_name: string }>;
+  orgSettings: {
+    default_tax_rate: number | null;
+    payment_method_fees: Record<string, number> | null;
+    transfer_bank_accounts: unknown[] | null;
+  } | null;
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
@@ -356,6 +364,7 @@ export function useDrawerQueries(woId: string | null): UseDrawerQueriesResult {
     partsCatalog,
     lowStockMap,
     mechanics: response?.mechanics ?? [],
+    orgSettings: response?.orgSettings ?? null,
     isLoading,
     isError,
     error,

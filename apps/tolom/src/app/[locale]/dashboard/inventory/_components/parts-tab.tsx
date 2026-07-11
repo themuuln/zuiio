@@ -84,6 +84,7 @@ export function PartsTab({
 }: PartsTabProps) {
   const locale = useLocale();
   const t = useTranslations("inventory");
+  const commonT = useTranslations("common");
   const now = useClientNow();
   const qc = useQueryClient();
 
@@ -842,13 +843,14 @@ export function PartsTab({
         </DetailDrawer.Body>
       </DetailDrawer>
 
-      {/* View Part Drawer */}
+      {/* View Part Drawer — Enhanced with summary + actions */}
       <DetailDrawer
         open={!!viewingPart}
         onOpenChange={(open) => {
           if (!open) setViewingPart(null);
         }}
         size="lg"
+        direction="bottom"
       >
         <DetailDrawer.Header>
           <DetailDrawer.Title>
@@ -861,23 +863,97 @@ export function PartsTab({
         </DetailDrawer.Header>
         <DetailDrawer.Body>
           {viewingPart && (
-            <PartForm
-              readOnly
-              initialData={{
-                name: viewingPart.name,
-                name_mn: viewingPart.name_mn ?? undefined,
-                part_number: viewingPart.part_number ?? undefined,
-                category: viewingPart.category ?? undefined,
-                description: viewingPart.description ?? undefined,
-                unit: viewingPart.unit ?? undefined,
-                default_price: viewingPart.default_price ?? undefined,
-                image_url: viewingPart.image_url ?? undefined,
-                location: viewingPart.location ?? undefined,
-              }}
-              onCancel={() => setViewingPart(null)}
-            />
+            <div className="flex flex-col gap-4">
+              {/* Summary Card */}
+              <Card className="border-border/50">
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">{t("price")}</span>
+                      <p className="font-medium">
+                        {viewingPart.default_price
+                          ? formatMNT(viewingPart.default_price)
+                          : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">{t("onHand")}</span>
+                      <p className="font-medium">
+                        {balanceMap.get(viewingPart.id)?.quantity_on_hand ?? 0} {viewingPart.unit ?? "piece"}
+                      </p>
+                    </div>
+                    {viewingPart.category && (
+                      <div>
+                        <span className="text-muted-foreground">{t("category")}</span>
+                        <p className="font-medium">{viewingPart.category}</p>
+                      </div>
+                    )}
+                    {thresholdMap[viewingPart.id] != null && (
+                      <div>
+                        <span className="text-muted-foreground">{t("minThreshold")}</span>
+                        <p className="font-medium">
+                          {thresholdMap[viewingPart.id]} {viewingPart.unit ?? "piece"}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Detail Form (read-only) */}
+              <PartForm
+                readOnly
+                initialData={{
+                  name: viewingPart.name,
+                  name_mn: viewingPart.name_mn ?? undefined,
+                  part_number: viewingPart.part_number ?? undefined,
+                  category: viewingPart.category ?? undefined,
+                  description: viewingPart.description ?? undefined,
+                  unit: viewingPart.unit ?? undefined,
+                  default_price: viewingPart.default_price ?? undefined,
+                  image_url: viewingPart.image_url ?? undefined,
+                  location: viewingPart.location ?? undefined,
+                }}
+                onCancel={() => setViewingPart(null)}
+              />
+            </div>
           )}
         </DetailDrawer.Body>
+        <DetailDrawer.Footer>
+          <DetailDrawer.FooterActions>
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => setViewingPart(null)}
+            >
+              {commonT("close")}
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 gap-1.5"
+              onClick={() => {
+                if (viewingPart) {
+                  setEditingPart(viewingPart);
+                  setViewingPart(null);
+                }
+              }}
+            >
+              <Pencil className="size-4" />
+              {t("edit")}
+            </Button>
+            <Link 
+              href={`/dashboard/inventory/parts/${viewingPart?.id}`}
+              className="flex-1"
+            >
+              <Button
+                className="w-full gap-1.5"
+              >
+                <Eye className="size-4" />
+                {t("viewFull")}
+              </Button>
+            </Link>
+          </DetailDrawer.FooterActions>
+        </DetailDrawer.Footer>
       </DetailDrawer>
 
       {/* Set Default Threshold Dialog */}

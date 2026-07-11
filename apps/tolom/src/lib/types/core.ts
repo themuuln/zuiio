@@ -195,21 +195,6 @@ export type {
   VehicleOwner,
 };
 
-// ── Org Theme ──────────────────────────────────────────────────
-
-export interface OrgTheme {
-  primaryColor: string;
-  accentColor: string;
-  radius: string;
-  fontFamily: string;
-}
-
-export const DEFAULT_ORG_THEME: OrgTheme = {
-  primaryColor: "oklch(0.205 0 0)",
-  accentColor: "oklch(0.97 0 0)",
-  radius: "0px",
-  fontFamily: "Inter, sans-serif",
-};
 
 // ── API Response Wrappers ──────────────────────────────────────
 

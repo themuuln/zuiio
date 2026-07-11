@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
-import BrandThemeProvider from "@/components/brand-theme-provider";
 import { PageHeader } from "@/components/page-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -34,7 +33,6 @@ export default function DashboardClientShell({
 
   return (
     <AuthWrapper>
-      <BrandThemeProvider>
         <PageHeaderProvider>
           <SidebarProvider defaultOpen={sidebarDefaultOpen}>
             <AppSidebar />
@@ -43,7 +41,7 @@ export default function DashboardClientShell({
               <div className="relative min-h-0 flex-1 overflow-hidden">
                 <div className="min-h-0 min-w-0 h-full flex flex-col overflow-hidden">
                   <DashboardHeader />
-                  <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6 pt-4 md:px-6">
+                  <div className="min-h-0 flex-1 overflow-y-auto">
                     {children}
                   </div>
                 </div>
@@ -51,7 +49,6 @@ export default function DashboardClientShell({
             </SidebarInset>
           </SidebarProvider>
         </PageHeaderProvider>
-      </BrandThemeProvider>
     </AuthWrapper>
   );
 }

@@ -143,7 +143,7 @@ export default function WorkOrderDetailPage() {
 
   if (loading) {
     return (
-      <div className="tablet-touch flex flex-col gap-6">
+      <div className="px-4 pt-4 pb-6 md:px-6 tablet-touch flex flex-col gap-6">
         <Skeleton className="h-8 w-32" />
         <Card>
           <CardContent className="flex p-6 flex-col gap-4">
@@ -158,7 +158,7 @@ export default function WorkOrderDetailPage() {
 
   if (error || !wo) {
     return (
-      <div className="tablet-touch flex flex-col gap-6">
+      <div className="px-4 pt-4 pb-6 md:px-6 tablet-touch flex flex-col gap-6">
         <Button variant="ghost" onClick={() => back()} className="w-fit">
           <ArrowLeft className="size-4" /> {t("back")}
         </Button>
@@ -177,7 +177,7 @@ export default function WorkOrderDetailPage() {
   }
 
   return (
-    <div className="tablet-touch flex max-w-5xl flex-col gap-6 tablet:gap-6 tablet:px-4">
+    <div className="px-4 pt-4 pb-6 md:px-6 tablet-touch flex max-w-5xl flex-col gap-6 tablet:gap-6 tablet:px-4">
       {/* ── Header ── */}
       <div className="flex items-center gap-4 tablet:gap-6">
         <Button

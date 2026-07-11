@@ -761,7 +761,7 @@ export default function FinancePage() {
 
   if (loading && !hasLoadedOnce) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 px-4 pt-4 pb-6 md:px-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <Typography.H1 className="text-2xl font-semibold tracking-tight">
@@ -805,7 +805,7 @@ export default function FinancePage() {
 
   if (error && !data) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 px-4 pt-4 pb-6 md:px-6">
         <div>
           <Typography.H1 className="text-2xl font-semibold tracking-tight">
             {t("nav.finance")}
@@ -829,7 +829,7 @@ export default function FinancePage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 px-4 pt-4 pb-6 md:px-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <Typography.H1 className="text-2xl font-semibold tracking-tight">

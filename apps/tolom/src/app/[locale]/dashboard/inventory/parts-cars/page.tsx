@@ -45,7 +45,7 @@ export default function PartsCarsListPage() {
   if (!orgId) return null;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="px-4 pt-4 pb-6 md:px-6 flex flex-col gap-6">
       <div>
         <Typography.H1 className="text-2xl font-semibold tracking-tight">
           {t("title")}

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { startTransition, useEffect, useMemo, useRef, useState } from "react";
-import { applyBrandThemePreview } from "@/components/brand-theme-provider";
+import { generateBrandCSS, resolveBrandConfig } from "@zuiio/branding";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -269,9 +269,18 @@ export default function SettingsPage() {
   }
 
   const preview = (color: string) => {
-    applyBrandThemePreview({
-      brand_color: color || undefined,
-    });
+    const css = generateBrandCSS(
+      resolveBrandConfig({
+        custom_colors: color ? { primary: color } : undefined,
+      }),
+    );
+    let el = document.getElementById("brand-theme");
+    if (!el) {
+      el = document.createElement("style");
+      el.id = "brand-theme";
+      document.head.appendChild(el);
+    }
+    el.textContent = css;
   };
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -417,7 +426,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 px-4 pt-4 pb-6 md:px-6">
       <div className="flex flex-col gap-2 border-b border-border pb-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-2">
           <Typography.Text className="text-sm font-semibold tracking-tight">

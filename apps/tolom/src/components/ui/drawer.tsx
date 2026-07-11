@@ -55,13 +55,17 @@ function DrawerBackdrop({
 
 function DrawerViewport({
   className,
+  direction = "right",
   ...props
-}: DrawerPrimitive.Viewport.Props) {
+}: DrawerPrimitive.Viewport.Props & { direction?: "right" | "bottom" }) {
   return (
     <DrawerPrimitive.Viewport
       data-slot="drawer-viewport"
       className={cn(
-        "fixed inset-0 z-50 flex items-stretch justify-end overflow-hidden p-0 pointer-events-none",
+        "fixed inset-0 z-50 flex overflow-hidden p-0 pointer-events-none",
+        direction === "bottom" 
+          ? "items-end justify-center" 
+          : "items-stretch justify-end",
         className,
       )}
       {...props}
@@ -77,6 +81,7 @@ function DrawerContent({
   viewportClassName,
   children,
   showCloseButton = true,
+  direction = "right",
   ...props
 }: DrawerPrimitive.Popup.Props & {
   showCloseButton?: boolean;
@@ -84,6 +89,7 @@ function DrawerContent({
   backdropClassName?: string;
   backdropForceRender?: boolean;
   viewportClassName?: string;
+  direction?: "right" | "bottom";
 }) {
   return (
     <DrawerPortal>
@@ -91,11 +97,13 @@ function DrawerContent({
         className={backdropClassName}
         forceRender={backdropForceRender}
       />
-      <DrawerViewport className={viewportClassName}>
+      <DrawerViewport className={viewportClassName} direction={direction}>
         <DrawerPrimitive.Popup
           data-slot="drawer-popup"
           className={cn(
-            "relative flex h-full w-full max-w-full [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[320ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:transition-none data-starting-style:translate-x-full data-ending-style:translate-x-full data-ending-style:duration-[calc(var(--drawer-swipe-strength)*320ms)] data-[nested-drawer-open]:-translate-x-3 sm:max-w-lg pointer-events-auto will-change-transform",
+            direction === "bottom"
+              ? "relative flex w-full max-w-full [transform:translateY(var(--drawer-swipe-movement-y))] transition-transform duration-[320ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:transition-none data-starting-style:translate-y-full data-ending-style:translate-y-full data-ending-style:duration-[calc(var(--drawer-swipe-strength)*320ms)] pointer-events-auto will-change-transform rounded-t-2xl max-h-[85vh]"
+              : "relative flex h-full w-full max-w-full [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[320ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:transition-none data-starting-style:translate-x-full data-ending-style:translate-x-full data-ending-style:duration-[calc(var(--drawer-swipe-strength)*320ms)] data-[nested-drawer-open]:-translate-x-3 sm:max-w-lg pointer-events-auto will-change-transform",
             className,
           )}
           {...props}
@@ -103,7 +111,9 @@ function DrawerContent({
           <DrawerPrimitive.Content
             data-slot="drawer-content"
             className={cn(
-              "relative flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden border-l border-border/80 bg-popover text-sm text-popover-foreground shadow-2xl",
+              direction === "bottom"
+                ? "relative flex min-h-0 w-full flex-col gap-2 overflow-hidden border-t border-border/80 bg-popover text-sm text-popover-foreground shadow-2xl"
+                : "relative flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden border-l border-border/80 bg-popover text-sm text-popover-foreground shadow-2xl",
               contentClassName,
             )}
           >

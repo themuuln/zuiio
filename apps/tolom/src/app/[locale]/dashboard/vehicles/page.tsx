@@ -85,7 +85,7 @@ export default function VehiclesPage() {
     isError || orgError ? (error?.message ?? t("noOrganization")) : null;
 
   return (
-    <>
+    <div className="px-4 pt-4 pb-6 md:px-6">
       <DataTablePage
         title={t("title")}
         description={
@@ -187,6 +187,6 @@ export default function VehiclesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 }

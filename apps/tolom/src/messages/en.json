@@ -33,6 +33,7 @@
   "common": {
     "save": "Save",
     "cancel": "Cancel",
+    "close": "Close",
     "delete": "Delete",
     "edit": "Edit",
     "create": "Create",
@@ -1283,7 +1284,9 @@
     "transferStatusReceived": "Received",
     "transferStatusCompleted": "Completed",
     "transferStatusCancelled": "Cancelled",
-    "selectBranch": "Select branch"
+    "selectBranch": "Select branch",
+    "minThreshold": "Min Threshold",
+    "viewFull": "View Full"
   },
   "services": {
     "tabMyServices": "My Services",

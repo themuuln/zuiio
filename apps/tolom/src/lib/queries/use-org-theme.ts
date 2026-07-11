@@ -1,74 +1,115 @@
 "use client";
 
+import type { BrandConfig } from "@zuiio/branding";
+import { generateBrandCSS } from "@zuiio/branding";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useOnlineStatus } from "@zuiio/hooks";
 import { toast } from "sonner";
 import { useMutationQueue } from "@/lib/offline/mutation-queue-provider";
-import type { OrgTheme } from "@/lib/types";
 
-interface ThemeResponse {
-  theme: OrgTheme;
+export interface BrandThemeResponse {
+  branding: BrandConfig;
   isDefault: boolean;
 }
 
-export function useOrgThemeQuery(orgId: string | null) {
+const THEME_QUERY_KEY = "org-theme" as const;
+
+/** Update or remove the <style id="brand-theme"> element in the document. */
+function applyBrandThemeStyle(css: string | null) {
+  if (typeof document === "undefined") return;
+  const id = "brand-theme";
+  let el = document.getElementById(id);
+  if (!css) {
+    el?.remove();
+    return;
+  }
+  if (!el) {
+    el = document.createElement("style");
+    el.id = id;
+    document.head.appendChild(el);
+  }
+  el.textContent = css;
+}
+
+export function useBrandThemeQuery(orgId: string | null) {
   return useQuery({
-    queryKey: ["org-theme", orgId],
-    queryFn: async (): Promise<ThemeResponse> => {
+    queryKey: [THEME_QUERY_KEY, orgId],
+    queryFn: async (): Promise<BrandThemeResponse> => {
       if (!orgId) {
-        return {
-          theme: {
-            primaryColor: "oklch(0.205 0 0)",
-            accentColor: "oklch(0.97 0 0)",
-            radius: "0px",
-            fontFamily: "Inter, sans-serif",
-          },
-          isDefault: true,
-        };
+        return { branding: { theme: "zuiio", radius: 0.5, logo_url: null }, isDefault: true };
       }
       const res = await fetch(`/api/organizations/${orgId}/theme`);
       if (!res.ok) throw new Error("Failed to fetch theme");
-      return res.json();
+      const json = await res.json();
+      return json.data as BrandThemeResponse;
     },
     enabled: !!orgId,
     staleTime: Infinity,
   });
 }
 
-export function useUpdateOrgTheme(orgId: string | null) {
+export function useUpdateBrandTheme(orgId: string | null) {
   const queryClient = useQueryClient();
   const isOnline = useOnlineStatus();
   const queue = useMutationQueue();
 
   return useMutation({
-    mutationFn: async (theme: OrgTheme) => {
+    mutationFn: async (config: BrandConfig) => {
       if (!orgId) throw new Error("No org ID");
 
       if (isOnline) {
         const res = await fetch(`/api/organizations/${orgId}/theme`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(theme),
+          body: JSON.stringify(config),
         });
         if (!res.ok) throw new Error("Failed to update theme");
-        return res.json();
+        const json = await res.json();
+        return json.data as BrandThemeResponse;
       }
 
       await queue.enqueue({
         endpoint: `/api/organizations/${orgId}/theme`,
-        method: "POST",
-        body: theme,
-        queryKeysToInvalidate: [["org-theme", orgId]],
+        method: "PUT",
+        body: config,
+        queryKeysToInvalidate: [[THEME_QUERY_KEY, orgId]],
       });
-      return { queued: true } as unknown as { theme: OrgTheme };
+      return { branding: config, isDefault: false, queued: true } as BrandThemeResponse & { queued: true };
     },
-    onSuccess: (data: { theme: OrgTheme }) => {
-      const d = data as Record<string, unknown>;
-      if (d?.queued) {
+    onMutate: async (config) => {
+      // Snapshot current value for rollback
+      const previous = queryClient.getQueryData<BrandThemeResponse>([THEME_QUERY_KEY, orgId]);
+
+      // Optimistic: update query cache and inject style
+      queryClient.setQueryData<BrandThemeResponse>([THEME_QUERY_KEY, orgId], {
+        branding: config,
+        isDefault: false,
+      });
+      applyBrandThemeStyle(generateBrandCSS(config));
+
+      return { previous };
+    },
+    onError: (_error, _config, context) => {
+      // Rollback
+      const prev = context?.previous;
+      if (prev) {
+        queryClient.setQueryData<BrandThemeResponse>([THEME_QUERY_KEY, orgId], prev);
+        applyBrandThemeStyle(generateBrandCSS(prev.branding));
+      }
+      toast.error("Failed to save theme");
+    },
+    onSuccess: (data) => {
+      if ("queued" in data && data.queued) {
         toast.info("Saved offline — will sync when connected");
-      } else {
-        queryClient.setQueryData(["org-theme", orgId], data);
+      }
+      // Keep optimistic style; server confirmed
+    },
+    onSettled: () => {
+      if (orgId) {
+        queryClient.invalidateQueries({ queryKey: [THEME_QUERY_KEY, orgId] });
       }
     },
   });
 }
+
+export { applyBrandThemeStyle };

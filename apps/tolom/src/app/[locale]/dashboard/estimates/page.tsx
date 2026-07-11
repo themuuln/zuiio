@@ -227,6 +227,7 @@ export default function EstimatesPage() {
   const emptyState = !estimatesQuery.isPending && estimates.length === 0;
 
   return (
+    <div className="px-4 pt-4 pb-6 md:px-6">
     <ListPageShell
       title={t("pageTitle")}
       description={t("pageSubtitle")}
@@ -364,5 +365,6 @@ export default function EstimatesPage() {
       </Card>
       <NewEstimateSheet open={newOpen} onOpenChange={setNewOpen} />
     </ListPageShell>
+    </div>
   );
 }

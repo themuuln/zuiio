@@ -182,7 +182,7 @@ export default function OverviewPage() {
 
   // ── Main Content (always rendered) ──
   return (
-    <div className="flex flex-col gap-8 pb-8">
+    <div className="flex flex-col gap-8 pb-8 px-4 pt-4 pb-6 md:px-6">
       {/* Simple header */}
       <div>
         {showOrgSkeleton ? (

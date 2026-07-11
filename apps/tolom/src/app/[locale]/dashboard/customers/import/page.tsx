@@ -344,7 +344,7 @@ export default function ImportCustomersPage() {
   }, []);
 
   return (
-    <div className="flex max-w-4xl flex-col gap-6">
+    <div className="flex max-w-4xl flex-col gap-6 px-4 pt-4 pb-6 md:px-6">
       {(orgQuery.error || (hasLoadedOnce && !orgId)) && (
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="p-4">

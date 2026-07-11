@@ -4,6 +4,20 @@ export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     process.setMaxListeners?.(20);
 
+    // ── Patch console.log to suppress EPIPE storms ─────────────
+    // Same issue as console.error: stdout pipe breaks during dev
+    // server restarts and EPIPE errors cascade into the pino logger.
+    const origConsoleLog = console.log.bind(console);
+    console.log = (...args: unknown[]) => {
+      if (
+        args.length === 1 &&
+        args[0] instanceof Error &&
+        (args[0] as Error).message?.includes?.("write EPIPE")
+      ) {
+        return;
+      }
+      origConsoleLog(...args);
+    };
     // ── Patch console.error to suppress EPIPE storms ────────────
     // Next.js DevTools' console interceptor can create an infinite
     // error loop when the stdout pipe breaks (EPIPE). This suppresses
@@ -48,7 +62,7 @@ export async function register() {
       // slow page). It is NOT a real crash — suppress it.
       if (
         error instanceof Error &&
-        (error.code === "ECONNRESET" || error.message === "aborted")
+        (error.code === "ECONNRESET" || error.code === "EPIPE" || error.message === "aborted")
       ) {
         return;
       }

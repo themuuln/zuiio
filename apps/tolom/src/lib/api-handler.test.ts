@@ -14,6 +14,7 @@ const mockEq = vi.fn();
 const mockIs = vi.fn();
 const mockFrom = vi.fn();
 
+const mockLoggerWarn = vi.fn();
 const mockLoggerInfo = vi.fn();
 const mockLoggerError = vi.fn();
 
@@ -29,6 +30,7 @@ vi.mock("@/lib/supabase/server", () => ({
 
 vi.mock("@/lib/logger", () => ({
   logger: {
+    warn: (...args: unknown[]) => mockLoggerWarn(...args),
     info: (...args: unknown[]) => mockLoggerInfo(...args),
     error: (...args: unknown[]) => mockLoggerError(...args),
   },

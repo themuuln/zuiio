@@ -192,7 +192,7 @@ export const KpiCards = React.memo(function KpiCards({
 
   return (
     <div className="shrink-0">
-      <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 shrink-0">
+      <div className="flex items-center gap-3 px-3 py-1.5 border-b border-border/30 shrink-0">
         <StatChip
           label={t("bayUtilization")}
           value={`${shiftReport?.bayUtilization ?? 0}%`}
