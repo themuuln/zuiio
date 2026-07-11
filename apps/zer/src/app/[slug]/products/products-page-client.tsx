@@ -142,29 +142,26 @@ export function ProductsPageClient({
         </div>
       )}
 
-      {/* Fixed sidebar — positioned outside flow */}
-      <aside className="pointer-events-auto fixed left-[max(2rem,calc(50%-38rem))] top-20 z-10 hidden h-[calc(100dvh-5rem)] w-60 overflow-y-auto border-r border-border/60 py-6 pr-6 lg:block">
-        <SidebarFilters
-          search={search}
-          setSearch={setSearch}
-          categoryFilter={categoryFilter}
-          setCategoryFilter={setCategoryFilter}
-          stockFilter={stockFilter}
-          setStockFilter={setStockFilter}
-          categories={categories}
-          products={products}
-          hasFilters={hasFilters}
-          clearFilters={clearFilters}
-        />
-      </aside>
-
-      {/* Main layout: spacer + grid */}
-      <div className="mx-auto flex w-full max-w-7xl flex-1 gap-0 px-4 sm:px-6 lg:gap-8 lg:px-8">
-        {/* Spacer for fixed sidebar */}
-        <div className="hidden w-60 shrink-0 lg:block" />
+      {/* Main layout: sticky sidebar + grid */}
+      <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-0 px-4 sm:px-6 lg:grid-cols-[15rem_1fr] lg:gap-8 lg:px-8">
+        {/* Sidebar — sticky below header */}
+        <aside className="hidden py-6 pr-6 lg:block lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100dvh-5rem)] lg:overflow-y-auto lg:border-r lg:border-border/60">
+          <SidebarFilters
+            search={search}
+            setSearch={setSearch}
+            categoryFilter={categoryFilter}
+            setCategoryFilter={setCategoryFilter}
+            stockFilter={stockFilter}
+            setStockFilter={setStockFilter}
+            categories={categories}
+            products={products}
+            hasFilters={hasFilters}
+            clearFilters={clearFilters}
+          />
+        </aside>
 
         {/* Product grid */}
-        <main className="flex-1 py-6">
+        <main className="py-6">
           {hasFilters && (
             <p className="mb-4 text-sm text-muted-foreground">
               {filtered.length} бүтээгдэхүүн олдлоо
