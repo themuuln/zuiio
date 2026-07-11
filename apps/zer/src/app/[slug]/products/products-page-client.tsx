@@ -3,8 +3,10 @@
 import {
   ArrowRight,
   BookmarkSimple,
+  FunnelSimple,
   MagnifyingGlass,
   Package,
+  X,
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -34,6 +36,7 @@ export function ProductsPageClient({
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [stockFilter, setStockFilter] = useState<string>("all");
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
@@ -59,11 +62,17 @@ export function ProductsPageClient({
 
   const hasFilters = search || categoryFilter || stockFilter !== "all";
 
+  const clearFilters = () => {
+    setSearch("");
+    setCategoryFilter("");
+    setStockFilter("all");
+  };
+
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       {/* Header */}
       <div className="border-b border-border/60 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4">
             <div>
               <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
@@ -73,30 +82,193 @@ export function ProductsPageClient({
                 {organization.name}
               </h1>
             </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold tabular-nums">
-                {products.length}
-              </p>
-              <p className="text-xs text-muted-foreground">бүтээгдэхүүн</p>
+            <div className="flex items-center gap-4">
+              {/* Mobile filter toggle */}
+              <button
+                type="button"
+                onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+                className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm text-muted-foreground lg:hidden"
+              >
+                <FunnelSimple className="size-4" />
+                Шүүлтүүр
+                {hasFilters && (
+                  <span className="size-1.5 rounded-full bg-primary" />
+                )}
+              </button>
+              <div className="text-right">
+                <p className="text-2xl font-bold tabular-nums">
+                  {filtered.length}
+                </p>
+                <p className="text-xs text-muted-foreground">бүтээгдэхүүн</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-        {/* Category pills — horizontal scroll */}
-        {categories.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+      {/* Mobile filters overlay */}
+      {mobileFiltersOpen && (
+        <div className="fixed inset-0 z-20 lg:hidden">
+          <button
+            type="button"
+            aria-label="Close filters"
+            className="absolute inset-0 bg-black/30"
+            onClick={() => setMobileFiltersOpen(false)}
+          />
+          <div className="absolute inset-y-0 left-0 w-80 max-w-[85vw] overflow-y-auto bg-background p-5 shadow-xl">
+            <div className="mb-5 flex items-center justify-between">
+              <h2 className="text-base font-semibold">Шүүлтүүр</h2>
+              <button
+                type="button"
+                onClick={() => setMobileFiltersOpen(false)}
+                className="rounded-md p-1 text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            <SidebarFilters
+              search={search}
+              setSearch={setSearch}
+              categoryFilter={categoryFilter}
+              setCategoryFilter={setCategoryFilter}
+              stockFilter={stockFilter}
+              setStockFilter={setStockFilter}
+              categories={categories}
+              products={products}
+              hasFilters={hasFilters}
+              clearFilters={clearFilters}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Main layout: sidebar + grid */}
+      <div className="mx-auto flex w-full max-w-7xl flex-1 gap-0 px-4 sm:px-6 lg:gap-8 lg:px-8">
+        {/* Desktop sidebar */}
+        <aside className="hidden w-60 shrink-0 border-r border-border/60 py-6 pr-6 lg:block">
+          <SidebarFilters
+            search={search}
+            setSearch={setSearch}
+            categoryFilter={categoryFilter}
+            setCategoryFilter={setCategoryFilter}
+            stockFilter={stockFilter}
+            setStockFilter={setStockFilter}
+            categories={categories}
+            products={products}
+            hasFilters={hasFilters}
+            clearFilters={clearFilters}
+          />
+        </aside>
+
+        {/* Product grid */}
+        <main className="flex-1 py-6">
+          {hasFilters && (
+            <p className="mb-4 text-sm text-muted-foreground">
+              {filtered.length} бүтээгдэхүүн олдлоо
+            </p>
+          )}
+
+          {filtered.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 py-20 text-center">
+              <Package className="size-12 text-muted-foreground/30" />
+              <p className="text-sm text-muted-foreground">
+                Бүтээгдэхүүн олдсонгүй.
+              </p>
+              {hasFilters && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
+                >
+                  Фильтр арилгах
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {filtered.map((product) => (
+                <Link
+                  key={product.id}
+                  href={`/${organization.slug}/products/${product.id}`}
+                  className="group block"
+                >
+                  <ProductCard
+                    product={product}
+                    currency={organization.currency}
+                  />
+                </Link>
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* Footer */}
+      <div className="border-t border-border/60 bg-card/30 py-6 text-center text-xs text-muted-foreground">
+        <p>{organization.name} &middot; Нээлттэй мэдээлэл</p>
+        <p className="mt-0.5">Zer ERP дэмждэг</p>
+      </div>
+    </div>
+  );
+}
+
+function SidebarFilters({
+  search,
+  setSearch,
+  categoryFilter,
+  setCategoryFilter,
+  stockFilter,
+  setStockFilter,
+  categories,
+  products,
+  hasFilters,
+  clearFilters,
+}: {
+  search: string;
+  setSearch: (v: string) => void;
+  categoryFilter: string;
+  setCategoryFilter: (v: string) => void;
+  stockFilter: string;
+  setStockFilter: (v: string) => void;
+  categories: PublicCategory[];
+  products: PublicProduct[];
+  hasFilters: boolean;
+  clearFilters: () => void;
+}) {
+  return (
+    <div className="space-y-6">
+      {/* Search */}
+      <div>
+        <p className="mb-1.5 text-xs font-medium text-muted-foreground">Хайх</p>
+        <div className="relative">
+          <MagnifyingGlass className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Нэр, тайлбар..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      </div>
+
+      {/* Categories */}
+      {categories.length > 0 && (
+        <div>
+          <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+            Ангилал
+          </p>
+          <div className="space-y-0.5">
             <button
               type="button"
               onClick={() => setCategoryFilter("")}
-              className={`shrink-0 rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+              className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors ${
                 !categoryFilter
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card text-muted-foreground hover:border-primary/50"
+                  ? "bg-primary/10 font-medium text-primary"
+                  : "text-muted-foreground hover:bg-muted"
               }`}
             >
-              Бүгд ({products.length})
+              <span>Бүгд</span>
+              <span className="text-xs tabular-nums">{products.length}</span>
             </button>
             {categories.map((cat) => (
               <button
@@ -105,113 +277,53 @@ export function ProductsPageClient({
                 onClick={() =>
                   setCategoryFilter(categoryFilter === cat.id ? "" : cat.id)
                 }
-                className={`shrink-0 rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+                className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors ${
                   categoryFilter === cat.id
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-card text-muted-foreground hover:border-primary/50"
-                }`}
-              >
-                {cat.name} ({cat.product_count})
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Search + stock filter */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative min-w-0 flex-1 sm:max-w-sm">
-            <MagnifyingGlass className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Нэр, тайлбар хайх..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-
-          <div className="flex gap-1 rounded-lg border border-border p-0.5">
-            {STOCK_FILTERS.map((f) => (
-              <button
-                key={f.value}
-                type="button"
-                onClick={() => setStockFilter(f.value)}
-                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                  stockFilter === f.value
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-primary/10 font-medium text-primary"
                     : "text-muted-foreground hover:bg-muted"
                 }`}
               >
-                {f.label}
+                <span className="truncate">{cat.name}</span>
+                <span className="shrink-0 text-xs tabular-nums">
+                  {cat.product_count}
+                </span>
               </button>
             ))}
           </div>
-
-          {hasFilters && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearch("");
-                setCategoryFilter("");
-                setStockFilter("all");
-              }}
-              className="text-xs text-muted-foreground underline-offset-2 hover:underline"
-            >
-              Цэвэрлэх
-            </button>
-          )}
         </div>
+      )}
 
-        {/* Summary */}
-        {hasFilters && (
-          <p className="text-sm text-muted-foreground">
-            {filtered.length} бүтээгдэхүүн олдлоо
-          </p>
-        )}
-
-        {/* Product grid */}
-        {filtered.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 py-20 text-center">
-            <Package className="size-12 text-muted-foreground/30" />
-            <p className="text-sm text-muted-foreground">
-              Бүтээгдэхүүн олдсонгүй.
-            </p>
-            {hasFilters && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearch("");
-                  setCategoryFilter("");
-                  setStockFilter("all");
-                }}
-                className={buttonVariants({ variant: "outline", size: "sm" })}
-              >
-                Фильтр арилгах
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((product) => (
-              <Link
-                key={product.id}
-                href={`/${organization.slug}/products/${product.id}`}
-                className="group block"
-              >
-                <ProductCard
-                  product={product}
-                  currency={organization.currency}
-                />
-              </Link>
-            ))}
-          </div>
-        )}
+      {/* Stock filter */}
+      <div>
+        <p className="mb-1.5 text-xs font-medium text-muted-foreground">Нөөц</p>
+        <div className="space-y-0.5">
+          {STOCK_FILTERS.map((f) => (
+            <button
+              key={f.value}
+              type="button"
+              onClick={() => setStockFilter(f.value)}
+              className={`w-full rounded-md px-3 py-2 text-left text-sm transition-colors ${
+                stockFilter === f.value
+                  ? "bg-primary/10 font-medium text-primary"
+                  : "text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Footer */}
-      <div className="border-t border-border/60 bg-card/30 py-6 text-center text-xs text-muted-foreground">
-        <p>{organization.name} &middot; Нээлттэй мэдээлэл</p>
-        <p className="mt-0.5">Zer ERP дэмждэг</p>
-      </div>
+      {/* Clear */}
+      {hasFilters && (
+        <button
+          type="button"
+          onClick={clearFilters}
+          className="w-full rounded-md border border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted"
+        >
+          Цэвэрлэх
+        </button>
+      )}
     </div>
   );
 }
@@ -233,7 +345,7 @@ function ProductCard({
       {/* Image area */}
       {product.image_url ? (
         <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {/* biome-ignore lint/performance/noImgElement: Supabase storage URLs */}
           <img
             src={product.image_url}
             alt={product.name}

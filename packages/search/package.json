@@ -10,6 +10,7 @@
   "peerDependencies": {
     "@tanstack/react-query": "^5",
     "@supabase/supabase-js": "^2",
+    "@zuiio/hooks": "workspace:*",
     "react": "^18 || ^19"
   },
   "devDependencies": {

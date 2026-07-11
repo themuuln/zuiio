@@ -9,6 +9,7 @@ import {
 import { capture } from "@zuiio/capture";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { getCompanyTypeLabel } from "@/lib/constants";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -55,7 +56,19 @@ type PublicProductDetailData = {
   product: ProductDetail;
 };
 
-export default async function PublicProductDetailPage({
+export default function PublicProductDetailPage({
+  params,
+}: {
+  params: Promise<{ slug: string; id: string }>;
+}) {
+  return (
+    <Suspense fallback={<ProductDetailSkeleton />}>
+      <ProductDetailDataFetcher params={params} />
+    </Suspense>
+  );
+}
+
+async function ProductDetailDataFetcher({
   params,
 }: {
   params: Promise<{ slug: string; id: string }>;
@@ -114,7 +127,7 @@ export default async function PublicProductDetailPage({
             <div className="mb-8 space-y-3">
               {/* Main image */}
               <div className="relative overflow-hidden rounded-2xl bg-muted">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {/* biome-ignore lint/performance/noImgElement: Supabase storage URLs */}
                 <img
                   src={images[0]}
                   alt={product.name}
@@ -129,7 +142,7 @@ export default async function PublicProductDetailPage({
                       key={img}
                       className="relative shrink-0 overflow-hidden rounded-lg border-2 border-border/60"
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      {/* biome-ignore lint/performance/noImgElement: Supabase storage URLs */}
                       <img
                         src={img}
                         alt={`${product.name} ${i + 1}`}
@@ -311,6 +324,62 @@ export default async function PublicProductDetailPage({
     capture(err, { context: "public product detail" });
     notFound();
   }
+}
+
+function ProductDetailSkeleton() {
+  return (
+    <div className="min-h-dvh bg-background">
+      {/* Header skeleton */}
+      <div className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur-md">
+        <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3 sm:px-6">
+          <div className="h-4 w-16 animate-pulse rounded bg-muted" />
+          <div className="h-4 w-px bg-muted" />
+          <div className="h-4 w-32 animate-pulse rounded bg-muted" />
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-4xl space-y-0 p-4 sm:p-6 lg:p-8">
+        {/* Image skeleton */}
+        <div className="mb-8 space-y-3">
+          <div className="aspect-[4/3] w-full animate-pulse rounded-2xl bg-muted" />
+          <div className="flex gap-2">
+            <div className="h-20 w-20 animate-pulse rounded-lg bg-muted" />
+            <div className="h-20 w-20 animate-pulse rounded-lg bg-muted" />
+          </div>
+        </div>
+
+        {/* Title skeleton */}
+        <div className="space-y-2 mb-6">
+          <div className="h-3 w-48 animate-pulse rounded bg-muted" />
+          <div className="h-8 w-64 animate-pulse rounded bg-muted" />
+          <div className="flex gap-2">
+            <div className="h-5 w-24 animate-pulse rounded-full bg-muted" />
+          </div>
+        </div>
+
+        {/* Cards skeleton */}
+        <div className="grid gap-4 sm:grid-cols-2 mb-8">
+          <div className="rounded-xl border border-border/80 bg-card p-5 shadow-sm">
+            <div className="h-3 w-12 animate-pulse rounded bg-muted mb-2" />
+            <div className="h-8 w-24 animate-pulse rounded bg-muted" />
+          </div>
+          <div className="rounded-xl border border-border/80 bg-card p-5 shadow-sm">
+            <div className="h-3 w-12 animate-pulse rounded bg-muted mb-2" />
+            <div className="h-8 w-24 animate-pulse rounded bg-muted" />
+          </div>
+        </div>
+
+        {/* Details skeleton */}
+        <div className="rounded-xl border border-border/80 bg-card p-5 shadow-sm">
+          <div className="h-3 w-24 animate-pulse rounded bg-muted mb-4" />
+          <div className="space-y-3">
+            <div className="h-4 w-full animate-pulse rounded bg-muted" />
+            <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function AttributeRow({ attribute }: { attribute: AttributeValue }) {

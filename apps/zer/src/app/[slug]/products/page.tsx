@@ -1,5 +1,6 @@
 import { capture } from "@zuiio/capture";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { ProductsPageClient } from "./products-page-client";
 
@@ -37,7 +38,19 @@ export type PublicCategory = {
   product_count: number;
 };
 
-export default async function PublicProductsPage({
+export default function PublicProductsPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  return (
+    <Suspense fallback={<ProductsSkeleton />}>
+      <ProductsDataFetcher params={params} />
+    </Suspense>
+  );
+}
+
+async function ProductsDataFetcher({
   params,
 }: {
   params: Promise<{ slug: string }>;
@@ -76,4 +89,36 @@ export default async function PublicProductsPage({
     capture(err, { context: "public products" });
     notFound();
   }
+}
+
+function ProductsSkeleton() {
+  return (
+    <div className="min-h-dvh bg-background">
+      <div className="mx-auto max-w-5xl space-y-6 p-4 sm:p-6">
+        {/* Header skeleton */}
+        <div className="space-y-2">
+          <div className="h-4 w-32 animate-pulse rounded bg-muted" />
+          <div className="h-8 w-64 animate-pulse rounded bg-muted" />
+          <div className="flex gap-2">
+            <div className="h-5 w-20 animate-pulse rounded-full bg-muted" />
+            <div className="h-5 w-20 animate-pulse rounded-full bg-muted" />
+          </div>
+        </div>
+        {/* Grid skeleton */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map((n) => (
+            <div
+              key={n}
+              className="rounded-xl border border-border/80 bg-card p-4 shadow-sm"
+            >
+              <div className="mb-3 aspect-[4/3] animate-pulse rounded-lg bg-muted" />
+              <div className="h-4 w-3/4 animate-pulse rounded bg-muted mb-2" />
+              <div className="h-3 w-1/2 animate-pulse rounded bg-muted mb-2" />
+              <div className="h-5 w-1/3 animate-pulse rounded bg-muted" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
