@@ -6,6 +6,7 @@ import { logger } from "@/lib/logger";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { syncWorkOrderToSchedules } from "@/lib/services/service-reminder-service";
 import type { MechanicAssignment, WorkOrder } from "@/lib/types";
+import { notifyWorkOrderAssigned } from "@/lib/services/push-triggers";
 
 // ── Helper: insert status history ──────────────────────────────
 async function insertStatusHistory(
@@ -238,6 +239,13 @@ export async function assignMechanic(
 
   revalidateTag(cacheTags.workOrder(workOrderId), "max");
   revalidateTag(cacheTags.workOrderDetail(workOrderId), "max");
+
+  // Fire-and-forget push notification — don't block the response
+  notifyWorkOrderAssigned(supabase, {
+    mechanicId,
+    workOrderNumber: workOrderId.slice(0, 8),
+    bayNumber: null,
+  }).catch(() => {});
 
   return data as unknown as MechanicAssignment;
 }

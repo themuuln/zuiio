@@ -111,6 +111,7 @@ const withPWA = withPWAInit({
   cacheOnFrontEndNav: true,
   cacheStartUrl: true,
   reloadOnOnline: true,
+  customWorkerSrc: "worker",
   fallbacks: {
     document: "/offline",
     image: "/icon-512.png",

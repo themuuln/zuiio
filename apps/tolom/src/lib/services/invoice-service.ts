@@ -5,6 +5,7 @@ import { cacheTags } from "@/lib/cache/keys";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { sendInvoiceEmail } from "@/lib/services/email-service";
+import { notifyInvoiceSent, notifyPaymentReceived } from "@/lib/services/push-triggers";
 import { calculateTax, getOrgTaxSettings } from "@/lib/services/tax-service";
 import type {
   Invoice,
@@ -751,6 +752,40 @@ export async function updateInvoiceStatus(
   });
 
   revalidateTag(cacheTags.invoice(id), "max");
+
+  // Fire-and-forget push notifications — don't block the response
+  if (status === "sent") {
+    const ownerRes = await supabase
+      .from("organization_users")
+      .select("user_id")
+      .eq("organization_id", orgId)
+      .eq("role", "owner")
+      .limit(1)
+      .single();
+    if (ownerRes.data) {
+      notifyInvoiceSent(supabase, {
+        userId: ownerRes.data.user_id,
+        invoiceNumber: data.invoice_number,
+        total: data.total,
+      }).catch(() => {});
+    }
+  }
+  if (status === "paid") {
+    const ownerRes = await supabase
+      .from("organization_users")
+      .select("user_id")
+      .eq("organization_id", orgId)
+      .eq("role", "owner")
+      .limit(1)
+      .single();
+    if (ownerRes.data) {
+      notifyPaymentReceived(supabase, {
+        userId: ownerRes.data.user_id,
+        amount: data.total,
+        workOrderNumber: data.invoice_number,
+      }).catch(() => {});
+    }
+  }
   revalidateTag(cacheTags.invoices(data.organization_id as string), "max");
   return data as unknown as Invoice;
 }

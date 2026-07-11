@@ -46,6 +46,7 @@ import { orgKeys } from "@/lib/queries/keys";
 import { useCurrentOrg } from "@/lib/queries/use-organization";
 import type { Organization, SubscriptionPlanInfo } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { PushNotificationSettings } from "@/components/push-notification-settings";
 
 const orgEditSchema = z.object({
   name: z
@@ -588,6 +589,8 @@ export default function OrganizationPage() {
           </CardContent>
         </Card>
       </div>
+
+      <PushNotificationSettings />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {workspaceCards.map((item) => {

@@ -48,6 +48,7 @@
     "src/**/__tests__",
     "src/**/*.test.ts",
     "src/**/*.test.tsx",
-    "supabase/functions"
+    "supabase/functions",
+    "worker"
   ]
 }
