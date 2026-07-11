@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ProductsPageClient } from "./products-page-client";
 
-type PublicProduct = {
+export type PublicProduct = {
   id: string;
   name: string;
   sku: string | null;
@@ -13,18 +13,28 @@ type PublicProduct = {
   current_stock: number | null;
   min_stock: number | null;
   category_name: string | null;
+  category_id: string | null;
+  image_url: string | null;
+  description: string | null;
+  attribute_count: number;
 };
 
-type OrgMeta = {
+export type OrgMeta = {
   name: string;
   slug: string;
   currency: string;
   companyType: string;
 };
 
-type PublicProductsData = {
+export type PublicProductsData = {
   organization: OrgMeta;
   products: PublicProduct[];
+};
+
+export type PublicCategory = {
+  id: string;
+  name: string;
+  product_count: number;
 };
 
 export default async function PublicProductsPage({
@@ -36,23 +46,31 @@ export default async function PublicProductsPage({
   const supabase = await createClient();
 
   try {
-    const { data, error } = await supabase.rpc("get_public_products", {
-      p_slug: slug,
-    });
+    const [{ data: productsData, error: prodError }, { data: categoriesData }] =
+      await Promise.all([
+        supabase.rpc("get_public_products", { p_slug: slug }),
+        supabase.rpc("get_public_categories", { p_slug: slug }),
+      ]);
 
-    if (error) {
-      capture(error, { context: "public products: rpc" });
+    if (prodError) {
+      capture(prodError, { context: "public products: rpc" });
       notFound();
     }
 
-    if (!data) {
+    if (!productsData) {
       notFound();
     }
 
-    const { organization, products } = data as unknown as PublicProductsData;
+    const { organization, products } =
+      productsData as unknown as PublicProductsData;
+    const categories = (categoriesData ?? []) as unknown as PublicCategory[];
 
     return (
-      <ProductsPageClient organization={organization} products={products} />
+      <ProductsPageClient
+        organization={organization}
+        products={products}
+        categories={categories}
+      />
     );
   } catch (err) {
     capture(err, { context: "public products" });

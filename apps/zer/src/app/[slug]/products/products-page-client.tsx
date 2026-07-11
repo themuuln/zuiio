@@ -1,6 +1,11 @@
 "use client";
 
-import { FunnelSimple, MagnifyingGlass } from "@phosphor-icons/react";
+import {
+  ArrowRight,
+  BookmarkSimple,
+  MagnifyingGlass,
+  Package,
+} from "@phosphor-icons/react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -8,25 +13,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getCompanyTypeLabel } from "@/lib/constants";
 import { formatCurrency } from "@/lib/format";
-
-type PublicProduct = {
-  id: string;
-  name: string;
-  sku: string | null;
-  barcode: string | null;
-  unit: string | null;
-  sale_price: number | null;
-  current_stock: number | null;
-  min_stock: number | null;
-  category_name: string | null;
-};
-
-type OrgMeta = {
-  name: string;
-  slug: string;
-  currency: string;
-  companyType: string;
-};
+import type { OrgMeta, PublicCategory, PublicProduct } from "./page";
 
 const STOCK_FILTERS = [
   { value: "all", label: "Бүгд" },
@@ -38,24 +25,16 @@ const STOCK_FILTERS = [
 export function ProductsPageClient({
   organization,
   products,
+  categories,
 }: {
   organization: OrgMeta;
   products: PublicProduct[];
+  categories: PublicCategory[];
 }) {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [stockFilter, setStockFilter] = useState<string>("all");
 
-  // Derive categories from data
-  const categories = useMemo(() => {
-    const cats = new Set<string>();
-    for (const p of products) {
-      if (p.category_name) cats.add(p.category_name);
-    }
-    return Array.from(cats).sort();
-  }, [products]);
-
-  // Filter products
   const filtered = useMemo(() => {
     return products.filter((p) => {
       const query = search.toLowerCase();
@@ -63,11 +42,11 @@ export function ProductsPageClient({
         query &&
         !p.name.toLowerCase().includes(query) &&
         !(p.sku ?? "").toLowerCase().includes(query) &&
-        !(p.barcode ?? "").toLowerCase().includes(query)
+        !(p.description ?? "").toLowerCase().includes(query)
       ) {
         return false;
       }
-      if (categoryFilter && p.category_name !== categoryFilter) return false;
+      if (categoryFilter && p.category_id !== categoryFilter) return false;
       const stock = Number(p.current_stock ?? 0);
       const minStock = Number(p.min_stock ?? 0);
       if (stockFilter === "in_stock" && stock <= 0) return false;
@@ -81,58 +60,74 @@ export function ProductsPageClient({
   const hasFilters = search || categoryFilter || stockFilter !== "all";
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      <div className="mx-auto w-full max-w-5xl flex-1 space-y-8 p-4 sm:p-6 lg:p-8">
-        {/* Branding header */}
-        <div className="space-y-1">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-            {getCompanyTypeLabel(organization.companyType)}
-          </p>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            {organization.name}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Нийт {products.length} төрөл бүтээгдэхүүн
-            {products.filter((p) => Number(p.current_stock ?? 0) > 0).length >
-              0 && (
-              <>
-                ,{" "}
-                {
-                  products.filter((p) => Number(p.current_stock ?? 0) > 0)
-                    .length
-                }{" "}
-                нь нөөцөд байгаа
-              </>
-            )}
-          </p>
+    <div className="flex min-h-dvh flex-col bg-background">
+      {/* Header */}
+      <div className="border-b border-border/60 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+        <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-4">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                {getCompanyTypeLabel(organization.companyType)}
+              </p>
+              <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+                {organization.name}
+              </h1>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold tabular-nums">
+                {products.length}
+              </p>
+              <p className="text-xs text-muted-foreground">бүтээгдэхүүн</p>
+            </div>
+          </div>
         </div>
+      </div>
 
-        {/* Filters bar */}
+      <div className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+        {/* Category pills — horizontal scroll */}
+        {categories.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <button
+              type="button"
+              onClick={() => setCategoryFilter("")}
+              className={`shrink-0 rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+                !categoryFilter
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-muted-foreground hover:border-primary/50"
+              }`}
+            >
+              Бүгд ({products.length})
+            </button>
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() =>
+                  setCategoryFilter(categoryFilter === cat.id ? "" : cat.id)
+                }
+                className={`shrink-0 rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+                  categoryFilter === cat.id
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card text-muted-foreground hover:border-primary/50"
+                }`}
+              >
+                {cat.name} ({cat.product_count})
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Search + stock filter */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative min-w-0 flex-1 sm:max-w-xs">
+          <div className="relative min-w-0 flex-1 sm:max-w-sm">
             <MagnifyingGlass className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Нэр, SKU, barcode..."
+              placeholder="Нэр, тайлбар хайх..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
             />
           </div>
-
-          {categories.length > 0 && (
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="h-9 rounded-lg border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <option value="">Ангилал бүгд</option>
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-          )}
 
           <div className="flex gap-1 rounded-lg border border-border p-0.5">
             {STOCK_FILTERS.map((f) => (
@@ -161,15 +156,22 @@ export function ProductsPageClient({
               }}
               className="text-xs text-muted-foreground underline-offset-2 hover:underline"
             >
-              Фильтр цэвэрлэх
+              Цэвэрлэх
             </button>
           )}
         </div>
 
-        {/* Results */}
+        {/* Summary */}
+        {hasFilters && (
+          <p className="text-sm text-muted-foreground">
+            {filtered.length} бүтээгдэхүүн олдлоо
+          </p>
+        )}
+
+        {/* Product grid */}
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 py-16 text-center">
-            <FunnelSimple className="size-8 text-muted-foreground/50" />
+          <div className="flex flex-col items-center gap-3 py-20 text-center">
+            <Package className="size-12 text-muted-foreground/30" />
             <p className="text-sm text-muted-foreground">
               Бүтээгдэхүүн олдсонгүй.
             </p>
@@ -188,73 +190,121 @@ export function ProductsPageClient({
             )}
           </div>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((product) => (
               <Link
                 key={product.id}
                 href={`/${organization.slug}/products/${product.id}`}
-                className="block"
+                className="group block"
               >
-                <ProductCard product={product} />
+                <ProductCard
+                  product={product}
+                  currency={organization.currency}
+                />
               </Link>
             ))}
           </div>
         )}
       </div>
 
-      <div className="border-t pt-6 text-center text-xs text-muted-foreground">
-        Zer ERP &middot; {organization.name} &middot; Нээлттэй мэдээлэл
+      {/* Footer */}
+      <div className="border-t border-border/60 bg-card/30 py-6 text-center text-xs text-muted-foreground">
+        <p>{organization.name} &middot; Нээлттэй мэдээлэл</p>
+        <p className="mt-0.5">Zer ERP дэмждэг</p>
       </div>
     </div>
   );
 }
 
-function ProductCard({ product }: { product: PublicProduct }) {
+function ProductCard({
+  product,
+  currency,
+}: {
+  product: PublicProduct;
+  currency: string;
+}) {
   const stock = Number(product.current_stock ?? 0);
   const minStock = Number(product.min_stock ?? 0);
   const isLow = stock > 0 && stock <= minStock;
   const isOut = stock <= 0;
 
   return (
-    <div className="rounded-xl border border-border/80 bg-card/80 p-4 shadow-sm transition-shadow hover:shadow-md">
-      <div className="mb-2 flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-medium">{product.name}</h3>
-          {product.sku && (
-            <p className="truncate text-xs text-muted-foreground">
-              SKU: {product.sku}
-            </p>
+    <div className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm transition-all group-hover:shadow-md group-hover:border-primary/30">
+      {/* Image area */}
+      {product.image_url ? (
+        <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={product.image_url}
+            alt={product.name}
+            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+            loading="lazy"
+          />
+          {product.attribute_count > 0 && (
+            <div className="absolute top-2 right-2">
+              <span className="inline-flex items-center gap-1 rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm">
+                <BookmarkSimple className="size-3" />
+                Зөвлөмж
+              </span>
+            </div>
           )}
         </div>
-        {product.category_name && (
-          <Badge variant="outline" className="shrink-0">
-            {product.category_name}
-          </Badge>
-        )}
-      </div>
-
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="text-lg font-semibold tracking-tight">
-          {formatCurrency(Number(product.sale_price ?? 0))}
-        </span>
-        <span
-          className={`text-sm ${
-            isOut
-              ? "text-destructive"
-              : isLow
-                ? "text-amber-600"
-                : "text-emerald-600"
-          }`}
-        >
-          {stock} {product.unit ?? "ширхэг"}
-        </span>
-      </div>
-
-      {product.barcode && (
-        <p className="mt-1 text-xs text-muted-foreground">
-          Barcode: {product.barcode}
-        </p>
+      ) : (
+        <div className="flex aspect-[4/3] items-center justify-center bg-muted/50">
+          <Package className="size-10 text-muted-foreground/20" />
+        </div>
       )}
+
+      {/* Content */}
+      <div className="space-y-2 p-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-sm font-medium leading-tight">
+              {product.name}
+            </h3>
+            {product.description && (
+              <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground leading-relaxed">
+                {product.description}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-end justify-between gap-2">
+          <div>
+            <p className="text-lg font-bold tracking-tight tabular-nums">
+              {formatCurrency(Number(product.sale_price ?? 0))}
+            </p>
+            {currency && (
+              <p className="text-[10px] text-muted-foreground">{currency}</p>
+            )}
+          </div>
+          <div className="text-right">
+            {isOut ? (
+              <Badge variant="destructive" className="text-[10px]">
+                Дууссан
+              </Badge>
+            ) : isLow ? (
+              <Badge
+                variant="outline"
+                className="border-amber-300 text-amber-600 text-[10px]"
+              >
+                {stock} үлдсэн
+              </Badge>
+            ) : (
+              <span className="text-xs text-emerald-600 font-medium">
+                {stock} {product.unit ?? "ширхэг"}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* View details hint */}
+        <div className="flex items-center gap-1 pt-1 text-xs text-primary opacity-0 transition-opacity group-hover:opacity-100">
+          Дэлгэрэнгүй
+          <ArrowRight className="size-3" />
+        </div>
+      </div>
     </div>
   );
 }
