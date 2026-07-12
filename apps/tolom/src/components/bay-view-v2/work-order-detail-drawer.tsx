@@ -29,6 +29,8 @@ import { savePostServiceData } from "@/lib/services/post-service-service";
 import type { WorkOrderDetail } from "@/lib/types/composite";
 import type { MechanicRef } from "@/lib/types/mechanic";
 import { cn } from "@/lib/utils";
+import type { CatalogPartItem, CatalogServiceItem } from "./_drawer-types";
+import { CatalogPickerDrawer } from "./_catalog-picker-drawer";
 import { CustomerPickerModal } from "./_customer-picker-modal";
 import { DrawerCelebration } from "./_drawer-celebration";
 import { DrawerContentPanel } from "./_drawer-content-panel";
@@ -565,19 +567,11 @@ export function WorkOrderDetailDrawer({
               workOrderId={workOrderId ?? ""}
               catalog={catalog}
               partsCatalog={partsCatalog}
-              serviceSearch={serviceSearch}
-              showAddService={showAddService}
               isFullScreen={isFullScreen}
-              onServiceSearchChange={setServiceSearch}
               onAddServiceOpenChange={handleServiceDrawerOpenChange}
-              onAddService={handleServiceSelect}
               onEditServicePriceSave={handleServicePriceSave}
               onEditServiceQtySave={handleServiceQtySave}
-              partSearch={partSearch}
-              showAddPart={showAddPart}
-              onPartSearchChange={setPartSearch}
               onAddPartOpenChange={handlePartDrawerOpenChange}
-              onAddPart={handlePartSelect}
               onEditPartPriceSave={handlePartPriceSave}
               onEditPartQtySave={handlePartQtySave}
               lastAddedServiceId={lastAddedServiceId}
@@ -615,7 +609,68 @@ export function WorkOrderDetailDrawer({
           message={t("completedCelebration")}
         />
 
-        {/* Nested drawers */}
+        {/* Nested drawers — rendered outside DrawerContent (portaled) but inside
+            DrawerPrimitive.Root via DetailDrawer's nestedContent slot.
+            This is the canonical Base UI pattern for nested drawer detection:
+            the child DrawerRoot's DialogRootContext finds the parent context
+            through React tree, enabling proper --nested-drawers stacking vars. */}
+        <CatalogPickerDrawer
+          open={showAddService}
+          onOpenChange={handleServiceDrawerOpenChange}
+          items={catalog}
+          search={serviceSearch}
+          onSearchChange={setServiceSearch}
+          onSelect={handleServiceSelect}
+          onAddNew={(name) =>
+            handleServiceSelect({
+              id: "",
+              name,
+              name_mn: null,
+              default_price: 0,
+              category: null,
+              _source: "global",
+            } as unknown as CatalogServiceItem)
+          }
+          isAdded={(svc) =>
+            wo?.services?.some((s) => s.service_catalog_id === svc.id) ?? false
+          }
+          placeholder={t("searchServices")}
+          noMatchMessage={t("noMatchService")}
+          addAsNewLabel={t("addAsNew")}
+          filterAllLabel={t("filterAll")}
+        />
+        <CatalogPickerDrawer
+          open={showAddPart}
+          onOpenChange={handlePartDrawerOpenChange}
+          items={partsCatalog}
+          search={partSearch}
+          onSearchChange={setPartSearch}
+          onSelect={handlePartSelect}
+          onAddNew={(name) =>
+            handlePartSelect({
+              id: "",
+              name,
+              name_mn: null,
+              default_price: 0,
+              _source: "global",
+            } as CatalogPartItem)
+          }
+          isAdded={(item) =>
+            wo?.parts?.some(
+              (p) => p.part_id === item.id,
+            ) ??
+            wo?.parts?.some(
+              (p) =>
+                p.part_id === null &&
+                p.part_name.toLowerCase() === item.name.toLowerCase(),
+            ) ??
+            false
+          }
+          placeholder={t("searchParts")}
+          noMatchMessage={t("noMatchPart")}
+          addAsNewLabel={t("addAsNew")}
+          filterAllLabel={t("filterAll")}
+        />
         <DrawerNestedForms
           wo={wo}
           showReadyForm={showReadyForm}

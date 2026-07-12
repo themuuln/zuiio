@@ -43,19 +43,11 @@ export interface DrawerContentPanelProps {
   workOrderId: string;
   catalog: CatalogServiceItem[];
   partsCatalog: CatalogPartItem[];
-  serviceSearch: string;
-  showAddService: boolean;
   isFullScreen?: boolean;
-  onServiceSearchChange: (val: string) => void;
   onAddServiceOpenChange: (open: boolean) => void;
-  onAddService: (svc: CatalogServiceItem) => void;
   onEditServicePriceSave: (id: string, price: number) => Promise<void>;
   onEditServiceQtySave: (id: string, qty: number) => Promise<void>;
-  partSearch: string;
-  showAddPart: boolean;
-  onPartSearchChange: (val: string) => void;
   onAddPartOpenChange: (open: boolean) => void;
-  onAddPart: (part: CatalogPartItem) => void;
   onEditPartPriceSave: (id: string, price: number) => Promise<void>;
   onEditPartQtySave: (partId: string, qty: number) => Promise<void>;
   lastAddedServiceId?: string | null;
@@ -89,13 +81,9 @@ export interface DrawerContentPanelProps {
 const MemoizedServicesZone = memo(function MemoizedServicesZone({
   services,
   catalog,
-  serviceSearch,
-  showAddService,
   locale,
   isFullScreen,
-  onServiceSearchChange,
   onAddServiceOpenChange,
-  onAddService,
   onEditPriceSave,
   onEditQtySave,
   t,
@@ -103,13 +91,9 @@ const MemoizedServicesZone = memo(function MemoizedServicesZone({
 }: {
   services: WorkOrderService[];
   catalog: CatalogServiceItem[];
-  serviceSearch: string;
-  showAddService: boolean;
   locale: string;
   isFullScreen?: boolean;
-  onServiceSearchChange: (val: string) => void;
   onAddServiceOpenChange: (open: boolean) => void;
-  onAddService: (svc: CatalogServiceItem) => void;
   onEditPriceSave: (id: string, price: number) => Promise<void>;
   onEditQtySave: (id: string, qty: number) => Promise<void>;
   t: (key: string) => string;
@@ -123,13 +107,9 @@ const MemoizedServicesZone = memo(function MemoizedServicesZone({
       <WorkOrderServicesSection
         services={services}
         catalog={catalog}
-        serviceSearch={serviceSearch}
-        showAddService={showAddService}
         locale={locale}
         isFullScreen={isFullScreen}
-        onServiceSearchChange={onServiceSearchChange}
         onAddServiceOpenChange={onAddServiceOpenChange}
-        onAddService={onAddService}
         onEditPriceSave={onEditPriceSave}
         onEditQtySave={onEditQtySave}
         t={t}
@@ -142,12 +122,8 @@ const MemoizedServicesZone = memo(function MemoizedServicesZone({
 const MemoizedPartsZone = memo(function MemoizedPartsZone({
   parts,
   partsCatalog,
-  partSearch,
-  showAddPart,
   locale,
-  onPartSearchChange,
   onAddPartOpenChange,
-  onAddPart,
   onEditPriceSave,
   onEditQtySave,
   t,
@@ -155,12 +131,8 @@ const MemoizedPartsZone = memo(function MemoizedPartsZone({
 }: {
   parts: WorkOrderPart[];
   partsCatalog: CatalogPartItem[];
-  partSearch: string;
-  showAddPart: boolean;
   locale: string;
-  onPartSearchChange: (val: string) => void;
   onAddPartOpenChange: (open: boolean) => void;
-  onAddPart: (part: CatalogPartItem) => void;
   onEditPriceSave: (id: string, price: number) => Promise<void>;
   onEditQtySave: (partId: string, qty: number) => Promise<void>;
   t: (key: string) => string;
@@ -174,12 +146,8 @@ const MemoizedPartsZone = memo(function MemoizedPartsZone({
       <WorkOrderPartsSection
         parts={parts}
         partsCatalog={partsCatalog}
-        partSearch={partSearch}
-        showAddPart={showAddPart}
         locale={locale}
-        onPartSearchChange={onPartSearchChange}
         onAddPartOpenChange={onAddPartOpenChange}
-        onAddPart={onAddPart}
         onEditPriceSave={onEditPriceSave}
         onEditQtySave={onEditQtySave}
         t={t}
@@ -256,19 +224,11 @@ export function DrawerContentPanel({
   workOrderId,
   catalog,
   partsCatalog,
-  serviceSearch,
-  showAddService,
   isFullScreen,
-  onServiceSearchChange,
   onAddServiceOpenChange,
-  onAddService,
   onEditServicePriceSave,
   onEditServiceQtySave,
-  partSearch,
-  showAddPart,
-  onPartSearchChange,
   onAddPartOpenChange,
-  onAddPart,
   onEditPartPriceSave,
   onEditPartQtySave,
   lastAddedServiceId,
@@ -333,13 +293,9 @@ export function DrawerContentPanel({
                 <MemoizedServicesZone
                   services={services}
                   catalog={catalog}
-                  serviceSearch={serviceSearch}
-                  showAddService={showAddService}
                   locale={locale}
                   isFullScreen={isFullScreen}
-                  onServiceSearchChange={onServiceSearchChange}
                   onAddServiceOpenChange={onAddServiceOpenChange}
-                  onAddService={onAddService}
                   onEditPriceSave={onEditServicePriceSave}
                   onEditQtySave={onEditServiceQtySave}
                   t={t}
@@ -349,12 +305,8 @@ export function DrawerContentPanel({
                 <MemoizedPartsZone
                   parts={parts}
                   partsCatalog={partsCatalog}
-                  partSearch={partSearch}
-                  showAddPart={showAddPart}
                   locale={locale}
-                  onPartSearchChange={onPartSearchChange}
                   onAddPartOpenChange={onAddPartOpenChange}
-                  onAddPart={onAddPart}
                   onEditPriceSave={onEditPartPriceSave}
                   onEditQtySave={onEditPartQtySave}
                   t={t}

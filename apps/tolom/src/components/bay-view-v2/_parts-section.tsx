@@ -1,21 +1,17 @@
 "use client";
 
 import { Package } from "lucide-react";
+import { useMemo } from "react";
 import { LineItemRow } from "@/components/work-orders/line-items";
 import type { WorkOrderPart } from "@/lib/types";
-import { CatalogPickerDrawer } from "./_catalog-picker-drawer";
 import type { CatalogPartItem } from "./_drawer-types";
 import { SectionCard } from "./_section-card";
 
 interface PartsSectionProps {
   parts: WorkOrderPart[];
   partsCatalog: CatalogPartItem[];
-  partSearch: string;
-  showAddPart: boolean;
   locale?: string;
-  onPartSearchChange: (val: string) => void;
   onAddPartOpenChange: (open: boolean) => void;
-  onAddPart: (item: CatalogPartItem) => void;
   onEditPriceSave: (id: string, price: number) => Promise<void>;
   onEditQtySave: (partId: string, qty: number) => Promise<void>;
   t: (key: string) => string;
@@ -30,12 +26,8 @@ type WorkOrderPartWithSource = WorkOrderPart & {
 export function PartsSection({
   parts,
   partsCatalog,
-  partSearch,
-  showAddPart,
   locale = "en",
-  onPartSearchChange,
   onAddPartOpenChange,
-  onAddPart,
   onEditPriceSave,
   onEditQtySave,
   t,
@@ -43,17 +35,22 @@ export function PartsSection({
 }: PartsSectionProps) {
   const isEmpty = (parts?.length ?? 0) === 0;
 
-  // Build lookups from partsCatalog for name_mn
-  const partNameLookup = new Map<string, string | null | undefined>();
-  const nameToNameMnLookup = new Map<string, string | null | undefined>();
-  for (const item of partsCatalog) {
-    if (item.id) {
-      partNameLookup.set(item.id, item.name_mn);
+  // Build lookups from partsCatalog for name_mn (memoized to avoid re-creating Maps on every render)
+  const partNameLookup = useMemo(() => {
+    const map = new Map<string, string | null | undefined>();
+    for (const item of partsCatalog) {
+      if (item.id) map.set(item.id, item.name_mn);
     }
-    if (item.name) {
-      nameToNameMnLookup.set(item.name.toLowerCase(), item.name_mn);
+    return map;
+  }, [partsCatalog]);
+
+  const nameToNameMnLookup = useMemo(() => {
+    const map = new Map<string, string | null | undefined>();
+    for (const item of partsCatalog) {
+      if (item.name) map.set(item.name.toLowerCase(), item.name_mn);
     }
-  }
+    return map;
+  }, [partsCatalog]);
 
   function getPartDisplayName(part: WorkOrderPartWithSource): string {
     if (locale !== "mn") return part.part_name;
@@ -111,39 +108,7 @@ export function PartsSection({
           </div>
         )}
       </SectionCard>
-
-      <CatalogPickerDrawer
-        open={showAddPart}
-        onOpenChange={onAddPartOpenChange}
-        items={partsCatalog}
-        search={partSearch}
-        onSearchChange={onPartSearchChange}
-        onSelect={onAddPart}
-        onAddNew={(name) =>
-          onAddPart({
-            id: "",
-            name,
-            name_mn: null,
-            default_price: 0,
-            _source: "global",
-          } as CatalogPartItem)
-        }
-        isAdded={(item) =>
-          parts?.some(
-            (p) => (p as WorkOrderPartWithSource).part_id === item.id,
-          ) ??
-          parts?.some(
-            (p) =>
-              (p as WorkOrderPartWithSource).part_id === null &&
-              p.part_name.toLowerCase() === item.name.toLowerCase(),
-          ) ??
-          false
-        }
-        placeholder={t("searchParts")}
-        noMatchMessage={t("noMatchPart")}
-        addAsNewLabel={t("addAsNew")}
-        filterAllLabel={t("filterAll")}
-      />
+      {/* CatalogPickerDrawer lifted to WorkOrderDetailDrawer for proper Base UI nesting */}
     </>
   );
 }

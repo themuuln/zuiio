@@ -1,22 +1,18 @@
 "use client";
 
 import { Wrench } from "lucide-react";
+import { useMemo } from "react";
 import { LineItemRow } from "@/components/work-orders/line-items";
 import type { WorkOrderService } from "@/lib/types";
-import { CatalogPickerDrawer } from "./_catalog-picker-drawer";
 import type { CatalogServiceItem } from "./_drawer-types";
 import { SectionCard } from "./_section-card";
 
 interface ServicesSectionProps {
   services: WorkOrderService[];
   catalog: CatalogServiceItem[];
-  serviceSearch: string;
-  showAddService: boolean;
   locale?: string;
   isFullScreen?: boolean;
-  onServiceSearchChange: (val: string) => void;
   onAddServiceOpenChange: (open: boolean) => void;
-  onAddService: (svc: CatalogServiceItem) => void;
   onEditPriceSave: (id: string, price: number) => Promise<void>;
   onEditQtySave: (id: string, qty: number) => Promise<void>;
   t: (key: string) => string;
@@ -26,13 +22,9 @@ interface ServicesSectionProps {
 export function ServicesSection({
   services,
   catalog,
-  serviceSearch,
-  showAddService,
   locale = "en",
   isFullScreen,
-  onServiceSearchChange,
   onAddServiceOpenChange,
-  onAddService,
   onEditPriceSave,
   onEditQtySave,
   t,
@@ -40,17 +32,22 @@ export function ServicesSection({
 }: ServicesSectionProps) {
   const isEmpty = (services?.length ?? 0) === 0;
 
-  // Build lookups from catalog for name_mn
-  const serviceNameLookup = new Map<string, string | null | undefined>();
-  const nameToNameMnLookup = new Map<string, string | null | undefined>();
-  for (const item of catalog) {
-    if (item.id) {
-      serviceNameLookup.set(item.id, item.name_mn);
+  // Build lookups from catalog for name_mn (memoized to avoid re-creating Maps on every render)
+  const serviceNameLookup = useMemo(() => {
+    const map = new Map<string, string | null | undefined>();
+    for (const item of catalog) {
+      if (item.id) map.set(item.id, item.name_mn);
     }
-    if (item.name) {
-      nameToNameMnLookup.set(item.name.toLowerCase(), item.name_mn);
+    return map;
+  }, [catalog]);
+
+  const nameToNameMnLookup = useMemo(() => {
+    const map = new Map<string, string | null | undefined>();
+    for (const item of catalog) {
+      if (item.name) map.set(item.name.toLowerCase(), item.name_mn);
     }
-  }
+    return map;
+  }, [catalog]);
 
   function getServiceDisplayName(svc: WorkOrderService): string {
     if (locale !== "mn") return svc.service_name;
@@ -108,32 +105,7 @@ export function ServicesSection({
           </div>
         )}
       </SectionCard>
-
-      <CatalogPickerDrawer
-        open={showAddService}
-        onOpenChange={onAddServiceOpenChange}
-        items={catalog}
-        search={serviceSearch}
-        onSearchChange={onServiceSearchChange}
-        onSelect={onAddService}
-        onAddNew={(name) =>
-          onAddService({
-            id: "",
-            name,
-            name_mn: null,
-            default_price: 0,
-            category: null,
-            _source: "global",
-          } as unknown as CatalogServiceItem)
-        }
-        isAdded={(svc) =>
-          services?.some((s) => s.service_catalog_id === svc.id) ?? false
-        }
-        placeholder={t("searchServices")}
-        noMatchMessage={t("noMatchService")}
-        addAsNewLabel={t("addAsNew")}
-        filterAllLabel={t("filterAll")}
-      />
+      {/* CatalogPickerDrawer lifted to WorkOrderDetailDrawer for proper Base UI nesting */}
     </>
   );
 }
