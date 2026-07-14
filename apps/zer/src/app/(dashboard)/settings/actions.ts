@@ -123,7 +123,7 @@ const PRESET_IMAGE_MAP: Record<string, string> = {
     "https://realpharm.eu/hpeciai/2b58caf2639603bf3fbab6077e5d487b/eng_pl_ProActive-Aminokwasy-BCAA-400g-GRAPE-2639_7.png",
   "RP-OM3-90":
     "https://realpharm.eu/hpeciai/b2c5738f29afd5986deef127210876bd/eng_pm_Real-Pharm-Omega-3-60-caps-2336_1.png",
-  // FIXME: RP-FW-600 and RP-FIN-500 need correct image URLs.
+  // RP-FW-600 and RP-FIN-500 image URLs not yet available.
   // ── HiTec Nutrition ──
   "HTN-HTP-2250":
     "https://hitec.pl/hpeciai/5230f82c115505af7b67a0e153fa90c4/pol_pm_WPC-80-2000g-1037_8.jpg",
@@ -556,7 +556,7 @@ export async function updateOrgFeatureSetting(
 ) {
   const ctx = await requireActionContext("settings.manage");
   if ("error" in ctx) return ctx;
-  const { supabase, organizationId } = ctx;
+  const { supabase } = ctx;
 
   const setting = formData.get("setting")?.toString();
   const value = formData.get("value") === "true";
