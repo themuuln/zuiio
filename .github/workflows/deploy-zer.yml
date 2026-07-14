@@ -6,6 +6,7 @@ on:
     paths:
       - 'apps/zer/**'
       - 'packages/**'
+      - '.github/workflows/deploy-zer.yml'
 
 concurrency:
   group: deploy-zer
@@ -56,4 +57,3 @@ jobs:
 
       - name: Deploy to production
         run: vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
-# Tue Jul 14 21:24:21 +08 2026
