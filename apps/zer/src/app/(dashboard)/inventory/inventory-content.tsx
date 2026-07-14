@@ -12,15 +12,8 @@ import { StatCard } from "@/components/erp/stat-card";
 import { LowStockSection } from "@/components/inventory/low-stock-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable } from "@/components/ui/data-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { createClient } from "@/lib/supabase/client";
@@ -53,6 +46,44 @@ export type RecentMovement = {
   product_name: string;
   product_unit: string | null;
 };
+const movementColumns: ColumnDef<RecentMovement>[] = [
+  {
+    accessorKey: "created_at",
+    header: "Огноо",
+    cell: ({ row }) => formatDate(row.getValue("created_at")),
+  },
+  {
+    accessorKey: "product_name",
+    header: "Бүтээгдэхүүн",
+  },
+  {
+    accessorKey: "type",
+    header: "Төрөл",
+    cell: ({ row }) => {
+      const type = row.getValue("type") as string;
+      return (
+        <Badge variant={type === "out" ? "destructive" : "secondary"}>
+          {MOVEMENT_LABELS[type] ?? type}
+        </Badge>
+      );
+    },
+  },
+  {
+    id: "quantity",
+    accessorFn: (row) => `${row.quantity} ${row.product_unit ?? "ширхэг"}`,
+    header: "Тоо хэмжээ",
+  },
+  {
+    accessorKey: "unit_cost",
+    header: "Өртөг",
+    cell: ({ row }) => formatCurrency(Number(row.getValue("unit_cost") ?? 0)),
+  },
+  {
+    id: "reference",
+    accessorFn: (row) => row.reference ?? row.notes ?? "-",
+    header: "Лавлагаа",
+  },
+];
 
 function InventorySkeleton() {
   return (
@@ -150,7 +181,7 @@ export function InventoryContent() {
   const stockMovements = movementsQuery.data ?? [];
   const suppliers = suppliersQuery.data ?? [];
 
-  const isLoading = productsQuery.isLoading || productsQuery.isFetching;
+  const isPending = productsQuery.isPending;
 
   // ── Compute KPIs ──
   const totalProducts = products.length;
@@ -192,7 +223,7 @@ export function InventoryContent() {
       null,
   }));
 
-  if (isLoading) {
+  if (isPending) {
     return <InventorySkeleton />;
   }
 
@@ -266,64 +297,27 @@ export function InventoryContent() {
               }),
             )}
           />
-          <Card>
-            <CardHeader>
-              <CardTitle>Сүүлийн хөдөлгөөнүүд</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              {movements.length === 0 ? (
-                <div className="px-6 pb-6 pt-2">
-                  <p className="text-sm text-muted-foreground">
-                    Барааны хөдөлгөөн бүртгэгдээгүй байна.
-                  </p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Огноо</TableHead>
-                      <TableHead>Бүтээгдэхүүн</TableHead>
-                      <TableHead>Төрөл</TableHead>
-                      <TableHead>Тоо хэмжээ</TableHead>
-                      <TableHead>Өртөг</TableHead>
-                      <TableHead>Лавлагаа</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {movements.map((movement) => (
-                      <TableRow key={movement.id}>
-                        <TableCell>{formatDate(movement.created_at)}</TableCell>
-                        <TableCell className="font-medium">
-                          {movement.product_name}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              movement.type === "out"
-                                ? "destructive"
-                                : "secondary"
-                            }
-                          >
-                            {MOVEMENT_LABELS[movement.type] ?? movement.type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {movement.quantity}{" "}
-                          {movement.product_unit ?? "ширхэг"}
-                        </TableCell>
-                        <TableCell>
-                          {formatCurrency(Number(movement.unit_cost ?? 0))}
-                        </TableCell>
-                        <TableCell>
-                          {movement.reference ?? movement.notes ?? "-"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+          <div className="flex flex-col gap-2">
+            <h3 className="text-sm font-medium text-muted-foreground">
+              Сүүлийн хөдөлгөөнүүд
+            </h3>
+            {movements.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Барааны хөдөлгөөн бүртгэгдээгүй байна.
+              </p>
+            ) : (
+              <DataTable
+                columns={movementColumns}
+                data={movements}
+                searchColumn="product_name"
+                searchPlaceholder="Хайх..."
+                pageSize={5}
+                totalLabel="хөдөлгөөн"
+                enableSorting
+                enableColumnVisibility
+              />
+            )}
+          </div>
           <div className="flex flex-wrap items-center gap-3">
             <Button asChild variant="outline" size="sm">
               <Link href="/inventory/categories">

@@ -1,8 +1,10 @@
 "use client";
 
-import { type Column, ErpDataTable } from "@/components/erp/data-table";
+import type { ColumnDef } from "@tanstack/react-table";
+import { DataTable } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
+import { currencyColumn, dateColumn, textColumn } from "@/lib/table-columns";
 
 export type SaleRow = {
   id: string;
@@ -34,36 +36,33 @@ function statusLabel(status: string | null): string {
   }
 }
 
-const columns: Column<SaleRow>[] = [
+const columns: ColumnDef<SaleRow>[] = [
+  dateColumn("sale_date", "Огноо"),
+  textColumn("contact_name", "Харилцагч"),
+  currencyColumn("total_amount", "Нийт дүн"),
+  currencyColumn("paid_amount", "Төлсөн дүн"),
   {
-    header: "Огноо",
-    accessor: (row) => formatDate(row.sale_date),
-    cellClassName: "whitespace-nowrap",
-  },
-  {
-    header: "Харилцагч",
-    accessor: (row) => row.contact_name ?? "-",
-  },
-  {
-    header: "Нийт дүн",
-    accessor: (row) => formatCurrency(Number(row.total_amount ?? 0)),
-  },
-  {
-    header: "Төлсөн дүн",
-    accessor: (row) => formatCurrency(Number(row.paid_amount ?? 0)),
-    cellClassName: "hidden md:table-cell",
-  },
-  {
+    accessorFn: (row) => (row.total_amount ?? 0) - (row.paid_amount ?? 0),
+    id: "balance",
     header: "Үлдэгдэл",
-    accessor: (row) =>
-      formatCurrency((row.total_amount ?? 0) - (row.paid_amount ?? 0)),
-    cellClassName: "hidden md:table-cell",
+    cell: ({ row }) =>
+      formatCurrency(
+        (row.original.total_amount ?? 0) - (row.original.paid_amount ?? 0),
+      ),
   },
   {
-    header: "Төлбөрийн төлөв",
-    accessor: (row) => {
+    accessorFn: (row) => {
       const total = row.total_amount ?? 0;
       const paid = row.paid_amount ?? 0;
+      if (paid >= total) return "Төлөгдсөн";
+      if (paid > 0) return "Хэсэгчлэн";
+      return "Төлөөгүй";
+    },
+    id: "payment_status",
+    header: "Төлбөрийн төлөв",
+    cell: ({ row }) => {
+      const total = row.original.total_amount ?? 0;
+      const paid = row.original.paid_amount ?? 0;
       let label: string;
       let variant: "default" | "secondary" | "destructive" | "outline";
       if (paid >= total) {
@@ -78,12 +77,12 @@ const columns: Column<SaleRow>[] = [
       }
       return <Badge variant={variant}>{label}</Badge>;
     },
-    cellClassName: "hidden md:table-cell",
   },
   {
+    accessorKey: "status",
     header: "Статус",
-    accessor: (row) => {
-      const status = row.status;
+    cell: ({ row }) => {
+      const status = row.original.status;
       let variant: "default" | "secondary" | "destructive" | "outline";
       switch (status) {
         case "completed":
@@ -102,12 +101,12 @@ const columns: Column<SaleRow>[] = [
     },
   },
   {
+    accessorKey: "payment_method",
     header: "Төлбөрийн арга",
-    accessor: (row) =>
-      paymentMethodLabels[row.payment_method ?? ""] ??
-      row.payment_method ??
+    cell: ({ row }) =>
+      paymentMethodLabels[row.original.payment_method ?? ""] ??
+      row.original.payment_method ??
       "-",
-    cellClassName: "hidden md:table-cell",
   },
 ];
 
@@ -122,17 +121,16 @@ export function SalesTable({
   loading?: boolean;
 }) {
   return (
-    <ErpDataTable
+    <DataTable
       columns={columns}
       data={data}
       loading={loading}
-      keyExtractor={(row) => row.id}
       onRowClick={onRowClick}
-      emptyState={{
-        title: "Борлуулалтын бүртгэл хоосон байна",
-        description:
-          "Шинэ борлуулалт үүсгэхэд барааны үлдэгдэл автоматаар буурна.",
-      }}
+      searchColumn="contact_name"
+      searchPlaceholder="Харилцагч хайх..."
+      totalLabel="борлуулалт"
+      enableSorting
+      enableColumnVisibility
     />
   );
 }

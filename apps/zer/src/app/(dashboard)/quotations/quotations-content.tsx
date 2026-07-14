@@ -1,15 +1,17 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import { FileText } from "@phosphor-icons/react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ErpDataTable } from "@/components/erp/data-table";
+import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
 import { QuotationCreateDrawer } from "@/components/quotations/quotation-create-drawer";
 import { QuotationDetailDrawer } from "@/components/quotations/quotation-detail-drawer";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { DataTable } from "@/components/ui/data-table";
+import { currencyColumn, dateColumn, textColumn } from "@/lib/table-columns";
 import type { QuotationRow } from "./page";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -32,6 +34,26 @@ const STATUS_VARIANTS: Record<
   expired: "outline",
   converted: "default",
 };
+const columns: ColumnDef<QuotationRow>[] = [
+  {
+    accessorKey: "quote_number",
+    header: "Дугаар",
+  },
+  dateColumn("issue_date", "Огноо"),
+  textColumn("contact_name", "Харилцагч"),
+  currencyColumn("total_amount", "Нийт дүн"),
+  {
+    accessorFn: (row) => STATUS_LABELS[row.status] ?? row.status,
+    id: "status",
+    header: "Төлөв",
+    cell: ({ row }) => (
+      <Badge variant={STATUS_VARIANTS[row.original.status] ?? "outline"}>
+        {STATUS_LABELS[row.original.status] ?? row.original.status}
+      </Badge>
+    ),
+  },
+  dateColumn("expiry_date", "Хүчинтэй"),
+];
 
 type ProductOption = {
   id: string;
@@ -86,49 +108,24 @@ export function QuotationsContent({
           />
         }
       >
-        <ErpDataTable
-          columns={[
-            {
-              header: "Дугаар",
-              accessor: (row: QuotationRow) => row.quote_number,
-              cellClassName: "font-medium",
-            },
-            {
-              header: "Огноо",
-              accessor: (row: QuotationRow) => formatDate(row.issue_date),
-            },
-            {
-              header: "Харилцагч",
-              accessor: (row: QuotationRow) => row.contact_name ?? "-",
-            },
-            {
-              header: "Нийт дүн",
-              accessor: (row: QuotationRow) => formatCurrency(row.total_amount),
-              className: "text-right",
-            },
-            {
-              header: "Төлөв",
-              accessor: (row: QuotationRow) => (
-                <Badge variant={STATUS_VARIANTS[row.status] ?? "outline"}>
-                  {STATUS_LABELS[row.status] ?? row.status}
-                </Badge>
-              ),
-            },
-            {
-              header: "Хүчинтэй",
-              accessor: (row: QuotationRow) =>
-                row.expiry_date ? formatDate(row.expiry_date) : "-",
-            },
-          ]}
-          data={quotations}
-          loading={loading}
-          keyExtractor={(row) => row.id}
-          onRowClick={(row) => setSelectedQuotationId(row.id)}
-          emptyState={{
-            icon: <FileText className="size-4" />,
-            title: "Үнийн санал байхгүй",
-            description: "Шинэ үнийн санал үүсгэж, үйлчлүүлэгчдэд илгээнэ үү.",
-            action: (
+        {loading ? (
+          <DataTable
+            columns={columns}
+            data={[]}
+            loading
+            searchColumn="quote_number"
+            searchPlaceholder="Хайх..."
+            pageSize={10}
+            totalLabel="үнийн санал"
+            enableSorting
+            enableColumnVisibility
+          />
+        ) : quotations.length === 0 ? (
+          <ErpEmptyState
+            icon={<FileText className="size-4" />}
+            title="Үнийн санал байхгүй"
+            description="Шинэ үнийн санал үүсгэж, үйлчлүүлэгчдэд илгээнэ үү."
+            action={
               <button
                 type="button"
                 className={buttonVariants({ variant: "default" })}
@@ -137,9 +134,21 @@ export function QuotationsContent({
                 <FileText className="size-4" />
                 Шинэ үнийн санал
               </button>
-            ),
-          }}
-        />
+            }
+          />
+        ) : (
+          <DataTable
+            columns={columns}
+            data={quotations}
+            searchColumn="quote_number"
+            searchPlaceholder="Хайх..."
+            pageSize={10}
+            totalLabel="үнийн санал"
+            enableSorting
+            enableColumnVisibility
+            onRowClick={(row) => setSelectedQuotationId(row.id)}
+          />
+        )}
       </PageShell>
       <QuotationDetailDrawer
         quotationId={selectedQuotationId}

@@ -3,13 +3,16 @@
 import { FileText } from "@phosphor-icons/react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { type Column, ErpDataTable } from "@/components/erp/data-table";
+import type { ColumnDef } from "@tanstack/react-table";
+import { DataTable } from "@/components/ui/data-table";
+import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
 import { InvoiceCreateDrawer } from "@/components/invoices/invoice-create-drawer";
 import { InvoiceDetailDrawer } from "@/components/invoices/invoice-detail-drawer";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
+import { dateColumn, textColumn } from "@/lib/table-columns";
 
 type ProductOption = {
   id: string;
@@ -49,33 +52,29 @@ export type InvoiceRow = {
   status: string | null;
 };
 
-const columns: Column<InvoiceRow>[] = [
+const columns: ColumnDef<InvoiceRow>[] = [
   {
+    accessorKey: "invoice_number",
     header: "Дугаар",
-    accessor: (row) => row.invoice_number,
   },
+  dateColumn("issue_date", "Огноо"),
+  dateColumn("due_date", "Дуусах хугацаа"),
+  textColumn("contact_name", "Харилцагч"),
   {
-    header: "Огноо",
-    accessor: (row) => formatDate(row.issue_date),
-  },
-  {
-    header: "Дуусах хугацаа",
-    accessor: (row) => (row.due_date ? formatDate(row.due_date) : "-"),
-  },
-  {
-    header: "Харилцагч",
-    accessor: (row) => row.contact_name ?? "-",
-  },
-  {
+    accessorKey: "total_amount",
     header: "Дүн",
-    accessor: (row) => formatCurrency(row.total_amount),
-    cellClassName: "text-right",
+    cell: ({ row }) => (
+      <span className="text-right">
+        {formatCurrency(row.original.total_amount)}
+      </span>
+    ),
   },
   {
+    accessorKey: "status",
     header: "Төлөв",
-    accessor: (row) => (
-      <Badge variant={STATUS_VARIANTS[row.status ?? ""] ?? "outline"}>
-        {STATUS_LABELS[row.status ?? ""] ?? row.status}
+    cell: ({ row }) => (
+      <Badge variant={STATUS_VARIANTS[row.original.status ?? ""] ?? "outline"}>
+        {STATUS_LABELS[row.original.status ?? ""] ?? row.original.status}
       </Badge>
     ),
   },
@@ -109,6 +108,45 @@ export function InvoicesContent({
     }
   }, []);
 
+  if (!loading && invoiceRows.length === 0) {
+    return (
+      <>
+        <PageShell
+          title="Нэхэмжлэл"
+          description="Борлуулалтын нэхэмжлэлүүд"
+          actions={
+            <InvoiceCreateDrawer
+              contacts={contacts}
+              products={products}
+              open={createOpen}
+              onOpenChange={setCreateOpen}
+            />
+          }
+        >
+          <ErpEmptyState
+            icon={<FileText className="size-4" />}
+            title="Нэхэмжлэл байхгүй"
+            description="Шинэ нэхэмжлэл үүсгэж, харилцагчдад хуваалцах холбоос илгээнэ үү."
+            action={
+              <button
+                type="button"
+                className={buttonVariants({ variant: "default" })}
+                onClick={() => setCreateOpen(true)}
+              >
+                <FileText className="size-4" />
+                Шинэ нэхэмжлэл
+              </button>
+            }
+          />
+        </PageShell>
+        <InvoiceDetailDrawer
+          invoiceId={selectedInvoiceId}
+          onClose={() => setSelectedInvoiceId(null)}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <PageShell
@@ -123,29 +161,16 @@ export function InvoicesContent({
           />
         }
       >
-        <ErpDataTable
-          title="Нэхэмжлэлийн жагсаалт"
+        <DataTable
           columns={columns}
           data={invoiceRows}
           loading={loading}
-          keyExtractor={(row) => row.id}
           onRowClick={(row) => setSelectedInvoiceId(row.id)}
-          emptyState={{
-            icon: <FileText className="size-4" />,
-            title: "Нэхэмжлэл байхгүй",
-            description:
-              "Шинэ нэхэмжлэл үүсгэж, харилцагчдад хуваалцах холбоос илгээнэ үү.",
-            action: (
-              <button
-                type="button"
-                className={buttonVariants({ variant: "default" })}
-                onClick={() => setCreateOpen(true)}
-              >
-                <FileText className="size-4" />
-                Шинэ нэхэмжлэл
-              </button>
-            ),
-          }}
+          searchColumn="invoice_number"
+          searchPlaceholder="Хайх..."
+          totalLabel="нэхэмжлэл"
+          enableSorting
+          enableColumnVisibility
         />
       </PageShell>
       <InvoiceDetailDrawer

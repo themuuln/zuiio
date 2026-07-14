@@ -55,11 +55,11 @@ export function JournalEntryDetailDrawer({
   const [editOpen, setEditOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const totalDebit = entry.journal_entry_lines.reduce(
+  const totalDebit = (entry.journal_entry_lines ?? []).reduce(
     (s, l) => s + l.debit_amount,
     0,
   );
-  const totalCredit = entry.journal_entry_lines.reduce(
+  const totalCredit = (entry.journal_entry_lines ?? []).reduce(
     (s, l) => s + l.credit_amount,
     0,
   );

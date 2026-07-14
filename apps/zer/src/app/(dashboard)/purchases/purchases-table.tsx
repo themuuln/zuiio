@@ -1,10 +1,14 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+import { useState } from "react";
 
+import {
+  PurchaseDetailDrawer,
+} from "@/components/purchases/purchase-detail-drawer";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { currencyColumn, dateColumn } from "@/lib/table-columns";
 
 export type PurchaseRow = {
   id: string;
@@ -96,25 +100,9 @@ const columns: ColumnDef<PurchaseRow>[] = [
     header: "Нийлүүлэгч",
     cell: ({ row }) => row.getValue("supplier_name") ?? "-",
   },
-  {
-    accessorKey: "order_date",
-    header: "Огноо",
-    cell: ({ row }) => formatDate(row.getValue("order_date")),
-  },
-  {
-    accessorKey: "expected_date",
-    header: "Хүлээгдэж буй огноо",
-    cell: ({ row }) => {
-      const date = row.getValue("expected_date") as string | null;
-      return date ? formatDate(date) : "-";
-    },
-  },
-  {
-    accessorKey: "total_amount",
-    header: "Дүн",
-    cell: ({ row }) =>
-      formatCurrency(Number(row.getValue("total_amount") ?? 0)),
-  },
+  dateColumn("order_date", "Огноо"),
+  dateColumn("expected_date", "Хүлээгдэж буй огноо"),
+  currencyColumn("total_amount", "Дүн"),
   {
     accessorKey: "status",
     header: "Статус",
@@ -136,17 +124,28 @@ export function PurchasesTable({
   data: PurchaseRow[];
   loading?: boolean;
 }) {
+  const [selectedPurchaseId, setSelectedPurchaseId] = useState<string | null>(
+    null,
+  );
+
   return (
-    <DataTable
-      columns={columns}
-      loading={loading}
-      data={data}
-      searchColumn="order_number"
-      searchPlaceholder="Захиалгын дугаар, нийлүүлэгч, дүнгээр хайх..."
-      pageSize={10}
-      totalLabel="захиалга"
-      enableSorting
-      enableColumnVisibility
-    />
+    <>
+      <DataTable
+        columns={columns}
+        loading={loading}
+        data={data}
+        searchColumn="order_number"
+        searchPlaceholder="Захиалгын дугаар, нийлүүлэгч, дүнгээр хайх..."
+        pageSize={10}
+        totalLabel="захиалга"
+        enableSorting
+        enableColumnVisibility
+        onRowClick={(row) => setSelectedPurchaseId(row.id)}
+      />
+      <PurchaseDetailDrawer
+        purchaseOrderId={selectedPurchaseId}
+        onClose={() => setSelectedPurchaseId(null)}
+      />
+    </>
   );
 }

@@ -20,9 +20,9 @@ function PageSkeleton() {
 async function DataFetcher({
   searchParams,
 }: {
-  searchParams: { branch?: string };
+  searchParams: Promise<{ branch?: string }>;
 }) {
-  const urlBranch = searchParams.branch;
+  const { branch: urlBranch } = await searchParams;
   const { supabase, organizationId, branchId, isBranchScoped } =
     await requireAppContext();
 
@@ -91,10 +91,9 @@ export default async function PurchasesPage({
 }: {
   searchParams: Promise<{ branch?: string }>;
 }) {
-  const sp = await searchParams;
   return (
     <Suspense fallback={<PageSkeleton />}>
-      <DataFetcher searchParams={sp} />
+      <DataFetcher searchParams={searchParams} />
     </Suspense>
   );
 }

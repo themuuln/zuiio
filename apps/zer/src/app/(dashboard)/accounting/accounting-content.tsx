@@ -18,17 +18,12 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import type { ColumnDef } from "@tanstack/react-table";
+import { DataTable } from "@/components/ui/data-table";
+import { dateColumn, currencyColumn, textColumn, actionsColumn } from "@/lib/table-columns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBranchContext } from "@/lib/branch-context";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { accountKeys, journalEntryKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
@@ -213,7 +208,7 @@ export function AccountingContent({
   const trialBalance = trialBalanceQuery.data ?? [];
   const accounts = accountsQuery.data ?? [];
   const journalEntries = journalEntriesQuery.data ?? [];
-  const isLoading = trialBalanceQuery.isLoading || trialBalanceQuery.isFetching;
+  const isPending = trialBalanceQuery.isPending;
 
   const accountsById = useMemo(
     () => new Map(accounts.map((a) => [a.id, a])),
@@ -250,6 +245,148 @@ export function AccountingContent({
       return { ...entry, debitTotal, creditTotal };
     });
   }, [journalEntries]);
+  // ── Column definitions ──
+  const trialBalanceColumns: ColumnDef<TrialBalanceRow>[] = useMemo(
+    () => [
+      textColumn("account_code", "Код"),
+      textColumn("account_name", "Дансны нэр"),
+      {
+        accessorKey: "account_type",
+        header: "Төрөл",
+        cell: ({ row }) => {
+          const t = row.getValue("account_type") as string;
+          return (
+            <Badge variant={ACCOUNT_TYPE_VARIANTS_RECORD[t] ?? "outline"}>
+              {ACCOUNT_TYPE_LABELS[t] ?? t}
+            </Badge>
+          );
+        },
+      },
+      {
+        accessorKey: "debit_balance",
+        header: "Дебет",
+        cell: ({ row }) => {
+          const v = row.getValue("debit_balance") as number;
+          return (
+            <span className="text-right font-mono">
+              {v > 0 ? formatCurrency(v) : "-"}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: "credit_balance",
+        header: "Кредит",
+        cell: ({ row }) => {
+          const v = row.getValue("credit_balance") as number;
+          return (
+            <span className="text-right font-mono">
+              {v > 0 ? formatCurrency(v) : "-"}
+            </span>
+          );
+        },
+      },
+    ],
+    [],
+  );
+
+  const journalEntryColumns: ColumnDef<(typeof processedEntries)[number]>[] =
+    useMemo(
+      () => [
+        dateColumn("entry_date", "Огноо"),
+        textColumn("entry_number", "Дугаар"),
+        {
+          accessorKey: "description",
+          header: "Тайлбар",
+          cell: ({ row }) => (
+            <span className="max-w-[200px] truncate">
+              {(row.getValue("description") as string) ?? "-"}
+            </span>
+          ),
+        },
+        currencyColumn("debitTotal", "Нийт дебет"),
+        currencyColumn("creditTotal", "Нийт кредит"),
+        actionsColumn("", (entry) => (
+          <span className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setEditEntryId(entry.id);
+              }}
+              className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              title="Засах"
+            >
+              <NotePencil className="size-3.5" />
+            </button>
+            <span className="text-xs text-muted-foreground">
+              Дэлгэрэнгүй
+            </span>
+          </span>
+        )),
+      ],
+      [],
+    );
+
+  const chartOfAccountsColumns: ColumnDef<AccountRow>[] = useMemo(
+    () => [
+      textColumn("code", "Код"),
+      textColumn("name", "Нэр"),
+      {
+        accessorKey: "type",
+        header: "Төрөл",
+        cell: ({ row }) => {
+          const t = row.getValue("type") as string;
+          return (
+            <Badge variant={ACCOUNT_TYPE_VARIANTS_RECORD[t] ?? "outline"}>
+              {ACCOUNT_TYPE_LABELS[t] ?? t}
+            </Badge>
+          );
+        },
+      },
+      {
+        id: "parent_name",
+        header: "Эх данс",
+        accessorFn: (row) => {
+          const parent = row.parent_id
+            ? accounts.find((a) => a.id === row.parent_id)
+            : null;
+          return parent?.name ?? "-";
+        },
+      },
+      {
+        id: "status",
+        header: "Төлөв",
+        cell: ({ row }) => {
+          const account = row.original;
+          return (
+            <button
+              type="button"
+              onClick={async () => {
+                const result = await toggleAccountActive(
+                  account.id,
+                  !account.is_active,
+                );
+                if (result && "error" in result) {
+                  toast.error(result.error);
+                }
+              }}
+              className="cursor-pointer"
+            >
+              <Badge
+                variant={account.is_active ? "default" : "outline"}
+                className="cursor-pointer hover:opacity-80"
+              >
+                {account.is_active ? "Идэвхтэй" : "Идэвхгүй"}
+              </Badge>
+            </button>
+          );
+        },
+      },
+    ],
+    [accounts],
+  );
+
 
   return (
     <PageShell
@@ -275,7 +412,7 @@ export function AccountingContent({
 
         {/* Trial Balance Tab */}
         <TabsContent value="trial-balance">
-          {isLoading ? (
+          {isPending ? (
             <Card>
               <CardHeader>
                 <CardTitle>Туршилтын баланс</CardTitle>
@@ -295,55 +432,15 @@ export function AccountingContent({
               description="Журналын бичилт хийсний дараа туршилтын баланс гарч ирнэ."
             />
           ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>Туршилтын баланс</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Код</TableHead>
-                      <TableHead>Дансны нэр</TableHead>
-                      <TableHead>Төрөл</TableHead>
-                      <TableHead className="text-right">Дебет</TableHead>
-                      <TableHead className="text-right">Кредит</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {trialBalance.map((row) => (
-                      <TableRow key={row.account_id}>
-                        <TableCell className="font-mono text-xs">
-                          {row.account_code}
-                        </TableCell>
-                        <TableCell>{row.account_name}</TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              ACCOUNT_TYPE_VARIANTS_RECORD[row.account_type] ??
-                              "outline"
-                            }
-                          >
-                            {ACCOUNT_TYPE_LABELS[row.account_type] ??
-                              row.account_type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {row.debit_balance > 0
-                            ? formatCurrency(row.debit_balance)
-                            : "-"}
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {row.credit_balance > 0
-                            ? formatCurrency(row.credit_balance)
-                            : "-"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+            <DataTable
+              columns={trialBalanceColumns}
+              data={trialBalance}
+              searchColumn="account_name"
+              searchPlaceholder="Данс хайх..."
+              totalLabel="данс"
+              enableSorting
+              enableColumnVisibility
+            />
           )}
         </TabsContent>
 
@@ -356,7 +453,7 @@ export function AccountingContent({
               onOpenChange={setCreateOpen}
             />
           </div>
-          {isLoading ? (
+          {isPending ? (
             <Card>
               <CardHeader>
                 <CardTitle>Журналын бичилтүүд</CardTitle>
@@ -386,69 +483,16 @@ export function AccountingContent({
               }
             />
           ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>Журналын бичилтүүд</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Огноо</TableHead>
-                      <TableHead>Дугаар</TableHead>
-                      <TableHead>Тайлбар</TableHead>
-                      <TableHead className="text-right">Нийт дебет</TableHead>
-                      <TableHead className="text-right">Нийт кредит</TableHead>
-                      <TableHead />
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {processedEntries.map((entry) => {
-                      const { debitTotal, creditTotal } = entry;
-                      return (
-                        <TableRow
-                          key={entry.id}
-                          className="cursor-pointer hover:bg-muted/50"
-                          onClick={() => setSelectedEntry(entry)}
-                        >
-                          <TableCell>{formatDate(entry.entry_date)}</TableCell>
-                          <TableCell className="font-mono text-xs">
-                            {entry.entry_number}
-                          </TableCell>
-                          <TableCell className="max-w-[200px] truncate">
-                            {entry.description ?? "-"}
-                          </TableCell>
-                          <TableCell className="text-right font-mono">
-                            {formatCurrency(debitTotal)}
-                          </TableCell>
-                          <TableCell className="text-right font-mono">
-                            {formatCurrency(creditTotal)}
-                          </TableCell>
-                          <TableCell>
-                            <span className="flex items-center gap-1">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditEntryId(entry.id);
-                                }}
-                                className="flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                                title="Засах"
-                              >
-                                <NotePencil className="size-3.5" />
-                              </button>
-                              <span className="text-xs text-muted-foreground">
-                                Дэлгэрэнгүй
-                              </span>
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+            <DataTable
+              columns={journalEntryColumns}
+              data={processedEntries}
+              searchColumn="entry_number"
+              searchPlaceholder="Бичилт хайх..."
+              totalLabel="бичилт"
+              enableSorting
+              enableColumnVisibility
+              onRowClick={(row) => setSelectedEntry(row)}
+            />
           )}
         </TabsContent>
 
@@ -461,7 +505,7 @@ export function AccountingContent({
               onOpenChange={setCreateAccountOpen}
             />
           </div>
-          {isLoading ? (
+          {isPending ? (
             <Card>
               <CardHeader>
                 <CardTitle>Дансны бүртгэл</CardTitle>
@@ -491,91 +535,29 @@ export function AccountingContent({
               }
             />
           ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>Дансны бүртгэл</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Код</TableHead>
-                      <TableHead>Нэр</TableHead>
-                      <TableHead>Төрөл</TableHead>
-                      <TableHead>Эх данс</TableHead>
-                      <TableHead>Төлөв</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {accounts.map((account) => {
-                      const parentName = account.parent_id
-                        ? (accounts.find((a) => a.id === account.parent_id)
-                            ?.name ?? "-")
-                        : "-";
-
-                      return (
-                        <TableRow key={account.id}>
-                          <TableCell className="font-mono text-xs">
-                            {account.code}
-                          </TableCell>
-                          <TableCell>{account.name}</TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={
-                                ACCOUNT_TYPE_VARIANTS_RECORD[account.type] ??
-                                "outline"
-                              }
-                            >
-                              {ACCOUNT_TYPE_LABELS[account.type] ??
-                                account.type}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {parentName}
-                          </TableCell>
-                          <TableCell>
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                const result = await toggleAccountActive(
-                                  account.id,
-                                  !account.is_active,
-                                );
-                                if (result && "error" in result) {
-                                  toast.error(result.error);
-                                }
-                              }}
-                              className="cursor-pointer"
-                            >
-                              <Badge
-                                variant={
-                                  account.is_active ? "default" : "outline"
-                                }
-                                className="cursor-pointer hover:opacity-80"
-                              >
-                                {account.is_active ? "Идэвхтэй" : "Идэвхгүй"}
-                              </Badge>
-                            </button>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+            <DataTable
+              columns={chartOfAccountsColumns}
+              data={accounts}
+              searchColumn="name"
+              searchPlaceholder="Данс хайх..."
+              totalLabel="данс"
+              enableSorting
+              enableColumnVisibility
+            />
           )}
         </TabsContent>
       </Tabs>
 
-      <JournalEntryDetailDrawer
-        entry={selectedEntry ?? ({} as JournalEntryDetailData)}
-        accounts={accounts}
-        open={!!selectedEntry}
-        onOpenChange={(open) => {
-          if (!open) setSelectedEntry(null);
-        }}
-      />
+      {selectedEntry && (
+        <JournalEntryDetailDrawer
+          entry={selectedEntry}
+          accounts={accounts}
+          open
+          onOpenChange={(open) => {
+            if (!open) setSelectedEntry(null);
+          }}
+        />
+      )}
       {editEntryId &&
         (() => {
           const entry = editEntryId

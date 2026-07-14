@@ -11,7 +11,9 @@ import { withDbCapture } from "@zuiio/capture";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { type Column, ErpDataTable } from "@/components/erp/data-table";
+import type { ColumnDef } from "@tanstack/react-table";
+import { ErpEmptyState } from "@/components/erp/empty-state";
+import { DataTable } from "@/components/ui/data-table";
 import { PageShell } from "@/components/erp/page-shell";
 import {
   type MovementDetailData,
@@ -64,41 +66,52 @@ interface QueryResult {
   movements: MovementRow[];
   totalCount: number;
   totalPages: number;
-}
+};
 
-const columns: Column<MovementRow>[] = [
+const columns: ColumnDef<MovementRow>[] = [
   {
+    accessorFn: (row) => row.created_at,
+    id: "created_at",
     header: "Огноо",
-    accessor: (row) => formatDate(row.created_at),
-    cellClassName: "text-xs sm:text-sm",
+    cell: ({ row }) => formatDate(row.original.created_at),
   },
   {
+    accessorFn: (row) => row.product_name,
+    id: "product_name",
     header: "Бүтээгдэхүүн",
-    accessor: (row) => (
-      <span className="text-xs font-medium sm:text-sm">{row.product_name}</span>
+    cell: ({ row }) => (
+      <span className="text-xs font-medium sm:text-sm">{row.original.product_name}</span>
     ),
   },
   {
+    accessorFn: (row) => row.type,
+    id: "type",
     header: "Төрөл",
-    accessor: (row) => (
-      <Badge variant={row.type === "out" ? "destructive" : "secondary"}>
-        {MOVEMENT_LABELS[row.type] ?? row.type}
+    cell: ({ row }) => (
+      <Badge variant={row.original.type === "out" ? "destructive" : "secondary"}>
+        {MOVEMENT_LABELS[row.original.type] ?? row.original.type}
       </Badge>
     ),
   },
   {
+    accessorFn: (row) => row.quantity,
+    id: "quantity",
     header: "Тоо хэмжээ",
-    accessor: (row) => `${row.quantity} ${row.product_unit ?? "ширхэг"}`,
+    cell: ({ row }) => `${row.original.quantity} ${row.original.product_unit ?? "ширхэг"}`,
   },
   {
+    accessorFn: (row) => row.unit_cost ?? 0,
+    id: "unit_cost",
     header: "Өртөг",
-    accessor: (row) => formatCurrency(Number(row.unit_cost ?? 0)),
+    cell: ({ row }) => formatCurrency(Number(row.original.unit_cost ?? 0)),
   },
   {
+    accessorFn: (row) => row.reference ?? row.notes ?? "",
+    id: "reference",
     header: "Лавлагаа",
-    accessor: (row) =>
-      row.reference ??
-      row.notes ?? <span className="text-muted-foreground">-</span>,
+    cell: ({ row }) =>
+      row.original.reference ??
+      row.original.notes ?? <span className="text-muted-foreground">-</span>,
   },
 ];
 
@@ -197,7 +210,7 @@ export function MovementsContent() {
   });
 
   const data = query.data ?? { movements: [], totalCount: 0, totalPages: 0 };
-  const isLoading = query.isLoading || query.isFetching;
+  const isPending = query.isPending || query.isFetching;
 
   function toDetailData(m: MovementRow): MovementDetailData {
     return {
@@ -282,27 +295,36 @@ export function MovementsContent() {
           ))}
         </div>
 
-        {/* ── Table / Loading / Empty ── */}
-        <ErpDataTable
+        {/* ── Empty state ── */}
+        {!isPending && data.movements.length === 0 && (
+          <ErpEmptyState
+            icon={<ArrowsClockwise className="size-4" />}
+            title="Хөдөлгөөн бүртгэгдээгүй байна"
+            description="Шинэ худалдан авалт, борлуулалт эсвэл тооллогын дараах тохируулга энд харагдана."
+          />
+        )}
+
+        {/* ── Table ── */}
+        <DataTable
           columns={columns}
           data={data.movements}
+          loading={isPending}
+          searchColumn="product_name"
+          searchPlaceholder="Бүтээгдэхүүнээр хайх..."
+          totalLabel="хөдөлгөөн"
+          pageSize={PAGE_SIZE}
+          enableSorting
+          enableColumnVisibility
+          manualPagination
+          currentPage={currentPage}
+          totalPages={data.totalPages}
+          totalCount={data.totalCount}
           onRowClick={(m) => setSelectedMovement(m)}
-          loading={isLoading}
-          keyExtractor={(m) => m.id}
-          emptyState={{
-            icon: <ArrowsClockwise className="size-4" />,
-            title: "Хөдөлгөөн бүртгэгдээгүй байна",
-            description:
-              "Шинэ худалдан авалт, борлуулалт эсвэл тооллогын дараах тохируулга энд харагдана.",
-          }}
         />
 
         {/* ── Pagination ── */}
-        {!isLoading && data.totalPages > 1 && (
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <span className="text-xs text-muted-foreground sm:text-sm">
-              Нийт {data.totalCount} хөдөлгөөн
-            </span>
+        {!isPending && data.totalPages > 1 && (
+          <div className="flex items-center justify-end gap-3">
 
             <div className="flex items-center gap-1">
               {currentPage > 1 && (

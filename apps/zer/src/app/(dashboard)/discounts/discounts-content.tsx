@@ -12,10 +12,13 @@ import {
   type DiscountEditData,
   DiscountEditDrawer,
 } from "@/components/discounts/discount-edit-drawer";
-import { ErpDataTable } from "@/components/erp/data-table";
+import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
 import { Badge } from "@/components/ui/badge";
+import { DataTable } from "@/components/ui/data-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { dateColumn, textColumn, actionsColumn } from "@/lib/table-columns";
 import type { DiscountRow } from "./page";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -79,6 +82,98 @@ export function DiscountsContent({ discounts }: { discounts: DiscountRow[] }) {
     };
   }
 
+  if (discounts.length === 0) {
+    return (
+      <PageShell
+        title="Хямдрал, урамшуулал"
+        description="Бүтээгдэхүүний хямдрал болон урамшууллын тохиргоо"
+        actions={
+          <DiscountCreateDrawer
+            open={createOpen}
+            onOpenChange={setCreateOpen}
+          />
+        }
+      >
+        <ErpEmptyState
+          icon={<Percent className="size-4" />}
+          title="Хямдрал байхгүй"
+          description="Шинэ хямдрал үүсгэж, үнийн урамшууллыг тохируулна уу."
+          action={
+            <DiscountCreateDrawer
+              open={createOpen}
+              onOpenChange={setCreateOpen}
+            />
+          }
+        />
+      </PageShell>
+    );
+  }
+
+  const columns: ColumnDef<DiscountRow>[] = [
+    textColumn("name", "Нэр"),
+    {
+      accessorFn: (row) => TYPE_LABELS[row.type] ?? row.type,
+      id: "type",
+      header: "Төрөл",
+      cell: ({ row }) => TYPE_LABELS[row.original.type] ?? row.original.type,
+    },
+    {
+      accessorFn: (row) =>
+        row.type === "percentage"
+          ? `${row.value}%`
+          : formatCurrency(row.value),
+      id: "value",
+      header: "Утга",
+      cell: ({ row }) =>
+        row.original.type === "percentage"
+          ? `${row.original.value}%`
+          : formatCurrency(row.original.value),
+    },
+    {
+      accessorFn: (row) => APPLIES_TO_LABELS[row.applies_to] ?? row.applies_to,
+      id: "applies_to",
+      header: "Хамаарах хүрээ",
+      cell: ({ row }) =>
+        APPLIES_TO_LABELS[row.original.applies_to] ?? row.original.applies_to,
+    },
+    dateColumn("valid_from", "Хүчинтэй эхлэх"),
+    {
+      accessorFn: (row) =>
+        row.valid_until ? formatDate(row.valid_until) : "Тодорхойгүй",
+      id: "valid_until",
+      header: "Хүчинтэй дуусах",
+      cell: ({ row }) =>
+        row.original.valid_until
+          ? formatDate(row.original.valid_until)
+          : "Тодорхойгүй",
+    },
+    {
+      accessorFn: (row) =>
+        row.usage_limit !== null
+          ? `${row.used_count} / ${row.usage_limit}`
+          : String(row.used_count),
+      id: "usage",
+      header: "Ашигласан",
+      cell: ({ row }) =>
+        row.original.usage_limit !== null
+          ? `${row.original.used_count} / ${row.original.usage_limit}`
+          : String(row.original.used_count),
+    },
+    {
+      accessorFn: (row) => (row.is_active ? "Тийм" : "Үгүй"),
+      id: "is_active",
+      header: "Идэвхтэй",
+      cell: ({ row }) => (
+        <Badge variant={row.original.is_active ? "default" : "secondary"}>
+          {row.original.is_active ? "Тийм" : "Үгүй"}
+        </Badge>
+      ),
+    },
+    actionsColumn("", (row) => (
+      <DiscountEditDrawer discount={toEditData(row)} />
+    )),
+  ];
+
   return (
     <>
       <PageShell
@@ -91,77 +186,16 @@ export function DiscountsContent({ discounts }: { discounts: DiscountRow[] }) {
           />
         }
       >
-        <ErpDataTable
-          title="Хямдралын жагсаалт"
-          columns={[
-            { header: "Нэр", accessor: (d: DiscountRow) => d.name },
-            {
-              header: "Төрөл",
-              accessor: (d: DiscountRow) => TYPE_LABELS[d.type] ?? d.type,
-            },
-            {
-              header: "Утга",
-              accessor: (d: DiscountRow) =>
-                d.type === "percentage"
-                  ? `${d.value}%`
-                  : formatCurrency(d.value),
-            },
-            {
-              header: "Хамаарах хүрээ",
-              accessor: (d: DiscountRow) =>
-                APPLIES_TO_LABELS[d.applies_to] ?? d.applies_to,
-            },
-            {
-              header: "Хүчинтэй эхлэх",
-              accessor: (d: DiscountRow) => formatDate(d.valid_from),
-            },
-            {
-              header: "Хүчинтэй дуусах",
-              accessor: (d: DiscountRow) =>
-                d.valid_until ? formatDate(d.valid_until) : "Тодорхойгүй",
-            },
-            {
-              header: "Ашигласан",
-              accessor: (d: DiscountRow) =>
-                d.usage_limit !== null
-                  ? `${d.used_count} / ${d.usage_limit}`
-                  : String(d.used_count),
-            },
-            {
-              header: "Идэвхтэй",
-              accessor: (d: DiscountRow) => (
-                <Badge variant={d.is_active ? "default" : "secondary"}>
-                  {d.is_active ? "Тийм" : "Үгүй"}
-                </Badge>
-              ),
-            },
-            {
-              header: "",
-              className: "w-12",
-              accessor: (d: DiscountRow) => (
-                // biome-ignore lint/a11y/noStaticElementInteractions: wrapper only for stopPropagation
-                // biome-ignore lint/a11y/useKeyWithClickEvents: wrapper only for stopPropagation; actual interactive element is DiscountEditDrawer trigger
-                <div onClick={(e) => e.stopPropagation()}>
-                  <DiscountEditDrawer discount={toEditData(d)} />
-                </div>
-              ),
-            },
-          ]}
+        <DataTable
+          columns={columns}
           data={discounts}
-          onRowClick={(d) => setSelectedDiscount(d)}
-          keyExtractor={(d) => d.id}
-          emptyState={{
-            icon: <Percent className="size-4" />,
-            title: "Хямдрал байхгүй",
-            description:
-              "Шинэ хямдрал үүсгэж, үнийн урамшууллыг тохируулна уу.",
-            action: (
-              <DiscountCreateDrawer
-                open={createOpen}
-                onOpenChange={setCreateOpen}
-              />
-            ),
-          }}
+          searchColumn="name"
+          searchPlaceholder="Хайх..."
+          pageSize={10}
+          totalLabel="хямдрал"
+          enableSorting
+          enableColumnVisibility
+          onRowClick={(row) => setSelectedDiscount(row)}
         />
       </PageShell>
       <DiscountDetailDrawer

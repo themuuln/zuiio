@@ -12,7 +12,7 @@ import {
   ExpenseEditDrawer,
 } from "@/components/expenses/expense-edit-drawer";
 import { DataTable } from "@/components/ui/data-table";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { currencyColumn, dateColumn, textColumn } from "@/lib/table-columns";
 
 export type ExpenseRow = {
   id: string;
@@ -53,11 +53,7 @@ const paymentMethodLabels: Record<string, string> = {
 };
 
 const columns: ColumnDef<ExpenseRow>[] = [
-  {
-    accessorKey: "expense_date",
-    header: "Огноо",
-    cell: ({ row }) => formatDate(row.getValue("expense_date")),
-  },
+  dateColumn("expense_date", "Огноо"),
   {
     accessorKey: "category",
     header: "Ангилал",
@@ -70,11 +66,7 @@ const columns: ColumnDef<ExpenseRow>[] = [
       return category.includes(search) || description.includes(search);
     },
   },
-  {
-    accessorKey: "amount",
-    header: "Дүн",
-    cell: ({ row }) => formatCurrency(Number(row.getValue("amount") ?? 0)),
-  },
+  currencyColumn("amount", "Дүн"),
   {
     accessorKey: "payment_method",
     header: "Төлбөрийн арга",
@@ -83,11 +75,7 @@ const columns: ColumnDef<ExpenseRow>[] = [
       return paymentMethodLabels[method ?? ""] ?? method ?? "-";
     },
   },
-  {
-    accessorKey: "description",
-    header: "Тайлбар",
-    cell: ({ row }) => row.getValue("description") ?? "-",
-  },
+  textColumn("description", "Тайлбар"),
 ];
 
 export function ExpensesTable({

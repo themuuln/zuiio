@@ -4,10 +4,12 @@ import { Plus } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
 import { withDbCapture } from "@zuiio/capture";
 import Link from "next/link";
-import { ErpDataTable } from "@/components/erp/data-table";
 import { PageShell } from "@/components/erp/page-shell";
+import { ErpEmptyState } from "@/components/erp/empty-state";
+import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
-import { formatDate } from "@/lib/format";
+import type { ColumnDef } from "@tanstack/react-table";
+import { dateColumn, textColumn } from "@/lib/table-columns";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { createClient } from "@/lib/supabase/client";
 
@@ -82,7 +84,43 @@ export function AdjustmentsContent() {
   });
 
   const data = query.data ?? [];
-  const isLoading = query.isLoading || query.isFetching;
+  const isPending = query.isPending;
+  const columns: ColumnDef<AdjustmentBatchRow>[] = [
+    dateColumn("created_at", "Огноо"),
+    textColumn("item_count", "Барааны тоо"),
+    {
+      accessorKey: "total_quantity",
+      header: "Нийт тохируулга",
+      cell: ({ row }) => {
+        const v = row.getValue<number>("total_quantity");
+        return (v > 0 ? "+" : "") + v.toLocaleString();
+      },
+    },
+    textColumn("notes", "Тайлбар"),
+    textColumn("created_by_name", "Бүртгэсэн"),
+  ];
+
+  if (data.length === 0 && !isPending) {
+    return (
+      <PageShell
+        title="Барааны тохируулга"
+        description="Бөөнөөр барааны үлдэгдэл тохируулах, тохируулгын түүх"
+        actions={
+          <Button asChild size="sm">
+            <Link href="/inventory/adjustments/new">
+              <Plus data-icon="inline-start" />
+              Шинэ тохируулга
+            </Link>
+          </Button>
+        }
+      >
+        <ErpEmptyState
+          title="Тохируулга бүртгэгдээгүй"
+          description="Тохируулгын түүх хоосон байна."
+        />
+      </PageShell>
+    );
+  }
 
   return (
     <PageShell
@@ -97,36 +135,16 @@ export function AdjustmentsContent() {
         </Button>
       }
     >
-      <ErpDataTable<AdjustmentBatchRow>
-        title="Тохируулгын түүх"
-        columns={[
-          {
-            header: "Огноо",
-            accessor: (row) => formatDate(row.created_at),
-          },
-          { header: "Барааны тоо", accessor: "item_count" },
-          {
-            header: "Нийт тохируулга",
-            accessor: (row) =>
-              (row.total_quantity > 0 ? "+" : "") +
-              row.total_quantity.toLocaleString(),
-          },
-          {
-            header: "Тайлбар",
-            accessor: (row) => row.notes ?? "-",
-          },
-          {
-            header: "Бүртгэсэн",
-            accessor: (row) => row.created_by_name ?? "-",
-          },
-        ]}
+      <DataTable
+        columns={columns}
         data={data}
-        loading={isLoading}
-        keyExtractor={(row) => row.batch_id}
-        emptyState={{
-          title: "Тохируулга бүртгэгдээгүй",
-          description: "Тохируулгын түүх хоосон байна.",
-        }}
+        loading={isPending}
+        searchColumn="created_by_name"
+        searchPlaceholder="Хайх..."
+        pageSize={10}
+        totalLabel="тохируулга"
+        enableSorting
+        enableColumnVisibility
       />
     </PageShell>
   );

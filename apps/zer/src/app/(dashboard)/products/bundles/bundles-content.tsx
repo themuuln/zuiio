@@ -1,6 +1,7 @@
 "use client";
 
 import { Trash } from "@phosphor-icons/react";
+import type { ColumnDef } from "@tanstack/react-table";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -14,15 +15,7 @@ import {
 } from "@/components/products/bundle-edit-drawer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable } from "@/components/ui/data-table";
 import { formatCurrency } from "@/lib/format";
 import { bundleKeys } from "@/lib/query/keys";
 import { deleteBundle } from "./actions";
@@ -94,92 +87,131 @@ export function BundlesContent({
     deleteMutation.mutate(id);
   };
 
+  const columns: ColumnDef<BundleRow>[] = [
+    {
+      accessorKey: "name",
+      header: "Нэр",
+      cell: ({ row }) => {
+        const bundle = row.original;
+        return (
+          <div className="font-medium">
+            {bundle.name}
+            {bundle.description && (
+              <p className="text-xs text-muted-foreground">
+                {bundle.description}
+              </p>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "sku",
+      header: "SKU",
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">
+          {row.original.sku ?? "-"}
+        </span>
+      ),
+    },
+    {
+      id: "itemCount",
+      header: "Барааны тоо",
+      accessorFn: (row) => row.product_bundle_items.length,
+      cell: ({ row }) => `${row.original.product_bundle_items.length} бараа`,
+    },
+    {
+      accessorKey: "cost_price",
+      header: "Өртөг",
+      cell: ({ row }) =>
+        row.original.cost_price
+          ? formatCurrency(row.original.cost_price)
+          : "-",
+    },
+    {
+      accessorKey: "sale_price",
+      header: "Борлуулалтын үнэ",
+      cell: ({ row }) =>
+        row.original.sale_price
+          ? formatCurrency(row.original.sale_price)
+          : "-",
+    },
+    {
+      accessorKey: "is_active",
+      header: "Төлөв",
+      cell: ({ row }) => (
+        <Badge variant={row.original.is_active ? "default" : "secondary"}>
+          {row.original.is_active ? "Идэвхтэй" : "Идэвхгүй"}
+        </Badge>
+      ),
+    },
+    {
+      id: "actions",
+      header: "",
+      cell: ({ row }) => {
+        const bundle = row.original;
+        return (
+          <div className="flex items-center gap-1">
+            <BundleEditDrawer
+              bundle={toEditData(bundle)}
+              products={products}
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(bundle.id, bundle.name);
+              }}
+              title="Устгах"
+            >
+              <Trash className="size-3.5" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+
+  if (list.length === 0) {
+    return (
+      <>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+          <p className="text-lg font-medium text-muted-foreground">
+            Багц байхгүй байна
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Шинэ багц нэмнэ үү.
+          </p>
+        </div>
+        <BundleDetailDrawer
+          bundle={
+            selectedBundle
+              ? toDetailData(selectedBundle)
+              : ({} as BundleDetailData)
+          }
+          open={!!selectedBundle}
+          onOpenChange={(open) => {
+            if (!open) setSelectedBundle(null);
+          }}
+        />
+      </>
+    );
+  }
+
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Бүх багцууд</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Нэр</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Барааны тоо</TableHead>
-                <TableHead>Өртөг</TableHead>
-                <TableHead>Борлуулалтын үнэ</TableHead>
-                <TableHead>Төлөв</TableHead>
-                <TableHead className="w-24" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {list.map((bundle) => {
-                const itemCount = bundle.product_bundle_items.length;
-                return (
-                  <TableRow
-                    key={bundle.id}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => setSelectedBundle(bundle)}
-                  >
-                    <TableCell className="font-medium">
-                      {bundle.name}
-                      {bundle.description && (
-                        <p className="text-xs text-muted-foreground">
-                          {bundle.description}
-                        </p>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {bundle.sku ?? "-"}
-                    </TableCell>
-                    <TableCell>{itemCount} бараа</TableCell>
-                    <TableCell>
-                      {bundle.cost_price
-                        ? formatCurrency(bundle.cost_price)
-                        : "-"}
-                    </TableCell>
-                    <TableCell>
-                      {bundle.sale_price
-                        ? formatCurrency(bundle.sale_price)
-                        : "-"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={bundle.is_active ? "default" : "secondary"}
-                      >
-                        {bundle.is_active ? "Идэвхтэй" : "Идэвхгүй"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {/* biome-ignore lint/a11y/noStaticElementInteractions: wrapper only for stopPropagation */}
-                      {/* biome-ignore lint/a11y/useKeyWithClickEvents: wrapper only for stopPropagation; actual interactive element inside */}
-                      <div
-                        className="flex items-center gap-1"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <BundleEditDrawer
-                          bundle={toEditData(bundle)}
-                          products={products}
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-8"
-                          onClick={() => handleDelete(bundle.id, bundle.name)}
-                          title="Устгах"
-                        >
-                          <Trash className="size-3.5" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <DataTable
+        columns={columns}
+        data={list}
+        searchColumn="name"
+        searchPlaceholder="Багц хайх..."
+        totalLabel="багц"
+        enableSorting
+        enableColumnVisibility
+        onRowClick={(bundle) => setSelectedBundle(bundle)}
+      />
       <BundleDetailDrawer
         bundle={
           selectedBundle

@@ -244,7 +244,7 @@ export function SalesContent({
             })}
           </div>
 
-          {/* SalesTable handles its own loading and empty state via ErpDataTable */}
+          {/* SalesTable handles its own loading and empty state */}
           <SalesTable
             data={filteredSales}
             onRowClick={(row) => setSelectedSaleId(row.id)}

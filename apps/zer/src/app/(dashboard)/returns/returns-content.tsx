@@ -4,15 +4,16 @@ import { useQuery } from "@tanstack/react-query";
 import { withDbCapture } from "@zuiio/capture";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { type Column, ErpDataTable } from "@/components/erp/data-table";
+import type { ColumnDef } from "@tanstack/react-table";
+import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
 import { ReturnCreateDrawer } from "@/components/returns/return-create-drawer";
 import { ReturnDetailDrawer } from "@/components/returns/return-detail-drawer";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DataTable } from "@/components/ui/data-table";
 import { useBranchContext } from "@/lib/branch-context";
 import { withBranchFilter } from "@/lib/branches";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { currencyColumn, dateColumn, textColumn } from "@/lib/table-columns";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { returnKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
@@ -80,35 +81,27 @@ function statusBadgeVariant(
   }
 }
 
-const columns: Column<ReturnRow>[] = [
+const columns: ColumnDef<ReturnRow>[] = [
+  textColumn("return_number", "Дугаар"),
+  dateColumn("return_date", "Огноо"),
   {
-    header: "Дугаар",
-    accessor: (row) => row.return_number,
-    cellClassName: "font-medium",
-  },
-  {
-    header: "Огноо",
-    accessor: (row) => formatDate(row.return_date),
-  },
-  {
+    accessorKey: "type",
     header: "Төрөл",
-    accessor: (row) => typeLabels[row.type] ?? row.type,
+    cell: ({ row }) => {
+      const val = row.getValue("type") as string;
+      return typeLabels[val] ?? val;
+    },
   },
+  textColumn("contact_name", "Харилцагч", "-"),
+  currencyColumn("total_amount", "Нийт дүн"),
   {
-    header: "Харилцагч",
-    accessor: (row) => row.contact_name ?? "-",
-  },
-  {
-    header: "Нийт дүн",
-    accessor: (row) => formatCurrency(row.total_amount),
-    cellClassName: "text-right",
-  },
-  {
+    accessorKey: "status",
     header: "Статус",
-    accessor: (row) => {
+    cell: ({ row }) => {
+      const status = row.getValue("status") as string;
       return (
-        <Badge variant={statusBadgeVariant(row.status)}>
-          {statusLabels[row.status] ?? row.status}
+        <Badge variant={statusBadgeVariant(status)}>
+          {statusLabels[status] ?? status}
         </Badge>
       );
     },
@@ -240,11 +233,33 @@ export function ReturnsContent() {
     sales: [],
     purchaseOrders: [],
   };
-  const isLoading = query.isLoading || query.isFetching;
-
   const selectedReturn = selectedReturnId
     ? (data.returns.find((r) => r.id === selectedReturnId) ?? null)
     : null;
+
+  if (!query.isPending && data.returns.length === 0) {
+    return (
+      <PageShell
+        title="Буцаалт"
+        description="Борлуулалт болон худалдан авалтын буцаалтууд"
+        actions={
+          <ReturnCreateDrawer
+            contacts={data.contacts}
+            products={data.products}
+            sales={data.sales}
+            purchaseOrders={data.purchaseOrders}
+            open={createOpen}
+            onOpenChange={setCreateOpen}
+          />
+        }
+      >
+        <ErpEmptyState
+          title="Буцаалт байхгүй"
+          description="Шинэ буцаалт үүсгэнэ үү."
+        />
+      </PageShell>
+    );
+  }
 
   return (
     <PageShell
@@ -261,49 +276,25 @@ export function ReturnsContent() {
         />
       }
     >
-      {isLoading ? (
-        <div className="space-y-4">
-          <div className="flex gap-2">
-            <Skeleton className="h-7 w-20 rounded-full" />
-            <Skeleton className="h-7 w-24 rounded-full" />
-            <Skeleton className="h-7 w-28 rounded-full" />
-          </div>
-          <ErpDataTable
-            title="Буцаалтын жагсаалт"
-            columns={columns}
-            data={[]}
-            loading={true}
-            keyExtractor={(row) => row.id}
-            onRowClick={(row) => setSelectedReturnId(row.id)}
-            emptyState={{
-              title: "Буцаалт байхгүй",
-              description: "Шинэ буцаалт үүсгэнэ үү.",
-            }}
-          />
-        </div>
-      ) : (
-        <>
-          <ErpDataTable
-            title="Буцаалтын жагсаалт"
-            columns={columns}
-            data={data.returns}
-            loading={false}
-            keyExtractor={(row) => row.id}
-            onRowClick={(row) => setSelectedReturnId(row.id)}
-            emptyState={{
-              title: "Буцаалт байхгүй",
-              description: "Шинэ буцаалт үүсгэнэ үү.",
-            }}
-          />
-          <ReturnDetailDrawer
-            returnData={selectedReturn}
-            open={!!selectedReturnId}
-            onOpenChange={(open) => {
-              if (!open) setSelectedReturnId(null);
-            }}
-          />
-        </>
-      )}
+      <DataTable
+        columns={columns}
+        data={data.returns}
+        loading={query.isPending}
+        searchColumn="return_number"
+        searchPlaceholder="Хайх..."
+        pageSize={10}
+        totalLabel="буцаалт"
+        enableSorting
+        enableColumnVisibility
+        onRowClick={(row) => setSelectedReturnId(row.id)}
+      />
+      <ReturnDetailDrawer
+        returnData={selectedReturn}
+        open={!!selectedReturnId}
+        onOpenChange={(open) => {
+          if (!open) setSelectedReturnId(null);
+        }}
+      />
     </PageShell>
   );
 }

@@ -12,6 +12,7 @@ import {
   WarningCircle,
 } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
 import { withDbCapture } from "@zuiio/capture";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -33,6 +34,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable } from "@/components/ui/data-table";
 import {
   Dialog,
   DialogContent,
@@ -97,6 +99,156 @@ export function BranchesContent() {
   const [editTarget, setEditTarget] = useState<Branch | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Branch | null>(null);
   const [defaultBusy, setDefaultBusy] = useState<string | null>(null);
+
+  const columns: ColumnDef<Branch>[] = [
+    {
+      accessorKey: "name",
+      header: "Нэр",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2 font-medium">
+          <Building className="size-4 text-muted-foreground" />
+          {row.original.name}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "address",
+      header: "Хаяг",
+      cell: ({ row }) => {
+        const address = row.original.address;
+        return address ? (
+          <div className="flex items-center gap-1 text-muted-foreground">
+            <MapPin className="size-3.5" />
+            {address}
+          </div>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        );
+      },
+    },
+    {
+      accessorKey: "phone",
+      header: "Утас",
+      cell: ({ row }) => {
+        const phone = row.original.phone;
+        return phone ? (
+          <div className="flex items-center gap-1 text-muted-foreground">
+            <Phone className="size-3.5" />
+            {phone}
+          </div>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        );
+      },
+    },
+    {
+      accessorKey: "is_default",
+      header: "Төлөв",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          {row.original.is_default ? (
+            <Badge variant="default">
+              <Star className="size-3" />
+              Үндсэн
+            </Badge>
+          ) : (
+            <Badge variant="outline">Энгийн</Badge>
+          )}
+        </div>
+      ),
+    },
+    {
+      id: "actions",
+      header: "Үйлдэл",
+      cell: ({ row }) => {
+        const branch = row.original;
+        return (
+          <div className="flex items-center gap-1">
+            {!branch.is_default && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8"
+                disabled={defaultBusy === branch.id}
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  setDefaultBusy(branch.id);
+                  const result = await setDefaultBranch(branch.id);
+                  setDefaultBusy(null);
+                  if (result && "error" in result) {
+                    toast.error(result.error);
+                  } else {
+                    toast.success(
+                      "Үндсэн салбар болгон өөрчиллөө.",
+                    );
+                  }
+                }}
+                title="Үндсэн салбар болгох"
+              >
+                <Star className="size-4" />
+              </Button>
+            )}
+
+            <Dialog
+              open={editTarget?.id === branch.id}
+              onOpenChange={(open) => {
+                if (!open) setEditTarget(null);
+              }}
+            >
+              <DialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditTarget(branch);
+                  }}
+                  title="Засах"
+                >
+                  <PencilSimple className="size-4" />
+                </Button>
+              </DialogTrigger>
+              {editTarget?.id === branch.id && (
+                <EditBranchDialog
+                  branch={editTarget}
+                  onClose={() => setEditTarget(null)}
+                />
+              )}
+            </Dialog>
+
+            <AlertDialog
+              open={deleteTarget?.id === branch.id}
+              onOpenChange={(open) => {
+                if (!open) setDeleteTarget(null);
+              }}
+            >
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-8 text-muted-foreground hover:text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteTarget(branch);
+                  }}
+                  title="Устгах"
+                >
+                  <Trash className="size-4" />
+                </Button>
+              </AlertDialogTrigger>
+              {deleteTarget?.id === branch.id && (
+                <DeleteBranchDialog
+                  branch={deleteTarget}
+                  onClose={() => setDeleteTarget(null)}
+                />
+              )}
+            </AlertDialog>
+          </div>
+        );
+      },
+    },
+  ];
 
   const query = useQuery({
     queryKey: ["branches", "list", organizationId],
@@ -238,138 +390,15 @@ export function BranchesContent() {
               description="Шинэ салбар нэмж, байгууллагын салбаруудыг удирдах."
             />
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Нэр</TableHead>
-                  <TableHead>Хаяг</TableHead>
-                  <TableHead>Утас</TableHead>
-                  <TableHead>Төлөв</TableHead>
-                  <TableHead className="w-40">Үйлдэл</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {branches.map((branch) => (
-                  <TableRow key={branch.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <Building className="size-4 text-muted-foreground" />
-                        {branch.name}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {branch.address ? (
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <MapPin className="size-3.5" />
-                          {branch.address}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {branch.phone ? (
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <Phone className="size-3.5" />
-                          {branch.phone}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {branch.is_default ? (
-                          <Badge variant="default">
-                            <Star className="size-3" />
-                            Үндсэн
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline">Энгийн</Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        {!branch.is_default && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8"
-                            disabled={defaultBusy === branch.id}
-                            onClick={async () => {
-                              setDefaultBusy(branch.id);
-                              const result = await setDefaultBranch(branch.id);
-                              setDefaultBusy(null);
-                              if (result && "error" in result) {
-                                toast.error(result.error);
-                              } else {
-                                toast.success(
-                                  "Үндсэн салбар болгон өөрчиллөө.",
-                                );
-                              }
-                            }}
-                            title="Үндсэн салбар болгох"
-                          >
-                            <Star className="size-4" />
-                          </Button>
-                        )}
-
-                        <Dialog
-                          open={editTarget?.id === branch.id}
-                          onOpenChange={(open) => {
-                            if (!open) setEditTarget(null);
-                          }}
-                        >
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-8"
-                              onClick={() => setEditTarget(branch)}
-                              title="Засах"
-                            >
-                              <PencilSimple className="size-4" />
-                            </Button>
-                          </DialogTrigger>
-                          {editTarget?.id === branch.id && (
-                            <EditBranchDialog
-                              branch={editTarget}
-                              onClose={() => setEditTarget(null)}
-                            />
-                          )}
-                        </Dialog>
-
-                        <AlertDialog
-                          open={deleteTarget?.id === branch.id}
-                          onOpenChange={(open) => {
-                            if (!open) setDeleteTarget(null);
-                          }}
-                        >
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-8 text-muted-foreground hover:text-destructive"
-                              onClick={() => setDeleteTarget(branch)}
-                              title="Устгах"
-                            >
-                              <Trash className="size-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          {deleteTarget?.id === branch.id && (
-                            <DeleteBranchDialog
-                              branch={deleteTarget}
-                              onClose={() => setDeleteTarget(null)}
-                            />
-                          )}
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              columns={columns}
+              data={branches}
+              searchColumn="name"
+              searchPlaceholder="Салбар хайх..."
+              totalLabel="салбар"
+              enableSorting
+              enableColumnVisibility
+            />
           )}
         </CardContent>
       </Card>
