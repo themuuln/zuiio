@@ -47,4 +47,4 @@ jobs:
         run: npm i -g vercel@latest
 
       - name: Deploy to production
-        run: vercel deploy --prod --token=$VERCEL_TOKEN
+        run: vercel deploy --prod --archive=tgz --token=$VERCEL_TOKEN
