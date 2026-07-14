@@ -1,7 +1,7 @@
 import {
+  Buildings,
+  CurrencyDollar,
   Package,
-  ShoppingCart,
-  Star,
   Users,
   Warehouse,
   Warning,
@@ -107,7 +107,7 @@ export async function QuickShortcuts({ orgId }: { orgId: string }) {
         />
         <ShortcutCard
           href="/suppliers"
-          icon={<Star className="size-5" />}
+          icon={<Buildings className="size-5" />}
           label="Нийлүүлэгчид"
           count={totalSuppliers.toLocaleString()}
         />
@@ -125,7 +125,7 @@ export async function QuickShortcuts({ orgId }: { orgId: string }) {
         />
         <ShortcutCard
           href="/sales"
-          icon={<ShoppingCart className="size-5" />}
+          icon={<CurrencyDollar className="size-5" />}
           label="Борлуулалт"
           count={totalProducts > 0 ? "Үзэх" : "—"}
         />

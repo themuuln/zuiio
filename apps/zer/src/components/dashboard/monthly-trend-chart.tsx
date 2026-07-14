@@ -27,9 +27,14 @@ export function MonthlyTrendChart({ data }: { data: MonthlyTrendItem[] }) {
       </CardHeader>
       <CardContent>
         {!hasSalesData ? (
-          <p className="text-sm text-muted-foreground">
-            Сүүлийн 30 хоногт борлуулалт хийгдээгүй байна.
-          </p>
+          <div className="flex flex-col items-center gap-2 py-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              Сүүлийн 30 хоногт борлуулалт хийгдээгүй байна.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Анхны борлуулалтаа бүртгэсний дараа энд 30 хоногийн дүн гарч ирнэ.
+            </p>
+          </div>
         ) : (
           <div className="h-60 w-full md:h-72">
             <ResponsiveContainer

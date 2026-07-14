@@ -67,7 +67,7 @@ export async function OnboardingChecklist({
 
   return (
     <aside className="w-full shrink-0 lg:w-64">
-      <div className="rounded-lg border bg-card p-4 text-card-foreground shadow-xs">
+      <div className="rounded-xl border bg-card p-4 text-card-foreground shadow-xs">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold">Эхлэх алхамууд</h3>
           <span className="text-xs text-muted-foreground">

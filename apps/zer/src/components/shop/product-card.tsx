@@ -172,7 +172,7 @@ export const ProductCard = memo(function ProductCard({
 
       <Card
         className={cn(
-          "flex flex-col gap-0 overflow-hidden py-0 transition-all",
+          "group flex flex-col gap-0 overflow-hidden py-0 transition-all",
           isOutOfStock && "opacity-60",
           justAdded && "ring-2 ring-primary/30",
         )}
@@ -255,15 +255,17 @@ export const ProductCard = memo(function ProductCard({
           {isTile ? (
             <>
               {/* Simplified tile: price + stock */}
-              <p className="text-lg font-bold text-primary">
+              <p className="text-lg font-bold tabular-nums tracking-tight">
                 {price.toLocaleString()}₮
               </p>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground/70">
                 <span>
                   Үлдэгдэл {stock} {unit}
                 </span>
                 {stock > 0 && stock <= 5 && (
-                  <span className="text-amber-600">(Дуусах дөхсөн)</span>
+                  <span className="text-amber-600 dark:text-amber-400">
+                    (Дуусах дөхсөн)
+                  </span>
                 )}
               </div>
             </>
@@ -286,15 +288,17 @@ export const ProductCard = memo(function ProductCard({
                   </span>
                 </div>
               )}
-              <p className="text-base font-semibold text-primary">
+              <p className="text-base font-bold tabular-nums tracking-tight">
                 {price.toLocaleString()}₮
               </p>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground/70">
                 <span>
                   Үлдэгдэл {stock} {unit}
                 </span>
                 {stock > 0 && stock <= 5 && (
-                  <span className="text-amber-600">(Дуусах дөхсөн)</span>
+                  <span className="text-amber-600 dark:text-amber-400">
+                    (Дуусах дөхсөн)
+                  </span>
                 )}
               </div>
             </>

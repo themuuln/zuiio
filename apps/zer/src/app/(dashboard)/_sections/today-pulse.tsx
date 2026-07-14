@@ -4,7 +4,7 @@ import {
   TrendDown,
   TrendUp,
 } from "@phosphor-icons/react/dist/ssr";
-import { capture, withDbCapture } from "@zuiio/capture";
+import { withDbCapture } from "@zuiio/capture";
 import { addDays, startOfDay } from "date-fns";
 import { PulseCard } from "@/components/dashboard/dashboard-cards";
 import { withBranchFilter } from "@/lib/branches";
@@ -81,37 +81,56 @@ export async function TodayPulse({
   const netProfit = todaySalesTotal - todayExpensesTotal;
   const pendingSalesCount = pendingResult.count ?? 0;
 
+  const allZero =
+    todaySalesTotal === 0 &&
+    todayExpensesTotal === 0 &&
+    pendingSalesCount === 0;
+
   return (
     <div>
       <h2 className="mb-3 text-sm font-medium text-muted-foreground">
         Өнөөдрийн байдал
       </h2>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <PulseCard
-          icon={<TrendUp className="size-5" />}
-          label="Өнөөдрийн борлуулалт"
-          value={formatCurrency(todaySalesTotal)}
-          color="emerald"
-        />
-        <PulseCard
-          icon={<TrendDown className="size-5" />}
-          label="Өнөөдрийн зарлага"
-          value={formatCurrency(todayExpensesTotal)}
-          color="red"
-        />
-        <PulseCard
-          icon={<ChartLineUp className="size-5" />}
-          label="Цэвэр ашиг"
-          value={formatCurrency(netProfit)}
-          color="blue"
-        />
-        <PulseCard
-          icon={<ClockCountdown className="size-5" />}
-          label="Хүлээгдэж буй"
-          value={pendingSalesCount.toLocaleString()}
-          color="amber"
-        />
-      </div>
+      {allZero ? (
+        <div className="rounded-xl border border-dashed bg-card p-6 text-center shadow-xs">
+          <p className="text-sm text-muted-foreground">
+            Өнөөдөр хараахан үйл ажиллагаа бүртгэгдээгүй байна.
+          </p>
+          <a
+            href="/sales?create=true"
+            className="mt-2 inline-block text-sm font-medium text-primary hover:underline"
+          >
+            Анхны борлуулалтаа бүртгэх →
+          </a>
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <PulseCard
+            icon={<TrendUp className="size-5" />}
+            label="Борлуулалт"
+            value={formatCurrency(todaySalesTotal)}
+            color="emerald"
+          />
+          <PulseCard
+            icon={<TrendDown className="size-5" />}
+            label="Зарлага"
+            value={formatCurrency(todayExpensesTotal)}
+            color="red"
+          />
+          <PulseCard
+            icon={<ChartLineUp className="size-5" />}
+            label="Ашиг"
+            value={formatCurrency(netProfit)}
+            color="blue"
+          />
+          <PulseCard
+            icon={<ClockCountdown className="size-5" />}
+            label="Хүлээгдэл"
+            value={pendingSalesCount.toLocaleString()}
+            color="amber"
+          />
+        </div>
+      )}
     </div>
   );
 }

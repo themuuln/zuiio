@@ -321,7 +321,7 @@ export function CatalogClient({
                 }
                 enterKeyHint={selectionMode === "grid" ? "search" : "done"}
                 className={cn(
-                  "h-[44px] w-full rounded-lg pl-9 pr-4 text-sm",
+                  "h-[44px] w-full rounded-md pl-9 pr-4 text-sm",
                   "focus-visible:ring-2 focus-visible:ring-primary/20",
                   showStatus &&
                     barcodeStatus.type === "found" &&
@@ -342,7 +342,7 @@ export function CatalogClient({
                 size="icon"
                 onClick={() => setIsCameraOpen(true)}
                 className={cn(
-                  "h-[44px] w-[44px] shrink-0 rounded-lg",
+                  "h-[44px] w-[44px] shrink-0 rounded-md",
                   "border-2 border-dashed",
                   isCameraOpen && "ring-2 ring-primary/30",
                 )}
@@ -409,6 +409,14 @@ export function CatalogClient({
           selectedId={selectedCategoryId}
           onSelect={setSelectedCategoryId}
         />
+        {/* Product count */}
+        {!isEmpty && !hasNoResults && (
+          <p className="text-xs text-muted-foreground">
+            {filteredProducts.length === allProducts.length
+              ? `${allProducts.length} бүтээгдэхүүн`
+              : `${filteredProducts.length} / ${allProducts.length} бүтээгдэхүүн`}
+          </p>
+        )}
 
         {/* Content area */}
         {isEmpty ? (
