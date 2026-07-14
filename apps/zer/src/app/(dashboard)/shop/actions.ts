@@ -73,23 +73,32 @@ export async function createShopSale(
     0,
   );
 
-  // --- Step 1: Validate stock for all items ---
+  // --- Step 1: Validate stock + handle customer (parallel) ---
   const productIds = items.map((i) => i.productId);
-  const productMap = await fetchProductsForStock(
-    supabase,
-    organizationId,
-    productIds,
-  );
-
-  // Collect variant IDs and validate variant stock
   const variantIds = items
     .filter((i) => i.variantId)
     .map((i) => i.variantId as string);
+  const customerName = getString(formData, "customer_name");
+  const customerPhone = customerName
+    ? getString(formData, "customer_phone")
+    : null;
 
-  const variantMap =
+  // Run all independent reads in parallel to save ~2 round-trips
+  const [productMap, variantMap, contactResult] = await Promise.all([
+    fetchProductsForStock(supabase, organizationId, productIds),
     variantIds.length > 0
-      ? await fetchVariantsForStock(supabase, variantIds)
-      : new Map();
+      ? fetchVariantsForStock(supabase, variantIds)
+      : new Map(),
+    customerName
+      ? findOrCreateContact(
+          supabase,
+          organizationId,
+          "customer",
+          customerName,
+          customerPhone,
+        )
+      : null,
+  ]);
 
   // Check each item's stock
   for (const item of items) {
@@ -122,22 +131,13 @@ export async function createShopSale(
     }
   }
 
-  // --- Step 2: Handle customer ---
+  // Handle customer result from parallel batch
   let contactId: string | null = null;
-  const customerName = getString(formData, "customer_name");
   let createdContact = false;
 
-  if (customerName) {
-    const phone = getString(formData, "customer_phone");
-    const result = await findOrCreateContact(
-      supabase,
-      organizationId,
-      "customer",
-      customerName,
-      phone,
-    );
-    if ("error" in result) return result;
-    contactId = result.id;
+  if (contactResult) {
+    if ("error" in contactResult) return contactResult;
+    contactId = contactResult.id;
     createdContact = true;
   }
 
@@ -270,15 +270,19 @@ export async function createShopSale(
 
   // --- Success ---
 
-  // Auto-generate invoice as receipt (fire-and-forget)
-  await createInvoiceFromSale(
+  // Auto-generate invoice as receipt (fire-and-forget — errors captured inside createInvoiceFromSale)
+  // Intentionally NOT awaited: invoice creation is ~500-800ms of 5 sequential DB calls
+  // that the customer doesn't need to wait for. The sale + stock are already committed.
+  createInvoiceFromSale(
     supabase,
     organizationId,
     userId,
     saleId,
     contactId,
     branchId as string,
-  );
+  ).catch((e) => {
+    capture(e, { context: "createShopSale: fire-and-forget invoice" });
+  });
 
   revalidateEntity("shop");
   return { saleId };
