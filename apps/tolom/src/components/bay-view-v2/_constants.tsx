@@ -20,6 +20,16 @@ const STATUSES: Record<string, StatusDef> = {
   Cancelled: { hue: "rose", weight: 400 },
 } as const;
 
+/** Hex colors for inline styles (border-left-color, etc.) */
+const STATUS_HEX: Record<string, string> = {
+  New: "#f59e0b",
+  Diagnosing: "#3b82f6",
+  "In Progress": "#14b8a6",
+  "Ready for Pickup": "#10b981",
+  Completed: "#34d399",
+  Cancelled: "#fb7185",
+};
+
 // ── Build helpers ──────────────────────────────────────────
 // Each accepts (hue, weight) and returns a complete, static class string
 // that Tailwind v4's JIT can scan.
