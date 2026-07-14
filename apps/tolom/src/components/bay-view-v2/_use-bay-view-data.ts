@@ -82,7 +82,7 @@ export function useBayViewData(
     refetchInterval: anySurfaceOpen ? false : 300_000,
   });
 
-  const loading = bayQuery.isLoading;
+  const loading = bayQuery.isPending;
   const data = bayQuery.data ?? null;
   const shiftReport = shiftQuery.data ?? null;
   const error = bayQuery.error instanceof Error ? bayQuery.error.message : null;

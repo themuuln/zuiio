@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import type {
   BaySlotData,
   BayViewWorkOrder,
@@ -114,12 +115,14 @@ function StatChip({
   trend,
   subtitle,
   onClick,
+  loading = false,
 }: {
   label: string;
   value: string;
   trend?: number | null;
   subtitle?: string;
   onClick: () => void;
+  loading?: boolean;
 }) {
   return (
     <button
@@ -130,10 +133,14 @@ function StatChip({
       <span className="text-[11px] font-medium text-muted-foreground/70 tabular-nums">
         {label}
       </span>
-      <span className="font-mono text-base font-bold text-foreground tabular-nums">
-        {value}
-      </span>
-      {trend !== undefined && trend !== null && trend !== 0 && (
+      {loading ? (
+        <Skeleton className="h-5 w-10 rounded" />
+      ) : (
+        <span className="font-mono text-base font-bold text-foreground tabular-nums">
+          {value}
+        </span>
+      )}
+      {!loading && trend !== undefined && trend !== null && trend !== 0 && (
         <span
           className={`inline-flex items-center gap-0.5 text-[11px] font-semibold ${trend > 0 ? "text-emerald-500" : "text-destructive"}`}
         >
@@ -146,7 +153,7 @@ function StatChip({
           {label.includes("%") ? "%" : ""}
         </span>
       )}
-      {subtitle && (
+      {!loading && subtitle && (
         <span className="text-[11px] text-muted-foreground/50">{subtitle}</span>
       )}
     </button>
