@@ -52,8 +52,10 @@ const ProductGrid = memo(function ProductGrid({
   selectionMode: "grid" | "barcode" | "hybrid";
 }) {
   const { items } = useCart();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const cartQuantityMap = useAggregatedLookup(
-    items.filter((i) => !i.variantId),
+    mounted ? items.filter((i) => !i.variantId) : [],
     (i) => i.productId,
     (i) => i.quantity,
   );

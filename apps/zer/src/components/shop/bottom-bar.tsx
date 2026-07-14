@@ -8,6 +8,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
+import { useEffect, useState } from "react";
 import { useShopHistoryDrawer } from "@/components/shop/shop-history-drawer";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +35,8 @@ export function BottomBar() {
   const historyDrawer = useShopHistoryDrawer();
   const { itemCount } = useCart();
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   return (
     <nav
       aria-label="Үндсэн навигац"
@@ -101,7 +104,7 @@ export function BottomBar() {
                   )}
                   weight={isActive ? "fill" : "regular"}
                 />
-                {tab.href === "/shop/cart" && itemCount > 0 && (
+                {mounted && tab.href === "/shop/cart" && itemCount > 0 && (
                   <span
                     className={cn(
                       "absolute -right-2 -top-1.5",

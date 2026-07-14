@@ -1,7 +1,7 @@
 "use client";
 
 import { Minus, Plus, ShoppingCart, Trash } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
 import { CheckoutDrawer } from "@/components/shop/checkout-drawer";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
@@ -24,7 +24,9 @@ export function CartFloatingButton() {
   } = useCart();
   const [open, setOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  if (items.length === 0 && !checkoutOpen) return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted || (items.length === 0 && !checkoutOpen)) return null;
 
   return (
     <>

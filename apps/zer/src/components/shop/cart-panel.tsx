@@ -1,7 +1,7 @@
 "use client";
 
 import { Minus, Plus, ShoppingCart, Trash } from "@phosphor-icons/react";
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
 import { CheckoutDrawer } from "@/components/shop/checkout-drawer";
 import { Button } from "@/components/ui/button";
@@ -90,8 +90,12 @@ export function CartPanel() {
     clearCart,
   } = useCart();
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
-  const isEmpty = items.length === 0;
+  // Force empty state on server/initial client render to avoid hydration mismatch
+  // (CartProvider loads from sessionStorage in useEffect, which fires after paint)
+  const showEmpty = !mounted || items.length === 0;
 
   const handleUpdateQuantity = useCallback(
     (key: string, qty: number) => updateQuantity(key, qty),
@@ -109,13 +113,13 @@ export function CartPanel() {
       <div className="flex h-[52px] shrink-0 items-center justify-between border-b border-border px-4">
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-semibold">Захиалга</h2>
-          {itemCount > 0 && (
+          {mounted && itemCount > 0 && (
             <span className="flex min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-[11px] font-bold leading-none text-primary-foreground tabular-nums">
               {itemCount > 99 ? "99+" : itemCount}
             </span>
           )}
         </div>
-        {!isEmpty && (
+        {!showEmpty && (
           <Button
             type="button"
             variant="ghost"
@@ -131,7 +135,7 @@ export function CartPanel() {
 
       {/* Line items */}
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {isEmpty ? (
+        {showEmpty ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 px-6 py-10 text-center">
             <div className="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
               <ShoppingCart className="size-6" />
@@ -163,7 +167,7 @@ export function CartPanel() {
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Дэд дүн</span>
             <span className="tabular-nums">
-              {totalAmount.toLocaleString()}₮
+              {(showEmpty ? 0 : totalAmount).toLocaleString()}₮
             </span>
           </div>
           {discount && (
@@ -180,7 +184,7 @@ export function CartPanel() {
           <div className="flex items-center justify-between pt-1">
             <span className="text-sm font-medium">Нийт дүн</span>
             <span className="text-xl font-bold tabular-nums">
-              {(discount ? discountedTotal : totalAmount).toLocaleString()}₮
+              {(showEmpty ? 0 : discount ? discountedTotal : totalAmount).toLocaleString()}₮
             </span>
           </div>
         </div>
@@ -189,7 +193,7 @@ export function CartPanel() {
           type="button"
           size="lg"
           className="w-full"
-          disabled={isEmpty}
+          disabled={showEmpty}
           onClick={() => setCheckoutOpen(true)}
         >
           Төлбөр тооцоо
