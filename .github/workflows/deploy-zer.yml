@@ -46,5 +46,17 @@ jobs:
       - name: Install Vercel CLI
         run: npm i -g vercel@latest
 
+      # Stage project config at root (avoids pnpm monorepo PATH bug)
+      - name: Stage Vercel project config
+        run: |
+          mkdir -p .vercel
+          echo '{"projectId":"'$VERCEL_PROJECT_ID'","orgId":"'$VERCEL_ORG_ID'"}' > .vercel/project.json
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+
+      - name: Build
+        run: vercel build --prod --token=$VERCEL_TOKEN
+
       - name: Deploy to production
-        run: vercel deploy --prod --archive=tgz --token=$VERCEL_TOKEN
+        run: vercel deploy --prebuilt --prod --archive=tgz --token=$VERCEL_TOKEN
