@@ -10,7 +10,7 @@ type PlayerPageProps = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: PlayerPageProps): Promise<Metadata> {
   const { id } = await params;
   const data = await getPlayerById(id);
-  if (!data) return { title: "Тоглогч олдсонгүй — Оноо" };
+  if (!data?.player) return { title: "Тоглогч олдсонгүй — Оноо" };
 
   return {
     title: `${data.player.canonical_name} — Оноо`,
@@ -21,9 +21,10 @@ export async function generateMetadata({ params }: PlayerPageProps): Promise<Met
 export default async function PlayerPage({ params }: PlayerPageProps) {
   const { id } = await params;
   const data = await getPlayerById(id);
-  if (!data) notFound();
+  if (!data?.player) notFound();
 
-  const { player, seasonStats, gameLog } = data;
+  const { player: playerMaybe, seasonStats, gameLog } = data;
+  const player = playerMaybe!;
   const latestSeason = seasonStats[0];
 
   return (
