@@ -8,6 +8,11 @@ export function formatCurrency(amount: number): string {
   return `₮ ${formatted}`;
 }
 
+/** Mongolian Tugrik — alias for `formatCurrency`. */
+export function formatMNT(amount: number): string {
+  return formatCurrency(amount);
+}
+
 export function formatDate(date: string | Date | null | undefined): string {
   if (!date) return "-";
   return format(new Date(date), "yyyy-MM-dd");
