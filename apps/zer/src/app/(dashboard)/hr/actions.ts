@@ -48,7 +48,7 @@ export async function createEmployee(_prevState: unknown, formData: FormData) {
 export async function updateEmployee(_prevState: unknown, formData: FormData) {
   const ctx = await requireActionContext("settings.manage");
   if ("error" in ctx) return ctx;
-  const { supabase } = ctx;
+  const { supabase, organizationId } = ctx;
 
   const id = formData.get("id")?.toString();
   if (!id) return { error: "Ажилтан тодорхойгүй байна." };
@@ -75,7 +75,8 @@ export async function updateEmployee(_prevState: unknown, formData: FormData) {
   const { error } = await supabase
     .from("employees")
     .update(updates)
-    .eq("id", id);
+    .eq("id", id)
+    .eq("organization_id", organizationId);
 
   if (error) {
     capture(error, { context: "hr: updateEmployee" });
@@ -88,12 +89,12 @@ export async function updateEmployee(_prevState: unknown, formData: FormData) {
 export async function deleteEmployee(formData: FormData) {
   const ctx = await requireActionContext("settings.manage");
   if ("error" in ctx) return ctx;
-  const { supabase } = ctx;
+  const { supabase, organizationId } = ctx;
 
   const id = formData.get("id")?.toString();
   if (!id) return { error: "Ажилтан тодорхойгүй байна." };
 
-  const { error } = await supabase.from("employees").delete().eq("id", id);
+  const { error } = await supabase.from("employees").delete().eq("id", id).eq("organization_id", organizationId);
   if (error) {
     capture(error, { context: "hr: deleteEmployee" });
     return { error: error.message };

@@ -29,10 +29,15 @@ function PageSkeleton() {
   );
 }
 
-async function DataFetcher({ pageStr }: { pageStr?: string }) {
+async function DataFetcher({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page } = (await searchParams) ?? {};
   const { supabase, organizationId } = await requireAppContext();
 
-  const currentPage = Math.max(1, Number(pageStr) || 1);
+  const currentPage = Math.max(1, Number(page) || 1);
   const offset = (currentPage - 1) * PAGE_SIZE;
 
   const { data: products, count } = await withDbCapture(
@@ -139,10 +144,9 @@ export default async function ProductsPage({
 }: {
   searchParams: Promise<{ page?: string }>;
 }) {
-  const { page } = await searchParams;
   return (
     <Suspense fallback={<PageSkeleton />}>
-      <DataFetcher pageStr={page} />
+      <DataFetcher searchParams={searchParams} />
     </Suspense>
   );
 }

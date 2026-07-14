@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "alert_dialog",
+  "name": "AlertDialog",
+  "version": "1.0.0",
+  "tags": [
+    "overlay",
+    "dialog",
+    "modal"
+  ],
+  "installedAt": "2026-07-05T15:59:17.526297Z",
+  "shared": [
+    "overlay",
+    "theme"
+  ],
+  "dependsOn": [
+    "dialog"
+  ],
+  "files": [
+    "registry/components/overlay/alert_dialog/_impl/core/alert_dialog_widget.dart",
+    "registry/components/overlay/alert_dialog/_impl/state/_alert_dialog_state.dart",
+    "registry/components/overlay/alert_dialog/alert_dialog.dart"
+  ],
+  "registryNamespace": "shadcn",
+  "manifestSource": "componentsJson",
+  "registryRoot": "https://github.com/ibrar-x/shadcn_flutter_kit/tree/a886eb1a280ae3108bc4fbdd3ce4c842b32b786e/flutter_shadcn_kit/lib"
+}

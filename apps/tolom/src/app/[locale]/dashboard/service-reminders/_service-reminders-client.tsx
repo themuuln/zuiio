@@ -303,7 +303,7 @@ export default function ServiceRemindersPageClient() {
         value={activeTab}
         onValueChange={(v) => setActiveTab(v as "schedule" | "logs")}
       >
-        <TabsList>
+        <TabsList className="flex w-fit h-9 p-0.5 rounded-lg bg-muted border border-border">
           <TabsTrigger value="schedule">
             {t("serviceReminders.scheduleList")}
           </TabsTrigger>

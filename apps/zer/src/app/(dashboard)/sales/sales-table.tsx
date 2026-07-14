@@ -124,7 +124,6 @@ export function SalesTable({
 }) {
   return (
     <ErpDataTable
-      title="Борлуулалтын түүх"
       columns={columns}
       data={data}
       loading={loading}

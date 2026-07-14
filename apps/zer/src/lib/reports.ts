@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { capture } from "@zuiio/capture";
+import { capture, withDbCapture } from "@zuiio/capture";
 import type { Database } from "@/lib/supabase/types";
 
 // ─── Public Types ─────────────────────────────────────────────────────
@@ -86,49 +86,37 @@ export async function getFinancialSummary(
 ): Promise<FinancialSummary> {
   const [{ data: sales }, { data: expenses }, { data: items }] =
     await Promise.all([
-      supabase
-        .from("sales")
-        .select("total_amount, paid_amount")
-        .eq("organization_id", organizationId)
-        .gte("sale_date", dateFrom)
-        .lte("sale_date", dateTo)
-        .neq("status", "cancelled")
-        .then((result) => {
-          if (result.error)
-            capture(result.error, {
-              context: "[reports] getFinancialSummary sales",
-            });
-          return result;
-        }),
-      supabase
-        .from("expenses")
-        .select("amount")
-        .eq("organization_id", organizationId)
-        .gte("expense_date", dateFrom)
-        .lte("expense_date", dateTo)
-        .then((result) => {
-          if (result.error)
-            capture(result.error, {
-              context: "[reports] getFinancialSummary expenses",
-            });
-          return result;
-        }),
-      supabase
-        .from("sale_items")
-        .select(
-          "quantity, products!inner(cost_price), sales!inner(organization_id, sale_date, status)",
-        )
-        .eq("sales.organization_id", organizationId)
-        .gte("sales.sale_date", dateFrom)
-        .lte("sales.sale_date", dateTo)
-        .neq("sales.status", "cancelled")
-        .then((result) => {
-          if (result.error)
-            capture(result.error, {
-              context: "[reports] getFinancialSummary sale_items",
-            });
-          return result;
-        }),
+      withDbCapture(
+        "report: financial summary sales",
+        supabase
+          .from("sales")
+          .select("total_amount, paid_amount")
+          .eq("organization_id", organizationId)
+          .gte("sale_date", dateFrom)
+          .lte("sale_date", dateTo)
+          .neq("status", "cancelled"),
+      ),
+      withDbCapture(
+        "report: financial summary expenses",
+        supabase
+          .from("expenses")
+          .select("amount")
+          .eq("organization_id", organizationId)
+          .gte("expense_date", dateFrom)
+          .lte("expense_date", dateTo),
+      ),
+      withDbCapture(
+        "report: financial summary sale items",
+        supabase
+          .from("sale_items")
+          .select(
+            "quantity, products!inner(cost_price), sales!inner(organization_id, sale_date, status)",
+          )
+          .eq("sales.organization_id", organizationId)
+          .gte("sales.sale_date", dateFrom)
+          .lte("sales.sale_date", dateTo)
+          .neq("sales.status", "cancelled"),
+      ),
     ]);
 
   const totalSales =
@@ -164,17 +152,18 @@ export async function getProductSalesBreakdown(
   dateFrom: string,
   dateTo: string,
 ): Promise<ProductSalesRow[]> {
-  const { data: items, error } = await supabase
-    .from("sale_items")
-    .select(
-      "quantity, total_price, products!inner(name, cost_price), sales!inner(organization_id, sale_date, status)",
-    )
-    .eq("sales.organization_id", organizationId)
-    .gte("sales.sale_date", dateFrom)
-    .lte("sales.sale_date", dateTo)
-    .neq("sales.status", "cancelled");
-  if (error)
-    capture(error, { context: "[reports] getProductSalesBreakdown items" });
+  const { data: items } = await withDbCapture(
+    "report: product sales breakdown",
+    supabase
+      .from("sale_items")
+      .select(
+        "quantity, total_price, products!inner(name, cost_price), sales!inner(organization_id, sale_date, status)",
+      )
+      .eq("sales.organization_id", organizationId)
+      .gte("sales.sale_date", dateFrom)
+      .lte("sales.sale_date", dateTo)
+      .neq("sales.status", "cancelled"),
+  );
 
   const rawItems = (items ?? []) as unknown as SaleItemForProductSales[];
 
@@ -226,16 +215,15 @@ export async function getExpenseBreakdownByCategory(
   dateFrom: string,
   dateTo: string,
 ): Promise<ExpenseCategoryRow[]> {
-  const { data: expenses, error } = await supabase
-    .from("expenses")
-    .select("category, amount")
-    .eq("organization_id", organizationId)
-    .gte("expense_date", dateFrom)
-    .lte("expense_date", dateTo);
-  if (error)
-    capture(error, {
-      context: "[reports] getExpenseBreakdownByCategory expenses",
-    });
+  const { data: expenses } = await withDbCapture(
+    "report: expense breakdown by category",
+    supabase
+      .from("expenses")
+      .select("category, amount")
+      .eq("organization_id", organizationId)
+      .gte("expense_date", dateFrom)
+      .lte("expense_date", dateTo),
+  );
 
   const raw = expenses ?? [];
   const categoryMap = new Map<string, { count: number; total: number }>();
@@ -269,14 +257,15 @@ export async function getStockMovementsSummary(
   dateFrom: string,
   dateTo: string,
 ): Promise<StockMovementsSummary> {
-  const { data: movements, error } = await supabase
-    .from("stock_movements")
-    .select("type")
-    .eq("organization_id", organizationId)
-    .gte("created_at", dateFrom)
-    .lte("created_at", dateTo);
-  if (error)
-    capture(error, { context: "[reports] getStockMovementsSummary movements" });
+  const { data: movements } = await withDbCapture(
+    "report: stock movements summary",
+    supabase
+      .from("stock_movements")
+      .select("type")
+      .eq("organization_id", organizationId)
+      .gte("created_at", dateFrom)
+      .lte("created_at", dateTo),
+  );
 
   const raw = movements ?? [];
   const summary: StockMovementsSummary = { in: 0, out: 0, adjustment: 0 };
@@ -299,15 +288,17 @@ export async function getPendingSales(
   dateFrom: string,
   dateTo: string,
 ): Promise<PendingSaleRow[]> {
-  const { data: sales, error } = await supabase
-    .from("sales")
-    .select("id, total_amount, sale_date, payment_method, contacts(name)")
-    .eq("organization_id", organizationId)
-    .eq("status", "pending")
-    .gte("sale_date", dateFrom)
-    .lte("sale_date", dateTo)
-    .order("sale_date", { ascending: false });
-  if (error) capture(error, { context: "[reports] getPendingSales sales" });
+  const { data: sales } = await withDbCapture(
+    "report: pending sales",
+    supabase
+      .from("sales")
+      .select("id, total_amount, sale_date, payment_method, contacts(name)")
+      .eq("organization_id", organizationId)
+      .eq("status", "pending")
+      .gte("sale_date", dateFrom)
+      .lte("sale_date", dateTo)
+      .order("sale_date", { ascending: false }),
+  );
 
   const raw = sales ?? [];
 
@@ -333,29 +324,28 @@ export async function getCommissionSummaryReport(
 ): Promise<CommissionSummaryData> {
   // Fetch all sale_items with commission_amount > 0 from non-cancelled sales
   // in the date range that have a salesperson assigned
-  const { data: commissionItems, error } = await supabase
-    .from("sale_items")
-    .select(
-      `id,
-       commission_amount,
-       sales!inner(
-         salesperson_id,
-         profiles!sales_salesperson_id_fkey(full_name),
-         sale_date,
-         status,
-         organization_id
-       )`,
-    )
-    .eq("sales.organization_id", organizationId)
-    .gte("sales.sale_date", dateFrom)
-    .lte("sales.sale_date", dateTo)
-    .neq("sales.status", "cancelled")
-    .not("sales.salesperson_id", "is", null)
-    .gt("commission_amount", 0);
-  if (error)
-    capture(error, {
-      context: "[reports] getCommissionSummaryReport commissionItems",
-    });
+  const { data: commissionItems } = await withDbCapture(
+    "report: commission summary items",
+    supabase
+      .from("sale_items")
+      .select(
+        `id,
+         commission_amount,
+         sales!inner(
+           salesperson_id,
+           profiles!sales_salesperson_id_fkey(full_name),
+           sale_date,
+           status,
+           organization_id
+         )`,
+      )
+      .eq("sales.organization_id", organizationId)
+      .gte("sales.sale_date", dateFrom)
+      .lte("sales.sale_date", dateTo)
+      .neq("sales.status", "cancelled")
+      .not("sales.salesperson_id", "is", null)
+      .gt("commission_amount", 0),
+  );
 
   if (!commissionItems || commissionItems.length === 0) {
     return { totalEarned: 0, totalPaid: 0, totalUnpaid: 0, staffBreakdown: [] };
@@ -395,24 +385,22 @@ export async function getCommissionSummaryReport(
   const staffPaidMap = new Map<string, number>();
   if (allItemIds.length > 0) {
     // Step 1: Fetch commission_payout_items directly (no joins needed)
-    const { data: payoutItems, error: payoutError } = await supabase
-      .from("commission_payout_items")
-      .select("sale_item_id, commission_amount")
-      .in("sale_item_id", allItemIds);
-    if (payoutError)
-      capture(payoutError, {
-        context: "[reports] getCommissionSummaryReport payoutItems",
-      });
+    const { data: payoutItems } = await withDbCapture(
+      "report: commission payout items",
+      supabase
+        .from("commission_payout_items")
+        .select("sale_item_id, commission_amount")
+        .in("sale_item_id", allItemIds),
+    );
 
     // Step 2: Fetch sale_items joined with sales to get the salesperson_id mapping
-    const { data: saleItemStaff, error: staffError } = await supabase
-      .from("sale_items")
-      .select("id, sales!inner(salesperson_id)")
-      .in("id", allItemIds);
-    if (staffError)
-      capture(staffError, {
-        context: "[reports] getCommissionSummaryReport saleItemStaff",
-      });
+    const { data: saleItemStaff } = await withDbCapture(
+      "report: commission sale item staff",
+      supabase
+        .from("sale_items")
+        .select("id, sales!inner(salesperson_id)")
+        .in("id", allItemIds),
+    );
 
     if (payoutItems && saleItemStaff) {
       // Build sale_item_id -> salesperson_id mapping

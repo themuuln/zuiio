@@ -5,7 +5,7 @@ import { requireWriteAction } from "@/lib/action-utils";
 import { revalidateEntities } from "@/lib/revalidate";
 import type { Database } from "@/lib/supabase/types";
 import { getString } from "@/lib/validation";
-import { capture } from "@zuiio/capture";
+import { capture, withDbCapture } from "@zuiio/capture";
 
 export async function createReturn(
   _prevState: { error?: string } | undefined,
@@ -52,12 +52,15 @@ export async function createReturn(
   // Validate reference exists
   if (referenceId) {
     if (type === "sales_return") {
-      const { data: sale, error: saleError } = await supabase
-        .from("sales")
-        .select("id")
-        .eq("organization_id", organizationId)
-        .eq("id", referenceId)
-        .single();
+      const { data: sale, error: saleError } = await withDbCapture(
+        "returns: validate sale reference",
+        supabase
+          .from("sales")
+          .select("id")
+          .eq("organization_id", organizationId)
+          .eq("id", referenceId)
+          .single(),
+      );
 
       if (saleError) {
         capture(saleError, { context: "returns: validate sale reference" });
@@ -70,12 +73,15 @@ export async function createReturn(
       type === "purchase_return" &&
       referenceType === "purchase_order"
     ) {
-      const { data: po, error: poError } = await supabase
-        .from("purchase_orders")
-        .select("id")
-        .eq("organization_id", organizationId)
-        .eq("id", referenceId)
-        .single();
+      const { data: po, error: poError } = await withDbCapture(
+        "returns: validate po reference",
+        supabase
+          .from("purchase_orders")
+          .select("id")
+          .eq("organization_id", organizationId)
+          .eq("id", referenceId)
+          .single(),
+      );
 
       if (poError) {
         capture(poError, { context: "returns: validate po reference" });
@@ -100,24 +106,27 @@ export async function createReturn(
   );
 
   // Insert return header
-  const { data: returnRecord, error: returnError } = await supabase
-    .from("returns")
-    .insert({
-      organization_id: organizationId,
-      branch_id: branchId!,
-      return_number: returnNumber,
-      return_date: returnDate || new Date().toISOString().slice(0, 10),
-      type,
-      reference_type: referenceType,
-      reference_id: referenceId,
-      contact_id: contactId,
-      status: "draft",
-      total_amount: totalAmount,
-      reason,
-      created_by: userId,
-    })
-    .select("id")
-    .single();
+  const { data: returnRecord, error: returnError } = await withDbCapture(
+    "returns: insert return",
+    supabase
+      .from("returns")
+      .insert({
+        organization_id: organizationId,
+        branch_id: branchId!,
+        return_number: returnNumber,
+        return_date: returnDate || new Date().toISOString().slice(0, 10),
+        type,
+        reference_type: referenceType,
+        reference_id: referenceId,
+        contact_id: contactId,
+        status: "draft",
+        total_amount: totalAmount,
+        reason,
+        created_by: userId,
+      })
+      .select("id")
+      .single(),
+  );
 
   if (returnError) {
     capture(returnError, { context: "createReturn: insert return" });
@@ -135,13 +144,19 @@ export async function createReturn(
     variant_id: item.variant_id ?? null,
   }));
 
-  const { error: itemsError } = await supabase
-    .from("return_items")
-    .insert(returnItems);
+  const { error: itemsError } = await withDbCapture(
+    "returns: insert return items",
+    supabase
+      .from("return_items")
+      .insert(returnItems),
+  );
 
   if (itemsError) {
     // Rollback
-    await supabase.from("returns").delete().eq("id", returnRecord.id);
+    await withDbCapture(
+      "returns: rollback delete return",
+      supabase.from("returns").delete().eq("id", returnRecord.id),
+    );
     return {
       error: `Барааны мэдээлэл хадгалахад алдаа гарлаа: ${itemsError.message}`,
     };
@@ -167,7 +182,10 @@ export async function completeReturn(returnId: string) {
     fetchQuery = fetchQuery.eq("branch_id", branchId);
   }
 
-  const { data: returnRecord, error: returnError } = await fetchQuery.single();
+  const { data: returnRecord, error: returnError } = await withDbCapture(
+    "returns: fetch for completion",
+    fetchQuery.single(),
+  );
 
   if (returnError || !returnRecord) {
     return { error: "Буцаалт олдсонгүй." };
@@ -202,22 +220,25 @@ export async function completeReturn(returnId: string) {
     const movementType = returnRecord.type === "sales_return" ? "in" : "out";
     const movementQuantity = item.quantity;
 
-    const { error: movementError } = await supabase
-      .from("stock_movements")
-      .insert({
-        organization_id: organizationId,
-        branch_id: branchId!,
-        product_id: item.product_id,
-        type: movementType,
-        quantity: movementQuantity,
-        unit_cost: item.unit_price,
-        reference: `return:${returnId}`,
-        notes:
-          returnRecord.type === "sales_return"
-            ? "Борлуулалтын буцаалт - агуулах руу буцах"
-            : "Худалдан авалтын буцаалт - нийлүүлэгч рүү буцах",
-        created_by: userId,
-      });
+    const { error: movementError } = await withDbCapture(
+      "returns: insert stock movement",
+      supabase
+        .from("stock_movements")
+        .insert({
+          organization_id: organizationId,
+          branch_id: branchId!,
+          product_id: item.product_id,
+          type: movementType,
+          quantity: movementQuantity,
+          unit_cost: item.unit_price,
+          reference: `return:${returnId}`,
+          notes:
+            returnRecord.type === "sales_return"
+              ? "Борлуулалтын буцаалт - агуулах руу буцах"
+              : "Худалдан авалтын буцаалт - нийлүүлэгч рүү буцах",
+          created_by: userId,
+        }),
+    );
 
     if (movementError) {
       errors.push(
@@ -228,12 +249,15 @@ export async function completeReturn(returnId: string) {
     }
 
     // Update product current_stock
-    const { data: product, error: productError } = await supabase
-      .from("products")
-      .select("current_stock")
-      .eq("organization_id", organizationId)
-      .eq("id", item.product_id)
-      .single();
+    const { data: product, error: productError } = await withDbCapture(
+      "returns: fetch product stock",
+      supabase
+        .from("products")
+        .select("current_stock")
+        .eq("organization_id", organizationId)
+        .eq("id", item.product_id)
+        .single(),
+    );
 
     if (productError) {
       capture(productError, { context: "returns: fetch product stock" });
@@ -259,9 +283,12 @@ export async function completeReturn(returnId: string) {
         updateQuery.gte("current_stock", Math.abs(stockDelta));
       }
 
-      const { data: updated, error: stockError } = await updateQuery
-        .select("current_stock")
-        .maybeSingle();
+      const { data: updated, error: stockError } = await withDbCapture(
+        "returns: update product stock",
+        updateQuery
+          .select("current_stock")
+          .maybeSingle(),
+      );
 
       if (stockError) {
         errors.push(`Үлдэгдэл шинэчлэхэд алдаа: ${stockError.message}`);
@@ -293,12 +320,15 @@ export async function completeReturn(returnId: string) {
       returnRecord.reference_type === "purchase_order" &&
       returnRecord.reference_id
     ) {
-      const { data: poItem, error: poItemError } = await supabase
-        .from("purchase_order_items")
-        .select("id, received_quantity")
-        .eq("purchase_order_id", returnRecord.reference_id)
-        .eq("product_id", item.product_id)
-        .maybeSingle();
+      const { data: poItem, error: poItemError } = await withDbCapture(
+        "returns: fetch po item",
+        supabase
+          .from("purchase_order_items")
+          .select("id, received_quantity")
+          .eq("purchase_order_id", returnRecord.reference_id)
+          .eq("product_id", item.product_id)
+          .maybeSingle(),
+      );
 
       if (poItemError) {
         capture(poItemError, { context: "returns: fetch po item" });
@@ -309,10 +339,13 @@ export async function completeReturn(returnId: string) {
           0,
           Number(poItem.received_quantity ?? 0) - item.quantity,
         );
-        const { error: poUpdateError } = await supabase
-          .from("purchase_order_items")
-          .update({ received_quantity: newReceivedQty })
-          .eq("id", poItem.id);
+        const { error: poUpdateError } = await withDbCapture(
+          "returns: update po item received quantity",
+          supabase
+            .from("purchase_order_items")
+            .update({ received_quantity: newReceivedQty })
+            .eq("id", poItem.id),
+        );
 
         if (poUpdateError) {
           errors.push(
@@ -345,7 +378,10 @@ export async function completeReturn(returnId: string) {
     completeQuery = completeQuery.eq("branch_id", branchId);
   }
 
-  const { error: updateError } = await completeQuery;
+  const { error: updateError } = await withDbCapture(
+    "returns: update status to completed",
+    completeQuery,
+  );
 
   if (updateError) {
     capture(updateError, { context: "completeReturn: update status" });
@@ -374,19 +410,25 @@ async function rollbackCompletedReturnItems(
     if (item.wasStockUpdated) {
       // Revert product stock to previous value.
       // RLS handles organization_id scoping via the authenticated user.
-      await supabase
-        .from("products")
-        .update({ current_stock: item.prevStock })
-        .eq("id", item.product_id);
+      await withDbCapture(
+        "returns: rollback product stock",
+        supabase
+          .from("products")
+          .update({ current_stock: item.prevStock })
+          .eq("id", item.product_id),
+      );
     }
 
     // Delete the stock movement we created.
     // RLS handles organization_id scoping via the authenticated user.
-    await supabase
-      .from("stock_movements")
-      .delete()
-      .eq("reference", `return:${returnId}`)
-      .eq("product_id", item.product_id);
+    await withDbCapture(
+      "returns: rollback delete stock movements",
+      supabase
+        .from("stock_movements")
+        .delete()
+        .eq("reference", `return:${returnId}`)
+        .eq("product_id", item.product_id),
+    );
   }
 }
 
@@ -405,7 +447,10 @@ export async function cancelReturn(returnId: string) {
     query = query.eq("branch_id", branchId);
   }
 
-  const { error } = await query;
+  const { error } = await withDbCapture(
+    "returns: cancel return",
+    query,
+  );
 
   if (error) {
     capture(error, { context: "cancelReturn: update status" });

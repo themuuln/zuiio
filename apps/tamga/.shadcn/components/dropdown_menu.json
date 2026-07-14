@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "dropdown_menu",
+  "name": "Dropdown Menu",
+  "version": "1.0.0",
+  "tags": [
+    "menu",
+    "dropdown",
+    "overlay"
+  ],
+  "installedAt": "2026-07-05T16:05:31.619055Z",
+  "shared": [
+    "overlay",
+    "theme"
+  ],
+  "dependsOn": [
+    "drawer",
+    "menu"
+  ],
+  "files": [
+    "registry/components/overlay/dropdown_menu/_impl/core/dropdown_menu_widget.dart",
+    "registry/components/overlay/dropdown_menu/_impl/state/_dropdown_menu_state.dart",
+    "registry/components/overlay/dropdown_menu/_impl/themes/base/dropdown_menu_theme.dart",
+    "registry/components/overlay/dropdown_menu/_impl/themes/config/dropdown_menu_theme_config.dart",
+    "registry/components/overlay/dropdown_menu/_impl/themes/config/dropdown_menu_theme_defaults.dart",
+    "registry/components/overlay/dropdown_menu/_impl/themes/config/dropdown_menu_theme_schema.dart",
+    "registry/components/overlay/dropdown_menu/_impl/themes/config/dropdown_menu_theme_tokens.dart",
+    "registry/components/overlay/dropdown_menu/_impl/utils/dropdown_menu_api.dart",
+    "registry/components/overlay/dropdown_menu/dropdown_menu.dart"
+  ],
+  "registryNamespace": "shadcn",
+  "manifestSource": "componentsJson",
+  "registryRoot": "https://github.com/ibrar-x/shadcn_flutter_kit/tree/a886eb1a280ae3108bc4fbdd3ce4c842b32b786e/flutter_shadcn_kit/lib"
+}

@@ -1,5 +1,5 @@
 "use server";
-import { capture } from "@zuiio/capture";
+import { capture, withDbCapture } from "@zuiio/capture";
 
 import { postPurchaseToJournal } from "@/lib/accounting";
 import { requireWriteAction } from "@/lib/action-utils";
@@ -16,11 +16,14 @@ export async function createPurchaseOrder(
   const { supabase, organizationId, userId, branchId } = ctx;
 
   // Check if org uses suppliers
-  const { data: orgSettings, error: orgSettingsError } = await supabase
-    .from("organizations")
-    .select("has_suppliers")
-    .eq("id", organizationId)
-    .single();
+  const { data: orgSettings, error: orgSettingsError } = await withDbCapture(
+    "purchases: fetch org settings",
+    supabase
+      .from("organizations")
+      .select("has_suppliers")
+      .eq("id", organizationId)
+      .single(),
+  );
 
   if (orgSettingsError) {
     capture(orgSettingsError, { context: "purchases: fetch org settings" });
@@ -86,23 +89,25 @@ export async function createPurchaseOrder(
   );
 
   // Insert purchase order
-  const { data: purchaseOrder, error: poError } = await supabase
-    .from("purchase_orders")
-    .insert({
-      organization_id: organizationId,
-      branch_id: branchId,
-      supplier_id: supplierId,
-      order_number: orderNumber,
-      order_date: orderDate || new Date().toISOString().slice(0, 10),
-      expected_date: expectedDate,
-      status: "draft",
-      total_amount: totalAmount,
-      notes,
-      created_by: userId,
-    })
-    .select("id")
-    .single();
-
+  const { data: purchaseOrder, error: poError } = await withDbCapture(
+    "purchases: create purchase order",
+    supabase
+      .from("purchase_orders")
+      .insert({
+        organization_id: organizationId,
+        branch_id: branchId,
+        supplier_id: supplierId,
+        order_number: orderNumber,
+        order_date: orderDate || new Date().toISOString().slice(0, 10),
+        expected_date: expectedDate,
+        status: "draft",
+        total_amount: totalAmount,
+        notes,
+        created_by: userId,
+      })
+      .select("id")
+      .single(),
+  );
   if (poError) {
     return {
       error: `Захиалга үүсгэхэд алдаа гарлаа: ${poError.message}`,
@@ -119,13 +124,19 @@ export async function createPurchaseOrder(
     variant_id: item.variant_id ?? null,
   }));
 
-  const { error: itemsError } = await supabase
-    .from("purchase_order_items")
-    .insert(orderItems);
+  const { error: itemsError } = await withDbCapture(
+    "purchases: insert PO items",
+    supabase
+      .from("purchase_order_items")
+      .insert(orderItems),
+  );
 
   if (itemsError) {
     // Rollback: delete the purchase order
-    await supabase.from("purchase_orders").delete().eq("id", purchaseOrder.id);
+    await withDbCapture(
+      "purchases: rollback delete PO",
+      supabase.from("purchase_orders").delete().eq("id", purchaseOrder.id),
+    );
     return {
       error: `Барааны мэдээлэл хадгалахад алдаа гарлаа: ${itemsError.message}`,
     };
@@ -165,7 +176,10 @@ export async function updatePurchaseOrderStatus(
 
   fetchQuery = withBranchFilter(fetchQuery, branchId, isBranchScoped);
 
-  const { data: order } = await fetchQuery.single();
+  const { data: order } = await withDbCapture(
+    "purchases: fetch order status",
+    fetchQuery.single(),
+  );
 
   if (!order) {
     return { error: "Захиалга олдсонгүй." };
@@ -173,12 +187,15 @@ export async function updatePurchaseOrderStatus(
 
   // When marking as received, update inventory
   if (status === "received") {
-    const { data: items, error: itemsError } = await supabase
-      .from("purchase_order_items")
-      .select(
-        "id, product_id, quantity, received_quantity, unit_cost, variant_id",
-      )
-      .eq("purchase_order_id", orderId);
+    const { data: items, error: itemsError } = await withDbCapture(
+      "purchases: fetch items for restock",
+      supabase
+        .from("purchase_order_items")
+        .select(
+          "id, product_id, quantity, received_quantity, unit_cost, variant_id",
+        )
+        .eq("purchase_order_id", orderId),
+    );
 
     if (itemsError) {
       capture(itemsError, { context: "purchases: fetch items for restock" });
@@ -229,9 +246,11 @@ export async function updatePurchaseOrderStatus(
     .eq("id", orderId)
     .eq("organization_id", organizationId);
 
-  updateQuery = withBranchFilter(updateQuery, branchId, isBranchScoped);
+  const { error } = await withDbCapture(
+    "purchases: update order status",
+    updateQuery,
+  );
 
-  const { error } = await updateQuery;
 
   if (error) {
     capture(error, { context: "purchases: updatePurchaseOrderStatus" });
@@ -278,7 +297,10 @@ export async function receivePurchaseOrderItems(
 
   fetchQuery = withBranchFilter(fetchQuery, branchId, isBranchScoped);
 
-  const { data: order, error: orderError } = await fetchQuery.single();
+  const { data: order, error: orderError } = await withDbCapture(
+    "purchases: verify order",
+    fetchQuery.single(),
+  );
 
   if (orderError || !order) {
     return { error: "Захиалга олдсонгүй." };

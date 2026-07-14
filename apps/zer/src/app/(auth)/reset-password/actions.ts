@@ -4,6 +4,7 @@ import { capture } from "@zuiio/capture";
 import { redirect } from "next/navigation";
 import { validatePasswordUpdateInput } from "@/lib/domain-rules";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimit } from "@zuiio/core";
 
 export async function updatePassword(
   _prevState: { error?: string } | undefined,
@@ -19,6 +20,9 @@ export async function updatePassword(
   if (validationError) {
     return { error: validationError };
   }
+  const rl = rateLimit(`reset-password`, 10, 300_000);
+  if (rl.error) return { error: rl.error };
+
 
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ password });

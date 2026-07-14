@@ -8,8 +8,6 @@ import { createInvoiceFromSale } from "@/lib/invoicing";
 import { revalidateEntity } from "@/lib/revalidate";
 import {
   createStockMovements,
-  decrementProductStock,
-  decrementVariantStock,
   fetchProductsForStock,
   fetchVariantsForStock,
 } from "@/lib/stock-utils";
@@ -226,60 +224,43 @@ export async function createShopSale(
     return { error: stockResult.error };
   }
 
-  // --- Step 6: Atomic decrement of current_stock ---
-  for (const item of items) {
-    if (item.variantId) {
-      const success = await decrementVariantStock(
-        supabase,
-        item.variantId,
-        item.quantity,
-      );
+  // --- Step 6: Atomic stock decrement via RPC ---
+  const { data: stockDecResult, error: stockDecError } = await supabase.rpc(
+    "process_sale_stock_decrement",
+    {
+      p_org_id: organizationId,
+      p_items: items.map((item) => ({
+        product_id: item.productId,
+        variant_id: item.variantId ?? "",
+        quantity: item.quantity,
+      })),
+    },
+  );
 
-      if (!success) {
-        capture(
-          new Error(`Variant stock decrement failed: ${item.variantId}`),
-          { context: "createShopSale: decrementVariantStock" },
-        );
-        await supabase
-          .from("stock_movements")
-          .delete()
-          .eq("reference", `sale:${saleId}`);
-        await supabase.from("sale_items").delete().eq("sale_id", saleId);
-        await supabase.from("sales").delete().eq("id", saleId);
-        if (createdContact && contactId) {
-          await supabase.from("contacts").delete().eq("id", contactId);
-        }
-        return {
-          error: `"${item.name}"-н үлдэгдэл хүрэлцэхгүй байна.`,
-        };
-      }
-    } else {
-      const updatedProduct = await decrementProductStock(
-        supabase,
-        organizationId,
-        item.productId,
-        item.quantity,
-      );
-
-      if (!updatedProduct) {
-        capture(
-          new Error(`Product stock decrement failed: ${item.productId}`),
-          { context: "createShopSale: decrementProductStock" },
-        );
-        await supabase
-          .from("stock_movements")
-          .delete()
-          .eq("reference", `sale:${saleId}`);
-        await supabase.from("sale_items").delete().eq("sale_id", saleId);
-        await supabase.from("sales").delete().eq("id", saleId);
-        if (createdContact && contactId) {
-          await supabase.from("contacts").delete().eq("id", contactId);
-        }
-        return {
-          error: `"${item.name}" бүтээгдэхүүний үлдэгдэл хүрэлцэхгүй байна.`,
-        };
-      }
+  if (
+    stockDecError ||
+    !stockDecResult ||
+    typeof stockDecResult !== "object" ||
+    !("success" in stockDecResult)
+  ) {
+    await supabase
+      .from("stock_movements")
+      .delete()
+      .eq("reference", `sale:${saleId}`);
+    await supabase.from("sale_items").delete().eq("sale_id", saleId);
+    await supabase.from("sales").delete().eq("id", saleId);
+    if (createdContact && contactId) {
+      await supabase.from("contacts").delete().eq("id", contactId);
     }
+    const rpcError =
+      stockDecResult &&
+      typeof stockDecResult === "object" &&
+      "error" in stockDecResult
+        ? String(stockDecResult.error)
+        : null;
+    const errorMsg = stockDecError?.message ?? rpcError ?? "Үлдэгдэл хүрэлцэхгүй байна.";
+    capture(new Error(errorMsg), { context: "createShopSale: process_sale_stock_decrement" });
+    return { error: errorMsg };
   }
 
   // --- Success ---

@@ -78,6 +78,7 @@ function DrawerContent({
   contentClassName,
   backdropClassName,
   backdropForceRender,
+  hideBackdrop,
   viewportClassName,
   children,
   showCloseButton = true,
@@ -88,22 +89,25 @@ function DrawerContent({
   contentClassName?: string;
   backdropClassName?: string;
   backdropForceRender?: boolean;
+  hideBackdrop?: boolean;
   viewportClassName?: string;
   direction?: "right" | "bottom";
 }) {
   return (
     <DrawerPortal>
-      <DrawerBackdrop
-        className={backdropClassName}
-        forceRender={backdropForceRender}
-      />
+      {!hideBackdrop && (
+        <DrawerBackdrop
+          className={backdropClassName}
+          forceRender={backdropForceRender}
+        />
+      )}
       <DrawerViewport className={viewportClassName} direction={direction}>
         <DrawerPrimitive.Popup
           data-slot="drawer-popup"
           className={cn(
             direction === "bottom"
               ? "[--bleed:3rem] [--peek:1rem] [--stack-progress:clamp(0,var(--drawer-swipe-progress),1)] [--stack-step:0.05] [--stack-peek-offset:max(0px,calc((var(--nested-drawers)-var(--stack-progress))*var(--peek)))] [--stack-scale-base:max(0,calc(1-(var(--nested-drawers)*var(--stack-step))))] [--stack-scale:clamp(0,calc(var(--stack-scale-base)+(var(--stack-step)*var(--stack-progress))),1)] [--stack-shrink:calc(1-var(--stack-scale))] [--stack-height:max(0px,calc(var(--drawer-frontmost-height,var(--drawer-height))-var(--bleed)))] relative -mx-px -mb-[3rem] w-[calc(100%+2px)] max-h-[calc(80vh+3rem)] [height:var(--drawer-height,auto)] [transform-origin:50%_calc(100%-var(--bleed))] [transform:translateY(calc(var(--drawer-swipe-movement-y)-var(--stack-peek-offset)-(var(--stack-shrink)*var(--stack-height))))_scale(var(--stack-scale))] [transition:transform_450ms_cubic-bezier(0.32,0.72,0,1),height_450ms_cubic-bezier(0.32,0.72,0,1),opacity_450ms_cubic-bezier(0.32,0.72,0,1)] group/popup pointer-events-auto will-change-transform data-swiping:select-none data-swiping:duration-0 data-nested-drawer-swiping:duration-0 data-starting-style:translate-y-full data-ending-style:translate-y-full data-ending-style:opacity-[0.9999] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-ending-style:data-swiping:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-ending-style:data-nested-drawer-swiping:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-nested-drawer-open:h-[calc(var(--stack-height)+var(--bleed))] data-nested-drawer-open:overflow-hidden after:pointer-events-none after:absolute after:inset-0 after:bg-transparent after:content-[''] after:transition-[background-color] after:duration-[450ms] after:ease-[cubic-bezier(0.32,0.72,0,1)] data-nested-drawer-open:after:bg-black/5 rounded-t-2xl"
-              : "[--bleed:3rem] [--peek:3rem] [--stack-step:0.05] [--stack-peek-offset:max(0px,calc((var(--nested-drawers))*var(--peek)))] [--stack-scale-base:max(0,calc(1-(var(--nested-drawers)*var(--stack-step))))] [--stack-scale:clamp(0,calc(var(--stack-scale-base)+(var(--stack-step)*var(--drawer-swipe-progress))),1)] relative flex h-full w-fit min-w-[20rem] max-w-[90vw] [transform-origin:calc(100%-var(--bleed))_50%] [transform:translateX(calc(var(--drawer-swipe-movement-x)-var(--stack-peek-offset)))_scale(var(--stack-scale))] transition-transform duration-[280ms] ease-[cubic-bezier(0.32,0.82,0,1.015)] data-swiping:transition-none data-starting-style:translate-x-full data-ending-style:translate-x-full data-ending-style:duration-[calc(var(--drawer-swipe-strength)*280ms)] data-nested-drawer-open:overflow-hidden after:pointer-events-none after:absolute after:inset-0 after:bg-transparent after:content-[''] after:transition-[background-color] after:duration-[450ms] after:ease-[cubic-bezier(0.32,0.72,0,1)] data-nested-drawer-open:after:bg-black/5 pointer-events-auto will-change-transform",
+              : "[--bleed:3rem] [--peek:3rem] [--stack-step:0.05] [--stack-peek-offset:max(0px,calc((var(--nested-drawers))*var(--peek)))] [--stack-scale-base:max(0,calc(1-(var(--nested-drawers)*var(--stack-step))))] [--stack-scale:clamp(0,calc(var(--stack-scale-base)+(var(--stack-step)*var(--drawer-swipe-progress))),1)] relative flex h-full w-fit min-w-[20rem] max-w-[90vw] [transform-origin:calc(100%-var(--bleed))_50%] [transform:translateX(calc(var(--drawer-swipe-movement-x)-var(--stack-peek-offset)))_scale(var(--stack-scale))] transition-transform duration-[280ms] ease-[cubic-bezier(0.32,0.82,0,1.015)] data-swiping:transition-none data-starting-style:translate-x-full data-ending-style:translate-x-full data-ending-style:duration-[calc(var(--drawer-swipe-strength)*280ms)] data-nested-drawer-open:overflow-hidden after:pointer-events-none after:absolute after:inset-0 after:bg-transparent after:content-[''] after:transition-[background-color] after:duration-[450ms] after:ease-[cubic-bezier(0.32,0.72,0,1)] data-nested-drawer-open:after:bg-black/5 group/popup pointer-events-auto will-change-transform",
             className,
           )}
           {...props}
@@ -112,8 +116,8 @@ function DrawerContent({
             data-slot="drawer-content"
             className={cn(
               direction === "bottom"
-                ? "relative flex min-h-0 w-full flex-col gap-2 overflow-hidden border-t border-border/80 bg-popover text-sm text-popover-foreground shadow-2xl"
-                : "relative flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden border-l border-border/80 bg-popover text-sm text-popover-foreground shadow-2xl",
+                ? "relative flex min-h-0 w-full flex-col gap-2 overflow-hidden border-t border-border/80 bg-popover text-sm text-popover-foreground shadow-2xl group-data-nested-drawer-open/popup:border-y"
+                : "relative flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden border-l border-border/80 bg-popover text-sm text-popover-foreground shadow-2xl group-data-nested-drawer-open/popup:border-y",
               contentClassName,
             )}
           >

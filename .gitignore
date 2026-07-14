@@ -1,15 +1,82 @@
+# Dependencies
 node_modules
-dist
-.tsbuildinfo
-.next
-# next-agents-md
-.next-docs/
-*.env
-*.env.local
-.expo/
+
+# Build outputs
 dist/
-web-build/
 *.tsbuildinfo
+
+# Next.js
+.next/
+.next-docs/
+
+# Expo
+.expo/
+web-build/
 expo-env.d.ts
+
+# Vercel
 .vercel
-/apps/tamga/.dart_tool
+
+# Environment files — never commit secrets
+.env*
+!.env.example
+
+# Turbo
+.turbo/
+
+# Debug logs
+*.log
+.pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# AI agent / IDE config directories (local tooling, not part of product)
+.adal/
+.agents/
+.aider-desk/
+.augment/
+.bob/
+.claude/
+.codeartsdoer/
+.codebuddy/
+.codemaker/
+.codestudio/
+.continue/
+.cortex/
+.documentizer/
+.factory/
+.forge/
+.iflow/
+.junie/
+.kilocode/
+.kiro/
+.kode/
+.mcpjam/
+.mux/
+.neovate/
+.omp/
+.opencode/
+.openhands/
+.pi/
+.pochi/
+.qoder/
+.qwen/
+.roo/
+.rovodev/
+.senpi/
+.tabnine/
+.trae/
+.vibe/
+.windsurf/
+.zencoder/
+
+# Tamga (Flutter) — only ignore the .dart_tool directory
+/apps/tamga/.dart_tool/

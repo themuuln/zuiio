@@ -6,7 +6,7 @@ import { logAuditEventWithClient } from "@/lib/audit"
 import { withBranchFilter } from "@/lib/branches";
 import { revalidateEntities } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
-import { capture } from "@zuiio/capture";
+import { capture, withDbCapture } from "@zuiio/capture";
 
 function parseFloatSafe(value: FormDataEntryValue | null): number {
   if (typeof value !== "string") return 0;
@@ -65,25 +65,28 @@ export async function createDiscount(
   }
 
   // Insert discount
-  const { data: discount, error: discountError } = await supabase
-    .from("discounts")
-    .insert({
-      organization_id: organizationId,
-      branch_id: branchId,
-      name,
-      description: description || null,
-      type,
-      value,
-      applies_to: appliesTo,
-      min_purchase_amount: minPurchaseAmount,
-      valid_from: validFrom,
-      valid_until: validUntil || null,
-      is_active: isActive,
-      usage_limit: usageLimit,
-      used_count: 0,
-    })
-    .select("id")
-    .single();
+  const { data: discount, error: discountError } = await withDbCapture(
+    "discounts: create",
+    supabase
+      .from("discounts")
+      .insert({
+        organization_id: organizationId,
+        branch_id: branchId,
+        name,
+        description: description || null,
+        type,
+        value,
+        applies_to: appliesTo,
+        min_purchase_amount: minPurchaseAmount,
+        valid_from: validFrom,
+        valid_until: validUntil || null,
+        is_active: isActive,
+        usage_limit: usageLimit,
+        used_count: 0,
+      })
+      .select("id")
+      .single(),
+  );
 
   if (discountError) {
     return {
@@ -115,13 +118,19 @@ export async function createDiscount(
         condition_value: c.condition_value,
       }));
 
-      const { error: condError } = await supabase
-        .from("discount_conditions")
-        .insert(conditionRows);
+      const { error: condError } = await withDbCapture(
+        "discounts: insert conditions",
+        supabase
+          .from("discount_conditions")
+          .insert(conditionRows),
+      );
 
       if (condError) {
         // Clean up the discount
-        await supabase.from("discounts").delete().eq("id", discount.id);
+        await withDbCapture(
+          "discounts: cleanup failed discount",
+          supabase.from("discounts").delete().eq("id", discount.id),
+        );
         return {
           error: `Нөхцөл хадгалахад алдаа гарлаа: ${condError.message}`,
         };
@@ -205,7 +214,10 @@ export async function updateDiscount(
     query = query.eq("branch_id", branchId);
   }
 
-  const { error: discountError } = await query;
+  const { error: discountError } = await withDbCapture(
+    "discounts: update",
+    query,
+  );
 
   if (discountError) {
     return {
@@ -219,10 +231,13 @@ export async function updateDiscount(
     appliesTo === "selected_categories"
   ) {
     // Delete existing conditions
-    await supabase
-      .from("discount_conditions")
-      .delete()
-      .eq("discount_id", discountId);
+    await withDbCapture(
+      "discounts: delete existing conditions",
+      supabase
+        .from("discount_conditions")
+        .delete()
+        .eq("discount_id", discountId),
+    );
 
     // Insert new conditions
     if (conditionsRaw) {
@@ -244,10 +259,12 @@ export async function updateDiscount(
           condition_value: c.condition_value,
         }));
 
-        const { error: condError } = await supabase
-          .from("discount_conditions")
-          .insert(conditionRows);
-
+        const { error: condError } = await withDbCapture(
+          "discounts: insert conditions",
+          supabase
+            .from("discount_conditions")
+            .insert(conditionRows),
+        );
         if (condError) {
           return {
             error: `Нөхцөл хадгалахад алдаа гарлаа: ${condError.message}`,
@@ -257,10 +274,13 @@ export async function updateDiscount(
     }
   } else {
     // "all" — delete any existing conditions
-    await supabase
-      .from("discount_conditions")
-      .delete()
-      .eq("discount_id", discountId);
+    await withDbCapture(
+      "discounts: delete all conditions",
+      supabase
+        .from("discount_conditions")
+        .delete()
+        .eq("discount_id", discountId),
+    );
   }
 
   after(() => logAuditEventWithClient(supabase,
@@ -295,7 +315,10 @@ export async function toggleDiscountActive(
     fetchQuery = fetchQuery.eq("branch_id", branchId);
   }
 
-  const { data: discount, error: fetchError } = await fetchQuery.single();
+  const { data: discount, error: fetchError } = await withDbCapture(
+    "discounts: fetch for toggle",
+    fetchQuery.single(),
+  );
 
   if (fetchError || !discount) {
     return { error: "Хямдрал олдсонгүй." };
@@ -311,8 +334,10 @@ export async function toggleDiscountActive(
     updateQuery = updateQuery.eq("branch_id", branchId);
   }
 
-  const { error } = await updateQuery;
-
+  const { error } = await withDbCapture(
+    "discounts: toggle active",
+    updateQuery,
+  );
   if (error) {
     return {
       error: `Төлөв шинэчлэхэд алдаа гарлаа: ${error.message}`,
@@ -358,7 +383,10 @@ export async function applyDiscount(formData: FormData) {
 
   fetchQuery = withBranchFilter(fetchQuery, branchId, isBranchScoped);
 
-  const { data: discount, error: discountError } = await fetchQuery.single();
+  const { data: discount, error: discountError } = await withDbCapture(
+    "discounts: fetch for apply",
+    fetchQuery.single(),
+  );
 
   if (discountError || !discount) {
     return { error: "Хямдрал олдсонгүй." };
@@ -405,10 +433,13 @@ export async function applyDiscount(formData: FormData) {
   const totalAfterDiscount = Math.max(0, cartTotal - discountAmount);
 
   // Increment used_count
-  await supabase
-    .from("discounts")
-    .update({ used_count: discount.used_count + 1 })
-    .eq("id", discountId);
+  await withDbCapture(
+    "discounts: increment used_count",
+    supabase
+      .from("discounts")
+      .update({ used_count: discount.used_count + 1 })
+      .eq("id", discountId),
+  );
 
   return {
     discountAmount,

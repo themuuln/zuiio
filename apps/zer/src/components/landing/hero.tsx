@@ -44,37 +44,30 @@ export function Hero() {
             </Button>
           </div>
 
-          {/* TODO: Verify these metrics against real data before launch.
-              "10,000 products", "500+ organizations", "95% satisfaction"
-              are placeholder benchmarks. */}
-          {/* Trust indicators — contextual proof */}
-          <div className="mt-16 grid gap-x-12 gap-y-6 border-t pt-10 sm:grid-cols-3">
-            <div className="text-left">
-              <p className="text-sm font-medium">Барааны бүртгэл автоматжсан</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                10,000 гаруй бүтээгдэхүүний нөөц, үнэ, түүхийг нэг дэлгэцээс
-                хянах боломжтой.
-              </p>
-            </div>
-            <div className="text-left">
-              <p className="text-sm font-medium">
-                500+ байгууллага итгэж хэрэглэж байна
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Монголын жижиг дунд бизнес эрхлэгчид Zer-ийг сонгож, өдөр тутмын
-                ажлаа дижитал хэлбэрт шилжүүлсэн.
-              </p>
-            </div>
-            <div className="text-left">
-              <p className="text-sm font-medium">
-                Хэрэглэгчдийн 95% сэтгэл ханамжтай
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Судалгаанд оролцогчдын дийлэнх нь Zer ашигласнаар ажлын бүртгэл
-                хөтлөх хугацаагаа эрс багасгасан гэж хариулсан.
-              </p>
-            </div>
-          </div>
+{/* Feature highlights — no fake metrics */}
+<div className="mt-16 grid gap-x-12 gap-y-6 border-t pt-10 sm:grid-cols-3">
+  <div className="text-left">
+    <p className="text-sm font-medium">Бараа материалын бүртгэл</p>
+    <p className="mt-1 text-sm text-muted-foreground">
+      Бүтээгдэхүүний нөөц, үнэ, түүхийг нэг дэлгэцээс хянах боломжтой.
+      Баркод уншуулж хурдан бүртгэнэ.
+    </p>
+  </div>
+  <div className="text-left">
+    <p className="text-sm font-medium">Борлуулалт &amp; тооцоо</p>
+    <p className="mt-1 text-sm text-muted-foreground">
+      POS-ээр хурдан борлуулалт хийж, нэхэмжлэл үүсгэн, төлбөр хүлээн авна.
+      Карт, бэлэн, шилжүүлэг — бүх төлбөрийн хэлбэр.
+    </p>
+  </div>
+  <div className="text-left">
+    <p className="text-sm font-medium">Санхүү &amp; Нягтлан</p>
+    <p className="mt-1 text-sm text-muted-foreground">
+      Ерөнхий журнал, тэнцлэгээ, зарлагын ангилал — бүх санхүүгийн мэдээлэл
+      нэг дор.
+    </p>
+  </div>
+</div>
         </div>
       </div>
     </section>

@@ -1,5 +1,5 @@
 "use server";
-import { capture } from "@zuiio/capture";
+import { capture, withDbCapture } from "@zuiio/capture";
 
 import { postExpenseToJournal } from "@/lib/accounting";
 import { requireWriteAction } from "@/lib/action-utils";
@@ -30,20 +30,23 @@ export async function createExpense(
     return { error: "Салбар тодорхойгүй байна." };
   }
 
-  const { data: expense, error } = await supabase
-    .from("expenses")
-    .insert({
-      organization_id: organizationId,
-      branch_id: branchId,
-      category,
-      amount,
-      expense_date: expenseDate,
-      description,
-      payment_method: getString(formData, "payment_method") || "cash",
-      created_by: userId,
-    })
-    .select("id")
-    .single();
+  const { data: expense, error } = await withDbCapture(
+    "expenses: createExpense",
+    supabase
+      .from("expenses")
+      .insert({
+        organization_id: organizationId,
+        branch_id: branchId,
+        category,
+        amount,
+        expense_date: expenseDate,
+        description,
+        payment_method: getString(formData, "payment_method") || "cash",
+        created_by: userId,
+      })
+      .select("id")
+      .single(),
+  );
 
   if (error) {
     capture(error, { context: "expenses: createExpense" });

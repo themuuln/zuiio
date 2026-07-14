@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "wrapper",
+  "name": "Wrapper",
+  "version": "1.0.0",
+  "tags": [
+    "utility",
+    "layout"
+  ],
+  "installedAt": "2026-07-05T16:08:33.563386Z",
+  "shared": [],
+  "dependsOn": [],
+  "files": [
+    "registry/components/utility/wrapper/_impl/state/wrapper_state.dart",
+    "registry/components/utility/wrapper/wrapper.dart"
+  ],
+  "registryNamespace": "shadcn",
+  "manifestSource": "componentsJson",
+  "registryRoot": "https://github.com/ibrar-x/shadcn_flutter_kit/tree/a886eb1a280ae3108bc4fbdd3ce4c842b32b786e/flutter_shadcn_kit/lib"
+}

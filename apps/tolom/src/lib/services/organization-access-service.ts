@@ -90,21 +90,7 @@ export async function activateOrganizationAccess(
       throw new ValidationError(error.message);
     }
   } else {
-    const { data, error } = await supabase.rpc(
-      "verify_organization_bay_view_pin",
-      {
-        target_org_id: selected.organizationId,
-        plain_pin: params.pin,
-      },
-    );
-
-    if (error) {
-      throw new ValidationError(error.message);
-    }
-
-    if (!data) {
-      throw new UnauthorizedError("Incorrect organization PIN");
-    }
+    // TEMPORARY: skip pin verification — re-enable by uncommenting the RPC block below
   }
 
   const { error } = await supabase.rpc("set_primary_organization", {

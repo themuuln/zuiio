@@ -39,7 +39,8 @@ export function CatalogPickerDrawer<T extends CatalogItem>({
     <DetailDrawer
       open={open}
       onOpenChange={onOpenChange}
-      backdropForceRender
+      hideBackdrop
+      className="sm:max-w-[46rem] lg:max-w-[68rem] xl:max-w-[78rem]"
     >
       <DetailDrawer.Body className="p-0">
         <CatalogCombobox

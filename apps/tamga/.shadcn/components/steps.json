@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "steps",
+  "name": "Steps",
+  "version": "1.0.0",
+  "tags": [
+    "steps",
+    "progress",
+    "layout"
+  ],
+  "installedAt": "2026-07-05T16:04:11.398289Z",
+  "shared": [
+    "theme",
+    "util"
+  ],
+  "dependsOn": [
+    "text"
+  ],
+  "files": [
+    "registry/components/layout/steps/_impl/core/step_item.dart",
+    "registry/components/layout/steps/_impl/core/steps_2.dart",
+    "registry/components/layout/steps/steps.dart"
+  ],
+  "registryNamespace": "shadcn",
+  "manifestSource": "componentsJson",
+  "registryRoot": "https://github.com/ibrar-x/shadcn_flutter_kit/tree/a886eb1a280ae3108bc4fbdd3ce4c842b32b786e/flutter_shadcn_kit/lib"
+}

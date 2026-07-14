@@ -16,7 +16,13 @@ const nextConfig: NextConfig = {
       dynamic: 30,
       static: 300,
     },
-    optimizePackageImports: ["@phosphor-icons/react"],
+    optimizePackageImports: [
+      "@phosphor-icons/react",
+      "@tanstack/react-query",
+      "date-fns",
+      "lucide-react",
+    ],
+    turbopackFileSystemCacheForBuild: true,
     viewTransition: true,
   },
   cacheLife: {
@@ -29,12 +35,19 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/(.*)",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "X-XSS-Protection", value: "1; mode=block" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+        ],
+      },
+      {
         source: "/sw.js",
         headers: [
-          {
-            key: "Cache-Control",
-            value: "no-cache, no-store, must-revalidate",
-          },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
         ],
       },
     ];
@@ -53,6 +66,10 @@ export default withSentryConfig(nextConfig, {
 
   // Bypass ad-blockers by proxying Sentry events through a Next.js route
   tunnelRoute: "/monitoring",
+
+  // Disable Sentry webpack plugin in development for faster builds
+  disableServerWebpackPlugin: process.env.NODE_ENV === "development",
+  disableClientWebpackPlugin: process.env.NODE_ENV === "development",
 
   webpack: {
     // Enables automatic instrumentation of Vercel Cron Monitors

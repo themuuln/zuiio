@@ -42,6 +42,7 @@ async function DataFetcher() {
       .eq("organization_id", organizationId)
       .eq("type", "supplier")
       .order("created_at", { ascending: false })
+      .limit(500)
   );
 
   const tableData: SupplierRow[] =

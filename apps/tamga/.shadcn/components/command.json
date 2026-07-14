@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "id": "command",
+  "name": "Command",
+  "version": "1.0.0",
+  "tags": [
+    "command",
+    "input",
+    "overlay"
+  ],
+  "installedAt": "2026-07-05T15:59:05.379231Z",
+  "shared": [
+    "border_utils",
+    "clickable",
+    "color_extensions",
+    "constants",
+    "focus_outline",
+    "icon_extensions",
+    "localizations",
+    "lucide_icons",
+    "outlined_container",
+    "overlay",
+    "subfocus",
+    "text_modifiers",
+    "theme",
+    "util"
+  ],
+  "dependsOn": [
+    "button",
+    "dialog",
+    "divider",
+    "text_field"
+  ],
+  "files": [
+    "registry/components/control/command/_impl/core/command_category.dart",
+    "registry/components/control/command/_impl/core/command_dialog.dart",
+    "registry/components/control/command/_impl/core/command_empty.dart",
+    "registry/components/control/command/_impl/core/command_item_widget.dart",
+    "registry/components/control/command/_impl/core/command_keyboard_display.dart",
+    "registry/components/control/command/_impl/core/command_widget.dart",
+    "registry/components/control/command/_impl/state/command_item_state.dart",
+    "registry/components/control/command/_impl/state/command_query.dart",
+    "registry/components/control/command/_impl/state/command_state.dart",
+    "registry/components/control/command/_impl/utils/next_item_intent.dart",
+    "registry/components/control/command/_impl/utils/previous_item_intent.dart",
+    "registry/components/control/command/command.dart"
+  ],
+  "registryNamespace": "shadcn",
+  "manifestSource": "componentsJson",
+  "registryRoot": "https://github.com/ibrar-x/shadcn_flutter_kit/tree/a886eb1a280ae3108bc4fbdd3ce4c842b32b786e/flutter_shadcn_kit/lib"
+}

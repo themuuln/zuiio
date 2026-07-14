@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "autocomplete",
+  "name": "Autocomplete",
+  "version": "1.0.0",
+  "tags": [
+    "form",
+    "input",
+    "autocomplete"
+  ],
+  "installedAt": "2026-07-05T15:58:12.892604Z",
+  "shared": [
+    "overlay",
+    "style_value",
+    "theme"
+  ],
+  "dependsOn": [
+    "button",
+    "card"
+  ],
+  "files": [
+    "registry/components/form/autocomplete/_impl/core/auto_complete.dart",
+    "registry/components/form/autocomplete/_impl/core/auto_complete_mode.dart",
+    "registry/components/form/autocomplete/_impl/core/autocomplete_item.dart",
+    "registry/components/form/autocomplete/_impl/state/_auto_complete_item_state.dart",
+    "registry/components/form/autocomplete/_impl/state/_autocomplete_preview_state.dart",
+    "registry/components/form/autocomplete/_impl/state/autocomplete_state.dart",
+    "registry/components/form/autocomplete/_impl/utils/accept_suggestion_intent.dart",
+    "registry/components/form/autocomplete/_impl/utils/auto_complete_intent.dart",
+    "registry/components/form/autocomplete/_impl/utils/navigate_suggestion_intent.dart",
+    "registry/components/form/autocomplete/autocomplete.dart"
+  ],
+  "registryNamespace": "shadcn",
+  "manifestSource": "componentsJson",
+  "registryRoot": "https://github.com/ibrar-x/shadcn_flutter_kit/tree/a886eb1a280ae3108bc4fbdd3ce4c842b32b786e/flutter_shadcn_kit/lib"
+}

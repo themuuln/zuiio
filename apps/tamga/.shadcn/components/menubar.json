@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "menubar",
+  "name": "Menubar",
+  "version": "1.0.0",
+  "tags": [
+    "menu",
+    "overlay",
+    "navigation"
+  ],
+  "installedAt": "2026-07-05T16:06:00.239414Z",
+  "shared": [
+    "constants",
+    "outlined_container",
+    "text_modifiers",
+    "theme"
+  ],
+  "dependsOn": [
+    "menu"
+  ],
+  "files": [
+    "registry/components/overlay/menubar/_impl/core/menubar_widget.dart",
+    "registry/components/overlay/menubar/_impl/state/menubar_state.dart",
+    "registry/components/overlay/menubar/_impl/themes/base/menubar_theme.dart",
+    "registry/components/overlay/menubar/_impl/themes/config/menubar_theme_config.dart",
+    "registry/components/overlay/menubar/_impl/themes/config/menubar_theme_defaults.dart",
+    "registry/components/overlay/menubar/_impl/themes/config/menubar_theme_schema.dart",
+    "registry/components/overlay/menubar/_impl/themes/config/menubar_theme_tokens.dart",
+    "registry/components/overlay/menubar/menubar.dart"
+  ],
+  "registryNamespace": "shadcn",
+  "manifestSource": "componentsJson",
+  "registryRoot": "https://github.com/ibrar-x/shadcn_flutter_kit/tree/a886eb1a280ae3108bc4fbdd3ce4c842b32b786e/flutter_shadcn_kit/lib"
+}

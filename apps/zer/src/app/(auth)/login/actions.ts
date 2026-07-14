@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { validateLoginInput } from "@/lib/domain-rules";
 import { createClient } from "@/lib/supabase/server";
 import { getString, sanitizeRedirectPath } from "@/lib/validation";
+import { rateLimit } from "@zuiio/core";
 
 export async function login(
   _prevState: { error?: string } | undefined,
@@ -19,6 +20,9 @@ export async function login(
   if (validationError) {
     return { error: validationError };
   }
+  const rl = rateLimit(`login:${email}`, 5, 60_000);
+  if (rl.error) return { error: rl.error };
+
 
   const { error } = await supabase.auth.signInWithPassword({
     email,

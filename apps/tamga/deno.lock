@@ -1,0 +1,22 @@
+{
+  "version": "5",
+  "redirects": {
+    "https://esm.sh/@supabase/supabase-js@2": "https://esm.sh/@supabase/supabase-js@2.108.2"
+  },
+  "remote": {
+    "https://esm.sh/@supabase/supabase-js@2.108.2": "7fbe17c4ef67b80d388cef1f0a0c7ecb28b2b1c3c4110875925a4bc82ff28e13"
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:@a5c-ai/babysitter-sdk@^0.0.187",
+        "npm:bcryptjs@^3.0.3",
+        "npm:mermaid@^11.15.0",
+        "npm:pg@^8.22.0",
+        "npm:vitepress-mermaid-renderer@^1.1.26",
+        "npm:vitepress@^1.6.4",
+        "npm:vue@^3.5.33"
+      ]
+    }
+  }
+}

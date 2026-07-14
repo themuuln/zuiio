@@ -15,16 +15,16 @@ const footerLinks = [
   {
     title: "Компани",
     links: [
-      { label: "Бидний тухай", href: "#" }, // TODO: replace with actual /about page
-      { label: "Блог", href: "#" }, // TODO: replace with actual /blog page
-      { label: "Холбогдох", href: "#" }, // TODO: replace with actual /contact page
+      { label: "Бидний тухай", href: "/about" },
+      { label: "Блог", href: "#" },
+      { label: "Холбогдох", href: "/contact" },
     ],
   },
   {
     title: "Эрх зүй",
     links: [
-      { label: "Нууцлалын бодлого", href: "#" }, // TODO: replace with actual /privacy page
-      { label: "Үйлчилгээний нөхцөл", href: "#" }, // TODO: replace with actual /terms page
+      { label: "Нууцлалын бодлого", href: "/privacy" },
+      { label: "Үйлчилгээний нөхцөл", href: "/terms" },
     ],
   },
 ];

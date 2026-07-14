@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "shadcn_localizations_en",
+  "name": "Shadcn Localizations (EN)",
+  "version": "1.0.0",
+  "tags": [
+    "localization",
+    "i18n",
+    "english"
+  ],
+  "installedAt": "2026-07-05T16:08:30.255755Z",
+  "shared": [],
+  "dependsOn": [],
+  "files": [
+    "registry/components/utility/shadcn_localizations_en/shadcn_localizations_en.dart"
+  ],
+  "registryNamespace": "shadcn",
+  "manifestSource": "componentsJson",
+  "registryRoot": "https://github.com/ibrar-x/shadcn_flutter_kit/tree/a886eb1a280ae3108bc4fbdd3ce4c842b32b786e/flutter_shadcn_kit/lib"
+}

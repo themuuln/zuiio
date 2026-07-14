@@ -29,6 +29,7 @@ export function SuppliersContent() {
           .eq("organization_id", organizationId)
           .eq("type", "supplier")
           .order("created_at", { ascending: false })
+          .limit(500)
       );
       return (suppliers ?? []).map((s) => ({
         id: s.id,

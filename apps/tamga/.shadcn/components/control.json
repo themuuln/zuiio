@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "control",
+  "name": "Control",
+  "version": "1.0.0",
+  "tags": [
+    "controller",
+    "form"
+  ],
+  "installedAt": "2026-07-05T15:59:20.094509Z",
+  "shared": [],
+  "dependsOn": [],
+  "files": [
+    "registry/components/form/control/_impl/core/controlled_component.dart",
+    "registry/components/form/control/_impl/core/controlled_component_data.dart",
+    "registry/components/form/control/_impl/state/_controlled_component_adapter_state.dart",
+    "registry/components/form/control/_impl/utils/component_value_controller.dart",
+    "registry/components/form/control/_impl/utils/controlled_component_adapter.dart",
+    "registry/components/form/control/control.dart"
+  ],
+  "registryNamespace": "shadcn",
+  "manifestSource": "componentsJson",
+  "registryRoot": "https://github.com/ibrar-x/shadcn_flutter_kit/tree/a886eb1a280ae3108bc4fbdd3ce4c842b32b786e/flutter_shadcn_kit/lib"
+}

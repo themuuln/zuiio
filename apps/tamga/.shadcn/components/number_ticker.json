@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "number_ticker",
+  "name": "Number Ticker",
+  "version": "1.0.0",
+  "tags": [
+    "display",
+    "indicator",
+    "animation"
+  ],
+  "installedAt": "2026-07-05T15:56:52.931443Z",
+  "shared": [
+    "animated_value_builder",
+    "style_value",
+    "theme"
+  ],
+  "dependsOn": [],
+  "files": [
+    "registry/components/display/number_ticker/_impl/themes/base/number_ticker_theme.dart",
+    "registry/components/display/number_ticker/_impl/themes/config/number_ticker_theme_config.dart",
+    "registry/components/display/number_ticker/_impl/themes/config/number_ticker_theme_defaults.dart",
+    "registry/components/display/number_ticker/_impl/themes/config/number_ticker_theme_schema.dart",
+    "registry/components/display/number_ticker/_impl/themes/config/number_ticker_theme_tokens.dart",
+    "registry/components/display/number_ticker/_number_ticker_preview_state.dart",
+    "registry/components/display/number_ticker/number_ticker.dart"
+  ],
+  "registryNamespace": "shadcn",
+  "manifestSource": "componentsJson",
+  "registryRoot": "https://github.com/ibrar-x/shadcn_flutter_kit/tree/a886eb1a280ae3108bc4fbdd3ce4c842b32b786e/flutter_shadcn_kit/lib"
+}

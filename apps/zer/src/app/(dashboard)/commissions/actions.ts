@@ -421,7 +421,7 @@ export async function createPayout(
     capture(itemsInsertError, { context: "commissions: insert payout items" });
 
     // Cleanup: delete the payout if items failed (best-effort rollback)
-    await supabase.from("commission_payouts").delete().eq("id", payout.id);
+    await supabase.from("commission_payouts").delete().eq("id", payout.id).eq("organization_id", orgId);
 
     return {
       error:

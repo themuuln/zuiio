@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "validated",
+  "name": "Validated",
+  "version": "1.0.0",
+  "tags": [
+    "form",
+    "validation",
+    "state"
+  ],
+  "installedAt": "2026-07-05T16:01:26.783588Z",
+  "shared": [],
+  "dependsOn": [
+    "form"
+  ],
+  "files": [
+    "registry/components/form/validated/_impl/state/_validated_state.dart",
+    "registry/components/form/validated/validated.dart"
+  ],
+  "registryNamespace": "shadcn",
+  "manifestSource": "componentsJson",
+  "registryRoot": "https://github.com/ibrar-x/shadcn_flutter_kit/tree/a886eb1a280ae3108bc4fbdd3ce4c842b32b786e/flutter_shadcn_kit/lib"
+}

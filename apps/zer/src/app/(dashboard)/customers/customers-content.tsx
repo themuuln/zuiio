@@ -26,7 +26,8 @@ export function CustomersContent() {
           .select("id, name, phone, email, address, balance")
           .eq("organization_id", organizationId)
           .eq("type", "customer")
-          .order("created_at", { ascending: false }),
+          .order("created_at", { ascending: false })
+          .limit(500),
       );
       if (error) throw error;
       return (data ?? []).map((customer) => ({

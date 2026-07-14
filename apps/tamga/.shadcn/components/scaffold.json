@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "id": "scaffold",
+  "name": "Scaffold",
+  "version": "1.0.0",
+  "tags": [
+    "layout",
+    "scaffold",
+    "structure"
+  ],
+  "installedAt": "2026-07-05T15:59:43.719764Z",
+  "shared": [
+    "color_extensions",
+    "theme",
+    "util"
+  ],
+  "dependsOn": [
+    "drawer",
+    "linear_progress_indicator",
+    "text"
+  ],
+  "files": [
+    "registry/components/layout/scaffold/_impl/core/_render_scaffold_padding.dart",
+    "registry/components/layout/scaffold/_impl/core/_scaffold_flex.dart",
+    "registry/components/layout/scaffold/_impl/core/_scaffold_parent_data.dart",
+    "registry/components/layout/scaffold/_impl/core/_scaffold_render_flex.dart",
+    "registry/components/layout/scaffold/_impl/core/app_bar.dart",
+    "registry/components/layout/scaffold/_impl/core/scaffold_2.dart",
+    "registry/components/layout/scaffold/_impl/core/scaffold_bar_data.dart",
+    "registry/components/layout/scaffold/_impl/core/scaffold_box_constraints.dart",
+    "registry/components/layout/scaffold/_impl/core/scaffold_footer_padding.dart",
+    "registry/components/layout/scaffold/_impl/core/scaffold_header_padding.dart",
+    "registry/components/layout/scaffold/_impl/core/scaffold_padding_storage.dart",
+    "registry/components/layout/scaffold/_impl/state/_app_bar_state.dart",
+    "registry/components/layout/scaffold/_impl/state/scaffold_state.dart",
+    "registry/components/layout/scaffold/scaffold.dart"
+  ],
+  "registryNamespace": "shadcn",
+  "manifestSource": "componentsJson",
+  "registryRoot": "https://github.com/ibrar-x/shadcn_flutter_kit/tree/a886eb1a280ae3108bc4fbdd3ce4c842b32b786e/flutter_shadcn_kit/lib"
+}

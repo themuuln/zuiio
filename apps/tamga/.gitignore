@@ -42,3 +42,4 @@ yarn-error.*
 # misc
 .DS_Store
 *.tsbuildinfo
+/.dart_tool

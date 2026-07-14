@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "tracker",
+  "name": "Tracker",
+  "version": "1.0.0",
+  "tags": [
+    "display",
+    "status"
+  ],
+  "installedAt": "2026-07-05T15:58:00.316993Z",
+  "shared": [
+    "style_value",
+    "theme",
+    "util"
+  ],
+  "dependsOn": [
+    "tooltip"
+  ],
+  "files": [
+    "registry/components/display/tracker/_impl/core/tracker_widget.dart",
+    "registry/components/display/tracker/_impl/themes/base/tracker_theme.dart",
+    "registry/components/display/tracker/_impl/themes/config/tracker_theme_config.dart",
+    "registry/components/display/tracker/_impl/themes/config/tracker_theme_defaults.dart",
+    "registry/components/display/tracker/_impl/themes/config/tracker_theme_schema.dart",
+    "registry/components/display/tracker/_impl/themes/config/tracker_theme_tokens.dart",
+    "registry/components/display/tracker/_impl/utils/_simple_tracker_level.dart",
+    "registry/components/display/tracker/_impl/utils/tracker_data.dart",
+    "registry/components/display/tracker/_impl/utils/tracker_level.dart",
+    "registry/components/display/tracker/tracker.dart"
+  ],
+  "registryNamespace": "shadcn",
+  "manifestSource": "componentsJson",
+  "registryRoot": "https://github.com/ibrar-x/shadcn_flutter_kit/tree/a886eb1a280ae3108bc4fbdd3ce4c842b32b786e/flutter_shadcn_kit/lib"
+}

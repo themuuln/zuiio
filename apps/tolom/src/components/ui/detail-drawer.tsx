@@ -33,6 +33,8 @@ interface DetailDrawerRootProps {
   contentClassName?: string;
   /** Passed to DrawerContent's viewportClassName — for full-screen viewport padding */
   viewportClassName?: string;
+  /** Hide the backdrop overlay — use for nested drawers that shouldn't blur the parent */
+  hideBackdrop?: boolean;
   /** Passed to DrawerContent's backdropClassName — custom class for the backdrop overlay */
   backdropClassName?: string;
   /**
@@ -52,6 +54,7 @@ export function DetailDrawer({
   modal = true,
   direction = "right",
   backdropForceRender,
+  hideBackdrop,
   swipeDirection,
   nestedContent,
   contentClassName,
@@ -75,6 +78,7 @@ export function DetailDrawer({
           )}
           viewportClassName={viewportClassName}
           backdropForceRender={backdropForceRender}
+          hideBackdrop={hideBackdrop}
           backdropClassName={backdropClassName}
           direction={direction}
         >

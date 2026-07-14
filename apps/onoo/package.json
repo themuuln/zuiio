@@ -8,7 +8,8 @@
 		"start": "next start",
 		"lint": "biome check",
 		"format": "biome format --write",
-		"validate:types": "NODE_OPTIONS='--max-old-space-size=8192' tsc --noEmit --incremental"
+		"validate:types": "NODE_OPTIONS='--max-old-space-size=8192' tsc --noEmit --incremental",
+		"clean:dev": "rm -rf .next/cache/turbopack .next/dev/cache/turbopack"
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^5.4.0",

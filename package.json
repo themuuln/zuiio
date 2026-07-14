@@ -21,7 +21,9 @@
     "prepare": "husky",
     "mcp:init": "npx tsx scripts/mcp-init.ts",
     "design:check": "bash scripts/design-quality-check.sh",
-    "design:score": "echo 'OPTIK skills: use /score in Claude Code or Cursor'"
+    "design:score": "echo 'OPTIK skills: use /score in Claude Code or Cursor'",
+    "clean:dev": "turbo run clean:dev",
+    "clean:turbopack": "find . -type d -name turbopack -path '*/.next/*' -exec rm -rf {} + 2>/dev/null; echo 'Turbopack caches cleaned'"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",

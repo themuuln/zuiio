@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "eye_dropper",
+  "name": "Eye Dropper",
+  "version": "1.0.0",
+  "tags": [
+    "color",
+    "picker",
+    "overlay"
+  ],
+  "installedAt": "2026-07-05T15:58:54.858204Z",
+  "shared": [
+    "color_extensions",
+    "text_modifiers",
+    "theme"
+  ],
+  "dependsOn": [
+    "history"
+  ],
+  "files": [
+    "registry/components/overlay/eye_dropper/_impl/core/eye_dropper_layer.dart",
+    "registry/components/overlay/eye_dropper/_impl/core/eye_dropper_layer_scope.dart",
+    "registry/components/overlay/eye_dropper/_impl/core/eye_dropper_result.dart",
+    "registry/components/overlay/eye_dropper/_impl/state/_eye_dropper_layer_state.dart",
+    "registry/components/overlay/eye_dropper/_impl/state/_eye_dropper_preview_state.dart",
+    "registry/components/overlay/eye_dropper/_impl/utils/_color_preview_painter.dart",
+    "registry/components/overlay/eye_dropper/_impl/utils/_eye_dropper_completer.dart",
+    "registry/components/overlay/eye_dropper/_impl/utils/_screenshot_image.dart",
+    "registry/components/overlay/eye_dropper/_impl/utils/_screenshot_result.dart",
+    "registry/components/overlay/eye_dropper/eye_dropper.dart"
+  ],
+  "registryNamespace": "shadcn",
+  "manifestSource": "componentsJson",
+  "registryRoot": "https://github.com/ibrar-x/shadcn_flutter_kit/tree/a886eb1a280ae3108bc4fbdd3ce4c842b32b786e/flutter_shadcn_kit/lib"
+}

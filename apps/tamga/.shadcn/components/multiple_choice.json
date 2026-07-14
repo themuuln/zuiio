@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "multiple_choice",
+  "name": "Multiple Choice",
+  "version": "1.0.0",
+  "tags": [
+    "form",
+    "choice",
+    "selection"
+  ],
+  "installedAt": "2026-07-05T16:00:31.531780Z",
+  "shared": [
+    "form_control",
+    "form_value_supplier",
+    "theme"
+  ],
+  "dependsOn": [],
+  "files": [
+    "registry/components/form/multiple_choice/_impl/core/choice.dart",
+    "registry/components/form/multiple_choice/_impl/core/controlled_multiple_answer.dart",
+    "registry/components/form/multiple_choice/_impl/core/controlled_multiple_choice.dart",
+    "registry/components/form/multiple_choice/_impl/core/multiple_answer.dart",
+    "registry/components/form/multiple_choice/_impl/state/_multiple_answer_state.dart",
+    "registry/components/form/multiple_choice/_impl/state/_multiple_choice_preview_state.dart",
+    "registry/components/form/multiple_choice/_impl/state/_multiple_choice_state.dart",
+    "registry/components/form/multiple_choice/_impl/themes/base/multiple_choice_theme.dart",
+    "registry/components/form/multiple_choice/_impl/themes/config/multiple_choice_theme_config.dart",
+    "registry/components/form/multiple_choice/_impl/themes/config/multiple_choice_theme_defaults.dart",
+    "registry/components/form/multiple_choice/_impl/themes/config/multiple_choice_theme_schema.dart",
+    "registry/components/form/multiple_choice/_impl/themes/config/multiple_choice_theme_tokens.dart",
+    "registry/components/form/multiple_choice/_impl/utils/multiple_answer_controller.dart",
+    "registry/components/form/multiple_choice/_impl/utils/multiple_choice_controller.dart",
+    "registry/components/form/multiple_choice/multiple_choice.dart"
+  ],
+  "registryNamespace": "shadcn",
+  "manifestSource": "componentsJson",
+  "registryRoot": "https://github.com/ibrar-x/shadcn_flutter_kit/tree/a886eb1a280ae3108bc4fbdd3ce4c842b32b786e/flutter_shadcn_kit/lib"
+}

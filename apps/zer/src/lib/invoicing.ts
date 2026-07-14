@@ -2,7 +2,7 @@
 
 import { randomBytes } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { capture } from "@zuiio/capture";
+import { capture, withDbCapture } from "@zuiio/capture";
 import type { Database } from "@/lib/supabase/types";
 
 /**
@@ -21,51 +21,58 @@ export async function createInvoiceFromSale(
   contactId?: string | null,
   branchId?: string,
 ) {
-  try {
-    // Fetch sale details with org-scoped check
-    const { data: sale } = await supabase
+  // Fetch sale details with org-scoped check
+  const { data: sale } = await withDbCapture(
+    "invoicing: fetch sale",
+    supabase
       .from("sales")
       .select("total_amount, paid_amount")
       .eq("id", saleId)
       .eq("organization_id", organizationId)
-      .single();
+      .single(),
+  );
 
-    if (!sale) {
-      capture(new Error(`Invoice generation: sale not found: ${saleId}`), {
-        context: "invoicing: sale lookup",
-      });
-      return null;
-    }
+  if (!sale) {
+    capture(new Error(`Invoice generation: sale not found: ${saleId}`), {
+      context: "invoicing: sale lookup",
+    });
+    return null;
+  }
 
-    // Fetch sale items with product info
-    const { data: items } = await supabase
+  // Fetch sale items with product info
+  const { data: items } = await withDbCapture(
+    "invoicing: fetch sale items",
+    supabase
       .from("sale_items")
       .select("product_id, quantity, unit_price, total_price, products(name)")
-      .eq("sale_id", saleId);
+      .eq("sale_id", saleId),
+  );
 
-    if (!items || items.length === 0) {
-      capture(new Error(`Invoice generation: no sale items found: ${saleId}`), {
-        context: "invoicing: items lookup",
-      });
-      return null;
-    }
+  if (!items || items.length === 0) {
+    capture(new Error(`Invoice generation: no sale items found: ${saleId}`), {
+      context: "invoicing: items lookup",
+    });
+    return null;
+  }
 
-    // Generate invoice number
-    const { data: invNum, error: invNumError } = await supabase.rpc(
-      "generate_invoice_number",
-    );
+  // Generate invoice number
+  const { data: invNum, error: invNumError } = await supabase.rpc(
+    "generate_invoice_number",
+  );
 
-    if (invNumError) {
-      capture(invNumError, { context: "invoicing: generate number" });
-    }
+  if (invNumError) {
+    capture(invNumError, { context: "invoicing: generate number" });
+  }
 
-    const invoiceNumber = invNum as string;
+  const invoiceNumber = invNum as string;
 
-    // Generate share token for public receipt access
-    const token = randomBytes(32).toString("hex");
+  // Generate share token for public receipt access
+  const token = randomBytes(32).toString("hex");
 
-    // Create invoice
-    const { data: invoice, error: invoiceError } = await supabase
+  // Create invoice
+  const { data: invoice, error: invoiceError } = await withDbCapture(
+    "invoicing: create invoice",
+    supabase
       .from("invoices")
       .insert({
         organization_id: organizationId,
@@ -80,37 +87,35 @@ export async function createInvoiceFromSale(
         created_by: userId,
       })
       .select("id")
-      .single();
+      .single(),
+  );
 
-    if (invoiceError) {
-      capture(invoiceError, { context: "invoicing: create invoice" });
-      return null;
-    }
-
-    // Create invoice items from sale items
-    const invoiceItems = items.map((item) => {
-      const product = item.products as { name: string } | null;
-      return {
-        invoice_id: invoice.id,
-        product_id: item.product_id,
-        description: product?.name ?? "Бүтээгдэхүүн",
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        total_price: item.total_price,
-      };
-    });
-
-    const { error: itemsError } = await supabase
-      .from("invoice_items")
-      .insert(invoiceItems);
-    if (itemsError) {
-      // Invoice exists but without items — partially bad state
-      capture(itemsError, { context: "invoicing: create invoice items" });
-    }
-
-    return { invoiceId: invoice.id, invoiceNumber, token };
-  } catch (err) {
-    capture(err, { context: "invoicing: createInvoiceFromSale" });
+  if (invoiceError) {
+    capture(invoiceError, { context: "invoicing: create invoice" });
     return null;
   }
+
+  // Create invoice items from sale items
+  const invoiceItems = items.map((item) => {
+    const product = item.products as { name: string } | null;
+    return {
+      invoice_id: invoice.id,
+      product_id: item.product_id,
+      description: product?.name ?? "Бүтээгдэхүүн",
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+      total_price: item.total_price,
+    };
+  });
+
+  const { error: itemsError } = await withDbCapture(
+    "invoicing: create invoice items",
+    supabase.from("invoice_items").insert(invoiceItems),
+  );
+  if (itemsError) {
+    // Invoice exists but without items — partially bad state
+    capture(itemsError, { context: "invoicing: create invoice items" });
+  }
+
+  return { invoiceId: invoice.id, invoiceNumber, token };
 }

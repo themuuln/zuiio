@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "avatar",
+  "name": "Avatar",
+  "version": "1.0.0",
+  "tags": [
+    "display",
+    "profile",
+    "user"
+  ],
+  "installedAt": "2026-07-05T15:57:03.812921Z",
+  "shared": [
+    "geometry_extensions",
+    "style_value",
+    "theme"
+  ],
+  "dependsOn": [],
+  "files": [
+    "registry/components/display/avatar/_impl/core/_avatar_state.dart",
+    "registry/components/display/avatar/_impl/core/_avatar_widget.dart",
+    "registry/components/display/avatar/_impl/core/avatar.dart",
+    "registry/components/display/avatar/_impl/core/avatar_badge.dart",
+    "registry/components/display/avatar/_impl/core/avatar_group.dart",
+    "registry/components/display/avatar/_impl/core/avatar_group_clipper.dart",
+    "registry/components/display/avatar/_impl/core/avatar_widget.dart",
+    "registry/components/display/avatar/_impl/themes/base/avatar_theme.dart",
+    "registry/components/display/avatar/_impl/themes/config/avatar_theme_config.dart",
+    "registry/components/display/avatar/_impl/themes/config/avatar_theme_defaults.dart",
+    "registry/components/display/avatar/_impl/themes/config/avatar_theme_schema.dart",
+    "registry/components/display/avatar/_impl/themes/config/avatar_theme_tokens.dart",
+    "registry/components/display/avatar/avatar.dart"
+  ],
+  "registryNamespace": "shadcn",
+  "manifestSource": "componentsJson",
+  "registryRoot": "https://github.com/ibrar-x/shadcn_flutter_kit/tree/a886eb1a280ae3108bc4fbdd3ce4c842b32b786e/flutter_shadcn_kit/lib"
+}

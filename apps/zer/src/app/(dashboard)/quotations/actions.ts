@@ -1,6 +1,6 @@
 "use server";
 
-import { capture } from "@zuiio/capture";
+import { capture, withDbCapture } from "@zuiio/capture";
 import { requireWriteAction } from "@/lib/action-utils";
 import { after } from "next/server";
 import { logAuditEventWithClient } from "@/lib/audit"
@@ -59,21 +59,25 @@ export async function createQuotation(
   );
 
   // Insert quotation
-  const { data: quotation, error: quotationError } = await supabase
-    .from("quotations")
-    .insert({
-      organization_id: organizationId,
-      branch_id: branchId!,
-      contact_id: contactId || null,
-      quote_number: quoteNumber,
-      issue_date: issueDate || new Date().toISOString().slice(0, 10),
-      expiry_date: expiryDate || null,
-      total_amount: totalAmount,
-      notes: notes || null,
-      created_by: userId,
-    })
-    .select("id")
-    .single();
+  const { data: quotation, error: quotationError } = await withDbCapture(
+    "quotations: create",
+    supabase
+      .from("quotations")
+      .insert({
+        organization_id: organizationId,
+        branch_id: branchId!,
+        contact_id: contactId || null,
+        quote_number: quoteNumber,
+        issue_date: issueDate || new Date().toISOString().slice(0, 10),
+        expiry_date: expiryDate || null,
+        total_amount: totalAmount,
+        status: "draft",
+        notes: notes || null,
+        created_by: userId,
+      })
+      .select("id")
+      .single(),
+  );
 
   if (quotationError) {
     return {
@@ -91,13 +95,19 @@ export async function createQuotation(
     variant_id: item.variant_id ?? null,
   }));
 
-  const { error: itemsError } = await supabase
-    .from("quotation_items")
-    .insert(quotationItems);
+  const { error: itemsError } = await withDbCapture(
+    "quotations: insert items",
+    supabase
+      .from("quotation_items")
+      .insert(quotationItems),
+  );
 
   if (itemsError) {
     // Rollback the quotation
-    await supabase.from("quotations").delete().eq("id", quotation.id);
+    await withDbCapture(
+      "quotations: rollback delete",
+      supabase.from("quotations").delete().eq("id", quotation.id),
+    );
     return {
       error: `Барааны мэдээлэл хадгалахад алдаа гарлаа: ${itemsError.message}`,
     };
@@ -132,7 +142,10 @@ export async function updateQuotationStatus(
 
   fetchQuery = withBranchFilter(fetchQuery, branchId, isBranchScoped);
 
-  const { data: quotation } = await fetchQuery.single();
+  const { data: quotation } = await withDbCapture(
+    "quotations: fetch for status update",
+    fetchQuery.single(),
+  );
 
   if (!quotation) {
     return { error: "Үнийн санал олдсонгүй." };
@@ -146,8 +159,10 @@ export async function updateQuotationStatus(
 
   updateQuery = withBranchFilter(updateQuery, branchId, isBranchScoped);
 
-  const { error } = await updateQuery;
-
+  const { error } = await withDbCapture(
+    "quotations: update status",
+    updateQuery,
+  );
   if (error) {
     return {
       error: `Төлөв шинэчлэхэд алдаа гарлаа: ${error.message}`,
@@ -181,7 +196,10 @@ export async function convertQuotationToSale(quotationId: string) {
 
   fetchQuery = withBranchFilter(fetchQuery, branchId, isBranchScoped);
 
-  const { data: quotation, error: quotationError } = await fetchQuery.single();
+  const { data: quotation, error: quotationError } = await withDbCapture(
+    "quotations: fetch for conversion",
+    fetchQuery.single(),
+  );
 
   if (quotationError || !quotation) {
     return { error: "Үнийн санал олдсонгүй." };
@@ -191,11 +209,13 @@ export async function convertQuotationToSale(quotationId: string) {
     return { error: "Энэ үнийн санал аль хэдийн борлуулалт болсон." };
   }
 
-  const { data: items, error: itemsError } = await supabase
-    .from("quotation_items")
-    .select("product_id,quantity,unit_price")
-    .eq("quotation_id", quotationId);
-
+  const { data: items, error: itemsError } = await withDbCapture(
+    "quotations: fetch items",
+    supabase
+      .from("quotation_items")
+      .select("product_id,quantity,unit_price")
+      .eq("quotation_id", quotationId),
+  );
   if (itemsError || !items || items.length === 0) {
     return { error: "Үнийн саналд бараа байхгүй байна." };
   }
@@ -203,24 +223,27 @@ export async function convertQuotationToSale(quotationId: string) {
   const totalAmount = quotation.total_amount;
 
   // Create the sale
-  const { data: sale, error: saleError } = await supabase
-    .from("sales")
-    .insert({
-      organization_id: organizationId,
-      branch_id: branchId!,
-      contact_id: quotation.contact_id,
-      sale_date: new Date().toISOString().slice(0, 10),
-      total_amount: totalAmount,
-      paid_amount: 0,
-      payment_method: "invoice",
-      status: "pending",
-      notes: quotation.notes
-        ? `Үнийн саналаас (${quotation.quote_number}): ${quotation.notes}`
-        : `Үнийн саналаас (${quotation.quote_number})`,
-      created_by: userId,
-    })
-    .select("id")
-    .single();
+  const { data: sale, error: saleError } = await withDbCapture(
+    "quotations: create sale",
+    supabase
+      .from("sales")
+      .insert({
+        organization_id: organizationId,
+        branch_id: branchId!,
+        contact_id: quotation.contact_id,
+        sale_date: new Date().toISOString().slice(0, 10),
+        total_amount: totalAmount,
+        paid_amount: 0,
+        payment_method: "invoice",
+        status: "pending",
+        notes: quotation.notes
+          ? `Үнийн саналаас (${quotation.quote_number}): ${quotation.notes}`
+          : `Үнийн саналаас (${quotation.quote_number})`,
+        created_by: userId,
+      })
+      .select("id")
+      .single(),
+  );
 
   if (saleError) {
     return {
@@ -238,14 +261,19 @@ export async function convertQuotationToSale(quotationId: string) {
     unit_price: item.unit_price,
     total_price: item.quantity * item.unit_price,
   }));
-
-  const { error: saleItemsError } = await supabase
-    .from("sale_items")
-    .insert(saleItems);
+  const { error: saleItemsError } = await withDbCapture(
+    "quotations: insert sale items",
+    supabase
+      .from("sale_items")
+      .insert(saleItems),
+  );
 
   if (saleItemsError) {
     // Rollback
-    await supabase.from("sales").delete().eq("id", saleId);
+    await withDbCapture(
+      "quotations: rollback sale",
+      supabase.from("sales").delete().eq("id", saleId),
+    );
     return {
       error: `Борлуулалтын бараа хадгалахад алдаа гарлаа: ${saleItemsError.message}`,
     };
@@ -256,18 +284,21 @@ export async function convertQuotationToSale(quotationId: string) {
     if (!item.product_id) continue;
 
     // Create stock movement
-    const { error: movementError } = await supabase
-      .from("stock_movements")
-      .insert({
-        organization_id: organizationId,
-        branch_id: branchId!,
-        product_id: item.product_id,
-        type: "out",
-        quantity: item.quantity,
-        unit_cost: item.unit_price,
-        reference: `sale:${saleId}`,
-        created_by: userId,
-      });
+    const { error: movementError } = await withDbCapture(
+      "quotations: stock movement",
+      supabase
+        .from("stock_movements")
+        .insert({
+          organization_id: organizationId,
+          branch_id: branchId!,
+          product_id: item.product_id,
+          type: "out",
+          quantity: item.quantity,
+          unit_cost: item.unit_price,
+          reference: `sale:${saleId}`,
+          created_by: userId,
+        }),
+    );
 
     if (movementError) {
       capture(movementError, { context: "quotations: stock movement" });
@@ -276,39 +307,47 @@ export async function convertQuotationToSale(quotationId: string) {
     }
 
     // Update product stock
-    const { data: product, error: productError } = await supabase
-      .from("products")
-      .select("current_stock")
-      .eq("id", item.product_id)
-      .single();
-
+    const { data: product, error: productError } = await withDbCapture(
+      "quotations: fetch product stock",
+      supabase
+        .from("products")
+        .select("current_stock")
+        .eq("id", item.product_id)
+        .single(),
+    );
     if (productError) {
       capture(productError, { context: "quotations: fetch product stock" });
     }
 
     if (product) {
-      await supabase
-        .from("products")
-        .update({
-          current_stock: Math.max(
-            0,
-            Number(product.current_stock ?? 0) - item.quantity,
-          ),
-        })
-        .eq("id", item.product_id)
-        .gte("current_stock", item.quantity);
+      await withDbCapture(
+        "quotations: update product stock",
+        supabase
+          .from("products")
+          .update({
+            current_stock: Math.max(
+              0,
+              Number(product.current_stock ?? 0) - item.quantity,
+            ),
+          })
+          .eq("id", item.product_id)
+          .gte("current_stock", item.quantity),
+      );
     }
   }
 
   // Update quotation status to 'converted' and set converted_to_sale_id
-  const { error: updateError } = await supabase
-    .from("quotations")
-    .update({
-      status: "converted",
-      converted_to_sale_id: saleId,
-    })
-    .eq("id", quotationId)
-    .eq("organization_id", organizationId);
+  const { error: updateError } = await withDbCapture(
+    "quotations: update status to converted",
+    supabase
+      .from("quotations")
+      .update({
+        status: "converted",
+        converted_to_sale_id: saleId,
+      })
+      .eq("id", quotationId)
+      .eq("organization_id", organizationId),
+  );
 
   if (updateError) {
     capture(updateError, { context: "quotations: update status" });

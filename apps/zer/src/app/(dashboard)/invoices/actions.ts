@@ -11,7 +11,7 @@ import { findOrCreateContact } from "@/lib/contact-utils";
 import { revalidateEntities } from "@/lib/revalidate";
 import type { Database } from "@/lib/supabase/types";
 import { getString } from "@/lib/validation";
-import { capture } from "@zuiio/capture";
+import { capture, withDbCapture } from "@zuiio/capture";
 
 type SupabaseDb = SupabaseClient<Database>;
 
@@ -88,23 +88,26 @@ export async function createInvoice(
     0,
   );
 
-  const { data: invoice, error: invoiceError } = await supabase
-    .from("invoices")
-    .insert({
-      organization_id: organizationId,
-      branch_id: branchId,
-      invoice_number: invoiceNumber,
-      contact_id: contactId || null,
-      issue_date: issueDate || new Date().toISOString().slice(0, 10),
-      due_date: dueDate || null,
-      total_amount: totalAmount,
-      paid_amount: 0,
-      status: "pending",
-      notes: notes || null,
-      created_by: userId,
-    })
-    .select("id")
-    .single();
+  const { data: invoice, error: invoiceError } = await withDbCapture(
+    "invoices: create",
+    supabase
+      .from("invoices")
+      .insert({
+        organization_id: organizationId,
+        branch_id: branchId,
+        invoice_number: invoiceNumber,
+        contact_id: contactId || null,
+        issue_date: issueDate || new Date().toISOString().slice(0, 10),
+        due_date: dueDate || null,
+        total_amount: totalAmount,
+        paid_amount: 0,
+        status: "pending",
+        notes: notes || null,
+        created_by: userId,
+      })
+      .select("id")
+      .single(),
+  );
 
   if (invoiceError) {
     return {
@@ -123,9 +126,12 @@ export async function createInvoice(
     variant_id: item.variant_id ?? null,
   }));
 
-  const { error: itemsError } = await supabase
-    .from("invoice_items")
-    .insert(invoiceItems);
+  const { error: itemsError } = await withDbCapture(
+    "invoices: insert items",
+    supabase
+      .from("invoice_items")
+      .insert(invoiceItems),
+  );
 
   if (itemsError) {
     return {
@@ -172,7 +178,10 @@ export async function createInvoiceShareLink(
 
   updateQuery = withBranchFilter(updateQuery, branchId, isBranchScoped);
 
-  const { error: updateError } = await updateQuery;
+  const { error: updateError } = await withDbCapture(
+    "invoices: create share link",
+    updateQuery,
+  );
 
   if (updateError) {
     return {
@@ -205,7 +214,10 @@ export async function updateInvoiceStatus(invoiceId: string, status: string) {
 
   fetchQuery = withBranchFilter(fetchQuery, branchId, isBranchScoped);
 
-  const { data: invoice } = await fetchQuery.single();
+  const { data: invoice } = await withDbCapture(
+    "invoices: fetch for status update",
+    fetchQuery.single(),
+  );
 
   if (!invoice) {
     return { error: "Нэхэмжлэл олдсонгүй." };
@@ -219,7 +231,10 @@ export async function updateInvoiceStatus(invoiceId: string, status: string) {
 
   updateQuery = withBranchFilter(updateQuery, branchId, isBranchScoped);
 
-  const { error } = await updateQuery;
+  const { error } = await withDbCapture(
+    "invoices: update status",
+    updateQuery,
+  );
 
   if (error) {
     capture(error, { context: "updateInvoiceStatus: update" });

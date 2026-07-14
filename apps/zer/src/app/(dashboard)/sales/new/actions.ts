@@ -17,8 +17,6 @@ import {
 import { revalidateEntities } from "@/lib/revalidate";
 import {
   createStockMovements,
-  decrementProductStock,
-  decrementVariantStock,
   fetchProductsForStock,
   fetchVariantsForStock,
 } from "@/lib/stock-utils";
@@ -275,68 +273,43 @@ export async function createSale(
       return { error: stockResult.error };
     }
 
-    // --- Atomic product stock decrement for non-variant items ---
-    const nonVariantProductQuantities = new Map<string, number>();
-    for (const item of items) {
-      if (!item.variantId) {
-        nonVariantProductQuantities.set(
-          item.productId,
-          (nonVariantProductQuantities.get(item.productId) ?? 0) +
-            item.quantity,
-        );
+    // --- Step 5b: Atomic stock decrement via RPC ---
+    const { data: stockDecResult, error: stockDecError } = await supabase.rpc(
+      "process_sale_stock_decrement",
+      {
+        p_org_id: organizationId,
+        p_items: items.map((item) => ({
+          product_id: item.productId,
+          variant_id: item.variantId ?? "",
+          quantity: item.quantity,
+        })),
+      },
+    );
+
+    if (
+      stockDecError ||
+      !stockDecResult ||
+      typeof stockDecResult !== "object" ||
+      !("success" in stockDecResult)
+    ) {
+      await supabase
+        .from("stock_movements")
+        .delete()
+        .eq("reference", `sale:${sale.id}`);
+      await supabase.from("sale_items").delete().eq("sale_id", sale.id);
+      await supabase.from("sales").delete().eq("id", sale.id);
+      if (createdContactId) {
+        await supabase.from("contacts").delete().eq("id", createdContactId);
       }
-    }
-    for (const [productId, totalQty] of nonVariantProductQuantities) {
-      const product = productMap.get(productId);
-      if (!product) continue;
-
-      const updatedProduct = await decrementProductStock(
-        supabase,
-        organizationId,
-        productId,
-        totalQty,
-      );
-
-      if (!updatedProduct) {
-        // Rollback
-        await supabase
-          .from("stock_movements")
-          .delete()
-          .eq("reference", `sale:${sale.id}`);
-        await supabase.from("sale_items").delete().eq("sale_id", sale.id);
-        await supabase.from("sales").delete().eq("id", sale.id);
-        if (createdContactId) {
-          await supabase.from("contacts").delete().eq("id", createdContactId);
-        }
-        return {
-          error: `"${product.name}" бүтээгдэхүүний үлдэгдэл хүрэлцэхгүй байна.`,
-        };
-      }
-    }
-
-    // --- Atomic variant stock decrement for variant items ---
-    for (const item of variantItems) {
-      const success = await decrementVariantStock(
-        supabase,
-        item.variantId!,
-        item.quantity,
-      );
-
-      if (!success) {
-        // Rollback
-        await supabase
-          .from("stock_movements")
-          .delete()
-          .eq("reference", `sale:${sale.id}`);
-        await supabase.from("sale_items").delete().eq("sale_id", sale.id);
-        await supabase.from("sales").delete().eq("id", sale.id);
-        if (createdContactId) {
-          await supabase.from("contacts").delete().eq("id", createdContactId);
-        }
-        return {
-          error: "Вариантын үлдэгдэл хүрэлцэхгүй байна.",
-        };
-      }
+      const rpcError =
+        stockDecResult &&
+        typeof stockDecResult === "object" &&
+        "error" in stockDecResult
+          ? String(stockDecResult.error)
+          : null;
+      const errorMsg = stockDecError?.message ?? rpcError ?? "Үлдэгдэл хүрэлцэхгүй байна.";
+      capture(new Error(errorMsg), { context: "createSale: process_sale_stock_decrement" });
+      return { error: errorMsg };
     }
   }
 

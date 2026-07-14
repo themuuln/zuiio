@@ -35,6 +35,8 @@ interface DataTableProps<T> {
     description: string;
     action?: React.ReactNode;
   };
+  /** Rows per page (default: 10). Pass data.length to show all rows without pagination. */
+  pageSize?: number;
 }
 
 /** Inline skeleton rows rendered inside the table when loading is true */
@@ -62,6 +64,7 @@ export function ErpDataTable<T extends Record<string, unknown>>({
   keyExtractor,
   title,
   emptyState,
+  pageSize: propPageSize,
 }: DataTableProps<T>) {
   // Convert simple Column<T> config to TanStack ColumnDef
   const tanstackColumns: ColumnDef<T>[] = React.useMemo(
@@ -92,33 +95,37 @@ export function ErpDataTable<T extends Record<string, unknown>>({
     [columns],
   );
 
-  // ── Loading: always render card/table structure with inline skeleton rows ──
+  // ── Loading: render table structure with inline skeleton rows ──
   if (loading) {
-    return (
-      <Card>
-        {title && (
+    const loadingTable = (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {columns.map((col) => (
+              <TableHead key={String(col.header)} className={col.className}>
+                {col.header}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <SkeletonRows columns={columns as Column<unknown>[]} />
+        </TableBody>
+      </Table>
+    );
+
+    if (title) {
+      return (
+        <Card>
           <CardHeader>
             <CardTitle>{title}</CardTitle>
           </CardHeader>
-        )}
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {columns.map((col) => (
-                  <TableHead key={String(col.header)} className={col.className}>
-                    {col.header}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <SkeletonRows columns={columns as Column<unknown>[]} />
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    );
+          <CardContent className="p-0">{loadingTable}</CardContent>
+        </Card>
+      );
+    }
+
+    return loadingTable;
   }
 
   // ── Empty state (only when data is loaded and truly empty) ──
@@ -139,7 +146,7 @@ export function ErpDataTable<T extends Record<string, unknown>>({
       columns={tanstackColumns}
       data={data}
       onRowClick={onRowClick}
-      pageSize={data.length}
+      pageSize={propPageSize ?? 10}
       enableSorting={false}
       enableColumnVisibility={false}
     />

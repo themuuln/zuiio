@@ -1,4 +1,4 @@
-import { capture } from "@zuiio/capture";
+import { capture, withDbCapture } from "@zuiio/capture";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,13 +41,16 @@ export default async function PublicInvoicePage({
   const supabase = await createClient();
 
   try {
-    const { data: invoice, error: lookupError } = await supabase
-      .from("invoices")
-      .select(
-        "id, invoice_number, issue_date, status, total_amount, paid_amount, notes, contacts(name, phone, email), organizations(name)",
-      )
-      .eq("token", token)
-      .single();
+    const { data: invoice, error: lookupError } = await withDbCapture(
+      "public invoice: lookup",
+      supabase
+        .from("invoices")
+        .select(
+          "id, invoice_number, issue_date, status, total_amount, paid_amount, notes, contacts(name, phone, email), organizations(name)",
+        )
+        .eq("token", token)
+        .single(),
+    );
 
     if (lookupError) {
       capture(lookupError, { context: "public invoice: lookup" });
@@ -58,12 +61,15 @@ export default async function PublicInvoicePage({
       notFound();
     }
 
-    const { data: items, error: itemsError } = await supabase
-      .from("invoice_items")
-      .select(
-        "id, description, quantity, unit_price, total_price, products(name, unit)",
-      )
-      .eq("invoice_id", invoice.id);
+    const { data: items, error: itemsError } = await withDbCapture(
+      "public invoice: items",
+      supabase
+        .from("invoice_items")
+        .select(
+          "id, description, quantity, unit_price, total_price, products(name, unit)",
+        )
+        .eq("invoice_id", invoice.id),
+    );
 
     if (itemsError) {
       capture(itemsError, { context: "public invoice: items" });

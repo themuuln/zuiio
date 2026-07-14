@@ -399,6 +399,16 @@ export async function deleteJournalEntry(entryId: string) {
   if (error) {
     return { error: `Журналын бичилт устгахад алдаа гарлаа: ${error.message}` };
   }
+  after(() => logAuditEventWithClient(
+    db,
+    organizationId,
+    ctx.userId,
+    "deleted",
+    "journal_entry",
+    entryId,
+    undefined,
+    `Журналын бичилт устгасан`,
+  ));
 
   revalidateEntities(["accounting"]);
   return { success: true as const, error: undefined };
@@ -429,6 +439,16 @@ export async function toggleAccountActive(
   if (error) {
     return { error: `Төлөв шинэчлэхэд алдаа гарлаа: ${error.message}` };
   }
+  after(() => logAuditEventWithClient(
+    db,
+    organizationId,
+    ctx.userId,
+    isActive ? "activated" : "deactivated",
+    "account",
+    accountId,
+    { is_active: { old: !isActive, new: isActive } },
+    `Данс "${accountId}" ${isActive ? "идэвхижүүлсэн" : "идэвхигүй болгосон"}`,
+  ));
 
   revalidateEntities(["accounting"]);
   return { success: true as const, error: undefined };
