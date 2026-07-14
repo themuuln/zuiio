@@ -2,15 +2,9 @@
 import { capture, withDbCapture } from "@zuiio/capture";
 
 import { requireAppContext, requireWriteAction } from "@/lib/action-utils";
-import { calculateCommission } from "@/lib/commissions";
 import { findOrCreateContact } from "@/lib/contact-utils";
 import { createInvoiceFromSale } from "@/lib/invoicing";
 import { revalidateEntity } from "@/lib/revalidate";
-import {
-  createStockMovements,
-  fetchProductsForStock,
-  fetchVariantsForStock,
-} from "@/lib/stock-utils";
 import type { CartItemData } from "@/lib/types";
 import { getString } from "@/lib/validation";
 
@@ -40,32 +34,7 @@ export async function createShopSale(
     return { error: "Сагсанд бүтээгдэхүүн байхгүй байна." };
   }
 
-  // --- Resolve salesperson ---
   const salespersonId = getString(formData, "salesperson_id") || userId;
-
-  // Validate cross-org salesperson override
-  if (salespersonId !== userId) {
-    const { data: salesperson, error: salespersonError } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("id", salespersonId)
-      .eq("organization_id", organizationId)
-      .maybeSingle();
-
-    if (salespersonError) {
-      capture(salespersonError, {
-        context: "createShopSale: validate salesperson",
-      });
-      return { error: "Борлуулагч шалгахад алдаа гарлаа." };
-    }
-
-    if (!salesperson) {
-      return {
-        error: "Сонгосон борлуулагч танай байгууллагад хамаарахгүй байна.",
-      };
-    }
-  }
-
   const paymentMethod = getString(formData, "payment_method") || "cash";
   const paidAmount = Number(formData.get("paid_amount") ?? 0);
   const totalAmount = items.reduce(
@@ -73,206 +42,105 @@ export async function createShopSale(
     0,
   );
 
-  // --- Step 1: Validate stock + handle customer (parallel) ---
-  const productIds = items.map((i) => i.productId);
-  const variantIds = items
-    .filter((i) => i.variantId)
-    .map((i) => i.variantId as string);
   const customerName = getString(formData, "customer_name");
   const customerPhone = customerName
     ? getString(formData, "customer_phone")
     : null;
 
-  // Run all independent reads in parallel to save ~2 round-trips
-  const [productMap, variantMap, contactResult] = await Promise.all([
-    fetchProductsForStock(supabase, organizationId, productIds),
-    variantIds.length > 0
-      ? fetchVariantsForStock(supabase, variantIds)
-      : new Map(),
+  // --- Run all independent pre-sale work in parallel ---
+  const [salespersonOk, contactResult] = await Promise.all([
+    // Salesperson validation (skip if self)
+    salespersonId === userId
+      ? (true as const)
+      : supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", salespersonId)
+          .eq("organization_id", organizationId)
+          .maybeSingle()
+          .then(({ data, error }) => {
+            if (error) {
+              capture(error, { context: "createShopSale: validate salesperson" });
+              return { error: "Борлуулагч шалгахад алдаа гарлаа." } as const;
+            }
+            if (!data) {
+              return { error: "Сонгосон борлуулагч танай байгууллагад хамаарахгүй байна." } as const;
+            }
+            return true as const;
+          }),
+    // Contact creation
     customerName
-      ? findOrCreateContact(
-          supabase,
-          organizationId,
-          "customer",
-          customerName,
-          customerPhone,
-        )
+      ? findOrCreateContact(supabase, organizationId, "customer", customerName, customerPhone)
       : null,
   ]);
 
-  // Check each item's stock
-  for (const item of items) {
-    if (item.variantId) {
-      const variant = variantMap.get(item.variantId);
-      if (!variant) {
-        return {
-          error: `Вариант олдсонгүй: "${item.name}".`,
-        };
-      }
-      const currentStock = Number(variant.current_stock ?? 0);
-      if (currentStock < item.quantity) {
-        return {
-          error: `"${item.name}" вариантын үлдэгдэл хүрэлцэхгүй байна. (Үлдэгдэл: ${currentStock}, хэрэгтэй: ${item.quantity})`,
-        };
-      }
-    } else {
-      const product = productMap.get(item.productId);
-      if (!product) {
-        return {
-          error: `Бүтээгдэхүүн "${item.name}" олдсонгүй.`,
-        };
-      }
-      const currentStock = Number(product.current_stock ?? 0);
-      if (currentStock < item.quantity) {
-        return {
-          error: `"${product.name}" бүтээгдэхүүний үлдэгдэл хүрэлцэхгүй байна. (Үлдэгдэл: ${currentStock}, хэрэгтэй: ${item.quantity})`,
-        };
-      }
-    }
+  if (typeof salespersonOk === "object" && "error" in salespersonOk) {
+    return salespersonOk;
   }
 
-  // Handle customer result from parallel batch
   let contactId: string | null = null;
   let createdContact = false;
-
   if (contactResult) {
     if ("error" in contactResult) return contactResult;
     contactId = contactResult.id;
     createdContact = true;
   }
 
-  // --- Step 3: Insert sale ---
-  const { data: sale, error: saleError } = await supabase
-    .from("sales")
-    .insert({
-      organization_id: organizationId,
-      branch_id: branchId as string,
-      contact_id: contactId,
-      total_amount: totalAmount,
-      paid_amount: paidAmount,
-      payment_method: paymentMethod,
-      status: "completed",
-      created_by: userId,
-      salesperson_id: salespersonId,
-    })
-    .select("id")
-    .single();
-
-  if (saleError) {
-    capture(saleError, { context: "createShopSale: insert sale" });
-    // Rollback contact creation if we created one
-    if (createdContact && contactId) {
-      await supabase.from("contacts").delete().eq("id", contactId);
-    }
-    return {
-      error: `Борлуулалт үүсгэхэд алдаа гарлаа: ${saleError.message}`,
-    };
-  }
-
-  const saleId = sale.id;
-
-  // --- Step 4: Insert sale_items ---
-  const saleItems = items.map((item) => {
-    const totalPrice = item.unitPrice * item.quantity;
-    return {
-      sale_id: saleId,
-      product_id: item.productId,
-      quantity: item.quantity,
-      unit_price: item.unitPrice,
-      total_price: totalPrice,
-      commission_amount: calculateCommission(totalPrice),
-      variant_id: item.variantId ?? null,
-    };
-  });
-
-  const { error: itemsError } = await supabase
-    .from("sale_items")
-    .insert(saleItems);
-
-  if (itemsError) {
-    capture(itemsError, { context: "createShopSale: insert sale_items" });
-    // Rollback
-    await supabase.from("sales").delete().eq("id", saleId);
-    if (createdContact && contactId) {
-      await supabase.from("contacts").delete().eq("id", contactId);
-    }
-    return {
-      error: `Борлуулалтын мөрүүд үүсгэхэд алдаа гарлаа: ${itemsError.message}`,
-    };
-  }
-
-  // --- Step 5: Insert stock_movements ---
-  const stockResult = await createStockMovements(supabase, {
-    organizationId,
-    branchId,
-    type: "out",
-    reference: `sale:${saleId}`,
-    createdBy: userId,
-    items: items.map((item) => ({
-      productId: item.productId,
-      quantity: item.quantity,
-      unitCost: item.unitPrice,
-      variantId: item.variantId,
-    })),
-  });
-
-  if (stockResult.error) {
-    capture(stockResult.error, { context: "createShopSale: stock_movements" });
-    await supabase.from("sale_items").delete().eq("sale_id", saleId);
-    await supabase.from("sales").delete().eq("id", saleId);
-    if (createdContact && contactId) {
-      await supabase.from("contacts").delete().eq("id", contactId);
-    }
-    return { error: stockResult.error };
-  }
-
-  // --- Step 6: Atomic stock decrement via RPC ---
-  const { data: stockDecResult, error: stockDecError } = await supabase.rpc(
-    "process_sale_stock_decrement",
+  // --- Single atomic RPC: sale + items + stock movements + stock decrement ---
+  const { data: result, error: rpcError } = await supabase.rpc(
+    "process_shop_sale",
     {
       p_org_id: organizationId,
+      p_branch_id: branchId,
+      p_user_id: userId,
+      p_contact_id: contactId,
+      p_total_amount: totalAmount,
+      p_paid_amount: paidAmount,
+      p_payment_method: paymentMethod,
+      p_salesperson_id: salespersonId,
       p_items: items.map((item) => ({
         product_id: item.productId,
-        variant_id: item.variantId ?? "",
         quantity: item.quantity,
+        unit_price: item.unitPrice,
+        total_price: item.unitPrice * item.quantity,
+        commission_amount: Math.round(item.unitPrice * item.quantity * 0.1 * 100) / 100,
+        variant_id: item.variantId ?? "",
+      })),
+      p_movements: items.map((item) => ({
+        product_id: item.productId,
+        quantity: item.quantity,
+        unit_cost: item.unitPrice,
+        variant_id: item.variantId ?? "",
       })),
     },
   );
 
   if (
-    stockDecError ||
-    !stockDecResult ||
-    typeof stockDecResult !== "object" ||
-    !("success" in stockDecResult)
+    rpcError ||
+    !result ||
+    typeof result !== "object" ||
+    !("success" in result)
   ) {
-    await supabase
-      .from("stock_movements")
-      .delete()
-      .eq("reference", `sale:${saleId}`);
-    await supabase.from("sale_items").delete().eq("sale_id", saleId);
-    await supabase.from("sales").delete().eq("id", saleId);
     if (createdContact && contactId) {
       await supabase.from("contacts").delete().eq("id", contactId);
     }
-    const rpcError =
-      stockDecResult &&
-      typeof stockDecResult === "object" &&
-      "error" in stockDecResult
-        ? String(stockDecResult.error)
+    const rpcErrResult =
+      result && typeof result === "object" && "error" in result
+        ? result
         : null;
     const errorMsg =
-      stockDecError?.message ?? rpcError ?? "Үлдэгдэл хүрэлцэхгүй байна.";
+      rpcError?.message ??
+      (rpcErrResult ? String(rpcErrResult.error) : null) ??
+      "Үлдэгдэл хүрэлцэхгүй байна.";
     capture(new Error(errorMsg), {
-      context: "createShopSale: process_sale_stock_decrement",
+      context: "createShopSale: process_shop_sale",
     });
     return { error: errorMsg };
   }
 
-  // --- Success ---
+  const saleId = String(result.sale_id);
 
-  // Auto-generate invoice as receipt (fire-and-forget — errors captured inside createInvoiceFromSale)
-  // Intentionally NOT awaited: invoice creation is ~500-800ms of 5 sequential DB calls
-  // that the customer doesn't need to wait for. The sale + stock are already committed.
+  // --- Success ---
   createInvoiceFromSale(
     supabase,
     organizationId,

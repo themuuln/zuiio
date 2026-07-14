@@ -29,11 +29,18 @@ export async function requireAppContext() {
     redirect("/login");
   }
 
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("organization_id, role_id, branch_id")
-    .eq("id", userId)
-    .single();
+  // Profile and permissions are independent — run in parallel (~100-200ms saved)
+  const [profileResult, permissionsResult] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("organization_id, role_id, branch_id")
+      .eq("id", userId)
+      .single(),
+    supabase.rpc("get_user_permissions"),
+  ]);
+
+  const { data: profile, error: profileError } = profileResult;
+  const { data: permissions, error: permissionsError } = permissionsResult;
 
   if (profileError || !profile?.organization_id) {
     if (profileError) {
@@ -43,16 +50,6 @@ export async function requireAppContext() {
     }
     redirect("/organization/new");
   }
-
-  // NOTE: The user object shape changed from the full Supabase User (getUser())
-  // to a minimal { id, email } object from JWT claims (getClaims()).
-  // The old shape included role, app_metadata, user_metadata — these are no longer
-  // available. All callers have been audited: none access user.role or user.app_metadata.
-  // If a future caller needs these fields, add them here from the claims or a profile query.
-  // Load user permissions
-  const { data: permissions, error: permissionsError } = await supabase.rpc(
-    "get_user_permissions",
-  );
 
   if (permissionsError) {
     capture(permissionsError, {

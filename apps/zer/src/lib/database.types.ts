@@ -4126,6 +4126,21 @@ export type Database = {
         Args: { p_items: Json; p_org_id: string };
         Returns: Json;
       };
+      process_shop_sale: {
+        Args: {
+          p_contact_id: string | null;
+          p_items: Json;
+          p_movements: Json;
+          p_org_id: string;
+          p_paid_amount: number;
+          p_payment_method: string;
+          p_branch_id: string;
+          p_salesperson_id: string;
+          p_total_amount: number;
+          p_user_id: string;
+        };
+        Returns: Json;
+      };
       save_product_catalog: {
         Args: {
           p_attribute_values: Json;
