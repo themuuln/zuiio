@@ -65,5 +65,11 @@ jobs:
           echo "=== builds.json ==="
           cat .vercel/output/builds.json 2>/dev/null || echo "No builds.json"
 
+      - name: Clean build output
+        run: |
+          rm -rf .vercel/output/static
+          rm -rf .vercel/output/diagnostics
+          du -sh .vercel/output/
+
       - name: Deploy to production
         run: vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
