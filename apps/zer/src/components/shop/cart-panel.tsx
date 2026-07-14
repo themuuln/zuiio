@@ -1,11 +1,78 @@
 "use client";
 
 import { Minus, Plus, ShoppingCart, Trash } from "@phosphor-icons/react";
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
 import { CheckoutDrawer } from "@/components/shop/checkout-drawer";
 import { Button } from "@/components/ui/button";
+import type { CartItem } from "@/lib/shop-cart";
 import { getCartItemKey } from "@/lib/shop-cart";
+
+const CartItemRow = memo(function CartItemRow({
+  item,
+  onUpdateQuantity,
+  onRemove,
+}: {
+  item: CartItem;
+  onUpdateQuantity: (key: string, qty: number) => void;
+  onRemove: (key: string) => void;
+}) {
+  const key = getCartItemKey(item);
+  const lineTotal = item.unitPrice * item.quantity;
+
+  return (
+    <li className="flex items-center gap-3 px-4 py-3">
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium">{item.name}</p>
+        {item.variantLabels && (
+          <p className="truncate text-xs text-muted-foreground">
+            {item.variantLabels}
+          </p>
+        )}
+        <p className="text-xs text-muted-foreground tabular-nums">
+          {item.unitPrice.toLocaleString()}₮ × {item.quantity}
+        </p>
+        <p className="mt-0.5 text-sm font-semibold tabular-nums text-primary">
+          {lineTotal.toLocaleString()}₮
+        </p>
+      </div>
+
+      {/* Quantity stepper */}
+      <div className="flex shrink-0 items-center gap-1">
+        <button
+          type="button"
+          onClick={() => {
+            if (item.quantity <= 1) {
+              onRemove(key);
+            } else {
+              onUpdateQuantity(key, item.quantity - 1);
+            }
+          }}
+          className="flex size-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-95"
+          aria-label={item.quantity <= 1 ? "Хасах" : "Тоо ширхэг багасгах"}
+        >
+          {item.quantity <= 1 ? (
+            <Trash className="size-3.5" />
+          ) : (
+            <Minus className="size-3.5" weight="bold" />
+          )}
+        </button>
+        <span className="flex w-7 items-center justify-center text-sm font-semibold tabular-nums">
+          {item.quantity}
+        </span>
+        <button
+          type="button"
+          onClick={() => onUpdateQuantity(key, item.quantity + 1)}
+          disabled={item.quantity >= item.maxStock}
+          className="flex size-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
+          aria-label="Тоо ширхэг нэмэх"
+        >
+          <Plus className="size-3.5" weight="bold" />
+        </button>
+      </div>
+    </li>
+  );
+});
 
 /**
  * Persistent order panel for the desktop POS layout.
@@ -25,6 +92,16 @@ export function CartPanel() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const isEmpty = items.length === 0;
+
+  const handleUpdateQuantity = useCallback(
+    (key: string, qty: number) => updateQuantity(key, qty),
+    [updateQuantity],
+  );
+
+  const handleRemove = useCallback(
+    (key: string) => removeItem(key),
+    [removeItem],
+  );
 
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card">
@@ -68,64 +145,14 @@ export function CartPanel() {
           </div>
         ) : (
           <ul className="divide-y divide-border">
-            {items.map((item) => {
-              const key = getCartItemKey(item);
-              const lineTotal = item.unitPrice * item.quantity;
-              return (
-                <li key={key} className="flex items-center gap-3 px-4 py-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{item.name}</p>
-                    {item.variantLabels && (
-                      <p className="truncate text-xs text-muted-foreground">
-                        {item.variantLabels}
-                      </p>
-                    )}
-                    <p className="text-xs text-muted-foreground tabular-nums">
-                      {item.unitPrice.toLocaleString()}₮ × {item.quantity}
-                    </p>
-                    <p className="mt-0.5 text-sm font-semibold tabular-nums text-primary">
-                      {lineTotal.toLocaleString()}₮
-                    </p>
-                  </div>
-
-                  {/* Quantity stepper */}
-                  <div className="flex shrink-0 items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (item.quantity <= 1) {
-                          removeItem(key);
-                        } else {
-                          updateQuantity(key, item.quantity - 1);
-                        }
-                      }}
-                      className="flex size-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-95"
-                      aria-label={
-                        item.quantity <= 1 ? "Хасах" : "Тоо ширхэг багасгах"
-                      }
-                    >
-                      {item.quantity <= 1 ? (
-                        <Trash className="size-3.5" />
-                      ) : (
-                        <Minus className="size-3.5" weight="bold" />
-                      )}
-                    </button>
-                    <span className="flex w-7 items-center justify-center text-sm font-semibold tabular-nums">
-                      {item.quantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => updateQuantity(key, item.quantity + 1)}
-                      disabled={item.quantity >= item.maxStock}
-                      className="flex size-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
-                      aria-label="Тоо ширхэг нэмэх"
-                    >
-                      <Plus className="size-3.5" weight="bold" />
-                    </button>
-                  </div>
-                </li>
-              );
-            })}
+            {items.map((item) => (
+              <CartItemRow
+                key={getCartItemKey(item)}
+                item={item}
+                onUpdateQuantity={handleUpdateQuantity}
+                onRemove={handleRemove}
+              />
+            ))}
           </ul>
         )}
       </div>

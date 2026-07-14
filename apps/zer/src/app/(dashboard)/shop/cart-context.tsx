@@ -109,11 +109,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Persist to storage on change
+  // Persist to storage on change (debounced to avoid write storm during rapid mutations)
+  const saveTimerRef = React.useRef<number>(0);
   React.useEffect(() => {
     if (initialized.current) {
-      saveCartToStorage(state.items);
+      window.clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = window.setTimeout(
+        () => saveCartToStorage(state.items),
+        300,
+      );
     }
+    return () => window.clearTimeout(saveTimerRef.current);
   }, [state.items]);
 
   // Persist discount to storage on change

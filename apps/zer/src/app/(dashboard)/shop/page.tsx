@@ -20,26 +20,29 @@ async function DataFetcher() {
   const verticalKey = process.env.NEXT_PUBLIC_VERTICAL_KEY ?? "default";
   const config = getVerticalPreset(verticalKey);
 
-  const { data: products } = await withDbCapture(
-    "shop_products",
-    supabase
-      .from("products")
-      .select(
-        "id, name, sku, barcode, unit, sale_price, current_stock, category_id, brand_id, image_url, brands(name, logo_url)",
-      )
-      .eq("organization_id", organizationId)
-      .is("deleted_at", null)
-      .order("name", { ascending: true }),
-  );
-
-  const { data: categories } = await withDbCapture(
-    "shop_categories",
-    supabase
-      .from("categories")
-      .select("id, name")
-      .eq("organization_id", organizationId)
-      .order("name", { ascending: true }),
-  );
+  const PAGE_SIZE = 50;
+  const [{ data: products }, { data: categories }] = await Promise.all([
+    withDbCapture(
+      "shop_products",
+      supabase
+        .from("products")
+        .select(
+          "id, name, sku, barcode, unit, sale_price, current_stock, category_id, brand_id, image_url, brands(name, logo_url)",
+        )
+        .eq("organization_id", organizationId)
+        .is("deleted_at", null)
+        .order("name", { ascending: true })
+        .range(0, PAGE_SIZE - 1),
+    ),
+    withDbCapture(
+      "shop_categories",
+      supabase
+        .from("categories")
+        .select("id, name")
+        .eq("organization_id", organizationId)
+        .order("name", { ascending: true }),
+    ),
+  ]);
 
   const productList = (products ?? []).map((p) => ({
     id: p.id,
@@ -64,11 +67,14 @@ async function DataFetcher() {
     name: c.name,
   }));
 
+  const hasMore = productList.length === PAGE_SIZE;
+
   return (
     <CatalogClient
       products={productList}
       categories={categoryList}
       selectionMode={config.selectionMode}
+      initialHasMore={hasMore}
     />
   );
 }

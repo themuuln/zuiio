@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { cn } from "@/lib/utils";
 
 export type CategoryChip = {
@@ -13,7 +14,7 @@ type CategoryChipsProps = {
   onSelect: (id: string | null) => void;
 };
 
-export function CategoryChips({
+export const CategoryChips = memo(function CategoryChips({
   categories,
   selectedId,
   onSelect,
@@ -58,4 +59,4 @@ export function CategoryChips({
       </div>
     </div>
   );
-}
+});

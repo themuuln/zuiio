@@ -43,102 +43,81 @@ export type ProductVariantDetail = ProductVariant & {
   }[];
 };
 
-async function fetchVariantGroups(productId: string) {
+export async function fetchVariantGroups(productId: string) {
   const supabase = createClient();
 
-  const { data: groups, error: groupsError } = await supabase
+  // Single query: groups + nested options (was 1 + N queries)
+  const { data: groups, error } = await supabase
     .from("product_variant_groups")
-    .select("id, product_id, name, sort_order")
+    .select(
+      "id, product_id, name, sort_order, product_variant_options(id, group_id, value, sort_order)",
+    )
     .eq("product_id", productId)
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
 
-  if (groupsError) {
-    capture(groupsError, { context: "fetchVariantGroups:groups" });
-    throw groupsError;
+  if (error) {
+    capture(error, { context: "fetchVariantGroups" });
+    throw error;
   }
 
-  const groupsWithOptions: VariantGroupWithOptions[] = [];
-  for (const group of groups) {
-    const { data: options, error: optionsError } = await supabase
-      .from("product_variant_options")
-      .select("id, group_id, value, sort_order")
-      .eq("group_id", group.id)
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: true });
-
-    if (optionsError) {
-      capture(optionsError, { context: "fetchVariantGroups:options" });
-      throw optionsError;
-    }
-
-    groupsWithOptions.push({ ...group, options: options ?? [] });
-  }
-
-  return groupsWithOptions;
+  return (groups ?? []).map((group) => ({
+    id: group.id,
+    product_id: group.product_id,
+    name: group.name,
+    sort_order: group.sort_order,
+    options: (group.product_variant_options ?? [])
+      .slice()
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
+  }));
 }
 
-async function fetchVariants(productId: string) {
+export async function fetchVariants(productId: string) {
   const supabase = createClient();
 
+  // Single query: variants → assignments → options (was 1 + N×2 queries)
   const { data: variants, error } = await supabase
     .from("product_variants")
     .select(
-      "id, product_id, sku, barcode, cost_price, sale_price, current_stock, min_stock, image_urls, is_active, created_at",
+      "id, product_id, sku, barcode, cost_price, sale_price, current_stock, min_stock, image_urls, is_active, created_at, product_variant_assignments(id, option_id, product_variant_options(value, group_id))",
     )
     .eq("product_id", productId)
     .order("created_at", { ascending: true });
 
   if (error) {
-    capture(error, { context: "fetchVariants:variants" });
+    capture(error, { context: "fetchVariants" });
     throw error;
   }
 
-  const enriched: ProductVariant[] = [];
-  for (const v of variants ?? []) {
-    const { data: assigns, error: assignError } = await supabase
-      .from("product_variant_assignments")
-      .select("id, option_id")
-      .eq("variant_id", v.id);
+  return (variants ?? []).map((v) => {
+    const assignments = v.product_variant_assignments ?? [];
+    const optionIds = assignments.map((a) => a.option_id);
+    const optionLabels = assignments
+      .flatMap((a) => a.product_variant_options?.value ?? [])
+      .join(" / ");
 
-    if (assignError) {
-      capture(assignError, { context: "fetchVariants:assignments" });
-      throw assignError;
-    }
-
-    // Fetch option values
-    const optionIds = assigns?.map((a) => a.option_id) ?? [];
-    let optionLabels = "";
-
-    if (optionIds.length > 0) {
-      const { data: opts, error: optsError } = await supabase
-        .from("product_variant_options")
-        .select("value, group_id")
-        .in("id", optionIds)
-        .order("sort_order", { ascending: true })
-        .order("created_at", { ascending: true });
-
-      if (optsError) {
-        capture(optsError, { context: "fetchVariants:options" });
-        throw optsError;
-      }
-      optionLabels = opts?.map((o) => o.value).join(" / ") ?? "";
-    }
-
-    enriched.push({
-      ...v,
+    return {
+      id: v.id,
+      product_id: v.product_id,
+      sku: v.sku,
+      barcode: v.barcode,
+      cost_price: v.cost_price,
+      sale_price: v.sale_price,
+      current_stock: v.current_stock,
+      min_stock: v.min_stock,
+      image_urls: v.image_urls,
+      is_active: v.is_active,
+      created_at: v.created_at,
       option_labels: optionLabels,
       option_ids: optionIds,
-    });
-  }
-
-  return enriched;
+    };
+  });
 }
 
 export function useVariantGroups(productId: string | undefined) {
   return useQuery({
     queryKey: variantKeys.byProduct(productId ?? ""),
-    queryFn: () => fetchVariantGroups(productId!),
+    queryFn: () => fetchVariantGroups(productId as string),
     enabled: !!productId,
   });
 }
@@ -146,7 +125,7 @@ export function useVariantGroups(productId: string | undefined) {
 export function useProductVariants(productId: string | undefined) {
   return useQuery({
     queryKey: [...variantKeys.byProduct(productId ?? ""), "variants"],
-    queryFn: () => fetchVariants(productId!),
+    queryFn: () => fetchVariants(productId as string),
     enabled: !!productId,
   });
 }

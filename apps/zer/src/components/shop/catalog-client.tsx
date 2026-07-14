@@ -7,10 +7,12 @@ import {
   Package,
   XCircle,
 } from "@phosphor-icons/react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { useAggregatedLookup, useDebounce, useLookup } from "@zuiio/hooks";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { fetchProductsPage } from "@/app/(dashboard)/shop/actions";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
 import { CartFloatingButton } from "@/components/shop/cart-floating-button";
 import { CartPanel } from "@/components/shop/cart-panel";
@@ -37,6 +39,43 @@ const CameraScanner = dynamic(
   { ssr: false },
 );
 
+/**
+ * Product grid — isolated from CatalogClient so cart mutations
+ * only re-render the grid, not the search bar / category chips.
+ * Uses content-visibility: auto for browser-native virtualization.
+ */
+const ProductGrid = memo(function ProductGrid({
+  products,
+  selectionMode,
+}: {
+  products: ProductCardProduct[];
+  selectionMode: "grid" | "barcode" | "hybrid";
+}) {
+  const { items } = useCart();
+  const cartQuantityMap = useAggregatedLookup(
+    items.filter((i) => !i.variantId),
+    (i) => i.productId,
+    (i) => i.quantity,
+  );
+
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+      {products.map((product) => (
+        <div
+          key={product.id}
+          style={{ contentVisibility: "auto", containIntrinsicSize: "0 280px" }}
+        >
+          <ProductCard
+            product={product}
+            variant={selectionMode === "grid" ? "tile" : "card"}
+            cartQuantity={cartQuantityMap.get(product.id) ?? 0}
+          />
+        </div>
+      ))}
+    </div>
+  );
+});
+
 type BarcodeStatus =
   | { type: "idle" }
   | { type: "found"; productName: string }
@@ -57,13 +96,16 @@ type CatalogClientProps = {
   categories: CategoryChip[];
   /** When "grid", hides barcode scanner and shows larger product tiles for tap-to-add. */
   selectionMode?: "grid" | "barcode" | "hybrid";
+  /** Whether more pages exist beyond the initial server-fetched page. */
+  initialHasMore?: boolean;
 };
 export function CatalogClient({
-  products,
+  products: initialProducts,
   categories,
   selectionMode = "barcode",
+  initialHasMore = false,
 }: CatalogClientProps) {
-  const { addItem, items } = useCart();
+  const { addItem } = useCart();
   const inputRef = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -89,15 +131,37 @@ export function CatalogClient({
     }, 2000);
   };
 
-  const barcodeMap = useLookup(products, (p) => p.barcode?.toLowerCase(), {
-    skipNull: true,
+  const barcodeMap = useLookup(
+    initialProducts,
+    (p) => p.barcode?.toLowerCase(),
+    {
+      skipNull: true,
+    },
+  );
+
+  // Infinite scroll: load more pages from server
+  const {
+    data: infiniteData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["shop_products", "infinite"],
+    queryFn: ({ pageParam }) => fetchProductsPage(pageParam),
+    initialPageParam: initialProducts.length,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.hasMore ? allPages.length * 50 : undefined,
+    initialData: {
+      pages: [{ products: initialProducts, hasMore: initialHasMore }],
+      pageParams: [0],
+    },
   });
 
-  const cartQuantityMap = useAggregatedLookup(
-    items.filter((i) => !i.variantId),
-    (i) => i.productId,
-    (i) => i.quantity,
+  const allProducts = useMemo(
+    () => infiniteData?.pages.flatMap((p) => p.products) ?? initialProducts,
+    [infiniteData, initialProducts],
   );
+
   const { data: serverResults } = useProductSearch(debouncedQuery);
 
   const handleBarcodeMatch = (barcode: string) => {
@@ -178,7 +242,7 @@ export function CatalogClient({
     }
 
     // Fallback: client-side filter for empty/short queries (shows all products)
-    let result = products;
+    let result = allProducts;
     if (selectedCategoryId) {
       result = result.filter(
         (product) => product.category_id === selectedCategoryId,
@@ -195,14 +259,14 @@ export function CatalogClient({
     }
     return result;
   }, [
-    products,
+    allProducts,
     searchQuery,
     debouncedQuery,
     serverResults,
     selectedCategoryId,
   ]);
 
-  const isEmpty = products.length === 0;
+  const isEmpty = allProducts.length === 0;
   const hasNoResults = !isEmpty && filteredProducts.length === 0;
 
   const showStatus = barcodeStatus.type !== "idle";
@@ -352,16 +416,35 @@ export function CatalogClient({
         ) : hasNoResults ? (
           <EmptySearchResults query={searchQuery} />
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-            {filteredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                variant={selectionMode === "grid" ? "tile" : "card"}
-                cartQuantity={cartQuantityMap.get(product.id) ?? 0}
-              />
-            ))}
-          </div>
+          <>
+            <ProductGrid
+              products={filteredProducts}
+              selectionMode={selectionMode}
+            />
+            {/* Infinite scroll sentinel */}
+            {hasNextPage && !serverResults && (
+              <div
+                ref={(el) => {
+                  if (!el) return;
+                  const observer = new IntersectionObserver(
+                    ([entry]) => {
+                      if (entry?.isIntersecting && !isFetchingNextPage) {
+                        fetchNextPage();
+                        observer.disconnect();
+                      }
+                    },
+                    { rootMargin: "200px" },
+                  );
+                  observer.observe(el);
+                }}
+                className="flex justify-center py-4"
+              >
+                {isFetchingNextPage && (
+                  <Skeleton className="h-8 w-32 rounded-lg" />
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
 

@@ -1,5 +1,5 @@
 "use server";
-import { capture } from "@zuiio/capture";
+import { capture, withDbCapture } from "@zuiio/capture";
 
 import { requireAppContext, requireWriteAction } from "@/lib/action-utils";
 import { calculateCommission } from "@/lib/commissions";
@@ -82,7 +82,9 @@ export async function createShopSale(
   );
 
   // Collect variant IDs and validate variant stock
-  const variantIds = items.filter((i) => i.variantId).map((i) => i.variantId!);
+  const variantIds = items
+    .filter((i) => i.variantId)
+    .map((i) => i.variantId as string);
 
   const variantMap =
     variantIds.length > 0
@@ -144,7 +146,7 @@ export async function createShopSale(
     .from("sales")
     .insert({
       organization_id: organizationId,
-      branch_id: branchId!,
+      branch_id: branchId as string,
       contact_id: contactId,
       total_amount: totalAmount,
       paid_amount: paidAmount,
@@ -275,7 +277,7 @@ export async function createShopSale(
     userId,
     saleId,
     contactId,
-    branchId!,
+    branchId as string,
   );
 
   revalidateEntity("shop");
@@ -300,4 +302,65 @@ export async function getStaffList() {
   }
 
   return { profiles: profiles ?? [], currentUserId: userId };
+}
+
+const PRODUCTS_PAGE_SIZE = 50;
+
+/**
+ * Fetch a page of products for the catalog (infinite scroll).
+ * Returns products + whether more pages exist.
+ */
+export async function fetchProductsPage(offset: number): Promise<{
+  products: {
+    id: string;
+    name: string;
+    sku: string | null;
+    barcode: string | null;
+    unit: string | null;
+    sale_price: number | null;
+    current_stock: number | null;
+    category_id: string | null;
+    image_url: string | null;
+    brand_name: string | null;
+    brand_logo_url: string | null;
+  }[];
+  hasMore: boolean;
+}> {
+  const { supabase, organizationId } = await requireAppContext();
+
+  const { data: products } = await withDbCapture(
+    "shop_products_page",
+    supabase
+      .from("products")
+      .select(
+        "id, name, sku, barcode, unit, sale_price, current_stock, category_id, image_url, brands(name, logo_url)",
+      )
+      .eq("organization_id", organizationId)
+      .is("deleted_at", null)
+      .order("name", { ascending: true })
+      .range(offset, offset + PRODUCTS_PAGE_SIZE - 1),
+  );
+
+  const productList = (products ?? []).map((p) => ({
+    id: p.id,
+    name: p.name,
+    sku: p.sku,
+    barcode: p.barcode,
+    unit: p.unit,
+    sale_price: p.sale_price,
+    current_stock: p.current_stock,
+    category_id: p.category_id,
+    image_url: p.image_url,
+    brand_name:
+      (p.brands as { name: string; logo_url: string | null } | null)?.name ??
+      null,
+    brand_logo_url:
+      (p.brands as { name: string; logo_url: string | null } | null)
+        ?.logo_url ?? null,
+  }));
+
+  return {
+    products: productList,
+    hasMore: productList.length === PRODUCTS_PAGE_SIZE,
+  };
 }

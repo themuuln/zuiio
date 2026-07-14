@@ -1,6 +1,7 @@
 "use client";
 import { Check, ShoppingCart } from "@phosphor-icons/react";
-import { memo, useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
 import type { SelectedVariant } from "@/components/products/variant-picker";
 import { VariantPicker } from "@/components/products/variant-picker";
@@ -10,7 +11,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DrawerFooter } from "@/components/ui/drawer-footer";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { SlideInDrawer } from "@/components/ui/slide-in-drawer";
-import { useVariantGroups } from "@/lib/query/hooks/use-product-variants";
+import {
+  fetchVariantGroups,
+  fetchVariants,
+  useVariantGroups,
+} from "@/lib/query/hooks/use-product-variants";
+import { variantKeys } from "@/lib/query/keys";
 import { cn } from "@/lib/utils";
 
 export type ProductCardProduct = {
@@ -67,6 +73,20 @@ export const ProductCard = memo(function ProductCard({
     detectorEnabled ? product.id : undefined,
   );
   const hasVariants = !!variantGroups && variantGroups.length > 0;
+  const queryClient = useQueryClient();
+  const prefetchVariants = useCallback(() => {
+    if (!hasVariants) return;
+    queryClient.prefetchQuery({
+      queryKey: variantKeys.byProduct(product.id),
+      queryFn: () => fetchVariantGroups(product.id),
+      staleTime: 60_000,
+    });
+    queryClient.prefetchQuery({
+      queryKey: [...variantKeys.byProduct(product.id), "variants"],
+      queryFn: () => fetchVariants(product.id),
+      staleTime: 60_000,
+    });
+  }, [hasVariants, product.id, queryClient]);
   // Reset state when product changes
   useEffect(() => {
     setVariantDialogOpen(false);
@@ -235,7 +255,7 @@ export const ProductCard = memo(function ProductCard({
           {isTile ? (
             <>
               {/* Simplified tile: price + stock */}
-              <p className="mt-auto text-lg font-bold text-primary">
+              <p className="text-lg font-bold text-primary">
                 {price.toLocaleString()}₮
               </p>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -266,7 +286,7 @@ export const ProductCard = memo(function ProductCard({
                   </span>
                 </div>
               )}
-              <p className="mt-auto text-base font-semibold text-primary">
+              <p className="text-base font-semibold text-primary">
                 {price.toLocaleString()}₮
               </p>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -283,12 +303,13 @@ export const ProductCard = memo(function ProductCard({
           <Button
             size="sm"
             className={cn(
-              "mt-2 h-[44px] w-full gap-2 text-sm font-semibold transition-all",
+              "mt-auto h-[44px] w-full gap-2 text-sm font-semibold transition-all",
               justAdded && "bg-emerald-600 hover:bg-emerald-600",
               hasVariants &&
                 "border border-dashed border-border bg-muted/40 text-foreground disabled:opacity-100",
             )}
             disabled={isOutOfStock}
+            onPointerEnter={prefetchVariants}
             onClick={(e) => {
               e.stopPropagation();
               handleAddToCart();

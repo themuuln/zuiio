@@ -3,6 +3,7 @@
 import { Check, CheckCircle, XCircle } from "@phosphor-icons/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/format";
 import {
   useProductVariants,
@@ -58,7 +59,7 @@ export function VariantPicker({
   }, [observe]);
 
   const { data: groups } = useVariantGroups(enabled ? productId : undefined);
-  const { data: variants } = useProductVariants(
+  const { data: variants, isPending: isVariantsLoading } = useProductVariants(
     enabled ? productId : undefined,
   );
 
@@ -241,6 +242,7 @@ export function VariantPicker({
                       type="button"
                       aria-pressed={isSelected}
                       disabled={!isAvailable && !isSelected}
+                      className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-background/80 px-3.5 py-2.5 text-sm font-medium transition-colors hover:bg-muted/60 aria-pressed:border-primary/30 aria-pressed:bg-primary/10 aria-pressed:text-primary disabled:cursor-not-allowed disabled:opacity-40"
                       onClick={() =>
                         setSelections((prev) => ({
                           ...prev,
@@ -259,8 +261,12 @@ export function VariantPicker({
                         {option.value}
                       </span>
                       {isAvailable && !isSelected && (
-                        <span className="ml-0.5 text-[10px] text-muted-foreground/70">
-                          {stockByOption[option.id] ?? 0} ш
+                        <span className="ml-0.5 text-[11px] text-muted-foreground/70">
+                          {isVariantsLoading ? (
+                            <Skeleton className="inline-block h-[11px] w-7 rounded-sm" />
+                          ) : (
+                            `${stockByOption[option.id] ?? 0} ш`
+                          )}
                         </span>
                       )}
                     </button>
@@ -500,7 +506,11 @@ export function VariantPicker({
                         </span>
                         {isAvailable && !isSelected && (
                           <span className="ml-auto shrink-0 text-[10px] text-muted-foreground/70">
-                            {stockByOption[option.id] ?? 0} ш
+                            {isVariantsLoading ? (
+                              <Skeleton className="inline-block h-[11px] w-7 rounded-sm" />
+                            ) : (
+                              `${stockByOption[option.id] ?? 0} ш`
+                            )}
                           </span>
                         )}
                       </button>

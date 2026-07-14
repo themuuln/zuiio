@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface OptimizedImageProps {
@@ -43,11 +43,37 @@ function getOptimizedSrc(src: string, width: number, format: string): string {
   }
 }
 
+// --- Shared IntersectionObserver singleton ---
+// All OptimizedImage instances share one observer instead of creating 50+.
+const imageCallbacks = new Map<Element, () => void>();
+
+let sharedObserver: IntersectionObserver | null = null;
+
+function getSharedObserver(): IntersectionObserver {
+  if (sharedObserver) return sharedObserver;
+  sharedObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          const cb = imageCallbacks.get(entry.target);
+          if (cb) {
+            cb();
+            sharedObserver?.unobserve(entry.target);
+            imageCallbacks.delete(entry.target);
+          }
+        }
+      }
+    },
+    { rootMargin: "200px" },
+  );
+  return sharedObserver;
+}
+
 /**
  * Smart image component optimized for Supabase storage images.
  *
  * Features:
- * - IntersectionObserver-based lazy loading
+ * - Shared IntersectionObserver (1 observer for all images, not 1 per image)
  * - Skeleton placeholder while loading
  * - Supabase image transformation (WebP/AVIF, resize)
  * - Aspect-ratio container to prevent layout shift
@@ -63,33 +89,30 @@ export function OptimizedImage({
   aspectRatio,
   format = "webp",
 }: OptimizedImageProps) {
-  const imgRef = useRef<HTMLImageElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(priority);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Intersection Observer for lazy loading
+  const onVisible = useCallback(() => setIsVisible(true), []);
+
+  // Register with shared observer
   useEffect(() => {
     if (priority || !src) {
       setIsVisible(true);
       return;
     }
 
-    const el = imgRef.current;
+    const el = containerRef.current;
     if (!el) return;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "200px" },
-    );
+    imageCallbacks.set(el, onVisible);
+    getSharedObserver().observe(el);
 
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [priority, src]);
+    return () => {
+      getSharedObserver().unobserve(el);
+      imageCallbacks.delete(el);
+    };
+  }, [priority, src, onVisible]);
 
   if (!src) return null;
 
@@ -104,12 +127,13 @@ export function OptimizedImage({
 
   return (
     <div
-      ref={imgRef}
+      ref={containerRef}
       className={cn("relative overflow-hidden", className)}
       style={aspectRatioStyle}
     >
       {!isLoaded && <div className="absolute inset-0 animate-pulse bg-muted" />}
       {isVisible && (
+        // biome-ignore lint/performance/noImgElement: Custom lazy-loading with shared IntersectionObserver
         <img
           src={optimizedSrc}
           alt={alt}
