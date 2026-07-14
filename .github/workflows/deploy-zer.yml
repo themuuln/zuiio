@@ -51,5 +51,17 @@ jobs:
           mkdir -p .vercel
           echo '{"projectId":"'$VERCEL_PROJECT_ID'","orgId":"'$VERCEL_ORG_ID'"}' > .vercel/project.json
 
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+
+      - name: Build
+        run: vercel build --prod --token=$VERCEL_TOKEN
+
+      - name: Clean build output
+        run: |
+          rm -rf .vercel/output/static
+          rm -rf .vercel/output/diagnostics
+          du -sh .vercel/output/
+
       - name: Deploy to production
-        run: vercel deploy --prod --token=$VERCEL_TOKEN
+        run: vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
