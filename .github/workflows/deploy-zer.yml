@@ -57,3 +57,4 @@ jobs:
 
       - name: Deploy to production
         run: vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+
