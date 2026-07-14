@@ -55,6 +55,9 @@ jobs:
       - name: Build
         run: vercel build --prod --token=$VERCEL_TOKEN
 
+      - name: Clean build cache
+        run: rm -rf .next/cache .vercel/output/diagnostics
+
       - name: Deploy to production
         run: vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
 
