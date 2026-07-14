@@ -67,10 +67,6 @@ export default withSentryConfig(nextConfig, {
   // Bypass ad-blockers by proxying Sentry events through a Next.js route
   tunnelRoute: "/monitoring",
 
-  // Disable Sentry webpack plugin in development for faster builds
-  disableServerWebpackPlugin: process.env.NODE_ENV === "development",
-  disableClientWebpackPlugin: process.env.NODE_ENV === "development",
-
   webpack: {
     // Enables automatic instrumentation of Vercel Cron Monitors
     automaticVercelMonitors: true,
