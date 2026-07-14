@@ -17,6 +17,8 @@ catalog:
   "@tanstack/react-query": ^5.101.2
   # Supabase
   "@supabase/supabase-js": ^2.110.1
+  # TypeScript
+  typescript: npm:@typescript/typescript6@^6.0.2
 
 allowBuilds:
   '@google/genai': true
