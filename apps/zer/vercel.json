@@ -3,5 +3,6 @@
   "regions": ["sin1"],
   "framework": "nextjs",
   "installCommand": "cd ../../ && corepack enable && pnpm install --no-frozen-lockfile",
+  "buildCommand": "cd ../../ && pnpm exec turbo run build --filter=zer",
   "outputDirectory": "apps/zer/.next"
 }
