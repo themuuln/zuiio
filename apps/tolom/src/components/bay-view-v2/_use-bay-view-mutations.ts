@@ -316,11 +316,11 @@ export function useBayViewMutations(params: BayViewMutationsParams) {
 
   const handleRegisterAndAssign = useCallback(
     (bayNumber: number) => {
-      setEmptyBayBayNumber(null);
+      // Don't close EmptyBayActionDrawer — nesting keeps it visible behind VehicleRegistrationDrawer
       setDirectAssignBayNumber(bayNumber);
       dialogs.set("vehicleReg", true);
     },
-    [setEmptyBayBayNumber, setDirectAssignBayNumber, dialogs],
+    [setDirectAssignBayNumber, dialogs],
   );
 
   const handleAssignToBay = useCallback(

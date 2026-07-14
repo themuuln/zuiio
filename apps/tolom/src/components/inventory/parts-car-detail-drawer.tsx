@@ -17,7 +17,6 @@ import {
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { DetailSheetHeader } from "@/components/ui/detail-drawer-header";
-import { DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -214,18 +213,18 @@ export function PartsCarDetailSheet({
 
   return (
     <DetailDrawer open={open} onOpenChange={onOpenChange}>
-      <DrawerHeader className="px-4 py-3 border-b border-border shrink-0">
+      <DetailDrawer.Header>
         <DetailSheetHeader
           icon={Car}
           iconLoading={isLoadingData}
           title={
-            <DrawerTitle className="text-base truncate">
+            <DetailDrawer.Title className="text-base truncate">
               {isLoadingData
                 ? "Loading…"
                 : car
                   ? `${car.make} ${car.model}`
                   : t("notFound")}
-            </DrawerTitle>
+            </DetailDrawer.Title>
           }
           subtitle={
             car ? (
@@ -280,7 +279,7 @@ export function PartsCarDetailSheet({
             ) : undefined
           }
         />
-      </DrawerHeader>
+      </DetailDrawer.Header>
 
       {isLoadingData && (
         <div className="flex items-center justify-center py-20">

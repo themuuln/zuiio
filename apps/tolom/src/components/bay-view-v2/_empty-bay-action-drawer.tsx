@@ -2,6 +2,7 @@
 
 import { Car, Clock, Loader2, X, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
+import type React from "react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,8 @@ interface EmptyBayActionDrawerProps {
   onSelectRegister: () => void;
   onSelectQueueItem: (workOrderId: string) => void;
   onSelectRegisterAndAssign: () => void;
+  /** Nested drawers rendered inside this drawer's Root for Base UI stack effect */
+  nestedContent?: React.ReactNode;
 }
 
 // ── Utility: time since creation ──────────────────────────────
@@ -40,6 +43,7 @@ export function EmptyBayActionDrawer({
   onSelectRegister,
   onSelectQueueItem,
   onSelectRegisterAndAssign,
+  nestedContent,
 }: EmptyBayActionDrawerProps) {
   const t = useTranslations("bayView");
   const [selectedQueueItem, setSelectedQueueItem] = useState<string | null>(
@@ -47,12 +51,10 @@ export function EmptyBayActionDrawer({
   );
 
   const handleRegisterAndAssign = () => {
-    onOpenChange(false);
     onSelectRegisterAndAssign();
   };
 
   const handleRegister = () => {
-    onOpenChange(false);
     onSelectRegister();
   };
 
@@ -66,6 +68,7 @@ export function EmptyBayActionDrawer({
     <DetailDrawer
       open={open}
       onOpenChange={onOpenChange}
+      nestedContent={nestedContent}
     >
       {/* ── Header ──────────────────────────────────────────── */}
       <DetailDrawer.Header bordered={false} className="p-6 pb-4">
