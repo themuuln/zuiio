@@ -1,11 +1,11 @@
 "use server";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { capture, withDbCapture } from "@zuiio/capture";
 import { requireWriteAction } from "@/lib/action-utils";
 import { revalidateEntities } from "@/lib/revalidate";
 import type { Database } from "@/lib/supabase/types";
 import { getString } from "@/lib/validation";
-import { capture, withDbCapture } from "@zuiio/capture";
 
 export async function createReturn(
   _prevState: { error?: string } | undefined,
@@ -93,7 +93,9 @@ export async function createReturn(
     }
   }
 
-  const { data: returnNum, error: returnNumError } = await supabase.rpc("generate_return_number");
+  const { data: returnNum, error: returnNumError } = await supabase.rpc(
+    "generate_return_number",
+  );
   if (returnNumError) {
     capture(returnNumError, { context: "returns: generate return number" });
     return { error: "Буцаалтын дугаар үүсгэхэд алдаа гарлаа." };
@@ -146,9 +148,7 @@ export async function createReturn(
 
   const { error: itemsError } = await withDbCapture(
     "returns: insert return items",
-    supabase
-      .from("return_items")
-      .insert(returnItems),
+    supabase.from("return_items").insert(returnItems),
   );
 
   if (itemsError) {
@@ -222,22 +222,20 @@ export async function completeReturn(returnId: string) {
 
     const { error: movementError } = await withDbCapture(
       "returns: insert stock movement",
-      supabase
-        .from("stock_movements")
-        .insert({
-          organization_id: organizationId,
-          branch_id: branchId!,
-          product_id: item.product_id,
-          type: movementType,
-          quantity: movementQuantity,
-          unit_cost: item.unit_price,
-          reference: `return:${returnId}`,
-          notes:
-            returnRecord.type === "sales_return"
-              ? "Борлуулалтын буцаалт - агуулах руу буцах"
-              : "Худалдан авалтын буцаалт - нийлүүлэгч рүү буцах",
-          created_by: userId,
-        }),
+      supabase.from("stock_movements").insert({
+        organization_id: organizationId,
+        branch_id: branchId!,
+        product_id: item.product_id,
+        type: movementType,
+        quantity: movementQuantity,
+        unit_cost: item.unit_price,
+        reference: `return:${returnId}`,
+        notes:
+          returnRecord.type === "sales_return"
+            ? "Борлуулалтын буцаалт - агуулах руу буцах"
+            : "Худалдан авалтын буцаалт - нийлүүлэгч рүү буцах",
+        created_by: userId,
+      }),
     );
 
     if (movementError) {
@@ -285,9 +283,7 @@ export async function completeReturn(returnId: string) {
 
       const { data: updated, error: stockError } = await withDbCapture(
         "returns: update product stock",
-        updateQuery
-          .select("current_stock")
-          .maybeSingle(),
+        updateQuery.select("current_stock").maybeSingle(),
       );
 
       if (stockError) {
@@ -447,10 +443,7 @@ export async function cancelReturn(returnId: string) {
     query = query.eq("branch_id", branchId);
   }
 
-  const { error } = await withDbCapture(
-    "returns: cancel return",
-    query,
-  );
+  const { error } = await withDbCapture("returns: cancel return", query);
 
   if (error) {
     capture(error, { context: "cancelReturn: update status" });

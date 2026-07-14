@@ -1,12 +1,12 @@
 "use server";
 
 import { capture } from "@zuiio/capture";
+import { rateLimit } from "@zuiio/core";
 import { redirect } from "next/navigation";
 import { validateRegistrationInput } from "@/lib/domain-rules";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import { getString } from "@/lib/validation";
-import { rateLimit } from "@zuiio/core";
 
 export async function register(
   _prevState: { error?: string } | undefined,
@@ -28,7 +28,6 @@ export async function register(
   }
   const rl = rateLimit(`register:${email}`, 3, 300_000);
   if (rl.error) return { error: rl.error };
-
 
   const { url } = getSupabaseEnv();
   const { data, error } = await supabase.auth.signUp({

@@ -7,13 +7,15 @@ import { ExpenseBreakdown } from "@/components/reports/expense-breakdown";
 import { FinancialSummary } from "@/components/reports/financial-summary";
 import { PendingSales } from "@/components/reports/pending-sales";
 import { ProductSalesTable } from "@/components/reports/product-sales-table";
+import {
+  ExpenseDonutChart,
+  FinancialSummaryChart,
+  PendingSalesChart,
+  ProductMarginChart,
+  ProductRevenueChart,
+  StockMovementChart,
+} from "@/components/reports/report-charts-dynamic";
 import { StockMovements } from "@/components/reports/stock-movements";
-import { ExpenseDonutChart } from "@/components/reports/report-charts-dynamic";
-import { FinancialSummaryChart } from "@/components/reports/report-charts-dynamic";
-import { PendingSalesChart } from "@/components/reports/report-charts-dynamic";
-import { ProductMarginChart } from "@/components/reports/report-charts-dynamic";
-import { ProductRevenueChart } from "@/components/reports/report-charts-dynamic";
-import { StockMovementChart } from "@/components/reports/report-charts-dynamic";
 import { requireAppContext } from "@/lib/erp";
 import { formatRouteDate } from "@/lib/format";
 import { getFullReport } from "@/lib/reports";
@@ -87,7 +89,9 @@ export default async function ReportsPage({
       }
     >
       <DateRangeForm />
-      <Suspense fallback={<div className="h-96 animate-pulse rounded-xl bg-muted" />}>
+      <Suspense
+        fallback={<div className="h-96 animate-pulse rounded-xl bg-muted" />}
+      >
         <DataFetcher from={from} to={to} />
       </Suspense>
     </PageShell>

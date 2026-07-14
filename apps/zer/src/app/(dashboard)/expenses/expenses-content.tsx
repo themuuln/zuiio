@@ -1,18 +1,18 @@
 "use client";
 
 import { Coins } from "@phosphor-icons/react";
-import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { withDbCapture } from "@zuiio/capture";
-import { createClient } from "@/lib/supabase/client";
-import { useOrgSettings } from "@/lib/org-settings-context";
-import { useBranchContext } from "@/lib/branch-context";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
 import { ExpenseCreateDrawer } from "@/components/expenses/expense-create-drawer";
 import { buttonVariants } from "@/components/ui/button";
+import { useBranchContext } from "@/lib/branch-context";
+import { useOrgSettings } from "@/lib/org-settings-context";
+import { createClient } from "@/lib/supabase/client";
 import { type ExpenseRow, ExpensesTable } from "./expenses-table";
 
 export function ExpensesContent() {
@@ -23,11 +23,10 @@ export function ExpensesContent() {
   const initialRef = useRef(createOpen);
 
   const { organizationId } = useOrgSettings();
-  const { selectedBranchId, isBranchScoped, userBranchId } =
-    useBranchContext();
+  const { selectedBranchId, isBranchScoped, userBranchId } = useBranchContext();
   const effectiveBranchId = isBranchScoped
     ? userBranchId
-    : selectedBranchId ?? null;
+    : (selectedBranchId ?? null);
 
   const query = useQuery({
     queryKey: ["expenses", organizationId, effectiveBranchId],

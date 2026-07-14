@@ -2,9 +2,12 @@
 
 import { Plus, ShoppingCart } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
+import { withDbCapture } from "@zuiio/capture";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { ErpEmptyState } from "@/components/erp/empty-state";
+import { PageShell } from "@/components/erp/page-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -16,8 +19,6 @@ import {
   ComboboxList,
 } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
-import { ErpEmptyState } from "@/components/erp/empty-state";
-import { PageShell } from "@/components/erp/page-shell";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -29,7 +30,6 @@ import {
 } from "@/components/ui/table";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { createClient } from "@/lib/supabase/client";
-import { withDbCapture } from "@zuiio/capture";
 import { batchCreatePurchaseOrders } from "./actions";
 
 export interface RestockProductRow {
@@ -90,9 +90,7 @@ export function RestockContent() {
         },
       );
 
-      const suppliers: SupplierOption[] = (
-        suppliersResult.data ?? []
-      ).map(
+      const suppliers: SupplierOption[] = (suppliersResult.data ?? []).map(
         (s: { id: string; name: string; phone: string | null }) => ({
           id: s.id,
           name: s.name,
@@ -100,9 +98,7 @@ export function RestockContent() {
         }),
       );
 
-      const productIds = rawProducts.map(
-        (p: { id: string }) => p.id,
-      );
+      const productIds = rawProducts.map((p: { id: string }) => p.id);
       const lastSupplierMap: Record<
         string,
         { id: string; name: string } | null
@@ -372,7 +368,9 @@ export function RestockContent() {
                     <TableHead>SKU</TableHead>
                     <TableHead className="text-right">Одоогийн нөөц</TableHead>
                     <TableHead className="text-right">Минимум нөөц</TableHead>
-                    <TableHead className="text-right w-28">Тоо хэмжээ</TableHead>
+                    <TableHead className="text-right w-28">
+                      Тоо хэмжээ
+                    </TableHead>
                     <TableHead className="text-right w-28">Өртөг</TableHead>
                     <TableHead className="w-48">Нийлүүлэгч</TableHead>
                   </TableRow>

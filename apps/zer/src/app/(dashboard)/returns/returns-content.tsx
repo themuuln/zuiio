@@ -1,21 +1,21 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { withDbCapture } from "@zuiio/capture";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { withBranchFilter } from "@/lib/branches";
-import { ErpDataTable, type Column } from "@/components/erp/data-table";
+import { type Column, ErpDataTable } from "@/components/erp/data-table";
 import { PageShell } from "@/components/erp/page-shell";
 import { ReturnCreateDrawer } from "@/components/returns/return-create-drawer";
 import { ReturnDetailDrawer } from "@/components/returns/return-detail-drawer";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useBranchContext } from "@/lib/branch-context";
+import { withBranchFilter } from "@/lib/branches";
+import { formatCurrency, formatDate } from "@/lib/format";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { returnKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
-import { withDbCapture } from "@zuiio/capture";
 import type { ReturnRow } from "./page";
 
 type ContactOption = {
@@ -145,7 +145,8 @@ export function ReturnsContent() {
         salesResult,
         purchaseOrdersResult,
       ] = await Promise.all([
-        withDbCapture("page:returns",
+        withDbCapture(
+          "page:returns",
           withBranchFilter(
             supabase
               .from("returns")
@@ -157,16 +158,18 @@ export function ReturnsContent() {
             selectedBranchId,
             isBranchScoped,
             urlBranch,
-          )
+          ),
         ),
-        withDbCapture("page:returns",
+        withDbCapture(
+          "page:returns",
           supabase
             .from("contacts")
             .select("id, name")
             .eq("organization_id", organizationId)
             .order("name"),
         ),
-        withDbCapture("page:returns",
+        withDbCapture(
+          "page:returns",
           supabase
             .from("products")
             .select("id, name, sale_price, current_stock, unit")
@@ -174,7 +177,8 @@ export function ReturnsContent() {
             .is("deleted_at", null)
             .order("name"),
         ),
-        withDbCapture("page:returns",
+        withDbCapture(
+          "page:returns",
           withBranchFilter(
             supabase
               .from("sales")
@@ -185,9 +189,10 @@ export function ReturnsContent() {
             selectedBranchId,
             isBranchScoped,
             urlBranch,
-          )
+          ),
         ),
-        withDbCapture("page:returns",
+        withDbCapture(
+          "page:returns",
           withBranchFilter(
             supabase
               .from("purchase_orders")
@@ -200,23 +205,22 @@ export function ReturnsContent() {
             selectedBranchId,
             isBranchScoped,
             urlBranch,
-          )
+          ),
         ),
       ]);
 
-      const returns: ReturnRow[] =
-        (returnsResult.data ?? []).map((r) => ({
-          id: r.id,
-          return_number: r.return_number,
-          return_date: r.return_date,
-          type: r.type,
-          reference_type: r.reference_type,
-          reference_id: r.reference_id,
-          contact_name: (r.contacts as { name: string } | null)?.name ?? null,
-          status: r.status,
-          total_amount: r.total_amount,
-          reason: r.reason,
-        }));
+      const returns: ReturnRow[] = (returnsResult.data ?? []).map((r) => ({
+        id: r.id,
+        return_number: r.return_number,
+        return_date: r.return_date,
+        type: r.type,
+        reference_type: r.reference_type,
+        reference_id: r.reference_id,
+        contact_name: (r.contacts as { name: string } | null)?.name ?? null,
+        status: r.status,
+        total_amount: r.total_amount,
+        reason: r.reason,
+      }));
 
       return {
         returns,

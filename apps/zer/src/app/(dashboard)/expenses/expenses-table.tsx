@@ -90,7 +90,13 @@ const columns: ColumnDef<ExpenseRow>[] = [
   },
 ];
 
-export function ExpensesTable({ data, loading }: { data: ExpenseRow[]; loading?: boolean }) {
+export function ExpensesTable({
+  data,
+  loading,
+}: {
+  data: ExpenseRow[];
+  loading?: boolean;
+}) {
   const [selectedExpense, setSelectedExpense] = useState<ExpenseRow | null>(
     null,
   );
@@ -123,7 +129,11 @@ export function ExpensesTable({ data, loading }: { data: ExpenseRow[]; loading?:
         onRowClick={(row) => setSelectedExpense(row)}
       />
       <ExpenseDetailDrawer
-        expense={selectedExpense ? toDetailData(selectedExpense) : ({} as ExpenseDetailData)}
+        expense={
+          selectedExpense
+            ? toDetailData(selectedExpense)
+            : ({} as ExpenseDetailData)
+        }
         open={!!selectedExpense}
         onOpenChange={(open) => {
           if (!open) setSelectedExpense(null);

@@ -1,11 +1,16 @@
 "use client";
 
+import {
+  Cube,
+  GearSix,
+  TelegramLogo,
+  WarningCircle,
+} from "@phosphor-icons/react/dist/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { Cube, GearSix, TelegramLogo, WarningCircle } from "@phosphor-icons/react/dist/ssr";
-import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { capture, withDbCapture } from "@zuiio/capture";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/erp/theme-toggle";
 import type { RolePermission } from "@/components/roles/roles-client";
 import { Button } from "@/components/ui/button";
@@ -19,10 +24,11 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { type BrandConfig, DEFAULT_BRAND_CONFIG } from "@/lib/branding";
-import { createClient } from "@/lib/supabase/client";
 import { useOrgSettings } from "@/lib/org-settings-context";
+import { createClient } from "@/lib/supabase/client";
 import { BrandingDrawer } from "./branding-drawer";
 import { LeaveOrganizationDialog } from "./leave-org-dialog";
+import { LinkCodeDisplay } from "./link-code-display";
 import { NotificationSettings } from "./notification-settings";
 import { OrgFeatureSettings } from "./org-feature-settings";
 import { OrgInfoForm } from "./org-info-form";
@@ -33,7 +39,6 @@ import { RolesDrawer } from "./roles-drawer";
 import { SettingsShell } from "./settings-shell";
 import { ShopPosSettings } from "./shop-pos-settings";
 import { SmtpSettings } from "./smtp-settings";
-import { LinkCodeDisplay } from "./link-code-display";
 
 const SUPERADMIN_EMAIL = "zerone.offical@gmail.com";
 
@@ -124,70 +129,67 @@ export function SettingsContent() {
 
       const canManageRoles = permissions.includes("roles.manage");
 
-      const [
-        orgResult,
-        profileResult,
-        posResult,
-        smtpResult,
-        telegramResult,
-      ] = await Promise.all([
-        withDbCapture(
-          "settings:overview:org",
-          supabase
-            .from("organizations")
-            .select(
-              "name, slug, company_type, currency, brand_config, has_suppliers, has_inventory, has_customer_credit, has_multi_branch, has_variants, has_brands, has_categories, has_email_reports, has_audit_log",
-            )
-            .eq("id", organizationId)
-            .single(),
-        ),
-        withDbCapture(
-          "settings:overview:profile",
-          supabase
-            .from("profiles")
-            .select("full_name")
-            .eq("id", user.id)
-            .single(),
-        ),
-        withDbCapture(
-          "settings:overview:pos",
-          supabase
-            .from("organizations")
-            .select(
-              "has_checkout_customer, has_checkout_quick_amounts, has_receipt_drawer, shop_default_payment_method",
-            )
-            .eq("id", organizationId)
-            .single(),
-        ),
-        withDbCapture(
-          "settings:overview:smtp",
-          supabase
-            .from("smtp_configs")
-            .select("*", { count: "exact", head: true }),
-        ),
-        // telegram_links not in generated Database types — cast to untyped SupabaseClient
-        withDbCapture(
-          "settings:overview:telegram",
-          (supabase as unknown as SupabaseClient)
-            .from("telegram_links")
-            .select("telegram_username, linked_at")
-            .eq("organization_id", organizationId)
-            .eq("user_id", user.id)
-            .eq("product_type", "zer")
-            .eq("is_active", true)
-            .order("linked_at", { ascending: false })
-            .limit(1),
-        ),
-      ]);
+      const [orgResult, profileResult, posResult, smtpResult, telegramResult] =
+        await Promise.all([
+          withDbCapture(
+            "settings:overview:org",
+            supabase
+              .from("organizations")
+              .select(
+                "name, slug, company_type, currency, brand_config, has_suppliers, has_inventory, has_customer_credit, has_multi_branch, has_variants, has_brands, has_categories, has_email_reports, has_audit_log",
+              )
+              .eq("id", organizationId)
+              .single(),
+          ),
+          withDbCapture(
+            "settings:overview:profile",
+            supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("id", user.id)
+              .single(),
+          ),
+          withDbCapture(
+            "settings:overview:pos",
+            supabase
+              .from("organizations")
+              .select(
+                "has_checkout_customer, has_checkout_quick_amounts, has_receipt_drawer, shop_default_payment_method",
+              )
+              .eq("id", organizationId)
+              .single(),
+          ),
+          withDbCapture(
+            "settings:overview:smtp",
+            supabase
+              .from("smtp_configs")
+              .select("*", { count: "exact", head: true }),
+          ),
+          // telegram_links not in generated Database types — cast to untyped SupabaseClient
+          withDbCapture(
+            "settings:overview:telegram",
+            (supabase as unknown as SupabaseClient)
+              .from("telegram_links")
+              .select("telegram_username, linked_at")
+              .eq("organization_id", organizationId)
+              .eq("user_id", user.id)
+              .eq("product_type", "zer")
+              .eq("is_active", true)
+              .order("linked_at", { ascending: false })
+              .limit(1),
+          ),
+        ]);
       const org = orgResult.data as OrgRow | null;
       const profile = profileResult.data as { full_name: string | null } | null;
       const posRow = posResult.data as PosRow | null;
 
       const posSettings = {
         has_checkout_customer: posRow?.has_checkout_customer !== false,
-        has_checkout_quick_amounts: posRow?.has_checkout_quick_amounts !== false,
+        has_checkout_quick_amounts:
+          posRow?.has_checkout_quick_amounts !== false,
         has_receipt_drawer: posRow?.has_receipt_drawer !== false,
-        shop_default_payment_method: posRow?.shop_default_payment_method ?? "cash",
+        shop_default_payment_method:
+          posRow?.shop_default_payment_method ?? "cash",
       };
 
       const smtpCount = smtpResult.count ?? 0;

@@ -11,11 +11,14 @@ import {
   Trash,
   WarningCircle,
 } from "@phosphor-icons/react";
+import { useQuery } from "@tanstack/react-query";
+import { withDbCapture } from "@zuiio/capture";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { ErpEmptyState } from "@/components/erp/empty-state";
+import { PageShell } from "@/components/erp/page-shell";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +44,7 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -48,19 +53,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useOrgSettings } from "@/lib/org-settings-context";
+import { createClient } from "@/lib/supabase/client";
 import {
   createBranch,
   deleteBranch,
   setDefaultBranch,
   updateBranch,
 } from "./actions";
-import { useQuery } from "@tanstack/react-query";
-import { PageShell } from "@/components/erp/page-shell";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useOrgSettings } from "@/lib/org-settings-context";
-import { createClient } from "@/lib/supabase/client";
-import { withDbCapture } from "@zuiio/capture";
 
 const createSchema = z.object({
   name: z.string().min(1, "Салбарын нэр шаардлагатай."),
@@ -91,7 +91,6 @@ type Branch = {
   created_at: string | null;
 };
 
-
 export function BranchesContent() {
   const { organizationId, hasMultiBranch } = useOrgSettings();
   const [createOpen, setCreateOpen] = useState(false);
@@ -108,7 +107,9 @@ export function BranchesContent() {
           "page:branches",
           supabase
             .from("branches")
-            .select("id, name, slug, address, phone, email, is_default, created_at")
+            .select(
+              "id, name, slug, address, phone, email, is_default, created_at",
+            )
             .eq("organization_id", organizationId)
             .order("name"),
         ),
@@ -117,10 +118,9 @@ export function BranchesContent() {
 
       return {
         branches: (branchesResult.data ?? []) as Branch[],
-        canManage:
-          ((permissionsResult.data ?? []) as string[]).includes(
-            "settings.manage",
-          ),
+        canManage: ((permissionsResult.data ?? []) as string[]).includes(
+          "settings.manage",
+        ),
       };
     },
     enabled: !!organizationId,
@@ -163,11 +163,21 @@ export function BranchesContent() {
               <TableBody>
                 {Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell><Skeleton className="h-5 w-40" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-28" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-40" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-28" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-5 w-24" />
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -294,7 +304,9 @@ export function BranchesContent() {
                               if (result && "error" in result) {
                                 toast.error(result.error);
                               } else {
-                                toast.success("Үндсэн салбар болгон өөрчиллөө.");
+                                toast.success(
+                                  "Үндсэн салбар болгон өөрчиллөө.",
+                                );
                               }
                             }}
                             title="Үндсэн салбар болгох"

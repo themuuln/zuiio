@@ -1,8 +1,8 @@
-import { withBranchFilter } from "@/lib/branches";
-import { requireAppContext } from "@/lib/erp";
 import { withDbCapture } from "@zuiio/capture";
 import { Suspense } from "react";
 import { PageShell } from "@/components/erp/page-shell";
+import { withBranchFilter } from "@/lib/branches";
+import { requireAppContext } from "@/lib/erp";
 import { PurchasesContent } from "./purchases-content";
 import type { PurchaseRow } from "./purchases-table";
 
@@ -27,7 +27,8 @@ async function DataFetcher({
     await requireAppContext();
 
   const [ordersResult, suppliersResult, productsResult] = await Promise.all([
-    withDbCapture("page:purchases",
+    withDbCapture(
+      "page:purchases",
       withBranchFilter(
         supabase
           .from("purchase_orders")
@@ -39,9 +40,10 @@ async function DataFetcher({
         branchId,
         isBranchScoped,
         urlBranch,
-      )
+      ),
     ),
-    withDbCapture("page:purchases",
+    withDbCapture(
+      "page:purchases",
       supabase
         .from("contacts")
         .select("id, name, phone")
@@ -49,7 +51,8 @@ async function DataFetcher({
         .eq("type", "supplier")
         .order("name"),
     ),
-    withDbCapture("page:purchases",
+    withDbCapture(
+      "page:purchases",
       supabase
         .from("products")
         .select("id, name, cost_price, sale_price, current_stock, unit")

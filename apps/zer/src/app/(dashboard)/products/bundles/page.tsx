@@ -1,11 +1,11 @@
 import { Package, Plus } from "@phosphor-icons/react/dist/ssr";
-import { ErpEmptyState } from "@/components/erp/empty-state";
-import { PageShell } from "@/components/erp/page-shell";
-import { DynamicBundleCreateDrawer } from "@/lib/dynamic-drawers";
-import { Button } from "@/components/ui/button";
-import { requireAppContext } from "@/lib/erp";
 import { withDbCapture } from "@zuiio/capture";
 import { Suspense } from "react";
+import { ErpEmptyState } from "@/components/erp/empty-state";
+import { PageShell } from "@/components/erp/page-shell";
+import { Button } from "@/components/ui/button";
+import { DynamicBundleCreateDrawer } from "@/lib/dynamic-drawers";
+import { requireAppContext } from "@/lib/erp";
 import { BundlesContent } from "./bundles-content";
 import type { BundleRow, SimpleProductOption } from "./types";
 
@@ -26,7 +26,8 @@ async function DataFetcher() {
   const { supabase, organizationId } = await requireAppContext();
 
   const [bundlesResult, productsResult] = await Promise.all([
-    withDbCapture("page:bundles",
+    withDbCapture(
+      "page:bundles",
       supabase
         .from("product_bundles")
         .select(
@@ -36,7 +37,8 @@ async function DataFetcher() {
         .order("created_at", { ascending: false }),
     ),
 
-    withDbCapture("page:bundles",
+    withDbCapture(
+      "page:bundles",
       supabase
         .from("products")
         .select("id, name, sku, sale_price, cost_price")

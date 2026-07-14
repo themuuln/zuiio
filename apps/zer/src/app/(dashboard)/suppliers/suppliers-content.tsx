@@ -2,6 +2,7 @@
 
 import { Buildings } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
+import { withDbCapture } from "@zuiio/capture";
 import { useEffect } from "react";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { ExportButton } from "@/components/erp/export-button";
@@ -10,10 +11,9 @@ import {
   type SupplierRow,
   SuppliersTable,
 } from "@/components/suppliers/suppliers-table";
+import { DynamicSupplierCreateDrawer } from "@/lib/dynamic-drawers";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { createClient } from "@/lib/supabase/client";
-import { DynamicSupplierCreateDrawer } from "@/lib/dynamic-drawers";
-import { withDbCapture } from "@zuiio/capture";
 
 export function SuppliersContent() {
   const { organizationId, hasSuppliers } = useOrgSettings();
@@ -22,14 +22,15 @@ export function SuppliersContent() {
     queryKey: ["suppliers", "list", organizationId],
     queryFn: async () => {
       const supabase = createClient();
-      const { data: suppliers } = await withDbCapture("page:suppliers",
+      const { data: suppliers } = await withDbCapture(
+        "page:suppliers",
         supabase
           .from("contacts")
           .select("id, name, phone, email, address, balance")
           .eq("organization_id", organizationId)
           .eq("type", "supplier")
           .order("created_at", { ascending: false })
-          .limit(500)
+          .limit(500),
       );
       return (suppliers ?? []).map((s) => ({
         id: s.id,

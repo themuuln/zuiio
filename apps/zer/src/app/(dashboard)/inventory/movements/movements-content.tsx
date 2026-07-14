@@ -1,24 +1,29 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, ArrowsClockwise, Plus } from "@phosphor-icons/react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ArrowsClockwise,
+  Plus,
+} from "@phosphor-icons/react";
+import { useQuery } from "@tanstack/react-query";
+import { withDbCapture } from "@zuiio/capture";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { withDbCapture } from "@zuiio/capture";
-import { createClient } from "@/lib/supabase/client";
-import { useOrgSettings } from "@/lib/org-settings-context";
-import { useBranchContext } from "@/lib/branch-context";
-import { withBranchFilter } from "@/lib/branches";
 import { type Column, ErpDataTable } from "@/components/erp/data-table";
 import { PageShell } from "@/components/erp/page-shell";
-import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
 import {
   type MovementDetailData,
   MovementDetailDrawer,
 } from "@/components/inventory/movement-detail-drawer";
+import { Badge } from "@/components/ui/badge";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { useBranchContext } from "@/lib/branch-context";
+import { withBranchFilter } from "@/lib/branches";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { useOrgSettings } from "@/lib/org-settings-context";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 20;
@@ -92,9 +97,8 @@ const columns: Column<MovementRow>[] = [
   {
     header: "Лавлагаа",
     accessor: (row) =>
-      row.reference ?? row.notes ?? (
-        <span className="text-muted-foreground">-</span>
-      ),
+      row.reference ??
+      row.notes ?? <span className="text-muted-foreground">-</span>,
   },
 ];
 
@@ -108,8 +112,9 @@ export function MovementsContent() {
   const resolvedType =
     typeFilter && VALID_TYPES[typeFilter] ? typeFilter : null;
 
-  const [selectedMovement, setSelectedMovement] =
-    useState<MovementRow | null>(null);
+  const [selectedMovement, setSelectedMovement] = useState<MovementRow | null>(
+    null,
+  );
 
   const { organizationId } = useOrgSettings();
   const { selectedBranchId, isBranchScoped } = useBranchContext();
@@ -372,7 +377,11 @@ export function MovementsContent() {
 
         {/* ── Detail drawer ── */}
         <MovementDetailDrawer
-          movement={selectedMovement ? toDetailData(selectedMovement) : ({} as MovementDetailData)}
+          movement={
+            selectedMovement
+              ? toDetailData(selectedMovement)
+              : ({} as MovementDetailData)
+          }
           open={!!selectedMovement}
           onOpenChange={(open) => {
             if (!open) setSelectedMovement(null);

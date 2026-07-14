@@ -1,6 +1,6 @@
 "use client";
 
-import { ErpDataTable, type Column } from "@/components/erp/data-table";
+import { type Column, ErpDataTable } from "@/components/erp/data-table";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/format";
 
@@ -56,9 +56,7 @@ const columns: Column<SaleRow>[] = [
   {
     header: "Үлдэгдэл",
     accessor: (row) =>
-      formatCurrency(
-        (row.total_amount ?? 0) - (row.paid_amount ?? 0),
-      ),
+      formatCurrency((row.total_amount ?? 0) - (row.paid_amount ?? 0)),
     cellClassName: "hidden md:table-cell",
   },
   {
@@ -107,7 +105,8 @@ const columns: Column<SaleRow>[] = [
     header: "Төлбөрийн арга",
     accessor: (row) =>
       paymentMethodLabels[row.payment_method ?? ""] ??
-        row.payment_method ?? "-",
+      row.payment_method ??
+      "-",
     cellClassName: "hidden md:table-cell",
   },
 ];
@@ -131,7 +130,8 @@ export function SalesTable({
       onRowClick={onRowClick}
       emptyState={{
         title: "Борлуулалтын бүртгэл хоосон байна",
-        description: "Шинэ борлуулалт үүсгэхэд барааны үлдэгдэл автоматаар буурна.",
+        description:
+          "Шинэ борлуулалт үүсгэхэд барааны үлдэгдэл автоматаар буурна.",
       }}
     />
   );

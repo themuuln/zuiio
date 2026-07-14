@@ -1,10 +1,10 @@
 "use server";
 
 import { capture } from "@zuiio/capture";
+import { rateLimit } from "@zuiio/core";
 import { validatePasswordResetRequestInput } from "@/lib/domain-rules";
 import { createClient } from "@/lib/supabase/server";
 import { getString } from "@/lib/validation";
-import { rateLimit } from "@zuiio/core";
 
 export async function requestPasswordReset(
   _prevState: { error?: string; success?: string } | undefined,
@@ -18,7 +18,6 @@ export async function requestPasswordReset(
   }
   const rl = rateLimit(`forgot-password:${email}`, 3, 300_000);
   if (rl.error) return { error: rl.error };
-
 
   const supabase = await createClient();
   const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";

@@ -6,8 +6,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { APP_DESCRIPTION, APP_NAME } from "@/lib/constants";
 import { QueryProvider } from "@/lib/query/provider";
 import "./globals.css";
-import { ErrorHandler } from "./error-handler";
 import { cn } from "@/lib/utils";
+import { ErrorHandler } from "./error-handler";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

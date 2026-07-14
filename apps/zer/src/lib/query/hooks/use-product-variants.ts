@@ -83,7 +83,9 @@ async function fetchVariants(productId: string) {
 
   const { data: variants, error } = await supabase
     .from("product_variants")
-    .select("id, product_id, sku, barcode, cost_price, sale_price, current_stock, min_stock, image_urls, is_active, created_at")
+    .select(
+      "id, product_id, sku, barcode, cost_price, sale_price, current_stock, min_stock, image_urls, is_active, created_at",
+    )
     .eq("product_id", productId)
     .order("created_at", { ascending: true });
 

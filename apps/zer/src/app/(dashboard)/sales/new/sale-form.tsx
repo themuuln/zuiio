@@ -10,6 +10,7 @@ import {
   Trash,
 } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { capture } from "@zuiio/capture";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
@@ -49,7 +50,6 @@ import { productKeys, saleKeys } from "@/lib/query/keys";
 import { useVariantLineItemRemove } from "@/lib/use-variant-line-items";
 import { cn } from "@/lib/utils";
 import { createSale } from "./actions";
-import { capture } from "@zuiio/capture";
 
 const CameraScanner = dynamic(
   () => import("@/components/shop/camera-scanner").then((m) => m.CameraScanner),

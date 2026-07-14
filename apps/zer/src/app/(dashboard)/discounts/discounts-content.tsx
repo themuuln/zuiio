@@ -165,7 +165,11 @@ export function DiscountsContent({ discounts }: { discounts: DiscountRow[] }) {
         />
       </PageShell>
       <DiscountDetailDrawer
-        discount={selectedDiscount ? toDetailData(selectedDiscount) : ({} as DiscountDetailData)}
+        discount={
+          selectedDiscount
+            ? toDetailData(selectedDiscount)
+            : ({} as DiscountDetailData)
+        }
         open={!!selectedDiscount}
         onOpenChange={(open) => {
           if (!open) setSelectedDiscount(null);

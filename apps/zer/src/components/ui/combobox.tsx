@@ -481,12 +481,12 @@ ComboboxItem.displayName = "ComboboxItem";
 
 export {
   Combobox,
-  ComboboxInput,
-  ComboboxList,
-  ComboboxEmpty,
   ComboboxContent,
-  ComboboxItem,
   ComboboxCreate,
-  ComboboxSeparator,
+  ComboboxEmpty,
   ComboboxGroupLabel,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxSeparator,
 };

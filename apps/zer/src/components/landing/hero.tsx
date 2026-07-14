@@ -44,30 +44,30 @@ export function Hero() {
             </Button>
           </div>
 
-{/* Feature highlights — no fake metrics */}
-<div className="mt-16 grid gap-x-12 gap-y-6 border-t pt-10 sm:grid-cols-3">
-  <div className="text-left">
-    <p className="text-sm font-medium">Бараа материалын бүртгэл</p>
-    <p className="mt-1 text-sm text-muted-foreground">
-      Бүтээгдэхүүний нөөц, үнэ, түүхийг нэг дэлгэцээс хянах боломжтой.
-      Баркод уншуулж хурдан бүртгэнэ.
-    </p>
-  </div>
-  <div className="text-left">
-    <p className="text-sm font-medium">Борлуулалт &amp; тооцоо</p>
-    <p className="mt-1 text-sm text-muted-foreground">
-      POS-ээр хурдан борлуулалт хийж, нэхэмжлэл үүсгэн, төлбөр хүлээн авна.
-      Карт, бэлэн, шилжүүлэг — бүх төлбөрийн хэлбэр.
-    </p>
-  </div>
-  <div className="text-left">
-    <p className="text-sm font-medium">Санхүү &amp; Нягтлан</p>
-    <p className="mt-1 text-sm text-muted-foreground">
-      Ерөнхий журнал, тэнцлэгээ, зарлагын ангилал — бүх санхүүгийн мэдээлэл
-      нэг дор.
-    </p>
-  </div>
-</div>
+          {/* Feature highlights — no fake metrics */}
+          <div className="mt-16 grid gap-x-12 gap-y-6 border-t pt-10 sm:grid-cols-3">
+            <div className="text-left">
+              <p className="text-sm font-medium">Бараа материалын бүртгэл</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Бүтээгдэхүүний нөөц, үнэ, түүхийг нэг дэлгэцээс хянах боломжтой.
+                Баркод уншуулж хурдан бүртгэнэ.
+              </p>
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-medium">Борлуулалт &amp; тооцоо</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                POS-ээр хурдан борлуулалт хийж, нэхэмжлэл үүсгэн, төлбөр хүлээн
+                авна. Карт, бэлэн, шилжүүлэг — бүх төлбөрийн хэлбэр.
+              </p>
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-medium">Санхүү &amp; Нягтлан</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Ерөнхий журнал, тэнцлэгээ, зарлагын ангилал — бүх санхүүгийн
+                мэдээлэл нэг дор.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </section>

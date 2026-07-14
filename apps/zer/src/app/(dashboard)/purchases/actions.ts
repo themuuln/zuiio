@@ -126,9 +126,7 @@ export async function createPurchaseOrder(
 
   const { error: itemsError } = await withDbCapture(
     "purchases: insert PO items",
-    supabase
-      .from("purchase_order_items")
-      .insert(orderItems),
+    supabase.from("purchase_order_items").insert(orderItems),
   );
 
   if (itemsError) {
@@ -240,7 +238,7 @@ export async function updatePurchaseOrderStatus(
     }
   }
 
-  let updateQuery = supabase
+  const updateQuery = supabase
     .from("purchase_orders")
     .update({ status })
     .eq("id", orderId)
@@ -250,7 +248,6 @@ export async function updatePurchaseOrderStatus(
     "purchases: update order status",
     updateQuery,
   );
-
 
   if (error) {
     capture(error, { context: "purchases: updatePurchaseOrderStatus" });

@@ -21,6 +21,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable } from "@/components/ui/data-table";
 import { DrawerLayout } from "@/components/ui/drawer-layout";
 import { InfoRow } from "@/components/ui/info-row";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
@@ -28,7 +29,6 @@ import {
   importProductPreset,
   importProductPresetsByIds,
 } from "../actions";
-import { OptimizedImage } from "@/components/ui/optimized-image";
 
 interface Preset {
   id: string;
@@ -484,13 +484,13 @@ function ProductTable({
             {/* Brand info */}
             <div className="flex items-center gap-3 rounded-lg bg-muted/30 p-3">
               {selectedPreset.brand_logo_url ? (
-              <OptimizedImage
-                src={selectedPreset.brand_logo_url}
-                alt={selectedPreset.brand_name}
-                width={40}
-                height={40}
-                className="size-10 shrink-0 rounded object-contain"
-              />
+                <OptimizedImage
+                  src={selectedPreset.brand_logo_url}
+                  alt={selectedPreset.brand_name}
+                  width={40}
+                  height={40}
+                  className="size-10 shrink-0 rounded object-contain"
+                />
               ) : (
                 <div className="flex size-10 shrink-0 items-center justify-center rounded bg-muted text-sm font-bold text-muted-foreground">
                   {selectedPreset.brand_name.charAt(0)}

@@ -2,13 +2,13 @@
 
 import { CurrencyDollar } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
+import { withDbCapture } from "@zuiio/capture";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
-import { PayrollRunList } from "@/components/hr/payroll-run-list";
 import type { PayrollRunRow } from "@/components/hr/payroll-run-list";
+import { PayrollRunList } from "@/components/hr/payroll-run-list";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { createClient } from "@/lib/supabase/client";
-import { withDbCapture } from "@zuiio/capture";
 
 export function PayrollContent() {
   const { organizationId } = useOrgSettings();

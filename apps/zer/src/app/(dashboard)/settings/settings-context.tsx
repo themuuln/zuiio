@@ -1,5 +1,6 @@
 "use client";
 
+import { capture } from "@zuiio/capture";
 import {
   createContext,
   useCallback,
@@ -9,7 +10,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { capture } from "@zuiio/capture";
 
 export type Change = {
   field: string;

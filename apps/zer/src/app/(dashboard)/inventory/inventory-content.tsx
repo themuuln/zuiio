@@ -1,14 +1,9 @@
 "use client";
 
-import {
-  Folder,
-  MapPin,
-  Plus,
-  Warehouse,
-} from "@phosphor-icons/react";
+import { Folder, MapPin, Plus, Warehouse } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
+import { withDbCapture } from "@zuiio/capture";
 import Link from "next/link";
-
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { ExportButton } from "@/components/erp/export-button";
 import { KpiGrid } from "@/components/erp/kpi-grid";
@@ -29,7 +24,6 @@ import {
 import { formatCurrency, formatDate } from "@/lib/format";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { createClient } from "@/lib/supabase/client";
-import { withDbCapture } from "@zuiio/capture";
 
 const MOVEMENT_LABELS: Record<string, string> = {
   in: "Орлого",
@@ -156,14 +150,12 @@ export function InventoryContent() {
   const stockMovements = movementsQuery.data ?? [];
   const suppliers = suppliersQuery.data ?? [];
 
-  const isLoading =
-    productsQuery.isLoading || productsQuery.isFetching;
+  const isLoading = productsQuery.isLoading || productsQuery.isFetching;
 
   // ── Compute KPIs ──
   const totalProducts = products.length;
   const inventoryValue = products.reduce(
-    (sum, p) =>
-      sum + (p.cost_price ?? 0) * (p.current_stock ?? 0),
+    (sum, p) => sum + (p.cost_price ?? 0) * (p.current_stock ?? 0),
     0,
   );
 
@@ -180,8 +172,7 @@ export function InventoryContent() {
       unit: p.unit,
       current_stock: p.current_stock,
       min_stock: p.min_stock,
-      category_name:
-        (p.categories as { name: string } | null)?.name ?? null,
+      category_name: (p.categories as { name: string } | null)?.name ?? null,
       cost_price: p.cost_price,
     }));
 
@@ -194,11 +185,11 @@ export function InventoryContent() {
     notes: m.notes,
     created_at: m.created_at ?? new Date().toISOString(),
     product_name:
-      (m.products as { name: string; unit: string | null } | null)
-        ?.name ?? "Устсан бүтээгдэхүүн",
+      (m.products as { name: string; unit: string | null } | null)?.name ??
+      "Устсан бүтээгдэхүүн",
     product_unit:
-      (m.products as { name: string; unit: string | null } | null)
-        ?.unit ?? null,
+      (m.products as { name: string; unit: string | null } | null)?.unit ??
+      null,
   }));
 
   if (isLoading) {

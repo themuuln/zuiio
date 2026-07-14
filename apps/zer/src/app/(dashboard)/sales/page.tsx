@@ -1,10 +1,10 @@
+import { withDbCapture } from "@zuiio/capture";
 import { Suspense } from "react";
+import { PageShell } from "@/components/erp/page-shell";
 import { withBranchFilter } from "@/lib/branches";
 import { requireAppContext } from "@/lib/erp";
-import { withDbCapture } from "@zuiio/capture";
 import { SalesContent } from "./sales-content";
 import type { SaleRow } from "./sales-table";
-import { PageShell } from "@/components/erp/page-shell";
 
 /** Skeleton shown while sale data streams in */
 function SalesSkeleton() {
@@ -29,7 +29,11 @@ function SalesSkeleton() {
 }
 
 /** Fetches sales data and renders the content */
-async function SalesDataFetcher({ searchParams }: { searchParams: Promise<{ branch?: string }> }) {
+async function SalesDataFetcher({
+  searchParams,
+}: {
+  searchParams: Promise<{ branch?: string }>;
+}) {
   const { branch: urlBranch } = await searchParams;
   const { supabase, organizationId, branchId, isBranchScoped } =
     await requireAppContext();

@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { withDbCapture } from "@zuiio/capture";
 import { PageShell } from "@/components/erp/page-shell";
 import { ReportEmailSettings } from "@/components/settings/report-email-settings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +9,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getCompanyTypeLabel } from "@/lib/constants";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { createClient } from "@/lib/supabase/client";
-import { withDbCapture } from "@zuiio/capture";
 
 const SUPERADMIN_EMAIL = "zerone.offical@gmail.com";
 
@@ -28,7 +28,9 @@ export function OrgSettingsContent() {
         "page:organization",
         supabase
           .from("profiles")
-          .select("full_name, role, organizations(name, company_type, currency)")
+          .select(
+            "full_name, role, organizations(name, company_type, currency)",
+          )
           .eq("id", user.id)
           .single(),
       );

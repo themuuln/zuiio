@@ -1,13 +1,13 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { withDbCapture } from "@zuiio/capture";
 import { PageShell } from "@/components/erp/page-shell";
 import { MembersClient } from "@/components/roles/members-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { createClient } from "@/lib/supabase/client";
 import { useOrgSettings } from "@/lib/org-settings-context";
-import { withDbCapture } from "@zuiio/capture";
+import { createClient } from "@/lib/supabase/client";
 import { getAuthUsers } from "./actions";
 
 export function UsersContent() {
@@ -18,36 +18,42 @@ export function UsersContent() {
     queryFn: async () => {
       const supabase = createClient();
 
-      const [profilesResult, authUsersResult, rolesResult, branchesResult, userResult, permissionsResult] =
-        await Promise.allSettled([
-          withDbCapture(
-            "settings:users:profiles",
-            supabase
-              .from("profiles")
-              .select("id, full_name, role, role_id, branch_id")
-              .eq("organization_id", organizationId)
-              .order("created_at", { ascending: true }),
-          ),
-          getAuthUsers(),
-          withDbCapture(
-            "settings:users:roles",
-            supabase
-              .from("roles")
-              .select("id, name, is_system_role")
-              .eq("organization_id", organizationId)
-              .order("hierarchy_level", { ascending: true }),
-          ),
-          withDbCapture(
-            "settings:users:branches",
-            supabase
-              .from("branches")
-              .select("id, name")
-              .eq("organization_id", organizationId)
-              .order("name"),
-          ),
-          supabase.auth.getUser(),
-          supabase.rpc("get_user_permissions"),
-        ]);
+      const [
+        profilesResult,
+        authUsersResult,
+        rolesResult,
+        branchesResult,
+        userResult,
+        permissionsResult,
+      ] = await Promise.allSettled([
+        withDbCapture(
+          "settings:users:profiles",
+          supabase
+            .from("profiles")
+            .select("id, full_name, role, role_id, branch_id")
+            .eq("organization_id", organizationId)
+            .order("created_at", { ascending: true }),
+        ),
+        getAuthUsers(),
+        withDbCapture(
+          "settings:users:roles",
+          supabase
+            .from("roles")
+            .select("id, name, is_system_role")
+            .eq("organization_id", organizationId)
+            .order("hierarchy_level", { ascending: true }),
+        ),
+        withDbCapture(
+          "settings:users:branches",
+          supabase
+            .from("branches")
+            .select("id, name")
+            .eq("organization_id", organizationId)
+            .order("name"),
+        ),
+        supabase.auth.getUser(),
+        supabase.rpc("get_user_permissions"),
+      ]);
 
       if (profilesResult.status === "rejected") {
         throw profilesResult.reason;
@@ -68,9 +74,7 @@ export function UsersContent() {
           : [];
 
       const currentUser =
-        userResult.status === "fulfilled"
-          ? userResult.value.data?.user
-          : null;
+        userResult.status === "fulfilled" ? userResult.value.data?.user : null;
 
       const permissions =
         permissionsResult.status === "fulfilled"
@@ -98,8 +102,12 @@ export function UsersContent() {
         roles,
         branches,
         currentUserId,
-        canManageRole: (permissions as string[]).includes("members.manage_role"),
-        canManageBranches: (permissions as string[]).includes("settings.manage"),
+        canManageRole: (permissions as string[]).includes(
+          "members.manage_role",
+        ),
+        canManageBranches: (permissions as string[]).includes(
+          "settings.manage",
+        ),
         canInvite: (permissions as string[]).includes("members.invite"),
         canRemove: (permissions as string[]).includes("members.remove"),
       };

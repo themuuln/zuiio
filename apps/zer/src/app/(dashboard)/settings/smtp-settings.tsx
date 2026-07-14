@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EnvelopeSimple } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { capture } from "@zuiio/capture";
 import { useCallback, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -20,7 +21,6 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { createClient } from "@/lib/supabase/client";
 import { useRegisterSave, useSettings } from "./settings-context";
-import { capture } from "@zuiio/capture";
 
 const smtpSchema = z.object({
   host: z.string().min(1, "Сервер шаардлагатай."),
@@ -49,7 +49,9 @@ async function fetchSmtpConfig(): Promise<SmtpConfigData | null> {
 
   const { data, error } = await supabase
     .from("smtp_configs")
-    .select("host,port,username,password,from_email,from_name,is_active,priority")
+    .select(
+      "host,port,username,password,from_email,from_name,is_active,priority",
+    )
     .order("priority", { ascending: false })
     .limit(1)
     .maybeSingle();

@@ -6,9 +6,9 @@ import { capture } from "@zuiio/capture";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { compressImage } from "@/lib/compress-image";
 import { createClient } from "@/lib/supabase/client";
-import { OptimizedImage } from "@/components/ui/optimized-image";
 import { updateOrgLogo } from "./actions";
 
 type OrgLogoUploaderProps = {

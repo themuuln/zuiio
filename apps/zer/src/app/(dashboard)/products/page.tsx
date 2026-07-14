@@ -2,19 +2,19 @@ import {
   Barcode,
   Package as PackageIcon,
 } from "@phosphor-icons/react/dist/ssr";
+import { withDbCapture } from "@zuiio/capture";
 import Link from "next/link";
+import { Suspense } from "react";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
-import { DynamicProductCreateDrawer } from "@/lib/dynamic-drawers";
 import {
   type ProductRow,
   ProductsTable,
 } from "@/components/products/products-table";
 import { Button } from "@/components/ui/button";
+import { DynamicProductCreateDrawer } from "@/lib/dynamic-drawers";
 import { requireAppContext } from "@/lib/erp";
-import { withDbCapture } from "@zuiio/capture";
-import { Suspense } from "react";
 
 const PAGE_SIZE = 20;
 

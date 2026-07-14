@@ -181,7 +181,11 @@ export function BundlesContent({
         </CardContent>
       </Card>
       <BundleDetailDrawer
-        bundle={selectedBundle ? toDetailData(selectedBundle) : ({} as BundleDetailData)}
+        bundle={
+          selectedBundle
+            ? toDetailData(selectedBundle)
+            : ({} as BundleDetailData)
+        }
         open={!!selectedBundle}
         onOpenChange={(open) => {
           if (!open) setSelectedBundle(null);

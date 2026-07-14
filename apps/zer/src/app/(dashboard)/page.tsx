@@ -2,12 +2,12 @@ import { Coin, Package, ShoppingCart } from "@phosphor-icons/react/dist/ssr";
 import { Suspense } from "react";
 import { HeroActionCard } from "@/components/dashboard/dashboard-cards";
 import { getDashboardContext } from "@/lib/dashboard-context";
+import { LowStockWrapper } from "./_sections/low-stock-wrapper";
 import { MonthlyTrendSection } from "./_sections/monthly-trend-section";
 import { OnboardingChecklist } from "./_sections/onboarding-checklist";
 import { QuickShortcuts } from "./_sections/quick-shortcuts";
 import { RecentSales } from "./_sections/recent-sales";
 import { TodayPulse } from "./_sections/today-pulse";
-import { LowStockWrapper } from "./_sections/low-stock-wrapper";
 
 export default async function DashboardPage() {
   return (

@@ -130,7 +130,11 @@ export function CustomersTable({
         onRowClick={(row) => setSelectedCustomer(row)}
       />
       <CustomerDetailDrawer
-        customer={selectedCustomer ? toDetailData(selectedCustomer) : ({} as CustomerDetailData)}
+        customer={
+          selectedCustomer
+            ? toDetailData(selectedCustomer)
+            : ({} as CustomerDetailData)
+        }
         open={!!selectedCustomer}
         onOpenChange={(open) => {
           if (!open) setSelectedCustomer(null);
@@ -138,7 +142,9 @@ export function CustomersTable({
         onEdit={() => selectedCustomer && setEditCustomer(selectedCustomer)}
       />
       <CustomerEditDrawer
-        customer={editCustomer ? toEditData(editCustomer) : ({} as CustomerEditData)}
+        customer={
+          editCustomer ? toEditData(editCustomer) : ({} as CustomerEditData)
+        }
         open={!!editCustomer}
         onOpenChange={(open) => {
           if (!open) setEditCustomer(null);

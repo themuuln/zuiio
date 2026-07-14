@@ -2,6 +2,7 @@
 
 import { Folder } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
+import { withDbCapture } from "@zuiio/capture";
 import { useEffect } from "react";
 import { CategoriesTable } from "@/components/categories/categories-table";
 import { ErpEmptyState } from "@/components/erp/empty-state";
@@ -9,7 +10,6 @@ import { PageShell } from "@/components/erp/page-shell";
 import { DynamicCategoryCreateDrawer } from "@/lib/dynamic-drawers";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { createClient } from "@/lib/supabase/client";
-import { withDbCapture } from "@zuiio/capture";
 
 export type CategoryRow = {
   id: string;
@@ -57,13 +57,11 @@ export function CategoriesContent() {
         }
       }
 
-      return (
-        categories?.map((category) => ({
-          id: category.id,
-          name: category.name,
-          product_count: productCountMap.get(category.id) ?? 0,
-        })) ?? []
-      ) as CategoryRow[];
+      return (categories?.map((category) => ({
+        id: category.id,
+        name: category.name,
+        product_count: productCountMap.get(category.id) ?? 0,
+      })) ?? []) as CategoryRow[];
     },
     enabled: !!organizationId,
   });

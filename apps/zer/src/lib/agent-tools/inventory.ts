@@ -1,7 +1,7 @@
-import { capture } from "@zuiio/capture";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/lib/supabase/types";
 import type { Tool } from "@zuiio/ai-agent";
+import { capture } from "@zuiio/capture";
+import type { Database } from "@/lib/supabase/types";
 
 interface InventoryItem {
   name: string;

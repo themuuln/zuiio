@@ -95,7 +95,13 @@ function buildColumns(
   ];
 }
 
-export function SuppliersTable({ data, loading }: { data: SupplierRow[]; loading?: boolean }) {
+export function SuppliersTable({
+  data,
+  loading,
+}: {
+  data: SupplierRow[];
+  loading?: boolean;
+}) {
   const [selectedSupplier, setSelectedSupplier] = useState<SupplierRow | null>(
     null,
   );
@@ -116,7 +122,11 @@ export function SuppliersTable({ data, loading }: { data: SupplierRow[]; loading
         loading={loading}
       />
       <SupplierDetailDrawer
-        supplier={selectedSupplier ? toDetailData(selectedSupplier) : ({} as SupplierDetailData)}
+        supplier={
+          selectedSupplier
+            ? toDetailData(selectedSupplier)
+            : ({} as SupplierDetailData)
+        }
         open={!!selectedSupplier}
         onOpenChange={(open) => {
           if (!open) setSelectedSupplier(null);
@@ -124,7 +134,9 @@ export function SuppliersTable({ data, loading }: { data: SupplierRow[]; loading
         onEdit={() => selectedSupplier && setEditSupplier(selectedSupplier)}
       />
       <SupplierEditDrawer
-        supplier={editSupplier ? toEditData(editSupplier) : ({} as SupplierEditData)}
+        supplier={
+          editSupplier ? toEditData(editSupplier) : ({} as SupplierEditData)
+        }
         open={!!editSupplier}
         onOpenChange={(open) => {
           if (!open) setEditSupplier(null);

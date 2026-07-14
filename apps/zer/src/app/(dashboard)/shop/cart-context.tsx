@@ -1,5 +1,6 @@
 "use client";
 
+import { capture } from "@zuiio/capture";
 import * as React from "react";
 import {
   createContext,
@@ -9,7 +10,6 @@ import {
   useReducer,
   useRef,
 } from "react";
-import { capture } from "@zuiio/capture";
 import type { CartItem, DiscountInfo } from "@/lib/shop-cart";
 import {
   cartReducer,

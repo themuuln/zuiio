@@ -3,7 +3,7 @@
 import { FileText } from "@phosphor-icons/react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ErpDataTable, type Column } from "@/components/erp/data-table";
+import { type Column, ErpDataTable } from "@/components/erp/data-table";
 import { PageShell } from "@/components/erp/page-shell";
 import { InvoiceCreateDrawer } from "@/components/invoices/invoice-create-drawer";
 import { InvoiceDetailDrawer } from "@/components/invoices/invoice-detail-drawer";
@@ -74,9 +74,7 @@ const columns: Column<InvoiceRow>[] = [
   {
     header: "Төлөв",
     accessor: (row) => (
-      <Badge
-        variant={STATUS_VARIANTS[row.status ?? ""] ?? "outline"}
-      >
+      <Badge variant={STATUS_VARIANTS[row.status ?? ""] ?? "outline"}>
         {STATUS_LABELS[row.status ?? ""] ?? row.status}
       </Badge>
     ),
@@ -135,7 +133,8 @@ export function InvoicesContent({
           emptyState={{
             icon: <FileText className="size-4" />,
             title: "Нэхэмжлэл байхгүй",
-            description: "Шинэ нэхэмжлэл үүсгэж, харилцагчдад хуваалцах холбоос илгээнэ үү.",
+            description:
+              "Шинэ нэхэмжлэл үүсгэж, харилцагчдад хуваалцах холбоос илгээнэ үү.",
             action: (
               <button
                 type="button"

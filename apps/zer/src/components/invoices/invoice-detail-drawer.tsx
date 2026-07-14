@@ -1,8 +1,8 @@
 "use client";
 
 import { ShareNetwork } from "@phosphor-icons/react";
-import { capture } from "@zuiio/capture";
 import { useQuery } from "@tanstack/react-query";
+import { capture } from "@zuiio/capture";
 import { useEffect, useRef, useState } from "react";
 import {
   createInvoiceShareLink,

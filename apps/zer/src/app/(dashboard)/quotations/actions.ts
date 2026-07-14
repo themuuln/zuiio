@@ -1,9 +1,9 @@
 "use server";
 
 import { capture, withDbCapture } from "@zuiio/capture";
-import { requireWriteAction } from "@/lib/action-utils";
 import { after } from "next/server";
-import { logAuditEventWithClient } from "@/lib/audit"
+import { requireWriteAction } from "@/lib/action-utils";
+import { logAuditEventWithClient } from "@/lib/audit";
 import { withBranchFilter } from "@/lib/branches";
 import { createInvoiceFromSale } from "@/lib/invoicing";
 import { revalidateEntities } from "@/lib/revalidate";
@@ -46,7 +46,9 @@ export async function createQuotation(
   }
 
   // Generate quote number
-  const { data: quoteNum, error: quoteNumError } = await supabase.rpc("generate_quote_number");
+  const { data: quoteNum, error: quoteNumError } = await supabase.rpc(
+    "generate_quote_number",
+  );
   if (quoteNumError) {
     capture(quoteNumError, { context: "quotations: generate quote number" });
     return { error: "Үнийн саналын дугаар үүсгэхэд алдаа гарлаа." };
@@ -97,9 +99,7 @@ export async function createQuotation(
 
   const { error: itemsError } = await withDbCapture(
     "quotations: insert items",
-    supabase
-      .from("quotation_items")
-      .insert(quotationItems),
+    supabase.from("quotation_items").insert(quotationItems),
   );
 
   if (itemsError) {
@@ -113,14 +113,18 @@ export async function createQuotation(
     };
   }
 
-  after(() => logAuditEventWithClient(supabase,
-  organizationId,
-  userId,
-  "created",
-  "sale",
-  quotation.id,
-  undefined,
-  `Үнийн санал ${quoteNumber} үүсгэсэн`,));
+  after(() =>
+    logAuditEventWithClient(
+      supabase,
+      organizationId,
+      userId,
+      "created",
+      "sale",
+      quotation.id,
+      undefined,
+      `Үнийн санал ${quoteNumber} үүсгэсэн`,
+    ),
+  );
 
   revalidateEntities(["quotations"]);
   return { success: true as const, error: undefined };
@@ -169,14 +173,18 @@ export async function updateQuotationStatus(
     };
   }
 
-  after(() => logAuditEventWithClient(supabase,
-  organizationId,
-  userId,
-  "status_changed",
-  "sale",
-  quotationId,
-  { status: { old: quotation.status, new: status } },
-  `Үнийн саналын төлөв "${quotation.status}" → "${status}" болж өөрчлөгдсөн`,));
+  after(() =>
+    logAuditEventWithClient(
+      supabase,
+      organizationId,
+      userId,
+      "status_changed",
+      "sale",
+      quotationId,
+      { status: { old: quotation.status, new: status } },
+      `Үнийн саналын төлөв "${quotation.status}" → "${status}" болж өөрчлөгдсөн`,
+    ),
+  );
 
   revalidateEntities(["quotations"]);
   return { success: true as const, error: undefined };
@@ -263,9 +271,7 @@ export async function convertQuotationToSale(quotationId: string) {
   }));
   const { error: saleItemsError } = await withDbCapture(
     "quotations: insert sale items",
-    supabase
-      .from("sale_items")
-      .insert(saleItems),
+    supabase.from("sale_items").insert(saleItems),
   );
 
   if (saleItemsError) {
@@ -286,18 +292,16 @@ export async function convertQuotationToSale(quotationId: string) {
     // Create stock movement
     const { error: movementError } = await withDbCapture(
       "quotations: stock movement",
-      supabase
-        .from("stock_movements")
-        .insert({
-          organization_id: organizationId,
-          branch_id: branchId!,
-          product_id: item.product_id,
-          type: "out",
-          quantity: item.quantity,
-          unit_cost: item.unit_price,
-          reference: `sale:${saleId}`,
-          created_by: userId,
-        }),
+      supabase.from("stock_movements").insert({
+        organization_id: organizationId,
+        branch_id: branchId!,
+        product_id: item.product_id,
+        type: "out",
+        quantity: item.quantity,
+        unit_cost: item.unit_price,
+        reference: `sale:${saleId}`,
+        created_by: userId,
+      }),
     );
 
     if (movementError) {
@@ -363,14 +367,18 @@ export async function convertQuotationToSale(quotationId: string) {
     branchId!,
   );
 
-  after(() => logAuditEventWithClient(supabase,
-  organizationId,
-  userId,
-  "created",
-  "sale",
-  saleId,
-  undefined,
-  `Үнийн саналаас (${quotation.quote_number}) борлуулалт үүсгэсэн`,));
+  after(() =>
+    logAuditEventWithClient(
+      supabase,
+      organizationId,
+      userId,
+      "created",
+      "sale",
+      saleId,
+      undefined,
+      `Үнийн саналаас (${quotation.quote_number}) борлуулалт үүсгэсэн`,
+    ),
+  );
 
   revalidateEntities(["quotations", "sales", "invoices", "inventory"]);
   return { success: true as const, error: undefined, saleId };

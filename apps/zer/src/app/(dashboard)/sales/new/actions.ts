@@ -1,10 +1,10 @@
 "use server";
 
 import { capture } from "@zuiio/capture";
+import { after } from "next/server";
 import { postSaleToJournal } from "@/lib/accounting";
 import { requireWriteAction } from "@/lib/action-utils";
-import { after } from "next/server";
-import { logAuditEventWithClient } from "@/lib/audit"
+import { logAuditEventWithClient } from "@/lib/audit";
 import { calculateCommission } from "@/lib/commissions";
 import { findOrCreateContact } from "@/lib/contact-utils";
 import { parseAmount } from "@/lib/erp";
@@ -307,8 +307,11 @@ export async function createSale(
         "error" in stockDecResult
           ? String(stockDecResult.error)
           : null;
-      const errorMsg = stockDecError?.message ?? rpcError ?? "Үлдэгдэл хүрэлцэхгүй байна.";
-      capture(new Error(errorMsg), { context: "createSale: process_sale_stock_decrement" });
+      const errorMsg =
+        stockDecError?.message ?? rpcError ?? "Үлдэгдэл хүрэлцэхгүй байна.";
+      capture(new Error(errorMsg), {
+        context: "createSale: process_sale_stock_decrement",
+      });
       return { error: errorMsg };
     }
   }
@@ -349,14 +352,18 @@ export async function createSale(
     ).catch((err) => capture(err, { context: "post_sale_to_journal" }));
   }
 
-  after(() => logAuditEventWithClient(supabase,
-  organizationId,
-  userId,
-  "created",
-  "sale",
-  sale.id,
-  { total_amount: { old: 0, new: totalAmount } },
-  `Борлуулалт ${formatRouteDate()} - ${formatCurrency(totalAmount)}`,));
+  after(() =>
+    logAuditEventWithClient(
+      supabase,
+      organizationId,
+      userId,
+      "created",
+      "sale",
+      sale.id,
+      { total_amount: { old: 0, new: totalAmount } },
+      `Борлуулалт ${formatRouteDate()} - ${formatCurrency(totalAmount)}`,
+    ),
+  );
 
   // Fire-and-forget notifications
   if (status !== "cancelled") {

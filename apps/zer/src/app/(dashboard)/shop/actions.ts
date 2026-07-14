@@ -258,8 +258,11 @@ export async function createShopSale(
       "error" in stockDecResult
         ? String(stockDecResult.error)
         : null;
-    const errorMsg = stockDecError?.message ?? rpcError ?? "Үлдэгдэл хүрэлцэхгүй байна.";
-    capture(new Error(errorMsg), { context: "createShopSale: process_sale_stock_decrement" });
+    const errorMsg =
+      stockDecError?.message ?? rpcError ?? "Үлдэгдэл хүрэлцэхгүй байна.";
+    capture(new Error(errorMsg), {
+      context: "createShopSale: process_sale_stock_decrement",
+    });
     return { error: errorMsg };
   }
 

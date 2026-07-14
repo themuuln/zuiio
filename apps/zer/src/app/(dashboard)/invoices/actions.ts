@@ -2,16 +2,16 @@
 
 import { randomBytes } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { capture, withDbCapture } from "@zuiio/capture";
 import { redirect } from "next/navigation";
-import { requireWriteAction } from "@/lib/action-utils";
 import { after } from "next/server";
-import { logAuditEventWithClient } from "@/lib/audit"
+import { requireWriteAction } from "@/lib/action-utils";
+import { logAuditEventWithClient } from "@/lib/audit";
 import { withBranchFilter } from "@/lib/branches";
 import { findOrCreateContact } from "@/lib/contact-utils";
 import { revalidateEntities } from "@/lib/revalidate";
 import type { Database } from "@/lib/supabase/types";
 import { getString } from "@/lib/validation";
-import { capture, withDbCapture } from "@zuiio/capture";
 
 type SupabaseDb = SupabaseClient<Database>;
 
@@ -76,7 +76,9 @@ export async function createInvoice(
   }
 
   // Generate invoice number
-  const { data: invNum, error: invNumError } = await supabase.rpc("generate_invoice_number");
+  const { data: invNum, error: invNumError } = await supabase.rpc(
+    "generate_invoice_number",
+  );
   if (invNumError) {
     capture(invNumError, { context: "invoices: generate invoice number" });
     return { error: "Нэхэмжлэлийн дугаар үүсгэхэд алдаа гарлаа." };
@@ -128,9 +130,7 @@ export async function createInvoice(
 
   const { error: itemsError } = await withDbCapture(
     "invoices: insert items",
-    supabase
-      .from("invoice_items")
-      .insert(invoiceItems),
+    supabase.from("invoice_items").insert(invoiceItems),
   );
 
   if (itemsError) {
@@ -139,14 +139,18 @@ export async function createInvoice(
     };
   }
 
-  after(() => logAuditEventWithClient(supabase,
-  organizationId,
-  userId,
-  "created",
-  "invoice",
-  invoice.id,
-  undefined,
-  `Нэхэмжлэл ${invoiceNumber} үүсгэсэн`,));
+  after(() =>
+    logAuditEventWithClient(
+      supabase,
+      organizationId,
+      userId,
+      "created",
+      "invoice",
+      invoice.id,
+      undefined,
+      `Нэхэмжлэл ${invoiceNumber} үүсгэсэн`,
+    ),
+  );
 
   revalidateEntities(["invoices"]);
   redirect(`/invoices/${invoice.id}`);
@@ -189,14 +193,18 @@ export async function createInvoiceShareLink(
     };
   }
 
-  after(() => logAuditEventWithClient(supabase,
-  organizationId,
-  userId,
-  "shared",
-  "invoice",
-  invoiceId,
-  undefined,
-  "Нэхэмжлэлийн хуваалцах холбоос үүсгэсэн",));
+  after(() =>
+    logAuditEventWithClient(
+      supabase,
+      organizationId,
+      userId,
+      "shared",
+      "invoice",
+      invoiceId,
+      undefined,
+      "Нэхэмжлэлийн хуваалцах холбоос үүсгэсэн",
+    ),
+  );
 
   return { token };
 }
@@ -231,24 +239,25 @@ export async function updateInvoiceStatus(invoiceId: string, status: string) {
 
   updateQuery = withBranchFilter(updateQuery, branchId, isBranchScoped);
 
-  const { error } = await withDbCapture(
-    "invoices: update status",
-    updateQuery,
-  );
+  const { error } = await withDbCapture("invoices: update status", updateQuery);
 
   if (error) {
     capture(error, { context: "updateInvoiceStatus: update" });
     return { error: `Төлөв шинэчлэхэд алдаа гарлаа: ${error.message}` };
   }
 
-  after(() => logAuditEventWithClient(supabase,
-  organizationId,
-  userId,
-  "status_changed",
-  "invoice",
-  invoiceId,
-  { status: { old: invoice.status, new: status } },
-  `Нэхэмжлэлийн төлөв "${invoice.status}" → "${status}" болж өөрчлөгдсөн`,));
+  after(() =>
+    logAuditEventWithClient(
+      supabase,
+      organizationId,
+      userId,
+      "status_changed",
+      "invoice",
+      invoiceId,
+      { status: { old: invoice.status, new: status } },
+      `Нэхэмжлэлийн төлөв "${invoice.status}" → "${status}" болж өөрчлөгдсөн`,
+    ),
+  );
 
   revalidateEntities(["invoices"]);
   return { success: true as const, error: undefined };

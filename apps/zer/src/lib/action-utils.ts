@@ -1,8 +1,9 @@
 import "server-only";
+
+import { withDbCapture } from "@zuiio/capture";
 import { checkPermission, requireAppContext } from "@/lib/erp";
 import type { AppPermission } from "@/lib/permissions";
 
-import { withDbCapture } from "@zuiio/capture";
 export { requireAppContext } from "@/lib/erp";
 
 export type ActionContext = Awaited<ReturnType<typeof requireAppContext>>;

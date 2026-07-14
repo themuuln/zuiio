@@ -15,6 +15,7 @@ import { ViewTransition } from "react";
 import { logout } from "@/app/(dashboard)/actions";
 import { QuickCreateDropdown } from "@/components/erp/quick-create-dropdown";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import {
   Select,
   SelectContent,
@@ -47,7 +48,6 @@ import {
 } from "@/lib/org-settings-context";
 import { RealtimeSubscriptions } from "@/lib/query/realtime-subscriptions";
 import { cn } from "@/lib/utils";
-import { OptimizedImage } from "@/components/ui/optimized-image";
 
 type DashboardShellProps = {
   children: React.ReactNode;
@@ -246,7 +246,9 @@ function SidebarNav({
                       {initials}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="truncate">{userFullName || "Хэрэглэгч"}</span>
+                  <span className="truncate">
+                    {userFullName || "Хэрэглэгч"}
+                  </span>
                 </Link>
               </SidebarMenuButton>
             </ViewTransition>

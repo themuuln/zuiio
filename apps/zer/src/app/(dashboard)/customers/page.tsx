@@ -1,6 +1,6 @@
-import { Suspense } from "react";
 import { Users } from "@phosphor-icons/react/dist/ssr";
-import { DynamicCustomerCreateDrawer } from "@/lib/dynamic-drawers";
+import { withDbCapture } from "@zuiio/capture";
+import { Suspense } from "react";
 import {
   type CustomerRow,
   CustomersTable,
@@ -8,8 +8,8 @@ import {
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
+import { DynamicCustomerCreateDrawer } from "@/lib/dynamic-drawers";
 import { requireAppContext } from "@/lib/erp";
-import { withDbCapture } from "@zuiio/capture";
 
 function PageSkeleton() {
   return (

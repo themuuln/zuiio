@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { capture } from "@zuiio/capture";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
-import { capture } from "@zuiio/capture";
 
 type EventType = "low_stock" | "daily_summary" | "new_sale";
 

@@ -1,9 +1,9 @@
 import { withDbCapture } from "@zuiio/capture";
+import { Suspense } from "react";
+import { PageShell } from "@/components/erp/page-shell";
 import { CatalogClient } from "@/components/shop/catalog-client";
 import { requireAppContext } from "@/lib/erp";
 import { getVerticalPreset } from "@/lib/vertical-config";
-import { Suspense } from "react";
-import { PageShell } from "@/components/erp/page-shell";
 
 function PageSkeleton() {
   return (

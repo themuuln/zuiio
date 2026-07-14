@@ -14,7 +14,11 @@ interface ChartSkeletonProps {
  * Reusable chart loading skeleton for use with dynamically imported chart components.
  * Renders a Card with a skeleton title and skeleton chart area.
  */
-export function ChartSkeleton({ title, height = "h-60", className }: ChartSkeletonProps) {
+export function ChartSkeleton({
+  title,
+  height = "h-60",
+  className,
+}: ChartSkeletonProps) {
   return (
     <Card className={cn("", className)}>
       {title && (
@@ -23,7 +27,9 @@ export function ChartSkeleton({ title, height = "h-60", className }: ChartSkelet
         </CardHeader>
       )}
       <CardContent>
-        <div className={cn("w-full animate-pulse rounded-lg bg-muted", height)} />
+        <div
+          className={cn("w-full animate-pulse rounded-lg bg-muted", height)}
+        />
       </CardContent>
     </Card>
   );

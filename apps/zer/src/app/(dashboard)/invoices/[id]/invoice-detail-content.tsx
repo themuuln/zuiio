@@ -1,15 +1,11 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { withDbCapture } from "@zuiio/capture";
 import { useParams } from "next/navigation";
 import { PageShell } from "@/components/erp/page-shell";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -19,12 +15,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { invoiceKeys } from "@/lib/query/keys";
 import { useBranchContext } from "@/lib/branch-context";
-import { useOrgSettings } from "@/lib/org-settings-context";
-import { createClient } from "@/lib/supabase/client";
-import { withDbCapture } from "@zuiio/capture";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { useOrgSettings } from "@/lib/org-settings-context";
+import { invoiceKeys } from "@/lib/query/keys";
+import { createClient } from "@/lib/supabase/client";
 import { InvoiceDetailClient } from "./invoice-detail-client";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -51,10 +46,7 @@ export function InvoiceDetailContent() {
   const { organizationId } = useOrgSettings();
   const { isBranchScoped, userBranchId } = useBranchContext();
 
-  const {
-    data: invoice,
-    isLoading: invoiceLoading,
-  } = useQuery({
+  const { data: invoice, isLoading: invoiceLoading } = useQuery({
     queryKey: invoiceKeys.detail(id),
     queryFn: async () => {
       const supabase = createClient();
@@ -172,9 +164,7 @@ export function InvoiceDetailContent() {
                     return (
                       <TableRow key={item.id}>
                         <TableCell>
-                          {item.description ||
-                            product?.name ||
-                            "Бүтээгдэхүүн"}
+                          {item.description || product?.name || "Бүтээгдэхүүн"}
                         </TableCell>
                         <TableCell className="text-right">
                           {item.quantity} {product?.unit ?? ""}
@@ -224,9 +214,7 @@ export function InvoiceDetailContent() {
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Төлөв</span>
                   <Badge
-                    variant={
-                      STATUS_VARIANTS[invoice.status ?? ""] ?? "outline"
-                    }
+                    variant={STATUS_VARIANTS[invoice.status ?? ""] ?? "outline"}
                   >
                     {STATUS_LABELS[invoice.status ?? ""] ?? invoice.status}
                   </Badge>

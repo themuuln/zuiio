@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { capture } from "@zuiio/capture";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ExportButton } from "@/components/erp/export-button";
@@ -13,7 +14,6 @@ import { SalesCreateDrawer } from "@/components/sales/sales-create-drawer";
 import { createClient } from "@/lib/supabase/client";
 import type { SaleRow } from "./sales-table";
 import { SalesTable } from "./sales-table";
-import { capture } from "@zuiio/capture";
 
 type ProductOption = {
   id: string;

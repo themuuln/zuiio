@@ -46,7 +46,9 @@ export async function createProduct(
       .eq("name", categoryName.trim())
       .maybeSingle();
     if (queryError) {
-      capture(queryError, { context: "createProduct: check existing category" });
+      capture(queryError, {
+        context: "createProduct: check existing category",
+      });
     }
 
     if (existing) {

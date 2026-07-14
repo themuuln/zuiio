@@ -178,7 +178,6 @@ export const DynamicEmployeeCreateDrawer = dynamic(
   { loading: DrawerTriggerSkeleton },
 );
 
-
 // ── Accounting Drawers ──
 
 export const DynamicAccountCreateDrawer = dynamic(
@@ -375,16 +374,11 @@ export const DynamicReturnDetailDrawer = dynamic(
 
 export const DynamicCheckoutDrawer = dynamic(
   () =>
-    import("@/components/shop/checkout-drawer").then(
-      (m) => m.CheckoutDrawer,
-    ),
+    import("@/components/shop/checkout-drawer").then((m) => m.CheckoutDrawer),
   { ssr: false },
 );
 
 export const DynamicReceiptDrawer = dynamic(
-  () =>
-    import("@/components/shop/receipt-drawer").then(
-      (m) => m.ReceiptDrawer,
-    ),
+  () => import("@/components/shop/receipt-drawer").then((m) => m.ReceiptDrawer),
   { ssr: false },
 );

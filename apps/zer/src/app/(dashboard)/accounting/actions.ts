@@ -1,9 +1,8 @@
 "use server";
 import { capture } from "@zuiio/capture";
-
-import { requireWriteAction } from "@/lib/action-utils";
 import { after } from "next/server";
-import { logAuditEventWithClient } from "@/lib/audit"
+import { requireWriteAction } from "@/lib/action-utils";
+import { logAuditEventWithClient } from "@/lib/audit";
 import { revalidateEntities } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
 
@@ -122,14 +121,18 @@ export async function createJournalEntry(
     return { error: `Мөрүүд хадгалахад алдаа гарлаа: ${linesError.message}` };
   }
 
-  after(() => logAuditEventWithClient(ctx.supabase,
-  organizationId,
-  userId,
-  "created",
-  "product",
-  journalEntry.id,
-  undefined,
-  `Журналын бичилт ${entryNumber} үүсгэсэн`,));
+  after(() =>
+    logAuditEventWithClient(
+      ctx.supabase,
+      organizationId,
+      userId,
+      "created",
+      "product",
+      journalEntry.id,
+      undefined,
+      `Журналын бичилт ${entryNumber} үүсгэсэн`,
+    ),
+  );
 
   revalidateEntities(["accounting"]);
   return { success: true as const, error: undefined };
@@ -197,14 +200,18 @@ export async function createAccount(
     return { error: `Данс үүсгэхэд алдаа гарлаа: ${insertError.message}` };
   }
 
-  after(() => logAuditEventWithClient(ctx.supabase,
-  organizationId,
-  userId,
-  "created",
-  "product",
-  code,
-  undefined,
-  `Данс "${code} - ${name}" үүсгэсэн`,));
+  after(() =>
+    logAuditEventWithClient(
+      ctx.supabase,
+      organizationId,
+      userId,
+      "created",
+      "product",
+      code,
+      undefined,
+      `Данс "${code} - ${name}" үүсгэсэн`,
+    ),
+  );
 
   revalidateEntities(["accounting"]);
   return { success: true as const, error: undefined };
@@ -363,14 +370,18 @@ export async function updateJournalEntry(
     return { error: `Мөрүүд хадгалахад алдаа гарлаа: ${linesError.message}` };
   }
 
-  after(() => logAuditEventWithClient(ctx.supabase,
-  organizationId,
-  userId,
-  "updated",
-  "product",
-  entryId,
-  undefined,
-  `Журналын бичилт шинэчлэгдсэн`,));
+  after(() =>
+    logAuditEventWithClient(
+      ctx.supabase,
+      organizationId,
+      userId,
+      "updated",
+      "product",
+      entryId,
+      undefined,
+      `Журналын бичилт шинэчлэгдсэн`,
+    ),
+  );
 
   revalidateEntities(["accounting"]);
   return { success: true as const, error: undefined };
@@ -399,16 +410,18 @@ export async function deleteJournalEntry(entryId: string) {
   if (error) {
     return { error: `Журналын бичилт устгахад алдаа гарлаа: ${error.message}` };
   }
-  after(() => logAuditEventWithClient(
-    db,
-    organizationId,
-    ctx.userId,
-    "deleted",
-    "journal_entry",
-    entryId,
-    undefined,
-    `Журналын бичилт устгасан`,
-  ));
+  after(() =>
+    logAuditEventWithClient(
+      db,
+      organizationId,
+      ctx.userId,
+      "deleted",
+      "journal_entry",
+      entryId,
+      undefined,
+      `Журналын бичилт устгасан`,
+    ),
+  );
 
   revalidateEntities(["accounting"]);
   return { success: true as const, error: undefined };
@@ -439,16 +452,18 @@ export async function toggleAccountActive(
   if (error) {
     return { error: `Төлөв шинэчлэхэд алдаа гарлаа: ${error.message}` };
   }
-  after(() => logAuditEventWithClient(
-    db,
-    organizationId,
-    ctx.userId,
-    isActive ? "activated" : "deactivated",
-    "account",
-    accountId,
-    { is_active: { old: !isActive, new: isActive } },
-    `Данс "${accountId}" ${isActive ? "идэвхижүүлсэн" : "идэвхигүй болгосон"}`,
-  ));
+  after(() =>
+    logAuditEventWithClient(
+      db,
+      organizationId,
+      ctx.userId,
+      isActive ? "activated" : "deactivated",
+      "account",
+      accountId,
+      { is_active: { old: !isActive, new: isActive } },
+      `Данс "${accountId}" ${isActive ? "идэвхижүүлсэн" : "идэвхигүй болгосон"}`,
+    ),
+  );
 
   revalidateEntities(["accounting"]);
   return { success: true as const, error: undefined };

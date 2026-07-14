@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EnvelopeSimple, TelegramLogo } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { capture } from "@zuiio/capture";
 import Link from "next/link";
 import { useCallback, useEffect, useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -22,7 +23,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { createClient } from "@/lib/supabase/client";
-import { capture } from "@zuiio/capture";
 import { useRegisterSave, useSettings } from "./settings-context";
 
 const EVENT_OPTIONS = [

@@ -34,7 +34,9 @@ export async function createContact(
     .eq("type", type)
     .maybeSingle();
   if (queryError) {
-    capture(queryError, { context: "customers: createContact check duplicate" });
+    capture(queryError, {
+      context: "customers: createContact check duplicate",
+    });
   }
 
   if (existing) {

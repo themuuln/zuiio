@@ -1,10 +1,10 @@
-import { Suspense } from "react";
+import { withDbCapture } from "@zuiio/capture";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { PageShell } from "@/components/erp/page-shell";
 import { requireAppContext } from "@/lib/erp";
 import { checkOrgSetting } from "@/lib/org-settings";
 import { AuditContent } from "./audit-content";
-import { withDbCapture } from "@zuiio/capture";
 
 export type AuditLogRow = {
   id: string;
@@ -29,13 +29,16 @@ function PageSkeleton() {
 async function DataFetcher() {
   const { supabase, organizationId } = await requireAppContext();
 
-  const { data: logs } = await withDbCapture("page:audit audit_log",
+  const { data: logs } = await withDbCapture(
+    "page:audit audit_log",
     supabase
       .from("audit_log")
-      .select("id, action, entity_type, summary, created_at, profiles(full_name)")
+      .select(
+        "id, action, entity_type, summary, created_at, profiles(full_name)",
+      )
       .eq("organization_id", organizationId)
       .order("created_at", { ascending: false })
-      .limit(100)
+      .limit(100),
   );
   const rows: AuditLogRow[] = (logs ?? []).map((log) => ({
     id: log.id,

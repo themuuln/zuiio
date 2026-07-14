@@ -4,8 +4,8 @@ import { capture } from "@zuiio/capture";
 import { redirect } from "next/navigation";
 import { requireActionContext, requireAppContext } from "@/lib/action-utils";
 import { revalidateEntity } from "@/lib/revalidate";
-import type { Database } from "@/lib/supabase/types";
 import { createServiceClient } from "@/lib/supabase/server-service";
+import type { Database } from "@/lib/supabase/types";
 
 export async function updateOrganization(
   _prevState: { error?: string } | undefined,
@@ -150,7 +150,9 @@ export async function importBrandPresets(formData: FormData) {
 
   const { data: presets, error: fetchError } = await serviceSupabase
     .from("product_presets")
-    .select("brand_name,brand_logo_url,category_name,product_sku,product_name,unit,cost_price,sale_price,min_stock,sort_order")
+    .select(
+      "brand_name,brand_logo_url,category_name,product_sku,product_name,unit,cost_price,sale_price,min_stock,sort_order",
+    )
     .eq("brand_name", brandName)
     .order("sort_order");
 
@@ -262,7 +264,9 @@ export async function importProductPreset(formData: FormData) {
 
   const { data: preset, error: fetchError } = await serviceSupabase
     .from("product_presets")
-    .select("id,brand_name,brand_logo_url,category_name,product_sku,product_name,unit,cost_price,sale_price,min_stock")
+    .select(
+      "id,brand_name,brand_logo_url,category_name,product_sku,product_name,unit,cost_price,sale_price,min_stock",
+    )
     .eq("id", presetId)
     .single();
 
@@ -381,7 +385,9 @@ export async function importProductPresetsByIds(presetIds: string[]) {
 
   const { data: presets, error: fetchError } = await serviceSupabase
     .from("product_presets")
-    .select("brand_name,brand_logo_url,category_name,product_sku,product_name,unit,cost_price,sale_price,min_stock")
+    .select(
+      "brand_name,brand_logo_url,category_name,product_sku,product_name,unit,cost_price,sale_price,min_stock",
+    )
     .in("id", presetIds);
 
   if (fetchError || !presets?.length) return { error: "Загварууд олдсонгүй." };

@@ -1,6 +1,6 @@
+import { withDbCapture } from "@zuiio/capture";
 import { Suspense } from "react";
 import { requireAppContext } from "@/lib/erp";
-import { withDbCapture } from "@zuiio/capture";
 import { StockMovementForm } from "./stock-movement-form";
 
 export type ProductOption = {

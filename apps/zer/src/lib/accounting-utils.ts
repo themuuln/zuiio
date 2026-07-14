@@ -1,9 +1,9 @@
 import "server-only";
-import { after } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { capture } from "@zuiio/capture";
+import { after } from "next/server";
 import { type EntityType, logAuditEventWithClient } from "@/lib/audit";
 import type { Database } from "@/lib/supabase/types";
-import { capture } from "@zuiio/capture";
 
 type AccountingLine = {
   account_id: string;
@@ -125,14 +125,18 @@ export async function createJournalEntry(
     if (linesError) return { success: false, error: linesError.message };
 
     // 6. Audit log
-    after(() => logAuditEventWithClient(supabase,
-    organizationId,
-    userId,
-    "created",
-    referenceType,
-    referenceId,
-    undefined,
-    `Журналын бичилт ${entryNumber} үүсгэсэн`,));
+    after(() =>
+      logAuditEventWithClient(
+        supabase,
+        organizationId,
+        userId,
+        "created",
+        referenceType,
+        referenceId,
+        undefined,
+        `Журналын бичилт ${entryNumber} үүсгэсэн`,
+      ),
+    );
 
     return { success: true };
   } catch (err: unknown) {

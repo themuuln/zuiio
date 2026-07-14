@@ -2,6 +2,7 @@
 
 import { IdentificationBadge } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
+import { withDbCapture } from "@zuiio/capture";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
 import { EmployeeTable } from "@/components/hr/employee-table";
@@ -9,7 +10,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DynamicEmployeeCreateDrawer } from "@/lib/dynamic-drawers";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { createClient } from "@/lib/supabase/client";
-import { withDbCapture } from "@zuiio/capture";
 
 type EmployeeRow = {
   id: string;

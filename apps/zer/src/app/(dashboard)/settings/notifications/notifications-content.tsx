@@ -7,8 +7,8 @@ import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { createClient } from "@/lib/supabase/client";
 import { useOrgSettings } from "@/lib/org-settings-context";
+import { createClient } from "@/lib/supabase/client";
 
 const EVENT_LABELS: Record<string, string> = {
   low_stock: "Бага нөөц",
@@ -104,7 +104,9 @@ export function NotificationsContent() {
                       {n.message}
                     </p>
                     <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                      <span>{EVENT_LABELS[n.event_type ?? ""] ?? n.event_type}</span>
+                      <span>
+                        {EVENT_LABELS[n.event_type ?? ""] ?? n.event_type}
+                      </span>
                       <span>&middot;</span>
                       <span>
                         {new Date(n.created_at ?? "").toLocaleDateString(

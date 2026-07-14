@@ -1,24 +1,26 @@
+import { withDbCapture } from "@zuiio/capture";
 import { Suspense } from "react";
-
 import { withBranchFilter } from "@/lib/branches";
 import { requireAppContext } from "@/lib/erp";
-import { withDbCapture } from "@zuiio/capture";
 import { InvoicesContent } from "./invoices-content";
 
 function PageSkeleton() {
-  return (
-    <div className="h-96 animate-pulse rounded-xl bg-muted" />
-  );
+  return <div className="h-96 animate-pulse rounded-xl bg-muted" />;
 }
 
-async function DataFetcher({ searchParams }: { searchParams: { branch?: string } }) {
+async function DataFetcher({
+  searchParams,
+}: {
+  searchParams: { branch?: string };
+}) {
   const { branch: urlBranch } = searchParams;
   const { supabase, organizationId, branchId, isBranchScoped } =
     await requireAppContext();
 
   const [{ data: invoices }, { data: contacts }, { data: products }] =
     await Promise.all([
-      withDbCapture("page:invoices:invoices",
+      withDbCapture(
+        "page:invoices:invoices",
         withBranchFilter(
           supabase
             .from("invoices")
@@ -32,7 +34,8 @@ async function DataFetcher({ searchParams }: { searchParams: { branch?: string }
           urlBranch,
         ),
       ),
-      withDbCapture("page:invoices:contacts",
+      withDbCapture(
+        "page:invoices:contacts",
         supabase
           .from("contacts")
           .select("id, name")
@@ -40,7 +43,8 @@ async function DataFetcher({ searchParams }: { searchParams: { branch?: string }
           .eq("type", "customer")
           .order("name"),
       ),
-      withDbCapture("page:invoices:products",
+      withDbCapture(
+        "page:invoices:products",
         supabase
           .from("products")
           .select("id, name, sale_price, current_stock, unit")
@@ -69,7 +73,6 @@ async function DataFetcher({ searchParams }: { searchParams: { branch?: string }
     />
   );
 }
-
 
 export default async function InvoicesPage({
   searchParams,

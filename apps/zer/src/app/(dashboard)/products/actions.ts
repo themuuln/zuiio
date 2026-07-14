@@ -52,7 +52,9 @@ export async function updateProduct(
       .eq("name", categoryName.trim())
       .maybeSingle();
     if (queryError) {
-      capture(queryError, { context: "updateProduct: check existing category" });
+      capture(queryError, {
+        context: "updateProduct: check existing category",
+      });
     }
 
     if (existing) {
@@ -119,7 +121,9 @@ export async function updateProduct(
         .select("id")
         .eq("product_id", id);
       if (varError) {
-        capture(varError, { context: "updateProduct: fetch existing variants" });
+        capture(varError, {
+          context: "updateProduct: fetch existing variants",
+        });
       }
       const existingVariantIds = (existingVariants ?? []).map((v) => v.id);
 
@@ -128,7 +132,9 @@ export async function updateProduct(
         .select("id")
         .eq("product_id", id);
       if (groupError) {
-        capture(groupError, { context: "updateProduct: fetch existing groups" });
+        capture(groupError, {
+          context: "updateProduct: fetch existing groups",
+        });
       }
       const existingGroupIds = (existingGroups ?? []).map((g) => g.id);
 

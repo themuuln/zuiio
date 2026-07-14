@@ -1,5 +1,5 @@
-import { createJournalEntry } from "@/lib/accounting-utils";
 import { capture } from "@zuiio/capture";
+import { createJournalEntry } from "@/lib/accounting-utils";
 
 /**
  * Post a sale to the general ledger.

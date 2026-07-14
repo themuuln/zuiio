@@ -1,16 +1,16 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { Users } from "@phosphor-icons/react/dist/ssr";
+import { useQuery } from "@tanstack/react-query";
+import { withDbCapture } from "@zuiio/capture";
 import type { CustomerRow } from "@/components/customers/customers-table";
 import { CustomersTable } from "@/components/customers/customers-table";
-import { DynamicCustomerCreateDrawer } from "@/lib/dynamic-drawers";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
-import { createClient } from "@/lib/supabase/client";
+import { DynamicCustomerCreateDrawer } from "@/lib/dynamic-drawers";
 import { useOrgSettings } from "@/lib/org-settings-context";
-import { withDbCapture } from "@zuiio/capture";
+import { createClient } from "@/lib/supabase/client";
 
 export function CustomersContent() {
   const { organizationId, hasCustomerCredit } = useOrgSettings();
@@ -58,7 +58,7 @@ export function CustomersContent() {
         </>
       }
     >
-      {customers && customers.length > 0 || isLoading ? (
+      {(customers && customers.length > 0) || isLoading ? (
         <CustomersTable
           data={customers ?? []}
           showBalance={showBalance}

@@ -1,8 +1,8 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { capture } from "@zuiio/capture";
 import type { Database } from "@/lib/supabase/types";
 import { normalizePhone } from "@/lib/validation";
-import { capture } from "@zuiio/capture";
 
 export type SupabaseDb = SupabaseClient<Database>;
 

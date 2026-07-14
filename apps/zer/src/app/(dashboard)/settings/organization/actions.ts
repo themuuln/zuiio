@@ -40,7 +40,9 @@ export async function updateReportEmailSettings(
     .eq("id", organizationId);
 
   if (updateError) {
-    capture(updateError, { context: "organization: updateReportEmailSettings" });
+    capture(updateError, {
+      context: "organization: updateReportEmailSettings",
+    });
     return {
       error: `Тохиргоо хадгалахад алдаа гарлаа: ${updateError.message}`,
     };

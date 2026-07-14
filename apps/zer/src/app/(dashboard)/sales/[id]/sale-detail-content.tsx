@@ -1,16 +1,16 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { withDbCapture } from "@zuiio/capture";
 import { useParams } from "next/navigation";
+import { PageShell } from "@/components/erp/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PageShell } from "@/components/erp/page-shell";
 import { Skeleton } from "@/components/ui/skeleton";
-import { saleKeys } from "@/lib/query/keys";
-import { useOrgSettings } from "@/lib/org-settings-context";
-import { createClient } from "@/lib/supabase/client";
-import { withDbCapture } from "@zuiio/capture";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { useOrgSettings } from "@/lib/org-settings-context";
+import { saleKeys } from "@/lib/query/keys";
+import { createClient } from "@/lib/supabase/client";
 
 const paymentMethodLabels: Record<string, string> = {
   cash: "Бэлэн",
@@ -95,8 +95,9 @@ export function SaleDetailContent() {
   const contactName = saleContact?.name ?? null;
 
   // Salesperson profile — guaranteed shape by .select("profiles!sales_salesperson_id_fkey(full_name)")
-  const salespersonProfile =
-    sale?.profiles as { full_name: string | null } | null;
+  const salespersonProfile = sale?.profiles as {
+    full_name: string | null;
+  } | null;
   const salespersonName = salespersonProfile?.full_name ?? null;
 
   return (
@@ -159,7 +160,9 @@ export function SaleDetailContent() {
                   <StatusBadge status={sale.status} />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Төлбөрийн арга</p>
+                  <p className="text-sm text-muted-foreground">
+                    Төлбөрийн арга
+                  </p>
                   <p className="font-medium">
                     {paymentMethodLabels[sale.payment_method ?? ""] ??
                       sale.payment_method ??
@@ -211,8 +214,10 @@ export function SaleDetailContent() {
                 <tbody>
                   {(items ?? []).map((item) => {
                     // Product join — guaranteed shape by .select("products(name, unit)")
-                    const product =
-                      item.products as { name: string; unit: string | null } | null;
+                    const product = item.products as {
+                      name: string;
+                      unit: string | null;
+                    } | null;
                     return (
                       <tr key={item.id} className="border-b last:border-0">
                         <td className="py-3 font-medium whitespace-nowrap">

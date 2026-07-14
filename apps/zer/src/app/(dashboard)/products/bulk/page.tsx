@@ -17,6 +17,7 @@ const CameraScanner = dynamic(
   { ssr: false },
 );
 
+import { withDbCapture } from "@zuiio/capture";
 import { toast } from "sonner";
 import { z } from "zod";
 import { PageShell } from "@/components/erp/page-shell";
@@ -33,7 +34,6 @@ import { FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { productKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
-import { withDbCapture } from "@zuiio/capture";
 
 const bulkItemSchema = z.object({
   barcode: z.string().min(1, "Баркод шаардлагатай"),
@@ -57,7 +57,8 @@ async function bulkCreateProducts(items: BulkValues["items"]) {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Нэвтрээгүй");
 
-  const { data: profile } = await withDbCapture("page:products_bulk",
+  const { data: profile } = await withDbCapture(
+    "page:products_bulk",
     supabase
       .from("profiles")
       .select("organization_id")
@@ -78,7 +79,8 @@ async function bulkCreateProducts(items: BulkValues["items"]) {
     unit: item.unit,
   }));
 
-  const { error } = await withDbCapture("page:products_bulk",
+  const { error } = await withDbCapture(
+    "page:products_bulk",
     supabase.from("products").insert(products),
   );
   if (error) throw new Error(error.message);

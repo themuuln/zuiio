@@ -1,9 +1,9 @@
 "use server";
 
+import { capture } from "@zuiio/capture";
 import { requireActionContext } from "@/lib/action-utils";
 import { revalidateEntity } from "@/lib/revalidate";
 import type { Database } from "@/lib/supabase/types";
-import { capture } from "@zuiio/capture";
 
 export async function createEmployee(_prevState: unknown, formData: FormData) {
   const MINIMUM_WAGE = 792_000;
@@ -94,7 +94,11 @@ export async function deleteEmployee(formData: FormData) {
   const id = formData.get("id")?.toString();
   if (!id) return { error: "Ажилтан тодорхойгүй байна." };
 
-  const { error } = await supabase.from("employees").delete().eq("id", id).eq("organization_id", organizationId);
+  const { error } = await supabase
+    .from("employees")
+    .delete()
+    .eq("id", id)
+    .eq("organization_id", organizationId);
   if (error) {
     capture(error, { context: "hr: deleteEmployee" });
     return { error: error.message };

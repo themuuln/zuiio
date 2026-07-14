@@ -1,16 +1,16 @@
-import { Suspense } from "react";
 import { Buildings } from "@phosphor-icons/react/dist/ssr";
+import { withDbCapture } from "@zuiio/capture";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { ExportButton } from "@/components/erp/export-button";
 import { PageShell } from "@/components/erp/page-shell";
-import { DynamicSupplierCreateDrawer } from "@/lib/dynamic-drawers";
 import {
   type SupplierRow,
   SuppliersTable,
 } from "@/components/suppliers/suppliers-table";
+import { DynamicSupplierCreateDrawer } from "@/lib/dynamic-drawers";
 import { requireAppContext } from "@/lib/erp";
-import { withDbCapture } from "@zuiio/capture";
 
 function SuppliersSkeleton() {
   return (
@@ -35,14 +35,15 @@ function SuppliersSkeleton() {
 async function DataFetcher() {
   const { supabase, organizationId } = await requireAppContext();
 
-  const { data: suppliers } = await withDbCapture("page:suppliers",
+  const { data: suppliers } = await withDbCapture(
+    "page:suppliers",
     supabase
       .from("contacts")
       .select("id, name, phone, email, address, balance")
       .eq("organization_id", organizationId)
       .eq("type", "supplier")
       .order("created_at", { ascending: false })
-      .limit(500)
+      .limit(500),
   );
 
   const tableData: SupplierRow[] =
@@ -87,12 +88,13 @@ export default async function SuppliersPage() {
   const { supabase, organizationId } = await requireAppContext();
 
   // Check org setting — redirect if suppliers are not used
-  const { data: org } = await withDbCapture("page:suppliers",
+  const { data: org } = await withDbCapture(
+    "page:suppliers",
     supabase
       .from("organizations")
       .select("has_suppliers")
       .eq("id", organizationId)
-      .single()
+      .single(),
   );
 
   const hasSuppliers =

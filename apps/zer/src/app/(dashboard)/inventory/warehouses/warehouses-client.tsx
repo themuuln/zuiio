@@ -263,7 +263,11 @@ export default function WarehousesPage() {
         }}
       />
       <WarehouseDetailDrawer
-        warehouse={selectedWarehouse ? toDetailData(selectedWarehouse) : ({} as WarehouseDetailData)}
+        warehouse={
+          selectedWarehouse
+            ? toDetailData(selectedWarehouse)
+            : ({} as WarehouseDetailData)
+        }
         open={!!selectedWarehouse}
         onOpenChange={(open) => {
           if (!open) setSelectedWarehouse(null);

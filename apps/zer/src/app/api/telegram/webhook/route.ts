@@ -140,7 +140,6 @@ export async function POST(request: Request) {
       userMessage: text,
       tools,
     });
-
   } catch (e) {
     capture(e, { context: "telegram: AI agent error" });
     await sendTelegramMessage(chatId, ERROR_MESSAGE, botToken);

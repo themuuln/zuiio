@@ -1,10 +1,10 @@
 "use server";
 
+import { capture } from "@zuiio/capture";
 import { requireActionContext } from "@/lib/action-utils";
 import { validateCategoryInput } from "@/lib/domain-rules";
 import { revalidateEntity } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
-import { capture } from "@zuiio/capture";
 
 export async function createCategory(
   _prevState: { error?: string } | undefined,
@@ -29,7 +29,9 @@ export async function createCategory(
     .eq("name", name)
     .maybeSingle();
   if (queryError) {
-    capture(queryError, { context: "categories: createCategory check duplicate" });
+    capture(queryError, {
+      context: "categories: createCategory check duplicate",
+    });
   }
 
   if (existing) {
@@ -79,7 +81,9 @@ export async function updateCategory(
     .neq("id", id)
     .maybeSingle();
   if (queryError) {
-    capture(queryError, { context: "categories: updateCategory check duplicate" });
+    capture(queryError, {
+      context: "categories: updateCategory check duplicate",
+    });
   }
 
   if (existing) {

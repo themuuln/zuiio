@@ -88,7 +88,8 @@ export async function getCommissionSummary(
         .from("sale_items")
         .select("commission_amount")
         .in("sale_id", saleIds);
-      if (earnedError) capture(earnedError, { context: "commissions: fetch earned items" });
+      if (earnedError)
+        capture(earnedError, { context: "commissions: fetch earned items" });
 
       totalEarned =
         earnedItems?.reduce(
@@ -104,7 +105,8 @@ export async function getCommissionSummary(
       .eq("organization_id", orgId)
       .eq("profile_id", profile.id)
       .eq("status", "completed");
-    if (payoutsError) capture(payoutsError, { context: "commissions: fetch profile payouts" });
+    if (payoutsError)
+      capture(payoutsError, { context: "commissions: fetch profile payouts" });
 
     let totalPaid = 0;
     if (profilePayouts && profilePayouts.length > 0) {
@@ -113,7 +115,10 @@ export async function getCommissionSummary(
         .from("commission_payout_items")
         .select("commission_amount")
         .in("payout_id", payoutIds);
-      if (paidItemsError) capture(paidItemsError, { context: "commissions: fetch paid items from payouts" });
+      if (paidItemsError)
+        capture(paidItemsError, {
+          context: "commissions: fetch paid items from payouts",
+        });
 
       totalPaid =
         paidItems?.reduce(
@@ -179,7 +184,8 @@ export async function getUnpaidItems(
     .from("commission_payout_items")
     .select("sale_item_id")
     .in("sale_item_id", itemIds);
-  if (paidItemsError) capture(paidItemsError, { context: "commissions: fetch paid item ids" });
+  if (paidItemsError)
+    capture(paidItemsError, { context: "commissions: fetch paid item ids" });
 
   const paidItemIds = new Set(paidItems?.map((pi) => pi.sale_item_id) ?? []);
 
@@ -313,7 +319,10 @@ export async function createPayout(
     .eq("organization_id", orgId)
     .eq("salesperson_id", profileId)
     .not("status", "eq", "cancelled");
-  if (profileSalesError) capture(profileSalesError, { context: "commissions: fetch profile sales for validation" });
+  if (profileSalesError)
+    capture(profileSalesError, {
+      context: "commissions: fetch profile sales for validation",
+    });
 
   if (!profileSales || profileSales.length === 0) {
     return { error: "Энэ ажилтанд комисс олдсонгүй." };
@@ -347,7 +356,10 @@ export async function createPayout(
     .from("commission_payout_items")
     .select("sale_item_id")
     .in("sale_item_id", selectedItems);
-  if (paidCheckError) capture(paidCheckError, { context: "commissions: check double-payment items" });
+  if (paidCheckError)
+    capture(paidCheckError, {
+      context: "commissions: check double-payment items",
+    });
 
   const alreadyPaidIds = getAlreadyPaidIds(paidItems ?? [], selectedItems);
   if (alreadyPaidIds.length > 0) {
@@ -365,7 +377,10 @@ export async function createPayout(
     .select("branch_id")
     .eq("id", profileId)
     .single();
-  if (targetProfileError) capture(targetProfileError, { context: "commissions: fetch target profile branch" });
+  if (targetProfileError)
+    capture(targetProfileError, {
+      context: "commissions: fetch target profile branch",
+    });
 
   let payoutBranchId: string | null = targetProfile?.branch_id ?? ctx.branchId;
 
@@ -377,7 +392,8 @@ export async function createPayout(
       .order("name")
       .limit(1)
       .maybeSingle();
-    if (fallbackError) capture(fallbackError, { context: "commissions: fetch fallback branch" });
+    if (fallbackError)
+      capture(fallbackError, { context: "commissions: fetch fallback branch" });
     payoutBranchId = fallbackBranch?.id ?? null;
   }
 
@@ -421,7 +437,11 @@ export async function createPayout(
     capture(itemsInsertError, { context: "commissions: insert payout items" });
 
     // Cleanup: delete the payout if items failed (best-effort rollback)
-    await supabase.from("commission_payouts").delete().eq("id", payout.id).eq("organization_id", orgId);
+    await supabase
+      .from("commission_payouts")
+      .delete()
+      .eq("id", payout.id)
+      .eq("organization_id", orgId);
 
     return {
       error:

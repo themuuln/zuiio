@@ -1,9 +1,9 @@
 "use server";
 
+import { capture } from "@zuiio/capture";
 import { requireActionContext } from "@/lib/action-utils";
 import type { AppPermission } from "@/lib/permissions";
 import { revalidateEntity } from "@/lib/revalidate";
-import { capture } from "@zuiio/capture";
 
 export async function createRole(formData: FormData) {
   const ctx = await requireActionContext("roles.manage");
@@ -121,7 +121,9 @@ export async function setRolePermissions(
   }
 
   if (typeof result === "object" && result !== null && "error" in result) {
-    capture((result as { error: string }).error, { context: "roles: setRolePermissions result" });
+    capture((result as { error: string }).error, {
+      context: "roles: setRolePermissions result",
+    });
     return { error: (result as { error: string }).error };
   }
 

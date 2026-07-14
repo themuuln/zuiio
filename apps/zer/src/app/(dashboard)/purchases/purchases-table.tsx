@@ -129,7 +129,13 @@ const columns: ColumnDef<PurchaseRow>[] = [
   },
 ];
 
-export function PurchasesTable({ data, loading }: { data: PurchaseRow[]; loading?: boolean }) {
+export function PurchasesTable({
+  data,
+  loading,
+}: {
+  data: PurchaseRow[];
+  loading?: boolean;
+}) {
   return (
     <DataTable
       columns={columns}

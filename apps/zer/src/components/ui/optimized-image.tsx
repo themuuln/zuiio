@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface OptimizedImageProps {
   src: string | null | undefined;
@@ -93,7 +93,9 @@ export function OptimizedImage({
 
   if (!src) return null;
 
-  const optimizedSrc = isVisible ? getOptimizedSrc(src, width, format) : undefined;
+  const optimizedSrc = isVisible
+    ? getOptimizedSrc(src, width, format)
+    : undefined;
   const aspectRatioStyle = aspectRatio
     ? { aspectRatio }
     : height
@@ -106,9 +108,7 @@ export function OptimizedImage({
       className={cn("relative overflow-hidden", className)}
       style={aspectRatioStyle}
     >
-      {!isLoaded && (
-        <div className="absolute inset-0 animate-pulse bg-muted" />
-      )}
+      {!isLoaded && <div className="absolute inset-0 animate-pulse bg-muted" />}
       {isVisible && (
         <img
           src={optimizedSrc}

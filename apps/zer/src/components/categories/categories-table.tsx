@@ -70,7 +70,13 @@ const columns = (
   },
 ];
 
-export function CategoriesTable({ data, loading }: { data: CategoryRow[]; loading?: boolean }) {
+export function CategoriesTable({
+  data,
+  loading,
+}: {
+  data: CategoryRow[];
+  loading?: boolean;
+}) {
   const [selectedCategory, setSelectedCategory] = useState<CategoryRow | null>(
     null,
   );
@@ -103,14 +109,19 @@ export function CategoriesTable({ data, loading }: { data: CategoryRow[]; loadin
         onRowClick={(row) => setSelectedCategory(row)}
       />
       <CategoryDetailDrawer
-        category={selectedCategory ? toDetailData(selectedCategory) : ({} as CategoryDetailData)}
+        category={
+          selectedCategory
+            ? toDetailData(selectedCategory)
+            : ({} as CategoryDetailData)
+        }
         open={!!selectedCategory}
         onOpenChange={(open) => {
           if (!open) setSelectedCategory(null);
         }}
         onEdit={() => selectedCategory && setEditCategory(selectedCategory)}
         onDelete={() =>
-          selectedCategory && handleDelete(selectedCategory.id, selectedCategory.name)
+          selectedCategory &&
+          handleDelete(selectedCategory.id, selectedCategory.name)
         }
         isDeletePending={deletePending}
       />

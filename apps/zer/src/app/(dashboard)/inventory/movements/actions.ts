@@ -45,7 +45,9 @@ export async function createStockMovement(
     .single();
 
   if (productError || !product) {
-    capture(productError, { context: "movements: recordMovement productCheck" });
+    capture(productError, {
+      context: "movements: recordMovement productCheck",
+    });
     return { error: "Сонгосон бүтээгдэхүүн олдсонгүй." };
   }
 

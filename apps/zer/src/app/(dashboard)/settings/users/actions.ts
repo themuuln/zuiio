@@ -1,9 +1,9 @@
 "use server";
 
+import { capture } from "@zuiio/capture";
 import { requireActionContext } from "@/lib/action-utils";
 import { revalidateEntity } from "@/lib/revalidate";
 import { createServiceClient } from "@/lib/supabase/server-service";
-import { capture } from "@zuiio/capture";
 
 export async function inviteMember(formData: FormData) {
   const ctx = await requireActionContext("members.invite");
@@ -55,10 +55,10 @@ export async function inviteMember(formData: FormData) {
       })
       .eq("id", existingUser.id);
 
-  if (updateError) {
-    capture(updateError, { context: "users: inviteMember updateProfile" });
-    return { error: `Урилга илгээхэд алдаа гарлаа: ${updateError.message}` };
-  }
+    if (updateError) {
+      capture(updateError, { context: "users: inviteMember updateProfile" });
+      return { error: `Урилга илгээхэд алдаа гарлаа: ${updateError.message}` };
+    }
   } else {
     // Create new auth user via invite
     const { data, error: inviteError } =

@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { capture } from "@zuiio/capture";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -34,7 +35,6 @@ import { formatRouteDate } from "@/lib/format";
 import { discountKeys } from "@/lib/query/keys";
 import { useOptimisticCreate } from "@/lib/query/use-optimistic";
 import { createClient } from "@/lib/supabase/client";
-import { capture } from "@zuiio/capture";
 
 const discountSchema = z.object({
   name: z.string().min(1, "Нэр шаардлагатай"),

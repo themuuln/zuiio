@@ -5,6 +5,7 @@ import {
   Package as PackageIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
+import { withDbCapture } from "@zuiio/capture";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ErpEmptyState } from "@/components/erp/empty-state";
@@ -15,10 +16,9 @@ import {
   ProductsTable,
 } from "@/components/products/products-table";
 import { Button } from "@/components/ui/button";
+import { DynamicProductCreateDrawer } from "@/lib/dynamic-drawers";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { createClient } from "@/lib/supabase/client";
-import { DynamicProductCreateDrawer } from "@/lib/dynamic-drawers";
-import { withDbCapture } from "@zuiio/capture";
 
 const PAGE_SIZE = 20;
 
@@ -68,17 +68,11 @@ export function ProductsContent() {
             (product.categories as { name: string } | null)?.name ?? null,
           brand_id: product.brand_id,
           brand_name:
-            (
-              product.brands as
-                | { name: string; logo_url: string | null }
-                | null
-            )?.name ?? null,
+            (product.brands as { name: string; logo_url: string | null } | null)
+              ?.name ?? null,
           brand_logo_url:
-            (
-              product.brands as
-                | { name: string; logo_url: string | null }
-                | null
-            )?.logo_url ?? null,
+            (product.brands as { name: string; logo_url: string | null } | null)
+              ?.logo_url ?? null,
           image_url: product.image_url,
         })) ?? [];
 

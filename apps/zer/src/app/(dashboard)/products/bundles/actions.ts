@@ -1,8 +1,8 @@
 "use server";
 
+import { capture } from "@zuiio/capture";
 import { requireWriteAction } from "@/lib/action-utils";
 import { revalidateEntities } from "@/lib/revalidate";
-import { capture } from "@zuiio/capture";
 
 interface BundleItemInput {
   product_id: string;
@@ -201,7 +201,9 @@ export async function updateBundle(
           variantItems.map((i) => i.variant_id as string),
         );
       if (variantsError) {
-        capture(variantsError, { context: "updateBundle: fetch variant prices" });
+        capture(variantsError, {
+          context: "updateBundle: fetch variant prices",
+        });
       }
       const variantMap = new Map(
         (variants || []).map((v) => [v.id, v.cost_price ?? 0]),
@@ -221,7 +223,9 @@ export async function updateBundle(
           productItems.map((i) => i.product_id),
         );
       if (productsError) {
-        capture(productsError, { context: "updateBundle: fetch product prices" });
+        capture(productsError, {
+          context: "updateBundle: fetch product prices",
+        });
       }
       const productMap = new Map(
         (products || []).map((p) => [p.id, p.cost_price ?? 0]),

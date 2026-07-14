@@ -1,6 +1,8 @@
 "use client";
 
 import { Calculator, NotePencil, StackSimple } from "@phosphor-icons/react";
+import { useQuery } from "@tanstack/react-query";
+import { withDbCapture } from "@zuiio/capture";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -14,6 +16,7 @@ import { PageShell } from "@/components/erp/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import {
   Table,
@@ -24,15 +27,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useBranchContext } from "@/lib/branch-context";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { toggleAccountActive } from "./actions";
-import { useQuery } from "@tanstack/react-query";
+import { useOrgSettings } from "@/lib/org-settings-context";
 import { accountKeys, journalEntryKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
-import { withDbCapture } from "@zuiio/capture";
-import { useOrgSettings } from "@/lib/org-settings-context";
-import { useBranchContext } from "@/lib/branch-context";
-import { Skeleton } from "@/components/ui/skeleton";
+import { toggleAccountActive } from "./actions";
 
 type TrialBalanceRow = {
   account_id: string;
@@ -108,7 +108,9 @@ export function AccountingContent({
   const [selectedEntry, setSelectedEntry] =
     useState<JournalEntryDetailData | null>(null);
   const [editEntryId, setEditEntryId] = useState<string | null>(null);
-  const [consolidated, setConsolidated] = useState(initialConsolidated ?? false);
+  const [consolidated, setConsolidated] = useState(
+    initialConsolidated ?? false,
+  );
 
   // Determine effective branch filter
   const showConsolidated = !isBranchScoped && consolidated;
@@ -576,7 +578,9 @@ export function AccountingContent({
       />
       {editEntryId &&
         (() => {
-          const entry = editEntryId ? journalEntries.find((e) => e.id === editEntryId) : null;
+          const entry = editEntryId
+            ? journalEntries.find((e) => e.id === editEntryId)
+            : null;
           if (!entry) return null;
           return (
             <JournalEntryEditDrawer

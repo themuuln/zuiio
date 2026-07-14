@@ -1,11 +1,11 @@
-import { Suspense } from "react";
-import { redirect } from "next/navigation";
 import { capture } from "@zuiio/capture";
+import { redirect } from "next/navigation";
 import type * as React from "react";
+import { Suspense } from "react";
 import { CartProvider } from "@/app/(dashboard)/shop/cart-context";
 import { ShopHeaderClient } from "@/app/(dashboard)/shop/shop-header-client";
-import { ShopHistoryProvider } from "@/components/shop/shop-history-drawer";
 import { BottomBar } from "@/components/shop/bottom-bar";
+import { ShopHistoryProvider } from "@/components/shop/shop-history-drawer";
 import { createClient } from "@/lib/supabase/server";
 
 /**

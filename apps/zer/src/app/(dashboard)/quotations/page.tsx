@@ -1,8 +1,8 @@
-import { withBranchFilter } from "@/lib/branches";
-import { requireAppContext } from "@/lib/erp";
 import { withDbCapture } from "@zuiio/capture";
 import { Suspense } from "react";
 import { PageShell } from "@/components/erp/page-shell";
+import { withBranchFilter } from "@/lib/branches";
+import { requireAppContext } from "@/lib/erp";
 import { QuotationsContent } from "./quotations-content";
 
 export type QuotationRow = {
@@ -38,7 +38,8 @@ async function DataFetcher({
 
   const [quotationsResult, productsResult, customersResult] = await Promise.all(
     [
-      withDbCapture("page:quotations",
+      withDbCapture(
+        "page:quotations",
         withBranchFilter(
           supabase
             .from("quotations")
@@ -50,9 +51,10 @@ async function DataFetcher({
           branchId,
           isBranchScoped,
           urlBranch,
-        )
+        ),
       ),
-      withDbCapture("page:quotations",
+      withDbCapture(
+        "page:quotations",
         supabase
           .from("products")
           .select("id, name, sale_price, current_stock, unit")
@@ -60,7 +62,8 @@ async function DataFetcher({
           .is("deleted_at", null)
           .order("name"),
       ),
-      withDbCapture("page:quotations",
+      withDbCapture(
+        "page:quotations",
         supabase
           .from("contacts")
           .select("id, name")

@@ -1,12 +1,12 @@
 "use server";
 
-import { requireAppContext, requireWriteAction } from "@/lib/action-utils";
+import { capture, withDbCapture } from "@zuiio/capture";
 import { after } from "next/server";
-import { logAuditEventWithClient } from "@/lib/audit"
+import { requireAppContext, requireWriteAction } from "@/lib/action-utils";
+import { logAuditEventWithClient } from "@/lib/audit";
 import { withBranchFilter } from "@/lib/branches";
 import { revalidateEntities } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
-import { capture, withDbCapture } from "@zuiio/capture";
 
 function parseFloatSafe(value: FormDataEntryValue | null): number {
   if (typeof value !== "string") return 0;
@@ -120,9 +120,7 @@ export async function createDiscount(
 
       const { error: condError } = await withDbCapture(
         "discounts: insert conditions",
-        supabase
-          .from("discount_conditions")
-          .insert(conditionRows),
+        supabase.from("discount_conditions").insert(conditionRows),
       );
 
       if (condError) {
@@ -138,14 +136,18 @@ export async function createDiscount(
     }
   }
 
-  after(() => logAuditEventWithClient(supabase,
-  organizationId,
-  userId,
-  "created",
-  "discount",
-  discount.id,
-  undefined,
-  `Хямдрал "${name}" үүсгэсэн`,));
+  after(() =>
+    logAuditEventWithClient(
+      supabase,
+      organizationId,
+      userId,
+      "created",
+      "discount",
+      discount.id,
+      undefined,
+      `Хямдрал "${name}" үүсгэсэн`,
+    ),
+  );
 
   revalidateEntities(["discounts"]);
   return { success: true as const, error: undefined };
@@ -261,9 +263,7 @@ export async function updateDiscount(
 
         const { error: condError } = await withDbCapture(
           "discounts: insert conditions",
-          supabase
-            .from("discount_conditions")
-            .insert(conditionRows),
+          supabase.from("discount_conditions").insert(conditionRows),
         );
         if (condError) {
           return {
@@ -283,14 +283,18 @@ export async function updateDiscount(
     );
   }
 
-  after(() => logAuditEventWithClient(supabase,
-  organizationId,
-  userId,
-  "updated",
-  "discount",
-  discountId,
-  undefined,
-  `Хямдрал "${name}" шинэчилсэн`,));
+  after(() =>
+    logAuditEventWithClient(
+      supabase,
+      organizationId,
+      userId,
+      "updated",
+      "discount",
+      discountId,
+      undefined,
+      `Хямдрал "${name}" шинэчилсэн`,
+    ),
+  );
 
   revalidateEntities(["discounts"]);
   return { success: true as const, error: undefined };
@@ -346,14 +350,18 @@ export async function toggleDiscountActive(
 
   const action = isActive ? "Идэвхжүүлсэн" : "Идэвхгүйжүүлсэн";
 
-  after(() => logAuditEventWithClient(supabase,
-  organizationId,
-  userId,
-  isActive ? "activated" : "deactivated",
-  "discount",
-  discountId,
-  { is_active: { old: !isActive, new: isActive } },
-  `Хямдрал "${discount.name}" ${action}`,));
+  after(() =>
+    logAuditEventWithClient(
+      supabase,
+      organizationId,
+      userId,
+      isActive ? "activated" : "deactivated",
+      "discount",
+      discountId,
+      { is_active: { old: !isActive, new: isActive } },
+      `Хямдрал "${discount.name}" ${action}`,
+    ),
+  );
 
   revalidateEntities(["discounts"]);
   return { success: true as const, error: undefined };
@@ -377,7 +385,9 @@ export async function applyDiscount(formData: FormData) {
   // Fetch discount
   let fetchQuery = supabase
     .from("discounts")
-    .select("id,name,description,type,value,is_active,valid_from,valid_until,usage_limit,used_count,min_purchase_amount")
+    .select(
+      "id,name,description,type,value,is_active,valid_from,valid_until,usage_limit,used_count,min_purchase_amount",
+    )
     .eq("id", discountId)
     .eq("organization_id", organizationId);
 

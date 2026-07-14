@@ -1,30 +1,32 @@
+import { withDbCapture } from "@zuiio/capture";
 import { Suspense } from "react";
-
 import { withBranchFilter } from "@/lib/branches";
 import { requireAppContext } from "@/lib/erp";
-import { withDbCapture } from "@zuiio/capture";
 import { DiscountsContent } from "./discounts-content";
 
 function PageSkeleton() {
-  return (
-    <div className="h-96 animate-pulse rounded-xl bg-muted" />
-  );
+  return <div className="h-96 animate-pulse rounded-xl bg-muted" />;
 }
 
-async function DataFetcher({ searchParams }: { searchParams: { branch?: string } }) {
+async function DataFetcher({
+  searchParams,
+}: {
+  searchParams: { branch?: string };
+}) {
   const { branch: urlBranch } = searchParams;
   const { supabase, organizationId, branchId, isBranchScoped } =
     await requireAppContext();
 
   const { data: discounts } = await withBranchFilter(
-    withDbCapture("page:discounts discounts",
+    withDbCapture(
+      "page:discounts discounts",
       supabase
         .from("discounts")
         .select(
           "id, name, description, type, value, applies_to, min_purchase_amount, valid_from, valid_until, is_active, usage_limit, used_count, created_at",
         )
         .eq("organization_id", organizationId)
-        .order("created_at", { ascending: false })
+        .order("created_at", { ascending: false }),
     ),
     branchId,
     isBranchScoped,
@@ -37,11 +39,12 @@ async function DataFetcher({ searchParams }: { searchParams: { branch?: string }
     Array<{ condition_type: string; condition_value: string }>
   > = {};
   if (discountIds.length > 0) {
-    const { data: conditions } = await withDbCapture("page:discounts discount_conditions",
+    const { data: conditions } = await withDbCapture(
+      "page:discounts discount_conditions",
       supabase
         .from("discount_conditions")
         .select("discount_id, condition_type, condition_value")
-        .in("discount_id", discountIds)
+        .in("discount_id", discountIds),
     );
     for (const cond of conditions ?? []) {
       if (!conditionsMap[cond.discount_id]) {
@@ -76,7 +79,6 @@ async function DataFetcher({ searchParams }: { searchParams: { branch?: string }
 
   return <DiscountsContent discounts={discountRows} />;
 }
-
 
 export type DiscountRow = {
   id: string;

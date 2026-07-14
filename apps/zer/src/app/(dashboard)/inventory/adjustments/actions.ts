@@ -1,8 +1,8 @@
 "use server";
 
+import { capture } from "@zuiio/capture";
 import { requireWriteAction } from "@/lib/action-utils";
 import { revalidateEntities } from "@/lib/revalidate";
-import { capture } from "@zuiio/capture";
 
 interface AdjustmentItem {
   product_id: string;

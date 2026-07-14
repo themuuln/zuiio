@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "@phosphor-icons/react";
 import { useState } from "react";
-import { Resolver, useForm } from "react-hook-form";
+import { type Resolver, useForm } from "react-hook-form";
 import { z } from "zod";
 import { createAccount } from "@/app/(dashboard)/accounting/actions";
 import { buttonVariants } from "@/components/ui/button";

@@ -1,11 +1,11 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { withDbCapture } from "@zuiio/capture";
 import { useEffect } from "react";
-import { BrandPresetsClient } from "./presets-client";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { createClient } from "@/lib/supabase/client";
-import { withDbCapture } from "@zuiio/capture";
+import { BrandPresetsClient } from "./presets-client";
 
 interface Preset {
   id: string;
