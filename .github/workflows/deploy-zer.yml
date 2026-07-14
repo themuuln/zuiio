@@ -46,7 +46,6 @@ jobs:
       - name: Install Vercel CLI
         run: npm i -g vercel@latest
 
-      # Stage project config at root (avoids pnpm monorepo PATH bug)
       - name: Stage Vercel project config
         run: |
           mkdir -p .vercel
@@ -57,6 +56,14 @@ jobs:
 
       - name: Build
         run: vercel build --prod --token=$VERCEL_TOKEN
+
+      - name: Check build output
+        run: |
+          echo "=== .vercel/output ==="
+          ls -la .vercel/output/ 2>/dev/null || echo "No .vercel/output"
+          du -sh .vercel/output/ 2>/dev/null || echo "No size"
+          echo "=== builds.json ==="
+          cat .vercel/output/builds.json 2>/dev/null || echo "No builds.json"
 
       - name: Deploy to production
         run: vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
