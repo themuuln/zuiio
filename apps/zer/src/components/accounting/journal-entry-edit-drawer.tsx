@@ -109,7 +109,6 @@ export function JournalEntryEditDrawer({
     control,
     watch,
     setValue,
-    _reset,
     formState: { errors, isSubmitting },
   } = useForm<JournalEntryValues>({
     resolver: zodResolver(journalEntrySchema),

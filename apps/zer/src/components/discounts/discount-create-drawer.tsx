@@ -94,8 +94,8 @@ export function DiscountCreateDrawer({
     handleSubmit,
     control,
     watch,
-    _reset,
-    formState: { errors, _isSubmitting },
+    reset,
+    formState: { errors },
   } = useForm<DiscountValues>({
     resolver: zodResolver(discountSchema) as Resolver<DiscountValues>,
     defaultValues: {
