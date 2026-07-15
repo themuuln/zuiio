@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { EVENT_TYPES, type EventTypeKey } from '../dictionary';
+import { EVENT_TYPES, isEventAllowedByRuleset, type EventTypeKey, type RulesetEventDictionary } from '../dictionary';
 import { validateEvent } from '../payloads';
 import { sortEvents } from '../ordering';
 import type { StatEvent } from '../../types';
@@ -144,5 +144,85 @@ describe('sortEvents', () => {
     const original = [...events];
     sortEvents(events);
     expect(events).toEqual(original);
+  });
+});
+
+describe('isEventAllowedByRuleset', () => {
+  const pilotRuleset: RulesetEventDictionary = {
+    version: '2026-pilot.1',
+    enabledEventTypes: [
+      'shot_2pt_made', 'shot_2pt_missed', 'shot_3pt_made', 'shot_3pt_missed',
+      'ft_made', 'ft_missed', 'rebound_off', 'rebound_def', 'rebound_team',
+      'steal', 'block', 'turnover', 'foul_personal', 'foul_technical',
+      'substitution', 'timeout', 'period_start', 'period_end',
+      'game_start', 'game_end',
+    ],
+  };
+
+  const restrictedRuleset: RulesetEventDictionary = {
+    version: '2026-3x3.1',
+    enabledEventTypes: [
+      'shot_2pt_made', 'shot_2pt_missed',
+      'ft_made', 'ft_missed',
+      'rebound_off', 'rebound_def',
+      'steal', 'block', 'turnover',
+      'foul_personal', 'foul_technical',
+      'period_start', 'period_end', 'game_start', 'game_end',
+    ],
+  };
+
+  it('allows all pilot event types in the pilot ruleset', () => {
+    for (const key of pilotRuleset.enabledEventTypes) {
+      expect(isEventAllowedByRuleset(key, pilotRuleset)).toBe(true);
+    }
+  });
+
+  it('rejects 3pt shots in the restricted ruleset', () => {
+    expect(isEventAllowedByRuleset('shot_3pt_made', restrictedRuleset)).toBe(false);
+    expect(isEventAllowedByRuleset('shot_3pt_missed', restrictedRuleset)).toBe(false);
+  });
+
+  it('allows 2pt shots in the restricted ruleset', () => {
+    expect(isEventAllowedByRuleset('shot_2pt_made', restrictedRuleset)).toBe(true);
+    expect(isEventAllowedByRuleset('shot_2pt_missed', restrictedRuleset)).toBe(true);
+  });
+
+  it('rejects substitution in the restricted ruleset', () => {
+    expect(isEventAllowedByRuleset('substitution', restrictedRuleset)).toBe(false);
+  });
+});
+
+describe('validateEvent with ruleset', () => {
+  const restrictedRuleset: RulesetEventDictionary = {
+    version: '2026-3x3.1',
+    enabledEventTypes: [
+      'shot_2pt_made', 'shot_2pt_missed',
+      'ft_made', 'ft_missed',
+      'period_start', 'period_end', 'game_start', 'game_end',
+    ],
+  };
+
+  it('accepts a valid event that is in the ruleset', () => {
+    const result = validateEvent(
+      { event_type: 'shot_2pt_made', payload: {} },
+      { ruleset: restrictedRuleset },
+    );
+    expect(result.valid).toBe(true);
+  });
+
+  it('rejects an event type not in the ruleset', () => {
+    const result = validateEvent(
+      { event_type: 'shot_3pt_made', payload: {} },
+      { ruleset: restrictedRuleset },
+    );
+    expect(result.valid).toBe(false);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors![0]).toContain('shot_3pt_made');
+    expect(result.errors![0]).toContain('not enabled in ruleset');
+  });
+
+  it('skips ruleset check when no ruleset is provided', () => {
+    const result = validateEvent({ event_type: 'shot_3pt_made', payload: {} });
+    expect(result.valid).toBe(true);
   });
 });

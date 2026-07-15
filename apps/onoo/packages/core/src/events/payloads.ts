@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { EventTypeKey } from './dictionary';
+import { isEventAllowedByRuleset, type EventTypeKey, type RulesetEventDictionary } from './dictionary';
 
 // --- Per-event-type payload schemas ---
 
@@ -83,10 +83,24 @@ const payloadSchemas = {
 
 // --- Validation function ---
 
-export function validateEvent(e: {
-  event_type: EventTypeKey;
-  payload: unknown;
-}): { valid: boolean; errors?: string[] } {
+export interface ValidateEventOptions {
+  /** When provided, rejected event types not in the ruleset vocabulary. */
+  ruleset?: RulesetEventDictionary;
+}
+
+export function validateEvent(
+  e: { event_type: EventTypeKey; payload: unknown },
+  options?: ValidateEventOptions,
+): { valid: boolean; errors?: string[] } {
+  // 1. Ruleset vocabulary gate
+  if (options?.ruleset && !isEventAllowedByRuleset(e.event_type, options.ruleset)) {
+    return {
+      valid: false,
+      errors: [`event_type "${e.event_type}" is not enabled in ruleset "${options.ruleset.version}"`],
+    };
+  }
+
+  // 2. Payload shape validation
   const schema = payloadSchemas[e.event_type];
   const result = schema.safeParse(e.payload);
   if (result.success) {

@@ -8,6 +8,7 @@ export {
 } from './dictionary';
 export {
   validateEvent,
+  type ValidateEventOptions,
   ShotMadePayload,
   ShotMissedPayload,
   TurnoverPayload,
