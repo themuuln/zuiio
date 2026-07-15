@@ -53,6 +53,7 @@ jobs:
         run: |
           mkdir -p .vercel
           echo '{"projectId":"'$VERCEL_PROJECT_ID'","orgId":"'$VERCEL_ORG_ID'"}' > .vercel/project.json
+          echo '{"$schema":"https://openapi.vercel.sh/vercel.json","framework":"nextjs","installCommand":"pnpm install --frozen-lockfile","buildCommand":"pnpm exec turbo run build --filter=zer"}' > vercel.json
 
       - name: Pull Vercel environment
         run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
