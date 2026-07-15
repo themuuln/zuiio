@@ -68,6 +68,7 @@ function SidebarNav({
   userFullName,
   initials,
   isBranchScoped,
+  hasMultiBranch,
   currentBranch,
   selectedBranchId,
   handleBranchChange,
@@ -80,6 +81,7 @@ function SidebarNav({
   userFullName: string | null;
   initials: string;
   isBranchScoped: boolean;
+  hasMultiBranch: boolean;
   currentBranch?: { name: string };
   selectedBranchId: string | null;
   handleBranchChange: (id: string) => void;
@@ -90,7 +92,7 @@ function SidebarNav({
   return (
     <>
       <SidebarHeader>
-        {isBranchScoped ? (
+        {(isBranchScoped || !hasMultiBranch) ? (
           <div className="flex items-center gap-2 overflow-hidden rounded-md border border-sidebar-border/40 bg-sidebar-accent/30 p-2 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0">
             <div className="flex aspect-square size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary text-primary-foreground">
               {logoUrl ? (
@@ -111,8 +113,17 @@ function SidebarNav({
                 {organizationName || APP_NAME}
               </span>
               <span className="flex items-center gap-1 truncate text-xs text-muted-foreground">
-                <MapPin className="size-3 shrink-0" weight="fill" />
-                {currentBranch?.name ?? "—"}
+                {isBranchScoped ? (
+                  <>
+                    <MapPin className="size-3 shrink-0" weight="fill" />
+                    {currentBranch?.name ?? "—"}
+                  </>
+                ) : (
+                  <>
+                    <Storefront className="size-3 shrink-0" />
+                    {organizationName || APP_NAME}
+                  </>
+                )}
               </span>
             </div>
           </div>
@@ -380,6 +391,7 @@ export function DashboardShell({
                 userFullName={userFullName}
                 initials={initials}
                 isBranchScoped={isBranchScoped}
+                hasMultiBranch={hasMultiBranch}
                 currentBranch={currentBranch}
                 selectedBranchId={selectedBranchId}
                 handleBranchChange={handleBranchChange}
@@ -418,6 +430,7 @@ export function DashboardShell({
                     userFullName={userFullName}
                     initials={initials}
                     isBranchScoped={isBranchScoped}
+                    hasMultiBranch={hasMultiBranch}
                     currentBranch={currentBranch}
                     selectedBranchId={selectedBranchId}
                     handleBranchChange={handleBranchChange}
