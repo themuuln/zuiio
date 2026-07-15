@@ -604,10 +604,10 @@ export async function seedReligiousCategories() {
     { name: "Тахилын хэрэгсэл", slug: "ritual-items" },
     { name: "Ном, Судар", slug: "scriptures-books" },
     { name: "Эрдэнэ", slug: "jewelry-mala" },
-    { name: "Хата", slug: "ceremonial-scarves" },
+    { name: "Хадаг", slug: "ceremonial-scarves" },
     { name: "Шашин хувцас", slug: "religious-clothing" },
-    { name: "Incense & Burners", slug: "incense-burners" },
-    { name: "Дуулал", slug: "singing-bowls" },
+    { name: "Утлага, хонх", slug: "incense-bells" },
+    { name: "Дуут аяга", slug: "singing-bowls" },
     { name: "Хийморь", slug: "wind-horse" },
   ];
 
@@ -748,60 +748,60 @@ export async function seedReligiousProducts() {
       category: "Ном, Судар",
     },
 
-    // --- Хата (Ceremonial Scarves) ---
+    // --- Хадаг (Ceremonial Scarves) ---
     {
-      name: "Хата — Цагаан (5м)",
+      name: "Хадаг — Цагаан (5м)",
       sku: "REL-HAT-001",
       unit: "ширхэг",
       cost_price: 5_000,
       sale_price: 12_000,
       current_stock: 50,
       min_stock: 10,
-      category: "Хата",
+      category: "Хадаг",
     },
     {
-      name: "Хата — Шар (5м)",
+      name: "Хадаг — Шар (5м)",
       sku: "REL-HAT-002",
       unit: "ширхэг",
       cost_price: 6_000,
       sale_price: 15_000,
       current_stock: 40,
       min_stock: 10,
-      category: "Хата",
+      category: "Хадаг",
     },
 
-    // --- Incense & Burners ---
+    // --- Утлага, хонх (Incense & Bells) ---
     {
-      name: "Сандал — Том (авсан утаа)",
+      name: "Утлага — Сандальны мод",
       sku: "REL-INC-001",
       unit: "кг",
       cost_price: 18_000,
       sale_price: 38_000,
       current_stock: 20,
       min_stock: 5,
-      category: "Incense & Burners",
+      category: "Утлага, хонх",
     },
     {
-      name: "Утааны шүүр — Зэсэн",
+      name: "Хонх — Зэсэн (Гүйлэн)",
       sku: "REL-INC-002",
       unit: "ширхэг",
       cost_price: 22_000,
       sale_price: 45_000,
       current_stock: 14,
       min_stock: 3,
-      category: "Incense & Burners",
+      category: "Утлага, хонх",
     },
 
-    // --- Дуулал (Singing Bowls) ---
+    // --- Дуут аяга (Singing Bowls) ---
     {
-      name: "Дуулал — Дунд (18см)",
+      name: "Дуут аяга — Дунд (18см)",
       sku: "REL-DUU-001",
       unit: "ширхэг",
       cost_price: 90_000,
       sale_price: 180_000,
       current_stock: 6,
       min_stock: 2,
-      category: "Дуулал",
+      category: "Дуут аяга",
     },
 
     // --- Хийморь (Wind Horse Flags) ---
@@ -814,6 +814,18 @@ export async function seedReligiousProducts() {
       current_stock: 30,
       min_stock: 8,
       category: "Хийморь",
+    },
+
+    // --- Мани хүрд (Prayer Wheels) ---
+    {
+      name: "Мани хүрд — Гар (10см)",
+      sku: "REL-PRW-001",
+      unit: "ширхэг",
+      cost_price: 35_000,
+      sale_price: 65_000,
+      current_stock: 10,
+      min_stock: 3,
+      category: "Тахилын хэрэгсэл",
     },
   ];
 
