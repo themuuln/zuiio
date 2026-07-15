@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale } from "next-intl";
-import { DetailDrawer } from "@/components/ui/detail-drawer";
+import { PickerDrawer } from "@/components/ui/picker-drawer";
 import type { CatalogItem } from "./_catalog-combobox";
 import { CatalogCombobox } from "./_catalog-combobox";
 
@@ -18,6 +18,8 @@ interface CatalogPickerDrawerProps<T extends CatalogItem> {
   noMatchMessage: string;
   addAsNewLabel: string;
   filterAllLabel: string;
+  title: string;
+  description?: string;
 }
 
 export function CatalogPickerDrawer<T extends CatalogItem>({
@@ -33,31 +35,31 @@ export function CatalogPickerDrawer<T extends CatalogItem>({
   noMatchMessage,
   addAsNewLabel,
   filterAllLabel,
+  title,
+  description,
 }: CatalogPickerDrawerProps<T>) {
   const locale = useLocale();
   return (
-    <DetailDrawer
+    <PickerDrawer
       open={open}
       onOpenChange={onOpenChange}
-      hideBackdrop
-      className="sm:max-w-[46rem] lg:max-w-[68rem] xl:max-w-[78rem]"
+      title={title}
+      description={description}
     >
-      <DetailDrawer.Body className="p-0">
-        <CatalogCombobox
-          items={items}
-          search={search}
-          onSearchChange={onSearchChange}
-          onSelect={onSelect}
-          onAddNew={onAddNew}
-          isAdded={isAdded}
-          placeholder={placeholder}
-          noMatchMessage={noMatchMessage}
-          addAsNewLabel={addAsNewLabel}
-          locale={locale}
-          resultsMode="inline"
-          filterAllLabel={filterAllLabel}
-        />
-      </DetailDrawer.Body>
-    </DetailDrawer>
+      <CatalogCombobox
+        items={items}
+        search={search}
+        onSearchChange={onSearchChange}
+        onSelect={onSelect}
+        onAddNew={onAddNew}
+        isAdded={isAdded}
+        placeholder={placeholder}
+        noMatchMessage={noMatchMessage}
+        addAsNewLabel={addAsNewLabel}
+        locale={locale}
+        resultsMode="inline"
+        filterAllLabel={filterAllLabel}
+      />
+    </PickerDrawer>
   );
 }

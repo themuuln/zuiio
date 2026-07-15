@@ -2,8 +2,7 @@
 
 import type { MechanicComboboxProps } from "@/components/mechanic-combobox";
 import { MechanicCombobox } from "@/components/mechanic-combobox";
-import { DetailDrawer } from "@/components/ui/detail-drawer";
-import { DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { PickerDrawer } from "@/components/ui/picker-drawer";
 
 // ─── Types ─────────────────────────────────────────────────────
 
@@ -25,18 +24,16 @@ export function MechanicPickerDrawer({
   ...comboboxProps
 }: MechanicPickerDrawerProps) {
   return (
-    <DetailDrawer
+    <PickerDrawer
       open={open}
       onOpenChange={onOpenChange}
+      title={title}
+      size="xl"
     >
-      <DrawerHeader className="border-b border-border/50 px-4 py-3 space-y-0">
-        <DrawerTitle className="text-sm">{title}</DrawerTitle>
-      </DrawerHeader>
-
       <MechanicCombobox
         {...comboboxProps}
         className="flex-1 flex flex-col overflow-hidden"
       />
-    </DetailDrawer>
+    </PickerDrawer>
   );
 }

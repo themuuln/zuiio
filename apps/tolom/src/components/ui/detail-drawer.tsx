@@ -1,6 +1,7 @@
 "use client";
 
-import type React from "react";
+import React from "react";
+import { XIcon } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -11,6 +12,24 @@ import {
   DrawerVirtualKeyboardProvider,
 } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
+
+// ── Context ──────────────────────────────────────────────────
+// Provides onOpenChange to child sub-components (Header, etc.)
+// so they can auto-derive onClose without prop drilling.
+
+interface DetailDrawerContextValue {
+  onOpenChange: (open: boolean) => void;
+}
+
+const DetailDrawerContext = React.createContext<DetailDrawerContextValue | null>(null);
+
+function useDetailDrawerContext() {
+  const ctx = React.useContext(DetailDrawerContext);
+  if (!ctx) {
+    throw new Error("DetailDrawer.Header must be used within a <DetailDrawer>");
+  }
+  return ctx;
+}
 
 interface DetailDrawerRootProps {
   open: boolean;
@@ -44,7 +63,24 @@ interface DetailDrawerRootProps {
    * @default "right"
    */
   direction?: "right" | "bottom";
+  /**
+   * Width cap applied to the drawer popup.
+   * Maps to Tailwind `max-w-*` with `!important` to override the base 90vw.
+   * `undefined` (default) keeps the base 90vw — backward compatible.
+   */
+  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "full";
 }
+
+/** Static map — Tailwind v4 scanner needs full class strings at build time. */
+const SIZE_VAR: Record<string, string> = {
+  sm: "[--drawer-max-w:24rem]",
+  md: "[--drawer-max-w:28rem]",
+  lg: "[--drawer-max-w:32rem]",
+  xl: "[--drawer-max-w:36rem]",
+  "2xl": "[--drawer-max-w:42rem]",
+  "3xl": "[--drawer-max-w:48rem]",
+  "4xl": "[--drawer-max-w:56rem]",
+};
 
 export function DetailDrawer({
   open,
@@ -60,7 +96,14 @@ export function DetailDrawer({
   contentClassName,
   viewportClassName,
   backdropClassName,
+  size,
 }: DetailDrawerRootProps) {
+  const sizeVar =
+    size === "full"
+      ? "[--drawer-max-w:100vw]"
+      : size
+        ? SIZE_VAR[size]
+        : undefined;
   return (
     <Drawer
       open={open}
@@ -71,7 +114,7 @@ export function DetailDrawer({
       <DrawerVirtualKeyboardProvider>
         <DrawerContent
           showCloseButton={false}
-          className={className}
+          className={cn(sizeVar, className)}
           contentClassName={cn(
             "flex flex-col p-0 gap-0 overflow-hidden",
             contentClassName,
@@ -82,7 +125,9 @@ export function DetailDrawer({
           backdropClassName={backdropClassName}
           direction={direction}
         >
-          {children}
+          <DetailDrawerContext.Provider value={{ onOpenChange }}>
+            {children}
+          </DetailDrawerContext.Provider>
         </DrawerContent>
       </DrawerVirtualKeyboardProvider>
       {nestedContent}
@@ -99,6 +144,13 @@ interface DetailDrawerHeaderProps {
   bordered?: boolean;
   /** Optional action elements rendered on the right side of the header (e.g. buttons) */
   actions?: React.ReactNode;
+  /** Show a close button (X icon) on the right side of the header */
+  closeButton?: boolean;
+  /**
+   * Called when the close button is clicked.
+   * If omitted, auto-derives `() => onOpenChange(false)` from parent DetailDrawer context.
+   */
+  onClose?: () => void;
 }
 
 DetailDrawer.Header = function DetailDrawerHeaderComponent({
@@ -106,7 +158,26 @@ DetailDrawer.Header = function DetailDrawerHeaderComponent({
   className,
   bordered = true,
   actions,
+  closeButton,
+  onClose: onCloseProp,
 }: DetailDrawerHeaderProps) {
+  // Auto-derive onClose from context when not explicitly provided
+  const ctx = React.useContext(DetailDrawerContext);
+  const onClose = onCloseProp ?? (ctx ? () => ctx.onOpenChange(false) : undefined);
+
+  const rightActions = closeButton ? (
+    <button
+      type="button"
+      onClick={onClose}
+      className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+    >
+      <XIcon className="size-4" />
+      <span className="sr-only">Close</span>
+    </button>
+  ) : null;
+
+  const hasActions = closeButton || actions;
+
   return (
     <DrawerHeader
       className={cn(
@@ -115,10 +186,13 @@ DetailDrawer.Header = function DetailDrawerHeaderComponent({
         className,
       )}
     >
-      {actions ? (
+      {hasActions ? (
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-col gap-0.5 min-w-0">{children}</div>
-          <div className="shrink-0">{actions}</div>
+          <div className="shrink-0 flex items-center gap-1">
+            {actions}
+            {rightActions}
+          </div>
         </div>
       ) : (
         children
