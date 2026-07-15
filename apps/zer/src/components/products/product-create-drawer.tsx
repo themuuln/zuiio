@@ -487,7 +487,6 @@ export function ProductCreateDrawer({
                 }}
                 variantData={variantData}
                 onVariantsChange={setVariantData}
-                parentTitle="Шинэ бүтээгдэхүүн"
                 inline
               />
 

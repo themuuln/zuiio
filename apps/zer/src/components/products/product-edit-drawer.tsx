@@ -346,6 +346,7 @@ export function ProductEditDrawer({
           <span className="w-full">{children}</span>
         ) : (
           <button
+            type="button"
             className={buttonVariants({ variant: "ghost", size: "icon-xs" })}
           >
             <NotePencil className="size-3.5" />
@@ -651,7 +652,6 @@ export function ProductEditDrawer({
           }}
           variantData={variantData}
           onVariantsChange={setVariantData}
-          parentTitle="\u0411\u04af\u0442\u044d\u044d\u0433\u0434\u04af\u04af\u043d\u0438\u0439\u043d \u0437\u0430\u0441\u0430\u0445"
           inline
         />
 

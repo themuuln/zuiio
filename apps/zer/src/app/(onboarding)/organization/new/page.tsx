@@ -90,7 +90,7 @@ export default function NewOrganizationPage() {
                   id="name"
                   placeholder="Жишээ дэлгүүр"
                   required
-                  className="pl-9"
+                  className="text-sm pl-9"
                   {...register("name")}
                 />
               </div>

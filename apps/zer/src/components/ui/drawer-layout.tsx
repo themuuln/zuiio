@@ -82,6 +82,22 @@ export function DrawerLayout({
       {trigger && (
         <Drawer.Trigger render={<Slot.Root />}>{trigger}</Drawer.Trigger>
       )}
+      {/* Stack effect styles for nested drawers */}
+      <style
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{
+          __html: `
+            [data-drawer-popup][data-nested-drawer-open]::after {
+              content: '';
+              position: absolute;
+              inset: 0;
+              background: rgb(0 0 0 / 0.05);
+              pointer-events: none;
+              transition: background-color 450ms cubic-bezier(0.32, 0.72, 0, 1);
+            }
+          `,
+        }}
+      />
       <Drawer.Portal>
         <Drawer.Backdrop
           className={cn(
@@ -103,10 +119,11 @@ export function DrawerLayout({
           )}
         >
           <Drawer.Popup
+            data-drawer-popup=""
             className={cn(
               direction === "bottom"
                 ? "[--bleed:3rem] supports-[-webkit-touch-callout:none]:[--bleed:0px] w-full -mb-[3rem] border-t border-border bg-white text-foreground outline-none overscroll-contain touch-auto [transform:translateY(var(--drawer-swipe-movement-y))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:select-none data-ending-style:[transform:translateY(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-starting-style:[transform:translateY(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:mb-0 supports-[-webkit-touch-callout:none]:border supports-[-webkit-touch-callout:none]:pb-6 dark:bg-popover dark:text-popover-foreground dark:shadow-none rounded-t-2xl max-h-[85vh]"
-                : "[--bleed:3rem] supports-[-webkit-touch-callout:none]:[--bleed:0px] h-full -mr-[3rem] border-l border-border bg-white text-foreground outline-none overscroll-contain touch-auto [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:select-none data-ending-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-starting-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:mr-0 supports-[-webkit-touch-callout:none]:border supports-[-webkit-touch-callout:none]:pr-6 dark:bg-popover dark:text-popover-foreground dark:shadow-none",
+                : "[--bleed:3rem] supports-[-webkit-touch-callout:none]:[--bleed:0px] h-full -mr-[3rem] border-l border-border bg-white text-foreground outline-none overscroll-contain touch-auto [transform:translateX(var(--drawer-swipe-movement-x))] transition-transform duration-[450ms] ease-[cubic-bezier(0.32,0.72,0,1)] data-swiping:select-none data-ending-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-starting-style:[transform:translateX(calc(100%-var(--bleed)+var(--viewport-padding)+2px))] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] supports-[-webkit-touch-callout:none]:mr-0 supports-[-webkit-touch-callout:none]:border supports-[-webkit-touch-callout:none]:pr-6 dark:bg-popover dark:text-popover-foreground dark:shadow-none data-[nested-drawer-open]:overflow-hidden data-[nested-drawer-open]:[transform:translateX(0.625rem)_scale(0.95)] data-[nested-drawer-open]:[transition:transform_450ms_cubic-bezier(0.32,0.72,0,1)]",
               direction === "bottom"
                 ? `h-auto max-h-[85vh]`
                 : `w-[calc(${panelWidth}+3rem)] max-w-[calc(100vw-3rem+3rem)] supports-[-webkit-touch-callout:none]:w-[${panelWidth}] supports-[-webkit-touch-callout:none]:max-w-[calc(100vw-3rem)]`,

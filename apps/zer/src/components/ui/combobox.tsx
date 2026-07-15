@@ -65,7 +65,8 @@ function ComboboxInner<T>(
     children,
   }: ComboboxProps<T>,
   _ref: React.ForwardedRef<HTMLDivElement>,
-) {
+)
+  // biome-ignore lint/correctness/useHookAtTopLevel: React.forwardRef render fn IS a component
   const [open, setOpen] = React.useState(false);
   const [highlightedIndex, setHighlightedIndex] = React.useState(-1);
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -203,7 +204,7 @@ const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputProps>(
           type="text"
           placeholder={placeholder}
           className={cn(
-            "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+            "flex h-9 w-full rounded-md border border-input bg-transparent dark:bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
             showTrigger && "pr-8",
             className,
           )}
