@@ -1,14 +1,13 @@
 "use server";
 
-import { randomBytes } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { capture, withDbCapture } from "@zuiio/capture";
 import type { Database } from "@/lib/supabase/types";
 
 /**
  * Creates an invoice from a completed sale.
- * Queries the sale and its items, then generates an invoice + invoice_items
- * with an auto-generated share token (acts as a receipt).
+ * Queries the sale and its items, then generates an invoice + invoice_items.
+ * Sharing is opt-in — no share token is auto-generated.
  *
  * This is called after a sale succeeds. Failures are logged but do not
  * roll back the sale — the sale is already committed.
@@ -54,8 +53,15 @@ export async function createInvoiceFromSale(
     });
     return null;
   }
-
-  // Generate invoice number
+  if (!branchId) {
+    capture(
+      new Error(`Invoice generation: branchId is required for sale ${saleId}`),
+      {
+        context: "invoicing: branchId guard",
+      },
+    );
+    return null;
+  }
   const { data: invNum, error: invNumError } = await supabase.rpc(
     "generate_invoice_number",
   );
@@ -66,9 +72,6 @@ export async function createInvoiceFromSale(
 
   const invoiceNumber = invNum as string;
 
-  // Generate share token for public receipt access
-  const token = randomBytes(32).toString("hex");
-
   // Create invoice
   const { data: invoice, error: invoiceError } = await withDbCapture(
     "invoicing: create invoice",
@@ -76,14 +79,13 @@ export async function createInvoiceFromSale(
       .from("invoices")
       .insert({
         organization_id: organizationId,
-        branch_id: branchId!,
+        branch_id: branchId,
         invoice_number: invoiceNumber,
         contact_id: contactId || null,
         sale_id: saleId,
         total_amount: sale.total_amount,
         paid_amount: sale.paid_amount ?? 0,
         status: "paid",
-        token,
         created_by: userId,
       })
       .select("id")
@@ -117,5 +119,5 @@ export async function createInvoiceFromSale(
     capture(itemsError, { context: "invoicing: create invoice items" });
   }
 
-  return { invoiceId: invoice.id, invoiceNumber, token };
+  return { invoiceId: invoice.id, invoiceNumber };
 }

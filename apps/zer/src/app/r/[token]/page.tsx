@@ -1,5 +1,6 @@
 import { capture } from "@zuiio/capture";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { ExpenseBreakdown } from "@/components/reports/expense-breakdown";
 import { ExpenseDonutChart } from "@/components/reports/expense-donut-chart";
 import { FinancialSummary } from "@/components/reports/financial-summary";
@@ -15,7 +16,19 @@ import { formatDate } from "@/lib/format";
 import { getFullReport } from "@/lib/reports";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function PublicReportPage({
+export default function PublicReportPage({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}) {
+  return (
+    <Suspense fallback={<ReportSkeleton />}>
+      <ReportDataFetcher params={params} />
+    </Suspense>
+  );
+}
+
+async function ReportDataFetcher({
   params,
 }: {
   params: Promise<{ token: string }>;
@@ -24,20 +37,25 @@ export default async function PublicReportPage({
   const supabase = await createClient();
 
   try {
-    const { data: share, error: lookupError } = await supabase
-      .from("shared_reports")
-      .select("organization_id, date_from, date_to")
-      .eq("token", token)
-      .single();
+    const { data: reportData, error: rpcError } = await supabase.rpc(
+      "get_public_report_data",
+      { p_token: token },
+    );
 
-    if (lookupError) {
-      capture(lookupError, { context: "public report: lookup share" });
+    if (rpcError) {
+      capture(rpcError, { context: "public report: RPC lookup" });
       notFound();
     }
 
-    if (!share) {
+    if (!reportData) {
       notFound();
     }
+
+    const share = reportData as {
+      organization_id: string;
+      date_from: string;
+      date_to: string;
+    };
 
     const report = await getFullReport(
       supabase,
@@ -91,4 +109,31 @@ export default async function PublicReportPage({
     capture(err, { context: "public report" });
     notFound();
   }
+}
+
+function ReportSkeleton() {
+  return (
+    <div className="mx-auto max-w-6xl space-y-6 p-6">
+      <div className="space-y-2">
+        <div className="h-8 w-32 animate-pulse rounded bg-muted" />
+        <div className="h-4 w-64 animate-pulse rounded bg-muted" />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[1, 2, 3, 4].map((n) => (
+          <div
+            key={n}
+            className="rounded-xl border border-border/80 bg-card p-5 shadow-sm"
+          >
+            <div className="h-4 w-24 animate-pulse rounded bg-muted mb-3" />
+            <div className="h-6 w-32 animate-pulse rounded bg-muted" />
+          </div>
+        ))}
+      </div>
+      <div className="h-48 animate-pulse rounded-xl bg-muted" />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="h-64 animate-pulse rounded-xl bg-muted" />
+        <div className="h-64 animate-pulse rounded-xl bg-muted" />
+      </div>
+    </div>
+  );
 }
