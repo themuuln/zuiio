@@ -6,6 +6,7 @@ on:
     paths:
       - 'apps/agent-gateway/**'
       - 'packages/**'
+      - 'pnpm-lock.yaml'
 
 concurrency:
   group: deploy-agent-gateway

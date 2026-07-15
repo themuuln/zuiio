@@ -6,6 +6,7 @@ on:
     paths:
       - 'apps/tolom/**'
       - 'packages/**'
+      - 'pnpm-lock.yaml'
 
 # Cancel in-progress runs for this workflow
 concurrency:

@@ -6,6 +6,7 @@ on:
     paths:
       - 'apps/onoo/**'
       - 'packages/**'
+      - 'pnpm-lock.yaml'
 
 concurrency:
   group: deploy-onoo

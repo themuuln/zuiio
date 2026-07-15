@@ -6,6 +6,7 @@ on:
     paths:
       - 'apps/website/**'
       - 'packages/**'
+      - 'pnpm-lock.yaml'
 
 concurrency:
   group: deploy-website
