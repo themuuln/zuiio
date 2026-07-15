@@ -101,6 +101,7 @@ export async function DashboardFetcher({
           hasMultiBranch={hasMultiBranch}
           orgSettings={{
             organizationId: organizationId ?? "",
+            companyType: org.company_type ?? "other",
             hasSuppliers,
             hasInventory,
             hasCustomerCredit,

@@ -5,6 +5,8 @@ import { createContext, useContext } from "react";
 export interface OrgSettings {
   /** Current organization ID */
   organizationId: string;
+  /** Organization company type (retail, wholesale, gym, etc.) */
+  companyType: string;
   hasSuppliers: boolean;
   hasInventory: boolean;
   hasCustomerCredit: boolean;
@@ -26,6 +28,7 @@ export interface OrgSettings {
 
 const defaults: OrgSettings = {
   organizationId: "",
+  companyType: "other",
   hasSuppliers: true,
   hasInventory: true,
   hasCustomerCredit: true,
