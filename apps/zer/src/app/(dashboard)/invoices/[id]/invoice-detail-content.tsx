@@ -110,7 +110,9 @@ export function InvoiceDetailContent() {
         ) : invoice ? (
           <InvoiceDetailClient
             invoiceId={invoice.id}
-            token={invoice.token}
+            tokenHash={invoice.token_hash}
+            expiresAt={invoice.expires_at}
+            revokedAt={invoice.revoked_at}
             status={invoice.status ?? "pending"}
           />
         ) : null
@@ -132,8 +134,8 @@ export function InvoiceDetailContent() {
                 <CardTitle>Нэхэмжлэлийн мэдээлэл</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <Skeleton key={i} className="h-5 w-full" />
+                {["sk-1", "sk-2", "sk-3", "sk-4", "sk-5", "sk-6"].map((id) => (
+                  <Skeleton key={id} className="h-5 w-full" />
                 ))}
               </CardContent>
             </Card>
