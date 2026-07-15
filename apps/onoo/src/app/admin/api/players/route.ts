@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
-  const { canonical_name, name_latin, position, nationality } = body;
+  const { canonical_name, name_latin, position, nationality, visibility, consent_recorded_at, consent_note } = body;
 
   if (!canonical_name) {
     return NextResponse.json(
@@ -50,6 +50,9 @@ export async function POST(request: NextRequest) {
       name_latin: name_latin ?? null,
       position: position ?? null,
       nationality: nationality ?? null,
+      visibility: visibility ?? "public",
+      consent_recorded_at: consent_recorded_at || null,
+      consent_note: consent_note ?? null,
     })
     .select("*")
     .single();

@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Pencil, Plus, Search, Trash2, AlertTriangle } from "lucide-react";
+import { PhotoUploader } from "@/components/admin/photo-uploader";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,6 +42,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { playersApi, type PlayerRow } from "@/app/admin/_lib/api";
 
@@ -59,6 +62,9 @@ const playerSchema = z.object({
   name_latin: z.string().optional(),
   position: z.string().optional(),
   nationality: z.string().optional(),
+  visibility: z.enum(["public", "hidden"]),
+  consent_recorded_at: z.string().optional(),
+  consent_note: z.string().optional(),
 });
 
 type PlayerFormValues = z.infer<typeof playerSchema>;
@@ -90,6 +96,9 @@ export default function PlayersPage() {
       name_latin: "",
       position: "",
       nationality: "MN",
+      visibility: "public",
+      consent_recorded_at: "",
+      consent_note: "",
     },
   });
 
@@ -111,6 +120,9 @@ export default function PlayersPage() {
         name_latin: data.name_latin || undefined,
         position: data.position || undefined,
         nationality: data.nationality || undefined,
+        visibility: data.visibility,
+        consent_recorded_at: data.consent_recorded_at || undefined,
+        consent_note: data.consent_note || undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "players"] });
@@ -130,6 +142,9 @@ export default function PlayersPage() {
         name_latin: data.name_latin || undefined,
         position: data.position || undefined,
         nationality: data.nationality || undefined,
+        visibility: data.visibility,
+        consent_recorded_at: data.consent_recorded_at || undefined,
+        consent_note: data.consent_note || undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "players"] });
@@ -163,6 +178,11 @@ export default function PlayersPage() {
       name_latin: player.name_latin ?? "",
       position: player.position ?? "",
       nationality: player.nationality ?? "MN",
+      visibility: player.visibility ?? "public",
+      consent_recorded_at: player.consent_recorded_at
+        ? player.consent_recorded_at.slice(0, 10)
+        : "",
+      consent_note: player.consent_note ?? "",
     });
     setDialogOpen(true);
   }
@@ -304,6 +324,60 @@ export default function PlayersPage() {
                         </FormItem>
                       )}
                     />
+                    <Separator />
+                    <FormField
+                      control={form.control}
+                      name="visibility"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Харагдалц</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="public">Нийтэд</SelectItem>
+                              <SelectItem value="hidden">Нууц</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="consent_recorded_at"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Зөвшөөрлийн огноо</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="consent_note"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Зөвшөөрлийн тэмдэглэл</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Зөвшөөрлийн дэлгэрэнгүй..."
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <div className="flex justify-end gap-2">
                       <Button
                         type="button"
@@ -335,7 +409,9 @@ export default function PlayersPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Зураг</TableHead>
                   <TableHead>Нэр</TableHead>
+                  <TableHead>Харагдалц</TableHead>
                   <TableHead>Латин нэр</TableHead>
                   <TableHead>Байрлал</TableHead>
                   <TableHead>Улс</TableHead>
@@ -345,8 +421,29 @@ export default function PlayersPage() {
               <TableBody>
                 {players.map((player) => (
                   <TableRow key={player.id}>
+                    <TableCell>
+                      <PhotoUploader
+                        entityId={player.id}
+                        entityType="player"
+                        currentUrl={player.photo_url}
+                        onUploaded={() =>
+                          queryClient.invalidateQueries({
+                            queryKey: ["admin", "players"],
+                          })
+                        }
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">
                       {player.canonical_name}
+                    </TableCell>
+                    <TableCell>
+                      {player.visibility === "hidden" ? (
+                        <Badge variant="outline" className="border-muted-foreground/40 text-muted-foreground">
+                          Нууц
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">Нийтэд</Badge>
+                      )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {player.name_latin ?? "—"}

@@ -106,6 +106,9 @@ export interface PlayerRow {
   position: string | null;
   nationality: string;
   photo_url: string | null;
+  visibility: "public" | "hidden";
+  consent_recorded_at: string | null;
+  consent_note: string | null;
   created_at: string;
 }
 
@@ -115,7 +118,7 @@ export const playersApi = {
     return request<PlayerRow[]>(`${BASE}/players${qs}`);
   },
   get: (id: string) => request<PlayerRow>(`${BASE}/players/${id}`),
-  create: (data: { canonical_name: string; name_latin?: string; position?: string; nationality?: string }) =>
+  create: (data: { canonical_name: string; name_latin?: string; position?: string; nationality?: string; visibility?: string; consent_recorded_at?: string; consent_note?: string }) =>
     request<PlayerRow>(`${BASE}/players`, { method: "POST", body: JSON.stringify(data) }),
   update: (id: string, data: Partial<PlayerRow>) =>
     request<PlayerRow>(`${BASE}/players/${id}`, { method: "PUT", body: JSON.stringify(data) }),

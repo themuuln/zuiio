@@ -449,6 +449,201 @@ export async function getPlayByPlay(gameId: string): Promise<PlayByPlayRow[]> {
   if (error || !data) return [];
   return data as unknown as PlayByPlayRow[];
 }
+export async function getPlayerShootingProfile(
+  playerId: string,
+  competitionId: string,
+): Promise<{
+  fgm: number;
+  fga: number;
+  tpm: number;
+  tpa: number;
+  ftm: number;
+  fta: number;
+} | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("v_public_leaders")
+    .select("fgm, fga, tpm, tpa, ftm, fta")
+    .eq("player_id", playerId)
+    .eq("competition_id", competitionId)
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  return {
+    fgm: (data.fgm as number) ?? 0,
+    fga: (data.fga as number) ?? 0,
+    tpm: (data.tpm as number) ?? 0,
+    tpa: (data.tpa as number) ?? 0,
+    ftm: (data.ftm as number) ?? 0,
+    fta: (data.fta as number) ?? 0,
+  };
+}
+
+export async function getPlayerSeasonAverages(
+  playerId: string,
+  competitionId: string,
+): Promise<{
+  ppg: number;
+  rpg: number;
+  apg: number;
+  spg: number;
+  bpg: number;
+} | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("v_public_leaders")
+    .select("pts, oreb, dreb, ast, stl, blk")
+    .eq("player_id", playerId)
+    .eq("competition_id", competitionId)
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  return {
+    ppg: data.pts ?? 0,
+    rpg: (data.oreb ?? 0) + (data.dreb ?? 0),
+    apg: data.ast ?? 0,
+    spg: data.stl ?? 0,
+    bpg: data.blk ?? 0,
+  };
+}
+
+export async function getLeagueAverages(
+  competitionId: string,
+): Promise<{
+  averages: { pts: number; reb: number; ast: number; stl: number; blk: number };
+  maxes: { pts: number; reb: number; ast: number; stl: number; blk: number };
+}> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("v_public_leaders")
+    .select("pts, oreb, dreb, ast, stl, blk, gp")
+    .eq("competition_id", competitionId)
+    .gte("gp", 5); // TODO(3.4): use official qualified flag when Task 3.4 lands
+
+  if (error || !data || data.length === 0) {
+    return {
+      averages: { pts: 0, reb: 0, ast: 0, stl: 0, blk: 0 },
+      maxes: { pts: 0, reb: 0, ast: 0, stl: 0, blk: 0 },
+    };
+  }
+
+  const rows = data as Array<{
+    pts: number | null;
+    oreb: number | null;
+    dreb: number | null;
+    ast: number | null;
+    stl: number | null;
+    blk: number | null;
+    gp: number;
+  }>;
+
+  const stats = rows.map((r) => ({
+    pts: r.pts ?? 0,
+    reb: (r.oreb ?? 0) + (r.dreb ?? 0),
+    ast: r.ast ?? 0,
+    stl: r.stl ?? 0,
+    blk: r.blk ?? 0,
+  }));
+
+  const n = stats.length;
+  const sum = { pts: 0, reb: 0, ast: 0, stl: 0, blk: 0 };
+  const max = { pts: 0, reb: 0, ast: 0, stl: 0, blk: 0 };
+
+  for (const s of stats) {
+    sum.pts += s.pts;
+    sum.reb += s.reb;
+    sum.ast += s.ast;
+    sum.stl += s.stl;
+    sum.blk += s.blk;
+    if (s.pts > max.pts) max.pts = s.pts;
+    if (s.reb > max.reb) max.reb = s.reb;
+    if (s.ast > max.ast) max.ast = s.ast;
+    if (s.stl > max.stl) max.stl = s.stl;
+    if (s.blk > max.blk) max.blk = s.blk;
+  }
+
+  return {
+    averages: {
+      pts: Math.round((sum.pts / n) * 10) / 10,
+      reb: Math.round((sum.reb / n) * 10) / 10,
+      ast: Math.round((sum.ast / n) * 10) / 10,
+      stl: Math.round((sum.stl / n) * 10) / 10,
+      blk: Math.round((sum.blk / n) * 10) / 10,
+    },
+    maxes: max,
+  };
+}
+
+export async function getPlayerCompetitions(playerId: string): Promise<Array<{
+  competition_id: string;
+  competition_name: string;
+  season_name: string;
+  league_name: string;
+}>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("v_public_player_profiles")
+    .select("competition_id, competition_name, season_name, league_name")
+    .eq("player_id", playerId);
+
+  if (error || !data || data.length === 0) return [];
+
+  const seen = new Set<string>();
+  const results: Array<{
+    competition_id: string;
+    competition_name: string;
+    season_name: string;
+    league_name: string;
+  }> = [];
+
+  for (const row of data) {
+    if (!seen.has(row.competition_id)) {
+      seen.add(row.competition_id);
+      results.push({
+        competition_id: row.competition_id,
+        competition_name: row.competition_name,
+        season_name: row.season_name,
+        league_name: row.league_name,
+      });
+    }
+  }
+
+  results.sort((a, b) => b.season_name.localeCompare(a.season_name));
+  return results;
+}
+
+export async function getPlayerCareerTotals(playerId: string): Promise<{
+  gp: number;
+  pts: number;
+  reb: number;
+  ast: number;
+} | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("v_public_leaders")
+    .select("gp, pts, oreb, dreb, ast")
+    .eq("player_id", playerId);
+
+  if (error || !data || data.length === 0) return null;
+
+  let gp = 0;
+  let pts = 0;
+  let reb = 0;
+  let ast = 0;
+  for (const row of data) {
+    gp += (row.gp as number) ?? 0;
+    pts += (row.pts as number) ?? 0;
+    reb += ((row.oreb as number) ?? 0) + ((row.dreb as number) ?? 0);
+    ast += (row.ast as number) ?? 0;
+  }
+
+  return { gp, pts, reb, ast };
+}
+
 
 // ---------------------------------------------------------------------------
 // Helpers (unchanged)

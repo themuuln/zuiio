@@ -144,3 +144,13 @@ scheduled → live_provisional → final_pending_review → league_verified → 
 | `ONOO_SEQUENCE_GAP` | `local_seq` is not monotonic | Client-side ordering bug; reload the tracker |
 | `ONOO_ROSTER_MISMATCH` | Player/team not in game roster | Verify roster before tracking |
 | `ONOO_INVALID_EVENT` (ruleset) | Event type not in ruleset vocabulary | Check event type against ruleset |
+
+
+---
+
+## Тоглогч нууцлах (Player Takedown)
+
+Тоглогчийг нууцлахын тулд: Admin → Тоглогч → тоглогчийг олоод "Нууц" сонгоно уу.
+Нууцалсан тоглогчийн нэр болон зураг бүхий нийтэлсэн хуудсууд дээр нуулагдана.
+Статистик нь үлдэж, эцсийн оноо нарийвчлал алдагдахгүй.
+Нууцлалыг ахин "Нийтэд" болгон өөрчилж болно.
