@@ -1,26 +1,22 @@
 "use client";
 
+import { ChartNoAxesCombined } from "lucide-react";
 import { useState } from "react";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-} from "recharts";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
+  type ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  type ChartConfig,
 } from "@/components/ui/chart";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-export type GameDataPoint = {
+export interface GameDataPoint {
   game_id: string;
   game_date: string;
   opponent: string;
@@ -28,7 +24,7 @@ export type GameDataPoint = {
   reb: number;
   ast: number;
   result: "W" | "L";
-};
+}
 
 type StatKey = "pts" | "reb" | "ast";
 
@@ -52,33 +48,34 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 // ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function formatDateShort(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString("mn-MN", {
-    month: "short",
-    day: "numeric",
-  });
-}
-
-// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
 interface SeasonArcProps {
   data: GameDataPoint[];
+  className?: string;
 }
 
-export function SeasonArc({ data }: SeasonArcProps) {
+export function SeasonArc({ data, className }: SeasonArcProps) {
   const [activeStat, setActiveStat] = useState<StatKey>("pts");
 
   // Empty state
   if (data.length === 0) {
     return (
-      <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">
-        Дүнгийн мэдээлэл байхгүй
+      <div
+        className={cn(
+          "flex min-h-56 flex-col items-center justify-center text-center",
+          className,
+        )}
+      >
+        <ChartNoAxesCombined
+          className="size-6 text-muted-foreground"
+          aria-hidden="true"
+        />
+        <p className="mt-3 font-semibold">Хандлага хараахан үүсээгүй</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Хоёр ба түүнээс олон тоглолтын дараа график гарна.
+        </p>
       </div>
     );
   }
@@ -87,7 +84,12 @@ export function SeasonArc({ data }: SeasonArcProps) {
   if (data.length === 1) {
     const game = data[0] as GameDataPoint;
     return (
-      <div className="flex h-[200px] flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
+      <div
+        className={cn(
+          "flex min-h-56 flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground",
+          className,
+        )}
+      >
         <p>Нэг тоглолтын мэдээлэл</p>
         <p className="tabular-nums text-foreground">
           {game.result === "W" ? "Ялалт" : "Ялагдал"} · {game.opponent} ·{" "}
@@ -118,7 +120,7 @@ export function SeasonArc({ data }: SeasonArcProps) {
         : "Дамжуулалт";
 
   return (
-    <div className="space-y-3">
+    <div className={cn("space-y-4", className)}>
       <Tabs
         value={activeStat}
         onValueChange={(v) => setActiveStat(v as StatKey)}
@@ -130,7 +132,7 @@ export function SeasonArc({ data }: SeasonArcProps) {
         </TabsList>
       </Tabs>
 
-      <ChartContainer config={chartConfig} className="h-[200px] w-full">
+      <ChartContainer config={chartConfig} className="h-64 w-full">
         <AreaChart
           data={chartData}
           margin={{ top: 4, right: 4, left: -12, bottom: 0 }}
@@ -166,6 +168,7 @@ export function SeasonArc({ data }: SeasonArcProps) {
             fill={colorVar}
             fillOpacity={0.15}
             strokeWidth={2}
+            isAnimationActive={false}
             dot={false}
             activeDot={{
               r: 4,

@@ -1,139 +1,312 @@
 "use client";
 
+import { ArrowRight, Medal, Scale, Trophy } from "lucide-react";
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
+import { PlayerAvatar } from "@/components/player-avatar";
+import { TeamLogo } from "@/components/team-logo";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
+import { PublicEmptyState } from "../../components/public-empty-state";
+import type { LeaderRow } from "../../lib/data";
 
-type LeaderRow = {
-  player_id: string;
-  player_name: string;
-  player_latin: string | null;
-  team_name: string;
-  team_short: string;
-  team_color: string | null;
-  pts: number | null;
-  dreb: number | null;
-  oreb: number | null;
-  ast: number | null;
-  stl: number | null;
-  blk: number | null;
-};
+const MINIMUM_GAMES = 5;
 
 interface CategoryConfig {
   key: string;
   label: string;
-  statKey: keyof Pick<LeaderRow, "pts" | "dreb" | "ast" | "stl" | "blk">;
-  suffix?: string;
+  shortLabel: string;
+  getValue: (leader: LeaderRow) => number;
 }
 
 const CATEGORIES: CategoryConfig[] = [
-  { key: "pts", label: "Оноо", statKey: "pts" },
-  { key: "reb", label: "Давсан", statKey: "dreb" },
-  { key: "ast", label: "Олгосон", statKey: "ast" },
-  { key: "stl", label: "Булаасан", statKey: "stl" },
-  { key: "blk", label: "Хаасан", statKey: "blk" },
+  {
+    key: "pts",
+    label: "Оноо",
+    shortLabel: "ОНОО",
+    getValue: (leader) => leader.pts ?? 0,
+  },
+  {
+    key: "reb",
+    label: "Самбар",
+    shortLabel: "САМБ",
+    getValue: (leader) => (leader.oreb ?? 0) + (leader.dreb ?? 0),
+  },
+  {
+    key: "ast",
+    label: "Дамжуулалт",
+    shortLabel: "ДАМЖ",
+    getValue: (leader) => leader.ast ?? 0,
+  },
+  {
+    key: "stl",
+    label: "Бөмбөг таслалт",
+    shortLabel: "ТАС",
+    getValue: (leader) => leader.stl ?? 0,
+  },
+  {
+    key: "blk",
+    label: "Хаалт",
+    shortLabel: "ХААЛТ",
+    getValue: (leader) => leader.blk ?? 0,
+  },
 ];
 
-function sortLeaders(leaders: LeaderRow[], statKey: string): LeaderRow[] {
+interface LeaderTabsProps {
+  leaders: LeaderRow[];
+  className?: string;
+}
+
+function rankedLeaders(
+  leaders: LeaderRow[],
+  category: CategoryConfig,
+): LeaderRow[] {
   return [...leaders]
     .sort((a, b) => {
-      const aVal = (a[statKey as keyof LeaderRow] as number) ?? 0;
-      const bVal = (b[statKey as keyof LeaderRow] as number) ?? 0;
-      return bVal - aVal;
+      const qualificationDifference =
+        Number(b.gp >= MINIMUM_GAMES) - Number(a.gp >= MINIMUM_GAMES);
+      if (qualificationDifference !== 0) return qualificationDifference;
+      return category.getValue(b) - category.getValue(a);
     })
     .slice(0, 10);
 }
 
-function formatStat(val: number | null, suffix?: string): string {
-  if (val == null) return "—";
-  return suffix ? `${val.toFixed(1)}${suffix}` : val.toFixed(1);
-}
+export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
+  if (leaders.length === 0) {
+    return (
+      <PublicEmptyState
+        icon={Trophy}
+        title="Тэргүүлэгч тодроогүй байна"
+        description="Баталгаажсан тоглолтын статистик цуглармагц ангилал бүрийн шилдгүүд энд гарна."
+        actionHref="/games"
+        actionLabel="Тоглолтууд харах"
+        className={className}
+      />
+    );
+  }
 
-export function LeaderTabs({ leaders }: { leaders: LeaderRow[] }) {
   return (
-    <Tabs defaultValue="pts" className="space-y-4">
-      <TabsList>
-        {CATEGORIES.map((cat) => (
-          <TabsTrigger key={cat.key} value={cat.key}>
-            {cat.label}
-          </TabsTrigger>
-        ))}
-      </TabsList>
+    <Tabs defaultValue="pts" className={cn("flex flex-col gap-6", className)}>
+      <div className="overflow-x-auto pb-1">
+        <TabsList variant="line">
+          {CATEGORIES.map((category) => (
+            <TabsTrigger key={category.key} value={category.key}>
+              {category.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </div>
 
-      {CATEGORIES.map((cat) => {
-        const sorted = sortLeaders(leaders, cat.statKey);
+      {CATEGORIES.map((category) => {
+        const ranked = rankedLeaders(leaders, category);
+        const podium = ranked.slice(0, 3);
+        const remaining = ranked.slice(3);
+
         return (
-          <TabsContent key={cat.key} value={cat.key}>
-            <Card>
-              <CardContent className="p-0 overflow-x-auto">
-                <table className="w-full text-sm" role="table">
-                  <thead>
-                    <tr className="border-b text-left text-muted-foreground">
-                      <th className="px-4 py-3 font-medium w-12" scope="col">
-                        #
-                      </th>
-                      <th className="px-4 py-3 font-medium" scope="col">
-                        Тоглогч
-                      </th>
-                      <th className="px-4 py-3 font-medium" scope="col">
-                        Баг
-                      </th>
-                      <th
-                        className="px-4 py-3 font-medium text-right"
-                        scope="col"
+          <TabsContent
+            key={category.key}
+            value={category.key}
+            className="flex flex-col gap-6"
+          >
+            <div className="grid gap-4 md:grid-cols-3">
+              {podium.map((leader, index) => (
+                <Link
+                  key={`${category.key}-${leader.player_id}-${leader.competition_id}`}
+                  href={`/players/${leader.player_id}`}
+                  className="group rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <Card
+                    className={cn(
+                      "h-full overflow-hidden shadow-none transition-[background-color,transform] group-active:scale-95 motion-reduce:transition-none",
+                      index === 0
+                        ? "bg-sidebar text-sidebar-foreground group-hover:bg-white/10"
+                        : "group-hover:bg-accent/40",
+                    )}
+                  >
+                    <CardHeader>
+                      <Badge variant={index === 0 ? "secondary" : "outline"}>
+                        <Medal data-icon="inline-start" aria-hidden="true" />#
+                        {index + 1}
+                      </Badge>
+                      <CardAction>
+                        <span className="text-3xl font-black tabular-nums">
+                          {category.getValue(leader).toFixed(1)}
+                        </span>
+                      </CardAction>
+                    </CardHeader>
+                    <CardContent className="flex items-end gap-4">
+                      <PlayerAvatar
+                        photoUrl={leader.player_photo_url}
+                        name={leader.player_name}
+                        primaryColor={leader.team_primary_color}
+                        size="xl"
+                      />
+                      <div className="min-w-0 flex-1 pb-1">
+                        <CardTitle className="truncate text-xl">
+                          {leader.player_name}
+                        </CardTitle>
+                        <CardDescription
+                          className={cn(
+                            "mt-2 flex items-center gap-2",
+                            index === 0 && "text-sidebar-foreground/70",
+                          )}
+                        >
+                          <TeamLogo
+                            logoUrl={leader.team_logo_url}
+                            shortCode={leader.team_short_code}
+                            primaryColor={leader.team_primary_color}
+                            size="sm"
+                          />
+                          <span className="truncate">{leader.team_name}</span>
+                        </CardDescription>
+                        <QualificationBadge gamesPlayed={leader.gp} />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+
+            {remaining.length > 0 ? (
+              <Card className="shadow-none">
+                <CardHeader>
+                  <CardTitle>4–10 байр</CardTitle>
+                  <CardDescription>
+                    {category.label} ангиллын дараагийн тоглогчид
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ol className="flex flex-col gap-1">
+                    {remaining.map((leader, index) => (
+                      <li
+                        key={`${category.key}-${leader.player_id}-${leader.competition_id}`}
                       >
-                        {cat.label}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sorted.map((row, i) => (
-                      <tr
-                        key={row.player_id}
-                        className="border-b last:border-0 transition-colors hover:bg-accent/30"
-                      >
-                        <td className="px-4 py-3 text-muted-foreground tabular-nums">
-                          {i + 1}
-                        </td>
-                        <td className="px-4 py-3 font-medium">
-                          <Link
-                            href={`/players/${row.player_id}`}
-                            className="hover:underline"
-                          >
-                            {row.player_name}
-                          </Link>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className="inline-flex items-center gap-2">
-                            <span
-                              className="inline-block size-3 rounded-full border"
-                              style={{
-                                backgroundColor:
-                                  row.team_color ?? "oklch(0.5 0 0)",
-                              }}
-                              aria-hidden="true"
-                            />
-                            <Link
-                              href={`/teams/${row.team_short === "ХАС" ? "team-a" : "team-b"}`}
-                              className="text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                              {row.team_name}
-                            </Link>
+                        <div className="grid grid-cols-12 items-center gap-3 rounded-lg p-3 transition-colors hover:bg-accent/50">
+                          <span className="col-span-1 text-sm font-black tabular-nums text-muted-foreground">
+                            {index + 4}
                           </span>
-                        </td>
-                        <td className="px-4 py-3 text-right tabular-nums font-semibold">
-                          {formatStat(row[cat.statKey])}
-                        </td>
-                      </tr>
+                          <Link
+                            href={`/players/${leader.player_id}`}
+                            className="col-span-7 flex min-w-0 items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            <PlayerAvatar
+                              photoUrl={leader.player_photo_url}
+                              name={leader.player_name}
+                              primaryColor={leader.team_primary_color}
+                            />
+                            <span className="min-w-0">
+                              <span className="block truncate font-semibold">
+                                {leader.player_name}
+                              </span>
+                              <span className="block truncate text-xs text-muted-foreground">
+                                {leader.team_name} · {leader.gp} тоглолт
+                              </span>
+                            </span>
+                          </Link>
+                          <span className="col-span-2 text-right text-xl font-black tabular-nums">
+                            {category.getValue(leader).toFixed(1)}
+                          </span>
+                          <Button
+                            asChild
+                            variant="ghost"
+                            size="icon-sm"
+                            className="col-span-2 justify-self-end"
+                          >
+                            <Link
+                              href={`/players/compare?players=${leader.player_id}`}
+                              aria-label={`${leader.player_name} тоглогчийг харьцуулах`}
+                            >
+                              <Scale aria-hidden="true" />
+                            </Link>
+                          </Button>
+                        </div>
+                      </li>
                     ))}
-                  </tbody>
-                </table>
-              </CardContent>
+                  </ol>
+                </CardContent>
+              </Card>
+            ) : null}
+
+            <Card className="shadow-none">
+              <CardHeader>
+                <CardTitle className="text-base">Эрэмбийн шаардлага</CardTitle>
+                <CardDescription>
+                  Нэг удаагийн өндөр үзүүлэлтээр хүснэгтийг тэргүүлэхээс
+                  сэргийлж дор хаяж {MINIMUM_GAMES} баталгаажсан тоглолтод
+                  оролцсон байна.
+                </CardDescription>
+                <CardAction>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href="/players/compare">
+                      Тоглогч харьцуулах
+                      <ArrowRight data-icon="inline-end" aria-hidden="true" />
+                    </Link>
+                  </Button>
+                </CardAction>
+              </CardHeader>
             </Card>
           </TabsContent>
         );
       })}
     </Tabs>
+  );
+}
+
+interface QualificationBadgeProps {
+  gamesPlayed: number;
+  className?: string;
+}
+
+function QualificationBadge({
+  gamesPlayed,
+  className,
+}: QualificationBadgeProps) {
+  const remainingGames = Math.max(MINIMUM_GAMES - gamesPlayed, 0);
+  return (
+    <Badge
+      variant={remainingGames === 0 ? "secondary" : "outline"}
+      className={cn("mt-3", className)}
+    >
+      {remainingGames === 0
+        ? "Шалгуур хангасан"
+        : `${remainingGames} тоглолт дутуу`}
+    </Badge>
+  );
+}
+
+interface LeaderTabsSkeletonProps {
+  className?: string;
+}
+
+export function LeaderTabsSkeleton({ className }: LeaderTabsSkeletonProps) {
+  const placeholders = ["leader-one", "leader-two", "leader-three"];
+
+  return (
+    <div className={cn("grid gap-4 md:grid-cols-3", className)}>
+      {placeholders.map((placeholder) => (
+        <Card key={placeholder} className="shadow-none" aria-hidden="true">
+          <CardHeader>
+            <Skeleton className="h-5 w-16" />
+          </CardHeader>
+          <CardContent className="flex items-end gap-4">
+            <Skeleton className="size-24 rounded-full" />
+            <div className="flex flex-1 flex-col gap-2">
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 }

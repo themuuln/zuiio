@@ -1,12 +1,11 @@
-import type { Metadata } from "next";
-import type { Viewport } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
-import { Providers } from "@/lib/providers";
 import { OfflineIndicator } from "@/components/offline-indicator";
-import { SiteNav } from "./components/site-nav";
+import { Providers } from "@/lib/providers";
 import { SiteFooter } from "./components/site-footer";
+import { SiteNav } from "./components/site-nav";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,9 +47,9 @@ export default function RootLayout({
         <Suspense>
           <Providers>
             <SiteNav />
-            <div className="flex-1">{children}</div>
+            <div className="flex-1 bg-muted/20 pb-20 sm:pb-0">{children}</div>
             <SiteFooter />
-        <OfflineIndicator />
+            <OfflineIndicator />
           </Providers>
         </Suspense>
       </body>

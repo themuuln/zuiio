@@ -45,3 +45,66 @@
   --color-accent:             oklch(0.78 0.16 80 / 15%);
   --color-accent-foreground:  oklch(0.90 0.06 80);
 }
+
+.player-showcase-hero {
+  background-image:
+    radial-gradient(
+      circle at 18% 10%,
+      color-mix(in oklch, var(--brand-sports) 24%, transparent),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 82% 88%,
+      color-mix(in oklch, var(--brand-violet) 22%, transparent),
+      transparent 38%
+    );
+}
+
+.team-showcase-hero {
+  background-image:
+    radial-gradient(
+      circle at 12% 20%,
+      color-mix(in oklch, var(--brand-sports) 20%, transparent),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 90% 80%,
+      color-mix(in oklch, var(--brand-violet) 18%, transparent),
+      transparent 36%
+    );
+}
+
+.game-scoreboard-hero {
+  background-image:
+    radial-gradient(
+      circle at 50% 0%,
+      color-mix(in oklch, var(--brand-sports) 18%, transparent),
+      transparent 34%
+    ),
+    linear-gradient(
+      to bottom,
+      transparent,
+      color-mix(in oklch, var(--brand-violet) 8%, transparent)
+    );
+}
+
+.player-showcase-court {
+  position: absolute;
+  inset: 0;
+  opacity: 0.24;
+  background-image:
+    linear-gradient(
+      to right,
+      transparent 49.8%,
+      var(--color-sidebar-border) 50%,
+      transparent 50.2%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      transparent 0 14%,
+      var(--color-sidebar-border) 14.2% 14.5%,
+      transparent 14.7%
+    );
+  mask-image: linear-gradient(to right, transparent, black 35%, black 75%, transparent);
+  pointer-events: none;
+}

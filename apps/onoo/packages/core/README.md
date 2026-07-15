@@ -9,7 +9,7 @@ Shared domain package for the Onoo sports stats platform.
 | Module | Purpose |
 |---|---|
 | `types` | Database row types (generated), domain types, Zod schemas |
-| `stats` | Stat engine: `deriveBoxScore()`, standings, leaders |
+| `stats` | Stat engine: `deriveBoxScore()`, milestone detection, standings, leaders |
 | `events` | Event dictionary, payload validation, canonical ordering |
 | `sync` | Offline event queue logic |
 | `format` | Clock, name, percentage formatters; i18n stat labels |
@@ -20,6 +20,7 @@ Shared domain package for the Onoo sports stats platform.
 import { deriveBoxScore } from "@onoo/core/stats";
 import { sortEvents } from "@onoo/core/events";
 import { formatClock } from "@onoo/core/format";
+import { detectMilestones } from "@onoo/core";
 ```
 
 ## Development

@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 interface Competition {
   competition_id: string;
@@ -19,6 +20,7 @@ interface Competition {
 interface SeasonSelectorProps {
   competitions: Competition[];
   currentCompetitionId: string | null;
+  className?: string;
 }
 
 const CAREER_VALUE = "__career__";
@@ -26,6 +28,7 @@ const CAREER_VALUE = "__career__";
 export function SeasonSelector({
   competitions,
   currentCompetitionId,
+  className,
 }: SeasonSelectorProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -33,7 +36,7 @@ export function SeasonSelector({
   function handleChange(value: string) {
     const params = new URLSearchParams(searchParams.toString());
     if (value === CAREER_VALUE) {
-      params.delete("season");
+      params.set("season", "career");
     } else {
       params.set("season", value);
     }
@@ -44,7 +47,10 @@ export function SeasonSelector({
 
   return (
     <Select value={currentValue} onValueChange={handleChange}>
-      <SelectTrigger className="w-full sm:w-[280px]" aria-label="Улирал сонгох">
+      <SelectTrigger
+        className={cn("w-full sm:w-72", className)}
+        aria-label="Улирал сонгох"
+      >
         <SelectValue placeholder="Улирал сонгох" />
       </SelectTrigger>
       <SelectContent>

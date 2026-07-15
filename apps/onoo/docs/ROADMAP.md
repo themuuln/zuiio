@@ -72,13 +72,13 @@ Turn `players/[id]` from a data page into a portrait of the athlete:
 
 Let people find tonight's game, follow the league, and argue about players:
 
-- [ ] **Home: tonight's games** — the homepage answers "who plays tonight, what's the score, who won" at a glance; schedule, live scores, and results one tap from everywhere. The most-visited fan surface.
+- [x] **Home: tonight's games** — the homepage answers "who plays tonight, what's the score, who won" at a glance; schedule, live scores, and results one tap from everywhere. The most-visited fan surface.
 - [ ] **Standings redesign** — form guide (last 5), movement indicators, team-color rows; the most-screenshotted league surface.
-- [ ] **Leaders redesign** — top-10 leaderboards as visual podiums/cards with player photos, not table rows.
+- [x] **Leaders redesign** — top-10 leaderboards as visual podiums/cards with player photos, not table rows.
 - [ ] **Qualification rules** — minimum games/minutes thresholds for leaderboards and league-average comparisons, so one hot game can't top the PPG board; show "N games to qualify" states.
 - [ ] **Awards & MVP races** — automated Player of the Week / season MVP race derived from leaders data, presented as shareable award graphics. Leagues hand them out, players share them, sponsors can sponsor them.
 - [ ] **Player comparison** — side-by-side visual duel view (existing `players/compare` + `api/stats/compare-players`), with mirrored bar charts and radar overlay.
-- [ ] **Team pages** — roster grid of mini player cards; team identity (colors, form guide) applied throughout.
+- [x] **Team pages** — roster grid of mini player cards; team identity (colors, form guide) applied throughout.
 - [ ] **Search & browse** — find any player by name/team/league in two taps from anywhere.
 
 ### Phase 4 — Shareability & reach

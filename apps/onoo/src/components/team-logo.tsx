@@ -1,20 +1,25 @@
+import { cn } from "@/lib/utils";
+
 interface TeamLogoProps {
   logoUrl?: string | null;
   shortCode: string;
   primaryColor?: string | null;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
+  className?: string;
 }
 
 const SIZE_MAP = {
   sm: 24,
   md: 32,
   lg: 48,
+  xl: 80,
 } as const;
 
 const TEXT_SIZE_MAP = {
   sm: "text-[10px]",
   md: "text-xs",
   lg: "text-base",
+  xl: "text-xl",
 } as const;
 
 export function TeamLogo({
@@ -22,6 +27,7 @@ export function TeamLogo({
   shortCode,
   primaryColor,
   size = "md",
+  className,
 }: TeamLogoProps) {
   const px = SIZE_MAP[size];
 
@@ -32,18 +38,22 @@ export function TeamLogo({
         alt={shortCode}
         width={px}
         height={px}
-        className="shrink-0 rounded-full object-cover"
+        className={cn("shrink-0 rounded-full object-cover", className)}
       />
     );
   }
 
   return (
     <div
-      className={`flex shrink-0 items-center justify-center rounded-full font-bold text-white ${TEXT_SIZE_MAP[size]}`}
+      className={cn(
+        "flex shrink-0 items-center justify-center rounded-full font-bold text-sidebar-foreground",
+        TEXT_SIZE_MAP[size],
+        className,
+      )}
       style={{
         width: px,
         height: px,
-        backgroundColor: primaryColor || "#1e293b",
+        backgroundColor: primaryColor || "var(--color-sidebar)",
       }}
       aria-hidden="true"
     >

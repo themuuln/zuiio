@@ -31,18 +31,31 @@ Onoo is an athlete-first Mongolian basketball statistics product. Public pages s
 - 2026-07-15 — Player profiles use a responsive showcase hierarchy: athlete identity and season averages, recent form, visual analysis, then complete game records.
 - 2026-07-15 — Team colors are accents only. Core text and data surfaces retain predictable contrast.
 - 2026-07-15 — No generated athlete imagery or copied brand assets; missing photos use the existing designed identity fallback.
+- 2026-07-15 — Reworked the player showcase into an ink-dark identity hero followed by recent form and an asymmetric analysis grid. Uses semantic sidebar, warning, chart, card, and muted tokens; all public records remain below the visual layer.
+- 2026-07-15 — Public navigation keeps every primary destination reachable at 360px without horizontal page overflow.
+- 2026-07-15 — Public surfaces follow a league-pulse hierarchy: live or next game, latest verified recap, featured athlete, category leaders, then standings context.
+- 2026-07-15 — Mobile navigation uses a fixed five-destination bottom bar; the compact top bar retains brand and account access without duplicating the full desktop menu.
+- 2026-07-15 — Scheduled and provisional games may appear only through a narrow curated publication view. Verified statistics and records remain separated, and the UI labels provisional state explicitly.
+- 2026-07-15 — Dense tables remain secondary to visual summaries, with complete records available directly below the summary rather than hidden behind separate analytics routes.
 
 ## Component Inventory
 
-- `HeroCard` — player identity, team context, season averages, and career snapshot
-- `RecentGames` — horizontal mobile-first last-five game capsules
-- `SeasonArc` — PTS/REB/AST trend chart
-- `ShootingProfile` — shooting split gauges and point-mix visualization
-- `SkillRadar` — player-versus-league shape comparison
-- `Milestones` — career-high and achievement summaries
-- `SeasonSelector` — season/career scope control
-- `PlayerAvatar` — resilient player portrait and identity fallback
-- `TeamLogo` — resilient team crest and short-code fallback
+- `HeroCard` — `src/app/players/[id]/components/hero-card.tsx`; player identity, team context, season averages, and career snapshot
+- `RecentGames` — `src/app/players/[id]/components/recent-games.tsx`; horizontal mobile-first last-five game capsules
+- `SeasonArc` — `src/app/players/[id]/components/season-arc.tsx`; PTS/REB/AST trend chart
+- `ShootingProfile` — `src/app/players/[id]/components/shooting-profile.tsx`; shooting split gauges and point-mix visualization
+- `SkillRadar` — `src/app/players/[id]/components/skill-radar.tsx`; player-versus-league shape comparison
+- `Milestones` — `src/app/players/[id]/components/milestones.tsx`; career-high and achievement summaries
+- `SeasonSelector` — `src/app/players/[id]/components/season-selector.tsx`; season/career scope control
+- `PlayerAvatar` — `src/components/player-avatar.tsx`; resilient player portrait and identity fallback
+- `TeamLogo` — `src/components/team-logo.tsx`; resilient team crest and short-code fallback
+- `SiteNav` — `src/app/components/site-nav.tsx`; responsive public navigation shell
+- `GameCard` — `src/app/components/game-card.tsx`; reusable schedule, live-state, and verified-result presentation
+- `GameStatusBadge` — `src/app/components/game-status-badge.tsx`; consistent lifecycle and provisional labeling
+- `PublicEmptyState` — `src/app/components/public-empty-state.tsx`; contextual no-data guidance and next action
+- `PlayerGrid` — `src/app/players/components/player-grid.tsx`; featured player discovery, filtering, sorting, and card/table views
+- `LeaderTabs` — `src/app/leaders/components/leader-tabs.tsx`; category podiums, full ranks, and qualification context
+- `ComparePlayersClient` — `src/app/players/compare/compare-players-client.tsx`; accessible player selection and mirrored statistical comparison
 
 ## Responsive Contract
 

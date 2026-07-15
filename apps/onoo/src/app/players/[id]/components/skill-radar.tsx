@@ -1,18 +1,20 @@
 "use client";
 
+import { ChartNoAxesCombined } from "lucide-react";
 import {
-  RadarChart,
-  Radar,
-  PolarGrid,
   PolarAngleAxis,
+  PolarGrid,
   PolarRadiusAxis,
+  Radar,
+  RadarChart,
 } from "recharts";
 import {
+  type ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  type ChartConfig,
 } from "@/components/ui/chart";
+import { cn } from "@/lib/utils";
 
 /**
  * Normalization: each axis value = (player_value / league_max) × 100.
@@ -31,11 +33,11 @@ type StatKey = (typeof STATS)[number];
 const chartConfig = {
   player: {
     label: "Тоглогч",
-    color: "var(--team-color, oklch(0.78 0.16 80))",
+    color: "var(--team-color, var(--brand-sports))",
   },
   league: {
     label: "Лигийн дундаж",
-    color: "oklch(0.65 0.01 265)",
+    color: "var(--color-muted-foreground)",
   },
 } satisfies ChartConfig;
 
@@ -49,59 +51,92 @@ const STAT_LABELS_MN: Record<StatKey, string> = {
 };
 
 interface SkillRadarProps {
-  playerStats: { pts: number; reb: number; ast: number; stl: number; blk: number };
-  leagueAverages: { pts: number; reb: number; ast: number; stl: number; blk: number };
-  leagueMaxes: { pts: number; reb: number; ast: number; stl: number; blk: number };
+  playerStats: {
+    pts: number;
+    reb: number;
+    ast: number;
+    stl: number;
+    blk: number;
+  };
+  leagueAverages: {
+    pts: number;
+    reb: number;
+    ast: number;
+    stl: number;
+    blk: number;
+  };
+  leagueMaxes: {
+    pts: number;
+    reb: number;
+    ast: number;
+    stl: number;
+    blk: number;
+  };
+  className?: string;
 }
 
 export function SkillRadar({
   playerStats,
   leagueAverages,
   leagueMaxes,
+  className,
 }: SkillRadarProps) {
   // Build chart data: normalize to league-max = 100
   const data = STATS.map((stat) => ({
     stat: STAT_LABELS_MN[stat],
     statKey: stat,
-    player: leagueMaxes[stat] > 0
-      ? Math.round((playerStats[stat] / leagueMaxes[stat]) * 100)
-      : 0,
-    league: leagueMaxes[stat] > 0
-      ? Math.round((leagueAverages[stat] / leagueMaxes[stat]) * 100)
-      : 0,
+    player:
+      leagueMaxes[stat] > 0
+        ? Math.round((playerStats[stat] / leagueMaxes[stat]) * 100)
+        : 0,
+    league:
+      leagueMaxes[stat] > 0
+        ? Math.round((leagueAverages[stat] / leagueMaxes[stat]) * 100)
+        : 0,
     // Actual values for tooltip display
     playerActual: playerStats[stat],
     leagueActual: leagueAverages[stat],
   }));
 
+  if (STATS.every((stat) => leagueMaxes[stat] === 0)) {
+    return (
+      <div
+        className={cn(
+          "flex min-h-64 flex-col items-center justify-center text-center",
+          className,
+        )}
+      >
+        <ChartNoAxesCombined
+          className="size-6 text-muted-foreground"
+          aria-hidden="true"
+        />
+        <p className="mt-3 font-semibold">Харьцуулах мэдээлэл хүрэлцэхгүй</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Лигийн тав ба түүнээс олон тоглолттой тоглогчид нэмэгдэхэд зураглал
+          гарна.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <ChartContainer config={chartConfig} className="aspect-square w-full max-w-[320px]">
+    <ChartContainer
+      config={chartConfig}
+      className={cn("aspect-square w-full max-w-sm", className)}
+    >
       <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
         <PolarGrid />
         <PolarAngleAxis dataKey="stat" tick={{ fontSize: 11 }} />
         <PolarRadiusAxis
           angle={90}
           domain={[0, 100]}
-          tick={{ fontSize: 10 }}
+          tick={false}
           tickCount={5}
         />
         <ChartTooltip
           content={
             <ChartTooltipContent
-              formatter={(value, name) => {
-                const item = data.find((d) => {
-                  if (name === "Тоглогч") return true;
-                  if (name === "Лигийн дундаж") return true;
-                  return false;
-                });
-                const actual = name === "Тоглагч"
-                  ? item?.playerActual
-                  : item?.leagueActual;
-                return [
-                  actual !== undefined ? actual.toFixed(1) : String(value),
-                  String(name),
-                ];
-              }}
+              formatter={(value, name) => [`${value}%`, String(name)]}
             />
           }
         />
@@ -113,6 +148,7 @@ export function SkillRadar({
           fillOpacity={0.08}
           strokeWidth={1.5}
           strokeDasharray="4 2"
+          isAnimationActive={false}
         />
         <Radar
           name="Тоглогч"
@@ -121,6 +157,7 @@ export function SkillRadar({
           fill="var(--color-player)"
           fillOpacity={0.18}
           strokeWidth={2}
+          isAnimationActive={false}
         />
       </RadarChart>
     </ChartContainer>

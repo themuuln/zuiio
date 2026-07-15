@@ -1,11 +1,15 @@
 "use client";
 
+import { Target } from "lucide-react";
+import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts";
 import {
-  RadialBarChart,
-  RadialBar,
-  PolarAngleAxis,
-} from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -23,15 +27,16 @@ export interface ShootingData {
 interface ShootingProfileProps {
   data: ShootingData;
   teamColor?: string | null;
+  className?: string;
 }
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const BRAND_ACCENT = "oklch(0.78 0.16 80)";
-const TRACK_COLOR = "oklch(0.92 0.005 265)";
-const GAUGE_SIZE = 112;
+const BRAND_ACCENT = "var(--brand-sports)";
+const TRACK_COLOR = "var(--color-muted)";
+const GAUGE_SIZE = 88;
 const ARC_START = 225;
 const ARC_END = -45;
 
@@ -58,7 +63,10 @@ function GaugeRing({
 
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <div className="relative" style={{ width: GAUGE_SIZE, height: GAUGE_SIZE }}>
+      <div
+        className="relative"
+        style={{ width: GAUGE_SIZE, height: GAUGE_SIZE }}
+      >
         <RadialBarChart
           width={GAUGE_SIZE}
           height={GAUGE_SIZE}
@@ -120,13 +128,27 @@ function PointsBreakdown({
 
   const segments = [
     { key: "2P", label: "2-оноо", points: twoP, color: "var(--color-chart-1)" },
-    { key: "3P", label: "3-оноо", points: threeP, color: "var(--color-chart-2)" },
-    { key: "FT", label: "Ширэнгийн", points: ft, color: "var(--color-chart-5)" },
+    {
+      key: "3P",
+      label: "3-оноо",
+      points: threeP,
+      color: "var(--color-chart-2)",
+    },
+    {
+      key: "FT",
+      label: "Ширэнгийн",
+      points: ft,
+      color: "var(--color-chart-5)",
+    },
   ].filter((s) => s.points > 0);
 
   return (
-    <div className="space-y-2 pt-4">
-      <div className="flex h-7 overflow-hidden rounded-md">
+    <div className="space-y-3 pt-2">
+      <div
+        className="flex h-3 overflow-hidden rounded-full"
+        role="img"
+        aria-label="Онооны бүтцийн харьцаа"
+      >
         {segments.map((seg) => (
           <div
             key={seg.key}
@@ -134,10 +156,9 @@ function PointsBreakdown({
               width: `${(seg.points / total) * 100}%`,
               backgroundColor: seg.color,
             }}
-            className="flex items-center justify-center text-xs font-medium text-white"
-          >
-            {segments.length > 1 && Math.round((seg.points / total) * 100)}%
-          </div>
+            className="h-full"
+            title={`${seg.label}: ${Math.round((seg.points / total) * 100)}%`}
+          />
         ))}
       </div>
 
@@ -164,7 +185,11 @@ function PointsBreakdown({
 // Component
 // ---------------------------------------------------------------------------
 
-export function ShootingProfile({ data, teamColor }: ShootingProfileProps) {
+export function ShootingProfile({
+  data,
+  teamColor,
+  className,
+}: ShootingProfileProps) {
   const color = teamColor ?? BRAND_ACCENT;
   const fgPct = data.fga > 0 ? (data.fgm / data.fga) * 100 : null;
   const tpPct = data.tpa > 0 ? (data.tpm / data.tpa) * 100 : null;
@@ -173,29 +198,47 @@ export function ShootingProfile({ data, teamColor }: ShootingProfileProps) {
   // All zeros — nothing to show
   if (data.fga === 0 && data.tpa === 0 && data.fta === 0) {
     return (
-      <Card>
+      <Card className={className}>
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg">\u041F\u04AF\u0440\u0448\u0438\u043B\u0442\u0438\u0439\u043D \u043F\u0440\u043E\u0444\u0438\u043B\u044C</CardTitle>
+          <CardTitle className="text-lg">
+            \u041F\u04AF\u0440\u0448\u0438\u043B\u0442\u0438\u0439\u043D
+            \u043F\u0440\u043E\u0444\u0438\u043B\u044C
+          </CardTitle>
+          <CardDescription>
+            Оролт, гурвалжин, шийдлийн нарийвчлал
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="py-8 text-center text-sm text-muted-foreground">
-            \u0417\u043E\u0440\u0438\u043B\u043E\u043D\u044B \u043C\u044D\u0434\u044D\u044D\u043B \u0431\u0430\u0439\u0445\u0433\u04AF\u0439
-          </p>
+          <div className="flex min-h-52 flex-col items-center justify-center text-center">
+            <Target
+              className="size-6 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <p className="mt-3 font-semibold">
+              Шидэлтийн мэдээлэл хараахан алга
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Баталгаажсан оролдлогын дараа харьцаа энд гарна.
+            </p>
+          </div>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card>
+    <Card className={cn("h-full", className)}>
       <CardHeader className="pb-2">
         <CardTitle className="text-lg">
-          {"\u041F\u04AF\u0440\u0448\u0438\u043B\u0442\u0438\u0439\u043D \u043F\u0440\u043E\u0444\u0438\u043B\u044C"}
+          {
+            "\u041F\u04AF\u0440\u0448\u0438\u043B\u0442\u0438\u0439\u043D \u043F\u0440\u043E\u0444\u0438\u043B\u044C"
+          }
         </CardTitle>
+        <CardDescription>Оролт, гурвалжин, шийдлийн нарийвчлал</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Three gauge rings side by side */}
-        <div className="flex items-start justify-center gap-6 sm:gap-10">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
           <GaugeRing
             percentage={fgPct}
             label="FG%"

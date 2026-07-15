@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 function shiftDate(dateStr: string, days: number): string {
-  const d = new Date(`${dateStr}T12:00:00`);
-  d.setDate(d.getDate() + days);
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const d = new Date(Date.UTC(year ?? 0, (month ?? 1) - 1, day ?? 1));
+  d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
 }
 
@@ -18,8 +19,12 @@ function formatShort(dateStr: string): string {
 }
 
 export function DateNav({ currentDate }: { currentDate: string }) {
-  const router = useRouter();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Ulaanbaatar",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
   const prev = shiftDate(currentDate, -1);
   const next = shiftDate(currentDate, 1);
   const isToday = currentDate === today;
@@ -29,36 +34,30 @@ export function DateNav({ currentDate }: { currentDate: string }) {
       aria-label="Огноо сонголт"
       className="flex items-center justify-between gap-4"
     >
-      <Link
-        href={`/games?date=${prev}`}
-        className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent"
-        prefetch={false}
-      >
-        ← Өмнөх
-      </Link>
+      <Button asChild variant="outline" size="sm">
+        <Link href={`/games?date=${prev}`} prefetch={false}>
+          ← Өмнөх
+        </Link>
+      </Button>
 
       <div className="flex items-center gap-3">
         <span className="text-sm font-medium tabular-nums">
           {formatShort(currentDate)}
         </span>
         {!isToday && (
-          <Link
-            href="/games"
-            className="rounded-md bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
-            prefetch={false}
-          >
-            Өнөөдөр
-          </Link>
+          <Button asChild variant="secondary" size="xs">
+            <Link href="/games" prefetch={false}>
+              Өнөөдөр
+            </Link>
+          </Button>
         )}
       </div>
 
-      <Link
-        href={`/games?date=${next}`}
-        className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent"
-        prefetch={false}
-      >
-        Дараагийн →
-      </Link>
+      <Button asChild variant="outline" size="sm">
+        <Link href={`/games?date=${next}`} prefetch={false}>
+          Дараагийн →
+        </Link>
+      </Button>
     </nav>
   );
 }

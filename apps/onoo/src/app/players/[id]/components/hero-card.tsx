@@ -1,14 +1,20 @@
 import Link from "next/link";
-import { getPlayerById, getPlayerSeasonAverages } from "@/app/lib/data";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TeamLogo } from "@/components/team-logo";
 import { Badge } from "@/components/ui/badge";
 import { StatNumber } from "./stat-number";
 import { getStatLabel } from "@onoo/core";
+import type { PlayerProfileRow } from "@/app/lib/data";
 
 interface HeroCardProps {
-  playerId: string;
-  competitionId: string | null;
+  player: PlayerProfileRow;
+  averages: {
+    ppg: number;
+    rpg: number;
+    apg: number;
+    spg: number;
+    bpg: number;
+  } | null;
   careerTotals?: { gp: number; pts: number; reb: number; ast: number } | null;
 }
 
@@ -16,18 +22,9 @@ const BRAND_ACCENT = "oklch(0.78 0.16 80)";
 
 /**
  * Trading-card style hero for the player page.
- * Server Component — fetches bio + season averages.
+ * Receives pre-fetched data — no internal fetches.
  */
-export async function HeroCard({ playerId, competitionId, careerTotals }: HeroCardProps) {
-  const [data, averages] = await Promise.all([
-    getPlayerById(playerId),
-    competitionId ? getPlayerSeasonAverages(playerId, competitionId) : Promise.resolve(null),
-  ]);
-
-  if (!data?.player) return null;
-
-  const { player } = data;
-
+export function HeroCard({ player, averages, careerTotals }: HeroCardProps) {
   return (
     <div
       className="overflow-hidden rounded-xl border border-border bg-card"

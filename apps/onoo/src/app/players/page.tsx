@@ -4,23 +4,33 @@ import { PlayerGrid } from "./components/player-grid";
 
 export const metadata: Metadata = {
   title: "Тоглогчид — Оноо",
-  description:
-    "Сагсан бөмбөгийн лигийн бүх тоглогчид — нэр, баг, статистик.",
+  description: "Сагсан бөмбөгийн лигийн бүх тоглогчид — нэр, баг, статистик.",
 };
 
-export default async function PlayersPage() {
+export default async function PlayersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q = "" } = await searchParams;
   const players = await getPlayers();
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8 space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">Тоглогчид</h1>
-        <p className="text-muted-foreground">
-          Бүх тоглогчид — хайж, шүүж, статистик үзэх
+    <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+      <header className="max-w-2xl">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Тамирчдын түүх
+        </p>
+        <h1 className="mt-2 font-display text-4xl leading-tight tracking-tight sm:text-5xl">
+          Тоглогчид
+        </h1>
+        <p className="mt-3 leading-relaxed text-muted-foreground">
+          Тоглогчоо нэр, баг, байрлалаар олж улирлын гүйцэтгэл болон бүрэн
+          тоглолтын түүхийг нь үзээрэй.
         </p>
       </header>
 
-      <PlayerGrid players={players} />
+      <PlayerGrid players={players} initialSearch={q} />
     </main>
   );
 }
