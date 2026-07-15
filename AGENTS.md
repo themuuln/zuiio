@@ -179,6 +179,28 @@ packages/<name>/
 - `noUncheckedIndexedAccess: true`
 - All packages checked together: `pnpm exec tsc --noEmit`
 
+
+### Supabase Type Generation (NEVER manually patch)
+
+After every database migration, types **MUST** be regenerated using CLI or MCP — **NEVER manually edit `database.types.ts` or `supabase/types.ts`**:
+
+```bash
+# Option 1: Supabase CLI (preferred)
+cd apps/<app> && supabase gen types typescript --project-id <ref> --schema public > src/lib/database.types.ts
+cp src/lib/database.types.ts src/lib/supabase/types.ts
+
+# Option 2: Supabase MCP (if CLI auth is broken)
+# Use mcp__supabase_zer_generate_typescript_types, then save output to both files
+```
+
+**Two type files exist per app** — both must be updated:
+- `src/lib/database.types.ts` — canonical Supabase-generated types
+- `src/lib/supabase/types.ts` — copy used by `createClient()` (imports from `./types`)
+
+After generating, run `biome check --write` to fix formatting (Supabase CLI outputs without semicolons).
+
+If type generation fails with auth errors, **stop and ask the user to run `supabase login`**. Do NOT manually patch types — stale types cause build failures on CI.
+
 ### Dependencies
 
 - **Runtime deps** go in `dependencies` (not `peerDependencies`) — this is a private monorepo

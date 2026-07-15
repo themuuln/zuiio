@@ -493,11 +493,26 @@ Every Supabase schema change **MUST** be applied to the remote project before th
 3. Verify with `mcp__supabase_list_migrations` that the new migration appears in the applied list
 
 If the Supabase MCP tools are unavailable or return auth errors, **stop and ask the user to re-authenticate** via `supabase login` + `supabase link --project-ref <ref>` before continuing. Do not skip remote deployment — unapplied migrations produce `[supabase] 400` errors with `column does not exist` (SQLCODE 42703) on every affected page load.
-### Type Generation Auth
+### Type Generation (NEVER manually patch)
 
-After every migration, types **MUST** be regenerated: `supabase gen types typescript --project-id <ref> > src/lib/database.types.ts`
+After every migration, types **MUST** be regenerated using CLI or MCP — **NEVER manually edit type files**:
 
-If `supabase gen types` fails with a 403 or auth error, **stop immediately and ask the user to run `supabase login`** in their terminal. Do NOT attempt workarounds (manual type patching, MCP queries, type stubs). The CLI auth must be fixed first — a corrupted or missing types file breaks every `.from()` call at build time.
+```bash
+# Option 1: Supabase CLI (preferred)
+cd apps/zer && supabase gen types typescript --project-id krrkhozadforrydffegg --schema public > src/lib/database.types.ts
+cp src/lib/database.types.ts src/lib/supabase/types.ts
+
+# Option 2: Supabase MCP (if CLI auth is broken)
+# Use mcp__supabase_zer_generate_typescript_types, then save output to both files
+```
+
+**Two type files exist** — both must be updated:
+- `src/lib/database.types.ts` — the canonical Supabase-generated types
+- `src/lib/supabase/types.ts` — copy used by `createClient()` (imports from `./types`)
+
+After generating, run `biome check --write` to fix formatting (Supabase CLI outputs without semicolons).
+
+If `supabase gen types` fails with a 403 or auth error, **stop immediately and ask the user to run `supabase login`** in their terminal. Do NOT attempt workarounds (manual type patching, type stubs). The CLI auth must be fixed first — a corrupted or missing types file breaks every `.from()` call at build time.
 
 ---
 
