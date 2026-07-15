@@ -1,18 +1,22 @@
 # @zuiio/auth
 
-React authentication context and hooks for Supabase Auth. Provides a provider pattern with typed state and actions.
+React authentication context and hooks for Supabase Auth. Provides a provider pattern with typed state and actions. All products federate to the central Zuiio identity via SSO — no product handles password/email signup directly.
 
 ## Exports
 
 | Export | Type | Description |
 |--------|------|-------------|
 | `SupabaseAuthProvider` | Component | Wraps app root, provides auth context |
-| `useAuth` | Hook | Access auth state + actions (signIn, signOut, etc.) |
+| `useAuth` | Hook | Access auth state + actions (signInWithZuiio, signOut) |
 | `useSession` | Hook | Returns current Session or null |
 | `useRequireAuth` | Hook | Redirects to login if unauthenticated |
+| `startZuiioSso` | Function | Initiates SSO login via `custom:zuiio` provider |
+| `exchangeZuiioSsoCode` | Function | Exchanges product-project PKCE code for session |
+| `ZUIIO_OIDC_PROVIDER` | Constant | `"custom:zuiio"` provider identifier |
 | `AuthState` | Type | `{ status: "loading" \| "authenticated" \| "unauthenticated" }` |
-| `AuthActions` | Type | `{ signIn, signOut, ... }` |
+| `AuthActions` | Type | `{ signInWithZuiio, signOut }` |
 | `AuthContextValue` | Type | Combined state + actions |
+| `ZuiioSsoResult` | Type | `{ url: string \| null, error: string \| null }` |
 
 ## Usage
 

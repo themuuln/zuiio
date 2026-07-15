@@ -10,6 +10,8 @@ import {
   type ReactNode,
 } from "react";
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
+import type { ZuiioSsoResult } from "./sso";
+import { startZuiioSso } from "./sso";
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -19,8 +21,10 @@ export type AuthState =
   | { status: "unauthenticated" };
 
 export interface AuthActions {
-  signIn: (email: string, password: string) => Promise<string | null>;
-  signUp: (email: string, password: string) => Promise<string | null>;
+  signInWithZuiio: (
+    redirectTo: string,
+    skipBrowserRedirect?: boolean,
+  ) => Promise<ZuiioSsoResult>;
   signOut: () => Promise<void>;
 }
 
@@ -84,21 +88,12 @@ export function SupabaseAuthProvider({
     return () => subscription.unsubscribe();
   }, [supabase]);
 
-  const signIn = useCallback(
-    async (email: string, password: string): Promise<string | null> => {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      return error?.message ?? null;
-    },
-    [supabase],
-  );
-
-  const signUp = useCallback(
-    async (email: string, password: string): Promise<string | null> => {
-      const { error } = await supabase.auth.signUp({ email, password });
-      return error?.message ?? null;
+  const signInWithZuiio = useCallback(
+    async (
+      redirectTo: string,
+      skipBrowserRedirect?: boolean,
+    ): Promise<ZuiioSsoResult> => {
+      return startZuiioSso(supabase, { redirectTo, skipBrowserRedirect });
     },
     [supabase],
   );
@@ -110,7 +105,7 @@ export function SupabaseAuthProvider({
 
   const value: AuthContextValue = {
     state,
-    actions: { signIn, signUp, signOut },
+    actions: { signInWithZuiio, signOut },
   };
 
   if (state.status === "loading" && loadingFallback) {

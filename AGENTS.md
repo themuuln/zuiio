@@ -17,6 +17,7 @@
 zuiio/
 ├── packages/        ← 12 shared @zuiio/* packages
 ├── apps/
+│   ├── zuiio-id/    ← Central identity app (Next.js 16, id.zuiio.com)
 │   ├── website/     ← Company website (Next.js 16, Tailwind v4)
 │   ├── zer/         ← SMB ERP app
 │   │   └── packages/branding/  ← @zer/branding
@@ -33,6 +34,7 @@ zuiio/
 
 | App | Stack | Description | dev command |
 |-----|-------|-------------|-------------|
+| `zuiio-id` | Next.js 16 + Supabase | Central identity SSO (id.zuiio.com) | `cd apps/zuiio-id && pnpm dev` |
 | `website` | Next.js 16, Tailwind v4 | Company site | `cd apps/website && pnpm dev` |
 | `zer` | Next.js 16 + Supabase | SMB ERP | `cd apps/zer && pnpm dev` |
 | `tolom` | Next.js 16 + Supabase | Auto repair management | `cd apps/tolom && pnpm dev` |
@@ -61,6 +63,7 @@ Multi-tenant AI agent gateway at `apps/agent-gateway/`. Connects Telegram bots t
 | `branding` | Framework-agnostic | OKLch design tokens, globals.css source of truth | — |
 | `config` | Build | Shared tsconfig extended by all packages | — |
 | `core` | Framework-agnostic | Formatting, validation, errors, timezone, domain rules, UUID, form validation, **lookup utilities: `createLookup()` `createAggregatedLookup()`** (O(1) Map builders replacing array.find) | date-fns |
+| `auth` | React | `SupabaseAuthProvider`, `useAuth`, `useSession`, `useRequireAuth`, **`startZuiioSso()` `exchangeZuiioSsoCode()` `ZUIIO_OIDC_PROVIDER`** (SSO federation adapter) | @supabase/supabase-js, react |
 | `hooks` | React | `useDebounce` `useDisclosure` `useCopyToClipboard` `useFuzzySearch` `useOnlineStatus` `useLocalStorage` `useIntersectionObserver`, **`useLookup()` `useAggregatedLookup()`** (memoized Map hooks) | react |
 | `query` | React/Next | React Query provider + optimistic CRUD hooks (FormData + JSON) | @tanstack/react-query, react |
 | `realtime` | React/Next | Supabase Realtime hooks: useRealtime, useRealtimeMulti | @supabase/supabase-js, @tanstack/react-query, react |
