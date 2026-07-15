@@ -16,7 +16,7 @@ catalog:
   # TanStack Query
   "@tanstack/react-query": ^5.101.2
   # Supabase
-  "@supabase/supabase-js": ^2.110.1
+  "@supabase/supabase-js": ^2.110.3
   # TypeScript
   typescript: npm:@typescript/typescript6@^6.0.2
   "@types/node": ^24.0.0

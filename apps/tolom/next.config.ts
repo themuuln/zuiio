@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
   ],
 
   // Allow Tailscale IP for phone testing from mobile devices
-  allowedDevOrigins: ["100.102.22.106", "192.168.1.121", "127.0.0.1", "localhost"],
+  allowedDevOrigins: ["100.102.22.106", "192.168.1.121", "192.168.1.126", "127.0.0.1", "localhost"],
 
   // TypeScript validation is handled by `pnpm validate` before build.
   typescript: {

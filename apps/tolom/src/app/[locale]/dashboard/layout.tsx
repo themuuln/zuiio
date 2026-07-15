@@ -1,5 +1,5 @@
-// Route renders user-specific content — legitimate cache opt-out.
-export const instant = false;
+// Brand theme + client shell persist across navigations — no server re-render needed.
+export const instant = true;
 
 import { generateBrandCSS } from "@zuiio/branding";
 import type { ReactNode } from "react";
