@@ -4,9 +4,10 @@ Per-task implementation state for the specs in this directory. Updated in the sa
 
 **Legend:** ✅ done & verified per spec done-when · 🟡 code-complete, verification blocked by environment · ⬜ not started
 
-**Environment constraints (2026-07-15):** no Docker/container runtime on this machine → no local Supabase stack; only the anon key exists for the hosted project → no DDL can be applied anywhere from this environment. Consequence: migrations are authored and reviewed but unapplied; done-whens requiring live DB behavior stay 🟡 until someone runs the chain (Docker `supabase db reset`, or `supabase db push` with project credentials).
+**Environment constraints (updated 2026-07-15):** no Docker/container runtime on this machine → no local Supabase stack. Migrations applied to hosted project via Supabase MCP (`mcp__supabase_onoo_apply_migration`). The hosted project now has the full V2 chain: all base tables, RLS policies, private helpers (`user_can_*`, `write_audit`, `raise_error`), all 13 `cmd_*` functions, 5 `v_public_*` views, and seed data. The `20260711094500_v2_recovery.sql` file was patched to remove `ALTER TYPE ... DROP VALUE` (not supported by Postgres) — the MCP-applied version skips those.
 
-**Hosted project drift (found 2026-07-15 by `scripts/verify-stack.sh --remote`):** the hosted project (`iyhujghadlymroihxyiy`) predates the V2 chain — all 12 probed base tables (`stat_events`, `games`, `game_player_stats`, `game_team_stats`, `season_player_stats`, `standings`, `source_submissions`, `game_revisions`, `audit_log`, `tracker_sessions`, `players`, `teams`) are **anon-readable**, and no `cmd_*` function exists there. The 5 `v_public_*` views do exist and serve pilot data. Deploying the migration chain to that project (or replacing it) is a prerequisite for any real pilot.
+**Migration chain status:** `20260712000000_paid_pilot_commands.sql` and `20260712010000_paid_pilot_publication.sql` are NOT yet applied to the hosted project. They enhance `cmd_record_event` with ruleset vocabulary binding and add the correction trio — apply when ready for pilot.
+
 
 ## Phase 1 — Trusted data foundation
 

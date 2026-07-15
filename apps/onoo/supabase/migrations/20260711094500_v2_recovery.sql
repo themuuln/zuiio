@@ -17,24 +17,11 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
--- Step 2: Migrate rows from v1 values to v2 values
+-- Step 2: Migrate any legacy rows to v2 enum values (safe no-ops if no v1 rows exist)
 UPDATE public.games SET status = 'live_provisional' WHERE status = 'live';
 UPDATE public.games SET status = 'final_pending_review' WHERE status = 'final';
 UPDATE public.games SET status = 'league_verified' WHERE status = 'verified';
 
--- Step 3: Remove old enum values (Postgres doesn't support DROP IF EXISTS)
-DO $$ BEGIN
-  ALTER TYPE public.game_status DROP VALUE 'live';
-EXCEPTION WHEN others THEN NULL;
-END $$;
-DO $$ BEGIN
-  ALTER TYPE public.game_status DROP VALUE 'final';
-EXCEPTION WHEN others THEN NULL;
-END $$;
-DO $$ BEGIN
-  ALTER TYPE public.game_status DROP VALUE 'verified';
-EXCEPTION WHEN others THEN NULL;
-END $$;
 
 -- 2. Create missing tables
 CREATE TABLE IF NOT EXISTS public.basketball_rulesets (
