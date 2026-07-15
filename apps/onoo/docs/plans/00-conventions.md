@@ -9,8 +9,8 @@ This file is for AI implementers. Read order: `AGENTS.md` → this file → the 
 | Framework | Next.js 16.2.10, App Router, React 19.2.7, Turbopack |
 | Styling | Tailwind CSS v4, shadcn/ui components in `src/components/ui/` |
 | Available shadcn components | badge, button, card, dialog, form, input, label, select, separator, table, tabs, textarea |
-| Charts | **None installed.** Task 2.4 installs the shadcn chart component (Recharts). Until then, no chart code exists. |
-| Animation | **No animation library.** Use CSS transitions and the `useCountUp` hook (Task 2.3). Do NOT add framer-motion. |
+| Charts | Recharts via shadcn chart component (`src/components/ui/chart.tsx`). Used in shooting-profile, skill-radar, season-arc. |
+| Animation | No animation library. Use CSS transitions and the `useCountUp` hook (`src/lib/hooks/use-count-up.ts`). Do NOT add framer-motion. |
 | Server state | TanStack Query v5 (client components only) |
 | Forms | react-hook-form + zod v4 + `@hookform/resolvers` |
 | Database | Supabase. Server client via `@supabase/ssr`; browser client at `src/lib/supabase/client.ts` |
