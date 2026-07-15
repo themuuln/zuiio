@@ -54,7 +54,8 @@ class SyncIndicator extends ConsumerWidget {
     }
 
     return GestureDetector(
-      onTap: onTap ?? (hasConflicts ? () => _navigateToConflicts(context) : null),
+      onTap:
+          onTap ?? (hasConflicts ? () => _navigateToConflicts(context) : null),
       child: Tooltip(
         message: tooltip,
         child: Container(

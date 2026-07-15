@@ -64,8 +64,7 @@ class IsarStorage {
       _db.isarServiceBookings;
   IsarCollection<IsarServiceProvider> get serviceProviders =>
       _db.isarServiceProviders;
-  IsarCollection<IsarVetProfile> get vetProfiles =>
-      _db.isarVetProfiles;
+  IsarCollection<IsarVetProfile> get vetProfiles => _db.isarVetProfiles;
   IsarCollection<IsarRace> get races => _db.isarRaces;
   IsarCollection<IsarRaceEntry> get raceEntries => _db.isarRaceEntrys;
   IsarCollection<IsarMarketConversation> get marketConversations =>
@@ -77,8 +76,7 @@ class IsarStorage {
   IsarCollection<IsarMarketOffer> get marketOffers => _db.isarMarketOffers;
   IsarCollection<IsarSellerProfile> get sellerProfiles =>
       _db.isarSellerProfiles;
-  IsarCollection<IsarSellerRating> get sellerRatings =>
-      _db.isarSellerRatings;
+  IsarCollection<IsarSellerRating> get sellerRatings => _db.isarSellerRatings;
   IsarCollection<IsarMarketInquiry> get marketInquiries =>
       _db.isarMarketInquirys;
   IsarCollection<IsarListingReport> get listingReports =>
@@ -113,24 +111,16 @@ class IsarStorage {
       _db.isarSellerPhoneVerifications;
   IsarCollection<IsarEMongoliaVerification> get eMongoliaVerifications =>
       _db.isarEMongoliaVerifications;
-  IsarCollection<IsarSavedSearch> get savedSearches =>
-      _db.isarSavedSearchs;
-  IsarCollection<IsarTrialSlot> get trialSlots =>
-      _db.isarTrialSlots;
-  IsarCollection<IsarTrialBooking> get trialBookings =>
-      _db.isarTrialBookings;
-  IsarCollection<IsarFeedSchedule> get feedSchedules =>
-      _db.isarFeedSchedules;
-  IsarCollection<IsarFeedLog> get feedLogs =>
-      _db.isarFeedLogs;
-  IsarCollection<IsarTrainingLog> get trainingLogs =>
-      _db.isarTrainingLogs;
+  IsarCollection<IsarSavedSearch> get savedSearches => _db.isarSavedSearchs;
+  IsarCollection<IsarTrialSlot> get trialSlots => _db.isarTrialSlots;
+  IsarCollection<IsarTrialBooking> get trialBookings => _db.isarTrialBookings;
+  IsarCollection<IsarFeedSchedule> get feedSchedules => _db.isarFeedSchedules;
+  IsarCollection<IsarFeedLog> get feedLogs => _db.isarFeedLogs;
+  IsarCollection<IsarTrainingLog> get trainingLogs => _db.isarTrainingLogs;
   IsarCollection<IsarPerformanceRecord> get performanceRecords =>
       _db.isarPerformanceRecords;
-  IsarCollection<IsarTeam> get teams =>
-      _db.isarTeams;
-  IsarCollection<IsarTeamMember> get teamMembers =>
-      _db.isarTeamMembers;
+  IsarCollection<IsarTeam> get teams => _db.isarTeams;
+  IsarCollection<IsarTeamMember> get teamMembers => _db.isarTeamMembers;
   IsarCollection<IsarTeamInvitation> get teamInvitations =>
       _db.isarTeamInvitations;
 

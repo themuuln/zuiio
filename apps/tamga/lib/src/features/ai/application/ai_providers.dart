@@ -21,15 +21,15 @@ final aiRepositoryProvider = Provider<AiRepository>((ref) {
 /// [sireId] ба [damId] параметрээр тодорхой хос морины шинжилгээг дуудах.
 final breedingAdviceProvider =
     FutureProvider.family<BreedingAdvice, BreedingQuery>((ref, query) async {
-  final repository = ref.watch(aiRepositoryProvider);
-  final result = await repository.getBreedingAdvice(query);
+      final repository = ref.watch(aiRepositoryProvider);
+      final result = await repository.getBreedingAdvice(query);
 
-  if (result.isSuccess) {
-    return result.value;
-  }
+      if (result.isSuccess) {
+        return result.value;
+      }
 
-  throw result.error;
-});
+      throw result.error;
+    });
 
 // ── Rate Limit Configuration ─────────────────────────────────────────
 
@@ -55,11 +55,7 @@ final breedingQueryCountProvider = StateProvider<int>((ref) => 0);
 
 /// Хэрэглэгчийн үлдэгдэл AI шинжилгээний квотын мэдээлэл.
 class BreedingQuotaInfo {
-  const BreedingQuotaInfo({
-    required this.tier,
-    this.limit,
-    required this.used,
-  });
+  const BreedingQuotaInfo({required this.tier, this.limit, required this.used});
 
   /// Хэрэглэгчийн түвшин.
   final SubscriptionTier tier;

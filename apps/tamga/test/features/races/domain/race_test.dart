@@ -7,10 +7,7 @@ void main() {
   // ══════════════════════════════════════════════════════════════
   group('Race domain model', () {
     test('has all required fields with sensible defaults', () {
-      final race = Race(
-        id: 'race-1',
-        name: 'Сур харваа',
-      );
+      final race = Race(id: 'race-1', name: 'Сур харваа');
 
       expect(race.id, 'race-1');
       expect(race.name, 'Сур харваа');

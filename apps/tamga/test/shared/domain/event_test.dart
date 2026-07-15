@@ -25,8 +25,11 @@ void main() {
 
     test('displayName is non-empty for all values', () {
       for (final type in EventType.values) {
-        expect(type.displayName.isNotEmpty, isTrue,
-            reason: '${type.name} should have a non-empty displayName');
+        expect(
+          type.displayName.isNotEmpty,
+          isTrue,
+          reason: '${type.name} should have a non-empty displayName',
+        );
       }
     });
 

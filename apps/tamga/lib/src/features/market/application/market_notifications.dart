@@ -219,9 +219,7 @@ class MarketNotifications {
     // Fetch the listing title for the notification body
     String listingTitle;
     try {
-      final listingResult = await _marketRepository.fetchListingById(
-        listingId,
-      );
+      final listingResult = await _marketRepository.fetchListingById(listingId);
       listingTitle = listingResult.getOrThrow()?.title ?? listingId;
     } catch (_) {
       listingTitle = listingId;
@@ -325,8 +323,7 @@ class MarketNotifications {
 
     // Байршил
     if (filters.containsKey('location')) {
-      final location = (filters['location'] as String?).orEmpty
-          .toLowerCase();
+      final location = (filters['location'] as String?).orEmpty.toLowerCase();
       if (location.isNotEmpty &&
           !listing.locationLabel.toLowerCase().contains(location)) {
         return false;
@@ -410,7 +407,8 @@ class MarketNotifications {
         body = '"$listingTitle" зарын туршилт цуцлагдлаа.';
       default:
         title = 'Туршилтын төлөв шинэчлэгдсэн';
-        body = '"$listingTitle" зарын туршилтын төлөв "$oldLabel"-аас "$newLabel" болж өөрчлөгдлөө.';
+        body =
+            '"$listingTitle" зарын туршилтын төлөв "$oldLabel"-аас "$newLabel" болж өөрчлөгдлөө.';
     }
 
     await _localNotification.showNotification(

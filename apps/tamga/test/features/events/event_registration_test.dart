@@ -262,11 +262,14 @@ void main() {
       await IsarDatabase.close();
     });
 
-    test('fetchRegistrations returns empty list for an event with no registrations', () async {
-      final result = await repository.fetchRegistrations('evt-nonexistent');
-      expect(result.isSuccess, true);
-      expect(result.value, isEmpty);
-    });
+    test(
+      'fetchRegistrations returns empty list for an event with no registrations',
+      () async {
+        final result = await repository.fetchRegistrations('evt-nonexistent');
+        expect(result.isSuccess, true);
+        expect(result.value, isEmpty);
+      },
+    );
 
     test('registerHorse creates a new registration', () async {
       final result = await repository.registerHorse(
@@ -313,28 +316,31 @@ void main() {
       expect(duplicate.isFailure, true);
     });
 
-    test('fetchRegistrations returns registrations for a specific event', () async {
-      await repository.registerHorse(
-        eventId: 'evt-1',
-        horseId: 'horse-1',
-        ownerId: 'user-1',
-      );
-      await repository.registerHorse(
-        eventId: 'evt-1',
-        horseId: 'horse-2',
-        ownerId: 'user-1',
-      );
-      await repository.registerHorse(
-        eventId: 'evt-2',
-        horseId: 'horse-3',
-        ownerId: 'user-1',
-      );
+    test(
+      'fetchRegistrations returns registrations for a specific event',
+      () async {
+        await repository.registerHorse(
+          eventId: 'evt-1',
+          horseId: 'horse-1',
+          ownerId: 'user-1',
+        );
+        await repository.registerHorse(
+          eventId: 'evt-1',
+          horseId: 'horse-2',
+          ownerId: 'user-1',
+        );
+        await repository.registerHorse(
+          eventId: 'evt-2',
+          horseId: 'horse-3',
+          ownerId: 'user-1',
+        );
 
-      final result = await repository.fetchRegistrations('evt-1');
-      expect(result.isSuccess, true);
-      expect(result.value.length, 2);
-      expect(result.value.every((r) => r.eventId == 'evt-1'), true);
-    });
+        final result = await repository.fetchRegistrations('evt-1');
+        expect(result.isSuccess, true);
+        expect(result.value.length, 2);
+        expect(result.value.every((r) => r.eventId == 'evt-1'), true);
+      },
+    );
 
     test('cancelRegistration updates status to cancelled', () async {
       final reg = await repository.registerHorse(
@@ -371,10 +377,12 @@ void main() {
       expect(item.entityId, reg.value.id);
     });
 
-    test('cancelRegistration returns failure for non-existent registration', () async {
-      final result = await repository.cancelRegistration('nonexistent');
-      expect(result.isFailure, true);
-    });
+    test(
+      'cancelRegistration returns failure for non-existent registration',
+      () async {
+        final result = await repository.cancelRegistration('nonexistent');
+        expect(result.isFailure, true);
+      },
+    );
   });
-
 }

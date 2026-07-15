@@ -31,7 +31,8 @@ class FavoriteListingsScreen extends ConsumerWidget {
                 return const EmptyState(
                   icon: Icons.favorite_border,
                   title: 'Хадгалсан зар алга',
-                  description: 'Зах дээрх заруудаас дуртай заруудаа хадгална уу.',
+                  description:
+                      'Зах дээрх заруудаас дуртай заруудаа хадгална уу.',
                 );
               }
 

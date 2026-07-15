@@ -123,40 +123,42 @@ void main() {
         expect(syncQueue.peek()!.action, SyncAction.delete);
       });
 
-      test('fetchSchedules returns only schedules for the specified horse',
-          () async {
-        await repository.saveSchedule(
-          FeedSchedule(
-            id: 'fs-a',
-            horseId: 'horse-a',
-            feedType: FeedType.hay,
-            quantityKg: 5.0,
-            frequency: 'Өдөр бүр',
-            startDate: DateTime.now(),
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          ),
-        );
-        await repository.saveSchedule(
-          FeedSchedule(
-            id: 'fs-b',
-            horseId: 'horse-b',
-            feedType: FeedType.grain,
-            quantityKg: 2.0,
-            frequency: 'Өдөрт 2 удаа',
-            startDate: DateTime.now(),
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          ),
-        );
-        final resultA = await repository.fetchSchedules('horse-a');
-        expect(resultA.value.length, 1);
-        expect(resultA.value.first.id, 'fs-a');
+      test(
+        'fetchSchedules returns only schedules for the specified horse',
+        () async {
+          await repository.saveSchedule(
+            FeedSchedule(
+              id: 'fs-a',
+              horseId: 'horse-a',
+              feedType: FeedType.hay,
+              quantityKg: 5.0,
+              frequency: 'Өдөр бүр',
+              startDate: DateTime.now(),
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
+          );
+          await repository.saveSchedule(
+            FeedSchedule(
+              id: 'fs-b',
+              horseId: 'horse-b',
+              feedType: FeedType.grain,
+              quantityKg: 2.0,
+              frequency: 'Өдөрт 2 удаа',
+              startDate: DateTime.now(),
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
+          );
+          final resultA = await repository.fetchSchedules('horse-a');
+          expect(resultA.value.length, 1);
+          expect(resultA.value.first.id, 'fs-a');
 
-        final resultB = await repository.fetchSchedules('horse-b');
-        expect(resultB.value.length, 1);
-        expect(resultB.value.first.id, 'fs-b');
-      });
+          final resultB = await repository.fetchSchedules('horse-b');
+          expect(resultB.value.length, 1);
+          expect(resultB.value.first.id, 'fs-b');
+        },
+      );
     });
 
     group('FeedLog', () {
@@ -270,8 +272,10 @@ void main() {
         );
         expect(result.isSuccess, true);
         expect(result.value.length, 2);
-        expect(result.value.map((l) => l.id),
-            containsAll(['fl-date-1', 'fl-date-2']));
+        expect(
+          result.value.map((l) => l.id),
+          containsAll(['fl-date-1', 'fl-date-2']),
+        );
       });
     });
 

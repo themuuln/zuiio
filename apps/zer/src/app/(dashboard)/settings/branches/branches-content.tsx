@@ -178,9 +178,7 @@ export function BranchesContent() {
                   if (result && "error" in result) {
                     toast.error(result.error);
                   } else {
-                    toast.success(
-                      "Үндсэн салбар болгон өөрчиллөө.",
-                    );
+                    toast.success("Үндсэн салбар болгон өөрчиллөө.");
                   }
                 }}
                 title="Үндсэн салбар болгох"

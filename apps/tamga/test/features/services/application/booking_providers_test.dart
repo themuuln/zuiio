@@ -60,8 +60,9 @@ void main() {
 
       final container = ProviderContainer(
         overrides: [
-          serviceBookingRepositoryProvider
-              .overrideWith((ref) => Future.value(mockRepository)),
+          serviceBookingRepositoryProvider.overrideWith(
+            (ref) => Future.value(mockRepository),
+          ),
         ],
       );
 
@@ -76,35 +77,37 @@ void main() {
       container.dispose();
     });
 
-    test('cancelBookingProvider on already cancelled booking returns error',
-        () async {
-      when(
-        () => mockRepository.cancelBooking('already-cancelled'),
-      ).thenAnswer(
-        (_) async => Result.fail(
-          AppException(
-            message: 'Захиалга аль хэдийн цуцлагдсан',
-            code: 'BOOKING_ALREADY_CANCELLED',
+    test(
+      'cancelBookingProvider on already cancelled booking returns error',
+      () async {
+        when(
+          () => mockRepository.cancelBooking('already-cancelled'),
+        ).thenAnswer(
+          (_) async => Result.fail(
+            AppException(
+              message: 'Захиалга аль хэдийн цуцлагдсан',
+              code: 'BOOKING_ALREADY_CANCELLED',
+            ),
           ),
-        ),
-      );
+        );
 
-      final container = ProviderContainer(
-        overrides: [
-          serviceBookingRepositoryProvider
-              .overrideWith((ref) => Future.value(mockRepository)),
-        ],
-      );
+        final container = ProviderContainer(
+          overrides: [
+            serviceBookingRepositoryProvider.overrideWith(
+              (ref) => Future.value(mockRepository),
+            ),
+          ],
+        );
 
-      expect(
-        () => container.read(
-          cancelBookingProvider('already-cancelled').future,
-        ),
-        throwsA(isA<AppException>()),
-      );
+        expect(
+          () =>
+              container.read(cancelBookingProvider('already-cancelled').future),
+          throwsA(isA<AppException>()),
+        );
 
-      container.dispose();
-    });
+        container.dispose();
+      },
+    );
 
     // ════════════════════════════════════════════════════════════
     // VAL-SRV-BOOKING-006: Booking list shows user's bookings
@@ -121,8 +124,9 @@ void main() {
 
       final container = ProviderContainer(
         overrides: [
-          serviceBookingRepositoryProvider
-              .overrideWith((ref) => Future.value(mockRepository)),
+          serviceBookingRepositoryProvider.overrideWith(
+            (ref) => Future.value(mockRepository),
+          ),
         ],
       );
 
@@ -138,22 +142,19 @@ void main() {
     });
 
     test('bookingsByUserProvider filters by userId', () async {
-      when(
-        () => mockRepository.fetchBookings('user-1'),
-      ).thenAnswer((_) async => Result.ok([
-        createTestBooking(id: 'b1', userId: 'user-1'),
-      ]));
+      when(() => mockRepository.fetchBookings('user-1')).thenAnswer(
+        (_) async => Result.ok([createTestBooking(id: 'b1', userId: 'user-1')]),
+      );
 
-      when(
-        () => mockRepository.fetchBookings('user-2'),
-      ).thenAnswer((_) async => Result.ok([
-        createTestBooking(id: 'b2', userId: 'user-2'),
-      ]));
+      when(() => mockRepository.fetchBookings('user-2')).thenAnswer(
+        (_) async => Result.ok([createTestBooking(id: 'b2', userId: 'user-2')]),
+      );
 
       final container = ProviderContainer(
         overrides: [
-          serviceBookingRepositoryProvider
-              .overrideWith((ref) => Future.value(mockRepository)),
+          serviceBookingRepositoryProvider.overrideWith(
+            (ref) => Future.value(mockRepository),
+          ),
         ],
       );
 

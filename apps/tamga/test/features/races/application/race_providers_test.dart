@@ -30,14 +30,12 @@ void main() {
         createMockRace(id: 'r2', name: 'Race 2', type: RaceType.regional),
       ];
 
-      when(() => mockRepository.fetchAll()).thenAnswer(
-        (_) async => Result.ok(races),
-      );
+      when(
+        () => mockRepository.fetchAll(),
+      ).thenAnswer((_) async => Result.ok(races));
 
       final container = ProviderContainer(
-        overrides: [
-          raceRepositoryProvider.overrideWithValue(mockRepository),
-        ],
+        overrides: [raceRepositoryProvider.overrideWithValue(mockRepository)],
       );
 
       final result = await container.read(racesProvider.future);
@@ -77,21 +75,20 @@ void main() {
         ),
       ];
 
-      when(() => mockRepository.fetchAll()).thenAnswer(
-        (_) async => Result.ok(races),
-      );
+      when(
+        () => mockRepository.fetchAll(),
+      ).thenAnswer((_) async => Result.ok(races));
 
       final container = ProviderContainer(
-        overrides: [
-          raceRepositoryProvider.overrideWithValue(mockRepository),
-        ],
+        overrides: [raceRepositoryProvider.overrideWithValue(mockRepository)],
       );
 
       final result = await container.read(upcomingRacesProvider.future);
       expect(result.length, 2);
       expect(
         result.every(
-          (r) => r.status == RaceStatus.upcoming || r.status == RaceStatus.ongoing,
+          (r) =>
+              r.status == RaceStatus.upcoming || r.status == RaceStatus.ongoing,
         ),
         true,
       );
@@ -122,21 +119,21 @@ void main() {
         ),
       ];
 
-      when(() => mockRepository.fetchAll()).thenAnswer(
-        (_) async => Result.ok(races),
-      );
+      when(
+        () => mockRepository.fetchAll(),
+      ).thenAnswer((_) async => Result.ok(races));
 
       final container = ProviderContainer(
-        overrides: [
-          raceRepositoryProvider.overrideWithValue(mockRepository),
-        ],
+        overrides: [raceRepositoryProvider.overrideWithValue(mockRepository)],
       );
 
       final result = await container.read(pastRacesProvider.future);
       expect(result.length, 2);
       expect(
         result.every(
-          (r) => r.status == RaceStatus.completed || r.status == RaceStatus.cancelled,
+          (r) =>
+              r.status == RaceStatus.completed ||
+              r.status == RaceStatus.cancelled,
         ),
         true,
       );
@@ -152,28 +149,29 @@ void main() {
         createMockRace(id: 'r4', name: 'Naadam 2', type: RaceType.naadam),
       ];
 
-      when(() => mockRepository.fetchAll()).thenAnswer(
-        (_) async => Result.ok(races),
-      );
+      when(
+        () => mockRepository.fetchAll(),
+      ).thenAnswer((_) async => Result.ok(races));
 
       final container = ProviderContainer(
-        overrides: [
-          raceRepositoryProvider.overrideWithValue(mockRepository),
-        ],
+        overrides: [raceRepositoryProvider.overrideWithValue(mockRepository)],
       );
 
-      final naadamRaces =
-          await container.read(racesByTypeProvider(RaceType.naadam).future);
+      final naadamRaces = await container.read(
+        racesByTypeProvider(RaceType.naadam).future,
+      );
       expect(naadamRaces.length, 2);
       expect(naadamRaces.every((r) => r.type == RaceType.naadam), true);
 
-      final regionalRaces =
-          await container.read(racesByTypeProvider(RaceType.regional).future);
+      final regionalRaces = await container.read(
+        racesByTypeProvider(RaceType.regional).future,
+      );
       expect(regionalRaces.length, 1);
       expect(regionalRaces.first.type, RaceType.regional);
 
-      final localRaces =
-          await container.read(racesByTypeProvider(RaceType.local).future);
+      final localRaces = await container.read(
+        racesByTypeProvider(RaceType.local).future,
+      );
       expect(localRaces.length, 1);
       expect(localRaces.first.type, RaceType.local);
 
@@ -190,9 +188,7 @@ void main() {
       );
 
       final container = ProviderContainer(
-        overrides: [
-          raceRepositoryProvider.overrideWithValue(mockRepository),
-        ],
+        overrides: [raceRepositoryProvider.overrideWithValue(mockRepository)],
       );
 
       final race1 = await container.read(raceDetailProvider('r1').future);
@@ -209,17 +205,12 @@ void main() {
     test('raceDetailProvider throws when race not found', () async {
       when(() => mockRepository.fetchById('nonexistent')).thenAnswer(
         (_) async => Result.fail(
-          AppException(
-            message: 'Уралдаан олдсонгүй',
-            code: 'RACE_NOT_FOUND',
-          ),
+          AppException(message: 'Уралдаан олдсонгүй', code: 'RACE_NOT_FOUND'),
         ),
       );
 
       final container = ProviderContainer(
-        overrides: [
-          raceRepositoryProvider.overrideWithValue(mockRepository),
-        ],
+        overrides: [raceRepositoryProvider.overrideWithValue(mockRepository)],
       );
 
       expect(

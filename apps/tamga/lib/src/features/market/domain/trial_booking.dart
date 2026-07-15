@@ -150,8 +150,16 @@ class TrialBooking {
 
   @override
   int get hashCode => Object.hash(
-      id, listingId, slotId, buyerId, sellerId,
-      status, notes, requestedAt, respondedAt);
+    id,
+    listingId,
+    slotId,
+    buyerId,
+    sellerId,
+    status,
+    notes,
+    requestedAt,
+    respondedAt,
+  );
 
   @override
   String toString() =>

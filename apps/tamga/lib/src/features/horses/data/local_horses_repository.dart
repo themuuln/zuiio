@@ -11,13 +11,9 @@ import '../../shared/data/pagination/paginated_result.dart';
 import '../domain/horse_record.dart';
 import 'horses_repository.dart';
 
-class LocalHorsesRepository
-    extends LocalRepository<HorseRecord, IsarHorse>
+class LocalHorsesRepository extends LocalRepository<HorseRecord, IsarHorse>
     implements HorsesRepository {
-  LocalHorsesRepository({
-    required super.storage,
-    required super.syncQueue,
-  });
+  LocalHorsesRepository({required super.storage, required super.syncQueue});
 
   @override
   IsarCollection<IsarHorse> get collection => storage.horses;
@@ -253,10 +249,7 @@ class LocalHorsesRepository
   @override
   Future<Result<void>> deleteHorse(String id) async {
     try {
-      final toDelete = await collection
-          .filter()
-          .domainIdEqualTo(id)
-          .findAll();
+      final toDelete = await collection.filter().domainIdEqualTo(id).findAll();
       if (toDelete.isEmpty) {
         return const Result.ok(null);
       }

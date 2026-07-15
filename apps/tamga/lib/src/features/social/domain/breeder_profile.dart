@@ -97,13 +97,16 @@ class BreederProfile {
           ? DateTime.tryParse(json['memberSince'] as String)
           : null,
       totalHorses: json['totalHorses'] as int? ?? 0,
-      achievements: (json['achievements'] as List<dynamic>?)
+      achievements:
+          (json['achievements'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],
-      recentListings: (json['recentListings'] as List<dynamic>?)
+      recentListings:
+          (json['recentListings'] as List<dynamic>?)
               ?.map(
-                (e) => BreederListingPreview.fromJson(e as Map<String, dynamic>),
+                (e) =>
+                    BreederListingPreview.fromJson(e as Map<String, dynamic>),
               )
               .toList() ??
           [],
@@ -180,10 +183,7 @@ class BreederListingPreview {
   /// Форматлагдсан үнэ.
   String get formattedPrice {
     if (currency == 'MNT') {
-      return '${priceAmount.toString().replaceAllMapped(
-        RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-        (m) => '${m[1]},',
-      )} ₮';
+      return '${priceAmount.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')} ₮';
     }
     return '\$$priceAmount';
   }
@@ -204,7 +204,9 @@ class BreederListingPreview {
       title: title ?? this.title,
       priceAmount: priceAmount ?? this.priceAmount,
       currency: currency ?? this.currency,
-      thumbnailUrl: clearThumbnailUrl ? null : (thumbnailUrl ?? this.thumbnailUrl),
+      thumbnailUrl: clearThumbnailUrl
+          ? null
+          : (thumbnailUrl ?? this.thumbnailUrl),
       status: status ?? this.status,
     );
   }

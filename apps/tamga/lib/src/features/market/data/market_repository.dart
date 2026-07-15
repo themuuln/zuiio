@@ -66,6 +66,7 @@ abstract class MarketRepository {
     required String reporterId,
     required String reason,
   });
+
   /// Худалдагчид үнэлгээ өгөх (1-5 од + сэтгэгдэл).
   Future<Result<SellerRating>> submitSellerRating({
     required String listingId,
@@ -79,9 +80,7 @@ abstract class MarketRepository {
   Future<Result<List<SellerRating>>> fetchSellerRatings(String sellerId);
 
   /// Худалдагчийн үнэлгээний хураангуйг авах.
-  Future<Result<SellerRatingSummary>> fetchSellerRatingSummary(
-    String sellerId,
-  );
+  Future<Result<SellerRatingSummary>> fetchSellerRatingSummary(String sellerId);
 
   /// Бүх мэдээлэгдсэн зарын жагсаалтыг авах (moderation queue-д зориулагдсан).
   Future<Result<List<ListingReport>>> fetchAllReports();
@@ -168,7 +167,7 @@ abstract class MarketRepository {
 
   /// Худалдагчийн баталгаажуулалтын хураангуй төлөвийг авах.
   Future<Result<SellerVerificationStatusSummary>>
-      fetchSellerVerificationSummary(String sellerId);
+  fetchSellerVerificationSummary(String sellerId);
 
   // ============================================================
   // Saved Searches
@@ -184,10 +183,7 @@ abstract class MarketRepository {
   Future<Result<List<SavedSearch>>> fetchSavedSearches(String userId);
 
   /// Хадгалсан хайлтын нэрийг шинэчлэх.
-  Future<Result<SavedSearch>> updateSavedSearchName(
-    String id,
-    String newName,
-  );
+  Future<Result<SavedSearch>> updateSavedSearchName(String id, String newName);
 
   /// Хадгалсан хайлтын lastNotifiedAt-г шинэчлэх.
   Future<Result<void>> updateSavedSearchLastNotifiedAt(
@@ -230,9 +226,7 @@ abstract class MarketRepository {
   Future<Result<TrialSlot>> createTrialSlot(TrialSlot slot);
 
   /// Зарын бүх туршилтын цагийн цонхыг авах.
-  Future<Result<List<TrialSlot>>> fetchTrialSlotsForListing(
-    String listingId,
-  );
+  Future<Result<List<TrialSlot>>> fetchTrialSlotsForListing(String listingId);
 
   /// Цагийн цонхны төлөвийг шинэчлэх.
   Future<Result<TrialSlot>> updateTrialSlot(TrialSlot slot);
@@ -259,9 +253,7 @@ abstract class MarketRepository {
   );
 
   /// Худалдан авагчийн бүх захиалгыг авах.
-  Future<Result<List<TrialBooking>>> fetchTrialBookingsForBuyer(
-    String buyerId,
-  );
+  Future<Result<List<TrialBooking>>> fetchTrialBookingsForBuyer(String buyerId);
 
   /// Худалдагчийн бүх захиалгыг авах.
   Future<Result<List<TrialBooking>>> fetchTrialBookingsForSeller(

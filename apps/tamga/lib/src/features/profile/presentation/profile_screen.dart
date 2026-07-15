@@ -806,7 +806,9 @@ class _SettingsTab extends ConsumerWidget {
           child: ListTile(
             leading: const Icon(Icons.tune_outlined),
             title: const Text('Синк тохиргоо'),
-            subtitle: const Text('Авто синк, синк хийх, локал өгөгдөл цэвэрлэх'),
+            subtitle: const Text(
+              'Авто синк, синк хийх, локал өгөгдөл цэвэрлэх',
+            ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/profile/sync-settings'),
           ),
@@ -835,9 +837,7 @@ class _SettingsTab extends ConsumerWidget {
           child: ListTile(
             leading: const Icon(Icons.analytics_outlined),
             title: const Text('Аналитик'),
-            subtitle: const Text(
-              'Сүрэг, эрүүл мэнд, санхүүгийн үзүүлэлтүүд',
-            ),
+            subtitle: const Text('Сүрэг, эрүүл мэнд, санхүүгийн үзүүлэлтүүд'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/profile/analytics'),
           ),
@@ -1020,8 +1020,8 @@ class _SettingsTab extends ConsumerWidget {
   /// Multi-user gated cards for Stable Profile and Team Management.
   List<Widget> _buildMultiUserCards(BuildContext context, WidgetRef ref) {
     final limits = ref.watch(tierLimitsProvider);
-    final hasMultiUsers = limits.maxMultiUsers != null &&
-        limits.maxMultiUsers! > 1;
+    final hasMultiUsers =
+        limits.maxMultiUsers != null && limits.maxMultiUsers! > 1;
 
     if (!hasMultiUsers) {
       return [const SizedBox.shrink()];
@@ -1032,9 +1032,7 @@ class _SettingsTab extends ConsumerWidget {
         child: ListTile(
           leading: const Icon(Icons.home_outlined),
           title: const Text('Жүчээний профайл'),
-          subtitle: const Text(
-            'Жүчээ мэдээлэл, гишүүд, морьдын тоо',
-          ),
+          subtitle: const Text('Жүчээ мэдээлэл, гишүүд, морьдын тоо'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => context.push('/profile/stable'),
         ),
@@ -1044,9 +1042,7 @@ class _SettingsTab extends ConsumerWidget {
         child: ListTile(
           leading: const Icon(Icons.group_outlined),
           title: const Text('Багийн удирдлага'),
-          subtitle: const Text(
-            'Гишүүд урих, дүр өөрчлөх, хасах',
-          ),
+          subtitle: const Text('Гишүүд урих, дүр өөрчлөх, хасах'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => context.push('/profile/team'),
         ),
@@ -1058,9 +1054,7 @@ class _SettingsTab extends ConsumerWidget {
         child: ListTile(
           leading: const Icon(Icons.mail_outline),
           title: const Text('Урилгууд'),
-          subtitle: const Text(
-            'Хүлээгдэж буй багийн урилгууд',
-          ),
+          subtitle: const Text('Хүлээгдэж буй багийн урилгууд'),
           trailing: _PendingInvitationsBadge(),
           onTap: () => context.push('/profile/invitations'),
         ),
@@ -1370,9 +1364,7 @@ class _SyncStatusSection extends ConsumerWidget {
         decoration: BoxDecoration(
           color: colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(AppSpacing.cornerRadius),
-          border: Border.all(
-            color: colorScheme.outlineVariant,
-          ),
+          border: Border.all(color: colorScheme.outlineVariant),
         ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
@@ -1461,9 +1453,7 @@ class _SyncStatusSection extends ConsumerWidget {
                         )
                       : const Icon(Icons.sync, size: 18),
                   label: Text(
-                    syncState.isSyncing
-                        ? 'Синк хийгдэж байна...'
-                        : 'Синк хийх',
+                    syncState.isSyncing ? 'Синк хийгдэж байна...' : 'Синк хийх',
                   ),
                 ),
               ),
@@ -1497,9 +1487,6 @@ class _PendingInvitationsBadge extends ConsumerWidget {
       return const Icon(Icons.chevron_right);
     }
 
-    return Badge(
-      label: Text('$count'),
-      child: const Icon(Icons.chevron_right),
-    );
+    return Badge(label: Text('$count'), child: const Icon(Icons.chevron_right));
   }
 }

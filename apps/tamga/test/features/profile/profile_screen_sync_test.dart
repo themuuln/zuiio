@@ -154,10 +154,7 @@ Future<SyncStateNotifier> pumpProfileScreen({
         horsesProvider.overrideWith((ref) => <HorseRecord>[]),
         eventsProvider.overrideWith((ref) => <Event>[]),
       ],
-      child: MaterialApp(
-        theme: AppTheme.light(),
-        home: const ProfileScreen(),
-      ),
+      child: MaterialApp(theme: AppTheme.light(), home: const ProfileScreen()),
     ),
   );
 
@@ -170,57 +167,67 @@ Future<SyncStateNotifier> pumpProfileScreen({
 // ── Tests ──────────────────────────────────────────────────────────
 
 void main() {
-  group('VAL-FOUND-027: ProfileScreen shows SyncIndicator and last sync time', () {
-    testWidgets('SyncIndicator widget is present in the header/cover area', (
-      tester,
-    ) async {
-      await pumpProfileScreen(tester: tester);
+  group(
+    'VAL-FOUND-027: ProfileScreen shows SyncIndicator and last sync time',
+    () {
+      testWidgets('SyncIndicator widget is present in the header/cover area', (
+        tester,
+      ) async {
+        await pumpProfileScreen(tester: tester);
 
-      // ── Assertion: SyncIndicator is present ──
-      expect(find.byType(SyncIndicator), findsOneWidget,
-          reason: 'SyncIndicator should be present in ProfileScreen header');
-    });
+        // ── Assertion: SyncIndicator is present ──
+        expect(
+          find.byType(SyncIndicator),
+          findsOneWidget,
+          reason: 'SyncIndicator should be present in ProfileScreen header',
+        );
+      });
 
-    testWidgets('shows last sync time "Сүүлд синк хийсэн" when lastSyncTime is non-null', (
-      tester,
-    ) async {
-      await tester.setLargeViewport();
+      testWidgets(
+        'shows last sync time "Сүүлд синк хийсэн" when lastSyncTime is non-null',
+        (tester) async {
+          await tester.setLargeViewport();
 
-      await pumpProfileScreen(
-        tester: tester,
-        initialState: SyncState(
-          lastSyncTime: DateTime.now().subtract(const Duration(minutes: 5)),
-        ),
+          await pumpProfileScreen(
+            tester: tester,
+            initialState: SyncState(
+              lastSyncTime: DateTime.now().subtract(const Duration(minutes: 5)),
+            ),
+          );
+
+          // ── Assertion: "Сүүлд синк хийсэн" text is shown ──
+          expect(
+            find.textContaining('Сүүлд синк хийсэн'),
+            findsOneWidget,
+            reason:
+                '"Сүүлд синк хийсэн" should appear when lastSyncTime is set',
+          );
+
+          // ── Assertion: relative time text is shown ──
+          expect(
+            find.textContaining('минутын өмнө'),
+            findsOneWidget,
+            reason:
+                'Relative time (minutes ago) should appear with last sync time',
+          );
+        },
       );
 
-      // ── Assertion: "Сүүлд синк хийсэн" text is shown ──
-      expect(
-        find.textContaining('Сүүлд синк хийсэн'),
-        findsOneWidget,
-        reason: '"Сүүлд синк хийсэн" should appear when lastSyncTime is set',
-      );
+      testWidgets('does not show last sync time when lastSyncTime is null', (
+        tester,
+      ) async {
+        await pumpProfileScreen(tester: tester);
 
-      // ── Assertion: relative time text is shown ──
-      expect(
-        find.textContaining('минутын өмнө'),
-        findsOneWidget,
-        reason: 'Relative time (minutes ago) should appear with last sync time',
-      );
-    });
-
-    testWidgets('does not show last sync time when lastSyncTime is null', (
-      tester,
-    ) async {
-      await pumpProfileScreen(tester: tester);
-
-      // ── Assertion: "Сүүлд синк хийсэн" should NOT be visible ──
-      expect(
-        find.textContaining('Сүүлд синк хийсэн'),
-        findsNothing,
-        reason: '"Сүүлд синк хийсэн" should NOT appear when lastSyncTime is null',
-      );
-    });
-  });
+        // ── Assertion: "Сүүлд синк хийсэн" should NOT be visible ──
+        expect(
+          find.textContaining('Сүүлд синк хийсэн'),
+          findsNothing,
+          reason:
+              '"Сүүлд синк хийсэн" should NOT appear when lastSyncTime is null',
+        );
+      });
+    },
+  );
 
   group('VAL-FOUND-028: ProfileScreen shows pending and conflict counts', () {
     testWidgets('shows pending count when pendingCount > 0', (tester) async {
@@ -228,10 +235,7 @@ void main() {
 
       final notifier = await pumpProfileScreen(
         tester: tester,
-        initialState: const SyncState(
-          pendingCount: 3,
-          lastSyncTime: null,
-        ),
+        initialState: const SyncState(pendingCount: 3, lastSyncTime: null),
       );
 
       // Set state after pump
@@ -347,8 +351,11 @@ void main() {
       // The real SyncStateNotifier.triggerSync() tries to read the coordinator
       // which is null, so it returns early without changing status.
       // We verify the button press doesn't throw and the notifier is reachable.
-      expect(notifier.state.status, SyncStatus.idle,
-          reason: 'Sync stays idle when coordinator is null (expected)');
+      expect(
+        notifier.state.status,
+        SyncStatus.idle,
+        reason: 'Sync stays idle when coordinator is null (expected)',
+      );
     });
   });
 }

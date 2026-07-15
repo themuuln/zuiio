@@ -33,8 +33,10 @@ class SupabaseServiceBookingRepository
           .order('created_at', ascending: false);
 
       final bookings = (response as List<dynamic>)
-          .map((row) =>
-              ServiceBooking.fromSupabaseJson(row as Map<String, dynamic>))
+          .map(
+            (row) =>
+                ServiceBooking.fromSupabaseJson(row as Map<String, dynamic>),
+          )
           .toList();
 
       return Result.ok(bookings);
@@ -57,9 +59,7 @@ class SupabaseServiceBookingRepository
 
       if (response == null) return const Result.ok(null);
 
-      return Result.ok(
-        ServiceBooking.fromSupabaseJson(response),
-      );
+      return Result.ok(ServiceBooking.fromSupabaseJson(response));
     } catch (e) {
       return Result.fail(wrapError(e));
     }

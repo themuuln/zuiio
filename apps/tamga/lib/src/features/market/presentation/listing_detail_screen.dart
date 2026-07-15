@@ -168,8 +168,7 @@ class ListingDetailScreen extends ConsumerWidget {
                             padding: EdgeInsets.only(top: AppSpacing.md),
                             child: SkeletonLoader(
                               items: 1,
-                              itemBuilder: (ctx, i) =>
-                                  const SkeletonCardTile(),
+                              itemBuilder: (ctx, i) => const SkeletonCardTile(),
                             ),
                           ),
                           error: (error, _) => Padding(
@@ -232,11 +231,7 @@ class ListingDetailScreen extends ConsumerWidget {
                     // Үнийн санал илгээх товч (худалдан авагчид)
                     if (listing.sellerId != localMarketBuyerId)
                       OutlinedButton.icon(
-                        onPressed: () => _sendOffer(
-                          context,
-                          ref,
-                          listing,
-                        ),
+                        onPressed: () => _sendOffer(context, ref, listing),
                         icon: const Icon(Icons.local_offer_outlined),
                         label: const Text('Үнийн санал өгөх'),
                       ),
@@ -253,11 +248,7 @@ class ListingDetailScreen extends ConsumerWidget {
 
                     // Гэрээ үүсгэх товч
                     OutlinedButton.icon(
-                      onPressed: () => _generateContract(
-                        context,
-                        ref,
-                        listing,
-                      ),
+                      onPressed: () => _generateContract(context, ref, listing),
                       icon: const Icon(Icons.description_outlined),
                       label: const Text('Гэрээ үүсгэх / Generate Contract'),
                     ),
@@ -341,9 +332,7 @@ class ListingDetailScreen extends ConsumerWidget {
     if (monitor.current == ConnectionStatus.offline) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Энэ үйлдэл интернэт холболт шаарддаг'),
-          ),
+          const SnackBar(content: Text('Энэ үйлдэл интернэт холболт шаарддаг')),
         );
       }
       return;
@@ -369,7 +358,8 @@ class ListingDetailScreen extends ConsumerWidget {
       buyerId: localMarketBuyerId,
       sellerId: listing.sellerId,
     );
-    final conversation = existingConv.getOrThrow() ??
+    final conversation =
+        existingConv.getOrThrow() ??
         (await messageRepo.createConversation(
           listingId: listing.id,
           buyerId: localMarketBuyerId,
@@ -416,9 +406,7 @@ class ListingDetailScreen extends ConsumerWidget {
 
     if (!context.mounted) return;
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ContractScreen(contract: contract),
-      ),
+      MaterialPageRoute(builder: (_) => ContractScreen(contract: contract)),
     );
   }
 
@@ -751,8 +739,11 @@ class _SellerTrustCard extends ConsumerWidget {
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () =>
-                            _showRateSellerDialog(context, ref, profile.sellerId),
+                        onPressed: () => _showRateSellerDialog(
+                          context,
+                          ref,
+                          profile.sellerId,
+                        ),
                         icon: const Icon(Icons.star_border),
                         label: const Text('Үнэлэх'),
                       ),
@@ -1046,8 +1037,7 @@ class _PriceInsightCard extends ConsumerWidget {
           ),
           error: (error, _) => TamgaErrorWidget(
             message: 'Үнийн шинжилгээ ачаалахад алдаа гарлаа',
-            onRetry: () =>
-                ref.invalidate(priceInsightProvider(listingId)),
+            onRetry: () => ref.invalidate(priceInsightProvider(listingId)),
           ),
         ),
       ),
@@ -1133,13 +1123,9 @@ class _SellerOfferSection extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.local_offer,
-                        color: theme.colorScheme.primary),
+                    Icon(Icons.local_offer, color: theme.colorScheme.primary),
                     const SizedBox(width: AppSpacing.sm),
-                    Text(
-                      'Ирсэн саналууд',
-                      style: theme.textTheme.titleLarge,
-                    ),
+                    Text('Ирсэн саналууд', style: theme.textTheme.titleLarge),
                     const Spacer(),
                     Text(
                       '${offers.length}',
@@ -1150,10 +1136,12 @@ class _SellerOfferSection extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.md),
-                ...offers.map((offer) => _SellerOfferItem(
-                      offer: offer,
-                      listingPrice: listingPrice,
-                    )),
+                ...offers.map(
+                  (offer) => _SellerOfferItem(
+                    offer: offer,
+                    listingPrice: listingPrice,
+                  ),
+                ),
               ],
             ),
           ),
@@ -1167,10 +1155,7 @@ class _SellerOfferSection extends ConsumerWidget {
 
 /// Худалдагчид ирсэн нэг саналын мөр.
 class _SellerOfferItem extends ConsumerWidget {
-  const _SellerOfferItem({
-    required this.offer,
-    required this.listingPrice,
-  });
+  const _SellerOfferItem({required this.offer, required this.listingPrice});
 
   final MarketOffer offer;
   final int listingPrice;
@@ -1264,10 +1249,7 @@ class _SellerOfferItem extends ConsumerWidget {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () => _openResponseDialog(
-                  context,
-                  ref,
-                ),
+                onPressed: () => _openResponseDialog(context, ref),
                 icon: const Icon(Icons.reply_outlined, size: 16),
                 label: const Text('Хариу өгөх'),
                 style: OutlinedButton.styleFrom(
@@ -1283,10 +1265,7 @@ class _SellerOfferItem extends ConsumerWidget {
     );
   }
 
-  Future<void> _openResponseDialog(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
+  Future<void> _openResponseDialog(BuildContext context, WidgetRef ref) async {
     final result = await OfferResponseDialog.show(
       context,
       offer: offer,
@@ -1313,8 +1292,8 @@ class _SellerOfferItem extends ConsumerWidget {
             status == MarketOfferStatus.accepted
                 ? 'Санал зөвшөөрөгдлөө!'
                 : status == MarketOfferStatus.declined
-                    ? 'Санал татгалзлаа.'
-                    : 'Хариу санал илгээгдлээ.',
+                ? 'Санал татгалзлаа.'
+                : 'Хариу санал илгээгдлээ.',
           ),
         ),
       );

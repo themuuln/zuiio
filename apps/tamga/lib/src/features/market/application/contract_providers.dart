@@ -68,8 +68,8 @@ class ContractActions {
 /// Тодорхой зарын гэрээний үйлдлүүдийн provider.
 final contractForListingProvider =
     Provider.family<ContractForListingActions, String>((ref, listingId) {
-  return ContractForListingActions(ref, listingId);
-});
+      return ContractForListingActions(ref, listingId);
+    });
 
 /// Зарын гэрээ үүсгэх туслах класс.
 class ContractForListingActions {

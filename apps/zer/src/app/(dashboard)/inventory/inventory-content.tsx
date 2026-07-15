@@ -2,6 +2,7 @@
 
 import { Folder, MapPin, Plus, Warehouse } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
 import { withDbCapture } from "@zuiio/capture";
 import Link from "next/link";
 import { ErpEmptyState } from "@/components/erp/empty-state";
@@ -13,7 +14,6 @@ import { LowStockSection } from "@/components/inventory/low-stock-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
-import type { ColumnDef } from "@tanstack/react-table";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { createClient } from "@/lib/supabase/client";

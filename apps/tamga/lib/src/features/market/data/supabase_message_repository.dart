@@ -2,8 +2,12 @@ import 'dart:async';
 // ignore_for_file: avoid_print
 
 import 'package:supabase_flutter/supabase_flutter.dart'
-    show PostgresChangeEvent, PostgresChangeFilter, PostgresChangeFilterType,
-        Supabase, SupabaseClient;
+    show
+        PostgresChangeEvent,
+        PostgresChangeFilter,
+        PostgresChangeFilterType,
+        Supabase,
+        SupabaseClient;
 
 import '../../../core/error/result.dart';
 import '../../../core/sync/sync_queue.dart';
@@ -21,10 +25,7 @@ class SupabaseMessageRepository implements MessageRepository {
   SupabaseMessageRepository({
     required IsarStorage storage,
     required SyncQueue syncQueue,
-  }) : _local = LocalMessageRepository(
-         storage: storage,
-         syncQueue: syncQueue,
-       );
+  }) : _local = LocalMessageRepository(storage: storage, syncQueue: syncQueue);
 
   final LocalMessageRepository _local;
   final Map<String, StreamSubscription> _subscriptions = {};
@@ -150,9 +151,7 @@ class SupabaseMessageRepository implements MessageRepository {
 
     // Set up Supabase Realtime subscription for new messages
     try {
-      final supabaseChannel = _client.channel(
-        'messages:$conversationId',
-      );
+      final supabaseChannel = _client.channel('messages:$conversationId');
 
       final controller = StreamController<MarketMessage>.broadcast();
 
@@ -212,10 +211,7 @@ class SupabaseMessageRepository implements MessageRepository {
   }
 
   /// Өгөгдлийг Supabase руу илгээх.
-  Future<void> _sendToSupabase(
-    String table,
-    Map<String, dynamic> data,
-  ) async {
+  Future<void> _sendToSupabase(String table, Map<String, dynamic> data) async {
     try {
       await _client.from(table).upsert(data);
     } catch (e) {

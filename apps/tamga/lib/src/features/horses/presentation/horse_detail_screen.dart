@@ -247,7 +247,8 @@ class _EventsTab extends StatelessWidget {
     return const EmptyState(
       icon: Icons.emoji_events_outlined,
       title: 'Уралдааны мэдээлэл холбогдоогүй байна',
-      description: 'Энэ морины уралдааны мэдээлэл одоогоор бүртгэгдээгүй байна.',
+      description:
+          'Энэ морины уралдааны мэдээлэл одоогоор бүртгэгдээгүй байна.',
     );
   }
 }

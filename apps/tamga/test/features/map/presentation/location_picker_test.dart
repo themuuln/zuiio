@@ -29,14 +29,20 @@ void main() {
     });
 
     test('bag field exceeds max length', () {
-      final validator = _buildMaxLengthValidator(200, 'Баг 200 тэмдэгтээс хэтрэхгүй');
+      final validator = _buildMaxLengthValidator(
+        200,
+        'Баг 200 тэмдэгтээс хэтрэхгүй',
+      );
       final longText = 'а' * 201;
       final result = validator(longText);
       expect(result, 'Баг 200 тэмдэгтээс хэтрэхгүй');
     });
 
     test('bag field at exactly max length passes', () {
-      final validator = _buildMaxLengthValidator(200, 'Баг 200 тэмдэгтээс хэтрэхгүй');
+      final validator = _buildMaxLengthValidator(
+        200,
+        'Баг 200 тэмдэгтээс хэтрэхгүй',
+      );
       final exactText = 'а' * 200;
       final result = validator(exactText);
       expect(result, isNull);

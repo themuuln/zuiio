@@ -84,10 +84,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             child: SegmentedButton<int>(
               segments: List.generate(
                 _periodLabels.length,
-                (i) => ButtonSegment(
-                  value: i,
-                  label: Text(_periodLabels[i]),
-                ),
+                (i) => ButtonSegment(value: i, label: Text(_periodLabels[i])),
               ),
               selected: {_selectedPeriodIndex},
               onSelectionChanged: (selected) {
@@ -378,8 +375,10 @@ class _BreedBreakdownCard extends ConsumerWidget {
                     ),
                   );
                 }
-                final total = herd.breedBreakdown.values
-                    .fold<int>(0, (a, b) => a + b);
+                final total = herd.breedBreakdown.values.fold<int>(
+                  0,
+                  (a, b) => a + b,
+                );
                 return Column(
                   children: herd.breedBreakdown.entries.map((entry) {
                     final fraction = entry.value / total;
@@ -597,10 +596,7 @@ class _FinancialStats extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Санхүүгийн статистик',
-              style: theme.textTheme.titleSmall,
-            ),
+            Text('Санхүүгийн статистик', style: theme.textTheme.titleSmall),
             const SizedBox(height: AppSpacing.md),
             financialAsync.when(
               data: (financial) {
@@ -626,9 +622,7 @@ class _FinancialStats extends ConsumerWidget {
                           ? '${financial.roi.toStringAsFixed(1)}%'
                           : '∞',
                       icon: Icons.percent,
-                      color: financial.roi >= 0
-                          ? Colors.green
-                          : Colors.red,
+                      color: financial.roi >= 0 ? Colors.green : Colors.red,
                     ),
                     const Divider(height: 24),
                     _FinancialRow(
@@ -700,12 +694,7 @@ class _FinancialRow extends StatelessWidget {
       children: [
         Icon(icon, size: 20, color: color),
         const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: Text(
-            label,
-            style: theme.textTheme.bodyMedium,
-          ),
-        ),
+        Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
         Text(
           value,
           style: theme.textTheme.bodyMedium?.copyWith(
@@ -731,9 +720,7 @@ class _ChartSection extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            child,
-          ],
+          children: [child],
         ),
       ),
     );
@@ -755,11 +742,7 @@ class _ErrorWidget extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: theme.colorScheme.error,
-            ),
+            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: AppSpacing.sm),
             Text(
               message,

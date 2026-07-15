@@ -63,15 +63,18 @@ class BreedingAdvice {
 
   factory BreedingAdvice.fromJson(Map<String, dynamic> json) {
     return BreedingAdvice(
-      inbreedingRisk:
-          InbreedingRisk.fromString(json['inbreedingRisk'] as String? ?? 'medium'),
+      inbreedingRisk: InbreedingRisk.fromString(
+        json['inbreedingRisk'] as String? ?? 'medium',
+      ),
       riskScore: json['riskScore'] as int? ?? 50,
       healthNotes: json['healthNotes'] as String? ?? '',
-      colorPredictions: (json['colorPredictions'] as List<dynamic>?)
+      colorPredictions:
+          (json['colorPredictions'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
-      breedSuggestions: (json['breedSuggestions'] as List<dynamic>?)
+      breedSuggestions:
+          (json['breedSuggestions'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
@@ -136,12 +139,12 @@ class BreedingAdvice {
 
   @override
   int get hashCode => Object.hash(
-        inbreedingRisk,
-        riskScore,
-        healthNotes,
-        Object.hashAll(colorPredictions),
-        Object.hashAll(breedSuggestions),
-      );
+    inbreedingRisk,
+    riskScore,
+    healthNotes,
+    Object.hashAll(colorPredictions),
+    Object.hashAll(breedSuggestions),
+  );
 
   @override
   String toString() =>
@@ -150,11 +153,7 @@ class BreedingAdvice {
 
 /// Үлдэгдэл квотын мэдээлэл.
 class BreedingQuota {
-  const BreedingQuota({
-    required this.tier,
-    this.limit,
-    this.remaining,
-  });
+  const BreedingQuota({required this.tier, this.limit, this.remaining});
 
   /// Хэрэглэгчийн түвшин.
   final String tier;

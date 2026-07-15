@@ -6,13 +6,9 @@ import '../../../shared/domain/event.dart';
 import '../../shared/data/isar_schemas/isar_event.dart';
 import 'event_repository.dart';
 
-class LocalEventRepository
-    extends LocalRepository<Event, IsarEvent>
+class LocalEventRepository extends LocalRepository<Event, IsarEvent>
     implements EventRepository {
-  LocalEventRepository({
-    required super.storage,
-    required super.syncQueue,
-  });
+  LocalEventRepository({required super.storage, required super.syncQueue});
 
   @override
   IsarCollection<IsarEvent> get collection => storage.events;

@@ -65,7 +65,7 @@ function ComboboxInner<T>(
     children,
   }: ComboboxProps<T>,
   _ref: React.ForwardedRef<HTMLDivElement>,
-)
+) {
   // biome-ignore lint/correctness/useHookAtTopLevel: React.forwardRef render fn IS a component
   const [open, setOpen] = React.useState(false);
   const [highlightedIndex, setHighlightedIndex] = React.useState(-1);
@@ -321,7 +321,7 @@ const ComboboxList = React.forwardRef<
   return (
     <ul
       ref={ref}
-      className={cn("max-h-[300px] overflow-y-auto py-1", className)}
+      className={cn("max-h-[300px] overflow-y-auto", className)}
       {...props}
     >
       {typeof children === "function" && groups

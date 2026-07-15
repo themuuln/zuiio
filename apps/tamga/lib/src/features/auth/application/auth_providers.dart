@@ -113,10 +113,7 @@ class AuthStateNotifier extends StreamNotifier<AuthState> {
     required String token,
   }) async {
     final repository = ref.read(authRepositoryProvider);
-    final result = await repository.verifyPhoneOtp(
-      phone: phone,
-      token: token,
-    );
+    final result = await repository.verifyPhoneOtp(phone: phone, token: token);
     if (result.isFailure) {
       throw result.error;
     }

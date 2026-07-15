@@ -107,7 +107,8 @@ abstract class Horse with _$Horse {
       gender: HorseGender.fromString(json['gender'] as String? ?? 'gelding'),
       microchipId: json['microchipId'] as String?,
       registrationNo: json['registrationNo'] as String?,
-      photoUrls: (json['photoUrls'] as List<dynamic>?)
+      photoUrls:
+          (json['photoUrls'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],
@@ -166,7 +167,8 @@ abstract class Horse with _$Horse {
       gender: HorseGender.fromString(json['gender'] as String? ?? 'gelding'),
       microchipId: json['microchip_id'] as String?,
       registrationNo: json['registration_no'] as String?,
-      photoUrls: (json['photo_urls'] as List<dynamic>?)
+      photoUrls:
+          (json['photo_urls'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],
@@ -177,9 +179,11 @@ abstract class Horse with _$Horse {
           : null,
       tamgaVerified: json['tamga_verified'] as bool? ?? false,
       stateVerified: json['state_verified'] as bool? ?? false,
-      createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ??
+      createdAt:
+          DateTime.tryParse(json['created_at'] as String? ?? '') ??
           DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updated_at'] as String? ?? '') ??
+      updatedAt:
+          DateTime.tryParse(json['updated_at'] as String? ?? '') ??
           DateTime.now(),
     );
   }

@@ -104,8 +104,7 @@ class LocalMapRepository implements MapRepository {
                 : null;
           }
           if (fields.containsKey('renewal_requested')) {
-            existing.renewalRequested =
-                fields['renewal_requested'] as bool;
+            existing.renewalRequested = fields['renewal_requested'] as bool;
           }
           existing.updatedAt = DateTime.now();
           await _storage.lostHorseReports.put(existing);

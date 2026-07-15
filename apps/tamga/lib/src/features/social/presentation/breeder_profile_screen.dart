@@ -11,10 +11,7 @@ import '../domain/breeder_profile.dart';
 ///
 /// [sellerId] — харах худалдагчийн ID.
 class BreederProfileScreen extends ConsumerWidget {
-  const BreederProfileScreen({
-    required this.sellerId,
-    super.key,
-  });
+  const BreederProfileScreen({required this.sellerId, super.key});
 
   final String sellerId;
 
@@ -23,22 +20,16 @@ class BreederProfileScreen extends ConsumerWidget {
     final profileAsync = ref.watch(breederProfileProvider(sellerId));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Үржүүлэгчийн профайл'),
-      ),
+      appBar: AppBar(title: const Text('Үржүүлэгчийн профайл')),
       body: profileAsync.when(
         data: (profile) {
           return CustomScrollView(
             slivers: [
               // ── Үндсэн мэдээлэл ──
-              SliverToBoxAdapter(
-                child: _BreederInfoHeader(profile: profile),
-              ),
+              SliverToBoxAdapter(child: _BreederInfoHeader(profile: profile)),
 
               // ── Үнэлгээний хураангуй ──
-              SliverToBoxAdapter(
-                child: _RatingSection(profile: profile),
-              ),
+              SliverToBoxAdapter(child: _RatingSection(profile: profile)),
 
               // ── Амжилт / тэмдэг ──
               if (profile.achievements.isNotEmpty)
@@ -57,9 +48,7 @@ class BreederProfileScreen extends ConsumerWidget {
                 ),
 
               // ── Хоосон зай ──
-              const SliverToBoxAdapter(
-                child: SizedBox(height: AppSpacing.xl),
-              ),
+              const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xl)),
             ],
           );
         },
@@ -230,7 +219,8 @@ class _RatingSection extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: List.generate(5, (index) {
                         final star = index + 1;
-                        final filled = profile.totalRatings > 0 &&
+                        final filled =
+                            profile.totalRatings > 0 &&
                             star <= profile.averageRating.round();
                         return Icon(
                           filled ? Icons.star : Icons.star_border,
@@ -297,10 +287,7 @@ class _AchievementsSection extends StatelessWidget {
                     size: 18,
                     color: theme.colorScheme.primary,
                   ),
-                  label: Text(
-                    achievement,
-                    style: theme.textTheme.labelMedium,
-                  ),
+                  label: Text(achievement, style: theme.textTheme.labelMedium),
                   backgroundColor: theme.colorScheme.primaryContainer,
                   side: BorderSide.none,
                 );

@@ -202,8 +202,9 @@ class AnalyticsExportService {
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/analytics_report.pdf');
     await file.writeAsBytes(await pdf.save());
-    await Share.shareXFiles([XFile(file.path)],
-        subject: 'Tamga Analytics Report');
+    await Share.shareXFiles([
+      XFile(file.path),
+    ], subject: 'Tamga Analytics Report');
   }
 
   // ── Helpers ─────────────────────────────────────────────────────
@@ -213,8 +214,9 @@ class AnalyticsExportService {
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/$fileName');
     await file.writeAsString(csvData);
-    await Share.shareXFiles([XFile(file.path)],
-        subject: 'Tamga Analytics Report');
+    await Share.shareXFiles([
+      XFile(file.path),
+    ], subject: 'Tamga Analytics Report');
   }
 
   /// PDF дотор хүснэгт үүсгэх.
@@ -225,22 +227,11 @@ class AnalyticsExportService {
     return pw.TableHelper.fromTextArray(
       headers: headers,
       data: rows,
-      border: pw.TableBorder.all(
-        color: PdfColors.grey300,
-        width: 0.5,
-      ),
-      headerStyle: pw.TextStyle(
-        fontWeight: pw.FontWeight.bold,
-        fontSize: 10,
-      ),
+      border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+      headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
       cellStyle: const pw.TextStyle(fontSize: 9),
-      headerDecoration: const pw.BoxDecoration(
-        color: PdfColors.grey200,
-      ),
-      cellAlignments: {
-        0: pw.Alignment.centerLeft,
-        1: pw.Alignment.centerRight,
-      },
+      headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
+      cellAlignments: {0: pw.Alignment.centerLeft, 1: pw.Alignment.centerRight},
     );
   }
 }

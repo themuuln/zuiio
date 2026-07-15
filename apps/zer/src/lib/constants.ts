@@ -18,6 +18,7 @@ export const COMPANY_TYPES = [
   { value: "manufacturing", label: "Үйлдвэрлэл" },
   { value: "restaurant", label: "Ресторан" },
   { value: "gym", label: "Фитнес / Спорт клуб" },
+  { value: "religious", label: "Шашны дэлгүүр" },
   { value: "other", label: "Бусад" },
 ] as const;
 
@@ -122,6 +123,18 @@ export const PRESET_CATEGORIES: Record<string, readonly string[]> = {
     "Хувцас",
     "Ундаа",
     "Бусад",
+  ],
+  religious: [
+    "Бурхан, Хийд",
+    "Зурга",
+    "Тахилын хэрэгсэл",
+    "Ном, Судар",
+    "Эрдэнэ",
+    "Хата",
+    "Шашин хувцас",
+    "Incense & Burners",
+    "Дуулал",
+    "Хийморь",
   ],
   other: ["Бусад"],
 };

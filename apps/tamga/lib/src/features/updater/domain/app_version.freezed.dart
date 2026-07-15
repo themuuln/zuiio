@@ -12,7 +12,8 @@ part of 'app_version.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
 
 /// @nodoc
 mixin _$AppVersion {
@@ -31,16 +32,18 @@ mixin _$AppVersion {
 /// @nodoc
 abstract class $AppVersionCopyWith<$Res> {
   factory $AppVersionCopyWith(
-          AppVersion value, $Res Function(AppVersion) then) =
-      _$AppVersionCopyWithImpl<$Res, AppVersion>;
+    AppVersion value,
+    $Res Function(AppVersion) then,
+  ) = _$AppVersionCopyWithImpl<$Res, AppVersion>;
   @useResult
-  $Res call(
-      {int versionCode,
-      String versionName,
-      String storagePath,
-      String sha256Hash,
-      String changelog,
-      bool forceUpdate});
+  $Res call({
+    int versionCode,
+    String versionName,
+    String storagePath,
+    String sha256Hash,
+    String changelog,
+    bool forceUpdate,
+  });
 }
 
 /// @nodoc
@@ -63,32 +66,35 @@ class _$AppVersionCopyWithImpl<$Res, $Val extends AppVersion>
     Object? changelog = null,
     Object? forceUpdate = null,
   }) {
-    return _then(_value.copyWith(
-      versionCode: null == versionCode
-          ? _value.versionCode
-          : versionCode // ignore: cast_nullable_to_non_nullable
-              as int,
-      versionName: null == versionName
-          ? _value.versionName
-          : versionName // ignore: cast_nullable_to_non_nullable
-              as String,
-      storagePath: null == storagePath
-          ? _value.storagePath
-          : storagePath // ignore: cast_nullable_to_non_nullable
-              as String,
-      sha256Hash: null == sha256Hash
-          ? _value.sha256Hash
-          : sha256Hash // ignore: cast_nullable_to_non_nullable
-              as String,
-      changelog: null == changelog
-          ? _value.changelog
-          : changelog // ignore: cast_nullable_to_non_nullable
-              as String,
-      forceUpdate: null == forceUpdate
-          ? _value.forceUpdate
-          : forceUpdate // ignore: cast_nullable_to_non_nullable
-              as bool,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            versionCode: null == versionCode
+                ? _value.versionCode
+                : versionCode // ignore: cast_nullable_to_non_nullable
+                      as int,
+            versionName: null == versionName
+                ? _value.versionName
+                : versionName // ignore: cast_nullable_to_non_nullable
+                      as String,
+            storagePath: null == storagePath
+                ? _value.storagePath
+                : storagePath // ignore: cast_nullable_to_non_nullable
+                      as String,
+            sha256Hash: null == sha256Hash
+                ? _value.sha256Hash
+                : sha256Hash // ignore: cast_nullable_to_non_nullable
+                      as String,
+            changelog: null == changelog
+                ? _value.changelog
+                : changelog // ignore: cast_nullable_to_non_nullable
+                      as String,
+            forceUpdate: null == forceUpdate
+                ? _value.forceUpdate
+                : forceUpdate // ignore: cast_nullable_to_non_nullable
+                      as bool,
+          )
+          as $Val,
+    );
   }
 }
 
@@ -96,17 +102,19 @@ class _$AppVersionCopyWithImpl<$Res, $Val extends AppVersion>
 abstract class _$$AppVersionImplCopyWith<$Res>
     implements $AppVersionCopyWith<$Res> {
   factory _$$AppVersionImplCopyWith(
-          _$AppVersionImpl value, $Res Function(_$AppVersionImpl) then) =
-      __$$AppVersionImplCopyWithImpl<$Res>;
+    _$AppVersionImpl value,
+    $Res Function(_$AppVersionImpl) then,
+  ) = __$$AppVersionImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {int versionCode,
-      String versionName,
-      String storagePath,
-      String sha256Hash,
-      String changelog,
-      bool forceUpdate});
+  $Res call({
+    int versionCode,
+    String versionName,
+    String storagePath,
+    String sha256Hash,
+    String changelog,
+    bool forceUpdate,
+  });
 }
 
 /// @nodoc
@@ -114,8 +122,9 @@ class __$$AppVersionImplCopyWithImpl<$Res>
     extends _$AppVersionCopyWithImpl<$Res, _$AppVersionImpl>
     implements _$$AppVersionImplCopyWith<$Res> {
   __$$AppVersionImplCopyWithImpl(
-      _$AppVersionImpl _value, $Res Function(_$AppVersionImpl) _then)
-      : super(_value, _then);
+    _$AppVersionImpl _value,
+    $Res Function(_$AppVersionImpl) _then,
+  ) : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
@@ -127,45 +136,48 @@ class __$$AppVersionImplCopyWithImpl<$Res>
     Object? changelog = null,
     Object? forceUpdate = null,
   }) {
-    return _then(_$AppVersionImpl(
-      versionCode: null == versionCode
-          ? _value.versionCode
-          : versionCode // ignore: cast_nullable_to_non_nullable
-              as int,
-      versionName: null == versionName
-          ? _value.versionName
-          : versionName // ignore: cast_nullable_to_non_nullable
-              as String,
-      storagePath: null == storagePath
-          ? _value.storagePath
-          : storagePath // ignore: cast_nullable_to_non_nullable
-              as String,
-      sha256Hash: null == sha256Hash
-          ? _value.sha256Hash
-          : sha256Hash // ignore: cast_nullable_to_non_nullable
-              as String,
-      changelog: null == changelog
-          ? _value.changelog
-          : changelog // ignore: cast_nullable_to_non_nullable
-              as String,
-      forceUpdate: null == forceUpdate
-          ? _value.forceUpdate
-          : forceUpdate // ignore: cast_nullable_to_non_nullable
-              as bool,
-    ));
+    return _then(
+      _$AppVersionImpl(
+        versionCode: null == versionCode
+            ? _value.versionCode
+            : versionCode // ignore: cast_nullable_to_non_nullable
+                  as int,
+        versionName: null == versionName
+            ? _value.versionName
+            : versionName // ignore: cast_nullable_to_non_nullable
+                  as String,
+        storagePath: null == storagePath
+            ? _value.storagePath
+            : storagePath // ignore: cast_nullable_to_non_nullable
+                  as String,
+        sha256Hash: null == sha256Hash
+            ? _value.sha256Hash
+            : sha256Hash // ignore: cast_nullable_to_non_nullable
+                  as String,
+        changelog: null == changelog
+            ? _value.changelog
+            : changelog // ignore: cast_nullable_to_non_nullable
+                  as String,
+        forceUpdate: null == forceUpdate
+            ? _value.forceUpdate
+            : forceUpdate // ignore: cast_nullable_to_non_nullable
+                  as bool,
+      ),
+    );
   }
 }
 
 /// @nodoc
 
 class _$AppVersionImpl implements _AppVersion {
-  const _$AppVersionImpl(
-      {required this.versionCode,
-      required this.versionName,
-      required this.storagePath,
-      required this.sha256Hash,
-      this.changelog = '',
-      this.forceUpdate = false});
+  const _$AppVersionImpl({
+    required this.versionCode,
+    required this.versionName,
+    required this.storagePath,
+    required this.sha256Hash,
+    this.changelog = '',
+    this.forceUpdate = false,
+  });
 
   @override
   final int versionCode;
@@ -207,8 +219,15 @@ class _$AppVersionImpl implements _AppVersion {
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, versionCode, versionName,
-      storagePath, sha256Hash, changelog, forceUpdate);
+  int get hashCode => Object.hash(
+    runtimeType,
+    versionCode,
+    versionName,
+    storagePath,
+    sha256Hash,
+    changelog,
+    forceUpdate,
+  );
 
   @JsonKey(ignore: true)
   @override
@@ -218,13 +237,14 @@ class _$AppVersionImpl implements _AppVersion {
 }
 
 abstract class _AppVersion implements AppVersion {
-  const factory _AppVersion(
-      {required final int versionCode,
-      required final String versionName,
-      required final String storagePath,
-      required final String sha256Hash,
-      final String changelog,
-      final bool forceUpdate}) = _$AppVersionImpl;
+  const factory _AppVersion({
+    required final int versionCode,
+    required final String versionName,
+    required final String storagePath,
+    required final String sha256Hash,
+    final String changelog,
+    final bool forceUpdate,
+  }) = _$AppVersionImpl;
 
   @override
   int get versionCode;

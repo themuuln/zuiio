@@ -156,13 +156,16 @@ void main() {
     });
 
     group('PerformanceRecord', () {
-      test('fetchPerformanceByHorse returns empty list for unknown horse',
-          () async {
-        final result =
-            await repository.fetchPerformanceByHorse('unknown-horse');
-        expect(result.isSuccess, true);
-        expect(result.value, isEmpty);
-      });
+      test(
+        'fetchPerformanceByHorse returns empty list for unknown horse',
+        () async {
+          final result = await repository.fetchPerformanceByHorse(
+            'unknown-horse',
+          );
+          expect(result.isSuccess, true);
+          expect(result.value, isEmpty);
+        },
+      );
 
       test('savePerformance creates a performance record', () async {
         await repository.savePerformance(

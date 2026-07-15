@@ -94,5 +94,9 @@ class SyncConflict {
           _mapsEqual(remoteData, other.remoteData);
 
   @override
-  int get hashCode => Object.hash(conflictKey, Object.hashAll(localData.entries), Object.hashAll(remoteData.entries));
+  int get hashCode => Object.hash(
+    conflictKey,
+    Object.hashAll(localData.entries),
+    Object.hashAll(remoteData.entries),
+  );
 }

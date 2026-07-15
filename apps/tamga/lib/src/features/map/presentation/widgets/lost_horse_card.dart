@@ -116,9 +116,7 @@ class LostHorseCard extends StatelessWidget {
                       ),
                     if (report.ages.isNotEmpty)
                       TamgaBadge(
-                        label: report.ages
-                            .map((a) => a.displayName)
-                            .join(', '),
+                        label: report.ages.map((a) => a.displayName).join(', '),
                         variant: TamgaBadgeVariant.info,
                         size: TamgaBadgeSize.small,
                       ),

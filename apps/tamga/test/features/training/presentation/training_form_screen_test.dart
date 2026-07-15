@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,10 +16,7 @@ Widget createTrainingFormScreen({
   return ProviderScope(
     child: MaterialApp(
       theme: AppTheme.light(),
-      home: TrainingFormScreen(
-        horseId: horseId,
-        existingLog: existingLog,
-      ),
+      home: TrainingFormScreen(horseId: horseId, existingLog: existingLog),
     ),
   );
 }
@@ -31,9 +27,7 @@ void main() {
     // Add form
     // ════════════════════════════════════════════════════════════════
     testWidgets('shows add training log form with all fields', (tester) async {
-      await tester.pumpWidget(createTrainingFormScreen(
-        horseId: 'horse-1',
-      ));
+      await tester.pumpWidget(createTrainingFormScreen(horseId: 'horse-1'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
@@ -62,10 +56,9 @@ void main() {
         weather: 'Нартай',
       );
 
-      await tester.pumpWidget(createTrainingFormScreen(
-        horseId: 'horse-1',
-        existingLog: log,
-      ));
+      await tester.pumpWidget(
+        createTrainingFormScreen(horseId: 'horse-1', existingLog: log),
+      );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
@@ -80,9 +73,7 @@ void main() {
     // Validation
     // ════════════════════════════════════════════════════════════════
     testWidgets('validates that duration is required', (tester) async {
-      await tester.pumpWidget(createTrainingFormScreen(
-        horseId: 'horse-1',
-      ));
+      await tester.pumpWidget(createTrainingFormScreen(horseId: 'horse-1'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
@@ -103,17 +94,16 @@ void main() {
     // ════════════════════════════════════════════════════════════════
     // Type picker
     // ════════════════════════════════════════════════════════════════
-    testWidgets('type picker has all TrainingLogType options', (
-      tester,
-    ) async {
-      await tester.pumpWidget(createTrainingFormScreen(
-        horseId: 'horse-1',
-      ));
+    testWidgets('type picker has all TrainingLogType options', (tester) async {
+      await tester.pumpWidget(createTrainingFormScreen(horseId: 'horse-1'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
       // Verify that the dropdown exists
-      expect(find.byType(DropdownButtonFormField<TrainingLogType>), findsOneWidget);
+      expect(
+        find.byType(DropdownButtonFormField<TrainingLogType>),
+        findsOneWidget,
+      );
     });
 
     // ════════════════════════════════════════════════════════════════

@@ -34,7 +34,9 @@ class LocalMessageRepository implements MessageRepository {
     return Result.tryFuture(() async {
       final stored = await _storage.marketConversations
           .filter()
-          .anyOf([userId], (q, id) => q.buyerIdEqualTo(id).or().sellerIdEqualTo(id))
+          .anyOf([
+            userId,
+          ], (q, id) => q.buyerIdEqualTo(id).or().sellerIdEqualTo(id))
           .sortByLastMessageAtDesc()
           .findAll();
       return stored.map((e) => e.toDomain()).toList();
@@ -185,10 +187,9 @@ class LocalMessageRepository implements MessageRepository {
   @override
   Future<Result<int>> getUnreadCount(String userId) async {
     return Result.tryFuture(() async {
-      final conversations = await _storage.marketConversations
-          .filter()
-          .anyOf([userId], (q, id) => q.buyerIdEqualTo(id).or().sellerIdEqualTo(id))
-          .findAll();
+      final conversations = await _storage.marketConversations.filter().anyOf([
+        userId,
+      ], (q, id) => q.buyerIdEqualTo(id).or().sellerIdEqualTo(id)).findAll();
       return conversations.fold<int>(0, (sum, c) => sum + c.unreadCount);
     });
   }

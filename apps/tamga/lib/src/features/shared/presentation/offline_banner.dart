@@ -15,10 +15,7 @@ import '../application/sync_providers.dart';
 /// Баннер дээр offline icon, "Offline — Локал өгөгдөл харуулж байна",
 /// болон сүүлд синк хийсэн цагийг харуулна.
 class OfflineBanner extends ConsumerStatefulWidget {
-  const OfflineBanner({
-    super.key,
-    this.connectionMonitor,
-  });
+  const OfflineBanner({super.key, this.connectionMonitor});
 
   /// Тестэд зориулсан dependency injection — сул бол `ConnectionMonitor.instance` ашиглана.
   final ConnectionMonitor? connectionMonitor;
@@ -92,9 +89,7 @@ class _OfflineBannerState extends ConsumerState<OfflineBanner> {
         decoration: BoxDecoration(
           color: colors.primary.withValues(alpha: 0.1),
           border: Border(
-            bottom: BorderSide(
-              color: colors.primary.withValues(alpha: 0.3),
-            ),
+            bottom: BorderSide(color: colors.primary.withValues(alpha: 0.3)),
           ),
         ),
         child: Row(

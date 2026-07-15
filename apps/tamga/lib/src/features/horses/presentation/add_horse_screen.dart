@@ -396,10 +396,7 @@ class _AddHorseScreenState extends ConsumerState<AddHorseScreen> {
 
     // Show offline-aware save feedback
     if (mounted) {
-      showOfflineAwareSaveFeedback(
-        context,
-        ConnectionMonitor.instance.current,
-      );
+      showOfflineAwareSaveFeedback(context, ConnectionMonitor.instance.current);
     }
 
     if (!mounted) return;

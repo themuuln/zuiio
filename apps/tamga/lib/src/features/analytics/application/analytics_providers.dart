@@ -29,17 +29,15 @@ final healthAnalyticsProvider = FutureProvider<HealthAnalytics>((ref) async {
   final result = await repo.fetchAll();
   final healthLogs = result.getOrThrow();
 
-  return HealthAnalytics(
-    healthLogs: healthLogs,
-    totalHorses: horses.length,
-  );
+  return HealthAnalytics(healthLogs: healthLogs, totalHorses: horses.length);
 });
 
 /// Санхүүгийн аналитик provider.
 ///
 /// Зах зээлийн заруудаар FinancialAnalytics-ийг тооцоолно.
-final financialAnalyticsProvider =
-    FutureProvider<FinancialAnalytics>((ref) async {
+final financialAnalyticsProvider = FutureProvider<FinancialAnalytics>((
+  ref,
+) async {
   final listings = await ref.watch(marketListingsProvider.future);
   if (listings.isEmpty) return FinancialAnalytics.empty;
   return FinancialAnalytics(listings: listings);

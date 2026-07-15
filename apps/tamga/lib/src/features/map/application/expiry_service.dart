@@ -18,7 +18,8 @@ import 'map_providers.dart';
 const String kRenewalPromptTitle = 'Сунгах уу?';
 
 /// Renewal prompt body text.
-const String kRenewalPromptBody = 'Таны хаяж морийн зар дуусах гэж байна. Сунгах уу?';
+const String kRenewalPromptBody =
+    'Таны хаяж морийн зар дуусах гэж байна. Сунгах уу?';
 
 /// Hours before expiry to trigger the renewal notification.
 const int kRenewalNotificationHoursBefore = 24;
@@ -40,8 +41,7 @@ final expiryServiceProvider = Provider<ExpiryService>((ref) {
 /// - Scheduling local renewal notifications 24h before expiry
 /// - Processing report renewal (extends expiry by tier duration)
 class ExpiryService {
-  ExpiryService({required MapRepository repository})
-    : _repository = repository;
+  ExpiryService({required MapRepository repository}) : _repository = repository;
 
   final MapRepository _repository;
 
@@ -175,14 +175,11 @@ class ExpiryService {
     final newExpiresAt = now.add(Duration(days: durationDays));
 
     // Update status, expiry, and renewal flag.
-    final updateResult = await _repository.updateLostHorseFields(
-      report.id,
-      {
-        'status': 'active',
-        'expires_at': newExpiresAt.toIso8601String(),
-        'renewal_requested': true,
-      },
-    );
+    final updateResult = await _repository.updateLostHorseFields(report.id, {
+      'status': 'active',
+      'expires_at': newExpiresAt.toIso8601String(),
+      'renewal_requested': true,
+    });
 
     if (updateResult.isFailure) {
       return Result.fail(updateResult.error);

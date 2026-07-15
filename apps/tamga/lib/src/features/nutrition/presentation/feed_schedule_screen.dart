@@ -41,14 +41,15 @@ class FeedScheduleScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton(
         heroTag: 'add_feed_schedule',
         onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) =>
-                  FeedScheduleFormScreen(horseId: horseId),
-            ),
-          ).then((_) {
-            ref.invalidate(feedSchedulesProvider(horseId));
-          });
+          Navigator.of(context)
+              .push(
+                MaterialPageRoute(
+                  builder: (_) => FeedScheduleFormScreen(horseId: horseId),
+                ),
+              )
+              .then((_) {
+                ref.invalidate(feedSchedulesProvider(horseId));
+              });
         },
         child: const Icon(Icons.add),
       ),
@@ -95,16 +96,18 @@ class _FeedScheduleList extends StatelessWidget {
           return _FeedScheduleTile(
             schedule: schedule,
             onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => FeedScheduleFormScreen(
-                    horseId: horseId,
-                    existingSchedule: schedule,
-                  ),
-                ),
-              ).then((_) {
-                onRefresh();
-              });
+              Navigator.of(context)
+                  .push(
+                    MaterialPageRoute(
+                      builder: (_) => FeedScheduleFormScreen(
+                        horseId: horseId,
+                        existingSchedule: schedule,
+                      ),
+                    ),
+                  )
+                  .then((_) {
+                    onRefresh();
+                  });
             },
           );
         },
@@ -116,10 +119,7 @@ class _FeedScheduleList extends StatelessWidget {
 // ── FeedScheduleTile ──────────────────────────────────────────────────
 
 class _FeedScheduleTile extends StatelessWidget {
-  const _FeedScheduleTile({
-    required this.schedule,
-    required this.onTap,
-  });
+  const _FeedScheduleTile({required this.schedule, required this.onTap});
 
   final FeedSchedule schedule;
   final VoidCallback onTap;
@@ -128,11 +128,17 @@ class _FeedScheduleTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = TamgaColors.of(context);
-    final isActive = schedule.endDate == null ||
-        schedule.endDate!.isAfter(DateTime.now().subtract(const Duration(days: 1)));
+    final isActive =
+        schedule.endDate == null ||
+        schedule.endDate!.isAfter(
+          DateTime.now().subtract(const Duration(days: 1)),
+        );
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: 4,
+      ),
       child: Card(
         child: InkWell(
           onTap: onTap,
@@ -336,7 +342,8 @@ class _FeedScheduleFormScreenState
 
     final quantity = double.tryParse(_quantityController.text) ?? 0;
     final schedule = FeedSchedule(
-      id: widget.existingSchedule?.id ??
+      id:
+          widget.existingSchedule?.id ??
           DateTime.now().microsecondsSinceEpoch.toString(),
       horseId: widget.horseId,
       feedType: _selectedType,
@@ -378,7 +385,9 @@ class _FeedScheduleFormScreenState
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Хуваарь устгах'),
-        content: const Text('Та энэ тэжээлийн хуваарийг устгахдаа итгэлтэй байна уу?'),
+        content: const Text(
+          'Та энэ тэжээлийн хуваарийг устгахдаа итгэлтэй байна уу?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -426,7 +435,9 @@ class _FeedScheduleFormScreenState
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.isEditing ? 'Тэжээлийн хуваарь засах' : 'Тэжээлийн хуваарь нэмэх',
+          widget.isEditing
+              ? 'Тэжээлийн хуваарь засах'
+              : 'Тэжээлийн хуваарь нэмэх',
         ),
         actions: [
           if (widget.isEditing)
@@ -531,7 +542,9 @@ class _FeedScheduleFormScreenState
               child: InputDecorator(
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppSpacing.cornerRadius),
+                    borderRadius: BorderRadius.circular(
+                      AppSpacing.cornerRadius,
+                    ),
                   ),
                   suffixIcon: const Icon(Icons.calendar_today),
                 ),

@@ -298,9 +298,9 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                 sliver: SliverToBoxAdapter(
                   child: TamgaErrorWidget(
                     message: 'Захын мэдээлэл ачаалахад алдаа гарлаа',
-                    onRetry: () => ref.read(paginatedMarketCatalogProvider.notifier).refresh(
-                      filters: ref.read(marketFiltersProvider),
-                    ),
+                    onRetry: () => ref
+                        .read(paginatedMarketCatalogProvider.notifier)
+                        .refresh(filters: ref.read(marketFiltersProvider)),
                   ),
                 ),
               ),

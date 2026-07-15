@@ -185,7 +185,9 @@ void main() {
     });
 
     test('toSupabaseJson booking_date is date-only format', () {
-      final booking = createTestBooking(bookingDate: DateTime(2026, 7, 5, 14, 30));
+      final booking = createTestBooking(
+        bookingDate: DateTime(2026, 7, 5, 14, 30),
+      );
       final json = booking.toSupabaseJson();
 
       expect(json['booking_date'], '2026-07-05');

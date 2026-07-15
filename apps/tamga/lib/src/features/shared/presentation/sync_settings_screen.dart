@@ -125,7 +125,9 @@ class SyncSettingsScreen extends ConsumerWidget {
                 'Синк дарааллыг цэвэрлэх',
                 style: TextStyle(color: theme.colorScheme.error),
               ),
-              subtitle: const Text('Хүлээгдэж буй синк дараалал болон dead letter-уудыг устгана'),
+              subtitle: const Text(
+                'Хүлээгдэж буй синк дараалал болон dead letter-уудыг устгана',
+              ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => _clearLocalData(context, ref),
             ),
@@ -165,11 +167,7 @@ class SyncSettingsScreen extends ConsumerWidget {
 
     await coordinator.syncAll();
     if (context.mounted) {
-      TamgaToast.show(
-        context,
-        'Синк эхэллээ',
-        icon: Icons.sync,
-      );
+      TamgaToast.show(context, 'Синк эхэллээ', icon: Icons.sync);
     }
   }
 
@@ -221,10 +219,7 @@ class SyncSettingsScreen extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        TamgaToast.showError(
-          context,
-          'Цэвэрлэхэд алдаа гарлаа: $e',
-        );
+        TamgaToast.showError(context, 'Цэвэрлэхэд алдаа гарлаа: $e');
       }
     }
   }

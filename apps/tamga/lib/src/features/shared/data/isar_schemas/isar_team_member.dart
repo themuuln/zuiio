@@ -28,10 +28,9 @@ class IsarTeamMember {
       ..teamId = member.teamId
       ..userId = member.userId
       ..role = member.role
-      ..permissions =
-          member.permissions.isNotEmpty
-              ? member.permissions.map((p) => p.name).toList()
-              : null
+      ..permissions = member.permissions.isNotEmpty
+          ? member.permissions.map((p) => p.name).toList()
+          : null
       ..joinedAt = member.joinedAt;
   }
 
@@ -42,10 +41,8 @@ class IsarTeamMember {
       userId: userId,
       role: role,
       permissions:
-          permissions
-                  ?.map((e) => TeamPermission.values.byName(e))
-                  .toList() ??
-              [],
+          permissions?.map((e) => TeamPermission.values.byName(e)).toList() ??
+          [],
       joinedAt: joinedAt,
     );
   }

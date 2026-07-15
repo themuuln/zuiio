@@ -102,7 +102,8 @@ extension MarketListingStatusLabel on MarketListingStatus {
 MarketListingStatus _statusFromName(String name) {
   return switch (name) {
     'published' || 'active' => MarketListingStatus.active,
-    'draft' || 'pending_verification' => MarketListingStatus.pendingVerification,
+    'draft' ||
+    'pending_verification' => MarketListingStatus.pendingVerification,
     'withdrawn' || 'expired' => MarketListingStatus.expired,
     'rejected' => MarketListingStatus.rejected,
     'sold' => MarketListingStatus.sold,
@@ -135,7 +136,9 @@ class MarketListing with _$MarketListing {
     required DateTime updatedAt,
     @Default(0) int viewsCount,
     @Default(false) bool isFavorite,
-    @Deprecated('Use boostLevel/vipLevel instead') @Default(false) bool isFeatured,
+    @Deprecated('Use boostLevel/vipLevel instead')
+    @Default(false)
+    bool isFeatured,
     @Default(BoostLevel.none) BoostLevel boostLevel,
     DateTime? boostExpiresAt,
     @Default(VipLevel.none) VipLevel vipLevel,
@@ -167,7 +170,9 @@ class MarketListing with _$MarketListing {
       viewsCount: json['viewsCount'] as int? ?? 0,
       isFavorite: json['isFavorite'] as bool? ?? false,
       isFeatured: json['isFeatured'] as bool? ?? false,
-      boostLevel: BoostLevel.values.byName(json['boostLevel'] as String? ?? 'none'),
+      boostLevel: BoostLevel.values.byName(
+        json['boostLevel'] as String? ?? 'none',
+      ),
       boostExpiresAt: json['boostExpiresAt'] != null
           ? DateTime.parse(json['boostExpiresAt'] as String)
           : null,
@@ -175,7 +180,9 @@ class MarketListing with _$MarketListing {
       vipExpiresAt: json['vipExpiresAt'] != null
           ? DateTime.parse(json['vipExpiresAt'] as String)
           : null,
-      sellerBadge: SellerBadgeType.values.byName(json['sellerBadge'] as String? ?? 'none'),
+      sellerBadge: SellerBadgeType.values.byName(
+        json['sellerBadge'] as String? ?? 'none',
+      ),
       sellerBadgeExpiresAt: json['sellerBadgeExpiresAt'] != null
           ? DateTime.parse(json['sellerBadgeExpiresAt'] as String)
           : null,
@@ -257,21 +264,39 @@ class MarketListing with _$MarketListing {
       description: row['description'] as String? ?? '',
       priceAmount: row['price_amount'] as int? ?? 0,
       currency: row['currency'] as String? ?? 'MNT',
-      saleType: MarketSaleType.values.byName(row['sale_type'] as String? ?? 'sale'),
+      saleType: MarketSaleType.values.byName(
+        row['sale_type'] as String? ?? 'sale',
+      ),
       status: _statusFromName(row['status'] as String? ?? 'draft'),
       locationLabel: row['location_label'] as String? ?? '',
-      disciplineTags: (row['discipline_tags'] as List<dynamic>?)?.cast<String>() ?? [],
-      documentTags: (row['document_tags'] as List<dynamic>?)?.cast<String>() ?? [],
+      disciplineTags:
+          (row['discipline_tags'] as List<dynamic>?)?.cast<String>() ?? [],
+      documentTags:
+          (row['document_tags'] as List<dynamic>?)?.cast<String>() ?? [],
       mediaUrls: (row['media_urls'] as List<dynamic>?)?.cast<String>() ?? [],
       isSellerVerified: row['is_seller_verified'] as bool? ?? false,
-      boostLevel: BoostLevel.values.byName(row['boost_level'] as String? ?? 'none'),
-      boostExpiresAt: row['boost_expires_at'] != null ? DateTime.tryParse(row['boost_expires_at'] as String) : null,
+      boostLevel: BoostLevel.values.byName(
+        row['boost_level'] as String? ?? 'none',
+      ),
+      boostExpiresAt: row['boost_expires_at'] != null
+          ? DateTime.tryParse(row['boost_expires_at'] as String)
+          : null,
       vipLevel: VipLevel.values.byName(row['vip_level'] as String? ?? 'none'),
-      vipExpiresAt: row['vip_expires_at'] != null ? DateTime.tryParse(row['vip_expires_at'] as String) : null,
-      sellerBadge: SellerBadgeType.values.byName(row['seller_badge'] as String? ?? 'none'),
-      sellerBadgeExpiresAt: row['seller_badge_expires_at'] != null ? DateTime.tryParse(row['seller_badge_expires_at'] as String) : null,
-      createdAt: DateTime.tryParse(row['created_at'] as String? ?? '') ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(row['updated_at'] as String? ?? '') ?? DateTime.now(),
+      vipExpiresAt: row['vip_expires_at'] != null
+          ? DateTime.tryParse(row['vip_expires_at'] as String)
+          : null,
+      sellerBadge: SellerBadgeType.values.byName(
+        row['seller_badge'] as String? ?? 'none',
+      ),
+      sellerBadgeExpiresAt: row['seller_badge_expires_at'] != null
+          ? DateTime.tryParse(row['seller_badge_expires_at'] as String)
+          : null,
+      createdAt:
+          DateTime.tryParse(row['created_at'] as String? ?? '') ??
+          DateTime.now(),
+      updatedAt:
+          DateTime.tryParse(row['updated_at'] as String? ?? '') ??
+          DateTime.now(),
     );
   }
 

@@ -148,8 +148,16 @@ class MarketContract {
 
   @override
   int get hashCode => Object.hash(
-      id, listingId, horseName, horseDescription,
-      sellerName, buyerName, price, currency, date);
+    id,
+    listingId,
+    horseName,
+    horseDescription,
+    sellerName,
+    buyerName,
+    price,
+    currency,
+    date,
+  );
 
   @override
   String toString() =>

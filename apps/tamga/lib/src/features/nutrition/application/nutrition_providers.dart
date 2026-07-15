@@ -32,9 +32,9 @@ final nutritionRepositoryProvider = Provider<NutritionRepository>((ref) {
 /// [horseId] ашиглан тухайн морины бүх тэжээлийн хуваарийг авна.
 final feedSchedulesProvider =
     createListFamilyProvider<FeedSchedule, NutritionRepository, String>(
-  (ref) async => ref.watch(nutritionRepositoryProvider),
-  (repo, horseId) => repo.fetchSchedules(horseId),
-);
+      (ref) async => ref.watch(nutritionRepositoryProvider),
+      (repo, horseId) => repo.fetchSchedules(horseId),
+    );
 
 // ═══════════════════════════════════════════════════════════════════════
 // FeedLog providers
@@ -45,22 +45,23 @@ final feedSchedulesProvider =
 /// [horseId] ашиглан тухайн морины бүх тэжээлийн бүртгэлийг авна.
 final feedLogsProvider =
     createListFamilyProvider<FeedLog, NutritionRepository, String>(
-  (ref) async => ref.watch(nutritionRepositoryProvider),
-  (repo, horseId) => repo.fetchLogs(horseId),
-);
+      (ref) async => ref.watch(nutritionRepositoryProvider),
+      (repo, horseId) => repo.fetchLogs(horseId),
+    );
 
 /// Морины тэжээлийн бүртгэлийг огнооны мужаар авах provider.
 ///
 /// [horseId] болон [startDate], [endDate] ашиглан шүүнэ.
-final feedLogsByDateRangeProvider = createListFamilyProvider<
-  FeedLog,
-  NutritionRepository,
-  ({String horseId, DateTime startDate, DateTime endDate})
->(
-  (ref) async => ref.watch(nutritionRepositoryProvider),
-  (repo, params) => repo.fetchLogsByDateRange(
-    params.horseId,
-    params.startDate,
-    params.endDate,
-  ),
-);
+final feedLogsByDateRangeProvider =
+    createListFamilyProvider<
+      FeedLog,
+      NutritionRepository,
+      ({String horseId, DateTime startDate, DateTime endDate})
+    >(
+      (ref) async => ref.watch(nutritionRepositoryProvider),
+      (repo, params) => repo.fetchLogsByDateRange(
+        params.horseId,
+        params.startDate,
+        params.endDate,
+      ),
+    );

@@ -13,7 +13,9 @@ import '../domain/search_area.dart';
 import 'map_repository.dart';
 
 /// Supabase implementation of [MapRepository].
-class SupabaseMapRepository with SupabaseRepositoryMixin implements MapRepository {
+class SupabaseMapRepository
+    with SupabaseRepositoryMixin
+    implements MapRepository {
   SupabaseMapRepository({SupabaseClient? client})
     : _client = client ?? Supabase.instance.client;
 
@@ -75,10 +77,7 @@ class SupabaseMapRepository with SupabaseRepositoryMixin implements MapRepositor
     try {
       final updateData = Map<String, dynamic>.from(fields);
       updateData['updated_at'] = DateTime.now().toIso8601String();
-      await _client
-          .from('lost_horse_reports')
-          .update(updateData)
-          .eq('id', id);
+      await _client.from('lost_horse_reports').update(updateData).eq('id', id);
       return const Result.ok(null);
     } catch (e) {
       return Result.fail(
@@ -172,10 +171,7 @@ class SupabaseMapRepository with SupabaseRepositoryMixin implements MapRepositor
         final photos = photoMap[r.id] ?? [];
         final videos = videoMap[r.id] ?? [];
         if (photos.isEmpty && videos.isEmpty) return r;
-        return r.copyWith(
-          photoUrls: photos,
-          videoUrls: videos,
-        );
+        return r.copyWith(photoUrls: photos, videoUrls: videos);
       }).toList();
     } catch (_) {
       // If media fetch fails, return reports without media URLs

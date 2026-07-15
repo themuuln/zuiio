@@ -108,19 +108,21 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
     }
 
     final pricing = _calculatePricing();
-    await ref.read(createBookingProvider.notifier).createBooking(
-      userId: userId,
-      providerId: widget.providerId,
-      providerType: _selectedType,
-      serviceType: _serviceType,
-      horseIds: _horseIds,
-      locationAimag: _locationAimagController.text,
-      locationSum: _locationSumController.text,
-      address: _addressController.text,
-      bookingDate: _bookingDate,
-      totalAmount: pricing,
-      notes: _notesController.text,
-    );
+    await ref
+        .read(createBookingProvider.notifier)
+        .createBooking(
+          userId: userId,
+          providerId: widget.providerId,
+          providerType: _selectedType,
+          serviceType: _serviceType,
+          horseIds: _horseIds,
+          locationAimag: _locationAimagController.text,
+          locationSum: _locationSumController.text,
+          address: _addressController.text,
+          bookingDate: _bookingDate,
+          totalAmount: pricing,
+          notes: _notesController.text,
+        );
   }
 
   int _calculatePricing() {
@@ -193,7 +195,8 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
               onSelectionChanged: (selected) {
                 setState(() {
                   _selectedType = selected.first;
-                  _serviceType = _selectedType == ServiceProviderType.photographer
+                  _serviceType =
+                      _selectedType == ServiceProviderType.photographer
                       ? 'photo_session'
                       : 'consultation';
                 });
@@ -235,9 +238,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                   : const [
                       DropdownMenuItem(
                         value: 'consultation',
-                        child: Text(
-                          'Ерөнхий зөвлөгөө / General Consultation',
-                        ),
+                        child: Text('Ерөнхий зөвлөгөө / General Consultation'),
                       ),
                       DropdownMenuItem(
                         value: 'vaccination',
@@ -334,10 +335,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                     const SizedBox(width: TamgaSpacing.md),
                     Text(
                       '${_bookingDate.year}-${_bookingDate.month.toString().padLeft(2, '0')}-${_bookingDate.day.toString().padLeft(2, '0')}',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: tc.onSurface,
-                      ),
+                      style: TextStyle(fontSize: 16, color: tc.onSurface),
                     ),
                   ],
                 ),
@@ -364,9 +362,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                 border: const OutlineInputBorder(),
               ),
               items: _aimags
-                  .map(
-                    (a) => DropdownMenuItem(value: a, child: Text(a)),
-                  )
+                  .map((a) => DropdownMenuItem(value: a, child: Text(a)))
                   .toList(),
               onChanged: (value) {
                 if (value != null) {
@@ -417,7 +413,8 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                       title:
                           'Морь тус бүрийн нэмэлт төлбөр'
                           ' / Per Horse Fee x${_horseIds.isEmpty ? 1 : _horseIds.length}',
-                      amount: 15000 * (_horseIds.isEmpty ? 1 : _horseIds.length),
+                      amount:
+                          15000 * (_horseIds.isEmpty ? 1 : _horseIds.length),
                     ),
                     const Divider(),
                     _PricingRow(

@@ -1,5 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import React from "react";
+import type React from "react";
 import { formatCurrency, formatDate } from "@/lib/format";
 
 /**
@@ -22,7 +22,10 @@ import { formatCurrency, formatDate } from "@/lib/format";
  */
 
 /** Date column — formats value with formatDate, renders "-" for null. */
-export function dateColumn<T>(key: keyof T & string, header: string): ColumnDef<T> {
+export function dateColumn<T>(
+  key: keyof T & string,
+  header: string,
+): ColumnDef<T> {
   return {
     accessorKey: key,
     header,
@@ -34,7 +37,10 @@ export function dateColumn<T>(key: keyof T & string, header: string): ColumnDef<
 }
 
 /** Currency column — formats value with formatCurrency, defaults to 0. */
-export function currencyColumn<T>(key: keyof T & string, header: string): ColumnDef<T> {
+export function currencyColumn<T>(
+  key: keyof T & string,
+  header: string,
+): ColumnDef<T> {
   return {
     accessorKey: key,
     header,

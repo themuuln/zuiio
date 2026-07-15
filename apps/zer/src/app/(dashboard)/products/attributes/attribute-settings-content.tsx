@@ -31,10 +31,13 @@ import { createClient } from "@/lib/supabase/client";
 import {
   type AttributeDefinitionRow,
   checkBuddhistPresetsEnabled,
+  checkReligiousPresetsEnabled,
   createAttributeDefinition,
   deleteAttributeDefinition,
   listAttributeCategoryLinks,
   listAttributeDefinitions,
+  seedReligiousCategories,
+  seedReligiousProducts,
   setAttributeCategories,
   updateAttributeDefinition,
 } from "./actions";
@@ -79,6 +82,36 @@ export function AttributeSettingsContent() {
     queryKey: ["buddhist-presets-enabled"],
     queryFn: async () => {
       return checkBuddhistPresetsEnabled();
+    },
+  });
+  const { data: religiousPresets } = useQuery({
+    queryKey: ["religious-presets-enabled"],
+    queryFn: async () => {
+      return checkReligiousPresetsEnabled();
+    },
+  });
+
+  const religiousSeedMutation = useMutation({
+    mutationFn: async () => {
+      const cats = await seedReligiousCategories();
+      const prods = await seedReligiousProducts();
+      return {
+        created:
+          ("created" in cats ? cats.created : 0) +
+          ("created" in prods ? prods.created : 0),
+        error:
+          ("error" in cats ? cats.error : null) ||
+          ("error" in prods ? prods.error : null),
+      };
+    },
+    onSuccess: (result) => {
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success(`${result.created} ангилал, бүтээгдэхүүн үүсгэгдлээ.`);
+        queryClient.invalidateQueries({ queryKey: ["categories"] });
+        queryClient.invalidateQueries({ queryKey: productKeys.definitions() });
+      }
     },
   });
 
@@ -127,6 +160,17 @@ export function AttributeSettingsContent() {
               {seedMutation.isPending
                 ? "Үүсгэж байна..."
                 : "Буддын загвар нэмэх"}
+            </Button>
+          )}
+          {religiousPresets?.enabled && (
+            <Button
+              variant="outline"
+              onClick={() => religiousSeedMutation.mutate()}
+              disabled={religiousSeedMutation.isPending}
+            >
+              {religiousSeedMutation.isPending
+                ? "Үүсгэж байна..."
+                : "Шашны дэлгүүр загвар нэмэх"}
             </Button>
           )}
           <Button

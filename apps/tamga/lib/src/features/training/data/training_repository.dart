@@ -16,7 +16,9 @@ abstract class TrainingRepository {
   Future<Result<void>> delete(String id);
 
   /// Морины бүх гүйцэтгэлийн үзүүлэлтийг авах.
-  Future<Result<List<PerformanceRecord>>> fetchPerformanceByHorse(String horseId);
+  Future<Result<List<PerformanceRecord>>> fetchPerformanceByHorse(
+    String horseId,
+  );
 
   /// Гүйцэтгэлийн үзүүлэлт хадгалах.
   Future<Result<PerformanceRecord>> savePerformance(PerformanceRecord record);

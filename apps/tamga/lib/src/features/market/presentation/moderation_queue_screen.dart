@@ -18,8 +18,7 @@ class ModerationQueueScreen extends ConsumerStatefulWidget {
       _ModerationQueueScreenState();
 }
 
-class _ModerationQueueScreenState
-    extends ConsumerState<ModerationQueueScreen> {
+class _ModerationQueueScreenState extends ConsumerState<ModerationQueueScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -45,10 +44,8 @@ class _ModerationQueueScreenState
             );
           }
 
-          final pendingReports =
-              reports.where((r) => !r.isResolved).toList();
-          final resolvedReports =
-              reports.where((r) => r.isResolved).toList();
+          final pendingReports = reports.where((r) => !r.isResolved).toList();
+          final resolvedReports = reports.where((r) => r.isResolved).toList();
 
           return ListView(
             padding: const EdgeInsets.all(AppSpacing.lg),
@@ -215,11 +212,7 @@ class _ModerationQueueScreenState
 // ══════════════════════════════════════════════════════════════════
 
 class _ReportCard extends StatelessWidget {
-  const _ReportCard({
-    required this.vm,
-    this.onApprove,
-    this.onReject,
-  });
+  const _ReportCard({required this.vm, this.onApprove, this.onReject});
 
   final ModerationReportVm vm;
   final VoidCallback? onApprove;
@@ -243,10 +236,7 @@ class _ReportCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: theme.colorScheme.surfaceContainerLow,
               border: Border(
-                bottom: BorderSide(
-                  color: theme.dividerColor,
-                  width: 0.5,
-                ),
+                bottom: BorderSide(color: theme.dividerColor, width: 0.5),
               ),
             ),
             child: Row(
@@ -382,15 +372,19 @@ class _ReportCard extends StatelessWidget {
                 ],
 
                 // ── Action buttons ──────────────────────────
-                if (!vm.isResolved && onApprove != null && onReject != null) ...[
+                if (!vm.isResolved &&
+                    onApprove != null &&
+                    onReject != null) ...[
                   const SizedBox(height: AppSpacing.md),
                   Row(
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: onApprove,
-                          icon: const Icon(Icons.check_circle_outline,
-                              size: 18),
+                          icon: const Icon(
+                            Icons.check_circle_outline,
+                            size: 18,
+                          ),
                           label: const Text('Батлах'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.green,
@@ -562,10 +556,7 @@ class _StatusBadge extends StatelessWidget {
     };
 
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: 2,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 2),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(AppSpacing.cornerRadiusPill),

@@ -349,9 +349,7 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
         // ── Section header ──
         Text(
           'Байршил',
-          style: TamgaTypography.headline(
-            weight: FontWeight.w600,
-          ),
+          style: TamgaTypography.headline(weight: FontWeight.w600),
         ),
         const SizedBox(height: TamgaSpacing.md),
 
@@ -374,16 +372,17 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
               _selectedSum = null;
             });
           },
-          itemBuilder: (item) => TamgaComboboxItem(
-            value: item,
-            child: Text(item),
-          ),
+          itemBuilder: (item) =>
+              TamgaComboboxItem(value: item, child: Text(item)),
           placeholder: 'Аймаг сонгоно уу',
           showClear: true,
         ),
         if (_locationValidated && _selectedAimag == null)
           Padding(
-            padding: const EdgeInsets.only(top: TamgaSpacing.xs, left: TamgaSpacing.sm),
+            padding: const EdgeInsets.only(
+              top: TamgaSpacing.xs,
+              left: TamgaSpacing.sm,
+            ),
             child: Text(
               'Аймаг сонгоно уу',
               style: TamgaTypography.caption1(color: colors.error),
@@ -407,10 +406,8 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
                 items: const <String>[],
                 value: null,
                 onSelected: (_) {},
-                itemBuilder: (item) => TamgaComboboxItem(
-                  value: item,
-                  child: Text(item),
-                ),
+                itemBuilder: (item) =>
+                    TamgaComboboxItem(value: item, child: Text(item)),
                 placeholder: 'Эхлээд аймаг сонгоно уу',
                 enabled: false,
               );
@@ -419,10 +416,8 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
               items: sums,
               value: _selectedSum,
               onSelected: (v) => setState(() => _selectedSum = v),
-              itemBuilder: (item) => TamgaComboboxItem(
-                value: item,
-                child: Text(item),
-              ),
+              itemBuilder: (item) =>
+                  TamgaComboboxItem(value: item, child: Text(item)),
               placeholder: sums.isEmpty ? 'Сум олдсонгүй' : 'Сум сонгоно уу',
               showClear: true,
             );
@@ -431,10 +426,8 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
             items: const <String>[],
             value: null,
             onSelected: (_) {},
-            itemBuilder: (item) => TamgaComboboxItem(
-              value: item,
-              child: Text(item),
-            ),
+            itemBuilder: (item) =>
+                TamgaComboboxItem(value: item, child: Text(item)),
             placeholder: 'Ачаалж байна...',
             enabled: false,
           ),
@@ -443,9 +436,14 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
             style: TamgaTypography.body(color: colors.error),
           ),
         ),
-        if (_locationValidated && _selectedAimag != null && _selectedSum == null)
+        if (_locationValidated &&
+            _selectedAimag != null &&
+            _selectedSum == null)
           Padding(
-            padding: const EdgeInsets.only(top: TamgaSpacing.xs, left: TamgaSpacing.sm),
+            padding: const EdgeInsets.only(
+              top: TamgaSpacing.xs,
+              left: TamgaSpacing.sm,
+            ),
             child: Text(
               'Сум сонгоно уу',
               style: TamgaTypography.caption1(color: colors.error),
@@ -510,9 +508,7 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
         // ── Section header ──
         Text(
           'Малын мэдээлэл',
-          style: TamgaTypography.headline(
-            weight: FontWeight.w600,
-          ),
+          style: TamgaTypography.headline(weight: FontWeight.w600),
         ),
         const SizedBox(height: TamgaSpacing.md),
 
@@ -529,10 +525,8 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
           items: AnimalType.values,
           value: _selectedAnimalType,
           onSelected: (v) => setState(() => _selectedAnimalType = v),
-          itemBuilder: (item) => TamgaComboboxItem(
-            value: item,
-            child: Text(item.displayName),
-          ),
+          itemBuilder: (item) =>
+              TamgaComboboxItem(value: item, child: Text(item.displayName)),
           itemToString: (item) => item.displayName,
           placeholder: 'Төрөл сонгоно уу',
         ),
@@ -563,10 +557,8 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
           multiple: true,
           values: _selectedAges,
           onValuesChanged: (v) => setState(() => _selectedAges = v),
-          itemBuilder: (item) => TamgaComboboxItem(
-            value: item,
-            child: Text(item.displayName),
-          ),
+          itemBuilder: (item) =>
+              TamgaComboboxItem(value: item, child: Text(item.displayName)),
           itemToString: (item) => item.displayName,
           placeholder: 'Нас сонгоно уу',
         ),
@@ -585,10 +577,8 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
           items: HorseGender.values,
           value: _selectedGender,
           onSelected: (v) => setState(() => _selectedGender = v),
-          itemBuilder: (item) => TamgaComboboxItem(
-            value: item,
-            child: Text(item.displayName),
-          ),
+          itemBuilder: (item) =>
+              TamgaComboboxItem(value: item, child: Text(item.displayName)),
           itemToString: (item) => item.displayName,
           placeholder: 'Хүйс сонгоно уу',
           showClear: true,
@@ -608,10 +598,8 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
           items: HorseBreed.values,
           value: _selectedBreed,
           onSelected: (v) => setState(() => _selectedBreed = v),
-          itemBuilder: (item) => TamgaComboboxItem(
-            value: item,
-            child: Text(item.displayName),
-          ),
+          itemBuilder: (item) =>
+              TamgaComboboxItem(value: item, child: Text(item.displayName)),
           itemToString: (item) => item.displayName,
           placeholder: 'Үүлдэр сонгоно уу',
           showClear: true,
@@ -631,10 +619,8 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
           items: horseCoatColors,
           value: _selectedCoatColor,
           onSelected: (v) => setState(() => _selectedCoatColor = v),
-          itemBuilder: (item) => TamgaComboboxItem(
-            value: item,
-            child: Text(item),
-          ),
+          itemBuilder: (item) =>
+              TamgaComboboxItem(value: item, child: Text(item)),
           placeholder: 'Зүс сонгоно уу...',
           searchable: true,
           showClear: true,
@@ -678,12 +664,7 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── Section header ──
-        Text(
-          'Зураг',
-          style: TamgaTypography.headline(
-            weight: FontWeight.w600,
-          ),
-        ),
+        Text('Зураг', style: TamgaTypography.headline(weight: FontWeight.w600)),
         const SizedBox(height: TamgaSpacing.md),
 
         // ── Photo thumbnails grid ──
@@ -707,10 +688,7 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
                         ),
                       ),
                       clipBehavior: Clip.antiAlias,
-                      child: Image.file(
-                        _localPhotos[index],
-                        fit: BoxFit.cover,
-                      ),
+                      child: Image.file(_localPhotos[index], fit: BoxFit.cover),
                     ),
                     // ── Remove button ──
                     Positioned(
@@ -738,8 +716,9 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
                       right: 4,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.surface
-                              .withValues(alpha: 0.75),
+                          color: theme.colorScheme.surface.withValues(
+                            alpha: 0.75,
+                          ),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         padding: const EdgeInsets.symmetric(
@@ -815,16 +794,12 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
         // ── Section header ──
         Text(
           'Үнэ ба Нөхцөл',
-          style: TamgaTypography.headline(
-            weight: FontWeight.w600,
-          ),
+          style: TamgaTypography.headline(weight: FontWeight.w600),
         ),
         const SizedBox(height: TamgaSpacing.sm),
         Text(
           'Зарын төрөл сонгох — үнэ төлбөр нь тайлбар хэсэгт дурдсан данс руу шилжүүлнэ',
-          style: TamgaTypography.caption1(
-            color: colors.onSurfaceVariant,
-          ),
+          style: TamgaTypography.caption1(color: colors.onSurfaceVariant),
         ),
         const SizedBox(height: TamgaSpacing.md),
 
@@ -1011,9 +986,7 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
         // ── Section header ──
         Text(
           'Тамга ба Им',
-          style: TamgaTypography.headline(
-            weight: FontWeight.w600,
-          ),
+          style: TamgaTypography.headline(weight: FontWeight.w600),
         ),
         const SizedBox(height: TamgaSpacing.md),
 
@@ -1056,11 +1029,7 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
                       shape: BoxShape.circle,
                     ),
                     padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      Icons.close,
-                      size: 14,
-                      color: colors.onError,
-                    ),
+                    child: Icon(Icons.close, size: 14, color: colors.onError),
                   ),
                 ),
               ),
@@ -1109,9 +1078,7 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
         // ── Section header ──
         Text(
           'Холбоо барих',
-          style: TamgaTypography.headline(
-            weight: FontWeight.w600,
-          ),
+          style: TamgaTypography.headline(weight: FontWeight.w600),
         ),
         const SizedBox(height: TamgaSpacing.md),
 
@@ -1139,9 +1106,7 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
         const SizedBox(height: TamgaSpacing.sm),
         Text(
           'Холбоо барих утасны дугаар. Профайлын утаснаас автоматаар бөглөгдөнө.',
-          style: TamgaTypography.caption1(
-            color: colors.onSurfaceVariant,
-          ),
+          style: TamgaTypography.caption1(color: colors.onSurfaceVariant),
         ),
       ],
     );
@@ -1239,8 +1204,7 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
         !aimagValid ||
         !sumValid ||
         !animalTypeValid ||
-        !photosValid
-    ) {
+        !photosValid) {
       setState(() {
         _locationValidated = true;
         _animalInfoValidated = true;
@@ -1320,8 +1284,9 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
 
     try {
       // Step 1: Create the report (gets back the saved report with ID)
-      final savedReport =
-          await ref.read(reportLostHorseProvider(report).future);
+      final savedReport = await ref.read(
+        reportLostHorseProvider(report).future,
+      );
       final reportId = savedReport.id;
 
       // Step 2: Upload each photo to Supabase Storage
@@ -1330,9 +1295,7 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
 
       for (var i = 0; i < _localPhotos.length; i++) {
         final file = _localPhotos[i];
-        final path = MediaStorageRouter.lostHorsePhotoPath(
-          reportId: reportId,
-        );
+        final path = MediaStorageRouter.lostHorsePhotoPath(reportId: reportId);
 
         final uploadResult = await storage.upload(
           file: file,
@@ -1344,10 +1307,7 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
           onSuccess: (upload) => photoUrls.add(upload.url),
           onFailure: (error) {
             // Continue uploading remaining photos even if one fails
-            TamgaToast.showError(
-              context,
-              friendlyErrorMessage(error),
-            );
+            TamgaToast.showError(context, friendlyErrorMessage(error));
           },
         );
       }
@@ -1355,12 +1315,16 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
       // Step 3: Insert photo URLs into lost_horse_media table
       if (photoUrls.isNotEmpty) {
         final supabase = Supabase.instance.client;
-        final mediaRows = photoUrls.map((url) => {
-          'report_id': reportId,
-          'url': url,
-          'media_type': 'photo',
-          'sort_order': photoUrls.indexOf(url),
-        }).toList();
+        final mediaRows = photoUrls
+            .map(
+              (url) => {
+                'report_id': reportId,
+                'url': url,
+                'media_type': 'photo',
+                'sort_order': photoUrls.indexOf(url),
+              },
+            )
+            .toList();
 
         await supabase.from('lost_horse_media').insert(mediaRows);
       }
@@ -1381,10 +1345,7 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
         uploadResult.when(
           onSuccess: (upload) => tamgaImageUrl = upload.url,
           onFailure: (error) {
-            TamgaToast.showError(
-              context,
-              friendlyErrorMessage(error),
-            );
+            TamgaToast.showError(context, friendlyErrorMessage(error));
           },
         );
       }
@@ -1422,7 +1383,9 @@ class _ReportLostHorseScreenState extends ConsumerState<ReportLostHorseScreen> {
           expiresAt: expiresAt,
         );
         // Fire-and-forget: don't block submission on notification scheduling
-        unawaited(expiryService.scheduleRenewalNotification(reportForScheduling));
+        unawaited(
+          expiryService.scheduleRenewalNotification(reportForScheduling),
+        );
       }
 
       if (!mounted) return;

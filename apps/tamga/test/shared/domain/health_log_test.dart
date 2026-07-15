@@ -27,8 +27,11 @@ void main() {
 
     test('displayName is non-empty for all values', () {
       for (final type in LogType.values) {
-        expect(type.displayName.isNotEmpty, isTrue,
-            reason: '${type.name} should have a non-empty displayName');
+        expect(
+          type.displayName.isNotEmpty,
+          isTrue,
+          reason: '${type.name} should have a non-empty displayName',
+        );
       }
     });
 
@@ -302,30 +305,33 @@ void main() {
 
     // ── Serialization — Supabase JSON ────────────────────────
 
-    test('toSupabaseJson uses snake_case keys and includes ownerId/updated_at', () {
-      final log = HealthLog(
-        id: 'hl-1',
-        horseId: 'horse-1',
-        logType: LogType.shoeing,
-        date: DateTime(2026, 4, 10),
-        notes: 'Шинэ эмээл',
-        cost: 30000.0,
-        farrierName: 'Дорж',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      final json = log.toSupabaseJson(ownerId: 'user-1');
+    test(
+      'toSupabaseJson uses snake_case keys and includes ownerId/updated_at',
+      () {
+        final log = HealthLog(
+          id: 'hl-1',
+          horseId: 'horse-1',
+          logType: LogType.shoeing,
+          date: DateTime(2026, 4, 10),
+          notes: 'Шинэ эмээл',
+          cost: 30000.0,
+          farrierName: 'Дорж',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        final json = log.toSupabaseJson(ownerId: 'user-1');
 
-      expect(json['owner_id'], 'user-1');
-      expect(json['id'], 'hl-1');
-      expect(json['horse_id'], 'horse-1');
-      expect(json['log_type'], 'shoeing');
-      expect(json['date'], '2026-04-10T00:00:00.000');
-      expect(json['notes'], 'Шинэ эмээл');
-      expect(json['cost'], 30000.0);
-      expect(json['farrier_name'], 'Дорж');
-      expect(json['updated_at'], isA<String>());
-    });
+        expect(json['owner_id'], 'user-1');
+        expect(json['id'], 'hl-1');
+        expect(json['horse_id'], 'horse-1');
+        expect(json['log_type'], 'shoeing');
+        expect(json['date'], '2026-04-10T00:00:00.000');
+        expect(json['notes'], 'Шинэ эмээл');
+        expect(json['cost'], 30000.0);
+        expect(json['farrier_name'], 'Дорж');
+        expect(json['updated_at'], isA<String>());
+      },
+    );
 
     test('fromSupabaseJson deserializes snake_case', () {
       final supabase = {
@@ -366,5 +372,4 @@ void main() {
       expect(str, contains('vaccination'));
     });
   });
-
 }

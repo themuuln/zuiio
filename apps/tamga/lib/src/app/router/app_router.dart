@@ -178,9 +178,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: ':raceId',
             builder: (ctx, state) {
-              return RaceDetailScreen(
-                raceId: state.pathParameters['raceId']!,
-              );
+              return RaceDetailScreen(raceId: state.pathParameters['raceId']!);
             },
           ),
         ],
@@ -415,8 +413,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'verification',
-                    builder: (ctx, state) =>
-                        const SellerVerificationScreen(),
+                    builder: (ctx, state) => const SellerVerificationScreen(),
                   ),
                   GoRoute(
                     path: 'saved-searches',
@@ -424,8 +421,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'partner-dashboard',
-                    builder: (ctx, state) =>
-                        const PartnerDashboardScreen(),
+                    builder: (ctx, state) => const PartnerDashboardScreen(),
                   ),
                   GoRoute(
                     path: 'analytics',

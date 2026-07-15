@@ -78,7 +78,8 @@ class BreedingScreen extends ConsumerWidget {
                       return const EmptyState(
                         icon: Icons.pets_outlined,
                         title: 'Хээлтүүлгийн бүртгэл байхгүй',
-                        description: 'Хээлтүүлгийн бүртгэл одоогоор байхгүй байна.',
+                        description:
+                            'Хээлтүүлгийн бүртгэл одоогоор байхгүй байна.',
                       );
                     }
 

@@ -28,11 +28,7 @@ const IsarLineageSnapshotSchema = CollectionSchema(
       name: r'relatedHorsesJson',
       type: IsarType.string,
     ),
-    r'rootId': PropertySchema(
-      id: 2,
-      name: r'rootId',
-      type: IsarType.string,
-    ),
+    r'rootId': PropertySchema(id: 2, name: r'rootId', type: IsarType.string),
     r'timelineJson': PropertySchema(
       id: 3,
       name: r'timelineJson',
@@ -52,7 +48,7 @@ const IsarLineageSnapshotSchema = CollectionSchema(
       id: 6,
       name: r'treeSummary',
       type: IsarType.string,
-    )
+    ),
   },
   estimateSize: _isarLineageSnapshotEstimateSize,
   serialize: _isarLineageSnapshotSerialize,
@@ -70,9 +66,9 @@ const IsarLineageSnapshotSchema = CollectionSchema(
           name: r'rootId',
           type: IndexType.hash,
           caseSensitive: true,
-        )
+        ),
       ],
-    )
+    ),
   },
   links: {},
   embeddedSchemas: {},
@@ -161,12 +157,16 @@ Id _isarLineageSnapshotGetId(IsarLineageSnapshot object) {
 }
 
 List<IsarLinkBase<dynamic>> _isarLineageSnapshotGetLinks(
-    IsarLineageSnapshot object) {
+  IsarLineageSnapshot object,
+) {
   return [];
 }
 
 void _isarLineageSnapshotAttach(
-    IsarCollection<dynamic> col, Id id, IsarLineageSnapshot object) {
+  IsarCollection<dynamic> col,
+  Id id,
+  IsarLineageSnapshot object,
+) {
   object.id = id;
 }
 
@@ -219,8 +219,10 @@ extension IsarLineageSnapshotByIndex on IsarCollection<IsarLineageSnapshot> {
     return putAllByIndex(r'rootId', objects);
   }
 
-  List<Id> putAllByRootIdSync(List<IsarLineageSnapshot> objects,
-      {bool saveLinks = true}) {
+  List<Id> putAllByRootIdSync(
+    List<IsarLineageSnapshot> objects, {
+    bool saveLinks = true,
+  }) {
     return putAllByIndexSync(r'rootId', objects, saveLinks: saveLinks);
   }
 }
@@ -237,17 +239,14 @@ extension IsarLineageSnapshotQueryWhereSort
 extension IsarLineageSnapshotQueryWhere
     on QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QWhereClause> {
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterWhereClause>
-      idEqualTo(Id id) {
+  idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: id,
-        upper: id,
-      ));
+      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterWhereClause>
-      idNotEqualTo(Id id) {
+  idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -270,7 +269,7 @@ extension IsarLineageSnapshotQueryWhere
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterWhereClause>
-      idGreaterThan(Id id, {bool include = false}) {
+  idGreaterThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -279,7 +278,7 @@ extension IsarLineageSnapshotQueryWhere
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterWhereClause>
-      idLessThan(Id id, {bool include = false}) {
+  idLessThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -288,230 +287,245 @@ extension IsarLineageSnapshotQueryWhere
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterWhereClause>
-      idBetween(
+  idBetween(
     Id lowerId,
     Id upperId, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: lowerId,
-        includeLower: includeLower,
-        upper: upperId,
-        includeUpper: includeUpper,
-      ));
+      return query.addWhereClause(
+        IdWhereClause.between(
+          lower: lowerId,
+          includeLower: includeLower,
+          upper: upperId,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterWhereClause>
-      rootIdEqualTo(String rootId) {
+  rootIdEqualTo(String rootId) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'rootId',
-        value: [rootId],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'rootId', value: [rootId]),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterWhereClause>
-      rootIdNotEqualTo(String rootId) {
+  rootIdNotEqualTo(String rootId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'rootId',
-              lower: [],
-              upper: [rootId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'rootId',
-              lower: [rootId],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'rootId',
+                lower: [],
+                upper: [rootId],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'rootId',
+                lower: [rootId],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'rootId',
-              lower: [rootId],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'rootId',
-              lower: [],
-              upper: [rootId],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'rootId',
+                lower: [rootId],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'rootId',
+                lower: [],
+                upper: [rootId],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
 }
 
-extension IsarLineageSnapshotQueryFilter on QueryBuilder<IsarLineageSnapshot,
-    IsarLineageSnapshot, QFilterCondition> {
+extension IsarLineageSnapshotQueryFilter
+    on
+        QueryBuilder<
+          IsarLineageSnapshot,
+          IsarLineageSnapshot,
+          QFilterCondition
+        > {
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      cachedAtEqualTo(DateTime value) {
+  cachedAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'cachedAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'cachedAt', value: value),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      cachedAtGreaterThan(
-    DateTime value, {
-    bool include = false,
-  }) {
+  cachedAtGreaterThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'cachedAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'cachedAt',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      cachedAtLessThan(
-    DateTime value, {
-    bool include = false,
-  }) {
+  cachedAtLessThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'cachedAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'cachedAt',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      cachedAtBetween(
+  cachedAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'cachedAt',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'cachedAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      idEqualTo(Id value) {
+  idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'id', value: value),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      idGreaterThan(
-    Id value, {
-    bool include = false,
-  }) {
+  idGreaterThan(Id value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      idLessThan(
-    Id value, {
-    bool include = false,
-  }) {
+  idLessThan(Id value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      idBetween(
+  idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'id',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      relatedHorsesJsonEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  relatedHorsesJsonEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'relatedHorsesJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'relatedHorsesJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      relatedHorsesJsonGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'relatedHorsesJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      relatedHorsesJsonLessThan(
+  relatedHorsesJsonGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'relatedHorsesJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'relatedHorsesJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      relatedHorsesJsonBetween(
+  relatedHorsesJsonLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'relatedHorsesJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
+  relatedHorsesJsonBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -519,135 +533,140 @@ extension IsarLineageSnapshotQueryFilter on QueryBuilder<IsarLineageSnapshot,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'relatedHorsesJson',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'relatedHorsesJson',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      relatedHorsesJsonStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  relatedHorsesJsonStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'relatedHorsesJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'relatedHorsesJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      relatedHorsesJsonEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  relatedHorsesJsonEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'relatedHorsesJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'relatedHorsesJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      relatedHorsesJsonContains(String value, {bool caseSensitive = true}) {
+  relatedHorsesJsonContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'relatedHorsesJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'relatedHorsesJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      relatedHorsesJsonMatches(String pattern, {bool caseSensitive = true}) {
+  relatedHorsesJsonMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'relatedHorsesJson',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'relatedHorsesJson',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      relatedHorsesJsonIsEmpty() {
+  relatedHorsesJsonIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'relatedHorsesJson',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'relatedHorsesJson', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      relatedHorsesJsonIsNotEmpty() {
+  relatedHorsesJsonIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'relatedHorsesJson',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'relatedHorsesJson', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      rootIdEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  rootIdEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'rootId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'rootId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      rootIdGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'rootId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      rootIdLessThan(
+  rootIdGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'rootId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'rootId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      rootIdBetween(
+  rootIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'rootId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
+  rootIdBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -655,135 +674,140 @@ extension IsarLineageSnapshotQueryFilter on QueryBuilder<IsarLineageSnapshot,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'rootId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'rootId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      rootIdStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  rootIdStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'rootId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'rootId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      rootIdEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  rootIdEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'rootId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'rootId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      rootIdContains(String value, {bool caseSensitive = true}) {
+  rootIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'rootId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'rootId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      rootIdMatches(String pattern, {bool caseSensitive = true}) {
+  rootIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'rootId',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'rootId',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      rootIdIsEmpty() {
+  rootIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'rootId',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'rootId', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      rootIdIsNotEmpty() {
+  rootIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'rootId',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'rootId', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      timelineJsonEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  timelineJsonEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'timelineJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'timelineJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      timelineJsonGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'timelineJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      timelineJsonLessThan(
+  timelineJsonGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'timelineJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'timelineJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      timelineJsonBetween(
+  timelineJsonLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'timelineJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
+  timelineJsonBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -791,135 +815,140 @@ extension IsarLineageSnapshotQueryFilter on QueryBuilder<IsarLineageSnapshot,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'timelineJson',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'timelineJson',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      timelineJsonStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  timelineJsonStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'timelineJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'timelineJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      timelineJsonEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  timelineJsonEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'timelineJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'timelineJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      timelineJsonContains(String value, {bool caseSensitive = true}) {
+  timelineJsonContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'timelineJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'timelineJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      timelineJsonMatches(String pattern, {bool caseSensitive = true}) {
+  timelineJsonMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'timelineJson',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'timelineJson',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      timelineJsonIsEmpty() {
+  timelineJsonIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'timelineJson',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'timelineJson', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      timelineJsonIsNotEmpty() {
+  timelineJsonIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'timelineJson',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'timelineJson', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeEdgesJsonEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  treeEdgesJsonEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'treeEdgesJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'treeEdgesJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeEdgesJsonGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'treeEdgesJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeEdgesJsonLessThan(
+  treeEdgesJsonGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'treeEdgesJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'treeEdgesJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeEdgesJsonBetween(
+  treeEdgesJsonLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'treeEdgesJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
+  treeEdgesJsonBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -927,135 +956,140 @@ extension IsarLineageSnapshotQueryFilter on QueryBuilder<IsarLineageSnapshot,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'treeEdgesJson',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'treeEdgesJson',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeEdgesJsonStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  treeEdgesJsonStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'treeEdgesJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'treeEdgesJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeEdgesJsonEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  treeEdgesJsonEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'treeEdgesJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'treeEdgesJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeEdgesJsonContains(String value, {bool caseSensitive = true}) {
+  treeEdgesJsonContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'treeEdgesJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'treeEdgesJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeEdgesJsonMatches(String pattern, {bool caseSensitive = true}) {
+  treeEdgesJsonMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'treeEdgesJson',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'treeEdgesJson',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeEdgesJsonIsEmpty() {
+  treeEdgesJsonIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'treeEdgesJson',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'treeEdgesJson', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeEdgesJsonIsNotEmpty() {
+  treeEdgesJsonIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'treeEdgesJson',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'treeEdgesJson', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeNodesJsonEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  treeNodesJsonEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'treeNodesJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'treeNodesJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeNodesJsonGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'treeNodesJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeNodesJsonLessThan(
+  treeNodesJsonGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'treeNodesJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'treeNodesJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeNodesJsonBetween(
+  treeNodesJsonLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'treeNodesJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
+  treeNodesJsonBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1063,135 +1097,140 @@ extension IsarLineageSnapshotQueryFilter on QueryBuilder<IsarLineageSnapshot,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'treeNodesJson',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'treeNodesJson',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeNodesJsonStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  treeNodesJsonStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'treeNodesJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'treeNodesJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeNodesJsonEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  treeNodesJsonEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'treeNodesJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'treeNodesJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeNodesJsonContains(String value, {bool caseSensitive = true}) {
+  treeNodesJsonContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'treeNodesJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'treeNodesJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeNodesJsonMatches(String pattern, {bool caseSensitive = true}) {
+  treeNodesJsonMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'treeNodesJson',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'treeNodesJson',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeNodesJsonIsEmpty() {
+  treeNodesJsonIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'treeNodesJson',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'treeNodesJson', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeNodesJsonIsNotEmpty() {
+  treeNodesJsonIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'treeNodesJson',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'treeNodesJson', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeSummaryEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  treeSummaryEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'treeSummary',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'treeSummary',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeSummaryGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'treeSummary',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeSummaryLessThan(
+  treeSummaryGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'treeSummary',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'treeSummary',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeSummaryBetween(
+  treeSummaryLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'treeSummary',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
+  treeSummaryBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1199,189 +1238,201 @@ extension IsarLineageSnapshotQueryFilter on QueryBuilder<IsarLineageSnapshot,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'treeSummary',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'treeSummary',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeSummaryStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  treeSummaryStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'treeSummary',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'treeSummary',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeSummaryEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  treeSummaryEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'treeSummary',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'treeSummary',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeSummaryContains(String value, {bool caseSensitive = true}) {
+  treeSummaryContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'treeSummary',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'treeSummary',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeSummaryMatches(String pattern, {bool caseSensitive = true}) {
+  treeSummaryMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'treeSummary',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'treeSummary',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeSummaryIsEmpty() {
+  treeSummaryIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'treeSummary',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'treeSummary', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterFilterCondition>
-      treeSummaryIsNotEmpty() {
+  treeSummaryIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'treeSummary',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'treeSummary', value: ''),
+      );
     });
   }
 }
 
-extension IsarLineageSnapshotQueryObject on QueryBuilder<IsarLineageSnapshot,
-    IsarLineageSnapshot, QFilterCondition> {}
+extension IsarLineageSnapshotQueryObject
+    on
+        QueryBuilder<
+          IsarLineageSnapshot,
+          IsarLineageSnapshot,
+          QFilterCondition
+        > {}
 
-extension IsarLineageSnapshotQueryLinks on QueryBuilder<IsarLineageSnapshot,
-    IsarLineageSnapshot, QFilterCondition> {}
+extension IsarLineageSnapshotQueryLinks
+    on
+        QueryBuilder<
+          IsarLineageSnapshot,
+          IsarLineageSnapshot,
+          QFilterCondition
+        > {}
 
 extension IsarLineageSnapshotQuerySortBy
     on QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QSortBy> {
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      sortByCachedAt() {
+  sortByCachedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'cachedAt', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      sortByCachedAtDesc() {
+  sortByCachedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'cachedAt', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      sortByRelatedHorsesJson() {
+  sortByRelatedHorsesJson() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'relatedHorsesJson', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      sortByRelatedHorsesJsonDesc() {
+  sortByRelatedHorsesJsonDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'relatedHorsesJson', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      sortByRootId() {
+  sortByRootId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'rootId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      sortByRootIdDesc() {
+  sortByRootIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'rootId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      sortByTimelineJson() {
+  sortByTimelineJson() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'timelineJson', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      sortByTimelineJsonDesc() {
+  sortByTimelineJsonDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'timelineJson', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      sortByTreeEdgesJson() {
+  sortByTreeEdgesJson() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'treeEdgesJson', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      sortByTreeEdgesJsonDesc() {
+  sortByTreeEdgesJsonDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'treeEdgesJson', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      sortByTreeNodesJson() {
+  sortByTreeNodesJson() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'treeNodesJson', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      sortByTreeNodesJsonDesc() {
+  sortByTreeNodesJsonDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'treeNodesJson', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      sortByTreeSummary() {
+  sortByTreeSummary() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'treeSummary', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      sortByTreeSummaryDesc() {
+  sortByTreeSummaryDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'treeSummary', Sort.desc);
     });
@@ -1391,112 +1442,112 @@ extension IsarLineageSnapshotQuerySortBy
 extension IsarLineageSnapshotQuerySortThenBy
     on QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QSortThenBy> {
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      thenByCachedAt() {
+  thenByCachedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'cachedAt', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      thenByCachedAtDesc() {
+  thenByCachedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'cachedAt', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      thenById() {
+  thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      thenByIdDesc() {
+  thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      thenByRelatedHorsesJson() {
+  thenByRelatedHorsesJson() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'relatedHorsesJson', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      thenByRelatedHorsesJsonDesc() {
+  thenByRelatedHorsesJsonDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'relatedHorsesJson', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      thenByRootId() {
+  thenByRootId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'rootId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      thenByRootIdDesc() {
+  thenByRootIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'rootId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      thenByTimelineJson() {
+  thenByTimelineJson() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'timelineJson', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      thenByTimelineJsonDesc() {
+  thenByTimelineJsonDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'timelineJson', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      thenByTreeEdgesJson() {
+  thenByTreeEdgesJson() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'treeEdgesJson', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      thenByTreeEdgesJsonDesc() {
+  thenByTreeEdgesJsonDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'treeEdgesJson', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      thenByTreeNodesJson() {
+  thenByTreeNodesJson() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'treeNodesJson', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      thenByTreeNodesJsonDesc() {
+  thenByTreeNodesJsonDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'treeNodesJson', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      thenByTreeSummary() {
+  thenByTreeSummary() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'treeSummary', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QAfterSortBy>
-      thenByTreeSummaryDesc() {
+  thenByTreeSummaryDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'treeSummary', Sort.desc);
     });
@@ -1506,52 +1557,58 @@ extension IsarLineageSnapshotQuerySortThenBy
 extension IsarLineageSnapshotQueryWhereDistinct
     on QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QDistinct> {
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QDistinct>
-      distinctByCachedAt() {
+  distinctByCachedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'cachedAt');
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QDistinct>
-      distinctByRelatedHorsesJson({bool caseSensitive = true}) {
+  distinctByRelatedHorsesJson({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'relatedHorsesJson',
-          caseSensitive: caseSensitive);
+      return query.addDistinctBy(
+        r'relatedHorsesJson',
+        caseSensitive: caseSensitive,
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QDistinct>
-      distinctByRootId({bool caseSensitive = true}) {
+  distinctByRootId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'rootId', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QDistinct>
-      distinctByTimelineJson({bool caseSensitive = true}) {
+  distinctByTimelineJson({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'timelineJson', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QDistinct>
-      distinctByTreeEdgesJson({bool caseSensitive = true}) {
+  distinctByTreeEdgesJson({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'treeEdgesJson',
-          caseSensitive: caseSensitive);
+      return query.addDistinctBy(
+        r'treeEdgesJson',
+        caseSensitive: caseSensitive,
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QDistinct>
-      distinctByTreeNodesJson({bool caseSensitive = true}) {
+  distinctByTreeNodesJson({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'treeNodesJson',
-          caseSensitive: caseSensitive);
+      return query.addDistinctBy(
+        r'treeNodesJson',
+        caseSensitive: caseSensitive,
+      );
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, IsarLineageSnapshot, QDistinct>
-      distinctByTreeSummary({bool caseSensitive = true}) {
+  distinctByTreeSummary({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'treeSummary', caseSensitive: caseSensitive);
     });
@@ -1567,14 +1624,14 @@ extension IsarLineageSnapshotQueryProperty
   }
 
   QueryBuilder<IsarLineageSnapshot, DateTime, QQueryOperations>
-      cachedAtProperty() {
+  cachedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'cachedAt');
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, String, QQueryOperations>
-      relatedHorsesJsonProperty() {
+  relatedHorsesJsonProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'relatedHorsesJson');
     });
@@ -1587,28 +1644,28 @@ extension IsarLineageSnapshotQueryProperty
   }
 
   QueryBuilder<IsarLineageSnapshot, String, QQueryOperations>
-      timelineJsonProperty() {
+  timelineJsonProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'timelineJson');
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, String, QQueryOperations>
-      treeEdgesJsonProperty() {
+  treeEdgesJsonProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'treeEdgesJson');
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, String, QQueryOperations>
-      treeNodesJsonProperty() {
+  treeNodesJsonProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'treeNodesJson');
     });
   }
 
   QueryBuilder<IsarLineageSnapshot, String, QQueryOperations>
-      treeSummaryProperty() {
+  treeSummaryProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'treeSummary');
     });

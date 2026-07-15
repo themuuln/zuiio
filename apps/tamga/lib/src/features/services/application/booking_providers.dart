@@ -19,9 +19,9 @@ import 'services_providers.dart';
 /// Тодорхой хэрэглэчийн захиалгууд.
 final bookingsByUserProvider =
     createListFamilyProvider<ServiceBooking, ServiceBookingRepository, String>(
-  (ref) => ref.watch(serviceBookingRepositoryProvider.future),
-  (repo, userId) => repo.fetchBookings(userId),
-);
+      (ref) => ref.watch(serviceBookingRepositoryProvider.future),
+      (repo, userId) => repo.fetchBookings(userId),
+    );
 
 /// Одоогийн нэвтэрсэн хэрэглэчийн захиалгууд.
 final myBookingsProvider = FutureProvider<List<ServiceBooking>>((ref) async {
@@ -36,7 +36,9 @@ final myBookingsProvider = FutureProvider<List<ServiceBooking>>((ref) async {
 });
 
 /// Ирээдүйн (идэвхтэй) захиалгууд.
-final upcomingBookingsProvider = FutureProvider<List<ServiceBooking>>((ref) async {
+final upcomingBookingsProvider = FutureProvider<List<ServiceBooking>>((
+  ref,
+) async {
   final bookings = await ref.watch(myBookingsProvider.future);
   return bookings.where((b) => b.isActive).toList();
 });
@@ -135,5 +137,3 @@ final cancelBookingProvider = FutureProvider.family<ServiceBooking, String>((
   final result = await repository.cancelBooking(bookingId);
   return result.getOrThrow();
 });
-
-

@@ -17,7 +17,9 @@ import 'lineage_repository.dart';
 /// Fetches lineage roots from the `horses` table where [lineage_root_id] is
 /// set, and builds complete [LineageSnapshot]s by traversing ancestor and
 /// descendant chains via the `pedigree_links` table.
-class SupabaseLineageRepository with SupabaseRepositoryMixin implements LineageRepository {
+class SupabaseLineageRepository
+    with SupabaseRepositoryMixin
+    implements LineageRepository {
   SupabaseLineageRepository({SupabaseClient? client})
     : _client = client ?? getConfiguredSupabaseClient();
 

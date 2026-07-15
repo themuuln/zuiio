@@ -18,10 +18,7 @@ class _MockMarketRepository extends Mock implements MarketRepository {}
 /// A [MarketCatalogNotifier] that starts in a loading state with no items.
 class _LoadingMarketNotifier extends MarketCatalogNotifier {
   _LoadingMarketNotifier()
-    : super(
-        repository: _MockMarketRepository(),
-        pageSize: 20,
-      ) {
+    : super(repository: _MockMarketRepository(), pageSize: 20) {
     state = const MarketCatalogPaginationState(isLoading: true);
   }
 }
@@ -40,9 +37,7 @@ void main() {
             marketFiltersProvider.overrideWith((ref) => const MarketFilters()),
             horsesProvider.overrideWith((ref) => <HorseRecord>[]),
             eventsProvider.overrideWith((ref) => <Event>[]),
-            favoriteListingIdsProvider.overrideWith(
-              (ref) => <String>[],
-            ),
+            favoriteListingIdsProvider.overrideWith((ref) => <String>[]),
           ],
           child: MaterialApp(
             theme: AppTheme.light(),

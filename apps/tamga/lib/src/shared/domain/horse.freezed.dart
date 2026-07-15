@@ -12,7 +12,8 @@ part of 'horse.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
 
 /// @nodoc
 mixin _$Horse {
@@ -47,28 +48,29 @@ abstract class $HorseCopyWith<$Res> {
   factory $HorseCopyWith(Horse value, $Res Function(Horse) then) =
       _$HorseCopyWithImpl<$Res, Horse>;
   @useResult
-  $Res call(
-      {String id,
-      String ownerId,
-      String name,
-      String relationLabel,
-      String coat,
-      int birthYear,
-      int awardCount,
-      int offspringCount,
-      bool isOwnedByHousehold,
-      String notes,
-      HorseGender gender,
-      String? microchipId,
-      String? registrationNo,
-      List<String> photoUrls,
-      String? lineageRootId,
-      String? ownerStampSvg,
-      DateTime? registrationDate,
-      bool tamgaVerified,
-      bool stateVerified,
-      DateTime createdAt,
-      DateTime updatedAt});
+  $Res call({
+    String id,
+    String ownerId,
+    String name,
+    String relationLabel,
+    String coat,
+    int birthYear,
+    int awardCount,
+    int offspringCount,
+    bool isOwnedByHousehold,
+    String notes,
+    HorseGender gender,
+    String? microchipId,
+    String? registrationNo,
+    List<String> photoUrls,
+    String? lineageRootId,
+    String? ownerStampSvg,
+    DateTime? registrationDate,
+    bool tamgaVerified,
+    bool stateVerified,
+    DateTime createdAt,
+    DateTime updatedAt,
+  });
 }
 
 /// @nodoc
@@ -106,124 +108,129 @@ class _$HorseCopyWithImpl<$Res, $Val extends Horse>
     Object? createdAt = null,
     Object? updatedAt = null,
   }) {
-    return _then(_value.copyWith(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      ownerId: null == ownerId
-          ? _value.ownerId
-          : ownerId // ignore: cast_nullable_to_non_nullable
-              as String,
-      name: null == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
-              as String,
-      relationLabel: null == relationLabel
-          ? _value.relationLabel
-          : relationLabel // ignore: cast_nullable_to_non_nullable
-              as String,
-      coat: null == coat
-          ? _value.coat
-          : coat // ignore: cast_nullable_to_non_nullable
-              as String,
-      birthYear: null == birthYear
-          ? _value.birthYear
-          : birthYear // ignore: cast_nullable_to_non_nullable
-              as int,
-      awardCount: null == awardCount
-          ? _value.awardCount
-          : awardCount // ignore: cast_nullable_to_non_nullable
-              as int,
-      offspringCount: null == offspringCount
-          ? _value.offspringCount
-          : offspringCount // ignore: cast_nullable_to_non_nullable
-              as int,
-      isOwnedByHousehold: null == isOwnedByHousehold
-          ? _value.isOwnedByHousehold
-          : isOwnedByHousehold // ignore: cast_nullable_to_non_nullable
-              as bool,
-      notes: null == notes
-          ? _value.notes
-          : notes // ignore: cast_nullable_to_non_nullable
-              as String,
-      gender: null == gender
-          ? _value.gender
-          : gender // ignore: cast_nullable_to_non_nullable
-              as HorseGender,
-      microchipId: freezed == microchipId
-          ? _value.microchipId
-          : microchipId // ignore: cast_nullable_to_non_nullable
-              as String?,
-      registrationNo: freezed == registrationNo
-          ? _value.registrationNo
-          : registrationNo // ignore: cast_nullable_to_non_nullable
-              as String?,
-      photoUrls: null == photoUrls
-          ? _value.photoUrls
-          : photoUrls // ignore: cast_nullable_to_non_nullable
-              as List<String>,
-      lineageRootId: freezed == lineageRootId
-          ? _value.lineageRootId
-          : lineageRootId // ignore: cast_nullable_to_non_nullable
-              as String?,
-      ownerStampSvg: freezed == ownerStampSvg
-          ? _value.ownerStampSvg
-          : ownerStampSvg // ignore: cast_nullable_to_non_nullable
-              as String?,
-      registrationDate: freezed == registrationDate
-          ? _value.registrationDate
-          : registrationDate // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
-      tamgaVerified: null == tamgaVerified
-          ? _value.tamgaVerified
-          : tamgaVerified // ignore: cast_nullable_to_non_nullable
-              as bool,
-      stateVerified: null == stateVerified
-          ? _value.stateVerified
-          : stateVerified // ignore: cast_nullable_to_non_nullable
-              as bool,
-      createdAt: null == createdAt
-          ? _value.createdAt
-          : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-      updatedAt: null == updatedAt
-          ? _value.updatedAt
-          : updatedAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            id: null == id
+                ? _value.id
+                : id // ignore: cast_nullable_to_non_nullable
+                      as String,
+            ownerId: null == ownerId
+                ? _value.ownerId
+                : ownerId // ignore: cast_nullable_to_non_nullable
+                      as String,
+            name: null == name
+                ? _value.name
+                : name // ignore: cast_nullable_to_non_nullable
+                      as String,
+            relationLabel: null == relationLabel
+                ? _value.relationLabel
+                : relationLabel // ignore: cast_nullable_to_non_nullable
+                      as String,
+            coat: null == coat
+                ? _value.coat
+                : coat // ignore: cast_nullable_to_non_nullable
+                      as String,
+            birthYear: null == birthYear
+                ? _value.birthYear
+                : birthYear // ignore: cast_nullable_to_non_nullable
+                      as int,
+            awardCount: null == awardCount
+                ? _value.awardCount
+                : awardCount // ignore: cast_nullable_to_non_nullable
+                      as int,
+            offspringCount: null == offspringCount
+                ? _value.offspringCount
+                : offspringCount // ignore: cast_nullable_to_non_nullable
+                      as int,
+            isOwnedByHousehold: null == isOwnedByHousehold
+                ? _value.isOwnedByHousehold
+                : isOwnedByHousehold // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            notes: null == notes
+                ? _value.notes
+                : notes // ignore: cast_nullable_to_non_nullable
+                      as String,
+            gender: null == gender
+                ? _value.gender
+                : gender // ignore: cast_nullable_to_non_nullable
+                      as HorseGender,
+            microchipId: freezed == microchipId
+                ? _value.microchipId
+                : microchipId // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            registrationNo: freezed == registrationNo
+                ? _value.registrationNo
+                : registrationNo // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            photoUrls: null == photoUrls
+                ? _value.photoUrls
+                : photoUrls // ignore: cast_nullable_to_non_nullable
+                      as List<String>,
+            lineageRootId: freezed == lineageRootId
+                ? _value.lineageRootId
+                : lineageRootId // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            ownerStampSvg: freezed == ownerStampSvg
+                ? _value.ownerStampSvg
+                : ownerStampSvg // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            registrationDate: freezed == registrationDate
+                ? _value.registrationDate
+                : registrationDate // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+            tamgaVerified: null == tamgaVerified
+                ? _value.tamgaVerified
+                : tamgaVerified // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            stateVerified: null == stateVerified
+                ? _value.stateVerified
+                : stateVerified // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            createdAt: null == createdAt
+                ? _value.createdAt
+                : createdAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
+            updatedAt: null == updatedAt
+                ? _value.updatedAt
+                : updatedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
+          )
+          as $Val,
+    );
   }
 }
 
 /// @nodoc
 abstract class _$$HorseImplCopyWith<$Res> implements $HorseCopyWith<$Res> {
   factory _$$HorseImplCopyWith(
-          _$HorseImpl value, $Res Function(_$HorseImpl) then) =
-      __$$HorseImplCopyWithImpl<$Res>;
+    _$HorseImpl value,
+    $Res Function(_$HorseImpl) then,
+  ) = __$$HorseImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {String id,
-      String ownerId,
-      String name,
-      String relationLabel,
-      String coat,
-      int birthYear,
-      int awardCount,
-      int offspringCount,
-      bool isOwnedByHousehold,
-      String notes,
-      HorseGender gender,
-      String? microchipId,
-      String? registrationNo,
-      List<String> photoUrls,
-      String? lineageRootId,
-      String? ownerStampSvg,
-      DateTime? registrationDate,
-      bool tamgaVerified,
-      bool stateVerified,
-      DateTime createdAt,
-      DateTime updatedAt});
+  $Res call({
+    String id,
+    String ownerId,
+    String name,
+    String relationLabel,
+    String coat,
+    int birthYear,
+    int awardCount,
+    int offspringCount,
+    bool isOwnedByHousehold,
+    String notes,
+    HorseGender gender,
+    String? microchipId,
+    String? registrationNo,
+    List<String> photoUrls,
+    String? lineageRootId,
+    String? ownerStampSvg,
+    DateTime? registrationDate,
+    bool tamgaVerified,
+    bool stateVerified,
+    DateTime createdAt,
+    DateTime updatedAt,
+  });
 }
 
 /// @nodoc
@@ -231,8 +238,9 @@ class __$$HorseImplCopyWithImpl<$Res>
     extends _$HorseCopyWithImpl<$Res, _$HorseImpl>
     implements _$$HorseImplCopyWith<$Res> {
   __$$HorseImplCopyWithImpl(
-      _$HorseImpl _value, $Res Function(_$HorseImpl) _then)
-      : super(_value, _then);
+    _$HorseImpl _value,
+    $Res Function(_$HorseImpl) _then,
+  ) : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
@@ -259,122 +267,124 @@ class __$$HorseImplCopyWithImpl<$Res>
     Object? createdAt = null,
     Object? updatedAt = null,
   }) {
-    return _then(_$HorseImpl(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      ownerId: null == ownerId
-          ? _value.ownerId
-          : ownerId // ignore: cast_nullable_to_non_nullable
-              as String,
-      name: null == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
-              as String,
-      relationLabel: null == relationLabel
-          ? _value.relationLabel
-          : relationLabel // ignore: cast_nullable_to_non_nullable
-              as String,
-      coat: null == coat
-          ? _value.coat
-          : coat // ignore: cast_nullable_to_non_nullable
-              as String,
-      birthYear: null == birthYear
-          ? _value.birthYear
-          : birthYear // ignore: cast_nullable_to_non_nullable
-              as int,
-      awardCount: null == awardCount
-          ? _value.awardCount
-          : awardCount // ignore: cast_nullable_to_non_nullable
-              as int,
-      offspringCount: null == offspringCount
-          ? _value.offspringCount
-          : offspringCount // ignore: cast_nullable_to_non_nullable
-              as int,
-      isOwnedByHousehold: null == isOwnedByHousehold
-          ? _value.isOwnedByHousehold
-          : isOwnedByHousehold // ignore: cast_nullable_to_non_nullable
-              as bool,
-      notes: null == notes
-          ? _value.notes
-          : notes // ignore: cast_nullable_to_non_nullable
-              as String,
-      gender: null == gender
-          ? _value.gender
-          : gender // ignore: cast_nullable_to_non_nullable
-              as HorseGender,
-      microchipId: freezed == microchipId
-          ? _value.microchipId
-          : microchipId // ignore: cast_nullable_to_non_nullable
-              as String?,
-      registrationNo: freezed == registrationNo
-          ? _value.registrationNo
-          : registrationNo // ignore: cast_nullable_to_non_nullable
-              as String?,
-      photoUrls: null == photoUrls
-          ? _value._photoUrls
-          : photoUrls // ignore: cast_nullable_to_non_nullable
-              as List<String>,
-      lineageRootId: freezed == lineageRootId
-          ? _value.lineageRootId
-          : lineageRootId // ignore: cast_nullable_to_non_nullable
-              as String?,
-      ownerStampSvg: freezed == ownerStampSvg
-          ? _value.ownerStampSvg
-          : ownerStampSvg // ignore: cast_nullable_to_non_nullable
-              as String?,
-      registrationDate: freezed == registrationDate
-          ? _value.registrationDate
-          : registrationDate // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
-      tamgaVerified: null == tamgaVerified
-          ? _value.tamgaVerified
-          : tamgaVerified // ignore: cast_nullable_to_non_nullable
-              as bool,
-      stateVerified: null == stateVerified
-          ? _value.stateVerified
-          : stateVerified // ignore: cast_nullable_to_non_nullable
-              as bool,
-      createdAt: null == createdAt
-          ? _value.createdAt
-          : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-      updatedAt: null == updatedAt
-          ? _value.updatedAt
-          : updatedAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-    ));
+    return _then(
+      _$HorseImpl(
+        id: null == id
+            ? _value.id
+            : id // ignore: cast_nullable_to_non_nullable
+                  as String,
+        ownerId: null == ownerId
+            ? _value.ownerId
+            : ownerId // ignore: cast_nullable_to_non_nullable
+                  as String,
+        name: null == name
+            ? _value.name
+            : name // ignore: cast_nullable_to_non_nullable
+                  as String,
+        relationLabel: null == relationLabel
+            ? _value.relationLabel
+            : relationLabel // ignore: cast_nullable_to_non_nullable
+                  as String,
+        coat: null == coat
+            ? _value.coat
+            : coat // ignore: cast_nullable_to_non_nullable
+                  as String,
+        birthYear: null == birthYear
+            ? _value.birthYear
+            : birthYear // ignore: cast_nullable_to_non_nullable
+                  as int,
+        awardCount: null == awardCount
+            ? _value.awardCount
+            : awardCount // ignore: cast_nullable_to_non_nullable
+                  as int,
+        offspringCount: null == offspringCount
+            ? _value.offspringCount
+            : offspringCount // ignore: cast_nullable_to_non_nullable
+                  as int,
+        isOwnedByHousehold: null == isOwnedByHousehold
+            ? _value.isOwnedByHousehold
+            : isOwnedByHousehold // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        notes: null == notes
+            ? _value.notes
+            : notes // ignore: cast_nullable_to_non_nullable
+                  as String,
+        gender: null == gender
+            ? _value.gender
+            : gender // ignore: cast_nullable_to_non_nullable
+                  as HorseGender,
+        microchipId: freezed == microchipId
+            ? _value.microchipId
+            : microchipId // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        registrationNo: freezed == registrationNo
+            ? _value.registrationNo
+            : registrationNo // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        photoUrls: null == photoUrls
+            ? _value._photoUrls
+            : photoUrls // ignore: cast_nullable_to_non_nullable
+                  as List<String>,
+        lineageRootId: freezed == lineageRootId
+            ? _value.lineageRootId
+            : lineageRootId // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        ownerStampSvg: freezed == ownerStampSvg
+            ? _value.ownerStampSvg
+            : ownerStampSvg // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        registrationDate: freezed == registrationDate
+            ? _value.registrationDate
+            : registrationDate // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+        tamgaVerified: null == tamgaVerified
+            ? _value.tamgaVerified
+            : tamgaVerified // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        stateVerified: null == stateVerified
+            ? _value.stateVerified
+            : stateVerified // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        createdAt: null == createdAt
+            ? _value.createdAt
+            : createdAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
+        updatedAt: null == updatedAt
+            ? _value.updatedAt
+            : updatedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
+      ),
+    );
   }
 }
 
 /// @nodoc
 
 class _$HorseImpl extends _Horse {
-  const _$HorseImpl(
-      {required this.id,
-      this.ownerId = '',
-      required this.name,
-      this.relationLabel = '',
-      this.coat = '',
-      this.birthYear = 0,
-      this.awardCount = 0,
-      this.offspringCount = 0,
-      this.isOwnedByHousehold = false,
-      this.notes = '',
-      required this.gender,
-      this.microchipId,
-      this.registrationNo,
-      final List<String> photoUrls = const [],
-      this.lineageRootId,
-      this.ownerStampSvg,
-      this.registrationDate,
-      this.tamgaVerified = false,
-      this.stateVerified = false,
-      required this.createdAt,
-      required this.updatedAt})
-      : _photoUrls = photoUrls,
-        super._();
+  const _$HorseImpl({
+    required this.id,
+    this.ownerId = '',
+    required this.name,
+    this.relationLabel = '',
+    this.coat = '',
+    this.birthYear = 0,
+    this.awardCount = 0,
+    this.offspringCount = 0,
+    this.isOwnedByHousehold = false,
+    this.notes = '',
+    required this.gender,
+    this.microchipId,
+    this.registrationNo,
+    final List<String> photoUrls = const [],
+    this.lineageRootId,
+    this.ownerStampSvg,
+    this.registrationDate,
+    this.tamgaVerified = false,
+    this.stateVerified = false,
+    required this.createdAt,
+    required this.updatedAt,
+  }) : _photoUrls = photoUrls,
+       super._();
 
   @override
   final String id;
@@ -466,8 +476,10 @@ class _$HorseImpl extends _Horse {
                 other.microchipId == microchipId) &&
             (identical(other.registrationNo, registrationNo) ||
                 other.registrationNo == registrationNo) &&
-            const DeepCollectionEquality()
-                .equals(other._photoUrls, _photoUrls) &&
+            const DeepCollectionEquality().equals(
+              other._photoUrls,
+              _photoUrls,
+            ) &&
             (identical(other.lineageRootId, lineageRootId) ||
                 other.lineageRootId == lineageRootId) &&
             (identical(other.ownerStampSvg, ownerStampSvg) ||
@@ -486,29 +498,29 @@ class _$HorseImpl extends _Horse {
 
   @override
   int get hashCode => Object.hashAll([
-        runtimeType,
-        id,
-        ownerId,
-        name,
-        relationLabel,
-        coat,
-        birthYear,
-        awardCount,
-        offspringCount,
-        isOwnedByHousehold,
-        notes,
-        gender,
-        microchipId,
-        registrationNo,
-        const DeepCollectionEquality().hash(_photoUrls),
-        lineageRootId,
-        ownerStampSvg,
-        registrationDate,
-        tamgaVerified,
-        stateVerified,
-        createdAt,
-        updatedAt
-      ]);
+    runtimeType,
+    id,
+    ownerId,
+    name,
+    relationLabel,
+    coat,
+    birthYear,
+    awardCount,
+    offspringCount,
+    isOwnedByHousehold,
+    notes,
+    gender,
+    microchipId,
+    registrationNo,
+    const DeepCollectionEquality().hash(_photoUrls),
+    lineageRootId,
+    ownerStampSvg,
+    registrationDate,
+    tamgaVerified,
+    stateVerified,
+    createdAt,
+    updatedAt,
+  ]);
 
   @JsonKey(ignore: true)
   @override
@@ -518,28 +530,29 @@ class _$HorseImpl extends _Horse {
 }
 
 abstract class _Horse extends Horse {
-  const factory _Horse(
-      {required final String id,
-      final String ownerId,
-      required final String name,
-      final String relationLabel,
-      final String coat,
-      final int birthYear,
-      final int awardCount,
-      final int offspringCount,
-      final bool isOwnedByHousehold,
-      final String notes,
-      required final HorseGender gender,
-      final String? microchipId,
-      final String? registrationNo,
-      final List<String> photoUrls,
-      final String? lineageRootId,
-      final String? ownerStampSvg,
-      final DateTime? registrationDate,
-      final bool tamgaVerified,
-      final bool stateVerified,
-      required final DateTime createdAt,
-      required final DateTime updatedAt}) = _$HorseImpl;
+  const factory _Horse({
+    required final String id,
+    final String ownerId,
+    required final String name,
+    final String relationLabel,
+    final String coat,
+    final int birthYear,
+    final int awardCount,
+    final int offspringCount,
+    final bool isOwnedByHousehold,
+    final String notes,
+    required final HorseGender gender,
+    final String? microchipId,
+    final String? registrationNo,
+    final List<String> photoUrls,
+    final String? lineageRootId,
+    final String? ownerStampSvg,
+    final DateTime? registrationDate,
+    final bool tamgaVerified,
+    final bool stateVerified,
+    required final DateTime createdAt,
+    required final DateTime updatedAt,
+  }) = _$HorseImpl;
   const _Horse._() : super._();
 
   @override

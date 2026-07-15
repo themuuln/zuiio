@@ -33,11 +33,7 @@ const IsarLineageTreeNodeSchema = CollectionSchema(
       name: r'branchOrder',
       type: IsarType.long,
     ),
-    r'coat': PropertySchema(
-      id: 3,
-      name: r'coat',
-      type: IsarType.string,
-    ),
+    r'coat': PropertySchema(id: 3, name: r'coat', type: IsarType.string),
     r'domainId': PropertySchema(
       id: 4,
       name: r'domainId',
@@ -58,16 +54,8 @@ const IsarLineageTreeNodeSchema = CollectionSchema(
       name: r'isOwnedByHousehold',
       type: IsarType.bool,
     ),
-    r'isRoot': PropertySchema(
-      id: 8,
-      name: r'isRoot',
-      type: IsarType.bool,
-    ),
-    r'name': PropertySchema(
-      id: 9,
-      name: r'name',
-      type: IsarType.string,
-    ),
+    r'isRoot': PropertySchema(id: 8, name: r'isRoot', type: IsarType.bool),
+    r'name': PropertySchema(id: 9, name: r'name', type: IsarType.string),
     r'offspringCount': PropertySchema(
       id: 10,
       name: r'offspringCount',
@@ -78,26 +66,14 @@ const IsarLineageTreeNodeSchema = CollectionSchema(
       name: r'photoUrl',
       type: IsarType.string,
     ),
-    r'region': PropertySchema(
-      id: 12,
-      name: r'region',
-      type: IsarType.string,
-    ),
+    r'region': PropertySchema(id: 12, name: r'region', type: IsarType.string),
     r'relationLabel': PropertySchema(
       id: 13,
       name: r'relationLabel',
       type: IsarType.string,
     ),
-    r'rootId': PropertySchema(
-      id: 14,
-      name: r'rootId',
-      type: IsarType.string,
-    ),
-    r'sex': PropertySchema(
-      id: 15,
-      name: r'sex',
-      type: IsarType.string,
-    ),
+    r'rootId': PropertySchema(id: 14, name: r'rootId', type: IsarType.string),
+    r'sex': PropertySchema(id: 15, name: r'sex', type: IsarType.string),
     r'sortOrder': PropertySchema(
       id: 16,
       name: r'sortOrder',
@@ -108,11 +84,7 @@ const IsarLineageTreeNodeSchema = CollectionSchema(
       name: r'speedIndex',
       type: IsarType.double,
     ),
-    r'tamgaNo': PropertySchema(
-      id: 18,
-      name: r'tamgaNo',
-      type: IsarType.string,
-    )
+    r'tamgaNo': PropertySchema(id: 18, name: r'tamgaNo', type: IsarType.string),
   },
   estimateSize: _isarLineageTreeNodeEstimateSize,
   serialize: _isarLineageTreeNodeSerialize,
@@ -130,7 +102,7 @@ const IsarLineageTreeNodeSchema = CollectionSchema(
           name: r'domainId',
           type: IndexType.hash,
           caseSensitive: true,
-        )
+        ),
       ],
     ),
     r'rootId': IndexSchema(
@@ -143,9 +115,9 @@ const IsarLineageTreeNodeSchema = CollectionSchema(
           name: r'rootId',
           type: IndexType.hash,
           caseSensitive: true,
-        )
+        ),
       ],
-    )
+    ),
   },
   links: {},
   embeddedSchemas: {},
@@ -305,12 +277,16 @@ Id _isarLineageTreeNodeGetId(IsarLineageTreeNode object) {
 }
 
 List<IsarLinkBase<dynamic>> _isarLineageTreeNodeGetLinks(
-    IsarLineageTreeNode object) {
+  IsarLineageTreeNode object,
+) {
   return [];
 }
 
 void _isarLineageTreeNodeAttach(
-    IsarCollection<dynamic> col, Id id, IsarLineageTreeNode object) {
+  IsarCollection<dynamic> col,
+  Id id,
+  IsarLineageTreeNode object,
+) {
   object.id = id;
 }
 
@@ -332,7 +308,8 @@ extension IsarLineageTreeNodeByIndex on IsarCollection<IsarLineageTreeNode> {
   }
 
   Future<List<IsarLineageTreeNode?>> getAllByDomainId(
-      List<String> domainIdValues) {
+    List<String> domainIdValues,
+  ) {
     final values = domainIdValues.map((e) => [e]).toList();
     return getAllByIndex(r'domainId', values);
   }
@@ -364,8 +341,10 @@ extension IsarLineageTreeNodeByIndex on IsarCollection<IsarLineageTreeNode> {
     return putAllByIndex(r'domainId', objects);
   }
 
-  List<Id> putAllByDomainIdSync(List<IsarLineageTreeNode> objects,
-      {bool saveLinks = true}) {
+  List<Id> putAllByDomainIdSync(
+    List<IsarLineageTreeNode> objects, {
+    bool saveLinks = true,
+  }) {
     return putAllByIndexSync(r'domainId', objects, saveLinks: saveLinks);
   }
 }
@@ -382,17 +361,14 @@ extension IsarLineageTreeNodeQueryWhereSort
 extension IsarLineageTreeNodeQueryWhere
     on QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QWhereClause> {
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterWhereClause>
-      idEqualTo(Id id) {
+  idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: id,
-        upper: id,
-      ));
+      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterWhereClause>
-      idNotEqualTo(Id id) {
+  idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -415,7 +391,7 @@ extension IsarLineageTreeNodeQueryWhere
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterWhereClause>
-      idGreaterThan(Id id, {bool include = false}) {
+  idGreaterThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -424,7 +400,7 @@ extension IsarLineageTreeNodeQueryWhere
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterWhereClause>
-      idLessThan(Id id, {bool include = false}) {
+  idLessThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -433,331 +409,352 @@ extension IsarLineageTreeNodeQueryWhere
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterWhereClause>
-      idBetween(
+  idBetween(
     Id lowerId,
     Id upperId, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: lowerId,
-        includeLower: includeLower,
-        upper: upperId,
-        includeUpper: includeUpper,
-      ));
+      return query.addWhereClause(
+        IdWhereClause.between(
+          lower: lowerId,
+          includeLower: includeLower,
+          upper: upperId,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterWhereClause>
-      domainIdEqualTo(String domainId) {
+  domainIdEqualTo(String domainId) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'domainId',
-        value: [domainId],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'domainId', value: [domainId]),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterWhereClause>
-      domainIdNotEqualTo(String domainId) {
+  domainIdNotEqualTo(String domainId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'domainId',
-              lower: [],
-              upper: [domainId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'domainId',
-              lower: [domainId],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'domainId',
+                lower: [],
+                upper: [domainId],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'domainId',
+                lower: [domainId],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'domainId',
-              lower: [domainId],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'domainId',
-              lower: [],
-              upper: [domainId],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'domainId',
+                lower: [domainId],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'domainId',
+                lower: [],
+                upper: [domainId],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterWhereClause>
-      rootIdEqualTo(String rootId) {
+  rootIdEqualTo(String rootId) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'rootId',
-        value: [rootId],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'rootId', value: [rootId]),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterWhereClause>
-      rootIdNotEqualTo(String rootId) {
+  rootIdNotEqualTo(String rootId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'rootId',
-              lower: [],
-              upper: [rootId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'rootId',
-              lower: [rootId],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'rootId',
+                lower: [],
+                upper: [rootId],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'rootId',
+                lower: [rootId],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'rootId',
-              lower: [rootId],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'rootId',
-              lower: [],
-              upper: [rootId],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'rootId',
+                lower: [rootId],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'rootId',
+                lower: [],
+                upper: [rootId],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
 }
 
-extension IsarLineageTreeNodeQueryFilter on QueryBuilder<IsarLineageTreeNode,
-    IsarLineageTreeNode, QFilterCondition> {
+extension IsarLineageTreeNodeQueryFilter
+    on
+        QueryBuilder<
+          IsarLineageTreeNode,
+          IsarLineageTreeNode,
+          QFilterCondition
+        > {
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      awardCountEqualTo(int value) {
+  awardCountEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'awardCount',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'awardCount', value: value),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      awardCountGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
+  awardCountGreaterThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'awardCount',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'awardCount',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      awardCountLessThan(
-    int value, {
-    bool include = false,
-  }) {
+  awardCountLessThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'awardCount',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'awardCount',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      awardCountBetween(
+  awardCountBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'awardCount',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'awardCount',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      birthYearEqualTo(int value) {
+  birthYearEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'birthYear',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'birthYear', value: value),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      birthYearGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
+  birthYearGreaterThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'birthYear',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'birthYear',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      birthYearLessThan(
-    int value, {
-    bool include = false,
-  }) {
+  birthYearLessThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'birthYear',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'birthYear',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      birthYearBetween(
+  birthYearBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'birthYear',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'birthYear',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      branchOrderEqualTo(int value) {
+  branchOrderEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'branchOrder',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'branchOrder', value: value),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      branchOrderGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
+  branchOrderGreaterThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'branchOrder',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'branchOrder',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      branchOrderLessThan(
-    int value, {
-    bool include = false,
-  }) {
+  branchOrderLessThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'branchOrder',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'branchOrder',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      branchOrderBetween(
+  branchOrderBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'branchOrder',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'branchOrder',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      coatEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  coatEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'coat',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'coat',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      coatGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'coat',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      coatLessThan(
+  coatGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'coat',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'coat',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      coatBetween(
+  coatLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'coat',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
+  coatBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -765,135 +762,140 @@ extension IsarLineageTreeNodeQueryFilter on QueryBuilder<IsarLineageTreeNode,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'coat',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'coat',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      coatStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  coatStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'coat',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'coat',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      coatEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  coatEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'coat',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'coat',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      coatContains(String value, {bool caseSensitive = true}) {
+  coatContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'coat',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'coat',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      coatMatches(String pattern, {bool caseSensitive = true}) {
+  coatMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'coat',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'coat',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      coatIsEmpty() {
+  coatIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'coat',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'coat', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      coatIsNotEmpty() {
+  coatIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'coat',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'coat', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      domainIdEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  domainIdEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      domainIdGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      domainIdLessThan(
+  domainIdGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      domainIdBetween(
+  domainIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
+  domainIdBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -901,323 +903,323 @@ extension IsarLineageTreeNodeQueryFilter on QueryBuilder<IsarLineageTreeNode,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'domainId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'domainId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      domainIdStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  domainIdStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      domainIdEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  domainIdEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      domainIdContains(String value, {bool caseSensitive = true}) {
+  domainIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'domainId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'domainId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      domainIdMatches(String pattern, {bool caseSensitive = true}) {
+  domainIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'domainId',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'domainId',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      domainIdIsEmpty() {
+  domainIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'domainId',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'domainId', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      domainIdIsNotEmpty() {
+  domainIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'domainId',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'domainId', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      generationEqualTo(int value) {
+  generationEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'generation',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'generation', value: value),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      generationGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
+  generationGreaterThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'generation',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'generation',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      generationLessThan(
-    int value, {
-    bool include = false,
-  }) {
+  generationLessThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'generation',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'generation',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      generationBetween(
+  generationBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'generation',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'generation',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      hiddenBranchCountEqualTo(int value) {
+  hiddenBranchCountEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'hiddenBranchCount',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'hiddenBranchCount', value: value),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      hiddenBranchCountGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
+  hiddenBranchCountGreaterThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'hiddenBranchCount',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'hiddenBranchCount',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      hiddenBranchCountLessThan(
-    int value, {
-    bool include = false,
-  }) {
+  hiddenBranchCountLessThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'hiddenBranchCount',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'hiddenBranchCount',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      hiddenBranchCountBetween(
+  hiddenBranchCountBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'hiddenBranchCount',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'hiddenBranchCount',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      idEqualTo(Id value) {
+  idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'id', value: value),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      idGreaterThan(
-    Id value, {
-    bool include = false,
-  }) {
+  idGreaterThan(Id value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      idLessThan(
-    Id value, {
-    bool include = false,
-  }) {
+  idLessThan(Id value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      idBetween(
+  idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'id',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      isOwnedByHouseholdEqualTo(bool value) {
+  isOwnedByHouseholdEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'isOwnedByHousehold',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'isOwnedByHousehold', value: value),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      isRootEqualTo(bool value) {
+  isRootEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'isRoot',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'isRoot', value: value),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      nameEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  nameEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'name',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      nameGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'name',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      nameLessThan(
+  nameGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'name',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      nameBetween(
+  nameLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
+  nameBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1225,209 +1227,213 @@ extension IsarLineageTreeNodeQueryFilter on QueryBuilder<IsarLineageTreeNode,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'name',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'name',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      nameStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  nameStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'name',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      nameEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  nameEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'name',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      nameContains(String value, {bool caseSensitive = true}) {
+  nameContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'name',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      nameMatches(String pattern, {bool caseSensitive = true}) {
+  nameMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'name',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'name',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      nameIsEmpty() {
+  nameIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'name',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'name', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      nameIsNotEmpty() {
+  nameIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'name',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'name', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      offspringCountEqualTo(int value) {
+  offspringCountEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'offspringCount',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'offspringCount', value: value),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      offspringCountGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
+  offspringCountGreaterThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'offspringCount',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'offspringCount',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      offspringCountLessThan(
-    int value, {
-    bool include = false,
-  }) {
+  offspringCountLessThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'offspringCount',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'offspringCount',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      offspringCountBetween(
+  offspringCountBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'offspringCount',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'offspringCount',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      photoUrlIsNull() {
+  photoUrlIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'photoUrl',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'photoUrl'),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      photoUrlIsNotNull() {
+  photoUrlIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'photoUrl',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'photoUrl'),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      photoUrlEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
+  photoUrlEqualTo(String? value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'photoUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'photoUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      photoUrlGreaterThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'photoUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      photoUrlLessThan(
+  photoUrlGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'photoUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'photoUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      photoUrlBetween(
+  photoUrlLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'photoUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
+  photoUrlBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -1435,153 +1441,158 @@ extension IsarLineageTreeNodeQueryFilter on QueryBuilder<IsarLineageTreeNode,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'photoUrl',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'photoUrl',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      photoUrlStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  photoUrlStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'photoUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'photoUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      photoUrlEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  photoUrlEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'photoUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'photoUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      photoUrlContains(String value, {bool caseSensitive = true}) {
+  photoUrlContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'photoUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'photoUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      photoUrlMatches(String pattern, {bool caseSensitive = true}) {
+  photoUrlMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'photoUrl',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'photoUrl',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      photoUrlIsEmpty() {
+  photoUrlIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'photoUrl',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'photoUrl', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      photoUrlIsNotEmpty() {
+  photoUrlIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'photoUrl',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'photoUrl', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      regionIsNull() {
+  regionIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'region',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'region'),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      regionIsNotNull() {
+  regionIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'region',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'region'),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      regionEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
+  regionEqualTo(String? value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'region',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'region',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      regionGreaterThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'region',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      regionLessThan(
+  regionGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'region',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'region',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      regionBetween(
+  regionLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'region',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
+  regionBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -1589,135 +1600,140 @@ extension IsarLineageTreeNodeQueryFilter on QueryBuilder<IsarLineageTreeNode,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'region',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'region',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      regionStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  regionStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'region',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'region',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      regionEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  regionEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'region',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'region',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      regionContains(String value, {bool caseSensitive = true}) {
+  regionContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'region',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'region',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      regionMatches(String pattern, {bool caseSensitive = true}) {
+  regionMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'region',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'region',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      regionIsEmpty() {
+  regionIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'region',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'region', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      regionIsNotEmpty() {
+  regionIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'region',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'region', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      relationLabelEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  relationLabelEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'relationLabel',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'relationLabel',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      relationLabelGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'relationLabel',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      relationLabelLessThan(
+  relationLabelGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'relationLabel',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'relationLabel',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      relationLabelBetween(
+  relationLabelLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'relationLabel',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
+  relationLabelBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1725,135 +1741,140 @@ extension IsarLineageTreeNodeQueryFilter on QueryBuilder<IsarLineageTreeNode,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'relationLabel',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'relationLabel',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      relationLabelStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  relationLabelStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'relationLabel',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'relationLabel',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      relationLabelEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  relationLabelEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'relationLabel',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'relationLabel',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      relationLabelContains(String value, {bool caseSensitive = true}) {
+  relationLabelContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'relationLabel',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'relationLabel',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      relationLabelMatches(String pattern, {bool caseSensitive = true}) {
+  relationLabelMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'relationLabel',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'relationLabel',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      relationLabelIsEmpty() {
+  relationLabelIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'relationLabel',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'relationLabel', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      relationLabelIsNotEmpty() {
+  relationLabelIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'relationLabel',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'relationLabel', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      rootIdEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  rootIdEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'rootId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'rootId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      rootIdGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'rootId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      rootIdLessThan(
+  rootIdGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'rootId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'rootId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      rootIdBetween(
+  rootIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'rootId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
+  rootIdBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1861,153 +1882,158 @@ extension IsarLineageTreeNodeQueryFilter on QueryBuilder<IsarLineageTreeNode,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'rootId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'rootId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      rootIdStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  rootIdStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'rootId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'rootId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      rootIdEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  rootIdEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'rootId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'rootId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      rootIdContains(String value, {bool caseSensitive = true}) {
+  rootIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'rootId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'rootId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      rootIdMatches(String pattern, {bool caseSensitive = true}) {
+  rootIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'rootId',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'rootId',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      rootIdIsEmpty() {
+  rootIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'rootId',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'rootId', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      rootIdIsNotEmpty() {
+  rootIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'rootId',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'rootId', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      sexIsNull() {
+  sexIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'sex',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'sex'),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      sexIsNotNull() {
+  sexIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'sex',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'sex'),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      sexEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
+  sexEqualTo(String? value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'sex',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'sex',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      sexGreaterThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'sex',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      sexLessThan(
+  sexGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'sex',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'sex',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      sexBetween(
+  sexLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'sex',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
+  sexBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -2015,209 +2041,213 @@ extension IsarLineageTreeNodeQueryFilter on QueryBuilder<IsarLineageTreeNode,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'sex',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'sex',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      sexStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  sexStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'sex',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'sex',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      sexEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  sexEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'sex',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'sex',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      sexContains(String value, {bool caseSensitive = true}) {
+  sexContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'sex',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'sex',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      sexMatches(String pattern, {bool caseSensitive = true}) {
+  sexMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'sex',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'sex',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      sexIsEmpty() {
+  sexIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'sex',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'sex', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      sexIsNotEmpty() {
+  sexIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'sex',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'sex', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      sortOrderEqualTo(int value) {
+  sortOrderEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'sortOrder',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'sortOrder', value: value),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      sortOrderGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
+  sortOrderGreaterThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'sortOrder',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'sortOrder',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      sortOrderLessThan(
-    int value, {
-    bool include = false,
-  }) {
+  sortOrderLessThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'sortOrder',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'sortOrder',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      sortOrderBetween(
+  sortOrderBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'sortOrder',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'sortOrder',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      speedIndexIsNull() {
+  speedIndexIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'speedIndex',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'speedIndex'),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      speedIndexIsNotNull() {
+  speedIndexIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'speedIndex',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'speedIndex'),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      speedIndexEqualTo(
-    double? value, {
-    double epsilon = Query.epsilon,
-  }) {
+  speedIndexEqualTo(double? value, {double epsilon = Query.epsilon}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'speedIndex',
-        value: value,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'speedIndex',
+          value: value,
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      speedIndexGreaterThan(
-    double? value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'speedIndex',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      speedIndexLessThan(
+  speedIndexGreaterThan(
     double? value, {
     bool include = false,
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'speedIndex',
-        value: value,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'speedIndex',
+          value: value,
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      speedIndexBetween(
+  speedIndexLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'speedIndex',
+          value: value,
+          epsilon: epsilon,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
+  speedIndexBetween(
     double? lower,
     double? upper, {
     bool includeLower = true,
@@ -2225,83 +2255,88 @@ extension IsarLineageTreeNodeQueryFilter on QueryBuilder<IsarLineageTreeNode,
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'speedIndex',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'speedIndex',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      tamgaNoIsNull() {
+  tamgaNoIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'tamgaNo',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'tamgaNo'),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      tamgaNoIsNotNull() {
+  tamgaNoIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'tamgaNo',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'tamgaNo'),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      tamgaNoEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
+  tamgaNoEqualTo(String? value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'tamgaNo',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'tamgaNo',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      tamgaNoGreaterThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'tamgaNo',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      tamgaNoLessThan(
+  tamgaNoGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'tamgaNo',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'tamgaNo',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      tamgaNoBetween(
+  tamgaNoLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'tamgaNo',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
+  tamgaNoBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -2309,357 +2344,369 @@ extension IsarLineageTreeNodeQueryFilter on QueryBuilder<IsarLineageTreeNode,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'tamgaNo',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'tamgaNo',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      tamgaNoStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  tamgaNoStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'tamgaNo',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'tamgaNo',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      tamgaNoEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  tamgaNoEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'tamgaNo',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'tamgaNo',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      tamgaNoContains(String value, {bool caseSensitive = true}) {
+  tamgaNoContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'tamgaNo',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'tamgaNo',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      tamgaNoMatches(String pattern, {bool caseSensitive = true}) {
+  tamgaNoMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'tamgaNo',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'tamgaNo',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      tamgaNoIsEmpty() {
+  tamgaNoIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'tamgaNo',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'tamgaNo', value: ''),
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterFilterCondition>
-      tamgaNoIsNotEmpty() {
+  tamgaNoIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'tamgaNo',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'tamgaNo', value: ''),
+      );
     });
   }
 }
 
-extension IsarLineageTreeNodeQueryObject on QueryBuilder<IsarLineageTreeNode,
-    IsarLineageTreeNode, QFilterCondition> {}
+extension IsarLineageTreeNodeQueryObject
+    on
+        QueryBuilder<
+          IsarLineageTreeNode,
+          IsarLineageTreeNode,
+          QFilterCondition
+        > {}
 
-extension IsarLineageTreeNodeQueryLinks on QueryBuilder<IsarLineageTreeNode,
-    IsarLineageTreeNode, QFilterCondition> {}
+extension IsarLineageTreeNodeQueryLinks
+    on
+        QueryBuilder<
+          IsarLineageTreeNode,
+          IsarLineageTreeNode,
+          QFilterCondition
+        > {}
 
 extension IsarLineageTreeNodeQuerySortBy
     on QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QSortBy> {
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByAwardCount() {
+  sortByAwardCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'awardCount', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByAwardCountDesc() {
+  sortByAwardCountDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'awardCount', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByBirthYear() {
+  sortByBirthYear() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'birthYear', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByBirthYearDesc() {
+  sortByBirthYearDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'birthYear', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByBranchOrder() {
+  sortByBranchOrder() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'branchOrder', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByBranchOrderDesc() {
+  sortByBranchOrderDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'branchOrder', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByCoat() {
+  sortByCoat() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'coat', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByCoatDesc() {
+  sortByCoatDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'coat', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByDomainId() {
+  sortByDomainId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'domainId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByDomainIdDesc() {
+  sortByDomainIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'domainId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByGeneration() {
+  sortByGeneration() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'generation', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByGenerationDesc() {
+  sortByGenerationDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'generation', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByHiddenBranchCount() {
+  sortByHiddenBranchCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'hiddenBranchCount', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByHiddenBranchCountDesc() {
+  sortByHiddenBranchCountDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'hiddenBranchCount', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByIsOwnedByHousehold() {
+  sortByIsOwnedByHousehold() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isOwnedByHousehold', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByIsOwnedByHouseholdDesc() {
+  sortByIsOwnedByHouseholdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isOwnedByHousehold', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByIsRoot() {
+  sortByIsRoot() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isRoot', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByIsRootDesc() {
+  sortByIsRootDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isRoot', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByName() {
+  sortByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByNameDesc() {
+  sortByNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByOffspringCount() {
+  sortByOffspringCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'offspringCount', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByOffspringCountDesc() {
+  sortByOffspringCountDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'offspringCount', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByPhotoUrl() {
+  sortByPhotoUrl() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'photoUrl', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByPhotoUrlDesc() {
+  sortByPhotoUrlDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'photoUrl', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByRegion() {
+  sortByRegion() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'region', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByRegionDesc() {
+  sortByRegionDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'region', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByRelationLabel() {
+  sortByRelationLabel() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'relationLabel', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByRelationLabelDesc() {
+  sortByRelationLabelDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'relationLabel', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByRootId() {
+  sortByRootId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'rootId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByRootIdDesc() {
+  sortByRootIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'rootId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortBySex() {
+  sortBySex() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sex', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortBySexDesc() {
+  sortBySexDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sex', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortBySortOrder() {
+  sortBySortOrder() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sortOrder', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortBySortOrderDesc() {
+  sortBySortOrderDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sortOrder', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortBySpeedIndex() {
+  sortBySpeedIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'speedIndex', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortBySpeedIndexDesc() {
+  sortBySpeedIndexDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'speedIndex', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByTamgaNo() {
+  sortByTamgaNo() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'tamgaNo', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      sortByTamgaNoDesc() {
+  sortByTamgaNoDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'tamgaNo', Sort.desc);
     });
@@ -2669,280 +2716,280 @@ extension IsarLineageTreeNodeQuerySortBy
 extension IsarLineageTreeNodeQuerySortThenBy
     on QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QSortThenBy> {
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByAwardCount() {
+  thenByAwardCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'awardCount', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByAwardCountDesc() {
+  thenByAwardCountDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'awardCount', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByBirthYear() {
+  thenByBirthYear() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'birthYear', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByBirthYearDesc() {
+  thenByBirthYearDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'birthYear', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByBranchOrder() {
+  thenByBranchOrder() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'branchOrder', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByBranchOrderDesc() {
+  thenByBranchOrderDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'branchOrder', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByCoat() {
+  thenByCoat() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'coat', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByCoatDesc() {
+  thenByCoatDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'coat', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByDomainId() {
+  thenByDomainId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'domainId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByDomainIdDesc() {
+  thenByDomainIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'domainId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByGeneration() {
+  thenByGeneration() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'generation', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByGenerationDesc() {
+  thenByGenerationDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'generation', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByHiddenBranchCount() {
+  thenByHiddenBranchCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'hiddenBranchCount', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByHiddenBranchCountDesc() {
+  thenByHiddenBranchCountDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'hiddenBranchCount', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenById() {
+  thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByIdDesc() {
+  thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByIsOwnedByHousehold() {
+  thenByIsOwnedByHousehold() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isOwnedByHousehold', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByIsOwnedByHouseholdDesc() {
+  thenByIsOwnedByHouseholdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isOwnedByHousehold', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByIsRoot() {
+  thenByIsRoot() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isRoot', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByIsRootDesc() {
+  thenByIsRootDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isRoot', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByName() {
+  thenByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByNameDesc() {
+  thenByNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByOffspringCount() {
+  thenByOffspringCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'offspringCount', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByOffspringCountDesc() {
+  thenByOffspringCountDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'offspringCount', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByPhotoUrl() {
+  thenByPhotoUrl() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'photoUrl', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByPhotoUrlDesc() {
+  thenByPhotoUrlDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'photoUrl', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByRegion() {
+  thenByRegion() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'region', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByRegionDesc() {
+  thenByRegionDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'region', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByRelationLabel() {
+  thenByRelationLabel() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'relationLabel', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByRelationLabelDesc() {
+  thenByRelationLabelDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'relationLabel', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByRootId() {
+  thenByRootId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'rootId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByRootIdDesc() {
+  thenByRootIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'rootId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenBySex() {
+  thenBySex() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sex', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenBySexDesc() {
+  thenBySexDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sex', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenBySortOrder() {
+  thenBySortOrder() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sortOrder', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenBySortOrderDesc() {
+  thenBySortOrderDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sortOrder', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenBySpeedIndex() {
+  thenBySpeedIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'speedIndex', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenBySpeedIndexDesc() {
+  thenBySpeedIndexDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'speedIndex', Sort.desc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByTamgaNo() {
+  thenByTamgaNo() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'tamgaNo', Sort.asc);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QAfterSortBy>
-      thenByTamgaNoDesc() {
+  thenByTamgaNoDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'tamgaNo', Sort.desc);
     });
@@ -2952,134 +2999,136 @@ extension IsarLineageTreeNodeQuerySortThenBy
 extension IsarLineageTreeNodeQueryWhereDistinct
     on QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QDistinct> {
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QDistinct>
-      distinctByAwardCount() {
+  distinctByAwardCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'awardCount');
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QDistinct>
-      distinctByBirthYear() {
+  distinctByBirthYear() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'birthYear');
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QDistinct>
-      distinctByBranchOrder() {
+  distinctByBranchOrder() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'branchOrder');
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QDistinct>
-      distinctByCoat({bool caseSensitive = true}) {
+  distinctByCoat({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'coat', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QDistinct>
-      distinctByDomainId({bool caseSensitive = true}) {
+  distinctByDomainId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'domainId', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QDistinct>
-      distinctByGeneration() {
+  distinctByGeneration() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'generation');
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QDistinct>
-      distinctByHiddenBranchCount() {
+  distinctByHiddenBranchCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'hiddenBranchCount');
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QDistinct>
-      distinctByIsOwnedByHousehold() {
+  distinctByIsOwnedByHousehold() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isOwnedByHousehold');
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QDistinct>
-      distinctByIsRoot() {
+  distinctByIsRoot() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isRoot');
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QDistinct>
-      distinctByName({bool caseSensitive = true}) {
+  distinctByName({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'name', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QDistinct>
-      distinctByOffspringCount() {
+  distinctByOffspringCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'offspringCount');
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QDistinct>
-      distinctByPhotoUrl({bool caseSensitive = true}) {
+  distinctByPhotoUrl({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'photoUrl', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QDistinct>
-      distinctByRegion({bool caseSensitive = true}) {
+  distinctByRegion({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'region', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QDistinct>
-      distinctByRelationLabel({bool caseSensitive = true}) {
+  distinctByRelationLabel({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'relationLabel',
-          caseSensitive: caseSensitive);
+      return query.addDistinctBy(
+        r'relationLabel',
+        caseSensitive: caseSensitive,
+      );
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QDistinct>
-      distinctByRootId({bool caseSensitive = true}) {
+  distinctByRootId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'rootId', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QDistinct>
-      distinctBySex({bool caseSensitive = true}) {
+  distinctBySex({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'sex', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QDistinct>
-      distinctBySortOrder() {
+  distinctBySortOrder() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'sortOrder');
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QDistinct>
-      distinctBySpeedIndex() {
+  distinctBySpeedIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'speedIndex');
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, IsarLineageTreeNode, QDistinct>
-      distinctByTamgaNo({bool caseSensitive = true}) {
+  distinctByTamgaNo({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'tamgaNo', caseSensitive: caseSensitive);
     });
@@ -3095,7 +3144,7 @@ extension IsarLineageTreeNodeQueryProperty
   }
 
   QueryBuilder<IsarLineageTreeNode, int, QQueryOperations>
-      awardCountProperty() {
+  awardCountProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'awardCount');
     });
@@ -3108,7 +3157,7 @@ extension IsarLineageTreeNodeQueryProperty
   }
 
   QueryBuilder<IsarLineageTreeNode, int, QQueryOperations>
-      branchOrderProperty() {
+  branchOrderProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'branchOrder');
     });
@@ -3121,28 +3170,28 @@ extension IsarLineageTreeNodeQueryProperty
   }
 
   QueryBuilder<IsarLineageTreeNode, String, QQueryOperations>
-      domainIdProperty() {
+  domainIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'domainId');
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, int, QQueryOperations>
-      generationProperty() {
+  generationProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'generation');
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, int, QQueryOperations>
-      hiddenBranchCountProperty() {
+  hiddenBranchCountProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'hiddenBranchCount');
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, bool, QQueryOperations>
-      isOwnedByHouseholdProperty() {
+  isOwnedByHouseholdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isOwnedByHousehold');
     });
@@ -3161,28 +3210,28 @@ extension IsarLineageTreeNodeQueryProperty
   }
 
   QueryBuilder<IsarLineageTreeNode, int, QQueryOperations>
-      offspringCountProperty() {
+  offspringCountProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'offspringCount');
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, String?, QQueryOperations>
-      photoUrlProperty() {
+  photoUrlProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'photoUrl');
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, String?, QQueryOperations>
-      regionProperty() {
+  regionProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'region');
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, String, QQueryOperations>
-      relationLabelProperty() {
+  relationLabelProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'relationLabel');
     });
@@ -3207,14 +3256,14 @@ extension IsarLineageTreeNodeQueryProperty
   }
 
   QueryBuilder<IsarLineageTreeNode, double?, QQueryOperations>
-      speedIndexProperty() {
+  speedIndexProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'speedIndex');
     });
   }
 
   QueryBuilder<IsarLineageTreeNode, String?, QQueryOperations>
-      tamgaNoProperty() {
+  tamgaNoProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'tamgaNo');
     });

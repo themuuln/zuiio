@@ -166,10 +166,7 @@ void main() {
 
     testWidgets('shows empty state when no horses registered', (tester) async {
       await tester.pumpWidget(
-        createBreedingAdviceScreen(
-          horses: [],
-          repository: mockRepository,
-        ),
+        createBreedingAdviceScreen(horses: [], repository: mockRepository),
       );
       await tester.pumpAndSettle();
 
@@ -181,10 +178,7 @@ void main() {
       final mares = [createMare()];
 
       await tester.pumpWidget(
-        createBreedingAdviceScreen(
-          horses: mares,
-          repository: mockRepository,
-        ),
+        createBreedingAdviceScreen(horses: mares, repository: mockRepository),
       );
       await tester.pumpAndSettle();
 
@@ -228,10 +222,7 @@ void main() {
       final horses = [createStallion(), createMare()];
 
       await tester.pumpWidget(
-        createBreedingAdviceScreen(
-          horses: horses,
-          repository: mockRepository,
-        ),
+        createBreedingAdviceScreen(horses: horses, repository: mockRepository),
       );
       await tester.pumpAndSettle();
 
@@ -248,10 +239,7 @@ void main() {
       final horses = [createStallion(), createMare()];
 
       await tester.pumpWidget(
-        createBreedingAdviceScreen(
-          horses: horses,
-          repository: mockRepository,
-        ),
+        createBreedingAdviceScreen(horses: horses, repository: mockRepository),
       );
       await tester.pumpAndSettle();
 
@@ -278,9 +266,11 @@ void main() {
         breedSuggestions: ['Excellent match'],
       );
 
-      when(() => mockRepository.getBreedingAdvice(
-            BreedingQuery(sireId: stallion.id, damId: mare.id),
-          )).thenAnswer((_) async => Result.ok(advice));
+      when(
+        () => mockRepository.getBreedingAdvice(
+          BreedingQuery(sireId: stallion.id, damId: mare.id),
+        ),
+      ).thenAnswer((_) async => Result.ok(advice));
 
       await tester.pumpWidget(
         createBreedingAdviceScreen(
@@ -320,9 +310,11 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify results are displayed
-      verify(() => mockRepository.getBreedingAdvice(
-            BreedingQuery(sireId: stallion.id, damId: mare.id),
-          )).called(1);
+      verify(
+        () => mockRepository.getBreedingAdvice(
+          BreedingQuery(sireId: stallion.id, damId: mare.id),
+        ),
+      ).called(1);
 
       // Check results
       expect(find.text('Цус ойртолтын эрсдэл'), findsOneWidget);

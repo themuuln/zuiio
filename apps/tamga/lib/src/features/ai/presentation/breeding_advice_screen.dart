@@ -41,14 +41,20 @@ class _BreedingAdviceScreenState extends ConsumerState<BreedingAdviceScreen> {
   // ── Геттерууд ───────────────────────────────────────────────────────
 
   List<Horse> get _stallions =>
-      ref.watch(horsesProvider).valueOrNull?.where(
-            (h) => h.gender == HorseGender.stallion,
-          ).toList() ?? [];
+      ref
+          .watch(horsesProvider)
+          .valueOrNull
+          ?.where((h) => h.gender == HorseGender.stallion)
+          .toList() ??
+      [];
 
   List<Horse> get _mares =>
-      ref.watch(horsesProvider).valueOrNull?.where(
-            (h) => h.gender == HorseGender.mare,
-          ).toList() ?? [];
+      ref
+          .watch(horsesProvider)
+          .valueOrNull
+          ?.where((h) => h.gender == HorseGender.mare)
+          .toList() ??
+      [];
 
   bool get _canAnalyze =>
       _selectedSireId != null &&
@@ -62,9 +68,7 @@ class _BreedingAdviceScreenState extends ConsumerState<BreedingAdviceScreen> {
     final horsesAsync = ref.watch(horsesProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Үржүүлгийн зөвлөгөө'),
-      ),
+      appBar: AppBar(title: const Text('Үржүүлгийн зөвлөгөө')),
       body: horsesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => TamgaErrorWidget(
@@ -157,10 +161,7 @@ class _BreedingAdviceScreenState extends ConsumerState<BreedingAdviceScreen> {
       color: theme.colorScheme.primaryContainer.withValues(alpha: 0.2),
       elevation: 0,
       shape: RoundedRectangleBorder(
-        side: BorderSide(
-          color: theme.colorScheme.primaryContainer,
-          width: 1,
-        ),
+        side: BorderSide(color: theme.colorScheme.primaryContainer, width: 1),
         borderRadius: BorderRadius.circular(AppSpacing.cornerRadius),
       ),
       child: Padding(
@@ -203,7 +204,10 @@ class _BreedingAdviceScreenState extends ConsumerState<BreedingAdviceScreen> {
   // ── Хос сонголт ─────────────────────────────────────────────────────
 
   Widget _buildPairSelector(
-      ThemeData theme, List<Horse> stallions, List<Horse> mares) {
+    ThemeData theme,
+    List<Horse> stallions,
+    List<Horse> mares,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -397,10 +401,7 @@ class _BreedingAdviceScreenState extends ConsumerState<BreedingAdviceScreen> {
   Widget _buildErrorState(ThemeData theme, AppException error) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-      child: TamgaErrorWidget(
-        message: error.message,
-        onRetry: _analyzePair,
-      ),
+      child: TamgaErrorWidget(message: error.message, onRetry: _analyzePair),
     );
   }
 

@@ -19,8 +19,7 @@ class LocalServiceBookingRepository
   });
 
   @override
-  IsarCollection<IsarServiceBooking> get collection =>
-      storage.serviceBookings;
+  IsarCollection<IsarServiceBooking> get collection => storage.serviceBookings;
 
   @override
   String get entityType => 'service_booking';

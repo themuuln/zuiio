@@ -103,8 +103,16 @@ class MarketMessage {
           read == other.read;
 
   @override
-  int get hashCode =>
-      Object.hash(id, conversationId, senderId, listingId, reportId, text, timestamp, read);
+  int get hashCode => Object.hash(
+    id,
+    conversationId,
+    senderId,
+    listingId,
+    reportId,
+    text,
+    timestamp,
+    read,
+  );
 
   @override
   String toString() =>

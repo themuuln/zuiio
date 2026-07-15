@@ -21,9 +21,7 @@ class SellerVerificationScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Баталгаажуулалт'),
-      ),
+      appBar: AppBar(title: const Text('Баталгаажуулалт')),
       body: summaryAsync.when(
         data: (summary) {
           return ListView(
@@ -159,14 +157,9 @@ class SellerVerificationScreen extends ConsumerWidget {
                             : OutlinedButton.icon(
                                 onPressed: summary.eMongoliaVerified
                                     ? null
-                                    : () => _showEMongoliaDialog(
-                                        context,
-                                        ref,
-                                      ),
+                                    : () => _showEMongoliaDialog(context, ref),
                                 icon: const Icon(Icons.hourglass_empty),
-                                label: const Text(
-                                  'Бэлтгэгдэж байна',
-                                ),
+                                label: const Text('Бэлтгэгдэж байна'),
                               ),
                       ),
                     ],
@@ -227,9 +220,7 @@ class SellerVerificationScreen extends ConsumerWidget {
     // After successful verification, the user completes the OTP flow.
     // We catch the navigation back and check the verification status.
     final phone = await Navigator.of(context).push<String>(
-      MaterialPageRoute(
-        builder: (ctx) => const _PhoneVerificationWrapper(),
-      ),
+      MaterialPageRoute(builder: (ctx) => const _PhoneVerificationWrapper()),
     );
 
     if (phone != null && context.mounted) {
@@ -248,10 +239,7 @@ class SellerVerificationScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _showEMongoliaDialog(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
+  Future<void> _showEMongoliaDialog(BuildContext context, WidgetRef ref) async {
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -288,19 +276,15 @@ class _PhoneVerificationWrapperState
     super.initState();
     // Navigate to phone login after build
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (ctx) => const PhoneLoginScreen(),
-        ),
-      );
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (ctx) => const PhoneLoginScreen()));
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }
 
@@ -318,12 +302,7 @@ class _BenefitRow extends StatelessWidget {
       children: [
         Icon(icon, size: 20, color: theme.colorScheme.primary),
         const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: Text(
-            text,
-            style: theme.textTheme.bodyMedium,
-          ),
-        ),
+        Expanded(child: Text(text, style: theme.textTheme.bodyMedium)),
       ],
     );
   }

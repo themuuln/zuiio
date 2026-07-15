@@ -102,7 +102,10 @@ class _MockTeamRepository implements TeamRepository {
     this.newRole = newRole;
     final idx = members.indexWhere((m) => m.userId == userId);
     if (idx >= 0) {
-      members[idx] = members[idx].copyWith(role: newRole, permissions: permissions);
+      members[idx] = members[idx].copyWith(
+        role: newRole,
+        permissions: permissions,
+      );
     }
     return Result.ok(members[idx]);
   }
@@ -115,18 +118,24 @@ class _MockTeamRepository implements TeamRepository {
   // ── Invitation Methods (unused in these tests) ──
 
   @override
-  Future<Result<TeamInvitation>> createInvitation(TeamInvitation invitation) async {
+  Future<Result<TeamInvitation>> createInvitation(
+    TeamInvitation invitation,
+  ) async {
     return Result.ok(invitation);
   }
 
   @override
-  Future<Result<List<TeamInvitation>>> getPendingInvitations(String userId) async {
+  Future<Result<List<TeamInvitation>>> getPendingInvitations(
+    String userId,
+  ) async {
     return const Result.ok([]);
   }
 
   @override
   Future<Result<TeamMember>> acceptInvitation(String invitationId) async {
-    return Result.fail(AppException(message: 'Not implemented', code: 'NOT_IMPLEMENTED'));
+    return Result.fail(
+      AppException(message: 'Not implemented', code: 'NOT_IMPLEMENTED'),
+    );
   }
 
   @override
@@ -211,13 +220,14 @@ Widget createTeamManagementScreen({
     return ProviderScope(
       overrides: [
         currentTeamProvider.overrideWith((ref) => completer.future),
-        teamMembersProvider(_testTeam.id).overrideWith(
-          (ref) => membersCompleter.future,
-        ),
+        teamMembersProvider(
+          _testTeam.id,
+        ).overrideWith((ref) => membersCompleter.future),
         teamRepositoryProvider.overrideWithValue(mockRepo),
         authStateProvider.overrideWith(() => _FakeAuthStateNotifier(authState)),
         subscriptionTierProvider.overrideWith(
-          (ref) async => isStableTier ? SubscriptionTier.stable : SubscriptionTier.free,
+          (ref) async =>
+              isStableTier ? SubscriptionTier.stable : SubscriptionTier.free,
         ),
       ],
       child: MaterialApp(
@@ -235,7 +245,8 @@ Widget createTeamManagementScreen({
       teamRepositoryProvider.overrideWithValue(mockRepo),
       authStateProvider.overrideWith(() => _FakeAuthStateNotifier(authState)),
       subscriptionTierProvider.overrideWith(
-        (ref) async => isStableTier ? SubscriptionTier.stable : SubscriptionTier.free,
+        (ref) async =>
+            isStableTier ? SubscriptionTier.stable : SubscriptionTier.free,
       ),
     ],
     child: MaterialApp(
@@ -342,7 +353,9 @@ void main() {
     // VAL-TEAM-005: Loading and error states
     // ══════════════════════════════════════════════════════════
     testWidgets('shows loading state', (tester) async {
-      await tester.pumpWidget(createTeamManagementScreen(simulateLoading: true));
+      await tester.pumpWidget(
+        createTeamManagementScreen(simulateLoading: true),
+      );
       await tester.pump();
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);

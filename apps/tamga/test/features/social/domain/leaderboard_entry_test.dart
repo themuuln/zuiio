@@ -54,10 +54,7 @@ void main() {
     });
 
     test('copyWith updates specified fields only', () {
-      final copy = testEntry.copyWith(
-        breederName: 'Баяр',
-        totalScore: 300,
-      );
+      final copy = testEntry.copyWith(breederName: 'Баяр', totalScore: 300);
       expect(copy.breederName, 'Баяр');
       expect(copy.totalScore, 300);
       expect(copy.rank, 1);
@@ -135,8 +132,14 @@ void main() {
   group('LeaderboardTimePeriod enum', () {
     test('has all three values', () {
       expect(LeaderboardTimePeriod.values.length, 3);
-      expect(LeaderboardTimePeriod.values, contains(LeaderboardTimePeriod.last7d));
-      expect(LeaderboardTimePeriod.values, contains(LeaderboardTimePeriod.last30d));
+      expect(
+        LeaderboardTimePeriod.values,
+        contains(LeaderboardTimePeriod.last7d),
+      );
+      expect(
+        LeaderboardTimePeriod.values,
+        contains(LeaderboardTimePeriod.last30d),
+      );
       expect(LeaderboardTimePeriod.values, contains(LeaderboardTimePeriod.all));
     });
 

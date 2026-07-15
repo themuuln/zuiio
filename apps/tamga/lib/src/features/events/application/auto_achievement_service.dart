@@ -88,7 +88,8 @@ class AutoAchievementService {
     ].take(10).toList();
 
     // Хамгийн сайн амжилт
-    final bestAchievement = currentProfile.bestAchievement ??
+    final bestAchievement =
+        currentProfile.bestAchievement ??
         (place == 1 ? completedEvent.title : null);
 
     // Сүүлийн уралдааны огноо

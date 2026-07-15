@@ -14,10 +14,7 @@ class ToastTestHost extends StatelessWidget {
     return Scaffold(
       body: ElevatedButton(
         onPressed: () {
-          showOfflineAwareSaveFeedback(
-            context,
-            ConnectionStatus.offline,
-          );
+          showOfflineAwareSaveFeedback(context, ConnectionStatus.offline);
         },
         child: const Text('Show Toast'),
       ),
@@ -30,10 +27,7 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light(),
-        home: const ToastTestHost(),
-      ),
+      MaterialApp(theme: AppTheme.light(), home: const ToastTestHost()),
     );
 
     // Tap the button to trigger offline save feedback
@@ -59,10 +53,7 @@ void main() {
           body: Builder(
             builder: (context) => ElevatedButton(
               onPressed: () {
-                showOfflineAwareSaveFeedback(
-                  context,
-                  ConnectionStatus.online,
-                );
+                showOfflineAwareSaveFeedback(context, ConnectionStatus.online);
               },
               child: const Text('Show Online Toast'),
             ),

@@ -26,10 +26,7 @@ import '../../features/shared/data/isar_storage.dart';
 /// method(s) while calling `super` where the base logic is still applicable.
 abstract class LocalRepository<T, TIsar> {
   /// Creates a local repository backed by [storage] and [syncQueue].
-  LocalRepository({
-    required this.storage,
-    required this.syncQueue,
-  });
+  LocalRepository({required this.storage, required this.syncQueue});
 
   /// The Isar storage used for database operations.
   final IsarStorage storage;
@@ -75,9 +72,10 @@ abstract class LocalRepository<T, TIsar> {
     final all = await collection.where().findAll();
     // ignore: avoid_dynamic_casts
     return all.cast<dynamic>().firstWhere(
-      (e) => (e as dynamic).domainId == domainId,
-      orElse: () => null,
-    ) as TIsar?;
+          (e) => (e as dynamic).domainId == domainId,
+          orElse: () => null,
+        )
+        as TIsar?;
   }
 
   /// Find a single entity by its [domainId].

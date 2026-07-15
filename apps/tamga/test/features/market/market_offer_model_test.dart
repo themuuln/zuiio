@@ -35,19 +35,29 @@ void main() {
 
     group('MarketOfferStatus', () {
       test('fromString returns correct status', () {
-        expect(MarketOfferStatus.fromString('pending'),
-            MarketOfferStatus.pending);
-        expect(MarketOfferStatus.fromString('accepted'),
-            MarketOfferStatus.accepted);
-        expect(MarketOfferStatus.fromString('declined'),
-            MarketOfferStatus.declined);
-        expect(MarketOfferStatus.fromString('countered'),
-            MarketOfferStatus.countered);
+        expect(
+          MarketOfferStatus.fromString('pending'),
+          MarketOfferStatus.pending,
+        );
+        expect(
+          MarketOfferStatus.fromString('accepted'),
+          MarketOfferStatus.accepted,
+        );
+        expect(
+          MarketOfferStatus.fromString('declined'),
+          MarketOfferStatus.declined,
+        );
+        expect(
+          MarketOfferStatus.fromString('countered'),
+          MarketOfferStatus.countered,
+        );
       });
 
       test('fromString defaults to pending for unknown values', () {
-        expect(MarketOfferStatus.fromString('unknown'),
-            MarketOfferStatus.pending);
+        expect(
+          MarketOfferStatus.fromString('unknown'),
+          MarketOfferStatus.pending,
+        );
       });
 
       test('displayName is not empty', () {
@@ -251,8 +261,10 @@ void main() {
         expect(MarketOfferStatus.pending.displayName, 'Хүлээгдэж буй');
         expect(MarketOfferStatus.accepted.displayName, 'Зөвшөөрсөн');
         expect(MarketOfferStatus.declined.displayName, 'Татгалзсан');
-        expect(MarketOfferStatus.countered.displayName,
-            'Саналын үнэ өөрчилсөн');
+        expect(
+          MarketOfferStatus.countered.displayName,
+          'Саналын үнэ өөрчилсөн',
+        );
       });
     });
   });

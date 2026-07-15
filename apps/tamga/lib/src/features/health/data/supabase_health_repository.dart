@@ -11,7 +11,9 @@ import 'health_repository.dart';
 ///
 /// Each method maps [HealthLog] ↔ Supabase row via the domain model's
 /// built-in `fromSupabaseJson` / `toSupabaseJson`.
-class SupabaseHealthRepository with SupabaseRepositoryMixin implements HealthRepository {
+class SupabaseHealthRepository
+    with SupabaseRepositoryMixin
+    implements HealthRepository {
   SupabaseHealthRepository({SupabaseClient? client})
     : _client = client ?? getConfiguredSupabaseClient();
 
@@ -174,5 +176,4 @@ class SupabaseHealthRepository with SupabaseRepositoryMixin implements HealthRep
       return Result.fail(wrapError(e));
     }
   }
-
 }

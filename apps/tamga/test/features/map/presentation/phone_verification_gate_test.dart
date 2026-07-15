@@ -48,10 +48,7 @@ void main() {
     });
 
     test('authenticated user with empty phone string is blocked', () {
-      final state = AuthState.authenticated(
-        userId: 'user1',
-        phone: '',
-      );
+      final state = AuthState.authenticated(userId: 'user1', phone: '');
       // hasPhone is `phone != null && phone!.isNotEmpty`
       expect(_canProceedWithSubmit(state), isFalse);
     });
@@ -63,9 +60,7 @@ void main() {
     testWidgets('shows correct title, content and buttons', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData(
-            extensions: const [TamgaColors.light],
-          ),
+          theme: ThemeData(extensions: const [TamgaColors.light]),
           home: _DialogTestHarness(),
         ),
       );
@@ -78,9 +73,7 @@ void main() {
 
       // Content
       expect(
-        find.text(
-          'Хаяж морь зарлахын тулд утасны дугаараа баталгаажуулна уу.',
-        ),
+        find.text('Хаяж морь зарлахын тулд утасны дугаараа баталгаажуулна уу.'),
         findsOneWidget,
       );
 
@@ -93,12 +86,8 @@ void main() {
       bool? dialogResult;
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData(
-            extensions: const [TamgaColors.light],
-          ),
-          home: _DialogTestHarness(
-            onResult: (r) => dialogResult = r,
-          ),
+          theme: ThemeData(extensions: const [TamgaColors.light]),
+          home: _DialogTestHarness(onResult: (r) => dialogResult = r),
         ),
       );
 
@@ -119,12 +108,8 @@ void main() {
       bool? dialogResult;
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData(
-            extensions: const [TamgaColors.light],
-          ),
-          home: _DialogTestHarness(
-            onResult: (r) => dialogResult = r,
-          ),
+          theme: ThemeData(extensions: const [TamgaColors.light]),
+          home: _DialogTestHarness(onResult: (r) => dialogResult = r),
         ),
       );
 
@@ -178,8 +163,6 @@ class _DialogTestHarness extends StatelessWidget {
       onResult?.call(result ?? false);
     });
 
-    return const Scaffold(
-      body: Center(child: Text('Test harness')),
-    );
+    return const Scaffold(body: Center(child: Text('Test harness')));
   }
 }

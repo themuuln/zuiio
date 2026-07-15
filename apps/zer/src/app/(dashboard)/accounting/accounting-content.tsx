@@ -2,6 +2,7 @@
 
 import { Calculator, NotePencil, StackSimple } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
 import { withDbCapture } from "@zuiio/capture";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -16,17 +17,21 @@ import { PageShell } from "@/components/erp/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import type { ColumnDef } from "@tanstack/react-table";
-import { DataTable } from "@/components/ui/data-table";
-import { dateColumn, currencyColumn, textColumn, actionsColumn } from "@/lib/table-columns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBranchContext } from "@/lib/branch-context";
 import { formatCurrency } from "@/lib/format";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { accountKeys, journalEntryKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
+import {
+  actionsColumn,
+  currencyColumn,
+  dateColumn,
+  textColumn,
+} from "@/lib/table-columns";
 import { toggleAccountActive } from "./actions";
 
 type TrialBalanceRow = {
@@ -319,9 +324,7 @@ export function AccountingContent({
             >
               <NotePencil className="size-3.5" />
             </button>
-            <span className="text-xs text-muted-foreground">
-              Дэлгэрэнгүй
-            </span>
+            <span className="text-xs text-muted-foreground">Дэлгэрэнгүй</span>
           </span>
         )),
       ],
@@ -386,7 +389,6 @@ export function AccountingContent({
     ],
     [accounts],
   );
-
 
   return (
     <PageShell

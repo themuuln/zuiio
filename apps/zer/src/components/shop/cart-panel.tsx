@@ -184,7 +184,13 @@ export function CartPanel() {
           <div className="flex items-center justify-between pt-1">
             <span className="text-sm font-medium">Нийт дүн</span>
             <span className="text-xl font-bold tabular-nums">
-              {(showEmpty ? 0 : discount ? discountedTotal : totalAmount).toLocaleString()}₮
+              {(showEmpty
+                ? 0
+                : discount
+                  ? discountedTotal
+                  : totalAmount
+              ).toLocaleString()}
+              ₮
             </span>
           </div>
         </div>

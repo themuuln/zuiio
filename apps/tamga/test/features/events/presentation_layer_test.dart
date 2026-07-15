@@ -69,10 +69,7 @@ List<Event> _mockEvents() {
 /// Creates a PaginationNotifier that starts with given events.
 class _MockPaginationNotifier extends PaginationNotifier<Event> {
   _MockPaginationNotifier(List<Event> events)
-    : super(
-        fetchPage: (_, _) async => events,
-        pageSize: 20,
-      ) {
+    : super(fetchPage: (_, _) async => events, pageSize: 20) {
     state = PaginationState<Event>(
       items: events,
       isLoading: false,
@@ -87,7 +84,9 @@ void main() {
   // VAL-EVENTS-002: EventCard shows type-appropriate icon and color
   // ══════════════════════════════════════════════════════════════
   group('VAL-EVENTS-002: EventCard type icons and colors', () {
-    testWidgets('race card shows speed icon with primary color', (tester) async {
+    testWidgets('race card shows speed icon with primary color', (
+      tester,
+    ) async {
       final event = Event(
         id: 'r1',
         horseId: 'h1',
@@ -418,76 +417,77 @@ void main() {
   // VAL-EVENTS-015: Upcoming/Past tabs filter correctly
   // ══════════════════════════════════════════════════════════════
   group('VAL-EVENTS-015: Upcoming/Past tabs', () {
-    testWidgets('upcoming tab shows events with future/no date, past shows past', (
-      tester,
-    ) async {
-      final now = DateTime.now();
-      final events = [
-        Event(
-          id: 'u1',
-          horseId: 'h1',
-          title: 'No Date Event',
-          eventType: EventType.race,
-          date: null,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-        Event(
-          id: 'u2',
-          horseId: 'h1',
-          title: 'Future Event',
-          eventType: EventType.race,
-          date: now.add(const Duration(days: 30)),
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-        Event(
-          id: 'p1',
-          horseId: 'h1',
-          title: 'Past Event',
-          eventType: EventType.race,
-          date: now.subtract(const Duration(days: 10)),
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-      ];
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            paginatedEventsProvider.overrideWith(
-              (ref) => _MockPaginationNotifier(events),
-            ),
-          ],
-          child: MaterialApp(
-            theme: AppTheme.light(),
-            home: const EventsScreen(),
+    testWidgets(
+      'upcoming tab shows events with future/no date, past shows past',
+      (tester) async {
+        final now = DateTime.now();
+        final events = [
+          Event(
+            id: 'u1',
+            horseId: 'h1',
+            title: 'No Date Event',
+            eventType: EventType.race,
+            date: null,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
           ),
-        ),
-      );
-      await tester.pump();
-      await tester.pump();
+          Event(
+            id: 'u2',
+            horseId: 'h1',
+            title: 'Future Event',
+            eventType: EventType.race,
+            date: now.add(const Duration(days: 30)),
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+          Event(
+            id: 'p1',
+            horseId: 'h1',
+            title: 'Past Event',
+            eventType: EventType.race,
+            date: now.subtract(const Duration(days: 10)),
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        ];
 
-      // Default tab is upcoming (Удахгүй)
-      // Should show events with no date or future date
-      expect(find.text('No Date Event'), findsOneWidget);
-      expect(find.text('Future Event'), findsOneWidget);
-      // Past event should NOT be visible in upcoming tab
-      expect(find.text('Past Event'), findsNothing);
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              paginatedEventsProvider.overrideWith(
+                (ref) => _MockPaginationNotifier(events),
+              ),
+            ],
+            child: MaterialApp(
+              theme: AppTheme.light(),
+              home: const EventsScreen(),
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pump();
 
-      // Switch to past tab (Дууссан) - tap the Tab widget directly
-      final tabBar = tester.widget<TabBar>(find.byType(TabBar));
-      tabBar.controller?.animateTo(1);
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-      await tester.pump();
+        // Default tab is upcoming (Удахгүй)
+        // Should show events with no date or future date
+        expect(find.text('No Date Event'), findsOneWidget);
+        expect(find.text('Future Event'), findsOneWidget);
+        // Past event should NOT be visible in upcoming tab
+        expect(find.text('Past Event'), findsNothing);
 
-      // Should show past event
-      expect(find.text('Past Event'), findsOneWidget);
-      // Future/no-date events should NOT be visible in past tab
-      expect(find.text('No Date Event'), findsNothing);
-      expect(find.text('Future Event'), findsNothing);
-    });
+        // Switch to past tab (Дууссан) - tap the Tab widget directly
+        final tabBar = tester.widget<TabBar>(find.byType(TabBar));
+        tabBar.controller?.animateTo(1);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.pump();
+
+        // Should show past event
+        expect(find.text('Past Event'), findsOneWidget);
+        // Future/no-date events should NOT be visible in past tab
+        expect(find.text('No Date Event'), findsNothing);
+        expect(find.text('Future Event'), findsNothing);
+      },
+    );
   });
 
   // ══════════════════════════════════════════════════════════════
@@ -552,69 +552,65 @@ void main() {
   // ══════════════════════════════════════════════════════════════
   group('VAL-EVENTS-033: EventCard tap navigation', () {
     testWidgets(
-        'tapping EventCard navigates to EventDetailScreen with correct event data',
-        (tester) async {
-      final event = Event(
-        id: 'e1',
-        horseId: 'h1',
-        title: 'Хаврын цом',
-        eventType: EventType.race,
-        location: 'Төв аймаг',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+      'tapping EventCard navigates to EventDetailScreen with correct event data',
+      (tester) async {
+        final event = Event(
+          id: 'e1',
+          horseId: 'h1',
+          title: 'Хаврын цом',
+          eventType: EventType.race,
+          location: 'Төв аймаг',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            authStateProvider.overrideWith(
-              () => _FakeAuthStateNotifier(
-                const AuthState.unauthenticated(),
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              authStateProvider.overrideWith(
+                () => _FakeAuthStateNotifier(const AuthState.unauthenticated()),
               ),
-            ),
-            horsesProvider.overrideWith((ref) async => <Horse>[]),
-            eventRegistrationsProvider(event.id).overrideWith(
-              (ref) async => [],
-            ),
-          ],
-          child: MaterialApp(
-            theme: AppTheme.light(),
-            initialRoute: '/',
-            routes: {
-              '/': (ctx) => Scaffold(
-                    body: SingleChildScrollView(
-                      child: EventCard(
-                        event: event,
-                        onTap: () =>
-                            Navigator.of(ctx).pushNamed('/detail'),
-                      ),
+              horsesProvider.overrideWith((ref) async => <Horse>[]),
+              eventRegistrationsProvider(
+                event.id,
+              ).overrideWith((ref) async => []),
+            ],
+            child: MaterialApp(
+              theme: AppTheme.light(),
+              initialRoute: '/',
+              routes: {
+                '/': (ctx) => Scaffold(
+                  body: SingleChildScrollView(
+                    child: EventCard(
+                      event: event,
+                      onTap: () => Navigator.of(ctx).pushNamed('/detail'),
                     ),
                   ),
-              '/detail': (ctx) => EventDetailScreen(event: event),
-            },
+                ),
+                '/detail': (ctx) => EventDetailScreen(event: event),
+              },
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Tap the event card
-      await tester.tap(find.byType(EventCard));
-      await tester.pumpAndSettle();
+        // Tap the event card
+        await tester.tap(find.byType(EventCard));
+        await tester.pumpAndSettle();
 
-      // Should now be on EventDetailScreen
-      expect(find.byType(EventDetailScreen), findsOneWidget);
+        // Should now be on EventDetailScreen
+        expect(find.byType(EventDetailScreen), findsOneWidget);
 
-      // Verify the event title and type are shown on the detail screen
-      expect(find.text('Хаврын цом'), findsOneWidget);
-      expect(find.text('Уралдаан'), findsWidgets);
+        // Verify the event title and type are shown on the detail screen
+        expect(find.text('Хаврын цом'), findsOneWidget);
+        expect(find.text('Уралдаан'), findsWidgets);
 
-      // Verify location is visible on the detail screen
-      expect(find.text('Төв аймаг'), findsWidgets);
-    });
+        // Verify location is visible on the detail screen
+        expect(find.text('Төв аймаг'), findsWidgets);
+      },
+    );
 
-    testWidgets(
-        'EventCard onTap fires when card is tapped',
-        (tester) async {
+    testWidgets('EventCard onTap fires when card is tapped', (tester) async {
       final event = Event(
         id: 'e2',
         horseId: 'h1',
@@ -630,10 +626,7 @@ void main() {
           theme: AppTheme.light(),
           home: Scaffold(
             body: SingleChildScrollView(
-              child: EventCard(
-                event: event,
-                onTap: () => wasTapped = true,
-              ),
+              child: EventCard(event: event, onTap: () => wasTapped = true),
             ),
           ),
         ),

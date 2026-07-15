@@ -29,9 +29,7 @@ final registrationCountProvider = FutureProvider.family<int, String>((
   ref,
   eventId,
 ) async {
-  final result = await ref.watch(
-    eventRegistrationsProvider(eventId).future,
-  );
+  final result = await ref.watch(eventRegistrationsProvider(eventId).future);
   // Цуцлагдсан бүртгэлийг тоолохгүй
   return result.where((r) => r.status != RegistrationStatus.cancelled).length;
 });

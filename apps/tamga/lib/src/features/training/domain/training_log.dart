@@ -89,9 +89,13 @@ class TrainingLog {
       type: type ?? this.type,
       date: date ?? this.date,
       durationMinutes: durationMinutes ?? this.durationMinutes,
-      distanceKm: distanceKm == _sentinel ? this.distanceKm : distanceKm as double?,
+      distanceKm: distanceKm == _sentinel
+          ? this.distanceKm
+          : distanceKm as double?,
       notes: notes ?? this.notes,
-      handlerName: handlerName == _sentinel ? this.handlerName : handlerName as String?,
+      handlerName: handlerName == _sentinel
+          ? this.handlerName
+          : handlerName as String?,
       weather: weather == _sentinel ? this.weather : weather as String?,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -190,7 +194,17 @@ class TrainingLog {
           weather == other.weather;
 
   @override
-  int get hashCode => Object.hash(id, horseId, type, date, durationMinutes, distanceKm, notes, handlerName, weather);
+  int get hashCode => Object.hash(
+    id,
+    horseId,
+    type,
+    date,
+    durationMinutes,
+    distanceKm,
+    notes,
+    handlerName,
+    weather,
+  );
 
   @override
   String toString() => 'TrainingLog(id: $id, type: ${type.name}, date: $date)';

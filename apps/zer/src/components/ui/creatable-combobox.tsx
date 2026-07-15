@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Combobox,
   ComboboxContent,
@@ -62,6 +62,13 @@ export function CreatableCombobox({
   const groups = useMemo(() => getGroups(initialItems), [initialItems]);
 
   const [allItems, setAllItems] = useState<string[]>([...flatAllItems]);
+  // Sync with prop changes (preserves user-added items)
+  useEffect(() => {
+    setAllItems((prev) => {
+      const addedItems = prev.filter((item) => !flatAllItems.includes(item));
+      return [...flatAllItems, ...addedItems];
+    });
+  }, [flatAllItems]);
 
   const filtered = loweredQuery
     ? allItems.filter((i) => i.toLowerCase().includes(loweredQuery))

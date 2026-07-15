@@ -53,9 +53,7 @@ void main() {
         serviceType: 'photo_session',
         horseIds: ['horse-1'],
         locationAimag: 'Архангай',
-        bookingDate: isUpcoming
-            ? DateTime(2026, 7, 1)
-            : DateTime(2026, 5, 1),
+        bookingDate: isUpcoming ? DateTime(2026, 7, 1) : DateTime(2026, 5, 1),
         status: status,
         totalAmount: 50000,
         notes: 'Test booking',
@@ -116,10 +114,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify upcoming section title
-      expect(
-        find.text('Удахгүй болох / Upcoming Bookings'),
-        findsOneWidget,
-      );
+      expect(find.text('Удахгүй болох / Upcoming Bookings'), findsOneWidget);
 
       // Verify mark complete buttons
       expect(find.text('Дуусгах / Mark Complete'), findsNWidgets(2));
@@ -160,18 +155,12 @@ void main() {
       ];
 
       await tester.pumpWidget(
-        createProviderDashboardScreen(
-          provider: provider,
-          pastBookings: past,
-        ),
+        createProviderDashboardScreen(provider: provider, pastBookings: past),
       );
       await tester.pumpAndSettle();
 
       // Verify past section title
-      expect(
-        find.text('Өнгөрсөн / Past Bookings'),
-        findsOneWidget,
-      );
+      expect(find.text('Өнгөрсөн / Past Bookings'), findsOneWidget);
 
       // Past bookings should not have mark complete buttons
       expect(find.text('Дуусгах / Mark Complete'), findsNothing);
@@ -201,10 +190,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify status badge
-      expect(
-        find.text('Баталгаажсан / Confirmed'),
-        findsOneWidget,
-      );
+      expect(find.text('Баталгаажсан / Confirmed'), findsOneWidget);
     });
   });
 }

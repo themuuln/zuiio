@@ -64,11 +64,7 @@ void main() {
         'healthNotes': 'High inbreeding risk detected.',
         'colorPredictions': ['Gray'],
         'breedSuggestions': ['Use different dam'],
-        'quota': {
-          'tier': 'free',
-          'limit': 5,
-          'remaining': 2,
-        },
+        'quota': {'tier': 'free', 'limit': 5, 'remaining': 2},
       };
 
       final advice = BreedingAdvice.fromJson(json);
@@ -194,11 +190,7 @@ void main() {
 
   group('BreedingQuota', () {
     test('fromJson parses correctly', () {
-      final json = {
-        'tier': 'free',
-        'limit': 5,
-        'remaining': 3,
-      };
+      final json = {'tier': 'free', 'limit': 5, 'remaining': 3};
       final quota = BreedingQuota.fromJson(json);
       expect(quota.tier, 'free');
       expect(quota.limit, 5);
@@ -206,9 +198,7 @@ void main() {
     });
 
     test('fromJson handles null limit and remaining', () {
-      final json = {
-        'tier': 'breeder',
-      };
+      final json = {'tier': 'breeder'};
       final quota = BreedingQuota.fromJson(json);
       expect(quota.tier, 'breeder');
       expect(quota.limit, isNull);

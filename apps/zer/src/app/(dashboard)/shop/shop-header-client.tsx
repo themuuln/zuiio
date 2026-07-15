@@ -3,9 +3,9 @@
 import { PanelLeftIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSidebarState } from "@/app/(dashboard)/dashboard-shell";
 import { useShopHistoryDrawer } from "@/components/shop/shop-history-drawer";
 import { Button } from "@/components/ui/button";
+import { useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
 const desktopNavLinks: { label: string; href: string }[] = [
@@ -19,7 +19,7 @@ const desktopNavLinks: { label: string; href: string }[] = [
  * "Түүх" opens a slide-in drawer instead of navigating.
  */
 export function ShopHeaderClient() {
-  const { open, setOpen } = useSidebarState();
+  const { toggleSidebar } = useSidebar();
   const pathname = usePathname();
   const historyDrawer = useShopHistoryDrawer();
 
@@ -30,7 +30,7 @@ export function ShopHeaderClient() {
           variant="ghost"
           size="icon"
           className="size-8 shrink-0"
-          onClick={() => setOpen(!open)}
+          onClick={toggleSidebar}
           aria-label="Хажуугийн цэс"
         >
           <PanelLeftIcon className="size-4" />

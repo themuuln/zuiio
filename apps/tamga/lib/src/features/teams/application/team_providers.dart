@@ -48,15 +48,17 @@ final currentTeamProvider = FutureProvider<Team?>((ref) async {
 /// Багийн бүх гишүүд.
 final teamMembersProvider =
     createListFamilyProvider<TeamMember, TeamRepository, String>(
-  (ref) async => ref.watch(teamRepositoryProvider),
-  (repo, teamId) => repo.getMembers(teamId),
-);
+      (ref) async => ref.watch(teamRepositoryProvider),
+      (repo, teamId) => repo.getMembers(teamId),
+    );
 
 // ── Current User's Role ───────────────────────────────────────────
 
 /// Одоогийн хэрэглэгчийн баг доторх дүр.
-final currentUserTeamRoleProvider =
-    Provider.family<TeamRole?, String>((ref, teamId) {
+final currentUserTeamRoleProvider = Provider.family<TeamRole?, String>((
+  ref,
+  teamId,
+) {
   final authState = ref.watch(authStateProvider).valueOrNull;
   final userId = authState?.userId;
   if (userId == null) return null;
@@ -84,7 +86,8 @@ final hasMultiUsersGateProvider = Provider<GateCheck>((ref) {
     return const GateAllowed();
   }
   return const GateDenied(
-    reason: 'Олон хэрэглэгчийн удирдлага нь Stable захиалгын боломж юм. '
+    reason:
+        'Олон хэрэглэгчийн удирдлага нь Stable захиалгын боломж юм. '
         'Stable захиалгаар 10 хүртэл хамтын хэрэглэгчтэй ажиллах боломжтой.',
     requiredTier: SubscriptionTier.stable,
   );
@@ -118,7 +121,10 @@ final pendingInvitationsCountProvider = Provider<int>((ref) {
 });
 
 /// Тодорхой багийн нэрийг урилгаар авах туслах.
-final teamNameByIdProvider = FutureProvider.family<String?, String>((ref, teamId) async {
+final teamNameByIdProvider = FutureProvider.family<String?, String>((
+  ref,
+  teamId,
+) async {
   final repo = ref.watch(teamRepositoryProvider);
   final result = await repo.getTeam(teamId);
   return result.isSuccess ? result.value.name : null;

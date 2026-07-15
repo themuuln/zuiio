@@ -17,9 +17,7 @@ void main() {
     testWidgets('EmptyState shows title and icon', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData(
-            extensions: const [TamgaColors.light],
-          ),
+          theme: ThemeData(extensions: const [TamgaColors.light]),
           home: const Scaffold(
             body: EmptyState(
               icon: Icons.pets_outlined,
@@ -38,13 +36,13 @@ void main() {
       expect(find.byIcon(Icons.pets_outlined), findsOneWidget);
     });
 
-    testWidgets('EmptyState with action button shows the button', (tester) async {
+    testWidgets('EmptyState with action button shows the button', (
+      tester,
+    ) async {
       var actionCalled = false;
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData(
-            extensions: const [TamgaColors.light],
-          ),
+          theme: ThemeData(extensions: const [TamgaColors.light]),
           home: Scaffold(
             body: EmptyState(
               icon: Icons.search_off_rounded,
@@ -64,18 +62,14 @@ void main() {
       expect(actionCalled, isTrue);
     });
 
-    testWidgets('EmptyState without description renders without error',
-        (tester) async {
+    testWidgets('EmptyState without description renders without error', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData(
-            extensions: const [TamgaColors.light],
-          ),
+          theme: ThemeData(extensions: const [TamgaColors.light]),
           home: const Scaffold(
-            body: EmptyState(
-              icon: Icons.info,
-              title: 'Мэдээлэл байхгүй',
-            ),
+            body: EmptyState(icon: Icons.info, title: 'Мэдээлэл байхгүй'),
           ),
         ),
       );
@@ -87,9 +81,7 @@ void main() {
     testWidgets('EmptyState does not crash without onAction', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData(
-            extensions: const [TamgaColors.light],
-          ),
+          theme: ThemeData(extensions: const [TamgaColors.light]),
           home: const Scaffold(
             body: EmptyState(
               icon: Icons.pets,
@@ -109,32 +101,24 @@ void main() {
   // ── TamgaErrorWidget Tests ────────────────────────────────────────
 
   group('TamgaErrorWidget renders correctly', () {
-    testWidgets('TamgaErrorWidget shows default message when message is null',
-        (tester) async {
+    testWidgets('TamgaErrorWidget shows default message when message is null', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData(
-            extensions: const [TamgaColors.light],
-          ),
-          home: const Scaffold(
-            body: TamgaErrorWidget(),
-          ),
+          theme: ThemeData(extensions: const [TamgaColors.light]),
+          home: const Scaffold(body: TamgaErrorWidget()),
         ),
       );
 
       expect(find.textContaining('Алдаа гарлаа'), findsOneWidget);
-      expect(
-        find.textContaining('Something went wrong'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('Something went wrong'), findsOneWidget);
     });
 
     testWidgets('TamgaErrorWidget shows custom message', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData(
-            extensions: const [TamgaColors.light],
-          ),
+          theme: ThemeData(extensions: const [TamgaColors.light]),
           home: const Scaffold(
             body: TamgaErrorWidget(message: 'Сүлжээний алдаа гарлаа'),
           ),
@@ -145,14 +129,11 @@ void main() {
       expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);
     });
 
-    testWidgets('TamgaErrorWidget retry button fires callback',
-        (tester) async {
+    testWidgets('TamgaErrorWidget retry button fires callback', (tester) async {
       var retryCalled = false;
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData(
-            extensions: const [TamgaColors.light],
-          ),
+          theme: ThemeData(extensions: const [TamgaColors.light]),
           home: Scaffold(
             body: TamgaErrorWidget(
               message: 'Алдаа',
@@ -168,16 +149,13 @@ void main() {
       expect(retryCalled, isTrue);
     });
 
-    testWidgets('TamgaErrorWidget no retry button when onRetry is null',
-        (tester) async {
+    testWidgets('TamgaErrorWidget no retry button when onRetry is null', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData(
-            extensions: const [TamgaColors.light],
-          ),
-          home: const Scaffold(
-            body: TamgaErrorWidget(message: 'Алдаа'),
-          ),
+          theme: ThemeData(extensions: const [TamgaColors.light]),
+          home: const Scaffold(body: TamgaErrorWidget(message: 'Алдаа')),
         ),
       );
 
@@ -202,11 +180,7 @@ void main() {
         if (shouldFail) {
           throw const SocketException('Connection lost');
         }
-        return {
-          ...formData,
-          'submitted': true,
-          'error': null,
-        };
+        return {...formData, 'submitted': true, 'error': null};
       } catch (e) {
         // On error, form data is preserved (not cleared)
         return {
@@ -379,7 +353,8 @@ void main() {
         () => EmptyState(
           icon: Icons.pets,
           title: 'Туршилтын урт гарчиг нь ямар ч асуудалгүй ажиллах ёстой',
-          description: 'Тайлбар текст нь бас урт байж болно. '
+          description:
+              'Тайлбар текст нь бас урт байж болно. '
               'Энэ нь хэрэглэгчид мэдээллийг ойлгоход тусална.',
         ),
         isNot(throwsException),
@@ -393,8 +368,7 @@ void main() {
       );
     });
 
-    test('friendlyErrorMessage handles all known AppException codes',
-        () {
+    test('friendlyErrorMessage handles all known AppException codes', () {
       final codes = {
         'NETWORK_ERROR': 'hides',
         'REPORT_FAILED': 'hides',
@@ -427,10 +401,7 @@ void main() {
     });
 
     test('friendlyErrorMessage handles null input without crash', () {
-      expect(
-        () => friendlyErrorMessage(null),
-        isNot(throwsException),
-      );
+      expect(() => friendlyErrorMessage(null), isNot(throwsException));
     });
   });
 
@@ -456,10 +427,7 @@ void main() {
     });
 
     test('renewal error shows generic for unknown failures', () {
-      final error = AppException.withDetail(
-        'UNKNOWN',
-        'something unexpected',
-      );
+      final error = AppException.withDetail('UNKNOWN', 'something unexpected');
       final message = friendlyErrorMessage(error);
 
       expect(message, contains('Түр зуурын алдаа гарлаа'));

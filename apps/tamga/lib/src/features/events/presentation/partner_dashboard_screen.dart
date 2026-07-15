@@ -117,8 +117,7 @@ class _PartnerDashboardScreenState
                   onToggleFeatured: () =>
                       _toggleFeatured(context, event, userId),
                   onEdit: () => _editEvent(context, event, horses),
-                  onComplete: () =>
-                      _completeEvent(context, event, userId),
+                  onComplete: () => _completeEvent(context, event, userId),
                   onView: () => _viewEvent(context, event),
                 );
               },
@@ -130,11 +129,7 @@ class _PartnerDashboardScreenState
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: colorScheme.error,
-              ),
+              Icon(Icons.error_outline, size: 64, color: colorScheme.error),
               const SizedBox(height: AppSpacing.md),
               Text(
                 'Арга хэмжээг ачаалахад алдаа гарлаа',
@@ -214,10 +209,8 @@ class _PartnerDashboardScreenState
     Future<Event?> navigateToAddEvent(dynamic horse) async {
       return Navigator.of(context).push<Event>(
         MaterialPageRoute(
-          builder: (_) => AddEventScreen(
-            horseId: horse.id,
-            horseName: horse.name,
-          ),
+          builder: (_) =>
+              AddEventScreen(horseId: horse.id, horseName: horse.name),
         ),
       );
     }
@@ -288,19 +281,14 @@ class _PartnerDashboardScreenState
     final horse = horses.where((h) => h.id == event.horseId).firstOrNull;
     if (horse == null) {
       if (context.mounted) {
-        TamgaToast.showError(
-          context,
-          'Морь олдсонгүй',
-        );
+        TamgaToast.showError(context, 'Морь олдсонгүй');
       }
       return;
     }
 
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => EventDetailScreen(event: event),
-      ),
-    );
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => EventDetailScreen(event: event)));
 
     if (context.mounted) {
       ref.invalidate(partnerEventsProvider);
@@ -380,11 +368,9 @@ class _PartnerDashboardScreenState
   }
 
   Future<void> _viewEvent(BuildContext context, Event event) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => EventDetailScreen(event: event),
-      ),
-    );
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => EventDetailScreen(event: event)));
 
     if (context.mounted) {
       ref.invalidate(partnerEventsProvider);
@@ -500,9 +486,7 @@ class _PartnerEventCard extends ConsumerWidget {
                         ),
                       ),
                       child: Icon(
-                        event.isFeatured
-                            ? Icons.star
-                            : Icons.star_border,
+                        event.isFeatured ? Icons.star : Icons.star_border,
                         size: 20,
                         color: event.isFeatured
                             ? colorScheme.primary

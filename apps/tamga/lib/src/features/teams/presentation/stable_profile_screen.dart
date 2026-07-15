@@ -87,9 +87,7 @@ class _StableProfileContent extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const TeamManagementScreen(),
-              ),
+              MaterialPageRoute(builder: (_) => const TeamManagementScreen()),
             ),
             tooltip: 'Багийн удирдлага',
           ),
@@ -174,10 +172,7 @@ class _StableDetail extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: colorScheme.surface,
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: colorScheme.primary,
-                    width: 3,
-                  ),
+                  border: Border.all(color: colorScheme.primary, width: 3),
                 ),
                 child: Icon(
                   Icons.home_outlined,

@@ -11,10 +11,7 @@ import '../domain/breeding_advice.dart';
 
 /// Цус ойртолтын эрсдэлийг өнгөөр ялгасан карт.
 class BreedingResultCard extends StatelessWidget {
-  const BreedingResultCard({
-    super.key,
-    required this.advice,
-  });
+  const BreedingResultCard({super.key, required this.advice});
 
   /// Шинжилгээний үр дүн.
   final BreedingAdvice advice;
@@ -62,8 +59,11 @@ class BreedingResultCard extends StatelessWidget {
 
         // ── Эрүүл мэндийн тэмдэглэл ──
         if (advice.healthNotes.isNotEmpty) ...[
-          _buildSectionHeader(theme, 'Эрүүл мэндийн тэмдэглэл',
-              Icons.health_and_safety_outlined),
+          _buildSectionHeader(
+            theme,
+            'Эрүүл мэндийн тэмдэглэл',
+            Icons.health_and_safety_outlined,
+          ),
           const SizedBox(height: AppSpacing.sm),
           Card(
             elevation: 0,
@@ -75,9 +75,7 @@ class BreedingResultCard extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: Text(
                 advice.healthNotes,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  height: 1.5,
-                ),
+                style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
               ),
             ),
           ),
@@ -87,24 +85,25 @@ class BreedingResultCard extends StatelessWidget {
         // ── Өнгөний таамаглал ──
         if (advice.colorPredictions.isNotEmpty) ...[
           _buildSectionHeader(
-              theme, 'Өнгөний таамаглал', Icons.palette_outlined),
+            theme,
+            'Өнгөний таамаглал',
+            Icons.palette_outlined,
+          ),
           const SizedBox(height: AppSpacing.sm),
           Wrap(
             spacing: AppSpacing.sm,
             runSpacing: AppSpacing.sm,
             children: advice.colorPredictions
-                .map((color) => Chip(
-                      label: Text(
-                        color,
-                        style: theme.textTheme.labelMedium,
-                      ),
-                      backgroundColor:
-                          theme.colorScheme.secondaryContainer,
-                      side: BorderSide.none,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                      ),
-                    ))
+                .map(
+                  (color) => Chip(
+                    label: Text(color, style: theme.textTheme.labelMedium),
+                    backgroundColor: theme.colorScheme.secondaryContainer,
+                    side: BorderSide.none,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                    ),
+                  ),
+                )
                 .toList(),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -113,7 +112,10 @@ class BreedingResultCard extends StatelessWidget {
         // ── Үүлдрийн зөвлөмж ──
         if (advice.breedSuggestions.isNotEmpty) ...[
           _buildSectionHeader(
-              theme, 'Үүлдрийн зөвлөмж', Icons.lightbulb_outline),
+            theme,
+            'Үүлдрийн зөвлөмж',
+            Icons.lightbulb_outline,
+          ),
           const SizedBox(height: AppSpacing.sm),
           ...advice.breedSuggestions.asMap().entries.map((entry) {
             return Padding(
@@ -137,9 +139,7 @@ class BreedingResultCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       entry.value,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        height: 1.4,
-                      ),
+                      style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
                     ),
                   ),
                 ],
@@ -154,7 +154,10 @@ class BreedingResultCard extends StatelessWidget {
   // ── Эрсдэлийн хэсэг ──────────────────────────────────────────────────
 
   Widget _buildRiskSection(
-      ThemeData theme, Color riskColor, Color riskBgColor) {
+    ThemeData theme,
+    Color riskColor,
+    Color riskBgColor,
+  ) {
     return Card(
       elevation: 0,
       color: riskBgColor,
@@ -169,11 +172,7 @@ class BreedingResultCard extends StatelessWidget {
             // ── Эрсдэлийн дүрс ба түвшин ──
             Row(
               children: [
-                Icon(
-                  _riskIcon(theme),
-                  color: riskColor,
-                  size: 28,
-                ),
+                Icon(_riskIcon(theme), color: riskColor, size: 28),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
@@ -207,9 +206,7 @@ class BreedingResultCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(
                       AppSpacing.cornerRadiusPill,
                     ),
-                    border: Border.all(
-                      color: riskColor.withValues(alpha: 0.5),
-                    ),
+                    border: Border.all(color: riskColor.withValues(alpha: 0.5)),
                   ),
                   child: Text(
                     '${advice.riskScore}/100',
@@ -268,15 +265,10 @@ class BreedingResultCard extends StatelessWidget {
 
   // ── Хэсгийн гарчиг ──────────────────────────────────────────────────
 
-  Widget _buildSectionHeader(
-      ThemeData theme, String title, IconData icon) {
+  Widget _buildSectionHeader(ThemeData theme, String title, IconData icon) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 18,
-          color: theme.colorScheme.primary,
-        ),
+        Icon(icon, size: 18, color: theme.colorScheme.primary),
         const SizedBox(width: AppSpacing.sm),
         Text(
           title,

@@ -172,8 +172,7 @@ class _AppShellState extends ConsumerState<AppShell> {
             FeatureTour(onCompleted: _onTourCompleted),
 
           // Floating action button menu — бүх нэмэх үйлдлүүд нэг дороо
-          if (onboardingCompleted)
-            const Positioned.fill(child: FabMenu()),
+          if (onboardingCompleted) const Positioned.fill(child: FabMenu()),
         ],
       ),
       bottomNavigationBar: NavigationBar(

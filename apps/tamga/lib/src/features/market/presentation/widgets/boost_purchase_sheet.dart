@@ -219,15 +219,17 @@ class _BoostPurchaseSheetState extends ConsumerState<BoostPurchaseSheet> {
         // Pop with the result including payment info
         if (!context.mounted) return; // ignore: use_build_context_synchronously
         // ignore: use_build_context_synchronously
-        Navigator.of(context).pop(BoostPurchaseResult(
-          listingId: widget.listingId,
-          type: _selectedType!,
-          tier: _selectedTier!.level,
-          priceMnt: _selectedTier!.priceMnt,
-          duration: _selectedTier!.duration,
-          paymentCode: payment.code,
-          paymentRequestId: payment.id,
-        ));
+        Navigator.of(context).pop(
+          BoostPurchaseResult(
+            listingId: widget.listingId,
+            type: _selectedType!,
+            tier: _selectedTier!.level,
+            priceMnt: _selectedTier!.priceMnt,
+            duration: _selectedTier!.duration,
+            paymentCode: payment.code,
+            paymentRequestId: payment.id,
+          ),
+        );
       } else {
         if (!context.mounted) return; // ignore: use_build_context_synchronously
         // ignore: use_build_context_synchronously

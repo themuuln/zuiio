@@ -31,15 +31,17 @@ class VetProfile {
     return VetProfile(
       id: json['id'] as String,
       providerId: json['providerId'] as String,
-      specialization:
-          List<String>.from(json['specialization'] as List<dynamic>? ?? []),
+      specialization: List<String>.from(
+        json['specialization'] as List<dynamic>? ?? [],
+      ),
       licenseNumber: json['licenseNumber'] as String?,
       education: json['education'] as String?,
       experienceYears: json['experienceYears'] as int?,
       consultationFee: json['consultationFee'] as int?,
       travelSurcharge: json['travelSurcharge'] as int?,
-      availableDays:
-          List<String>.from(json['availableDays'] as List<dynamic>? ?? []),
+      availableDays: List<String>.from(
+        json['availableDays'] as List<dynamic>? ?? [],
+      ),
     );
   }
 

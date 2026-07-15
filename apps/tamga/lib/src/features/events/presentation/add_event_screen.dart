@@ -346,8 +346,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
             const SizedBox(height: AppSpacing.lg),
 
             // ─── Organizer fields ──
-            Text('Зохион байгуулагч',
-                style: theme.textTheme.titleMedium),
+            Text('Зохион байгуулагч', style: theme.textTheme.titleMedium),
             const SizedBox(height: AppSpacing.sm),
 
             TextFormField(
@@ -397,7 +396,9 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
               value: _isFeatured,
               title: const Text('Онцлох'),
               subtitle: Text(
-                _isFeatured ? 'Онцлох хэсэгт харагдана' : 'Онцлох хэсэгт харагдахгүй',
+                _isFeatured
+                    ? 'Онцлох хэсэгт харагдана'
+                    : 'Онцлох хэсэгт харагдахгүй',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

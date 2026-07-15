@@ -8,7 +8,9 @@ import '../domain/ownership_certificate.dart';
 import 'certificate_repository.dart';
 
 /// Supabase cloud implementation for ownership certificates.
-class SupabaseCertificateRepository with SupabaseRepositoryMixin implements CertificateRepository {
+class SupabaseCertificateRepository
+    with SupabaseRepositoryMixin
+    implements CertificateRepository {
   SupabaseCertificateRepository({SupabaseClient? client})
     : _client = client ?? getConfiguredSupabaseClient();
 

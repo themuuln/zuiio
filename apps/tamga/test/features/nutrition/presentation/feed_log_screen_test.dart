@@ -33,9 +33,11 @@ Widget createFeedLogScreen({
         feedSchedulesProvider(horseId).overrideWith((ref) async {
           throw Exception('Test network error');
         }),
-        feedLogsByDateRangeProvider(
-          (horseId: horseId, startDate: dayStart, endDate: dayEnd),
-        ).overrideWith((ref) async {
+        feedLogsByDateRangeProvider((
+          horseId: horseId,
+          startDate: dayStart,
+          endDate: dayEnd,
+        )).overrideWith((ref) async {
           return [];
         }),
       ],
@@ -51,9 +53,11 @@ Widget createFeedLogScreen({
       feedSchedulesProvider(horseId).overrideWith((ref) async {
         return schedules ?? [];
       }),
-      feedLogsByDateRangeProvider(
-        (horseId: horseId, startDate: dayStart, endDate: dayEnd),
-      ).overrideWith((ref) async {
+      feedLogsByDateRangeProvider((
+        horseId: horseId,
+        startDate: dayStart,
+        endDate: dayEnd,
+      )).overrideWith((ref) async {
         return logs ?? [];
       }),
     ],
@@ -75,9 +79,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            feedSchedulesProvider('horse-1').overrideWith(
-              (ref) => scheduleCompleter.future,
-            ),
+            feedSchedulesProvider(
+              'horse-1',
+            ).overrideWith((ref) => scheduleCompleter.future),
           ],
           child: MaterialApp(
             theme: AppTheme.light(),
@@ -96,10 +100,9 @@ void main() {
     // Error state
     // ════════════════════════════════════════════════════════════════
     testWidgets('shows error widget on fetch failure', (tester) async {
-      await tester.pumpWidget(createFeedLogScreen(
-        horseId: 'horse-1',
-        simulateError: true,
-      ));
+      await tester.pumpWidget(
+        createFeedLogScreen(horseId: 'horse-1', simulateError: true),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byType(TamgaErrorWidget), findsOneWidget);
@@ -109,11 +112,9 @@ void main() {
     // Empty state
     // ════════════════════════════════════════════════════════════════
     testWidgets('shows empty state when no active schedules', (tester) async {
-      await tester.pumpWidget(createFeedLogScreen(
-        horseId: 'horse-1',
-        schedules: [],
-        logs: [],
-      ));
+      await tester.pumpWidget(
+        createFeedLogScreen(horseId: 'horse-1', schedules: [], logs: []),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Энэ өдөр тэжээлийн хуваарь байхгүй'), findsOneWidget);
@@ -140,11 +141,9 @@ void main() {
         ),
       ];
 
-      await tester.pumpWidget(createFeedLogScreen(
-        horseId: 'horse-1',
-        schedules: schedules,
-        logs: [],
-      ));
+      await tester.pumpWidget(
+        createFeedLogScreen(horseId: 'horse-1', schedules: schedules, logs: []),
+      );
       await tester.pumpAndSettle();
 
       // Should show schedule info
@@ -178,11 +177,13 @@ void main() {
         ),
       ];
 
-      await tester.pumpWidget(createFeedLogScreen(
-        horseId: 'horse-1',
-        schedules: schedules,
-        logs: logs,
-      ));
+      await tester.pumpWidget(
+        createFeedLogScreen(
+          horseId: 'horse-1',
+          schedules: schedules,
+          logs: logs,
+        ),
+      );
       await tester.pumpAndSettle();
 
       // "Тэжээсэн" appears as both status badge and action button
@@ -214,11 +215,13 @@ void main() {
         ),
       ];
 
-      await tester.pumpWidget(createFeedLogScreen(
-        horseId: 'horse-1',
-        schedules: schedules,
-        logs: logs,
-      ));
+      await tester.pumpWidget(
+        createFeedLogScreen(
+          horseId: 'horse-1',
+          schedules: schedules,
+          logs: logs,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Алгассан'), findsAtLeast(1));
@@ -238,11 +241,9 @@ void main() {
         ),
       ];
 
-      await tester.pumpWidget(createFeedLogScreen(
-        horseId: 'horse-1',
-        schedules: schedules,
-        logs: [],
-      ));
+      await tester.pumpWidget(
+        createFeedLogScreen(horseId: 'horse-1', schedules: schedules, logs: []),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Хүлээгдэж буй'), findsOneWidget);
@@ -252,11 +253,9 @@ void main() {
     // Date selector
     // ════════════════════════════════════════════════════════════════
     testWidgets('shows date navigation controls', (tester) async {
-      await tester.pumpWidget(createFeedLogScreen(
-        horseId: 'horse-1',
-        schedules: [],
-        logs: [],
-      ));
+      await tester.pumpWidget(
+        createFeedLogScreen(horseId: 'horse-1', schedules: [], logs: []),
+      );
       await tester.pumpAndSettle();
 
       // Should show date navigation chevrons
@@ -278,11 +277,9 @@ void main() {
         ),
       ];
 
-      await tester.pumpWidget(createFeedLogScreen(
-        horseId: 'horse-1',
-        schedules: schedules,
-        logs: [],
-      ));
+      await tester.pumpWidget(
+        createFeedLogScreen(horseId: 'horse-1', schedules: schedules, logs: []),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Тэжээсэн'), findsOneWidget);
@@ -300,17 +297,11 @@ void main() {
   group('VAL-NUTR-007 — Horse detail tabs', () {
     test('FeedScheduleScreen accepts horseId parameter', () {
       // Just verify the class has a horseId constructor param
-      expect(
-        () => FeedScheduleScreen(horseId: 'test-horse'),
-        returnsNormally,
-      );
+      expect(() => FeedScheduleScreen(horseId: 'test-horse'), returnsNormally);
     });
 
     test('FeedLogScreen accepts horseId parameter', () {
-      expect(
-        () => FeedLogScreen(horseId: 'test-horse'),
-        returnsNormally,
-      );
+      expect(() => FeedLogScreen(horseId: 'test-horse'), returnsNormally);
     });
   });
 }

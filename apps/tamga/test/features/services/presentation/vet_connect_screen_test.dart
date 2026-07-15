@@ -22,9 +22,7 @@ Widget createVetConnectScreen({List<VetProfile>? profiles}) {
         if (filter.specialization != null &&
             filter.specialization!.isNotEmpty) {
           result = result
-              .where(
-                (v) => v.specialization.contains(filter.specialization),
-              )
+              .where((v) => v.specialization.contains(filter.specialization))
               .toList();
         }
         return result;
@@ -37,10 +35,7 @@ Widget createVetConnectScreen({List<VetProfile>? profiles}) {
         return profiles?.where((p) => p.id == id).firstOrNull;
       }),
     ],
-    child: MaterialApp(
-      theme: AppTheme.light(),
-      home: const VetConnectScreen(),
-    ),
+    child: MaterialApp(theme: AppTheme.light(), home: const VetConnectScreen()),
   );
 }
 
@@ -92,7 +87,10 @@ void main() {
 
       // Verify filter sections
       expect(find.text('Аймгаар шүүх / Filter by Aimag'), findsOneWidget);
-      expect(find.text('Мэргэжлээр шүүх / Filter by Specialization'), findsOneWidget);
+      expect(
+        find.text('Мэргэжлээр шүүх / Filter by Specialization'),
+        findsOneWidget,
+      );
 
       // Verify some filter chips
       expect(find.text('Бүгд / All'), findsWidgets);
@@ -100,12 +98,7 @@ void main() {
     });
 
     testWidgets('shows consultation fee on vet card', (tester) async {
-      final profiles = [
-        createTestProfile(
-          id: 'v1',
-          consultationFee: 50000,
-        ),
-      ];
+      final profiles = [createTestProfile(id: 'v1', consultationFee: 50000)];
 
       await tester.pumpWidget(createVetConnectScreen(profiles: profiles));
       await tester.pumpAndSettle();

@@ -65,9 +65,7 @@ class _RaceListScreenState extends ConsumerState<RaceListScreen>
 
   Future<void> _navigateToDetail(BuildContext context, Race race) async {
     await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => RaceDetailScreen(raceId: race.id),
-      ),
+      MaterialPageRoute(builder: (_) => RaceDetailScreen(raceId: race.id)),
     );
     if (context.mounted) {
       ref.invalidate(racesProvider);
@@ -138,7 +136,8 @@ class _RaceListBody extends ConsumerWidget {
               (r) =>
                   r.status == RaceStatus.completed ||
                   r.status == RaceStatus.cancelled ||
-                  (r.date != null && r.date!.isBefore(now) &&
+                  (r.date != null &&
+                      r.date!.isBefore(now) &&
                       r.status != RaceStatus.upcoming),
             )
             .toList();
@@ -241,10 +240,7 @@ class _RaceTabList extends StatelessWidget {
       separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
       itemBuilder: (ctx, i) {
         final race = filtered[i];
-        return _RaceCard(
-          race: race,
-          onTap: () => onRaceTap(race),
-        );
+        return _RaceCard(race: race, onTap: () => onRaceTap(race));
       },
     );
   }
@@ -341,10 +337,7 @@ class _RaceCard extends StatelessWidget {
               // ── Status chip ──
               _StatusChip(status: race.status),
               const SizedBox(width: AppSpacing.sm),
-              Icon(
-                Icons.chevron_right,
-                color: colorScheme.onSurfaceVariant,
-              ),
+              Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
             ],
           ),
         ),
@@ -365,10 +358,22 @@ class _StatusChip extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     final (Color bg, Color fg) = switch (status) {
-      RaceStatus.upcoming => (colorScheme.primaryContainer, colorScheme.onPrimaryContainer),
-      RaceStatus.ongoing => (colorScheme.tertiaryContainer, colorScheme.onTertiaryContainer),
-      RaceStatus.completed => (colorScheme.secondaryContainer, colorScheme.onSecondaryContainer),
-      RaceStatus.cancelled => (colorScheme.errorContainer, colorScheme.onErrorContainer),
+      RaceStatus.upcoming => (
+        colorScheme.primaryContainer,
+        colorScheme.onPrimaryContainer,
+      ),
+      RaceStatus.ongoing => (
+        colorScheme.tertiaryContainer,
+        colorScheme.onTertiaryContainer,
+      ),
+      RaceStatus.completed => (
+        colorScheme.secondaryContainer,
+        colorScheme.onSecondaryContainer,
+      ),
+      RaceStatus.cancelled => (
+        colorScheme.errorContainer,
+        colorScheme.onErrorContainer,
+      ),
     };
 
     return Container(
@@ -382,11 +387,7 @@ class _StatusChip extends StatelessWidget {
       ),
       child: Text(
         status.displayName,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: fg,
-        ),
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: fg),
       ),
     );
   }

@@ -9,9 +9,7 @@ Widget createCard(BreedingAdvice advice) {
   return MaterialApp(
     theme: AppTheme.light(),
     home: Scaffold(
-      body: SingleChildScrollView(
-        child: BreedingResultCard(advice: advice),
-      ),
+      body: SingleChildScrollView(child: BreedingResultCard(advice: advice)),
     ),
   );
 }
@@ -45,7 +43,9 @@ void main() {
     // ════════════════════════════════════════════════════════════════
     // Medium risk (yellow/orange)
     // ════════════════════════════════════════════════════════════════
-    testWidgets('shows orange theme for medium inbreeding risk', (tester) async {
+    testWidgets('shows orange theme for medium inbreeding risk', (
+      tester,
+    ) async {
       final advice = BreedingAdvice(
         inbreedingRisk: InbreedingRisk.medium,
         riskScore: 50,
@@ -70,7 +70,8 @@ void main() {
       final advice = BreedingAdvice(
         inbreedingRisk: InbreedingRisk.high,
         riskScore: 85,
-        healthNotes: 'High inbreeding risk detected. Strongly recommend '
+        healthNotes:
+            'High inbreeding risk detected. Strongly recommend '
             'alternative pairing.',
         colorPredictions: ['Gray', 'Roan'],
         breedSuggestions: [
@@ -95,7 +96,8 @@ void main() {
       final advice = BreedingAdvice(
         inbreedingRisk: InbreedingRisk.medium,
         riskScore: 40,
-        healthNotes: 'Both horses show good overall health. '
+        healthNotes:
+            'Both horses show good overall health. '
             'No hereditary diseases detected.',
         colorPredictions: ['Bay'],
         breedSuggestions: ['Consider this pairing'],
@@ -151,10 +153,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Үүлдрийн зөвлөмж'), findsOneWidget);
-      expect(
-        find.text('Consider line-breeding with caution'),
-        findsOneWidget,
-      );
+      expect(find.text('Consider line-breeding with caution'), findsOneWidget);
       expect(
         find.text('Use unrelated sire for better diversity'),
         findsOneWidget,
