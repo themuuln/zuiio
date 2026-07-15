@@ -1,9 +1,9 @@
 "use server";
 
 import { capture } from "@zuiio/capture";
-import { PRESET_CATEGORIES } from "@/lib/constants";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { PRESET_CATEGORIES } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/server-service";
 import type { Database } from "@/lib/supabase/types";
@@ -90,7 +90,8 @@ export async function completeOnboarding(
       .single();
 
     const companyType = org?.company_type ?? "other";
-    const presetNames = PRESET_CATEGORIES[companyType] ?? PRESET_CATEGORIES.other ?? [];
+    const presetNames =
+      PRESET_CATEGORIES[companyType] ?? PRESET_CATEGORIES.other ?? [];
 
     if (presetNames.length > 0) {
       // Fetch existing categories to avoid duplicates
@@ -105,6 +106,7 @@ export async function completeOnboarding(
         .map((name) => ({
           name,
           organization_id: profile.organization_id!,
+          slug: "",
         }));
 
       if (newCategories.length > 0) {
@@ -183,6 +185,7 @@ export async function completeOnboarding(
               .insert({
                 name: preset.category_name,
                 organization_id: profile.organization_id,
+                slug: "",
               })
               .select("id")
               .single();

@@ -1,8 +1,8 @@
 "use server";
 
 import { capture } from "@zuiio/capture";
-import { PRESET_CATEGORIES } from "@/lib/constants";
 import { requireActionContext } from "@/lib/action-utils";
+import { PRESET_CATEGORIES } from "@/lib/constants";
 import { validateCategoryInput } from "@/lib/domain-rules";
 import { revalidateEntity } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
@@ -42,6 +42,7 @@ export async function createCategory(
   const { error } = await supabase.from("categories").insert({
     organization_id: organizationId,
     name,
+    slug: "",
   });
 
   if (error) {
@@ -190,6 +191,7 @@ export async function seedPresetCategories(): Promise<{
     .map((name) => ({
       name,
       organization_id: organizationId,
+      slug: "",
     }));
 
   if (newCategories.length === 0) return { seeded: 0 };

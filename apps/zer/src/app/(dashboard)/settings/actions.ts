@@ -217,6 +217,7 @@ export async function importBrandPresets(formData: FormData) {
             .insert({
               name: preset.category_name,
               organization_id: organizationId,
+              slug: "",
             })
             .select("id")
             .single();
@@ -335,6 +336,7 @@ export async function importProductPreset(formData: FormData) {
         .insert({
           name: preset.category_name,
           organization_id: organizationId,
+          slug: "",
         })
         .select("id")
         .single();
@@ -452,6 +454,7 @@ export async function importProductPresetsByIds(presetIds: string[]) {
           .insert({
             name: preset.category_name,
             organization_id: organizationId,
+            slug: "",
           })
           .select("id")
           .single();

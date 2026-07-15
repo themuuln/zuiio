@@ -125,7 +125,7 @@ export async function createShopSale(
           p_org_id: organizationId,
           p_branch_id: branchId,
           p_user_id: userId,
-          p_contact_id: contactId,
+          p_contact_id: contactId ?? "",
           p_total_amount: totalAmount,
           p_paid_amount: paidAmount,
           p_payment_method: paymentMethod,
