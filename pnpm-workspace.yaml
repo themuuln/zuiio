@@ -19,6 +19,12 @@ catalog:
   "@supabase/supabase-js": ^2.110.1
   # TypeScript
   typescript: npm:@typescript/typescript6@^6.0.2
+  "@types/node": ^24.0.0
+  "@types/react-dom": ^19.2.0
+  # Tailwind CSS
+  tailwindcss: ^4.1.0
+  "@tailwindcss/postcss": ^4.1.0
+  postcss: ^8.5.0
 
 allowBuilds:
   '@google/genai': true
