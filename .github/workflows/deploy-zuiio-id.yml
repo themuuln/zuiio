@@ -60,6 +60,10 @@ jobs:
 
       - name: Build
         run: vercel build --prod --token=$VERCEL_TOKEN
+      - name: Copy build output to root
+        run: |
+          cp -r apps/zuiio-id/.next .next
+          cp -r apps/zuiio-id/.next/static .next/static 2>/dev/null || true
 
       - name: Deploy to production
         run: vercel deploy --prebuilt --prod --archive=tgz --token=$VERCEL_TOKEN
