@@ -803,6 +803,9 @@ export type Database = {
           sale_id: string | null;
           status: string | null;
           token: string | null;
+          token_hash: string | null;
+          expires_at: string | null;
+          revoked_at: string | null;
           total_amount: number | null;
         };
         Insert: {
@@ -811,15 +814,18 @@ export type Database = {
           created_at?: string | null;
           created_by?: string | null;
           due_date?: string | null;
+          expires_at?: string | null;
           id?: string;
           invoice_number: string;
           issue_date?: string;
           notes?: string | null;
           organization_id: string;
           paid_amount?: number | null;
+          revoked_at?: string | null;
           sale_id?: string | null;
           status?: string | null;
           token?: string | null;
+          token_hash?: string | null;
           total_amount?: number | null;
         };
         Update: {
@@ -828,15 +834,18 @@ export type Database = {
           created_at?: string | null;
           created_by?: string | null;
           due_date?: string | null;
+          expires_at?: string | null;
           id?: string;
           invoice_number?: string;
           issue_date?: string;
           notes?: string | null;
           organization_id?: string;
           paid_amount?: number | null;
+          revoked_at?: string | null;
           sale_id?: string | null;
           status?: string | null;
           token?: string | null;
+          token_hash?: string | null;
           total_amount?: number | null;
         };
         Relationships: [
