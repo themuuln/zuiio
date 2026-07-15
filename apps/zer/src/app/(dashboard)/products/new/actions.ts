@@ -21,8 +21,9 @@ export async function createProduct(
   const sku = formData.get("sku")?.toString() ?? null;
   const barcode = formData.get("barcode")?.toString() ?? null;
   const unit = formData.get("unit")?.toString() ?? "ширхэг";
-  const brandId = formData.get("brand_id")?.toString() || null;
+  const brandName = formData.get("brand_name")?.toString() || null;
   const categoryName = formData.get("category_name")?.toString() || null;
+  const imageUrl = formData.get("image_url")?.toString() || null;
 
   const validationError = validateProductInput({
     name,
@@ -66,6 +67,36 @@ export async function createProduct(
       if (created) categoryId = created.id;
     }
   }
+  // Resolve brand_name to brand_id (find-or-create, same as categories)
+  let resolvedBrandId: string | null = null;
+  if (brandName) {
+    const { data: existingBrand, error: brandQueryError } = await supabase
+      .from("brands")
+      .select("id")
+      .eq("organization_id", organizationId)
+      .eq("name", brandName.trim())
+      .maybeSingle();
+    if (brandQueryError) {
+      capture(brandQueryError, {
+        context: "createProduct: check existing brand",
+      });
+    }
+
+    if (existingBrand) {
+      resolvedBrandId = existingBrand.id;
+    } else {
+      const { data: newBrand, error: createBrandError } = await supabase
+        .from("brands")
+        .insert({ name: brandName.trim(), organization_id: organizationId })
+        .select("id")
+        .single();
+      if (createBrandError) {
+        capture(createBrandError, { context: "createProduct: create brand" });
+      }
+
+      if (newBrand) resolvedBrandId = newBrand.id;
+    }
+  }
 
   const { data: product, error } = await supabase
     .from("products")
@@ -75,12 +106,13 @@ export async function createProduct(
       sku: sku?.trim() || null,
       barcode: barcode?.trim() || null,
       unit,
-      brand_id: brandId || null,
+      brand_id: resolvedBrandId,
       category_id: categoryId,
       cost_price: costPrice,
       sale_price: salePrice,
       current_stock: currentStock,
       min_stock: minStock,
+      image_url: imageUrl,
     })
     .select("id")
     .single();

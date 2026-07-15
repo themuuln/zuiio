@@ -5,12 +5,12 @@ import {
   CheckCircle,
   MagnifyingGlass,
   Package,
+  Plus,
   XCircle,
 } from "@phosphor-icons/react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useAggregatedLookup, useDebounce, useLookup } from "@zuiio/hooks";
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { fetchProductsPage } from "@/app/(dashboard)/shop/actions";
 import { useCart } from "@/app/(dashboard)/shop/cart-context";
@@ -36,6 +36,14 @@ import { cn } from "@/lib/utils";
 
 const CameraScanner = dynamic(
   () => import("./camera-scanner").then((m) => m.CameraScanner),
+  { ssr: false },
+);
+
+const ProductCreateDrawer = dynamic(
+  () =>
+    import("@/components/products/product-create-drawer").then(
+      (m) => m.ProductCreateDrawer,
+    ),
   { ssr: false },
 );
 
@@ -100,12 +108,16 @@ type CatalogClientProps = {
   selectionMode?: "grid" | "barcode" | "hybrid";
   /** Whether more pages exist beyond the initial server-fetched page. */
   initialHasMore?: boolean;
+  /** Organization ID for inline product creation drawer. */
+  organizationId?: string;
 };
+
 export function CatalogClient({
   products: initialProducts,
   categories,
   selectionMode = "barcode",
   initialHasMore = false,
+  organizationId,
 }: CatalogClientProps) {
   const { addItem } = useCart();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -118,6 +130,7 @@ export function CatalogClient({
     type: "idle",
   });
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const debouncedQuery = useDebounce(searchQuery, 300);
 
   // Auto-focus on mount
@@ -250,23 +263,8 @@ export function CatalogClient({
         (product) => product.category_id === selectedCategoryId,
       );
     }
-    const query = searchQuery.toLowerCase().trim();
-    if (query) {
-      result = result.filter(
-        (product) =>
-          product.name.toLowerCase().includes(query) ||
-          product.sku?.toLowerCase().includes(query) ||
-          product.barcode?.toLowerCase().includes(query),
-      );
-    }
     return result;
-  }, [
-    allProducts,
-    searchQuery,
-    debouncedQuery,
-    serverResults,
-    selectedCategoryId,
-  ]);
+  }, [serverResults, debouncedQuery, allProducts, selectedCategoryId]);
 
   const isEmpty = allProducts.length === 0;
   const hasNoResults = !isEmpty && filteredProducts.length === 0;
@@ -422,7 +420,7 @@ export function CatalogClient({
 
         {/* Content area */}
         {isEmpty ? (
-          <EmptyCatalogState />
+          <EmptyCatalogState onCreateClick={() => setCreateDrawerOpen(true)} />
         ) : hasNoResults ? (
           <EmptySearchResults query={searchQuery} />
         ) : (
@@ -470,6 +468,15 @@ export function CatalogClient({
       <div className="lg:hidden">
         <CartFloatingButton />
       </div>
+
+      {/* Inline product create drawer */}
+      <ProductCreateDrawer
+        companyType=""
+        organizationId={organizationId}
+        open={createDrawerOpen}
+        onOpenChange={setCreateDrawerOpen}
+        hideTrigger
+      />
     </div>
   );
 }
@@ -508,7 +515,11 @@ export function CatalogSkeleton() {
   );
 }
 
-function EmptyCatalogState() {
+function EmptyCatalogState({
+  onCreateClick,
+}: {
+  onCreateClick: () => void;
+}) {
   return (
     <Empty className="min-h-[300px] rounded-xl border border-dashed border-border bg-card/50">
       <EmptyHeader>
@@ -518,12 +529,13 @@ function EmptyCatalogState() {
         <EmptyTitle>Бүтээгдэхүүн байхгүй байна</EmptyTitle>
         <EmptyDescription>
           Танай байгууллагад бүртгэлтэй бүтээгдэхүүн одоогоор байхгүй байна.
-          Шинэ бүтээгдэхүүн нэмэхийн тулд Бүтээгдэхүүн хэсэгт очно уу.
+          Доорх товч дээр дарж шинэ бүтээгдэхүүн нэмнэ үү.
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button asChild>
-          <Link href="/products/new">Бүтээгдэхүүн нэмэх</Link>
+        <Button type="button" onClick={onCreateClick}>
+          <Plus className="size-4" />
+          Шинэ бүтээгдэхүүн
         </Button>
       </EmptyContent>
     </Empty>
