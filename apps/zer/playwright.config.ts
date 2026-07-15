@@ -19,10 +19,10 @@ const AUTH_FILE = ".auth/user.json";
 export default defineConfig({
   testDir: "./e2e",
   testIgnore: ["**/codeceptjs/**"],
-  fullyParallel: false,
+  fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 1 : 3,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 2 : 4,
   timeout: 90 * 1000,
   reporter: [
     ["html", { outputFolder: "playwright-report" }],

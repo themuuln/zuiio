@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/erp/theme-toggle";
 import type { RolePermission } from "@/components/roles/roles-client";
+import { BankAccountsSettings } from "@/components/settings/bank-accounts-settings";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -372,7 +373,6 @@ export function SettingsContent() {
     org,
     profile,
     posSettings,
-    userId,
     userEmail,
     permissions,
     smtpCount,
@@ -505,6 +505,12 @@ export function SettingsContent() {
 
       {/* Shop / POS checkout settings */}
       <ShopPosSettings initial={posSettings} />
+      {/* Bank Accounts */}
+      <Card>
+        <CardContent className="pt-6">
+          <BankAccountsSettings />
+        </CardContent>
+      </Card>
 
       {/* Product Brand Presets */}
       {hasBrands && hasPresets ? (

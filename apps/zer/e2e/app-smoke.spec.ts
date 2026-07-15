@@ -23,7 +23,7 @@ const pages: [string, string, string?][] = [
   ["Purchases", "/purchases"],
   ["Returns", "/returns"],
   ["Quotations", "/quotations"],
-  ["Settings", "/settings"],
+  ["Cash Register", "/cash-register"],
   ["Settings Notifications", "/settings/notifications"],
   ["Settings Users", "/settings/users"],
   ["Settings Roles", "/settings/roles"],
