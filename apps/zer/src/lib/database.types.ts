@@ -3606,9 +3606,13 @@ export type Database = {
           created_by: string | null;
           date_from: string;
           date_to: string;
+          expires_at: string | null;
           id: string;
           organization_id: string;
+          revoked_at: string | null;
+          rotated_at: string | null;
           token: string;
+          token_hash: string | null;
         };
         Insert: {
           branch_id?: string | null;
@@ -3616,9 +3620,13 @@ export type Database = {
           created_by?: string | null;
           date_from: string;
           date_to: string;
+          expires_at?: string | null;
           id?: string;
           organization_id: string;
+          revoked_at?: string | null;
+          rotated_at?: string | null;
           token: string;
+          token_hash?: string | null;
         };
         Update: {
           branch_id?: string | null;
@@ -3626,9 +3634,13 @@ export type Database = {
           created_by?: string | null;
           date_from?: string;
           date_to?: string;
+          expires_at?: string | null;
           id?: string;
           organization_id?: string;
+          revoked_at?: string | null;
+          rotated_at?: string | null;
           token?: string;
+          token_hash?: string | null;
         };
         Relationships: [
           {
