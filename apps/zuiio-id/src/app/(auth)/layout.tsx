@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Zuiio ID — Нэвтрэх систем",

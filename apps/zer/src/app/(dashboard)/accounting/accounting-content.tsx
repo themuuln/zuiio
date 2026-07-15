@@ -8,10 +8,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AccountCreateDrawer } from "@/components/accounting/account-create-drawer";
+import { BalanceSheet } from "@/components/accounting/balance-sheet";
+import { CashFlowStatement } from "@/components/accounting/cash-flow-statement";
 import { JournalEntryCreateDrawer } from "@/components/accounting/journal-entry-create-drawer";
 import type { JournalEntryDetailData } from "@/components/accounting/journal-entry-detail-drawer";
 import { JournalEntryDetailDrawer } from "@/components/accounting/journal-entry-detail-drawer";
 import { JournalEntryEditDrawer } from "@/components/accounting/journal-entry-edit-drawer";
+import { ProfitLossStatement } from "@/components/accounting/profit-loss-statement";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +25,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBranchContext } from "@/lib/branch-context";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatRouteDate } from "@/lib/format";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -110,6 +113,10 @@ export function AccountingContent({
   const [consolidated, setConsolidated] = useState(
     initialConsolidated ?? false,
   );
+  // Financial statement date range
+  const today = formatRouteDate();
+  const [dateFrom, setDateFrom] = useState(today);
+  const [dateTo, setDateTo] = useState(today);
 
   // Determine effective branch filter
   const showConsolidated = !isBranchScoped && consolidated;
@@ -409,6 +416,9 @@ export function AccountingContent({
           <TabsTrigger value="trial-balance">Туршилтын баланс</TabsTrigger>
           <TabsTrigger value="journal-entries">Журналын бичилт</TabsTrigger>
           <TabsTrigger value="chart-of-accounts">Дансны бүртгэл</TabsTrigger>
+          <TabsTrigger value="profit-loss">Орлого зарлага</TabsTrigger>
+          <TabsTrigger value="balance-sheet">Үлдэгдэл</TabsTrigger>
+          <TabsTrigger value="cash-flow">Мөнгөн урсгал</TabsTrigger>
         </TabsList>
 
         {/* Trial Balance Tab */}
@@ -546,6 +556,71 @@ export function AccountingContent({
               enableColumnVisibility
             />
           )}
+        </TabsContent>
+        {/* Profit & Loss Tab */}
+        <TabsContent value="profit-loss">
+          <div className="mb-4 flex items-center gap-3">
+            <label className="text-sm text-muted-foreground">
+              Эхлэх:
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="ml-2 rounded-lg border bg-background px-3 py-1.5 text-sm"
+              />
+            </label>
+            <label className="text-sm text-muted-foreground">
+              Дуусах:
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="ml-2 rounded-lg border bg-background px-3 py-1.5 text-sm"
+              />
+            </label>
+          </div>
+          <ProfitLossStatement dateFrom={dateFrom} dateTo={dateTo} />
+        </TabsContent>
+
+        {/* Balance Sheet Tab */}
+        <TabsContent value="balance-sheet">
+          <div className="mb-4 flex items-center gap-3">
+            <label className="text-sm text-muted-foreground">
+              Огноо:
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="ml-2 rounded-lg border bg-background px-3 py-1.5 text-sm"
+              />
+            </label>
+          </div>
+          <BalanceSheet asOfDate={dateTo} />
+        </TabsContent>
+
+        {/* Cash Flow Tab */}
+        <TabsContent value="cash-flow">
+          <div className="mb-4 flex items-center gap-3">
+            <label className="text-sm text-muted-foreground">
+              Эхлэх:
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="ml-2 rounded-lg border bg-background px-3 py-1.5 text-sm"
+              />
+            </label>
+            <label className="text-sm text-muted-foreground">
+              Дуусах:
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="ml-2 rounded-lg border bg-background px-3 py-1.5 text-sm"
+              />
+            </label>
+          </div>
+          <CashFlowStatement dateFrom={dateFrom} dateTo={dateTo} />
         </TabsContent>
       </Tabs>
 
