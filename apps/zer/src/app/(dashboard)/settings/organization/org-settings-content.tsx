@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { withDbCapture } from "@zuiio/capture";
 import { PageShell } from "@/components/erp/page-shell";
+import { PublicProfileSettings } from "@/components/settings/public-profile-settings";
 import { ReportEmailSettings } from "@/components/settings/report-email-settings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -59,12 +60,42 @@ export function OrgSettingsContent() {
         reportEmailRecipient = org?.report_email_recipient ?? null;
       }
 
+      // Fetch organization slug and public profile
+      const { data: orgBasic } = await withDbCapture(
+        "page:organization",
+        supabase
+          .from("organizations")
+          .select("slug")
+          .eq("id", organizationId)
+          .single(),
+      );
+
+      const profileResult = await withDbCapture(
+        "page:organization",
+        supabase
+          .from("organization_public_profiles" as never)
+          .select("*")
+          .eq("organization_id", organizationId)
+          .maybeSingle(),
+      );
+      const publicProfile = profileResult.data as {
+        catalog_enabled: boolean;
+        display_name: string | null;
+        description: string | null;
+        contact_email: string | null;
+        contact_phone: string | null;
+        address: string | null;
+        website_url: string | null;
+      } | null;
+
       return {
         profile,
         isSuperadmin,
         reportEmailEnabled,
         reportEmailTime,
         reportEmailRecipient,
+        slug: orgBasic?.slug ?? null,
+        publicProfile,
       };
     },
     enabled: !!organizationId,
@@ -156,6 +187,11 @@ export function OrgSettingsContent() {
               recipient={data.reportEmailRecipient}
             />
           )}
+
+          <PublicProfileSettings
+            slug={data.slug ?? ""}
+            initialProfile={data.publicProfile}
+          />
         </div>
       ) : null}
     </PageShell>

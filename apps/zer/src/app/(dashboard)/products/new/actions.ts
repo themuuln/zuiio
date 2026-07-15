@@ -57,7 +57,11 @@ export async function createProduct(
     } else {
       const { data: created, error: createCatError } = await supabase
         .from("categories")
-        .insert({ name: categoryName.trim(), organization_id: organizationId })
+        .insert({
+          name: categoryName.trim(),
+          organization_id: organizationId,
+          slug: "",
+        })
         .select("id")
         .single();
       if (createCatError) {
@@ -113,7 +117,8 @@ export async function createProduct(
       current_stock: currentStock,
       min_stock: minStock,
       image_url: imageUrl,
-    })
+      is_public: false,
+    } as never)
     .select("id")
     .single();
 

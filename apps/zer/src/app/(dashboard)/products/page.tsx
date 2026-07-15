@@ -79,6 +79,7 @@ async function DataFetcher({
         (product.brands as { name: string; logo_url: string | null } | null)
           ?.logo_url ?? null,
       image_url: product.image_url,
+      is_public: false, // Will be populated after migration is applied to generated types
     })) ?? [];
 
   return (

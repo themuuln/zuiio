@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  Barcode,
   Camera,
   CaretDown,
   ImageSquare,
@@ -11,6 +10,7 @@ import {
   ShoppingCart,
 } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useOrgSettings } from "@/lib/org-settings-context";
@@ -30,6 +30,7 @@ import {
   VariantSummaryCard,
 } from "@/components/products/variant-manager-drawer";
 import { buttonVariants } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CreatableCombobox } from "@/components/ui/creatable-combobox";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import {
@@ -114,10 +115,11 @@ function ProductPreviewCard({
     <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
       <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-muted/30">
         {image_url ? (
-          <img
+          <Image
             src={image_url}
             alt={displayName}
-            className="h-full w-full object-cover"
+            fill
+            className="object-cover"
           />
         ) : (
           <span
@@ -165,6 +167,7 @@ export function ProductCreateDrawer({
   const [internalOpen, setInternalOpen] = useState(false);
   const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
   const [showMore, setShowMore] = useState(false);
+  const [isPublic, setIsPublic] = useState(false);
   const open = externalOpen ?? internalOpen;
   const setOpen = externalOnOpenChange ?? setInternalOpen;
   const presets = companyType
@@ -284,6 +287,7 @@ export function ProductCreateDrawer({
     formData.append("current_stock", String(data.current_stock));
     formData.append("min_stock", String(data.min_stock));
     formData.append("image_url", data.image_url ?? "");
+    if (isPublic) formData.append("is_public", "on");
 
     // Attach variant data from state
     if (hasVariants) {
@@ -559,6 +563,27 @@ export function ProductCreateDrawer({
                   </Field>
                 </FieldGroup>
               )}
+            </div>
+
+            {/* Publication */}
+            <div className="rounded-lg border border-border/80 bg-muted/30 p-4">
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  id="is_public"
+                  checked={isPublic}
+                  onCheckedChange={(checked) => setIsPublic(checked === true)}
+                />
+                <label
+                  htmlFor="is_public"
+                  className="text-sm font-medium leading-none"
+                >
+                  Нийтийн каталогт нийтлэх
+                </label>
+              </div>
+              <p className="mt-1.5 ml-7 text-xs text-muted-foreground">
+                Нийтэлбэл бүтээгдэхүүний нэр, зураг, үнэ, тайлбар нийтийн
+                хуудаснаа харагдана. Нөөц, SKU, өртөг үнэ нууц хэвээр үлдэнэ.
+              </p>
             </div>
 
             {/* Variants */}
