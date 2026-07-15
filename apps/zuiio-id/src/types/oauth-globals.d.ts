@@ -11,9 +11,9 @@ declare global {
   interface GoogleAccountsIdInitializeConfig {
     client_id: string;
     callback: (response: { credential: string }) => void;
+    nonce?: string;
     auto_select?: boolean;
     cancel_on_tap_outside?: boolean;
-    use_fedcm?: boolean;
   }
 
   interface GoogleAccountsId {

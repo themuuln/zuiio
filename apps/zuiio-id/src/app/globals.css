@@ -7,6 +7,8 @@
   --color-primary: oklch(0.70 0.16 195);
   --color-primary-foreground: oklch(0.13 0.003 80);
 
+  --color-ring: oklch(0.45 0.16 195);
+
   --color-background: oklch(0.98 0.005 80);
   --color-foreground: oklch(0.13 0.003 80);
 

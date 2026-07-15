@@ -12,5 +12,9 @@ export function createBrowserSupabaseClient() {
     );
   }
 
-  return createBrowserClient(url, publishableKey);
+  return createBrowserClient(url, publishableKey, {
+    auth: {
+      experimental: { passkey: true },
+    },
+  });
 }

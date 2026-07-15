@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
 import Link from "next/link";
+import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
 import { signup } from "./actions";
 import { signInWithGoogle, signInWithApple } from "@/app/(auth)/login/actions";
+import { generateGoogleNonce } from "@/lib/auth/google-nonce";
 
 function OAuthButton({
   provider,
@@ -23,7 +25,7 @@ function OAuthButton({
       type="button"
       onClick={onClick}
       disabled={loading}
-      className="flex h-12 w-full items-center justify-center gap-3 rounded-lg border border-border bg-card text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50"
+      className="flex h-12 w-full items-center justify-center gap-3 rounded-lg border border-border bg-card text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50"
     >
       {provider === "google" ? (
         <svg className="size-5" viewBox="0 0 24 24" aria-hidden="true">
@@ -67,59 +69,55 @@ export function SignupForm({
     null,
   );
   const [oauthError, setOauthError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [gsiInitialized, setGsiInitialized] = useState(false);
+  const gsiInitializationRef = useRef(false);
 
-  /* ── Google Identity Services — initialize once on mount ── */
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  /* ── Google Identity Services — initialize when the SDK is ready ── */
+  async function initializeGoogleSignIn() {
+    const googleId = window.google?.accounts?.id;
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
-    const checkGsi = setInterval(() => {
-      if (window.google?.accounts?.id && !gsiInitialized) {
-        window.google.accounts.id.initialize({
-          client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
-          use_fedcm: true,
-          callback: async (response: { credential: string }) => {
-            setOauthLoading("google");
-            setOauthError(null);
-            try {
-              const idToken = response.credential;
-              if (!idToken) {
-                setOauthError("Google нэвтрэхэд алдаа гарлаа.");
-                return;
-              }
-              const result = await signInWithGoogle(idToken);
-              if (result?.formError) setOauthError(result.formError);
-              else if (result?.redirectTo) router.push(result.redirectTo);
-            } catch {
+    if (!googleId || !clientId || gsiInitializationRef.current) {
+      return;
+    }
+
+    gsiInitializationRef.current = true;
+
+    try {
+      const { rawNonce, hashedNonce } = await generateGoogleNonce();
+
+      googleId.initialize({
+        client_id: clientId,
+        nonce: hashedNonce,
+        callback: async (response: { credential: string }) => {
+          setOauthLoading("google");
+          setOauthError(null);
+          try {
+            const idToken = response.credential;
+            if (!idToken) {
               setOauthError("Google нэвтрэхэд алдаа гарлаа.");
-            } finally {
-              setOauthLoading(null);
+              return;
             }
-          },
-        });
-        setGsiInitialized(true);
-        // Skip One Tap auto-prompt on Safari/iOS where FedCM is unreliable
-        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-        const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 
-        if (!isSafari && !isIOS) {
-          window.google.accounts.id.prompt((notification) => {
-            const momentType = notification.getMomentType();
-            console.log("[Google One Tap] moment:", momentType);
-            if (momentType === "dismissed" || momentType === "skipped") {
-              setOauthLoading(null);
-            }
-          });
-        } else {
-          setOauthLoading(null);
-          console.log("[Google One Tap] Skipped auto-prompt on Safari/iOS");
-        }
-        clearInterval(checkGsi);
-      }
-    }, 100);
+            const result = await signInWithGoogle(idToken, rawNonce);
+            if (result?.formError) setOauthError(result.formError);
+            else if (result?.redirectTo) router.push(result.redirectTo);
+          } catch {
+            setOauthError("Google нэвтрэхэд алдаа гарлаа.");
+          } finally {
+            setOauthLoading(null);
+          }
+        },
+      });
 
-    return () => clearInterval(checkGsi);
-  }, [gsiInitialized, router]);
+      setGsiInitialized(true);
+      googleId.prompt();
+    } catch {
+      gsiInitializationRef.current = false;
+      setOauthError("Google нэвтрэх үйлчилгээ ачаалагдсангүй.");
+    }
+  }
 
   if (state?.redirectTo) {
     window.location.href = state.redirectTo;
@@ -144,15 +142,7 @@ export function SignupForm({
     setOauthLoading("google");
     setOauthError(null);
 
-    // When called from a user gesture (click), Google shows the
-    // account chooser popup rather than the One Tap card.
-    window.google.accounts.id.prompt((notification) => {
-      const momentType = notification.getMomentType();
-      if (momentType === "dismissed" || momentType === "skipped") {
-        // User dismissed — clear loading, no error
-        setOauthLoading(null);
-      }
-    });
+    window.google.accounts.id.prompt();
   }
 
   /* ── Apple Sign In JS ─────────────────────────────────────── */
@@ -226,6 +216,7 @@ export function SignupForm({
       <Script
         src="https://accounts.google.com/gsi/client"
         strategy="afterInteractive"
+        onReady={() => void initializeGoogleSignIn()}
       />
       <Script
         src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"
@@ -286,7 +277,7 @@ export function SignupForm({
               type="text"
               autoComplete="name"
               required
-              className="h-10 rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="h-10 rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               placeholder="Батбилэг Ц"
             />
             {state?.fieldErrors?.fullName && (
@@ -303,7 +294,7 @@ export function SignupForm({
               name="username"
               type="text"
               autoComplete="username"
-              className="h-10 rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="h-10 rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               placeholder="batbilig"
             />
             {state?.fieldErrors?.username && (
@@ -321,7 +312,7 @@ export function SignupForm({
               type="email"
               autoComplete="email"
               required
-              className="h-10 rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="h-10 rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               placeholder="name@example.com"
             />
             {state?.fieldErrors?.email && (
@@ -331,17 +322,27 @@ export function SignupForm({
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="password" className="text-sm font-medium text-foreground">
-              Нууц үг
+            <div className="relative">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                className="h-10 w-full rounded-lg border border-input bg-card px-3 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground transition-colors hover:text-foreground"
+                tabIndex={-1}
+                aria-label={showPassword ? "Нууц үг нуух" : "Нууц үг харуулах"}
+              >
+                {showPassword ? <EyeSlashIcon size={16} /> : <EyeIcon size={16} />}
+              </button>
+            </div>
             </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              required
-              className="h-10 rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              placeholder="••••••••"
-            />
             {state?.fieldErrors?.password && (
               <p className="text-xs text-destructive">{state.fieldErrors.password[0]}</p>
             )}
@@ -349,17 +350,27 @@ export function SignupForm({
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
-              Нууц үг давтах
+            <div className="relative">
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                className="h-10 w-full rounded-lg border border-input bg-card px-3 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground transition-colors hover:text-foreground"
+                tabIndex={-1}
+                aria-label={showPassword ? "Нууц үг нуух" : "Нууц үг харуулах"}
+              >
+                {showPassword ? <EyeSlashIcon size={16} /> : <EyeIcon size={16} />}
+              </button>
+            </div>
             </label>
-            <input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              autoComplete="new-password"
-              required
-              className="h-10 rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              placeholder="••••••••"
-            />
             {state?.fieldErrors?.confirmPassword && (
               <p className="text-xs text-destructive">{state.fieldErrors.confirmPassword[0]}</p>
             )}
@@ -374,7 +385,7 @@ export function SignupForm({
           <button
             type="submit"
             disabled={isPending}
-            className="h-11 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-11 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isPending ? "Бүртгүүлж байна…" : "Бүртгүүлэх"}
           </button>
@@ -382,7 +393,7 @@ export function SignupForm({
 
         <p className="text-center text-sm text-muted-foreground">
           Бүртгэлтэй юу?{" "}
-          <Link href="/login" className="font-medium text-primary hover:underline">
+          <Link href="/login" className="font-medium text-foreground transition-colors hover:text-primary hover:underline">
             Нэвтрэх
           </Link>
         </p>

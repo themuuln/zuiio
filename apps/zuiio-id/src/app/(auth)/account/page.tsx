@@ -26,6 +26,7 @@ export default async function AccountPage() {
             email: user.email ?? "",
             fullName: profile?.full_name ?? "",
             username: profile?.username ?? "",
+            isOnboarding: !profile?.username,
           }}
         />
       </main>

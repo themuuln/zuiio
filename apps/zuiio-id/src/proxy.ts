@@ -30,9 +30,9 @@ export async function proxy(request: NextRequest) {
 
   let supabaseResponse = NextResponse.next({ request });
 
- // In production, share cookies across all zuiio.com subdomains
- const isProduction = process.env.NODE_ENV === "production";
- const cookieDomain = isProduction ? ".zuiio.com" : undefined;
+// In production, share cookies across all zuiiotech.com subdomains
+const isProduction = process.env.NODE_ENV === "production";
+const cookieDomain = isProduction ? ".zuiiotech.com" : undefined;
 
  const supabase = createServerClient(supabaseUrl, anonKey, {
    cookies: {

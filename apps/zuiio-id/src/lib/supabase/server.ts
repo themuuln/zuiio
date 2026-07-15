@@ -6,11 +6,11 @@ export async function createClient() {
  const cookieStore = await cookies();
  const { anonKey, url } = getSupabaseEnv();
 
- // In production, share cookies across all zuiio.com subdomains
- // so that zer.zuiio.com, tolom.zuiio.com, id.zuiio.com
- // all recognize the user's session.
- const isProduction = process.env.NODE_ENV === "production";
- const cookieDomain = isProduction ? ".zuiio.com" : undefined;
+// In production, share cookies across all zuiiotech.com subdomains
+// so that zer.zuiiotech.com, tolom.zuiiotech.com, id.zuiiotech.com
+// all recognize the user's session.
+const isProduction = process.env.NODE_ENV === "production";
+const cookieDomain = isProduction ? ".zuiiotech.com" : undefined;
 
  return createServerClient(url, anonKey, {
    cookies: {

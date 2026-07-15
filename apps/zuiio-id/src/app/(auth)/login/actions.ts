@@ -1,10 +1,11 @@
 "use server";
 
-import type { AuthActionState } from "@/lib/auth/action-state";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 
 import { cookies } from "next/headers";
-import { createRemoteJWKSet, jwtVerify } from "jose";
+import type { AuthActionState } from "@/lib/auth/action-state";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
+
 /**
  * Remote JWKS set for verifying Apple ID tokens.
  * Apple publishes keys at this well-known URL.
@@ -95,36 +96,40 @@ export async function login(
  */
 export async function signInWithGoogle(
   token: string,
+  rawNonce: string,
 ): Promise<AuthActionState> {
   try {
-    // 1. Exchange the Google ID token for a Supabase session
+    // Google receives the SHA-256 hash of this nonce. Supabase hashes the
+    // original value again and compares it with the nonce in Google's token.
     const supabase = await createClient();
 
     const { data, error } = await supabase.auth.signInWithIdToken({
       provider: "google",
       token,
+      nonce: rawNonce,
     });
 
     if (error) {
-      console.error("[signInWithGoogle] signInWithIdToken:", error.message, error.code);
+      console.error(
+        "[signInWithGoogle] signInWithIdToken:",
+        error.message,
+        error.code,
+      );
       return { formError: "Google нэвтрэхэд алдаа гарлаа." };
     }
 
-    // 2. Update profile with Google data (works for new AND existing users)
-    if (data?.user) {
-      const profileClient = await createClient();
-      const { error: profileErr } = await profileClient
+    // The auth.users trigger creates profiles. Only update the existing row:
+    // upsert would also require an INSERT policy and is rejected by RLS.
+    const fullName =
+      data.user?.user_metadata?.full_name ?? data.user?.user_metadata?.name;
+    if (typeof fullName === "string" && fullName.trim()) {
+      const { error: profileError } = await supabase
         .from("profiles")
-        .upsert(
-          {
-            id: data.user.id,
-            full_name: data.user.user_metadata?.full_name ?? data.user.user_metadata?.name,
-          },
-          { onConflict: "id" },
-        );
+        .update({ full_name: fullName.trim() })
+        .eq("id", data.user.id);
 
-      if (profileErr) {
-        console.error("[signInWithGoogle] profile upsert:", profileErr);
+      if (profileError) {
+        console.error("[signInWithGoogle] profile update:", profileError);
       }
     }
 
@@ -138,7 +143,7 @@ export async function signInWithGoogle(
       path: "/",
     });
 
-    return { redirectTo: "/welcome" };
+    return { redirectTo: "/account" };
   } catch (err) {
     console.error("[signInWithGoogle] Unexpected:", err);
     return { formError: "Google нэвтрэхэд алдаа гарлаа." };
@@ -180,9 +185,7 @@ export async function signInWithApple(payload: {
     );
 
     const email =
-      typeof tokenPayload.email === "string"
-        ? tokenPayload.email
-        : undefined;
+      typeof tokenPayload.email === "string" ? tokenPayload.email : undefined;
 
     if (!email) {
       return {
@@ -204,10 +207,7 @@ export async function signInWithApple(payload: {
 
     // Apple only provides fullName on the first sign-in.
     if (payload.fullName?.givenName || payload.fullName?.familyName) {
-      const fullName = [
-        payload.fullName.givenName,
-        payload.fullName.familyName,
-      ]
+      const fullName = [payload.fullName.givenName, payload.fullName.familyName]
         .filter(Boolean)
         .join(" ");
 
@@ -265,15 +265,13 @@ export async function signInWithApple(payload: {
             .join(" ")
         : undefined;
 
-    const { error: profileErr } = await profileClient
-      .from("profiles")
-      .upsert(
-        {
-          id: linkData.user.id,
-          ...(profileFullName ? { full_name: profileFullName } : {}),
-        },
-        { onConflict: "id" },
-      );
+    const { error: profileErr } = await profileClient.from("profiles").upsert(
+      {
+        id: linkData.user.id,
+        ...(profileFullName ? { full_name: profileFullName } : {}),
+      },
+      { onConflict: "id" },
+    );
 
     if (profileErr) {
       console.error("[signInWithApple] profile upsert:", profileErr);
@@ -303,9 +301,45 @@ export async function signInWithApple(payload: {
       path: "/",
     });
 
-    return { redirectTo: "/welcome" };
+    return { redirectTo: "/account" };
   } catch (err) {
     console.error("[signInWithApple] Unexpected:", err);
     return { formError: "Apple нэвтрэхэд алдаа гарлаа." };
   }
+}
+
+/**
+ * Completes a browser-based passkey sign-in after Supabase has issued the
+ * session. Keeping this on the server lets the last-used provider cookie stay
+ * HttpOnly and verifies that the new session reached the server.
+ */
+export async function completePasskeySignIn(
+  redirectTo?: string,
+): Promise<AuthActionState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { formError: "Passkey ашиглан нэвтрэхэд алдаа гарлаа." };
+  }
+
+  const cookieStore = await cookies();
+  cookieStore.set("last_provider", "passkey", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 365,
+    path: "/",
+  });
+
+  const safeRedirect =
+    redirectTo?.startsWith("/") &&
+    !redirectTo.startsWith("//") &&
+    !redirectTo.includes("://")
+      ? redirectTo
+      : "/account";
+
+  return { redirectTo: safeRedirect };
 }
