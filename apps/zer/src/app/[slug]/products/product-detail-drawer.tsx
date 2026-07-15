@@ -7,6 +7,7 @@ import {
   Scroll,
   StackSimple,
 } from "@phosphor-icons/react";
+import Link from "next/link";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
@@ -99,11 +100,16 @@ export function ProductDetailDrawer({
         maxHeight="90dvh"
         footer={
           <div className="flex gap-2">
-            <Button
-              variant="outline"
+            <Link
+              href={`/${organization.slug}/products/${product.id}`}
               className="flex-1"
               onClick={() => setOpen(false)}
             >
+              <Button variant="outline" className="w-full">
+                Бүтээгдэхүүний хуудас
+              </Button>
+            </Link>
+            <Button variant="outline" onClick={() => setOpen(false)}>
               Хаах
             </Button>
           </div>

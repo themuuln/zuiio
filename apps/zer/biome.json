@@ -145,6 +145,16 @@
           }
         }
       }
+    },
+    {
+      "includes": ["src/app/\\[slug\\]/**"],
+      "linter": {
+        "rules": {
+          "security": {
+            "noDangerouslySetInnerHtml": "off"
+          }
+        }
+      }
     }
   ],
   "assist": {
