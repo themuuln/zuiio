@@ -1,24 +1,14 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Zuiio ID — Нэвтрэх систем",
 };
 
-export default async function AuthLayout({
+export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  let lastProvider: string | null = null;
-  try {
-    const cookieStore = await cookies();
-    lastProvider = cookieStore.get("last_provider")?.value ?? null;
-  } catch {
-    // cookies() may fail in some render contexts
-  }
-
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-4 py-12">
       <main className="w-full max-w-sm">
