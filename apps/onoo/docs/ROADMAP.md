@@ -43,7 +43,7 @@ Beautiful stats built on wrong numbers destroy trust. Keep the trusted-record co
 
 - [x] Durable tracker journal (persist-before-send, safe replay after reload).
 - [ ] Controlled lead-to-backup scorer handoff.
-- [ ] Game-day runbook with paper fallback.
+- [x] Game-day runbook with paper fallback.
 - [ ] Ops console with private telemetry (tracker health, journal lag, pending reviews).
 - [ ] Database integration tests and tracker chaos tests — kill the network mid-game and prove recovery.
 

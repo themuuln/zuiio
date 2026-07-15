@@ -19,7 +19,7 @@ Per-task implementation state for the specs in this directory. Updated in the sa
 | 1.5 Authorization cutover | ⬜ | |
 | 1.6 Journal durability tests | ✅ | 15 core tests for EventQueue durability (subset ack, idempotent ack, rejection persistence, monotonic sequences) pass. Manual reload procedure documented in test file header. |
 | 1.7 Handoff UI | ⬜ | |
-| 1.8 Runbook + paper fallback | ⬜ | |
+| 1.8 Runbook + paper fallback | ✅ | `docs/runbook.md` written (pre-game checklist, failure ladder, handoff procedure, post-game flow, error code reference). Printable scoresheet at `/tracker/paper` (A4 portrait, period grid + player tally rows + print CSS). |
 | 1.9 Ops console | ⬜ | |
 | 1.10 Integration + chaos tests | ⬜ | |
 
