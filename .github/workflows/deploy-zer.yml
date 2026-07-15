@@ -49,11 +49,20 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Stage Vercel project config
+        working-directory: apps/zer
+        run: |
+          mkdir -p .vercel
+          echo '{"projectId":"'$VERCEL_PROJECT_ID'","orgId":"'$VERCEL_ORG_ID'"}' > .vercel/project.json
+
       - name: Pull Vercel environment
+        working-directory: apps/zer
         run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
 
       - name: Build
+        working-directory: apps/zer
         run: vercel build --prod --token=$VERCEL_TOKEN
 
       - name: Deploy to production
+        working-directory: apps/zer
         run: vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
