@@ -1,10 +1,11 @@
 "use client";
 
 import { Folder } from "@phosphor-icons/react/dist/ssr";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { withDbCapture } from "@zuiio/capture";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { CategoriesTable } from "@/components/categories/categories-table";
+import { seedPresetCategories } from "@/app/(dashboard)/inventory/categories/actions";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
 import { PRESET_CATEGORIES } from "@/lib/constants";
@@ -22,7 +23,7 @@ export type CategoryRow = {
 
 export function CategoriesContent() {
   const { organizationId, hasCategories, companyType } = useOrgSettings();
-
+  const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: ["categories", "list", organizationId],
     queryFn: async () => {
@@ -91,15 +92,28 @@ export function CategoriesContent() {
     return [...dbCategories, ...presets];
   }, [dbCategories, companyType]);
 
+  // Seed preset categories on first load for existing orgs that predate the seeding feature.
+  // Only runs when there are DB categories but some presets are still missing.
+  const hasSeeded = useRef(false);
+  useEffect(() => {
+    if (hasSeeded.current || query.isPending || !organizationId) return;
+    const presetNames =
+      PRESET_CATEGORIES[companyType] ?? PRESET_CATEGORIES.other ?? [];
+    const dbNames = new Set(dbCategories.map((c) => c.name));
+    const missing = presetNames.filter((n) => !dbNames.has(n));
+    if (missing.length === 0) return;
+    hasSeeded.current = true;
+    seedPresetCategories().then(() => {
+      queryClient.invalidateQueries({ queryKey: ["categories", "list", organizationId] });
+    });
+  }, [query.isPending, organizationId, companyType, dbCategories, queryClient]);
+
   // Redirect if categories feature is disabled
   useEffect(() => {
     if (!hasCategories) {
       window.location.href = "/";
     }
   }, [hasCategories]);
-
-  // Don't render anything while redirecting
-  if (!hasCategories) return null;
 
   return (
     <PageShell

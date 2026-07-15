@@ -1,6 +1,7 @@
 "use server";
 
 import { capture } from "@zuiio/capture";
+import { PRESET_CATEGORIES } from "@/lib/constants";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -77,6 +78,45 @@ export async function completeOnboarding(
     .eq("id", profile.organization_id);
   if (posError) {
     capture(posError, { context: "onboarding: pos checkout setting" });
+  }
+
+  // Seed preset categories for the org's company type
+  if (hasCategories !== false) {
+    const serviceSupabase = createServiceClient();
+    const { data: org } = await serviceSupabase
+      .from("organizations")
+      .select("company_type")
+      .eq("id", profile.organization_id!)
+      .single();
+
+    const companyType = org?.company_type ?? "other";
+    const presetNames = PRESET_CATEGORIES[companyType] ?? PRESET_CATEGORIES.other ?? [];
+
+    if (presetNames.length > 0) {
+      // Fetch existing categories to avoid duplicates
+      const { data: existingCats } = await serviceSupabase
+        .from("categories")
+        .select("name")
+        .eq("organization_id", profile.organization_id!);
+
+      const existingNames = new Set(existingCats?.map((c) => c.name) ?? []);
+      const newCategories = presetNames
+        .filter((name) => !existingNames.has(name))
+        .map((name) => ({
+          name,
+          organization_id: profile.organization_id!,
+        }));
+
+      if (newCategories.length > 0) {
+        const { error: seedError } = await serviceSupabase
+          .from("categories")
+          .insert(newCategories);
+
+        if (seedError) {
+          capture(seedError, { context: "onboarding: seed preset categories" });
+        }
+      }
+    }
   }
 
   // Import selected brand presets using service client (bypasses RLS)
