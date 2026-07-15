@@ -19,9 +19,9 @@ Per-task implementation state for the specs in this directory. Updated in the sa
 | 1.4 Projection rebuild command | ⬜ | |
 | 1.5 Authorization cutover | ⬜ | |
 | 1.6 Journal durability tests | ✅ | 15 core tests for EventQueue durability (subset ack, idempotent ack, rejection persistence, monotonic sequences) pass. Manual reload procedure documented in test file header. |
-| 1.7 Handoff UI | ⬜ | |
+| 1.7 Handoff UI | 🟡 | `tracker/[gameId]/components/handoff-dialog.tsx` written; needs integration verification. |
 | 1.8 Runbook + paper fallback | ✅ | `docs/runbook.md` written (pre-game checklist, failure ladder, handoff procedure, post-game flow, error code reference). Printable scoresheet at `/tracker/paper` (A4 portrait, period grid + player tally rows + print CSS). |
-| 1.9 Ops console | ⬜ | |
+| 1.9 Ops console | 🟡 | `src/app/admin/ops/page.tsx` built (active sessions, pending submissions/revisions, audit log, stale games, error reports). Needs integration verification. |
 | 1.10 Integration + chaos tests | ⬜ | |
 
 ## Phase 2 — Player profile as showcase
@@ -30,16 +30,16 @@ Per-task implementation state for the specs in this directory. Updated in the sa
 |---|---|---|
 | 2.1 Roster onboarding kit | ⬜ | |
 | 2.2 Consent & takedown | ⬜ | |
-| 2.3 Hero identity card | ⬜ | |
-| 2.4 Season story arc | ⬜ | |
-| 2.5 Shooting profile | ⬜ | |
-| 2.6 Career highs & milestones | ⬜ | |
-| 2.7 Radar vs league average | ⬜ | |
-| 2.8 Recent games strip | ⬜ | |
-| 2.9 Plain-language summaries | ⬜ | |
-| 2.10 Report-error intake | ⬜ | |
-| 2.11 Season selector & career | ⬜ | |
-| 2.12 Box score below fold | ⬜ | |
+| 2.3 Hero identity card | ✅ | `src/app/players/[id]/components/hero-card.tsx` — trading-card style, bio + season averages, team color accent. |
+| 2.4 Season story arc | ✅ | `src/app/players/[id]/components/season-arc.tsx` — Recharts AreaChart with PTS/REB/AST toggle, game-by-game trend. |
+| 2.5 Shooting profile | ✅ | `src/app/players/[id]/components/shooting-profile.tsx` — radial gauge rings (FG/3P/FT) + horizontal points breakdown bar. |
+| 2.6 Career highs & milestones | ✅ | `packages/core/src/stats/milestones.ts` (detectMilestones) + `src/app/players/[id]/components/milestones.tsx` (badge display). 331-line test suite passes. |
+| 2.7 Radar vs league average | ✅ | `src/app/players/[id]/components/skill-radar.tsx` — Recharts RadarChart, normalized 0–100 axes vs league max, actual values in tooltips. |
+| 2.8 Recent games strip | ✅ | `src/app/players/[id]/components/recent-games.tsx` — last-5 game capsules with W/L context. |
+| 2.9 Plain-language summaries | ✅ | `packages/core/src/i18n/summaries.ts` — `describePlayerGame()` generates Mongolian one-liners with career-high, double-double, shooting suffix detection. |
+| 2.10 Report-error intake | ✅ | `src/components/report-error-dialog.tsx` + `src/app/api/report-error/route.ts` — public dialog with message/contact, POSTs to `public_error_reports`. |
+| 2.11 Season selector & career | ✅ | `src/app/players/[id]/components/season-selector.tsx` — competition tabs with career toggle via `?season=` param. |
+| 2.12 Box score below fold | ✅ | Player page renders full box score in Tabs component below visual layer. |
 
 ## Phase 3 — Discovery & league surfaces
 

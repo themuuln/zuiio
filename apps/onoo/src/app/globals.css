@@ -14,7 +14,11 @@
   --brand-sports-dim:   oklch(0.55 0.14 80);
 }
 
+
 @theme inline {
+  /* Display font for headlines and player names */
+  --font-display: var(--font-instrument-serif), serif;
+
   /* Override accent to amber for sports identity */
   --color-accent:             oklch(0.95 0.04 80);
   --color-accent-foreground:  oklch(0.30 0.10 80);
