@@ -1,108 +1,222 @@
+import { getStatLabel } from "@onoo/core";
+import { CalendarDays, MapPin, Ruler, Weight } from "lucide-react";
 import Link from "next/link";
+import type { CSSProperties } from "react";
+import { getPlayerById, getPlayerSeasonAverages } from "@/app/lib/data";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TeamLogo } from "@/components/team-logo";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { StatNumber } from "./stat-number";
-import { getStatLabel } from "@onoo/core";
-import type { PlayerProfileRow } from "@/app/lib/data";
 
 interface HeroCardProps {
-  player: PlayerProfileRow;
-  averages: {
-    ppg: number;
-    rpg: number;
-    apg: number;
-    spg: number;
-    bpg: number;
-  } | null;
+  playerId: string;
+  competitionId: string | null;
   careerTotals?: { gp: number; pts: number; reb: number; ast: number } | null;
+  className?: string;
 }
 
-const BRAND_ACCENT = "oklch(0.78 0.16 80)";
+function formatBirthDate(value: string | null): string {
+  if (!value) return "—";
 
-/**
- * Trading-card style hero for the player page.
- * Receives pre-fetched data — no internal fetches.
- */
-export function HeroCard({ player, averages, careerTotals }: HeroCardProps) {
+  return new Date(`${value}T12:00:00`).toLocaleDateString("mn-MN", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+export async function HeroCard({
+  playerId,
+  competitionId,
+  careerTotals,
+  className,
+}: HeroCardProps) {
+  const [data, averages] = await Promise.all([
+    getPlayerById(playerId),
+    competitionId
+      ? getPlayerSeasonAverages(playerId, competitionId)
+      : Promise.resolve(null),
+  ]);
+
+  if (!data?.player) return null;
+
+  const player =
+    data.profiles.find((profile) => profile.competition_id === competitionId) ??
+    data.player;
+  const isCareer = Boolean(careerTotals);
+
   return (
-    <div
-      className="overflow-hidden rounded-xl border border-border bg-card"
-      style={{ "--team-color": BRAND_ACCENT } as React.CSSProperties}
+    <section
+      aria-labelledby="player-name"
+      className={cn(
+        "player-showcase-hero relative overflow-hidden rounded-3xl border border-sidebar-border bg-sidebar text-sidebar-foreground shadow-xl",
+        className,
+      )}
+      style={{ "--team-color": "var(--brand-sports)" } as CSSProperties}
     >
-      {/* Accent top bar */}
-      <div
-        className="h-1 w-full"
-        style={{ backgroundColor: "var(--team-color)" }}
-      />
+      <div className="player-showcase-court" aria-hidden="true" />
 
-      {/* Identity row: avatar + bio */}
-      <div className="flex items-center gap-4 p-4 sm:gap-6 sm:p-6">
-        <PlayerAvatar
-          photoUrl={player.photo_url}
-          name={player.canonical_name}
-          primaryColor={null}
-          size="xl"
-        />
-
-        <div className="min-w-0 flex-1 space-y-1.5">
-          {/* Name + jersey */}
-          <div className="flex items-baseline gap-2">
-            <h1 className="min-w-0 truncate text-2xl font-bold tracking-tight sm:text-3xl">
-              {player.canonical_name}
-            </h1>
+      <div className="relative grid gap-8 p-5 sm:p-8 lg:grid-cols-12 lg:gap-10 lg:p-10">
+        <div className="flex min-w-0 flex-col gap-6 sm:flex-row sm:items-center lg:col-span-7">
+          <div className="relative mx-auto shrink-0 sm:mx-0">
+            <div
+              className="absolute inset-3 rounded-full bg-warning/30 blur-2xl"
+              aria-hidden="true"
+            />
+            <PlayerAvatar
+              photoUrl={player.photo_url}
+              name={player.canonical_name}
+              primaryColor="var(--color-sidebar-accent)"
+              size="2xl"
+              className="relative ring-4 ring-sidebar-foreground/10"
+            />
             {player.jersey_number != null && (
-              <span
-                className="shrink-0 text-lg font-semibold tabular-nums"
-                style={{ color: "var(--team-color)" }}
-              >
-                #{player.jersey_number}
+              <span className="absolute -bottom-2 -right-2 inline-flex size-11 items-center justify-center rounded-full border-4 border-sidebar bg-warning text-sm font-black text-warning-foreground shadow-md">
+                {player.jersey_number}
               </span>
             )}
           </div>
 
-          {/* Position + nationality */}
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            {player.position && <Badge variant="outline">{player.position}</Badge>}
-            {player.nationality && <span>{player.nationality}</span>}
-          </div>
+          <div className="min-w-0 space-y-4 text-center sm:text-left">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-widest text-warning">
+                {isCareer ? "Карьерийн тойм" : player.season_name}
+              </p>
+              <h1
+                id="player-name"
+                className="text-4xl font-black leading-none tracking-tight text-balance sm:text-5xl"
+              >
+                {player.canonical_name}
+              </h1>
+              {player.name_latin && (
+                <p className="text-sm text-sidebar-foreground/55">
+                  {player.name_latin}
+                </p>
+              )}
+            </div>
 
-          {/* Team chip */}
-          <Link
-            href={`/teams/${player.team_slug}`}
-            className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 -ml-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors min-h-11"
-          >
-            <TeamLogo
-              logoUrl={player.team_logo_url}
-              shortCode={player.team_name.slice(0, 3).toUpperCase()}
-              size="sm"
-            />
-            <span>{player.team_name}</span>
-          </Link>
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+              {player.position && (
+                <Badge className="border-sidebar-border bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent">
+                  {player.position}
+                </Badge>
+              )}
+              <Link
+                href={`/teams/${player.team_slug}`}
+                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-sidebar-border bg-sidebar-accent/70 px-3 py-1.5 text-sm font-semibold text-sidebar-foreground transition-colors hover:bg-sidebar-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar"
+              >
+                <TeamLogo
+                  logoUrl={player.team_logo_url}
+                  shortCode={player.team_name.slice(0, 3).toUpperCase()}
+                  size="sm"
+                />
+                <span>{player.team_name}</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 lg:col-span-5 lg:self-center">
+          <ProfileFact
+            icon={Ruler}
+            label="Өндөр"
+            value={player.height_cm ? `${player.height_cm} см` : "—"}
+          />
+          <ProfileFact
+            icon={Weight}
+            label="Жин"
+            value={player.weight_kg ? `${player.weight_kg} кг` : "—"}
+          />
+          <ProfileFact
+            icon={CalendarDays}
+            label="Төрсөн өдөр"
+            value={formatBirthDate(player.dob)}
+          />
+          <ProfileFact
+            icon={MapPin}
+            label="Харьяалал"
+            value={player.nationality || "—"}
+          />
         </div>
       </div>
 
-      {/* Stats row — 3 cols mobile, 5 cols sm+ */}
-      {careerTotals ? (
-        <div className="grid grid-cols-4 gap-3 border-t border-border px-4 py-4 sm:gap-4 sm:px-6">
-          <StatNumber value={careerTotals.gp} label="Тоглолт" />
-          <StatNumber value={careerTotals.pts} label={getStatLabel("pts", "mn")} />
-          <StatNumber value={careerTotals.reb} label="Давсан" />
-          <StatNumber value={careerTotals.ast} label={getStatLabel("ast", "mn")} />
-        </div>
-      ) : averages ? (
-        <div className="grid grid-cols-3 gap-3 border-t border-border px-4 py-4 sm:grid-cols-5 sm:gap-4 sm:px-6">
-          <StatNumber value={averages.ppg} label={getStatLabel("pts", "mn")} />
-          <StatNumber value={averages.rpg} label="Давсан" />
-          <StatNumber value={averages.apg} label={getStatLabel("ast", "mn")} />
-          <div className="hidden sm:block">
-            <StatNumber value={averages.spg} label={getStatLabel("stl", "mn")} />
+      <div className="relative border-t border-sidebar-border bg-sidebar-accent/55 px-5 py-5 backdrop-blur-sm sm:px-8 lg:px-10">
+        {careerTotals ? (
+          <div className="grid grid-cols-2 gap-5 sm:grid-cols-4">
+            <StatNumber
+              value={careerTotals.gp}
+              label={getStatLabel("gp", "mn")}
+              precision={0}
+              inverse
+            />
+            <StatNumber
+              value={careerTotals.pts}
+              label={getStatLabel("pts", "mn")}
+              precision={0}
+              inverse
+            />
+            <StatNumber
+              value={careerTotals.reb}
+              label={getStatLabel("reb", "mn")}
+              precision={0}
+              inverse
+            />
+            <StatNumber
+              value={careerTotals.ast}
+              label={getStatLabel("ast", "mn")}
+              precision={0}
+              inverse
+            />
           </div>
-          <div className="hidden sm:block">
-            <StatNumber value={averages.bpg} label={getStatLabel("blk", "mn")} />
+        ) : (
+          <div className="grid grid-cols-3 gap-4 sm:grid-cols-5 sm:gap-6">
+            <StatNumber
+              value={averages?.ppg ?? null}
+              label={getStatLabel("pts", "mn")}
+              inverse
+            />
+            <StatNumber
+              value={averages?.rpg ?? null}
+              label={getStatLabel("reb", "mn")}
+              inverse
+            />
+            <StatNumber
+              value={averages?.apg ?? null}
+              label={getStatLabel("ast", "mn")}
+              inverse
+            />
+            <StatNumber
+              value={averages?.spg ?? null}
+              label={getStatLabel("stl", "mn")}
+              inverse
+              className="hidden sm:flex"
+            />
+            <StatNumber
+              value={averages?.bpg ?? null}
+              label={getStatLabel("blk", "mn")}
+              inverse
+              className="hidden sm:flex"
+            />
           </div>
-        </div>
-      ) : null}
+        )}
+      </div>
+    </section>
+  );
+}
+
+interface ProfileFactProps {
+  icon: typeof Ruler;
+  label: string;
+  value: string;
+}
+
+function ProfileFact({ icon: Icon, label, value }: ProfileFactProps) {
+  return (
+    <div className="rounded-2xl border border-sidebar-border bg-sidebar-accent/55 p-3.5 backdrop-blur-sm sm:p-4">
+      <Icon className="mb-4 size-4 text-warning" aria-hidden="true" />
+      <p className="truncate text-base font-bold tabular-nums">{value}</p>
+      <p className="mt-1 text-xs text-sidebar-foreground/55">{label}</p>
     </div>
   );
 }

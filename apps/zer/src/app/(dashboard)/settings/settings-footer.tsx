@@ -77,7 +77,7 @@ export function SettingsFooter() {
                         </p>
                         {section.changes.length > 0 ? (
                           <div className="space-y-1">
-                            {section.changes.map((change, i) => (
+                            {section.changes.map((change, _i) => (
                               <div
                                 key={change.field}
                                 className="flex items-start gap-2 text-xs"

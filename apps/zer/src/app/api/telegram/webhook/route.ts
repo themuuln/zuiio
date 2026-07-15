@@ -134,7 +134,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
 
-    const result = await runWithTools({
+    const _result = await runWithTools({
       apiKey: deepseekKey,
       systemPrompt: SYSTEM_PROMPT,
       userMessage: text,

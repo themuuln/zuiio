@@ -515,11 +515,7 @@ export function CatalogSkeleton() {
   );
 }
 
-function EmptyCatalogState({
-  onCreateClick,
-}: {
-  onCreateClick: () => void;
-}) {
+function EmptyCatalogState({ onCreateClick }: { onCreateClick: () => void }) {
   return (
     <Empty className="min-h-[300px] rounded-xl border border-dashed border-border bg-card/50">
       <EmptyHeader>

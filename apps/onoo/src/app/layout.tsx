@@ -47,7 +47,7 @@ export default function RootLayout({
         <Suspense>
           <Providers>
             <SiteNav />
-            <div className="flex-1 bg-muted/20 pb-20 sm:pb-0">{children}</div>
+            <div className="flex-1 bg-muted/20">{children}</div>
             <SiteFooter />
             <OfflineIndicator />
           </Providers>

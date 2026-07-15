@@ -1,6 +1,6 @@
 "use server";
 
-import { capture } from "@zuiio/capture";
+import { capture, withDbCapture } from "@zuiio/capture";
 import { redirect } from "next/navigation";
 import { requireActionContext, requireAppContext } from "@/lib/action-utils";
 import { revalidateEntity } from "@/lib/revalidate";
@@ -568,9 +568,12 @@ export async function updateOrgFeatureSetting(
     return { error: "Буруу тохиргоо." };
   }
 
-  const { error } = await supabase.from("organizations").update({
-    [setting]: value,
-  } as Database["public"]["Tables"]["organizations"]["Update"]);
+  const { error } = await withDbCapture(
+    "organizations: update feature setting",
+    supabase.from("organizations").update({
+      [setting]: value,
+    } as Database["public"]["Tables"]["organizations"]["Update"]),
+  );
 
   if (error) {
     capture(error, { context: "updateOrgFeatureSetting" });

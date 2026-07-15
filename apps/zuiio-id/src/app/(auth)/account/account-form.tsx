@@ -1,5 +1,7 @@
 "use client";
 
+import { logout } from "@/app/(auth)/logout/actions";
+
 import { useActionState } from "react";
 import { updateProfile } from "./actions";
 
@@ -92,8 +94,7 @@ export function AccountForm({ user }: AccountFormProps) {
           {isPending ? "Хадгалж байна…" : "Хадгалах"}
         </button>
       </form>
-
-      <form action="/logout" method="post">
+      <form action={logout}>
         <button
           type="submit"
           className="h-11 w-full rounded-lg border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"

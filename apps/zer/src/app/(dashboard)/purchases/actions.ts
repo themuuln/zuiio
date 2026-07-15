@@ -6,6 +6,7 @@ import { requireWriteAction } from "@/lib/action-utils";
 import { withBranchFilter } from "@/lib/branches";
 import { revalidateEntities } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
+import { purchaseSchema } from "@/lib/validation-schemas";
 
 export async function createPurchaseOrder(
   _prevState: { error?: string } | undefined,
@@ -36,6 +37,18 @@ export async function createPurchaseOrder(
   const expectedDate = getString(formData, "expected_date") || null;
   const notes = getString(formData, "notes") || null;
   const itemsJson = getString(formData, "items");
+  const parsedPurchase = purchaseSchema.safeParse({
+    supplier_id: supplierId,
+    order_date: orderDate,
+    expected_date: expectedDate,
+    notes,
+    items: itemsJson,
+  });
+  if (!parsedPurchase.success) {
+    return {
+      error: parsedPurchase.error.issues[0]?.message || "Мэдээлэл буруу байна.",
+    };
+  }
 
   if (hasSuppliers && !supplierId) {
     return { error: "Нийлүүлэгч сонгоно уу." };

@@ -24,6 +24,15 @@ interface PickerDrawerProps {
  * </PickerDrawer>
  * ```
  */
+/** Static map — Tailwind v4 scanner needs full class strings at build time. */
+const SIZE_WIDTH: Record<string, string> = {
+  lg: "sm:max-w-[32rem]",
+  xl: "sm:max-w-[36rem]",
+  "2xl": "sm:max-w-[42rem]",
+  "3xl": "sm:max-w-[48rem]",
+  "4xl": "sm:max-w-[56rem]",
+};
+
 export function PickerDrawer({
   open,
   onOpenChange,
@@ -32,24 +41,22 @@ export function PickerDrawer({
   size = "2xl",
   children,
 }: PickerDrawerProps) {
+  const widthClass = SIZE_WIDTH[size];
   return (
     <DetailDrawer
       open={open}
       onOpenChange={onOpenChange}
       hideBackdrop
-      size={size}
+      modal={false}
+      className={widthClass}
     >
       <DetailDrawer.Header closeButton>
         <DetailDrawer.Title>{title}</DetailDrawer.Title>
         {description && (
-          <DetailDrawer.Description>
-            {description}
-          </DetailDrawer.Description>
+          <DetailDrawer.Description>{description}</DetailDrawer.Description>
         )}
       </DetailDrawer.Header>
-      <DetailDrawer.Body className="p-0">
-        {children}
-      </DetailDrawer.Body>
+      <DetailDrawer.Body className="p-0">{children}</DetailDrawer.Body>
     </DetailDrawer>
   );
 }

@@ -1,5 +1,5 @@
 "use server";
-import { capture } from "@zuiio/capture";
+import { capture, withDbCapture } from "@zuiio/capture";
 
 import { requireWriteAction } from "@/lib/action-utils";
 import { validateContactInput } from "@/lib/domain-rules";
@@ -26,13 +26,16 @@ export async function createContact(
   }
 
   // Check for duplicate name in the same org
-  const { data: existing, error: queryError } = await supabase
-    .from("contacts")
-    .select("id")
-    .eq("organization_id", organizationId)
-    .eq("name", name)
-    .eq("type", type)
-    .maybeSingle();
+  const { data: existing, error: queryError } = await withDbCapture(
+    "contacts: check duplicate",
+    supabase
+      .from("contacts")
+      .select("id")
+      .eq("organization_id", organizationId)
+      .eq("name", name)
+      .eq("type", type)
+      .maybeSingle(),
+  );
   if (queryError) {
     capture(queryError, {
       context: "customers: createContact check duplicate",
@@ -45,14 +48,17 @@ export async function createContact(
     };
   }
 
-  const { error } = await supabase.from("contacts").insert({
-    organization_id: organizationId,
-    name,
-    phone: phone || null,
-    email: email || null,
-    address: address || null,
-    type,
-  });
+  const { error } = await withDbCapture(
+    "contacts: create",
+    supabase.from("contacts").insert({
+      organization_id: organizationId,
+      name,
+      phone: phone || null,
+      email: email || null,
+      address: address || null,
+      type,
+    }),
+  );
 
   if (error) {
     capture(error, { context: "customers: createContact" });
@@ -89,12 +95,15 @@ export async function updateContact(
   }
 
   // Get current contact to check type and verify ownership
-  const { data: current, error: currentError } = await supabase
-    .from("contacts")
-    .select("type")
-    .eq("id", id)
-    .eq("organization_id", organizationId)
-    .maybeSingle();
+  const { data: current, error: currentError } = await withDbCapture(
+    "contacts: get current for update",
+    supabase
+      .from("contacts")
+      .select("type")
+      .eq("id", id)
+      .eq("organization_id", organizationId)
+      .maybeSingle(),
+  );
   if (currentError) {
     capture(currentError, { context: "customers: updateContact get current" });
   }
@@ -104,14 +113,17 @@ export async function updateContact(
   }
 
   // Check for duplicate name (exclude current contact)
-  const { data: existing, error: dupError } = await supabase
-    .from("contacts")
-    .select("id")
-    .eq("organization_id", organizationId)
-    .eq("name", name)
-    .eq("type", current.type)
-    .neq("id", id)
-    .maybeSingle();
+  const { data: existing, error: dupError } = await withDbCapture(
+    "contacts: check duplicate for update",
+    supabase
+      .from("contacts")
+      .select("id")
+      .eq("organization_id", organizationId)
+      .eq("name", name)
+      .eq("type", current.type)
+      .neq("id", id)
+      .maybeSingle(),
+  );
   if (dupError) {
     capture(dupError, { context: "customers: updateContact check duplicate" });
   }
@@ -122,16 +134,19 @@ export async function updateContact(
     };
   }
 
-  const { error } = await supabase
-    .from("contacts")
-    .update({
-      name,
-      phone: phone || null,
-      email: email || null,
-      address: address || null,
-    })
-    .eq("id", id)
-    .eq("organization_id", organizationId);
+  const { error } = await withDbCapture(
+    "contacts: update",
+    supabase
+      .from("contacts")
+      .update({
+        name,
+        phone: phone || null,
+        email: email || null,
+        address: address || null,
+      })
+      .eq("id", id)
+      .eq("organization_id", organizationId),
+  );
 
   if (error) {
     capture(error, { context: "customers: updateContact" });

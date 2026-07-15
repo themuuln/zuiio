@@ -2,11 +2,37 @@ import { generateEveningReport } from "@zuiio/ai-agent";
 import { capture } from "@zuiio/capture";
 import { startOfDay, subDays } from "date-fns";
 import { NextResponse } from "next/server";
-import { sendDailyReportEmail } from "@/lib/email";
+import { getActiveSmtpConfig, sendDailyReportEmail } from "@/lib/email";
 import { formatCurrency } from "@/lib/format";
 import { sendTelegramNotification } from "@/lib/notification";
 import { getFullReport } from "@/lib/reports";
 import { createServiceClient } from "@/lib/supabase/server-service";
+
+/**
+ * Retry an async operation with exponential backoff.
+ * Returns true on success, false after all retries exhausted.
+ */
+async function sendWithRetry(
+  fn: () => Promise<void>,
+  maxRetries = 2,
+  label = "send",
+): Promise<boolean> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      await fn();
+      return true;
+    } catch (err) {
+      if (attempt === maxRetries) {
+        capture(err, {
+          context: `[cron] daily-report ${label} failed after ${maxRetries + 1} attempts`,
+        });
+        return false;
+      }
+      await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+    }
+  }
+  return false;
+}
 
 /**
  * Cron job endpoint called by pg_cron via net.http_post.
@@ -34,11 +60,14 @@ export async function POST(request: Request) {
 
     const dateFrom = yesterday.toISOString();
     const dateTo = today.toISOString();
+    const startedAt = Date.now();
 
     // ─── Telegram Notifications ─────────────────────────────────────
 
     let telegramSent = 0;
     let telegramAIDone = 0;
+    let telegramFailed = 0;
+    let emailFallbackSent = 0;
 
     const { data: configs } = await supabase
       .from("notification_configs")
@@ -139,17 +168,51 @@ export async function POST(request: Request) {
           }
         }
 
-        const result = await sendTelegramNotification(
-          orgId,
-          "daily_summary",
-          `📋 Өдрийн тойм — ${orgName}`,
-          message,
-          supabase,
+        const telegramOk = await sendWithRetry(
+          () =>
+            sendTelegramNotification(
+              orgId,
+              "daily_summary",
+              `📋 Өдрийн тойм — ${orgName}`,
+              message,
+              supabase,
+            ).then((r) => {
+              if (!r.success)
+                throw new Error(r.error ?? "Telegram send failed");
+            }),
+          2,
+          `telegram:${orgId}`,
         );
 
-        if (result.success) {
+        if (telegramOk) {
           telegramSent++;
           if (usedAi) telegramAIDone++;
+        } else {
+          telegramFailed++;
+          // Email fallback: use org's configured report recipient
+          try {
+            const { data: orgRow } = await supabase
+              .from("organizations")
+              .select("report_email_recipient")
+              .eq("id", orgId)
+              .maybeSingle();
+
+            if (orgRow?.report_email_recipient) {
+              const emailResult = await sendDailyReportEmail(
+                supabase,
+                orgId,
+                orgName,
+                orgRow.report_email_recipient,
+              );
+              if (emailResult.success) {
+                emailFallbackSent++;
+              }
+            }
+          } catch (fbErr) {
+            capture(fbErr, {
+              context: `[cron] daily-report email fallback for org ${orgId}`,
+            });
+          }
         }
       }
     }
@@ -157,24 +220,31 @@ export async function POST(request: Request) {
     // ─── Email Reports ──────────────────────────────────────────────
 
     let emailSent = 0;
+    let emailSkipped = 0;
 
-    const { data: emailOrgs } = await supabase
-      .from("organizations")
-      .select("id, name, report_email_recipient")
-      .eq("report_email_enabled", true)
-      .not("report_email_recipient", "is", null);
+    const smtpConfig = await getActiveSmtpConfig(supabase);
+    if (!smtpConfig.data) {
+      // No SMTP config — emailSent stays 0
+    } else {
+      const { data: emailOrgs } = await supabase
+        .from("organizations")
+        .select("id, name, report_email_recipient")
+        .eq("report_email_enabled", true)
+        .not("report_email_recipient", "is", null);
 
-    if (emailOrgs && emailOrgs.length > 0) {
-      for (const org of emailOrgs) {
-        if (!org.report_email_recipient) continue;
+      if (emailOrgs && emailOrgs.length > 0) {
+        for (const org of emailOrgs) {
+          if (!org.report_email_recipient) continue;
 
-        const result = await sendDailyReportEmail(
-          supabase,
-          org.id,
-          org.name,
-          org.report_email_recipient,
-        );
-        if (result.success) emailSent++;
+          const result = await sendDailyReportEmail(
+            supabase,
+            org.id,
+            org.name,
+            org.report_email_recipient,
+          );
+          if (result.success) emailSent++;
+          else emailSkipped++;
+        }
       }
     }
 
@@ -182,7 +252,11 @@ export async function POST(request: Request) {
       ok: true,
       telegramSent,
       telegramAIDone,
+      telegramFailed,
       emailSent,
+      emailSkipped,
+      emailFallbackSent,
+      durationMs: Date.now() - startedAt,
     });
   } catch (err) {
     capture(err, { context: "daily report cron" });

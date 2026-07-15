@@ -16,11 +16,12 @@ import {
   DrawerSubmit,
 } from "@/components/ui/drawer-footer";
 import { DrawerLayout } from "@/components/ui/drawer-layout";
-import { ErrorBanner } from "@/components/ui/error-banner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { formatRouteDate } from "@/lib/format";
+import { expenseKeys } from "@/lib/query/keys";
+import { useOptimisticUpdate } from "@/lib/query/use-optimistic";
 
 const expenseSchema = z.object({
   expense_date: z.string().min(1, "Огноо шаардлагатай"),
@@ -50,13 +51,12 @@ const PAYMENT_OPTIONS = [
 
 export function ExpenseEditDrawer({ expense }: { expense: ExpenseEditData }) {
   const [open, setOpen] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
     control,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<ExpenseValues>({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
@@ -68,8 +68,24 @@ export function ExpenseEditDrawer({ expense }: { expense: ExpenseEditData }) {
     },
   });
 
-  const onSubmit = async (data: ExpenseValues) => {
-    setServerError(null);
+  const updateMutation = useOptimisticUpdate({
+    mutationFn: async (formData: FormData) => {
+      const result = await updateExpense(undefined, formData);
+      if (result?.error) throw new Error(result.error);
+      return result;
+    },
+    queryKey: expenseKeys.all,
+    getId: (formData) => formData.get("id")?.toString() ?? "",
+    buildOptimistic: (formData) => ({
+      category: formData.get("category")?.toString() ?? "",
+      amount: Number(formData.get("amount") ?? 0),
+      expense_date: formData.get("expense_date")?.toString() ?? "",
+      description: formData.get("description")?.toString() || null,
+      payment_method: formData.get("payment_method")?.toString() ?? "cash",
+    }),
+  });
+
+  const onSubmit = (data: ExpenseValues) => {
     const formData = new FormData();
     formData.append("id", expense.id);
     formData.append("expense_date", data.expense_date);
@@ -78,13 +94,12 @@ export function ExpenseEditDrawer({ expense }: { expense: ExpenseEditData }) {
     formData.append("description", data.description ?? "");
     formData.append("payment_method", data.payment_method);
 
-    const result = await updateExpense(undefined, formData);
-    if (result?.error) {
-      setServerError(result.error);
-    } else {
-      setOpen(false);
-      toast.success("Зарлага амжилттай шинэчлэгдсэн.");
-    }
+    updateMutation.mutate(formData, {
+      onSuccess: () => {
+        setOpen(false);
+        toast.success("Зарлага амжилттай шинэчлэгдсэн.");
+      },
+    });
   };
 
   return (
@@ -107,7 +122,7 @@ export function ExpenseEditDrawer({ expense }: { expense: ExpenseEditData }) {
           <DrawerCancel onClick={() => setOpen(false)} />
           <DrawerSubmit
             form="edit-expense-form"
-            isPending={isSubmitting}
+            isPending={updateMutation.isPending}
             label="Хадгалах"
             loadingLabel="Хадгалж байна..."
           />
@@ -201,8 +216,6 @@ export function ExpenseEditDrawer({ expense }: { expense: ExpenseEditData }) {
             </Field>
           </FieldGroup>
         </div>
-
-        <ErrorBanner error={serverError} />
       </form>
     </DrawerLayout>
   );

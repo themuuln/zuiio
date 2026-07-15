@@ -4,8 +4,8 @@ import { Folder } from "@phosphor-icons/react/dist/ssr";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { withDbCapture } from "@zuiio/capture";
 import { useEffect, useMemo, useRef } from "react";
-import { CategoriesTable } from "@/components/categories/categories-table";
 import { seedPresetCategories } from "@/app/(dashboard)/inventory/categories/actions";
+import { CategoriesTable } from "@/components/categories/categories-table";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
 import { PRESET_CATEGORIES } from "@/lib/constants";
@@ -104,7 +104,9 @@ export function CategoriesContent() {
     if (missing.length === 0) return;
     hasSeeded.current = true;
     seedPresetCategories().then(() => {
-      queryClient.invalidateQueries({ queryKey: ["categories", "list", organizationId] });
+      queryClient.invalidateQueries({
+        queryKey: ["categories", "list", organizationId],
+      });
     });
   }, [query.isPending, organizationId, companyType, dbCategories, queryClient]);
 

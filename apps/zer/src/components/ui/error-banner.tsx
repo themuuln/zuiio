@@ -28,7 +28,7 @@ export function ErrorBanner({
   useEffect(() => {
     // Reset dismissal when error changes
     setDismissed(false);
-  }, [rawMessage]);
+  }, []);
 
   useEffect(() => {
     if (!show || !autoHide) return;

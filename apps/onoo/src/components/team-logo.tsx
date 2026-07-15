@@ -4,7 +4,7 @@ interface TeamLogoProps {
   logoUrl?: string | null;
   shortCode: string;
   primaryColor?: string | null;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg";
   className?: string;
 }
 
@@ -12,14 +12,12 @@ const SIZE_MAP = {
   sm: 24,
   md: 32,
   lg: 48,
-  xl: 80,
 } as const;
 
 const TEXT_SIZE_MAP = {
   sm: "text-[10px]",
   md: "text-xs",
   lg: "text-base",
-  xl: "text-xl",
 } as const;
 
 export function TeamLogo({

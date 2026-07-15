@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { capture, withDbCapture } from "@zuiio/capture";
+import { withDbCapture } from "@zuiio/capture";
 import type { Database } from "@/lib/supabase/types";
 
 // ─── Public Types ─────────────────────────────────────────────────────

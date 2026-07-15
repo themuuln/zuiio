@@ -24,7 +24,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBranchContext } from "@/lib/branch-context";
 import { formatCurrency } from "@/lib/format";
 import { useOrgSettings } from "@/lib/org-settings-context";
-import { accountKeys, journalEntryKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
 import {
   actionsColumn,
@@ -215,7 +214,7 @@ export function AccountingContent({
   const journalEntries = journalEntriesQuery.data ?? [];
   const isPending = trialBalanceQuery.isPending;
 
-  const accountsById = useMemo(
+  const _accountsById = useMemo(
     () => new Map(accounts.map((a) => [a.id, a])),
     [accounts],
   );

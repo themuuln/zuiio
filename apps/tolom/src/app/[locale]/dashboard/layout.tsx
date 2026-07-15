@@ -3,49 +3,45 @@ export const instant = true;
 
 import { generateBrandCSS } from "@zuiio/branding";
 import type { ReactNode } from "react";
-import { createClient } from "@/lib/supabase/server";
+import { Suspense } from "react";
 import { readOrganizationBrandConfig } from "@/lib/organization-branding";
 import { getCurrentUserProfile } from "@/lib/services/user-service";
+import { createClient } from "@/lib/supabase/server";
 import DashboardClientShell from "./_dashboard-client-shell";
 
 /**
- * Async server layout that emits the organization's saved brand theme
- * as a <style> tag so the first paint never flashes the default palette.
+ * Fetches org branding via cookies() and emits a <style> tag.
+ * Isolated in its own async component so the layout shell stays static
+ * for instant navigation — cookies() streams in behind a Suspense boundary.
  */
-export default async function DashboardLayout({
-  children,
-}: {
-  children: ReactNode;
-}) {
-  let brandCSS: string | null = null;
+async function BrandThemeLoader() {
+  const supabase = await createClient();
+  const profile = await getCurrentUserProfile(supabase);
 
-  try {
-    const supabase = await createClient();
-    const profile = await getCurrentUserProfile(supabase);
+  if (!profile?.organizationId) return null;
 
-    if (profile?.organizationId) {
-      const { data: org } = await supabase
-        .from("organizations")
-        .select("settings")
-        .eq("id", profile.organizationId)
-        .single();
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("settings")
+    .eq("id", profile.organizationId)
+    .single();
 
-      if (org?.settings) {
-        const config = readOrganizationBrandConfig(org.settings);
-        const css = generateBrandCSS(config);
-        if (css) brandCSS = css;
-      }
-    }
-  } catch {
-    // Query failure → render shell without override; existing auth wrapper
-    // will redirect unauthenticated users. Fallback = canonical Zuiio theme.
-  }
+  if (!org?.settings) return null;
 
+  const config = readOrganizationBrandConfig(org.settings);
+  const css = generateBrandCSS(config);
+  if (!css) return null;
+
+  // biome-ignore lint/security/noDangerouslySetInnerHtml: Brand theme CSS from org settings
+  return <style id="brand-theme" dangerouslySetInnerHTML={{ __html: css }} />;
+}
+
+export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <>
-      {brandCSS ? (
-        <style id="brand-theme" dangerouslySetInnerHTML={{ __html: brandCSS }} />
-      ) : null}
+      <Suspense fallback={null}>
+        <BrandThemeLoader />
+      </Suspense>
       <DashboardClientShell>{children}</DashboardClientShell>
     </>
   );

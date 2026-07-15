@@ -28,7 +28,6 @@ import {
   getPlayerCompetitions,
   getPlayerGameLog,
   getPlayerShootingProfile,
-  getPlayerSeasonAverages,
 } from "../../lib/data";
 import { HeroCard } from "./components/hero-card";
 import { Milestones } from "./components/milestones";
@@ -95,7 +94,7 @@ export default async function PlayerPage({
       (profile) => profile.competition_id === activeCompetitionId,
     ) ?? player;
 
-  const [shootingProfile, leagueData, careerTotals, playerGameLog, seasonAverages] =
+  const [shootingProfile, leagueData, careerTotals, playerGameLog] =
     await Promise.all([
       activeCompetitionId
         ? getPlayerShootingProfile(id, activeCompetitionId)
@@ -105,9 +104,6 @@ export default async function PlayerPage({
         : Promise.resolve(null),
       getPlayerCareerTotals(id),
       getPlayerGameLog(id, activeCompetitionId),
-      activeCompetitionId
-        ? getPlayerSeasonAverages(id, activeCompetitionId)
-        : Promise.resolve(null),
     ]);
 
   const trendData = playerGameLog.map((line) => ({
@@ -181,8 +177,8 @@ export default async function PlayerPage({
 
         <TabsContent value="summary" className="space-y-8">
           <HeroCard
-            player={activeProfile}
-            averages={seasonAverages}
+            playerId={id}
+            competitionId={activeCompetitionId}
             careerTotals={isCareer ? careerTotals : null}
           />
 

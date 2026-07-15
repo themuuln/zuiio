@@ -3,29 +3,38 @@ import { cookies } from "next/headers";
 import { getSupabaseEnv } from "./env";
 
 export async function createClient() {
-  const cookieStore = await cookies();
-  const { anonKey, url } = getSupabaseEnv();
+ const cookieStore = await cookies();
+ const { anonKey, url } = getSupabaseEnv();
 
-  return createServerClient(url, anonKey, {
-    cookies: {
-      getAll() {
-        try {
-          return cookieStore.getAll();
-        } catch {
-          return [];
-        }
-      },
-      setAll(cookiesToSet) {
-        try {
-          for (const { name, value, options } of cookiesToSet) {
-            cookieStore.set(name, value, options);
-          }
-        } catch {
-          // Called from Server Component — ignore
-        }
-      },
-    },
-  });
+ // In production, share cookies across all zuiio.com subdomains
+ // so that zer.zuiio.com, tolom.zuiio.com, id.zuiio.com
+ // all recognize the user's session.
+ const isProduction = process.env.NODE_ENV === "production";
+ const cookieDomain = isProduction ? ".zuiio.com" : undefined;
+
+ return createServerClient(url, anonKey, {
+   cookies: {
+     getAll() {
+       try {
+         return cookieStore.getAll();
+       } catch {
+         return [];
+       }
+     },
+     setAll(cookiesToSet) {
+       try {
+         for (const { name, value, options } of cookiesToSet) {
+           cookieStore.set(name, value, {
+             ...options,
+             domain: cookieDomain ?? options.domain,
+           });
+         }
+       } catch {
+         // Called from Server Component — ignore
+       }
+     },
+   },
+ });
 }
 
 /**
