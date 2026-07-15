@@ -475,6 +475,50 @@ export type Database = {
           },
         ];
       };
+      bank_accounts: {
+        Row: {
+          account_number: string | null;
+          account_type: string;
+          bank_name: string | null;
+          created_at: string | null;
+          id: string;
+          is_active: boolean;
+          is_default: boolean;
+          name: string;
+          organization_id: string;
+        };
+        Insert: {
+          account_number?: string | null;
+          account_type?: string;
+          bank_name?: string | null;
+          created_at?: string | null;
+          id?: string;
+          is_active?: boolean;
+          is_default?: boolean;
+          name: string;
+          organization_id: string;
+        };
+        Update: {
+          account_number?: string | null;
+          account_type?: string;
+          bank_name?: string | null;
+          created_at?: string | null;
+          id?: string;
+          is_active?: boolean;
+          is_default?: boolean;
+          name?: string;
+          organization_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "bank_accounts_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       branches: {
         Row: {
           address: string | null;
@@ -676,7 +720,7 @@ export type Database = {
           id?: string;
           name: string;
           organization_id: string;
-          slug?: string;
+          slug: string;
         };
         Update: {
           created_at?: string | null;
@@ -1239,6 +1283,7 @@ export type Database = {
       expenses: {
         Row: {
           amount: number;
+          bank_account_id: string | null;
           branch_id: string;
           category: string;
           created_at: string | null;
@@ -1251,6 +1296,7 @@ export type Database = {
         };
         Insert: {
           amount: number;
+          bank_account_id?: string | null;
           branch_id: string;
           category: string;
           created_at?: string | null;
@@ -1263,6 +1309,7 @@ export type Database = {
         };
         Update: {
           amount?: number;
+          bank_account_id?: string | null;
           branch_id?: string;
           category?: string;
           created_at?: string | null;
@@ -1274,6 +1321,13 @@ export type Database = {
           payment_method?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "expenses_bank_account_id_fkey";
+            columns: ["bank_account_id"];
+            isOneToOne: false;
+            referencedRelation: "bank_accounts";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "expenses_branch_id_fkey";
             columns: ["branch_id"];
@@ -1399,18 +1453,24 @@ export type Database = {
       invoices: {
         Row: {
           branch_id: string;
+          branch_snapshot: Json | null;
+          buyer_snapshot: Json | null;
+          cashier_name: string | null;
           contact_id: string | null;
           created_at: string | null;
           created_by: string | null;
           due_date: string | null;
+          ebarimt_id: string | null;
           expires_at: string | null;
           id: string;
           invoice_number: string;
           is_receipt: boolean | null;
           issue_date: string;
+          lines_snapshot: Json | null;
           notes: string | null;
           organization_id: string;
           paid_amount: number | null;
+          payment_splits: Json | null;
           receipt_expires_at: string | null;
           receipt_number: string | null;
           receipt_revoked_at: string | null;
@@ -1418,25 +1478,33 @@ export type Database = {
           revoked_at: string | null;
           rotated_at: string | null;
           sale_id: string | null;
+          seller_snapshot: Json | null;
           status: string | null;
           token: string | null;
           token_hash: string | null;
           total_amount: number | null;
+          totals_snapshot: Json | null;
         };
         Insert: {
           branch_id: string;
+          branch_snapshot?: Json | null;
+          buyer_snapshot?: Json | null;
+          cashier_name?: string | null;
           contact_id?: string | null;
           created_at?: string | null;
           created_by?: string | null;
           due_date?: string | null;
+          ebarimt_id?: string | null;
           expires_at?: string | null;
           id?: string;
           invoice_number: string;
           is_receipt?: boolean | null;
           issue_date?: string;
+          lines_snapshot?: Json | null;
           notes?: string | null;
           organization_id: string;
           paid_amount?: number | null;
+          payment_splits?: Json | null;
           receipt_expires_at?: string | null;
           receipt_number?: string | null;
           receipt_revoked_at?: string | null;
@@ -1444,25 +1512,33 @@ export type Database = {
           revoked_at?: string | null;
           rotated_at?: string | null;
           sale_id?: string | null;
+          seller_snapshot?: Json | null;
           status?: string | null;
           token?: string | null;
           token_hash?: string | null;
           total_amount?: number | null;
+          totals_snapshot?: Json | null;
         };
         Update: {
           branch_id?: string;
+          branch_snapshot?: Json | null;
+          buyer_snapshot?: Json | null;
+          cashier_name?: string | null;
           contact_id?: string | null;
           created_at?: string | null;
           created_by?: string | null;
           due_date?: string | null;
+          ebarimt_id?: string | null;
           expires_at?: string | null;
           id?: string;
           invoice_number?: string;
           is_receipt?: boolean | null;
           issue_date?: string;
+          lines_snapshot?: Json | null;
           notes?: string | null;
           organization_id?: string;
           paid_amount?: number | null;
+          payment_splits?: Json | null;
           receipt_expires_at?: string | null;
           receipt_number?: string | null;
           receipt_revoked_at?: string | null;
@@ -1470,10 +1546,12 @@ export type Database = {
           revoked_at?: string | null;
           rotated_at?: string | null;
           sale_id?: string | null;
+          seller_snapshot?: Json | null;
           status?: string | null;
           token?: string | null;
           token_hash?: string | null;
           total_amount?: number | null;
+          totals_snapshot?: Json | null;
         };
         Relationships: [
           {
@@ -1909,6 +1987,68 @@ export type Database = {
             foreignKeyName: "order_templates_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      organization_public_profiles: {
+        Row: {
+          address: string | null;
+          banner_url: string | null;
+          business_hours: Json | null;
+          catalog_enabled: boolean;
+          contact_email: string | null;
+          contact_phone: string | null;
+          created_at: string | null;
+          description: string | null;
+          display_name: string | null;
+          id: string;
+          logo_url: string | null;
+          organization_id: string;
+          policies: string | null;
+          updated_at: string | null;
+          website_url: string | null;
+        };
+        Insert: {
+          address?: string | null;
+          banner_url?: string | null;
+          business_hours?: Json | null;
+          catalog_enabled?: boolean;
+          contact_email?: string | null;
+          contact_phone?: string | null;
+          created_at?: string | null;
+          description?: string | null;
+          display_name?: string | null;
+          id?: string;
+          logo_url?: string | null;
+          organization_id: string;
+          policies?: string | null;
+          updated_at?: string | null;
+          website_url?: string | null;
+        };
+        Update: {
+          address?: string | null;
+          banner_url?: string | null;
+          business_hours?: Json | null;
+          catalog_enabled?: boolean;
+          contact_email?: string | null;
+          contact_phone?: string | null;
+          created_at?: string | null;
+          description?: string | null;
+          display_name?: string | null;
+          id?: string;
+          logo_url?: string | null;
+          organization_id?: string;
+          policies?: string | null;
+          updated_at?: string | null;
+          website_url?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "organization_public_profiles_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: true;
             referencedRelation: "organizations";
             referencedColumns: ["id"];
           },
@@ -2732,10 +2872,13 @@ export type Database = {
           id: string;
           image_url: string | null;
           image_urls: string[] | null;
+          is_public: boolean;
           min_stock: number | null;
           name: string;
           name_norm: string | null;
           organization_id: string;
+          published_at: string | null;
+          published_by: string | null;
           sale_price: number | null;
           search_vector: unknown;
           sku: string | null;
@@ -2756,10 +2899,13 @@ export type Database = {
           id?: string;
           image_url?: string | null;
           image_urls?: string[] | null;
+          is_public?: boolean;
           min_stock?: number | null;
           name: string;
           name_norm?: string | null;
           organization_id: string;
+          published_at?: string | null;
+          published_by?: string | null;
           sale_price?: number | null;
           search_vector?: unknown;
           sku?: string | null;
@@ -2780,10 +2926,13 @@ export type Database = {
           id?: string;
           image_url?: string | null;
           image_urls?: string[] | null;
+          is_public?: boolean;
           min_stock?: number | null;
           name?: string;
           name_norm?: string | null;
           organization_id?: string;
+          published_at?: string | null;
+          published_by?: string | null;
           sale_price?: number | null;
           search_vector?: unknown;
           sku?: string | null;
@@ -2810,6 +2959,13 @@ export type Database = {
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "products_published_by_fkey";
+            columns: ["published_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];
@@ -3514,6 +3670,7 @@ export type Database = {
       };
       sales: {
         Row: {
+          bank_account_id: string | null;
           branch_id: string;
           contact_id: string | null;
           created_at: string | null;
@@ -3530,6 +3687,7 @@ export type Database = {
           total_amount: number;
         };
         Insert: {
+          bank_account_id?: string | null;
           branch_id: string;
           contact_id?: string | null;
           created_at?: string | null;
@@ -3546,6 +3704,7 @@ export type Database = {
           total_amount: number;
         };
         Update: {
+          bank_account_id?: string | null;
           branch_id?: string;
           contact_id?: string | null;
           created_at?: string | null;
@@ -3562,6 +3721,13 @@ export type Database = {
           total_amount?: number;
         };
         Relationships: [
+          {
+            foreignKeyName: "sales_bank_account_id_fkey";
+            columns: ["bank_account_id"];
+            isOneToOne: false;
+            referencedRelation: "bank_accounts";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "sales_branch_id_fkey";
             columns: ["branch_id"];
@@ -3611,7 +3777,7 @@ export type Database = {
           organization_id: string;
           revoked_at: string | null;
           rotated_at: string | null;
-          token: string;
+          token: string | null;
           token_hash: string | null;
         };
         Insert: {
@@ -3625,7 +3791,7 @@ export type Database = {
           organization_id: string;
           revoked_at?: string | null;
           rotated_at?: string | null;
-          token: string;
+          token?: string | null;
           token_hash?: string | null;
         };
         Update: {
@@ -3639,7 +3805,7 @@ export type Database = {
           organization_id?: string;
           revoked_at?: string | null;
           rotated_at?: string | null;
-          token?: string;
+          token?: string | null;
           token_hash?: string | null;
         };
         Relationships: [
@@ -4082,13 +4248,78 @@ export type Database = {
           status: Database["public"]["Enums"]["handoff_status"];
         }[];
       };
+      get_balance_sheet: {
+        Args: {
+          p_as_of_date?: string;
+          p_branch_id?: string;
+          p_organization_id: string;
+        };
+        Returns: {
+          account_code: string;
+          account_id: string;
+          account_name: string;
+          account_type: string;
+          balance: number;
+        }[];
+      };
+      get_cash_flow: {
+        Args: {
+          p_branch_id?: string;
+          p_date_from: string;
+          p_date_to: string;
+          p_organization_id: string;
+        };
+        Returns: {
+          amount: number;
+          category: string;
+        }[];
+      };
       get_current_organization: { Args: never; Returns: string };
+      get_inventory_valuation: {
+        Args: { p_branch_id?: string; p_organization_id: string };
+        Returns: {
+          average_cost: number;
+          product_id: string;
+          product_name: string;
+          sku: string;
+          total_cost: number;
+          total_quantity: number;
+        }[];
+      };
+      get_profit_loss: {
+        Args: {
+          p_branch_id?: string;
+          p_date_from: string;
+          p_date_to: string;
+          p_organization_id: string;
+        };
+        Returns: {
+          account_code: string;
+          account_id: string;
+          account_name: string;
+          account_type: string;
+          amount: number;
+        }[];
+      };
       get_public_categories: { Args: { p_slug: string }; Returns: Json };
+      get_public_invoice: { Args: { p_token: string }; Returns: Json };
       get_public_product: {
         Args: { p_product_id: string; p_slug: string };
         Returns: Json;
       };
-      get_public_products: { Args: { p_slug: string }; Returns: Json };
+      get_public_products:
+        | { Args: { p_slug: string }; Returns: Json }
+        | {
+            Args: {
+              p_category_id?: string;
+              p_page?: number;
+              p_page_size?: number;
+              p_search?: string;
+              p_slug: string;
+            };
+            Returns: Json;
+          };
+      get_public_receipt: { Args: { p_token: string }; Returns: Json };
       get_public_report_data: { Args: { p_token: string }; Returns: Json };
       get_trial_balance: {
         Args: {
@@ -4167,13 +4398,13 @@ export type Database = {
       };
       process_shop_sale: {
         Args: {
-          p_contact_id: string | null;
+          p_branch_id: string;
+          p_contact_id: string;
           p_items: Json;
           p_movements: Json;
           p_org_id: string;
           p_paid_amount: number;
           p_payment_method: string;
-          p_branch_id: string;
           p_salesperson_id: string;
           p_total_amount: number;
           p_user_id: string;
@@ -4224,10 +4455,13 @@ export type Database = {
               id: string;
               image_url: string | null;
               image_urls: string[] | null;
+              is_public: boolean;
               min_stock: number | null;
               name: string;
               name_norm: string | null;
               organization_id: string;
+              published_at: string | null;
+              published_by: string | null;
               sale_price: number | null;
               search_vector: unknown;
               sku: string | null;
@@ -4261,10 +4495,13 @@ export type Database = {
               id: string;
               image_url: string | null;
               image_urls: string[] | null;
+              is_public: boolean;
               min_stock: number | null;
               name: string;
               name_norm: string | null;
               organization_id: string;
+              published_at: string | null;
+              published_by: string | null;
               sale_price: number | null;
               search_vector: unknown;
               sku: string | null;
@@ -4278,6 +4515,10 @@ export type Database = {
               isSetofReturn: true;
             };
           };
+      seed_default_bank_accounts: {
+        Args: { p_organization_id: string };
+        Returns: undefined;
+      };
       seed_default_chart_of_accounts: {
         Args: { p_organization_id: string };
         Returns: undefined;
