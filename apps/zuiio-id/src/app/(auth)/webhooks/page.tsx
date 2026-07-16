@@ -1,6 +1,6 @@
-export const instant = false;
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { WebhookList } from "./webhook-list";
 
@@ -8,21 +8,8 @@ export const metadata: Metadata = {
   title: "Вебхүүк — Zuiio ID",
 };
 
-export default async function WebhooksPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login");
-
-  const admin = await createAdminClient();
-
-  const { data: subscriptions } = await admin
-    .from("webhook_subscriptions")
-    .select("*, product_catalog(display_name)")
-    .order("created_at", { ascending: false });
-
+/** PPR: static shell renders immediately, auth + data streams in via Suspense. */
+export default function WebhooksPage() {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-8">
       <main className="w-full max-w-md">
@@ -35,9 +22,28 @@ export default async function WebhooksPage() {
               Auth үйлдлүүдийн мэдээлэл хүлээн авах
             </p>
           </div>
-          <WebhookList subscriptions={subscriptions ?? []} />
+          <Suspense>
+            <WebhooksContent />
+          </Suspense>
         </div>
       </main>
     </div>
   );
+}
+
+async function WebhooksContent() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+
+  const admin = await createAdminClient();
+  const { data: subscriptions } = await admin
+    .from("webhook_subscriptions")
+    .select("*, product_catalog(display_name)")
+    .order("created_at", { ascending: false });
+
+  return <WebhookList subscriptions={subscriptions ?? []} />;
 }

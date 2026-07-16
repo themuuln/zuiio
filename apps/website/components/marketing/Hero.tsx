@@ -37,7 +37,7 @@ export function Hero({
 				}}
 				aria-hidden="true"
 			/>
-			<div className="mx-auto flex max-w-4xl flex-col items-center py-24 text-center md:py-32">
+			<div className="mx-auto flex max-w-4xl flex-col items-center py-24 text-center md:py-40">
 				<div className="animate-fade-in mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-xs font-medium text-muted-foreground">
 					<span
 						className="inline-block h-2 w-2 rounded-full"

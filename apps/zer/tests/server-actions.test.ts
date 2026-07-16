@@ -51,73 +51,66 @@ function mockActionCtx(overrides?: Record<string, unknown>) {
 }
 
 // ─── Register all mocks BEFORE importing action modules ──────────────
+// Bun's mock.module uses `exports`; Node's @types/node uses `namedExports`.
+// Unchecked cast at library boundary — Bun runtime expects `exports`.
+function mockMod(specifier: string, mod: Record<string, unknown>) {
+  mock.module(specifier, { exports: mod } as unknown as Parameters<
+    typeof mock.module
+  >[1]);
+}
 
 let mockCtx: unknown = mockActionCtx();
 
-mock.module("@/lib/action-utils", {
-  exports: {
-    requireWriteAction: async () => mockCtx,
-    requireActionContext: async () => mockCtx,
-    requireBranchScope: () => null,
-  },
+mockMod("@/lib/action-utils", {
+  requireWriteAction: async () => mockCtx,
+  requireActionContext: async () => mockCtx,
+  requireBranchScope: () => null,
 });
 
-mock.module("@zuiio/capture", {
-  exports: {
-    capture: mock.fn(async () => {}),
-    withDbCapture: mock.fn(
-      async (_label: string, promise: Promise<unknown>) => promise,
-    ),
-    captureDbError: mock.fn(async () => {}),
-    setCaptureHandler: () => {},
-    captureRedirectLoop: mock.fn(async () => {}),
-    withSupabaseConsoleCapture: () => (input: unknown) => input,
-  },
+mockMod("@zuiio/capture", {
+  capture: mock.fn(async () => {}),
+  withDbCapture: mock.fn(
+    async (_label: string, promise: Promise<unknown>) => promise,
+  ),
+  captureDbError: mock.fn(async () => {}),
+  setCaptureHandler: () => {},
+  captureRedirectLoop: mock.fn(async () => {}),
+  withSupabaseConsoleCapture: () => (input: unknown) => input,
 });
 
-mock.module("@/lib/revalidate", {
-  exports: {
-    revalidateEntities: mock.fn(() => {}),
-  },
+mockMod("@/lib/revalidate", {
+  revalidateEntities: mock.fn(() => {}),
 });
 
-mock.module("@/lib/accounting", {
-  exports: {
-    postExpenseToJournal: mock.fn(async () => ({ success: true })),
-  },
+mockMod("@/lib/accounting", {
+  postExpenseToJournal: mock.fn(async () => ({ success: true })),
 });
 
-mock.module("next/server", {
-  exports: {
-    after: (fn: () => void) => fn(),
-  },
+mockMod("next/server", {
+  after: (fn: () => void) => fn(),
 });
 
-mock.module("next/cache", {
-  exports: {
-    revalidatePath: mock.fn(() => {}),
-    revalidateTag: mock.fn(() => {}),
-  },
+mockMod("next/cache", {
+  revalidatePath: mock.fn(() => {}),
+  revalidateTag: mock.fn(() => {}),
 });
 
-mock.module("@/lib/audit", {
-  exports: {
-    logAuditEventWithClient: mock.fn(async () => {}),
-  },
+mockMod("@/lib/audit", {
+  logAuditEventWithClient: mock.fn(async () => {}),
 });
 
 // ─── Lazy-loaded action modules ──────────────────────────────────────
 
 let createExpense: (
-  prev: unknown,
+  prev: undefined,
   fd: FormData,
 ) => Promise<Record<string, unknown> | undefined>;
 let createDiscount: (
-  prev: unknown,
+  prev: undefined,
   fd: FormData,
 ) => Promise<Record<string, unknown> | undefined>;
 let createPayout: (
-  prev: unknown,
+  prev: undefined,
   fd: FormData,
 ) => Promise<Record<string, unknown> | undefined>;
 
@@ -165,7 +158,10 @@ test("createExpense rejects zero amount", async () => {
   });
   const result = await createExpense(undefined, fd);
   assert.ok(result && "error" in result, "should return error");
-  assert.ok(result.error?.includes("Дүн"), "error should mention amount");
+  assert.ok(
+    String(result.error).includes("Дүн"),
+    "error should mention amount",
+  );
 });
 
 test("createExpense calls supabase insert with valid data", async () => {
@@ -237,7 +233,7 @@ test("createDiscount rejects missing name", async () => {
   });
   const result = await createDiscount(undefined, fd);
   assert.ok(result && "error" in result, "should return error");
-  assert.ok(result.error?.includes("Нэр"), "error should mention name");
+  assert.ok(String(result.error).includes("Нэр"), "error should mention name");
 });
 
 test("createDiscount rejects zero value", async () => {
@@ -253,7 +249,7 @@ test("createDiscount rejects zero value", async () => {
   const result = await createDiscount(undefined, fd);
   assert.ok(result && "error" in result, "should return error");
   assert.ok(
-    result.error?.includes("Дүн"),
+    String(result.error).includes("Дүн"),
     `error should mention amount: "${result.error}"`,
   );
 });
@@ -310,7 +306,7 @@ test("createDiscount rejects percentage over 100", async () => {
   const result = await createDiscount(undefined, fd);
   assert.ok(result && "error" in result, "should return error");
   assert.ok(
-    result.error?.includes("100"),
+    String(result.error).includes("100"),
     `error should mention 100 limit: "${result.error}"`,
   );
 });
@@ -340,7 +336,7 @@ test("createDiscount returns error on insert failure", async () => {
   const result = await createDiscount(undefined, fd);
   assert.ok(result && "error" in result, "should return error");
   assert.ok(
-    result.error?.includes("relation not found"),
+    String(result.error).includes("relation not found"),
     `should forward DB error: "${result.error}"`,
   );
 });
@@ -503,7 +499,12 @@ test("createPayout returns error when payout insert fails", async () => {
 
 test("withDbCapture is called (mock was invoked)", async () => {
   const { withDbCapture } = await import("@zuiio/capture");
-  const before = (withDbCapture as ReturnType<typeof mock.fn>).mock.callCount();
+  // mock.module replaces the export at runtime; TypeScript still sees the original signature.
+  // Cast through unknown to access the mock tracker (library boundary type mismatch).
+  const mockTrack = withDbCapture as unknown as {
+    mock: { callCount: () => number };
+  };
+  const before = mockTrack.mock.callCount();
 
   const supabase = createMockSupabase();
   mockCtx = mockActionCtx({ supabase });
@@ -515,7 +516,7 @@ test("withDbCapture is called (mock was invoked)", async () => {
   });
   await createExpense(undefined, fd);
 
-  const after = (withDbCapture as ReturnType<typeof mock.fn>).mock.callCount();
+  const after = mockTrack.mock.callCount();
   assert.ok(
     after > before,
     "withDbCapture should have been called during the action",

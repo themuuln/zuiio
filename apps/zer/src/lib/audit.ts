@@ -30,7 +30,10 @@ export type EntityType =
   | "return"
   | "discount"
   | "journal_entry"
-  | "account";
+  | "account"
+  | "budget"
+  | "loyalty_setting"
+  | "loyalty_reward";
 
 type FieldChange = {
   old: unknown;

@@ -10,30 +10,26 @@ $ NODE_OPTIONS='--max-old-space-size=12288' next build
   ✓ viewTransition
 
   Creating an optimized production build ...
-✓ Compiled successfully in 2.7s
+✓ Compiled successfully in 2.2s
   Running next.config.js provided runAfterProductionCompile ...
 [@sentry/nextjs - After Production Compile] Info: Sending telemetry data on issues and performance to Sentry. To disable telemetry, set `options.telemetry` to `false`.
 [@sentry/nextjs - After Production Compile] Warning: No auth token provided. Will not create release. Please set the `authToken` option. You can find information on how to generate a Sentry auth token here: https://docs.sentry.io/api/auth/
 You seem to be using Turborepo, did you forget to put SENTRY_AUTH_TOKEN in `passThroughEnv`? https://turbo.build/repo/docs/reference/configuration#passthroughenv
 [@sentry/nextjs - After Production Compile] Warning: No auth token provided. Will not upload source maps. Please set the `authToken` option. You can find information on how to generate a Sentry auth token here: https://docs.sentry.io/api/auth/
 You seem to be using Turborepo, did you forget to put SENTRY_AUTH_TOKEN in `passThroughEnv`? https://turbo.build/repo/docs/reference/configuration#passthroughenv
-✓ Completed runAfterProductionCompile in 534ms
+✓ Completed runAfterProductionCompile in 572ms
   Running TypeScript ...
 Failed to type check.
 
-./src/components/cash-register/cash-register-manager.tsx:61:15
-Type error: No overload matches this call.
-  Overload 1 of 2, '(relation: "brands" | "products" | "sales" | "expenses" | "returns" | "invoices" | "quotations" | "discounts" | "employees" | "profiles" | "organizations" | "categories" | "business_events" | ... 65 more ... | "warehouse_products"): PostgrestQueryBuilder<...>', gave the following error.
-    Argument of type '"cash_registers"' is not assignable to parameter of type '"brands" | "products" | "sales" | "expenses" | "returns" | "invoices" | "quotations" | "discounts" | "employees" | "profiles" | "organizations" | "categories" | "business_events" | ... 65 more ... | "warehouse_products"'.
-  Overload 2 of 2, '(relation: never): PostgrestQueryBuilder<{ PostgrestVersion: "14.5"; }, { Tables: { agent_audit_log: { Row: { chat_id: number; created_at: string | null; duration_ms: number | null; error: string | null; id: string; ... 5 more ...; user_id: string; }; Insert: { ...; }; Update: { ...; }; Relationships: []; }; ... 77 more ...; warehouses: { ...; }; }; Views: {}; Functions: { ...; }; Enums: { ...; }; CompositeTypes: {}; }, never, never, never>', gave the following error.
-    Argument of type '"cash_registers"' is not assignable to parameter of type 'never'.
+./src/app/(dashboard)/budget/budget-content.tsx:56:53
+Type error: Argument of type '"budget"' is not assignable to parameter of type 'EntityType'.
 
-  [90m59 |[0m       [36mconst[0m supabase = createClient();
-  [90m60 |[0m       [36mconst[0m { data, error } = [36mawait[0m supabase
-[31m[1m>[0m [90m61 |[0m         .[36mfrom[0m([32m"cash_registers"[0m)
-  [90m   |[0m               [31m[1m^[0m
-  [90m62 |[0m         .select([32m"id, name, is_active"[0m)
-  [90m63 |[0m         .eq([32m"organization_id"[0m, organizationId)
-  [90m64 |[0m         .order([32m"name"[0m);
+  [90m54 |[0m ...[36murn[0m data;
+  [90m55 |[0m ...
+[31m[1m>[0m [90m56 |[0m ...cess: (data) => { logAuditEvent([32m"created"[0m, [32m"budget"[0m, data.id, [36mundefined[0m, [32m"Төсөв үүсгэсэ...[0m
+  [90m   |[0m                                               [31m[1m^[0m
+  [90m57 |[0m ...or: (e) => { capture(e); toast.error([32m"Алдаа гарлаа."[0m); },
+  [90m58 |[0m ...
+  [90m59 |[0m ...
 Next.js build worker exited with code: 1 and signal: null
 [ELIFECYCLE] Command failed with exit code 1.

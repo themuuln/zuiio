@@ -1,12 +1,25 @@
-export const instant = false;
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { VerifyEmailForm } from "./verify-email-form";
 
 export const metadata: Metadata = {
   title: "Имэйл баталгаажуулах — Zuiio ID",
 };
 
-export default async function VerifyEmailPage({
+/** PPR: static shell renders immediately, searchParams streams in via Suspense. */
+export default function VerifyEmailPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  return (
+    <Suspense>
+      <VerifyEmailContent searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function VerifyEmailContent({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | undefined>>;

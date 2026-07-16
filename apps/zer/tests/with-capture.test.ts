@@ -54,7 +54,10 @@ test("passes context label through to capture", async () => {
 
 test("captures thrown exceptions and returns null data", async () => {
   const exception = new Error("network timeout");
-  const mockPromise = Promise.reject(exception);
+  const mockPromise = Promise.reject(exception) as PromiseLike<{
+    data: unknown;
+    error: unknown;
+  }>;
 
   const result = await withDbCapture("fetchOrders", mockPromise);
 

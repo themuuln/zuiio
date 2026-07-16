@@ -170,7 +170,7 @@ test("telegram failure + org has recipient → email sent", async () => {
   const sendTelegram = mock.fn(async () => {
     throw new Error("tg down");
   });
-  const sendEmail = mock.fn(async () => {});
+  const sendEmail = mock.fn(async (_to: string) => {});
 
   const result = await handleEmailFallback(
     { id: "org1", name: "TestOrg", report_email_recipient: "a@b.com" },

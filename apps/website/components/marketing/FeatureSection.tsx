@@ -101,7 +101,7 @@ export function FeatureSection({
 	className,
 }: FeatureSectionProps) {
 	return (
-		<section className={cn("mx-auto max-w-6xl px-6 py-20 md:py-28", className)}>
+		<section className={cn("mx-auto max-w-6xl px-6 py-24 md:py-32", className)}>
 			<div className="mx-auto max-w-2xl text-center">
 				<h2
 					className="text-3xl font-semibold tracking-tight md:text-4xl"
@@ -112,7 +112,7 @@ export function FeatureSection({
 				<p className="mt-4 text-lg text-muted-foreground">{description}</p>
 			</div>
 
-			<div className="mt-16 grid gap-5 md:grid-cols-3 md:grid-rows-3">
+			<div className="mt-16 grid gap-6 md:grid-cols-3 md:grid-rows-3">
 				{/* Feature 0 — hero cell spans 2 cols */}
 				<div className="bento-cell col-span-1 md:col-span-2 md:row-span-2 flex flex-col justify-center p-8">
 					<div

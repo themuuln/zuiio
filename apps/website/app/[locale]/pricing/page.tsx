@@ -32,7 +32,8 @@ export default async function PricingPage({ params }: Props) {
 	return (
 		<>
 			<Hero title={t("title")} subtitle={t("subtitle")} />
-			<section className="mx-auto max-w-5xl px-6 pb-24">
+		<section className="border-y border-border" style={{ backgroundColor: "var(--color-muted)" }}>
+			<div className="mx-auto max-w-5xl px-6 py-20 md:py-28">
 				<div className="grid gap-6 md:grid-cols-3">
 					{plans.map((plan) => (
 						<PricingCard
@@ -88,7 +89,8 @@ export default async function PricingPage({ params }: Props) {
 						</svg>
 					</a>
 				</div>
-			</section>
+			</div>
+		</section>
 		</>
 	);
 }

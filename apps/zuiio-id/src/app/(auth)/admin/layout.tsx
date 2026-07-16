@@ -1,6 +1,5 @@
-export const instant = false;
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 
@@ -8,18 +7,12 @@ export const metadata: Metadata = {
   title: "Админ — Zuiio ID",
 };
 
-export default async function AdminLayout({
+/** PPR: static nav shell renders immediately, auth guard streams in. */
+export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login");
-
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       <header className="flex items-center gap-4 border-b border-border px-4 py-3">
@@ -45,7 +38,9 @@ export default async function AdminLayout({
           </Link>
         </nav>
       </header>
-      <main className="flex-1 px-4 py-6">{children}</main>
+      <main className="flex-1 px-4 py-6">
+        <Suspense>{children}</Suspense>
+      </main>
     </div>
   );
 }

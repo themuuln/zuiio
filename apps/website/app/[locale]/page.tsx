@@ -64,7 +64,7 @@ export default async function HomePage({ params }: Props) {
 				secondaryCta={{ label: h("cta-pricing"), href: "/pricing" }}
 			/>
 
-			<section className="mx-auto max-w-6xl px-6 pb-20">
+		<section className="mx-auto max-w-6xl px-6 pb-16 pt-4">
 				<div className="flex flex-col gap-3 text-center mb-12">
 					<h2
 						className="text-3xl font-semibold tracking-tight md:text-4xl"
@@ -103,26 +103,27 @@ export default async function HomePage({ params }: Props) {
 				}))}
 			/>
 
-			<section className="mx-auto max-w-6xl px-6 pb-20">
-				<h2
-					className="mb-12 text-center text-3xl font-semibold tracking-tight md:text-4xl"
-					style={{ fontFamily: "var(--font-display)" }}
-				>
-					{t("testimonials-title")}
-				</h2>
-				<div className="grid gap-6 md:grid-cols-2">
-					{testimonials.map((tst) => (
-						<Testimonial
-							key={tst.authorKey}
-							quote={t(`testimonial-${tst.quoteKey}-quote`)}
-							author={t(`testimonial-${tst.authorKey}-author`)}
-							role={t(`testimonial-${tst.roleKey}-role`)}
-						/>
-					))}
-				</div>
-			</section>
+		<section className="mx-auto max-w-6xl px-6 py-20 md:py-28">
+			<h2
+				className="mb-12 text-3xl font-semibold tracking-tight md:text-4xl"
+				style={{ fontFamily: "var(--font-display)" }}
+			>
+				{t("testimonials-title")}
+			</h2>
+			<div className="grid gap-6 md:grid-cols-2">
+				{testimonials.map((tst) => (
+					<Testimonial
+						key={tst.authorKey}
+						quote={t(`testimonial-${tst.quoteKey}-quote`)}
+						author={t(`testimonial-${tst.authorKey}-author`)}
+						role={t(`testimonial-${tst.roleKey}-role`)}
+					/>
+				))}
+			</div>
+		</section>
 
-			<section className="mx-auto max-w-6xl px-6 pb-20" id="pricing">
+		<section id="pricing" className="border-y border-border" style={{ backgroundColor: "var(--color-muted)" }}>
+			<div className="mx-auto max-w-6xl px-6 py-20 md:py-28">
 				<h2
 					className="mb-4 text-center text-3xl font-semibold tracking-tight md:text-4xl"
 					style={{ fontFamily: "var(--font-display)" }}
@@ -147,58 +148,59 @@ export default async function HomePage({ params }: Props) {
 						/>
 					))}
 				</div>
-			</section>
+			</div>
+		</section>
 
-			<section className="mx-auto max-w-6xl px-6 pb-24">
+		<section className="mx-auto max-w-6xl px-6 pb-24 pt-16 md:pt-24">
+			<div
+				className="relative isolate overflow-hidden rounded-2xl px-6 py-16 text-center md:py-20"
+				style={{
+					backgroundColor: "var(--color-card)",
+					border: "1px solid var(--color-border)",
+				}}
+			>
 				<div
-					className="relative isolate overflow-hidden rounded-2xl px-6 py-16 text-center md:py-20"
+					className="pointer-events-none absolute -inset-32 -z-10 opacity-40"
 					style={{
-						backgroundColor: "var(--color-card)",
-						border: "1px solid var(--color-border)",
+						background:
+							"radial-gradient(ellipse 60% 50% at 50% 50%, var(--brand-violet-glow), transparent)",
 					}}
+					aria-hidden="true"
+				/>
+				<h2
+					className="text-3xl font-semibold tracking-tight md:text-4xl"
+					style={{ fontFamily: "var(--font-display)" }}
 				>
-					<div
-						className="pointer-events-none absolute -inset-32 -z-10 opacity-40"
-						style={{
-							background:
-								"radial-gradient(ellipse 60% 50% at 50% 50%, var(--brand-violet-glow), transparent)",
-						}}
-						aria-hidden="true"
-					/>
-					<h2
-						className="text-3xl font-semibold tracking-tight md:text-4xl"
-						style={{ fontFamily: "var(--font-display)" }}
-					>
-						{t("cta-title")}
-					</h2>
-					<p className="mx-auto mt-4 max-w-lg text-muted-foreground">
-						{t("cta-subtitle")}
-					</p>
-					<div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-						<Link href="/pricing" className="btn-primary">
-							{t("cta-button")}
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								width="16"
-								height="16"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2.5"
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								aria-hidden="true"
-							>
-								<path d="M5 12h14" />
-								<path d="m12 5 7 7-7 7" />
-							</svg>
-						</Link>
-						<Link href="/about" className="btn-secondary">
-							{t("cta-secondary")}
-						</Link>
-					</div>
+					{t("cta-title")}
+				</h2>
+				<p className="mx-auto mt-4 max-w-lg text-muted-foreground">
+					{t("cta-subtitle")}
+				</p>
+				<div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+					<Link href="/pricing" className="btn-primary">
+						{t("cta-button")}
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="16"
+							height="16"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2.5"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							aria-hidden="true"
+						>
+							<path d="M5 12h14" />
+							<path d="m12 5 7 7-7 7" />
+						</svg>
+					</Link>
+					<Link href="/about" className="btn-secondary">
+						{t("cta-secondary")}
+					</Link>
 				</div>
-			</section>
+			</div>
+		</section>
 		</>
 	);
 }

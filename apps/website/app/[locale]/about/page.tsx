@@ -38,28 +38,29 @@ export default async function AboutPage({ params }: Props) {
 					{t("mission-p3")}
 				</p>
 			</section>
-			<section className="border-t border-border">
-				<div className="mx-auto max-w-6xl px-6 py-20">
-					<h2
-						className="mb-12 text-center text-3xl font-semibold tracking-tight"
-						style={{ fontFamily: "var(--font-display)" }}
-					>
-						{t("values-title")}
-					</h2>
-					<div className="grid gap-5 md:grid-cols-2">
-						{values.map((v) => (
-							<div key={v.key} className="bento-cell p-6">
-								<h3 className="text-lg font-semibold">
-									{t(`value-${v.key}-title`)}
-								</h3>
-								<p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-									{t(`value-${v.key}-desc`)}
-								</p>
-							</div>
-						))}
-					</div>
+		<section className="border-t border-border">
+			<div className="mx-auto max-w-6xl px-6 py-20 md:py-28">
+				<h2
+					className="mb-12 text-center text-3xl font-semibold tracking-tight"
+					style={{ fontFamily: "var(--font-display)" }}
+				>
+					{t("values-title")}
+				</h2>
+				<div className="grid gap-5 md:grid-cols-2">
+					{values.map((v) => (
+						<div key={v.key} className="bento-cell p-6">
+							<h3 className="text-lg font-semibold">
+								{t(`value-${v.key}-title`)}
+							</h3>
+							<p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+								{t(`value-${v.key}-desc`)}
+							</p>
+						</div>
+					))}
 				</div>
-			</section>
+			</div>
+		</section>
+		<section className="mx-auto max-w-3xl px-6 py-20 md:py-24">
 			<section className="mx-auto max-w-3xl px-6 py-20">
 				<h2
 					className="mb-8 text-center text-3xl font-semibold tracking-tight"

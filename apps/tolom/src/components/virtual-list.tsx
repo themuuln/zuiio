@@ -32,8 +32,8 @@ export function VirtualList<T>({
   }
 
   return (
-    {/* biome-ignore lint/a11y/useSemanticElements: Virtual list needs div for absolute positioning */}
-    {/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: aria-rowcount is valid for virtual lists */}
+    // biome-ignore lint/a11y/useSemanticElements: Virtual list needs div for absolute positioning
+    // biome-ignore lint/a11y/useAriaPropsSupportedByRole: aria-rowcount is valid for virtual lists
     <div
       ref={parentRef}
       className={cn("overflow-auto", className)}
@@ -46,8 +46,8 @@ export function VirtualList<T>({
           if (item === undefined) return null;
 
           return (
-            {/* biome-ignore lint/a11y/useSemanticElements: Virtual list needs div for absolute positioning */}
-            {/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: aria-rowindex is valid for virtual lists */}
+            // biome-ignore lint/a11y/useSemanticElements: Virtual list needs div for absolute positioning
+            // biome-ignore lint/a11y/useAriaPropsSupportedByRole: aria-rowindex is valid for virtual lists
             <div
               key={virtualRow.key}
               role="listitem"

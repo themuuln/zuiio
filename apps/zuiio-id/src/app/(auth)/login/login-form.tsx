@@ -343,7 +343,7 @@ export function LoginForm({
             <span className="w-full border-t border-border" />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-card px-2 text-muted-foreground">эсвэл</span>
+            <span className="bg-card px-2 text-xs uppercase text-muted-foreground">эсвэл</span>
           </div>
         </div>
 

@@ -1,6 +1,6 @@
-export const instant = false;
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { ChangePasswordForm } from "./change-password-form";
 
@@ -8,14 +8,8 @@ export const metadata: Metadata = {
   title: "Нууц үг солих — Zuiio ID",
 };
 
-export default async function ChangePasswordPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login");
-
+/** PPR: static shell renders immediately, auth check streams in via Suspense. */
+export default function ChangePasswordPage() {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-8">
       <main className="w-full max-w-sm">
@@ -28,9 +22,22 @@ export default async function ChangePasswordPage() {
               Одоогийн нууц үгээ оруулж, шинэ нууц үгээ тогтооно уу.
             </p>
           </div>
-          <ChangePasswordForm />
+          <Suspense>
+            <ChangePasswordContent />
+          </Suspense>
         </div>
       </main>
     </div>
   );
+}
+
+async function ChangePasswordContent() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+
+  return <ChangePasswordForm />;
 }
