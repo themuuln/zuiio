@@ -116,10 +116,10 @@ let createPayout: (
 
 test.before(async () => {
   const expenseMod = await import("@/app/(dashboard)/expenses/new/actions");
-  createExpense = expenseMod.createExpense;
+  createExpense = expenseMod.createExpense as typeof createExpense;
 
   const discountMod = await import("@/app/(dashboard)/discounts/actions");
-  createDiscount = discountMod.createDiscount;
+  createDiscount = discountMod.createDiscount as typeof createDiscount;
 
   const payoutMod = await import("@/app/(dashboard)/commissions/actions");
   createPayout = payoutMod.createPayout;
