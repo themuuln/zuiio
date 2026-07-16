@@ -101,7 +101,7 @@ function tool(name: string) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe("🧰 Tolom — getDailySummary", () => {
-	const run = () => tool("getDailySummary").execute({}) as Promise<any>;
+	const run = () => tool("getDailySummary")\.execute({}, ctx) as Promise<any>;
 
 	it("🗣️ 'Өнөөдрийн хураангуйгаа хэлж өгөөч'", async () => {
 		const r = await run();
@@ -146,7 +146,7 @@ describe("🧰 Tolom — getDailySummary", () => {
 });
 
 describe("🧰 Tolom — getActiveWorkOrders", () => {
-	const run = () => tool("getActiveWorkOrders").execute({}) as Promise<any[]>;
+	const run = () => tool("getActiveWorkOrders")\.execute({}, ctx) as Promise<any[]>;
 
 	it("🗣️ 'Идэвхтэй захиалгуудыг харуул'", async () => {
 		const r = await run();
@@ -194,7 +194,7 @@ describe("🧰 Tolom — getActiveWorkOrders", () => {
 });
 
 describe("🧰 Tolom — getCustomerHistory (Name Search)", () => {
-	const run = (q: string) => tool("getCustomerHistory").execute({ query: q }) as Promise<any[] | { message: string }>;
+	const run = (q: string) => tool("getCustomerHistory")\\.execute({ query: q }, ctx) as Promise<any[] | { message: string }>;
 
 	it("🗣️ 'Бат-Эрдэнэ гэдэг харилцагчийн мэдээлэл харуул'", async () => {
 		const r = await run("Бат-Эрдэнэ");
@@ -241,7 +241,7 @@ describe("🧰 Tolom — getCustomerHistory (Name Search)", () => {
 });
 
 describe("🧰 Tolom — getCustomerHistory (Plate Search)", () => {
-	const run = (q: string) => tool("getCustomerHistory").execute({ query: q });
+	const run = (q: string) => tool("getCustomerHistory")\\.execute({ query: q }, ctx);
 
 	it("🗣️ 'УБА1234 дугаартай машины эзэн хэн бэ?'", async () => {
 		// webhook-helpers version searches by name/phone via ilike, not by plate
@@ -253,7 +253,7 @@ describe("🧰 Tolom — getCustomerHistory (Plate Search)", () => {
 });
 
 describe("🧰 Tolom — getCustomerHistory (Edge Cases)", () => {
-	const run = (q: string) => tool("getCustomerHistory").execute({ query: q });
+	const run = (q: string) => tool("getCustomerHistory")\\.execute({ query: q }, ctx);
 
 	it("🗣️ '' (empty query — matches all via ilike)", async () => {
 		const r = await run("");
@@ -269,7 +269,7 @@ describe("🧰 Tolom — getCustomerHistory (Edge Cases)", () => {
 });
 
 describe("🧰 Tolom — getInvoiceStatus", () => {
-	const run = () => tool("getInvoiceStatus").execute({}) as Promise<any>;
+	const run = () => tool("getInvoiceStatus")\.execute({}, ctx) as Promise<any>;
 
 	it("🗣️ 'Энэ сарын нэхэмжлэлийн хураангуй'", async () => {
 		const r = await run();
@@ -299,7 +299,7 @@ describe("🧰 Tolom — getInvoiceStatus", () => {
 });
 
 describe("🧰 Tolom — getExpensesSummary", () => {
-	const run = () => tool("getExpensesSummary").execute({}) as Promise<any>;
+	const run = () => tool("getExpensesSummary")\.execute({}, ctx) as Promise<any>;
 
 	it("🗣️ 'Энэ сарын зарлагын хураангуй харуул'", async () => {
 		const r = await run();
@@ -340,7 +340,7 @@ describe("🧰 Tolom — getExpensesSummary", () => {
 });
 
 describe("🧰 Tolom — getAppointments", () => {
-	const run = () => tool("getAppointments").execute({}) as Promise<any[]>;
+	const run = () => tool("getAppointments")\.execute({}, ctx) as Promise<any[]>;
 
 	it("🗣️ 'Өнөөдрийн цагийн хуваарийг харуул'", async () => {
 		const r = await run();
@@ -403,7 +403,7 @@ describe("🧰 Tolom — getAppointments", () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe("🏪 Zer — getSalesSummary", () => {
-	const run = (days?: number) => tool("getSalesSummary").execute({ ...(days !== undefined ? { days } : {}) }) as Promise<any>;
+	const run = (days?: number) => tool("getSalesSummary").execute({ ...(days !== undefined ? { days } : {}) }, ctx) as Promise<any>;
 
 	it("🗣️ 'Сүүлийн 7 хоногийн борлуулалтын хураангуй'", async () => {
 		const r = await run();
@@ -434,7 +434,7 @@ describe("🏪 Zer — getSalesSummary", () => {
 });
 
 describe("🏪 Zer — getPendingSales", () => {
-	const run = () => tool("getPendingSales").execute({}) as Promise<any[]>;
+	const run = () => tool("getPendingSales")\.execute({}, ctx) as Promise<any[]>;
 
 	it("🗣️ 'Дутуу төлөлттэй борлуулалтуудыг харуул'", async () => {
 		const r = await run();
@@ -478,7 +478,7 @@ describe("🏪 Zer — getPendingSales", () => {
 });
 
 describe("🏪 Zer — getTodaySales", () => {
-	const run = () => tool("getTodaySales").execute({}) as Promise<any>;
+	const run = () => tool("getTodaySales")\.execute({}, ctx) as Promise<any>;
 
 	it("🗣️ 'Өнөөдрийн борлуулалтын дүн хэд вэ?'", async () => {
 		const r = await run();
@@ -526,48 +526,48 @@ describe("⚠️  Empty / Zero Data Edge Cases", () => {
 	it("getActiveWorkOrders — no data returns empty array", async () => {
 		const { supabase } = emptyCtx();
 		const tools = getProductTools("tolom", { ...ctx, supabase });
-		const r = await tools.find(t => t.name === "getActiveWorkOrders")!.execute({});
+		const r = await tools.find(t => t.name === "getActiveWorkOrders")!\.execute({}, ctx);
 		expect(Array.isArray(r)).toBe(true);
 		expect(r).toHaveLength(0);
 	});
 	it("getExpensesSummary — no data returns 0 values", async () => {
 		const { supabase } = emptyCtx();
 		const tools = getProductTools("tolom", { ...ctx, supabase });
-		const r = await tools.find(t => t.name === "getExpensesSummary")!.execute({}) as any;
+		const r = await tools.find(t => t.name === "getExpensesSummary")!\.execute({}, ctx) as any;
 		expect(r.total).toBe(0);
 		expect(r.expenseCount).toBe(0);
 	});
 	it("getSalesSummary — no data returns 0", async () => {
 		const { supabase } = emptyCtx();
 		const tools = getProductTools("zer", { ...ctx, supabase });
-		const r = await tools.find(t => t.name === "getSalesSummary")!.execute({}) as any;
+		const r = await tools.find(t => t.name === "getSalesSummary")!\.execute({}, ctx) as any;
 		expect(r.totalAmount).toBe(0);
 		expect(r.saleCount).toBe(0);
 	});
 	it("getTodaySales — no data returns 0", async () => {
 		const { supabase } = emptyCtx();
 		const tools = getProductTools("zer", { ...ctx, supabase });
-		const r = await tools.find(t => t.name === "getTodaySales")!.execute({}) as any;
+		const r = await tools.find(t => t.name === "getTodaySales")!\.execute({}, ctx) as any;
 		expect(r.saleCount).toBe(0);
 	});
 	it("getPendingSales — no data returns empty array", async () => {
 		const { supabase } = emptyCtx();
 		const tools = getProductTools("zer", { ...ctx, supabase });
-		const r = await tools.find(t => t.name === "getPendingSales")!.execute({});
+		const r = await tools.find(t => t.name === "getPendingSales")!\.execute({}, ctx);
 		expect(Array.isArray(r)).toBe(true);
 		expect(r).toHaveLength(0);
 	});
 	it("getDailySummary — no data returns 0s", async () => {
 		const { supabase } = emptyCtx();
 		const tools = getProductTools("tolom", { ...ctx, supabase });
-		const r = await tools.find(t => t.name === "getDailySummary")!.execute({}) as any;
+		const r = await tools.find(t => t.name === "getDailySummary")!\.execute({}, ctx) as any;
 		expect(r.activeWorkOrders).toBe(0);
 		expect(r.monthlyInvoices).toBe(0);
 	});
 	it("getAppointments — no data returns empty array", async () => {
 		const { supabase } = emptyCtx();
 		const tools = getProductTools("tolom", { ...ctx, supabase });
-		const r = await tools.find(t => t.name === "getAppointments")!.execute({});
+		const r = await tools.find(t => t.name === "getAppointments")!\.execute({}, ctx);
 		expect(Array.isArray(r)).toBe(true);
 		expect(r).toHaveLength(0);
 	});
@@ -575,17 +575,17 @@ describe("⚠️  Empty / Zero Data Edge Cases", () => {
 
 describe("⚠️  Boundary Values", () => {
 	it("getSalesSummary days=0 defaults to 7", async () => {
-		expect((await tool("getSalesSummary").execute({ days: 0 }) as any).period).toBe("Сүүлийн 7 өдөр");
+		expect((await tool("getSalesSummary")\\.execute({ days: 0 }, ctx) as any).period).toBe("Сүүлийн 7 өдөр");
 	});
 	it("getSalesSummary days=-1 defaults to 7", async () => {
-		expect((await tool("getSalesSummary").execute({ days: -1 }) as any).period).toBe("Сүүлийн 7 өдөр");
+		expect((await tool("getSalesSummary")\\.execute({ days: -1 }, ctx) as any).period).toBe("Сүүлийн 7 өдөр");
 	});
 	it("getSalesSummary days=9999 (large boundary)", async () => {
-		expect((await tool("getSalesSummary").execute({ days: 9999 }) as any).period).toBe("Сүүлийн 9999 өдөр");
+		expect((await tool("getSalesSummary")\\.execute({ days: 9999 }, ctx) as any).period).toBe("Сүүлийн 9999 өдөр");
 	});
 	it("getSalesSummary days=1.5 (float — JS allows floats)", async () => {
 		// typeof 1.5 === "number" and 1.5 > 0, so it passes validation
-		const r = await tool("getSalesSummary").execute({ days: 1.5 }) as any;
+		const r = await tool("getSalesSummary")\\.execute({ days: 1.5 }, ctx) as any;
 		expect(r.period).toBe("Сүүлийн 1.5 өдөр");
 	});
 });
@@ -597,40 +597,40 @@ describe("⚠️  Error Resilience", () => {
 	};
 
 	it("getDailySummary — DB error returns Mongolian error", async () => {
-		const r = await getProductTools("tolom", brokenCtx()).find(t => t.name === "getDailySummary")!.execute({});
+		const r = await getProductTools("tolom", brokenCtx()).find(t => t.name === "getDailySummary")!\.execute({}, ctx);
 		expect(r).toHaveProperty("error");
 		expect((r as any).error).toMatch(/[А-Яа-я]/); // Cyrillic error message
 	});
 	it("getActiveWorkOrders — DB error returns error", async () => {
-		const r = await getProductTools("tolom", brokenCtx()).find(t => t.name === "getActiveWorkOrders")!.execute({});
+		const r = await getProductTools("tolom", brokenCtx()).find(t => t.name === "getActiveWorkOrders")!\.execute({}, ctx);
 		expect(r).toHaveProperty("error");
 	});
 	it("getCustomerHistory — DB error returns error", async () => {
-		const r = await getProductTools("tolom", brokenCtx()).find(t => t.name === "getCustomerHistory")!.execute({ query: "test" });
+		const r = await getProductTools("tolom", brokenCtx()).find(t => t.name === "getCustomerHistory")!\.execute({ query: "test" }, ctx);
 		expect(r).toHaveProperty("error");
 	});
 	it("getInvoiceStatus — DB error returns error", async () => {
-		const r = await getProductTools("tolom", brokenCtx()).find(t => t.name === "getInvoiceStatus")!.execute({});
+		const r = await getProductTools("tolom", brokenCtx()).find(t => t.name === "getInvoiceStatus")!\.execute({}, ctx);
 		expect(r).toHaveProperty("error");
 	});
 	it("getExpensesSummary — DB error returns error", async () => {
-		const r = await getProductTools("tolom", brokenCtx()).find(t => t.name === "getExpensesSummary")!.execute({});
+		const r = await getProductTools("tolom", brokenCtx()).find(t => t.name === "getExpensesSummary")!\.execute({}, ctx);
 		expect(r).toHaveProperty("error");
 	});
 	it("getAppointments — DB error returns error", async () => {
-		const r = await getProductTools("tolom", brokenCtx()).find(t => t.name === "getAppointments")!.execute({});
+		const r = await getProductTools("tolom", brokenCtx()).find(t => t.name === "getAppointments")!\.execute({}, ctx);
 		expect(r).toHaveProperty("error");
 	});
 	it("getSalesSummary — DB error returns error", async () => {
-		const r = await getProductTools("zer", brokenCtx()).find(t => t.name === "getSalesSummary")!.execute({});
+		const r = await getProductTools("zer", brokenCtx()).find(t => t.name === "getSalesSummary")!\.execute({}, ctx);
 		expect(r).toHaveProperty("error");
 	});
 	it("getPendingSales — DB error returns error", async () => {
-		const r = await getProductTools("zer", brokenCtx()).find(t => t.name === "getPendingSales")!.execute({});
+		const r = await getProductTools("zer", brokenCtx()).find(t => t.name === "getPendingSales")!\.execute({}, ctx);
 		expect(r).toHaveProperty("error");
 	});
 	it("getTodaySales — DB error returns error", async () => {
-		const r = await getProductTools("zer", brokenCtx()).find(t => t.name === "getTodaySales")!.execute({});
+		const r = await getProductTools("zer", brokenCtx()).find(t => t.name === "getTodaySales")!\.execute({}, ctx);
 		expect(r).toHaveProperty("error");
 	});
 });
@@ -674,32 +674,32 @@ describe("🔧 Product Type Integrity", () => {
 
 describe("📊 Data Validity", () => {
 	it("Invoice totalInvoiced ≥ totalPaid", async () => {
-		const r = await tool("getInvoiceStatus").execute({}) as any;
+		const r = await tool("getInvoiceStatus")\.execute({}, ctx) as any;
 		expect(r.totalInvoiced).toBeGreaterThanOrEqual(r.totalPaid);
 	});
 	it("Today's sales totalAmount ≥ totalPaid", async () => {
-		const r = await tool("getTodaySales").execute({}) as any;
+		const r = await tool("getTodaySales")\.execute({}, ctx) as any;
 		expect(r.totalAmount).toBeGreaterThanOrEqual(r.totalPaid);
 	});
 	it("Expense total equals sum of categories", async () => {
-		const r = await tool("getExpensesSummary").execute({}) as any;
+		const r = await tool("getExpensesSummary")\.execute({}, ctx) as any;
 		const catSum = Object.values(r.byCategory as Record<string, number>).reduce((a, b) => a + b, 0);
 		expect(catSum).toBe(r.total);
 	});
 	it("Active work orders count is non-negative", async () => {
-		const r = await tool("getDailySummary").execute({}) as any;
+		const r = await tool("getDailySummary")\.execute({}, ctx) as any;
 		expect(r.activeWorkOrders).toBeGreaterThanOrEqual(0);
 	});
 	it("Sales summary totalAmount is non-negative", async () => {
-		expect((await tool("getSalesSummary").execute({}) as any).totalAmount).toBeGreaterThanOrEqual(0);
+		expect((await tool("getSalesSummary")\.execute({}, ctx) as any).totalAmount).toBeGreaterThanOrEqual(0);
 	});
 	it("Pending sales all have total ≥ paid", async () => {
-		for (const s of await tool("getPendingSales").execute({}) as any[]) {
+		for (const s of await tool("getPendingSales")\.execute({}, ctx) as any[]) {
 			expect(s.totalAmount).toBeGreaterThanOrEqual(s.paidAmount);
 		}
 	});
 	it("Appointment customer names are never empty", async () => {
-		for (const a of await tool("getAppointments").execute({}) as any[]) {
+		for (const a of await tool("getAppointments")\.execute({}, ctx) as any[]) {
 			expect(a.customerName).toBeTruthy();
 		}
 	});

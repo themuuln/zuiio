@@ -6,7 +6,7 @@ describe("securityAudit", () => {
 	beforeEach(() => {
 		// Start with clean env — only set safe defaults
 		process.env = { ...originalEnv };
-		process.env.NODE_ENV = "production";
+		Object.defineProperty(process.env, "NODE_ENV", { value: "production", writable: true });
 	});
 
 	afterEach(() => {

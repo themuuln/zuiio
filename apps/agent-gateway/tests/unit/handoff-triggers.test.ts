@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 describe("checkHandoffTriggers", () => {
 	let checkHandoffTriggers: typeof import("@/state/handoff").checkHandoffTriggers;

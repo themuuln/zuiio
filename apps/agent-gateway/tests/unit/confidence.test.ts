@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 describe("scoreConfidence", () => {
 	let scoreConfidence: typeof import("@/state/confidence").scoreConfidence;
