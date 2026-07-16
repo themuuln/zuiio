@@ -8,6 +8,7 @@ on:
       - "packages/**"
       - "pnpm-lock.yaml"
       - ".github/workflows/deploy-agent-gateway.yml"
+      - ".github/workflows/_deploy-vercel.yml"
 
 concurrency:
   group: deploy-agent-gateway

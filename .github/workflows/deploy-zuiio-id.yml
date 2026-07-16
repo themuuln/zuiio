@@ -8,6 +8,7 @@ on:
       - "packages/**"
       - "pnpm-lock.yaml"
       - ".github/workflows/deploy-zuiio-id.yml"
+      - ".github/workflows/_deploy-vercel.yml"
 
 concurrency:
   group: deploy-zuiio-id
