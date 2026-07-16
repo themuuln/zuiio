@@ -9,13 +9,10 @@ on:
       - ".vscode/**"
       - ".gitignore"
 
-# Single concurrency group per app — rapid pushes cancel previous runs
-concurrency:
-  group: deploy-${{ github.sha }}
-  cancel-in-progress: true
+permissions:
+  contents: read
 
 jobs:
-  # ─── Detect which apps actually changed ───
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
@@ -25,8 +22,6 @@ jobs:
       website: ${{ steps.filter.outputs.website }}
       agent-gateway: ${{ steps.filter.outputs['agent-gateway'] }}
       zuiio-id: ${{ steps.filter.outputs['zuiio-id'] }}
-      tamga: ${{ steps.filter.outputs.tamga }}
-      workflows: ${{ steps.filter.outputs.workflows }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -35,26 +30,83 @@ jobs:
           filters: |
             zer:
               - 'apps/zer/**'
+              - 'packages/core/**'
+              - 'packages/hooks/**'
+              - 'packages/query/**'
+              - 'packages/ui/**'
+              - 'packages/realtime/**'
+              - 'packages/offline/**'
+              - 'packages/hr/**'
+              - 'packages/export/**'
+              - 'packages/branding/**'
+              - 'config/**'
+              - 'turbo.json'
+              - 'tsconfig.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'package.json'
             tolom:
               - 'apps/tolom/**'
+              - 'packages/core/**'
+              - 'packages/hooks/**'
+              - 'packages/query/**'
+              - 'packages/ui/**'
+              - 'packages/realtime/**'
+              - 'packages/offline/**'
+              - 'packages/hr/**'
+              - 'packages/export/**'
+              - 'packages/branding/**'
+              - 'config/**'
+              - 'turbo.json'
+              - 'tsconfig.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'package.json'
             onoo:
               - 'apps/onoo/**'
+              - 'packages/core/**'
+              - 'packages/branding/**'
+              - 'config/**'
+              - 'turbo.json'
+              - 'tsconfig.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'package.json'
             website:
               - 'apps/website/**'
+              - 'packages/core/**'
+              - 'config/**'
+              - 'turbo.json'
+              - 'tsconfig.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'package.json'
             agent-gateway:
               - 'apps/agent-gateway/**'
+              - 'packages/core/**'
+              - 'packages/ai-agent/**'
+              - 'packages/capture/**'
+              - 'config/**'
+              - 'turbo.json'
+              - 'tsconfig.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'package.json'
             zuiio-id:
               - 'apps/zuiio-id/**'
-            tamga:
-              - 'apps/tamga/**'
-            workflows:
-              - '.github/workflows/**'
-
-  # ─── Deploy only changed apps ───
+              - 'packages/core/**'
+              - 'packages/auth/**'
+              - 'packages/branding/**'
+              - 'config/**'
+              - 'turbo.json'
+              - 'tsconfig.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'package.json'
 
   deploy-zer:
     needs: detect-changes
-    if: needs.detect-changes.outputs.zer == 'true' || needs.detect-changes.outputs.workflows == 'true'
+    if: needs.detect-changes.outputs.zer == 'true'
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: zer
@@ -67,7 +119,7 @@ jobs:
 
   deploy-tolom:
     needs: detect-changes
-    if: needs.detect-changes.outputs.tolom == 'true' || needs.detect-changes.outputs.workflows == 'true'
+    if: needs.detect-changes.outputs.tolom == 'true'
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: tolom
@@ -80,7 +132,7 @@ jobs:
 
   deploy-onoo:
     needs: detect-changes
-    if: needs.detect-changes.outputs.onoo == 'true' || needs.detect-changes.outputs.workflows == 'true'
+    if: needs.detect-changes.outputs.onoo == 'true'
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: onoo
@@ -93,7 +145,7 @@ jobs:
 
   deploy-website:
     needs: detect-changes
-    if: needs.detect-changes.outputs.website == 'true' || needs.detect-changes.outputs.workflows == 'true'
+    if: needs.detect-changes.outputs.website == 'true'
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: website
@@ -106,7 +158,7 @@ jobs:
 
   deploy-agent-gateway:
     needs: detect-changes
-    if: needs.detect-changes.outputs['agent-gateway'] == 'true' || needs.detect-changes.outputs.workflows == 'true'
+    if: needs.detect-changes.outputs['agent-gateway'] == 'true'
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: agent-gateway
@@ -119,7 +171,7 @@ jobs:
 
   deploy-zuiio-id:
     needs: detect-changes
-    if: needs.detect-changes.outputs['zuiio-id'] == 'true' || needs.detect-changes.outputs.workflows == 'true'
+    if: needs.detect-changes.outputs['zuiio-id'] == 'true'
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: zuiio-id
@@ -129,57 +181,3 @@ jobs:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_ZUIIO_ID }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_ZUIIO_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_ZUIIO_ID }}
-
-  deploy-tamga:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.tamga == 'true'
-    runs-on: ubuntu-latest
-    env:
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_TAMGA }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_TAMGA }}
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_TAMGA }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: false
-          sparse-checkout: |
-            apps/tamga
-
-      - name: Set Vercel-compatible git author
-        run: |
-          git config user.email "themuln.official@gmail.com"
-          git config user.name "Temuulen Undrakhbayar"
-          git commit --amend --no-edit --reset-author
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Enable corepack
-        run: corepack enable
-
-      - name: Install Vercel CLI
-        run: npm i -g vercel@latest
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Stage Vercel project config
-        run: |
-          mkdir -p .vercel
-          printf '{"projectId":"%s","orgId":"%s"}\n' "$VERCEL_PROJECT_ID" "$VERCEL_ORG_ID" > .vercel/project.json
-
-      - name: Pull Vercel environment
-        run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
-
-      - name: Build
-        run: vercel build --prod --token=$VERCEL_TOKEN
-
-      - name: Deploy to production
-        run: vercel deploy --prebuilt --prod --archive=tgz --token=$VERCEL_TOKEN
