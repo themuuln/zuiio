@@ -3,5 +3,15 @@
 	"buildCommand": "cd ../.. && pnpm exec turbo run build --filter=agent-gateway",
 	"outputDirectory": ".next",
 	"framework": "nextjs",
-	"regions": ["sin1"]
+	"regions": ["sin1"],
+	"crons": [
+		{
+			"path": "/api/cron/reminders",
+			"schedule": "*/5 * * * *"
+		},
+		{
+			"path": "/api/cron/briefing",
+			"schedule": "0 8 * * *"
+		}
+	]
 }

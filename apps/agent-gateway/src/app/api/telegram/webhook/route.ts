@@ -106,9 +106,9 @@ export async function POST(request: Request): Promise<NextResponse> {
 		}
 
 		const msg = update.message;
-		if (!msg?.text && !msg?.voice) {
-			return NextResponse.json({ ok: true });
-		}
+if (!msg?.text && !msg?.voice && !msg?.photo) {
+	return NextResponse.json({ ok: true });
+}
 
 		const chatId = msg.chat.id;
 		const userId = msg.from?.id ?? 0;
@@ -152,6 +152,41 @@ export async function POST(request: Request): Promise<NextResponse> {
 
 			return NextResponse.json({ ok: true });
 		}
+		// ─── Photo handling ────────────────────────────────────────────────
+		if (msg.photo) {
+			const tg = getTelegram();
+			// Telegram sends multiple sizes — pick the largest
+			const largestPhoto = msg.photo[msg.photo.length - 1];
+			if (!largestPhoto?.file_id) {
+				return NextResponse.json({ ok: true });
+			}
+
+			try {
+				const fileInfo = await tg.getFile(largestPhoto.file_id);
+				const fileBuffer = await tg.downloadFile(fileInfo.file_path);
+				const base64 = fileBuffer.toString("base64");
+				const dataUrl = `data:image/jpeg;base64,${base64}`;
+
+				const caption = msg.caption ?? "Энэ зургийг шинжилж үзээрэй.";
+				await handleUserMessage(
+					chatId,
+					userId,
+					caption,
+					chatType,
+					msg.message_id,
+					[dataUrl],
+				);
+			} catch (err) {
+				capture(err, { context: "agent-gateway: photo processing" });
+				await tg.sendMessage(
+					chatId,
+					"Уучлаарай, зураг боловсруулахад алдаа гарлаа.",
+				);
+			}
+
+			return NextResponse.json({ ok: true });
+		}
+
 
 		if (text.startsWith("/switch")) {
 			await handleSwitchCommand(chatId, userId);
@@ -580,10 +615,8 @@ export async function POST(request: Request): Promise<NextResponse> {
 				// Zer - search products
 				const { data: products } = await sb
 					.from("products")
-					.select("id, name, price, sku")
-					.eq("organization_id", orgId)
-					.is("deleted_at", null)
-					.or(`name.ilike.%${query}%,sku.ilike.%${query}%`)
+					.select("id, name, price")
+					.ilike("name", `%${query}%`)
 					.limit(5);
 
 				if (!products || products.length === 0) {
@@ -615,13 +648,14 @@ export async function POST(request: Request): Promise<NextResponse> {
 		}
 	}
 
-	async function handleUserMessage(
-		chatId: number,
-		userId: number,
-		text: string,
-		chatType: string,
-		messageId?: number,
-	): Promise<void> {
+async function handleUserMessage(
+	chatId: number,
+	userId: number,
+	text: string,
+	chatType: string,
+	messageId?: number,
+	images?: string[],
+): Promise<void> {
 		const tg = getTelegram();
 		const sb = getSupabase();
 
@@ -688,12 +722,12 @@ export async function POST(request: Request): Promise<NextResponse> {
 	// Vercel serverless kills background tasks after response, so we MUST
 	// await the full flow (agent + telegram send) before returning.
 	try {
-		const response = await handleAgentMessage(resolved.context, text, chatType, {
-			getSystemPrompt: systemPromptFor,
-			getTools: (ctx) => getProductTools(productType, ctx),
-			dataClient,
-			onToken,
-		});
+const response = await handleAgentMessage(resolved.context, text, chatType, {
+	getSystemPrompt: systemPromptFor,
+	getTools: (ctx) => getProductTools(productType, ctx),
+	dataClient,
+	onToken,
+}, images);
 		stopTyping();
 	debug("webhook", "agent responded", { chatId, len: response.length });
 	if (messageId) {

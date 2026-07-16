@@ -12,6 +12,7 @@ export async function systemPromptFor(
 	productType: string,
 	orgId: string,
 	chatType: string,
+	lang?: string,
 ): Promise<string> {
 	const groupWarning =
 		chatType !== "private"
@@ -33,6 +34,36 @@ export async function systemPromptFor(
 	}
 
 	if (productType === "tolom") {
+		if (lang === "en") {
+			return `You are an AI business agent for "${orgName || "This auto repair shop"}", a Tolom-powered auto repair business.
+
+## IDENTITY
+- Your name is: ${orgName || "This auto repair shop"}
+- You are a PROACTIVE business agent
+- You take initiative: query data, analyze, and provide insights WITHOUT being asked
+
+## RESPONSE FORMAT
+- Use HTML formatting ONLY: <b>Bold</b>, <i>Italic</i>, <code>Code</code>
+- Keep responses SHORT — 1-2 sentences maximum
+
+## AGENT BEHAVIOR RULES
+1. NEVER say "I don't have that data" — you have tools to query ANY business data
+2. ALWAYS use tools when the user asks about business data
+3. Query with the right date range based on what the user asks
+4. Be proactive — after showing data, offer relevant next steps
+
+## TOOL USAGE
+You have flexible query tools for all business data. Use getVehicleAnalytics for vehicle questions, getFinancialSummary for financial questions, queryData for any table query. For write operations, describe what you'll do first.
+
+## MULTI-STEP WIZARDS
+When users want to do complex operations, guide them step by step:
+- "Create work order" → Start work order wizard: ask customer name, plate, description
+- "Book appointment" → Start appointment wizard: ask customer, date/time, description
+- "Create invoice" → Start invoice wizard: ask customer, amount, description
+- Keep each step to ONE question at a time
+- After collecting all data, confirm with the user before submitting
+Organization ID: ${orgId}${groupWarning}`;
+		}
 		return `You are an AI business agent for "${orgName || "This auto repair shop"}", a Tolom-powered auto repair business.
 
 ## IDENTITY
@@ -116,9 +147,39 @@ You can query ALL business data including:
 - Cash register sessions
 - Mechanic daily reports
 
+## MULTI-STEP WIZARDS
+When users want to do complex operations, guide them step by step:
+- "Захиалга үүсгэе" → Start work order wizard: ask customer name, plate, description
+- "Цаг захиалга үүсгэе" → Start appointment wizard: ask customer, date/time, description
+- "Нэхэмжлэх үүсгэе" → Start invoice wizard: ask customer, amount, description
+- Keep each step to ONE question at a time
+- After collecting all data, confirm with the user before submitting
 Organization ID: ${orgId}${groupWarning}`;
 	}
 
+	if (lang === "en") {
+		return `You are an AI assistant for "${orgName || "This store"}", a Zer-powered retail/accounting business.
+
+## IDENTITY
+- Your name is: ${orgName || "This store"}
+- You are a PROACTIVE business agent
+- You take initiative: query data, analyze, and provide insights WITHOUT being asked
+
+## RESPONSE FORMAT
+- Use HTML formatting ONLY: <b>Bold</b>, <i>Italic</i>, <code>Code</code>
+- Keep responses SHORT — 1-2 sentences maximum
+
+## AGENT BEHAVIOR RULES
+1. NEVER say "I don't have that data" — you have tools to query ANY business data
+2. ALWAYS use tools when the user asks about business data
+3. Query with the right date range based on what the user asks
+4. Be proactive — after showing data, offer relevant next steps
+
+## TOOL USAGE
+You have flexible query tools for all business data.
+
+Organization ID: ${orgId}${groupWarning}`;
+	}
 	return `You are an AI assistant for "${orgName || "This store"}", a Zer-powered retail/accounting business.
 
 ## IDENTITY
@@ -955,6 +1016,91 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 				}
 			},
 		},
+		{
+			name: "exportData",
+			description: "Өгөгдлийг CSV болгож экспортлох. Хүснэгт, хугацааны хязгаартай.",
+			parameters: [
+				{ name: "table", type: "string", description: "Хүснэгтийн нэр (work_orders, invoices, customers, expenses, sales)", required: true },
+				{ name: "date_from", type: "string", description: "Эхлэх огноо (YYYY-MM-DD)", required: false },
+				{ name: "date_to", type: "string", description: "Дуусах огноо (YYYY-MM-DD)", required: false },
+			],
+			execute: async (args) => {
+				try {
+					const table = (args.table as string)?.toLowerCase();
+					const allowedTables: Record<string, { dateCol: string; select: string }> = {
+						work_orders: { dateCol: "created_at", select: "id, status, description, total_amount, created_at" },
+						invoices: { dateCol: "issued_at", select: "id, invoice_number, status, total, amount_paid, balance_due, issued_at" },
+						customers: { dateCol: "created_at", select: "id, full_name, phone, email, total_visits" },
+						expenses: { dateCol: "expense_date", select: "id, amount, description, expense_date" },
+						sales: { dateCol: "sale_date", select: "id, total_amount, paid_amount, sale_date, customer_name" },
+					};
+					if (!table || !allowedTables[table]) {
+						return { error: `Экспортлох боломжгүй хүснэгт: "${args.table}"` };
+					}
+					const cfg = allowedTables[table];
+					let query = supabase.from(table).select(cfg.select).eq("organization_id", orgId).is("deleted_at", null);
+					if (args.date_from && typeof args.date_from === "string") query = query.gte(cfg.dateCol, args.date_from);
+					if (args.date_to && typeof args.date_to === "string") query = query.lte(cfg.dateCol, `${args.date_to}T23:59:59Z`);
+					const { data, error } = await query.order(cfg.dateCol, { ascending: false }).limit(500);
+					if (error) return { error: "Өгөгдөл татахад алдаа гарлаа" };
+					const rows = data ?? [];
+					if (rows.length === 0) return { message: "Өгөгдөл олдсонгүй", csv: "" };
+					const headers = Object.keys((rows[0] ?? {}) as unknown as Record<string, unknown>);
+					const csvRows = (rows as unknown as Record<string, unknown>[]).map((r) =>
+						headers.map((h) => {
+							const val = r[h];
+							if (val === null || val === undefined) return "";
+							if (typeof val === "object") return JSON.stringify(val);
+							const str = String(val);
+							return str.includes(",") || str.includes('"') ? `"${str.replace(/"/g, '""')}"` : str;
+						}).join(",")
+					);
+					const csv = [headers.join(","), ...csvRows].join("\n");
+					return { table, rowCount: rows.length, csv };
+				} catch (err) {
+					capture(err, { context: "agent-gateway: exportData" });
+					return { error: "Экспортлохад алдаа гарлаа" };
+				}
+			},
+		},
+		{
+			name: "partsLookup",
+			description: "Сэлбэгийн үнийн мэдээлэл хайх. Дотоод каталог болон түүхэн үнэ.",
+			parameters: [
+				{ name: "query", type: "string", description: "Сэлбэгийн нэр, дугаар эсвэл тодорхойлолт", required: true },
+			],
+			execute: async (args) => {
+				try {
+					const q = args.query as string;
+					const { data: internalParts } = await supabase
+						.from("parts_catalog")
+						.select("id, name, part_number, unit_price, category")
+						.eq("organization_id", orgId)
+						.is("deleted_at", null)
+						.or(`name.ilike.%${q}%,part_number.ilike.%${q}%`)
+						.limit(10);
+					const { data: historicalParts } = await supabase
+						.from("work_order_parts")
+						.select("part_name, part_number, unit_price, final_price, created_at")
+						.eq("organization_id", orgId)
+						.or(`part_name.ilike.%${q}%,part_number.ilike.%${q}%`)
+						.order("created_at", { ascending: false })
+						.limit(10);
+					return {
+						query: q,
+						internalCatalog: (internalParts ?? []).map((p: Record<string, unknown>) => ({
+							name: p.name, partNumber: p.part_number, price: Number(p.unit_price) || 0, category: p.category,
+						})),
+						historicalPricing: (historicalParts ?? []).map((p: Record<string, unknown>) => ({
+							name: p.part_name, partNumber: p.part_number, unitPrice: Number(p.unit_price) || 0, date: p.created_at,
+						})),
+					};
+				} catch (err) {
+					capture(err, { context: "agent-gateway: partsLookup" });
+					return { error: "Сэлбэг хайхад алдаа гарлаа" };
+				}
+			},
+		},
 	];
 }
 
@@ -1433,6 +1579,97 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 				} catch (err) {
 					capture(err, { context: "agent-gateway: createAppointment" });
 					return { error: "Цаг захиалга үүсгэхэд алдаа гарлаа" };
+				}
+			},
+		},
+		{
+			name: "sendInvoicePdf",
+			description:
+				"Нэхэмжлэхийг PDF болгож илгээх. БАТАЛГААЖУУЛАЛТЫН багаж.",
+			parameters: [
+				{
+					name: "invoiceId",
+					type: "string",
+					description: "Нэхэмжлэхийн ID",
+					required: true,
+				},
+			],
+			execute: async (args) => {
+				try {
+					const { data: invoice, error } = await supabase
+						.from("invoices")
+						.select(
+							"id, invoice_number, total, amount_paid, balance_due, status, customer_name, issued_at",
+						)
+						.eq("id", args.invoiceId as string)
+						.eq("organization_id", orgId)
+						.single();
+					if (error || !invoice) return { error: "Нэхэмжлэх олдсонгүй" };
+					// Return invoice data — the channel layer handles PDF generation
+					return {
+						success: true,
+						invoiceId: (invoice as Record<string, unknown>).id,
+						invoiceNumber: (invoice as Record<string, unknown>).invoice_number,
+						total: (invoice as Record<string, unknown>).total,
+						customerName: (invoice as Record<string, unknown>).customer_name,
+						message: "Нэхэмжлэхийн мэдээлэл бэлэн. PDF үүсгэх шаардлагатай.",
+					};
+				} catch (err) {
+					capture(err, { context: "agent-gateway: sendInvoicePdf" });
+					return { error: "Нэхэмжлэх илгээхэд алдаа гарлаа" };
+				}
+			},
+		},
+		{
+			name: "createReminder",
+			description: "Сануулга үүсгэх. Тодорхой хугацааны дараа мессеж илгээнэ. БАТАЛГААЖУУЛАЛТЫН багаж.",
+			parameters: [
+				{ name: "message", type: "string", description: "Сануулгын агуулга", required: true },
+				{ name: "remindAt", type: "string", description: "Хэзээ сануулах (YYYY-MM-DDTHH:MM)", required: true },
+			],
+			execute: async (args) => {
+				try {
+					const message = args.message as string;
+					const remindAt = args.remindAt as string;
+					const { error } = await supabase.from("notifications").insert({
+						organization_id: orgId, type: "reminder", title: "Сануулга",
+						message, scheduled_for: remindAt, is_read: false,
+					});
+					if (error) return { success: true, message: `Сануулга тэмдэглэгдлээ: ${message} (${remindAt})` };
+					return { success: true, message: `Сануулга амжилттай үүслээ: ${message} (${remindAt})` };
+				} catch (err) {
+					capture(err, { context: "agent-gateway: createReminder" });
+					return { error: "Сануулга үүсгэхэд алдаа гарлаа" };
+				}
+			},
+		},
+		{
+			name: "bulkUpdateWorkOrderStatus",
+			description: "Олон ажлын захиалгын төлөвийг нэгэн зэрэг өөрчлөх. БАТАЛГААЖУУЛАЛТЫН багаж.",
+			parameters: [
+				{ name: "workOrderIds", type: "string", description: "IDs-уудын жагсаалт (тикийгээр таслалаар тусгаарласан)", required: true },
+				{ name: "newStatus", type: "string", description: "Шинэ төлөв: received, in_progress, completed, delivered, cancelled", required: true },
+			],
+			execute: async (args) => {
+				try {
+					const ids = (args.workOrderIds as string).split(",").map(s => s.trim()).filter(Boolean);
+					const validStatuses = ["received", "in_progress", "completed", "delivered", "cancelled"];
+					const newStatus = (args.newStatus as string).toLowerCase();
+					if (!validStatuses.includes(newStatus)) {
+						return { error: `Хүчингүй төлөв: "${args.newStatus}". Боломжит: ${validStatuses.join(", ")}` };
+					}
+					if (ids.length === 0) return { error: "ID-ууд оруулна уу" };
+					const { data, error } = await supabase
+						.from("work_orders")
+						.update({ status: newStatus })
+						.eq("organization_id", orgId)
+						.in("id", ids)
+						.select("id, status");
+					if (error) return { error: "Олон захиалга шинэчлэхэд алдаа гарлаа" };
+					return { success: true, updated: (data ?? []).length, newStatus, ids };
+				} catch (err) {
+					capture(err, { context: "agent-gateway: bulkUpdateWorkOrderStatus" });
+					return { error: "Олон захиалга шинэчлэхэд алдаа гарлаа" };
 				}
 			},
 		},

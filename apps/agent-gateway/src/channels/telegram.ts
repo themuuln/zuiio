@@ -58,6 +58,27 @@ export class TelegramChannel implements Channel {
 		}
 	}
 
+	async sendDocument(
+		chatId: number | string,
+		fileBuffer: Buffer,
+		filename: string,
+		caption?: string,
+	): Promise<void> {
+		const formData = new FormData();
+		formData.append("chat_id", String(chatId));
+		formData.append("document", new Blob([fileBuffer as unknown as BlobPart]), filename);
+		if (caption) formData.append("caption", caption);
+
+		const res = await fetch(`${this.baseUrl}/sendDocument`, {
+			method: "POST",
+			body: formData,
+		});
+		if (!res.ok) {
+			const err = await res.text().catch(() => "unknown");
+			throw new Error(`Telegram sendDocument failed: ${res.status} — ${err}`);
+		}
+	}
+
 	/**
 	 * Send a rich message with native table rendering (Bot API 10.1+).
 	 * Returns true if sent successfully, false to fall back to HTML.

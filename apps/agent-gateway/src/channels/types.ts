@@ -41,6 +41,13 @@ export interface Channel {
 		messageId: number,
 		text: string,
 	): Promise<void>;
+	/** Send a document/file. Optional — not all channels support it. */
+	sendDocument?(
+		chatId: number | string,
+		fileBuffer: Buffer,
+		filename: string,
+		caption?: string,
+	): Promise<void>;
 }
 
 /** Incoming message from any channel. */
@@ -80,6 +87,8 @@ export interface TelegramUpdate {
 		};
 		text?: string;
 		voice?: { file_id: string; duration: number };
+		photo?: Array<{ file_id: string; file_size?: number; width?: number; height?: number }>;
+		caption?: string;
 	};
 	callback_query?: {
 		id: string;

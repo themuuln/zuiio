@@ -2,16 +2,16 @@ import "server-only";
 
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
-import { gatherBriefingData, logBriefing } from "@/state/briefing";
+import { TelegramChannel } from "@/channels/telegram";
 
 export const runtime = "nodejs";
 
 /**
- * POST /api/cron/briefing
+ * GET /api/cron/briefing
+ * Sends a morning summary to org owners via Telegram.
  * Runs daily at 8:00 AM Mongolia time (UTC+8 = 00:00 UTC).
- * Loops through all organizations with telegram_links and sends a morning briefing.
  */
-export async function GET(request: Request) {
+export async function GET(request: Request): Promise<NextResponse> {
 	// Verify cron secret
 	const authHeader = request.headers.get("authorization");
 	const cronSecret = process.env.CRON_SECRET;
@@ -20,114 +20,93 @@ export async function GET(request: Request) {
 	}
 
 	const sb = createServiceClient();
-	const results: Array<{ orgId: string; success: boolean; error?: string }> =
-		[];
+	const tg = new TelegramChannel();
 
 	try {
-		// Get all orgs with active telegram links
+		// Get all active orgs with Telegram links
 		const { data: links } = await sb
 			.from("telegram_links")
 			.select("organization_id, telegram_chat_id")
 			.eq("is_active", true);
 
 		if (!links || links.length === 0) {
-			return NextResponse.json({
-				status: "ok",
-				briefingCount: 0,
-				message: "No active organizations found",
-			});
+			return NextResponse.json({ sent: 0 });
 		}
 
-		// Deduplicate by org
-		const orgs = new Map<string, number>();
-		for (const link of links as Array<{
-			organization_id: string;
-			telegram_chat_id: number;
-		}>) {
-			if (!orgs.has(link.organization_id)) {
-				orgs.set(link.organization_id, link.telegram_chat_id);
-			}
-		}
+		const today = new Date().toISOString().split("T")[0];
+		let sent = 0;
 
-		// Gather and send briefings
-		for (const [orgId, adminChatId] of orgs) {
+		for (const link of links) {
 			try {
-				const data = await gatherBriefingData(sb, orgId, adminChatId);
-				if (!data) continue;
+				const orgId = link.organization_id;
+				const chatId = Number(link.telegram_chat_id);
 
-				// Build briefing message
-				const briefingLines = [
-					`☀️ **Өглөөний хураангуй — ${data.orgName}**`,
-					`📅 ${data.date}`,
+				// Gather data in parallel
+				const [workOrders, appointments, invoices, expenses] =
+					await Promise.all([
+						sb
+							.from("work_orders")
+							.select("id, status")
+							.eq("organization_id", orgId)
+							.is("deleted_at", null)
+							.not(
+								"status",
+								"in",
+								'("delivered","cancelled","completed")',
+							),
+						sb
+							.from("appointments")
+							.select("id, scheduled_at, customers(full_name)")
+							.eq("organization_id", orgId)
+							.is("deleted_at", null)
+							.gte("scheduled_at", today)
+							.lte("scheduled_at", `${today}T23:59:59Z`),
+						sb
+							.from("invoices")
+							.select("id, total, balance_due")
+							.eq("organization_id", orgId)
+							.is("deleted_at", null)
+							.gt("balance_due", 0),
+						sb
+							.from("expenses")
+							.select("amount")
+							.eq("organization_id", orgId)
+							.is("deleted_at", null)
+							.gte("expense_date", today),
+					]);
+
+				const activeWO = (workOrders.data ?? []).length;
+				const todayAppts = (appointments.data ?? []).length;
+				const unpaidCount = (invoices.data ?? []).length;
+				const unpaidTotal = (invoices.data ?? []).reduce(
+					(s: number, r: Record<string, unknown>) =>
+						s + (Number(r.balance_due) || 0),
+					0,
+				);
+				const todayExpenses = (expenses.data ?? []).reduce(
+					(s: number, r: Record<string, unknown>) =>
+						s + (Number(r.amount) || 0),
+					0,
+				);
+
+				const message = [
+					`🌅 <b>Өгрийн мэдээ — ${today}</b>`,
 					"",
-					`📊 **Өчигдрийн тойм:**`,
-					`• Идэвхтэй харилцаа: ${data.overnightMessages} мессеж`,
-					`• Багажийн дуудлага: ${data.overnightToolCalls} удаа`,
-					`• Шийдвэрлэгдээгүй: ${data.pendingHandoffs} хүнд шилжүүлэлт`,
-					"",
-				];
+					`📋 Идэвхтэй ажлын захиалга: <b>${activeWO}</b>`,
+					`📅 Өнөөдрийн цаг захиалга: <b>${todayAppts}</b>`,
+					`💰 Төлөгдөөгүй нэхэмжлэх: <b>${unpaidCount}</b> (${unpaidTotal.toLocaleString()}₮)`,
+					`💸 Өнөөдрийн зарлага: <b>${todayExpenses.toLocaleString()}₮</b>`,
+				].join("\n");
 
-				if (data.topQueries.length > 0) {
-					briefingLines.push("🔝 **Хамгийн их асуугдсан:**");
-					for (const q of data.topQueries) {
-						briefingLines.push(`  • ${q}`);
-					}
-					briefingLines.push("");
-				}
-
-				if (data.anomalies.length > 0) {
-					briefingLines.push("⚠️ **Анхаарах асуудлууд:**");
-					for (const a of data.anomalies) {
-						briefingLines.push(`  • ${a}`);
-					}
-					briefingLines.push("");
-				}
-
-				briefingLines.push("💡 Бүрэн тайлан харах: /dashboard");
-
-				const briefingText = briefingLines.join("\n");
-
-				// Send via Telegram
-				const botToken = process.env.TELEGRAM_BOT_TOKEN;
-				if (botToken) {
-					await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({
-							chat_id: adminChatId,
-							text: briefingText,
-							parse_mode: "Markdown",
-						}),
-					});
-				}
-
-				// Log briefing delivery
-				await logBriefing(sb, data, briefingText, adminChatId);
-
-				results.push({ orgId, success: true });
-			} catch (err) {
-				results.push({
-					orgId,
-					success: false,
-					error: err instanceof Error ? err.message : "Unknown error",
-				});
+				await tg.sendMessage(chatId, message);
+				sent++;
+			} catch {
+				// Skip failed briefings
 			}
 		}
 
-		return NextResponse.json({
-			status: "ok",
-			briefingCount: results.length,
-			succeeded: results.filter((r) => r.success).length,
-			failed: results.filter((r) => !r.success).length,
-			results,
-		});
-	} catch (err) {
-		return NextResponse.json(
-			{
-				status: "error",
-				error: err instanceof Error ? err.message : "Unknown error",
-			},
-			{ status: 500 },
-		);
+		return NextResponse.json({ sent });
+	} catch {
+		return NextResponse.json({ sent: 0 });
 	}
 }

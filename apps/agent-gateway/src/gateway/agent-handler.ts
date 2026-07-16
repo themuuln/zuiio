@@ -29,6 +29,11 @@ import {
 	summarizeIfNeeded,
 	type SessionMessage,
 } from "@/state/session";
+import {
+	getWizardState,
+	saveWizardState,
+	clearWizardState,
+} from "@/state/wizard";
 
 /** Shared gateway instance (lazy singleton). */
 let _gateway: AiGateway | null = null;
@@ -56,6 +61,7 @@ export interface AgentHandlerOptions {
 		productType: string,
 		orgId: string,
 		chatType: string,
+		lang?: string,
 	) => Promise<string>;
 	/** Get tools for the product type and context. */
 	getTools: (context: ToolContext) => GatewayTool[];
@@ -66,7 +72,7 @@ export interface AgentHandlerOptions {
 }
 
 /**
- * Handle a text or voice-transcribed message from any bot mode.
+ * Handle a text, voice, or photo message from any bot mode.
  * Requires a pre-resolved GatewayContext (orgId, userId, productType already known).
  */
 export async function handleAgentMessage(
@@ -74,7 +80,8 @@ export async function handleAgentMessage(
 	text: string,
 	chatType: string,
 	opts: AgentHandlerOptions,
-	): Promise<string> {
+	images?: string[],
+): Promise<string> {
 	console.log(`[agent-handler] START org=${ctx.orgId} chat=${ctx.channelChatId} user=${ctx.channelUserId} channel=${ctx.channel} textLen=${text.length}`);
 	const sb = getSb();
 	const gateway = getGateway();
@@ -95,6 +102,10 @@ export async function handleAgentMessage(
 	}
 
 	const sanitizedText = sanitizeUserInput(text);
+
+	// Detect language: Cyrillic → Mongolian, Latin → English
+	const isCyrillic = /[\u0400-\u04FF]/.test(sanitizedText);
+	const detectedLang = isCyrillic ? "mn" : "en";
 
 	// Check handoff triggers — if user wants a human, escalate immediately
 	const handoff = checkHandoffTriggers(sanitizedText, {
@@ -127,7 +138,7 @@ export async function handleAgentMessage(
 	debug("agent", "session loaded", { messageCount: session.messages.length, tokenCount: session.tokenCount });
 
 	// Search knowledge base for relevant context
-	let systemPrompt = await opts.getSystemPrompt(ctx.productType, ctx.orgId, chatType);
+	let systemPrompt = await opts.getSystemPrompt(ctx.productType, ctx.orgId, chatType, detectedLang);
 	try {
 		const knowledgeChunks = await searchKnowledge(context.supabase, ctx.orgId, sanitizedText, {
 			limit: 3,
@@ -138,18 +149,30 @@ export async function handleAgentMessage(
 	} catch {
 		// Knowledge search is non-critical — continue without it
 	}
+	// Check for active wizard state
+	const wizardState = await getWizardState(sb, ctx.orgId, ctx.channelChatId, ctx.channelUserId, ctx.channel);
+	if (wizardState) {
+		systemPrompt += `\n\n## ACTIVE WIZARD\nYou are in the middle of a "${wizardState.type}" wizard (step ${wizardState.step}).\nThe user's next message is a response to your wizard question. Process it as step ${wizardState.step + 1} of the wizard.\nCollected data so far: ${JSON.stringify(wizardState.data)}\n\nWhen the wizard is complete (all steps done), respond with the result and include this marker at the end: [WIZARD_COMPLETE:${wizardState.type}]\nWhen the user wants to cancel the wizard, respond naturally and include: [WIZARD_CANCEL]`;
+	}
 
-	const response = await gateway.runWithTools({
-		system: systemPrompt,
-		userMessage: sanitizedText,
-		tools: safeTools,
-		context,
-		maxRounds: REQUEST_LIMITS.maxToolRounds,
-		onToken: opts.onToken,
+const response = await gateway.runWithTools({
+	system: systemPrompt,
+	userMessage: sanitizedText,
+	images,
+	tools: safeTools,
+	context,
+	maxRounds: REQUEST_LIMITS.maxToolRounds,
+	onToken: opts.onToken,
 	conversationHistory:
-			session.messages.length > 0 ? session.messages : undefined,
-	});
+		session.messages.length > 0 ? session.messages : undefined,
+});
 	debug("agent", "LLM call complete", { responseLen: response.length, preview: response.slice(0, 80) });
+	// Check for wizard completion/cancel
+	if (response.includes("[WIZARD_CANCEL]")) {
+		await clearWizardState(sb, ctx.orgId, ctx.channelChatId, ctx.channelUserId, ctx.channel);
+	} else if (response.includes("[WIZARD_COMPLETE:")) {
+		await clearWizardState(sb, ctx.orgId, ctx.channelChatId, ctx.channelUserId, ctx.channel);
+	}
 
 	// Save session — summarize old messages, then trim by token budget
 	// DeepSeek: ~16k context, GPT-4o-mini: ~128k — use conservative limit

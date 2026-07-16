@@ -50,25 +50,26 @@ export interface AiProvider {
 	 * Provider sends messages, parses tool calls, executes tools with context,
 	 * appends results, repeats until no more tool calls or maxRounds reached.
 	 */
-	runWithTools(params: {
-		system: string;
-		userMessage: string;
-		tools: GatewayTool[];
-		context: ToolContext;
-		maxRounds?: number;
-		/** Called with each token chunk when streaming is enabled. */
-		onToken?: (token: string) => void;
-		conversationHistory?: Array<{
-			role: "system" | "user" | "assistant" | "tool";
-			content: string | null;
-			tool_calls?: Array<{
-				id: string;
-				type: "function";
-				function: { name: string; arguments: string };
-			}>;
-			tool_call_id?: string;
+runWithTools(params: {
+	system: string;
+	userMessage: string;
+	images?: string[];
+	tools: GatewayTool[];
+	context: ToolContext;
+	maxRounds?: number;
+	/** Called with each token chunk when streaming is enabled. */
+	onToken?: (token: string) => void;
+	conversationHistory?: Array<{
+		role: "system" | "user" | "assistant" | "tool";
+		content: string | null;
+		tool_calls?: Array<{
+			id: string;
+			type: "function";
+			function: { name: string; arguments: string };
 		}>;
-	}): Promise<string>;
+		tool_call_id?: string;
+	}>;
+}): Promise<string>;
 }
 
 /**

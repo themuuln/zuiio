@@ -15,32 +15,34 @@ export class GptMiniProvider implements AiProvider {
 		},
 	) {}
 
-	async runWithTools(params: {
-		system: string;
-		userMessage: string;
-		tools: GatewayTool[];
-		context: ToolContext;
-		maxRounds?: number;
-		onToken?: (token: string) => void;
-		conversationHistory?: Array<{
-			role: string;
-			content: string | null;
-			tool_calls?: Array<{
-				id: string;
-				type: "function";
-				function: { name: string; arguments: string };
-			}>;
-			tool_call_id?: string;
+async runWithTools(params: {
+	system: string;
+	userMessage: string;
+	images?: string[];
+	tools: GatewayTool[];
+	context: ToolContext;
+	maxRounds?: number;
+	onToken?: (token: string) => void;
+	conversationHistory?: Array<{
+		role: string;
+		content: string | null;
+		tool_calls?: Array<{
+			id: string;
+			type: "function";
+			function: { name: string; arguments: string };
 		}>;
-	}): Promise<string> {
-		const {
-			system,
-			userMessage,
-			tools,
-			context,
-			maxRounds = 5,
-			conversationHistory,
-		} = params;
+		tool_call_id?: string;
+	}>;
+}): Promise<string> {
+const {
+	system,
+	userMessage,
+	images,
+	tools,
+	context,
+	maxRounds = 5,
+	conversationHistory,
+} = params;
 		const baseUrl = this.options.baseUrl ?? "https://api.openai.com/v1";
 
 		// Convert tools to OpenAI function-calling format
@@ -77,7 +79,20 @@ export class GptMiniProvider implements AiProvider {
 			messages.push(...conversationHistory);
 		}
 
-		messages.push({ role: "user", content: userMessage });
+if (images && images.length > 0) {
+	messages.push({
+		role: "user",
+		content: [
+			{ type: "text", text: userMessage },
+			...images.map((url) => ({
+				type: "image_url" as const,
+				image_url: { url, detail: "auto" as const },
+			})),
+		],
+	});
+} else {
+	messages.push({ role: "user", content: userMessage });
+}
 
 		let lastContent: string | null = null;
 
@@ -191,9 +206,9 @@ export class GptMiniProvider implements AiProvider {
 				throw new Error("OpenAI API returned empty response");
 			}
 
-			if (message.content) {
-				lastContent = message.content;
-			}
+if (message.content && typeof message.content === "string") {
+	lastContent = message.content;
+}
 
 			// No tool calls → done
 			if (!message.tool_calls || message.tool_calls.length === 0) {

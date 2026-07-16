@@ -28,24 +28,25 @@ export class OpenCodeGoProvider implements AiProvider {
 		},
 	) {}
 
-	async runWithTools(params: {
-		system: string;
-		userMessage: string;
-		tools: GatewayTool[];
-		context: ToolContext;
-		maxRounds?: number;
-		onToken?: (token: string) => void;
-		conversationHistory?: Array<{
-			role: string;
-			content: string | null;
-			tool_calls?: Array<{
-				id: string;
-				type: "function";
-				function: { name: string; arguments: string };
-			}>;
-			tool_call_id?: string;
+async runWithTools(params: {
+	system: string;
+	userMessage: string;
+	images?: string[];
+	tools: GatewayTool[];
+	context: ToolContext;
+	maxRounds?: number;
+	onToken?: (token: string) => void;
+	conversationHistory?: Array<{
+		role: string;
+		content: string | null;
+		tool_calls?: Array<{
+			id: string;
+			type: "function";
+			function: { name: string; arguments: string };
 		}>;
-	}): Promise<string> {
+		tool_call_id?: string;
+	}>;
+}): Promise<string> {
 		const {
 			system,
 			userMessage,
@@ -58,26 +59,27 @@ export class OpenCodeGoProvider implements AiProvider {
 		// Wrap gateway tools to close over context
 		const wrappedTools = tools.map((t) => wrapTool(t, context));
 
-		return runWithTools({
-			apiKey: this.options.apiKey,
-			baseUrl: this.options.baseUrl ?? "https://opencode.ai/zen/go/v1",
-			model: this.options.model ?? "deepseek-v4-flash",
-			systemPrompt: system,
-			userMessage,
-			tools: wrappedTools,
-			maxRounds,
-			conversationHistory: conversationHistory as
-				| Array<{
-						role: "system" | "user" | "assistant" | "tool";
-						content: string | null;
-						tool_calls?: Array<{
-							id: string;
-							type: "function";
-							function: { name: string; arguments: string };
-						}>;
-						tool_call_id?: string;
-				  }>
-				| undefined,
-		});
+return runWithTools({
+	apiKey: this.options.apiKey,
+	baseUrl: this.options.baseUrl ?? "https://opencode.ai/zen/go/v1",
+	model: this.options.model ?? "mimo-v2.5",
+	systemPrompt: system,
+	userMessage,
+	images: params.images,
+	tools: wrappedTools,
+	maxRounds,
+	conversationHistory: conversationHistory as
+		| Array<{
+				role: "system" | "user" | "assistant" | "tool";
+				content: string | null;
+				tool_calls?: Array<{
+					id: string;
+					type: "function";
+					function: { name: string; arguments: string };
+				}>;
+				tool_call_id?: string;
+		  }>
+		| undefined,
+});
 	}
 }
