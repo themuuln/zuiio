@@ -1,0 +1,45 @@
+# Gitleaks configuration for @zuiio monorepo
+# Docs: https://github.com/gitleaks/gitleaks
+
+title = "zuiio gitleaks config"
+
+[allowlist]
+  description = "Global allowlist — false positives common in this codebase"
+  paths = [
+    # Lock files
+    '''pnpm-lock\.yaml$''',
+    '''package-lock\.json$''',
+    '''yarn\.lock$''',
+    # Generated types
+    '''database\.types\.ts$''',
+    '''supabase/types\.ts$''',
+    # Test fixtures and mocks
+    '''__fixtures__''',
+    '''__mocks__''',
+    '''\.test\.''',
+    '''\.spec\.''',
+    '''e2e/''',
+    # Documentation
+    '''\.md$''',
+    '''docs/''',
+    # Config files with placeholder values
+    '''\.env\.example$''',
+    '''\.env\.local\.example$''',
+  ]
+
+  # Common false positive patterns in React/TypeScript code
+  regexes = [
+    # React key props — not secrets
+    '''key\s*=\s*['"][^'"]+['"]''',
+    # TanStack Query keys — not secrets
+    '''queryKey\s*:\s*\[''',
+    # Table column definitions with "key" property
+    '''\{\s*header\s*:.*key\s*:''',
+    # Mongolian text that contains "token" as a word
+    '''Токен''',
+    # Environment variable references (not values)
+    '''process\.env\.[A-Z_]+''',
+    # Supabase URL patterns (public, not secret)
+    '''supabase\.co''',
+    '''supabase\.in''',
+  ]
