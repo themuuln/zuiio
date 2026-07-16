@@ -14,51 +14,6 @@ export type Database = {
   };
   public: {
     Tables: {
-      cash_sessions: {
-        Row: {
-          id: string;
-          register_id: string;
-          opened_at: string;
-          opening_balance: number;
-          closed_at: string | null;
-          closing_balance: number | null;
-          actual_amount: number | null;
-          difference: number | null;
-          status: string;
-          notes: string | null;
-          organization_id: string;
-          expected_amount: number | null;
-        };
-        Insert: {
-          id?: string;
-          register_id?: string | null;
-          opened_at?: string;
-          opening_balance: number;
-          closed_at?: string | null;
-          closing_balance?: number | null;
-          actual_amount?: number | null;
-          difference?: number | null;
-          status?: string;
-          notes?: string | null;
-          organization_id: string;
-          expected_amount?: number | null;
-        };
-        Update: {
-          id?: string;
-          register_id?: string;
-          opened_at?: string;
-          opening_balance?: number;
-          closed_at?: string | null;
-          closing_balance?: number | null;
-          actual_amount?: number | null;
-          difference?: number | null;
-          status?: string;
-          notes?: string | null;
-          organization_id?: string;
-          expected_amount?: number | null;
-        };
-        Relationships: [];
-      };
       agent_audit_log: {
         Row: {
           chat_id: number;
@@ -4332,7 +4287,9 @@ export type Database = {
           contact_id: string | null;
           created_at: string | null;
           created_by: string | null;
+          currency_code: string | null;
           currency_id: string | null;
+          currency_symbol: string | null;
           deleted_at: string | null;
           exchange_rate: number | null;
           id: string;
@@ -4353,7 +4310,9 @@ export type Database = {
           contact_id?: string | null;
           created_at?: string | null;
           created_by?: string | null;
+          currency_code?: string | null;
           currency_id?: string | null;
+          currency_symbol?: string | null;
           deleted_at?: string | null;
           exchange_rate?: number | null;
           id?: string;
@@ -4374,7 +4333,9 @@ export type Database = {
           contact_id?: string | null;
           created_at?: string | null;
           created_by?: string | null;
+          currency_code?: string | null;
           currency_id?: string | null;
+          currency_symbol?: string | null;
           deleted_at?: string | null;
           exchange_rate?: number | null;
           id?: string;
@@ -5077,21 +5038,40 @@ export type Database = {
         Args: { p_items: Json; p_org_id: string };
         Returns: Json;
       };
-      process_shop_sale: {
-        Args: {
-          p_branch_id: string;
-          p_contact_id: string;
-          p_items: Json;
-          p_movements: Json;
-          p_org_id: string;
-          p_paid_amount: number;
-          p_payment_method: string;
-          p_salesperson_id: string;
-          p_total_amount: number;
-          p_user_id: string;
-        };
-        Returns: Json;
-      };
+      process_shop_sale:
+        | {
+            Args: {
+              p_branch_id: string;
+              p_contact_id: string;
+              p_items: Json;
+              p_movements: Json;
+              p_org_id: string;
+              p_paid_amount: number;
+              p_payment_method: string;
+              p_salesperson_id: string;
+              p_total_amount: number;
+              p_user_id: string;
+            };
+            Returns: Json;
+          }
+        | {
+            Args: {
+              p_branch_id: string;
+              p_contact_id: string;
+              p_currency_code?: string;
+              p_currency_symbol?: string;
+              p_exchange_rate?: number;
+              p_items: Json;
+              p_movements: Json;
+              p_org_id: string;
+              p_paid_amount: number;
+              p_payment_method: string;
+              p_salesperson_id: string;
+              p_total_amount: number;
+              p_user_id: string;
+            };
+            Returns: Json;
+          };
       restore_record: {
         Args: { p_record_id: string; p_table_name: string };
         Returns: Json;
@@ -5521,3 +5501,17 @@ export const Constants = {
     },
   },
 } as const;
+A;
+new version();
+of;
+Supabase;
+CLI;
+is;
+available: v2;
+0.109;
+.1 (currently installed v2.105.0)
+We;
+recommend;
+updating;
+regularly;
+for new features and bug fixes: https: //supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
