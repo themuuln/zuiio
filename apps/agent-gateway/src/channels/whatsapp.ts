@@ -2,6 +2,7 @@ import "server-only";
 import { capture } from "@zuiio/capture";
 
 import type { Channel, InlineButton, SendMessageOptions } from "./types";
+import { markdownToMessengerFormat } from "@/lib/format-telegram";
 
 /**
  * WhatsApp Cloud API channel adapter.
@@ -57,12 +58,13 @@ export class WhatsAppChannel implements Channel {
 		text: string,
 		_options?: SendMessageOptions,
 	): Promise<void> {
+		const formatted = markdownToMessengerFormat(text);
 		await this.api("messages", {
 			messaging_product: "whatsapp",
 			recipient_type: "individual",
 			to: chatId.toString(),
 			type: "text",
-			text: { body: text.substring(0, 4096) },
+			text: { body: formatted.substring(0, 4096) },
 		});
 	}
 

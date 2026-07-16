@@ -23,23 +23,29 @@ on:
       VERCEL_PROJECT_ID:
         required: true
 
+# Per-app concurrency: rapid pushes to the same app cancel prior deploys,
+# but pushes to different apps run in parallel.
+concurrency:
+  group: vercel-${{ inputs.app }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      # Turborepo remote cache (uses Vercel token)
-      TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      TURBO_TEAM: ${{ secrets.VERCEL_ORG_ID }}
 
     steps:
       # Sparse checkout: only fetch the app + shared packages (skip unused apps)
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           submodules: false
+          persist-credentials: false
           sparse-checkout: |
             apps/${{ inputs.app }}
             packages
@@ -49,57 +55,62 @@ jobs:
             package.json
             turbo.json
             tsconfig.json
-            .github/workflows
 
       # Hobby plan blocks deploys where commit author != account owner.
       # Amend HEAD author to match the target Vercel account.
       - name: Set Vercel-compatible git author
+        env:
+          AUTHOR_EMAIL: ${{ inputs.author-email }}
         run: |
-          git config user.email "${{ inputs.author-email }}"
+          git config user.email "$AUTHOR_EMAIL"
           git config user.name "Temuulen Undrakhbayar"
-          git commit --amend --no-edit --reset-author
+          git commit --amend --no-edit --reset-author --quiet
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "24"
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
 
       - name: Enable corepack
         run: corepack enable
 
-      # Skip pnpm store cache — 7GB cache takes 68s to restore but install is only 21s
-      # Network install is faster than cache restore on Hobby plan
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Cache Vercel CLI to avoid reinstalling every run (~15s savings)
-      - name: Cache Vercel CLI
-        id: vercel-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.local/share/vercel
-          key: ${{ runner.os }}-vercel-cli-${{ hashFiles('.github/workflows/_deploy-vercel.yml') }}
-
       - name: Install Vercel CLI
-        if: steps.vercel-cache.outputs.cache-hit != 'true'
-        run: npm i -g vercel@latest
+        run: npm i -g vercel@56
 
-      # Stage project.json + vercel.json so the Vercel CLI knows
-      # which project to target and which turbo filter to build.
+      # Stage project.json + vercel.json for CI builds.
+      # app-level vercel.json is for Vercel Git integration (CWD inside apps/<app>).
+      # CI runs from root, so we generate a root vercel.json with consistent settings.
       - name: Stage Vercel project config
+        env:
+          TURBO_FILTER: ${{ inputs.turbo-filter }}
         run: |
           mkdir -p .vercel
-          printf '{"projectId":"%s","orgId":"%s"}\n' "$VERCEL_PROJECT_ID" "$VERCEL_ORG_ID" > .vercel/project.json
-          printf '{"$schema":"https://openapi.vercel.sh/vercel.json","framework":"nextjs","installCommand":"pnpm install --frozen-lockfile","buildCommand":"pnpm exec turbo run build --filter=%s"}\n' "${{ inputs.turbo-filter }}" > vercel.json
+          jq -n \
+            --arg pid "$VERCEL_PROJECT_ID" \
+            --arg oid "$VERCEL_ORG_ID" \
+            '{projectId: $pid, orgId: $oid}' > .vercel/project.json
+          jq -n \
+            --arg schema "https://openapi.vercel.sh/vercel.json" \
+            --arg filter "$TURBO_FILTER" \
+            '{
+              "$schema": $schema,
+              "framework": "nextjs",
+              "installCommand": "pnpm install --frozen-lockfile",
+              "buildCommand": ("pnpm exec turbo run build --filter=" + $filter)
+            }' > vercel.json
 
+      # Token via env (VERCEL_TOKEN), not --token flag — keeps it out of process args.
       - name: Pull Vercel environment
-        run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+        run: vercel pull --yes --environment=production
 
       - name: Build
-        run: vercel build --prod --token=$VERCEL_TOKEN
+        run: vercel build --prod
 
       - name: Deploy to production
-        run: vercel deploy --prebuilt --prod --archive=tgz --token=$VERCEL_TOKEN
+        run: vercel deploy --prebuilt --prod --archive=tgz

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import Image from "next/image";
 import { logout } from "@/app/(auth)/logout/actions";
 export const instant = false;
 
@@ -36,35 +37,13 @@ export default async function HomePage() {
           className="inline-flex items-center gap-2 text-foreground transition-opacity hover:opacity-80"
           aria-label="Zuiio"
         >
-          <svg
-            width="28"
-            height="28"
-            viewBox="0 0 32 32"
-            fill="none"
-            aria-hidden="true"
-          >
-            <rect
-              width="32"
-              height="32"
-              rx="8"
-              fill="currentColor"
-              className="text-primary"
-            />
-            <path
-              d="M8 16C8 11.58 11.58 8 16 8C20.42 8 24 11.58 24 16"
-              stroke="currentColor"
-              className="text-primary-foreground"
-              strokeWidth="3"
-              strokeLinecap="round"
-            />
-            <path
-              d="M12 20C12 17.79 13.79 16 16 16C18.21 16 20 17.79 20 20"
-              stroke="currentColor"
-              className="text-primary-foreground"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            />
-          </svg>
+          <Image
+            src="/zuiio-logo.png"
+            alt="Zuiio"
+            width={28}
+            className="rounded-lg dark:invert"
+            priority
+          />
           <span className="text-lg font-semibold tracking-tight">Zuiio</span>
         </a>
       </header>
@@ -98,7 +77,7 @@ export default async function HomePage() {
             <div className="flex flex-col gap-2">
               <a
                 href="https://zer.zuiiotech.com"
-                className="active-scale flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                className="active-scale flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-colors hover:border-success/30 hover:bg-success/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
                 <span className="flex h-8 w-8 items-center justify-center rounded-md bg-success/10 text-success">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -114,7 +93,7 @@ export default async function HomePage() {
               </a>
               <a
                 href="https://tolom.zuiiotech.com"
-                className="active-scale flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                className="active-scale flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-colors hover:border-info/30 hover:bg-info/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
                 <span className="flex h-8 w-8 items-center justify-center rounded-md bg-info/10 text-info">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

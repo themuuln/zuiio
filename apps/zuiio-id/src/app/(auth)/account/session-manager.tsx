@@ -111,12 +111,15 @@ function SessionRow({
   };
 
   return (
-    <div className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2.5">
+    <div className={`flex items-center justify-between rounded-lg border px-3 py-2.5 ${session.is_current ? "border-success/30 bg-success/5" : "border-border bg-card"}`}>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm text-foreground">
           {parseUserAgent(session.user_agent)}
           {session.is_current && (
-            <span className="ml-2 text-xs text-primary">(одоо)</span>
+            <span className="ml-2 inline-flex items-center gap-1 text-xs text-success">
+              <span className="inline-block size-1.5 rounded-full bg-success" />
+              (одоо)
+            </span>
           )}
         </p>
         <p className="text-xs text-muted-foreground">

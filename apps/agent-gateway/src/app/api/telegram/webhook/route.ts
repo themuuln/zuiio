@@ -5,7 +5,6 @@ import { TelegramChannel } from "@/channels/telegram";
 import type { TelegramUpdate } from "@/channels/types";
 import { startTypingLoop } from "@/channels/typing-loop";
 import { handleAgentMessage } from "@/gateway/agent-handler";
-import { markdownToTelegramHtml } from "@/lib/format-telegram";
 import { resolveOrgFromChatUser } from "@/gateway/mode-a";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
 import { debug } from "@/lib/debug";
@@ -179,7 +178,6 @@ export async function POST(request: Request): Promise<NextResponse> {
 					"/help — Энэ тусламж\n" +
 					"/switch — Байгууллага солих\n" +
 					"/link — Кодоор холбогдох",
-				{ parseMode: "Markdown" },
 			);
 			return NextResponse.json({ ok: true });
 		}
@@ -190,7 +188,6 @@ export async function POST(request: Request): Promise<NextResponse> {
 				"🔗 Холбогдох кодоо оруулна уу.\n\n" +
 					"Кодоо Zer эсвэл Tolom-ын **Тохиргоо → Telegram холболт** хэсгээс аваарай.\n\n" +
 					"Код жишээ: `ABCD-EFGH`",
-				{ parseMode: "Markdown" },
 			);
 			return NextResponse.json({ ok: true });
 		}
@@ -437,7 +434,6 @@ export async function POST(request: Request): Promise<NextResponse> {
 						`💰 Нийт орлого: ₮${totalRevenue.toLocaleString()}\n` +
 						`📋 Захиалга: ${orderCount}\n` +
 						`📅 ${today.toLocaleDateString("mn-MN")}`,
-					{ parseMode: "Markdown" },
 				);
 			} else {
 				// Zer - use AI to get sales summary
@@ -506,7 +502,6 @@ export async function POST(request: Request): Promise<NextResponse> {
 				await tg.sendMessage(
 					chatId,
 					`📋 **Идэвхтэй захиалгууд** (${data.length})\n\n${orders}`,
-					{ parseMode: "Markdown" },
 				);
 			} else {
 				// Zer - use AI to get orders
@@ -580,7 +575,6 @@ export async function POST(request: Request): Promise<NextResponse> {
 				await tg.sendMessage(
 					chatId,
 					`🔍 **Харилцагчдын жагсаалт** (${customers.length})\n\n${results}`,
-					{ parseMode: "Markdown" },
 				);
 			} else {
 				// Zer - search products
@@ -610,7 +604,6 @@ export async function POST(request: Request): Promise<NextResponse> {
 				await tg.sendMessage(
 					chatId,
 					`🔍 **Бүтээгдэхүүний жагсаалт** (${products.length})\n\n${results}`,
-					{ parseMode: "Markdown" },
 				);
 			}
 		} catch (err) {
@@ -703,11 +696,10 @@ export async function POST(request: Request): Promise<NextResponse> {
 		});
 		stopTyping();
 	debug("webhook", "agent responded", { chatId, len: response.length });
-	const formattedResponse = markdownToTelegramHtml(response);
-		if (messageId) {
-			tg.setReaction(chatId, messageId, TelegramChannel.REACTIONS.done).catch(() => {});
-		}
-		await tg.sendMessage(chatId, formattedResponse, { parseMode: "HTML" });
+	if (messageId) {
+		tg.setReaction(chatId, messageId, TelegramChannel.REACTIONS.done).catch(() => {});
+	}
+	await tg.sendMessage(chatId, response);
 		// Add quick action buttons for Tolom
 		if (productType === "tolom") {
 			await tg.sendInlineKeyboard(chatId, "Дараах үйлдлүүдээс сонгоно уу:", [

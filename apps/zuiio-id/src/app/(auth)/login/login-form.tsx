@@ -2,7 +2,6 @@
 
 import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
 import { FingerprintSimpleIcon } from "@phosphor-icons/react/FingerprintSimple";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
@@ -42,7 +41,11 @@ function SignInMethodButton({
       className={`active-scale flex h-12 w-full items-center justify-center gap-3 rounded-lg border text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50 ${
         isLastUsed
           ? "border-primary/40 bg-primary/5 text-foreground ring-1 ring-primary/30 hover:bg-primary/10"
-          : "border-border bg-card text-foreground hover:bg-muted"
+          : provider === "passkey"
+            ? "border-border bg-card text-foreground hover:border-primary/30 hover:bg-primary/5"
+            : provider === "google"
+              ? "border-border bg-card text-foreground hover:border-info/30 hover:bg-info/5"
+              : "border-border bg-card text-foreground hover:border-muted-foreground/20 hover:bg-muted/80"
       }`}
     >
       {provider === "google" ? (
@@ -291,14 +294,6 @@ export function LoginForm({
 
       <div className="flex animate-fade-in flex-col gap-6">
         <div className="flex flex-col gap-2 text-center">
-          <Image
-            src="/zuiio-logo.png"
-            alt="Zuiio"
-            width={48}
-            height={48}
-            className="mx-auto mb-1"
-            priority
-          />
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Нэвтрэх
           </h1>
@@ -390,7 +385,7 @@ export function LoginForm({
               </label>
               <Link
                 href="/forgot-password"
-                className="text-xs text-foreground/60 transition-colors hover:text-foreground hover:underline"
+                className="text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
               >
                 Нууц үг мартсан?
               </Link>

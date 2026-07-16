@@ -2,9 +2,15 @@
 
 import { createRemoteJWKSet, jwtVerify } from "jose";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import type { AuthActionState } from "@/lib/auth/action-state";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
+import {
+  checkRateLimit,
+  cleanupOldAttempts,
+  recordLoginAttempt,
+} from "@/lib/rate-limit";
+import { extractIp } from "@/lib/supabase/audit";
 
 /**
  * Remote JWKS set for verifying Apple ID tokens.
@@ -39,6 +45,17 @@ export async function login(
       },
     };
   }
+  // Extract IP for rate limiting
+  const hdrs = await headers();
+  const ip = extractIp(hdrs);
+
+  // Check rate limit before attempting sign-in
+  const rateLimit = await checkRateLimit(identifier, ip);
+  if (!rateLimit.allowed) {
+    return {
+      formError: `Хэт их оролдлогын тоо. Түр хүлээнэ үү. ${rateLimit.retryAfterSeconds} секундийн дараа дахин оролдоно уу.`,
+    };
+  }
 
   const supabase = await createClient();
 
@@ -69,6 +86,7 @@ export async function login(
   });
 
   if (error) {
+    recordLoginAttempt(identifier, false, ip);
     // Never reveal whether the account exists
     return { formError: "Имэйл/нэр эсвэл нууц үг буруу байна." };
   }
@@ -89,6 +107,9 @@ export async function login(
     maxAge: remember ? 60 * 60 * 24 * 365 : 60 * 60 * 24, // 1 year vs 1 day
     path: "/",
   });
+  // Record successful login and clean up old attempts (fire-and-forget)
+  void recordLoginAttempt(identifier, true, ip);
+  void cleanupOldAttempts();
 
   // Check if user has completed onboarding (has a username)
   const { data: profile } = await supabase

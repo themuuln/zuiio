@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { logout } from "@/app/(auth)/logout/actions";
@@ -35,16 +34,6 @@ export function AccountForm({ user }: AccountFormProps) {
   return (
     <div className="flex animate-fade-in flex-col gap-6">
       <div className="flex flex-col gap-2 text-center">
-        {showWelcome && (
-          <Image
-            src="/zuiio-logo.png"
-            alt="Zuiio"
-            width={48}
-            height={48}
-            className="mx-auto mb-1"
-            priority
-          />
-        )}
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           {showWelcome ? "Тавтай морилно уу!" : "Бүртгэлийн мэдээлэл"}
         </h1>

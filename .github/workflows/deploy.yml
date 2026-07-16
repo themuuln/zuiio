@@ -37,9 +37,10 @@ jobs:
       website: ${{ steps.filter.outputs.website }}
       agent-gateway: ${{ steps.filter.outputs['agent-gateway'] }}
       zuiio-id: ${{ steps.filter.outputs['zuiio-id'] }}
+      shared: ${{ steps.filter.outputs.shared }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590 # v3.0.3
         id: filter
         with:
           filters: |
@@ -55,6 +56,16 @@ jobs:
               - 'apps/agent-gateway/**'
             zuiio-id:
               - 'apps/zuiio-id/**'
+            # Shared packages and root config affect ALL apps
+            shared:
+              - 'packages/**'
+              - 'config/**'
+              - 'turbo.json'
+              - 'tsconfig.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'package.json'
+              - '.npmrc'
 
   # ─── Typecheck changed apps BEFORE burning a Vercel deploy ───
   typecheck:
@@ -62,7 +73,7 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           submodules: false
           sparse-checkout: |
@@ -79,37 +90,46 @@ jobs:
             package.json
             turbo.json
             tsconfig.json
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "24"
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
       - run: corepack enable
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Typecheck changed apps
+        env:
+          SHARED: ${{ needs.detect-changes.outputs.shared }}
+          ZER: ${{ needs.detect-changes.outputs.zer }}
+          TOLOM: ${{ needs.detect-changes.outputs.tolom }}
+          ONOO: ${{ needs.detect-changes.outputs.onoo }}
+          WEBSITE: ${{ needs.detect-changes.outputs.website }}
+          AGENT_GW: ${{ needs.detect-changes.outputs['agent-gateway'] }}
+          ZUIIO_ID: ${{ needs.detect-changes.outputs['zuiio-id'] }}
         run: |
           FAILED=""
-          if [ "${{ needs.detect-changes.outputs.zer }}" = "true" ]; then
+          TYPECHECK_ALL="$SHARED"
+          if [ "$TYPECHECK_ALL" = "true" ] || [ "$ZER" = "true" ]; then
             echo "🔍 Typechecking zer..."
             pnpm --filter zer exec tsc --noEmit 2>&1 || FAILED="$FAILED zer"
           fi
-          if [ "${{ needs.detect-changes.outputs.tolom }}" = "true" ]; then
+          if [ "$TYPECHECK_ALL" = "true" ] || [ "$TOLOM" = "true" ]; then
             echo "🔍 Typechecking tolom..."
             pnpm --filter tolom exec tsc --noEmit 2>&1 || FAILED="$FAILED tolom"
           fi
-          if [ "${{ needs.detect-changes.outputs.onoo }}" = "true" ]; then
+          if [ "$TYPECHECK_ALL" = "true" ] || [ "$ONOO" = "true" ]; then
             echo "🔍 Typechecking onoo..."
             pnpm --filter onoo-web exec tsc --noEmit 2>&1 || FAILED="$FAILED onoo"
           fi
-          if [ "${{ needs.detect-changes.outputs.website }}" = "true" ]; then
+          if [ "$TYPECHECK_ALL" = "true" ] || [ "$WEBSITE" = "true" ]; then
             echo "🔍 Typechecking website..."
             pnpm --filter "@zuiio/website" exec tsc --noEmit 2>&1 || FAILED="$FAILED website"
           fi
-          if [ "${{ needs.detect-changes.outputs['agent-gateway'] }}" = "true" ]; then
+          if [ "$TYPECHECK_ALL" = "true" ] || [ "$AGENT_GW" = "true" ]; then
             echo "🔍 Typechecking agent-gateway..."
             pnpm --filter agent-gateway exec tsc --noEmit 2>&1 || FAILED="$FAILED agent-gateway"
           fi
-          if [ "${{ needs.detect-changes.outputs['zuiio-id'] }}" = "true" ]; then
+          if [ "$TYPECHECK_ALL" = "true" ] || [ "$ZUIIO_ID" = "true" ]; then
             echo "🔍 Typechecking zuiio-id..."
             pnpm --filter "@zuiio/id" exec tsc --noEmit 2>&1 || FAILED="$FAILED zuiio-id"
           fi
@@ -127,7 +147,7 @@ jobs:
     if: |
       always() && !cancelled() &&
       (needs.typecheck.result == 'success' || needs.typecheck.result == 'skipped') &&
-      (inputs.app == 'zer' || needs.detect-changes.outputs.zer == 'true')
+      (inputs.app == 'zer' || needs.detect-changes.outputs.zer == 'true' || needs.detect-changes.outputs.shared == 'true')
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: zer
@@ -143,7 +163,7 @@ jobs:
     if: |
       always() && !cancelled() &&
       (needs.typecheck.result == 'success' || needs.typecheck.result == 'skipped') &&
-      (inputs.app == 'tolom' || needs.detect-changes.outputs.tolom == 'true')
+      (inputs.app == 'tolom' || needs.detect-changes.outputs.tolom == 'true' || needs.detect-changes.outputs.shared == 'true')
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: tolom
@@ -159,7 +179,7 @@ jobs:
     if: |
       always() && !cancelled() &&
       (needs.typecheck.result == 'success' || needs.typecheck.result == 'skipped') &&
-      (inputs.app == 'onoo' || needs.detect-changes.outputs.onoo == 'true')
+      (inputs.app == 'onoo' || needs.detect-changes.outputs.onoo == 'true' || needs.detect-changes.outputs.shared == 'true')
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: onoo
@@ -175,7 +195,7 @@ jobs:
     if: |
       always() && !cancelled() &&
       (needs.typecheck.result == 'success' || needs.typecheck.result == 'skipped') &&
-      (inputs.app == 'website' || needs.detect-changes.outputs.website == 'true')
+      (inputs.app == 'website' || needs.detect-changes.outputs.website == 'true' || needs.detect-changes.outputs.shared == 'true')
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: website
@@ -191,7 +211,7 @@ jobs:
     if: |
       always() && !cancelled() &&
       (needs.typecheck.result == 'success' || needs.typecheck.result == 'skipped') &&
-      (inputs.app == 'agent-gateway' || needs.detect-changes.outputs['agent-gateway'] == 'true')
+      (inputs.app == 'agent-gateway' || needs.detect-changes.outputs['agent-gateway'] == 'true' || needs.detect-changes.outputs.shared == 'true')
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: agent-gateway
@@ -207,7 +227,7 @@ jobs:
     if: |
       always() && !cancelled() &&
       (needs.typecheck.result == 'success' || needs.typecheck.result == 'skipped') &&
-      (inputs.app == 'zuiio-id' || needs.detect-changes.outputs['zuiio-id'] == 'true')
+      (inputs.app == 'zuiio-id' || needs.detect-changes.outputs['zuiio-id'] == 'true' || needs.detect-changes.outputs.shared == 'true')
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: zuiio-id

@@ -3,6 +3,7 @@ import "server-only";
 import { capture } from "@zuiio/capture";
 
 import type { Channel, InlineButton, SendMessageOptions } from "./types";
+import { markdownToMessengerFormat } from "@/lib/format-telegram";
 
 const GRAPH_API_VERSION = process.env.FB_GRAPH_API_VERSION || "v25.0";
 const GRAPH_API_BASE = `https://graph.facebook.com/${GRAPH_API_VERSION}`;
@@ -50,10 +51,11 @@ export class FacebookChannel implements Channel {
 		try {
 			const url = `${GRAPH_API_BASE}/${pageId}/messages?access_token=${pageAccessToken}`;
 
+			const formatted = markdownToMessengerFormat(text);
 			const payload: Record<string, unknown> = {
 				recipient: { id: chatId.toString() },
 				messaging_type: "RESPONSE",
-				message: { text },
+				message: { text: formatted },
 			};
 
 			// Add quick replies if provided

@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import type { AuthActionState } from "@/lib/auth/action-state";
 import { signContinuation } from "@/lib/auth/continuation";
+import { validatePassword } from "@/lib/password-policy";
 import { getSsoProduct, type ProductId } from "@config/sso-products";
 
 /**
@@ -62,8 +63,9 @@ export async function signup(
     fieldErrors.email = ["Зөв имэйл хаяг оруулна уу."];
   }
 
-  if (password.length < 8) {
-    fieldErrors.password = ["Нууц үг хамгийн багадаа 8 тэмдэгт байх ёстой."];
+  const passwordResult = validatePassword(password);
+  if (!passwordResult.valid) {
+    fieldErrors.password = passwordResult.errors;
   }
 
   if (password !== confirmPassword) {
@@ -105,5 +107,5 @@ export async function signup(
     }
   }
 
-  return { redirectTo: "/account" };
+  return { redirectTo: `/verify-email?email=${encodeURIComponent(email)}` };
 }

@@ -1,4 +1,22 @@
 /**
+ * Convert AI-generated markdown for Messenger / WhatsApp / Instagram.
+ *
+ * These channels support limited formatting:
+ * - Bold: `*text*` (single asterisk, not double)
+ * - Tables: convert to plain-text list (no HTML, no pipe syntax)
+ * - Strip other markdown (headers, links) to plain text
+ */
+export function markdownToMessengerFormat(text: string): string {
+	let result = convertTablesToPlainList(text);
+	// **bold** → *bold* (Messenger/WhatsApp single-asterisk syntax)
+	result = result.replace(/\*\*(.+?)\*\*/g, "*$1*");
+	// Strip remaining markdown artifacts: headers, links, stray asterisks
+	result = result.replace(/^#{1,6}\s+/gm, "");
+	result = result.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+	return result;
+}
+
+/**
  * Convert AI-generated markdown to Telegram-compatible HTML.
  *
  * Telegram HTML supports: <b>, <i>, <u>, <s>, <code>, <pre>, <a href>.
@@ -54,7 +72,6 @@ function convertTables(text: string): string {
 		// Detect table start: first row with | separators
 		if (line.startsWith("|") && line.endsWith("|")) {
 			const rows: string[][] = [];
-			let headerDone = false;
 
 			// Collect all table rows
 			while (i < lines.length) {
@@ -68,7 +85,6 @@ function convertTables(text: string): string {
 
 				// Skip separator rows (---|---|---)
 				if (cells.every((c) => /^[-:]+$/.test(c))) {
-					headerDone = true;
 					i++;
 					continue;
 				}
@@ -82,30 +98,91 @@ function convertTables(text: string): string {
 				const dataRows = rows.slice(1);
 
 				if (dataRows.length === 0) {
-					// Single row — just show as bold list
+					// Single row — show as bold header
 					output.push(`<b>${headers.join(" | ")}</b>`);
-				} else if (headers.length <= 3) {
-					// Simple table: show as key-value pairs per row
+				} else {
+					// Calculate column widths for alignment
+					const colWidths = headers.map((h, idx) => {
+						const maxData = Math.max(
+							...dataRows.map((r) => (r[idx] ?? "—").length),
+						);
+						return Math.max(h.length, maxData);
+					});
+
+					// Pad cell to column width
+					const pad = (cell: string, width: number) =>
+						cell + " ".repeat(Math.max(0, width - cell.length));
+
+					// Build aligned table
+					const headerLine = headers
+						.map((h, idx) => pad(h, colWidths[idx]!))
+						.join(" | ");
+					const separator = colWidths.map((w) => "-".repeat(w)).join("-+-");
+					const dataLines = dataRows.map((row) =>
+						headers
+							.map((_, idx) => pad(row[idx] ?? "—", colWidths[idx]!))
+							.join(" | "),
+					);
+
+					const table = [headerLine, separator, ...dataLines].join("\n");
+					output.push(`<pre>${table}</pre>`);
+				}
+			}
+		} else {
+			output.push(lines[i]!);
+			i++;
+		}
+	}
+
+	return output.join("\n");
+}
+/**
+ * Convert markdown tables to plain-text key-value lists (no HTML tags).
+ * Used by Messenger, WhatsApp, Instagram adapters.
+ */
+export function convertTablesToPlainList(text: string): string {
+	const lines = text.split("\n");
+	const output: string[] = [];
+	let i = 0;
+
+	while (i < lines.length) {
+		const line = lines[i]!.trim();
+
+		if (line.startsWith("|") && line.endsWith("|")) {
+			const rows: string[][] = [];
+
+			while (i < lines.length) {
+				const row = lines[i]!.trim();
+				if (!row.startsWith("|") || !row.endsWith("|")) break;
+
+				const cells = row
+					.split("|")
+					.slice(1, -1)
+					.map((c) => c.trim().replace(/\*\*/g, "").replace(/`/g, ""));
+
+				if (cells.every((c) => /^[-:]+$/.test(c))) {
+					i++;
+					continue;
+				}
+
+				rows.push(cells);
+				i++;
+			}
+
+			if (rows.length > 0) {
+				const headers = rows[0]!;
+				const dataRows = rows.slice(1);
+
+				if (dataRows.length === 0) {
+					output.push(headers.join(" | "));
+				} else {
 					for (const row of dataRows) {
 						const parts = headers.map((h, idx) => {
 							const val = row[idx] ?? "—";
-							return `<b>${h}:</b> ${val}`;
+							return `${h}: ${val}`;
 						});
 						output.push(parts.join("\n"));
 						output.push("");
-					}
-				} else {
-					// Complex table: show each row as a block with header labels
-					for (let r = 0; r < dataRows.length; r++) {
-						const row = dataRows[r]!;
-						const block = headers
-							.map((h, idx) => {
-								const val = row[idx] ?? "—";
-								return `<b>${h}:</b> ${val}`;
-							})
-							.join("\n");
-						output.push(block);
-						if (r < dataRows.length - 1) output.push("—————————");
 					}
 				}
 			}
@@ -116,6 +193,80 @@ function convertTables(text: string): string {
 	}
 
 	return output.join("\n");
+}
+
+/**
+ * Convert markdown tables to Telegram RichBlockTable blocks (Bot API 10.1+).
+ * Returns an array of blocks — empty if no tables found.
+ * Used by TelegramChannel.sendRichMessage() for native table rendering.
+ */
+export function convertMarkdownToRichBlocks(
+	text: string,
+): Array<Record<string, unknown>> {
+	const lines = text.split("\n");
+	const blocks: Array<Record<string, unknown>> = [];
+	let i = 0;
+
+	while (i < lines.length) {
+		const line = lines[i]!.trim();
+
+		if (line.startsWith("|") && line.endsWith("|")) {
+			const rows: string[][] = [];
+
+			while (i < lines.length) {
+				const row = lines[i]!.trim();
+				if (!row.startsWith("|") || !row.endsWith("|")) break;
+
+				const cells = row
+					.split("|")
+					.slice(1, -1)
+					.map((c) => c.trim());
+
+				// Skip separator rows
+				if (cells.every((c) => /^[-:]+$/.test(c))) {
+					i++;
+					continue;
+				}
+
+				rows.push(cells);
+				i++;
+			}
+
+			if (rows.length > 0) {
+				const headers = rows[0]!;
+				const dataRows = rows.slice(1);
+
+				// Build RichBlockTable
+				const tableRows: Array<Record<string, unknown>> = [];
+
+				// Header row (bold)
+				tableRows.push({
+					cells: headers.map((h) => ({
+						text: h.replace(/\*\*/g, "").replace(/`/g, ""),
+						style: ["bold"],
+					})),
+				});
+
+				// Data rows
+				for (const row of dataRows) {
+					tableRows.push({
+						cells: row.map((cell) => ({
+							text: cell.replace(/\*\*/g, "").replace(/`/g, ""),
+						})),
+					});
+				}
+
+				blocks.push({
+					type: "table",
+					rows: tableRows,
+				});
+			}
+		} else {
+			i++;
+		}
+	}
+
+	return blocks;
 }
 
 /** Escape < > & in text but preserve our formatting tags */

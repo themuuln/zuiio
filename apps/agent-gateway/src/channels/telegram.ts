@@ -1,5 +1,7 @@
 import "server-only";
 import { capture } from "@zuiio/capture";
+import { debug } from "@/lib/debug";
+import { markdownToTelegramHtml, convertMarkdownToRichBlocks } from "@/lib/format-telegram";
 
 import type { Channel, InlineButton, SendMessageOptions } from "./types";
 
@@ -25,15 +27,25 @@ export class TelegramChannel implements Channel {
 		text: string,
 		options?: SendMessageOptions,
 	): Promise<void> {
+		// Try rich message first (Bot API 10.1+ tables, headings, etc.)
+		const richBlocks = convertMarkdownToRichBlocks(text);
+		if (richBlocks.length > 0) {
+			const sent = await this.sendRichMessage(chatId, richBlocks);
+			if (sent) return;
+		}
+
+		// Fallback: HTML with <pre> blocks for tables
+		const formatted = markdownToTelegramHtml(text);
+		const sendOpts = { ...options, parseMode: "HTML" as const };
 		// Telegram limit: 4096 characters per message
 		const MAX_LENGTH = 4096;
-		if (text.length <= MAX_LENGTH) {
-			await this.sendSingleMessage(chatId, text, options);
+		if (formatted.length <= MAX_LENGTH) {
+			await this.sendSingleMessage(chatId, formatted, sendOpts);
 			return;
 		}
 
 		// Split on paragraph boundaries when possible
-		let remaining = text;
+		let remaining = formatted;
 		while (remaining.length > 0) {
 			let chunk = remaining.slice(0, MAX_LENGTH);
 			// Try to split on last newline within limit
@@ -42,7 +54,41 @@ export class TelegramChannel implements Channel {
 				chunk = remaining.slice(0, lastNewline);
 			}
 			remaining = remaining.slice(chunk.length).trimStart();
-			await this.sendSingleMessage(chatId, chunk, options);
+			await this.sendSingleMessage(chatId, chunk, sendOpts);
+		}
+	}
+
+	/**
+	 * Send a rich message with native table rendering (Bot API 10.1+).
+	 * Returns true if sent successfully, false to fall back to HTML.
+	 */
+	private async sendRichMessage(
+		chatId: number | string,
+		blocks: Array<Record<string, unknown>>,
+	): Promise<boolean> {
+		try {
+			const res = await fetch(`${this.baseUrl}/sendRichMessage`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					chat_id: chatId,
+					rich_message: {
+						content: { blocks },
+					},
+				}),
+			});
+
+			if (res.ok) return true;
+
+			// Rich message not supported or failed — fall back silently
+			const err = await res.text().catch(() => "unknown");
+			debug("telegram", "sendRichMessage failed, falling back to HTML", {
+				status: res.status,
+				err,
+			});
+			return false;
+		} catch {
+			return false;
 		}
 	}
 
@@ -78,6 +124,7 @@ export class TelegramChannel implements Channel {
 		text: string,
 		buttons: InlineButton[][],
 	): Promise<void> {
+		const formatted = markdownToTelegramHtml(text);
 		const replyMarkup = {
 			inline_keyboard: buttons.map((row) =>
 				row.map((btn) => ({
@@ -92,7 +139,8 @@ export class TelegramChannel implements Channel {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
 				chat_id: chatId,
-				text,
+				text: formatted,
+				parse_mode: "HTML",
 				reply_markup: replyMarkup,
 			}),
 		});

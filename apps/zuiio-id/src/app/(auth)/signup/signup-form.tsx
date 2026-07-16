@@ -401,9 +401,15 @@ export function SignupForm({
               </button>
             </div>
             {!state?.fieldErrors?.password && (
-              <p className="text-xs text-muted-foreground">
-                Хамгийн багадаа 8 тэмдэгт
-              </p>
+              <div className="flex flex-col gap-0.5">
+                <p className="text-xs text-muted-foreground">Шаардлагууд:</p>
+                <ul className="text-xs text-muted-foreground list-disc list-inside">
+                  <li>Хамгийн багадаа 8 тэмдэгт</li>
+                  <li>Дор хаяж нэг том үсэг (A-Z)</li>
+                  <li>Дор хаяж нэг жижиг үсэг (a-z)</li>
+                  <li>Дор хаяж нэг тоо (0-9)</li>
+                </ul>
+              </div>
             )}
             {state?.fieldErrors?.password && (
               <p className="text-xs text-destructive">

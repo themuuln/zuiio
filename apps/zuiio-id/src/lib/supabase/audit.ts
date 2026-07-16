@@ -1,5 +1,6 @@
 import type { AuthErrorCode } from "../errors";
 import { createAdminClient } from "./server";
+import { dispatchWebhook } from "@/lib/webhooks";
 
 export type AuditEventType =
   | "consent_approved"
@@ -37,6 +38,15 @@ export async function auditEvent(event: AuditEvent): Promise<void> {
     });
     if (error) {
       console.error("Audit insert failed:", error.message);
+    } else {
+      // Dispatch webhook (fire-and-forget)
+      void dispatchWebhook(event.eventType, {
+        user_id: event.userId,
+        client_id: event.clientId,
+        ip_address: event.ipAddress,
+        event_type: event.eventType,
+        metadata: event.metadata,
+      });
     }
   } catch (err) {
     console.error("Audit event error:", err);
