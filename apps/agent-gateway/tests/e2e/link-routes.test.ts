@@ -5,6 +5,7 @@
  * testing input validation, response formatting, and error handling.
  */
 import { describe, expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
 
 // Mock Supabase so routes don't make real network calls
 vi.mock("@/lib/supabase", () => ({
@@ -33,7 +34,7 @@ describe("POST /api/link/code", () => {
 	it("generates a link code with valid input", async () => {
 		const { POST } = await import("@/app/api/link/code/route");
 
-		const request = new Request("http://localhost/api/link/code", {
+		const request = new NextRequest("http://localhost/api/link/code", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
@@ -56,7 +57,7 @@ describe("POST /api/link/code", () => {
 	it("rejects missing orgId", async () => {
 		const { POST } = await import("@/app/api/link/code/route");
 
-		const request = new Request("http://localhost/api/link/code", {
+		const request = new NextRequest("http://localhost/api/link/code", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
@@ -72,7 +73,7 @@ describe("POST /api/link/code", () => {
 	it("rejects invalid productType", async () => {
 		const { POST } = await import("@/app/api/link/code/route");
 
-		const request = new Request("http://localhost/api/link/code", {
+		const request = new NextRequest("http://localhost/api/link/code", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
@@ -89,7 +90,7 @@ describe("POST /api/link/code", () => {
 	it("rejects empty body", async () => {
 		const { POST } = await import("@/app/api/link/code/route");
 
-		const request = new Request("http://localhost/api/link/code", {
+		const request = new NextRequest("http://localhost/api/link/code", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: "{}",
@@ -104,7 +105,7 @@ describe("POST /api/link/generate (compact token)", () => {
 	it("generates a compact token with valid input", async () => {
 		const { POST } = await import("@/app/api/link/generate/route");
 
-		const request = new Request("http://localhost/api/link/generate", {
+		const request = new NextRequest("http://localhost/api/link/generate", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
