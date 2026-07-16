@@ -29,6 +29,7 @@ export async function login(
   const identifier = String(formData.get("identifier") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const redirectTo = String(formData.get("redirectTo") ?? "/account");
+  const remember = formData.get("remember") === "on";
 
   if (!identifier || !password) {
     return {
@@ -78,6 +79,14 @@ export async function login(
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 365,
+    path: "/",
+  });
+  // Store remember-me preference for session duration control
+  cookieStore.set("remember_me", remember ? "1" : "0", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: remember ? 60 * 60 * 24 * 365 : 60 * 60 * 24, // 1 year vs 1 day
     path: "/",
   });
 

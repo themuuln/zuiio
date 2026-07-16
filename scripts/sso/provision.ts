@@ -10,13 +10,11 @@
  * Without --apply: dry-run, shows what would change.
  * With --apply: writes changes to Supabase.
  *
- * Required env vars:
- *   ZUIIO_ID_URL              – zuiio-id Supabase URL
- *   ZUIIO_ID_SERVICE_ROLE_KEY – zuiio-id service role key
+ * Required env vars (one of each pair):
+ *   ZUIIO_ID_URL + ZUIIO_ID_SERVICE_ROLE_KEY
+ *   or NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY
  *
- * Optional env vars (project refs for redirect URI construction):
- *   ZER_PROJECT_REF           – zer Supabase project ref
- *   TOLOM_PROJECT_REF         – tolom Supabase project ref
+ * Optional: ZER_PROJECT_REF, TOLOM_PROJECT_REF (for redirect URIs)
  */
 
 import { createClient } from "@supabase/supabase-js";
@@ -24,45 +22,47 @@ import { SSO_PRODUCTS, type SsoProduct } from "../../config/sso-products";
 
 const APPLY = process.argv.includes("--apply");
 
-const ZUIIO_ID_URL = process.env.ZUIIO_ID_URL;
-const ZUIIO_ID_KEY = process.env.ZUIIO_ID_SERVICE_ROLE_KEY;
+const ZUIIO_ID_URL =
+  process.env.ZUIIO_ID_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+const ZUIIO_ID_KEY =
+  process.env.ZUIIO_ID_SERVICE_ROLE_KEY ??
+  process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!ZUIIO_ID_URL || !ZUIIO_ID_KEY) {
   console.error(
-    "Missing env vars. Set ZUIIO_ID_URL and ZUIIO_ID_SERVICE_ROLE_KEY.",
+    "Missing env vars. Set ZUIIO_ID_URL + ZUIIO_ID_SERVICE_ROLE_KEY,\n" +
+      "or NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY.",
   );
   process.exit(1);
 }
 
-// Project refs for redirect URIs
+// Project refs for redirect URI construction
 const PROJECT_REFS: Record<string, string | undefined> = {
   zer: process.env.ZER_PROJECT_REF,
   tolom: process.env.TOLOM_PROJECT_REF,
 };
 
-interface OAuthClient {
-  id: string;
-  name: string;
+// ─── GoTrue admin API helpers ─────────────────────────────────────
+// Endpoint: /auth/v1/admin/oauth/clients
+// Auth: service role key via Authorization header
+
+interface GotrueClient {
+  client_id: string;
+  client_name?: string;
   redirect_uris: string[];
-  logo_uri: string;
-  secret?: string;
+  grant_types: string[];
+  logo_uri?: string;
+  [key: string]: unknown;
 }
 
-// ─── GoTrue admin helpers ─────────────────────────────────────────
-
-async function gotrueRequest(
-  method: string,
+async function gotrueGet(
   path: string,
-  body?: Record<string, unknown>,
 ): Promise<{ data: unknown; error: string | null }> {
   const res = await fetch(`${ZUIIO_ID_URL}/auth/v1${path}`, {
-    method,
     headers: {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${ZUIIO_ID_KEY}`,
       apikey: ZUIIO_ID_KEY,
     },
-    body: body ? JSON.stringify(body) : undefined,
   });
   const text = await res.text();
   let data: unknown;
@@ -71,14 +71,52 @@ async function gotrueRequest(
   return { data, error: null };
 }
 
+async function gotruePost(
+  path: string,
+  body: Record<string, unknown>,
+): Promise<{ data: unknown; error: string | null }> {
+  const res = await fetch(`${ZUIIO_ID_URL}/auth/v1${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${ZUIIO_ID_KEY}`,
+      apikey: ZUIIO_ID_KEY,
+    },
+    body: JSON.stringify(body),
+  });
+  const text = await res.text();
+  let data: unknown;
+  try { data = JSON.parse(text); } catch { data = text; }
+  if (!res.ok) return { data, error: `HTTP ${res.status}: ${String(text).slice(0, 200)}` };
+  return { data, error: null };
+}
+
+async function gotruePut(
+  path: string,
+  body: Record<string, unknown>,
+): Promise<{ error: string | null }> {
+  const res = await fetch(`${ZUIIO_ID_URL}/auth/v1${path}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${ZUIIO_ID_KEY}`,
+      apikey: ZUIIO_ID_KEY,
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    return { error: `HTTP ${res.status}: ${String(text).slice(0, 200)}` };
+  }
+  return { error: null };
+}
+
 // ─── Resolve redirect URI for a product ───────────────────────────
 
 function resolveRedirectUri(product: SsoProduct): string {
   const ref = PROJECT_REFS[product.id];
   if (!ref) {
-    // Fallback: derive from appRoots convention
-    // Most products follow https://<project-ref>.supabase.co/auth/v1/callback
-    console.warn(`  ⚠ No PROJECT_REF for ${product.id} — skipping redirect URI`);
+    console.warn(`  ⚠ No PROJECT_REF for ${product.id} — skipping`);
     return "";
   }
   return `https://${ref}.supabase.co/auth/v1/callback`;
@@ -89,16 +127,16 @@ function resolveRedirectUri(product: SsoProduct): string {
 async function main() {
   console.log(`\n🔧 SSO Provisioning (${APPLY ? "apply" : "dry-run"})\n`);
 
-  // 1. List existing OAuth clients in zuiio-id
-  const { data: clientsData, error: listErr } = await gotrueRequest(
-    "GET",
-    "/oauth/clients",
+  // 1. List existing OAuth clients
+  const { data: clientsResp, error: listErr } = await gotrueGet(
+    "/admin/oauth/clients",
   );
   if (listErr) {
     console.error(`Failed to list OAuth clients: ${listErr}`);
     process.exit(1);
   }
-  const existingClients = (clientsData as OAuthClient[]) ?? [];
+  const existingClients =
+    (clientsResp as { clients?: GotrueClient[] })?.clients ?? [];
   console.log(`Found ${existingClients.length} existing OAuth client(s)\n`);
 
   // 2. List existing catalog rows
@@ -127,20 +165,19 @@ async function main() {
       continue;
     }
 
-    // Match existing client by name (exact match)
+    // Match existing client by name
     const existing = existingClients.find(
-      (c) => c.name === product.displayName,
+      (c) => c.client_name === product.displayName,
     );
     // Match catalog by product id
     const existingCatalog = catalog.find((r) => r.id === product.id);
 
     // ── OAuth client ──
     if (!existing) {
-      // CREATE
       console.log(`  📦 Creating OAuth client: ${product.displayName}`);
       if (APPLY) {
-        const { data, error } = await gotrueRequest("POST", "/oauth/clients", {
-          name: product.displayName,
+        const { data, error } = await gotruePost("/admin/oauth/clients", {
+          client_name: product.displayName,
           redirect_uris: [redirectUri],
           scopes: ["openid", "profile", "email"],
           grant_types: ["authorization_code", "refresh_token"],
@@ -149,32 +186,27 @@ async function main() {
         if (error) {
           console.error(`  ❌ Failed: ${error}`);
         } else {
-          const client = data as { id: string; secret?: string };
-          console.log(`  ✅ Created client ${client.id}`);
-          if (client.secret) {
-            console.log(`  🔑 Secret: ${client.secret}`);
-            console.log(`  ⚠ Save this secret — it won't be shown again`);
-          }
+          const client = data as GotrueClient;
+          console.log(`  ✅ Created client ${client.client_id}`);
           created++;
         }
       } else {
-        console.log(`  (dry-run) Would create client with redirect: ${redirectUri}`);
+        console.log(`  (dry-run) Would create client → ${redirectUri}`);
         created++;
       }
     } else {
-      // CHECK for updates needed
-      const needsUpdate =
-        existing.redirect_uris?.[0] !== redirectUri ||
-        existing.logo_uri !== (product.logoUrl ?? "");
+      // Check if update needed
+      const uriChanged = existing.redirect_uris?.[0] !== redirectUri;
+      const logoChanged =
+        (existing.logo_uri ?? "") !== (product.logoUrl ?? "");
 
-      if (needsUpdate) {
-        console.log(`  📦 Updating OAuth client: ${existing.id}`);
+      if (uriChanged || logoChanged) {
+        console.log(`  📦 Updating OAuth client: ${existing.client_id}`);
         if (APPLY) {
-          const { error } = await gotrueRequest(
-            "PUT",
-            `/oauth/clients/${existing.id}`,
+          const { error } = await gotruePut(
+            `/admin/oauth/clients/${existing.client_id}`,
             {
-              name: product.displayName,
+              client_name: product.displayName,
               redirect_uris: [redirectUri],
               scopes: ["openid", "profile", "email"],
               grant_types: ["authorization_code", "refresh_token"],
@@ -184,20 +216,20 @@ async function main() {
           if (error) {
             console.error(`  ❌ Failed: ${error}`);
           } else {
-            console.log(`  ✅ Updated client ${existing.id}`);
+            console.log(`  ✅ Updated`);
             updated++;
           }
         } else {
-          console.log(`  (dry-run) Would update client ${existing.id}`);
+          console.log(`  (dry-run) Would update client ${existing.client_id}`);
           updated++;
         }
       } else {
-        console.log(`  ✓ Client ${existing.id} is up to date`);
+        console.log(`  ✓ Client ${existing.client_id} up to date`);
       }
     }
 
     // ── Catalog row ──
-    const clientId = existing?.id ?? "PENDING";
+    const clientId = existing?.client_id ?? "PENDING";
     const catalogNeedsCreate = !existingCatalog;
     const catalogNeedsUpdate =
       existingCatalog &&
@@ -208,18 +240,21 @@ async function main() {
     if (catalogNeedsCreate) {
       console.log(`  📋 Creating catalog row: ${product.id}`);
       if (APPLY) {
-        const { error } = await admin.from("product_catalog").upsert({
-          id: product.id,
-          display_name: product.displayName,
-          client_id: clientId,
-          enabled: true,
-          logo_url: product.logoUrl ?? null,
-          continue_urls: [],
-        }, { onConflict: "id" });
+        const { error } = await admin.from("product_catalog").upsert(
+          {
+            id: product.id,
+            display_name: product.displayName,
+            client_id: clientId,
+            enabled: true,
+            logo_url: product.logoUrl ?? null,
+            continue_urls: [],
+          },
+          { onConflict: "id" },
+        );
         if (error) {
           console.error(`  ❌ Failed: ${error.message}`);
         } else {
-          console.log(`  ✅ Catalog row created`);
+          console.log(`  ✅ Created`);
         }
       } else {
         console.log(`  (dry-run) Would create catalog row`);
@@ -238,13 +273,13 @@ async function main() {
         if (error) {
           console.error(`  ❌ Failed: ${error.message}`);
         } else {
-          console.log(`  ✅ Catalog row updated`);
+          console.log(`  ✅ Updated`);
         }
       } else {
         console.log(`  (dry-run) Would update catalog row`);
       }
     } else {
-      console.log(`  ✓ Catalog row is up to date`);
+      console.log(`  ✓ Catalog row up to date`);
     }
 
     console.log();
@@ -255,7 +290,9 @@ async function main() {
   console.log(`  Created: ${created}`);
   console.log(`  Updated: ${updated}`);
   console.log(`  Skipped: ${skipped}`);
-  console.log(`  Mode: ${APPLY ? "APPLIED" : "dry-run (run with --apply to write)"}\n`);
+  console.log(
+    `  Mode: ${APPLY ? "APPLIED ✓" : "dry-run (run with --apply to write)"}\n`,
+  );
 }
 
 main().catch((err) => {
