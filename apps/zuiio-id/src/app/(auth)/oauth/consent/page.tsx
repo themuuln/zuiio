@@ -1,14 +1,12 @@
 import { Suspense } from "react";
 import { ThemeProvider } from "@/app/theme-provider";
 import { createClient } from "@/lib/supabase/server";
+import { createProjectClient } from "@/lib/supabase/external";
 import { ConsentForm } from "./consent-form";
 
 interface AuthorizationDetails {
   authorization_id: string;
-  client: {
-    name: string;
-    logo_uri?: string;
-  };
+  client: { name?: string; logo_uri?: string };
   scope: string;
   redirect_uri: string;
 }
@@ -19,6 +17,14 @@ interface AuthorizationDetails {
  * Supabase OAuth Server redirects here with authorization_id.
  * Uses the SDK's getAuthorizationDetails to load authorization info.
  * If a grant already exists, redirects immediately (remembered consent).
+ *
+ * IMPORTANT: The authorization was created on the originating project's
+ * Supabase (e.g. Tolom), not on Zuiio ID. We must call the originating
+ * project's OAuth Server API, not Zuiio ID's.
+ *
+ * The `project_ref` search param identifies which project created the
+ * authorization. It's added to the consent URL in each project's
+ * Supabase Dashboard -> Auth -> Providers -> custom:zuiio -> Consent URL.
  */
 export default function ConsentPage({
   searchParams,
@@ -27,54 +33,15 @@ export default function ConsentPage({
 }) {
   return (
     <ThemeProvider>
-      <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-4 py-12">
-        <main className="w-full max-w-sm">
-          {/* Zuiio wordmark */}
-          <div className="mb-8 flex justify-center">
-            <a
-              href="/"
-              className="inline-flex items-center gap-2 text-foreground transition-opacity hover:opacity-80"
-              aria-label="Zuiio"
-            >
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 32 32"
-                fill="none"
-                aria-hidden="true"
-              >
-                <rect
-                  width="32"
-                  height="32"
-                  rx="8"
-                  fill="currentColor"
-                  className="text-primary"
-                />
-                <path
-                  d="M8 16C8 11.58 11.58 8 16 8C20.42 8 24 11.58 24 16"
-                  stroke="currentColor"
-                  className="text-primary-foreground"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M12 20C12 17.79 13.79 16 16 16C18.21 16 20 17.79 20 20"
-                  stroke="currentColor"
-                  className="text-primary-foreground"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                />
-              </svg>
-              <span className="text-xl font-semibold tracking-tight">
-                Zuiio
-              </span>
-            </a>
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-4">
+        <div className="w-full max-w-sm">
+          <div className="mb-6 text-center">
+            <h1 className="text-lg font-semibold text-foreground">Zuiio</h1>
           </div>
-
           <Suspense fallback={<ConsentLoading />}>
             <ConsentFormWrapper searchParams={searchParams} />
           </Suspense>
-        </main>
+        </div>
       </div>
     </ThemeProvider>
   );
@@ -87,6 +54,7 @@ async function ConsentFormWrapper({
 }) {
   const params = await searchParams;
   const authorizationId = params.authorization_id;
+  const projectRef = params.project_ref;
 
   if (!authorizationId) {
     return (
@@ -97,9 +65,17 @@ async function ConsentFormWrapper({
     );
   }
 
-  // Use the SDK's getAuthorizationDetails which runs under the user's session.
-  // This returns authorization details, or a redirect_url if a grant already exists.
-  const supabase = await createClient();
+  // Create a client for the originating project's Supabase.
+  // The authorization was created there, so the OAuth Server API lives there.
+  let supabase;
+  if (projectRef) {
+    supabase = await createProjectClient(projectRef);
+  }
+  // Fallback to Zuiio ID client if no project_ref (backwards compatibility)
+  if (!supabase) {
+    supabase = await createClient();
+  }
+
   const { data: authDetails, error } =
     await supabase.auth.oauth.getAuthorizationDetails(authorizationId);
 
@@ -130,6 +106,7 @@ async function ConsentFormWrapper({
   return (
     <ConsentForm
       authorizationId={authorizationId}
+      projectRef={projectRef ?? ""}
       clientName={details.client?.name ?? "Тодорхойлогдоогүй"}
       clientLogoUri={details.client?.logo_uri}
       scope={details.scope ?? "openid"}
@@ -141,10 +118,12 @@ async function ConsentFormWrapper({
 function AutoRedirect({ url }: { url: string }) {
   return (
     <div className="rounded-lg border border-border bg-card p-6 text-center">
-      <p className="text-sm text-muted-foreground">
-        Зөвшөөрөл баталгаажуулж байна...
-      </p>
-      <meta httpEquiv="refresh" content={`0;url=${url}`} />
+      <p className="text-sm text-muted-foreground">Нэвтэрч байна...</p>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `window.location.href = ${JSON.stringify(url)}`,
+        }}
+      />
     </div>
   );
 }
@@ -152,8 +131,7 @@ function AutoRedirect({ url }: { url: string }) {
 function ConsentLoading() {
   return (
     <div className="rounded-lg border border-border bg-card p-6 text-center">
-      <div className="mx-auto h-10 w-10 animate-pulse rounded-full bg-muted" />
-      <div className="mt-4 mx-auto h-4 w-32 animate-pulse rounded bg-muted" />
+      <div className="mx-auto h-4 w-32 animate-pulse rounded bg-muted" />
     </div>
   );
 }
