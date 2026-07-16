@@ -1,0 +1,196 @@
+name: Deploy to Vercel
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - ".vscode/**"
+      - ".gitignore"
+
+# Single concurrency group per app — rapid pushes cancel previous runs
+concurrency:
+  group: deploy-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  # ─── Detect which apps actually changed ───
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      zer: ${{ steps.filter.outputs.zer }}
+      tolom: ${{ steps.filter.outputs.tolom }}
+      onoo: ${{ steps.filter.outputs.onoo }}
+      website: ${{ steps.filter.outputs.website }}
+      agent-gateway: ${{ steps.filter.outputs['agent-gateway'] }}
+      zuiio-id: ${{ steps.filter.outputs['zuiio-id'] }}
+      tamga: ${{ steps.filter.outputs.tamga }}
+      any: ${{ steps.filter.outputs.any }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            zer:
+              - 'apps/zer/**'
+            tolom:
+              - 'apps/tolom/**'
+            onoo:
+              - 'apps/onoo/**'
+            website:
+              - 'apps/website/**'
+            agent-gateway:
+              - 'apps/agent-gateway/**'
+            zuiio-id:
+              - 'apps/zuiio-id/**'
+            tamga:
+              - 'apps/tamga/**'
+
+  # ─── Deploy only changed apps ───
+
+  deploy-zer:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.zer == 'true'
+    uses: ./.github/workflows/_deploy-vercel.yml
+    with:
+      app: zer
+      turbo-filter: zer
+      author-email: "yesprice.mn@gmail.com"
+    secrets:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_ZER }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_ZER }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_ZER }}
+
+  deploy-tolom:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.tolom == 'true'
+    uses: ./.github/workflows/_deploy-vercel.yml
+    with:
+      app: tolom
+      turbo-filter: tolom
+      author-email: "themuln.official@gmail.com"
+    secrets:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_TOLOM }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_TOLOM }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_TOLOM }}
+
+  deploy-onoo:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.onoo == 'true'
+    uses: ./.github/workflows/_deploy-vercel.yml
+    with:
+      app: onoo
+      turbo-filter: onoo-web
+      author-email: "zerone.offical@gmail.com"
+    secrets:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_ONOO }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_ONOO }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_ONOO }}
+
+  deploy-website:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.website == 'true'
+    uses: ./.github/workflows/_deploy-vercel.yml
+    with:
+      app: website
+      turbo-filter: "@zuiio/website"
+      author-email: "zerone.offical@gmail.com"
+    secrets:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_WEBSITE }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_WEBSITE }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEBSITE }}
+
+  deploy-agent-gateway:
+    needs: detect-changes
+    if: needs.detect-changes.outputs['agent-gateway'] == 'true'
+    uses: ./.github/workflows/_deploy-vercel.yml
+    with:
+      app: agent-gateway
+      turbo-filter: agent-gateway
+      author-email: "zerone.offical@gmail.com"
+    secrets:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_AGENT }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_AGENT }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_AGENT }}
+
+  deploy-zuiio-id:
+    needs: detect-changes
+    if: needs.detect-changes.outputs['zuiio-id'] == 'true'
+    uses: ./.github/workflows/_deploy-vercel.yml
+    with:
+      app: zuiio-id
+      turbo-filter: "@zuiio/id"
+      author-email: "themuuln6@gmail.com"
+    secrets:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_ZUIIO_ID }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_ZUIIO_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_ZUIIO_ID }}
+
+  deploy-tamga:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.tamga == 'true'
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_TAMGA }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_TAMGA }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_TAMGA }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+          sparse-checkout: |
+            apps/tamga
+
+      - name: Set Vercel-compatible git author
+        run: |
+          git config user.email "themuln.official@gmail.com"
+          git config user.name "Temuulen Undrakhbayar"
+          git commit --amend --no-edit --reset-author
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+        id: pnpm-cache
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Stage Vercel project config
+        run: |
+          mkdir -p .vercel
+          printf '{"projectId":"%s","orgId":"%s"}\n' "$VERCEL_PROJECT_ID" "$VERCEL_ORG_ID" > .vercel/project.json
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+
+      - name: Build
+        run: vercel build --prod --token=$VERCEL_TOKEN
+
+      - name: Deploy to production
+        run: vercel deploy --prebuilt --prod --archive=tgz --token=$VERCEL_TOKEN
