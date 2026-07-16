@@ -4,6 +4,12 @@ import { createProjectClient } from "@/lib/supabase/external";
 import { auditEvent, extractIp, extractUserAgent } from "@/lib/supabase/audit";
 import type { AuthErrorCode } from "@/lib/errors";
 
+/**
+ * Default project ref for the OAuth Server.
+ * Matches the default in consent/page.tsx — see that file for rationale.
+ */
+const DEFAULT_PROJECT_REF = "fhzuolncswccxkcqzclg"; // Tolom
+
 interface DecisionBody {
   authorization_id?: string;
   decision?: "approve" | "deny";
@@ -47,13 +53,11 @@ export async function POST(request: NextRequest) {
 
   // Create a client for the originating project's Supabase.
   // The authorization was created there, so the OAuth Server API lives there.
-  let supabase;
-  if (project_ref) {
-    supabase = await createProjectClient(project_ref);
-  }
-  // Fallback to Zuiio ID client if no project_ref (backwards compatibility)
+  const effectiveRef = project_ref ?? DEFAULT_PROJECT_REF;
+  const supabase = await createProjectClient(effectiveRef);
+
   if (!supabase) {
-    supabase = await createClient();
+    return errorResponse("consent_failed", 500);
   }
 
   const {
@@ -79,8 +83,6 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     // Protocol-level denial follows the SDK's registered client redirect.
-    // The SDK returns a redirect_url even on denial so the client can
-    // navigate back to the requesting app with the denial error.
     if (data && "redirect_url" in data && data.redirect_url) {
       return NextResponse.json(
         { redirect_to: data.redirect_url },

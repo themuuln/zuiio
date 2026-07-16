@@ -12,6 +12,19 @@ interface AuthorizationDetails {
 }
 
 /**
+ * Default project ref for the OAuth Server.
+ *
+ * The Supabase OAuth Server strips query params from Authorization Path,
+ * so we can't pass project_ref via URL. We default to tolom's ref since
+ * it's the only consumer of this SSO flow right now.
+ *
+ * When zer (or other products) start using SSO, we'll need to:
+ * - Add their project ref to the KNOWN_PROJECTS map in external.ts
+ * - Determine the correct ref from the authorization_id or another signal
+ */
+const DEFAULT_PROJECT_REF = "fhzuolncswccxkcqzclg"; // Tolom
+
+/**
  * OAuth Consent page.
  *
  * Supabase OAuth Server redirects here with authorization_id.
@@ -21,10 +34,6 @@ interface AuthorizationDetails {
  * IMPORTANT: The authorization was created on the originating project's
  * Supabase (e.g. Tolom), not on Zuiio ID. We must call the originating
  * project's OAuth Server API, not Zuiio ID's.
- *
- * The `project_ref` search param identifies which project created the
- * authorization. It's added to the consent URL in each project's
- * Supabase Dashboard -> Auth -> Providers -> custom:zuiio -> Consent URL.
  */
 export default function ConsentPage({
   searchParams,
@@ -54,7 +63,7 @@ async function ConsentFormWrapper({
 }) {
   const params = await searchParams;
   const authorizationId = params.authorization_id;
-  const projectRef = params.project_ref;
+  const projectRef = params.project_ref ?? DEFAULT_PROJECT_REF;
 
   if (!authorizationId) {
     return (
@@ -67,13 +76,15 @@ async function ConsentFormWrapper({
 
   // Create a client for the originating project's Supabase.
   // The authorization was created there, so the OAuth Server API lives there.
-  let supabase;
-  if (projectRef) {
-    supabase = await createProjectClient(projectRef);
-  }
-  // Fallback to Zuiio ID client if no project_ref (backwards compatibility)
+  const supabase = await createProjectClient(projectRef);
+
   if (!supabase) {
-    supabase = await createClient();
+    return (
+      <ConsentError
+        code="unknown_project"
+        message="Тодорхойлогдоогүй төсөл."
+      />
+    );
   }
 
   const { data: authDetails, error } =
@@ -99,14 +110,12 @@ async function ConsentFormWrapper({
   }
 
   // Otherwise, extract authorization details for the consent form.
-  // The SDK returns the full authorization object; we need client name,
-  // logo, scope, and redirect_uri.
   const details = authDetails as AuthorizationDetails;
 
   return (
     <ConsentForm
       authorizationId={authorizationId}
-      projectRef={projectRef ?? ""}
+      projectRef={projectRef}
       clientName={details.client?.name ?? "Тодорхойлогдоогүй"}
       clientLogoUri={details.client?.logo_uri}
       scope={details.scope ?? "openid"}
