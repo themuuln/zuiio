@@ -1,8 +1,8 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 export const instant = false;
-
 
 /**
  * Tolom SSO start route.
@@ -12,9 +12,13 @@ export const instant = false;
  * which exchanges the PKCE code for a local session.
  */
 export default async function SsoStartPage() {
+  const hdrs = await headers();
   const supabase = await createClient();
 
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  // Build origin from the request host — avoids NEXT_PUBLIC compile-time inlining issues
+  const host = hdrs.get("host") ?? "localhost:3000";
+  const proto = hdrs.get("x-forwarded-proto") ?? "http";
+  const origin = `${proto}://${host}`;
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "custom:zuiio",
