@@ -70,6 +70,8 @@ components:
 
 # Design System: Zuiio ID
 
+> **Shared design system**: [`docs/design.md`](../../../docs/design.md) — tokens, rules, anti-patterns, components, accessibility, overlay patterns, and product template. This document covers only product-specific decisions.
+
 ## 1. Overview
 
 **Creative North Star: "The Secure Threshold"**

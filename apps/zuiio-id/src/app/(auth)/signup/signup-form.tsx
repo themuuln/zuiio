@@ -76,6 +76,7 @@ export function SignupForm({
   );
   const [oauthError, setOauthError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [showUsername, setShowUsername] = useState(false);
   const [gsiInitialized, setGsiInitialized] = useState(false);
   const gsiInitializationRef = useRef(false);
 
@@ -259,6 +260,9 @@ export function SignupForm({
             loading={oauthLoading === "apple"}
           />
         </div>
+        <p className="text-center text-xs text-muted-foreground">
+          Хурдан бүртгүүлэх бол Google эсвэл Apple ашиглана уу
+        </p>
 
         {oauthError && (
           <div className="animate-slide-up rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -270,7 +274,7 @@ export function SignupForm({
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t border-border" />
           </div>
-          <div className="relative flex justify-center text-xs uppercase">
+          <div className="relative flex justify-center text-xs">
             <span className="bg-card px-2 text-muted-foreground">эсвэл</span>
           </div>
         </div>
@@ -304,30 +308,41 @@ export function SignupForm({
             )}
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="username"
-              className="text-sm font-medium text-foreground"
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowUsername(!showUsername)}
+              className="text-xs text-muted-foreground transition-colors hover:text-foreground"
             >
-              Нэр <span className="text-muted-foreground">(сонгох)</span>
-            </label>
-            <input
-              id="username"
-              name="username"
-              type="text"
-              autoComplete="username"
-              className="h-10 rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-              placeholder="batbilig"
-            />
-            {!state?.fieldErrors?.username && (
-              <p className="text-xs text-muted-foreground">
-                Латин үсэг, тоо, . _ - (3-32 тэмдэгт)
-              </p>
-            )}
-            {state?.fieldErrors?.username && (
-              <p className="text-xs text-destructive">
-                {state.fieldErrors.username[0]}
-              </p>
+              {showUsername ? "Нэр нуух" : "Нэр нэмэх (сонгох)"}
+            </button>
+            {showUsername && (
+              <div className="mt-2 flex flex-col gap-1.5">
+                <label
+                  htmlFor="username"
+                  className="text-sm font-medium text-foreground"
+                >
+                  Нэр
+                </label>
+                <input
+                  id="username"
+                  name="username"
+                  type="text"
+                  autoComplete="username"
+                  className="h-10 rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  placeholder="batbilig"
+                />
+                {!state?.fieldErrors?.username && (
+                  <p className="text-xs text-muted-foreground">
+                    Латин үсэг, тоо, . _ - (3-32 тэмдэгт)
+                  </p>
+                )}
+                {state?.fieldErrors?.username && (
+                  <p className="text-xs text-destructive">
+                    {state.fieldErrors.username[0]}
+                  </p>
+                )}
+              </div>
             )}
           </div>
 

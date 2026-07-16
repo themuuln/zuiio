@@ -330,6 +330,9 @@ export function LoginForm({
             isLastUsed={lastProvider === "apple"}
           />
         </div>
+        <p className="text-center text-xs text-muted-foreground">
+          Төхөөрөмжийн нууц үггүйгээр нэвтрэх
+        </p>
 
         {oauthError && (
           <div
@@ -344,7 +347,7 @@ export function LoginForm({
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t border-border" />
           </div>
-          <div className="relative flex justify-center text-xs uppercase">
+          <div className="relative flex justify-center text-xs">
             <span className="bg-card px-2 text-muted-foreground">эсвэл</span>
           </div>
         </div>
@@ -428,6 +431,14 @@ export function LoginForm({
               {state.formError}
             </div>
           )}
+          <label className="flex items-center gap-2 text-sm text-foreground">
+            <input
+              type="checkbox"
+              name="remember"
+              className="h-4 w-4 rounded border-input bg-card text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            />
+            Намайг сана
+          </label>
 
           <button
             type="submit"

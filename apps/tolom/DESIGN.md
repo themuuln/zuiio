@@ -23,6 +23,8 @@ colors:
 
 # Tolom — Design Decisions
 
+> **Shared design system**: [`docs/design.md`](../../docs/design.md) — tokens, rules, anti-patterns, components, accessibility, overlay patterns, and product template. This document covers only product-specific decisions.
+
 ## Product Character: "The Workshop Counter"
 
 Clean, organized, purposeful. Like a well-run auto shop — tools in their place, everything visible, nothing wasted. The interface should feel like stepping up to a counter where someone already knows what you need.

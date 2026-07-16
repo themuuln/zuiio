@@ -1,5 +1,7 @@
 # Onoo Design System
 
+> **Shared design system**: [`docs/design.md`](../../docs/design.md) — tokens, rules, anti-patterns, components, accessibility, overlay patterns, and product template. This document covers only product-specific decisions.
+
 ## Stack
 
 - Framework: Next.js 16 App Router with React Server Components by default

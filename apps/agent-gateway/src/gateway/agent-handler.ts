@@ -72,7 +72,7 @@ export async function handleAgentMessage(
 	chatType: string,
 	opts: AgentHandlerOptions,
 	): Promise<string> {
-	debug("agent", "handleAgentMessage START", { orgId: ctx.orgId, chatId: ctx.channelChatId, userId: ctx.channelUserId, channel: ctx.channel, textLen: text.length });
+	console.log(`[agent-handler] START org=${ctx.orgId} chat=${ctx.channelChatId} user=${ctx.channelUserId} channel=${ctx.channel} textLen=${text.length}`);
 	const sb = getSb();
 	const gateway = getGateway();
 	const context: ToolContext = {

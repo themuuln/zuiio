@@ -227,6 +227,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 		await handleUserMessage(chatId, userId, text, chatType, msg.message_id);
 		return NextResponse.json({ ok: true });
 	} catch (err) {
+		console.error("[webhook] ERROR:", err);
 		capture(err, { context: "agent-gateway: telegram webhook" });
 		return NextResponse.json({ ok: true });
 	}
