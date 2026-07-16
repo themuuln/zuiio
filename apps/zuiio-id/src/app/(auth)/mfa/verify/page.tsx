@@ -108,7 +108,7 @@ export default function MfaVerifyPage() {
           </a>
         </div>
 
-        <div className="rounded-lg border border-border bg-card p-6">
+        <div className="animate-fade-in rounded-lg border border-border bg-card p-6">
           <h1 className="text-center text-lg font-semibold text-foreground">
             Нэмэлт баталгаа
           </h1>
@@ -117,7 +117,7 @@ export default function MfaVerifyPage() {
           </p>
 
           {error && (
-            <div className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <div className="animate-slide-down mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {error}
             </div>
           )}
@@ -140,7 +140,7 @@ export default function MfaVerifyPage() {
               type="button"
               onClick={handleVerify}
               disabled={loading || code.length !== 6}
-              className="h-11 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+              className="active-scale h-11 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
               {loading ? "Шалгаж байна..." : "Баталгаажуулах"}
             </button>

@@ -286,7 +286,7 @@ export function PasskeyManager() {
 
       {feedback && (
         <div
-          className={`rounded-lg px-3 py-2 text-sm ${
+          className={`animate-slide-down rounded-lg px-3 py-2 text-sm ${
             feedback.tone === "error"
               ? "bg-destructive/10 text-destructive"
               : "bg-primary/10 text-primary"

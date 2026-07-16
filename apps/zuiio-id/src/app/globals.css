@@ -89,19 +89,44 @@
 
 @layer utilities {
   .animate-fade-in {
-    animation: fade-in 0.3s ease-out both;
+    animation: fade-in 0.3s cubic-bezier(0.23, 1, 0.32, 1) both;
   }
   .animate-slide-up {
-    animation: slide-up 0.25s ease-out both;
+    animation: slide-up 0.25s cubic-bezier(0.23, 1, 0.32, 1) both;
+  }
+  .animate-slide-down {
+    animation: slide-down 0.25s cubic-bezier(0.23, 1, 0.32, 1) both;
   }
   .animate-shake {
-    animation: shake 0.4s ease-out;
+    animation: shake 0.4s cubic-bezier(0.23, 1, 0.32, 1);
   }
   .active-scale {
-    transition: transform 0.1s ease-out;
+    transition: transform 0.1s cubic-bezier(0.23, 1, 0.32, 1);
   }
   .active-scale:active {
     transform: scale(0.98);
+  }
+
+  /* Expand/collapse via grid-template-rows — use with a wrapper div */
+  .expand-wrapper {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.25s cubic-bezier(0.23, 1, 0.32, 1),
+      opacity 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+    opacity: 0;
+  }
+  .expand-wrapper[data-expanded="true"] {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+  .expand-wrapper > * {
+    overflow: hidden;
+  }
+
+  /* Stagger delay via CSS custom property --i */
+  .stagger-item {
+    animation: fade-in 0.25s cubic-bezier(0.23, 1, 0.32, 1) both;
+    animation-delay: calc(var(--i, 0) * 50ms);
   }
 }
 
@@ -117,6 +142,16 @@
 }
 
 @keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes slide-down {
   from {
     opacity: 0;
     transform: translateY(-4px);
@@ -149,10 +184,19 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in,
   .animate-slide-up,
-  .animate-shake {
+  .animate-slide-down,
+  .animate-shake,
+  .stagger-item {
     animation: none;
   }
   .active-scale:active {
     transform: none;
+  }
+  .expand-wrapper {
+    transition: opacity 0.01ms;
+  }
+  .expand-wrapper[data-expanded="true"] {
+    grid-template-rows: 1fr;
+    opacity: 1;
   }
 }

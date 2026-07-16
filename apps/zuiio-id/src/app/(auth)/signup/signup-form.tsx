@@ -4,7 +4,6 @@ import { useActionState, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
 import Link from "next/link";
-import Image from "next/image";
 import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
 import { signup } from "./actions";
 import { signInWithGoogle, signInWithApple } from "@/app/(auth)/login/actions";
@@ -26,7 +25,11 @@ function OAuthButton({
       type="button"
       onClick={onClick}
       disabled={loading}
-      className="active-scale flex h-12 w-full items-center justify-center gap-3 rounded-lg border border-border bg-card text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50"
+      className={`active-scale flex h-12 w-full items-center justify-center gap-3 rounded-lg border text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50 ${
+        provider === "google"
+          ? "border-border bg-card text-foreground hover:border-info/30 hover:bg-info/5"
+          : "border-border bg-card text-foreground hover:border-muted-foreground/20 hover:bg-muted/80"
+      }`}
     >
       {provider === "google" ? (
         <svg className="size-5" viewBox="0 0 24 24" aria-hidden="true">
@@ -232,14 +235,6 @@ export function SignupForm({
 
       <div className="flex animate-fade-in flex-col gap-6">
         <div className="flex flex-col gap-2 text-center">
-          <Image
-            src="/zuiio-logo.png"
-            alt="Zuiio"
-            width={48}
-            height={48}
-            className="mx-auto mb-1"
-            priority
-          />
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Бүртгүүлэх
           </h1>
@@ -316,8 +311,11 @@ export function SignupForm({
             >
               {showUsername ? "Нэр нуух" : "Нэр нэмэх (сонгох)"}
             </button>
-            {showUsername && (
-              <div className="mt-2 flex flex-col gap-1.5">
+            <div
+              className="expand-wrapper mt-2"
+              data-expanded={String(showUsername)}
+            >
+              <div className="flex flex-col gap-1.5">
                 <label
                   htmlFor="username"
                   className="text-sm font-medium text-foreground"
@@ -343,7 +341,7 @@ export function SignupForm({
                   </p>
                 )}
               </div>
-            )}
+            </div>
           </div>
 
           <div className="flex flex-col gap-1.5">

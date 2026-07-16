@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 
 interface ConsentFormProps {
   authorizationId: string;
@@ -27,6 +27,12 @@ export function ConsentForm({
     email: "Таны имэйл хаяг",
     profile: "Таны нэр, зураг",
     phone: "Таны утасны дугаар",
+  };
+  const scopeColors: Record<string, string> = {
+    openid: "bg-primary/10 text-primary",
+    email: "bg-info/10 text-info",
+    profile: "bg-muted text-muted-foreground",
+    phone: "bg-warning/10 text-warning",
   };
 
   const handleDecision = async (decision: "approve" | "deny") => {
@@ -68,7 +74,7 @@ export function ConsentForm({
   const initial = clientName.charAt(0).toUpperCase();
 
   return (
-    <div className="rounded-lg border border-border bg-card p-6">
+    <div className="animate-fade-in rounded-lg border border-border bg-card p-6">
       <div className="text-center">
         {/* App logo or initial fallback */}
         {clientLogoUri ? (
@@ -103,8 +109,8 @@ export function ConsentForm({
       {/* Scope list */}
       <div className="mt-6 space-y-3">
         {requestedScopes.map((scopeItem) => (
-          <div key={scopeItem} className="flex items-center gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-xs font-medium text-muted-foreground">
+          <div key={scopeItem} className="stagger-item flex items-center gap-3" style={{ "--i": requestedScopes.indexOf(scopeItem) } as CSSProperties}>
+            <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-medium ${scopeColors[scopeItem] ?? "bg-muted text-muted-foreground"}`}>
               {scopeItem.charAt(0).toUpperCase()}
             </div>
             <span className="text-sm text-foreground">
@@ -116,7 +122,7 @@ export function ConsentForm({
 
       {/* Error message */}
       {error && (
-        <p className="mt-4 text-center text-sm text-destructive">{error}</p>
+        <p className="animate-slide-down mt-4 text-center text-sm text-destructive">{error}</p>
       )}
 
       {/* Actions */}
@@ -125,7 +131,7 @@ export function ConsentForm({
           type="button"
           onClick={() => handleDecision("approve")}
           disabled={loading !== null}
-          className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+          className="active-scale w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
         >
           {loading === "approve" ? "Баталгаажуулж байна..." : "Зөвшөөрөх"}
         </button>
@@ -133,7 +139,7 @@ export function ConsentForm({
           type="button"
           onClick={() => handleDecision("deny")}
           disabled={loading !== null}
-          className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+          className="active-scale w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
         >
           {loading === "deny" ? "Татгалзаж байна..." : "Татгалзах"}
         </button>

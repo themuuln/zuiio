@@ -169,12 +169,12 @@ export function MfaManager() {
       </h2>
 
       {error && (
-        <div className="mb-3 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <div className="animate-slide-down mb-3 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error}
         </div>
       )}
       {success && (
-        <div className="mb-3 rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">
+        <div className="animate-slide-down mb-3 rounded-lg bg-success/10 px-3 py-2 text-sm text-success">
           {success}
         </div>
       )}
@@ -190,7 +190,10 @@ export function MfaManager() {
                 <p className="text-sm text-foreground">
                   {f.friendly_name ?? "TOTP"}
                 </p>
-                <p className="text-xs text-muted-foreground">Идэвхитай</p>
+                <p className="flex items-center gap-1.5 text-xs text-success">
+                  <span className="inline-block size-1.5 rounded-full bg-success" />
+                  Идэвхитай
+                </p>
               </div>
               <button
                 type="button"
