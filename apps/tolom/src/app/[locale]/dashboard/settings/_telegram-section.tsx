@@ -20,6 +20,7 @@ import { SettingsBlock } from "./_settings-layout";
 interface TelegramLinkResponse {
   data: {
     bot_deep_link: string;
+    link_code?: string;
   };
   error?: {
     message?: string;
@@ -29,13 +30,14 @@ interface TelegramLinkResponse {
 const BOT_USERNAME = "zuiio_bot";
 export function TelegramSection() {
   const [deepLink, setDeepLink] = useState<string | null>(null);
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [linkCode, setLinkCode] = useState<string | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
   const t = useTranslations("settings");
 
   const generateLinkMutation = useMutation({
-    mutationFn: async (): Promise<string> => {
+    mutationFn: async () => {
       const res = await fetch("/api/telegram/link-token", {
         method: "POST",
       });
@@ -43,12 +45,13 @@ export function TelegramSection() {
       if (!res.ok || json.error) {
         throw new Error(json.error?.message ?? "Failed to generate link");
       }
-      return json.data.bot_deep_link;
+      return json.data;
     },
-    onSuccess: async (link) => {
-      setDeepLink(link);
+    onSuccess: async (data) => {
+      setDeepLink(data.bot_deep_link);
+      setLinkCode(data.link_code ?? null);
       setQrDataUrl(null);
-      const dataUrl = await QRCode.toDataURL(link, {
+      const dataUrl = await QRCode.toDataURL(data.bot_deep_link, {
         width: 220,
         margin: 2,
       });
@@ -122,6 +125,19 @@ export function TelegramSection() {
             <span>{t("telegramStep4")}</span>
           </li>
         </ol>
+        {linkCode ? (
+          <div className="rounded-lg border border-border bg-muted/20 p-3">
+            <Typography.Muted className="text-xs text-muted-foreground mb-1.5">
+              Холбох код:
+            </Typography.Muted>
+            <code className="block text-lg font-mono font-bold tracking-widest text-foreground">
+              {linkCode}
+            </code>
+            <Typography.Muted className="text-[10px] text-muted-foreground mt-1">
+              Telegram-д /start бичиж, дээрх кодоо оруулна уу
+            </Typography.Muted>
+          </div>
+        ) : null}
 
         <div className="flex flex-wrap items-center gap-2">
           <Button
