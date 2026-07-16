@@ -95,10 +95,11 @@ describe("Tolom Tools", () => {
 		supabase: {} as ReturnType<typeof createMockToolSupabase>["mockClient"],
 	};
 
-	it("returns all 12 Tolom tools (9 read + 3 write)", () => {
+	it("returns all Tolom tools (12 read + 6 write)", () => {
 		const tools = getProductTools("tolom", context);
 		const toolNames = tools.map((t) => t.name).sort();
 		expect(toolNames).toEqual([
+			"createAppointment",
 			"createInvoice",
 			"createWorkOrder",
 			"getActiveWorkOrders",
@@ -106,13 +107,18 @@ describe("Tolom Tools", () => {
 			"getCustomerHistory",
 			"getDailySummary",
 			"getExpensesSummary",
+			"getFinancialSummary",
 			"getInvoiceStatus",
 			"getMechanics",
 			"getSuppliers",
+			"getVehicleAnalytics",
 			"getWorkOrderDetails",
+			"queryData",
+			"recordPayment",
+			"updateWorkOrderDetails",
 			"updateWorkOrderStatus",
 		]);
-		expect(tools).toHaveLength(12);
+		expect(tools).toHaveLength(18);
 	});
 
 	it("getDailySummary returns summary data", async () => {

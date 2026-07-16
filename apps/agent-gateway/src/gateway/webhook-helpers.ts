@@ -33,12 +33,13 @@ export async function systemPromptFor(
 	}
 
 	if (productType === "tolom") {
-		return `You are an AI assistant for "${orgName || "This auto repair shop"}", a Tolom-powered auto repair business.
+		return `You are an AI business agent for "${orgName || "This auto repair shop"}", a Tolom-powered auto repair business.
 
 ## IDENTITY
 - Your name is: ${orgName || "This auto repair shop"}
+- You are a PROACTIVE business agent — not just a chatbot
+- You take initiative: query data, analyze, and provide insights WITHOUT being asked for each detail
 - You are friendly, professional, and concise
-- You help customers with their auto repair questions and needs
 
 ## LANGUAGE RULES (NON-NEGOTIABLE — HIGHEST PRIORITY)
 - CRITICAL: You MUST respond ONLY in Mongolian (Монгол хэл) — NO EXCEPTIONS
@@ -58,24 +59,62 @@ export async function systemPromptFor(
 When users say hello, goodbye, thanks, or ask casual questions:
 - Respond briefly in Mongolian with a warm tone
 - Example: User says "hi" → You say: "Сайн байна уу! Танд ямар тус хэрэгтэй вэ?"
-- Example: User says "say hi please" → You say: "Сайн байна уу! 👋"
-- Example: User says "thanks" → You say: "Танд талархалаа! Бусад зүйл байна уу?"
+- Example: "say hi please" → "Сайн байна уу! 👋"
+- Example: "thanks" → "Танд талархалаа! Бусад зүйл байна уу?"
 - Do NOT say "Welcome to [org name]" for every greeting — just greet warmly
 
+## AGENT BEHAVIOR RULES (CRITICAL)
+You are a BUSINESS AGENT with full database access. Follow these rules:
+
+1. **NEVER say "I don't have that data" or "би тухайн мэдээлэлгүй байна"** — You have tools to query ANY business data. Use them.
+2. **ALWAYS use tools when the user asks about business data** — revenue, expenses, work orders, customers, vehicles, appointments, invoices, parts, mechanics. Even for vague questions, query the data first.
+3. **Query with the right date range** — If the user says "last year", set date_from to 1 year ago. If "this month", use month start. If "all time", omit date filters.
+4. **Be proactive** — After showing requested data, offer relevant next steps. Example: if showing unpaid invoices, mention total outstanding.
+5. **Use queryData for ANY table query** — It works with: work_orders, customers, vehicles, appointments, invoices, invoice_items, invoice_payments, expenses, suppliers, profiles, parts_catalog, service_catalog, sales, sales_items, cash_register_sessions, work_order_parts, work_order_services, mechanic_daily_reports.
+6. **Use getVehicleAnalytics for vehicle-specific questions** — "Which car had the most repairs?", "Show me repair history for plate 1234AB"
+7. **Use getFinancialSummary for financial questions** — "How much revenue this quarter?", "Show expenses by category"
+8. **Use getDailySummary for today's quick overview**
+9. **Use getActiveWorkOrders for current active jobs**
+10. **For write operations** (create work order, update status, record payment, create appointment) — describe what you'll do, then call the tool. The system will ask for confirmation.
+
 ## TOOL USAGE
-You have access to business tools. Use them when users ask about:
-- Daily summaries, work orders, customers, invoices, appointments, staff, suppliers, parts
-- For general questions (greetings, "who are you", etc.), respond WITHOUT tools
+You have access to these tools. Use them proactively:
+- <b>queryData</b> — Flexible query for ANY table with date ranges, filters, sorting, aggregation
+- <b>getVehicleAnalytics</b> — Vehicle repair stats (which car most repairs, total revenue per vehicle)
+- <b>getFinancialSummary</b> — Revenue, expenses, payments over any period
+- <b>getDailySummary</b> — Today's quick overview
+- <b>getActiveWorkOrders</b> — Current active jobs
+- <b>getCustomerHistory</b> — Customer search by name/phone
+- <b>getInvoiceStatus</b> — Current month invoice summary
+- <b>getExpensesSummary</b> — Current month expenses by category
+- <b>getAppointments</b> — Upcoming appointments
+- <b>getMechanics</b> — Staff/mechanic list
+- <b>getWorkOrderDetails</b> — Detailed work order with parts
+- <b>getSuppliers</b> — Supplier list
+- <b>createWorkOrder</b> — Create new work order (requires confirmation)
+- <b>updateWorkOrderStatus</b> — Change work order status (requires confirmation)
+- <b>updateWorkOrderDetails</b> — Update description/notes/amount (requires confirmation)
+- <b>createInvoice</b> — Create invoice (requires confirmation)
+- <b>recordPayment</b> — Record payment against invoice (requires confirmation)
+- <b>createAppointment</b> — Book appointment (requires confirmation)
+
+For general questions (greetings, "who are you", etc.), respond WITHOUT tools.
 
 ## AVAILABLE DATA
-- Daily summary (revenue, active jobs, new customers)
-- Active work orders and their details (parts, status)
-- Customer history and vehicle information
-- Invoices and expenses
+You can query ALL business data including:
+- Work orders (all statuses, full history, parts, services)
+- Customers and their vehicles
+- Vehicles (plate, make, model, year, repair history)
+- Invoices and payments
+- Expenses by category
 - Appointments
 - Employees/mechanics (name, phone, active status)
-- Supplier information
-- Parts used in work orders
+- Suppliers
+- Parts catalog and pricing
+- Service catalog and pricing
+- Sales history
+- Cash register sessions
+- Mechanic daily reports
 
 Organization ID: ${orgId}${groupWarning}`;
 	}
@@ -495,6 +534,427 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 				}
 			},
 		},
+		// ─── Flexible Query Tools ────────────────────────────────────────
+		{
+			name: "queryData",
+			description:
+				"Бүх төрлийн бизнес өгөгдлийг уян хатан хугацааны хязгаартайгаар асуух. Хүсэлтийг шүүх, эрэмбэлэх, бүлэглэх боломжтой. Баганууд: work_orders, customers, vehicles, appointments, invoices, invoice_items, invoice_payments, expenses, suppliers, profiles, parts_catalog, service_catalog, sales, sales_items, cash_register_sessions.",
+			parameters: [
+				{
+					name: "table",
+					type: "string",
+					description: "Өгөгдлийн сан (жагсаалтыг үз)",
+					required: true,
+				},
+				{
+					name: "date_from",
+	type: "string",
+					description: "Эхлэх огноо (YYYY-MM-DD)",
+					required: false,
+				},
+				{
+					name: "date_to",
+					type: "string",
+					description: "Дуусах огноо (YYYY-MM-DD)",
+					required: false,
+				},
+				{
+					name: "filters",
+					type: "string",
+					description:
+						'Шүүлтүүр JSON форматаар. Жишээ: {"status":"in_progress"} эсвэл {"plate_number":"1234AB"}',
+					required: false,
+				},
+				{
+					name: "sort_by",
+					type: "string",
+					description: "Эрэмбэлэх багана (default: created_at)",
+					required: false,
+				},
+				{
+					name: "sort_order",
+					type: "string",
+					description: "Эрэмбэлэх чиглэл: asc эсвэл desc (default: desc)",
+					required: false,
+				},
+				{
+					name: "limit",
+					type: "number",
+					description: "Хамгийн их тоо (default: 20, макс 100)",
+					required: false,
+				},
+				{
+					name: "aggregate",
+					type: "string",
+					description: 'Нэгтгэх: "count", "sum:<column>", "avg:<column>" эсвэл "group:<column>"',
+					required: false,
+				},
+			],
+			execute: async (args) => {
+				try {
+					const table = (args.table as string)?.toLowerCase();
+					const allowedTables: Record<string, { dateCol: string }> = {
+						work_orders: { dateCol: "created_at" },
+						customers: { dateCol: "created_at" },
+						vehicles: { dateCol: "created_at" },
+						appointments: { dateCol: "scheduled_at" },
+						invoices: { dateCol: "issued_at" },
+						invoice_items: { dateCol: "created_at" },
+						invoice_payments: { dateCol: "paid_at" },
+						expenses: { dateCol: "expense_date" },
+						suppliers: { dateCol: "created_at" },
+						profiles: { dateCol: "created_at" },
+						parts_catalog: { dateCol: "created_at" },
+						service_catalog: { dateCol: "created_at" },
+						sales: { dateCol: "sale_date" },
+						sales_items: { dateCol: "created_at" },
+						cash_register_sessions: { dateCol: "date" },
+						work_order_parts: { dateCol: "created_at" },
+						work_order_services: { dateCol: "created_at" },
+						mechanic_daily_reports: { dateCol: "report_date" },
+					};
+					if (!table || !allowedTables[table]) {
+						return {
+							error: `Хүчингүй багана: "${args.table}". Зөвшөөрөгдсөн: ${Object.keys(allowedTables).join(", ")}`,
+						};
+					}
+
+					const dateCol = allowedTables[table].dateCol;
+					const limit = Math.min(
+						typeof args.limit === "number" ? args.limit : 20,
+						100,
+					);
+
+					let query = supabase.from(table).select("*").eq("organization_id", orgId);
+
+					if (!["profiles"].includes(table)) {
+						query = query.is("deleted_at", null);
+					}
+
+					// Date filters
+					if (args.date_from && typeof args.date_from === "string") {
+						query = query.gte(dateCol, args.date_from);
+					}
+					if (args.date_to && typeof args.date_to === "string") {
+						const endDate = args.date_to.includes("T")
+							? args.date_to
+							: `${args.date_to}T23:59:59Z`;
+						query = query.lte(dateCol, endDate);
+					}
+
+					// Custom filters
+					if (args.filters && typeof args.filters === "string") {
+						try {
+							const parsed = JSON.parse(args.filters) as Record<string, string>;
+							for (const [key, value] of Object.entries(parsed)) {
+								query = query.eq(key, value);
+							}
+						} catch {
+							return { error: "Шүүлтүүрийн формат буруу байна" };
+						}
+					}
+
+					// Sorting
+					const sortCol =
+						typeof args.sort_by === "string" ? args.sort_by : dateCol;
+					const sortAsc = args.sort_order === "asc";
+					query = query.order(sortCol, { ascending: sortAsc });
+
+					// Aggregate
+					const aggregate =
+						typeof args.aggregate === "string" ? args.aggregate : undefined;
+
+					if (aggregate === "count") {
+						const { data, error } = await query.select("id").limit(10000);
+						if (error) return { error: "Тоолох алдаа гарлаа" };
+						return { table, count: (data ?? []).length };
+					}
+
+					if (aggregate?.startsWith("sum:")) {
+						const col = aggregate.split(":")[1];
+						const { data, error } = await query.select(col).limit(1000);
+						if (error) return { error: "Нэмэх алдаа гарлаа" };
+						const total = (data ?? []).reduce(
+							(s: number, r: any) => s + (Number(r[col]) || 0),
+							0,
+						);
+						return { table, column: col, total, rowCount: data?.length ?? 0 };
+					}
+
+					if (aggregate?.startsWith("avg:")) {
+						const col = aggregate.split(":")[1];
+						const { data, error } = await query.select(col).limit(1000);
+						if (error) return { error: "Дундаж тооцох алдаа гарлаа" };
+						const rows = data ?? [];
+						const total = rows.reduce(
+							(s: number, r: any) => s + (Number(r[col]) || 0),
+							0,
+						);
+						return {
+							table,
+							column: col,
+							average: rows.length > 0 ? total / rows.length : 0,
+							rowCount: rows.length,
+						};
+					}
+
+					if (aggregate?.startsWith("group:")) {
+						const col = aggregate.split(":")[1];
+						const { data, error } = await query.select(`*, ${col}`).limit(
+							1000,
+						);
+						if (error) return { error: "Бүлэглэх алдаа гарлаа" };
+						const groups: Record<string, number> = {};
+						for (const r of data ?? []) {
+							const row = r as unknown as Record<string, unknown>;
+							const key = String(row[col] ?? "—");
+							groups[key] = (groups[key] ?? 0) + 1;
+						}
+						return { table, groupBy: col, groups };
+					}
+
+					// Default: return rows
+					const { data, error } = await query.limit(limit);
+					if (error) {
+						console.error("[queryData]", error);
+						return { error: "Өгөгдөл авахад алдаа гарлаа" };
+					}
+					return { table, rows: data ?? [], count: (data ?? []).length };
+				} catch (err) {
+					capture(err, { context: "agent-gateway: queryData" });
+					return { error: "Өгөгдөл авахад алдаа гарлаа" };
+				}
+			},
+		},
+		{
+			name: "getVehicleAnalytics",
+			description:
+				"Машин бүрийн засварын тоо, нийт орлого, сүүлийн засварын огноо гэх мэт аналитик. Хугацааны хязгаар нэмж болно.",
+			parameters: [
+				{
+					name: "date_from",
+					type: "string",
+					description: "Эхлэх огноо (YYYY-MM-DD)",
+					required: false,
+				},
+				{
+					name: "date_to",
+					type: "string",
+					description: "Дуусах огноо (YYYY-MM-DD)",
+					required: false,
+				},
+				{
+					name: "sort_by",
+					type: "string",
+					description: "Эрэмбэлэх: repair_count, total_revenue, last_repair (default: repair_count)",
+					required: false,
+				},
+				{
+					name: "limit",
+					type: "number",
+					description: "Хэдэн машин харуулах (default: 10)",
+					required: false,
+				},
+			],
+			execute: async (args) => {
+				try {
+					const dateFrom =
+						typeof args.date_from === "string" ? args.date_from : undefined;
+					const dateTo =
+						typeof args.date_to === "string"
+							? `${args.date_to}T23:59:59Z`
+							: undefined;
+					const limit =
+						typeof args.limit === "number" ? Math.min(args.limit, 50) : 10;
+
+					let woQuery = supabase
+						.from("work_orders")
+						.select(
+							"id, vehicle_id, total_amount, created_at, status, vehicles(plate_number, make, model, year)",
+						)
+						.eq("organization_id", orgId)
+						.is("deleted_at", null)
+						.not("status", "in", '("cancelled")');
+
+					if (dateFrom) woQuery = woQuery.gte("created_at", dateFrom);
+					if (dateTo) woQuery = woQuery.lte("created_at", dateTo);
+
+					const { data: workOrders, error: woError } = await woQuery.limit(500);
+					if (woError) return { error: "Машин аналитик авахад алдаа гарлаа" };
+
+					const vehicleMap = new Map<
+						string,
+						{
+							plate: string;
+							make: string;
+							model: string;
+							year: number | null;
+							repairCount: number;
+							totalRevenue: number;
+							lastRepair: string;
+						}
+					>();
+
+					for (const wo of workOrders ?? []) {
+						const v = wo.vehicles as any;
+						const vid = wo.vehicle_id ?? "unknown";
+						const existing = vehicleMap.get(vid);
+						const revenue = Number(wo.total_amount) || 0;
+						const woDate = wo.created_at ?? "";
+
+						if (existing) {
+							existing.repairCount++;
+							existing.totalRevenue += revenue;
+							if (woDate > existing.lastRepair) existing.lastRepair = woDate;
+						} else {
+							vehicleMap.set(vid, {
+								plate: v?.plate_number ?? "—",
+								make: v?.make ?? "—",
+								model: v?.model ?? "—",
+								year: v?.year ?? null,
+								repairCount: 1,
+								totalRevenue: revenue,
+								lastRepair: woDate,
+							});
+						}
+					}
+
+					let vehicles = Array.from(vehicleMap.values());
+					const sortBy = typeof args.sort_by === "string" ? args.sort_by : "repair_count";
+					if (sortBy === "total_revenue") {
+						vehicles.sort((a, b) => b.totalRevenue - a.totalRevenue);
+					} else if (sortBy === "last_repair") {
+						vehicles.sort((a, b) =>
+							b.lastRepair.localeCompare(a.lastRepair),
+						);
+					} else {
+						vehicles.sort((a, b) => b.repairCount - a.repairCount);
+					}
+
+					return {
+						period:
+							dateFrom || dateTo
+								? `${dateFrom ?? "эхлээгүй"} → ${args.date_to ?? "өнөөдөр"}`
+								: "Бүх цаг хугацаа",
+						vehicles: vehicles.slice(0, limit),
+						totalVehicles: vehicles.length,
+					};
+				} catch (err) {
+					capture(err, { context: "agent-gateway: getVehicleAnalytics" });
+					return { error: "Машин аналитик авахад алдаа гарлаа" };
+				}
+			},
+		},
+		{
+			name: "getFinancialSummary",
+			description:
+				"Орлого, зарлага, төлбөрийн хураангуй тодорхой хугацаанд. Тухайн сар, улирал, жилээр асууж болно.",
+			parameters: [
+				{
+					name: "date_from",
+					type: "string",
+					description: "Эхлэх огноо (YYYY-MM-DD)",
+					required: false,
+				},
+				{
+					name: "date_to",
+					type: "string",
+					description: "Дуусах огноо (YYYY-MM-DD)",
+					required: false,
+				},
+			],
+			execute: async (args) => {
+				try {
+					const now = new Date();
+					const dateFrom =
+						typeof args.date_from === "string"
+							? args.date_from
+							: new Date(now.getFullYear(), now.getMonth(), 1)
+									.toISOString()
+									.split("T")[0];
+					const dateTo =
+						typeof args.date_to === "string"
+							? `${args.date_to}T23:59:59Z`
+							: now.toISOString();
+
+					const [invoicesRes, expensesRes, paymentsRes] = await Promise.all([
+						supabase
+							.from("invoices")
+							.select("total, amount_paid, balance_due, status")
+							.eq("organization_id", orgId)
+							.is("deleted_at", null)
+							.gte("issued_at", dateFrom)
+							.lte("issued_at", dateTo),
+						supabase
+							.from("expenses")
+							.select("amount, expense_categories(name)")
+							.eq("organization_id", orgId)
+							.is("deleted_at", null)
+							.gte("expense_date", dateFrom)
+							.lte("expense_date", dateTo),
+						supabase
+							.from("invoice_payments")
+							.select("amount, method, paid_at")
+							.eq("organization_id", orgId)
+							.gte("paid_at", dateFrom)
+							.lte("paid_at", dateTo),
+					]);
+
+					const invoiceRows = invoicesRes.data ?? [];
+					const expenseRows = expensesRes.data ?? [];
+					const paymentRows = paymentsRes.data ?? [];
+
+					const totalInvoiced = invoiceRows.reduce(
+						(s: number, r: any) => s + (Number(r.total) || 0),
+						0,
+					);
+					const totalPaid = invoiceRows.reduce(
+						(s: number, r: any) => s + (Number(r.amount_paid) || 0),
+						0,
+					);
+					const totalUnpaid = invoiceRows.reduce(
+						(s: number, r: any) => s + (Number(r.balance_due) || 0),
+						0,
+					);
+					const totalExpenses = expenseRows.reduce(
+						(s: number, r: any) => s + (Number(r.amount) || 0),
+						0,
+					);
+					const expensesByCategory: Record<string, number> = {};
+					for (const r of expenseRows) {
+						const cat =
+							((r as any).expense_categories as any)?.name ?? "Бусад";
+						expensesByCategory[cat] =
+							(expensesByCategory[cat] ?? 0) + (Number((r as any).amount) || 0);
+					}
+					const paymentsByMethod: Record<string, number> = {};
+					for (const r of paymentRows) {
+						const method = (r as any).method ?? "бусад";
+						paymentsByMethod[method] =
+							(paymentsByMethod[method] ?? 0) +
+							(Number((r as any).amount) || 0);
+					}
+
+					return {
+						period: `${dateFrom} → ${typeof args.date_to === "string" ? args.date_to : now.toISOString().split("T")[0]}`,
+						summary: {
+							totalInvoiced,
+							totalCollected: totalPaid,
+							totalOutstanding: totalUnpaid,
+							totalExpenses,
+							netIncome: totalPaid - totalExpenses,
+						},
+						invoiceCount: invoiceRows.length,
+						expenseCount: expenseRows.length,
+						expensesByCategory,
+						paymentsByMethod,
+					};
+				} catch (err) {
+					capture(err, { context: "agent-gateway: getFinancialSummary" });
+					return { error: "Санхүүгийн хураангуй авахад алдаа гарлаа" };
+				}
+			},
+		},
 	];
 }
 
@@ -718,6 +1178,262 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 				capture(err, { context: "agent-gateway: createInvoice" });
 				return { error: "Нэхэмжлэх үүсгэхэд алдаа гарлаа" };
 			}
+			},
+		},
+		// ─── New CRU Tools ─────────────────────────────────────────────
+		{
+			name: "updateWorkOrderDetails",
+			description:
+				"Ажлын захиалгын дэлгэрэнгүйг засах: тайлбар, тэмдэглээ, нийт дүн. БАТАЛГААЖУУЛАЛТЫН багаж.",
+			parameters: [
+				{
+					name: "workOrderId",
+					type: "string",
+					description: "Ажлын захиалгын ID",
+					required: true,
+				},
+				{
+					name: "description",
+					type: "string",
+					description: "Шинэ тайлбар",
+					required: false,
+				},
+				{
+					name: "notes",
+					type: "string",
+					description: "Шинэ тэмдэглээ",
+					required: false,
+				},
+				{
+					name: "totalAmount",
+					type: "number",
+					description: "Шинэ нийт дүн (₮)",
+					required: false,
+				},
+			],
+			execute: async (args) => {
+				try {
+					const updates: Record<string, unknown> = {};
+					if (typeof args.description === "string")
+						updates.description = args.description;
+					if (typeof args.notes === "string") updates.notes = args.notes;
+					if (typeof args.totalAmount === "number")
+						updates.total_amount = args.totalAmount;
+
+					if (Object.keys(updates).length === 0) {
+						return { error: "Өөрчлөх зүйл байхгүй байна" };
+					}
+
+					const { data, error } = await supabase
+						.from("work_orders")
+						.update(updates)
+						.eq("organization_id", orgId)
+						.eq("id", args.workOrderId as string)
+						.select("id, description, notes, total_amount")
+						.single();
+
+					if (error || !data) {
+						return { error: "Ажлын захиалга олдсонгүй эсвэл өөрчлөх эрхгүй" };
+					}
+
+					return {
+						success: true,
+						message: `Ажлын захиалга #${(data as { id: string }).id.split("-")[0]} амжилттай шинэчлэгдлээ`,
+						updatedFields: Object.keys(updates),
+					};
+				} catch (err) {
+					capture(err, { context: "agent-gateway: updateWorkOrderDetails" });
+					return { error: "Ажлын захиалга шинэчлэхэд алдаа гарлаа" };
+				}
+			},
+		},
+		{
+			name: "recordPayment",
+			description:
+				"Нэхэмжлэх дээр төлбөр бүртгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
+			parameters: [
+				{
+					name: "invoiceId",
+					type: "string",
+					description: "Нэхэмжлэхийн ID",
+					required: true,
+				},
+				{
+					name: "amount",
+					type: "number",
+					description: "Төлсөн дүн (₮)",
+					required: true,
+				},
+				{
+					name: "method",
+					type: "string",
+					description: "Төлбөрийн хэрэгсэл: cash, card, qpay, transfer",
+					required: false,
+				},
+			],
+			execute: async (args) => {
+				try {
+					const amount = Number(args.amount);
+					if (amount <= 0) return { error: "Дүн 0-ээс их байх ёстой" };
+
+					const method = (args.method as string) ?? "cash";
+					const validMethods = ["cash", "card", "qpay", "transfer"];
+					if (!validMethods.includes(method)) {
+						return { error: `Хүчингүй төлбөрийн хэрэгсэл: "${method}". Боломжит: ${validMethods.join(", ")}` };
+					}
+
+					// Get current invoice
+					const { data: invoice, error: invErr } = await supabase
+						.from("invoices")
+						.select("id, total, amount_paid, balance_due")
+						.eq("id", args.invoiceId as string)
+						.eq("organization_id", orgId)
+						.single();
+
+					if (invErr || !invoice) return { error: "Нэхэмжлэх олдсонгүй" };
+
+					const inv = invoice as {
+						id: string;
+						total: number;
+						amount_paid: number;
+						balance_due: number;
+					};
+
+					if (amount > inv.balance_due) {
+						return {
+							error: `Төлсөн дүн (${amount}₮) нэхэмжлэхийн үлдэгдэл (${inv.balance_due}₮)-ээс их байна`,
+						};
+					}
+
+					const newPaid = inv.amount_paid + amount;
+					const newBalance = inv.total - newPaid;
+					const newStatus = newBalance <= 0 ? "paid" : "partial";
+
+					const { error: updateErr } = await supabase
+						.from("invoices")
+						.update({
+							amount_paid: newPaid,
+							balance_due: newBalance,
+							status: newStatus,
+							paid_at: newBalance <= 0 ? new Date().toISOString() : null,
+						})
+						.eq("id", inv.id);
+
+					if (updateErr) return { error: "Төлбөр бүртгэхэд алдаа гарлаа" };
+
+					// Record payment entry
+					await supabase.from("invoice_payments").insert({
+						invoice_id: inv.id,
+						organization_id: orgId,
+						amount,
+						method,
+						paid_at: new Date().toISOString(),
+					});
+
+					return {
+						success: true,
+						message: `${amount}₮ төлбөр амжилттай бүртгэгдлээ (${method})`,
+						invoiceId: inv.id,
+						remainingBalance: newBalance,
+						newStatus,
+					};
+				} catch (err) {
+					capture(err, { context: "agent-gateway: recordPayment" });
+					return { error: "Төлбөр бүртгэхэд алдаа гарлаа" };
+				}
+			},
+		},
+		{
+			name: "createAppointment",
+			description:
+				"Шинэ цаг захиалга үүсгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
+			parameters: [
+				{
+					name: "customerName",
+					type: "string",
+					description: "Харилцагчийн нэр",
+					required: true,
+				},
+				{
+					name: "customerPhone",
+					type: "string",
+					description: "Харилцагчийн утас",
+					required: false,
+				},
+				{
+					name: "scheduledAt",
+					type: "string",
+					description: "Цагийн уулзвар (YYYY-MM-DDTHH:MM)",
+					required: true,
+				},
+				{
+					name: "description",
+					type: "string",
+					description: "Захиалгын тайлбар",
+					required: false,
+				},
+			],
+			execute: async (args) => {
+				try {
+					const phone = (args.customerPhone as string) ?? "";
+					let customerId: string;
+
+					// Find or create customer
+					const { data: existing } = await supabase
+						.from("customers")
+						.select("id")
+						.eq("organization_id", orgId)
+						.eq("phone", phone)
+						.is("deleted_at", null)
+						.limit(1);
+
+					if (existing && existing.length > 0) {
+						customerId = (existing[0] as { id: string }).id;
+					} else {
+						const name = (args.customerName as string) ?? "—";
+						const [firstName, ...rest] = name.split(" ");
+						const { data: created, error: createErr } = await supabase
+							.from("customers")
+							.insert({
+								organization_id: orgId,
+								full_name: name,
+								first_name: firstName ?? name,
+								last_name: rest.join(" ") || undefined,
+								phone: phone || undefined,
+							})
+							.select("id")
+							.single();
+						if (createErr || !created) {
+							return { error: "Харилцагч үүсгэхэд алдаа гарлаа" };
+						}
+						customerId = (created as { id: string }).id;
+					}
+
+					const { data: appt, error: apptErr } = await supabase
+						.from("appointments")
+						.insert({
+							organization_id: orgId,
+							customer_id: customerId,
+							scheduled_at: args.scheduledAt as string,
+							description: (args.description as string) ?? undefined,
+							status: "scheduled",
+						})
+						.select("id, scheduled_at, status")
+						.single();
+
+					if (apptErr || !appt) {
+						return { error: "Цаг захиалга үүсгэхэд алдаа гарлаа" };
+					}
+
+					return {
+						success: true,
+						message: `Цаг захиалга амжилттай үүслээ: ${(appt as { scheduled_at: string }).scheduled_at}`,
+						appointmentId: (appt as { id: string }).id,
+					};
+				} catch (err) {
+					capture(err, { context: "agent-gateway: createAppointment" });
+					return { error: "Цаг захиалга үүсгэхэд алдаа гарлаа" };
+				}
 			},
 		},
 	];
