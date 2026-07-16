@@ -705,7 +705,24 @@ export async function POST(request: Request): Promise<NextResponse> {
 		if (messageId) {
 			tg.setReaction(chatId, messageId, TelegramChannel.REACTIONS.done).catch(() => {});
 		}
-		await tg.sendMessage(chatId, response);
+		await tg.sendMessage(chatId, response, { parseMode: "HTML" });
+		// Add quick action buttons for Tolom
+		if (productType === "tolom") {
+			await tg.sendInlineKeyboard(chatId, "Дараах үйлдлүүдээс сонгоно уу:", [
+				[
+					{ text: "📊 Өнөөдрийн хураангуй", callbackData: "action:daily_summary" },
+					{ text: "🔧 Идэвхтэй захиалгууд", callbackData: "action:active_orders" },
+				],
+				[
+					{ text: "👥 Механикчид", callbackData: "action:mechanics" },
+					{ text: "📅 Цагийн хуваарь", callbackData: "action:appointments" },
+				],
+				[
+					{ text: "💰 Нэхэмжлэл", callbackData: "action:invoices" },
+					{ text: "📋 Зарлагын хураангуй", callbackData: "action:expenses" },
+				],
+			]);
+		}
 	} catch (err) {
 		stopTyping();
 		console.error("[webhook] agent error:", err);
@@ -787,6 +804,23 @@ export async function POST(request: Request): Promise<NextResponse> {
 			rejectAction(nonce);
 			await tg.editMessageText(chatId, messageId, "❌ Цуцаллаа.");
 			await tg.answerCallbackQuery(cq.id, "❌ Цуцаллаа.");
+	} else if (action === "action") {
+			// Quick action buttons — forward as a regular message to the agent
+			const actionText: Record<string, string> = {
+				daily_summary: "Өнөөдрийн хураангуй үзүүлээрэй",
+				active_orders: "Идэвхтэй ажлын захиалгуудыг жагсааж өгөөч",
+				mechanics: "Механикчдын жагсаалт үзүүлээрэй",
+				appointments: "Өнөөдрийн цагийн хуваарийг үзүүлээрэй",
+				invoices: "Нэхэмжлэлийн хураангуй үзүүлээрэй",
+				expenses: "Зарлагын хураангуй үзүүлээрэй",
+			};
+			const query = actionText[nonce];
+			if (!query) {
+				await tg.answerCallbackQuery(cq.id, "❌ Тодорхойгүй үйлдэл.");
+				return;
+			}
+			await tg.answerCallbackQuery(cq.id);
+			// Process as a regular message
+			await handleUserMessage(chatId, userId, query, "private", messageId);
 		}
 	}
-}
