@@ -358,3 +358,27 @@ For tasks spanning >10 files or >30 minutes:
 4. **Don't read all docs** — read only what's relevant to your task
 
 **Expected savings:** -30% token usage, +10% agent performance
+
+---
+
+## Package Documentation — READ BEFORE CODING
+
+Before using ANY npm package from `package.json`, verify current API against the package's own documentation. **Never hardcode API patterns from training data.**
+
+**Discovery order:**
+1. Check `node_modules/<pkg>/package.json` for `llms`, `llmsFull`, or `mcpServer` fields → use those URLs as primary docs
+2. Check `node_modules/<pkg>/AGENTS.md` or `node_modules/<pkg>/SKILL.md` → read for API guidance
+3. If neither exists, fetch current docs from the web before writing code
+
+**Key packages across apps:**
+| Package | Docs Source |
+|---------|------------|
+| `@tanstack/react-query` | https://tanstack.com/query/latest/docs/framework/react/overview |
+| `@tanstack/react-table` | https://tanstack.com/table/latest/docs/introduction |
+| `@supabase/supabase-js` | `node_modules/@supabase/supabase-js/AGENTS.md` (per-package) |
+| `@supabase/ssr` | https://supabase.com/docs/guides/auth/server-side/nextjs |
+| `zod` | `node_modules/zod/AGENTS.md` + `llms` field in package.json |
+| `react-hook-form` | https://react-hook-form.com/docs/useform |
+| `next` | `node_modules/next/dist/docs/` (bundled) |
+
+**This is not optional.** Package APIs change across versions. Training data is stale by definition.

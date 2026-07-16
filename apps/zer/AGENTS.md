@@ -1,9 +1,9 @@
 <!-- BEGIN:nextjs-agent-rules -->
-
 # This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 <!-- END:nextjs-agent-rules -->
 
 # Agent Instructions
@@ -536,3 +536,26 @@ If `supabase gen types` fails with a 403 or auth error, **stop immediately and a
 | Shared components | `src/components/AGENTS.md` |
 | Feature modules | `src/app/(dashboard)/<module>/AGENTS.md` |
 
+
+---
+
+## Package Documentation — READ BEFORE CODING
+
+Before using ANY npm package from `package.json`, verify current API against the package's own documentation. **Never hardcode API patterns from training data.**
+
+**Discovery order:**
+1. Check `node_modules/<pkg>/package.json` for `llms`, `llmsFull`, or `mcpServer` fields → use those URLs as primary docs
+2. Check `node_modules/<pkg>/AGENTS.md` or `node_modules/<pkg>/SKILL.md` → read for API guidance
+3. If neither exists, fetch current docs from the web before writing code
+
+**Key packages and their docs:**
+| Package | Docs Source |
+|---------|------------|
+| `@tanstack/react-query` | https://tanstack.com/query/latest/docs/framework/react/overview |
+| `@supabase/supabase-js` | `node_modules/@supabase/supabase-js/AGENTS.md` (per-package) |
+| `@supabase/ssr` | https://supabase.com/docs/guides/auth/server-side/nextjs |
+| `zod` | `node_modules/zod/AGENTS.md` + `llms` field in package.json |
+| `react-hook-form` | https://react-hook-form.com/docs/useform |
+| `next` | `node_modules/next/dist/docs/` (bundled) |
+
+**This is not optional.** Package APIs change across versions. Training data is stale by definition.

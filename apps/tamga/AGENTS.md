@@ -281,3 +281,24 @@ All project knowledge — product decisions, business rules, marketing strategy,
 - [Product](docs/product.md) — Product vision and roadmap
 - [Design](docs/design.md) — Brand and visual direction
 - [Database](docs/database.md) — Supabase schema reference
+
+---
+
+## Package Documentation — READ BEFORE CODING
+
+Before using ANY npm package from `package.json`, verify current API against the package's own documentation. **Never hardcode API patterns from training data.**
+
+**Discovery order:**
+1. Check `node_modules/<pkg>/package.json` for `llms`, `llmsFull`, or `mcpServer` fields → use those URLs as primary docs
+2. Check `node_modules/<pkg>/AGENTS.md` or `node_modules/<pkg>/SKILL.md` → read for API guidance
+3. If neither exists, fetch current docs from the web before writing code
+
+**Key packages and their docs:**
+| Package | Docs Source |
+|---------|------------|
+| `@tanstack/react-query` | https://tanstack.com/query/latest/docs/framework/react/overview |
+| `@supabase/supabase-js` | `node_modules/@supabase/supabase-js/AGENTS.md` (per-package) |
+| `zod` | `node_modules/zod/AGENTS.md` + `llms` field in package.json |
+| `next` | `node_modules/next/dist/docs/` (bundled) |
+
+**This is not optional.** Package APIs change across versions. Training data is stale by definition.
