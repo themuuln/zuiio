@@ -9,6 +9,7 @@ export const PUBLIC_ROUTES = [
   "/reset-password",
   "/update-password",
   "/organization/new",
+  "/sso",
 ];
 
 export const COMPANY_TYPES = [

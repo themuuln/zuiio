@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
+export const instant = false;
+
+
 /**
  * Tolom SSO start route.
  *

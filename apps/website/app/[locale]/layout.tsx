@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { routing } from "@/lib/i18n/routing";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { ThemeProvider } from "@/components/layout/ThemeProvider";
 
 type Props = {
 	children: React.ReactNode;
@@ -22,17 +23,19 @@ export default async function LocaleLayout({ children, params }: Props) {
 	setRequestLocale(locale);
 
 	const messages = await getMessages();
-
 	return (
-		<NextIntlClientProvider locale={locale} messages={messages}>
-			<a href="#main-content" className="skip-to-content">
-				Skip to content
-			</a>
-			<Header />
-			<main id="main-content" className="flex-1">
-				{children}
-			</main>
-			<Footer />
-		</NextIntlClientProvider>
+
+		<ThemeProvider>
+			<NextIntlClientProvider locale={locale} messages={messages}>
+				<a href="#main-content" className="skip-to-content">
+					Skip to content
+				</a>
+				<Header />
+				<main id="main-content" className="flex-1">
+					{children}
+				</main>
+				<Footer />
+			</NextIntlClientProvider>
+		</ThemeProvider>
 	);
 }

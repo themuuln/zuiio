@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Instrument_Serif, Geist } from "next/font/google";
 import "./globals.css";
 
@@ -40,6 +40,9 @@ export const metadata: Metadata = {
 		},
 	},
 };
+export const viewport = {
+	viewportFit: "cover" as const,
+};
 
 export default function RootLayout({
 	children,
@@ -70,6 +73,11 @@ export default function RootLayout({
 							contactType: "sales",
 						},
 					}),
+				}}
+			/>
+			<script
+				dangerouslySetInnerHTML={{
+					__html: `document.addEventListener('DOMContentLoaded',function(){var o=new IntersectionObserver(function(e){e.forEach(function(n){if(n.isIntersecting){n.target.classList.add('visible');o.unobserve(n.target)}})},{threshold:0.15});document.querySelectorAll('.reveal').forEach(function(n){o.observe(n)})})`,
 				}}
 			/>
 			{children}

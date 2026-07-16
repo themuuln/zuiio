@@ -23,7 +23,6 @@ const nextConfig: NextConfig = {
 		"@zuiio/capture",
 		"@zuiio/export",
 		"@zuiio/config",
-		"@zuiio/ai-agent",
 		"@zuiio/hr",
 	],
 

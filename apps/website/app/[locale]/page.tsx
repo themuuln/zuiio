@@ -76,7 +76,7 @@ export default async function HomePage({ params }: Props) {
 						{t("products-subtitle")}
 					</p>
 				</div>
-			<div className="product-grid grid gap-6 md:grid-cols-3">
+			<div className="product-grid grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 				<ProductCard
 					name={t("zer-name")}
 					tagline={t("zer-tagline")}
@@ -113,6 +113,11 @@ export default async function HomePage({ params }: Props) {
 					variant="zuiio-id"
 				/>
 			</div>
+			<div className="mt-8 text-center">
+				<Link href="/products/compare" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+					{t("compare-link")} →
+				</Link>
+			</div>
 			</section>
 
 			<FeatureSection
@@ -124,7 +129,7 @@ export default async function HomePage({ params }: Props) {
 				}))}
 			/>
 
-		<section className="mx-auto max-w-6xl px-6 py-20 md:py-28">
+		<section className="reveal mx-auto max-w-6xl px-6 py-20 md:py-28">
 			<h2
 				className="mb-12 text-3xl font-semibold tracking-tight md:text-4xl"
 				style={{ fontFamily: "var(--font-display)" }}
@@ -143,7 +148,7 @@ export default async function HomePage({ params }: Props) {
 			</div>
 		</section>
 
-		<section id="pricing" className="border-y border-border" style={{ backgroundColor: "var(--color-muted)" }}>
+		<section id="pricing" className="reveal border-y border-border" style={{ backgroundColor: "var(--color-muted)" }}>
 			<div className="mx-auto max-w-6xl px-6 py-20 md:py-28">
 				<h2
 					className="mb-4 text-center text-3xl font-semibold tracking-tight md:text-4xl"
@@ -154,7 +159,7 @@ export default async function HomePage({ params }: Props) {
 				<p className="mx-auto mb-12 max-w-lg text-center text-muted-foreground">
 					{t("pricing-subtitle")}
 				</p>
-				<div className="grid gap-6 md:grid-cols-3">
+				<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 					{plans.map((plan) => (
 						<PricingCard
 							key={plan.key}
@@ -172,7 +177,7 @@ export default async function HomePage({ params }: Props) {
 			</div>
 		</section>
 
-		<section className="mx-auto max-w-6xl px-6 pb-24 pt-16 md:pt-24">
+		<section className="reveal mx-auto max-w-6xl px-6 pb-24 pt-16 md:pt-24">
 			<div
 				className="relative isolate overflow-hidden rounded-2xl px-6 py-16 text-center md:py-20"
 				style={{
@@ -227,8 +232,8 @@ export default async function HomePage({ params }: Props) {
 				<div
 					className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold"
 					style={{
-						backgroundColor: "var(--brand-violet-glow)",
-						color: "var(--color-primary)",
+						backgroundColor: "var(--brand-teal-glow)",
+						color: "var(--brand-teal)",
 					}}
 					aria-hidden="true"
 				>

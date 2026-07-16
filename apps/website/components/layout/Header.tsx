@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { ThemeToggle } from "./ThemeToggle";
 
 function MenuIcon() {
 	return (
@@ -138,6 +139,7 @@ export function Header() {
 
 				<div className="hidden items-center gap-3 md:flex">
 					<LanguageSwitcher />
+					<ThemeToggle />
 					<Link href="/pricing" className="btn-primary">
 						{t("cta")}
 					</Link>
@@ -182,7 +184,10 @@ export function Header() {
 							</Link>
 						))}
 						<div className="mt-4 flex flex-col gap-3 border-t border-border pt-4">
-							<LanguageSwitcher />
+							<div className="flex items-center gap-3">
+								<LanguageSwitcher />
+								<ThemeToggle />
+							</div>
 							<Link
 								href="/pricing"
 								className="btn-primary w-full justify-center"

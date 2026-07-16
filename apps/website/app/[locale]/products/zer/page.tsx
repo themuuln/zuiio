@@ -1,5 +1,6 @@
 import { Hero } from "@/components/marketing/Hero";
 import { Link } from "@/lib/i18n/navigation";
+import { ProductJsonLd } from "@/components/marketing/ProductJsonLd";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 const features = [
@@ -120,6 +121,7 @@ export default async function ZerProductPage({ params }: Props) {
 
 	return (
 		<>
+			<ProductJsonLd name="Zer" description="Mini ERP for Mongolian SMEs — inventory, sales, expenses, customers, and reports." url="/products/zer" />
 			<Hero
 				title={t("title")}
 				subtitle={t("subtitle")}

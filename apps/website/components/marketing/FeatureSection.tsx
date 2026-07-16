@@ -101,7 +101,7 @@ export function FeatureSection({
 	className,
 }: FeatureSectionProps) {
 	return (
-		<section className={cn("mx-auto max-w-6xl px-6 py-24 md:py-32", className)}>
+		<section className={cn("reveal mx-auto max-w-6xl px-6 py-24 md:py-32", className)}>
 			<div className="mx-auto max-w-2xl text-center">
 				<h2
 					className="text-3xl font-semibold tracking-tight md:text-4xl"

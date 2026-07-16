@@ -46,6 +46,9 @@ export function Hero({
 					/>
 					{eyebrow}
 				</div>
+				<div className="animate-fade-in mt-3 text-xs font-medium tracking-wide text-muted-foreground/70">
+					Монголд бүтээсэн · Ulaanbaatar
+				</div>
 				<h1
 					id="hero-heading"
 					className="animate-fade-up text-4xl font-semibold leading-tight tracking-tight md:text-6xl lg:text-7xl text-balance"

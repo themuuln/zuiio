@@ -61,7 +61,6 @@ export default async function AboutPage({ params }: Props) {
 			</div>
 		</section>
 		<section className="mx-auto max-w-3xl px-6 py-20 md:py-24">
-			<section className="mx-auto max-w-3xl px-6 py-20">
 				<h2
 					className="mb-8 text-center text-3xl font-semibold tracking-tight"
 					style={{ fontFamily: "var(--font-display)" }}

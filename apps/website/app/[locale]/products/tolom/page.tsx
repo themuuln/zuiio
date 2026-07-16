@@ -1,5 +1,6 @@
 import { Hero } from "@/components/marketing/Hero";
 import { Link } from "@/lib/i18n/navigation";
+import { ProductJsonLd } from "@/components/marketing/ProductJsonLd";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 const features = [

@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
+export const instant = false;
+
 /**
  * Zer SSO start route.
  *
@@ -24,7 +26,7 @@ export default async function SsoStartPage({
       ? params.next
       : "/";
 
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const origin = process.env.ZUIIO_ID_URL ?? "http://localhost:3000";
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "custom:zuiio",
