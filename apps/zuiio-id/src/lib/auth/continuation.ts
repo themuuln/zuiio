@@ -45,9 +45,7 @@ export function signContinuation(
   return { payload, token: `${btoa(data)}.${token}` };
 }
 
-export function verifyContinuation(
-  token: string,
-): ContinuationPayload | null {
+export function verifyContinuation(token: string): ContinuationPayload | null {
   const separatorIndex = token.lastIndexOf(".");
   if (separatorIndex === -1) return null;
 

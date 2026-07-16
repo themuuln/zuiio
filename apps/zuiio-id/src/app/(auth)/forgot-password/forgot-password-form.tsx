@@ -5,7 +5,10 @@ import Link from "next/link";
 import { forgotPassword } from "./actions";
 
 export function ForgotPasswordForm() {
-  const [state, formAction, isPending] = useActionState(forgotPassword, undefined);
+  const [state, formAction, isPending] = useActionState(
+    forgotPassword,
+    undefined,
+  );
 
   if (state?.success) {
     return (
@@ -41,7 +44,10 @@ export function ForgotPasswordForm() {
 
       <form action={formAction} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="email" className="text-sm font-medium text-foreground">
+          <label
+            htmlFor="email"
+            className="text-sm font-medium text-foreground"
+          >
             Имэйл
           </label>
           <input
@@ -72,7 +78,10 @@ export function ForgotPasswordForm() {
 
       <p className="text-center text-sm text-muted-foreground">
         Буцах{" "}
-        <Link href="/login" className="font-medium text-foreground transition-colors hover:text-primary hover:underline">
+        <Link
+          href="/login"
+          className="font-medium text-foreground transition-colors hover:text-primary hover:underline"
+        >
           нэвтрэх хуудас руу
         </Link>
       </p>

@@ -98,10 +98,7 @@ export async function signup(
   if (product && returnTo) {
     const ssoProduct = getSsoProduct(product as ProductId);
     if (ssoProduct) {
-      const { token } = signContinuation(
-        product as ProductId,
-        returnTo,
-      );
+      const { token } = signContinuation(product as ProductId, returnTo);
       return {
         redirectTo: `/auth/callback?continuation=${token}`,
       };

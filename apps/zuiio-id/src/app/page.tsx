@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/app/(auth)/logout/actions";
-
+export const instant = false;
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -87,6 +87,46 @@ export default async function HomePage() {
                 </p>
               )}
               <p className="text-sm text-muted-foreground">{user.email}</p>
+            </div>
+          </div>
+
+          {/* Connected products */}
+          <div className="flex w-full flex-col gap-3">
+            <p className="text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Холбогдсон бүтээгдэхүүд
+            </p>
+            <div className="flex flex-col gap-2">
+              <a
+                href="https://zer.zuiiotech.com"
+                className="active-scale flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              >
+                <span className="flex h-8 w-8 items-center justify-center rounded-md bg-success/10 text-success">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                    <line x1="12" y1="22.08" x2="12" y2="12" />
+                  </svg>
+                </span>
+                <span className="flex flex-col">
+                  <span>Zer</span>
+                  <span className="text-xs font-normal text-muted-foreground">Жижиг дунд бизнесийн ERP</span>
+                </span>
+              </a>
+              <a
+                href="https://tolom.zuiiotech.com"
+                className="active-scale flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              >
+                <span className="flex h-8 w-8 items-center justify-center rounded-md bg-info/10 text-info">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                </span>
+                <span className="flex flex-col">
+                  <span>Tolom</span>
+                  <span className="text-xs font-normal text-muted-foreground">Автомашин засварын менежмент</span>
+                </span>
+              </a>
             </div>
           </div>
 

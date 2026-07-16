@@ -1,11 +1,13 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
 import Image from "next/image";
+import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { logout } from "@/app/(auth)/logout/actions";
 import { updateProfile } from "./actions";
 import { PasskeyManager } from "./passkey-manager";
+import { SessionManager } from "./session-manager";
+import { MfaManager } from "./mfa-manager";
 
 interface AccountFormProps {
   user: {
@@ -139,7 +141,19 @@ export function AccountForm({ user }: AccountFormProps) {
           {isPending ? "Хадгалж байна…" : "Хадгалах"}
         </button>
       </form>
+
+      {/* Session & connected products management */}
+      <div className="rounded-lg border border-border bg-card p-4">
+        <SessionManager />
+      </div>
+
+      {/* MFA management */}
+      <div className="rounded-lg border border-border bg-card p-4">
+        <MfaManager />
+      </div>
+
       <PasskeyManager />
+
       <form action={logout}>
         <button
           type="submit"

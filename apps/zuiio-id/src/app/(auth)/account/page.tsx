@@ -5,7 +5,9 @@ import { AccountForm } from "./account-form";
 
 export default async function AccountPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     redirect("/login");

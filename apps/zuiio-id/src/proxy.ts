@@ -1,6 +1,6 @@
+import { createServerClient, parseCookieHeader } from "@supabase/ssr";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { createServerClient, parseCookieHeader } from "@supabase/ssr";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 
 /**
@@ -30,15 +30,15 @@ import { getSupabaseEnv } from "@/lib/supabase/env";
  */
 export async function proxy(request: NextRequest) {
   const { url: supabaseUrl, anonKey } = getSupabaseEnv();
-
-  let supabaseResponse = NextResponse.next({ request });
+  const supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(supabaseUrl, anonKey, {
     cookies: {
       getAll() {
-        return parseCookieHeader(request.cookies.toString()).map(
-          (c) => ({ name: c.name, value: c.value ?? "" }),
-        );
+        return parseCookieHeader(request.cookies.toString()).map((c) => ({
+          name: c.name,
+          value: c.value ?? "",
+        }));
       },
       setAll(cookiesToSet, headers) {
         // Prevent CDNs from caching responses that carry auth tokens

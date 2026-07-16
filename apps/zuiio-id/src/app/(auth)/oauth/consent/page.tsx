@@ -1,13 +1,24 @@
 import { Suspense } from "react";
 import { ThemeProvider } from "@/app/theme-provider";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { ConsentForm } from "./consent-form";
+
+interface AuthorizationDetails {
+  authorization_id: string;
+  client: {
+    name: string;
+    logo_uri?: string;
+  };
+  scope: string;
+  redirect_uri: string;
+}
 
 /**
  * OAuth Consent page.
  *
  * Supabase OAuth Server redirects here with authorization_id.
- * The user approves or denies access, then Supabase issues an authorization code.
+ * Uses the SDK's getAuthorizationDetails to load authorization info.
+ * If a grant already exists, redirects immediately (remembered consent).
  */
 export default function ConsentPage({
   searchParams,
@@ -78,57 +89,86 @@ async function ConsentFormWrapper({
   const authorizationId = params.authorization_id;
 
   if (!authorizationId) {
-    return <ConsentError message="Missing authorization ID" />;
+    return (
+      <ConsentError
+        code="missing_authorization_id"
+        message="Зөвшөөрлийн ID байхгүй байна."
+      />
+    );
   }
 
-  // Look up authorization details from the database
-  const admin = await createAdminClient();
+  // Use the SDK's getAuthorizationDetails which runs under the user's session.
+  // This returns authorization details, or a redirect_url if a grant already exists.
+  const supabase = await createClient();
+  const { data: authDetails, error } =
+    await supabase.auth.oauth.getAuthorizationDetails(authorizationId);
 
-  const { data: authz, error } = await admin
-    .schema("auth")
-    .from("oauth_authorizations")
-    .select("authorization_id, client_id, redirect_uri, scope, state, status")
-    .eq("authorization_id", authorizationId)
-    .single();
-
-  if (error || !authz) {
-    return <ConsentError message="Authorization not found or expired" />;
+  if (error) {
+    return (
+      <ConsentError
+        code="invalid_authorization"
+        message="Зөвшөөрлийг олсонгүй эсвэл хугацаа нь дууссан."
+      />
+    );
   }
 
-  // Look up client name
-  const { data: client } = await admin
-    .schema("auth")
-    .from("oauth_clients")
-    .select("client_name")
-    .eq("id", authz.client_id)
-    .single();
+  // If getAuthorizationDetails returns a redirect_url, the grant already
+  // exists — redirect immediately (remembered consent).
+  if (
+    authDetails &&
+    "redirect_url" in authDetails &&
+    authDetails.redirect_url
+  ) {
+    return <AutoRedirect url={authDetails.redirect_url} />;
+  }
+
+  // Otherwise, extract authorization details for the consent form.
+  // The SDK returns the full authorization object; we need client name,
+  // logo, scope, and redirect_uri.
+  const details = authDetails as AuthorizationDetails;
 
   return (
     <ConsentForm
-      authorizationId={authz.authorization_id}
-      clientName={client?.client_name || "Unknown App"}
-      scope={authz.scope || "openid"}
-      redirectUri={authz.redirect_uri}
+      authorizationId={authorizationId}
+      clientName={details.client?.name ?? "Тодорхойлогдоогүй"}
+      clientLogoUri={details.client?.logo_uri}
+      scope={details.scope ?? "openid"}
+      redirectUri={details.redirect_uri ?? ""}
     />
+  );
+}
+
+function AutoRedirect({ url }: { url: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-6 text-center">
+      <p className="text-sm text-muted-foreground">
+        Зөвшөөрөл баталгаажуулж байна...
+      </p>
+      <meta httpEquiv="refresh" content={`0;url=${url}`} />
+    </div>
   );
 }
 
 function ConsentLoading() {
   return (
     <div className="rounded-lg border border-border bg-card p-6 text-center">
-      <div className="animate-pulse">
-        <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-muted" />
-        <div className="mx-auto mb-2 h-4 w-32 rounded bg-muted" />
-        <div className="mx-auto h-3 w-48 rounded bg-muted" />
-      </div>
+      <div className="mx-auto h-10 w-10 animate-pulse rounded-full bg-muted" />
+      <div className="mt-4 mx-auto h-4 w-32 animate-pulse rounded bg-muted" />
     </div>
   );
 }
 
-function ConsentError({ message }: { message: string }) {
+function ConsentError({ code, message }: { code?: string; message: string }) {
+  const errorUrl = code ? `/auth/error?code=${code}` : "/login";
   return (
     <div className="rounded-lg border border-border bg-card p-6 text-center">
-      <p className="text-sm text-muted-foreground">{message}</p>
+      <p className="text-sm text-foreground">{message}</p>
+      <a
+        href={errorUrl}
+        className="mt-4 inline-block text-sm text-muted-foreground underline hover:text-foreground"
+      >
+        Буцах
+      </a>
     </div>
   );
 }

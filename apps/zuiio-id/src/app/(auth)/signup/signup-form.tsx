@@ -48,7 +48,12 @@ function OAuthButton({
           />
         </svg>
       ) : (
-        <svg className="size-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <svg
+          className="size-5"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+        >
           <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
         </svg>
       )}
@@ -237,9 +242,7 @@ export function SignupForm({
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Бүртгүүлэх
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Zuiio бүртгэл үүсгэх
-          </p>
+          <p className="text-sm text-muted-foreground">Zuiio бүртгэл үүсгэх</p>
         </div>
 
         <div className="flex flex-col gap-3">
@@ -274,10 +277,15 @@ export function SignupForm({
 
         <form action={formAction} className="flex flex-col gap-4">
           {product && <input type="hidden" name="product" value={product} />}
-          {returnTo && <input type="hidden" name="return_to" value={returnTo} />}
+          {returnTo && (
+            <input type="hidden" name="return_to" value={returnTo} />
+          )}
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="fullName" className="text-sm font-medium text-foreground">
+            <label
+              htmlFor="fullName"
+              className="text-sm font-medium text-foreground"
+            >
               Бүтэн нэр
             </label>
             <input
@@ -290,12 +298,17 @@ export function SignupForm({
               placeholder="Батбилэг Ц"
             />
             {state?.fieldErrors?.fullName && (
-              <p className="text-xs text-destructive">{state.fieldErrors.fullName[0]}</p>
+              <p className="text-xs text-destructive">
+                {state.fieldErrors.fullName[0]}
+              </p>
             )}
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="username" className="text-sm font-medium text-foreground">
+            <label
+              htmlFor="username"
+              className="text-sm font-medium text-foreground"
+            >
               Нэр <span className="text-muted-foreground">(сонгох)</span>
             </label>
             <input
@@ -307,15 +320,22 @@ export function SignupForm({
               placeholder="batbilig"
             />
             {!state?.fieldErrors?.username && (
-              <p className="text-xs text-muted-foreground">Латин үсэг, тоо, . _ - (3-32 тэмдэгт)</p>
+              <p className="text-xs text-muted-foreground">
+                Латин үсэг, тоо, . _ - (3-32 тэмдэгт)
+              </p>
             )}
             {state?.fieldErrors?.username && (
-              <p className="text-xs text-destructive">{state.fieldErrors.username[0]}</p>
+              <p className="text-xs text-destructive">
+                {state.fieldErrors.username[0]}
+              </p>
             )}
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="email" className="text-sm font-medium text-foreground">
+            <label
+              htmlFor="email"
+              className="text-sm font-medium text-foreground"
+            >
               Имэйл
             </label>
             <input
@@ -328,12 +348,19 @@ export function SignupForm({
               placeholder="name@example.com"
             />
             {state?.fieldErrors?.email && (
-              <p className="text-xs text-destructive">{state.fieldErrors.email[0]}</p>
+              <p className="text-xs text-destructive">
+                {state.fieldErrors.email[0]}
+              </p>
             )}
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="password" className="text-sm font-medium text-foreground">
+            <label
+              htmlFor="password"
+              className="text-sm font-medium text-foreground"
+            >
+              Нууц үг
+            </label>
             <div className="relative">
               <input
                 id="password"
@@ -349,22 +376,36 @@ export function SignupForm({
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground transition-colors hover:text-foreground"
                 tabIndex={-1}
-                aria-label={showPassword ? "Нууц үг нуух" : "Нууц үг харуулах"}
+                aria-label={
+                  showPassword ? "Нууц үг нуух" : "Нууц үг харуулах"
+                }
               >
-                {showPassword ? <EyeSlashIcon size={16} /> : <EyeIcon size={16} />}
+                {showPassword ? (
+                  <EyeSlashIcon size={16} />
+                ) : (
+                  <EyeIcon size={16} />
+                )}
               </button>
             </div>
-            </label>
             {!state?.fieldErrors?.password && (
-              <p className="text-xs text-muted-foreground">Хамгийн багадаа 8 тэмдэгт</p>
+              <p className="text-xs text-muted-foreground">
+                Хамгийн багадаа 8 тэмдэгт
+              </p>
             )}
             {state?.fieldErrors?.password && (
-              <p className="text-xs text-destructive">{state.fieldErrors.password[0]}</p>
+              <p className="text-xs text-destructive">
+                {state.fieldErrors.password[0]}
+              </p>
             )}
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
+            <label
+              htmlFor="confirmPassword"
+              className="text-sm font-medium text-foreground"
+            >
+              Нууц үг давтах
+            </label>
             <div className="relative">
               <input
                 id="confirmPassword"
@@ -380,14 +421,21 @@ export function SignupForm({
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground transition-colors hover:text-foreground"
                 tabIndex={-1}
-                aria-label={showPassword ? "Нууц үг нуух" : "Нууц үг харуулах"}
+                aria-label={
+                  showPassword ? "Нууц үг нуух" : "Нууц үг харуулах"
+                }
               >
-                {showPassword ? <EyeSlashIcon size={16} /> : <EyeIcon size={16} />}
+                {showPassword ? (
+                  <EyeSlashIcon size={16} />
+                ) : (
+                  <EyeIcon size={16} />
+                )}
               </button>
             </div>
-            </label>
             {state?.fieldErrors?.confirmPassword && (
-              <p className="text-xs text-destructive">{state.fieldErrors.confirmPassword[0]}</p>
+              <p className="text-xs text-destructive">
+                {state.fieldErrors.confirmPassword[0]}
+              </p>
             )}
           </div>
 
@@ -408,7 +456,10 @@ export function SignupForm({
 
         <p className="text-center text-sm text-muted-foreground">
           Бүртгэлтэй юу?{" "}
-          <Link href="/login" className="font-medium text-foreground transition-colors hover:text-primary hover:underline">
+          <Link
+            href="/login"
+            className="font-medium text-foreground transition-colors hover:text-primary hover:underline"
+          >
             Нэвтрэх
           </Link>
         </p>

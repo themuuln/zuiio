@@ -96,7 +96,7 @@ The palette is deliberately minimal: one accent on a near-white ground, with war
 - **Near-Black** (oklch(0.13 0.003 80) / #1f1e1c): Body text, headings, interactive text. The primary reading color.
 - **Warm Paper** (oklch(0.98 0.005 80) / #faf9f7): Page background and card surfaces. Flat — no shadows, no layering.
 - **Muted Gray** (oklch(0.96 0.008 80) / #f4f3f0): Subtle background tints, hover states.
-- **Subtitle Gray** (oklch(0.55 0.008 80) / #7a7976): Subtitles, secondary text, placeholders. Meets WCAG AA at 4.58:1.
+- **Subtitle Gray** (oklch(0.55 0.008 80) / #7a7976): Subtitles, secondary text, placeholders. Actual contrast ~4.14:1 — fails WCAG AA (4.5:1 threshold). Use only for non-essential secondary text, never for essential information.
 - **Border** (oklch(0.92 0.004 80) / #ebeae7): Dividers, input borders, card edges.
 - **Input Border** (oklch(0.88 0.006 80) / #e0dfdc): Input field borders — slightly more prominent than decorative borders.
 
@@ -196,5 +196,5 @@ None. The flat model is deliberate.
 - **Don't** add floating badges over buttons — use ring/tint states instead.
 - **Don't** use box-shadows on cards or inputs — the system is flat.
 - **Don't** render hidden elements for OAuth flows — use `prompt()` directly.
-- **Don't** use `text-muted-foreground` for essential information — it's borderline at 4.58:1.
+- **Don't** use `text-muted-foreground` for essential information — actual contrast is ~4.14:1, which fails WCAG AA.
 - **Don't** pair Geist with another sans-serif — single family carries all weights.

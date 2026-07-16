@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import type { Route } from "next";
 import { createClient } from "@/lib/supabase/server";
 
-
 /**
  * Logout Server Action.
  *

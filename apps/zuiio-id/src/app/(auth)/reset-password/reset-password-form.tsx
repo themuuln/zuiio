@@ -7,7 +7,10 @@ import { useState } from "react";
 import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
 
 export function ResetPasswordForm() {
-  const [state, formAction, isPending] = useActionState(resetPassword, undefined);
+  const [state, formAction, isPending] = useActionState(
+    resetPassword,
+    undefined,
+  );
   const [showPassword, setShowPassword] = useState(false);
 
   if (state?.success) {
@@ -44,7 +47,10 @@ export function ResetPasswordForm() {
 
       <form action={formAction} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="password" className="text-sm font-medium text-foreground">
+          <label
+            htmlFor="password"
+            className="text-sm font-medium text-foreground"
+          >
             Шинэ нууц үг
             <div className="relative">
               <input
@@ -63,17 +69,26 @@ export function ResetPasswordForm() {
                 tabIndex={-1}
                 aria-label={showPassword ? "Нууц үг нуух" : "Нууц үг харуулах"}
               >
-                {showPassword ? <EyeSlashIcon size={16} /> : <EyeIcon size={16} />}
+                {showPassword ? (
+                  <EyeSlashIcon size={16} />
+                ) : (
+                  <EyeIcon size={16} />
+                )}
               </button>
             </div>
-            </label>
-            {state?.fieldErrors?.password && (
-            <p className="text-xs text-destructive">{state.fieldErrors.password[0]}</p>
+          </label>
+          {state?.fieldErrors?.password && (
+            <p className="text-xs text-destructive">
+              {state.fieldErrors.password[0]}
+            </p>
           )}
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
+          <label
+            htmlFor="confirmPassword"
+            className="text-sm font-medium text-foreground"
+          >
             Нууц үг давтах
             <div className="relative">
               <input
@@ -92,12 +107,18 @@ export function ResetPasswordForm() {
                 tabIndex={-1}
                 aria-label={showPassword ? "Нууц үг нуух" : "Нууц үг харуулах"}
               >
-                {showPassword ? <EyeSlashIcon size={16} /> : <EyeIcon size={16} />}
+                {showPassword ? (
+                  <EyeSlashIcon size={16} />
+                ) : (
+                  <EyeIcon size={16} />
+                )}
               </button>
             </div>
-            </label>
-            {state?.fieldErrors?.confirmPassword && (
-            <p className="text-xs text-destructive">{state.fieldErrors.confirmPassword[0]}</p>
+          </label>
+          {state?.fieldErrors?.confirmPassword && (
+            <p className="text-xs text-destructive">
+              {state.fieldErrors.confirmPassword[0]}
+            </p>
           )}
         </div>
 

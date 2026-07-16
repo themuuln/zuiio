@@ -27,6 +27,7 @@ export interface SsoProduct {
   mobileStartUrl?: `zuiio-${string}://auth/start`;
 }
 
+export const SSO_PRODUCTS = [
   {
     id: "zer",
     displayName: "Zer",
