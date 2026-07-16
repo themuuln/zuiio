@@ -38,7 +38,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: false
 
       # Hobby plan blocks deploys where commit author != account owner.
       # Amend HEAD author to match the target Vercel account.
@@ -47,6 +47,9 @@ jobs:
           git config user.email "${{ inputs.author-email }}"
           git config user.name "Temuulen Undrakhbayar"
           git commit --amend --no-edit --reset-author
+      # Website is a git submodule — init it so turbo can find the package
+      - name: Init website submodule
+        run: git submodule update --init apps/website || true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
