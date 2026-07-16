@@ -246,6 +246,32 @@ function LoginForm() {
                 {t("submit")}
               </span>
             </Button>
+            <div className="relative flex items-center gap-3 my-2">
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">
+                {authT("orContinueWith")}
+              </span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+
+            <Link
+              href={
+                redirectTo
+                  ? `/auth/sso?next=${encodeURIComponent(redirectTo)}`
+                  : "/auth/sso"
+              }
+            >
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full flex items-center justify-center gap-1.5 h-8 min-h-0 cursor-pointer"
+              >
+                <span className="uppercase tracking-wider font-mono text-[9px] font-bold">
+                  {authT("ssoLogin")}
+                </span>
+              </Button>
+            </Link>
 
             <Typography.Muted className="mt-3 text-center text-[10px] text-muted-foreground font-sans">
               {t("noAccount")}{" "}

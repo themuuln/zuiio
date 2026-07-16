@@ -16,7 +16,6 @@ interface UseStatusMutationsParams {
   branchId: string | undefined;
   wo: WorkOrderDetail | null;
   setWo: React.Dispatch<React.SetStateAction<WorkOrderDetail | null>>;
-  fetchWo: (silent?: boolean, orgIdOverride?: string) => Promise<void>;
   onRefresh: () => void;
 }
 
@@ -29,7 +28,6 @@ export function useStatusMutations({
   branchId,
   wo,
   setWo,
-  fetchWo,
   onRefresh,
 }: UseStatusMutationsParams) {
   // ── State ──
@@ -52,8 +50,7 @@ export function useStatusMutations({
     invalidateKeys: branchId
       ? ([bayViewKeys.data(branchId)] as const)
       : undefined,
-    onSuccess: (_data, _vars) => {
-      fetchWo(true);
+    onSuccess: () => {
       onRefresh();
     },
   });
@@ -85,24 +82,16 @@ export function useStatusMutations({
       toast(`Status changed to ${newStatus}`, {
         action: {
           label: "Undo",
-          onClick: () => {
+          onClick: async () => {
             if (prevWo) setWo(prevWo);
-            fetch(
-              `/api/organizations/${orgIdCurrent}/work-orders/${workOrderId}`,
-              {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status: prevWo?.status }),
-              },
-            )
-              .then(() => {
-                fetchWo(true);
-                onRefresh();
-              })
-              .catch((err) => {
-                reportServerError("Status undo failed", err);
-                toast.error("Failed to undo status change");
+            try {
+              await statusMutation.mutateAsync({
+                status: prevWo?.status ?? "",
               });
+            } catch (err) {
+              reportServerError("Status undo failed", err);
+              toast.error("Failed to undo status change");
+            }
           },
         },
         duration: 8000,

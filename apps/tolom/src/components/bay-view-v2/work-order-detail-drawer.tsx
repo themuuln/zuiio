@@ -263,6 +263,10 @@ export function WorkOrderDetailDrawer({
       : undefined,
   });
 
+  // ── Per-button loading state ──
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const isSaving = saving || completeMutation.isPending || pendingAction !== null;
+
   // ── Local-only state ──
 
   const [showCustomerPicker, setShowCustomerPicker] = useState(false);
@@ -346,9 +350,15 @@ export function WorkOrderDetailDrawer({
     const orgIdVal = orgIdRef.current;
     if (!orgIdVal || !workOrderId) return;
 
+    const prevWo = wo;
+    // Optimistic: update UI immediately
+    setWo((prev) =>
+      prev ? ({ ...prev, status: "Completed" } as WorkOrderDetail) : prev,
+    );
+    setPendingAction("complete");
+
     try {
       await completeMutation.mutateAsync({ status: "Completed" });
-      await fetchWo(true);
       toast.dismiss();
       toast.success(t("workOrderCompleted"));
       setShowCelebration(true);
@@ -358,9 +368,31 @@ export function WorkOrderDetailDrawer({
       }, 1500);
       onRefresh();
     } catch {
+      // Rollback on error
+      if (prevWo) setWo(prevWo);
       toast.error(t("failedToComplete"));
+    } finally {
+      setPendingAction(null);
     }
   }
+  // Wrapped onChangeStatus to track which button is loading
+  const handleWrappedChangeStatus = useCallback(
+    async (status: string) => {
+      const actionKey =
+        status === "Diagnosing"
+          ? "diagnose"
+          : status === "In Progress"
+            ? "work"
+            : null;
+      if (actionKey) setPendingAction(actionKey);
+      try {
+        await changeStatus(status);
+      } finally {
+        if (actionKey) setPendingAction(null);
+      }
+    },
+    [changeStatus],
+  );
 
   async function handleMarkReady() {
     if (workOrderId) {
@@ -551,6 +583,7 @@ export function WorkOrderDetailDrawer({
           className={cn(
             "flex flex-col min-h-0 flex-1 overflow-hidden transition-[transform,opacity] duration-300 ease-out",
             transitioning ? "scale-[0.98] opacity-95" : "scale-100 opacity-100",
+            isSaving && "pointer-events-none opacity-60",
           )}
         >
           {error?.message && !wo ? (
@@ -583,14 +616,15 @@ export function WorkOrderDetailDrawer({
               nuatEnabled={wo.nuat_enabled ?? false}
               onNuatToggle={handleNuatToggle}
               taxRate={orgSettings?.default_tax_rate ?? 0}
-              saving={saving}
+              saving={isSaving}
               confirmStatus={confirmStatus}
               statusNotes={statusNotes}
               creatingInvoice={creatingInvoice}
               canCancel={canCancel}
               canInvoice={canInvoice}
               invoicePublicToken={invoicePublicToken}
-              onChangeStatus={changeStatus}
+              pendingAction={pendingAction}
+              onChangeStatus={handleWrappedChangeStatus}
               onConfirmCancel={handleConfirmCancel}
               onStatusNotesChange={setStatusNotes}
               onMarkReady={handleMarkReady}

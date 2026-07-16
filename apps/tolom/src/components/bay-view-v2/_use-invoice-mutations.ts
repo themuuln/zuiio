@@ -104,8 +104,7 @@ export function useInvoiceMutations({
     invalidateKeys: branchId
       ? ([bayViewKeys.data(branchId)] as const)
       : undefined,
-    onSuccess: (_data, _vars) => {
-      fetchWo(true);
+    onSuccess: () => {
       onRefresh();
     },
   });

@@ -6,319 +6,34 @@ $ NODE_OPTIONS='--max-old-space-size=12288' next build
   ✓ inlineCss
   · optimizePackageImports
   · staleTimes
+  ✓ turbopackFileSystemCacheForBuild
   ✓ viewTransition
 
   Creating an optimized production build ...
+✓ Compiled successfully in 2.7s
+  Running next.config.js provided runAfterProductionCompile ...
+[@sentry/nextjs - After Production Compile] Info: Sending telemetry data on issues and performance to Sentry. To disable telemetry, set `options.telemetry` to `false`.
+[@sentry/nextjs - After Production Compile] Warning: No auth token provided. Will not create release. Please set the `authToken` option. You can find information on how to generate a Sentry auth token here: https://docs.sentry.io/api/auth/
+You seem to be using Turborepo, did you forget to put SENTRY_AUTH_TOKEN in `passThroughEnv`? https://turbo.build/repo/docs/reference/configuration#passthroughenv
+[@sentry/nextjs - After Production Compile] Warning: No auth token provided. Will not upload source maps. Please set the `authToken` option. You can find information on how to generate a Sentry auth token here: https://docs.sentry.io/api/auth/
+You seem to be using Turborepo, did you forget to put SENTRY_AUTH_TOKEN in `passThroughEnv`? https://turbo.build/repo/docs/reference/configuration#passthroughenv
+✓ Completed runAfterProductionCompile in 534ms
+  Running TypeScript ...
+Failed to type check.
 
-> Build error occurred
-Error: Turbopack build failed with 13 errors:
-./apps/zer/src/app/[slug]/products/products-page-client.tsx
-Error: Error evaluating Node.js code
-SyntaxError: /Users/themuuln/.workspace/zuiio/apps/zer/src/app/[slug]/products/products-page-client.tsx: Identifier 'Link' has already been declared. (332:7)
+./src/components/cash-register/cash-register-manager.tsx:61:15
+Type error: No overload matches this call.
+  Overload 1 of 2, '(relation: "brands" | "products" | "sales" | "expenses" | "returns" | "invoices" | "quotations" | "discounts" | "employees" | "profiles" | "organizations" | "categories" | "business_events" | ... 65 more ... | "warehouse_products"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"cash_registers"' is not assignable to parameter of type '"brands" | "products" | "sales" | "expenses" | "returns" | "invoices" | "quotations" | "discounts" | "employees" | "profiles" | "organizations" | "categories" | "business_events" | ... 65 more ... | "warehouse_products"'.
+  Overload 2 of 2, '(relation: never): PostgrestQueryBuilder<{ PostgrestVersion: "14.5"; }, { Tables: { agent_audit_log: { Row: { chat_id: number; created_at: string | null; duration_ms: number | null; error: string | null; id: string; ... 5 more ...; user_id: string; }; Insert: { ...; }; Update: { ...; }; Relationships: []; }; ... 77 more ...; warehouses: { ...; }; }; Views: {}; Functions: { ...; }; Enums: { ...; }; CompositeTypes: {}; }, never, never, never>', gave the following error.
+    Argument of type '"cash_registers"' is not assignable to parameter of type 'never'.
 
-  330 |   );
-  331 | }
-> 332 | import Link from "next/link";
-      |        ^
-  333 | import { useMemo, useState } from "react";
-  334 | import { Badge } from "@/components/ui/badge";
-  335 | import { buttonVariants } from "@/components/ui/button";
-    [at constructor (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:137106)]
-    [at TypeScriptParserMixin.raise (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:194165)]
-    [at TypeScriptScopeHandler.checkRedeclarationInScope (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:163167)]
-    [at TypeScriptScopeHandler.declareName (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:162530)]
-    [at TypeScriptScopeHandler.declareName (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:271161)]
-    [at TypeScriptParserMixin.declareNameFromIdentifier (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:279227)]
-    [at TypeScriptParserMixin.checkIdentifier (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:279153)]
-    [at TypeScriptParserMixin.checkLVal (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:278198)]
-    [at TypeScriptParserMixin.finishImportSpecifier (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:422706)]
-    [at TypeScriptParserMixin.parseImportSpecifierLocal (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:422639)]
-    [at TypeScriptParserMixin.maybeParseDefaultImportSpecifier (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:424840)]
-    [at TypeScriptParserMixin.parseImportSpecifiersAndAfter (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:421937)]
-    [at TypeScriptParserMixin.parseImport (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:421804)]
-    [at TypeScriptParserMixin.parseImport (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:322074)]
-    [at TypeScriptParserMixin.parseStatementContent (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:391782)]
-    [at TypeScriptParserMixin.parseStatementContent (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:324043)]
-    [at TypeScriptParserMixin.parseStatementLike (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:389495)]
-    [at TypeScriptParserMixin.parseModuleItem (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:389056)]
-    [at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:401401)]
-    [at TypeScriptParserMixin.parseBlockBody (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:401224)]
-    [at TypeScriptParserMixin.parseProgram (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:386858)]
-    [at TypeScriptParserMixin.parseTopLevel (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:386576)]
-    [at TypeScriptParserMixin.parse (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:426835)]
-    [at TypeScriptParserMixin.parse (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:337632)]
-    [at parse (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:191:427093)]
-    [at parser (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:1:142461)]
-    [at <anonymous>]
-    [at normalizeFile (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/compiled/babel/bundle.js:13:13275)]
-    [at <anonymous>]
-    [at consumeIterator (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/build/babel/loader/util.js:13:38)]
-    [at transform (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/build/babel/loader/transform.js:89:44)]
-    [at async (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/build/babel/loader/index.js:36:108)]
-    at async DummySpan.traceAsyncFn (turbopack:///[turbopack-node]/transforms/webpack-loaders.ts:125:12) [/Users/themuuln/.workspace/zuiio/apps/zer/.next/build/chunks/[root-of-the-server]__0dhog6e._.js:243:16]
-    [at async nextBabelLoader (/Users/themuuln/.workspace/zuiio/node_modules/.pnpm/next@16.3.0-preview.5_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@playwright+test@1.61_7f612de2c4afa1c2e6b9079f6bba9feb/node_modules/next/dist/build/babel/loader/index.js:36:63)]
-    at async DummySpan.traceAsyncFn (turbopack:///[turbopack-node]/transforms/webpack-loaders.ts:125:12) [/Users/themuuln/.workspace/zuiio/apps/zer/.next/build/chunks/[root-of-the-server]__0dhog6e._.js:243:16]
-
-Import trace:
-  Server Component:
-    ./apps/zer/src/app/[slug]/products/products-page-client.tsx
-    ./apps/zer/src/app/[slug]/products/page.tsx
-
-
-./apps/zer/src/app/[slug]/products/products-page-client.tsx:334:10
-Error: the name `Badge` is defined multiple times
-  [90m332 |[0m [36mimport[0m [33mLink[0m [36mfrom[0m [32m"next/link"[0m;
-  [90m333 |[0m [36mimport[0m { useMemo, useState } [36mfrom[0m [32m"react"[0m;
-[31m[1m>[0m [90m334 |[0m [36mimport[0m { [33mBadge[0m } [36mfrom[0m [32m"@/components/ui/badge"[0m;
-  [90m    |[0m          [31m[1m^^^^^[0m
-  [90m335 |[0m [36mimport[0m { buttonVariants } [36mfrom[0m [32m"@/components/ui/button"[0m;
-  [90m336 |[0m [36mimport[0m { [33mInput[0m } [36mfrom[0m [32m"@/components/ui/input"[0m;
-  [90m337 |[0m [36mimport[0m { getCompanyTypeLabel } [36mfrom[0m [32m"@/lib/constants"[0m;
-
-Ecmascript file had an error
-
-Import trace:
-  Server Component:
-    ./apps/zer/src/app/[slug]/products/products-page-client.tsx
-    ./apps/zer/src/app/[slug]/products/page.tsx
-
-
-./apps/zer/src/app/[slug]/products/products-page-client.tsx:336:10
-Error: the name `Input` is defined multiple times
-  [90m334 |[0m [36mimport[0m { [33mBadge[0m } [36mfrom[0m [32m"@/components/ui/badge"[0m;
-  [90m335 |[0m [36mimport[0m { buttonVariants } [36mfrom[0m [32m"@/components/ui/button"[0m;
-[31m[1m>[0m [90m336 |[0m [36mimport[0m { [33mInput[0m } [36mfrom[0m [32m"@/components/ui/input"[0m;
-  [90m    |[0m          [31m[1m^^^^^[0m
-  [90m337 |[0m [36mimport[0m { getCompanyTypeLabel } [36mfrom[0m [32m"@/lib/constants"[0m;
-  [90m338 |[0m [36mimport[0m { formatCurrency } [36mfrom[0m [32m"@/lib/format"[0m;
-  [90m339 |[0m [36mimport[0m [36mtype[0m { [33mOrgMeta[0m, [33mPublicCategory[0m, [33mPublicProduct[0m } [36mfrom[0m [32m"./page"[0m;
-
-Ecmascript file had an error
-
-Import trace:
-  Server Component:
-    ./apps/zer/src/app/[slug]/products/products-page-client.tsx
-    ./apps/zer/src/app/[slug]/products/page.tsx
-
-
-./apps/zer/src/app/[slug]/products/products-page-client.tsx:332:8
-Error: the name `Link` is defined multiple times
-  [90m330 |[0m   );
-  [90m331 |[0m }
-[31m[1m>[0m [90m332 |[0m [36mimport[0m [33mLink[0m [36mfrom[0m [32m"next/link"[0m;
-  [90m    |[0m        [31m[1m^^^^[0m
-  [90m333 |[0m [36mimport[0m { useMemo, useState } [36mfrom[0m [32m"react"[0m;
-  [90m334 |[0m [36mimport[0m { [33mBadge[0m } [36mfrom[0m [32m"@/components/ui/badge"[0m;
-  [90m335 |[0m [36mimport[0m { buttonVariants } [36mfrom[0m [32m"@/components/ui/button"[0m;
-
-Ecmascript file had an error
-
-Import trace:
-  Server Component:
-    ./apps/zer/src/app/[slug]/products/products-page-client.tsx
-    ./apps/zer/src/app/[slug]/products/page.tsx
-
-
-./apps/zer/src/app/[slug]/products/products-page-client.tsx:348:17
-Error: the name `ProductsPageClient` is defined multiple times
-  [90m346 |[0m ] [36mas[0m [36mconst[0m;
-  [90m347 |[0m
-[31m[1m>[0m [90m348 |[0m [36mexport[0m [36mfunction[0m [33mProductsPageClient[0m({
-  [90m    |[0m                 [31m[1m^^^^^^^^^^^^^^^^^^[0m
-  [90m349 |[0m   organization,
-  [90m350 |[0m   products,
-  [90m351 |[0m   categories,
-
-Ecmascript file had an error
-
-Import trace:
-  Server Component:
-    ./apps/zer/src/app/[slug]/products/products-page-client.tsx
-    ./apps/zer/src/app/[slug]/products/page.tsx
-
-
-./apps/zer/src/app/[slug]/products/products-page-client.tsx:341:7
-Error: the name `STOCK_FILTERS` is defined multiple times
-  [90m339 |[0m [36mimport[0m [36mtype[0m { [33mOrgMeta[0m, [33mPublicCategory[0m, [33mPublicProduct[0m } [36mfrom[0m [32m"./page"[0m;
-  [90m340 |[0m
-[31m[1m>[0m [90m341 |[0m [36mconst[0m [33mSTOCK_FILTERS[0m = [
-  [90m    |[0m       [31m[1m^^^^^^^^^^^^^[0m
-  [90m342 |[0m   { value: [32m"all"[0m, label: [32m"Бүгд"[0m },
-  [90m343 |[0m   { value: [32m"in_stock"[0m, label: [32m"Нөөцөд"[0m },
-  [90m344 |[0m   { value: [32m"low_stock"[0m, label: [32m"Дуусах дөхсөн"[0m },
-
-Ecmascript file had an error
-
-Import trace:
-  Server Component:
-    ./apps/zer/src/app/[slug]/products/products-page-client.tsx
-    ./apps/zer/src/app/[slug]/products/page.tsx
-
-
-./apps/zer/src/app/[slug]/products/products-page-client.tsx:335:10
-Error: the name `buttonVariants` is defined multiple times
-  [90m333 |[0m [36mimport[0m { useMemo, useState } [36mfrom[0m [32m"react"[0m;
-  [90m334 |[0m [36mimport[0m { [33mBadge[0m } [36mfrom[0m [32m"@/components/ui/badge"[0m;
-[31m[1m>[0m [90m335 |[0m [36mimport[0m { buttonVariants } [36mfrom[0m [32m"@/components/ui/button"[0m;
-  [90m    |[0m          [31m[1m^^^^^^^^^^^^^^[0m
-  [90m336 |[0m [36mimport[0m { [33mInput[0m } [36mfrom[0m [32m"@/components/ui/input"[0m;
-  [90m337 |[0m [36mimport[0m { getCompanyTypeLabel } [36mfrom[0m [32m"@/lib/constants"[0m;
-  [90m338 |[0m [36mimport[0m { formatCurrency } [36mfrom[0m [32m"@/lib/format"[0m;
-
-Ecmascript file had an error
-
-Import trace:
-  Server Component:
-    ./apps/zer/src/app/[slug]/products/products-page-client.tsx
-    ./apps/zer/src/app/[slug]/products/page.tsx
-
-
-./apps/zer/src/app/[slug]/products/products-page-client.tsx:338:10
-Error: the name `formatCurrency` is defined multiple times
-  [90m336 |[0m [36mimport[0m { [33mInput[0m } [36mfrom[0m [32m"@/components/ui/input"[0m;
-  [90m337 |[0m [36mimport[0m { getCompanyTypeLabel } [36mfrom[0m [32m"@/lib/constants"[0m;
-[31m[1m>[0m [90m338 |[0m [36mimport[0m { formatCurrency } [36mfrom[0m [32m"@/lib/format"[0m;
-  [90m    |[0m          [31m[1m^^^^^^^^^^^^^^[0m
-  [90m339 |[0m [36mimport[0m [36mtype[0m { [33mOrgMeta[0m, [33mPublicCategory[0m, [33mPublicProduct[0m } [36mfrom[0m [32m"./page"[0m;
-  [90m340 |[0m
-  [90m341 |[0m [36mconst[0m [33mSTOCK_FILTERS[0m = [
-
-Ecmascript file had an error
-
-Import trace:
-  Server Component:
-    ./apps/zer/src/app/[slug]/products/products-page-client.tsx
-    ./apps/zer/src/app/[slug]/products/page.tsx
-
-
-./apps/zer/src/app/[slug]/products/products-page-client.tsx:337:10
-Error: the name `getCompanyTypeLabel` is defined multiple times
-  [90m335 |[0m [36mimport[0m { buttonVariants } [36mfrom[0m [32m"@/components/ui/button"[0m;
-  [90m336 |[0m [36mimport[0m { [33mInput[0m } [36mfrom[0m [32m"@/components/ui/input"[0m;
-[31m[1m>[0m [90m337 |[0m [36mimport[0m { getCompanyTypeLabel } [36mfrom[0m [32m"@/lib/constants"[0m;
-  [90m    |[0m          [31m[1m^^^^^^^^^^^^^^^^^^^[0m
-  [90m338 |[0m [36mimport[0m { formatCurrency } [36mfrom[0m [32m"@/lib/format"[0m;
-  [90m339 |[0m [36mimport[0m [36mtype[0m { [33mOrgMeta[0m, [33mPublicCategory[0m, [33mPublicProduct[0m } [36mfrom[0m [32m"./page"[0m;
-  [90m340 |[0m
-
-Ecmascript file had an error
-
-Import trace:
-  Server Component:
-    ./apps/zer/src/app/[slug]/products/products-page-client.tsx
-    ./apps/zer/src/app/[slug]/products/page.tsx
-
-
-./apps/zer/src/app/[slug]/products/products-page-client.tsx:333:10
-Error: the name `useMemo` is defined multiple times
-  [90m331 |[0m }
-  [90m332 |[0m [36mimport[0m [33mLink[0m [36mfrom[0m [32m"next/link"[0m;
-[31m[1m>[0m [90m333 |[0m [36mimport[0m { useMemo, useState } [36mfrom[0m [32m"react"[0m;
-  [90m    |[0m          [31m[1m^^^^^^^[0m
-  [90m334 |[0m [36mimport[0m { [33mBadge[0m } [36mfrom[0m [32m"@/components/ui/badge"[0m;
-  [90m335 |[0m [36mimport[0m { buttonVariants } [36mfrom[0m [32m"@/components/ui/button"[0m;
-  [90m336 |[0m [36mimport[0m { [33mInput[0m } [36mfrom[0m [32m"@/components/ui/input"[0m;
-
-Ecmascript file had an error
-
-Import trace:
-  Server Component:
-    ./apps/zer/src/app/[slug]/products/products-page-client.tsx
-    ./apps/zer/src/app/[slug]/products/page.tsx
-
-
-./apps/zer/src/app/[slug]/products/products-page-client.tsx:333:19
-Error: the name `useState` is defined multiple times
-  [90m331 |[0m }
-  [90m332 |[0m [36mimport[0m [33mLink[0m [36mfrom[0m [32m"next/link"[0m;
-[31m[1m>[0m [90m333 |[0m [36mimport[0m { useMemo, useState } [36mfrom[0m [32m"react"[0m;
-  [90m    |[0m                   [31m[1m^^^^^^^^[0m
-  [90m334 |[0m [36mimport[0m { [33mBadge[0m } [36mfrom[0m [32m"@/components/ui/badge"[0m;
-  [90m335 |[0m [36mimport[0m { buttonVariants } [36mfrom[0m [32m"@/components/ui/button"[0m;
-  [90m336 |[0m [36mimport[0m { [33mInput[0m } [36mfrom[0m [32m"@/components/ui/input"[0m;
-
-Ecmascript file had an error
-
-Import trace:
-  Server Component:
-    ./apps/zer/src/app/[slug]/products/products-page-client.tsx
-    ./apps/zer/src/app/[slug]/products/page.tsx
-
-
-./packages/search/src/use-rpc-search.ts:4:1
-Error: Module not found: Can't resolve '@zuiio/hooks'
-  [90m2 |[0m
-  [90m3 |[0m [36mimport[0m { useQuery } [36mfrom[0m [32m"@tanstack/react-query"[0m;
-[31m[1m>[0m [90m4 |[0m [36mimport[0m { useDebounce } [36mfrom[0m [32m"@zuiio/hooks"[0m;
-  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
-  [90m5 |[0m [36mimport[0m [36mtype[0m { [33mUseRpcSearchOptions[0m } [36mfrom[0m [32m"./types"[0m;
-  [90m6 |[0m [36mimport[0m {
-  [90m7 |[0m   [33mDEFAULT_DEBOUNCE_MS[0m,
-
-
-
-Import traces:
-  Client Component Browser:
-    ./packages/search/src/use-rpc-search.ts [Client Component Browser]
-    ./apps/zer/src/lib/query/hooks/use-product-search.ts [Client Component Browser]
-    ./apps/zer/src/components/shop/catalog-client.tsx [Client Component Browser]
-    ./apps/zer/src/components/shop/catalog-client.tsx [Server Component]
-    ./apps/zer/src/app/(dashboard)/shop/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./packages/search/src/use-rpc-search.ts [Client Component SSR]
-    ./apps/zer/src/lib/query/hooks/use-product-search.ts [Client Component SSR]
-    ./apps/zer/src/components/shop/catalog-client.tsx [Client Component SSR]
-    ./apps/zer/src/components/shop/catalog-client.tsx [Server Component]
-    ./apps/zer/src/app/(dashboard)/shop/page.tsx [Server Component]
-
-https://nextjs.org/docs/messages/module-not-found
-
-
-./packages/search/src/use-rpc-search.ts:4:1
-Error: Module not found: Can't resolve '@zuiio/hooks'
-  [90m2 |[0m
-  [90m3 |[0m [36mimport[0m { useQuery } [36mfrom[0m [32m"@tanstack/react-query"[0m;
-[31m[1m>[0m [90m4 |[0m [36mimport[0m { useDebounce } [36mfrom[0m [32m"@zuiio/hooks"[0m;
-  [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
-  [90m5 |[0m [36mimport[0m [36mtype[0m { [33mUseRpcSearchOptions[0m } [36mfrom[0m [32m"./types"[0m;
-  [90m6 |[0m [36mimport[0m {
-  [90m7 |[0m   [33mDEFAULT_DEBOUNCE_MS[0m,
-
-
-
-Import traces:
-  Client Component Browser:
-    ./packages/search/src/use-rpc-search.ts [Client Component Browser]
-    ./apps/zer/src/lib/query/hooks/use-product-search.ts [Client Component Browser]
-    ./apps/zer/src/components/shop/catalog-client.tsx [Client Component Browser]
-    ./apps/zer/src/components/shop/catalog-client.tsx [Server Component]
-    ./apps/zer/src/app/(dashboard)/shop/page.tsx [Server Component]
-
-  Client Component SSR:
-    ./packages/search/src/use-rpc-search.ts [Client Component SSR]
-    ./apps/zer/src/lib/query/hooks/use-product-search.ts [Client Component SSR]
-    ./apps/zer/src/components/shop/catalog-client.tsx [Client Component SSR]
-    ./apps/zer/src/components/shop/catalog-client.tsx [Server Component]
-    ./apps/zer/src/app/(dashboard)/shop/page.tsx [Server Component]
-
-https://nextjs.org/docs/messages/module-not-found
-
-
-    at async DummySpan.traceAsyncFn (turbopack:///[turbopack-node]/transforms/webpack-loaders.ts:125:12) [/Users/themuuln/.workspace/zuiio/apps/zer/.next/build/chunks/[root-of-the-server]__0dhog6e._.js:243:16])
-    at async DummySpan.traceAsyncFn (turbopack:///[turbopack-node]/transforms/webpack-loaders.ts:125:12) [/Users/themuuln/.workspace/zuiio/apps/zer/.next/build/chunks/[root-of-the-server]__0dhog6e._.js:243:16])
-    at <unknown> (./apps/zer/src/app/[slug]/products/products-page-client.tsx:334:10)
-    at <unknown> (./apps/zer/src/app/[slug]/products/products-page-client.tsx:336:10)
-    at <unknown> (./apps/zer/src/app/[slug]/products/products-page-client.tsx:332:8)
-    at <unknown> (./apps/zer/src/app/[slug]/products/products-page-client.tsx:348:17)
-    at <unknown> (./apps/zer/src/app/[slug]/products/products-page-client.tsx:341:7)
-    at <unknown> (./apps/zer/src/app/[slug]/products/products-page-client.tsx:335:10)
-    at <unknown> (./apps/zer/src/app/[slug]/products/products-page-client.tsx:338:10)
-    at <unknown> (./apps/zer/src/app/[slug]/products/products-page-client.tsx:337:10)
-    at <unknown> (./apps/zer/src/app/[slug]/products/products-page-client.tsx:333:10)
-    at <unknown> (./apps/zer/src/app/[slug]/products/products-page-client.tsx:333:19)
-    at <unknown> (./packages/search/src/use-rpc-search.ts:4:1)
-    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
-    at <unknown> (./packages/search/src/use-rpc-search.ts:4:1)
-    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+  [90m59 |[0m       [36mconst[0m supabase = createClient();
+  [90m60 |[0m       [36mconst[0m { data, error } = [36mawait[0m supabase
+[31m[1m>[0m [90m61 |[0m         .[36mfrom[0m([32m"cash_registers"[0m)
+  [90m   |[0m               [31m[1m^[0m
+  [90m62 |[0m         .select([32m"id, name, is_active"[0m)
+  [90m63 |[0m         .eq([32m"organization_id"[0m, organizationId)
+  [90m64 |[0m         .order([32m"name"[0m);
+Next.js build worker exited with code: 1 and signal: null
 [ELIFECYCLE] Command failed with exit code 1.

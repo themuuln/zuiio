@@ -1,10 +1,10 @@
 "use client";
 
-import { FingerprintSimpleIcon } from "@phosphor-icons/react/FingerprintSimple";
 import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
+import { FingerprintSimpleIcon } from "@phosphor-icons/react/FingerprintSimple";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Script from "next/script";
 import { useActionState, useRef, useState } from "react";
 import { generateGoogleNonce } from "@/lib/auth/google-nonce";
@@ -140,7 +140,6 @@ export function LoginForm({
       });
 
       setGsiInitialized(true);
-      googleId.prompt();
     } catch {
       gsiInitializationRef.current = false;
       setOauthError("Google нэвтрэх үйлчилгээ ачаалагдсангүй.");

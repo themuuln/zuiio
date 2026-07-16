@@ -63,6 +63,18 @@ export function LoginForm({ next }: { next: string }) {
           <ArrowRight data-icon="inline-end" />
         </Button>
 
+        <div className="relative flex items-center gap-3 my-1">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs text-muted-foreground uppercase tracking-wider">Эсвэл</span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+
+        <Link href={`/sso?next=${encodeURIComponent(next)}`}>
+          <Button type="button" variant="outline" className="w-full">
+            SSO-р нэвтрэх
+          </Button>
+        </Link>
+
         <p className="text-center text-sm text-muted-foreground">
           Бүртгэлгүй юу?{" "}
           <Link

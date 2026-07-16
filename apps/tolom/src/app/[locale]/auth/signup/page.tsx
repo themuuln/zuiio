@@ -196,6 +196,29 @@ export default function SignupPage() {
               {isPending ? <Loader2 className="animate-spin" /> : <UserPlus />}
               {t("submit")}
             </Button>
+            <div className="relative flex items-center gap-3 my-2">
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-xs text-muted-foreground uppercase tracking-wider">
+                {authT("orContinueWith")}
+              </span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+
+            <Link
+              href={
+                redirectTo
+                  ? `/auth/sso?next=${encodeURIComponent(redirectTo)}`
+                  : "/auth/sso"
+              }
+            >
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+              >
+                {authT("ssoSignup")}
+              </Button>
+            </Link>
             <Typography.Muted className="mt-4 text-center text-sm text-muted-foreground">
               {t("haveAccount")}{" "}
               <Link

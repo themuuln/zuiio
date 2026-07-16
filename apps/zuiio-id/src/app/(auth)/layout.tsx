@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/app/theme-provider";
-import { ThemeToggle } from "./theme-toggle";
 
 export const metadata: Metadata = {
   title: "Zuiio ID — Нэвтрэх систем",
@@ -28,7 +27,6 @@ export default function AuthLayout({
           </div>
           {children}
         </main>
-        <ThemeToggle />
       </div>
     </ThemeProvider>
   );

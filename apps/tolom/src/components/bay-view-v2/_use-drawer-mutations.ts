@@ -136,7 +136,6 @@ export function useDrawerMutations({
     branchId,
     wo,
     setWo,
-    fetchWo,
     onRefresh,
   });
 
@@ -169,11 +168,6 @@ export function useDrawerMutations({
     transferBanks,
   });
 
-  // ── Local state ───────────────────────────────────────────────────
-
-  const [saving, setSaving] = useState(false);
-  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
-
   // ── Fallback mutations (used when pre-built hooks not provided) ──
 
   const patchWorkOrderMutation = useOrgMutation<
@@ -188,10 +182,18 @@ export function useDrawerMutations({
       ? ([bayViewKeys.data(branchId)] as const)
       : undefined,
     onSuccess: () => {
-      fetchWo(true);
       onRefresh();
     },
   });
+
+  // ── Loading state (computed from mutation pending) ─────────────────
+
+  const saving =
+    assignMechanicMutation?.isPending ||
+    assignCustomerMutation?.isPending ||
+    patchWorkOrderMutation.isPending;
+
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
 
   // ── Mechanic assignment ──
 
@@ -228,9 +230,7 @@ export function useDrawerMutations({
           mechanic_id: mechanicId || null,
         });
       }
-      fetchWo(true);
       onRefresh();
-      toast.dismiss();
       toast.success(mechanicId ? "Mechanic assigned" : "Mechanic removed");
     } catch (err) {
       reportServerError("Unexpected error", err);
@@ -238,8 +238,6 @@ export function useDrawerMutations({
       toast.error(
         err instanceof Error ? err.message : "Failed to assign mechanic",
       );
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -280,9 +278,7 @@ export function useDrawerMutations({
           customer_id: customerId,
         });
       }
-      fetchWo(true);
       onRefresh();
-      toast.dismiss();
       if (customerId) {
         toast.success("Customer assigned");
       }
@@ -292,8 +288,6 @@ export function useDrawerMutations({
       toast.error(
         err instanceof Error ? err.message : "Failed to assign customer",
       );
-    } finally {
-      setSaving(false);
     }
   }
 

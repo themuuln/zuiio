@@ -169,6 +169,9 @@
     "signIn": "Нэвтрэх",
     "signUp": "Бүртгүүлэх",
     "signOut": "Гарах",
+    "orContinueWith": "Эсвэл",
+    "ssoLogin": "SSO-р нэвтрэх",
+    "ssoSignup": "SSO-р бүртгүүлэх",
     "login": {
       "title": "TOLOM-д нэвтрэх",
       "subtitle": "Өөрийн бүртгэлээр нэвтэрнэ үү",

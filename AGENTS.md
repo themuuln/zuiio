@@ -9,7 +9,7 @@
 >
 > You MUST read these before starting any significant task. This file (`AGENTS.md`) covers project structure, package map, and conventions.
 
-**Private monorepo** serving Mongolian business apps: **Zer** (SMB ERP), **Tolom** (auto repair shop management), and the **Zuiio company website**.
+**Private monorepo** serving Mongolian business apps: **Zer** (SMB ERP), **Tolom** (auto repair shop management), **Zuiio ID** (central SSO), and the **Zuiio company website**.
 
 ## Directory Structure
 
@@ -102,7 +102,7 @@ All apps consume `@zuiio/*` packages via `workspace:*` protocol inside this mono
 ### Build commands
 
 - **Never run `pnpm build`** (builds all 17 packages/apps — slow, most are legacy)
-- **Always use filtered builds:** `pnpm build:zer`, `pnpm build:tolom`, `pnpm build:website`
+- **Always use filtered builds:** `pnpm build:zer`, `pnpm build:tolom`, `pnpm build:website`, `pnpm build:zuiio-id`
 - For CI full builds: `pnpm turbo run build --filter='./apps/*' --filter='./packages/*'`
 - Package tsc builds (ai-agent, capture, core) are fast (~2s each); Next.js `next build` is the bottleneck
 
@@ -136,6 +136,7 @@ All apps consume `@zuiio/*` packages via `workspace:*` protocol inside this mono
 pnpm build:zer
 pnpm build:tolom
 pnpm build:website
+pnpm build:zuiio-id
 
 # Typecheck + lint in parallel (no build needed)
 pnpm check
@@ -250,6 +251,7 @@ Use this section to find the right context for your task. Read the linked file b
 
 ### Working on an app
 
+- **Zuiio ID (central SSO)** → `apps/zuiio-id/AGENTS.md`
 - **Zer (SMB ERP)** → `apps/zer/AGENTS.md`
 - **Tolom (auto repair)** → `apps/tolom/AGENTS.md`
 - **Agent Gateway (Telegram bot)** → `apps/agent-gateway/AGENTS.md`
@@ -287,6 +289,7 @@ How the apps and packages connect:
 | `zer` | core, hooks, query, ui, realtime, offline, hr, export, branding | SMB ERP with full feature set |
 | `tolom` | core, hooks, query, ui, realtime, offline, hr, export, branding | Auto repair management |
 | `agent-gateway` | ai-agent, capture, core | Telegram AI bot connecting to zer/tolom |
+| `zuiio-id` | auth, branding, core | Central identity SSO |
 | `website` | core | Company marketing site |
 
 | Package | Used By | Purpose |
@@ -301,7 +304,8 @@ How the apps and packages connect:
 | `export` | zer, tolom | CSV/XLSX/DOCX/PDF generation |
 | `capture` | agent-gateway | Sentry error capture wrapper |
 | `ai-agent` | agent-gateway | LLM client + tool-calling loop |
-| `branding` | zer, tolom | OKLch design tokens, globals.css |
+| `auth` | zuiio-id | SSO federation adapter (startZuiioSso, exchangeCode) |
+| `branding` | zer, tolom, zuiio-id | OKLch design tokens, globals.css |
 ## Advanced Agent Patterns
 
 ### Just-in-Time Context Loading
