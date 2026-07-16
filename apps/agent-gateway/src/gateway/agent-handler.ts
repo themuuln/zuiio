@@ -1,4 +1,5 @@
 import "server-only";
+import { after } from "next/server";
 
 import type { GatewayContext } from "@/gateway/types";
 import { openCodeGoConfig, openAiConfig, validateConfig } from "@/lib/env";
@@ -25,6 +26,8 @@ import {
 	loadSession,
 	MAX_SESSION_MESSAGES,
 	saveSession,
+	summarizeIfNeeded,
+	type SessionMessage,
 } from "@/state/session";
 
 /** Shared gateway instance (lazy singleton). */
@@ -148,35 +151,43 @@ export async function handleAgentMessage(
 	});
 	debug("agent", "LLM call complete", { responseLen: response.length, preview: response.slice(0, 80) });
 
-	// Save session — prune by both message count AND token budget
+	// Save session — summarize old messages, then trim by token budget
 	// DeepSeek: ~16k context, GPT-4o-mini: ~128k — use conservative limit
 	const CONTEXT_WINDOW_TOKENS = 12_000;
-	const updatedMessages = [
+	const updatedMessages: SessionMessage[] = [
 		...session.messages,
 		{ role: "user" as const, content: sanitizedText },
-		{ role: "assistant" as const, content: response },
+		{ role: "assistant" as const, content: response ?? "" },
 	];
-	// First: trim by message count
-	let trimmed =
-		updatedMessages.length > MAX_SESSION_MESSAGES
-			? updatedMessages.slice(updatedMessages.length - MAX_SESSION_MESSAGES)
-			: updatedMessages;
-	// Then: trim by token budget — drop oldest messages until under limit
-	let totalTokens = trimmed.reduce(
+	// Step 1: Try summarization if messages are getting long
+	let finalMessages = await summarizeIfNeeded(updatedMessages) ?? updatedMessages;
+	// Step 2: Hard trim by message count (safety net)
+	if (finalMessages.length > MAX_SESSION_MESSAGES) {
+		finalMessages = finalMessages.slice(finalMessages.length - MAX_SESSION_MESSAGES);
+	}
+	// Step 3: Trim by token budget — drop oldest non-system messages until under limit
+	let totalTokens = finalMessages.reduce(
 		(sum, m) => sum + Math.ceil((m.content?.length ?? 0) / 4),
 		0,
 	);
-	while (trimmed.length > 2 && totalTokens > CONTEXT_WINDOW_TOKENS) {
-		const dropped = trimmed.shift()!;
+	while (finalMessages.length > 2 && totalTokens > CONTEXT_WINDOW_TOKENS) {
+		// Never drop system messages (summaries)
+		const idx = finalMessages.findIndex((m) => m.role !== "system");
+		if (idx < 0) break;
+		const dropped = finalMessages.splice(idx, 1)[0]!;
 		totalTokens -= Math.ceil((dropped.content?.length ?? 0) / 4);
 	}
 	const estimatedTokens = totalTokens;
-	// Fire and forget — don't block the response
-	Promise.all([
-		saveSession(sb, ctx.orgId, ctx.channelChatId, ctx.channelUserId, trimmed, estimatedTokens, ctx.channel),
-		recordUsageAtomic(sb, ctx.orgId, Math.ceil((sanitizedText.length + response.length) / 4)),
-	]).catch((err) => {
-		console.error("[agent-handler] background save/usage failed:", err);
+	// Persist session AFTER response is sent — after() extends serverless lifetime
+	after(async () => {
+		try {
+			await Promise.all([
+				saveSession(sb, ctx.orgId, ctx.channelChatId, ctx.channelUserId, finalMessages, estimatedTokens, ctx.channel),
+				recordUsageAtomic(sb, ctx.orgId, Math.ceil((sanitizedText.length + response.length) / 4)),
+			]);
+		} catch (err) {
+			console.error("[agent-handler] after() save/usage failed:", err);
+		}
 	});
 
 	return response;

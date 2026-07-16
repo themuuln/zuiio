@@ -28,6 +28,7 @@
 	},
 	"dependencies": {
 		"@supabase/supabase-js": "catalog:",
+		"@upstash/redis": "^1.38.0",
 		"@zuiio/ai-agent": "workspace:*",
 		"@zuiio/capture": "workspace:*",
 		"@zuiio/core": "workspace:*",

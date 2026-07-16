@@ -42,6 +42,14 @@ export function openAiConfig() {
 	};
 }
 
+/** Upstash Redis configuration. Returns null if not configured. */
+export function redisConfig() {
+	const url = env("UPSTASH_REDIS_REST_URL");
+	const token = env("UPSTASH_REDIS_REST_TOKEN");
+	if (!url || !token) return null;
+	return { url, token };
+}
+
 /**
  * Validate all required environment variables at startup.
  * Call once during initialization to fail fast on misconfiguration.

@@ -30,7 +30,9 @@ export function sanitizeDbError(_rawError: unknown): string {
 }
 
 /**
- * Truncate a tool result to prevent context window overflow.
+ * Truncate a tool result using the PARTIAL contract.
+ * Returns: useful prefix + structural PARTIAL marker + total length info.
+ * The model can detect truncation and request continuation.
  */
 export function truncateResult(
 	result: string,
@@ -39,9 +41,21 @@ export function truncateResult(
 	// Rough estimate: 1 token ≈ 4 chars
 	const maxChars = maxTokens * 4;
 	if (result.length <= maxChars) return result;
+
+	// Cut at a natural boundary (newline) near the limit for cleaner output
+	let cutPoint = maxChars;
+	const lastNewline = result.lastIndexOf("\n", maxChars);
+	if (lastNewline > maxChars * 0.8) {
+		cutPoint = lastNewline;
+	}
+
+	const prefix = result.slice(0, cutPoint);
+	const totalLen = result.length;
+	const remaining = totalLen - cutPoint;
+
 	return (
-		result.slice(0, maxChars) +
-		"\n\n... (үр дүн хэтэрхий урт байсан тул таслав)"
+		prefix +
+		`\n\n---\n[PARTIAL: ${remaining} тэмдэгт үлдсэн. Нийт ${totalLen} тэмдэгт.]`
 	);
 }
 

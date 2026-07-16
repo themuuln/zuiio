@@ -1,6 +1,9 @@
 import "server-only";
 
+import { chatCompletion } from "@zuiio/ai-agent";
+import { getCachedSession, setCachedSession } from "@/lib/cache";
 import { debug } from "@/lib/debug";
+import { openCodeGoConfig } from "@/lib/env";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /** A single message in the conversation history (OpenAI-compatible format). */
@@ -26,6 +29,7 @@ const SESSION_TTL_HOURS = 24;
 
 /**
  * Load session for a tenant+chat+user compound key.
+ * Checks Redis hot cache first, falls back to Supabase.
  * Returns existing messages or empty array.
  */
 export async function loadSession(
@@ -35,6 +39,13 @@ export async function loadSession(
 	channelUserId: string,
 	_channel = "telegram",
 ): Promise<SessionState> {
+	// Step 1: Check Redis hot cache
+	const cached = await getCachedSession<SessionState>(orgId, channelChatId, channelUserId);
+	if (cached) {
+		return cached;
+	}
+
+	// Step 2: Fall back to Supabase
 	const { data, error } = await supabase
 		.from("agent_sessions")
 		.select("messages, token_count")
@@ -47,10 +58,15 @@ export async function loadSession(
 		return { messages: [], tokenCount: 0 };
 	}
 
-	return {
+	const session: SessionState = {
 		messages: (data.messages as SessionMessage[]) ?? [],
 		tokenCount: (data.token_count as number) ?? 0,
 	};
+
+	// Step 3: Populate Redis cache for next read
+	await setCachedSession(orgId, channelChatId, channelUserId, session);
+
+	return session;
 }
 
 /**
@@ -116,6 +132,10 @@ export async function saveSession(
 	} else {
 		debug("session", "new session inserted", { orgId, chatId: channelChatId });
 	}
+
+	// Update Redis hot cache
+	const sessionState: SessionState = { messages, tokenCount };
+	await setCachedSession(orgId, channelChatId, channelUserId, sessionState);
 }
 
 /**
@@ -146,4 +166,73 @@ export async function appendToSession(
 		session.tokenCount,
 		channel,
 	);
+}
+
+/** Threshold: compress when messages exceed this count */
+const SUMMARIZE_THRESHOLD_MESSAGES = 20;
+/** Keep this many recent turns verbatim after summarization */
+const VERBATIM_WINDOW = 10;
+/** Max tokens for the summarization response */
+const SUMMARIZE_MAX_TOKENS = 512;
+
+/**
+ * Summarize old messages to compress conversation history.
+ * Takes messages beyond the verbatim window, calls a cheap model to summarize,
+ * and returns a new messages array with a summary replacing the old messages.
+ *
+ * Returns null if no summarization is needed (below threshold).
+ */
+export async function summarizeIfNeeded(
+	messages: SessionMessage[],
+): Promise<SessionMessage[] | null> {
+	if (messages.length <= SUMMARIZE_THRESHOLD_MESSAGES) {
+		return null;
+	}
+
+	// Split: summary candidates (old) + verbatim window (recent)
+	const splitIdx = messages.length - VERBATIM_WINDOW;
+	const oldMessages = messages.slice(0, splitIdx);
+	const recentMessages = messages.slice(splitIdx);
+
+	// Skip if old messages are too short to summarize meaningfully
+	const oldContent = oldMessages
+		.filter((m) => m.role === "user" || m.role === "assistant")
+		.map((m) => `${m.role}: ${m.content ?? ""}`)
+		.join("\n");
+
+	if (oldContent.length < 200) {
+		return null;
+	}
+
+	try {
+		const config = openCodeGoConfig();
+		const summary = await chatCompletion({
+			apiKey: config.apiKey,
+			baseUrl: config.baseUrl,
+			model: config.model,
+			temperature: 0.3,
+			maxTokens: SUMMARIZE_MAX_TOKENS,
+			systemPrompt: "Та ярианы товч бичээч. Дараах харилцааны тэмдэглэлийг нэг хэсэг болгон товчло. Монгол хэлээр бичнэ үү. Зүйл бүрийг хадгал: хэрэглэгчийн хүсэлт, шийдвэр, үр дүн. 3-5 өгүүлбэр бичнэ.",
+			messages: [{ role: "user", content: oldContent }],
+		});
+
+		debug("session", "summarized old messages", {
+			oldCount: oldMessages.length,
+			summaryLen: summary.length,
+		});
+
+		// Replace old messages with a single summary
+		const summaryMessage: SessionMessage = {
+			role: "system",
+			content: `[Ярианы товч]\n${summary}`,
+		};
+
+		return [summaryMessage, ...recentMessages];
+	} catch (err) {
+		debug("session", "summarization failed, falling back to trim", {
+			error: err instanceof Error ? err.message : String(err),
+		});
+		// Fallback: just keep the recent window
+		return recentMessages;
+	}
 }

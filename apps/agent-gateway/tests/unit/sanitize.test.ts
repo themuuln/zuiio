@@ -88,12 +88,14 @@ describe("truncateResult", () => {
 		expect(truncateResult(short)).toBe(short);
 	});
 
-	it("truncates when over the limit with Mongolian message", () => {
+	it("truncates with PARTIAL contract when over the limit", () => {
 		const long = "x".repeat(10_000);
 		const result = truncateResult(long, 500);
 		// 500 tokens * 4 chars = 2000 max
 		expect(result.length).toBeLessThanOrEqual(2100);
-		expect(result).toContain("үр дүн хэтэрхий урт");
+		expect(result).toContain("[PARTIAL:");
+		expect(result).toContain("тэмдэгт үлдсэн");
+		expect(result).toContain("Нийт 10000 тэмдэгт");
 	});
 
 	it("uses default max of 2048 tokens", () => {
