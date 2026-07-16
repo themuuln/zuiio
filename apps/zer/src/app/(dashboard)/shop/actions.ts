@@ -58,6 +58,10 @@ export async function createShopSale(
         0,
       );
 
+      const currencyCode = getString(formData, "currency_code") || "MNT";
+      const currencySymbol = getString(formData, "currency_symbol") || "₮";
+      const exchangeRate = Number(formData.get("exchange_rate") ?? 1.0);
+
       const customerName = getString(formData, "customer_name");
       const customerPhone = customerName
         ? getString(formData, "customer_phone")
@@ -145,6 +149,9 @@ export async function createShopSale(
             unit_cost: item.unitPrice,
             variant_id: item.variantId ?? "",
           })),
+          p_currency_code: currencyCode,
+          p_currency_symbol: currencySymbol,
+          p_exchange_rate: exchangeRate,
         },
       );
       timing("rpc", performance.now() - rpcStart);

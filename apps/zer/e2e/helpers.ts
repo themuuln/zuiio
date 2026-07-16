@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test";
 
 /**
  * Opens a drawer by clicking the trigger button that contains the given text.
- * Uses page.evaluate for reliable DOM click through Base UI + Radix Slot.
+ * Uses Playwright's click for reliable event handling through Base UI + Radix Slot.
  * Waits for the dialog to appear instead of a hardcoded timeout.
  */
 export async function openDrawerByText(page: Page, text: string) {
@@ -18,21 +18,35 @@ export async function openDrawerByText(page: Page, text: string) {
     { timeout: 15000 },
   );
 
-  const result = await page.evaluate((btnText) => {
-    const buttons = document.querySelectorAll("button");
-    for (const btn of buttons) {
-      if (btn.textContent?.trim().includes(btnText)) {
-        btn.click();
-        return `clicked: ${btn.textContent.trim()}`;
+  // Use Playwright's click for reliable event handling
+  // Filter to find the button with the exact text
+  const btn = page.locator("button").filter({ hasText: text }).first();
+  const isVisible = await btn.isVisible().catch(() => false);
+
+  if (isVisible) {
+    await btn.click();
+  } else {
+    // Fallback: try evaluate click
+    const result = await page.evaluate((btnText) => {
+      const buttons = document.querySelectorAll("button");
+      for (const btn of buttons) {
+        if (btn.textContent?.trim().includes(btnText)) {
+          btn.click();
+          return `clicked: ${btn.textContent.trim()}`;
+        }
       }
+      return "not found";
+    }, text);
+    if (result === "not found") {
+      console.log(`[openDrawerByText] Button "${text}" not found`);
     }
-    return "not found";
-  }, text);
-  if (result === "not found") {
-    console.log(`[openDrawerByText] Button "${text}" not found`);
   }
-  // Wait for Base UI drawer: dialog role appears in portal after animation
-  await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
+
+  // Wait for Base UI drawer: data-drawer-popup appears in portal after animation
+  // Also support Radix UI dialogs with role="dialog" as fallback
+  await page.waitForSelector('[data-drawer-popup], [role="dialog"]', {
+    timeout: 5000,
+  });
 }
 
 /**
@@ -52,8 +66,12 @@ export async function submitDrawerForm(page: Page, formId: string) {
   }, formId);
   if (!result.ok) console.log(`[submitDrawerForm] ${result.error}`);
   // Wait for dialog to close after form submit
+  // Support both Base UI (data-drawer-popup) and Radix UI (role="dialog")
   await page
-    .waitForSelector('[role="dialog"]', { state: "hidden", timeout: 10000 })
+    .waitForSelector('[data-drawer-popup], [role="dialog"]', {
+      state: "hidden",
+      timeout: 10000,
+    })
     .catch(() => {
       // Dialog may not close if there's a validation error — that's OK
     });

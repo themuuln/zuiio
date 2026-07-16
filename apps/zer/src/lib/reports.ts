@@ -139,6 +139,7 @@ export async function getFinancialSummary(
           .from("sales")
           .select("total_amount, paid_amount")
           .eq("organization_id", organizationId)
+          .is("deleted_at", null)
           .gte("sale_date", dateFrom)
           .lte("sale_date", dateTo)
           .neq("status", "cancelled"),
@@ -149,6 +150,7 @@ export async function getFinancialSummary(
           .from("expenses")
           .select("amount")
           .eq("organization_id", organizationId)
+          .is("deleted_at", null)
           .gte("expense_date", dateFrom)
           .lte("expense_date", dateTo),
       ),
@@ -160,6 +162,8 @@ export async function getFinancialSummary(
             "quantity, products!inner(cost_price), sales!inner(organization_id, sale_date, status)",
           )
           .eq("sales.organization_id", organizationId)
+          .is("deleted_at", null)
+          .is("sales.deleted_at", null)
           .gte("sales.sale_date", dateFrom)
           .lte("sales.sale_date", dateTo)
           .neq("sales.status", "cancelled"),
@@ -207,6 +211,8 @@ export async function getProductSalesBreakdown(
         "quantity, total_price, products!inner(name, cost_price), sales!inner(organization_id, sale_date, status)",
       )
       .eq("sales.organization_id", organizationId)
+      .is("deleted_at", null)
+      .is("sales.deleted_at", null)
       .gte("sales.sale_date", dateFrom)
       .lte("sales.sale_date", dateTo)
       .neq("sales.status", "cancelled"),
@@ -268,6 +274,7 @@ export async function getExpenseBreakdownByCategory(
       .from("expenses")
       .select("category, amount")
       .eq("organization_id", organizationId)
+      .is("deleted_at", null)
       .gte("expense_date", dateFrom)
       .lte("expense_date", dateTo),
   );
@@ -310,6 +317,7 @@ export async function getStockMovementsSummary(
       .from("stock_movements")
       .select("type")
       .eq("organization_id", organizationId)
+      .is("deleted_at", null)
       .gte("created_at", dateFrom)
       .lte("created_at", dateTo),
   );
@@ -341,6 +349,7 @@ export async function getPendingSales(
       .from("sales")
       .select("id, total_amount, sale_date, payment_method, contacts(name)")
       .eq("organization_id", organizationId)
+      .is("deleted_at", null)
       .eq("status", "pending")
       .gte("sale_date", dateFrom)
       .lte("sale_date", dateTo)
@@ -387,6 +396,8 @@ export async function getCommissionSummaryReport(
          )`,
       )
       .eq("sales.organization_id", organizationId)
+      .is("deleted_at", null)
+      .is("sales.deleted_at", null)
       .gte("sales.sale_date", dateFrom)
       .lte("sales.sale_date", dateTo)
       .neq("sales.status", "cancelled")

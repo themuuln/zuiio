@@ -664,6 +664,56 @@ export type Database = {
           },
         ];
       };
+      budgets: {
+        Row: {
+          alert_threshold: number;
+          amount: number;
+          category: string | null;
+          created_at: string;
+          end_date: string;
+          id: string;
+          name: string;
+          organization_id: string;
+          period: string;
+          spent: number;
+          start_date: string;
+        };
+        Insert: {
+          alert_threshold?: number;
+          amount: number;
+          category?: string | null;
+          created_at?: string;
+          end_date: string;
+          id?: string;
+          name: string;
+          organization_id: string;
+          period?: string;
+          spent?: number;
+          start_date: string;
+        };
+        Update: {
+          alert_threshold?: number;
+          amount?: number;
+          category?: string | null;
+          created_at?: string;
+          end_date?: string;
+          id?: string;
+          name?: string;
+          organization_id?: string;
+          period?: string;
+          spent?: number;
+          start_date?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "budgets_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       business_event_stock_targets: {
         Row: {
           category_id: string | null;
@@ -772,6 +822,131 @@ export type Database = {
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      cash_registers: {
+        Row: {
+          branch_id: string | null;
+          created_at: string | null;
+          id: string;
+          is_active: boolean;
+          name: string;
+          organization_id: string;
+        };
+        Insert: {
+          branch_id?: string | null;
+          created_at?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          organization_id: string;
+        };
+        Update: {
+          branch_id?: string | null;
+          created_at?: string | null;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          organization_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "cash_registers_branch_id_fkey";
+            columns: ["branch_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "cash_registers_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      cash_sessions: {
+        Row: {
+          actual_amount: number | null;
+          branch_id: string | null;
+          closed_at: string | null;
+          closing_balance: number | null;
+          created_at: string | null;
+          difference: number | null;
+          expected_amount: number | null;
+          id: string;
+          notes: string | null;
+          opened_at: string;
+          opened_by: string | null;
+          opening_balance: number;
+          organization_id: string;
+          register_id: string;
+          status: string;
+        };
+        Insert: {
+          actual_amount?: number | null;
+          branch_id?: string | null;
+          closed_at?: string | null;
+          closing_balance?: number | null;
+          created_at?: string | null;
+          difference?: number | null;
+          expected_amount?: number | null;
+          id?: string;
+          notes?: string | null;
+          opened_at?: string;
+          opened_by?: string | null;
+          opening_balance?: number;
+          organization_id: string;
+          register_id: string;
+          status?: string;
+        };
+        Update: {
+          actual_amount?: number | null;
+          branch_id?: string | null;
+          closed_at?: string | null;
+          closing_balance?: number | null;
+          created_at?: string | null;
+          difference?: number | null;
+          expected_amount?: number | null;
+          id?: string;
+          notes?: string | null;
+          opened_at?: string;
+          opened_by?: string | null;
+          opening_balance?: number;
+          organization_id?: string;
+          register_id?: string;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "cash_sessions_branch_id_fkey";
+            columns: ["branch_id"];
+            isOneToOne: false;
+            referencedRelation: "branches";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "cash_sessions_opened_by_fkey";
+            columns: ["opened_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "cash_sessions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "cash_sessions_register_id_fkey";
+            columns: ["register_id"];
+            isOneToOne: false;
+            referencedRelation: "cash_registers";
             referencedColumns: ["id"];
           },
         ];
@@ -986,6 +1161,7 @@ export type Database = {
           organization_id: string;
           payment_terms_days: number | null;
           phone: string | null;
+          points_balance: number | null;
           type: string;
         };
         Insert: {
@@ -1000,6 +1176,7 @@ export type Database = {
           organization_id: string;
           payment_terms_days?: number | null;
           phone?: string | null;
+          points_balance?: number | null;
           type: string;
         };
         Update: {
@@ -1014,6 +1191,7 @@ export type Database = {
           organization_id?: string;
           payment_terms_days?: number | null;
           phone?: string | null;
+          points_balance?: number | null;
           type?: string;
         };
         Relationships: [
@@ -1026,6 +1204,50 @@ export type Database = {
           },
           {
             foreignKeyName: "contacts_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      currencies: {
+        Row: {
+          code: string;
+          created_at: string;
+          exchange_rate: number;
+          id: string;
+          is_default: boolean;
+          last_updated: string | null;
+          name: string;
+          organization_id: string;
+          symbol: string;
+        };
+        Insert: {
+          code: string;
+          created_at?: string;
+          exchange_rate?: number;
+          id?: string;
+          is_default?: boolean;
+          last_updated?: string | null;
+          name: string;
+          organization_id: string;
+          symbol: string;
+        };
+        Update: {
+          code?: string;
+          created_at?: string;
+          exchange_rate?: number;
+          id?: string;
+          is_default?: boolean;
+          last_updated?: string | null;
+          name?: string;
+          organization_id?: string;
+          symbol?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "currencies_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
@@ -1357,10 +1579,14 @@ export type Database = {
           category: string;
           created_at: string | null;
           created_by: string | null;
+          currency_id: string | null;
+          deleted_at: string | null;
           description: string | null;
+          exchange_rate: number | null;
           expense_date: string;
           id: string;
           organization_id: string;
+          original_amount: number | null;
           payment_method: string | null;
         };
         Insert: {
@@ -1370,10 +1596,14 @@ export type Database = {
           category: string;
           created_at?: string | null;
           created_by?: string | null;
+          currency_id?: string | null;
+          deleted_at?: string | null;
           description?: string | null;
+          exchange_rate?: number | null;
           expense_date?: string;
           id?: string;
           organization_id: string;
+          original_amount?: number | null;
           payment_method?: string | null;
         };
         Update: {
@@ -1383,10 +1613,14 @@ export type Database = {
           category?: string;
           created_at?: string | null;
           created_by?: string | null;
+          currency_id?: string | null;
+          deleted_at?: string | null;
           description?: string | null;
+          exchange_rate?: number | null;
           expense_date?: string;
           id?: string;
           organization_id?: string;
+          original_amount?: number | null;
           payment_method?: string | null;
         };
         Relationships: [
@@ -1412,7 +1646,65 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "expenses_currency_id_fkey";
+            columns: ["currency_id"];
+            isOneToOne: false;
+            referencedRelation: "currencies";
+            referencedColumns: ["id"];
+          },
+          {
             foreignKeyName: "expenses_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      fiscal_periods: {
+        Row: {
+          closed_at: string | null;
+          closed_by: string | null;
+          created_at: string | null;
+          end_date: string;
+          id: string;
+          is_closed: boolean | null;
+          organization_id: string;
+          period_name: string;
+          start_date: string;
+        };
+        Insert: {
+          closed_at?: string | null;
+          closed_by?: string | null;
+          created_at?: string | null;
+          end_date: string;
+          id?: string;
+          is_closed?: boolean | null;
+          organization_id: string;
+          period_name: string;
+          start_date: string;
+        };
+        Update: {
+          closed_at?: string | null;
+          closed_by?: string | null;
+          created_at?: string | null;
+          end_date?: string;
+          id?: string;
+          is_closed?: boolean | null;
+          organization_id?: string;
+          period_name?: string;
+          start_date?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_periods_closed_by_fkey";
+            columns: ["closed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fiscal_periods_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
@@ -1466,6 +1758,7 @@ export type Database = {
       };
       invoice_items: {
         Row: {
+          deleted_at: string | null;
           description: string | null;
           id: string;
           invoice_id: string;
@@ -1476,6 +1769,7 @@ export type Database = {
           variant_id: string | null;
         };
         Insert: {
+          deleted_at?: string | null;
           description?: string | null;
           id?: string;
           invoice_id: string;
@@ -1486,6 +1780,7 @@ export type Database = {
           variant_id?: string | null;
         };
         Update: {
+          deleted_at?: string | null;
           description?: string | null;
           id?: string;
           invoice_id?: string;
@@ -1528,6 +1823,7 @@ export type Database = {
           contact_id: string | null;
           created_at: string | null;
           created_by: string | null;
+          deleted_at: string | null;
           due_date: string | null;
           ebarimt_id: string | null;
           expires_at: string | null;
@@ -1562,6 +1858,7 @@ export type Database = {
           contact_id?: string | null;
           created_at?: string | null;
           created_by?: string | null;
+          deleted_at?: string | null;
           due_date?: string | null;
           ebarimt_id?: string | null;
           expires_at?: string | null;
@@ -1596,6 +1893,7 @@ export type Database = {
           contact_id?: string | null;
           created_at?: string | null;
           created_by?: string | null;
+          deleted_at?: string | null;
           due_date?: string | null;
           ebarimt_id?: string | null;
           expires_at?: string | null;
@@ -1665,6 +1963,7 @@ export type Database = {
           branch_id: string;
           created_at: string | null;
           created_by: string | null;
+          deleted_at: string | null;
           description: string | null;
           entry_date: string;
           entry_number: string;
@@ -1677,6 +1976,7 @@ export type Database = {
           branch_id: string;
           created_at?: string | null;
           created_by?: string | null;
+          deleted_at?: string | null;
           description?: string | null;
           entry_date?: string;
           entry_number: string;
@@ -1689,6 +1989,7 @@ export type Database = {
           branch_id?: string;
           created_at?: string | null;
           created_by?: string | null;
+          deleted_at?: string | null;
           description?: string | null;
           entry_date?: string;
           entry_number?: string;
@@ -1727,6 +2028,7 @@ export type Database = {
           created_at: string | null;
           credit_amount: number;
           debit_amount: number;
+          deleted_at: string | null;
           id: string;
           journal_entry_id: string;
         };
@@ -1735,6 +2037,7 @@ export type Database = {
           created_at?: string | null;
           credit_amount?: number;
           debit_amount?: number;
+          deleted_at?: string | null;
           id?: string;
           journal_entry_id: string;
         };
@@ -1743,6 +2046,7 @@ export type Database = {
           created_at?: string | null;
           credit_amount?: number;
           debit_amount?: number;
+          deleted_at?: string | null;
           id?: string;
           journal_entry_id?: string;
         };
@@ -1817,6 +2121,277 @@ export type Database = {
           },
           {
             foreignKeyName: "leave_requests_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      loyalty_points: {
+        Row: {
+          created_at: string;
+          customer_id: string;
+          expires_at: string | null;
+          id: string;
+          notes: string | null;
+          organization_id: string;
+          points: number;
+          reference_id: string | null;
+          type: string;
+        };
+        Insert: {
+          created_at?: string;
+          customer_id: string;
+          expires_at?: string | null;
+          id?: string;
+          notes?: string | null;
+          organization_id: string;
+          points: number;
+          reference_id?: string | null;
+          type: string;
+        };
+        Update: {
+          created_at?: string;
+          customer_id?: string;
+          expires_at?: string | null;
+          id?: string;
+          notes?: string | null;
+          organization_id?: string;
+          points?: number;
+          reference_id?: string | null;
+          type?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_points_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "contacts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "loyalty_points_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      loyalty_rewards: {
+        Row: {
+          created_at: string;
+          description: string | null;
+          discount_type: string | null;
+          discount_value: number | null;
+          id: string;
+          is_active: boolean;
+          name: string;
+          organization_id: string;
+          points_cost: number;
+        };
+        Insert: {
+          created_at?: string;
+          description?: string | null;
+          discount_type?: string | null;
+          discount_value?: number | null;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          organization_id: string;
+          points_cost: number;
+        };
+        Update: {
+          created_at?: string;
+          description?: string | null;
+          discount_type?: string | null;
+          discount_value?: number | null;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          organization_id?: string;
+          points_cost?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_rewards_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      loyalty_settings: {
+        Row: {
+          created_at: string;
+          id: string;
+          is_enabled: boolean;
+          min_purchase: number;
+          organization_id: string;
+          points_per_mnt: number;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          is_enabled?: boolean;
+          min_purchase?: number;
+          organization_id: string;
+          points_per_mnt?: number;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          is_enabled?: boolean;
+          min_purchase?: number;
+          organization_id?: string;
+          points_per_mnt?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_settings_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: true;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      message_log: {
+        Row: {
+          channel_id: string | null;
+          created_at: string;
+          error: string | null;
+          id: string;
+          organization_id: string;
+          recipient: string;
+          sent_at: string | null;
+          status: string;
+          template_id: string | null;
+        };
+        Insert: {
+          channel_id?: string | null;
+          created_at?: string;
+          error?: string | null;
+          id?: string;
+          organization_id: string;
+          recipient: string;
+          sent_at?: string | null;
+          status?: string;
+          template_id?: string | null;
+        };
+        Update: {
+          channel_id?: string | null;
+          created_at?: string;
+          error?: string | null;
+          id?: string;
+          organization_id?: string;
+          recipient?: string;
+          sent_at?: string | null;
+          status?: string;
+          template_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "message_log_channel_id_fkey";
+            columns: ["channel_id"];
+            isOneToOne: false;
+            referencedRelation: "notification_channels";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "message_log_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "message_log_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: false;
+            referencedRelation: "message_templates";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      message_templates: {
+        Row: {
+          body: string;
+          channel_id: string;
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          name: string;
+          organization_id: string;
+          subject: string | null;
+        };
+        Insert: {
+          body: string;
+          channel_id: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          organization_id: string;
+          subject?: string | null;
+        };
+        Update: {
+          body?: string;
+          channel_id?: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          organization_id?: string;
+          subject?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "message_templates_channel_id_fkey";
+            columns: ["channel_id"];
+            isOneToOne: false;
+            referencedRelation: "notification_channels";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "message_templates_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      notification_channels: {
+        Row: {
+          config: Json | null;
+          created_at: string;
+          id: string;
+          is_enabled: boolean;
+          organization_id: string;
+          type: string;
+        };
+        Insert: {
+          config?: Json | null;
+          created_at?: string;
+          id?: string;
+          is_enabled?: boolean;
+          organization_id: string;
+          type: string;
+        };
+        Update: {
+          config?: Json | null;
+          created_at?: string;
+          id?: string;
+          is_enabled?: boolean;
+          organization_id?: string;
+          type?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notification_channels_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
@@ -3094,6 +3669,7 @@ export type Database = {
       purchase_order_items: {
         Row: {
           created_at: string | null;
+          deleted_at: string | null;
           description: string | null;
           id: string;
           product_id: string | null;
@@ -3106,6 +3682,7 @@ export type Database = {
         };
         Insert: {
           created_at?: string | null;
+          deleted_at?: string | null;
           description?: string | null;
           id?: string;
           product_id?: string | null;
@@ -3118,6 +3695,7 @@ export type Database = {
         };
         Update: {
           created_at?: string | null;
+          deleted_at?: string | null;
           description?: string | null;
           id?: string;
           product_id?: string | null;
@@ -3157,12 +3735,16 @@ export type Database = {
           branch_id: string;
           created_at: string | null;
           created_by: string | null;
+          currency_id: string | null;
+          deleted_at: string | null;
+          exchange_rate: number | null;
           expected_date: string | null;
           id: string;
           notes: string | null;
           order_date: string;
           order_number: string;
           organization_id: string;
+          original_amount: number | null;
           status: string;
           supplier_id: string | null;
           total_amount: number;
@@ -3171,12 +3753,16 @@ export type Database = {
           branch_id: string;
           created_at?: string | null;
           created_by?: string | null;
+          currency_id?: string | null;
+          deleted_at?: string | null;
+          exchange_rate?: number | null;
           expected_date?: string | null;
           id?: string;
           notes?: string | null;
           order_date?: string;
           order_number: string;
           organization_id: string;
+          original_amount?: number | null;
           status?: string;
           supplier_id?: string | null;
           total_amount?: number;
@@ -3185,12 +3771,16 @@ export type Database = {
           branch_id?: string;
           created_at?: string | null;
           created_by?: string | null;
+          currency_id?: string | null;
+          deleted_at?: string | null;
+          exchange_rate?: number | null;
           expected_date?: string | null;
           id?: string;
           notes?: string | null;
           order_date?: string;
           order_number?: string;
           organization_id?: string;
+          original_amount?: number | null;
           status?: string;
           supplier_id?: string | null;
           total_amount?: number;
@@ -3208,6 +3798,13 @@ export type Database = {
             columns: ["created_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "purchase_orders_currency_id_fkey";
+            columns: ["currency_id"];
+            isOneToOne: false;
+            referencedRelation: "currencies";
             referencedColumns: ["id"];
           },
           {
@@ -3229,6 +3826,7 @@ export type Database = {
       quotation_items: {
         Row: {
           created_at: string | null;
+          deleted_at: string | null;
           description: string | null;
           id: string;
           product_id: string | null;
@@ -3240,6 +3838,7 @@ export type Database = {
         };
         Insert: {
           created_at?: string | null;
+          deleted_at?: string | null;
           description?: string | null;
           id?: string;
           product_id?: string | null;
@@ -3251,6 +3850,7 @@ export type Database = {
         };
         Update: {
           created_at?: string | null;
+          deleted_at?: string | null;
           description?: string | null;
           id?: string;
           product_id?: string | null;
@@ -3291,6 +3891,7 @@ export type Database = {
           converted_to_sale_id: string | null;
           created_at: string | null;
           created_by: string | null;
+          deleted_at: string | null;
           expiry_date: string | null;
           id: string;
           issue_date: string;
@@ -3306,6 +3907,7 @@ export type Database = {
           converted_to_sale_id?: string | null;
           created_at?: string | null;
           created_by?: string | null;
+          deleted_at?: string | null;
           expiry_date?: string | null;
           id?: string;
           issue_date?: string;
@@ -3321,6 +3923,7 @@ export type Database = {
           converted_to_sale_id?: string | null;
           created_at?: string | null;
           created_by?: string | null;
+          deleted_at?: string | null;
           expiry_date?: string | null;
           id?: string;
           issue_date?: string;
@@ -3422,6 +4025,7 @@ export type Database = {
       return_items: {
         Row: {
           created_at: string | null;
+          deleted_at: string | null;
           id: string;
           product_id: string | null;
           quantity: number;
@@ -3433,6 +4037,7 @@ export type Database = {
         };
         Insert: {
           created_at?: string | null;
+          deleted_at?: string | null;
           id?: string;
           product_id?: string | null;
           quantity: number;
@@ -3444,6 +4049,7 @@ export type Database = {
         };
         Update: {
           created_at?: string | null;
+          deleted_at?: string | null;
           id?: string;
           product_id?: string | null;
           quantity?: number;
@@ -3483,6 +4089,7 @@ export type Database = {
           contact_id: string | null;
           created_at: string | null;
           created_by: string | null;
+          deleted_at: string | null;
           id: string;
           organization_id: string;
           reason: string | null;
@@ -3499,6 +4106,7 @@ export type Database = {
           contact_id?: string | null;
           created_at?: string | null;
           created_by?: string | null;
+          deleted_at?: string | null;
           id?: string;
           organization_id: string;
           reason?: string | null;
@@ -3515,6 +4123,7 @@ export type Database = {
           contact_id?: string | null;
           created_at?: string | null;
           created_by?: string | null;
+          deleted_at?: string | null;
           id?: string;
           organization_id?: string;
           reason?: string | null;
@@ -3685,6 +4294,7 @@ export type Database = {
       sale_items: {
         Row: {
           commission_amount: number;
+          deleted_at: string | null;
           id: string;
           product_id: string | null;
           quantity: number;
@@ -3695,6 +4305,7 @@ export type Database = {
         };
         Insert: {
           commission_amount?: number;
+          deleted_at?: string | null;
           id?: string;
           product_id?: string | null;
           quantity: number;
@@ -3705,6 +4316,7 @@ export type Database = {
         };
         Update: {
           commission_amount?: number;
+          deleted_at?: string | null;
           id?: string;
           product_id?: string | null;
           quantity?: number;
@@ -3744,9 +4356,13 @@ export type Database = {
           contact_id: string | null;
           created_at: string | null;
           created_by: string | null;
+          currency_id: string | null;
+          deleted_at: string | null;
+          exchange_rate: number | null;
           id: string;
           notes: string | null;
           organization_id: string;
+          original_amount: number | null;
           paid_amount: number | null;
           payment_method: string | null;
           payment_splits: Json | null;
@@ -3761,9 +4377,13 @@ export type Database = {
           contact_id?: string | null;
           created_at?: string | null;
           created_by?: string | null;
+          currency_id?: string | null;
+          deleted_at?: string | null;
+          exchange_rate?: number | null;
           id?: string;
           notes?: string | null;
           organization_id: string;
+          original_amount?: number | null;
           paid_amount?: number | null;
           payment_method?: string | null;
           payment_splits?: Json | null;
@@ -3778,9 +4398,13 @@ export type Database = {
           contact_id?: string | null;
           created_at?: string | null;
           created_by?: string | null;
+          currency_id?: string | null;
+          deleted_at?: string | null;
+          exchange_rate?: number | null;
           id?: string;
           notes?: string | null;
           organization_id?: string;
+          original_amount?: number | null;
           paid_amount?: number | null;
           payment_method?: string | null;
           payment_splits?: Json | null;
@@ -3816,6 +4440,13 @@ export type Database = {
             columns: ["created_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "sales_currency_id_fkey";
+            columns: ["currency_id"];
+            isOneToOne: false;
+            referencedRelation: "currencies";
             referencedColumns: ["id"];
           },
           {
@@ -4279,6 +4910,11 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      check_period_locked: {
+        Args: { p_check_date: string; p_org_id: string };
+        Returns: boolean;
+      };
+      close_fiscal_period: { Args: { p_period_id: string }; Returns: Json };
       create_organization: {
         Args: { org_name: string; org_slug: string; org_type?: string };
         Returns: Json;
@@ -4480,6 +5116,10 @@ export type Database = {
         };
         Returns: Json;
       };
+      restore_record: {
+        Args: { p_record_id: string; p_table_name: string };
+        Returns: Json;
+      };
       save_product_catalog: {
         Args: {
           p_attribute_values: Json;
@@ -4601,6 +5241,10 @@ export type Database = {
       };
       show_limit: { Args: never; Returns: number };
       show_trgm: { Args: { "": string }; Returns: string[] };
+      soft_delete_record: {
+        Args: { p_record_id: string; p_table_name: string };
+        Returns: Json;
+      };
       soundex: { Args: { "": string }; Returns: string };
       text_soundex: { Args: { "": string }; Returns: string };
       unschedule_daily_report_cron: { Args: never; Returns: string };
@@ -4615,6 +5259,7 @@ export type Database = {
         };
         Returns: boolean;
       };
+      validate_journal_balance: { Args: { p_entry_id: string }; Returns: Json };
     };
     Enums: {
       app_permission:

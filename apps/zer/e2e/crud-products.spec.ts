@@ -12,10 +12,9 @@ test.describe("Products module", () => {
     await test.step("Verify form fields are visible", async () => {
       await expect(page.getByLabel("Нэр")).toBeVisible({ timeout: 10000 });
       await expect(page.getByLabel("SKU")).toBeVisible();
-      await expect(page.getByLabel("Өртөг")).toBeVisible();
-      await expect(page.getByLabel("Үнийн дүн")).toBeVisible();
-      await expect(page.getByLabel("Одоохон агуулахад")).toBeVisible();
-      await expect(page.getByLabel("Доод нөөц")).toBeVisible();
+      await expect(page.getByLabel("Өртөг үнэ")).toBeVisible();
+      await expect(page.getByLabel("Зарах үнэ")).toBeVisible();
+      await expect(page.getByLabel("Эхний үлдэгдэл")).toBeVisible();
       await expect(
         page.getByRole("button", { name: "Хадгалах" }),
       ).toBeVisible();

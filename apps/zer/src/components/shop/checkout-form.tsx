@@ -39,6 +39,7 @@ import { Separator } from "@/components/ui/separator";
 import { useOrgSettings } from "@/lib/org-settings-context";
 import { productKeys, saleKeys } from "@/lib/query/keys";
 import { createClient } from "@/lib/supabase/client";
+import { CurrencySelector, type CurrencyOption } from "@/components/ui/currency-selector";
 import { cn } from "@/lib/utils";
 
 type Contact = {
@@ -128,6 +129,17 @@ export function CheckoutForm({
     },
   });
 
+
+  // Fetch available currencies
+  const { data: currencies = [] } = useQuery({
+    queryKey: ["currencies"],
+    queryFn: async () => {
+      const response = await fetch("/api/currencies");
+      const result = await response.json();
+      return result.currencies ?? [];
+    },
+  });
+
   // Customer state
   const [selectedContactId, setSelectedContactId] = useState<string | null>(
     null,
@@ -140,6 +152,7 @@ export function CheckoutForm({
   // Payment state — paid amount defaults to the full total so the common
   // exact-payment sale is a single Enter press.
   const [paymentMethod, setPaymentMethod] = useState("card");
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyOption>({ id: "mnt", code: "MNT", name: "Монгол төгрөг", symbol: "₮", exchange_rate: 1.0, is_default: true });
   const [paidAmountStr, setPaidAmountStr] = useState(() => String(totalAmount));
   const paidInputRef = useRef<HTMLInputElement>(null);
 
@@ -382,8 +395,9 @@ export function CheckoutForm({
       <input type="hidden" name="paid_amount" ref={paidAmountInputRef} />
       <input type="hidden" name="customer_name" ref={customerNameInputRef} />
       <input type="hidden" name="customer_phone" ref={customerPhoneInputRef} />
-
-      {/* === ORDER SUMMARY CARD === */}
+      <input type="hidden" name="currency_code" value={selectedCurrency.code} />
+      <input type="hidden" name="currency_symbol" value={selectedCurrency.symbol} />
+      <input type="hidden" name="exchange_rate" value={selectedCurrency.exchange_rate} />
       <div className="rounded-xl border border-border bg-card">
         {/* Total row — always visible */}
         <button
@@ -398,7 +412,7 @@ export function CheckoutForm({
               Нийт дүн
             </span>
             <span className="text-2xl font-bold tabular-nums">
-              {totalAmount.toLocaleString()}₮
+              {totalAmount.toLocaleString()}{selectedCurrency.symbol}
             </span>
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -435,7 +449,7 @@ export function CheckoutForm({
                       </span>
                     </span>
                     <span className="ml-3 shrink-0 font-medium tabular-nums">
-                      {lineTotal.toLocaleString()}₮
+                      {lineTotal.toLocaleString()}{selectedCurrency.symbol}
                     </span>
                   </div>
                 );
@@ -490,6 +504,20 @@ export function CheckoutForm({
             );
           })}
         </RadioGroup>
+        {/* Currency selector — only show if org has multiple currencies */}
+        {currencies.length > 1 && (
+          <div className="mt-3">
+            <span className="mb-2 block text-xs font-medium text-muted-foreground">
+              Валют
+            </span>
+            <CurrencySelector
+              value={selectedCurrency.id}
+              onChange={setSelectedCurrency}
+              currencies={currencies}
+              className="w-full"
+            />
+          </div>
+        )}
       </div>
 
       {/* === PAID AMOUNT === */}
@@ -516,7 +544,7 @@ export function CheckoutForm({
             className="h-14 w-full rounded-xl border border-border bg-background pl-4 pr-10 text-right text-2xl font-bold tabular-nums transition-all focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
           />
           <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted-foreground">
-            ₮
+            {selectedCurrency.symbol}
           </span>
         </div>
 
@@ -550,7 +578,7 @@ export function CheckoutForm({
                       : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
                   )}
                 >
-                  {amount.toLocaleString()}₮
+                  {amount.toLocaleString()}{selectedCurrency.symbol}
                 </button>
               );
             })}
@@ -564,7 +592,7 @@ export function CheckoutForm({
               Өөрчлөлт
             </span>
             <span className="text-lg font-bold text-emerald-700 dark:text-emerald-400 tabular-nums">
-              {change.toLocaleString()}₮
+              {change.toLocaleString()}{selectedCurrency.symbol}
             </span>
           </div>
         )}

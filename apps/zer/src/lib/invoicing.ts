@@ -28,6 +28,7 @@ export async function createInvoiceFromSale(
       .select("total_amount, paid_amount")
       .eq("id", saleId)
       .eq("organization_id", organizationId)
+      .is("deleted_at", null)
       .single(),
   );
 
@@ -44,7 +45,8 @@ export async function createInvoiceFromSale(
     supabase
       .from("sale_items")
       .select("product_id, quantity, unit_price, total_price, products(name)")
-      .eq("sale_id", saleId),
+      .eq("sale_id", saleId)
+      .is("deleted_at", null),
   );
 
   if (!items || items.length === 0) {
