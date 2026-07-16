@@ -16,6 +16,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import type { ResolvedTransferBank } from "@/lib/payments/org-bank-accounts";
 import { bayViewKeys, workOrderKeys } from "@/lib/queries/keys";
+import { drawerDetailKeys } from "@/lib/queries/use-drawer-queries";
 import { reportServerError } from "@/lib/sentry-report-server";
 import type { WorkOrderDetail } from "@/lib/types";
 import type { PaymentMethodFees } from "./_payment-fees";
@@ -178,6 +179,10 @@ export function useDrawerMutations({
       `/api/organizations/${orgIdRef.current}/work-orders/${workOrderId}`,
     method: "PATCH",
     queryKey: workOrderKeys.all(orgId ?? ""),
+    optimisticQueryKey:
+      orgId && workOrderId
+        ? drawerDetailKeys.all(orgId, workOrderId)
+        : undefined,
     invalidateKeys: branchId
       ? ([bayViewKeys.data(branchId)] as const)
       : undefined,

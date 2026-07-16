@@ -100,6 +100,7 @@ export function LoginForm({
   const [showPassword, setShowPassword] = useState(false);
   const [gsiInitialized, setGsiInitialized] = useState(false);
   const gsiInitializationRef = useRef(false);
+  const navigatingRef = useRef(false);
 
   /* ── Google Identity Services — initialize when the SDK is ready ── */
   async function initializeGoogleSignIn() {
@@ -127,14 +128,17 @@ export function LoginForm({
               setOauthError("Google нэвтрэхэд алдаа гарлаа.");
               return;
             }
-
             const result = await signInWithGoogle(idToken, rawNonce);
-            if (result?.formError) setOauthError(result.formError);
-            else if (result?.redirectTo) router.push(result.redirectTo);
+            if (result?.formError) {
+              setOauthError(result.formError);
+            } else if (result?.redirectTo) {
+              navigatingRef.current = true;
+              router.push(result.redirectTo);
+            }
           } catch {
             setOauthError("Google нэвтрэхэд алдаа гарлаа.");
           } finally {
-            setOauthLoading(null);
+            if (!navigatingRef.current) setOauthLoading(null);
           }
         },
       });
@@ -196,12 +200,13 @@ export function LoginForm({
       if (result.formError) {
         setOauthError(result.formError);
       } else if (result.redirectTo) {
+        navigatingRef.current = true;
         router.push(result.redirectTo);
       }
     } catch {
       setOauthError("Passkey ашиглан нэвтрэхэд алдаа гарлаа.");
     } finally {
-      setPasskeyLoading(false);
+      if (!navigatingRef.current) setPasskeyLoading(false);
     }
   }
 
@@ -248,6 +253,7 @@ export function LoginForm({
       if (result?.formError) {
         setOauthError(result.formError);
       } else if (result?.redirectTo) {
+        navigatingRef.current = true;
         router.push(result.redirectTo);
       }
     } catch (err: unknown) {
@@ -264,7 +270,7 @@ export function LoginForm({
       }
       setOauthError("Apple нэвтрэхэд алдаа гарлаа.");
     } finally {
-      setOauthLoading(null);
+      if (!navigatingRef.current) setOauthLoading(null);
     }
   }
 

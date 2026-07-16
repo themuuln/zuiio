@@ -22,11 +22,11 @@ export interface SsoProduct {
   appRoots: readonly string[];
   callbackPath: "/auth/callback";
   ssoStartPath: "/auth/sso";
+  logoUrl?: string;
   mobileCallbackUrl?: `zuiio-${string}://auth/callback`;
   mobileStartUrl?: `zuiio-${string}://auth/start`;
 }
 
-export const SSO_PRODUCTS = [
   {
     id: "zer",
     displayName: "Zer",
@@ -34,6 +34,7 @@ export const SSO_PRODUCTS = [
     appRoots: ["apps/zer", "apps/zer-app"],
     callbackPath: "/auth/callback",
     ssoStartPath: "/auth/sso",
+    logoUrl: "https://zer.zuiiotech.com/favicon.ico",
     mobileCallbackUrl: "zuiio-zer://auth/callback",
     mobileStartUrl: "zuiio-zer://auth/start",
   },
@@ -44,6 +45,7 @@ export const SSO_PRODUCTS = [
     appRoots: ["apps/tolom", "apps/tolom-mobile"],
     callbackPath: "/auth/callback",
     ssoStartPath: "/auth/sso",
+    logoUrl: "https://tolom.zuiiotech.com/favicon.ico",
     mobileCallbackUrl: "zuiio-tolom://auth/callback",
     mobileStartUrl: "zuiio-tolom://auth/start",
   },

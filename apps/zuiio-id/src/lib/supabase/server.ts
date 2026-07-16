@@ -3,38 +3,32 @@ import { cookies } from "next/headers";
 import { getSupabaseEnv } from "./env";
 
 export async function createClient() {
- const cookieStore = await cookies();
- const { anonKey, url } = getSupabaseEnv();
+  const cookieStore = await cookies();
+  const { anonKey, url } = getSupabaseEnv();
 
-// In production, share cookies across all zuiiotech.com subdomains
-// so that zer.zuiiotech.com, tolom.zuiiotech.com, id.zuiiotech.com
-// all recognize the user's session.
-const isProduction = process.env.NODE_ENV === "production";
-const cookieDomain = isProduction ? ".zuiiotech.com" : undefined;
+  // Production cookies are host-only — each Supabase project keeps its own session.
+  // SSO seamlessness comes from redirect-based flows, not shared cookies.
 
- return createServerClient(url, anonKey, {
-   cookies: {
-     getAll() {
-       try {
-         return cookieStore.getAll();
-       } catch {
-         return [];
-       }
-     },
-     setAll(cookiesToSet) {
-       try {
-         for (const { name, value, options } of cookiesToSet) {
-           cookieStore.set(name, value, {
-             ...options,
-             domain: cookieDomain ?? options.domain,
-           });
-         }
-       } catch {
-         // Called from Server Component — ignore
-       }
-     },
-   },
- });
+  return createServerClient(url, anonKey, {
+    cookies: {
+      getAll() {
+        try {
+          return cookieStore.getAll();
+        } catch {
+          return [];
+        }
+      },
+      setAll(cookiesToSet) {
+        try {
+          for (const { name, value, options } of cookiesToSet) {
+            cookieStore.set(name, value, options);
+          }
+        } catch {
+          // Called from Server Component — ignore
+        }
+      },
+    },
+  });
 }
 
 /**

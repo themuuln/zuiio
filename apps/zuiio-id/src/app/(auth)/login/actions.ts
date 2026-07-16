@@ -81,7 +81,14 @@ export async function login(
     path: "/",
   });
 
-  return { redirectTo };
+  // Check if user has completed onboarding (has a username)
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("username")
+    .eq("id", (await supabase.auth.getUser()).data.user?.id ?? "")
+    .single();
+
+  return { redirectTo: profile?.username ? "/" : redirectTo };
 }
 
 /**
@@ -143,7 +150,15 @@ export async function signInWithGoogle(
       path: "/",
     });
 
-    return { redirectTo: "/account" };
+    // New users (no username) need onboarding at /account;
+    // existing users go straight to the home page.
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", data.user.id)
+      .single();
+
+    return { redirectTo: profile?.username ? "/" : "/account" };
   } catch (err) {
     console.error("[signInWithGoogle] Unexpected:", err);
     return { formError: "Google нэвтрэхэд алдаа гарлаа." };
@@ -294,14 +309,22 @@ export async function signInWithApple(payload: {
 
     const cookieStore = await cookies();
     cookieStore.set("last_provider", "apple", {
-      httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 365,
       path: "/",
     });
 
-    return { redirectTo: "/account" };
+    // New users (no username) need onboarding at /account;
+    // existing users go straight to the home page.
+    const appleSupabase = await createClient();
+    const { data: appleProfile } = await appleSupabase
+      .from("profiles")
+      .select("username")
+      .eq("id", linkData.user.id)
+      .single();
+
+    return { redirectTo: appleProfile?.username ? "/" : "/account" };
   } catch (err) {
     console.error("[signInWithApple] Unexpected:", err);
     return { formError: "Apple нэвтрэхэд алдаа гарлаа." };
@@ -334,12 +357,21 @@ export async function completePasskeySignIn(
     path: "/",
   });
 
+  // Check if user has completed onboarding (has a username)
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("username")
+    .eq("id", user.id)
+    .single();
+
   const safeRedirect =
     redirectTo?.startsWith("/") &&
     !redirectTo.startsWith("//") &&
     !redirectTo.includes("://")
       ? redirectTo
-      : "/account";
+      : profile?.username
+        ? "/"
+        : "/account";
 
   return { redirectTo: safeRedirect };
 }

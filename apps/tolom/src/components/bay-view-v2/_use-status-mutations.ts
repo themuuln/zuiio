@@ -4,8 +4,10 @@ import { useOrgMutation } from "@zuiio/query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { bayViewKeys, workOrderKeys } from "@/lib/queries/keys";
+import { drawerDetailKeys } from "@/lib/queries/use-drawer-queries";
 import { reportServerError } from "@/lib/sentry-report-server";
 import type { WorkOrderDetail } from "@/lib/types";
+import type { DrawerDetailResponse } from "@/lib/queries/use-drawer-queries";
 
 // ─── Params ────────────────────────────────────────────────────────────
 
@@ -47,6 +49,21 @@ export function useStatusMutations({
       `/api/organizations/${orgIdRef.current}/work-orders/${workOrderId}`,
     method: "PATCH",
     queryKey: workOrderKeys.all(orgId ?? ""),
+    optimisticQueryKey: orgId && workOrderId
+      ? drawerDetailKeys.all(orgId, workOrderId)
+      : undefined,
+    onOptimisticUpdate: (qc, vars) => {
+      if (!orgId || !workOrderId) return undefined;
+      const key = drawerDetailKeys.all(orgId, workOrderId);
+      const prev = qc.getQueryData<DrawerDetailResponse>(key);
+      if (prev?.workOrder) {
+        qc.setQueryData<DrawerDetailResponse>(key, {
+          ...prev,
+          workOrder: { ...prev.workOrder, status: vars.status } as WorkOrderDetail,
+        });
+      }
+      return prev;
+    },
     invalidateKeys: branchId
       ? ([bayViewKeys.data(branchId)] as const)
       : undefined,
@@ -64,14 +81,10 @@ export function useStatusMutations({
     const prevWo = wo;
     const destructive = isDestructive(newStatus);
 
-    // Optimistic: update UI immediately
-    setWo((prev) =>
-      prev ? ({ ...prev, status: newStatus } as WorkOrderDetail) : prev,
-    );
-
     try {
       await statusMutation.mutateAsync({ status: newStatus });
     } catch {
+      // Rollback: onOptimisticUpdate handles cache, but we also restore local state
       if (prevWo) setWo(prevWo);
       return;
     }
@@ -83,7 +96,6 @@ export function useStatusMutations({
         action: {
           label: "Undo",
           onClick: async () => {
-            if (prevWo) setWo(prevWo);
             try {
               await statusMutation.mutateAsync({
                 status: prevWo?.status ?? "",
@@ -115,8 +127,6 @@ export function useStatusMutations({
     setConfirmStatus(null);
     setStatusNotes("");
 
-    // Optimistic: update UI immediately
-    setWo((prev) => (prev ? ({ ...prev, status } as WorkOrderDetail) : prev));
 
     try {
       const payload: Record<string, string> = { status };

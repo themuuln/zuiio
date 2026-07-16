@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { logout } from "@/app/(auth)/logout/actions";
 import { updateProfile } from "./actions";
 import { PasskeyManager } from "./passkey-manager";
@@ -22,6 +23,12 @@ export function AccountForm({ user }: AccountFormProps) {
     undefined,
   );
   const showWelcome = user.isOnboarding && !state?.success;
+  const router = useRouter();
+  useEffect(() => {
+    if (state?.success) {
+      router.push("/");
+    }
+  }, [state?.success, router]);
 
   return (
     <div className="flex animate-fade-in flex-col gap-6">

@@ -23,6 +23,9 @@ import { getSupabaseEnv } from "@/lib/supabase/env";
  * Never trust `supabase.auth.getSession()` inside the Proxy — it doesn't
  * re-validate the JWT. Always use `getClaims()` for identity decisions.
  *
+ * Production cookies are host-only by default — no cross-subdomain sharing.
+ * SSO seamlessness comes from redirect flows, not shared cookies.
+ *
  * @see https://supabase.com/docs/guides/auth/server-side/creating-a-client
  */
 export async function proxy(request: NextRequest) {
@@ -30,34 +33,27 @@ export async function proxy(request: NextRequest) {
 
   let supabaseResponse = NextResponse.next({ request });
 
-// In production, share cookies across all zuiiotech.com subdomains
-const isProduction = process.env.NODE_ENV === "production";
-const cookieDomain = isProduction ? ".zuiiotech.com" : undefined;
+  const supabase = createServerClient(supabaseUrl, anonKey, {
+    cookies: {
+      getAll() {
+        return parseCookieHeader(request.cookies.toString()).map(
+          (c) => ({ name: c.name, value: c.value ?? "" }),
+        );
+      },
+      setAll(cookiesToSet, headers) {
+        // Prevent CDNs from caching responses that carry auth tokens
+        if (headers) {
+          for (const [key, value] of Object.entries(headers)) {
+            supabaseResponse.headers.set(key, value);
+          }
+        }
 
- const supabase = createServerClient(supabaseUrl, anonKey, {
-   cookies: {
-     getAll() {
-       return parseCookieHeader(request.cookies.toString()).map(
-         (c) => ({ name: c.name, value: c.value ?? "" }),
-       );
-     },
-     setAll(cookiesToSet, headers) {
-       // Prevent CDNs from caching responses that carry auth tokens
-       if (headers) {
-         for (const [key, value] of Object.entries(headers)) {
-           supabaseResponse.headers.set(key, value);
-         }
-       }
-
-       for (const { name, value, options } of cookiesToSet) {
-         supabaseResponse.cookies.set(name, value, {
-           ...options,
-           domain: cookieDomain ?? options.domain,
-         });
-       }
-     },
-   },
- });
+        for (const { name, value, options } of cookiesToSet) {
+          supabaseResponse.cookies.set(name, value, options);
+        }
+      },
+    },
+  });
 
   // IMPORTANT: `getClaims()` triggers token refresh and validates the JWT
   // against the project's published public keys (local WebCrypto when

@@ -59,8 +59,20 @@ export async function GET(request: Request) {
       );
     }
 
-    // Redirect to the specified next URL or account
-    const redirectTo = next && next.startsWith("/") ? next : "/account";
+    // Check if user has completed onboarding (has a username)
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", (await supabase.auth.getUser()).data.user?.id ?? "")
+      .single();
+
+    // Redirect to the specified next URL, or home/onboarding based on profile
+    const redirectTo =
+      next && next.startsWith("/")
+        ? next
+        : profile?.username
+          ? "/"
+          : "/account";
     return NextResponse.redirect(new URL(redirectTo, origin));
   }
 
