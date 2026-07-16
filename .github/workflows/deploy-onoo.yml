@@ -51,6 +51,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Stage Vercel project config
+        run: |
+          mkdir -p .vercel
+          echo '{"projectId":"'$VERCEL_PROJECT_ID'","orgId":"'$VERCEL_ORG_ID'}' > .vercel/project.json
       - name: Pull Vercel environment
         run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
 
