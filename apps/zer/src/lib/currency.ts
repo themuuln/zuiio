@@ -26,7 +26,10 @@ export const DEFAULT_CURRENCIES = [
 export type CurrencyCode = (typeof DEFAULT_CURRENCIES)[number]["code"];
 
 export function formatAmount(amount: number, currency?: { code: string; symbol: string }): string {
-  return coreFormatCurrency(amount, currency);
+  if (currency) {
+    return `${currency.symbol}${coreFormatCurrency(amount)}`;
+  }
+  return coreFormatCurrency(amount);
 }
 
 export function convertCurrency(amount: number, fromRate: number, toRate: number): number {
