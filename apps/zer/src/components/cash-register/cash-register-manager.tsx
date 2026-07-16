@@ -90,7 +90,7 @@ export function CashRegisterManager() {
     mutationFn: async () => {
       const supabase = createClient();
       const { error } = await supabase.from("cash_registers").insert({
-        organization_id: organizationId,
+        organization_id: organizationId!,
         name: newName,
       });
       if (error) throw error;
@@ -112,8 +112,8 @@ export function CashRegisterManager() {
     mutationFn: async () => {
       const supabase = createClient();
       const { error } = await supabase.from("cash_sessions").insert({
-        organization_id: organizationId,
-        register_id: openSessionRegisterId,
+        organization_id: organizationId!,
+        register_id: openSessionRegisterId!,
         opening_balance: Number(openingBalance) || 0,
       });
       if (error) throw error;
