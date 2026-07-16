@@ -1,6 +1,6 @@
 {
 	"installCommand": "cd ../.. && pnpm install",
-	"buildCommand": "pnpm exec turbo run build --filter=agent-gateway",
+	"buildCommand": "cd ../.. && pnpm exec turbo run build --filter=agent-gateway",
 	"outputDirectory": ".next",
 	"framework": "nextjs",
 	"regions": ["sin1"]
