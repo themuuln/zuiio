@@ -10,12 +10,6 @@
 [submodule "apps/zoa"]
 	path = apps/zoa
 	url = https://github.com/themuuln/zoa.git
-[submodule "apps/zraf-web"]
-	path = apps/archive/zraf-web
-	url = https://github.com/themuuln/zraf-web.git
-[submodule "apps/zill"]
-	path = apps/archive/zill
-	url = https://github.com/themuuln/zill.git
 [submodule "apps/side"]
 	path = apps/side
 	url = https://github.com/themuuln/side.git
@@ -25,9 +19,6 @@
 [submodule "apps/zunch"]
 	path = apps/zunch
 	url = https://github.com/themuuln/zunch.git
-[submodule "apps/zer-commission"]
-	path = apps/archive/zer-commission
-	url = https://github.com/themuuln/zer-commission.git
 [submodule "apps/tamga-web"]
 	path = apps/tamga-web
 	url = https://github.com/themuuln/tamga-web.git

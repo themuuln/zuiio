@@ -16,6 +16,8 @@ expo-env.d.ts
 
 # Vercel
 .vercel
+.vercel.bak/
+.impeccable/
 
 # Environment files — never commit secrets
 .env*

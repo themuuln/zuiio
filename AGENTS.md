@@ -9,37 +9,45 @@
 >
 > You MUST read these before starting any significant task. This file (`AGENTS.md`) covers project structure, package map, and conventions.
 
-**Private monorepo** serving Mongolian business apps: **Zer** (SMB ERP), **Tolom** (auto repair shop management), **Zuiio ID** (central SSO), and the **Zuiio company website**.
+**Private monorepo** for Zuiio, a Mongolian software company. Products: **Zer** (SMB ERP), **Tolom** (auto repair), **Tumurch** (gym platform), **Tamga** (horse management), **Zuiio ID** (central SSO), plus the company website and internal tools.
 
 ## Directory Structure
 
 ```
 zuiio/
-├── packages/        ← 12 shared @zuiio/* packages
-├── apps/
-│   ├── zuiio-id/    ← Central identity app (Next.js 16, id.zuiio.com)
-│   ├── website/     ← Company website (Next.js 16, Tailwind v4)
-│   ├── zer/         ← SMB ERP app
-│   │   └── packages/branding/  ← @zer/branding
-│   ├── tolom/       ← Auto repair app
-│   │   └── packages/{config,supabase}  ← @tolom/*
-│   └── agent-gateway/ ← Multi-tenant AI agent gateway (Telegram bots)
-├── docs/            ← Design system, stacks, vision, architecture
-├── .claude/         ← AI agent instructions
+├── packages/            ← 16 shared @zuiio/* packages
+│   ├── zuiio-id/        ← Central identity SSO (Next.js 16, Supabase, id.zuiio.com)
+│   ├── website/         ← Company website (Next.js 16, Tailwind v4)
+│   ├── zer/             ← SMB ERP (Next.js 16, Supabase) [submodule]
+│   ├── tolom/           ← Auto repair management (Next.js 16, Supabase) [submodule]
+│   ├── agent-gateway/   ← Multi-tenant AI agent gateway (Telegram bots)
+│   ├── onoo/            ← Basketball stats tracker (Next.js 16, Supabase)
+│   ├── tamga/           ← Horse management (Flutter)
+│   ├── tumurch/         ← Tumurch gym platform (submodule)
+│   ├── zim/             ← App
+│   ├── zerbu/           ← App
+│   └── ...              ← Other apps and submodules
+├── packages/            ← 16 shared @zuiio/* packages
+├── docs/                ← Design system, stacks, vision, architecture
+├── docs/org.yaml        ← Org catalog (source of truth for product info)
 ├── README.md
-└── AGENTS.md        ← Project instructions (this file)
+└── AGENTS.md            ← Project instructions (this file)
 ```
 
 ## Apps
 
 | App | Stack | Description | dev command |
 |-----|-------|-------------|-------------|
-| `zuiio-id` | Next.js 16 + Supabase | Central identity SSO (id.zuiio.com) | `cd apps/zuiio-id && pnpm dev` |
-| `website` | Next.js 16, Tailwind v4 | Company site | `cd apps/website && pnpm dev` |
-| `zer` | Next.js 16 + Supabase | SMB ERP | `cd apps/zer && pnpm dev` |
-| `tolom` | Next.js 16 + Supabase | Auto repair management | `cd apps/tolom && pnpm dev` |
-| `agent-gateway` | Next.js 16 + Supabase + Telegram | Multi-tenant AI agent gateway for Telegram bots | `cd apps/agent-gateway && pnpm dev` |
-
+| `zuiio-id` | Next.js 16 + Supabase | Central identity SSO (id.zuiio.com) | `pnpm dev:zuiio-id` |
+| `website` | Next.js 16, Tailwind v4 | Company site | `pnpm dev:website` |
+| `zer` | Next.js 16 + Supabase | SMB ERP | `pnpm dev:zer` |
+| `tolom` | Next.js 16 + Supabase | Auto repair management | `pnpm dev:tolom` |
+| `agent-gateway` | Next.js 16 + Supabase + Telegram | Multi-tenant AI agent gateway for Telegram bots | `pnpm dev:agent-gateway` |
+| `onoo` | Next.js 16 + Supabase | Basketball stats tracker | `cd apps/onoo && pnpm dev` |
+| `tamga` | Flutter | Horse management mobile app | `cd apps/tamga && flutter run` |
+| `tumurch` | React Native + Expo | Gym platform (submodule) | `cd apps/tumurch && pnpm dev` |
+| `zim` | — | App | `cd apps/zim && pnpm dev` |
+| `zerbu` | — | App | `cd apps/zerbu && pnpm dev` |
 Each app has its own `AGENTS.md` with app-specific rules. Read them when working in that app.
 
 ## Agent Gateway
@@ -73,6 +81,9 @@ Multi-tenant AI agent gateway at `apps/agent-gateway/`. Connects Telegram bots t
 | `export` | Framework-agnostic | CSV, XLSX (ExcelJS), DOCX (docx), PDF (pdf-lib) generation + serveEntityExport | exceljs, docx, pdf-lib, @pdf-lib/fontkit |
 | `capture` | Framework-agnostic | Sentry error capture wrapper with Supabase integration | @sentry/nextjs |
 | `ai-agent` | Framework-agnostic | LLM client, tool-calling loop, provider abstraction | — |
+| `i18n` | Framework-agnostic | Internationalization utilities | — |
+| `sdk` | Framework-agnostic | SDK package | — |
+| `search` | Framework-agnostic | Search utilities | — |
 
 ## Consumer Projects
 
@@ -256,6 +267,9 @@ Use this section to find the right context for your task. Read the linked file b
 - **Tolom (auto repair)** → `apps/tolom/AGENTS.md`
 - **Agent Gateway (Telegram bot)** → `apps/agent-gateway/AGENTS.md`
 - **Website (company site)** → `apps/website/AGENTS.md`
+- **Onoo (basketball stats)** → `apps/onoo/AGENTS.md`
+- **Tamga (horse management)** → `apps/tamga/AGENTS.md`
+- **Tumurch (gym platform)** → `apps/tumurch/AGENTS.md`
 
 ### Working on a package
 
@@ -271,6 +285,8 @@ Use this section to find the right context for your task. Read the linked file b
 - **@zuiio/ai-agent** → `packages/ai-agent/AGENTS.md`
 - **@zuiio/branding** → `packages/branding/AGENTS.md`
 - **@zuiio/config** → `packages/config/AGENTS.md`
+- **@zuiio/i18n** → `packages/i18n/AGENTS.md`
+- **@zuiio/supabase** → `packages/supabase/AGENTS.md`
 
 ### Common tasks
 
@@ -291,6 +307,9 @@ How the apps and packages connect:
 | `agent-gateway` | ai-agent, capture, core | Telegram AI bot connecting to zer/tolom |
 | `zuiio-id` | auth, branding, core | Central identity SSO |
 | `website` | core | Company marketing site |
+| `onoo` | — | Basketball stats tracker |
+| `tamga` | — | Horse management (Flutter, standalone) |
+| `tumurch` | — | Gym platform (submodule, standalone) |
 
 | Package | Used By | Purpose |
 |---------|---------|---------|

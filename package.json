@@ -15,6 +15,8 @@
     "dev:tolom": "turbo run dev --filter=tolom",
     "dev:zuiio-id": "turbo run dev --filter=@zuiio/id",
     "dev:agent-gateway": "turbo run dev --filter=agent-gateway",
+    "dev:onoo": "turbo run dev --filter=onoo",
+    "build:onoo": "turbo run build --filter=onoo",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
     "check": "turbo run typecheck lint --continue",

@@ -13,9 +13,12 @@
 
 ## Product Purpose
 
-Communicate Zuiio's value proposition to Mongolian businesses and convert visitors into users. Two products under one brand:
+Communicate Zuiio's value proposition to Mongolian businesses and convert visitors into users. Five products under one brand:
 - **Zer** — mini ERP (inventory, sales, expenses, customer management)
 - **Tolom** — auto repair shop management (scheduling, work orders, estimates)
+- **Tumurch** — gym platform (workout logging, coaching, operations, billing)
+- **Tamga** — horse management (bloodlines, health, training, performance)
+- **Zuiio ID** — central SSO (single sign-on, org management, federation)
 
 ## Brand Personality
 

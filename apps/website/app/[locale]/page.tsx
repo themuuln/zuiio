@@ -76,22 +76,43 @@ export default async function HomePage({ params }: Props) {
 						{t("products-subtitle")}
 					</p>
 				</div>
-				<div className="grid gap-6 md:grid-cols-2">
-					<ProductCard
-						name={t("zer-name")}
-						tagline={t("zer-tagline")}
-						description={t("zer-description")}
-						href="/products/zer"
-						variant="zer"
-					/>
-					<ProductCard
-						name={t("tolom-name")}
-						tagline={t("tolom-tagline")}
-						description={t("tolom-description")}
-						href="/products/tolom"
-						variant="tolom"
-					/>
-				</div>
+			<div className="product-grid grid gap-6 md:grid-cols-3">
+				<ProductCard
+					name={t("zer-name")}
+					tagline={t("zer-tagline")}
+					description={t("zer-description")}
+					href="/products/zer"
+					variant="zer"
+				/>
+				<ProductCard
+					name={t("tolom-name")}
+					tagline={t("tolom-tagline")}
+					description={t("tolom-description")}
+					href="/products/tolom"
+					variant="tolom"
+				/>
+				<ProductCard
+					name={t("tumurch-name")}
+					tagline={t("tumurch-tagline")}
+					description={t("tumurch-description")}
+					href="/products/tumurch"
+					variant="tumurch"
+				/>
+				<ProductCard
+					name={t("tamga-name")}
+					tagline={t("tamga-tagline")}
+					description={t("tamga-description")}
+					href="/products/tamga"
+					variant="tamga"
+				/>
+				<ProductCard
+					name={t("zuiio-id-name")}
+					tagline={t("zuiio-id-tagline")}
+					description={t("zuiio-id-description")}
+					href="/products/zuiio-id"
+					variant="zuiio-id"
+				/>
+			</div>
 			</section>
 
 			<FeatureSection
@@ -199,6 +220,26 @@ export default async function HomePage({ params }: Props) {
 						{t("cta-secondary")}
 					</Link>
 				</div>
+			</div>
+		</section>
+		<section className="mx-auto max-w-6xl px-6 pb-20 text-center">
+			<div className="mx-auto max-w-md">
+				<div
+					className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold"
+					style={{
+						backgroundColor: "var(--brand-violet-glow)",
+						color: "var(--color-primary)",
+					}}
+					aria-hidden="true"
+				>
+					З
+				</div>
+				<blockquote className="text-sm leading-relaxed text-muted-foreground">
+					&ldquo;Бид Монгол бизнесүүдийн төлөө программ хангамж бүтээхээр зорьж байна.&rdquo;
+				</blockquote>
+				<p className="mt-2 text-xs font-medium text-muted-foreground/70">
+					— Zuiio баг, Улаанбаатар
+				</p>
 			</div>
 		</section>
 		</>

@@ -20,8 +20,8 @@ export default async function ProductsPage({ params }: Props) {
 	return (
 		<>
 			<Hero title={t("title")} subtitle={t("subtitle")} />
-			<section className="mx-auto max-w-4xl px-6 pb-24">
-				<div className="grid gap-8 md:grid-cols-2">
+			<section className="mx-auto max-w-6xl px-6 pb-24">
+				<div className="grid gap-6 md:grid-cols-3">
 					<ProductCard
 						name="Zer"
 						tagline={t("zer-tagline")}
@@ -35,6 +35,27 @@ export default async function ProductsPage({ params }: Props) {
 						description={t("tolom-description")}
 						href="/products/tolom"
 						variant="tolom"
+					/>
+					<ProductCard
+						name="Tumurch"
+						tagline={t("tumurch-tagline")}
+						description={t("tumurch-description")}
+						href="/products/tumurch"
+						variant="tumurch"
+					/>
+					<ProductCard
+						name="Tamga"
+						tagline={t("tamga-tagline")}
+						description={t("tamga-description")}
+						href="/products/tamga"
+						variant="tamga"
+					/>
+					<ProductCard
+						name="Zuiio ID"
+						tagline={t("zuiio-id-tagline")}
+						description={t("zuiio-id-description")}
+						href="/products/zuiio-id"
+						variant="zuiio-id"
 					/>
 				</div>
 			</section>

@@ -19,8 +19,11 @@ app/
     ├── about/              # Company page
     ├── pricing/            # Pricing overview
     ├── products/           # Product index
-    │   ├── zer/            # Zer product page
-    │   └── tolom/          # Tolom product page
+    │   ├── zer/            # Zer — Mini ERP
+    │   ├── tolom/          # Tolom — Auto Repair
+    │   ├── tumurch/        # Tumurch — Gym Platform
+    │   ├── tamga/          # Tamga — Horse Management
+    │   └── zuiio-id/       # Zuiio ID — Single Sign-On
     ├── blog/
     │   ├── page.tsx        # Blog index
     │   └── [slug]/         # Dynamic posts (static content, no CMS)
