@@ -9,6 +9,23 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Game } from "./types";
 
+/** Return today's date string in Asia/Ulaanbaatar timezone (UTC+8). */
+export function getUlaanbaatarDate(): string {
+  return new Date()
+    .toLocaleDateString("sv-SE", { timeZone: "Asia/Ulaanbaatar" });
+}
+
+/** Return recent finalized games (most recent first), limited to `limit`. */
+export async function getRecentGames(
+  limit = 4,
+): Promise<GameWithTeams[]> {
+  const today = new Date().toISOString().slice(0, 10);
+  const allGames = await getGamesByDate(today);
+  return allGames
+    .filter((g) => g.status === "official" || g.status === "league_verified")
+    .slice(0, limit);
+}
+
 // ---------------------------------------------------------------------------
 // View-row types (match v_public_* column names exactly)
 // ---------------------------------------------------------------------------
@@ -45,6 +62,14 @@ export type GameWithTeams = Game & {
   away_short: string;
   away_color: string | null;
   venue_city: string | null;
+  is_provisional: boolean;
+  home_team_primary_color: string | null;
+  away_team_primary_color: string | null;
+  home_team_slug: string;
+  away_team_slug: string;
+  home_team_id: string;
+  home_score: number | null;
+  away_score: number | null;
 };
 
 export type StandingRow = {
@@ -72,6 +97,8 @@ export type StandingRow = {
   l: number;
   team_short: string;
   team_color: string | null;
+  team_short_code: string;
+  team_primary_color: string | null;
 };
 
 export type LeaderRow = {
@@ -107,6 +134,33 @@ export type LeaderRow = {
   team_short: string;
   team_color: string | null;
   seconds_played: number | null;
+  player_photo_url: string | null;
+  team_primary_color: string | null;
+  team_logo_url: string | null;
+  team_short_code: string;
+  photo_url: string | null;
+  points_per_game: number | null;
+  rebounds_per_game: number | null;
+  assists_per_game: number | null;
+  team_slug: string;
+  games_played: number | null;
+};
+
+export type PlayerDirectoryRow = {
+  player_id: string;
+  player_name: string;
+  player_name_latin: string | null;
+  player_position: string | null;
+  photo_url: string | null;
+  team_name: string;
+  team_slug: string;
+  team_short_code: string;
+  team_logo_url: string | null;
+  team_primary_color: string | null;
+  games_played: number | null;
+  points_per_game: number | null;
+  rebounds_per_game: number | null;
+  assists_per_game: number | null;
 };
 
 export type BoxScoreRow = {

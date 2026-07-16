@@ -161,7 +161,7 @@ export function CashRegisterManager() {
           actual_amount: actual,
           difference,
         })
-        .eq("id", closeSessionId);
+        .eq("id", closeSessionId!);
       if (error) throw error;
     },
     onSuccess: () => {

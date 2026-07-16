@@ -14,6 +14,75 @@ export type Database = {
   };
   public: {
     Tables: {
+      cash_registers: {
+        Row: {
+          id: string;
+          name: string;
+          is_active: boolean;
+          organization_id: string;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          is_active?: boolean;
+          organization_id: string;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          is_active?: boolean;
+          organization_id?: string;
+          created_at?: string | null;
+        };
+        Relationships: [];
+      };
+      cash_sessions: {
+        Row: {
+          id: string;
+          register_id: string;
+          opened_at: string;
+          opening_balance: number;
+          closed_at: string | null;
+          closing_balance: number | null;
+          actual_amount: number | null;
+          difference: number | null;
+          status: string;
+          notes: string | null;
+          organization_id: string;
+          expected_amount: number | null;
+        };
+        Insert: {
+          id?: string;
+          register_id?: string | null;
+          opened_at?: string;
+          opening_balance: number;
+          closed_at?: string | null;
+          closing_balance?: number | null;
+          actual_amount?: number | null;
+          difference?: number | null;
+          status?: string;
+          notes?: string | null;
+          organization_id: string;
+          expected_amount?: number | null;
+        };
+        Update: {
+          id?: string;
+          register_id?: string;
+          opened_at?: string;
+          opening_balance?: number;
+          closed_at?: string | null;
+          closing_balance?: number | null;
+          actual_amount?: number | null;
+          difference?: number | null;
+          status?: string;
+          notes?: string | null;
+          organization_id?: string;
+          expected_amount?: number | null;
+        };
+        Relationships: [];
+      };
       agent_audit_log: {
         Row: {
           chat_id: number;

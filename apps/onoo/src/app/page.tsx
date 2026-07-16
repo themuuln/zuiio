@@ -30,7 +30,7 @@ import {
   getRecentGames,
   getStandings,
   getUlaanbaatarDate,
-  getUpcomingGames,
+  getLiveGames,
 } from "./lib/data";
 
 export const metadata: Metadata = {
@@ -49,7 +49,7 @@ export default async function HomePage() {
   const [todayGames, upcomingGames, recentGames, standings, leaders, players] =
     await Promise.all([
       getGamesByDate(today),
-      getUpcomingGames(4),
+      getLiveGames(),
       getRecentGames(4),
       getStandings(),
       getLeaders(),

@@ -826,3 +826,4 @@ export async function POST(request: Request): Promise<NextResponse> {
 			await handleUserMessage(chatId, userId, query, "private", messageId);
 		}
 	}
+}
