@@ -66,16 +66,25 @@ jobs:
           git config user.name "Temuulen Undrakhbayar"
           git commit --amend --no-edit --reset-author --quiet
 
-      - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version: "24"
-
       - name: Install pnpm
         uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
 
       - name: Enable corepack
         run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      # Pre-flight: verify sparse checkout fetched everything needed
+      - name: Verify workspace files
+        run: |
+          test -f .npmrc
+          test -f pnpm-lock.yaml
+          test -f pnpm-workspace.yaml
+          test -f turbo.json
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
