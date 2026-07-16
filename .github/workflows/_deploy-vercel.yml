@@ -43,6 +43,7 @@ jobs:
           sparse-checkout: |
             apps/${{ inputs.app }}
             packages
+            config
             pnpm-lock.yaml
             pnpm-workspace.yaml
             package.json
