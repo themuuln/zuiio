@@ -70,19 +70,10 @@ jobs:
       - name: Enable corepack
         run: corepack enable
 
-      # Cache pnpm store to skip reinstall when lockfile unchanged
-      - name: Get pnpm store directory
-        shell: bash
-        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
-        id: pnpm-cache
-
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+      # Skip pnpm store cache — 7GB cache takes 68s to restore but install is only 21s
+      # Network install is faster than cache restore on Hobby plan
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       # Cache Vercel CLI to avoid reinstalling every run (~15s savings)
       - name: Cache Vercel CLI
@@ -95,9 +86,6 @@ jobs:
       - name: Install Vercel CLI
         if: steps.vercel-cache.outputs.cache-hit != 'true'
         run: npm i -g vercel@latest
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile --prefer-offline
 
       # Stage project.json + vercel.json so the Vercel CLI knows
       # which project to target and which turbo filter to build.
