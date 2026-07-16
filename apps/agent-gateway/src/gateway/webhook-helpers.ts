@@ -37,6 +37,15 @@ export async function systemPromptFor(
 Байгууллагын нэр: ${orgName || "Танай байгууллага"}
 Та Монгол хэлээр хариулна.
 Та зөвхөн өгөгдсөн багаж (tool) ашиглан хариулна. Гэхдээ ерөнхий асуултанд (мэндчилгээ, "хэн бэ", "юу хийдэг вэ" г.м) багажгүйгээр хариулж болно.
+Та дараах мэдээллүүдэд хандах боломжтой:
+- Өнөөдрийн хураангуй (орлого, идэвхтэй ажлын тоо, шинэ харилцагч)
+- Идэвхтэй ажлын захиалгууд ба тэдгээрийн дэлгэрэнгүй (сэлбэг, төлөв)
+- Харилцагчдын түүх ба автомашины мэдээлэл
+- Нэхэмжлэл, зарлагын мэдээ
+- Цагийн хуваарь (appointment)
+- Ажилтнууд/механикчид (нэр, утас, идэвхтэй эсэх)
+- Нийлүүлэгчдийн мэдээлэл
+- Ажлын захиалгад ашигласан сэлбэгүүд
 Байгууллагын ID: ${orgId}${groupWarning}`;
 	}
 
@@ -325,6 +334,104 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 				capture(err, { context: "agent-gateway: getAppointments" });
 				return { error: "Цагийн жагсаалт авахад алдаа гарлаа" };
 			}
+			},
+		},
+		{
+			name: "getMechanics",
+			description: "Ажилтнууд/механикчдын жагсаалт: нэр, утас, идэвхтэй эсэх",
+			parameters: [],
+			execute: async () => {
+				try {
+					const { data } = await supabase
+						.from("profiles")
+						.select("id, full_name, phone, is_active, username")
+						.eq("organization_id", orgId)
+						.order("full_name");
+					return (data ?? []).map((p: any) => ({
+						name: p.full_name ?? "—",
+						phone: p.phone ?? "—",
+						isActive: p.is_active,
+						username: p.username ?? "—",
+					}));
+				} catch (err) {
+					capture(err, { context: "agent-gateway: getMechanics" });
+					return { error: "Ажилтнуудын жагсаалт авахад алдаа гарлаа" };
+				}
+			},
+		},
+		{
+			name: "getWorkOrderDetails",
+			description: "Ажлын захиалгын дэлгэрэнгүй: сэлбэг, нэмэлт мэдээлэл",
+			parameters: [
+				{
+					name: "workOrderId",
+					type: "string",
+					description: "Ажлын захиалгын ID",
+					required: true,
+				},
+			],
+			execute: async (args) => {
+				try {
+					const woId = args.workOrderId as string;
+					const [woRes, partsRes] = await Promise.all([
+						supabase
+							.from("work_orders")
+							.select("*, customers(full_name, phone), vehicles(plate_number, make, model, year)")
+							.eq("id", woId)
+							.eq("organization_id", orgId)
+							.single(),
+						supabase
+							.from("work_order_parts")
+							.select("part_name, part_number, quantity, unit_price, final_price")
+							.eq("work_order_id", woId)
+							.eq("organization_id", orgId),
+					]);
+					if (woRes.error || !woRes.data) return { error: "Ажлын захиалга олдсонгүй" };
+					const wo = woRes.data;
+					return {
+						id: wo.id,
+						status: wo.status,
+						total: Number(wo.total_amount) || 0,
+						plate: wo.plate_number ?? (wo.vehicles as any)?.plate_number ?? "—",
+						vehicle: [(wo.vehicles as any)?.make, (wo.vehicles as any)?.model].filter(Boolean).join(" "),
+						customerName: (wo.customers as any)?.full_name ?? "—",
+						phone: (wo.customers as any)?.phone ?? "—",
+						description: wo.description ?? "—",
+						parts: (partsRes.data ?? []).map((p: any) => ({
+							name: p.part_name,
+							qty: p.quantity,
+							price: Number(p.final_price) || 0,
+						})),
+					};
+				} catch (err) {
+					capture(err, { context: "agent-gateway: getWorkOrderDetails" });
+					return { error: "Ажлын захиалгын дэлгэрэнгүй авахад алдаа гарлаа" };
+				}
+			},
+		},
+		{
+			name: "getSuppliers",
+			description: "Нийлүүлэгчдийн жагсаалт: нэр, холбоо барих",
+			parameters: [],
+			execute: async () => {
+				try {
+					const { data } = await supabase
+						.from("suppliers")
+						.select("name, contact_person, phone, email, is_active")
+						.eq("organization_id", orgId)
+						.is("deleted_at", null)
+						.order("name");
+					return (data ?? []).map((s: any) => ({
+						name: s.name,
+						contactPerson: s.contact_person ?? "—",
+						phone: s.phone ?? "—",
+						email: s.email ?? "—",
+						isActive: s.is_active,
+					}));
+				} catch (err) {
+					capture(err, { context: "agent-gateway: getSuppliers" });
+					return { error: "Нийлүүлэгчдийн жагсаалт авахад алдаа гарлаа" };
+				}
 			},
 		},
 	];
