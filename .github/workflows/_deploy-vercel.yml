@@ -38,7 +38,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: false
+          submodules: true
 
       # Hobby plan blocks deploys where commit author != account owner.
       # Amend HEAD author to match the target Vercel account.
