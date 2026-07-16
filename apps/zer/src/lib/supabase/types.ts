@@ -14,30 +14,6 @@ export type Database = {
   };
   public: {
     Tables: {
-      cash_registers: {
-        Row: {
-          id: string;
-          name: string;
-          is_active: boolean;
-          organization_id: string;
-          created_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          name: string;
-          is_active?: boolean;
-          organization_id: string;
-          created_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          name?: string;
-          is_active?: boolean;
-          organization_id?: string;
-          created_at?: string | null;
-        };
-        Relationships: [];
-      };
       cash_sessions: {
         Row: {
           id: string;

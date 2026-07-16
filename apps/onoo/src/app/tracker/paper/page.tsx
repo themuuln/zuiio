@@ -1,10 +1,5 @@
 "use client";
 
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Оноо — Цахим бүртгэлийн хуудас",
-};
 
 /**
  * Printable paper scoresheet for game-day fallback.
