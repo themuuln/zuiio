@@ -1,0 +1,97 @@
+name: _Deploy to Vercel (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      app:
+        description: "App directory name (e.g. zer, tolom)"
+        required: true
+        type: string
+      turbo-filter:
+        description: "Turbo filter name (e.g. zer, @zuiio/id)"
+        required: true
+        type: string
+      author-email:
+        description: "Vercel Hobby account owner email (must match exactly)"
+        required: true
+        type: string
+    secrets:
+      VERCEL_TOKEN:
+        required: true
+      VERCEL_ORG_ID:
+        required: true
+      VERCEL_PROJECT_ID:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      # Turborepo remote cache (uses Vercel token)
+      TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      TURBO_TEAM: ${{ secrets.VERCEL_ORG_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      # Hobby plan blocks deploys where commit author != account owner.
+      # Amend HEAD author to match the target Vercel account.
+      - name: Set Vercel-compatible git author
+        run: |
+          git config user.email "${{ inputs.author-email }}"
+          git config user.name "Temuulen Undrakhbayar"
+          git commit --amend --no-edit --reset-author
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Enable corepack
+        run: corepack enable
+
+      # Cache pnpm store to skip reinstall when lockfile unchanged
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+        id: pnpm-cache
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Stage project.json + vercel.json so the Vercel CLI knows
+      # which project to target and which turbo filter to build.
+      - name: Stage Vercel project config
+        run: |
+          mkdir -p .vercel
+          printf '{"projectId":"%s","orgId":"%s"}\n' "$VERCEL_PROJECT_ID" "$VERCEL_ORG_ID" > .vercel/project.json
+          printf '{"$schema":"https://openapi.vercel.sh/vercel.json","framework":"nextjs","installCommand":"pnpm install --frozen-lockfile","buildCommand":"pnpm exec turbo run build --filter=%s"}\n' "${{ inputs.turbo-filter }}" > vercel.json
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+
+      - name: Build
+        run: vercel build --prod --token=$VERCEL_TOKEN
+
+      - name: Deploy to production
+        run: vercel deploy --prebuilt --prod --archive=tgz --token=$VERCEL_TOKEN
