@@ -8,11 +8,26 @@ on:
       - "docs/**"
       - ".vscode/**"
       - ".gitignore"
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "App to deploy (empty = auto-detect from changes)"
+        required: false
+        type: choice
+        options:
+          - ""
+          - zer
+          - tolom
+          - onoo
+          - website
+          - agent-gateway
+          - zuiio-id
 
 permissions:
   contents: read
 
 jobs:
+  # ─── Detect which apps actually changed ───
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
@@ -30,83 +45,89 @@ jobs:
           filters: |
             zer:
               - 'apps/zer/**'
-              - 'packages/core/**'
-              - 'packages/hooks/**'
-              - 'packages/query/**'
-              - 'packages/ui/**'
-              - 'packages/realtime/**'
-              - 'packages/offline/**'
-              - 'packages/hr/**'
-              - 'packages/export/**'
-              - 'packages/branding/**'
-              - 'config/**'
-              - 'turbo.json'
-              - 'tsconfig.json'
-              - 'pnpm-lock.yaml'
-              - 'pnpm-workspace.yaml'
-              - 'package.json'
             tolom:
               - 'apps/tolom/**'
-              - 'packages/core/**'
-              - 'packages/hooks/**'
-              - 'packages/query/**'
-              - 'packages/ui/**'
-              - 'packages/realtime/**'
-              - 'packages/offline/**'
-              - 'packages/hr/**'
-              - 'packages/export/**'
-              - 'packages/branding/**'
-              - 'config/**'
-              - 'turbo.json'
-              - 'tsconfig.json'
-              - 'pnpm-lock.yaml'
-              - 'pnpm-workspace.yaml'
-              - 'package.json'
             onoo:
               - 'apps/onoo/**'
-              - 'packages/core/**'
-              - 'packages/branding/**'
-              - 'config/**'
-              - 'turbo.json'
-              - 'tsconfig.json'
-              - 'pnpm-lock.yaml'
-              - 'pnpm-workspace.yaml'
-              - 'package.json'
             website:
               - 'apps/website/**'
-              - 'packages/core/**'
-              - 'config/**'
-              - 'turbo.json'
-              - 'tsconfig.json'
-              - 'pnpm-lock.yaml'
-              - 'pnpm-workspace.yaml'
-              - 'package.json'
             agent-gateway:
               - 'apps/agent-gateway/**'
-              - 'packages/core/**'
-              - 'packages/ai-agent/**'
-              - 'packages/capture/**'
-              - 'config/**'
-              - 'turbo.json'
-              - 'tsconfig.json'
-              - 'pnpm-lock.yaml'
-              - 'pnpm-workspace.yaml'
-              - 'package.json'
             zuiio-id:
               - 'apps/zuiio-id/**'
-              - 'packages/core/**'
-              - 'packages/auth/**'
-              - 'packages/branding/**'
-              - 'config/**'
-              - 'turbo.json'
-              - 'tsconfig.json'
-              - 'pnpm-lock.yaml'
-              - 'pnpm-workspace.yaml'
-              - 'package.json'
+
+  # ─── Typecheck changed apps BEFORE burning a Vercel deploy ───
+  typecheck:
+    needs: detect-changes
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+          sparse-checkout: |
+            apps/zer
+            apps/tolom
+            apps/onoo
+            apps/website
+            apps/agent-gateway
+            apps/zuiio-id
+            packages
+            config
+            pnpm-lock.yaml
+            pnpm-workspace.yaml
+            package.json
+            turbo.json
+            tsconfig.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - uses: pnpm/action-setup@v4
+      - run: corepack enable
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck changed apps
+        run: |
+          FAILED=""
+          if [ "${{ needs.detect-changes.outputs.zer }}" = "true" ]; then
+            echo "🔍 Typechecking zer..."
+            pnpm --filter zer exec tsc --noEmit 2>&1 || FAILED="$FAILED zer"
+          fi
+          if [ "${{ needs.detect-changes.outputs.tolom }}" = "true" ]; then
+            echo "🔍 Typechecking tolom..."
+            pnpm --filter tolom exec tsc --noEmit 2>&1 || FAILED="$FAILED tolom"
+          fi
+          if [ "${{ needs.detect-changes.outputs.onoo }}" = "true" ]; then
+            echo "🔍 Typechecking onoo..."
+            pnpm --filter onoo-web exec tsc --noEmit 2>&1 || FAILED="$FAILED onoo"
+          fi
+          if [ "${{ needs.detect-changes.outputs.website }}" = "true" ]; then
+            echo "🔍 Typechecking website..."
+            pnpm --filter "@zuiio/website" exec tsc --noEmit 2>&1 || FAILED="$FAILED website"
+          fi
+          if [ "${{ needs.detect-changes.outputs['agent-gateway'] }}" = "true" ]; then
+            echo "🔍 Typechecking agent-gateway..."
+            pnpm --filter agent-gateway exec tsc --noEmit 2>&1 || FAILED="$FAILED agent-gateway"
+          fi
+          if [ "${{ needs.detect-changes.outputs['zuiio-id'] }}" = "true" ]; then
+            echo "🔍 Typechecking zuiio-id..."
+            pnpm --filter "@zuiio/id" exec tsc --noEmit 2>&1 || FAILED="$FAILED zuiio-id"
+          fi
+          if [ -n "$FAILED" ]; then
+            echo ""
+            echo "❌ Typecheck failed for:$FAILED"
+            exit 1
+          fi
+          echo "✅ All changed apps passed typecheck"
+
+  # ─── Deploy only changed apps ───
 
   deploy-zer:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.zer == 'true'
+    needs: [detect-changes, typecheck]
+    if: |
+      always() && !cancelled() &&
+      (needs.typecheck.result == 'success' || needs.typecheck.result == 'skipped') &&
+      (inputs.app == 'zer' || needs.detect-changes.outputs.zer == 'true')
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: zer
@@ -118,8 +139,11 @@ jobs:
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_ZER }}
 
   deploy-tolom:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.tolom == 'true'
+    needs: [detect-changes, typecheck]
+    if: |
+      always() && !cancelled() &&
+      (needs.typecheck.result == 'success' || needs.typecheck.result == 'skipped') &&
+      (inputs.app == 'tolom' || needs.detect-changes.outputs.tolom == 'true')
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: tolom
@@ -131,8 +155,11 @@ jobs:
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_TOLOM }}
 
   deploy-onoo:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.onoo == 'true'
+    needs: [detect-changes, typecheck]
+    if: |
+      always() && !cancelled() &&
+      (needs.typecheck.result == 'success' || needs.typecheck.result == 'skipped') &&
+      (inputs.app == 'onoo' || needs.detect-changes.outputs.onoo == 'true')
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: onoo
@@ -144,8 +171,11 @@ jobs:
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_ONOO }}
 
   deploy-website:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.website == 'true'
+    needs: [detect-changes, typecheck]
+    if: |
+      always() && !cancelled() &&
+      (needs.typecheck.result == 'success' || needs.typecheck.result == 'skipped') &&
+      (inputs.app == 'website' || needs.detect-changes.outputs.website == 'true')
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: website
@@ -157,8 +187,11 @@ jobs:
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WEBSITE }}
 
   deploy-agent-gateway:
-    needs: detect-changes
-    if: needs.detect-changes.outputs['agent-gateway'] == 'true'
+    needs: [detect-changes, typecheck]
+    if: |
+      always() && !cancelled() &&
+      (needs.typecheck.result == 'success' || needs.typecheck.result == 'skipped') &&
+      (inputs.app == 'agent-gateway' || needs.detect-changes.outputs['agent-gateway'] == 'true')
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: agent-gateway
@@ -170,8 +203,11 @@ jobs:
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_AGENT }}
 
   deploy-zuiio-id:
-    needs: detect-changes
-    if: needs.detect-changes.outputs['zuiio-id'] == 'true'
+    needs: [detect-changes, typecheck]
+    if: |
+      always() && !cancelled() &&
+      (needs.typecheck.result == 'success' || needs.typecheck.result == 'skipped') &&
+      (inputs.app == 'zuiio-id' || needs.detect-changes.outputs['zuiio-id'] == 'true')
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: zuiio-id
