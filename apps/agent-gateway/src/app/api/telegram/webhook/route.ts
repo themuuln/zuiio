@@ -5,6 +5,7 @@ import { TelegramChannel } from "@/channels/telegram";
 import type { TelegramUpdate } from "@/channels/types";
 import { startTypingLoop } from "@/channels/typing-loop";
 import { handleAgentMessage } from "@/gateway/agent-handler";
+import { markdownToTelegramHtml } from "@/lib/format-telegram";
 import { resolveOrgFromChatUser } from "@/gateway/mode-a";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
 import { debug } from "@/lib/debug";
@@ -704,8 +705,9 @@ export async function POST(request: Request): Promise<NextResponse> {
 		debug("webhook", "agent responded", { chatId, len: response.length });
 		if (messageId) {
 			tg.setReaction(chatId, messageId, TelegramChannel.REACTIONS.done).catch(() => {});
+	const formattedResponse = markdownToTelegramHtml(response);
 		}
-		await tg.sendMessage(chatId, response, { parseMode: "HTML" });
+		await tg.sendMessage(chatId, formattedResponse, { parseMode: "HTML" });
 		// Add quick action buttons for Tolom
 		if (productType === "tolom") {
 			await tg.sendInlineKeyboard(chatId, "Дараах үйлдлүүдээс сонгоно уу:", [
