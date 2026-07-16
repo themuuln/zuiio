@@ -26,7 +26,7 @@ jobs:
       agent-gateway: ${{ steps.filter.outputs['agent-gateway'] }}
       zuiio-id: ${{ steps.filter.outputs['zuiio-id'] }}
       tamga: ${{ steps.filter.outputs.tamga }}
-      any: ${{ steps.filter.outputs.any }}
+      workflows: ${{ steps.filter.outputs.workflows }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -47,12 +47,14 @@ jobs:
               - 'apps/zuiio-id/**'
             tamga:
               - 'apps/tamga/**'
+            workflows:
+              - '.github/workflows/**'
 
   # ─── Deploy only changed apps ───
 
   deploy-zer:
     needs: detect-changes
-    if: needs.detect-changes.outputs.zer == 'true'
+    if: needs.detect-changes.outputs.zer == 'true' || needs.detect-changes.outputs.workflows == 'true'
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: zer
@@ -65,7 +67,7 @@ jobs:
 
   deploy-tolom:
     needs: detect-changes
-    if: needs.detect-changes.outputs.tolom == 'true'
+    if: needs.detect-changes.outputs.tolom == 'true' || needs.detect-changes.outputs.workflows == 'true'
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: tolom
@@ -78,7 +80,7 @@ jobs:
 
   deploy-onoo:
     needs: detect-changes
-    if: needs.detect-changes.outputs.onoo == 'true'
+    if: needs.detect-changes.outputs.onoo == 'true' || needs.detect-changes.outputs.workflows == 'true'
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: onoo
@@ -91,7 +93,7 @@ jobs:
 
   deploy-website:
     needs: detect-changes
-    if: needs.detect-changes.outputs.website == 'true'
+    if: needs.detect-changes.outputs.website == 'true' || needs.detect-changes.outputs.workflows == 'true'
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: website
@@ -104,7 +106,7 @@ jobs:
 
   deploy-agent-gateway:
     needs: detect-changes
-    if: needs.detect-changes.outputs['agent-gateway'] == 'true'
+    if: needs.detect-changes.outputs['agent-gateway'] == 'true' || needs.detect-changes.outputs.workflows == 'true'
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: agent-gateway
@@ -117,7 +119,7 @@ jobs:
 
   deploy-zuiio-id:
     needs: detect-changes
-    if: needs.detect-changes.outputs['zuiio-id'] == 'true'
+    if: needs.detect-changes.outputs['zuiio-id'] == 'true' || needs.detect-changes.outputs.workflows == 'true'
     uses: ./.github/workflows/_deploy-vercel.yml
     with:
       app: zuiio-id
@@ -161,19 +163,6 @@ jobs:
 
       - name: Enable corepack
         run: corepack enable
-
-      - name: Get pnpm store directory
-        shell: bash
-        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
-        id: pnpm-cache
-
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
 
       - name: Install Vercel CLI
         run: npm i -g vercel@latest
