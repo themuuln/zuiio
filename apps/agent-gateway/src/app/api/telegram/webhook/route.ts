@@ -702,10 +702,10 @@ export async function POST(request: Request): Promise<NextResponse> {
 			onToken,
 		});
 		stopTyping();
-		debug("webhook", "agent responded", { chatId, len: response.length });
+	debug("webhook", "agent responded", { chatId, len: response.length });
+	const formattedResponse = markdownToTelegramHtml(response);
 		if (messageId) {
 			tg.setReaction(chatId, messageId, TelegramChannel.REACTIONS.done).catch(() => {});
-	const formattedResponse = markdownToTelegramHtml(response);
 		}
 		await tg.sendMessage(chatId, formattedResponse, { parseMode: "HTML" });
 		// Add quick action buttons for Tolom
