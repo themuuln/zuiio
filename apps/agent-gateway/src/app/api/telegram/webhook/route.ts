@@ -224,8 +224,8 @@ export async function POST(request: Request): Promise<NextResponse> {
 			}
 		}
 
-		await handleUserMessage(chatId, userId, text, chatType, msg.message_id);
-		return NextResponse.json({ ok: true });
+	await handleUserMessage(chatId, userId, text, chatType, msg.message_id);
+	return NextResponse.json({ ok: true });
 	} catch (err) {
 		console.error("[webhook] ERROR:", err);
 		capture(err, { context: "agent-gateway: telegram webhook" });
@@ -690,56 +690,31 @@ export async function POST(request: Request): Promise<NextResponse> {
 		const stopTyping = startTypingLoop(tg, chatId);
 		let typingStopped = false;
 
-		// Fire agent with async fallback
-		const agentPromise = handleAgentMessage(resolved.context, text, chatType, {
+	// Run agent synchronously — await the result then send to Telegram.
+	// Vercel serverless kills background tasks after response, so we MUST
+	// await the full flow (agent + telegram send) before returning.
+	try {
+		const response = await handleAgentMessage(resolved.context, text, chatType, {
 			getSystemPrompt: systemPromptFor,
 			getTools: (ctx) => getProductTools(productType, ctx),
 			dataClient,
 			onToken,
 		});
-
-		runAgentWithFallback(agentPromise, {
-			onAsyncFallback: () => {
-				debug("webhook", "async fallback triggered", { chatId });
-				return messageId
-					? tg.setReaction(
-							chatId,
-							messageId,
-							TelegramChannel.REACTIONS.processing,
-						)
-					: Promise.resolve();
-			},
-			onResult: (response) => {
-				stopTyping(); // safety — stop if not already stopped
-				debug("webhook", "onResult sending", {
-					chatId,
-					len: response.length,
-					preview: response.slice(0, 80),
-				});
-				// Set done reaction
-				if (messageId) {
-					tg.setReaction(
-						chatId,
-						messageId,
-						TelegramChannel.REACTIONS.done,
-					).catch(() => {});
-				}
-				return tg.sendMessage(chatId, response);
-			},
-			onError: (message) => {
-				stopTyping(); // safety — stop if not already stopped
-				debug("webhook", "onError sending", { chatId, message });
-				// Set error reaction
-				if (messageId) {
-					tg.setReaction(
-						chatId,
-						messageId,
-						TelegramChannel.REACTIONS.error,
-					).catch(() => {});
-				}
-				return tg.sendMessage(chatId, message);
-			},
-		});
+		stopTyping();
+		debug("webhook", "agent responded", { chatId, len: response.length });
+		if (messageId) {
+			tg.setReaction(chatId, messageId, TelegramChannel.REACTIONS.done).catch(() => {});
+		}
+		await tg.sendMessage(chatId, response);
+	} catch (err) {
+		stopTyping();
+		console.error("[webhook] agent error:", err);
+		capture(err, { context: "agent-gateway: agent in handleUserMessage" });
+		if (messageId) {
+			tg.setReaction(chatId, messageId, TelegramChannel.REACTIONS.error).catch(() => {});
+		}
+		await tg.sendMessage(chatId, "Уучлаарай, алдаа гарлаа. Дахин оролдоно уу.");
+	}
 	}
 
 	async function handleCallbackQuery(
