@@ -297,3 +297,4 @@ function escapeHtml(text: string): string {
 		.replace(/>/g, "&gt;");
 }
 
+
