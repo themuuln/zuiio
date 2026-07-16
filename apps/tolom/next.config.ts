@@ -3,197 +3,101 @@ import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
-const withNextIntl = createNextIntlPlugin("./src/lib/i18n/request.ts", {
-  createMessagesDeclaration: "./src/messages/en.json",
+const withNextIntl = createNextIntlPlugin({
+	requestConfig: "./src/lib/i18n/request.ts",
+	experimental: {
+		createMessagesDeclaration: "./src/messages/en.json",
+	},
 });
 
 const nextConfig: NextConfig = {
-  // @zuiio/* packages export raw .ts source — transpile them.
-  transpilePackages: [
-    "@zuiio/branding",
-    "@zuiio/core",
-    "@zuiio/hooks",
-    "@zuiio/offline",
-    "@zuiio/query",
-    "@zuiio/realtime",
-    "@zuiio/ui",
-  ],
+	// @zuiio/* packages export raw .ts source — transpile them.
+	transpilePackages: [
+		"@zuiio/branding",
+		"@zuiio/core",
+		"@zuiio/hooks",
+		"@zuiio/offline",
+		"@zuiio/query",
+		"@zuiio/realtime",
+		"@zuiio/ui",
+		"@zuiio/capture",
+		"@zuiio/export",
+		"@zuiio/config",
+		"@zuiio/ai-agent",
+		"@zuiio/hr",
+	],
 
-  // Allow Tailscale IP for phone testing from mobile devices
-  allowedDevOrigins: ["100.102.22.106", "192.168.1.121", "192.168.1.126", "127.0.0.1", "localhost"],
+	// Allow Tailscale IP for phone testing from mobile devices
+	allowedDevOrigins: ["100.102.22.106", "192.168.1.121", "192.168.1.126", "127.0.0.1", "localhost"],
 
-  // TypeScript validation is handled by `pnpm validate` before build.
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  reactCompiler: process.env.NODE_ENV === "development",
+	// TypeScript validation is handled by `pnpm validate` before build.
+	typescript: {
+		ignoreBuildErrors: true,
+	},
+	reactCompiler: process.env.NODE_ENV === "development",
 
-  // ── Next.js 16.3: Instant Navigations ──────────────────────
-  cacheComponents: true,
-  partialPrefetching: true,
+	// ── Next.js 16.3: Instant Navigations ──────────────────────
+	cacheComponents: true,
+	partialPrefetching: true,
 
-  // ── Cache lifetime profiles (used with 'use cache' directive) ──
-  cacheLife: {
-    // Real-time: bay view, cash register balance, work order detail
-    realtime: { stale: 120, revalidate: 60, expire: 300 },
-    // Frequent: work orders, inventory balances, invoices
-    frequent: { stale: 60, revalidate: 30, expire: 300 },
-    // Standard: customers, vehicles, reports, expenses, dashboards
-    standard: { stale: 300, revalidate: 60, expire: 600 },
-    // Reference: service catalog, branches, suppliers, vehicle models
-    reference: { stale: 3600, revalidate: 600, expire: 7200 },
-  },
+	// ── Cache lifetime profiles (used with 'use cache' directive) ──
+	cacheLife: {
+		fifteenMinutes: { revalidate: 900, stale: 3600, expire: 86400 },
+		hourly: { revalidate: 3600, stale: 14400, expire: 86400 },
+		daily: { revalidate: 86400, stale: 604800, expire: 2592000 },
+	},
 
-  serverExternalPackages: [
-    "playwright-core",
-    "@aws-sdk/client-s3",
-    "@aws-sdk/s3-request-presigner",
-    // Heavy native/binary packages — keep out of the server bundle
-    "@react-pdf/renderer",
-    "nodemailer",
-    "exceljs",
-    "sharp",
-  ],
+	serverExternalPackages: ["@zuiio/ai-agent"],
 
-  images: {
-    formats: ["image/avif", "image/webp"],
-    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-  },
+	images: {
+		remotePatterns: [
+			{ protocol: "https", hostname: "*.supabase.co" },
+			{ protocol: "https", hostname: "lh3.googleusercontent.com" },
+		],
+	},
+	// ── Security Headers ──────────────────────────────────────────
+	async headers() {
+		const csp = [
+			"default-src 'self'",
+			"script-src 'self' 'unsafe-eval' 'unsafe-inline' 'wasm-unsafe-eval' https://va.vercel-scripts.com https://vitals.vercel-insights.com",
+			"style-src 'self' 'unsafe-inline'",
+			"img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com",
+			"font-src 'self' data:",
+			"connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vitals.vercel-insights.com https://o4507894414827520.ingest.us.sentry.io",
+			"frame-ancestors 'none'",
+			"base-uri 'self'",
+			"form-action 'self'",
+		].join("; ");
 
-  experimental: {
-    optimizePackageImports: ["lucide-react", "@tanstack/react-table"],
-    // Turbopack: persistent cache for faster successive builds
-    turbopackFileSystemCacheForBuild: true,
-    // Experimental Rust React Compiler (faster than Babel variant)
-    turbopackRustReactCompiler: process.env.NODE_ENV === "development",
-    // View Transitions API for smooth page navigation animations
-    viewTransition: true,
-  },
-
-  // ── Security Headers ──────────────────────────────────────────
-  async headers() {
-    return [
-      {
-        source: "/(.*)",
-        headers: [
-          {
-            key: "X-Frame-Options",
-            value: "DENY",
-          },
-          {
-            key: "X-Content-Type-Options",
-            value: "nosniff",
-          },
-          {
-            key: "Referrer-Policy",
-            value: "strict-origin-when-cross-origin",
-          },
-          {
-            key: "Permissions-Policy",
-            value:
-              "camera=(), microphone=(), geolocation=(), interest-cohort=()",
-          },
-          {
-            key: "Strict-Transport-Security",
-            value: "max-age=31536000; includeSubDomains; preload",
-          },
-        ],
-      },
-      {
-        source: "/dashboard/:path*",
-        headers: [
-          {
-            key: "X-Robots-Tag",
-            value: "noindex, nofollow",
-          },
-        ],
-      },
-    ];
-  },
+		return [
+			{
+				source: "/(.*)",
+				headers: [
+					{ key: "X-Frame-Options", value: "DENY" },
+					{ key: "X-Content-Type-Options", value: "nosniff" },
+					{ key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+					{ key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+					{ key: "X-XSS-Protection", value: "1; mode=block" },
+					{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+					{ key: "Content-Security-Policy", value: csp },
+				],
+			},
+		];
+	},
 };
 
 const withPWA = withPWAInit({
-  dest: "public",
-  disable: process.env.NODE_ENV === "development" || process.env.ENABLE_PWA !== "true",
-  register: true,
-  scope: "/",
-  sw: "sw.js",
-  cacheOnFrontEndNav: true,
-  cacheStartUrl: true,
-  reloadOnOnline: true,
-  customWorkerSrc: "worker",
-  fallbacks: {
-    document: "/offline",
-    image: "/icon-512.png",
-  },
-  workboxOptions: {
-    runtimeCaching: [
-      {
-        urlPattern: /^https?.*\/api\/(?!auth|trpc).*/,
-        handler: "NetworkFirst",
-        options: {
-          cacheName: "api-cache",
-          expiration: {
-            maxEntries: 100,
-            maxAgeSeconds: 60 * 60 * 24, // 24 hours
-          },
-          networkTimeoutSeconds: 5,
-        },
-      },
-      {
-        urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|avif|ico)$/,
-        handler: "CacheFirst",
-        options: {
-          cacheName: "image-cache",
-          expiration: {
-            maxEntries: 200,
-            maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
-          },
-        },
-      },
-      {
-        urlPattern: /\.(?:woff|woff2|ttf|eot)$/,
-        handler: "CacheFirst",
-        options: {
-          cacheName: "font-cache",
-          expiration: {
-            maxEntries: 50,
-            maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
-          },
-        },
-      },
-    ],
-  },
+	dest: "public",
+	register: true,
+	disable: process.env.NODE_ENV === "development",
 });
 
 export default withPWA(
-  withSentryConfig(withNextIntl(nextConfig), {
-    // For all available options, see:
-    // https://www.npmjs.com/package/@sentry/webpack-plugin#options
-
-    org: "themuuln",
-
-    project: "javascript-nextjs",
-
-    // Only print logs for uploading source maps in CI
-    silent: !process.env.CI,
-    // Disabled: reduces source map upload size and build time significantly
-    widenClientFileUpload: false,
-
-    webpack: {
-      // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
-      // See the following for more information:
-      // https://docs.sentry.io/product/crons/
-      // https://vercel.com/docs/cron-jobs
-      automaticVercelMonitors: true,
-
-      // Tree-shaking options for reducing bundle size
-      treeshake: {
-        // Automatically tree-shake Sentry logger statements to reduce bundle size
-        removeDebugLogging: true,
-      },
-    },
-  }),
+	withSentryConfig(withNextIntl(nextConfig), {
+		org: process.env.SENTRY_ORG,
+		project: process.env.SENTRY_PROJECT,
+		silent: true,
+	 widenClientFileUpload: true,
+		reactComponentAnnotation: { enabled: true },
+	}),
 );

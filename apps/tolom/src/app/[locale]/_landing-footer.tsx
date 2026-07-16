@@ -39,7 +39,7 @@ export function LandingFooter() {
               {t("footerProduct")}
             </Typography.H4>
             <ul className="flex flex-col gap-2">
-              {["Features", "Pricing", "Integrations"].map((item) => (
+              {(["Features", "Pricing", "Integrations"] as const).map((item) => (
                 <li key={item}>
                   <Link
                     href={
@@ -64,7 +64,7 @@ export function LandingFooter() {
               {t("footerCompany")}
             </Typography.H4>
             <ul className="flex flex-col gap-2">
-              {["About", "Blog", "Contact"].map((item) => (
+              {(["About", "Blog", "Contact"] as const).map((item) => (
                 <li key={item}>
                   <Link
                     href={
@@ -89,7 +89,7 @@ export function LandingFooter() {
               {t("footerSupport")}
             </Typography.H4>
             <ul className="flex flex-col gap-2">
-              {["Docs", "FAQ", "Status"].map((item) => (
+              {(["Docs", "FAQ", "Status"] as const).map((item) => (
                 <li key={item}>
                   <Link
                     href={
