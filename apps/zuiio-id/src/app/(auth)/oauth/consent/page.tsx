@@ -1,3 +1,4 @@
+export const instant = false;
 import { Suspense } from "react";
 import { ThemeProvider } from "@/app/theme-provider";
 import { createClient } from "@/lib/supabase/server";

@@ -1,10 +1,15 @@
 {
-  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [
+    ".npmrc",
+    "pnpm-workspace.yaml",
+    "tsconfig.json",
+    "config/**"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["src/**", "app/**", "pages/**", "next.config.*", "tsconfig.json", "package.json", "tailwind.config.*"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "inputs": ["$TURBO_DEFAULT$"],
+      "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**", "dist/**"],
       "env": [
         "NEXT_PUBLIC_SENTRY_DSN",
         "SENTRY_AUTH_TOKEN",

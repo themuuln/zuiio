@@ -1,3 +1,4 @@
+export const instant = false;
 import type { Metadata } from "next";
 import { VerifyEmailForm } from "./verify-email-form";
 

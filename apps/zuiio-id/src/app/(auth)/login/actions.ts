@@ -294,10 +294,6 @@ export async function signInWithApple(payload: {
       return { formError: "Системд нэвтрэхэд алдаа гарлаа." };
     }
 
-    console.log("[signInWithApple] generateLink success", {
-      verificationType: linkData.properties.verification_type,
-      tokenLength: verifyToken.length,
-    });
 
     // --- 4. Update profile with Apple data (works for new AND existing users) -
     const profileClient = await createClient();

@@ -8,6 +8,12 @@ const nextConfig: NextConfig = {
   experimental: {
     turbopackFileSystemCacheForBuild: true,
     turbopackRustReactCompiler: true,
+    optimizePackageImports: [
+      "@phosphor-icons/react",
+      "@tanstack/react-query",
+      "date-fns",
+      "lucide-react",
+    ],
   },
   allowedDevOrigins: ["127.0.0.1"],
   images: {
