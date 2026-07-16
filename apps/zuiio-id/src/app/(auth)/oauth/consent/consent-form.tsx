@@ -1,10 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useState, type CSSProperties } from "react";
+import { useState } from "react";
 
 interface ConsentFormProps {
   authorizationId: string;
+  projectRef: string;
   clientName: string;
   clientLogoUri?: string;
   scope: string;
@@ -13,6 +14,7 @@ interface ConsentFormProps {
 
 export function ConsentForm({
   authorizationId,
+  projectRef,
   clientName,
   clientLogoUri,
   scope,
@@ -45,6 +47,7 @@ export function ConsentForm({
         body: JSON.stringify({
           authorization_id: authorizationId,
           decision,
+          project_ref: projectRef,
         }),
       });
 
@@ -75,73 +78,65 @@ export function ConsentForm({
 
   return (
     <div className="animate-fade-in rounded-lg border border-border bg-card p-6">
-      <div className="text-center">
-        {/* App logo or initial fallback */}
+      <div className="mb-5 flex items-center gap-3">
         {clientLogoUri ? (
-          <div className="mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border border-border bg-muted">
-            <Image
-              src={clientLogoUri}
-              alt={clientName}
-              width={64}
-              height={64}
-              unoptimized
-              className="h-full w-full object-contain"
-              onError={(e) => {
-                // Hide broken image, the initial fallback will show via CSS
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
-            />
-          </div>
+          <Image
+            src={clientLogoUri}
+            alt={clientName}
+            width={40}
+            height={40}
+            className="rounded-lg"
+          />
         ) : (
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl border border-border bg-muted text-xl font-semibold text-muted-foreground">
+          <div
+            className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-sm font-semibold text-primary"
+          >
             {initial}
           </div>
         )}
-
-        <h2 className="mt-4 text-lg font-semibold text-foreground">
-          {clientName}
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          дараах мэдээлэлд хандахыг хүсч байна:
-        </p>
+        <div>
+          <p className="text-sm font-medium text-foreground">{clientName}</p>
+          <p className="text-xs text-muted-foreground">
+            Зөвшөөрөл хүсч байна
+          </p>
+        </div>
       </div>
 
-      {/* Scope list */}
-      <div className="mt-6 space-y-3">
-        {requestedScopes.map((scopeItem) => (
-          <div key={scopeItem} className="stagger-item flex items-center gap-3" style={{ "--i": requestedScopes.indexOf(scopeItem) } as CSSProperties}>
-            <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-medium ${scopeColors[scopeItem] ?? "bg-muted text-muted-foreground"}`}>
-              {scopeItem.charAt(0).toUpperCase()}
-            </div>
-            <span className="text-sm text-foreground">
-              {scopeDescriptions[scopeItem] ?? scopeItem}
+      <div className="mb-5 space-y-2">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          Нэвтрэх эрх
+        </p>
+        {requestedScopes.map((s) => (
+          <div key={s} className="flex items-center gap-2">
+            <span
+              className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${scopeColors[s] ?? "bg-muted text-muted-foreground"}`}
+            >
+              {scopeDescriptions[s] ?? s}
             </span>
           </div>
         ))}
       </div>
 
-      {/* Error message */}
       {error && (
-        <p className="animate-slide-down mt-4 text-center text-sm text-destructive">{error}</p>
+        <p className="mb-4 text-xs text-destructive">{error}</p>
       )}
 
-      {/* Actions */}
-      <div className="mt-6 space-y-3">
-        <button
-          type="button"
-          onClick={() => handleDecision("approve")}
-          disabled={loading !== null}
-          className="active-scale w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-        >
-          {loading === "approve" ? "Баталгаажуулж байна..." : "Зөвшөөрөх"}
-        </button>
+      <div className="flex gap-3">
         <button
           type="button"
           onClick={() => handleDecision("deny")}
           disabled={loading !== null}
-          className="active-scale w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+          className="flex-1 rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50"
         >
           {loading === "deny" ? "Татгалзаж байна..." : "Татгалзах"}
+        </button>
+        <button
+          type="button"
+          onClick={() => handleDecision("approve")}
+          disabled={loading !== null}
+          className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+        >
+          {loading === "approve" ? "Зөвшөөрч байна..." : "Зөвшөөрөх"}
         </button>
       </div>
     </div>
