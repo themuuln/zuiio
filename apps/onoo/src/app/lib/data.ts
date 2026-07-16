@@ -409,6 +409,9 @@ export async function getTeamBySlug(slug: string): Promise<{
   };
   players: TeamRosterRow[];
   standings: StandingRow | undefined;
+  leaders: LeaderRow[];
+  recentGames: GameWithTeams[];
+  upcomingGames: GameWithTeams[];
 } | null> {
   const supabase = await createClient();
 
@@ -430,12 +433,36 @@ export async function getTeamBySlug(slug: string): Promise<{
     team_season_id: first.team_season_id,
   };
 
-  const { data: standings } = await supabase
-    .from("v_public_standings")
-    .select("*")
-    .eq("team_slug", slug)
-    .limit(1)
-    .single();
+  // Run standings, leaders, and games queries in parallel
+  const today = new Date().toISOString().slice(0, 10);
+  const [standingsResult, leadersResult, recentResult, upcomingResult] =
+    await Promise.all([
+      supabase
+        .from("v_public_standings")
+        .select("*")
+        .eq("team_slug", slug)
+        .limit(1)
+        .single(),
+      supabase
+        .from("v_public_leaders")
+        .select("*")
+        .eq("team_id", team.id)
+        .order("pts", { ascending: false }),
+      supabase
+        .from("v_public_games")
+        .select("*")
+        .or(`home_team_id.eq.${team.id},away_team_id.eq.${team.id}`)
+        .lt("scheduled_at", `${today}T23:59:59`)
+        .order("scheduled_at", { ascending: false })
+        .limit(8),
+      supabase
+        .from("v_public_games")
+        .select("*")
+        .or(`home_team_id.eq.${team.id},away_team_id.eq.${team.id}`)
+        .gte("scheduled_at", `${today}T00:00:00`)
+        .order("scheduled_at", { ascending: true })
+        .limit(8),
+    ]);
 
   return {
     team,
@@ -446,9 +473,24 @@ export async function getTeamBySlug(slug: string): Promise<{
       name_latin: r.player_name_latin as string | null,
       position: r.player_position as string | null,
     })) as TeamRosterRow[],
-    standings: standings
-      ? mapStandingRow(standings as Record<string, unknown>)
+    standings: standingsResult.data
+      ? mapStandingRow(standingsResult.data as Record<string, unknown>)
       : undefined,
+    leaders: leadersResult.data
+      ? leadersResult.data.map((row: Record<string, unknown>) =>
+          mapLeaderRow(row),
+        )
+      : [],
+    recentGames: recentResult.data
+      ? recentResult.data.map((row: Record<string, unknown>) =>
+          mapGameRow(row),
+        )
+      : [],
+    upcomingGames: upcomingResult.data
+      ? upcomingResult.data.map((row: Record<string, unknown>) =>
+          mapGameRow(row),
+        )
+      : [],
   };
 }
 
