@@ -9,7 +9,7 @@ export function ForgotPasswordForm() {
 
   if (state?.success) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex animate-fade-in flex-col gap-6">
         <div className="flex flex-col gap-2 text-center">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Имэйл илгээгдлээ
@@ -29,7 +29,7 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex animate-fade-in flex-col gap-6">
       <div className="flex flex-col gap-2 text-center">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Нууц үг мартсан
@@ -56,7 +56,7 @@ export function ForgotPasswordForm() {
         </div>
 
         {state?.formError && (
-          <div className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <div className="animate-slide-up rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {state.formError}
           </div>
         )}
@@ -64,7 +64,7 @@ export function ForgotPasswordForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="h-11 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50"
+          className="active-scale h-11 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isPending ? "Илгээж байна…" : "Нууц үг сэргээх"}
         </button>

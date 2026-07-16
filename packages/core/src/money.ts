@@ -1,7 +1,16 @@
-/** Strip ₮, commas, spaces → number. Returns NaN if unparseable. */
+/** Strip ₮, commas, spaces → number. Supports k/m shorthand (e.g. "400k" →400000). Returns NaN if unparseable. */
 export function parseCurrencyInput(value: string): number {
   const cleaned = value.replace(/[₮,\s]/g, "").trim();
-  return cleaned === "" ? 0 : Number(cleaned);
+  if (cleaned === "") return 0;
+
+  const match = cleaned.match(/^([\d.]+)\s*([km])$/i);
+  if (match) {
+    const num = Number(match[1]);
+    if (Number.isNaN(num)) return NaN;
+    return match[2].toLowerCase() === "k" ? num * 1_000 : num * 1_000_000;
+  }
+
+  return Number(cleaned);
 }
 
 /** Compact display: 1_200_000 → "₮1.2M", 50_000 → "₮50K" */

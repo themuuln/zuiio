@@ -4,6 +4,7 @@ import { FingerprintSimpleIcon } from "@phosphor-icons/react/FingerprintSimple";
 import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Script from "next/script";
 import { useActionState, useRef, useState } from "react";
 import { generateGoogleNonce } from "@/lib/auth/google-nonce";
@@ -38,7 +39,7 @@ function SignInMethodButton({
       type="button"
       onClick={onClick}
       disabled={loading}
-      className={`flex h-12 w-full items-center justify-center gap-3 rounded-lg border text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50 ${
+      className={`active-scale flex h-12 w-full items-center justify-center gap-3 rounded-lg border text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50 ${
         isLastUsed
           ? "border-primary/40 bg-primary/5 text-foreground ring-1 ring-primary/30 hover:bg-primary/10"
           : "border-border bg-card text-foreground hover:bg-muted"
@@ -283,8 +284,16 @@ export function LoginForm({
         strategy="afterInteractive"
       />
 
-      <div className="flex flex-col gap-6">
+      <div className="flex animate-fade-in flex-col gap-6">
         <div className="flex flex-col gap-2 text-center">
+          <Image
+            src="/zuiio-logo.png"
+            alt="Zuiio"
+            width={48}
+            height={48}
+            className="mx-auto mb-1"
+            priority
+          />
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Нэвтрэх
           </h1>
@@ -354,7 +363,7 @@ export function LoginForm({
               autoComplete="username email"
               required
               className="h-10 rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-              placeholder="name@example.com"
+              placeholder="name@example.com эсвэл нэр"
             />
             {state?.fieldErrors?.identifier && (
               <p className="text-xs text-destructive">
@@ -410,7 +419,7 @@ export function LoginForm({
           </div>
 
           {state?.formError && (
-            <div className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <div className="animate-slide-up rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {state.formError}
             </div>
           )}
@@ -418,7 +427,7 @@ export function LoginForm({
           <button
             type="submit"
             disabled={isPending}
-            className="flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50"
+            className="active-scale flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isPending && (
               <svg

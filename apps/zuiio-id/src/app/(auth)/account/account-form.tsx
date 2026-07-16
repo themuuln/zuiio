@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Image from "next/image";
 import { logout } from "@/app/(auth)/logout/actions";
 import { updateProfile } from "./actions";
 import { PasskeyManager } from "./passkey-manager";
@@ -23,8 +24,18 @@ export function AccountForm({ user }: AccountFormProps) {
   const showWelcome = user.isOnboarding && !state?.success;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
+    <div className="flex animate-fade-in flex-col gap-6">
+      <div className="flex flex-col gap-2 text-center">
+        {showWelcome && (
+          <Image
+            src="/zuiio-logo.png"
+            alt="Zuiio"
+            width={48}
+            height={48}
+            className="mx-auto mb-1"
+            priority
+          />
+        )}
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           {showWelcome ? "Тавтай морилно уу!" : "Бүртгэлийн мэдээлэл"}
         </h1>
@@ -102,13 +113,13 @@ export function AccountForm({ user }: AccountFormProps) {
         </div>
 
         {state?.formError && (
-          <div className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <div className="animate-slide-up rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {state.formError}
           </div>
         )}
 
         {state?.success && (
-          <div className="rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">
+          <div className="animate-slide-up rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">
             Мэдээлэл амжилттай шинэчлэгдлээ.
           </div>
         )}
@@ -116,7 +127,7 @@ export function AccountForm({ user }: AccountFormProps) {
         <button
           type="submit"
           disabled={isPending}
-          className="h-11 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50"
+          className="active-scale h-11 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isPending ? "Хадгалж байна…" : "Хадгалах"}
         </button>
