@@ -24,14 +24,19 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 2 : 4,
   timeout: 90 * 1000,
+  expect: {
+    timeout: 10_000,
+  },
   reporter: [
-    ["html", { outputFolder: "playwright-report" }],
+    ["html", { outputFolder: "playwright-report", open: "never" }],
     ["@midscene/web/playwright-reporter", { type: "merged" }],
   ],
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000",
     headless: true,
     trace: "retain-on-failure",
+    screenshot: "only-on-failure",
+    video: "on-first-retry",
   },
   projects: [
     // Setup project: login once, save storage state

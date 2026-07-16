@@ -3,6 +3,7 @@ import type { Page } from "@playwright/test";
 /**
  * Opens a drawer by clicking the trigger button that contains the given text.
  * Uses page.evaluate for reliable DOM click through Base UI + Radix Slot.
+ * Waits for the dialog to appear instead of a hardcoded timeout.
  */
 export async function openDrawerByText(page: Page, text: string) {
   // Wait for React hydration by polling for React-fiber attributes on buttons
@@ -30,19 +31,18 @@ export async function openDrawerByText(page: Page, text: string) {
   if (result === "not found") {
     console.log(`[openDrawerByText] Button "${text}" not found`);
   }
-  // Wait for Base UI drawer animation (450ms) + React content render
-  await page.waitForTimeout(1200);
+  // Wait for Base UI drawer: dialog role appears in portal after animation
+  await page.waitForSelector('[role="dialog"]', { timeout: 5000 });
 }
 
 /**
  * Submits a form inside a Base UI Drawer by dispatching a submit event.
  * Dispatches a native submit event on the form, which React/RHF intercepts
  * via handleSubmit. This avoids Base UI Portal + Playwright click conflicts.
- * @param page Playwright page
- * @param formId The `id` attribute of the form element to submit
  */
 export async function submitDrawerForm(page: Page, formId: string) {
-  await page.waitForTimeout(500); // Wait for drawer animation
+  // Wait for the form to exist in the DOM (drawer animation complete)
+  await page.waitForSelector(`#${formId}`, { timeout: 5000 });
   const result = await page.evaluate((fid) => {
     const form = document.getElementById(fid) as HTMLFormElement | null;
     if (!form) return { ok: false, error: `form #${fid} not found` };
@@ -51,7 +51,12 @@ export async function submitDrawerForm(page: Page, formId: string) {
     return { ok: true, prevented };
   }, formId);
   if (!result.ok) console.log(`[submitDrawerForm] ${result.error}`);
-  await page.waitForTimeout(1500);
+  // Wait for dialog to close after form submit
+  await page
+    .waitForSelector('[role="dialog"]', { state: "hidden", timeout: 10000 })
+    .catch(() => {
+      // Dialog may not close if there's a validation error — that's OK
+    });
 }
 
 /**

@@ -4,87 +4,90 @@ test.describe("Shop checkout flow", () => {
   test("add product to cart from catalog", async ({ page }) => {
     await page.goto("/shop", { waitUntil: "domcontentloaded" });
 
-    // Check if there are products to add
-    const addBtn = page.getByText("Нэмэх").first();
-    const addBtnVisible = await addBtn.isVisible().catch(() => false);
+    await test.step("Find and add product", async () => {
+      const addBtn = page.getByRole("button", { name: "Нэмэх" }).first();
+      const addBtnVisible = await addBtn.isVisible().catch(() => false);
 
-    if (!addBtnVisible) {
-      // Empty shop — skip this test
-      console.log("Shop has no products to add to cart, skipping");
-      test.skip();
-      return;
-    }
+      if (!addBtnVisible) {
+        test.skip();
+        return;
+      }
 
-    // Click the first "Нэмэх" button on a product card
-    await addBtn.click();
-    await page.waitForTimeout(1000);
+      await addBtn.click();
+      // Wait for cart count to update instead of hardcoded timeout
+      await page
+        .waitForResponse(
+          (resp) => resp.url().includes("/api/") && resp.status() < 400,
+        )
+        .catch(() => {});
+    });
 
-    // Navigate to cart to verify product was added
-    await page.goto("/shop/cart", { waitUntil: "domcontentloaded" });
+    await test.step("Verify cart has items", async () => {
+      await page.goto("/shop/cart", { waitUntil: "domcontentloaded" });
 
-    // Cart should have items — check for quantity controls or total
-    const total = page.locator("text=Нийт дүн").first();
-    const emptyCart = page.locator("text=Сагс хоосон").first();
-    const emptyVisible = await emptyCart.isVisible().catch(() => false);
+      const total = page.getByText("Нийт дүн").first();
+      const emptyCart = page.getByText("Сагс хоосон").first();
+      const emptyVisible = await emptyCart.isVisible().catch(() => false);
 
-    if (!emptyVisible) {
-      await expect(total).toBeVisible({ timeout: 5000 });
-    }
+      if (!emptyVisible) {
+        await expect(total).toBeVisible({ timeout: 5000 });
+      }
+    });
   });
 
   test("cart page shows empty state when no items", async ({ page }) => {
-    // Clear cookies/storage to ensure empty cart
     await page.goto("/shop/cart", { waitUntil: "domcontentloaded" });
 
-    // Should show empty state or cart with items
-    const emptyState = page.locator("text=Сагс хоосон").first();
-    const total = page.locator("text=Нийт дүн").first();
+    await test.step("Verify empty or populated cart", async () => {
+      const emptyState = page.getByText("Сагс хоосон").first();
+      const total = page.getByText("Нийт дүн").first();
 
-    const emptyVisible = await emptyState.isVisible().catch(() => false);
-    const totalVisible = await total.isVisible().catch(() => false);
+      const emptyVisible = await emptyState.isVisible().catch(() => false);
+      const totalVisible = await total.isVisible().catch(() => false);
 
-    if (emptyVisible) {
-      await expect(emptyState).toBeVisible({ timeout: 5000 });
-      await expect(page.getByText("Бараа үзэх").first()).toBeVisible();
-    } else if (totalVisible) {
-      // Items exist in cart — that's fine too
-      console.log("Cart has items from previous test or session");
-    }
+      if (emptyVisible) {
+        await expect(emptyState).toBeVisible();
+        await expect(page.getByText("Бараа үзэх").first()).toBeVisible();
+      } else if (totalVisible) {
+        // Items exist in cart — valid state
+      }
+    });
   });
 
   test("checkout page renders with payment options", async ({ page }) => {
     await page.goto("/shop/checkout", { waitUntil: "domcontentloaded" });
 
-    // Checkout page could show either the form or empty cart state
-    const checkoutTitle = page.locator("h1:has-text('Төлбөр тооцоо')").first();
-    const emptyCart = page.locator("text=Сагс хоосон").first();
+    await test.step("Verify checkout page content", async () => {
+      const checkoutTitle = page.getByRole("heading", {
+        name: "Төлбөр тооцоо",
+      });
+      const emptyCart = page.getByText("Сагс хоосон").first();
 
-    const checkoutVisible = await checkoutTitle.isVisible().catch(() => false);
-    const emptyVisible = await emptyCart.isVisible().catch(() => false);
+      const checkoutVisible = await checkoutTitle
+        .isVisible()
+        .catch(() => false);
+      const emptyVisible = await emptyCart.isVisible().catch(() => false);
 
-    if (checkoutVisible) {
-      await expect(checkoutTitle).toBeVisible({ timeout: 5000 });
-      // Should show order summary at minimum
-      const orderSummary = page.getByText("Захиалга").first();
-      await expect(orderSummary).toBeVisible({ timeout: 5000 });
-      // Should render submit button
-      await expect(page.getByText("Борлуулалт үүсгэх").first()).toBeVisible();
-    } else if (emptyVisible) {
-      await expect(emptyCart).toBeVisible({ timeout: 5000 });
-    } else {
-      // Might still be in loading state — wait a bit more
-      await page.waitForTimeout(3000);
-      const fallbackEmpty = page.locator("text=Сагс хоосон").first();
-      if (await fallbackEmpty.isVisible().catch(() => false)) {
-        await expect(fallbackEmpty).toBeVisible();
+      if (checkoutVisible) {
+        await expect(checkoutTitle).toBeVisible();
+        await expect(page.getByText("Захиалга").first()).toBeVisible();
+        await expect(
+          page.getByRole("button", { name: "Борлуулалт үүсгэх" }),
+        ).toBeVisible();
+      } else if (emptyVisible) {
+        await expect(emptyCart).toBeVisible();
       }
-    }
+      // If neither visible, page may still be loading — no hardcoded wait
+    });
   });
 
   test("shop history page loads", async ({ page }) => {
     await page.goto("/shop/history", { waitUntil: "domcontentloaded" });
 
-    const title = page.locator("text=Борлуулалтын түүх").first();
-    await expect(title).toBeVisible({ timeout: 10000 });
+    await test.step("Verify shop history title", async () => {
+      await expect(page.getByText("Борлуулалтын түүх").first()).toBeVisible({
+        timeout: 10000,
+      });
+    });
   });
 });

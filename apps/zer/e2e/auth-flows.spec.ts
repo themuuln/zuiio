@@ -2,8 +2,8 @@ import { expect, test } from "@playwright/test";
 
 const PASSWORD = "Tolom!11";
 
-// /forgot-password and /reset-password redirect to /login?next=... when not
-// authenticated due to Supabase SSR auth guard — we test them via the login page
+// /forgot-password and /reset-password now render their own forms
+// (no longer redirect to /login?next=... when not authenticated)
 
 test.describe("Auth pages render correctly", () => {
   test("login page shows form fields", async ({ page }) => {
@@ -26,15 +26,16 @@ test.describe("Auth pages render correctly", () => {
     await expect(page.getByLabel("Нууц үг")).toBeVisible();
   });
 
-  test("forgot-password redirects to login when not authenticated", async ({
-    page,
-  }) => {
+  test("forgot-password page renders reset form", async ({ page }) => {
     await page.goto("/forgot-password", { waitUntil: "domcontentloaded" });
-    // Should redirect to /login?next=/forgot-password
-    expect(page.url()).toContain("/login");
-    expect(page.url()).toContain("next=");
-    // Login form should still render
-    await expect(page.getByLabel("Имэйл")).toBeVisible({ timeout: 10000 });
+    // Forgot password page renders its own form (no longer redirects to login)
+    await expect(page.getByText("Нууц үг сэргээх").first()).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(page.getByLabel("Имэйл")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /холбоос илгээх/i }),
+    ).toBeVisible();
   });
 });
 
