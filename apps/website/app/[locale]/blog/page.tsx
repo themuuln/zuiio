@@ -2,27 +2,10 @@ import { Hero } from "@/components/marketing/Hero";
 import { Link } from "@/lib/i18n/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-const posts = [
-	{
-		slug: "welcome-to-zuiio",
-		title: { en: "Welcome to Zuiio", mn: "Зуииод тавтай морил" },
-		excerpt: {
-			en: "Why we're building software for Mongolian businesses, and what we've learned so far.",
-			mn: "Яагаад Монголын бизнесүүдэд зориулж программ хангамж бүтээж байгаа тухай.",
-		},
-		date: "2026-06-15",
-		author: "Zuiio Team",
-	},
-	{
-		slug: "getting-started-with-zer",
-		title: { en: "Getting Started with Zer", mn: "Зэр-тэй эхлэх" },
-		excerpt: {
-			en: "A practical walkthrough of Zer's core features — inventory, sales, expenses, and reporting.",
-			mn: "Зэр-ийн үндсэн боломжуудтай танилцах — бараа материал, борлуулалт, зарлага, тайлан.",
-		},
-		date: "2026-05-20",
-		author: "Zuiio Team",
-	},
+const postSlugs = [
+	"welcome-to-zuiio",
+	"getting-started-with-zer",
+	"why-mongolian-businesses-need-local-software",
 ];
 
 type Props = {
@@ -39,6 +22,14 @@ export default async function BlogPage({ params }: Props) {
 	const { locale } = await params;
 	setRequestLocale(locale);
 	const t = await getTranslations("BlogPage");
+
+	const posts = postSlugs.map((slug, i) => ({
+		slug,
+		title: t(`post-${i + 1}-title`),
+		excerpt: t(`post-${i + 1}-excerpt`),
+		date: t(`post-${i + 1}-date`),
+		author: t("author"),
+	}));
 
 	return (
 		<>
@@ -60,10 +51,10 @@ export default async function BlogPage({ params }: Props) {
 								className="mt-3 text-xl font-semibold tracking-tight transition-colors duration-250"
 								style={{ fontFamily: "var(--font-display)" }}
 							>
-								{post.title[locale as "en" | "mn"] ?? post.title.en}
+								{post.title}
 							</h2>
 							<p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-								{post.excerpt[locale as "en" | "mn"] ?? post.excerpt.en}
+								{post.excerpt}
 							</p>
 							<div className="mt-4 flex items-center gap-1.5 text-sm font-medium text-primary opacity-0 transition-all duration-250 group-hover:opacity-100 group-hover:gap-3">
 								{t("read-more")}

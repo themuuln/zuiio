@@ -126,7 +126,7 @@ export default async function ZerProductPage({ params }: Props) {
 				title={t("title")}
 				subtitle={t("subtitle")}
 				cta={{ label: t("cta"), href: "/pricing" }}
-				secondaryCta={{ label: "Learn more…", href: "#features" }}
+				secondaryCta={{ label: t("learn-more"), href: "#features" }}
 			/>
 			<section id="features" className="mx-auto max-w-6xl px-6 pb-24">
 				<div className="mx-auto max-w-2xl text-center mb-16">

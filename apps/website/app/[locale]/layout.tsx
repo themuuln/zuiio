@@ -1,5 +1,5 @@
 import { hasLocale, NextIntlClientProvider } from "next-intl";
-import { getMessages, setRequestLocale } from "next-intl/server";
+import { getMessages, setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/lib/i18n/routing";
 import { Header } from "@/components/layout/Header";
@@ -23,12 +23,13 @@ export default async function LocaleLayout({ children, params }: Props) {
 	setRequestLocale(locale);
 
 	const messages = await getMessages();
+	const t = await getTranslations("Layout");
 	return (
 
 		<ThemeProvider>
 			<NextIntlClientProvider locale={locale} messages={messages}>
 				<a href="#main-content" className="skip-to-content">
-					Skip to content
+					{t("skip-to-content")}
 				</a>
 				<Header />
 				<main id="main-content" className="flex-1">

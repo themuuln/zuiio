@@ -58,7 +58,7 @@ export function PricingCard({
 	return (
 		<div
 			className={cn(
-				"relative flex flex-col rounded-2xl p-8 transition-shadow duration-250 ease-out",
+				"relative flex flex-col overflow-visible rounded-2xl p-8 transition-shadow duration-250 ease-out",
 				highlighted
 					? "border-2 border-primary bg-card shadow-brand hover:shadow-lg"
 					: "border border-border bg-card hover:shadow-card-hover",
@@ -66,7 +66,7 @@ export function PricingCard({
 			)}
 		>
 			{highlighted && (
-				<div className="absolute -top-3.5 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-primary to-brand-teal px-5 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm">
+				<div className="absolute -top-3.5 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm">
 					<StarIcon /> Most popular
 				</div>
 			)}

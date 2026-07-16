@@ -38,11 +38,12 @@ export default async function TamgaProductPage({ params }: Props) {
 
 	return (
 		<>
+			<ProductJsonLd name="Tamga" description={t("jsonld-description")} url={"/products/tamga"} category={t("jsonld-category")} />
 			<Hero
 				title={t("title")}
 				subtitle={t("subtitle")}
 				cta={{ label: t("cta"), href: "/pricing" }}
-				secondaryCta={{ label: "Learn more…", href: "#features" }}
+				secondaryCta={{ label: t("learn-more"), href: "#features" }}
 			/>
 			<section id="features" className="reveal mx-auto max-w-6xl px-6 pb-24">
 				<div className="mx-auto max-w-2xl text-center mb-16">

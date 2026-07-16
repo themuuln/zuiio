@@ -1,4 +1,5 @@
 import { Link } from "@/lib/i18n/navigation";
+import { getTranslations } from "next-intl/server";
 
 export interface LegalSection {
 	id: string;
@@ -23,7 +24,7 @@ interface LegalPageProps extends LegalDocument {
 	locale: string;
 }
 
-export function LegalPage({
+export async function LegalPage({
 	locale,
 	eyebrow,
 	title,
@@ -31,15 +32,12 @@ export function LegalPage({
 	lastUpdated,
 	sections,
 }: LegalPageProps) {
-	const currentLocale = resolveLocale(locale);
-	const quickLinksLabel = currentLocale === "en" ? "On this page" : "Энэ хуудсанд";
-	const lastUpdatedLabel = currentLocale === "en" ? "Last updated" : "Сүүлд шинэчилсэн";
-	const contactTitle = currentLocale === "en" ? "Questions about these terms?" : "Эдгээр нөхцөлийн талаар асуух зүйл байна уу?";
-	const contactBody =
-		currentLocale === "en"
-			? "Email us and include the product, workspace, or chatbot conversation you are asking about."
-			: "Бидэнд имэйл илгээхдээ асууж буй бүтээгдэхүүн, workspace эсвэл чатботын харилцан яриаг дурдана уу.";
-	const contactLabel = currentLocale === "en" ? "Contact Zuiio" : "Zuiio-той холбогдох";
+	const t = await getTranslations("LegalPage");
+	const quickLinksLabel = t("quick-links");
+	const lastUpdatedLabel = t("last-updated");
+	const contactTitle = t("contact-title");
+	const contactBody = t("contact-body");
+	const contactLabel = t("contact-label");
 
 	return (
 		<section className="mx-auto grid max-w-6xl gap-10 px-6 py-16 md:grid-cols-[minmax(0,1fr)_18rem] md:py-24">
@@ -116,13 +114,13 @@ export function LegalPage({
 
 				<div className="mt-5 grid gap-2 text-sm">
 					<Link href="/privacy" className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
-						{currentLocale === "en" ? "Privacy Policy" : "Нууцлалын бодлого"}
+						{t("privacy-link")}
 					</Link>
 					<Link href="/terms" className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
-						{currentLocale === "en" ? "Terms of Service" : "Үйлчилгээний нөхцөл"}
+						{t("terms-link")}
 					</Link>
 					<Link href="/data-deletion" className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
-						{currentLocale === "en" ? "Data Deletion" : "Өгөгдөл устгах"}
+						{t("data-deletion-link")}
 					</Link>
 				</div>
 			</aside>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { getTranslations } from "next-intl/server";
 
 interface HeroProps {
 	title: string;
@@ -11,7 +12,7 @@ interface HeroProps {
 	gutters?: boolean;
 }
 
-export function Hero({
+export async function Hero({
 	title,
 	subtitle,
 	eyebrow,
@@ -20,6 +21,7 @@ export function Hero({
 	className,
 	gutters = true,
 }: HeroProps) {
+	const t = await getTranslations("Hero");
 	return (
 		<section
 			className={cn(
@@ -47,7 +49,7 @@ export function Hero({
 					{eyebrow}
 				</div>
 				<div className="animate-fade-in mt-3 text-xs font-medium tracking-wide text-muted-foreground/70">
-					Монголд бүтээсэн · Ulaanbaatar
+					{t("built-in-mongolia")}
 				</div>
 				<h1
 					id="hero-heading"
