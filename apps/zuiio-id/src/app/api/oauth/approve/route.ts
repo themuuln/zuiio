@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * POST /api/oauth/approve
@@ -8,10 +8,13 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { client_id, redirect_uri, state, scope, response_type } = body;
+    const { authorization_id } = body;
 
-    if (!client_id || !redirect_uri) {
-      return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
+    if (!authorization_id) {
+      return NextResponse.json(
+        { error: "Missing required parameters" },
+        { status: 400 },
+      );
     }
 
     const supabase = await createClient();
@@ -28,41 +31,52 @@ export async function POST(request: NextRequest) {
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !serviceRoleKey) {
-      return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 },
+      );
     }
 
-    const approveResponse = await fetch(`${supabaseUrl}/auth/v1/oauth/approve`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${serviceRoleKey}`,
-        "apikey": serviceRoleKey,
+    const approveResponse = await fetch(
+      `${supabaseUrl}/auth/v1/oauth/approve`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${serviceRoleKey}`,
+          apikey: serviceRoleKey,
+        },
+        body: JSON.stringify({
+          authorization_id,
+          user_id: session.user.id,
+        }),
       },
-      body: JSON.stringify({
-        client_id,
-        redirect_uri,
-        state,
-        scope: scope || "openid email profile",
-        response_type: response_type || "code",
-        user_id: session.user.id,
-      }),
-    });
+    );
 
     if (!approveResponse.ok) {
       const errorData = await approveResponse.text();
       console.error("OAuth approve failed:", errorData);
-      return NextResponse.json({ error: "Failed to approve consent" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to approve consent" },
+        { status: 500 },
+      );
     }
 
     const data = await approveResponse.json();
 
     if (!data.redirect_to) {
-      return NextResponse.json({ error: "No redirect URL returned" }, { status: 500 });
+      return NextResponse.json(
+        { error: "No redirect URL returned" },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({ redirect_to: data.redirect_to });
   } catch (error) {
     console.error("Consent approve error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

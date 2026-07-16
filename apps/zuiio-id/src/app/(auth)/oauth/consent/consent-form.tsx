@@ -1,19 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 interface ConsentFormProps {
-  params: Record<string, string | undefined>;
+  authorizationId: string;
+  clientName: string;
+  scope: string;
+  redirectUri: string;
 }
 
-export function ConsentForm({ params }: ConsentFormProps) {
-  const { client_id, redirect_uri, state, scope } = params;
-  const router = useRouter();
+export function ConsentForm({
+  authorizationId,
+  clientName,
+  scope,
+}: ConsentFormProps) {
   const [loading, setLoading] = useState<"approve" | "deny" | null>(null);
 
   // Parse requested scopes for display
-  const requestedScopes = (scope || "openid email profile").split(" ");
+  const requestedScopes = scope.split(" ").filter(Boolean);
   const scopeDescriptions: Record<string, string> = {
     openid: "Таны нэвтрэх мэдээлэл",
     email: "Таны имэйл хаяг",
@@ -27,7 +31,7 @@ export function ConsentForm({ params }: ConsentFormProps) {
       const response = await fetch("/api/oauth/approve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(params),
+        body: JSON.stringify({ authorization_id: authorizationId }),
       });
       const data = await response.json();
       if (data.redirect_to) {
@@ -48,7 +52,7 @@ export function ConsentForm({ params }: ConsentFormProps) {
       const response = await fetch("/api/oauth/deny", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(params),
+        body: JSON.stringify({ authorization_id: authorizationId }),
       });
       const data = await response.json();
       if (data.redirect_to) {
@@ -60,12 +64,17 @@ export function ConsentForm({ params }: ConsentFormProps) {
     }
   };
 
+  // First letter of client name for avatar
+  const initial = clientName.charAt(0).toUpperCase();
+
   return (
     <div className="rounded-lg border border-border bg-card p-6">
       <div className="text-center">
         {/* App icon */}
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-          <span className="text-2xl font-bold text-muted-foreground">T</span>
+          <span className="text-2xl font-bold text-muted-foreground">
+            {initial}
+          </span>
         </div>
 
         {/* Title */}
@@ -73,7 +82,8 @@ export function ConsentForm({ params }: ConsentFormProps) {
           Зөвшөөрөл шаардлагатай
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Нэгэн хэрэглэгч таны бүртгэлд хандахыг хүсч байна
+          <span className="font-medium text-foreground">{clientName}</span>{" "}
+          таны бүртгэлд хандахыг хүсч байна
         </p>
       </div>
 
@@ -84,7 +94,10 @@ export function ConsentForm({ params }: ConsentFormProps) {
         </p>
         <ul className="space-y-2">
           {requestedScopes.map((s) => (
-            <li key={s} className="flex items-center gap-2 text-sm text-muted-foreground">
+            <li
+              key={s}
+              className="flex items-center gap-2 text-sm text-muted-foreground"
+            >
               <svg
                 className="h-4 w-4 text-green-500"
                 fill="none"

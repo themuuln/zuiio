@@ -1,11 +1,12 @@
 import { Suspense } from "react";
 import { ThemeProvider } from "@/app/theme-provider";
+import { createAdminClient } from "@/lib/supabase/server";
 import { ConsentForm } from "./consent-form";
 
 /**
  * OAuth Consent page.
  *
- * Supabase OAuth Server redirects here with authorization request parameters.
+ * Supabase OAuth Server redirects here with authorization_id.
  * The user approves or denies access, then Supabase issues an authorization code.
  */
 export default function ConsentPage({
@@ -74,7 +75,42 @@ async function ConsentFormWrapper({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const params = await searchParams;
-  return <ConsentForm params={params} />;
+  const authorizationId = params.authorization_id;
+
+  if (!authorizationId) {
+    return <ConsentError message="Missing authorization ID" />;
+  }
+
+  // Look up authorization details from the database
+  const admin = await createAdminClient();
+
+  const { data: authz, error } = await admin
+    .schema("auth")
+    .from("oauth_authorizations")
+    .select("authorization_id, client_id, redirect_uri, scope, state, status")
+    .eq("authorization_id", authorizationId)
+    .single();
+
+  if (error || !authz) {
+    return <ConsentError message="Authorization not found or expired" />;
+  }
+
+  // Look up client name
+  const { data: client } = await admin
+    .schema("auth")
+    .from("oauth_clients")
+    .select("client_name")
+    .eq("id", authz.client_id)
+    .single();
+
+  return (
+    <ConsentForm
+      authorizationId={authz.authorization_id}
+      clientName={client?.client_name || "Unknown App"}
+      scope={authz.scope || "openid"}
+      redirectUri={authz.redirect_uri}
+    />
+  );
 }
 
 function ConsentLoading() {
@@ -85,6 +121,14 @@ function ConsentLoading() {
         <div className="mx-auto mb-2 h-4 w-32 rounded bg-muted" />
         <div className="mx-auto h-3 w-48 rounded bg-muted" />
       </div>
+    </div>
+  );
+}
+
+function ConsentError({ message }: { message: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-6 text-center">
+      <p className="text-sm text-muted-foreground">{message}</p>
     </div>
   );
 }
