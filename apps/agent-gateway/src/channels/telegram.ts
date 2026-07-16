@@ -220,7 +220,7 @@ export class TelegramChannel implements Channel {
 		emoji: string,
 	): Promise<void> {
 		try {
-			await fetch(`${this.baseUrl}/setMessageReaction`, {
+			const res = await fetch(`${this.baseUrl}/setMessageReaction`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
@@ -229,8 +229,17 @@ export class TelegramChannel implements Channel {
 					reaction: [{ type: "emoji", emoji }],
 				}),
 			});
-		} catch {
-			// Reaction failures are non-critical — silently ignore
+			if (!res.ok) {
+				const body = await res.text();
+				capture(new Error(`setReaction ${res.status}: ${body}`), {
+					context: "telegram:setReaction",
+					chatId,
+					messageId,
+					emoji,
+				});
+			}
+		} catch (err) {
+			capture(err, { context: "telegram:setReaction:network", chatId, messageId });
 		}
 	}
 
