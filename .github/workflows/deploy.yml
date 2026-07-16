@@ -67,7 +67,7 @@ jobs:
               - 'package.json'
               - '.npmrc'
 
-  # ─── Typecheck changed apps BEFORE burning a Vercel deploy ───
+  # ─── Typecheck deploying apps BEFORE burning a Vercel deploy ───
   typecheck:
     needs: detect-changes
     if: github.event_name == 'push'
@@ -98,7 +98,7 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Typecheck changed apps
+      - name: Typecheck deploying apps
         env:
           SHARED: ${{ needs.detect-changes.outputs.shared }}
           ZER: ${{ needs.detect-changes.outputs.zer }}
@@ -108,29 +108,29 @@ jobs:
           AGENT_GW: ${{ needs.detect-changes.outputs['agent-gateway'] }}
           ZUIIO_ID: ${{ needs.detect-changes.outputs['zuiio-id'] }}
         run: |
+          # Only typecheck apps that will actually deploy (matching deploy-* job conditions)
           FAILED=""
-          TYPECHECK_ALL="$SHARED"
-          if [ "$TYPECHECK_ALL" = "true" ] || [ "$ZER" = "true" ]; then
+          if [ "$ZER" = "true" ] || [ "$SHARED" = "true" ]; then
             echo "🔍 Typechecking zer..."
             pnpm --filter zer exec tsc --noEmit 2>&1 || FAILED="$FAILED zer"
           fi
-          if [ "$TYPECHECK_ALL" = "true" ] || [ "$TOLOM" = "true" ]; then
+          if [ "$TOLOM" = "true" ] || [ "$SHARED" = "true" ]; then
             echo "🔍 Typechecking tolom..."
             pnpm --filter tolom exec tsc --noEmit 2>&1 || FAILED="$FAILED tolom"
           fi
-          if [ "$TYPECHECK_ALL" = "true" ] || [ "$ONOO" = "true" ]; then
+          if [ "$ONOO" = "true" ] || [ "$SHARED" = "true" ]; then
             echo "🔍 Typechecking onoo..."
             pnpm --filter onoo-web exec tsc --noEmit 2>&1 || FAILED="$FAILED onoo"
           fi
-          if [ "$TYPECHECK_ALL" = "true" ] || [ "$WEBSITE" = "true" ]; then
+          if [ "$WEBSITE" = "true" ] || [ "$SHARED" = "true" ]; then
             echo "🔍 Typechecking website..."
             pnpm --filter "@zuiio/website" exec tsc --noEmit 2>&1 || FAILED="$FAILED website"
           fi
-          if [ "$TYPECHECK_ALL" = "true" ] || [ "$AGENT_GW" = "true" ]; then
+          if [ "$AGENT_GW" = "true" ] || [ "$SHARED" = "true" ]; then
             echo "🔍 Typechecking agent-gateway..."
             pnpm --filter agent-gateway exec tsc --noEmit 2>&1 || FAILED="$FAILED agent-gateway"
           fi
-          if [ "$TYPECHECK_ALL" = "true" ] || [ "$ZUIIO_ID" = "true" ]; then
+          if [ "$ZUIIO_ID" = "true" ] || [ "$SHARED" = "true" ]; then
             echo "🔍 Typechecking zuiio-id..."
             pnpm --filter "@zuiio/id" exec tsc --noEmit 2>&1 || FAILED="$FAILED zuiio-id"
           fi
@@ -139,7 +139,7 @@ jobs:
             echo "❌ Typecheck failed for:$FAILED"
             exit 1
           fi
-          echo "✅ All changed apps passed typecheck"
+          echo "✅ All deploying apps passed typecheck"
 
   # ─── Deploy only changed apps ───
 
