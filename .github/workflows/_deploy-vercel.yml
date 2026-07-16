@@ -85,7 +85,7 @@ jobs:
         run: |
           mkdir -p .vercel
           printf '{"projectId":"%s","orgId":"%s"}\n' "$VERCEL_PROJECT_ID" "$VERCEL_ORG_ID" > .vercel/project.json
-          printf '{"$schema":"https://openapi.vercel.sh/vercel.json","framework":"nextjs","installCommand":"cd ../.. && pnpm install --frozen-lockfile","buildCommand":"cd ../.. && pnpm exec turbo run build --filter=%s"}\n' "${{ inputs.turbo-filter }}" > vercel.json
+          printf '{"$schema":"https://openapi.vercel.sh/vercel.json","framework":"nextjs","installCommand":"pnpm install --frozen-lockfile","buildCommand":"pnpm exec turbo run build --filter=%s"}\n' "${{ inputs.turbo-filter }}" > vercel.json
 
       - name: Pull Vercel environment
         run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
