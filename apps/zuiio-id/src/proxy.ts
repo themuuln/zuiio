@@ -32,14 +32,6 @@ export async function proxy(request: NextRequest) {
   const { url: supabaseUrl, anonKey } = getSupabaseEnv();
   const supabaseResponse = NextResponse.next({ request });
 
-  // Fast path: skip Supabase client creation + JWT validation when
-  // no session cookie exists (unauthenticated public routes like
-  // /login, /signup, /forgot-password).
-  const hasSessionCookie = request.cookies
-    .getAll()
-    .some((c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"));
-  if (!hasSessionCookie) return supabaseResponse;
-
   const supabase = createServerClient(supabaseUrl, anonKey, {
     cookies: {
       getAll() {
