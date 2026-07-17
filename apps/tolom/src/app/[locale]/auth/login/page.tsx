@@ -1,11 +1,9 @@
 "use client";
 
-import { Suspense } from "react";
-
 import { Eye, EyeOff, Loader2, LogIn } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { Suspense, useActionState, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -73,6 +71,7 @@ function LoginForm() {
   }, [state?.formError, isPending]);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [ssoLoading, setSsoLoading] = useState(false);
   const searchParams = useSearchParams();
   const redirectTo = searchParams?.get("redirectTo") ?? "";
 
@@ -265,8 +264,13 @@ function LoginForm() {
                 type="button"
                 variant="outline"
                 size="sm"
+                disabled={ssoLoading}
+                onClick={() => setSsoLoading(true)}
                 className="w-full flex items-center justify-center gap-1.5 h-8 min-h-0 cursor-pointer"
               >
+                {ssoLoading ? (
+                  <Loader2 className="size-3 animate-spin" />
+                ) : null}
                 <span className="uppercase tracking-wider font-mono text-[9px] font-bold">
                   {authT("ssoLogin")}
                 </span>

@@ -44,6 +44,7 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [ssoLoading, setSsoLoading] = useState(false);
 
   return (
     <div className="flex flex-col gap-6">
@@ -214,8 +215,13 @@ export default function SignupPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
+                disabled={ssoLoading}
+                onClick={() => setSsoLoading(true)}
+                className="w-full flex items-center justify-center gap-1.5"
               >
+                {ssoLoading ? (
+                  <Loader2 className="size-3 animate-spin" />
+                ) : null}
                 {authT("ssoSignup")}
               </Button>
             </Link>
