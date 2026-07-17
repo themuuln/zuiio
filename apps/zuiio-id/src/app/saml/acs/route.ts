@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { getIdpByEntityId, recordSamlAssertion } from "@/lib/saml-config";
+import { getIdpByEntityId, getSpConfig, recordSamlAssertion } from "@/lib/saml-config";
 import { extractIp, extractUserAgent } from "@/lib/supabase/audit";
 import { SAML } from "@node-saml/node-saml";
 
@@ -27,12 +27,33 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Create SAML instance and validate response
+    // First, decode and parse to get the Issuer for IdP lookup
+    const decoded = Buffer.from(samlResponse, "base64").toString("utf-8");
+
+    // Extract Issuer from XML (simplified parse for issuer extraction)
+    const issuerMatch = decoded.match(/<saml:Issuer[^>]*>([^<]+)<\/saml:Issuer>/i)
+      ?? decoded.match(/<saml2:Issuer[^>]*>([^<]+)<\/saml2:Issuer>/i);
+    const issuerEntityId = issuerMatch?.[1];
+
+    if (!issuerEntityId) {
+      return NextResponse.redirect(
+        new URL("/error?code=saml_no_issuer", request.url),
+      );
+    }
+
+    // Look up IdP from database
+    const idp = await getIdpByEntityId(issuerEntityId);
+    if (!idp) {
+      return NextResponse.redirect(
+        new URL("/error?code=saml_unknown_idp", request.url),
+      );
+    }
+
+    // Create SAML instance with IdP certificate from database
     const saml = new SAML({
-      // In production, configure with your IdP's metadata/certificates
-      idpCert: process.env.SAML_IDP_CERT ?? "",
-      issuer: process.env.SAML_ISSUER ?? "zuiio-id",
-      callbackUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/saml/acs`,
+      idpCert: idp.certificate,
+      issuer: getSpConfig().entity_id,
+      callbackUrl: getSpConfig().assertion_consumer_service_url,
       wantAssertionsSigned: true,
       wantAuthnResponseSigned: true,
     });
