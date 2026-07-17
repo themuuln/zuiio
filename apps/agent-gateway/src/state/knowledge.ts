@@ -6,6 +6,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { capture } from "@zuiio/capture";
+import { getRedis } from "@/lib/redis";
 
 /**
  * Knowledge base retrieval for agent context.
@@ -20,10 +21,6 @@ export interface KnowledgeChunk {
 	similarity: number;
 }
 
-/**
- * Search knowledge base for relevant content using vector similarity.
- * Falls back to text ILIKE search if no embedding is provided (or function unavailable).
- */
 export async function searchKnowledge(
 	supabase: SupabaseClient,
 	orgId: string,
@@ -33,6 +30,39 @@ export async function searchKnowledge(
 	const limit = options?.limit ?? 5;
 	const embedding = options?.embeddings;
 
+	// Check Redis cache first
+	const redis = getRedis();
+	const cacheKey = `knowledge:${orgId}:${limit}:${embedding ? "vec" : "txt"}:${query}`;
+	if (redis) {
+		try {
+			const cached = await redis.get<KnowledgeChunk[]>(cacheKey);
+			if (cached && Array.isArray(cached) && cached.length > 0) {
+				return cached;
+			}
+		} catch {
+			// Cache read failed — fall through to query
+		}
+	}
+
+	// Cache miss — run the query
+	const result = await runKnowledgeQuery(supabase, orgId, query, limit, embedding);
+
+	// Populate cache (fire-and-forget — never block response)
+	if (redis && result.length > 0) {
+		redis.set(cacheKey, result, { ex: 300 }).catch(() => {});
+	}
+
+	return result;
+}
+
+/** Inner query logic — shared between direct call and cache-miss path. */
+async function runKnowledgeQuery(
+	supabase: SupabaseClient,
+	orgId: string,
+	query: string,
+	limit: number,
+	embedding: number[] | undefined,
+): Promise<KnowledgeChunk[]> {
 	// Try pgvector similarity first
 	if (embedding && embedding.length === 1536) {
 		try {
@@ -73,7 +103,7 @@ export async function searchKnowledge(
 		sourceType: row.source_type as string,
 		title: row.title as string | null,
 		content: row.content as string,
-		similarity: 0.5, // placeholder for text match
+		similarity: 0.5,
 	}));
 }
 

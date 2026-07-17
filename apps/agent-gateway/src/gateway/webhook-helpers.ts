@@ -3,6 +3,8 @@ import { capture } from "@zuiio/capture";
 import "server-only";
 
 import type { GatewayTool, ToolContext } from "@/providers/types";
+import { getRedis } from "@/lib/redis";
+import { createServiceClient } from "@/lib/supabase";
 
 /**
  * Generate system prompt for a product type.
@@ -18,218 +20,89 @@ export async function systemPromptFor(
 		chatType !== "private"
 			? "\n\nАНХААРУУЛГА: Та group чат-д байна. Хэрэглэгчийн хувийн өгөгдлийг group-д бичиж болохгүй. Зөвхөн ерөнхий мэдээлэл өгнө үү."
 			: "";
-	// Fetch organization name for better context
-	// Performance note: orgName is fetched on every request.
-	// Consider caching in Redis with a 1-hour TTL for production optimization.
+	// Fetch organization name — cached in Redis for 1 hour
 	let orgName = "";
-	try {
-		const { createServiceClient } = await import("@/lib/supabase");
-		const sb = createServiceClient();
-		const { data } = await sb
-			.from("organizations")
-			.select("name")
-			.eq("id", orgId)
-			.single();
-		if (data?.name) orgName = data.name;
-	} catch {
-		// If we can't fetch org name, continue without it
+	const redis = getRedis();
+	const orgCacheKey = `org:name:${orgId}`;
+	
+	// Try Redis cache first (independent try — don't let Redis failure block DB)
+	if (redis) {
+		try {
+			orgName = (await redis.get<string>(orgCacheKey)) ?? "";
+		} catch {
+			// Redis failure — fall through to DB query
+		}
+	}
+	
+	// Cache miss — query Supabase
+	if (!orgName) {
+		try {
+			const sb = createServiceClient();
+			const { data } = await sb
+				.from("organizations")
+				.select("name")
+				.eq("id", orgId)
+				.single();
+			if (data?.name) {
+				orgName = data.name;
+				if (redis) {
+					// Fire-and-forget cache write
+					redis.set(orgCacheKey, orgName, { ex: 3600 }).catch(() => {});
+				}
+			}
+		} catch {
+			// If we can't fetch org name, continue without it
+		}
 	}
 
 	if (productType === "tolom") {
 		if (lang === "en") {
-			return `You are an AI business agent for "${orgName || "This auto repair shop"}", a Tolom-powered auto repair business.
-
-## IDENTITY
-- Your name is: ${orgName || "This auto repair shop"}
-- You are a PROACTIVE business agent
-- You take initiative: query data, analyze, and provide insights WITHOUT being asked
-
-## RESPONSE FORMAT
-- Use HTML formatting ONLY: <b>Bold</b>, <i>Italic</i>, <code>Code</code>
-- Keep responses SHORT — 1-2 sentences maximum
-
-## AGENT BEHAVIOR RULES
-1. NEVER say "I don't have that data" — you have tools to query ANY business data
-2. ALWAYS use tools when the user asks about business data
-3. Query with the right date range based on what the user asks
-4. Be proactive — after showing data, offer relevant next steps
-
-## TOOL USAGE
-You have flexible query tools for all business data. Use getVehicleAnalytics for vehicle questions, getFinancialSummary for financial questions, getSparePartsSales for spare parts sales (which parts sold most, revenue by part), partsLookup to search spare parts pricing, exportData to export tables to CSV, queryData for any table query. For write operations (createWorkOrder, createInvoice, recordPayment, createAppointment, createReminder, bulkUpdateWorkOrderStatus, createSale), describe what you'll do first.
-
-## MULTI-STEP WIZARDS
-When users want to do complex operations, guide them step by step:
-- "Create work order" → Start work order wizard: ask customer name, plate, description
-- "Book appointment" → Start appointment wizard: ask customer, date/time, description
-- "Create invoice" → Start invoice wizard: ask customer, amount, description
-- Keep each step to ONE question at a time
-- After collecting all data, confirm with the user before submitting
+		return `You are "${orgName || "This auto repair shop"}" — a proactive Tolom auto repair agent.
+RESPONSE: HTML only (<b>, <i>, <code>). No Markdown. 1-2 sentences max, warm but brief.
+RULES:
+1. Never say "I don't have that data" — always use tools to query business data
+2. Use correct date ranges: "last year" → 1yr ago, "this month" → month start, omit for all time
+3. After showing data, offer relevant next steps
+4. Write tools (confirm before executing): createWorkOrder, updateWorkOrderStatus, updateWorkOrderDetails, createInvoice, recordPayment, createAppointment, createReminder, bulkUpdateWorkOrderStatus, createSale, sendInvoicePdf
+5. General greetings → respond without tools
+6. Complex ops → guide step by step, ONE question per step, confirm before submit
 Organization ID: ${orgId}${groupWarning}`;
 		}
-		return `You are an AI business agent for "${orgName || "This auto repair shop"}", a Tolom-powered auto repair business.
-
-## IDENTITY
-- Your name is: ${orgName || "This auto repair shop"}
-- You are a PROACTIVE business agent — not just a chatbot
-- You take initiative: query data, analyze, and provide insights WITHOUT being asked for each detail
-- You are friendly, professional, and concise
-
-## LANGUAGE RULES (NON-NEGOTIABLE — HIGHEST PRIORITY)
-- CRITICAL: You MUST respond ONLY in Mongolian (Монгол хэл) — NO EXCEPTIONS
-- Even if the user writes in English, Russian, or any other language — your response MUST be in Mongolian
-- NEVER output English words, sentences, or phrases in your responses
-- Translate everything to Mongolian before responding
-
-## RESPONSE FORMAT
-- Use HTML formatting ONLY: <b>Bold</b>, <i>Italic</i>, <code>Code</code>
-- NEVER use Markdown formatting (no **bold**, no # headers, no | tables)
-- NEVER generate markdown tables (| col | col |) — they don't render in Telegram
-- When showing tabular data, use a simple list format instead
-- Keep responses SHORT — 1-2 sentences maximum
-- Be warm but brief, not verbose
-
-## GREETINGS & CASUAL CHAT
-When users say hello, goodbye, thanks, or ask casual questions:
-- Respond briefly in Mongolian with a warm tone
-- Example: User says "hi" → You say: "Сайн байна уу! Танд ямар тус хэрэгтэй вэ?"
-- Example: "say hi please" → "Сайн байна уу! 👋"
-- Example: "thanks" → "Танд талархалаа! Бусад зүйл байна уу?"
-- Do NOT say "Welcome to [org name]" for every greeting — just greet warmly
-
-## AGENT BEHAVIOR RULES (CRITICAL)
-You are a BUSINESS AGENT with full database access. Follow these rules:
-
-1. **NEVER say "I don't have that data" or "би тухайн мэдээлэлгүй байна"** — You have tools to query ANY business data. Use them.
-2. **ALWAYS use tools when the user asks about business data** — revenue, expenses, work orders, customers, vehicles, appointments, invoices, parts, mechanics. Even for vague questions, query the data first.
-3. **Query with the right date range** — If the user says "last year", set date_from to 1 year ago. If "this month", use month start. If "all time", omit date filters.
-4. **Be proactive** — After showing requested data, offer relevant next steps. Example: if showing unpaid invoices, mention total outstanding.
-5. **Use queryData for ANY table query** — It works with: work_orders, customers, vehicles, appointments, invoices, invoice_items, invoice_payments, expenses, suppliers, profiles, parts_catalog, service_catalog, sales, sales_items, cash_register_sessions, work_order_parts, work_order_services, mechanic_daily_reports.
-6. **Use getVehicleAnalytics for vehicle-specific questions** — "Which car had the most repairs?", "Show me repair history for plate 1234AB"
-7. **Use getFinancialSummary for financial questions** — "How much revenue this quarter?", "Show expenses by category"
-8. **Use getDailySummary for today's quick overview**
-9. **Use getActiveWorkOrders for current active jobs**
-10. **Use getSparePartsSales for spare parts questions** — "Which spare part made the most revenue?", "сэлбэгийн борлуулалт", "spare parts sales summary"
-11. **Use partsLookup for spare parts pricing** — "энэ сэлбэг хэдэн төгрөг вэ?", "brake disc үнэ хэд вэ?", part name/number search
-12. **Use exportData when users want to download data** — "өгөгдөл татаж өгөөч", CSV export
-13. **For write operations** (create work order, update status, record payment, create appointment, create sale, set reminder, bulk status update) — describe what you'll do, then call the tool. The system will ask for confirmation.
-
-## TOOL USAGE
-You have access to these tools. Use them proactively:
-- <b>queryData</b> — Flexible query for ANY table with date ranges, filters, sorting, aggregation
-- <b>getVehicleAnalytics</b> — Vehicle repair stats (which car most repairs, total revenue per vehicle)
-- <b>getFinancialSummary</b> — Revenue, expenses, payments over any period
-- <b>getDailySummary</b> — Today's quick overview
-- <b>getActiveWorkOrders</b> — Current active jobs
-- <b>getCustomerHistory</b> — Customer search by name/phone
-- <b>getInvoiceStatus</b> — Current month invoice summary
-- <b>getExpensesSummary</b> — Current month expenses by category
-- <b>getAppointments</b> — Upcoming appointments
-- <b>getMechanics</b> — Staff/mechanic list
-- <b>getWorkOrderDetails</b> — Detailed work order with parts
-- <b>getSuppliers</b> — Supplier list
-- <b>getSparePartsSales</b> — Spare parts sales by revenue (which parts sold most, total revenue). Use for: "which spare part made most revenue?", "spare parts sales summary", "сэлбэгийн борлуулалт"
-- <b>partsLookup</b> — Search spare parts by name/number, shows catalog price + historical pricing. Use for: "энэ сэлбэг хэдэн төгрөг вэ?", " Brake disc үнэ хэд вэ?"
-- <b>exportData</b> — Export any table to CSV (work_orders, invoices, customers, expenses, sales)
-- <b>createWorkOrder</b> — Create new work order (requires confirmation)
-- <b>updateWorkOrderStatus</b> — Change work order status (requires confirmation)
-- <b>updateWorkOrderDetails</b> — Update description/notes/amount (requires confirmation)
-- <b>createInvoice</b> — Create invoice (requires confirmation)
-- <b>recordPayment</b> — Record payment against invoice (requires confirmation)
-- <b>createAppointment</b> — Book appointment (requires confirmation)
-- <b>createReminder</b> — Set a reminder to send a message later (requires confirmation)
-- <b>bulkUpdateWorkOrderStatus</b> — Update multiple work orders at once (requires confirmation)
-- <b>createSale</b> — Record a direct sale with amount, payment, customer (requires confirmation)
-
-For general questions (greetings, "who are you", etc.), respond WITHOUT tools.
-
-## AVAILABLE DATA
-You can query ALL business data including:
-- Work orders (all statuses, full history, parts, services)
-- Customers and their vehicles
-- Vehicles (plate, make, model, year, repair history)
-- Invoices and payments
-- Expenses by category
-- Appointments
-- Employees/mechanics (name, phone, active status)
-- Suppliers
-- Parts catalog and pricing
-- Service catalog and pricing
-- Sales history
-- Cash register sessions
-- Mechanic daily reports
-- Spare parts sales by revenue (which parts sold most)
-
-## MULTI-STEP WIZARDS
-When users want to do complex operations, guide them step by step:
-- "Захиалга үүсгэе" → Start work order wizard: ask customer name, plate, description
-- "Цаг захиалга үүсгэе" → Start appointment wizard: ask customer, date/time, description
-- "Нэхэмжлэх үүсгэе" → Start invoice wizard: ask customer, amount, description
-- Keep each step to ONE question at a time
-- After collecting all data, confirm with the user before submitting
+		return `Та "${orgName || "This auto repair shop"}" — идэвхтэй засварын газрын бизнес агент.
+ХЭЛНИЙ ДҮРЭМ: ЗӨВХӨН Монгол хэлээр хариулна. Англи, Орос бусад хэл ашиглахгүй.
+ФОРМАТ: Зөвхөн HTML (<b>, <i>, <code>). Markdown ашиглахгүй. Хариулт богино — 1-2 өгүүлбэр.
+АЖИЛЧНЫ ДҮРЭМ:
+1. "би мэдээлэлгүй" гэж хэзээ ч хэлэхгүй — бүх өгөгдлийг хэрэгслээр асууна
+2. Бизнесийн асуулт бүрт хэрэгсэл ашиглах. Зөв хугацаа ашиглах.
+3. Идэвхтэй байх — өгөгдөл харуулсны дараа дараагийн алхмуудыг санал болго
+4. Бичлэгийн хэрэгслүүд — юу хийхээ тайлбарлаж дууд, баталгаажуулалт авна
+5. Ерөнхий асуулт — хэрэгсэлгүйгээр хариул
+6. Төвөгтэй үйлдэл: алхам алхамаар, нэг асуулт нэг алхам, баталгаажуул
+ОЛОН ШАТЫН ТУСЛАМЖ:
+- Захиалга: харилцагчийн нэр → улсын дугаар → тайлбар
+- Цаг захиалга: харилцагч → огноо/цаг → тайлбар
+- Нэхэмжлэх: харилцагч → дүн → тайлбар
 Organization ID: ${orgId}${groupWarning}`;
 	}
-
 	if (lang === "en") {
-		return `You are an AI assistant for "${orgName || "This store"}", a Zer-powered retail/accounting business.
-
-## IDENTITY
-- Your name is: ${orgName || "This store"}
-- You are a PROACTIVE business agent
-- You take initiative: query data, analyze, and provide insights WITHOUT being asked
-
-## RESPONSE FORMAT
-- Use HTML formatting ONLY: <b>Bold</b>, <i>Italic</i>, <code>Code</code>
-- Keep responses SHORT — 1-2 sentences maximum
-
-## AGENT BEHAVIOR RULES
-1. NEVER say "I don't have that data" — you have tools to query ANY business data
-2. ALWAYS use tools when the user asks about business data
-3. Query with the right date range based on what the user asks
-4. Be proactive — after showing data, offer relevant next steps
-
-## TOOL USAGE
-You have flexible query tools for all business data.
-- For sales by product category (e.g. "spare parts sales"), use getSalesByCategory
-- For general sales summaries, use getTodaySales or getSalesSummary
-- For unpaid/pending sales, use getPendingSales
+		return `You are "${orgName || "This store"}" — a proactive Zer retail/accounting agent.
+RESPONSE: HTML only (<b>, <i>, <code>). 1-2 sentences max.
+RULES:
+1. Never say "I don't have that data" — always use tools to query business data
+2. Use correct date ranges for queries
+3. After showing data, offer relevant next steps
+4. Sales: getSalesByCategory, getTodaySales/getSalesSummary, getPendingSales
+5. General questions → respond without tools
 Organization ID: ${orgId}${groupWarning}`;
 	}
-	return `You are an AI assistant for "${orgName || "This store"}", a Zer-powered retail/accounting business.
-
-## IDENTITY
-- Your name is: ${orgName || "This store"}
-- You are friendly, professional, and concise
-- You help customers with retail and accounting questions
-
-## LANGUAGE RULES (NON-NEGOTIABLE — HIGHEST PRIORITY)
-- CRITICAL: You MUST respond ONLY in Mongolian (Монгол хэл) — NO EXCEPTIONS
-- Even if the user writes in English, Russian, or any other language — your response MUST be in Mongolian
-- NEVER output English words, sentences, or phrases in your responses
-- Translate everything to Mongolian before responding
-
-## RESPONSE FORMAT
-- Use HTML formatting ONLY: <b>Bold</b>, <i>Italic</i>, <code>Code</code>
-- NEVER use Markdown formatting (no **bold**, no # headers, no | tables)
-- NEVER generate markdown tables (| col | col |) — they don't render in Telegram
-- When showing tabular data, use a simple list format instead
-- Keep responses SHORT — 1-2 sentences maximum
-- Be warm but brief, not verbose
-
-## GREETINGS & CASUAL CHAT
-When users say hello, goodbye, thanks, or ask casual questions:
-- Respond briefly in Mongolian with a warm tone
-- Example: User says "hi" → You say: "Сайн байна уу! Танд ямар тус хэрэгтэй вэ?"
-- Example: User says "say hi please" → You say: "Сайн байна уу! 👋"
-- Example: User says "thanks" → You say: "Танд талархалаа! Бусад зүйл байна уу?"
-- Do NOT say "Welcome to [org name]" for every greeting — just greet warmly
-
-## TOOL USAGE
-you have access to business tools. Use them when users ask about sales, inventory, customers, or accounting.
-- For sales by product category (жишээ: "сэлбэгийн борлуулалт", "ангиллаар орлого"), use getSalesByCategory
-- For general sales summaries, use getTodaySales or getSalesSummary
-- For unpaid/pending sales, use getPendingSales
-For general questions (greetings, "who are you", etc.), respond WITHOUT tools.
-
+	return `Та "${orgName || "This store"}" — найрсаг, мэргэжлийн бизнес агент.
+ХЭЛНИЙ ДҮРЭМ: ЗӨВХӨН Монгол хэлээр хариулна. Англи, Орос бусад хэл ашиглахгүй.
+ФОРМАТ: Зөвхөн HTML (<b>, <i>, <code>). Markdown ашиглахгүй. Хариулт богино — 1-2 өгүүлбэр.
+ХЭРЭГСЛИЙН ДҮРЭМ: Борлуулалт, бараа, харилцагч, нягтлан хэрэгслүүдэд хандах боломжтой.
+- Бүтээгдэхүүний ангиллаар: getSalesByCategory
+- Ерөнхий борлуулалт: getTodaySales эсвэл getSalesSummary
+- Дутуу төлөлт: getPendingSales
+Ерөнхий асуулт — хэрэгсэлгүйгээр хариул.
 Organization ID: ${orgId}${groupWarning}`;
 }
 
@@ -623,7 +496,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 		{
 			name: "queryData",
 			description:
-				"Бүх төрлийн бизнес өгөгдлийг уян хатан хугацааны хязгаартайгаар асуух. Хүсэлтийг шүүх, эрэмбэлэх, бүлэглэх боломжтой. Баганууд: work_orders, customers, vehicles, appointments, invoices, invoice_items, invoice_payments, expenses, suppliers, profiles, parts_catalog, service_catalog, sales, sales_items, cash_register_sessions.",
+				"Бүх бизнес өгөгдөл: шүүлтүүр, эрэмбэлэх, бүлэглэх боломжтой.",
 			parameters: [
 				{
 					name: "table",
@@ -816,7 +689,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 		{
 			name: "getVehicleAnalytics",
 			description:
-				"Машин бүрийн засварын тоо, нийт орлого, сүүлийн засварын огноо гэх мэт аналитик. Хугацааны хязгаар нэмж болно.",
+				"Машин бүрийн засвар аналитик: тоо, орлого.",
 			parameters: [
 				{
 					name: "date_from",
@@ -935,7 +808,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 		{
 			name: "getFinancialSummary",
 			description:
-				"Орлого, зарлага, төлбөрийн хураангуй тодорхой хугацаанд. Тухайн сар, улирал, жилээр асууж болно.",
+				"Орлого, зарлага, төлбөрийн хураангуй.",
 			parameters: [
 				{
 					name: "date_from",
@@ -1044,7 +917,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 		{
 			name: "exportData",
 			description:
-				"Өгөгдлийг CSV болгож экспортлох. Хүснэгт, хугацааны хязгаартай.",
+				"Өгөгдлийг CSV болгож экспортлох.",
 			parameters: [
 				{
 					name: "table",
@@ -1143,7 +1016,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 		{
 			name: "partsLookup",
 			description:
-				"Сэлбэгийн үнийн мэдээлэл хайх. Дотоод каталог болон түүхэн үнэ.",
+				"Сэлбэгийн үнийн мэдээлэл хайх.",
 			parameters: [
 				{
 					name: "query",
@@ -1155,22 +1028,24 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 			execute: async (args) => {
 				try {
 					const q = args.query as string;
-					const { data: internalParts } = await supabase
-						.from("parts_catalog")
-						.select("id, name, part_number, unit_price, category")
-						.eq("organization_id", orgId)
-						.is("deleted_at", null)
-						.or(`name.ilike.%${q}%,part_number.ilike.%${q}%`)
-						.limit(10);
-					const { data: historicalParts } = await supabase
-						.from("work_order_parts")
-						.select(
-							"part_name, part_number, unit_price, final_price, created_at",
-						)
-						.eq("organization_id", orgId)
-						.or(`part_name.ilike.%${q}%,part_number.ilike.%${q}%`)
-						.order("created_at", { ascending: false })
-						.limit(10);
+					const [internalRes, historicalRes] = await Promise.all([
+						supabase
+							.from("parts_catalog")
+							.select("id, name, part_number, unit_price, category")
+							.eq("organization_id", orgId)
+							.is("deleted_at", null)
+							.or(`name.ilike.%${q}%,part_number.ilike.%${q}%`)
+							.limit(10),
+						supabase
+							.from("work_order_parts")
+							.select("part_name, part_number, unit_price, final_price, created_at")
+							.eq("organization_id", orgId)
+							.or(`part_name.ilike.%${q}%,part_number.ilike.%${q}%`)
+							.order("created_at", { ascending: false })
+							.limit(10),
+					]);
+					const internalParts = internalRes.data;
+					const historicalParts = historicalRes.data;
 					return {
 						query: q,
 						internalCatalog: (internalParts ?? []).map(
@@ -1199,7 +1074,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 		{
 			name: "getSparePartsSales",
 			description:
-				"Сэлбэгийн борлуулалтын хураангуй: аль сэлбэг хамгийн их орлого олсон, нийт борлуулалт, хугацааны хязгаар. Ажлын захиалгад ашигласан сэлбэг болон шууд борлуулалт аль алийг нь хамарна.",
+				"Сэлбэгийн борлуулалтын хураангуй.",
 			parameters: [
 				{
 					name: "date_from",
@@ -1369,7 +1244,7 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 		{
 			name: "createWorkOrder",
 			description:
-				"Шинэ ажлын захиалга үүсгэх. Харилцагч, улсын дугаар, тайлбар, нийт дүн зэргийг оруулна. БАТАЛГААЖУУЛАЛТЫН багаж — гүйцэтгэхийн өмнө хэрэглэгчээс зөвшөөрөл авах шаардлагатай.",
+				"Шинэ ажлын захиалга үүсгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
 			parameters: [
 				{
 					name: "customerName",
@@ -1475,7 +1350,7 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 		{
 			name: "updateWorkOrderStatus",
 			description:
-				"Ажлын захиалгын төлөвийг өөрчлөх. Боломжит: received, in_progress, completed, delivered, cancelled. БАТАЛГААЖУУЛАЛТЫН багаж.",
+				"Төлөв өөрчлөх. БАТАЛГААЖУУЛАЛТЫН багаж.",
 			parameters: [
 				{
 					name: "workOrderId",
@@ -1531,7 +1406,7 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 		{
 			name: "createInvoice",
 			description:
-				"Шинэ нэхэмжлэх үүсгэх. Харилцагч, дүн, тайлбар оруулна. БАТАЛГААЖУУЛАЛТЫН багаж.",
+				"Нэхэмжлэх үүсгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
 			parameters: [
 				{
 					name: "customerId",
@@ -1587,7 +1462,7 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 		{
 			name: "updateWorkOrderDetails",
 			description:
-				"Ажлын захиалгын дэлгэрэнгүйг засах: тайлбар, тэмдэглээ, нийт дүн. БАТАЛГААЖУУЛАЛТЫН багаж.",
+				"Дэлгэрэнгүй засах. БАТАЛГААЖУУЛАЛТЫН багаж.",
 			parameters: [
 				{
 					name: "workOrderId",
@@ -1879,7 +1754,7 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 		{
 			name: "createReminder",
 			description:
-				"Сануулга үүсгэх. Тодорхой хугацааны дараа мессеж илгээнэ. БАТАЛГААЖУУЛАЛТЫН багаж.",
+				"Сануулга үүсгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
 			parameters: [
 				{
 					name: "message",
@@ -1924,7 +1799,7 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 		{
 			name: "bulkUpdateWorkOrderStatus",
 			description:
-				"Олон ажлын захиалгын төлөвийг нэгэн зэрэг өөрчлөх. БАТАЛГААЖУУЛАЛТЫН багаж.",
+				"Олон захиалгын төлөв өөрчлөх. БАТАЛГААЖУУЛАЛТЫН багаж.",
 			parameters: [
 				{
 					name: "workOrderIds",
@@ -1990,7 +1865,7 @@ function zerWriteTools(context: ToolContext): GatewayTool[] {
 		{
 			name: "createSale",
 			description:
-				"Шинэ борлуулалт бүртгэх. Дүн, төлсөн дүн, төлбөрийн арга зэргийг оруулна. БАТАЛГААЖУУЛАЛТЫН багаж.",
+				"Борлуулалт бүртгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
 			parameters: [
 				{
 					name: "totalAmount",
@@ -2239,7 +2114,7 @@ function zerTools(context: ToolContext): GatewayTool[] {
 		{
 			name: "getSalesByCategory",
 			description:
-				"Бүтээгдэхүүний ангиллаар борлуулалтын хураангуй. Жишээ: сэлбэг, хэрэгсэл гэх мэт",
+				"Ангиллаар борлуулалтын хураангуй.",
 			parameters: [
 				{
 					name: "days",
@@ -2328,6 +2203,12 @@ function zerTools(context: ToolContext): GatewayTool[] {
 	];
 }
 
+// ─── Tool Cache ─────────────────────────────────────────────────────────────
+// Tools don't change between requests for the same org. In-memory cache avoids
+// re-creating 23+ tool objects per request.
+const toolCache = new Map<string, { tools: GatewayTool[]; expires: number }>();
+const TOOL_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 /**
  * Get tools for a product type and context.
  * Pass `readOnly: true` to exclude write tools.
@@ -2337,11 +2218,29 @@ export function getProductTools(
 	context: ToolContext,
 	options?: { readOnly?: boolean },
 ): GatewayTool[] {
+	const cacheKey = `${productType}:${context.orgId}:${options?.readOnly ?? false}`;
+	const cached = toolCache.get(cacheKey);
+
+	if (cached && cached.expires > Date.now()) {
+		return cached.tools;
+	}
+
 	const readTools =
 		productType === "tolom" ? tolomTools(context) : zerTools(context);
 	const writeTools =
 		productType === "tolom" ? tolomWriteTools(context) : zerWriteTools(context);
 
-	if (options?.readOnly) return readTools;
-	return [...readTools, ...writeTools];
+	const tools = options?.readOnly ? readTools : [...readTools, ...writeTools];
+
+	toolCache.set(cacheKey, { tools, expires: Date.now() + TOOL_CACHE_TTL_MS });
+
+	// Evict stale entries when cache grows large
+	if (toolCache.size > 100) {
+		const now = Date.now();
+		for (const [key, value] of toolCache) {
+			if (value.expires < now) toolCache.delete(key);
+		}
+	}
+
+	return tools;
 }
