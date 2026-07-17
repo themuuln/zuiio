@@ -1,11 +1,8 @@
-"use client";
-
 import Image from "next/image";
 import { useState } from "react";
 
 interface ConsentFormProps {
   authorizationId: string;
-  projectRef: string;
   clientName: string;
   clientLogoUri?: string;
   scope: string;
@@ -14,7 +11,6 @@ interface ConsentFormProps {
 
 export function ConsentForm({
   authorizationId,
-  projectRef,
   clientName,
   clientLogoUri,
   scope,
@@ -47,7 +43,6 @@ export function ConsentForm({
         body: JSON.stringify({
           authorization_id: authorizationId,
           decision,
-          project_ref: projectRef,
         }),
       });
 
@@ -78,66 +73,78 @@ export function ConsentForm({
 
   return (
     <div className="animate-fade-in rounded-lg border border-border bg-card p-6">
-      <div className="mb-5 flex items-center gap-3">
-        {clientLogoUri ? (
-          <Image
-            src={clientLogoUri}
-            alt={clientName}
-            width={40}
-            height={40}
-            className="rounded-lg"
-          />
-        ) : (
-          <div
-            className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-sm font-semibold text-primary"
-          >
-            {initial}
-          </div>
-        )}
+      <div className="flex flex-col items-center gap-4 text-center">
+        {/* Client avatar */}
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+          {clientLogoUri ? (
+            <Image
+              src={clientLogoUri}
+              alt={clientName}
+              width={48}
+              height={48}
+              className="rounded-full"
+            />
+          ) : (
+            <span className="text-xl font-bold text-primary">{initial}</span>
+          )}
+        </div>
+
+        {/* Client info */}
         <div>
-          <p className="text-sm font-medium text-foreground">{clientName}</p>
+          <h2 className="text-sm font-medium text-foreground">
+            {clientName}
+          </h2>
           <p className="text-xs text-muted-foreground">
-            Зөвшөөрөл хүсч байна
+            Таны эрхийг хүсч байна
           </p>
         </div>
-      </div>
 
-      <div className="mb-5 space-y-2">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          Нэвтрэх эрх
-        </p>
-        {requestedScopes.map((s) => (
-          <div key={s} className="flex items-center gap-2">
-            <span
-              className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${scopeColors[s] ?? "bg-muted text-muted-foreground"}`}
-            >
-              {scopeDescriptions[s] ?? s}
-            </span>
+        {/* Requested permissions */}
+        {requestedScopes.length > 0 && (
+          <div className="w-full space-y-2">
+            {requestedScopes.map((s) => (
+              <div
+                key={s}
+                className={`flex items-center gap-2 rounded-md px-3 py-2 text-xs ${scopeColors[s] ?? "bg-muted text-muted-foreground"}`}
+              >
+                <span className="font-medium">{s}</span>
+                <span className="opacity-70">
+                  {scopeDescriptions[s] ?? s}
+                </span>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        )}
 
-      {error && (
-        <p className="mb-4 text-xs text-destructive">{error}</p>
-      )}
+        {/* Error message */}
+        {error && (
+          <p className="text-xs text-destructive">{error}</p>
+        )}
 
-      <div className="flex gap-3">
-        <button
-          type="button"
-          onClick={() => handleDecision("deny")}
-          disabled={loading !== null}
-          className="flex-1 rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50"
-        >
-          {loading === "deny" ? "Татгалзаж байна..." : "Татгалзах"}
-        </button>
-        <button
-          type="button"
-          onClick={() => handleDecision("approve")}
-          disabled={loading !== null}
-          className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-        >
-          {loading === "approve" ? "Зөвшөөрч байна..." : "Зөвшөөрөх"}
-        </button>
+        {/* Action buttons */}
+        <div className="flex w-full gap-3 pt-2">
+          <button
+            type="button"
+            disabled={loading !== null}
+            onClick={() => handleDecision("deny")}
+            className="flex-1 rounded-md border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+          >
+            {loading === "deny" ? "Татгалзаж байна..." : "Татгалзах"}
+          </button>
+          <button
+            type="button"
+            disabled={loading !== null}
+            onClick={() => handleDecision("approve")}
+            className="flex-1 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+          >
+            {loading === "approve" ? "Зөвшөөрч байна..." : "Зөвшөөрөх"}
+          </button>
+        </div>
+
+        {/* Powered by */}
+        <p className="pt-2 text-[10px] text-muted-foreground/50">
+          Zuiio ID-аар хянасан
+        </p>
       </div>
     </div>
   );

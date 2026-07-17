@@ -1,19 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createProjectClient } from "@/lib/supabase/external";
 import { auditEvent, extractIp, extractUserAgent } from "@/lib/supabase/audit";
 import type { AuthErrorCode } from "@/lib/errors";
-
-/**
- * Default project ref for the OAuth Server.
- * Matches the default in consent/page.tsx — see that file for rationale.
- */
-const DEFAULT_PROJECT_REF = "fhzuolncswccxkcqzclg"; // Tolom
 
 interface DecisionBody {
   authorization_id?: string;
   decision?: "approve" | "deny";
-  project_ref?: string;
 }
 
 /**
@@ -23,12 +15,12 @@ interface DecisionBody {
  * Uses the Supabase SDK's approveAuthorization / denyAuthorization methods
  * with skipBrowserRedirect: true so the client handles navigation.
  *
- * Body: { authorization_id: string, decision: "approve" | "deny", project_ref?: string }
+ * Body: { authorization_id: string, decision: "approve" | "deny" }
  * Success: { redirect_to: string }
  * Failure: { error_code: AuthErrorCode } with appropriate HTTP status
  *
- * IMPORTANT: The authorization was created on the originating project's
- * Supabase, so we must use that project's client for the approve/deny call.
+ * The OAuth Server is enabled on THIS project (Zuiio ID), so we use
+ * createClient() directly — no cross-project client needed.
  */
 export async function POST(request: NextRequest) {
   const ip = extractIp(request.headers);
@@ -41,7 +33,7 @@ export async function POST(request: NextRequest) {
     return errorResponse("consent_failed", 400);
   }
 
-  const { authorization_id, decision, project_ref } = body;
+  const { authorization_id, decision } = body;
 
   if (!authorization_id || !decision) {
     return errorResponse("consent_failed", 400);
@@ -51,14 +43,8 @@ export async function POST(request: NextRequest) {
     return errorResponse("consent_failed", 400);
   }
 
-  // Create a client for the originating project's Supabase.
-  // The authorization was created there, so the OAuth Server API lives there.
-  const effectiveRef = project_ref ?? DEFAULT_PROJECT_REF;
-  const supabase = await createProjectClient(effectiveRef);
-
-  if (!supabase) {
-    return errorResponse("consent_failed", 500);
-  }
+  // Use Zuiio ID's own Supabase client — the OAuth Server is enabled here.
+  const supabase = await createClient();
 
   const {
     data: { session },
@@ -83,9 +69,10 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     // Protocol-level denial follows the SDK's registered client redirect.
-    if (data && "redirect_url" in data && data.redirect_url) {
+    const redirectData = data as { redirect_url?: string } | null;
+    if (redirectData?.redirect_url) {
       return NextResponse.json(
-        { redirect_to: data.redirect_url },
+        { redirect_to: redirectData.redirect_url },
         { status: 403 },
       );
     }
