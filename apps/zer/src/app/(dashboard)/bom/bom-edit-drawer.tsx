@@ -87,8 +87,8 @@ export function BomEditDrawer({
     queryKey: [...bomKeys.all(), bom.id],
     queryFn: async () => {
       const result = await getBom(bom.id);
-      if (result?.error) throw new Error(result.error);
-      return result?.data ?? null;
+      if ("data" in result) return result.data;
+      throw new Error(result.error);
     },
     enabled: open,
   });
@@ -355,6 +355,9 @@ export function BomEditDrawer({
                           onValueChange={(next) =>
                             itemField.onChange(next?.id ?? "")
                           }
+                          itemToStringLabel={(p) => p?.name ?? ""}
+                          inputValue={selected?.name ?? ""}
+                          onInputValueChange={() => {}}
                         >
                           <ComboboxInput
                             placeholder="Материал сонгох..."
@@ -419,9 +422,16 @@ export function BomEditDrawer({
 
                   <div className="space-y-1">
                     <FieldLabel className="text-xs">Нэгж өртөг</FieldLabel>
-                    <CurrencyInput
-                      className="text-sm"
-                      {...register(`items.${index}.estimated_unit_cost`)}
+                    <Controller
+                      control={control}
+                      name={`items.${index}.estimated_unit_cost`}
+                      render={({ field }) => (
+                        <CurrencyInput
+                          className="text-sm"
+                          value={field.value ?? undefined}
+                          onChange={field.onChange}
+                        />
+                      )}
                     />
                   </div>
                 </div>

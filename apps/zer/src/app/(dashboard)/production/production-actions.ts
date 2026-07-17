@@ -48,7 +48,7 @@ export interface ProductionMaterialData {
   required_width_mm: number | null;
   required_length_mm: number | null;
   required_thickness_mm: number | null;
-  estimated_unit_cost_snapshot: number;
+  estimated_unit_cost_snapshot: number | null;
 }
 
 export interface ProductionOrderDetail {
@@ -67,8 +67,8 @@ export interface ProductionOrderDetail {
   planned_end_date: string | null;
   actual_start_at: string | null;
   actual_end_at: string | null;
-  estimated_cost_snapshot: number;
-  completed_actual_cost: number;
+  estimated_cost_snapshot: number | null;
+  completed_actual_cost: number | null;
   notes: string | null;
   created_by: string | null;
   created_at: string;
@@ -422,7 +422,7 @@ export async function createProductionOrder(input: CreateProductionOrderInput) {
     };
   }
 
-  revalidateEntities(["production_orders"]);
+  revalidateEntities(["production"]);
 
   return { data: { id: order.id, order_number: orderNumber } };
 }
@@ -534,14 +534,11 @@ export async function updateProductionOrderStatus(
       };
     }
   }
-  const updateData: Record<string, unknown> = { status: input.new_status };
-
-  // Set timestamps based on transition
-  if (input.new_status === "in_progress") {
-    updateData.actual_start_at = new Date().toISOString();
-  } else if (input.new_status === "completed") {
-    updateData.actual_end_at = new Date().toISOString();
-  }
+  const updateData = {
+    status: input.new_status,
+    ...(input.new_status === "in_progress" ? { actual_start_at: new Date().toISOString() } : {}),
+    ...(input.new_status === "completed" ? { actual_end_at: new Date().toISOString() } : {}),
+  };
 
   const { error: updateError } = await withDbCapture(
     "production: updateStatus",
@@ -558,7 +555,7 @@ export async function updateProductionOrderStatus(
     };
   }
 
-  revalidateEntities(["production_orders"]);
+  revalidateEntities(["production"]);
 
   return { success: true };
 }
@@ -603,17 +600,12 @@ export async function advanceStage(input: AdvanceStageInput) {
     };
   }
 
-  const updateData: Record<string, unknown> = { status: input.new_status };
-
-  if (input.new_status === "in_progress") {
-    updateData.started_at = new Date().toISOString();
-  } else if (input.new_status === "completed") {
-    updateData.completed_at = new Date().toISOString();
-  }
-
-  if (input.notes !== undefined) {
-    updateData.notes = input.notes;
-  }
+  const updateData = {
+    status: input.new_status,
+    ...(input.new_status === "in_progress" ? { started_at: new Date().toISOString() } : {}),
+    ...(input.new_status === "completed" ? { completed_at: new Date().toISOString() } : {}),
+    ...(input.notes !== undefined ? { notes: input.notes } : {}),
+  };
 
   const { error: updateError } = await withDbCapture(
     "production: advanceStage",
@@ -628,7 +620,7 @@ export async function advanceStage(input: AdvanceStageInput) {
     return { error: "Үйлдвэрлэлийн шат шинэчлэхэд алдаа гарлаа." };
   }
 
-  revalidateEntities(["production_orders"]);
+  revalidateEntities(["production"]);
 
   return { success: true };
 }
@@ -683,7 +675,7 @@ export async function cancelProductionOrder(orderId: string) {
     };
   }
 
-  revalidateEntities(["production_orders"]);
+  revalidateEntities(["production"]);
 
   return { success: true };
 }

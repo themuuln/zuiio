@@ -32,9 +32,11 @@ import { formatCurrency, formatDate } from "@/lib/format";
 import { laborKeys, productionKeys } from "@/lib/query/keys";
 import {
   addLaborRecord,
+  getStageLaborSummary,
   getOrderCostSummary,
   listActiveEmployees,
   removeLaborRecord,
+  type LaborRecord,
 } from "./labor-actions";
 import { issueMaterials, returnMaterials } from "./material-actions";
 import type { ProductionStageData } from "./production-actions";
@@ -167,7 +169,7 @@ function LaborStageCard({
       {/* Labor records list */}
       {records.length > 0 ? (
         <div className="space-y-1">
-          {records.map((record) => (
+          {records.map((record: LaborRecord) => (
             <div
               key={record.id}
               className="flex items-center justify-between text-sm bg-muted/30 rounded px-3 py-2"
@@ -181,7 +183,7 @@ function LaborStageCard({
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-medium">
-                  {formatCurrency(record.labor_cost)}
+                  {formatCurrency(record.labor_cost ?? 0)}
                 </span>
                 {canAddLabor && stage.status === "in_progress" && (
                   <Button
@@ -1016,7 +1018,7 @@ export function ProductionDetailDrawer({
                     Төлөвлөсөн зардал:
                   </span>
                   <span className="text-sm font-medium">
-                    {formatCurrency(order.estimated_cost_snapshot)}
+                    {formatCurrency(order.estimated_cost_snapshot ?? 0)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-3">
@@ -1047,7 +1049,7 @@ export function ProductionDetailDrawer({
             {/* Revenue & Profit */}
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Орлого ба ашиг</h4>
-              {order.sale_item_id ? (
+              {order.sale_item_id && costSummary ? (
                 <div className="rounded-lg border divide-y">
                   <div className="flex items-center justify-between p-3">
                     <span className="text-sm text-muted-foreground">

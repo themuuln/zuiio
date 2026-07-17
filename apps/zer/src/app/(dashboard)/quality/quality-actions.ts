@@ -105,7 +105,7 @@ export async function createQualityCheck(input: CreateQualityCheckInput) {
   if ("error" in ctx) return ctx;
   const { supabase, organizationId, userId } = ctx;
 
-  const insertData: Record<string, unknown> = {
+  const insertData = {
     organization_id: organizationId,
     production_order_id: input.production_order_id,
     production_stage_id: input.production_stage_id ?? null,

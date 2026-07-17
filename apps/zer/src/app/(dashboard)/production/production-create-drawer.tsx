@@ -318,6 +318,9 @@ export function ProductionCreateDrawer({
                       field.onChange(next?.id ?? "");
                       reset((prev) => ({ ...prev, bom_id: "" }));
                     }}
+                    itemToStringLabel={(p) => p?.name ?? ""}
+                    inputValue={selected?.name ?? ""}
+                    onInputValueChange={() => {}}
                   >
                     <ComboboxInput
                       id="production-product"
@@ -361,6 +364,9 @@ export function ProductionCreateDrawer({
                     items={boms}
                     value={selected ?? null}
                     onValueChange={(next) => field.onChange(next?.id ?? "")}
+                    itemToStringLabel={(b) => b ? `BOM v${b.version}` : ""}
+                    inputValue={selected ? `BOM v${selected.version}` : ""}
+                    onInputValueChange={() => {}}
                   >
                     <ComboboxInput
                       id="production-bom"
@@ -447,6 +453,9 @@ export function ProductionCreateDrawer({
                     items={branches}
                     value={selected ?? null}
                     onValueChange={(next) => field.onChange(next?.id ?? "")}
+                    itemToStringLabel={(b) => b?.name ?? ""}
+                    inputValue={selected?.name ?? ""}
+                    onInputValueChange={() => {}}
                   >
                     <ComboboxInput
                       id="production-branch"

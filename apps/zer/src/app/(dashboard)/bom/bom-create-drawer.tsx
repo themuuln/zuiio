@@ -245,6 +245,9 @@ export function BomCreateDrawer({
                     items={products}
                     value={selected ?? null}
                     onValueChange={(next) => field.onChange(next?.id ?? "")}
+                    itemToStringLabel={(p) => p?.name ?? ""}
+                    inputValue={selected?.name ?? ""}
+                    onInputValueChange={() => {}}
                   >
                     <ComboboxInput
                       id="bom-product"
@@ -359,6 +362,9 @@ export function BomCreateDrawer({
                           onValueChange={(next) =>
                             itemField.onChange(next?.id ?? "")
                           }
+                          itemToStringLabel={(p) => p?.name ?? ""}
+                          inputValue={selected?.name ?? ""}
+                          onInputValueChange={() => {}}
                         >
                           <ComboboxInput
                             placeholder="Материал сонгох..."
@@ -423,9 +429,16 @@ export function BomCreateDrawer({
 
                   <div className="space-y-1">
                     <FieldLabel className="text-xs">Нэгж өртөг</FieldLabel>
-                    <CurrencyInput
-                      className="text-sm"
-                      {...register(`items.${index}.estimated_unit_cost`)}
+                    <Controller
+                      control={control}
+                      name={`items.${index}.estimated_unit_cost`}
+                      render={({ field }) => (
+                        <CurrencyInput
+                          className="text-sm"
+                          value={field.value ?? undefined}
+                          onChange={field.onChange}
+                        />
+                      )}
                     />
                   </div>
                 </div>

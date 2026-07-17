@@ -58,7 +58,7 @@ export interface BomDetail {
     required_width_mm: number | null;
     required_length_mm: number | null;
     required_thickness_mm: number | null;
-    estimated_unit_cost: number;
+  estimated_unit_cost: number | null;
     sort_order: number;
     notes: string | null;
   }>;
@@ -118,6 +118,7 @@ export async function listBoms() {
     name: b.name,
     version: b.version,
     status: b.status,
+    product_id: b.product_id,
     product_name: extractName(b.product),
     item_count: countMap[b.id] ?? 0,
     activated_at: b.activated_at,
@@ -369,13 +370,10 @@ export async function updateBom(input: UpdateBomInput) {
   }
 
   // Update BOM metadata
-  const updateData: Record<string, string | null> = {};
-  if (input.name?.trim()) {
-    updateData.name = input.name.trim();
-  }
-  if (input.notes !== undefined) {
-    updateData.notes = input.notes;
-  }
+  const updateData = {
+    ...(input.name?.trim() ? { name: input.name.trim() } : {}),
+    ...(input.notes !== undefined ? { notes: input.notes } : {}),
+  };
 
   if (Object.keys(updateData).length > 0) {
     const { error: updateError } = await withDbCapture(

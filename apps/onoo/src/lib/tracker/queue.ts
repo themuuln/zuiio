@@ -135,14 +135,14 @@ class TrackerDB {
 
   async saveOperation(op: StoredOperation): Promise<void> {
     if (!this.db) await this.init();
-    await this.db!.put(STORE_NAME, op);
+    await this.db?.put(STORE_NAME, op);
   }
 
   async getOperation(
     operationId: string,
   ): Promise<StoredOperation | undefined> {
     if (!this.db) await this.init();
-    return this.db!.get(STORE_NAME, operationId);
+    return this.db?.get(STORE_NAME, operationId);
   }
 
   async loadPendingByGame(gameId: string): Promise<StoredOperation[]> {
@@ -161,9 +161,9 @@ class TrackerDB {
 
   async markAcknowledged(operationId: string): Promise<void> {
     if (!this.db) await this.init();
-    const existing = await this.db!.get(STORE_NAME, operationId);
+    const existing = await this.db?.get(STORE_NAME, operationId);
     if (existing) {
-      await this.db!.put(STORE_NAME, {
+      await this.db?.put(STORE_NAME, {
         ...existing,
         state: "acknowledged" as OperationState,
         updatedAt: new Date().toISOString(),
@@ -173,9 +173,9 @@ class TrackerDB {
 
   async markSending(operationId: string): Promise<void> {
     if (!this.db) await this.init();
-    const existing = await this.db!.get(STORE_NAME, operationId);
+    const existing = await this.db?.get(STORE_NAME, operationId);
     if (existing) {
-      await this.db!.put(STORE_NAME, {
+      await this.db?.put(STORE_NAME, {
         ...existing,
         state: "sending" as OperationState,
         attemptCount: existing.attemptCount + 1,
@@ -186,9 +186,9 @@ class TrackerDB {
 
   async markRejected(operationId: string, error: string): Promise<void> {
     if (!this.db) await this.init();
-    const existing = await this.db!.get(STORE_NAME, operationId);
+    const existing = await this.db?.get(STORE_NAME, operationId);
     if (existing) {
-      await this.db!.put(STORE_NAME, {
+      await this.db?.put(STORE_NAME, {
         ...existing,
         state: "rejected" as OperationState,
         lastError: error,
@@ -212,7 +212,7 @@ class TrackerDB {
 
   async size(): Promise<number> {
     if (!this.db) await this.init();
-    return this.db!.count(STORE_NAME);
+    return this.db!.count(STORE_NAME) ?? 0;
   }
 }
 

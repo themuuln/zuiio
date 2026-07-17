@@ -67,8 +67,8 @@ export function BomContent() {
     queryKey: bomKeys.all(),
     queryFn: async () => {
       const result = await listBoms();
-      if (result?.error) throw new Error(result.error);
-      return result?.data ?? [];
+      if ("data" in result) return result.data;
+      throw new Error(result.error);
     },
   });
 

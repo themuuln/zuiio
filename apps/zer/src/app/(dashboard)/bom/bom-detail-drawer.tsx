@@ -72,8 +72,8 @@ export function BomDetailDrawer({
     queryKey: [...bomKeys.all(), bomId],
     queryFn: async () => {
       const result = await getBom(bomId);
-      if (result?.error) throw new Error(result.error);
-      return result?.data ?? null;
+      if ("data" in result) return result.data;
+      throw new Error(result.error);
     },
     enabled: open,
   });

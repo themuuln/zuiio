@@ -133,8 +133,8 @@ export function ProductionContent() {
     queryKey: productionKeys.all(),
     queryFn: async () => {
       const result = await getProductionOrderStats();
-      if (result?.error) throw new Error(result.error);
-      return result?.data ?? null;
+      if ("error" in result) throw new Error(result.error);
+      return result.data;
     },
   });
 
@@ -143,8 +143,8 @@ export function ProductionContent() {
     queryKey: [...productionKeys.all(), "list"],
     queryFn: async () => {
       const result = await listProductionOrders();
-      if (result?.error) throw new Error(result.error);
-      return result?.data ?? [];
+      if ("error" in result) throw new Error(result.error);
+      return result.data;
     },
   });
 
@@ -161,7 +161,7 @@ export function ProductionContent() {
         order_id: orderId,
         new_status: "in_progress",
       });
-      if (result?.error) throw new Error(result.error);
+      if ("error" in result) throw new Error(result.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productionKeys.all() });
@@ -178,7 +178,7 @@ export function ProductionContent() {
         order_id: orderId,
         new_status: "completed",
       });
-      if (result?.error) throw new Error(result.error);
+      if ("error" in result) throw new Error(result.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productionKeys.all() });
@@ -192,7 +192,7 @@ export function ProductionContent() {
   const cancelMutation = useMutation({
     mutationFn: async (orderId: string) => {
       const result = await cancelProductionOrder(orderId);
-      if (result?.error) throw new Error(result.error);
+      if ("error" in result) throw new Error(result.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productionKeys.all() });

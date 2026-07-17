@@ -39,7 +39,7 @@ export async function issueMaterials(input: IssueMaterialsInput) {
     };
   }
 
-  revalidateEntities(["production_orders"]);
+  revalidateEntities(["production"]);
 
   return { success: true };
 }
@@ -78,7 +78,7 @@ export async function returnMaterials(input: ReturnMaterialsInput) {
     };
   }
 
-  revalidateEntities(["production_orders"]);
+  revalidateEntities(["production"]);
 
   return { success: true };
 }
@@ -117,7 +117,7 @@ export async function recordUsage(input: RecordUsageInput) {
     };
   }
 
-  revalidateEntities(["production_orders"]);
+  revalidateEntities(["production"]);
 
   return { success: true };
 }
