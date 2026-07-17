@@ -2,12 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
-  partialPrefetching: true,
   // typedRoutes: true,   /* enable once route type inference stabilizes */
   reactCompiler: true,
   experimental: {
     turbopackFileSystemCacheForBuild: true,
-    turbopackRustReactCompiler: true,
     optimizePackageImports: [
       "@phosphor-icons/react",
       "@tanstack/react-query",
