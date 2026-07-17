@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import "./globals.css";
 import { ThemeProvider } from "@/app/theme-provider";
 import { ThemeToggle } from "@/app/(auth)/theme-toggle";
+import { LinkedAccountsNotification } from "@/components/linked-accounts-notification";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,6 +49,7 @@ export default function RootLayout({
         <ThemeProvider>
           {children}
           <ThemeToggle />
+          <LinkedAccountsNotification />
         </ThemeProvider>
         <Toaster richColors position="top-center" />
         {/* impeccable-live-start */}
