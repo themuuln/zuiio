@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { verifyBearerToken, type ScimAuthContext } from "@/lib/scim-auth";
 import type { ScimUser } from "@/lib/scim-types";
+import { checkApiRateLimit } from "@/lib/rate-limit";
 
 function toScimUser(row: Record<string, unknown>, baseUrl: string): ScimUser {
   return {
@@ -26,6 +27,12 @@ function toScimUser(row: Record<string, unknown>, baseUrl: string): ScimUser {
     },
   };
 }
+function scimError(detail: string, status: number) {
+  return NextResponse.json(
+    { schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"], detail },
+    { status, headers: { "Content-Type": "application/scim+json" } },
+  );
+}
 
 /**
  * GET /scim/v2/Users
@@ -40,7 +47,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const admin = await createAdminClient();
+  const admin = createAdminClient();
   const params = request.nextUrl.searchParams;
   const filter = params.get("filter");
   const startIndex = Math.max(1, parseInt(params.get("startIndex") ?? "1", 10));
@@ -49,6 +56,15 @@ export async function GET(request: NextRequest) {
   let query = admin
     .from("profiles")
     .select("id, full_name, username, created_at, updated_at", { count: "exact" });
+
+  // Fetch emails from auth.users for the current batch
+  const { data: authUsers } = await admin.auth.admin.listUsers();
+  const emailMap = new Map<string, string>();
+  if (authUsers?.users) {
+    for (const u of authUsers.users) {
+      if (u.email) emailMap.set(u.id, u.email);
+    }
+  }
 
   // Basic filter support: userName eq "value"
   if (filter) {
@@ -76,7 +92,11 @@ export async function GET(request: NextRequest) {
     totalResults: total ?? 0,
     startIndex,
     itemsPerPage: count,
-    Resources: (data ?? []).map((row) => toScimUser(row as Record<string, unknown>, baseUrl)),
+    Resources: (data ?? []).map((row) => {
+      const r = row as Record<string, unknown>;
+      const email = emailMap.get(r.id as string) ?? "";
+      return toScimUser({ ...r, email }, baseUrl);
+    }),
   }, {
     headers: { "Content-Type": "application/scim+json" },
   });
@@ -89,9 +109,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const auth = await verifyBearerToken(request);
   if (!auth) {
+    return scimError("Invalid or missing bearer token", 401);
+  }
+
+  // Rate limit: 10 creates per 15 minutes per IP
+  const ip = request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? "unknown";
+  const rateLimit = await checkApiRateLimit(ip, "scim-users-create", 10);
+  if (!rateLimit.allowed) {
     return NextResponse.json(
-      { schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"], scimType: "invalidBearer", detail: "Invalid or missing bearer token" },
-      { status: 401, headers: { "Content-Type": "application/scim+json" } },
+      { schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"], detail: "Rate limit exceeded" },
+      { status: 429, headers: { "Content-Type": "application/scim+json", "Retry-After": String(rateLimit.retryAfterSeconds) } },
     );
   }
 
@@ -123,6 +150,21 @@ export async function POST(request: NextRequest) {
       { status: 400, headers: { "Content-Type": "application/scim+json" } },
     );
   }
+  // Validate username format (reuse signup rules)
+  if (userName.length < 3 || userName.length > 32) {
+    return scimError("userName must be 3-32 characters", 400);
+  }
+  if (!/^[a-z0-9][a-z0-9._-]*[a-z0-9]$/.test(userName)) {
+    return scimError("userName must contain only lowercase letters, numbers, . _ -", 400);
+  }
+  if (["admin", "api", "auth", "login", "root", "signup", "support", "system", "zuiio"].includes(userName)) {
+    return scimError("This username is reserved", 400);
+  }
+
+  // Validate email format
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return scimError("Invalid email format", 400);
+  }
 
   const admin = await createAdminClient();
 
@@ -145,7 +187,7 @@ export async function POST(request: NextRequest) {
   // If active is false, deactivate immediately
   if (active === false && newUser?.user?.id) {
     await admin.auth.admin.updateUserById(newUser.user.id, {
-      ban_duration: "none",
+      ban_duration: "100y",
     });
   }
 

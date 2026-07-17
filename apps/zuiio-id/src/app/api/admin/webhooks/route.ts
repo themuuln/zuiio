@@ -32,6 +32,28 @@ export async function GET() {
  * Body: { product_id: string, url: string, events?: string[] }
  */
 export async function POST(request: NextRequest) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Нэвтрэх шаардлагатай." }, { status: 401 });
+  }
+
+  // Check admin role
+  const admin = await createAdminClient();
+  const { data: membership } = await admin
+    .from("org_memberships")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("roles.name", "admin")
+    .single();
+
+  if (!membership) {
+    return NextResponse.json({ error: "Зөвшөөрөлгүй." }, { status: 403 });
+  }
+
   const body = await request.json();
   const { product_id, url, events } = body;
 
@@ -48,8 +70,6 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Буруу URL." }, { status: 400 });
   }
-
-  const admin = await createAdminClient();
 
   const { data, error } = await admin
     .from("webhook_subscriptions")

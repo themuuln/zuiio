@@ -1,4 +1,4 @@
-import { createHmac, randomUUID } from "node:crypto";
+import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { getEnabledProductById } from "@/lib/products/catalog";
 
 const HMAC_ALGORITHM = "sha256";
@@ -63,7 +63,7 @@ export async function verifyContinuation(token: string): Promise<ContinuationPay
     .update(data)
     .digest("hex");
 
-  if (signature !== expectedSignature) return null;
+  if (!timingSafeEqual(Buffer.from(signature, "hex"), Buffer.from(expectedSignature, "hex"))) return null;
 
   let payload: ContinuationPayload;
   try {

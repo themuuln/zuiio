@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { auditEvent, extractIp, extractUserAgent } from "@/lib/supabase/audit";
 import type { AuthErrorCode } from "@/lib/errors";
+import { checkApiRateLimit, recordApiAttempt } from "@/lib/rate-limit";
 
 interface DecisionBody {
   authorization_id?: string;
@@ -26,6 +27,15 @@ export async function POST(request: NextRequest) {
   const ip = extractIp(request.headers);
   const ua = extractUserAgent(request.headers);
 
+  // Rate limit: 30 requests per 15 minutes per IP
+  const rateLimit = await checkApiRateLimit(ip ?? "unknown", "oauth-decision");
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error_code: "rate_limited" as AuthErrorCode },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+    );
+  }
+
   let body: DecisionBody;
   try {
     body = await request.json();
@@ -46,11 +56,9 @@ export async function POST(request: NextRequest) {
   // Use Zuiio ID's own Supabase client — the OAuth Server is enabled here.
   const supabase = await createClient();
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (userError || !user) {
     return errorResponse("consent_failed", 401);
   }
 
@@ -78,7 +86,7 @@ export async function POST(request: NextRequest) {
     }
     await auditOAuthError(
       "consent_failed",
-      session.user.id,
+      user.id,
       undefined,
       ip,
       ua,
@@ -89,7 +97,7 @@ export async function POST(request: NextRequest) {
   // Audit the successful decision
   await auditEvent({
     eventType: decision === "approve" ? "consent_approved" : "consent_denied",
-    userId: session.user.id,
+    userId: user.id,
     ipAddress: ip,
     userAgent: ua,
     metadata: { authorization_id, decision },

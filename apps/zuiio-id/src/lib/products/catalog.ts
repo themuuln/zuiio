@@ -129,18 +129,38 @@ export const listEnabledProducts = cache(
 /**
  * Verify a SCIM bearer token against the product_catalog.
  */
+/**
+ * Hash a token with SHA-256 for storage.
+ */
+function hashToken(token: string): string {
+  const { createHash } = require("node:crypto") as typeof import("node:crypto");
+  return createHash("sha256").update(token).digest("hex");
+}
+
+/**
+ * Verify a SCIM bearer token against the product_catalog.
+ * Tokens are stored as SHA-256 hashes; incoming token is hashed before comparison.
+ */
 export async function verifyScimToken(
   token: string,
 ): Promise<{ productId: string } | null> {
-  const admin = await createAdminClient();
+  const admin = createAdminClient();
+  const hashedToken = hashToken(token);
 
   const { data } = await admin
     .from("product_catalog")
     .select("id")
-    .eq("scim_token", token)
+    .eq("scim_token", hashedToken)
     .eq("enabled", true)
     .maybeSingle();
 
   if (!data) return null;
   return { productId: data.id };
+}
+
+/**
+ * Hash a SCIM token for storage (used when creating/updating tokens).
+ */
+export function hashScimToken(token: string): string {
+  return hashToken(token);
 }

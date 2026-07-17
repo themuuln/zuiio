@@ -48,44 +48,23 @@ export async function createOrganization(
 ): Promise<Organization> {
   const admin = await createAdminClient();
 
-  // Get owner role
-  const { data: ownerRole } = await admin
-    .from("roles")
-    .select("id")
-    .eq("name", "owner")
-    .single();
-
-  if (!ownerRole) throw new Error("Owner role not found");
-
-  const ownerRow = toRow(ownerRole);
-  const roleId = ownerRow?.["id"];
-  if (typeof roleId !== "string") throw new Error("Owner role not found");
-
-  // Create org
-  const { data: org, error: orgError } = await admin
-    .from("organizations")
-    .insert({ name, slug, created_by: createdBy })
-    .select()
-    .single();
-
-  if (orgError) throw orgError;
-
-  const orgRow = toRow(org);
-  if (!orgRow) throw new Error("Organization creation failed");
-
-  // Add creator as owner
-  await admin.from("org_memberships").insert({
-    org_id: orgRow["id"],
-    user_id: createdBy,
-    role_id: roleId,
+  const { data, error } = await admin.rpc("create_organization_with_owner", {
+    org_name: name,
+    org_slug: slug,
+    creator_id: createdBy,
   });
 
+  if (error) throw error;
+
+  const row = toRow(data);
+  if (!row) throw new Error("Organization creation failed");
+
   return {
-    id: String(orgRow["id"]),
-    name: String(orgRow["name"]),
-    slug: String(orgRow["slug"]),
-    created_by: typeof orgRow["created_by"] === "string" ? orgRow["created_by"] : null,
-    created_at: String(orgRow["created_at"]),
+    id: String(row.org_id ?? row.id),
+    name: String(row.org_name_out ?? row.name),
+    slug: String(row.org_slug_out ?? row.slug),
+    created_by: createdBy,
+    created_at: String(row.created_at_out ?? row.created_at),
   };
 }
 
@@ -152,61 +131,25 @@ export async function acceptInvite(
 ): Promise<{ orgId: string; error?: string }> {
   const admin = await createAdminClient();
 
-  // Find the invite
-  const { data: invite } = await admin
-    .from("org_invites")
-    .select("*")
-    .eq("token", token)
-    .is("accepted_at", null)
-    .gt("expires_at", new Date().toISOString())
-    .single();
+  const { data, error } = await admin.rpc("accept_invite", {
+    invite_token: token,
+    user_id: userId,
+  });
 
-  const inviteRow = toRow(invite);
-  if (!inviteRow) {
-    return {
-      orgId: "",
-      error: "Урилга олдсонгүй эсвэл хугацаа нь дууссан байна.",
-    };
-  }
-
-  const inviteOrgId = String(inviteRow["org_id"]);
-
-  // Check if already a member
-  const { data: existing } = await admin
-    .from("org_memberships")
-    .select("id")
-    .eq("org_id", inviteOrgId)
-    .eq("user_id", userId)
-    .single();
-
-  if (existing) {
-    return {
-      orgId: inviteOrgId,
-      error: "Та аль хэдийн энэ байгууллагын гишүүн байна.",
-    };
-  }
-
-  // Add membership
-  const { error: memberError } = await admin
-    .from("org_memberships")
-    .insert({
-      org_id: inviteOrgId,
-      user_id: userId,
-      role_id: String(inviteRow["role_id"]),
-      invited_by: typeof inviteRow["invited_by"] === "string" ? inviteRow["invited_by"] : null,
-    });
-
-  if (memberError) {
+  if (error) {
     return { orgId: "", error: "Гишүүн болоход алдаа гарлаа." };
   }
 
-  // Mark invite as accepted
-  await admin
-    .from("org_invites")
-    .update({ accepted_at: new Date().toISOString() })
-    .eq("id", String(inviteRow["id"]));
+  const row = toRow(data);
+  if (!row) {
+    return { orgId: "", error: "Гишүүн болоход алдаа гарлаа." };
+  }
 
-  return { orgId: inviteOrgId };
+  if (row.error) {
+    return { orgId: "", error: String(row.error) };
+  }
+
+  return { orgId: String(row.org_id) };
 }
 
 /**

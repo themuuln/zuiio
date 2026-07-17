@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getIdpByEntityId, recordSamlAssertion } from "@/lib/saml-config";
 import { extractIp, extractUserAgent } from "@/lib/supabase/audit";
-import { XMLParser } from "fast-xml-parser";
+import { SAML } from "@node-saml/node-saml";
 
 /**
  * POST /saml/acs
@@ -27,55 +27,28 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Decode the SAML Response
-    const decoded = Buffer.from(samlResponse, "base64").toString("utf-8");
-
-    // Parse XML (simplified — production would use @node-saml/node-saml)
-    const parser = new XMLParser({
-      ignoreAttributes: false,
-      attributeNamePrefix: "@_",
+    // Create SAML instance and validate response
+    const saml = new SAML({
+      // In production, configure with your IdP's metadata/certificates
+      idpCert: process.env.SAML_IDP_CERT ?? "",
+      issuer: process.env.SAML_ISSUER ?? "zuiio-id",
+      callbackUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/saml/acs`,
+      wantAssertionsSigned: true,
+      wantAuthnResponseSigned: true,
     });
-    const parsed = parser.parse(decoded);
 
-    // Extract assertion (the structure varies by IdP)
-    const assertion =
-      parsed?.["saml2p:Response"]?.["saml2:Assertion"] ??
-      parsed?.["samlp:Response"]?.["saml:Assertion"];
+    const { profile } = await saml.validatePostResponseAsync({
+      SAMLResponse: samlResponse,
+    });
 
-    if (!assertion) {
+    if (!profile) {
       return NextResponse.redirect(
-        new URL("/error?code=saml_parse_error", request.url),
+        new URL("/error?code=saml_validation_failed", request.url),
       );
     }
 
-    // Extract NameID (user identifier)
-    const nameId =
-      assertion?.["saml2:Subject"]?.["saml2:NameID"]?.["#text"] ??
-      assertion?.["saml:Subject"]?.["saml:NameID"]?.["#text"];
-
-    // Extract attributes
-    const attributeStatement =
-      assertion?.["saml2:AttributeStatement"] ??
-      assertion?.["saml:AttributeStatement"];
-    const attributes: Record<string, string> = {};
-
-    if (attributeStatement?.["saml2:Attribute"]) {
-      const attrs = Array.isArray(attributeStatement["saml2:Attribute"])
-        ? attributeStatement["saml2:Attribute"]
-        : [attributeStatement["saml2:Attribute"]];
-      for (const attr of attrs) {
-        const name = attr["@_Name"];
-        const value =
-          attr["saml2:AttributeValue"]?.["#text"] ??
-          attr["saml2:AttributeValue"];
-        if (name && value) {
-          attributes[name] = String(value);
-        }
-      }
-    }
-
-    // Determine email from NameID or attributes
-    const email = nameId ?? attributes["email"] ?? attributes["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"];
+    // Extract user info from validated profile
+    const email = profile.nameID ?? profile.email;
 
     if (!email) {
       return NextResponse.redirect(
@@ -85,10 +58,10 @@ export async function POST(request: NextRequest) {
 
     // Find or create the user via JIT provisioning
     const admin = await createAdminClient();
-    const fullName = attributes["displayName"] ?? attributes["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] ?? email.split("@")[0];
+    const fullName = profile.displayName ?? profile.givenName ?? email.split("@")[0];
     const username = email.split("@")[0]?.toLowerCase().replace(/[^a-z0-9]/g, "") ?? "";
 
-    // Try to invite (creates user if not exists, returns existing if already exists)
+    // Try to invite (creates user if not exists)
     const { data: userData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
       data: {
         full_name: fullName,
@@ -98,21 +71,20 @@ export async function POST(request: NextRequest) {
       redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback`,
     });
 
+    let userId: string | undefined;
+
     if (inviteError) {
-      // If invite fails (user already exists), try to get user by listing
-      const { data: users } = await admin.auth.admin.listUsers({
-        page: 1,
-        perPage: 1000,
-      });
-      const existingUser = users?.users?.find((u) => u.email === email);
+      // If invite fails (user already exists), query by email
+      const { data: { users } } = await admin.auth.admin.listUsers();
+      const existingUser = users?.find((u) => u.email === email);
       if (!existingUser) {
         return NextResponse.redirect(
           new URL("/error?code=saml_user_creation_failed", request.url),
         );
       }
-      var userId = existingUser.id;
+      userId = existingUser.id;
     } else {
-      var userId = userData?.user?.id;
+      userId = userData?.user?.id;
     }
 
     if (!userId) {
@@ -141,10 +113,10 @@ export async function POST(request: NextRequest) {
 
     // Record the assertion
     await recordSamlAssertion({
-      idpId: "unknown", // Would need to resolve from InResponseTo
+      idpId: profile.issuer ?? "unknown",
       userId,
-      nameId: nameId ?? undefined,
-      attributes,
+      nameId: profile.nameID ?? undefined,
+      attributes: { email: profile.email, name: profile.nameID } as Record<string, unknown>,
       status: "success",
       ipAddress: ip,
       userAgent: ua,

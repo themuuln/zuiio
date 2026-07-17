@@ -72,6 +72,85 @@ export async function checkRateLimit(
 }
 
 /**
+ * Check if an IP address is rate-limited for API endpoints.
+ * Uses login_attempts table with IP-based tracking.
+ * Default: 30 attempts per 15 minutes per IP.
+ */
+export async function checkApiRateLimit(
+  ipAddress: string,
+  endpoint: string,
+  maxAttempts = 30,
+): Promise<RateLimitResult> {
+  try {
+    const admin = createAdminClient();
+    const windowStart = new Date(Date.now() - WINDOW_MS).toISOString();
+    const identifier = `api:${endpoint}:${ipAddress}`;
+
+    const { count } = await admin
+      .from("login_attempts")
+      .select("*", { count: "exact", head: true })
+      .eq("identifier", identifier)
+      .gte("attempted_at", windowStart);
+
+    const attemptCount = count ?? 0;
+
+    if (attemptCount >= maxAttempts) {
+      const { data: oldest } = await admin
+        .from("login_attempts")
+        .select("attempted_at")
+        .eq("identifier", identifier)
+        .gte("attempted_at", windowStart)
+        .order("attempted_at", { ascending: true })
+        .limit(1)
+        .single();
+
+      const retryAfter = oldest
+        ? Math.ceil(
+            (new Date(oldest.attempted_at).getTime() +
+              WINDOW_MS -
+              Date.now()) /
+              1000,
+          )
+        : Math.ceil(WINDOW_MS / 1000);
+
+      return {
+        allowed: false,
+        remainingAttempts: 0,
+        retryAfterSeconds: Math.max(retryAfter, 60),
+      };
+    }
+
+    return {
+      allowed: true,
+      remainingAttempts: maxAttempts - attemptCount,
+    };
+  } catch {
+    return { allowed: true, remainingAttempts: maxAttempts };
+  }
+}
+
+/**
+ * Record an API attempt for rate limiting.
+ */
+export async function recordApiAttempt(
+  ipAddress: string,
+  endpoint: string,
+): Promise<void> {
+  try {
+    const admin = createAdminClient();
+    const identifier = `api:${endpoint}:${ipAddress}`;
+
+    await admin.from("login_attempts").insert({
+      identifier,
+      success: true,
+      ip_address: ipAddress,
+    });
+  } catch {
+    // Best-effort
+  }
+}
+
+/**
  * Check if an email is rate-limited for password reset emails.
  * Lower threshold: 3 attempts per 15 minutes.
  * Fails open.
