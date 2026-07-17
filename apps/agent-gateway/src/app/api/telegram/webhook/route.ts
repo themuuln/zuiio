@@ -242,6 +242,36 @@ if (!msg?.text && !msg?.voice && !msg?.photo) {
 			return NextResponse.json({ ok: true });
 		}
 
+		if (text.startsWith("/daily")) {
+			await handleUserMessage(chatId, userId, "Өнөөдрийн хураангуй үзүүлээрэй", "private");
+			return NextResponse.json({ ok: true });
+		}
+
+		if (text.startsWith("/active")) {
+			await handleUserMessage(chatId, userId, "Идэвхтэй ажлын захиалгуудыг жагсааж өгөөч", "private");
+			return NextResponse.json({ ok: true });
+		}
+
+		if (text.startsWith("/mechanics")) {
+			await handleUserMessage(chatId, userId, "Механикчдын жагсаалт үзүүлээрэй", "private");
+			return NextResponse.json({ ok: true });
+		}
+
+		if (text.startsWith("/schedule")) {
+			await handleUserMessage(chatId, userId, "Өнөөдрийн цагийн хуваарийг үзүүлээрэй", "private");
+			return NextResponse.json({ ok: true });
+		}
+
+		if (text.startsWith("/invoices")) {
+			await handleUserMessage(chatId, userId, "Нэхэмжлэлийн хураангуй үзүүлээрэй", "private");
+			return NextResponse.json({ ok: true });
+		}
+
+		if (text.startsWith("/expenses")) {
+			await handleUserMessage(chatId, userId, "Зарлагын хураангуй үзүүлээрэй", "private");
+			return NextResponse.json({ ok: true });
+		}
+
 		// Try device auth code redemption before general message handling
 		if (text.length >= 6 && text.length <= 10) {
 			const redeemed = await redeemLinkCode(getSupabase(), text, {
@@ -382,7 +412,6 @@ if (!msg?.text && !msg?.voice && !msg?.photo) {
 			);
 		}
 	}
-
 	async function handleSwitchCommand(
 		chatId: number,
 		userId: number,
@@ -393,7 +422,7 @@ if (!msg?.text && !msg?.voice && !msg?.photo) {
 		// Find all links for this chat+user
 		const { data: links } = await sb
 			.from("telegram_links")
-			.select("organization_id, is_active, notification_preferences")
+			.select("organization_id, is_active, product_type")
 			.eq("telegram_chat_id", chatId)
 			.eq("telegram_user_id", userId)
 			.order("updated_at", { ascending: false });
@@ -406,14 +435,26 @@ if (!msg?.text && !msg?.voice && !msg?.photo) {
 			return;
 		}
 
-		// Get org names
-		const orgIds = links.map((l) => l.organization_id);
-		const { data: orgs } = await sb
-			.from("organizations")
-			.select("id, name")
-			.in("id", orgIds);
+		// Group links by product_type, query org names from each DB
+		const orgMap = new Map<string, string>();
+		const byProduct = new Map<string, string[]>();
+		for (const l of links) {
+			const pt = (l.product_type ?? "zer") as string;
+			const ids = byProduct.get(pt) ?? [];
+			ids.push(l.organization_id);
+			byProduct.set(pt, ids);
+		}
 
-		const orgMap = new Map((orgs ?? []).map((o) => [o.id, o.name]));
+		for (const [productType, ids] of byProduct) {
+			const client = getSupabaseForProduct(productType);
+			const { data: orgs } = await client
+				.from("organizations")
+				.select("id, name")
+				.in("id", ids);
+			for (const o of orgs ?? []) {
+				orgMap.set(o.id, o.name);
+			}
+		}
 
 		// Build inline keyboard
 		const keyboard = links.map((l) => {
@@ -734,23 +775,6 @@ const response = await handleAgentMessage(resolved.context, text, chatType, {
 		tg.setReaction(chatId, messageId, TelegramChannel.REACTIONS.done).catch(() => {});
 	}
 	await tg.sendMessage(chatId, response);
-		// Add quick action buttons for Tolom
-		if (productType === "tolom") {
-			await tg.sendInlineKeyboard(chatId, "Дараах үйлдлүүдээс сонгоно уу:", [
-				[
-					{ text: "📊 Өнөөдрийн хураангуй", callbackData: "action:daily_summary" },
-					{ text: "🔧 Идэвхтэй захиалгууд", callbackData: "action:active_orders" },
-				],
-				[
-					{ text: "👥 Механикчид", callbackData: "action:mechanics" },
-					{ text: "📅 Цагийн хуваарь", callbackData: "action:appointments" },
-				],
-				[
-					{ text: "💰 Нэхэмжлэл", callbackData: "action:invoices" },
-					{ text: "📋 Зарлагын хураангуй", callbackData: "action:expenses" },
-				],
-			]);
-		}
 	} catch (err) {
 		stopTyping();
 		console.error("[webhook] agent error:", err);

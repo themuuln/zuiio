@@ -177,6 +177,8 @@ Organization ID: ${orgId}${groupWarning}`;
 
 ## TOOL USAGE
 You have flexible query tools for all business data.
+- For sales by product category (e.g. "spare parts sales"), use getSalesByCategory
+- For general sales summaries, use getTodaySales or getSalesSummary
 
 Organization ID: ${orgId}${groupWarning}`;
 	}
@@ -210,7 +212,9 @@ When users say hello, goodbye, thanks, or ask casual questions:
 - Do NOT say "Welcome to [org name]" for every greeting — just greet warmly
 
 ## TOOL USAGE
-You have access to business tools. Use them when users ask about sales, inventory, customers, or accounting.
+you have access to business tools. Use them when users ask about sales, inventory, customers, or accounting.
+- For sales by product category (жишээ: "сэлбэгийн борлуулалт", "ангиллаар орлого"), use getSalesByCategory
+- For general sales summaries, use getTodaySales or getSalesSummary
 For general questions (greetings, "who are you", etc.), respond WITHOUT tools.
 
 Organization ID: ${orgId}${groupWarning}`;
@@ -1927,6 +1931,75 @@ function zerTools(context: ToolContext): GatewayTool[] {
 			} catch (err) {
 				capture(err, { context: "agent-gateway: getTodaySales" });
 				return { error: "Өнөөдрийн борлуулалт авахад алдаа гарлаа" };
+			}
+			},
+		},
+		{
+			name: "getSalesByCategory",
+			description: "Бүтээгдэхүүний ангиллаар борлуулалтын хураангуй. Жишээ: сэлбэг, хэрэгсэл гэх мэт",
+			parameters: [
+				{
+					name: "days",
+					type: "number",
+					description: "Хэдэн өдрийн (default 30)",
+					required: false,
+				},
+				{
+					name: "category",
+					type: "string",
+					description: "Ангиллын нэр (жишээ: сэлбэг, хэрэгсэл). Хоосон бол бүх ангиллаар",
+					required: false,
+				},
+			],
+			execute: async (args) => {
+				try {
+					const days = typeof args.days === "number" && args.days > 0 ? args.days : 30;
+					const dateStart = new Date(Date.now() - days * 86400000).toISOString();
+					const categoryFilter = typeof args.category === "string" && args.category.trim() ? args.category.trim() : null;
+
+					// Query sale_items joined with products and categories
+					let query = supabase
+						.from("sale_items")
+						.select(`
+							quantity, unit_price, total_price,
+							products!inner(name, category_id, categories!inner(name))
+						`)
+						.gte("created_at", dateStart)
+						.is("deleted_at", null);
+
+					if (categoryFilter) {
+						query = query.ilike("products.categories.name", `%${categoryFilter}%`);
+					}
+
+					const { data, error } = await query;
+					if (error) throw error;
+					const items = data ?? [];
+
+					// Group by category
+					const byCategory = new Map<string, { totalRevenue: number; totalQuantity: number; itemCount: number }>();
+					for (const item of items) {
+						const prod = item.products as any;
+						const catName = prod?.categories?.name ?? "Бусад";
+						const existing = byCategory.get(catName) ?? { totalRevenue: 0, totalQuantity: 0, itemCount: 0 };
+						existing.totalRevenue += Number(item.total_price) || 0;
+						existing.totalQuantity += Number(item.quantity) || 0;
+						existing.itemCount += 1;
+						byCategory.set(catName, existing);
+					}
+
+					// Convert to sorted array
+					const categories = Array.from(byCategory.entries())
+						.map(([name, data]) => ({ name, ...data }))
+						.sort((a, b) => b.totalRevenue - a.totalRevenue);
+
+					return {
+						period: `Сүүлийн ${days} өдөр`,
+						totalRevenue: categories.reduce((s, c) => s + c.totalRevenue, 0),
+						categories,
+					};
+			} catch (err) {
+				capture(err, { context: "agent-gateway: getSalesByCategory" });
+				return { error: "Ангиллаар борлуулалт авахад алдаа гарлаа" };
 			}
 			},
 		},
