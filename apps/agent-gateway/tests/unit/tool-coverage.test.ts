@@ -12,19 +12,21 @@ const mockContext: ToolContext = {
 };
 
 describe("Tolom tool coverage", () => {
-	it("returns 24 Tolom tools", () => {
+	it("returns Tolom tools with queryData and complex analytics", () => {
 		const tools = getProductTools("tolom", mockContext);
 		const toolNames = tools.map((t) => t.name).sort();
-		// Core read tools
+		// Core read tools (kept: complex multi-table)
 		expect(toolNames).toContain("getDailySummary");
-		expect(toolNames).toContain("getActiveWorkOrders");
-		expect(toolNames).toContain("getCustomerHistory");
-		expect(toolNames).toContain("getInvoiceStatus");
-		expect(toolNames).toContain("getExpensesSummary");
-		expect(toolNames).toContain("getAppointments");
 		expect(toolNames).toContain("queryData");
 		expect(toolNames).toContain("getWorkOrderDetails");
 		expect(toolNames).toContain("getVehicleAnalytics");
+		expect(toolNames).toContain("getFinancialSummary");
+		expect(toolNames).toContain("exportData");
+		expect(toolNames).toContain("partsLookup");
+		expect(toolNames).toContain("getSparePartsSales");
+		// Redundant tools removed (use queryData instead):
+		// getActiveWorkOrders, getCustomerHistory, getInvoiceStatus,
+		// getExpensesSummary, getAppointments, getMechanics, getSuppliers
 		// Write tools
 		expect(toolNames).toContain("createWorkOrder");
 		expect(toolNames).toContain("createInvoice");
@@ -45,10 +47,10 @@ describe("Tolom tool coverage", () => {
 });
 
 describe("Zer tool coverage", () => {
-	it("returns Zer tools including getSalesSummary", () => {
+	it("returns Zer tools with getSalesByCategory", () => {
 		const tools = getProductTools("zer", mockContext);
-		expect(tools.length).toBeGreaterThanOrEqual(5);
+		expect(tools.length).toBeGreaterThanOrEqual(1);
 		const toolNames = tools.map((t) => t.name);
-		expect(toolNames).toContain("getSalesSummary");
+		expect(toolNames).toContain("getSalesByCategory");
 	});
 });

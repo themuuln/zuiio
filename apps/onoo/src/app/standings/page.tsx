@@ -11,16 +11,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { PublicEmptyState } from "../components/public-empty-state";
-import { getStandings, type StandingRow } from "../lib/data";
+import { getStandings } from "../lib/data";
+import { StandingsTable } from "./components/standings-table";
 
 export const metadata: Metadata = {
   title: "Шалгуур — Оноо",
@@ -32,7 +25,10 @@ function formatPercent(value: number): string {
   return `${percent.toFixed(1)}%`;
 }
 
-function getPointDifference(row: StandingRow): number {
+function getPointDifference(row: {
+  points_for: number | null;
+  points_against: number | null;
+}): number {
   return (row.points_for ?? 0) - (row.points_against ?? 0);
 }
 
@@ -167,7 +163,7 @@ export default async function StandingsPage({
             </div>
           </section>
 
-          {/* Full standings table */}
+          {/* Full standings table — interactive with collapsible rows */}
           <section
             aria-labelledby="full-standings-heading"
             className="flex flex-col gap-4"
@@ -181,74 +177,14 @@ export default async function StandingsPage({
               </h2>
             </div>
             <Card className="shadow-none">
-              <CardContent className="overflow-x-auto p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">#</TableHead>
-                      <TableHead>Баг</TableHead>
-                      <TableHead className="text-center">Я</TableHead>
-                      <TableHead className="text-center">Х</TableHead>
-                      <TableHead className="text-center">Хувь</TableHead>
-                      <TableHead className="text-center">GB</TableHead>
-                      <TableHead className="text-center">Цуврал</TableHead>
-                      <TableHead className="text-center">Сүүлийн 10</TableHead>
-                      <TableHead className="text-right">Зөрүү</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {standings.map((row, index) => {
-                      const pointDifference = getPointDifference(row);
-                      return (
-                        <TableRow key={row.team_season_id}>
-                          <TableCell className="font-semibold tabular-nums text-muted-foreground">
-                            {index + 1}
-                          </TableCell>
-                          <TableCell>
-                            <Link
-                              href={`/teams/${row.team_slug}`}
-                              className="inline-flex items-center gap-3 font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            >
-                              <TeamLogo
-                                logoUrl={row.team_logo_url}
-                                shortCode={row.team_short_code}
-                                primaryColor={row.team_primary_color}
-                              />
-                              {row.team_name}
-                            </Link>
-                          </TableCell>
-                          <TableCell className="text-center font-semibold tabular-nums">
-                            {row.w}
-                          </TableCell>
-                          <TableCell className="text-center tabular-nums">
-                            {row.l}
-                          </TableCell>
-                          <TableCell className="text-center font-semibold tabular-nums">
-                            {formatPercent(row.win_pct)}
-                          </TableCell>
-                          <TableCell className="text-center tabular-nums text-muted-foreground">
-                            {row.gb ?? "—"}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Badge variant="outline">{row.streak ?? "—"}</Badge>
-                          </TableCell>
-                          <TableCell className="text-center tabular-nums">
-                            {row.last10 ?? "—"}
-                          </TableCell>
-                          <TableCell className="text-right font-semibold tabular-nums">
-                            {pointDifference > 0 ? "+" : ""}
-                            {pointDifference}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+              <CardContent className="p-0">
+                <StandingsTable rows={standings} />
               </CardContent>
             </Card>
             <p className="text-sm leading-relaxed text-muted-foreground">
               Я — ялалт, Х — хожигдол, GB — тэргүүлэгчээс хоцорч буй тоглолт.
-              Тэнцсэн үед лигийн баталсан тай-брейк дүрэм үйлчилнэ.
+              Мөр дээр дарж дэлгэрэнгүй үзнэ. Тэнцсэн үед лигийн баталсан
+              тай-брейк дүрэм үйлчилнэ.
             </p>
           </section>
         </>
@@ -265,11 +201,11 @@ interface RaceStatProps {
 // Display-only statistic: loading and empty states are handled by the page.
 function RaceStat({ label, value }: RaceStatProps) {
   return (
-    <div className="rounded-lg bg-[var(--surface-3)] p-3 text-center">
-      <p className="stat-number">{value}</p>
-      <p className="mt-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+    <div className="flex flex-col items-center gap-1">
+      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
         {label}
-      </p>
+      </span>
+      <span className="text-lg font-bold tabular-nums">{value}</span>
     </div>
   );
 }

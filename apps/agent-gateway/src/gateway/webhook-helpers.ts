@@ -57,7 +57,7 @@ export async function systemPromptFor(
 
 	if (productType === "tolom") {
 		if (lang === "en") {
-		return `You are "${orgName || "This auto repair shop"}" — a proactive Tolom auto repair agent.
+return `You are "${orgName || "This auto repair shop"}" — a proactive Tolom auto repair agent.
 RESPONSE: HTML only (<b>, <i>, <code>). No Markdown. 1-2 sentences max, warm but brief.
 RULES:
 1. Never say "I don't have that data" — always use tools to query business data
@@ -66,9 +66,11 @@ RULES:
 4. Write tools (confirm before executing): createWorkOrder, updateWorkOrderStatus, updateWorkOrderDetails, createInvoice, recordPayment, createAppointment, createReminder, bulkUpdateWorkOrderStatus, createSale, sendInvoicePdf
 5. General greetings → respond without tools
 6. Complex ops → guide step by step, ONE question per step, confirm before submit
+QUERY TOOL: Use queryData for all data lookups. Allowed tables: work_orders, customers, vehicles, appointments, invoices, invoice_items, invoice_payments, expenses, suppliers, profiles, parts_catalog, service_catalog, sales, sales_items, cash_register_sessions, work_order_parts, work_order_services, mechanic_daily_reports.
+Examples: "show active orders" → queryData(table:"work_orders", filters:"{\"status\":\"in_progress\"}"); "customer by phone" → queryData(table:"customers", filters:"{\"phone\":\"12345678\"}"); "today's appointments" → queryData(table:"appointments", date_from:"2024-01-15"); "monthly expenses" → queryData(table:"expenses", aggregate:"sum:amount", date_from:"2024-01-01")
 Organization ID: ${orgId}${groupWarning}`;
 		}
-		return `Та "${orgName || "This auto repair shop"}" — идэвхтэй засварын газрын бизнес агент.
+return `Та "${orgName || "This auto repair shop"}" — идэвхтэй засварын газрын бизнес агент.
 ХЭЛНИЙ ДҮРЭМ: ЗӨВХӨН Монгол хэлээр хариулна. Англи, Орос бусад хэл ашиглахгүй.
 ФОРМАТ: Зөвхөн HTML (<b>, <i>, <code>). Markdown ашиглахгүй. Хариулт богино — 1-2 өгүүлбэр.
 АЖИЛЧНЫ ДҮРЭМ:
@@ -78,6 +80,9 @@ Organization ID: ${orgId}${groupWarning}`;
 4. Бичлэгийн хэрэгслүүд — юу хийхээ тайлбарлаж дууд, баталгаажуулалт авна
 5. Ерөнхий асуулт — хэрэгсэлгүйгээр хариул
 6. Төвөгтэй үйлдэл: алхам алхамаар, нэг асуулт нэг алхам, баталгаажуул
+ХЭРЭГСЛИЙН ДҮРЭМ: queryData ашиглах — бүх өгөгдөл хайх, шүүх, бүлэглэх.
+Зөвшөөрөгдсөн хүснэгтүүд: work_orders, customers, vehicles, appointments, invoices, invoice_items, invoice_payments, expenses, suppliers, profiles, parts_catalog, service_catalog, sales, sales_items, cash_register_sessions, work_order_parts, work_order_services, mechanic_daily_reports.
+Жишээ: "идэвхтэй захиалга" → queryData(table:"work_orders", filters:"{\"status\":\"in_progress\"}"); "утсаар харилцагч" → queryData(table:"customers", filters:"{\"phone\":\"12345678\"}"); "өнөөдрийн цаг" → queryData(table:"appointments", date_from:"2024-01-15"); "сарын зарлага" → queryData(table:"expenses", aggregate:"sum:amount", date_from:"2024-01-01")
 ОЛОН ШАТЫН ТУСЛАМЖ:
 - Захиалга: харилцагчийн нэр → улсын дугаар → тайлбар
 - Цаг захиалга: харилцагч → огноо/цаг → тайлбар
@@ -85,23 +90,23 @@ Organization ID: ${orgId}${groupWarning}`;
 Organization ID: ${orgId}${groupWarning}`;
 	}
 	if (lang === "en") {
-		return `You are "${orgName || "This store"}" — a proactive Zer retail/accounting agent.
+return `You are "${orgName || "This store"}" — a proactive Zer retail/accounting agent.
 RESPONSE: HTML only (<b>, <i>, <code>). 1-2 sentences max.
 RULES:
 1. Never say "I don't have that data" — always use tools to query business data
 2. Use correct date ranges for queries
 3. After showing data, offer relevant next steps
-4. Sales: getSalesByCategory, getTodaySales/getSalesSummary, getPendingSales
-5. General questions → respond without tools
+4. Use queryData for all lookups (sales, products, customers, expenses, invoices)
+5. Use getSalesByCategory for category breakdowns
+6. General questions → respond without tools
 Organization ID: ${orgId}${groupWarning}`;
 	}
 	return `Та "${orgName || "This store"}" — найрсаг, мэргэжлийн бизнес агент.
 ХЭЛНИЙ ДҮРЭМ: ЗӨВХӨН Монгол хэлээр хариулна. Англи, Орос бусад хэл ашиглахгүй.
 ФОРМАТ: Зөвхөн HTML (<b>, <i>, <code>). Markdown ашиглахгүй. Хариулт богино — 1-2 өгүүлбэр.
-ХЭРЭГСЛИЙН ДҮРЭМ: Борлуулалт, бараа, харилцагч, нягтлан хэрэгслүүдэд хандах боломжтой.
-- Бүтээгдэхүүний ангиллаар: getSalesByCategory
-- Ерөнхий борлуулалт: getTodaySales эсвэл getSalesSummary
-- Дутуу төлөлт: getPendingSales
+ХЭРЭГСЛИЙН ДҮРЭМ: queryData ашиглах — бүх өгөгдөл хайх, шүүх, бүлэглэх. Борлуулалт, бараа, харилцагч, нягтлан хэрэгслүүдэд хандах боломжтой.
+- Ангиллаар: getSalesByCategory
+- Бусад бүх асуулт: queryData ашиглах
 Ерөнхий асуулт — хэрэгсэлгүйгээр хариул.
 Organization ID: ${orgId}${groupWarning}`;
 }
@@ -190,227 +195,6 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 			},
 		},
 		{
-			name: "getActiveWorkOrders",
-			description:
-				"Идэвхтэй ажлын захиалгын жагсаалт, харилцагчийн нэр, утас, төлөв",
-			parameters: [],
-			execute: async () => {
-				try {
-					const { data } = await supabase
-						.from("work_orders")
-						.select(
-							"id, status, total_amount, plate_number, customers(full_name, phone)",
-						)
-						.eq("organization_id", orgId)
-						.is("deleted_at", null)
-						.not("status", "in", '("delivered","cancelled","completed")')
-						.order("created_at", { ascending: false })
-						.limit(20);
-					return (data ?? []).map((wo: any) => ({
-						id: wo.id,
-						status: wo.status,
-						total: Number(wo.total_amount) || 0,
-						plate: wo.plate_number ?? "—",
-						customerName: (wo.customers as any)?.full_name ?? "—",
-						phone: (wo.customers as any)?.phone ?? "—",
-					}));
-				} catch (err) {
-					capture(err, { context: "agent-gateway: getActiveWorkOrders" });
-					return { error: "Ажлын жагсаалт авахад алдаа гарлаа" };
-				}
-			},
-		},
-		{
-			name: "getCustomerHistory",
-			description: "Харилцагчийн түүх: утас эсвэл нэрээр хайх",
-			parameters: [
-				{
-					name: "query",
-					type: "string",
-					description: "Харилцагчийн нэр эсвэл утасны дугаар",
-					required: true,
-				},
-			],
-			execute: async (args) => {
-				try {
-					const q = args.query as string;
-					const { data } = await supabase
-						.from("customers")
-						.select(
-							"id, full_name, phone, first_name, last_name, total_visits, last_visit_at",
-						)
-						.eq("organization_id", orgId)
-						.is("deleted_at", null)
-						.or(`full_name.ilike.%${q}%,phone.ilike.%${q}%`)
-						.limit(5);
-
-					if (!data || data.length === 0)
-						return { message: "Харилцагч олдсонгүй" };
-
-					const customerIds = data.map((c: any) => c.id);
-					const { data: vehicles } = await supabase
-						.from("vehicles")
-						.select("plate_number, make, model, year, customer_id")
-						.eq("organization_id", orgId)
-						.in("customer_id", customerIds)
-						.is("deleted_at", null);
-
-					const vehByCust = new Map<string, any[]>();
-					for (const v of vehicles ?? []) {
-						const list = vehByCust.get(v.customer_id) ?? [];
-						list.push(v);
-						vehByCust.set(v.customer_id, list);
-					}
-
-					return data.map((c: any) => {
-						const vehs = vehByCust.get(c.id) ?? [];
-						return {
-							matchType: "name",
-							customerName:
-								(c.full_name ??
-									[c.first_name, c.last_name].filter(Boolean).join(" ")) ||
-								"—",
-							phone: c.phone ?? "—",
-							totalVisits: c.total_visits ?? 0,
-							lastVisit: c.last_visit_at ?? null,
-							vehicles: vehs.map((v: any) => ({
-								plateNumber: v.plate_number,
-								info:
-									[v.make, v.model].filter(Boolean).join(" ") +
-									(v.year ? ` (${v.year})` : ""),
-							})),
-						};
-					});
-				} catch (err) {
-					capture(err, { context: "agent-gateway: getCustomerHistory" });
-					return { error: "Харилцагч хайхад алдаа гарлаа" };
-				}
-			},
-		},
-		{
-			name: "getInvoiceStatus",
-			description: "Тухайн сарын нэхэмжлэлийн хураангуй",
-			parameters: [],
-			execute: async () => {
-				try {
-					const { data } = await supabase
-						.from("invoices")
-						.select("total, amount_paid, balance_due, status")
-						.eq("organization_id", orgId)
-						.is("deleted_at", null)
-						.gte("issued_at", monthStart)
-						.lte("issued_at", monthEnd);
-
-					const rows = data ?? [];
-					return {
-						totalInvoiced: rows.reduce(
-							(s, r: any) => s + (Number(r.total) || 0),
-							0,
-						),
-						totalPaid: rows.reduce(
-							(s, r: any) => s + (Number(r.amount_paid) || 0),
-							0,
-						),
-						totalUnpaid: rows.reduce(
-							(s, r: any) => s + (Number(r.balance_due) || 0),
-							0,
-						),
-						invoiceCount: rows.length,
-					};
-				} catch (err) {
-					capture(err, { context: "agent-gateway: getInvoiceStatus" });
-					return { error: "Нэхэмжлэлийн хураангуй авахад алдаа гарлаа" };
-				}
-			},
-		},
-		{
-			name: "getExpensesSummary",
-			description: "Тухайн сарын зарлагын хураангуй, категориор",
-			parameters: [],
-			execute: async () => {
-				try {
-					const { data } = await supabase
-						.from("expenses")
-						.select("amount, expense_categories(name)")
-						.eq("organization_id", orgId)
-						.is("deleted_at", null)
-						.gte("expense_date", monthStart)
-						.lte("expense_date", monthEnd);
-
-					const rows = data ?? [];
-					const byCategory: Record<string, number> = {};
-					let total = 0;
-					for (const r of rows) {
-						const amount = Number((r as any).amount) || 0;
-						total += amount;
-						const catName =
-							((r as any).expense_categories as any)?.name ?? "Бусад";
-						byCategory[catName] = (byCategory[catName] ?? 0) + amount;
-					}
-					return { total, byCategory, expenseCount: rows.length };
-				} catch (err) {
-					capture(err, { context: "agent-gateway: getExpensesSummary" });
-					return { error: "Зарлагын хураангуй авахад алдаа гарлаа" };
-				}
-			},
-		},
-		{
-			name: "getAppointments",
-			description: "Өнөөдрийн болон ирэх цагууд",
-			parameters: [],
-			execute: async () => {
-				try {
-					const { data } = await supabase
-						.from("appointments")
-						.select(
-							"id, scheduled_at, status, customers(full_name, phone), vehicles(plate_number, make, model)",
-						)
-						.eq("organization_id", orgId)
-						.is("deleted_at", null)
-						.gte("scheduled_at", today)
-						.order("scheduled_at", { ascending: true })
-						.limit(15);
-					return (data ?? []).map((a: any) => ({
-						id: a.id,
-						scheduledAt: a.scheduled_at,
-						status: a.status,
-						customerName: (a.customers as any)?.full_name ?? "—",
-						phone: (a.customers as any)?.phone ?? "—",
-						plate: (a.vehicles as any)?.plate_number ?? "—",
-						vehicle: [(a.vehicles as any)?.make, (a.vehicles as any)?.model]
-							.filter(Boolean)
-							.join(" "),
-					}));
-				} catch (err) {
-					capture(err, { context: "agent-gateway: getAppointments" });
-					return { error: "Цагийн жагсаалт авахад алдаа гарлаа" };
-				}
-			},
-		},
-		{
-			name: "getMechanics",
-			description: "Ажилтнууд/механикчдын жагсаалт: нэр, утас, идэвхтэй эсэх",
-			parameters: [],
-			execute: async () => {
-				try {
-					const { data } = await supabase
-						.from("profiles")
-						.select("id, full_name, phone, is_active, username")
-						.eq("organization_id", orgId)
-						.order("full_name");
-					return (data ?? []).map((p: any) => ({
-						name: p.full_name ?? "—",
-						phone: p.phone ?? "—",
-						isActive: p.is_active,
-						username: p.username ?? "—",
-					}));
-				} catch (err) {
-					capture(err, { context: "agent-gateway: getMechanics" });
-					return { error: "Ажилтнуудын жагсаалт авахад алдаа гарлаа" };
-				}
-			},
-		},
-		{
 			name: "getWorkOrderDetails",
 			description: "Ажлын захиалгын дэлгэрэнгүй: сэлбэг, нэмэлт мэдээлэл",
 			parameters: [
@@ -464,31 +248,6 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 				} catch (err) {
 					capture(err, { context: "agent-gateway: getWorkOrderDetails" });
 					return { error: "Ажлын захиалгын дэлгэрэнгүй авахад алдаа гарлаа" };
-				}
-			},
-		},
-		{
-			name: "getSuppliers",
-			description: "Нийлүүлэгчдийн жагсаалт: нэр, холбоо барих",
-			parameters: [],
-			execute: async () => {
-				try {
-					const { data } = await supabase
-						.from("suppliers")
-						.select("name, contact_person, phone, email, is_active")
-						.eq("organization_id", orgId)
-						.is("deleted_at", null)
-						.order("name");
-					return (data ?? []).map((s: any) => ({
-						name: s.name,
-						contactPerson: s.contact_person ?? "—",
-						phone: s.phone ?? "—",
-						email: s.email ?? "—",
-						isActive: s.is_active,
-					}));
-				} catch (err) {
-					capture(err, { context: "agent-gateway: getSuppliers" });
-					return { error: "Нийлүүлэгчдийн жагсаалт авахад алдаа гарлаа" };
 				}
 			},
 		},
@@ -2011,107 +1770,6 @@ function zerTools(context: ToolContext): GatewayTool[] {
 	const { supabase, orgId } = context;
 	return [
 		{
-			name: "getSalesSummary",
-			description: "Сүүлийн N өдрийн борлуулалтын хураангуй",
-			parameters: [
-				{
-					name: "days",
-					type: "number",
-					description: "Хэдэн өдрийн (default 7)",
-					required: false,
-				},
-			],
-			execute: async (args) => {
-				try {
-					const days =
-						typeof args.days === "number" && args.days > 0 ? args.days : 7;
-					const dateStart = new Date(
-						Date.now() - days * 86400000,
-					).toISOString();
-					const { data } = await supabase
-						.from("sales")
-						.select("total_amount, paid_amount")
-						.eq("organization_id", orgId)
-						.gte("sale_date", dateStart);
-					const rows = data ?? [];
-					return {
-						period: `Сүүлийн ${days} өдөр`,
-						totalAmount: rows.reduce(
-							(s, r: any) => s + Number(r.total_amount),
-							0,
-						),
-						totalPaid: rows.reduce(
-							(s, r: any) =>
-								s + (r.paid_amount != null ? Number(r.paid_amount) : 0),
-							0,
-						),
-						saleCount: rows.length,
-					};
-				} catch (err) {
-					capture(err, { context: "agent-gateway: getSalesSummary" });
-					return { error: "Борлуулалтын хураангуй авахад алдаа гарлаа" };
-				}
-			},
-		},
-		{
-			name: "getPendingSales",
-			description: "Дутуу төлөлттэй борлуулалтууд",
-			parameters: [],
-			execute: async () => {
-				try {
-					const { data } = await supabase
-						.from("sales")
-						.select("id, sale_date, total_amount, paid_amount")
-						.eq("organization_id", orgId)
-						.or("paid_amount.is.null,paid_amount.lt.total_amount")
-						.order("sale_date", { ascending: false })
-						.limit(10);
-					return (data ?? []).map((s: any) => ({
-						id: s.id,
-						saleDate: s.sale_date,
-						totalAmount: Number(s.total_amount),
-						paidAmount: s.paid_amount != null ? Number(s.paid_amount) : 0,
-					}));
-				} catch (err) {
-					capture(err, { context: "agent-gateway: getPendingSales" });
-					return { error: "Дутуу төлөлт авахад алдаа гарлаа" };
-				}
-			},
-		},
-		{
-			name: "getTodaySales",
-			description: "Өнөөдрийн борлуулалтын хураангуй",
-			parameters: [],
-			execute: async () => {
-				try {
-					const dayStart = new Date();
-					dayStart.setHours(0, 0, 0, 0);
-					const { data } = await supabase
-						.from("sales")
-						.select("total_amount, paid_amount")
-						.eq("organization_id", orgId)
-						.gte("sale_date", dayStart.toISOString());
-					const rows = data ?? [];
-					return {
-						date: dayStart.toISOString(),
-						totalAmount: rows.reduce(
-							(s, r: any) => s + Number(r.total_amount),
-							0,
-						),
-						totalPaid: rows.reduce(
-							(s, r: any) =>
-								s + (r.paid_amount != null ? Number(r.paid_amount) : 0),
-							0,
-						),
-						saleCount: rows.length,
-					};
-				} catch (err) {
-					capture(err, { context: "agent-gateway: getTodaySales" });
-					return { error: "Өнөөдрийн борлуулалт авахад алдаа гарлаа" };
-				}
-			},
-		},
-		{
 			name: "getSalesByCategory",
 			description:
 				"Ангиллаар борлуулалтын хураангуй.",
@@ -2205,7 +1863,7 @@ function zerTools(context: ToolContext): GatewayTool[] {
 
 // ─── Tool Cache ─────────────────────────────────────────────────────────────
 // Tools don't change between requests for the same org. In-memory cache avoids
-// re-creating 23+ tool objects per request.
+// re-creating 15+ tool objects per request.
 const toolCache = new Map<string, { tools: GatewayTool[]; expires: number }>();
 const TOOL_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 

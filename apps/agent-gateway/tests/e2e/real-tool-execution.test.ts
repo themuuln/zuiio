@@ -226,135 +226,6 @@ describe("Real Tool Execution — Output Format Verification", () => {
 		});
 	});
 
-	// ─── getCustomerHistory ────────────────────────────────────────────────
-	describe("getCustomerHistory — returns FLAT array, not {customers}", () => {
-		it("returns array of customer objects with vehicles", async () => {
-			const result = await getTool("getCustomerHistory").execute({ query: "Бат" }, context) as any;
-
-			// REAL shape: flat array, NOT { customers: [...] }
-			expect(Array.isArray(result)).toBe(true);
-			expect(result.length).toBeGreaterThan(0);
-
-			const customer = result[0];
-			expect(customer.customerName).toContain("Бат");
-			expect(customer.phone).toBe("99112233");
-			expect(customer.totalVisits).toBe(5);
-			expect(customer.matchType).toBe("name");
-			expect(Array.isArray(customer.vehicles)).toBe(true);
-			expect(customer.vehicles[0].plateNumber).toBe("1234АБ");
-			expect(customer.vehicles[0].info).toContain("Toyota");
-		});
-
-	});
-
-	// ─── getDailySummary ───────────────────────────────────────────────────
-	describe("getDailySummary — returns FLAT shape, not nested", () => {
-		it("returns { today, activeWorkOrders, totalWorkOrders, ... }", async () => {
-			const result = await getTool("getDailySummary").execute({}, context) as any;
-
-			// REAL shape: flat, NOT { today: { activeWorkOrders } }
-			expect(typeof result.today).toBe("string");
-			expect(typeof result.activeWorkOrders).toBe("number");
-			expect(typeof result.totalWorkOrders).toBe("number");
-			expect(typeof result.monthlyInvoices).toBe("number");
-			expect(typeof result.monthlyInvoicesPaid).toBe("number");
-			expect(typeof result.newCustomersThisMonth).toBe("number");
-
-			// With mock data: 3 total work orders
-			expect(result.totalWorkOrders).toBe(3);
-			// Monthly invoices: 1,200,000 + 800,000 = 2,000,000
-			expect(result.monthlyInvoices).toBe(2000000);
-		});
-	});
-
-	// ─── getActiveWorkOrders ───────────────────────────────────────────────
-	describe("getActiveWorkOrders — returns FLAT array, not {activeWorkOrders}", () => {
-		it("returns array of work order objects", async () => {
-			const result = await getTool("getActiveWorkOrders").execute({}, context) as any;
-
-			// REAL shape: flat array, NOT { activeWorkOrders: [...] }
-			expect(Array.isArray(result)).toBe(true);
-			expect(result.length).toBeGreaterThan(0);
-
-			const order = result[0];
-			expect(order).toHaveProperty("id");
-			expect(order).toHaveProperty("status");
-			expect(order).toHaveProperty("total");
-			expect(order).toHaveProperty("plate");
-			expect(order).toHaveProperty("customerName");
-			expect(order).toHaveProperty("phone");
-
-			// total is a number, not a string
-			expect(typeof order.total).toBe("number");
-		});
-	});
-
-	// ─── getInvoiceStatus ──────────────────────────────────────────────────
-	describe("getInvoiceStatus — monthly invoice summary", () => {
-		it("returns { totalInvoiced, totalPaid, totalUnpaid, invoiceCount }", async () => {
-			const result = await getTool("getInvoiceStatus").execute({}, context) as any;
-
-			expect(typeof result.totalInvoiced).toBe("number");
-			expect(typeof result.totalPaid).toBe("number");
-			expect(typeof result.totalUnpaid).toBe("number");
-			expect(typeof result.invoiceCount).toBe("number");
-
-			// 1,200,000 + 800,000 = 2,000,000
-			expect(result.totalInvoiced).toBe(2000000);
-			// 500,000 + 800,000 = 1,300,000
-			expect(result.totalPaid).toBe(1300000);
-			// 700,000 + 0 = 700,000
-			expect(result.totalUnpaid).toBe(700000);
-		});
-	});
-
-	// ─── getExpensesSummary ────────────────────────────────────────────────
-	describe("getExpensesSummary — expenses by category", () => {
-		it("returns { total, byCategory, expenseCount }", async () => {
-			const result = await getTool("getExpensesSummary").execute({}, context) as any;
-
-			expect(typeof result.total).toBe("number");
-			expect(typeof result.byCategory).toBe("object");
-			expect(typeof result.expenseCount).toBe("number");
-
-			// 500,000 + 200,000 = 700,000
-			expect(result.total).toBe(700000);
-			expect(result.byCategory["Цалин"]).toBe(500000);
-			expect(result.byCategory["Түрээс"]).toBe(200000);
-		});
-	});
-
-	// ─── getMechanics ──────────────────────────────────────────────────────
-	describe("getMechanics — FLAT array of profiles", () => {
-		it("returns array with name, phone, isActive, username", async () => {
-			const result = await getTool("getMechanics").execute({}, context) as any;
-
-			expect(Array.isArray(result)).toBe(true);
-			expect(result.length).toBeGreaterThan(0);
-
-			const mechanic = result[0];
-			expect(typeof mechanic.name).toBe("string");
-			expect(typeof mechanic.phone).toBe("string");
-			expect(typeof mechanic.isActive).toBe("boolean");
-			expect(typeof mechanic.username).toBe("string");
-		});
-	});
-
-	// ─── getSuppliers ──────────────────────────────────────────────────────
-	describe("getSuppliers — FLAT array", () => {
-		it("returns array with name, contactPerson, phone, email, isActive", async () => {
-			const result = await getTool("getSuppliers").execute({}, context) as any;
-
-			expect(Array.isArray(result)).toBe(true);
-			expect(result.length).toBe(1);
-
-			const supplier = result[0];
-			expect(supplier.name).toBe("Tenger");
-			expect(supplier.contactPerson).toBe("Мөнх");
-			expect(supplier.phone).toBe("88650102");
-			expect(supplier.isActive).toBe(true);
-		});
-	});
 
 	// ─── partsLookup ───────────────────────────────────────────────────────
 	describe("partsLookup — catalog + historical pricing", () => {
@@ -415,9 +286,8 @@ describe("Real Tool Execution — Output Format Verification", () => {
 	// ─── Output format sanity ──────────────────────────────────────────────
 	describe("Output format — no HTML in tool output", () => {
 		it("read tools return plain objects (no HTML tags)", async () => {
-			const readToolNames = [
-				"getDailySummary", "getActiveWorkOrders", "getInvoiceStatus",
-				"getExpensesSummary", "getMechanics", "getSuppliers",
+		const readToolNames = [
+				"getDailySummary",
 				"partsLookup", "getSparePartsSales", "queryData",
 			];
 
@@ -473,7 +343,6 @@ describe("Real Tool Execution — Output Format Verification", () => {
 		it("contains Zer-specific tools", async () => {
 			const prompt = await systemPromptFor("zer", orgId, "private", "mn");
 			expect(prompt).toContain("getSalesByCategory");
-			expect(prompt).toContain("getTodaySales");
 			expect(prompt).toContain(orgId);
 		});
 	});

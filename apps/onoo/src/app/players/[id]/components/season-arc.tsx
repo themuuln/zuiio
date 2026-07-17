@@ -2,7 +2,14 @@
 
 import { ChartNoAxesCombined } from "lucide-react";
 import { useState } from "react";
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import {
+  Area,
+  AreaChart,
+  Brush,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+} from "recharts";
 import {
   type ChartConfig,
   ChartContainer,
@@ -176,8 +183,24 @@ export function SeasonArc({ data, className }: SeasonArcProps) {
               stroke: "var(--background)",
             }}
           />
+          {data.length > 8 && (
+            <Brush
+              dataKey="gameIndex"
+              height={24}
+              stroke="var(--color-muted-foreground)"
+              fill="var(--color-muted)"
+              travellerWidth={8}
+              className="text-xs"
+            />
+          )}
         </AreaChart>
       </ChartContainer>
+
+      {data.length > 8 && (
+        <p className="text-center text-xs text-muted-foreground">
+          Доод шугамыг чирч хугацаа сонгоно уу
+        </p>
+      )}
     </div>
   );
 }

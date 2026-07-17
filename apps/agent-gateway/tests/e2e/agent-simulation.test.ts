@@ -59,11 +59,11 @@ const scenarios = [
 	},
 	{
 		question: "Идэвхтэй ажлын захиалгуудыг жагсааж өгөөч",
-		expectedTool: "getActiveWorkOrders",
+		expectedTool: "queryData",
 	},
 	{
 		question: "Бат харилцагчийн мэдээлэл үзүүлээрэй",
-		expectedTool: "getCustomerHistory",
+		expectedTool: "queryData",
 	},
 	{
 		question: "Сүүлийн 7 хоногийн борлуулалтын хураангуй",
@@ -71,11 +71,11 @@ const scenarios = [
 	},
 	{
 		question: "Энэ сарын зарлагын хураангуй",
-		expectedTool: "getExpensesSummary",
+		expectedTool: "queryData",
 	},
 	{
 		question: "Механикчдын жагсаалт үзүүлээрэй",
-		expectedTool: "getMechanics",
+		expectedTool: "queryData",
 	},
 	{
 		question: "Window Motor сэлбэгийн үнийн мэдээлэл",
@@ -83,7 +83,7 @@ const scenarios = [
 	},
 	{
 		question: "Нийлүүлэгчдийн жагсаалт",
-		expectedTool: "getSuppliers",
+		expectedTool: "queryData",
 	},
 ];
 
@@ -161,47 +161,6 @@ describe("Agent Simulation — Tool Execution", () => {
 		expect(result).toBeDefined();
 	});
 
-	it("getActiveWorkOrders executes without crashing", async () => {
-		const t = findTool("getActiveWorkOrders");
-		expect(t).toBeDefined();
-		const result = await t!.execute({}, mockContext);
-		expect(result).toBeDefined();
-	});
-
-	it("getCustomerHistory executes without crashing", async () => {
-		const t = findTool("getCustomerHistory");
-		expect(t).toBeDefined();
-		const result = await t!.execute({ query: "Бат" }, mockContext);
-		expect(result).toBeDefined();
-	});
-
-	it("getExpensesSummary executes without crashing", async () => {
-		const t = findTool("getExpensesSummary");
-		expect(t).toBeDefined();
-		const result = await t!.execute({}, mockContext);
-		expect(result).toBeDefined();
-	});
-
-	it("getMechanics executes without crashing", async () => {
-		const t = findTool("getMechanics");
-		expect(t).toBeDefined();
-		const result = await t!.execute({}, mockContext);
-		expect(result).toBeDefined();
-	});
-
-	it("partsLookup executes without crashing", async () => {
-		const t = findTool("partsLookup");
-		expect(t).toBeDefined();
-		const result = await t!.execute({ query: "Window Motor" }, mockContext);
-		expect(result).toBeDefined();
-	});
-
-	it("getSuppliers executes without crashing", async () => {
-		const t = findTool("getSuppliers");
-		expect(t).toBeDefined();
-		const result = await t!.execute({}, mockContext);
-		expect(result).toBeDefined();
-	});
 
 	it("queryData executes with a valid table", async () => {
 		const t = findTool("queryData");
@@ -230,24 +189,16 @@ describe("Agent Simulation — Tool Execution", () => {
 describe("Agent Simulation — Zer Tools", () => {
 	const zerTools = getProductTools("zer", mockContext);
 
-	it("Zer provides 4+ tools", () => {
-		expect(zerTools.length).toBeGreaterThanOrEqual(4);
+	it("Zer provides tools", () => {
+		expect(zerTools.length).toBeGreaterThanOrEqual(1);
 	});
 
-	it("Zer has getSalesSummary", () => {
-		expect(zerTools.map((t) => t.name)).toContain("getSalesSummary");
+	it("Zer has getSalesByCategory", () => {
+		expect(zerTools.map((t) => t.name)).toContain("getSalesByCategory");
 	});
 
-	it("Zer has getPendingSales", () => {
-		expect(zerTools.map((t) => t.name)).toContain("getPendingSales");
-	});
-
-	it("Zer has getTodaySales", () => {
-		expect(zerTools.map((t) => t.name)).toContain("getTodaySales");
-	});
-
-	it("getSalesSummary executes without crashing", async () => {
-		const t = zerTools.find((x) => x.name === "getSalesSummary")!;
+	it("getSalesByCategory executes without crashing", async () => {
+		const t = zerTools.find((x) => x.name === "getSalesByCategory")!;
 		expect(t).toBeDefined();
 		const result = await t.execute({}, mockContext);
 		expect(result).toBeDefined();

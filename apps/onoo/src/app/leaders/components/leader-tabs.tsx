@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import { PublicEmptyState } from "../../components/public-empty-state";
 import type { LeaderRow } from "../../lib/data";
 
-const MINIMUM_GAMES = 5;
+const MINIMUM_GAMES = 3;
 
 interface CategoryConfig {
   key: string;
@@ -71,13 +71,9 @@ function rankedLeaders(
   leaders: LeaderRow[],
   category: CategoryConfig,
 ): LeaderRow[] {
-  return [...leaders]
-    .sort((a, b) => {
-      const qualificationDifference =
-        Number(b.gp >= MINIMUM_GAMES) - Number(a.gp >= MINIMUM_GAMES);
-      if (qualificationDifference !== 0) return qualificationDifference;
-      return category.getValue(b) - category.getValue(a);
-    })
+  return leaders
+    .filter((p) => (p.gp ?? 0) >= MINIMUM_GAMES)
+    .sort((a, b) => category.getValue(b) - category.getValue(a))
     .slice(0, 10);
 }
 
@@ -105,6 +101,11 @@ export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
             </TabsTrigger>
           ))}
         </TabsList>
+      </div>
+      <div className="flex items-center gap-2">
+        <Badge variant="outline" className="text-[10px]">
+          Дор хаяж {MINIMUM_GAMES} тоглолттой
+        </Badge>
       </div>
 
       {CATEGORIES.map((category) => {

@@ -797,3 +797,94 @@ insert into public.game_rosters (game_id, team_season_id, player_id, is_starter)
 ('70000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000104', true),
 ('70000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000110', false)
 on conflict (game_id, player_id) do nothing;
+
+-- ============================================================================
+-- TODAY'S GAMES (dynamic dates so the website shows data)
+-- ============================================================================
+
+-- Official games for today
+INSERT INTO public.games (id, competition_id, ruleset_id, home_team_season_id, away_team_season_id, venue_id, scheduled_at, status, current_period, home_score, away_score, current_revision_number) VALUES
+('70000000-0000-0000-0000-000000000100', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000002', 'f0000000-0000-0000-0000-000000000001',
+ (CURRENT_DATE || 'T18:00:00+08:00')::timestamptz, 'official', 4, 88, 76, 1),
+('70000000-0000-0000-0000-000000000101', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000003', '30000000-0000-0000-0000-000000000004', 'f0000000-0000-0000-0000-000000000004',
+ (CURRENT_DATE || 'T19:00:00+08:00')::timestamptz, 'official', 4, 91, 85, 1),
+-- Live game
+('70000000-0000-0000-0000-000000000102', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000005', '30000000-0000-0000-0000-000000000006', 'f0000000-0000-0000-0000-000000000006',
+ (CURRENT_DATE || 'T20:00:00+08:00')::timestamptz, 'live_provisional', 3, 54, 49, 0),
+-- Scheduled tomorrow
+('70000000-0000-0000-0000-000000000103', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000007', '30000000-0000-0000-0000-000000000008', 'f0000000-0000-0000-0000-000000000007',
+ (CURRENT_DATE + 1 || 'T15:00:00+08:00')::timestamptz, 'scheduled', 0, null, null, 0),
+('70000000-0000-0000-0000-000000000104', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000009', '30000000-0000-0000-0000-000000000010', 'f0000000-0000-0000-0000-000000000001',
+ (CURRENT_DATE + 1 || 'T18:00:00+08:00')::timestamptz, 'scheduled', 0, null, null, 0),
+-- Scheduled day after
+('70000000-0000-0000-0000-000000000105', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000010', 'f0000000-0000-0000-0000-000000000001',
+ (CURRENT_DATE + 2 || 'T19:00:00+08:00')::timestamptz, 'scheduled', 0, null, null, 0)
+on conflict (id) do nothing;
+
+-- Approval chain for today's official games
+DO $$ DECLARE a uuid := '397692e0-915f-4361-9f75-f84d0883ba80'; s1 uuid := gen_random_uuid(); r1 uuid := gen_random_uuid(); s2 uuid := gen_random_uuid(); r2 uuid := gen_random_uuid(); BEGIN
+INSERT INTO public.source_submissions (id, game_id, source_type, submitted_by, submitted_at, normalized_payload, status, reviewed_by, reviewed_at) VALUES
+(s1, '70000000-0000-0000-0000-000000000100', 'tracker_journal', a, NOW(), '{"periods":4}'::jsonb, 'approved', a, NOW()),
+(s2, '70000000-0000-0000-0000-000000000101', 'tracker_journal', a, NOW(), '{"periods":4}'::jsonb, 'approved', a, NOW()) ON CONFLICT DO NOTHING;
+INSERT INTO public.game_revisions (id, game_id, revision_number, source_submission_id, state, journal, projection, validation_warnings, created_by, created_at, approved_by, approved_at) VALUES
+(r1, '70000000-0000-0000-0000-000000000100', 1, s1, 'approved', '[]'::jsonb, '{}'::jsonb, '[]'::jsonb, a, NOW(), a, NOW()),
+(r2, '70000000-0000-0000-0000-000000000101', 1, s2, 'approved', '[]'::jsonb, '{}'::jsonb, '[]'::jsonb, a, NOW(), a, NOW()) ON CONFLICT DO NOTHING;
+UPDATE public.games SET published_at = NOW() WHERE id IN ('70000000-0000-0000-0000-000000000100', '70000000-0000-0000-0000-000000000101');
+END $$;
+
+-- Game rosters for today's official games
+INSERT INTO public.game_rosters (game_id, team_season_id, player_id, is_starter)
+SELECT '70000000-0000-0000-0000-000000000100', re.team_season_id, re.player_id, re.jersey_number <= 5
+FROM public.roster_entries re WHERE re.team_season_id IN ('30000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000002') AND re.left_at IS NULL
+on conflict (game_id, player_id) do nothing;
+INSERT INTO public.game_rosters (game_id, team_season_id, player_id, is_starter)
+SELECT '70000000-0000-0000-0000-000000000101', re.team_season_id, re.player_id, re.jersey_number <= 5
+FROM public.roster_entries re WHERE re.team_season_id IN ('30000000-0000-0000-0000-000000000003','30000000-0000-0000-0000-000000000004') AND re.left_at IS NULL
+on conflict (game_id, player_id) do nothing;
+
+-- Box scores for today's official games
+INSERT INTO public.game_player_stats (game_id, player_id, team_season_id, revision_id, seconds_played, pts, fgm, fga, tpm, tpa, ftm, fta, oreb, dreb, ast, stl, blk, tov, pf)
+SELECT gr.game_id, gr.player_id, gr.team_season_id, gr2.id,
+(1600 + random() * 1400)::int, (random() * 22 + 4)::int, (random() * 8 + 1)::int, (random() * 14 + 2)::int,
+(random() * 3)::int, (random() * 6)::int, (random() * 4)::int, (random() * 6)::int,
+(random() * 3)::int, (random() * 6 + 1)::int, (random() * 5)::int, (random() * 2)::int,
+(random() * 2)::int, (random() * 3)::int, (random() * 3 + 1)::int
+FROM public.game_rosters gr
+JOIN public.game_revisions gr2 ON gr2.game_id = gr.game_id AND gr2.revision_number = (SELECT current_revision_number FROM public.games WHERE id = gr.game_id)
+WHERE gr.game_id IN ('70000000-0000-0000-0000-000000000100','70000000-0000-0000-0000-000000000101')
+on conflict do nothing;
+
+-- Season player stats (all TL players)
+INSERT INTO public.season_player_stats (competition_id, player_id, team_season_id, gp, pts, fgm, fga, tpm, tpa, ftm, fta, oreb, dreb, ast, stl, blk, tov, pf, seconds_played, mpg)
+SELECT 'e0000000-0000-0000-0000-000000000001', re.player_id, re.team_season_id,
+(floor(random() * 8) + 3)::smallint, (floor(random() * 18) + 4)::int, (floor(random() * 8) + 1)::int, (floor(random() * 15) + 3)::int,
+(floor(random() * 4))::int, (floor(random() * 8) + 1)::int, (floor(random() * 5))::int, (floor(random() * 6) + 1)::int,
+(floor(random() * 4))::int, (floor(random() * 7) + 1)::int, (floor(random() * 6))::int, (floor(random() * 3))::int,
+(floor(random() * 2))::int, (floor(random() * 4))::int, (floor(random() * 4) + 1)::int,
+(floor(random() * 800) + 400)::int, (floor(random() * 25) + 10)::real
+FROM public.roster_entries re
+JOIN public.team_seasons ts ON ts.id = re.team_season_id
+WHERE ts.competition_id = 'e0000000-0000-0000-0000-000000000001' AND re.left_at IS NULL
+on conflict (competition_id, player_id) do nothing;
+
+-- Standings from official games
+INSERT INTO public.standings (competition_id, team_season_id, w, l, wins, losses, win_pct, points_for, points_against)
+SELECT g.competition_id, ts.id,
+SUM(CASE WHEN (ts.id = g.home_team_season_id AND g.home_score > g.away_score) OR (ts.id = g.away_team_season_id AND g.away_score > g.home_score) THEN 1 ELSE 0 END)::smallint,
+SUM(CASE WHEN (ts.id = g.home_team_season_id AND g.home_score < g.away_score) OR (ts.id = g.away_team_season_id AND g.away_score < g.home_score) THEN 1 ELSE 0 END)::smallint,
+SUM(CASE WHEN (ts.id = g.home_team_season_id AND g.home_score > g.away_score) OR (ts.id = g.away_team_season_id AND g.away_score > g.home_score) THEN 1 ELSE 0 END)::smallint,
+SUM(CASE WHEN (ts.id = g.home_team_season_id AND g.home_score < g.away_score) OR (ts.id = g.away_team_season_id AND g.away_score < g.home_score) THEN 1 ELSE 0 END)::smallint,
+CASE WHEN COUNT(*) > 0 THEN SUM(CASE WHEN (ts.id = g.home_team_season_id AND g.home_score > g.away_score) OR (ts.id = g.away_team_season_id AND g.away_score > g.home_score) THEN 1 ELSE 0 END)::real / COUNT(*)::real ELSE 0 END,
+SUM(CASE WHEN ts.id = g.home_team_season_id THEN g.home_score ELSE g.away_score END),
+SUM(CASE WHEN ts.id = g.home_team_season_id THEN g.away_score ELSE g.home_score END)
+FROM public.games g
+JOIN public.team_seasons ts ON (ts.id = g.home_team_season_id OR ts.id = g.away_team_season_id)
+WHERE g.status = 'official'
+GROUP BY g.competition_id, ts.id
+on conflict (competition_id, team_season_id) do nothing;

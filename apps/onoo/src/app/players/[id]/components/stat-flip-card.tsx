@@ -87,7 +87,7 @@ export function StatFlipCard({
   className,
 }: StatFlipCardProps) {
   const [flipped, setFlipped] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const styleInjected = useRef(false);
 
   // Inject styles once

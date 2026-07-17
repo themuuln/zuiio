@@ -95,7 +95,7 @@ describe("Tolom Tools", () => {
 		supabase: {} as ReturnType<typeof createMockToolSupabase>["mockClient"],
 	};
 
-	it("returns all Tolom tools (14 read + 9 write)", () => {
+	it("returns Tolom tools with queryData and complex analytics", () => {
 		const tools = getProductTools("tolom", context);
 		const toolNames = tools.map((t) => t.name).sort();
 		expect(toolNames).toEqual([
@@ -105,15 +105,9 @@ describe("Tolom Tools", () => {
 			"createReminder",
 			"createWorkOrder",
 			"exportData",
-			"getActiveWorkOrders",
-			"getAppointments",
-			"getCustomerHistory",
 			"getDailySummary",
-			"getExpensesSummary",
 			"getFinancialSummary",
-			"getInvoiceStatus",
-			"getMechanics",
-			"getSuppliers",
+			"getSparePartsSales",
 			"getVehicleAnalytics",
 			"getWorkOrderDetails",
 			"partsLookup",
@@ -123,7 +117,7 @@ describe("Tolom Tools", () => {
 			"updateWorkOrderDetails",
 			"updateWorkOrderStatus",
 		]);
-		expect(tools).toHaveLength(23);
+		expect(tools).toHaveLength(17);
 	});
 
 	it("getDailySummary returns summary data", async () => {
@@ -164,176 +158,6 @@ describe("Tolom Tools", () => {
 		expect(typeof result).toBe("object");
 	});
 
-	it("getActiveWorkOrders returns work orders data", async () => {
-		const { onTable, mockClient } = createMockToolSupabase();
-
-		onTable("work_orders", (chain, respond) => {
-			respond([
-				{
-					id: "wo-1",
-					status: "InProgress",
-					total: "1200000",
-					created_at: "2026-07-01T08:00:00Z",
-					bay_number: 3,
-					description: "Engine repair",
-					customers: { full_name: "Бат-Эрдэнэ", phone: "99111111" },
-					vehicles: {
-						plate_number: "УБА1234",
-						make: "Toyota",
-						model: "Camry",
-					},
-				},
-			]);
-		});
-
-		const tools = getProductTools("tolom", {
-			...context,
-			supabase: mockClient,
-		});
-		const tool = tools.find((t) => t.name === "getActiveWorkOrders")!;
-		const result = await tool.execute({});
-
-		expect(Array.isArray(result)).toBe(true);
-		expect(result).toHaveLength(1);
-	});
-
-	it("getCustomerHistory searches by plate", async () => {
-		const { onTable, mockClient } = createMockToolSupabase();
-
-		onTable("vehicles", (chain, respond) => {
-			respond([
-				{
-					customer_id: "cust-1",
-					plate_number: "УБА1234",
-					make: "Toyota",
-					model: "Camry",
-					year: 2020,
-					total_visits: 5,
-					last_visit_at: "2026-06-15T10:00:00Z",
-				},
-			]);
-		});
-		onTable("customers", (chain, respond) => {
-			respond([
-				{
-					id: "cust-1",
-					full_name: "Бат-Эрдэнэ",
-					phone: "99111111",
-					total_visits: 5,
-					last_visit_at: "2026-06-15T10:00:00Z",
-				},
-			]);
-		});
-
-		const tools = getProductTools("tolom", {
-			...context,
-			supabase: mockClient,
-		});
-		const tool = tools.find((t) => t.name === "getCustomerHistory")!;
-		const result = await tool.execute({ query: "УБА1234" });
-
-		expect(Array.isArray(result)).toBe(true);
-		expect(result).toHaveLength(1);
-	});
-	
-	it("getCustomerHistory returns not-found for empty input", async () => {
-		const { mockClient } = createMockToolSupabase();
-		const tools = getProductTools("tolom", {
-			...context,
-			supabase: mockClient,
-		});
-		const tool = tools.find((t) => t.name === "getCustomerHistory")!;
-		const result = await tool.execute({ query: "" });
-		// The webhook-helpers version passes empty string as-is to the DB,
-		// which matches all. With empty mock data it returns "not found".
-		expect(result).toHaveProperty("message");
-		expect(result.message).toBe("Харилцагч олдсонгүй");
-	});
-
-	it("getInvoiceStatus returns invoice summary", async () => {
-		const { onTable, mockClient } = createMockToolSupabase();
-
-		onTable("invoices", (chain, respond) => {
-			respond([
-				{ total: "1000000", amount_paid: "1000000", balance_due: "0", status: "paid" },
-				{ total: "500000", amount_paid: "200000", balance_due: "300000", status: "partial" },
-				{ total: "750000", amount_paid: "0", balance_due: "750000", status: "unpaid" },
-			]);
-		});
-
-		const tools = getProductTools("tolom", {
-			...context,
-			supabase: mockClient,
-		});
-		const tool = tools.find((t) => t.name === "getInvoiceStatus")!;
-		const result = await tool.execute({});
-
-		expect(result).not.toHaveProperty("error");
-		expect(result).toHaveProperty("totalInvoiced");
-		expect(result).toHaveProperty("totalPaid");
-		expect(result).toHaveProperty("totalUnpaid");
-	});
-
-	it("getExpensesSummary returns expense breakdown", async () => {
-		const { onTable, mockClient } = createMockToolSupabase();
-
-		onTable("expenses", (chain, respond) => {
-			respond([
-				{
-					amount: "200000",
-					category_id: "cat-1",
-					expense_date: "2026-07-01",
-					expense_categories: { name: "Сэлбэг" },
-				},
-				{
-					amount: "100000",
-					category_id: "cat-2",
-					expense_date: "2026-07-02",
-					expense_categories: { name: "Цалин" },
-				},
-			]);
-		});
-
-		const tools = getProductTools("tolom", {
-			...context,
-			supabase: mockClient,
-		});
-		const tool = tools.find((t) => t.name === "getExpensesSummary")!;
-		const result = await tool.execute({});
-
-		expect(result).not.toHaveProperty("error");
-		expect(result).toHaveProperty("total");
-		expect(result).toHaveProperty("byCategory");
-		expect(result).toHaveProperty("expenseCount");
-	});
-
-	it("getAppointments returns schedule data", async () => {
-		const { onTable, mockClient } = createMockToolSupabase();
-
-		onTable("appointments", (chain, respond) => {
-			respond([
-				{
-					id: "apt-1",
-					title: "Oil change",
-					scheduled_at: "2026-07-07T14:00:00Z",
-					end_at: "2026-07-07T15:00:00Z",
-					status: "confirmed",
-					notes: "Customer prefers synthetic oil",
-					customers: { full_name: "Ганбат", phone: "99222222" },
-					vehicles: { plate_number: "УББ5678", make: "Hyundai", model: "Sonata" },
-				},
-			]);
-		});
-
-		const tools = getProductTools("tolom", {
-			...context,
-			supabase: mockClient,
-		});
-		const tool = tools.find((t) => t.name === "getAppointments")!;
-		const result = await tool.execute({});
-		expect(result[0]).toHaveProperty("vehicle");
-		expect(result[0]).toHaveProperty("plate");
-	});
 });
 
 describe("Zer Tools", () => {
@@ -343,115 +167,14 @@ describe("Zer Tools", () => {
 		supabase: {} as ReturnType<typeof createMockToolSupabase>["mockClient"],
 	};
 
-	it("returns all 6 Zer tools (4 read + 2 write)", () => {
+	it("returns Zer tools with getSalesByCategory", () => {
 		const tools = getProductTools("zer", context);
 		const toolNames = tools.map((t) => t.name).sort();
 		expect(toolNames).toEqual([
 			"createSale",
-			"getPendingSales",
 			"getSalesByCategory",
-			"getSalesSummary",
-			"getTodaySales",
 			"recordPayment",
 		]);
-		expect(tools).toHaveLength(6);
-	});
-
-	it("getSalesSummary returns sales data with default 7 days", async () => {
-		const { onTable, mockClient } = createMockToolSupabase();
-
-		onTable("sales", (chain, respond) => {
-			respond([
-				{ total_amount: "500000", paid_amount: "500000" },
-				{ total_amount: "300000", paid_amount: "100000" },
-				{ total_amount: "200000", paid_amount: null },
-			]);
-		});
-
-		const tools = getProductTools("zer", {
-			...context,
-			supabase: mockClient,
-		});
-		const tool = tools.find((t) => t.name === "getSalesSummary")!;
-		const result = await tool.execute({});
-
-		expect(result).not.toHaveProperty("error");
-		expect(result).toHaveProperty("period", "Сүүлийн 7 өдөр");
-		expect(result).toHaveProperty("totalAmount");
-		expect(result).toHaveProperty("totalPaid");
-		expect(result).toHaveProperty("saleCount", 3);
-	});
-
-	it("getSalesSummary respects custom days parameter", async () => {
-		const { onTable, mockClient } = createMockToolSupabase();
-
-		onTable("sales", (chain, respond) => {
-			respond([]);
-		});
-
-		const tools = getProductTools("zer", {
-			...context,
-			supabase: mockClient,
-		});
-		const tool = tools.find((t) => t.name === "getSalesSummary")!;
-		const result = await tool.execute({ days: 30 });
-
-		expect(result).toHaveProperty("period", "Сүүлийн 30 өдөр");
-	});
-
-	it("getPendingSales returns unpaid sales", async () => {
-		const { onTable, mockClient } = createMockToolSupabase();
-
-		onTable("sales", (chain, respond) => {
-			respond([
-				{
-					id: "sale-1",
-					sale_date: "2026-07-01",
-					total_amount: "500000",
-					paid_amount: "100000",
-				},
-				{
-					id: "sale-2",
-					sale_date: "2026-07-02",
-					total_amount: "300000",
-					paid_amount: null,
-				},
-			]);
-		});
-
-		const tools = getProductTools("zer", {
-			...context,
-			supabase: mockClient,
-		});
-		const tool = tools.find((t) => t.name === "getPendingSales")!;
-		const result = await tool.execute({});
-
-		expect(Array.isArray(result)).toBe(true);
-		expect(result).toHaveLength(2);
-		expect(result[0]).toHaveProperty("id");
-		expect(result[0]).toHaveProperty("totalAmount");
-	});
-
-	it("getTodaySales returns today's summary", async () => {
-		const { onTable, mockClient } = createMockToolSupabase();
-
-		onTable("sales", (chain, respond) => {
-			respond([
-				{ total_amount: "1000000", paid_amount: "800000" },
-				{ total_amount: "500000", paid_amount: "500000" },
-			]);
-		});
-
-		const tools = getProductTools("zer", {
-			...context,
-			supabase: mockClient,
-		});
-		const tool = tools.find((t) => t.name === "getTodaySales")!;
-		const result = await tool.execute({});
-
-		expect(result).not.toHaveProperty("error");
-		expect(result).toHaveProperty("totalAmount");
-		expect(result).toHaveProperty("totalPaid");
-		expect(result).toHaveProperty("saleCount");
+		expect(tools).toHaveLength(3);
 	});
 });

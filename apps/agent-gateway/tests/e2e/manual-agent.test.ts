@@ -59,8 +59,8 @@ describe("Manual Agent Test — Tool Counts", () => {
 		expect(getProductTools("tolom", mockContext).length).toBeGreaterThanOrEqual(15);
 	});
 
-	it("Zer has 4+ tools", () => {
-		expect(getProductTools("zer", mockContext).length).toBeGreaterThanOrEqual(4);
+	it("Zer has 2+ tools", () => {
+		expect(getProductTools("zer", mockContext).length).toBeGreaterThanOrEqual(2);
 	});
 });
 
@@ -72,18 +72,8 @@ describe("Manual Agent Test — Tool Execution", () => {
 		expect(await t.execute({}, mockContext)).toBeDefined();
 	});
 
-	it("getActiveWorkOrders executes", async () => {
-		const t = tolomTools.find((x) => x.name === "getActiveWorkOrders")!;
-		expect(await t.execute({}, mockContext)).toBeDefined();
-	});
-
 	it("partsLookup executes", async () => {
 		const t = tolomTools.find((x) => x.name === "partsLookup")!;
 		expect(await t.execute({ query: "test" }, mockContext)).toBeDefined();
-	});
-
-	it("getMechanics executes", async () => {
-		const t = tolomTools.find((x) => x.name === "getMechanics")!;
-		expect(await t.execute({}, mockContext)).toBeDefined();
 	});
 });

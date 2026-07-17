@@ -814,6 +814,57 @@ export async function getPlayerCareerTotals(playerId: string): Promise<{
 
   return { gp, pts, reb, ast };
 }
+// ---------------------------------------------------------------------------
+// Global search
+// ---------------------------------------------------------------------------
+
+export interface SearchAllResult {
+  players: PlayerDirectoryRow[];
+  teams: StandingRow[];
+  games: GameWithTeams[];
+}
+
+export async function searchAll(query: string): Promise<SearchAllResult> {
+  const q = query.trim();
+  if (q.length === 0) return { players: [], teams: [], games: [] };
+
+  const supabase = await createClient();
+  const pattern = `%${q}%`;
+
+  const [playersRes, teamsRes, gamesRes] = await Promise.all([
+    supabase
+      .from("v_public_player_directory")
+      .select("*")
+      .or(`player_name.ilike.${pattern},player_name_latin.ilike.${pattern},team_name.ilike.${pattern}`)
+      .order("points_per_game", { ascending: false })
+      .limit(20),
+    supabase
+      .from("v_public_standings")
+      .select("*")
+      .ilike("team_name", pattern)
+      .order("win_pct", { ascending: false })
+      .limit(10),
+    supabase
+      .from("v_public_games")
+      .select("*")
+      .or(`home_team_name.ilike.${pattern},away_team_name.ilike.${pattern}`)
+      .order("scheduled_at", { ascending: false })
+      .limit(10),
+  ]);
+
+  return {
+    players: playersRes.data
+      ? (playersRes.data as unknown as PlayerDirectoryRow[])
+      : [],
+    teams: teamsRes.data
+      ? teamsRes.data.map((row: Record<string, unknown>) => mapStandingRow(row))
+      : [],
+    games: gamesRes.data
+      ? gamesRes.data.map((row: Record<string, unknown>) => mapGameRow(row))
+      : [],
+  };
+}
+
 
 // ---------------------------------------------------------------------------
 // Helpers (unchanged)

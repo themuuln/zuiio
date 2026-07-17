@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleDot } from "lucide-react";
+import { CircleDot, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -57,6 +57,21 @@ export function SiteNav() {
               </li>
             );
           })}
+          <li className="shrink-0">
+            <Link
+              href="/search"
+              className={cn(
+                "inline-flex size-10 items-center justify-center rounded-lg transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                pathname === "/search"
+                  ? "bg-[var(--brand-sports)]/10 text-[var(--ink)]"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
+              )}
+              aria-label="Хайх"
+              aria-current={pathname === "/search" ? "page" : undefined}
+            >
+              <Search className="size-4" aria-hidden="true" />
+            </Link>
+          </li>
         </ul>
       </nav>
     </header>
