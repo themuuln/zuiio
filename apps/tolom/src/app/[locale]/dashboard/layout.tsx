@@ -42,7 +42,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <Suspense fallback={null}>
         <BrandThemeLoader />
       </Suspense>
-      <DashboardClientShell>{children}</DashboardClientShell>
+      <Suspense fallback={null}>
+        <DashboardClientShell>{children}</DashboardClientShell>
+      </Suspense>
     </>
   );
 }

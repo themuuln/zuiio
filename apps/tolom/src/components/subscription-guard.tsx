@@ -21,9 +21,10 @@ export function SubscriptionGuard({ orgId, orgName, children }: Props) {
       const body = await res.json();
       return (body.data as SubscriptionStatus) ?? null;
     },
-    refetchInterval: 60_000,
+    refetchInterval: 300_000,
+    refetchOnWindowFocus: false,
     retry: 1,
-    staleTime: 30_000,
+    staleTime: 120_000,
   });
 
   const blocked = status?.expired === true;

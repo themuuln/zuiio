@@ -37,7 +37,6 @@ const nextConfig: NextConfig = {
 
 	// ── Next.js 16.3: Instant Navigations ──────────────────────
 	cacheComponents: true,
-	partialPrefetching: true,
 
 	// ── Cache lifetime profiles (used with 'use cache' directive) ──
 	cacheLife: {
@@ -97,6 +96,6 @@ export default withPWA(
 		project: process.env.SENTRY_PROJECT,
 		silent: true,
 	 widenClientFileUpload: true,
-		reactComponentAnnotation: { enabled: true },
+		webpack: { reactComponentAnnotation: { enabled: true } },
 	}),
 );

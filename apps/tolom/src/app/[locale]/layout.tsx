@@ -49,7 +49,9 @@ export async function generateMetadata({
   };
 }
 
-export default async function LocaleLayout({
+import { Suspense } from "react";
+
+async function LocaleLayoutInner({
   children,
   params,
 }: {
@@ -86,5 +88,19 @@ export default async function LocaleLayout({
         </NextIntlClientProvider>
       </TooltipProvider>
     </DrawerProvider>
+  );
+}
+
+export default async function LocaleLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ locale: string }>;
+}) {
+  return (
+    <Suspense fallback={null}>
+      <LocaleLayoutInner params={params}>{children}</LocaleLayoutInner>
+    </Suspense>
   );
 }

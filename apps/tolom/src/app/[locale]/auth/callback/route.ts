@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { reportServerError } from "@/lib/sentry-report-server";
 import { finalizeSignup } from "@/lib/services/signup-service";
-import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 /**
  * SSO callback handler with account linking.
@@ -69,9 +70,9 @@ async function linkExistingAccountIfNeeded(
     const admin = await createServiceRoleClient();
     
     // Find existing user with this email (excluding the current SSO user)
-    const { data: existingUsers } = await admin.auth.admin.listUsers();
+    const { data: existingUsers } = await admin.auth.admin.listUsers({ perPage: 50 });
     const existingUser = existingUsers?.users?.find(
-      (u) => u.email === email && u.id !== ssoUserId && !u.app_metadata?.provider?.includes("custom:zuiio")
+      (u) => u.email === email && u.id !== ssoUserId && !String(u.app_metadata?.provider ?? "").includes("custom:zuiio")
     );
     
     if (!existingUser) {
