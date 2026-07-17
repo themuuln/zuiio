@@ -1,3 +1,7 @@
+// Performance note: Add these indexes for faster ILIKE search:
+// CREATE INDEX agent_knowledge_active_title_idx ON agent_knowledge_sources (organization_id) WHERE is_active = true;
+// For full-text search: CREATE INDEX agent_knowledge_active_content_trgm_idx ON agent_knowledge_sources USING gin (content gin_trgm_ops) WHERE is_active = true;
+
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -59,7 +63,9 @@ export async function searchKnowledge(
 		.select("id, source_type, title, content")
 		.eq("organization_id", orgId)
 		.eq("is_active", true)
-		.or(`title.ilike.%${query}%,content.ilike.%${query}%`)
+		.or(
+			`title.ilike.%${escapeIlIKE(query)}%,content.ilike.%${escapeIlIKE(query)}%`,
+		)
 		.limit(limit);
 
 	return ((data ?? []) as Array<Record<string, unknown>>).map((row) => ({
@@ -132,4 +138,9 @@ export function formatKnowledgeContext(chunks: KnowledgeChunk[]): string {
 		.join("\n\n");
 
 	return `\n--- Бизнесийн мэдлэгийн сан ---\n${formatted}\n--- Мэдлэгийн сан дууслаа ---\n\nДээрх мэдлэгийн сангаас хамааралтай мэдээллийг хариултандаа ашиглана уу.`;
+}
+
+/** Escape special characters for PostgreSQL ILIKE patterns. */
+function escapeIlIKE(input: string): string {
+	return input.replace(/[%_\\]/g, "\\$&");
 }

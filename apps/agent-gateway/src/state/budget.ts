@@ -2,6 +2,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { capture } from "@zuiio/capture";
+import { getCachedBudget, setCachedBudget } from "@/lib/cache";
 
 export const REQUEST_LIMITS = {
 	maxToolRounds: 10,
@@ -16,11 +17,27 @@ export const DAILY_LIMITS = {
 
 /**
  * Check if a request is within the org's daily spend budget.
+ * Checks Redis cache first, falls back to Supabase.
  */
 export async function checkDailyBudget(
 	supabase: SupabaseClient,
 	orgId: string,
 ): Promise<{ allowed: boolean; reason?: string; tokensUsedToday: number }> {
+	// Step 1: Check Redis cache
+	const cached = await getCachedBudget(orgId);
+	if (cached) {
+		const tokensUsed = cached.tokensUsed;
+		if (tokensUsed >= DAILY_LIMITS.hardCapTokens) {
+			return {
+				allowed: false,
+				reason: `Өнөөдрийн токены хязгаар дууссан. Маргааш дахин оролдоно уу.`,
+				tokensUsedToday: tokensUsed,
+			};
+		}
+		return { allowed: true, tokensUsedToday: tokensUsed };
+	}
+
+	// Step 2: Fall back to Supabase
 	const today = new Date().toISOString().split("T")[0]!;
 	const { data, error } = await supabase
 		.from("agent_daily_spend")
@@ -34,6 +51,9 @@ export async function checkDailyBudget(
 	if (error && error.code !== "PGRST116" && error.code !== "42P01") {
 		capture(error, { context: "agent-gateway: budget check" });
 	}
+
+	// Step 3: Populate cache
+	await setCachedBudget(orgId, tokensUsed);
 
 	if (tokensUsed >= DAILY_LIMITS.hardCapTokens) {
 		return {

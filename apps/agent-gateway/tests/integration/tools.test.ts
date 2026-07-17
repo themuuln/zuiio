@@ -343,17 +343,18 @@ describe("Zer Tools", () => {
 		supabase: {} as ReturnType<typeof createMockToolSupabase>["mockClient"],
 	};
 
-	it("returns all 5 Zer tools (3 read + 2 write)", () => {
+	it("returns all 6 Zer tools (4 read + 2 write)", () => {
 		const tools = getProductTools("zer", context);
 		const toolNames = tools.map((t) => t.name).sort();
 		expect(toolNames).toEqual([
 			"createSale",
 			"getPendingSales",
+			"getSalesByCategory",
 			"getSalesSummary",
 			"getTodaySales",
 			"recordPayment",
 		]);
-		expect(tools).toHaveLength(5);
+		expect(tools).toHaveLength(6);
 	});
 
 	it("getSalesSummary returns sales data with default 7 days", async () => {

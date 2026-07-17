@@ -1,6 +1,11 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+	getCachedWizard,
+	invalidateCachedWizard,
+	setCachedWizard,
+} from "@/lib/cache";
 
 export interface WizardState {
 	type: string;
@@ -13,6 +18,7 @@ const WIZARD_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 /**
  * Get active wizard state for a user session.
+ * Checks Redis cache first, falls back to Supabase.
  */
 export async function getWizardState(
 	sb: SupabaseClient,
@@ -21,6 +27,23 @@ export async function getWizardState(
 	channelUserId: string,
 	channel: string,
 ): Promise<WizardState | null> {
+	// Step 1: Check Redis cache
+	const cached = await getCachedWizard<WizardState>(
+		orgId,
+		channelChatId,
+		channelUserId,
+		channel,
+	);
+	if (cached) {
+		// Check TTL even for cached entries
+		if (Date.now() - new Date(cached.startedAt).getTime() > WIZARD_TTL_MS) {
+			await clearWizardState(sb, orgId, channelChatId, channelUserId, channel);
+			return null;
+		}
+		return cached;
+	}
+
+	// Step 2: Fall back to Supabase
 	try {
 		const key = `wizard_${orgId}_${channelChatId}_${channelUserId}_${channel}`;
 		const { data } = await sb
@@ -37,6 +60,10 @@ export async function getWizardState(
 			await clearWizardState(sb, orgId, channelChatId, channelUserId, channel);
 			return null;
 		}
+
+		// Step 3: Populate cache
+		await setCachedWizard(orgId, channelChatId, channelUserId, channel, state);
+
 		return state;
 	} catch {
 		return null;
@@ -44,7 +71,7 @@ export async function getWizardState(
 }
 
 /**
- * Save wizard state.
+ * Save wizard state to Supabase and Redis.
  */
 export async function saveWizardState(
 	sb: SupabaseClient,
@@ -55,15 +82,19 @@ export async function saveWizardState(
 	state: WizardState,
 ): Promise<void> {
 	const key = `wizard_${orgId}_${channelChatId}_${channelUserId}_${channel}`;
-	await sb
-		.from("app_config")
-		.upsert({ key, value: state as unknown as Record<string, unknown> }, {
-			onConflict: "key",
-		});
+	await Promise.all([
+		sb.from("app_config").upsert(
+			{ key, value: state as unknown as Record<string, unknown> },
+			{
+				onConflict: "key",
+			},
+		),
+		setCachedWizard(orgId, channelChatId, channelUserId, channel, state),
+	]);
 }
 
 /**
- * Clear wizard state.
+ * Clear wizard state from Supabase and Redis.
  */
 export async function clearWizardState(
 	sb: SupabaseClient,
@@ -73,5 +104,8 @@ export async function clearWizardState(
 	channel: string,
 ): Promise<void> {
 	const key = `wizard_${orgId}_${channelChatId}_${channelUserId}_${channel}`;
-	await sb.from("app_config").delete().eq("key", key);
+	await Promise.all([
+		sb.from("app_config").delete().eq("key", key),
+		invalidateCachedWizard(orgId, channelChatId, channelUserId, channel),
+	]);
 }

@@ -1,10 +1,10 @@
 import "server-only";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { chatCompletion } from "@zuiio/ai-agent";
 import { getCachedSession, setCachedSession } from "@/lib/cache";
 import { debug } from "@/lib/debug";
 import { openCodeGoConfig } from "@/lib/env";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
 /** A single message in the conversation history (OpenAI-compatible format). */
 export interface SessionMessage {
@@ -37,10 +37,15 @@ export async function loadSession(
 	orgId: string,
 	channelChatId: string,
 	channelUserId: string,
-	_channel = "telegram",
+	channel = "telegram",
 ): Promise<SessionState> {
 	// Step 1: Check Redis hot cache
-	const cached = await getCachedSession<SessionState>(orgId, channelChatId, channelUserId);
+	const cached = await getCachedSession<SessionState>(
+		orgId,
+		channel,
+		channelChatId,
+		channelUserId,
+	);
 	if (cached) {
 		return cached;
 	}
@@ -64,14 +69,13 @@ export async function loadSession(
 	};
 
 	// Step 3: Populate Redis cache for next read
-	await setCachedSession(orgId, channelChatId, channelUserId, session);
+	await setCachedSession(orgId, channel, channelChatId, channelUserId, session);
 
 	return session;
 }
 
 /**
- * Save session state to Supabase.
- * Tries insert first; falls back to update on duplicate key.
+ * Save session state to Supabase using a single upsert.
  */
 export async function saveSession(
 	supabase: SupabaseClient,
@@ -80,7 +84,7 @@ export async function saveSession(
 	channelUserId: string,
 	messages: SessionMessage[],
 	tokenCount: number,
-	_channel = "telegram",
+	channel = "telegram",
 ): Promise<void> {
 	// Trim old messages if exceeding limit
 	if (messages.length > MAX_SESSION_MESSAGES) {
@@ -96,46 +100,48 @@ export async function saveSession(
 	}
 
 	const now = new Date().toISOString();
-	const expiresAt = new Date(Date.now() + SESSION_TTL_HOURS * 3600000).toISOString();
+	const expiresAt = new Date(
+		Date.now() + SESSION_TTL_HOURS * 3600000,
+	).toISOString();
 	const serialized = JSON.parse(JSON.stringify(messages)) as never;
-	const row = {
-		organization_id: orgId,
-		telegram_chat_id: channelChatId,
-		telegram_user_id: channelUserId,
-		messages: serialized,
-		token_count: tokenCount,
-		updated_at: now,
-		expires_at: expiresAt,
-	};
 
-	// Try insert first
-	debug("session", "saveSession insert", { orgId, chatId: channelChatId, userId: channelUserId, messageCount: messages.length });
-	const { error } = await supabase.from("agent_sessions").insert(row);
+	debug("session", "saveSession upsert", {
+		orgId,
+		chatId: channelChatId,
+		userId: channelUserId,
+		messageCount: messages.length,
+	});
+	const { error } = await supabase.from("agent_sessions").upsert(
+		{
+			organization_id: orgId,
+			telegram_chat_id: channelChatId,
+			telegram_user_id: channelUserId,
+			messages: serialized,
+			token_count: tokenCount,
+			updated_at: now,
+			expires_at: expiresAt,
+		},
+		{
+			onConflict: "organization_id,telegram_chat_id,telegram_user_id",
+			ignoreDuplicates: false,
+		},
+	);
 
 	if (error) {
-		if (error.code === "23505") {
-			debug("session", "session exists, updating", { orgId, chatId: channelChatId });
-			await supabase
-				.from("agent_sessions")
-				.update({
-					messages: serialized,
-					token_count: tokenCount,
-					updated_at: now,
-					expires_at: expiresAt,
-				})
-				.eq("organization_id", orgId)
-				.eq("telegram_chat_id", channelChatId)
-				.eq("telegram_user_id", channelUserId);
-		} else {
-			console.error("[session] save failed:", error.message);
-		}
+		console.error("[session] save failed:", error.message);
 	} else {
-		debug("session", "new session inserted", { orgId, chatId: channelChatId });
+		debug("session", "session saved", { orgId, chatId: channelChatId });
 	}
 
 	// Update Redis hot cache
 	const sessionState: SessionState = { messages, tokenCount };
-	await setCachedSession(orgId, channelChatId, channelUserId, sessionState);
+	await setCachedSession(
+		orgId,
+		channel,
+		channelChatId,
+		channelUserId,
+		sessionState,
+	);
 }
 
 /**
@@ -151,7 +157,13 @@ export async function appendToSession(
 	tokenCount: number,
 	channel = "telegram",
 ): Promise<void> {
-	const session = await loadSession(supabase, orgId, channelChatId, channelUserId, channel);
+	const session = await loadSession(
+		supabase,
+		orgId,
+		channelChatId,
+		channelUserId,
+		channel,
+	);
 
 	session.messages.push({ role: "user", content: userMessage });
 	session.messages.push({ role: "assistant", content: assistantResponse });
@@ -212,7 +224,8 @@ export async function summarizeIfNeeded(
 			model: config.model,
 			temperature: 0.3,
 			maxTokens: SUMMARIZE_MAX_TOKENS,
-			systemPrompt: "Та ярианы товч бичээч. Дараах харилцааны тэмдэглэлийг нэг хэсэг болгон товчло. Монгол хэлээр бичнэ үү. Зүйл бүрийг хадгал: хэрэглэгчийн хүсэлт, шийдвэр, үр дүн. 3-5 өгүүлбэр бичнэ.",
+			systemPrompt:
+				"Та ярианы товч бичээч. Дараах харилцааны тэмдэглэлийг нэг хэсэг болгон товчло. Монгол хэлээр бичнэ үү. Зүйл бүрийг хадгал: хэрэглэгчийн хүсэлт, шийдвэр, үр дүн. 3-5 өгүүлбэр бичнэ.",
 			messages: [{ role: "user", content: oldContent }],
 		});
 

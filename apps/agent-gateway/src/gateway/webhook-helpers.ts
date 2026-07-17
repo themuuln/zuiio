@@ -19,6 +19,8 @@ export async function systemPromptFor(
 			? "\n\nАНХААРУУЛГА: Та group чат-д байна. Хэрэглэгчийн хувийн өгөгдлийг group-д бичиж болохгүй. Зөвхөн ерөнхий мэдээлэл өгнө үү."
 			: "";
 	// Fetch organization name for better context
+	// Performance note: orgName is fetched on every request.
+	// Consider caching in Redis with a 1-hour TTL for production optimization.
 	let orgName = "";
 	try {
 		const { createServiceClient } = await import("@/lib/supabase");
@@ -53,7 +55,7 @@ export async function systemPromptFor(
 4. Be proactive — after showing data, offer relevant next steps
 
 ## TOOL USAGE
-You have flexible query tools for all business data. Use getVehicleAnalytics for vehicle questions, getFinancialSummary for financial questions, queryData for any table query. For write operations, describe what you'll do first.
+You have flexible query tools for all business data. Use getVehicleAnalytics for vehicle questions, getFinancialSummary for financial questions, getSparePartsSales for spare parts sales (which parts sold most, revenue by part), partsLookup to search spare parts pricing, exportData to export tables to CSV, queryData for any table query. For write operations (createWorkOrder, createInvoice, recordPayment, createAppointment, createReminder, bulkUpdateWorkOrderStatus, createSale), describe what you'll do first.
 
 ## MULTI-STEP WIZARDS
 When users want to do complex operations, guide them step by step:
@@ -106,7 +108,10 @@ You are a BUSINESS AGENT with full database access. Follow these rules:
 7. **Use getFinancialSummary for financial questions** — "How much revenue this quarter?", "Show expenses by category"
 8. **Use getDailySummary for today's quick overview**
 9. **Use getActiveWorkOrders for current active jobs**
-10. **For write operations** (create work order, update status, record payment, create appointment) — describe what you'll do, then call the tool. The system will ask for confirmation.
+10. **Use getSparePartsSales for spare parts questions** — "Which spare part made the most revenue?", "сэлбэгийн борлуулалт", "spare parts sales summary"
+11. **Use partsLookup for spare parts pricing** — "энэ сэлбэг хэдэн төгрөг вэ?", "brake disc үнэ хэд вэ?", part name/number search
+12. **Use exportData when users want to download data** — "өгөгдөл татаж өгөөч", CSV export
+13. **For write operations** (create work order, update status, record payment, create appointment, create sale, set reminder, bulk status update) — describe what you'll do, then call the tool. The system will ask for confirmation.
 
 ## TOOL USAGE
 You have access to these tools. Use them proactively:
@@ -122,12 +127,18 @@ You have access to these tools. Use them proactively:
 - <b>getMechanics</b> — Staff/mechanic list
 - <b>getWorkOrderDetails</b> — Detailed work order with parts
 - <b>getSuppliers</b> — Supplier list
+- <b>getSparePartsSales</b> — Spare parts sales by revenue (which parts sold most, total revenue). Use for: "which spare part made most revenue?", "spare parts sales summary", "сэлбэгийн борлуулалт"
+- <b>partsLookup</b> — Search spare parts by name/number, shows catalog price + historical pricing. Use for: "энэ сэлбэг хэдэн төгрөг вэ?", " Brake disc үнэ хэд вэ?"
+- <b>exportData</b> — Export any table to CSV (work_orders, invoices, customers, expenses, sales)
 - <b>createWorkOrder</b> — Create new work order (requires confirmation)
 - <b>updateWorkOrderStatus</b> — Change work order status (requires confirmation)
 - <b>updateWorkOrderDetails</b> — Update description/notes/amount (requires confirmation)
 - <b>createInvoice</b> — Create invoice (requires confirmation)
 - <b>recordPayment</b> — Record payment against invoice (requires confirmation)
 - <b>createAppointment</b> — Book appointment (requires confirmation)
+- <b>createReminder</b> — Set a reminder to send a message later (requires confirmation)
+- <b>bulkUpdateWorkOrderStatus</b> — Update multiple work orders at once (requires confirmation)
+- <b>createSale</b> — Record a direct sale with amount, payment, customer (requires confirmation)
 
 For general questions (greetings, "who are you", etc.), respond WITHOUT tools.
 
@@ -146,6 +157,7 @@ You can query ALL business data including:
 - Sales history
 - Cash register sessions
 - Mechanic daily reports
+- Spare parts sales by revenue (which parts sold most)
 
 ## MULTI-STEP WIZARDS
 When users want to do complex operations, guide them step by step:
@@ -179,7 +191,7 @@ Organization ID: ${orgId}${groupWarning}`;
 You have flexible query tools for all business data.
 - For sales by product category (e.g. "spare parts sales"), use getSalesByCategory
 - For general sales summaries, use getTodaySales or getSalesSummary
-
+- For unpaid/pending sales, use getPendingSales
 Organization ID: ${orgId}${groupWarning}`;
 	}
 	return `You are an AI assistant for "${orgName || "This store"}", a Zer-powered retail/accounting business.
@@ -215,10 +227,11 @@ When users say hello, goodbye, thanks, or ask casual questions:
 you have access to business tools. Use them when users ask about sales, inventory, customers, or accounting.
 - For sales by product category (жишээ: "сэлбэгийн борлуулалт", "ангиллаар орлого"), use getSalesByCategory
 - For general sales summaries, use getTodaySales or getSalesSummary
+- For unpaid/pending sales, use getPendingSales
 For general questions (greetings, "who are you", etc.), respond WITHOUT tools.
 
 Organization ID: ${orgId}${groupWarning}`;
-	}
+}
 
 // ─── Tolom Tools ───────────────────────────────────────────────────────────
 
@@ -328,10 +341,10 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 						customerName: (wo.customers as any)?.full_name ?? "—",
 						phone: (wo.customers as any)?.phone ?? "—",
 					}));
-			} catch (err) {
-				capture(err, { context: "agent-gateway: getActiveWorkOrders" });
-				return { error: "Ажлын жагсаалт авахад алдаа гарлаа" };
-			}
+				} catch (err) {
+					capture(err, { context: "agent-gateway: getActiveWorkOrders" });
+					return { error: "Ажлын жагсаалт авахад алдаа гарлаа" };
+				}
 			},
 		},
 		{
@@ -395,10 +408,10 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 							})),
 						};
 					});
-			} catch (err) {
-				capture(err, { context: "agent-gateway: getCustomerHistory" });
-				return { error: "Харилцагч хайхад алдаа гарлаа" };
-			}
+				} catch (err) {
+					capture(err, { context: "agent-gateway: getCustomerHistory" });
+					return { error: "Харилцагч хайхад алдаа гарлаа" };
+				}
 			},
 		},
 		{
@@ -431,10 +444,10 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 						),
 						invoiceCount: rows.length,
 					};
-			} catch (err) {
-				capture(err, { context: "agent-gateway: getInvoiceStatus" });
-				return { error: "Нэхэмжлэлийн хураангуй авахад алдаа гарлаа" };
-			}
+				} catch (err) {
+					capture(err, { context: "agent-gateway: getInvoiceStatus" });
+					return { error: "Нэхэмжлэлийн хураангуй авахад алдаа гарлаа" };
+				}
 			},
 		},
 		{
@@ -462,10 +475,10 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 						byCategory[catName] = (byCategory[catName] ?? 0) + amount;
 					}
 					return { total, byCategory, expenseCount: rows.length };
-			} catch (err) {
-				capture(err, { context: "agent-gateway: getExpensesSummary" });
-				return { error: "Зарлагын хураангуй авахад алдаа гарлаа" };
-			}
+				} catch (err) {
+					capture(err, { context: "agent-gateway: getExpensesSummary" });
+					return { error: "Зарлагын хураангуй авахад алдаа гарлаа" };
+				}
 			},
 		},
 		{
@@ -495,10 +508,10 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 							.filter(Boolean)
 							.join(" "),
 					}));
-			} catch (err) {
-				capture(err, { context: "agent-gateway: getAppointments" });
-				return { error: "Цагийн жагсаалт авахад алдаа гарлаа" };
-			}
+				} catch (err) {
+					capture(err, { context: "agent-gateway: getAppointments" });
+					return { error: "Цагийн жагсаалт авахад алдаа гарлаа" };
+				}
 			},
 		},
 		{
@@ -541,24 +554,31 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 					const [woRes, partsRes] = await Promise.all([
 						supabase
 							.from("work_orders")
-							.select("*, customers(full_name, phone), vehicles(plate_number, make, model, year)")
+							.select(
+								"*, customers(full_name, phone), vehicles(plate_number, make, model, year)",
+							)
 							.eq("id", woId)
 							.eq("organization_id", orgId)
 							.single(),
 						supabase
 							.from("work_order_parts")
-							.select("part_name, part_number, quantity, unit_price, final_price")
+							.select(
+								"part_name, part_number, quantity, unit_price, final_price",
+							)
 							.eq("work_order_id", woId)
 							.eq("organization_id", orgId),
 					]);
-					if (woRes.error || !woRes.data) return { error: "Ажлын захиалга олдсонгүй" };
+					if (woRes.error || !woRes.data)
+						return { error: "Ажлын захиалга олдсонгүй" };
 					const wo = woRes.data;
 					return {
 						id: wo.id,
 						status: wo.status,
 						total: Number(wo.total_amount) || 0,
 						plate: wo.plate_number ?? (wo.vehicles as any)?.plate_number ?? "—",
-						vehicle: [(wo.vehicles as any)?.make, (wo.vehicles as any)?.model].filter(Boolean).join(" "),
+						vehicle: [(wo.vehicles as any)?.make, (wo.vehicles as any)?.model]
+							.filter(Boolean)
+							.join(" "),
 						customerName: (wo.customers as any)?.full_name ?? "—",
 						phone: (wo.customers as any)?.phone ?? "—",
 						description: wo.description ?? "—",
@@ -613,7 +633,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 				},
 				{
 					name: "date_from",
-	type: "string",
+					type: "string",
 					description: "Эхлэх огноо (YYYY-MM-DD)",
 					required: false,
 				},
@@ -651,7 +671,8 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 				{
 					name: "aggregate",
 					type: "string",
-					description: 'Нэгтгэх: "count", "sum:<column>", "avg:<column>" эсвэл "group:<column>"',
+					description:
+						'Нэгтгэх: "count", "sum:<column>", "avg:<column>" эсвэл "group:<column>"',
 					required: false,
 				},
 			],
@@ -690,7 +711,10 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 						100,
 					);
 
-					let query = supabase.from(table).select("*").eq("organization_id", orgId);
+					let query = supabase
+						.from(table)
+						.select("*")
+						.eq("organization_id", orgId);
 
 					if (!["profiles"].includes(table)) {
 						query = query.is("deleted_at", null);
@@ -765,9 +789,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 
 					if (aggregate?.startsWith("group:")) {
 						const col = aggregate.split(":")[1];
-						const { data, error } = await query.select(`*, ${col}`).limit(
-							1000,
-						);
+						const { data, error } = await query.select(`*, ${col}`).limit(1000);
 						if (error) return { error: "Бүлэглэх алдаа гарлаа" };
 						const groups: Record<string, number> = {};
 						for (const r of data ?? []) {
@@ -811,7 +833,8 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 				{
 					name: "sort_by",
 					type: "string",
-					description: "Эрэмбэлэх: repair_count, total_revenue, last_repair (default: repair_count)",
+					description:
+						"Эрэмбэлэх: repair_count, total_revenue, last_repair (default: repair_count)",
 					required: false,
 				},
 				{
@@ -884,14 +907,13 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 						}
 					}
 
-					let vehicles = Array.from(vehicleMap.values());
-					const sortBy = typeof args.sort_by === "string" ? args.sort_by : "repair_count";
+					const vehicles = Array.from(vehicleMap.values());
+					const sortBy =
+						typeof args.sort_by === "string" ? args.sort_by : "repair_count";
 					if (sortBy === "total_revenue") {
 						vehicles.sort((a, b) => b.totalRevenue - a.totalRevenue);
 					} else if (sortBy === "last_repair") {
-						vehicles.sort((a, b) =>
-							b.lastRepair.localeCompare(a.lastRepair),
-						);
+						vehicles.sort((a, b) => b.lastRepair.localeCompare(a.lastRepair));
 					} else {
 						vehicles.sort((a, b) => b.repairCount - a.repairCount);
 					}
@@ -987,8 +1009,7 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 					);
 					const expensesByCategory: Record<string, number> = {};
 					for (const r of expenseRows) {
-						const cat =
-							((r as any).expense_categories as any)?.name ?? "Бусад";
+						const cat = ((r as any).expense_categories as any)?.name ?? "Бусад";
 						expensesByCategory[cat] =
 							(expensesByCategory[cat] ?? 0) + (Number((r as any).amount) || 0);
 					}
@@ -1022,42 +1043,94 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "exportData",
-			description: "Өгөгдлийг CSV болгож экспортлох. Хүснэгт, хугацааны хязгаартай.",
+			description:
+				"Өгөгдлийг CSV болгож экспортлох. Хүснэгт, хугацааны хязгаартай.",
 			parameters: [
-				{ name: "table", type: "string", description: "Хүснэгтийн нэр (work_orders, invoices, customers, expenses, sales)", required: true },
-				{ name: "date_from", type: "string", description: "Эхлэх огноо (YYYY-MM-DD)", required: false },
-				{ name: "date_to", type: "string", description: "Дуусах огноо (YYYY-MM-DD)", required: false },
+				{
+					name: "table",
+					type: "string",
+					description:
+						"Хүснэгтийн нэр (work_orders, invoices, customers, expenses, sales)",
+					required: true,
+				},
+				{
+					name: "date_from",
+					type: "string",
+					description: "Эхлэх огноо (YYYY-MM-DD)",
+					required: false,
+				},
+				{
+					name: "date_to",
+					type: "string",
+					description: "Дуусах огноо (YYYY-MM-DD)",
+					required: false,
+				},
 			],
 			execute: async (args) => {
 				try {
 					const table = (args.table as string)?.toLowerCase();
-					const allowedTables: Record<string, { dateCol: string; select: string }> = {
-						work_orders: { dateCol: "created_at", select: "id, status, description, total_amount, created_at" },
-						invoices: { dateCol: "issued_at", select: "id, invoice_number, status, total, amount_paid, balance_due, issued_at" },
-						customers: { dateCol: "created_at", select: "id, full_name, phone, email, total_visits" },
-						expenses: { dateCol: "expense_date", select: "id, amount, description, expense_date" },
-						sales: { dateCol: "sale_date", select: "id, total_amount, paid_amount, sale_date, customer_name" },
+					const allowedTables: Record<
+						string,
+						{ dateCol: string; select: string }
+					> = {
+						work_orders: {
+							dateCol: "created_at",
+							select: "id, status, description, total_amount, created_at",
+						},
+						invoices: {
+							dateCol: "issued_at",
+							select:
+								"id, invoice_number, status, total, amount_paid, balance_due, issued_at",
+						},
+						customers: {
+							dateCol: "created_at",
+							select: "id, full_name, phone, email, total_visits",
+						},
+						expenses: {
+							dateCol: "expense_date",
+							select: "id, amount, description, expense_date",
+						},
+						sales: {
+							dateCol: "sale_date",
+							select: "id, total_amount, paid_amount, sale_date, customer_name",
+						},
 					};
 					if (!table || !allowedTables[table]) {
 						return { error: `Экспортлох боломжгүй хүснэгт: "${args.table}"` };
 					}
 					const cfg = allowedTables[table];
-					let query = supabase.from(table).select(cfg.select).eq("organization_id", orgId).is("deleted_at", null);
-					if (args.date_from && typeof args.date_from === "string") query = query.gte(cfg.dateCol, args.date_from);
-					if (args.date_to && typeof args.date_to === "string") query = query.lte(cfg.dateCol, `${args.date_to}T23:59:59Z`);
-					const { data, error } = await query.order(cfg.dateCol, { ascending: false }).limit(500);
+					let query = supabase
+						.from(table)
+						.select(cfg.select)
+						.eq("organization_id", orgId)
+						.is("deleted_at", null);
+					if (args.date_from && typeof args.date_from === "string")
+						query = query.gte(cfg.dateCol, args.date_from);
+					if (args.date_to && typeof args.date_to === "string")
+						query = query.lte(cfg.dateCol, `${args.date_to}T23:59:59Z`);
+					const { data, error } = await query
+						.order(cfg.dateCol, { ascending: false })
+						.limit(500);
 					if (error) return { error: "Өгөгдөл татахад алдаа гарлаа" };
 					const rows = data ?? [];
-					if (rows.length === 0) return { message: "Өгөгдөл олдсонгүй", csv: "" };
-					const headers = Object.keys((rows[0] ?? {}) as unknown as Record<string, unknown>);
-					const csvRows = (rows as unknown as Record<string, unknown>[]).map((r) =>
-						headers.map((h) => {
-							const val = r[h];
-							if (val === null || val === undefined) return "";
-							if (typeof val === "object") return JSON.stringify(val);
-							const str = String(val);
-							return str.includes(",") || str.includes('"') ? `"${str.replace(/"/g, '""')}"` : str;
-						}).join(",")
+					if (rows.length === 0)
+						return { message: "Өгөгдөл олдсонгүй", csv: "" };
+					const headers = Object.keys(
+						(rows[0] ?? {}) as unknown as Record<string, unknown>,
+					);
+					const csvRows = (rows as unknown as Record<string, unknown>[]).map(
+						(r) =>
+							headers
+								.map((h) => {
+									const val = r[h];
+									if (val === null || val === undefined) return "";
+									if (typeof val === "object") return JSON.stringify(val);
+									const str = String(val);
+									return str.includes(",") || str.includes('"')
+										? `"${str.replace(/"/g, '""')}"`
+										: str;
+								})
+								.join(","),
 					);
 					const csv = [headers.join(","), ...csvRows].join("\n");
 					return { table, rowCount: rows.length, csv };
@@ -1069,9 +1142,15 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "partsLookup",
-			description: "Сэлбэгийн үнийн мэдээлэл хайх. Дотоод каталог болон түүхэн үнэ.",
+			description:
+				"Сэлбэгийн үнийн мэдээлэл хайх. Дотоод каталог болон түүхэн үнэ.",
 			parameters: [
-				{ name: "query", type: "string", description: "Сэлбэгийн нэр, дугаар эсвэл тодорхойлолт", required: true },
+				{
+					name: "query",
+					type: "string",
+					description: "Сэлбэгийн нэр, дугаар эсвэл тодорхойлолт",
+					required: true,
+				},
 			],
 			execute: async (args) => {
 				try {
@@ -1085,23 +1164,197 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 						.limit(10);
 					const { data: historicalParts } = await supabase
 						.from("work_order_parts")
-						.select("part_name, part_number, unit_price, final_price, created_at")
+						.select(
+							"part_name, part_number, unit_price, final_price, created_at",
+						)
 						.eq("organization_id", orgId)
 						.or(`part_name.ilike.%${q}%,part_number.ilike.%${q}%`)
 						.order("created_at", { ascending: false })
 						.limit(10);
 					return {
 						query: q,
-						internalCatalog: (internalParts ?? []).map((p: Record<string, unknown>) => ({
-							name: p.name, partNumber: p.part_number, price: Number(p.unit_price) || 0, category: p.category,
-						})),
-						historicalPricing: (historicalParts ?? []).map((p: Record<string, unknown>) => ({
-							name: p.part_name, partNumber: p.part_number, unitPrice: Number(p.unit_price) || 0, date: p.created_at,
-						})),
+						internalCatalog: (internalParts ?? []).map(
+							(p: Record<string, unknown>) => ({
+								name: p.name,
+								partNumber: p.part_number,
+								price: Number(p.unit_price) || 0,
+								category: p.category,
+							}),
+						),
+						historicalPricing: (historicalParts ?? []).map(
+							(p: Record<string, unknown>) => ({
+								name: p.part_name,
+								partNumber: p.part_number,
+								unitPrice: Number(p.unit_price) || 0,
+								date: p.created_at,
+							}),
+						),
 					};
 				} catch (err) {
 					capture(err, { context: "agent-gateway: partsLookup" });
 					return { error: "Сэлбэг хайхад алдаа гарлаа" };
+				}
+			},
+		},
+		{
+			name: "getSparePartsSales",
+			description:
+				"Сэлбэгийн борлуулалтын хураангуй: аль сэлбэг хамгийн их орлого олсон, нийт борлуулалт, хугацааны хязгаар. Ажлын захиалгад ашигласан сэлбэг болон шууд борлуулалт аль алийг нь хамарна.",
+			parameters: [
+				{
+					name: "date_from",
+					type: "string",
+					description: "Эхлэх огноо (YYYY-MM-DD)",
+					required: false,
+				},
+				{
+					name: "date_to",
+					type: "string",
+					description: "Дуусах огноо (YYYY-MM-DD)",
+					required: false,
+				},
+				{
+					name: "limit",
+					type: "number",
+					description: "Хэдэн сэлбэг харуулах (default 10)",
+					required: false,
+				},
+			],
+			execute: async (args) => {
+				try {
+					const now = new Date();
+					const dateFrom =
+						typeof args.date_from === "string"
+							? args.date_from
+							: new Date(now.getFullYear(), now.getMonth(), 1)
+									.toISOString()
+									.split("T")[0];
+					const dateTo =
+						typeof args.date_to === "string"
+							? `${args.date_to}T23:59:59Z`
+							: now.toISOString();
+					const limit =
+						typeof args.limit === "number" ? Math.min(args.limit, 50) : 10;
+
+					// Query work_order_parts (parts used in repairs)
+					const woPartsPromise = supabase
+						.from("work_order_parts")
+						.select(
+							"part_name, part_number, quantity, unit_price, final_price, created_at",
+						)
+						.eq("organization_id", orgId)
+						.gte("created_at", dateFrom)
+						.lte("created_at", dateTo)
+						.order("created_at", { ascending: false })
+						.limit(1000);
+
+					// Query sales_items (direct parts sales) if the table exists
+					const salesItemsPromise = supabase
+						.from("sales_items")
+						.select(
+							"part_name, part_number, quantity, unit_price, total_price, created_at",
+						)
+						.eq("organization_id", orgId)
+						.gte("created_at", dateFrom)
+						.lte("created_at", dateTo)
+						.order("created_at", { ascending: false })
+						.limit(1000)
+						.then(
+							(res) => res,
+							() => ({ data: null, error: null }),
+						);
+					const [woPartsRes, salesItemsRes] = await Promise.all([
+						woPartsPromise,
+						salesItemsPromise,
+					]);
+
+					// Merge and aggregate by part_name
+					type PartRow = {
+						part_name?: string | null;
+						part_number?: string | null;
+						quantity?: number | string | null;
+						unit_price?: number | string | null;
+						final_price?: number | string | null;
+						total_price?: number | string | null;
+					};
+
+					const partsMap = new Map<
+						string,
+						{
+							partName: string;
+							partNumber: string;
+							totalQuantity: number;
+							totalRevenue: number;
+							saleCount: number;
+						}
+					>();
+
+					for (const p of (woPartsRes.data ?? []) as PartRow[]) {
+						const name = p.part_name ?? "—";
+						const num = p.part_number ?? "";
+						const revenue =
+							Number(p.final_price) ||
+							Number(p.unit_price) * Number(p.quantity) ||
+							0;
+						const qty = Number(p.quantity) || 0;
+						const existing = partsMap.get(name);
+						if (existing) {
+							existing.totalQuantity += qty;
+							existing.totalRevenue += revenue;
+							existing.saleCount += 1;
+						} else {
+							partsMap.set(name, {
+								partName: name,
+								partNumber: num,
+								totalQuantity: qty,
+								totalRevenue: revenue,
+								saleCount: 1,
+							});
+						}
+					}
+
+					for (const p of (salesItemsRes.data ?? []) as PartRow[]) {
+						const name = p.part_name ?? "—";
+						const num = p.part_number ?? "";
+						const revenue =
+							Number(p.total_price) ||
+							Number(p.unit_price) * Number(p.quantity) ||
+							0;
+						const qty = Number(p.quantity) || 0;
+						const existing = partsMap.get(name);
+						if (existing) {
+							existing.totalQuantity += qty;
+							existing.totalRevenue += revenue;
+							existing.saleCount += 1;
+						} else {
+							partsMap.set(name, {
+								partName: name,
+								partNumber: num,
+								totalQuantity: qty,
+								totalRevenue: revenue,
+								saleCount: 1,
+							});
+						}
+					}
+
+					// Sort by revenue descending
+					const parts = Array.from(partsMap.values())
+						.sort((a, b) => b.totalRevenue - a.totalRevenue)
+						.slice(0, limit);
+
+					const totalRevenue = parts.reduce((s, p) => s + p.totalRevenue, 0);
+
+					return {
+						period: `${dateFrom} → ${typeof args.date_to === "string" ? args.date_to : now.toISOString().split("T")[0]}`,
+						totalRevenue,
+						totalParts: parts.length,
+						parts,
+					};
+				} catch (err) {
+					capture(err, { context: "agent-gateway: getSparePartsSales" });
+					return {
+						error: "Сэлбэгийн борлуулалтын хураангуй авахад алдаа гарлаа",
+					};
 				}
 			},
 		},
@@ -1213,10 +1466,10 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 						status: woData.status,
 						totalAmount: woData.total_amount,
 					};
-			} catch (err) {
-				capture(err, { context: "agent-gateway: createWorkOrder" });
-				return { error: "Ажлын захиалга үүсгэхэд алдаа гарлаа" };
-			}
+				} catch (err) {
+					capture(err, { context: "agent-gateway: createWorkOrder" });
+					return { error: "Ажлын захиалга үүсгэхэд алдаа гарлаа" };
+				}
 			},
 		},
 		{
@@ -1269,10 +1522,10 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 						success: true,
 						message: `Ажлын захиалга #${(args.workOrderId as string).split("-")[0]} төлөв "${newStatus}" болж өөрчлөгдлөө`,
 					};
-			} catch (err) {
-				capture(err, { context: "agent-gateway: updateWorkOrderStatus" });
-				return { error: "Төлөв өөрчлөхөд алдаа гарлаа" };
-			}
+				} catch (err) {
+					capture(err, { context: "agent-gateway: updateWorkOrderStatus" });
+					return { error: "Төлөв өөрчлөхөд алдаа гарлаа" };
+				}
 			},
 		},
 		{
@@ -1324,10 +1577,10 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 						invoiceId: (data as { id: string }).id,
 						total: (data as { total: number }).total,
 					};
-			} catch (err) {
-				capture(err, { context: "agent-gateway: createInvoice" });
-				return { error: "Нэхэмжлэх үүсгэхэд алдаа гарлаа" };
-			}
+				} catch (err) {
+					capture(err, { context: "agent-gateway: createInvoice" });
+					return { error: "Нэхэмжлэх үүсгэхэд алдаа гарлаа" };
+				}
 			},
 		},
 		// ─── New CRU Tools ─────────────────────────────────────────────
@@ -1399,8 +1652,7 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "recordPayment",
-			description:
-				"Нэхэмжлэх дээр төлбөр бүртгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
+			description: "Нэхэмжлэх дээр төлбөр бүртгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
 			parameters: [
 				{
 					name: "invoiceId",
@@ -1429,7 +1681,9 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 					const method = (args.method as string) ?? "cash";
 					const validMethods = ["cash", "card", "qpay", "transfer"];
 					if (!validMethods.includes(method)) {
-						return { error: `Хүчингүй төлбөрийн хэрэгсэл: "${method}". Боломжит: ${validMethods.join(", ")}` };
+						return {
+							error: `Хүчингүй төлбөрийн хэрэгсэл: "${method}". Боломжит: ${validMethods.join(", ")}`,
+						};
 					}
 
 					// Get current invoice
@@ -1495,8 +1749,7 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "createAppointment",
-			description:
-				"Шинэ цаг захиалга үүсгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
+			description: "Шинэ цаг захиалга үүсгэх. БАТАЛГААЖУУЛАЛТЫН багаж.",
 			parameters: [
 				{
 					name: "customerName",
@@ -1588,8 +1841,7 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "sendInvoicePdf",
-			description:
-				"Нэхэмжлэхийг PDF болгож илгээх. БАТАЛГААЖУУЛАЛТЫН багаж.",
+			description: "Нэхэмжлэхийг PDF болгож илгээх. БАТАЛГААЖУУЛАЛТЫН багаж.",
 			parameters: [
 				{
 					name: "invoiceId",
@@ -1626,21 +1878,43 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "createReminder",
-			description: "Сануулга үүсгэх. Тодорхой хугацааны дараа мессеж илгээнэ. БАТАЛГААЖУУЛАЛТЫН багаж.",
+			description:
+				"Сануулга үүсгэх. Тодорхой хугацааны дараа мессеж илгээнэ. БАТАЛГААЖУУЛАЛТЫН багаж.",
 			parameters: [
-				{ name: "message", type: "string", description: "Сануулгын агуулга", required: true },
-				{ name: "remindAt", type: "string", description: "Хэзээ сануулах (YYYY-MM-DDTHH:MM)", required: true },
+				{
+					name: "message",
+					type: "string",
+					description: "Сануулгын агуулга",
+					required: true,
+				},
+				{
+					name: "remindAt",
+					type: "string",
+					description: "Хэзээ сануулах (YYYY-MM-DDTHH:MM)",
+					required: true,
+				},
 			],
 			execute: async (args) => {
 				try {
 					const message = args.message as string;
 					const remindAt = args.remindAt as string;
 					const { error } = await supabase.from("notifications").insert({
-						organization_id: orgId, type: "reminder", title: "Сануулга",
-						message, scheduled_for: remindAt, is_read: false,
+						organization_id: orgId,
+						type: "reminder",
+						title: "Сануулга",
+						message,
+						scheduled_for: remindAt,
+						is_read: false,
 					});
-					if (error) return { success: true, message: `Сануулга тэмдэглэгдлээ: ${message} (${remindAt})` };
-					return { success: true, message: `Сануулга амжилттай үүслээ: ${message} (${remindAt})` };
+					if (error)
+						return {
+							success: true,
+							message: `Сануулга тэмдэглэгдлээ: ${message} (${remindAt})`,
+						};
+					return {
+						success: true,
+						message: `Сануулга амжилттай үүслээ: ${message} (${remindAt})`,
+					};
 				} catch (err) {
 					capture(err, { context: "agent-gateway: createReminder" });
 					return { error: "Сануулга үүсгэхэд алдаа гарлаа" };
@@ -1649,18 +1923,41 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 		},
 		{
 			name: "bulkUpdateWorkOrderStatus",
-			description: "Олон ажлын захиалгын төлөвийг нэгэн зэрэг өөрчлөх. БАТАЛГААЖУУЛАЛТЫН багаж.",
+			description:
+				"Олон ажлын захиалгын төлөвийг нэгэн зэрэг өөрчлөх. БАТАЛГААЖУУЛАЛТЫН багаж.",
 			parameters: [
-				{ name: "workOrderIds", type: "string", description: "IDs-уудын жагсаалт (тикийгээр таслалаар тусгаарласан)", required: true },
-				{ name: "newStatus", type: "string", description: "Шинэ төлөв: received, in_progress, completed, delivered, cancelled", required: true },
+				{
+					name: "workOrderIds",
+					type: "string",
+					description: "IDs-уудын жагсаалт (тикийгээр таслалаар тусгаарласан)",
+					required: true,
+				},
+				{
+					name: "newStatus",
+					type: "string",
+					description:
+						"Шинэ төлөв: received, in_progress, completed, delivered, cancelled",
+					required: true,
+				},
 			],
 			execute: async (args) => {
 				try {
-					const ids = (args.workOrderIds as string).split(",").map(s => s.trim()).filter(Boolean);
-					const validStatuses = ["received", "in_progress", "completed", "delivered", "cancelled"];
+					const ids = (args.workOrderIds as string)
+						.split(",")
+						.map((s) => s.trim())
+						.filter(Boolean);
+					const validStatuses = [
+						"received",
+						"in_progress",
+						"completed",
+						"delivered",
+						"cancelled",
+					];
 					const newStatus = (args.newStatus as string).toLowerCase();
 					if (!validStatuses.includes(newStatus)) {
-						return { error: `Хүчингүй төлөв: "${args.newStatus}". Боломжит: ${validStatuses.join(", ")}` };
+						return {
+							error: `Хүчингүй төлөв: "${args.newStatus}". Боломжит: ${validStatuses.join(", ")}`,
+						};
 					}
 					if (ids.length === 0) return { error: "ID-ууд оруулна уу" };
 					const { data, error } = await supabase
@@ -1670,7 +1967,12 @@ function tolomWriteTools(context: ToolContext): GatewayTool[] {
 						.in("id", ids)
 						.select("id, status");
 					if (error) return { error: "Олон захиалга шинэчлэхэд алдаа гарлаа" };
-					return { success: true, updated: (data ?? []).length, newStatus, ids };
+					return {
+						success: true,
+						updated: (data ?? []).length,
+						newStatus,
+						ids,
+					};
 				} catch (err) {
 					capture(err, { context: "agent-gateway: bulkUpdateWorkOrderStatus" });
 					return { error: "Олон захиалга шинэчлэхэд алдаа гарлаа" };
@@ -1751,10 +2053,10 @@ function zerWriteTools(context: ToolContext): GatewayTool[] {
 						paidAmount: rec.paid_amount,
 						isPending: rec.paid_amount < rec.total_amount,
 					};
-			} catch (err) {
-				capture(err, { context: "agent-gateway: createSale" });
-				return { error: "Борлуулалт бүртгэхэд алдаа гарлаа" };
-			}
+				} catch (err) {
+					capture(err, { context: "agent-gateway: createSale" });
+					return { error: "Борлуулалт бүртгэхэд алдаа гарлаа" };
+				}
 			},
 		},
 		{
@@ -1819,10 +2121,10 @@ function zerWriteTools(context: ToolContext): GatewayTool[] {
 						remaining: remaining,
 						isFullyPaid: remaining <= 0,
 					};
-			} catch (err) {
-				capture(err, { context: "agent-gateway: recordPayment" });
-				return { error: "Төлбөр бүртгэхэд алдаа гарлаа" };
-			}
+				} catch (err) {
+					capture(err, { context: "agent-gateway: recordPayment" });
+					return { error: "Төлбөр бүртгэхэд алдаа гарлаа" };
+				}
 			},
 		},
 	];
@@ -1870,10 +2172,10 @@ function zerTools(context: ToolContext): GatewayTool[] {
 						),
 						saleCount: rows.length,
 					};
-			} catch (err) {
-				capture(err, { context: "agent-gateway: getSalesSummary" });
-				return { error: "Борлуулалтын хураангуй авахад алдаа гарлаа" };
-			}
+				} catch (err) {
+					capture(err, { context: "agent-gateway: getSalesSummary" });
+					return { error: "Борлуулалтын хураангуй авахад алдаа гарлаа" };
+				}
 			},
 		},
 		{
@@ -1895,10 +2197,10 @@ function zerTools(context: ToolContext): GatewayTool[] {
 						totalAmount: Number(s.total_amount),
 						paidAmount: s.paid_amount != null ? Number(s.paid_amount) : 0,
 					}));
-			} catch (err) {
-				capture(err, { context: "agent-gateway: getPendingSales" });
-				return { error: "Дутуу төлөлт авахад алдаа гарлаа" };
-			}
+				} catch (err) {
+					capture(err, { context: "agent-gateway: getPendingSales" });
+					return { error: "Дутуу төлөлт авахад алдаа гарлаа" };
+				}
 			},
 		},
 		{
@@ -1928,15 +2230,16 @@ function zerTools(context: ToolContext): GatewayTool[] {
 						),
 						saleCount: rows.length,
 					};
-			} catch (err) {
-				capture(err, { context: "agent-gateway: getTodaySales" });
-				return { error: "Өнөөдрийн борлуулалт авахад алдаа гарлаа" };
-			}
+				} catch (err) {
+					capture(err, { context: "agent-gateway: getTodaySales" });
+					return { error: "Өнөөдрийн борлуулалт авахад алдаа гарлаа" };
+				}
 			},
 		},
 		{
 			name: "getSalesByCategory",
-			description: "Бүтээгдэхүүний ангиллаар борлуулалтын хураангуй. Жишээ: сэлбэг, хэрэгсэл гэх мэт",
+			description:
+				"Бүтээгдэхүүний ангиллаар борлуулалтын хураангуй. Жишээ: сэлбэг, хэрэгсэл гэх мэт",
 			parameters: [
 				{
 					name: "days",
@@ -1947,28 +2250,40 @@ function zerTools(context: ToolContext): GatewayTool[] {
 				{
 					name: "category",
 					type: "string",
-					description: "Ангиллын нэр (жишээ: сэлбэг, хэрэгсэл). Хоосон бол бүх ангиллаар",
+					description:
+						"Ангиллын нэр (жишээ: сэлбэг, хэрэгсэл). Хоосон бол бүх ангиллаар",
 					required: false,
 				},
 			],
 			execute: async (args) => {
 				try {
-					const days = typeof args.days === "number" && args.days > 0 ? args.days : 30;
-					const dateStart = new Date(Date.now() - days * 86400000).toISOString();
-					const categoryFilter = typeof args.category === "string" && args.category.trim() ? args.category.trim() : null;
+					const days =
+						typeof args.days === "number" && args.days > 0 ? args.days : 30;
+					const dateStart = new Date(
+						Date.now() - days * 86400000,
+					).toISOString();
+					const categoryFilter =
+						typeof args.category === "string" && args.category.trim()
+							? args.category.trim()
+							: null;
 
 					// Query sale_items joined with products and categories
 					let query = supabase
 						.from("sale_items")
 						.select(`
 							quantity, unit_price, total_price,
+							sales!inner(organization_id),
 							products!inner(name, category_id, categories!inner(name))
 						`)
+						.eq("sales.organization_id", orgId)
 						.gte("created_at", dateStart)
 						.is("deleted_at", null);
 
 					if (categoryFilter) {
-						query = query.ilike("products.categories.name", `%${categoryFilter}%`);
+						query = query.ilike(
+							"products.categories.name",
+							`%${categoryFilter}%`,
+						);
 					}
 
 					const { data, error } = await query;
@@ -1976,11 +2291,18 @@ function zerTools(context: ToolContext): GatewayTool[] {
 					const items = data ?? [];
 
 					// Group by category
-					const byCategory = new Map<string, { totalRevenue: number; totalQuantity: number; itemCount: number }>();
+					const byCategory = new Map<
+						string,
+						{ totalRevenue: number; totalQuantity: number; itemCount: number }
+					>();
 					for (const item of items) {
 						const prod = item.products as any;
 						const catName = prod?.categories?.name ?? "Бусад";
-						const existing = byCategory.get(catName) ?? { totalRevenue: 0, totalQuantity: 0, itemCount: 0 };
+						const existing = byCategory.get(catName) ?? {
+							totalRevenue: 0,
+							totalQuantity: 0,
+							itemCount: 0,
+						};
 						existing.totalRevenue += Number(item.total_price) || 0;
 						existing.totalQuantity += Number(item.quantity) || 0;
 						existing.itemCount += 1;
@@ -1997,10 +2319,10 @@ function zerTools(context: ToolContext): GatewayTool[] {
 						totalRevenue: categories.reduce((s, c) => s + c.totalRevenue, 0),
 						categories,
 					};
-			} catch (err) {
-				capture(err, { context: "agent-gateway: getSalesByCategory" });
-				return { error: "Ангиллаар борлуулалт авахад алдаа гарлаа" };
-			}
+				} catch (err) {
+					capture(err, { context: "agent-gateway: getSalesByCategory" });
+					return { error: "Ангиллаар борлуулалт авахад алдаа гарлаа" };
+				}
 			},
 		},
 	];

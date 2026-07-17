@@ -1,7 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { truncateResult } from "@/lib/sanitize";
 import type { GatewayTool, ToolContext } from "@/providers/types";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
+
+interface AuditOptions {
+	truncate?: boolean;
+}
 
 interface LogToolCallParams {
 	orgId: string;
@@ -61,6 +66,7 @@ export function withAudit(
 	channel: string,
 	channelChatId: string,
 	channelUserId: string,
+	options?: AuditOptions,
 ): GatewayTool {
 	const originalExecute = tool.execute;
 
@@ -69,8 +75,12 @@ export function withAudit(
 		execute: async (args: Record<string, unknown>, context: ToolContext) => {
 			const start = performance.now();
 			try {
-				const result = await originalExecute(args, context);
+				let result = await originalExecute(args, context);
 				const durationMs = Math.round(performance.now() - start);
+				// Apply truncation if requested
+				if (options?.truncate && typeof result === "string") {
+					result = truncateResult(result);
+				}
 				logToolCall(context.supabase, {
 					orgId: context.orgId,
 					userId: context.userId,
