@@ -1,0 +1,18 @@
+{
+  "name": "@zuiio/oidc",
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "openid-client": "^6"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "@zuiio/config": "workspace:*",
+    "openid-client": "^6.8.4",
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
+  }
+}

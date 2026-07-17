@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 
   // If we have a continuation token from signup, verify and redirect
   if (continuation) {
-    const payload = verifyContinuation(continuation);
+    const payload = await verifyContinuation(continuation);
 
     if (!payload) {
       return NextResponse.redirect(

@@ -287,6 +287,8 @@ Use this section to find the right context for your task. Read the linked file b
 - **@zuiio/config** → `packages/config/AGENTS.md`
 - **@zuiio/i18n** → `packages/i18n/AGENTS.md`
 - **@zuiio/supabase** → `packages/supabase/AGENTS.md`
+- **@zuiio/auth** → `packages/auth/AGENTS.md`
+- **@zuiio/oidc** → `packages/oidc/AGENTS.md`
 
 ### Common tasks
 
@@ -295,6 +297,14 @@ Use this section to find the right context for your task. Read the linked file b
 - **Add a new AI provider** → `apps/agent-gateway/docs/ADDING_PROVIDERS.md`
 - **Add a new messaging channel** → `apps/agent-gateway/docs/ADDING_CHANNELS.md`
 - **Understand the architecture** → `apps/agent-gateway/docs/ARCHITECTURE.md`
+
+### SSO / Identity
+
+- **Adding a new SSO product** → Run `pnpm sso:plan --product=<id>` then `pnpm sso:apply --product=<id>`. No Zuiio ID code changes needed.
+- **Health check** → `pnpm sso:doctor` checks OAuth clients, catalog, providers, and mobile redirects.
+- **Product manifest** → `config/sso-products.json` is the desired-state source of truth for provisioning.
+- **Catalog library** → `apps/zuiio-id/src/lib/products/catalog.ts` — async DB lookups replacing static imports.
+- **OIDC SDK** → `packages/oidc/` for non-Supabase consumers.
 
 ## Project Relationships
 
@@ -324,7 +334,7 @@ How the apps and packages connect:
 | `capture` | agent-gateway | Sentry error capture wrapper |
 | `ai-agent` | agent-gateway | LLM client + tool-calling loop |
 | `auth` | zuiio-id | SSO federation adapter (startZuiioSso, exchangeCode) |
-| `branding` | zer, tolom, zuiio-id | OKLch design tokens, globals.css |
+| `oidc` | external apps | Direct OIDC client for non-Supabase consumers (openid-client wrapper) |
 ## Advanced Agent Patterns
 
 ### Just-in-Time Context Loading

@@ -23,6 +23,9 @@
     "test": "turbo run test",
     "format": "biome format --write",
     "prepare": "husky",
+    "sso:plan": "tsx scripts/sso/cli.ts plan",
+    "sso:apply": "tsx scripts/sso/cli.ts apply",
+    "sso:doctor": "tsx scripts/sso/cli.ts doctor",
     "mcp:init": "npx tsx scripts/mcp-init.ts",
     "design:check": "bash scripts/design-quality-check.sh",
     "design:score": "echo 'OPTIK skills: use /score in Claude Code or Cursor'",
@@ -30,14 +33,14 @@
     "clean:turbopack": "find . -type d -name turbopack -path '*/.next/*' -exec rm -rf {} + 2>/dev/null; echo 'Turbopack caches cleaned'"
   },
   "devDependencies": {
-    "@biomejs/biome": "catalog:",
+    "@biomejs/biome": "^2.5.4",
     "@types/node": "^26.1.1",
     "@types/react": "catalog:",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",
-    "next": "catalog:",
+    "next": "^16.2.10",
     "optik-design": "^1.0.0",
-    "turbo": "^2.10.4",
+    "turbo": "^2.10.5",
     "vitest": "catalog:"
   },
   "lint-staged": {

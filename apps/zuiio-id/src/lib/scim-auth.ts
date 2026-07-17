@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { verifyScimToken } from "@/lib/products/catalog";
 import { createAdminClient } from "@/lib/supabase/server";
 
 export interface ScimAuthContext {
@@ -22,22 +23,14 @@ export async function verifyBearerToken(
   const token = authHeader.slice(7);
   if (!token) return null;
 
-  const admin = await createAdminClient();
-
-  // Look up the token in product_catalog (we'll add scim_token column via migration)
-  const { data: product } = await admin
-    .from("product_catalog")
-    .select("id, scim_token")
-    .eq("scim_token", token)
-    .single();
-
+  // Check product_catalog SCIM tokens first
+  const product = await verifyScimToken(token);
   if (product) {
-    return {
-      clientId: product.id as string,
-    };
+    return { clientId: product.productId };
   }
 
-  // Also check SAML IdP tokens
+  // Fallback: check SAML IdP tokens
+  const admin = await createAdminClient();
   const { data: samlIdp } = await admin
     .from("saml_idps")
     .select("id, name")

@@ -1,5 +1,5 @@
 import { createHmac, randomUUID } from "node:crypto";
-import { getSsoProduct, type ProductId } from "@config/sso-products";
+import { getEnabledProductById } from "@/lib/products/catalog";
 
 const HMAC_ALGORITHM = "sha256";
 const CONTINUATION_TTL_MS = 15 * 60 * 1000; // 15 minutes
@@ -11,7 +11,7 @@ const CONTINUATION_TTL_MS = 15 * 60 * 1000; // 15 minutes
  */
 export interface ContinuationPayload {
   jti: string;
-  productId: ProductId;
+  productId: string;
   returnTo: string;
   expiresAt: number;
 }
@@ -30,7 +30,7 @@ function getSigningSecret(): string {
 }
 
 export function signContinuation(
-  productId: ProductId,
+  productId: string,
   returnTo: string,
 ): SignedContinuation {
   const jti = randomUUID();
@@ -45,7 +45,7 @@ export function signContinuation(
   return { payload, token: `${btoa(data)}.${token}` };
 }
 
-export function verifyContinuation(token: string): ContinuationPayload | null {
+export async function verifyContinuation(token: string): Promise<ContinuationPayload | null> {
   const separatorIndex = token.lastIndexOf(".");
   if (separatorIndex === -1) return null;
 
@@ -79,8 +79,8 @@ export function verifyContinuation(token: string): ContinuationPayload | null {
     return null;
   }
 
-  // Validate the product exists and the returnTo is in its allowlist
-  const product = getSsoProduct(payload.productId);
+  // Validate the product exists in the catalog
+  const product = await getEnabledProductById(payload.productId);
   if (!product) return null;
 
   return payload;

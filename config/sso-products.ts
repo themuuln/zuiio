@@ -1,165 +1,51 @@
-export type ProductId =
-  | "zer"
-  | "tolom"
-  | "tamga"
-  | "onoo"
-  | "tumurch"
-  | "zraf"
-  | "zoa"
-  | "zatly"
-  | "khosuud"
-  | "zerbu"
-  | "zunch"
-  | "card"
-  | "zill";
+/**
+ * SSO products manifest.
+ *
+ * Source of truth: config/sso-products.json
+ * This module re-exports the JSON as typed constants for use by
+ * provisioning scripts (scripts/sso/) and legacy type references.
+ *
+ * The Zuiio ID app itself reads from the product_catalog DB table
+ * at runtime via @/lib/products/catalog — not from this file.
+ */
+
+import { readFileSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const raw = readFileSync(join(__dirname, "sso-products.json"), "utf-8");
+const productsJson = JSON.parse(raw) as SsoProductManifestEntry[];
+
+// ─── Types ──────────────────────────────────────────────────────────
+
+export type ProductId = string;
 
 export type ProductAuthMode = "sso" | "none";
 
-export interface SsoProduct {
-  id: ProductId;
+interface SsoProductManifestEntry {
+  id: string;
   displayName: string;
   authMode: ProductAuthMode;
-  appRoots: readonly string[];
-  callbackPath: "/auth/callback";
-  ssoStartPath: "/auth/sso";
+  appRoots: string[];
+  callbackPath: string;
+  ssoStartPath: string;
   logoUrl?: string;
-  mobileCallbackUrl?: `zuiio-${string}://auth/callback`;
-  mobileStartUrl?: `zuiio-${string}://auth/start`;
+  mobileCallbackUrl?: string;
+  mobileStartUrl?: string;
 }
 
-export const SSO_PRODUCTS = [
-  {
-    id: "zer",
-    displayName: "Zer",
-    authMode: "sso",
-    appRoots: ["apps/zer", "apps/zer-app"],
-    callbackPath: "/auth/callback",
-    ssoStartPath: "/auth/sso",
-    logoUrl: "https://zer.zuiiotech.com/favicon.ico",
-    mobileCallbackUrl: "zuiio-zer://auth/callback",
-    mobileStartUrl: "zuiio-zer://auth/start",
-  },
-  {
-    id: "tolom",
-    displayName: "Tolom",
-    authMode: "sso",
-    appRoots: ["apps/tolom", "apps/tolom-mobile"],
-    callbackPath: "/auth/callback",
-    ssoStartPath: "/auth/sso",
-    logoUrl: "https://tolom.zuiiotech.com/favicon.ico",
-    mobileCallbackUrl: "zuiio-tolom://auth/callback",
-    mobileStartUrl: "zuiio-tolom://auth/start",
-  },
-  {
-    id: "tamga",
-    displayName: "Tamga",
-    authMode: "sso",
-    appRoots: ["apps/tamga", "apps/tamga-web"],
-    callbackPath: "/auth/callback",
-    ssoStartPath: "/auth/sso",
-    mobileCallbackUrl: "zuiio-tamga://auth/callback",
-    mobileStartUrl: "zuiio-tamga://auth/start",
-  },
-  {
-    id: "onoo",
-    displayName: "Onöö",
-    authMode: "sso",
-    appRoots: ["apps/onoo", "apps/onoo-app"],
-    callbackPath: "/auth/callback",
-    ssoStartPath: "/auth/sso",
-    mobileCallbackUrl: "zuiio-onoo://auth/callback",
-    mobileStartUrl: "zuiio-onoo://auth/start",
-  },
-  {
-    id: "tumurch",
-    displayName: "Tumurch",
-    authMode: "sso",
-    appRoots: ["apps/tumurch", "apps/tumurch-rn"],
-    callbackPath: "/auth/callback",
-    ssoStartPath: "/auth/sso",
-    mobileCallbackUrl: "zuiio-tumurch://auth/callback",
-    mobileStartUrl: "zuiio-tumurch://auth/start",
-  },
-  {
-    id: "zraf",
-    displayName: "Zraf",
-    authMode: "sso",
-    appRoots: ["apps/zraf", "apps/zraf-web"],
-    callbackPath: "/auth/callback",
-    ssoStartPath: "/auth/sso",
-    mobileCallbackUrl: "zuiio-zraf://auth/callback",
-    mobileStartUrl: "zuiio-zraf://auth/start",
-  },
-  {
-    id: "zoa",
-    displayName: "Zoa",
-    authMode: "sso",
-    appRoots: ["apps/zoa/apps/web", "apps/zoa/apps/mobile"],
-    callbackPath: "/auth/callback",
-    ssoStartPath: "/auth/sso",
-    mobileCallbackUrl: "zuiio-zoa://auth/callback",
-    mobileStartUrl: "zuiio-zoa://auth/start",
-  },
-  {
-    id: "zatly",
-    displayName: "Zatly",
-    authMode: "sso",
-    appRoots: ["apps/zatly"],
-    callbackPath: "/auth/callback",
-    ssoStartPath: "/auth/sso",
-  },
-  {
-    id: "khosuud",
-    displayName: "Khosuud",
-    authMode: "sso",
-    appRoots: ["apps/khosuud"],
-    callbackPath: "/auth/callback",
-    ssoStartPath: "/auth/sso",
-    mobileCallbackUrl: "zuiio-khosuud://auth/callback",
-    mobileStartUrl: "zuiio-khosuud://auth/start",
-  },
-  {
-    id: "zerbu",
-    displayName: "Zerbu",
-    authMode: "sso",
-    appRoots: ["apps/zerbu"],
-    callbackPath: "/auth/callback",
-    ssoStartPath: "/auth/sso",
-  },
-  {
-    id: "zunch",
-    displayName: "Zunch",
-    authMode: "sso",
-    appRoots: ["apps/zunch"],
-    callbackPath: "/auth/callback",
-    ssoStartPath: "/auth/sso",
-    mobileCallbackUrl: "zuiio-zunch://auth/callback",
-    mobileStartUrl: "zuiio-zunch://auth/start",
-  },
-  {
-    id: "card",
-    displayName: "Card",
-    authMode: "none",
-    appRoots: ["apps/card"],
-    callbackPath: "/auth/callback",
-    ssoStartPath: "/auth/sso",
-  },
-  {
-    id: "zill",
-    displayName: "Zill",
-    authMode: "none",
-    appRoots: ["apps/zill"],
-    callbackPath: "/auth/callback",
-    ssoStartPath: "/auth/sso",
-  },
-] as const satisfies readonly SsoProduct[];
+export interface SsoProduct extends SsoProductManifestEntry {
+  appRoots: readonly string[];
+}
 
-export function getSsoProduct(id: ProductId): SsoProduct {
-  const product = SSO_PRODUCTS.find((candidate) => candidate.id === id);
+// ─── Exports ────────────────────────────────────────────────────────
 
-  if (!product) {
-    throw new Error(`Unknown Zuiio product: ${id}`);
-  }
+export const SSO_PRODUCTS: readonly SsoProduct[] = productsJson.map((p) => ({
+  ...p,
+  appRoots: Object.freeze([...p.appRoots]),
+}));
 
-  return product;
+export function getSsoProduct(id: string): SsoProduct | undefined {
+  return SSO_PRODUCTS.find((candidate) => candidate.id === id);
 }

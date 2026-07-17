@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { AuthActionState } from "@/lib/auth/action-state";
 import { signContinuation } from "@/lib/auth/continuation";
 import { validatePassword } from "@/lib/password-policy";
-import { getSsoProduct, type ProductId } from "@config/sso-products";
+import { getEnabledProductById } from "@/lib/products/catalog";
 
 /**
  * Server Action: register a new central identity.
@@ -98,9 +98,9 @@ export async function signup(
 
   // If product continuation is present, sign and redirect back
   if (product && returnTo) {
-    const ssoProduct = getSsoProduct(product as ProductId);
+    const ssoProduct = await getEnabledProductById(product);
     if (ssoProduct) {
-      const { token } = signContinuation(product as ProductId, returnTo);
+      const { token } = signContinuation(product, returnTo);
       return {
         redirectTo: `/auth/callback?continuation=${token}`,
       };
