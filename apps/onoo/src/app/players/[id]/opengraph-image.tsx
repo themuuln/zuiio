@@ -46,11 +46,12 @@ export default async function Image({
   const reb =
     (data?.player?.oreb_per_game ?? 0) + (data?.player?.dreb_per_game ?? 0);
   const ast = data?.player?.ast_per_game;
+
+  // Resolve team color from standings
+  let teamColor = "#3b82f6";
+  if (data?.player?.team_slug) {
     try {
       const supabase = await createClient();
-      const { data: standing } = await supabase
-      );
-      const supabase = await createServerClient();
       const { data: standing } = await supabase
         .from("v_public_standings")
         .select("team_primary_color")
@@ -61,7 +62,7 @@ export default async function Image({
         teamColor = standing.team_primary_color;
       }
     } catch {
-      // Use default color
+      // Use default blue accent
     }
   }
 
@@ -69,33 +70,20 @@ export default async function Image({
   if (ppg != null) statParts.push(`${ppg.toFixed(1)} НГ`);
   if (reb) statParts.push(`${reb.toFixed(1)} ОВР`);
   if (ast != null) statParts.push(`${ast.toFixed(1)} ПАС`);
-  const statLine = statParts.join("   ");
 
   const [regular, bold] = await Promise.all([
     loadFont("Noto Sans", 400),
     loadFont("Noto Sans", 700),
   ]);
 
-  const fonts: Array<{
-    name: string;
-    data: ArrayBuffer;
-    weight: number;
-    style: string;
-  }> = [];
-  if (regular)
-    fonts.push({
-      name: "Noto Sans",
-      data: regular,
-      weight: 400,
-      style: "normal",
-    });
-  if (bold)
-    fonts.push({
-      name: "Noto Sans",
-      data: bold,
-      weight: 700,
-      style: "normal",
-    });
+  const fonts = [
+    ...(regular
+      ? [{ name: "Noto Sans", data: regular, weight: 400 as const, style: "normal" as const }]
+      : []),
+    ...(bold
+      ? [{ name: "Noto Sans", data: bold, weight: 700 as const, style: "normal" as const }]
+      : []),
+  ];
 
   return new ImageResponse(
     (
@@ -131,7 +119,6 @@ export default async function Image({
             flex: 1,
           }}
         >
-          {/* Player name */}
           <div
             style={{
               fontSize: 62,
@@ -144,7 +131,6 @@ export default async function Image({
             {name}
           </div>
 
-          {/* Team name */}
           {team && (
             <div
               style={{
@@ -157,8 +143,7 @@ export default async function Image({
             </div>
           )}
 
-          {/* Stats line */}
-          {statLine && (
+          {statParts.length > 0 && (
             <div
               style={{
                 display: "flex",

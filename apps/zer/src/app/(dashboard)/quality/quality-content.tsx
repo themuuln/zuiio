@@ -116,12 +116,12 @@ export function QualityContent() {
   const [createOpen, setCreateOpen] = useState(false);
 
   // Quality checks list query
-  const { data: checks = [], isPending } = useQuery({
+  const { data: checks = [], isPending } = useQuery<QualityCheckListItem[]>({
     queryKey: qualityKeys.all(),
     queryFn: async () => {
       const result = await listQualityChecks();
-      if (result?.error) throw new Error(result.error);
-      return result?.data ?? [];
+      if ("error" in result) throw new Error(result.error);
+      return result.data;
     },
   });
 
@@ -223,21 +223,18 @@ export function QualityContent() {
           label="Өнгөрсөн"
           value={stats.pass}
           icon={CheckCircle}
-          variant="default"
           isLoading={isPending}
         />
         <StatsCard
           label="Унасан"
           value={stats.fail}
           icon={XCircle}
-          variant="destructive"
           isLoading={isPending}
         />
         <StatsCard
           label="Нөхцөлт"
           value={stats.conditional}
           icon={Warning}
-          variant="outline"
           isLoading={isPending}
         />
       </div>
@@ -276,9 +273,9 @@ export function QualityContent() {
         <DataTable
           columns={columns}
           data={filteredChecks}
-          isLoading={isPending}
+          loading={isPending}
           searchPlaceholder="Шалгалт хайх..."
-          searchKey="order_number"
+          searchColumn="order_number"
         />
       ) : (
         <ErpEmptyState
