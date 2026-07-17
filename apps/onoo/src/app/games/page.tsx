@@ -42,8 +42,9 @@ export default async function GamesPage({
   const completedGames = games.filter(isFinal);
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-      <header className="grid gap-5 lg:grid-cols-12 lg:items-end">
+    <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+      {/* Header + date nav row */}
+      <div className="grid gap-6 lg:grid-cols-12">
         <div className="lg:col-span-7">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Хуваарь ба үр дүн
@@ -60,7 +61,25 @@ export default async function GamesPage({
           <p className="mb-2 text-sm font-semibold">{formatDate(dateStr)}</p>
           <DateNav currentDate={dateStr} />
         </div>
-      </header>
+      </div>
+
+      {/* Quick stats bar */}
+      {games.length > 0 && (
+        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+          {liveGames.length > 0 && (
+            <span className="flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-destructive animate-pulse" />
+              {liveGames.length} шууд
+            </span>
+          )}
+          {upcomingGames.length > 0 && (
+            <span>{upcomingGames.length} удахгүй</span>
+          )}
+          {completedGames.length > 0 && (
+            <span>{completedGames.length} дууссан</span>
+          )}
+        </div>
+      )}
 
       {games.length === 0 ? (
         <PublicEmptyState
@@ -119,7 +138,7 @@ function GameGroup({
   live = false,
 }: GameGroupProps) {
   return (
-    <section aria-labelledby={id} className="flex flex-col gap-4">
+    <section aria-labelledby={id} className="flex flex-col gap-4 pb-2 first:pb-0 border-b border-border/50 last:border-b-0 last:pb-0">
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">

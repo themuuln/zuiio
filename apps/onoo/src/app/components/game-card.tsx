@@ -35,7 +35,7 @@ export function GameCard({ game, featured = false, className }: GameCardProps) {
     >
       <Card
       className={cn(
-        "h-full shadow-none transition-[background-color,transform] duration-150 group-active:scale-95 motion-reduce:transition-none",
+        "h-full shadow-none transition-[box-shadow,transform] duration-150 group-hover:shadow-md group-active:scale-[0.98] motion-reduce:transition-none",
         featured
           ? "bg-sidebar text-sidebar-foreground group-hover:bg-white/10"
           : "group-hover:bg-accent/40",
@@ -73,7 +73,7 @@ export function GameCard({ game, featured = false, className }: GameCardProps) {
               {hasScore(game) ? (
                 <p
                   className={cn(
-                    "text-2xl font-black tabular-nums tracking-tight",
+                    "stat-number text-2xl tracking-tight",
                     featured && "sm:text-4xl",
                   )}
                 >

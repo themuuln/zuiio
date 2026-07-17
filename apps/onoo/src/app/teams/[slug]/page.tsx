@@ -373,8 +373,8 @@ interface TeamStatementProps {
 function TeamStatement({ label, value }: TeamStatementProps) {
   return (
     <div className="rounded-xl bg-sidebar-accent p-4 text-center">
-      <p className="text-2xl font-black tabular-nums text-warning">{value}</p>
-      <p className="mt-1 text-xs font-semibold tracking-wider text-sidebar-foreground/60">
+      <p className="stat-number text-2xl text-warning">{value}</p>
+      <p className="mt-1 text-xs font-semibold tracking-wider text-sidebar-foreground/60 uppercase">
         {label}
       </p>
     </div>
@@ -388,9 +388,9 @@ interface TeamMetricProps {
 
 function TeamMetric({ label, value }: TeamMetricProps) {
   return (
-    <div className="rounded-lg bg-muted p-4">
-      <p className="text-2xl font-black tabular-nums">{value}</p>
-      <p className="mt-1 text-xs font-semibold text-muted-foreground">
+    <div className="rounded-lg bg-[var(--surface-3)] p-4">
+      <p className="stat-number text-2xl">{value}</p>
+      <p className="mt-1 text-xs font-semibold text-muted-foreground uppercase">
         {label}
       </p>
     </div>
@@ -404,9 +404,9 @@ interface RosterStatProps {
 
 function RosterStat({ label, value }: RosterStatProps) {
   return (
-    <div className="rounded-lg bg-muted p-2 text-center">
-      <p className="font-black tabular-nums">{value}</p>
-      <p className="mt-1 text-xs font-semibold tracking-wider text-muted-foreground">
+    <div className="rounded-lg bg-[var(--surface-3)] p-2 text-center">
+      <p className="stat-number">{value}</p>
+      <p className="mt-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
         {label}
       </p>
     </div>

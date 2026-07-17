@@ -2,6 +2,7 @@
  * Client-side API helpers for admin CRUD operations.
  * All functions call Next.js Route Handlers which use Supabase server client.
  */
+import { createClient } from "@/lib/supabase/client";
 
 const BASE = "/admin/api";
 
@@ -192,3 +193,83 @@ export const teamSeasonsApi = {
     return request<TeamSeasonRow[]>(`${BASE}/team-seasons${qs}`);
   },
 };
+
+// ── Submissions (source_submissions) ──
+export interface SubmissionRow {
+  id: string;
+  game_id: string;
+  source_type: string;
+  evidence_url: string | null;
+  submitted_by: string;
+  submitted_at: string;
+  normalized_payload: Record<string, unknown>;
+  confidence: number | null;
+  status: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  review_note: string | null;
+}
+
+export interface RevisionRow {
+  id: string;
+  game_id: string;
+  revision_number: number;
+  source_submission_id: string;
+  state: string;
+  journal: Record<string, unknown>;
+  projection: Record<string, unknown>;
+  validation_warnings: string[];
+  created_by: string;
+  created_at: string;
+  approved_by: string | null;
+  approved_at: string | null;
+}
+
+export const submissionsApi = {
+  list: (gameId: string) =>
+    request<SubmissionRow[]>(`${BASE}/games/${gameId}/submissions`),
+  approve: async (submissionId: string, note?: string) => {
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc("cmd_approve_source", {
+      p_submission_id: submissionId,
+      p_approved: true,
+      p_note: note ?? null,
+    });
+    if (error) throw new Error(error.message);
+    return data as SubmissionRow;
+  },
+  reject: async (submissionId: string, note?: string) => {
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc("cmd_approve_source", {
+      p_submission_id: submissionId,
+      p_approved: false,
+      p_note: note ?? null,
+    });
+    if (error) throw new Error(error.message);
+    return data as SubmissionRow;
+  },
+};
+
+export const revisionsApi = {
+  list: (gameId: string) =>
+    request<RevisionRow[]>(`${BASE}/games/${gameId}/revisions`),
+  approve: async (revisionId: string) => {
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc("cmd_approve_revision", {
+      p_revision_id: revisionId,
+      p_approved: true,
+    });
+    if (error) throw new Error(error.message);
+    return data as RevisionRow;
+  },
+  reject: async (revisionId: string) => {
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc("cmd_approve_revision", {
+      p_revision_id: revisionId,
+      p_approved: false,
+    });
+    if (error) throw new Error(error.message);
+    return data as RevisionRow;
+  },
+};
+

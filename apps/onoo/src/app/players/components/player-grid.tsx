@@ -124,7 +124,7 @@ export function PlayerGrid({
       {featuredPlayers.length > 0 && !hasActiveFilters ? (
         <section
           aria-labelledby="featured-players-heading"
-          className="flex flex-col gap-4"
+          className="court-divider rounded-xl bg-[var(--surface-1)] p-6 sm:p-8"
         >
           <div className="flex items-end justify-between gap-4">
             <div>
@@ -348,7 +348,7 @@ function PlayerCard({ player, rank, className }: PlayerCardProps) {
     >
       <Card
         className={cn(
-          "h-full shadow-none transition-[background-color,transform] group-hover:bg-accent/40 group-active:scale-95 motion-reduce:transition-none",
+          "h-full shadow-none transition-[box-shadow,transform] group-hover:shadow-md group-active:scale-[0.98] motion-reduce:transition-none",
           className,
         )}
       >
@@ -403,9 +403,9 @@ interface PlayerStatProps {
 // Display-only statistic: loading and empty states are handled by PlayerGrid.
 function PlayerStat({ label, value }: PlayerStatProps) {
   return (
-    <div className="rounded-lg bg-muted p-3 text-center">
-      <p className="text-xl font-black tabular-nums">{value}</p>
-      <p className="mt-1 text-xs font-semibold tracking-wider text-muted-foreground">
+    <div className="rounded-lg bg-[var(--surface-3)] p-3 text-center">
+      <p className="stat-number text-xl">{value}</p>
+      <p className="mt-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
         {label}
       </p>
     </div>

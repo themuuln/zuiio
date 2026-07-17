@@ -28,6 +28,11 @@ export default async function PlayersPage({
           Тоглогчоо нэр, баг, байрлалаар олж улирлын гүйцэтгэл болон бүрэн
           тоглолтын түүхийг нь үзээрэй.
         </p>
+        {players.length > 0 && (
+          <p className="mt-4 text-sm tabular-nums text-muted-foreground">
+            <span className="stat-number">{players.length}</span> тоглогч
+          </p>
+        )}
       </header>
 
       <PlayerGrid players={players} initialSearch={q} />

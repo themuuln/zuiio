@@ -144,7 +144,7 @@ export default async function GameDetailPage({ params }: GamePageProps) {
                 {formatGameTime(game.scheduled_at)}
               </p>
             ) : (
-              <p className="text-4xl font-black tabular-nums tracking-tight sm:text-7xl">
+              <p className="stat-number text-4xl sm:text-7xl tracking-tight">
                 {game.home_score ?? 0}
                 <span className="px-2 text-sidebar-foreground/30">–</span>
                 {game.away_score ?? 0}
@@ -502,8 +502,8 @@ function BoxScoreSection({ rows }: BoxScoreSectionProps) {
                       <TableCell className="text-right tabular-nums">
                         {formatMinutes(row.seconds_played)}
                       </TableCell>
-                      <TableCell className="text-right font-black tabular-nums">
-                        {row.pts}
+                      <TableCell className="text-right tabular-nums">
+                        <span className="stat-number">{row.pts}</span>
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
                         {row.fgm}/{row.fga}

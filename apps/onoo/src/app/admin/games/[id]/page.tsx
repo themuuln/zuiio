@@ -14,7 +14,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { gamesApi, type GameRow } from "@/app/admin/_lib/api";
+import { ReviewTab } from "./components/review-tab";
 
 function statusBadgeVariant(status: string) {
   switch (status) {
@@ -132,105 +134,111 @@ export default function GameDetailPage() {
         Буцах
       </a>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">
-            {homeName} vs {awayName}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="flex items-center gap-2 text-sm">
-              <Trophy className="size-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Уралдаан:</span>
-              <span>{game.competitions?.name ?? "Тодорхойгүй"}</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <MapPin className="size-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Талбай:</span>
-              <span>
-                {game.venues
-                  ? `${game.venues.name}${game.venues.city ? `, ${game.venues.city}` : ""}`
-                  : "Тодорхойгүй"}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Calendar className="size-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Огноо:</span>
-              <span>
-                {format(new Date(game.scheduled_at), "yyyy-MM-dd HH:mm")}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Төлөв:</span>
-              <Badge
-                variant={statusBadgeVariant(game.status) as "default" | "secondary" | "destructive" | "outline"}
-                className={
-                  game.status === "official"
-                    ? "bg-green-600 text-white hover:bg-green-700"
-                    : undefined
-                }
-              >
-                {statusLabel(game.status)}
-              </Badge>
-            </div>
-          </div>
+      <h1 className="text-2xl font-bold">
+        {homeName} vs {awayName}
+      </h1>
 
-          {hasScore && (
-            <div className="flex items-center justify-center gap-4 rounded-lg bg-muted py-6">
-              <span className="text-3xl font-bold">{game.home_score}</span>
-              <span className="text-xl text-muted-foreground">-</span>
-              <span className="text-3xl font-bold">{game.away_score}</span>
-            </div>
-          )}
+      <Tabs defaultValue="game">
+        <TabsList>
+          <TabsTrigger value="game">Тоглолт</TabsTrigger>
+          <TabsTrigger value="review">Шалгах</TabsTrigger>
+        </TabsList>
 
-          <div className="flex flex-wrap gap-2 pt-2">
-            {game.status === "scheduled" && (
-              <Button
-                onClick={() => updateStatus("live_provisional")}
-              >
-                Тоглолт эхлүүлэх
-              </Button>
-            )}
-            {game.status === "final_pending_review" && (
-              <Button
-                onClick={() => updateStatus("league_verified")}
-              >
-                Баталгаажуулах
-              </Button>
-            )}
-            {game.status === "league_verified" && (
-              <Button
-                onClick={() => updateStatus("official")}
-              >
-                Албан ёс болгох
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+        <TabsContent value="game" className="space-y-4">
+          <Card>
+            <CardContent className="space-y-4 pt-6">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <Trophy className="size-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Уралдаан:</span>
+                  <span>{game.competitions?.name ?? "Тодорхойгүй"}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <MapPin className="size-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Талбай:</span>
+                  <span>
+                    {game.venues
+                      ? `${game.venues.name}${game.venues.city ? `, ${game.venues.city}` : ""}`
+                      : "Тодорхойгүй"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar className="size-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Огноо:</span>
+                  <span>
+                    {format(new Date(game.scheduled_at), "yyyy-MM-dd HH:mm")}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground">Төлөв:</span>
+                  <Badge
+                    variant={statusBadgeVariant(game.status) as "default" | "secondary" | "destructive" | "outline"}
+                    className={
+                      game.status === "official"
+                        ? "bg-green-600 text-white hover:bg-green-700"
+                        : undefined
+                    }
+                  >
+                    {statusLabel(game.status)}
+                  </Badge>
+                </div>
+              </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Тоглогчдын жагсаалт</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Тоглогчдын жагсаалт удахгүй нэмэгдэнэ
-          </p>
-        </CardContent>
-      </Card>
+              {hasScore && (
+                <div className="flex items-center justify-center gap-4 rounded-lg bg-muted py-6">
+                  <span className="text-3xl font-bold">{game.home_score}</span>
+                  <span className="text-xl text-muted-foreground">-</span>
+                  <span className="text-3xl font-bold">{game.away_score}</span>
+                </div>
+              )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Хариуцагчид</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Хариуцагчид удахгүй нэмэгдэнэ
-          </p>
-        </CardContent>
-      </Card>
+              <div className="flex flex-wrap gap-2 pt-2">
+                {game.status === "scheduled" && (
+                  <Button onClick={() => updateStatus("live_provisional")}>
+                    Тоглолт эхлүүлэх
+                  </Button>
+                )}
+                {game.status === "final_pending_review" && (
+                  <Button onClick={() => updateStatus("league_verified")}>
+                    Баталгаажуулах
+                  </Button>
+                )}
+                {game.status === "league_verified" && (
+                  <Button onClick={() => updateStatus("official")}>
+                    Албан ёс болгох
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Тоглогчдын жагсаалт</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Тоглогчдын жагсаалт удахгүй нэмэгдэнэ
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Хариуцагчид</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Хариуцагчид удахгүй нэмэгдэнэ
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="review">
+          <ReviewTab gameId={game.id} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

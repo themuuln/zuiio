@@ -10,6 +10,7 @@ const features = [
 	{ key: "4" },
 	{ key: "5" },
 	{ key: "6" },
+	{ key: "7" },
 ];
 
 const featIcons = [
@@ -98,6 +99,22 @@ const featIcons = [
 	>
 		<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
 	</svg>,
+	<svg
+		key="ai"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		strokeWidth="1.5"
+		strokeLinecap="round"
+		strokeLinejoin="round"
+		className="h-5 w-5"
+		aria-hidden="true"
+	>
+		<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+		<path d="M8 10h.01" />
+		<path d="M12 10h.01" />
+		<path d="M16 10h.01" />
+	</svg>,
 ];
 
 type Props = {
@@ -135,7 +152,7 @@ export default async function TolomProductPage({ params }: Props) {
 						{t("features-subtitle")}
 					</p>
 				</div>
-				<div className="grid gap-5 md:grid-cols-3 md:grid-rows-2">
+				<div className="grid gap-5 md:grid-cols-3">
 					<div className="bento-cell col-span-1 md:col-span-2 md:row-span-2 flex flex-col justify-center p-8">
 						<div
 							className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl"

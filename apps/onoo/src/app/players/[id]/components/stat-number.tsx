@@ -26,7 +26,7 @@ export function StatNumber({
 
   return (
     <div className={cn("flex flex-col gap-1", className)}>
-      <span className="text-3xl font-bold tabular-nums tracking-tight sm:text-4xl">
+      <span className="stat-number text-3xl sm:text-4xl">
         {hasData ? animated.toFixed(precision) : "\u2013"}
       </span>
       <span

@@ -414,7 +414,7 @@ function StatCell({ children, muted = false, strong = false }: StatCellProps) {
     <td
       className={`px-4 py-3 text-right tabular-nums ${
         muted ? "text-muted-foreground" : ""
-      } ${strong ? "font-bold" : ""}`}
+      } ${strong ? "stat-number" : ""}`}
     >
       {children}
     </td>

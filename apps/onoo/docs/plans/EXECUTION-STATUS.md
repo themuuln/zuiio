@@ -15,7 +15,7 @@ Per-task implementation state for the specs in this directory. Updated in the sa
 |---|---|---|
 | 1.1 Local stack proof | 🟡 | `scripts/verify-stack.sh` written; `--remote` mode run (13 drift findings above). Local mode + types diff blocked on Docker. `src/lib/supabase/types.ts` designated as canonical generated-types path (does not exist yet; first local run creates it). |
 | 1.2 Ruleset-bound vocabulary | 🟡 | `validateEvent` extended with optional `ruleset` param → calls `isEventAllowedByRuleset`; 7 new core tests pass. Migration already checks ruleset in `cmd_record_event` (20260712000000). RPC-side rejection unverified — blocked on Docker. |
-| 1.3 Submission review UI | ⬜ | |
+| 1.3 Submission review UI | ✅ | `src/app/admin/games/[id]/components/review-tab.tsx` — lists submissions + revisions with approve/reject via `cmd_approve_source`/`cmd_approve_revision` RPCs. Confirmation dialogs, sonner toasts, TanStack Query invalidation. Evidence bucket created (`20260717165045_evidence_storage_bucket.sql`). Game detail page restructured with Tabs (Тоглолт / Шалгах). |
 | 1.4 Projection rebuild command | ⬜ | |
 | 1.5 Authorization cutover | ⬜ | |
 | 1.6 Journal durability tests | ✅ | 15 core tests for EventQueue durability (subset ack, idempotent ack, rejection persistence, monotonic sequences) pass. Manual reload procedure documented in test file header. |

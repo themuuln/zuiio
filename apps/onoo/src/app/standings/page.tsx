@@ -57,9 +57,9 @@ export default async function StandingsPage({
     : [];
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-      <header className="grid gap-5 lg:grid-cols-12 lg:items-end">
-        <div className="lg:col-span-7">
+    <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+      <header className="flex flex-col gap-4">
+        <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Лигийн өрсөлдөөн
           </p>
@@ -71,10 +71,10 @@ export default async function StandingsPage({
             харьцуулна.
           </p>
         </div>
-        {competitions.length > 1 ? (
+        {competitions.length > 1 && (
           <nav
             aria-label="Тэмцээн сонгох"
-            className="flex flex-wrap gap-2 lg:col-span-5 lg:justify-end"
+            className="flex flex-wrap gap-2"
           >
             {competitions.map(([id, item]) => (
               <Button
@@ -89,7 +89,7 @@ export default async function StandingsPage({
               </Button>
             ))}
           </nav>
-        ) : null}
+        )}
       </header>
 
       {standings.length === 0 ? (
@@ -102,20 +102,27 @@ export default async function StandingsPage({
         />
       ) : (
         <>
+          {/* Top 3 race cards — hero section */}
           <section
             aria-labelledby="standings-race-heading"
-            className="flex flex-col gap-4"
+            className="court-divider rounded-xl bg-[var(--surface-1)] p-6 sm:p-8"
           >
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Тэргүүн хэсэг
-              </p>
-              <h2
-                id="standings-race-heading"
-                className="mt-1 text-2xl font-bold tracking-tight"
-              >
-                Лигийн уралдаан
-              </h2>
+            <div className="flex items-end justify-between gap-4 mb-6">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Тэргүүн хэсэг
+                </p>
+                <h2
+                  id="standings-race-heading"
+                  className="mt-1 text-2xl font-bold tracking-tight"
+                >
+                  Лигийн уралдаан
+                </h2>
+              </div>
+              <Badge variant="outline">
+                <BarChart3 data-icon="inline-start" aria-hidden="true" />
+                {standings.length} баг
+              </Badge>
             </div>
             <div className="grid gap-4 md:grid-cols-3">
               {standings.slice(0, 3).map((row, index) => (
@@ -124,7 +131,7 @@ export default async function StandingsPage({
                   href={`/teams/${row.team_slug}`}
                   className="group rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
-                  <Card className="h-full shadow-none transition-[background-color,transform] group-hover:bg-accent/40 group-active:scale-95 motion-reduce:transition-none">
+                  <Card className="h-full shadow-none transition-[box-shadow,transform] group-hover:shadow-md group-active:scale-[0.98] motion-reduce:transition-none">
                     <CardHeader>
                       <Badge variant={index === 0 ? "default" : "secondary"}>
                         #{index + 1}
@@ -160,26 +167,18 @@ export default async function StandingsPage({
             </div>
           </section>
 
+          {/* Full standings table */}
           <section
             aria-labelledby="full-standings-heading"
             className="flex flex-col gap-4"
           >
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Бүрэн бүртгэл
-                </p>
-                <h2
-                  id="full-standings-heading"
-                  className="mt-1 text-2xl font-bold tracking-tight"
-                >
-                  Бүх баг
-                </h2>
-              </div>
-              <Badge variant="outline">
-                <BarChart3 data-icon="inline-start" aria-hidden="true" />
-                {standings.length} баг
-              </Badge>
+            <div>
+              <h2
+                id="full-standings-heading"
+                className="text-2xl font-bold tracking-tight"
+              >
+                Бүх баг
+              </h2>
             </div>
             <Card className="shadow-none">
               <CardContent className="overflow-x-auto p-0">
@@ -266,9 +265,9 @@ interface RaceStatProps {
 // Display-only statistic: loading and empty states are handled by the page.
 function RaceStat({ label, value }: RaceStatProps) {
   return (
-    <div className="rounded-lg bg-muted p-3 text-center">
-      <p className="font-black tabular-nums">{value}</p>
-      <p className="mt-1 text-xs font-semibold tracking-wider text-muted-foreground">
+    <div className="rounded-lg bg-[var(--surface-3)] p-3 text-center">
+      <p className="stat-number">{value}</p>
+      <p className="mt-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
         {label}
       </p>
     </div>

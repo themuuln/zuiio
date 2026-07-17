@@ -127,10 +127,10 @@ export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
                 >
                   <Card
                     className={cn(
-                      "h-full overflow-hidden shadow-none transition-[background-color,transform] group-active:scale-95 motion-reduce:transition-none",
+                      "h-full overflow-hidden shadow-none transition-[box-shadow,transform] group-hover:shadow-md group-active:scale-[0.98] motion-reduce:transition-none",
                       index === 0
-                        ? "bg-sidebar text-sidebar-foreground group-hover:bg-white/10"
-                        : "group-hover:bg-accent/40",
+                        ? "bg-sidebar text-sidebar-foreground"
+                        : "",
                     )}
                   >
                     <CardHeader>
@@ -139,7 +139,7 @@ export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
                         {index + 1}
                       </Badge>
                       <CardAction>
-                        <span className="text-3xl font-black tabular-nums">
+                        <span className="stat-number text-3xl">
                           {category.getValue(leader).toFixed(1)}
                         </span>
                       </CardAction>

@@ -1,5 +1,9 @@
+"use client";
+
 import { CircleDot } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/", label: "Нүүр хуудас" },
@@ -9,11 +13,19 @@ const NAV_ITEMS = [
   { href: "/leaders", label: "Тэргүүлэгчид" },
 ];
 
+function isActive(href: string, pathname: string): boolean {
+  if (href === "/") return pathname === "/";
+  return pathname.startsWith(href);
+}
+
 export function SiteNav() {
+  const pathname = usePathname();
+
   return (
     <header className="sticky top-0 z-50 border-b bg-background/90 backdrop-blur-xl">
+      <div className="h-0.5 bg-[var(--brand-sports)]" aria-hidden="true" />
       <nav
-        className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-6 lg:px-8"
+        className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-1.5 sm:px-6 lg:px-8"
         aria-label="Үндсэн цэс"
       >
         <Link
@@ -25,17 +37,26 @@ export function SiteNav() {
           </span>
           Оноо
         </Link>
-        <ul className="flex w-full items-center gap-1 overflow-x-auto pb-1 sm:w-auto sm:pb-0">
-          {NAV_ITEMS.map((item) => (
-            <li key={item.href} className="shrink-0">
-              <Link
-                href={item.href}
-                className="inline-flex min-h-10 items-center rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                {item.label}
-              </Link>
-            </li>
-          ))}
+        <ul className="flex items-center gap-0.5 overflow-x-auto scrollbar-none">
+          {NAV_ITEMS.map((item) => {
+            const active = isActive(item.href, pathname);
+            return (
+              <li key={item.href} className="shrink-0">
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "inline-flex min-h-10 items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                    active
+                      ? "bg-[var(--brand-sports)]/10 text-[var(--ink)] font-semibold"
+                      : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                  )}
+                  aria-current={active ? "page" : undefined}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </nav>
     </header>

@@ -82,7 +82,7 @@ export function RecentGames({ gameLines, className }: RecentGamesProps) {
                 <p className="truncate text-sm font-semibold">
                   {line.opponent_name}
                 </p>
-                <p className="mt-1 text-2xl font-black tracking-tight tabular-nums">
+                <p className="stat-number text-2xl tracking-tight">
                   {line.team_score}–{line.opponent_score}
                 </p>
               </div>

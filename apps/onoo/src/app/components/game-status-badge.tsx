@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import type { GameWithTeams } from "../lib/data";
 import { statusLabel, statusVariant } from "../lib/data";
@@ -14,7 +15,16 @@ export function GameStatusBadge({ game, className }: GameStatusBadgeProps) {
     : statusLabel(game.status);
 
   return (
-    <Badge variant={statusVariant(game.status)} className={className}>
+    <Badge
+      variant={statusVariant(game.status)}
+      className={cn(
+        game.status === "live_provisional" && "animate-pulse",
+        className,
+      )}
+    >
+      {game.status === "live_provisional" && (
+        <span className="mr-1 inline-block size-1.5 rounded-full bg-destructive" aria-hidden="true" />
+      )}
       {label}
     </Badge>
   );
