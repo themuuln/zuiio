@@ -134,7 +134,11 @@ export function LoginForm({
               setOauthError("Google нэвтрэхэд алдаа гарлаа.");
               return;
             }
-            const result = await signInWithGoogle(idToken, rawNonce);
+            const result = await signInWithGoogle(
+              idToken,
+              rawNonce,
+              redirectTo,
+            );
             if (result?.formError) {
               setOauthError(result.formError);
             } else if (result?.redirectTo) {
@@ -150,6 +154,16 @@ export function LoginForm({
       });
 
       setGsiInitialized(true);
+      googleId.prompt((notification) => {
+        // Clear loading if the prompt was dismissed or not displayed
+        // (user clicked away, closed the popup, or no Google session)
+        if (
+          notification.isDismissedMoment?.() ||
+          notification.isNotDisplayed?.()
+        ) {
+          setOauthLoading(null);
+        }
+      });
     } catch {
       gsiInitializationRef.current = false;
       setOauthError("Google нэвтрэх үйлчилгээ ачаалагдсангүй.");
@@ -179,7 +193,14 @@ export function LoginForm({
     setOauthLoading("google");
     setOauthError(null);
 
-    window.google.accounts.id.prompt();
+    window.google.accounts.id.prompt((notification) => {
+      if (
+        notification.isDismissedMoment?.() ||
+        notification.isNotDisplayed?.()
+      ) {
+        setOauthLoading(null);
+      }
+    });
   }
 
   async function handlePasskeySignIn() {
@@ -248,6 +269,7 @@ export function LoginForm({
 
       const result = await signInWithApple({
         idToken: data.authorization.id_token,
+        redirectTo,
         fullName: data.user?.name
           ? {
               givenName: data.user.name.firstName,

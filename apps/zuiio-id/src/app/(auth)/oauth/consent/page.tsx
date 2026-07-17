@@ -79,10 +79,7 @@ async function ConsentFormWrapper({
 
   if (error) {
     return (
-      <ConsentError
-        code="invalid_authorization"
-        message="Зөвшөөрлийг олсонгүй эсвэл хугацаа нь дууссан."
-      />
+      <ConsentError message="Энэ зөвшөөрөл хугацаа нь дууссан байна. Бүтээгдэхүүний нүүр хуудас руу буцаж дахин оролдоно уу." />
     );
   }
 

@@ -118,7 +118,15 @@ export async function login(
     .eq("id", (await supabase.auth.getUser()).data.user?.id ?? "")
     .single();
 
-  return { redirectTo: profile?.username ? "/" : redirectTo };
+  // If an explicit redirectTo was provided (e.g. from consent flow), use it.
+  // Otherwise fall back to / (existing user) or /account (new user).
+  const destination =
+    redirectTo !== "/account"
+      ? redirectTo
+      : profile?.username
+        ? "/"
+        : redirectTo;
+  return { redirectTo: destination };
 }
 
 /**
@@ -134,6 +142,7 @@ export async function login(
 export async function signInWithGoogle(
   token: string,
   rawNonce: string,
+  redirectTo?: string,
 ): Promise<AuthActionState> {
   try {
     // Google receives the SHA-256 hash of this nonce. Supabase hashes the
@@ -188,7 +197,13 @@ export async function signInWithGoogle(
       .eq("id", data.user.id)
       .single();
 
-    return { redirectTo: profile?.username ? "/" : "/account" };
+    const googleDestination =
+      redirectTo && redirectTo !== "/account"
+        ? redirectTo
+        : profile?.username
+          ? "/"
+          : "/account";
+    return { redirectTo: googleDestination };
   } catch (err) {
     console.error("[signInWithGoogle] Unexpected:", err);
     return { formError: "Google нэвтрэхэд алдаа гарлаа." };
@@ -210,6 +225,7 @@ export async function signInWithGoogle(
  */
 export async function signInWithApple(payload: {
   idToken: string;
+  redirectTo?: string;
   fullName?: { givenName?: string; familyName?: string };
 }): Promise<AuthActionState> {
   try {
@@ -349,7 +365,13 @@ export async function signInWithApple(payload: {
       .eq("id", linkData.user.id)
       .single();
 
-    return { redirectTo: appleProfile?.username ? "/" : "/account" };
+    const appleDestination =
+      payload.redirectTo && payload.redirectTo !== "/account"
+        ? payload.redirectTo
+        : appleProfile?.username
+          ? "/"
+          : "/account";
+    return { redirectTo: appleDestination };
   } catch (err) {
     console.error("[signInWithApple] Unexpected:", err);
     return { formError: "Apple нэвтрэхэд алдаа гарлаа." };
