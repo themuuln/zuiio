@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
 /**
@@ -130,7 +130,6 @@ export default function MfaVerifyPage() {
               placeholder="6 оронтоо код"
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              autoFocus
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleVerify();
               }}

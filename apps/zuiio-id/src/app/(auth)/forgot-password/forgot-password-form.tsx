@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
 import Link from "next/link";
+import { useActionState } from "react";
 import { forgotPassword } from "./actions";
 
 export function ForgotPasswordForm() {

@@ -20,7 +20,7 @@ export async function inviteMember(
     return { formError: "Байгууллага сонгоно уу." };
   }
 
-  if (!email || !email.includes("@")) {
+  if (!email?.includes("@")) {
     return { formError: "Зөв имэйл хаяг оруулна уу." };
   }
 
@@ -38,7 +38,8 @@ export async function inviteMember(
     return { success: true };
   } catch (err) {
     return {
-      formError: err instanceof Error ? err.message : "Урилга илгээхэд алдаа гарлаа.",
+      formError:
+        err instanceof Error ? err.message : "Урилга илгээхэд алдаа гарлаа.",
     };
   }
 }

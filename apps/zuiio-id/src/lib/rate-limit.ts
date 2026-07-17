@@ -17,7 +17,7 @@ export interface RateLimitResult {
  */
 export async function checkRateLimit(
   identifier: string,
-  ipAddress?: string,
+  _ipAddress?: string,
 ): Promise<RateLimitResult> {
   try {
     const admin = await createAdminClient();
@@ -47,9 +47,7 @@ export async function checkRateLimit(
 
       const retryAfter = oldest
         ? Math.ceil(
-            (new Date(oldest.attempted_at).getTime() +
-              WINDOW_MS -
-              Date.now()) /
+            (new Date(oldest.attempted_at).getTime() + WINDOW_MS - Date.now()) /
               1000,
           )
         : Math.ceil(WINDOW_MS / 1000);
@@ -106,9 +104,7 @@ export async function checkApiRateLimit(
 
       const retryAfter = oldest
         ? Math.ceil(
-            (new Date(oldest.attempted_at).getTime() +
-              WINDOW_MS -
-              Date.now()) /
+            (new Date(oldest.attempted_at).getTime() + WINDOW_MS - Date.now()) /
               1000,
           )
         : Math.ceil(WINDOW_MS / 1000);
@@ -184,9 +180,7 @@ export async function checkPasswordResetRateLimit(
 
       const retryAfter = oldest
         ? Math.ceil(
-            (new Date(oldest.attempted_at).getTime() +
-              WINDOW_MS -
-              Date.now()) /
+            (new Date(oldest.attempted_at).getTime() + WINDOW_MS - Date.now()) /
               1000,
           )
         : Math.ceil(WINDOW_MS / 1000);

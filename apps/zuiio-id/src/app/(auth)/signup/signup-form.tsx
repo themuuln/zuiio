@@ -1,13 +1,13 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
-import Link from "next/link";
-import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
-import { signup } from "./actions";
-import { signInWithGoogle, signInWithApple } from "@/app/(auth)/login/actions";
+import { useActionState, useRef, useState } from "react";
+import { signInWithApple, signInWithGoogle } from "@/app/(auth)/login/actions";
+import { EyeIcon, EyeSlashIcon } from "@/components/icons";
 import { generateGoogleNonce } from "@/lib/auth/google-nonce";
+import { signup } from "./actions";
 
 function OAuthButton({
   provider,
@@ -389,9 +389,7 @@ export function SignupForm({
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground transition-colors hover:text-foreground"
                 tabIndex={-1}
-                aria-label={
-                  showPassword ? "Нууц үг нуух" : "Нууц үг харуулах"
-                }
+                aria-label={showPassword ? "Нууц үг нуух" : "Нууц үг харуулах"}
               >
                 {showPassword ? (
                   <EyeSlashIcon size={16} />
@@ -440,9 +438,7 @@ export function SignupForm({
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground transition-colors hover:text-foreground"
                 tabIndex={-1}
-                aria-label={
-                  showPassword ? "Нууц үг нуух" : "Нууц үг харуулах"
-                }
+                aria-label={showPassword ? "Нууц үг нуух" : "Нууц үг харуулах"}
               >
                 {showPassword ? (
                   <EyeSlashIcon size={16} />

@@ -9,8 +9,8 @@
  * service-role only (revoked for anon, authenticated).
  */
 
-import { createAdminClient } from "@/lib/supabase/server";
 import { cache } from "react";
+import { createAdminClient } from "@/lib/supabase/server";
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -51,7 +51,8 @@ function mapRow(row: {
     enabled: row.enabled,
     logoUrl: row.logo_url,
     continueUrls: row.continue_urls ?? [],
-    integrationType: (row.integration_type ?? "supabase_federation") as IntegrationType,
+    integrationType: (row.integration_type ??
+      "supabase_federation") as IntegrationType,
     consentPolicy: (row.consent_policy ?? "explicit") as ConsentPolicy,
     allowedScopes: row.allowed_scopes ?? ["openid", "profile", "email"],
     scimToken: row.scim_token,
@@ -122,7 +123,9 @@ export const listEnabledProducts = cache(
       .eq("enabled", true)
       .order("display_name");
 
-    return (data ?? []).map((row) => mapRow(row as Parameters<typeof mapRow>[0]));
+    return (data ?? []).map((row) =>
+      mapRow(row as Parameters<typeof mapRow>[0]),
+    );
   },
 );
 

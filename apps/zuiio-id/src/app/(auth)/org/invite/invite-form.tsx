@@ -4,7 +4,10 @@ import { useActionState } from "react";
 import { inviteMember } from "./actions";
 
 export function InviteForm({ orgId }: { orgId: string }) {
-  const [state, formAction, isPending] = useActionState(inviteMember, undefined);
+  const [state, formAction, isPending] = useActionState(
+    inviteMember,
+    undefined,
+  );
 
   if (state?.success) {
     return (

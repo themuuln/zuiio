@@ -4,7 +4,10 @@ import { useActionState } from "react";
 import { deleteAccount } from "./actions";
 
 export function DeleteAccountForm() {
-  const [state, formAction, isPending] = useActionState(deleteAccount, undefined);
+  const [state, formAction, isPending] = useActionState(
+    deleteAccount,
+    undefined,
+  );
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -19,7 +22,10 @@ export function DeleteAccountForm() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="password" className="text-sm font-medium text-foreground">
+        <label
+          htmlFor="password"
+          className="text-sm font-medium text-foreground"
+        >
           Нүүр хуудсыг устгахын тулд нууц үгээ оруулна уу
         </label>
         <input

@@ -153,9 +153,7 @@ export function MergeAccountsManager() {
   return (
     <section className="flex flex-col gap-4">
       <div>
-        <h2 className="text-sm font-medium text-foreground">
-          Бүртгэл нэгтгэх
-        </h2>
+        <h2 className="text-sm font-medium text-foreground">Бүртгэл нэгтгэх</h2>
         <p className="mt-1 text-xs text-muted-foreground">
           Таны холбогдсон нэвтрэх аргууд өөр өөр бүртгэлтэй байж магадгүй.
           Нэгтгэх боломжтой.

@@ -33,16 +33,24 @@ export function UserList({ users }: { users: User[] }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/50">
-              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Нэр</th>
-              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Нэвтрэх нэр</th>
-              <th className="px-3 py-2 text-left font-medium text-muted-foreground">Бүртгүүлсэн</th>
+              <th className="px-3 py-2 text-left font-medium text-muted-foreground">
+                Нэр
+              </th>
+              <th className="px-3 py-2 text-left font-medium text-muted-foreground">
+                Нэвтрэх нэр
+              </th>
+              <th className="px-3 py-2 text-left font-medium text-muted-foreground">
+                Бүртгүүлсэн
+              </th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((u) => (
               <tr key={u.id} className="border-b border-border last:border-0">
                 <td className="px-3 py-2 text-foreground">{u.full_name}</td>
-                <td className="px-3 py-2 text-muted-foreground">{u.username ?? "—"}</td>
+                <td className="px-3 py-2 text-muted-foreground">
+                  {u.username ?? "—"}
+                </td>
                 <td className="px-3 py-2 text-muted-foreground">
                   {new Date(u.created_at).toLocaleDateString("mn-MN")}
                 </td>
@@ -50,7 +58,10 @@ export function UserList({ users }: { users: User[] }) {
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={3} className="px-3 py-8 text-center text-muted-foreground">
+                <td
+                  colSpan={3}
+                  className="px-3 py-8 text-center text-muted-foreground"
+                >
                   Хэрэглэгч олдсонгүй.
                 </td>
               </tr>

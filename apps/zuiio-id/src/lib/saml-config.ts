@@ -56,7 +56,9 @@ export async function getActiveIdps(): Promise<SamlIdp[]> {
 /**
  * Get a SAML IdP by entity ID.
  */
-export async function getIdpByEntityId(entityId: string): Promise<SamlIdp | null> {
+export async function getIdpByEntityId(
+  entityId: string,
+): Promise<SamlIdp | null> {
   const admin = await createAdminClient();
   const { data } = await admin
     .from("saml_idps")

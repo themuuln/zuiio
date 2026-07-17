@@ -13,6 +13,7 @@ export function ThemeToggle() {
 
   return (
     <button
+      type="button"
       onClick={() =>
         setTheme(
           theme === "dark" ? "light" : theme === "light" ? "system" : "dark",
@@ -23,6 +24,7 @@ export function ThemeToggle() {
     >
       {theme === "dark" ? (
         <svg
+          aria-hidden="true"
           width="16"
           height="16"
           viewBox="0 0 24 24"
@@ -44,6 +46,7 @@ export function ThemeToggle() {
         </svg>
       ) : theme === "light" ? (
         <svg
+          aria-hidden="true"
           width="16"
           height="16"
           viewBox="0 0 24 24"
@@ -57,6 +60,7 @@ export function ThemeToggle() {
         </svg>
       ) : (
         <svg
+          aria-hidden="true"
           width="16"
           height="16"
           viewBox="0 0 24 24"

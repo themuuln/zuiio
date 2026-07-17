@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseEnv, getServiceRoleKey } from "@/lib/supabase/env";
+import { type NextRequest, NextResponse } from "next/server";
 import { auditEvent, extractIp, extractUserAgent } from "@/lib/supabase/audit";
+import { getServiceRoleKey, getSupabaseEnv } from "@/lib/supabase/env";
 
 /**
  * POST /api/oauth/revoke
@@ -37,17 +37,14 @@ export async function POST(request: NextRequest) {
     const serviceKey = getServiceRoleKey();
 
     // GoTrue supports token revocation at /auth/v1/admin/token
-    const revokeResponse = await fetch(
-      `${url}/auth/v1/admin/token`,
-      {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${serviceKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ token }),
+    const revokeResponse = await fetch(`${url}/auth/v1/admin/token`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${serviceKey}`,
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({ token }),
+    });
 
     // Audit the revocation attempt (regardless of outcome)
     await auditEvent({

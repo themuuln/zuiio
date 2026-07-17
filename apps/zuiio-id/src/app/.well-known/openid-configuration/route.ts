@@ -8,8 +8,7 @@ import { getSupabaseEnv } from "@/lib/supabase/env";
  */
 export async function GET() {
   const { url } = getSupabaseEnv();
-  const issuer =
-    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const issuer = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
   const metadata = {
     issuer,
@@ -48,8 +47,7 @@ export async function GET() {
 
   return NextResponse.json(metadata, {
     headers: {
-      "Cache-Control":
-        "public, max-age=3600, stale-while-revalidate=86400",
+      "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
       "Content-Type": "application/json",
     },
   });

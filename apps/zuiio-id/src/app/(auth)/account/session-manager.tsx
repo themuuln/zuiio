@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { GrantInfo, SessionInfo } from "./actions";
-import { getSessions, getGrants } from "./actions";
+import { getGrants, getSessions } from "./actions";
 
 function parseUserAgent(ua: string | null): string {
   if (!ua) return "Тодорхойлогдоогүй төхөөрөмж";
@@ -111,7 +111,9 @@ function SessionRow({
   };
 
   return (
-    <div className={`flex items-center justify-between rounded-lg border px-3 py-2.5 ${session.is_current ? "border-success/30 bg-success/5" : "border-border bg-card"}`}>
+    <div
+      className={`flex items-center justify-between rounded-lg border px-3 py-2.5 ${session.is_current ? "border-success/30 bg-success/5" : "border-border bg-card"}`}
+    >
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm text-foreground">
           {parseUserAgent(session.user_agent)}

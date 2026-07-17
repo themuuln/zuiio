@@ -1,12 +1,12 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useActionState, useEffect } from "react";
 import { logout } from "@/app/(auth)/logout/actions";
 import { updateProfile } from "./actions";
+import { MfaManager } from "./mfa-manager";
 import { PasskeyManager } from "./passkey-manager";
 import { SessionManager } from "./session-manager";
-import { MfaManager } from "./mfa-manager";
 
 interface AccountFormProps {
   user: {

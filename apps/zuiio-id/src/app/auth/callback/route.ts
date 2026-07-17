@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { verifyContinuation } from "@/lib/auth/continuation";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * Identity auth callback.
@@ -70,12 +70,11 @@ export async function GET(request: Request) {
       .single();
 
     // Redirect to the specified next URL, or home/onboarding based on profile
-    const redirectTo =
-      next && next.startsWith("/")
-        ? next
-        : profile?.username
-          ? "/"
-          : "/account";
+    const redirectTo = next?.startsWith("/")
+      ? next
+      : profile?.username
+        ? "/"
+        : "/account";
 
     const response = NextResponse.redirect(new URL(redirectTo, origin));
 
@@ -108,7 +107,6 @@ async function setLinkedIdentitiesCookie(
 
     if (identityCount > 1) {
       response.cookies.set("linked_identities_count", String(identityCount), {
-        httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         maxAge: 5 * 60, // 5 minutes

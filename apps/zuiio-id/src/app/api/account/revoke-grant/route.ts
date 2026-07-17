@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { revokeGrantAction } from "@/app/(auth)/account/actions";
 
 export async function POST(request: NextRequest) {

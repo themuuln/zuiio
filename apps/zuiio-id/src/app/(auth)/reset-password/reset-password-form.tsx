@@ -1,10 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
 import Link from "next/link";
+import { useActionState, useState } from "react";
+import { EyeIcon, EyeSlashIcon } from "@/components/icons";
 import { resetPassword } from "./actions";
-import { useState } from "react";
-import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
 
 export function ResetPasswordForm() {
   const [state, formAction, isPending] = useActionState(
@@ -76,17 +75,17 @@ export function ResetPasswordForm() {
                 )}
               </button>
             </div>
-          {!state?.fieldErrors?.password && (
-            <div className="flex flex-col gap-0.5">
-              <p className="text-xs text-muted-foreground">Шаардлагууд:</p>
-              <ul className="text-xs text-muted-foreground list-disc list-inside">
-                <li>Хамгийн багадаа 8 тэмдэгт</li>
-                <li>Дор хаяж нэг том үсэг (A-Z)</li>
-                <li>Дор хаяж нэг жижиг үсэг (a-z)</li>
-                <li>Дор хаяж нэг тоо (0-9)</li>
-              </ul>
-            </div>
-          )}
+            {!state?.fieldErrors?.password && (
+              <div className="flex flex-col gap-0.5">
+                <p className="text-xs text-muted-foreground">Шаардлагууд:</p>
+                <ul className="text-xs text-muted-foreground list-disc list-inside">
+                  <li>Хамгийн багадаа 8 тэмдэгт</li>
+                  <li>Дор хаяж нэг том үсэг (A-Z)</li>
+                  <li>Дор хаяж нэг жижиг үсэг (a-z)</li>
+                  <li>Дор хаяж нэг тоо (0-9)</li>
+                </ul>
+              </div>
+            )}
           </label>
           {state?.fieldErrors?.password && (
             <p className="text-xs text-destructive">

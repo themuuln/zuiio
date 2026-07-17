@@ -45,7 +45,9 @@ export function signContinuation(
   return { payload, token: `${btoa(data)}.${token}` };
 }
 
-export async function verifyContinuation(token: string): Promise<ContinuationPayload | null> {
+export async function verifyContinuation(
+  token: string,
+): Promise<ContinuationPayload | null> {
   const separatorIndex = token.lastIndexOf(".");
   if (separatorIndex === -1) return null;
 
@@ -63,7 +65,13 @@ export async function verifyContinuation(token: string): Promise<ContinuationPay
     .update(data)
     .digest("hex");
 
-  if (!timingSafeEqual(Buffer.from(signature, "hex"), Buffer.from(expectedSignature, "hex"))) return null;
+  if (
+    !timingSafeEqual(
+      Buffer.from(signature, "hex"),
+      Buffer.from(expectedSignature, "hex"),
+    )
+  )
+    return null;
 
   let payload: ContinuationPayload;
   try {

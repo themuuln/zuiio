@@ -1,7 +1,7 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { validatePassword } from "@/lib/password-policy";
+import { createClient } from "@/lib/supabase/server";
 
 export interface ResetPasswordState {
   fieldErrors?: Record<string, string[]>;

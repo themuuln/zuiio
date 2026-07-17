@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
 import Link from "next/link";
+import { useActionState } from "react";
 import { resendVerification } from "./actions";
 
 export function VerifyEmailForm({ email }: { email: string }) {
@@ -41,8 +41,8 @@ export function VerifyEmailForm({ email }: { email: string }) {
           Имэйлээ баталгаажуулна уу
         </h1>
         <p className="text-sm text-muted-foreground">
-          Бид таны имэйл хаяг руу баталгаажуулах холбоос илгээсэн.
-          Дараагийн алхам руу явахын тулд имэйлээ шалгаад холбоос дээр дарна уу.
+          Бид таны имэйл хаяг руу баталгаажуулах холбоос илгээсэн. Дараагийн
+          алхам руу явахын тулд имэйлээ шалгаад холбоос дээр дарна уу.
         </p>
       </div>
 

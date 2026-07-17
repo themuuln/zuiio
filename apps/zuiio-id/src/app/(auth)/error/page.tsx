@@ -29,11 +29,11 @@ export default function AuthErrorPage({
                 aria-label="Zuiio"
               >
                 <svg
+                  aria-hidden="true"
                   width="32"
                   height="32"
                   viewBox="0 0 32 32"
                   fill="none"
-                  aria-hidden="true"
                 >
                   <rect
                     width="32"
@@ -66,6 +66,7 @@ export default function AuthErrorPage({
             <div className="flex flex-col items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
                 <svg
+                  aria-hidden="true"
                   width="24"
                   height="24"
                   viewBox="0 0 24 24"
@@ -87,9 +88,7 @@ export default function AuthErrorPage({
             <Suspense
               fallback={
                 <div className="rounded-lg border border-border bg-card p-6 text-center">
-                  <p className="text-sm text-muted-foreground">
-                    Ачаалж байна…
-                  </p>
+                  <p className="text-sm text-muted-foreground">Ачаалж байна…</p>
                 </div>
               }
             >

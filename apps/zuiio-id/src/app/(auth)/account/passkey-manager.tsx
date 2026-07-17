@@ -1,7 +1,7 @@
 "use client";
 
-import { FingerprintSimpleIcon } from "@phosphor-icons/react/FingerprintSimple";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { FingerprintSimpleIcon } from "@/components/icons";
 import {
   getPasskeyErrorMessage,
   isPasskeyCancellation,
@@ -148,7 +148,7 @@ export function PasskeyManager() {
     >
       <div className="flex gap-3">
         <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <FingerprintSimpleIcon size={22} aria-hidden="true" />
+          <FingerprintSimpleIcon size={22} />
         </div>
         <div className="flex flex-col gap-1">
           <h2

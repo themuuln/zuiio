@@ -11,12 +11,9 @@ export async function GET() {
 
   try {
     // Supabase GoTrue exposes its JWKS at this path
-    const response = await fetch(
-      `${url}/auth/v1/.well-known/jwks.json`,
-      {
-        headers: { "Cache-Control": "public, max-age=3600" },
-      },
-    );
+    const response = await fetch(`${url}/auth/v1/.well-known/jwks.json`, {
+      headers: { "Cache-Control": "public, max-age=3600" },
+    });
 
     if (!response.ok) {
       // Fallback: return empty key set with proper structure
@@ -35,8 +32,7 @@ export async function GET() {
 
     return NextResponse.json(jwks, {
       headers: {
-        "Cache-Control":
-          "public, max-age=3600, stale-while-revalidate=86400",
+        "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
         "Content-Type": "application/json",
       },
     });

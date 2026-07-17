@@ -22,7 +22,9 @@ export function WebhookList({
   async function handleDelete(id: string) {
     setDeleting(id);
     try {
-      const res = await fetch(`/api/admin/webhooks/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/webhooks/${id}`, {
+        method: "DELETE",
+      });
       if (res.ok) {
         window.location.reload();
       }
@@ -34,7 +36,9 @@ export function WebhookList({
   if (subscriptions.length === 0) {
     return (
       <div className="rounded-lg border border-border bg-card p-8 text-center">
-        <p className="text-sm text-muted-foreground">Вебхүүк тохируулаагүй байна.</p>
+        <p className="text-sm text-muted-foreground">
+          Вебхүүк тохируулаагүй байна.
+        </p>
       </div>
     );
   }
@@ -59,6 +63,7 @@ export function WebhookList({
             </span>
           </div>
           <button
+            type="button"
             onClick={() => void handleDelete(sub.id)}
             disabled={deleting === sub.id}
             className="text-xs text-destructive hover:text-destructive/80 disabled:opacity-50"

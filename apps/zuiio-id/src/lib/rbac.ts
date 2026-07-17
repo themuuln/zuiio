@@ -32,9 +32,9 @@ function toRow(value: unknown): Record<string, unknown> | null {
 
 /** Extract the `name` field from a nested `roles` join. */
 function roleName(row: Record<string, unknown>): string | null {
-  const roles = row["roles"];
+  const roles = row.roles;
   if (roles && typeof roles === "object" && "name" in roles) {
-    const name = (roles as Record<string, unknown>)["name"];
+    const name = (roles as Record<string, unknown>).name;
     if (typeof name === "string") return name;
   }
   return null;
@@ -42,17 +42,17 @@ function roleName(row: Record<string, unknown>): string | null {
 
 /** Extract a Permission from a role_permissions join row. */
 function toPermission(row: Record<string, unknown>): Permission | null {
-  const value = row["permissions"];
+  const value = row.permissions;
   if (!value || typeof value !== "object") return null;
   const obj = value as Record<string, unknown>;
-  if (typeof obj["id"] !== "string") return null;
-  if (typeof obj["resource"] !== "string") return null;
-  if (typeof obj["action"] !== "string") return null;
+  if (typeof obj.id !== "string") return null;
+  if (typeof obj.resource !== "string") return null;
+  if (typeof obj.action !== "string") return null;
   return {
-    id: obj["id"],
-    resource: obj["resource"],
-    action: obj["action"],
-    description: typeof obj["description"] === "string" ? obj["description"] : null,
+    id: obj.id,
+    resource: obj.resource,
+    action: obj.action,
+    description: typeof obj.description === "string" ? obj.description : null,
   };
 }
 
@@ -81,12 +81,12 @@ export async function getUserMemberships(
     .map(toRow)
     .filter((r): r is Record<string, unknown> => r !== null)
     .map((m) => ({
-      id: String(m["id"]),
-      org_id: String(m["org_id"]),
-      user_id: String(m["user_id"]),
-      role_id: String(m["role_id"]),
+      id: String(m.id),
+      org_id: String(m.org_id),
+      user_id: String(m.user_id),
+      role_id: String(m.role_id),
       role_name: roleName(m) ?? "",
-      joined_at: String(m["joined_at"]),
+      joined_at: String(m.joined_at),
     }));
 }
 
@@ -132,7 +132,7 @@ export async function userHasPermission(
   const membershipRow = toRow(membership);
   if (!membershipRow) return false;
 
-  const roleId = membershipRow["role_id"];
+  const roleId = membershipRow.role_id;
   if (typeof roleId !== "string") return false;
 
   // Get the permission id
@@ -146,7 +146,7 @@ export async function userHasPermission(
   const permRow = toRow(perm);
   if (!permRow) return false;
 
-  const permId = permRow["id"];
+  const permId = permRow.id;
   if (typeof permId !== "string") return false;
 
   // Check if role has this permission
@@ -180,7 +180,7 @@ export async function getUserPermissions(
   const membershipRow = toRow(membership);
   if (!membershipRow) return [];
 
-  const roleId = membershipRow["role_id"];
+  const roleId = membershipRow.role_id;
   if (typeof roleId !== "string") return [];
 
   // Get permissions for that role

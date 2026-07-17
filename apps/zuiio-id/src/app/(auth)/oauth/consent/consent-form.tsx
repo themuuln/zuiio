@@ -92,9 +92,7 @@ export function ConsentForm({
 
         {/* Client info */}
         <div>
-          <h2 className="text-sm font-medium text-foreground">
-            {clientName}
-          </h2>
+          <h2 className="text-sm font-medium text-foreground">{clientName}</h2>
           <p className="text-xs text-muted-foreground">
             Таны эрхийг хүсч байна
           </p>
@@ -109,18 +107,14 @@ export function ConsentForm({
                 className={`flex items-center gap-2 rounded-md px-3 py-2 text-xs ${scopeColors[s] ?? "bg-muted text-muted-foreground"}`}
               >
                 <span className="font-medium">{s}</span>
-                <span className="opacity-70">
-                  {scopeDescriptions[s] ?? s}
-                </span>
+                <span className="opacity-70">{scopeDescriptions[s] ?? s}</span>
               </div>
             ))}
           </div>
         )}
 
         {/* Error message */}
-        {error && (
-          <p className="text-xs text-destructive">{error}</p>
-        )}
+        {error && <p className="text-xs text-destructive">{error}</p>}
 
         {/* Action buttons */}
         <div className="flex w-full gap-3 pt-2">

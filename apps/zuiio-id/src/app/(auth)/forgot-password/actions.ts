@@ -1,10 +1,10 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import {
   checkPasswordResetRateLimit,
   recordLoginAttempt,
 } from "@/lib/rate-limit";
+import { createClient } from "@/lib/supabase/server";
 
 export interface ForgotPasswordState {
   formError?: string;
@@ -17,7 +17,7 @@ export async function forgotPassword(
 ): Promise<ForgotPasswordState> {
   const email = String(formData.get("email") ?? "").trim();
 
-  if (!email || !email.includes("@")) {
+  if (!email?.includes("@")) {
     return { formError: "Зөв имэйл хаяг оруулна уу." };
   }
   // Rate limit password reset emails (3 per 15 min)
@@ -27,7 +27,6 @@ export async function forgotPassword(
       formError: `Хэт их оролдлогын тоо. Түр хүлээнэ үү. ${rateLimit.retryAfterSeconds} секундийн дараа дахин оролдоно уу.`,
     };
   }
-
 
   const supabase = await createClient();
   const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -45,4 +44,3 @@ export async function forgotPassword(
 
   return { success: true };
 }
-

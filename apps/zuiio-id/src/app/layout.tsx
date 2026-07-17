@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import { Toaster } from "sonner";
 import "./globals.css";
-import { ThemeProvider } from "@/app/theme-provider";
 import { ThemeToggle } from "@/app/(auth)/theme-toggle";
+import { ThemeProvider } from "@/app/theme-provider";
 import { LinkedAccountsNotification } from "@/components/linked-accounts-notification";
 
 const geistSans = Geist({
@@ -52,10 +52,7 @@ export default function RootLayout({
           <LinkedAccountsNotification />
         </ThemeProvider>
         <Toaster richColors position="top-center" />
-        {/* impeccable-live-start */}
-<script src="http://localhost:8400/live.js"></script>
-{/* impeccable-live-end */}
-</body>
+      </body>
     </html>
   );
 }

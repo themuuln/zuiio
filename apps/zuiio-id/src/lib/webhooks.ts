@@ -147,7 +147,8 @@ async function handleFailedDelivery(
         .eq("id", deliveryId);
     } else {
       // Schedule retry
-      const delay = RETRY_DELAY_MS[newAttempts - 1] ?? RETRY_DELAY_MS[2] ?? 300000;
+      const delay =
+        RETRY_DELAY_MS[newAttempts - 1] ?? RETRY_DELAY_MS[2] ?? 300000;
       await admin
         .from("webhook_deliveries")
         .update({

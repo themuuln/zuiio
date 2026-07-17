@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { ThemeProvider } from "@/app/theme-provider";
 import Image from "next/image";
+import { ThemeProvider } from "@/app/theme-provider";
 
 export const metadata: Metadata = {
   title: "Zuiio ID — Нэвтрэх систем",

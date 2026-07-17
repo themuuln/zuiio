@@ -19,7 +19,7 @@ export async function resendVerification(
 ): Promise<VerifyEmailState> {
   const email = String(formData.get("email") ?? "").trim();
 
-  if (!email || !email.includes("@")) {
+  if (!email?.includes("@")) {
     return { formError: "Зөв имэйл хаяг оруулна уу." };
   }
 

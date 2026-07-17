@@ -30,7 +30,7 @@ export function LoginHistory() {
     try {
       const res = await fetch("/api/account/login-history");
       if (res.ok) {
-        const data = await res.json() as { attempts: LoginAttempt[] };
+        const data = (await res.json()) as { attempts: LoginAttempt[] };
         setAttempts(data.attempts ?? []);
       }
     } catch {

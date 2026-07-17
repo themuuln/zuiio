@@ -1,10 +1,10 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import type { AuthActionState } from "@/lib/auth/action-state";
 import { signContinuation } from "@/lib/auth/continuation";
 import { validatePassword } from "@/lib/password-policy";
 import { getEnabledProductById } from "@/lib/products/catalog";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * Server Action: register a new central identity.
@@ -59,7 +59,7 @@ export async function signup(
     }
   }
 
-  if (!email || !email.includes("@")) {
+  if (!email?.includes("@")) {
     fieldErrors.email = ["Зөв имэйл хаяг оруулна уу."];
   }
 

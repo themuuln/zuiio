@@ -1,7 +1,7 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import type { Route } from "next";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -17,7 +17,7 @@ export async function logout(formData: FormData) {
   await supabase.auth.signOut();
 
   const next = formData.get("next") as string | null;
-  if (next && next.startsWith("/") && !next.includes("://")) {
+  if (next?.startsWith("/") && !next.includes("://")) {
     redirect(next as Route);
   }
 

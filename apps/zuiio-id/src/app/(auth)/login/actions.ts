@@ -4,13 +4,13 @@ import { createRemoteJWKSet, jwtVerify } from "jose";
 
 import { cookies, headers } from "next/headers";
 import type { AuthActionState } from "@/lib/auth/action-state";
-import { createAdminClient, createClient } from "@/lib/supabase/server";
 import {
   checkRateLimit,
   cleanupOldAttempts,
   recordLoginAttempt,
 } from "@/lib/rate-limit";
 import { extractIp } from "@/lib/supabase/audit";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 
 /**
  * Remote JWKS set for verifying Apple ID tokens.
@@ -293,7 +293,6 @@ export async function signInWithApple(payload: {
       console.error("[signInWithApple] No token in action_link");
       return { formError: "Системд нэвтрэхэд алдаа гарлаа." };
     }
-
 
     // --- 4. Update profile with Apple data (works for new AND existing users) -
     const profileClient = await createClient();

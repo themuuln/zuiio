@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { verifyBearerToken } from "@/lib/scim-auth";
 import type { ScimUser } from "@/lib/scim-types";
+import { createAdminClient } from "@/lib/supabase/server";
 
 function toScimUser(row: Record<string, unknown>, baseUrl: string): ScimUser {
   return {
@@ -10,7 +10,8 @@ function toScimUser(row: Record<string, unknown>, baseUrl: string): ScimUser {
     userName: (row.username as string) ?? "",
     name: {
       givenName: (row.full_name as string)?.split(" ")[0] ?? "",
-      familyName: (row.full_name as string)?.split(" ").slice(1).join(" ") ?? "",
+      familyName:
+        (row.full_name as string)?.split(" ").slice(1).join(" ") ?? "",
       formatted: (row.full_name as string) ?? "",
     },
     displayName: (row.full_name as string) ?? "",
@@ -35,7 +36,11 @@ export async function GET(
   const auth = await verifyBearerToken(request);
   if (!auth) {
     return NextResponse.json(
-      { schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"], scimType: "invalidBearer", detail: "Invalid bearer token" },
+      {
+        schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"],
+        scimType: "invalidBearer",
+        detail: "Invalid bearer token",
+      },
       { status: 401, headers: { "Content-Type": "application/scim+json" } },
     );
   }
@@ -51,7 +56,10 @@ export async function GET(
 
   if (error || !data) {
     return NextResponse.json(
-      { schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"], detail: "User not found" },
+      {
+        schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"],
+        detail: "User not found",
+      },
       { status: 404, headers: { "Content-Type": "application/scim+json" } },
     );
   }
@@ -61,9 +69,12 @@ export async function GET(
   const email = authUser?.user?.email ?? "";
 
   const baseUrl = `${request.nextUrl.origin}/scim/v2`;
-  return NextResponse.json(toScimUser({ ...data, email } as Record<string, unknown>, baseUrl), {
-    headers: { "Content-Type": "application/scim+json" },
-  });
+  return NextResponse.json(
+    toScimUser({ ...data, email } as Record<string, unknown>, baseUrl),
+    {
+      headers: { "Content-Type": "application/scim+json" },
+    },
+  );
 }
 
 /**
@@ -77,7 +88,11 @@ export async function PUT(
   const auth = await verifyBearerToken(request);
   if (!auth) {
     return NextResponse.json(
-      { schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"], scimType: "invalidBearer", detail: "Invalid bearer token" },
+      {
+        schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"],
+        scimType: "invalidBearer",
+        detail: "Invalid bearer token",
+      },
       { status: 401, headers: { "Content-Type": "application/scim+json" } },
     );
   }
@@ -88,7 +103,10 @@ export async function PUT(
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"], detail: "Invalid JSON" },
+      {
+        schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"],
+        detail: "Invalid JSON",
+      },
       { status: 400, headers: { "Content-Type": "application/scim+json" } },
     );
   }
@@ -96,7 +114,9 @@ export async function PUT(
   const admin = await createAdminClient();
 
   // Update profile
-  const fullName = (body.name as { formatted?: string })?.formatted ?? body.displayName as string;
+  const fullName =
+    (body.name as { formatted?: string })?.formatted ??
+    (body.displayName as string);
   const username = body.userName as string;
 
   const updates: Record<string, unknown> = {};
@@ -104,14 +124,14 @@ export async function PUT(
   if (username) updates.username = username;
 
   if (Object.keys(updates).length > 0) {
-    const { error } = await admin
-      .from("profiles")
-      .update(updates)
-      .eq("id", id);
+    const { error } = await admin.from("profiles").update(updates).eq("id", id);
 
     if (error) {
       return NextResponse.json(
-        { schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"], detail: error.message },
+        {
+          schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"],
+          detail: error.message,
+        },
         { status: 500, headers: { "Content-Type": "application/scim+json" } },
       );
     }
@@ -136,7 +156,13 @@ export async function PUT(
 
   const baseUrl = `${request.nextUrl.origin}/scim/v2`;
   return NextResponse.json(
-    toScimUser({ ...data, email: authUser?.user?.email ?? "" } as Record<string, unknown>, baseUrl),
+    toScimUser(
+      { ...data, email: authUser?.user?.email ?? "" } as Record<
+        string,
+        unknown
+      >,
+      baseUrl,
+    ),
     { headers: { "Content-Type": "application/scim+json" } },
   );
 }
@@ -152,7 +178,11 @@ export async function DELETE(
   const auth = await verifyBearerToken(request);
   if (!auth) {
     return NextResponse.json(
-      { schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"], scimType: "invalidBearer", detail: "Invalid bearer token" },
+      {
+        schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"],
+        scimType: "invalidBearer",
+        detail: "Invalid bearer token",
+      },
       { status: 401, headers: { "Content-Type": "application/scim+json" } },
     );
   }
@@ -167,7 +197,10 @@ export async function DELETE(
 
   if (error) {
     return NextResponse.json(
-      { schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"], detail: error.message },
+      {
+        schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"],
+        detail: error.message,
+      },
       { status: 500, headers: { "Content-Type": "application/scim+json" } },
     );
   }

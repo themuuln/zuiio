@@ -1,8 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { auditEvent } from "@/lib/supabase/audit";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 
 export interface DeleteAccountState {
   formError?: string;

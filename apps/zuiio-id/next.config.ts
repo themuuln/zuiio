@@ -6,12 +6,7 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   experimental: {
     turbopackFileSystemCacheForBuild: true,
-    optimizePackageImports: [
-      "@phosphor-icons/react",
-      "@tanstack/react-query",
-      "date-fns",
-      "lucide-react",
-    ],
+    optimizePackageImports: ["date-fns"],
   },
   allowedDevOrigins: ["127.0.0.1"],
   images: {

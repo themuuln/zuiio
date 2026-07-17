@@ -29,6 +29,7 @@ export function LinkedAccountsNotification() {
       }
 
       // Clear the cookie after showing notification
+      // biome-ignore lint/suspicious/noDocumentCookie: intentional — clearing a notification cookie, not setting auth state
       document.cookie =
         "linked_identities_count=; path=/; max-age=0; sameSite=lax";
     }

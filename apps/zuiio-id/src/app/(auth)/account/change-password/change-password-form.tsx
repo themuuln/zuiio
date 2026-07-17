@@ -1,12 +1,14 @@
 "use client";
 
-import { useActionState } from "react";
-import { useState } from "react";
-import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
+import { useActionState, useState } from "react";
+import { EyeIcon, EyeSlashIcon } from "@/components/icons";
 import { changePassword } from "./actions";
 
 export function ChangePasswordForm() {
-  const [state, formAction, isPending] = useActionState(changePassword, undefined);
+  const [state, formAction, isPending] = useActionState(
+    changePassword,
+    undefined,
+  );
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
 
@@ -17,7 +19,9 @@ export function ChangePasswordForm() {
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500/10">
             <span className="text-green-600 text-sm">&#x2713;</span>
           </div>
-          <p className="text-sm text-foreground">Нууц үг амжилттай шинэчлэгдлээ.</p>
+          <p className="text-sm text-foreground">
+            Нууц үг амжилттай шинэчлэгдлээ.
+          </p>
         </div>
       </div>
     );
@@ -25,10 +29,15 @@ export function ChangePasswordForm() {
 
   return (
     <div className="rounded-lg border border-border bg-card p-4">
-      <h3 className="text-sm font-medium text-foreground mb-3">Нууц үг солих</h3>
+      <h3 className="text-sm font-medium text-foreground mb-3">
+        Нууц үг солих
+      </h3>
       <form action={formAction} className="flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="currentPassword" className="text-xs font-medium text-muted-foreground">
+          <label
+            htmlFor="currentPassword"
+            className="text-xs font-medium text-muted-foreground"
+          >
             Одоогийн нууц үг
           </label>
           <div className="relative">
@@ -45,16 +54,25 @@ export function ChangePasswordForm() {
               onClick={() => setShowCurrent(!showCurrent)}
               className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
-              {showCurrent ? <EyeSlashIcon className="size-4" /> : <EyeIcon className="size-4" />}
+              {showCurrent ? (
+                <EyeSlashIcon className="size-4" />
+              ) : (
+                <EyeIcon className="size-4" />
+              )}
             </button>
           </div>
           {state?.fieldErrors?.currentPassword && (
-            <p className="text-xs text-destructive">{state.fieldErrors.currentPassword[0]}</p>
+            <p className="text-xs text-destructive">
+              {state.fieldErrors.currentPassword[0]}
+            </p>
           )}
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="newPassword" className="text-xs font-medium text-muted-foreground">
+          <label
+            htmlFor="newPassword"
+            className="text-xs font-medium text-muted-foreground"
+          >
             Шинэ нууц үг
           </label>
           <div className="relative">
@@ -71,7 +89,11 @@ export function ChangePasswordForm() {
               onClick={() => setShowNew(!showNew)}
               className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
-              {showNew ? <EyeSlashIcon className="size-4" /> : <EyeIcon className="size-4" />}
+              {showNew ? (
+                <EyeSlashIcon className="size-4" />
+              ) : (
+                <EyeIcon className="size-4" />
+              )}
             </button>
           </div>
           {!state?.fieldErrors?.newPassword && (
@@ -86,12 +108,17 @@ export function ChangePasswordForm() {
             </div>
           )}
           {state?.fieldErrors?.newPassword && (
-            <p className="text-xs text-destructive">{state.fieldErrors.newPassword[0]}</p>
+            <p className="text-xs text-destructive">
+              {state.fieldErrors.newPassword[0]}
+            </p>
           )}
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="confirmPassword" className="text-xs font-medium text-muted-foreground">
+          <label
+            htmlFor="confirmPassword"
+            className="text-xs font-medium text-muted-foreground"
+          >
             Нууц үгээ давтана уу
           </label>
           <input
@@ -103,7 +130,9 @@ export function ChangePasswordForm() {
             className="h-9 w-full rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           />
           {state?.fieldErrors?.confirmPassword && (
-            <p className="text-xs text-destructive">{state.fieldErrors.confirmPassword[0]}</p>
+            <p className="text-xs text-destructive">
+              {state.fieldErrors.confirmPassword[0]}
+            </p>
           )}
         </div>
 

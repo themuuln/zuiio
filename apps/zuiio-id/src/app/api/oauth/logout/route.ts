@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { auditEvent, extractIp, extractUserAgent } from "@/lib/supabase/audit";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * GET /api/oauth/logout

@@ -1,6 +1,6 @@
+import { dispatchWebhook } from "@/lib/webhooks";
 import type { AuthErrorCode } from "../errors";
 import { createAdminClient } from "./server";
-import { dispatchWebhook } from "@/lib/webhooks";
 
 export type AuditEventType =
   | "consent_approved"

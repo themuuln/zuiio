@@ -26,7 +26,7 @@
   --color-warning-foreground: oklch(0.13 0.003 80);
   --color-info: oklch(0.6 0.15 240);
   --color-info-foreground: oklch(0.13 0.003 80);
-  --color-destructive-text: oklch(0.50 0.18 25);
+  --color-destructive-text: oklch(0.5 0.18 25);
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
@@ -111,7 +111,8 @@
   .expand-wrapper {
     display: grid;
     grid-template-rows: 0fr;
-    transition: grid-template-rows 0.25s cubic-bezier(0.23, 1, 0.32, 1),
+    transition:
+      grid-template-rows 0.25s cubic-bezier(0.23, 1, 0.32, 1),
       opacity 0.2s cubic-bezier(0.23, 1, 0.32, 1);
     opacity: 0;
   }

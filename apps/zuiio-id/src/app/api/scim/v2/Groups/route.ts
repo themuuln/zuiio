@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { verifyBearerToken } from "@/lib/scim-auth";
+import { createAdminClient } from "@/lib/supabase/server";
 
 /**
  * GET /scim/v2/Groups
@@ -10,14 +10,21 @@ export async function GET(request: NextRequest) {
   const auth = await verifyBearerToken(request);
   if (!auth) {
     return NextResponse.json(
-      { schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"], scimType: "invalidBearer", detail: "Invalid bearer token" },
+      {
+        schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"],
+        scimType: "invalidBearer",
+        detail: "Invalid bearer token",
+      },
       { status: 401, headers: { "Content-Type": "application/scim+json" } },
     );
   }
 
   const admin = await createAdminClient();
   const params = request.nextUrl.searchParams;
-  const count = Math.min(100, Math.max(1, parseInt(params.get("count") ?? "20", 10)));
+  const count = Math.min(
+    100,
+    Math.max(1, parseInt(params.get("count") ?? "20", 10)),
+  );
 
   const { data: orgs } = await admin
     .from("organizations")
@@ -40,12 +47,15 @@ export async function GET(request: NextRequest) {
     },
   }));
 
-  return NextResponse.json({
-    schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
-    totalResults: groups.length,
-    itemsPerPage: count,
-    Resources: groups,
-  }, {
-    headers: { "Content-Type": "application/scim+json" },
-  });
+  return NextResponse.json(
+    {
+      schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+      totalResults: groups.length,
+      itemsPerPage: count,
+      Resources: groups,
+    },
+    {
+      headers: { "Content-Type": "application/scim+json" },
+    },
+  );
 }

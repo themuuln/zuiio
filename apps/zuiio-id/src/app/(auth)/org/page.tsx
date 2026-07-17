@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { createClient } from "@/lib/supabase/server";
 import { getUserMemberships } from "@/lib/rbac";
+import { createClient } from "@/lib/supabase/server";
 import { OrgList } from "./org-list";
 
 export const metadata: Metadata = {

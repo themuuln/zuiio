@@ -1,5 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { getSupabaseEnv } from "./env";
 
@@ -45,7 +45,8 @@ let _adminClient: SupabaseClient | null = null;
 export function createAdminClient(): SupabaseClient {
   if (_adminClient) return _adminClient;
 
-  const { createClient } = require("@supabase/supabase-js") as typeof import("@supabase/supabase-js");
+  const { createClient } =
+    require("@supabase/supabase-js") as typeof import("@supabase/supabase-js");
   const { url } = getSupabaseEnv();
   const { getServiceRoleKey } = require("./env") as typeof import("./env");
 

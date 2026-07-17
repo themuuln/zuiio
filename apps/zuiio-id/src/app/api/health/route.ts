@@ -11,18 +11,16 @@ import { createAdminClient } from "@/lib/supabase/server";
  * Returns 200 if healthy, 503 if degraded.
  */
 export async function GET() {
-  const checks: Record<string, { status: "ok" | "error"; latencyMs?: number }> = {};
+  const checks: Record<string, { status: "ok" | "error"; latencyMs?: number }> =
+    {};
   let healthy = true;
 
   // Database connectivity check
   const dbStart = Date.now();
   try {
     const admin = createAdminClient();
-    const { error } = await admin
-      .from("product_catalog")
-      .select("id")
-      .limit(1);
-    
+    const { error } = await admin.from("product_catalog").select("id").limit(1);
+
     checks.database = {
       status: error ? "error" : "ok",
       latencyMs: Date.now() - dbStart,

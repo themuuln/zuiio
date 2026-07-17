@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { verifyScimToken } from "@/lib/products/catalog";
 import { createAdminClient } from "@/lib/supabase/server";
 

@@ -30,9 +30,9 @@ function toRow(value: unknown): Record<string, unknown> | null {
 
 /** Extract the `name` field from a nested `roles` join. */
 function roleName(row: Record<string, unknown>): string | null {
-  const roles = row["roles"];
+  const roles = row.roles;
   if (roles && typeof roles === "object" && "name" in roles) {
-    const name = (roles as Record<string, unknown>)["name"];
+    const name = (roles as Record<string, unknown>).name;
     if (typeof name === "string") return name;
   }
   return null;
@@ -88,7 +88,7 @@ export async function inviteToOrganization(
     .single();
 
   const roleRow = toRow(role);
-  const roleId = roleRow?.["id"];
+  const roleId = roleRow?.id;
   if (typeof roleId !== "string") {
     throw new Error(`Role '${roleName}' not found`);
   }
@@ -110,15 +110,17 @@ export async function inviteToOrganization(
   if (!inviteRow) throw new Error("Invite creation failed");
 
   return {
-    id: String(inviteRow["id"]),
-    org_id: String(inviteRow["org_id"]),
-    email: String(inviteRow["email"]),
-    role_id: String(inviteRow["role_id"]),
-    invited_by: typeof inviteRow["invited_by"] === "string" ? inviteRow["invited_by"] : null,
-    token: String(inviteRow["token"]),
-    expires_at: String(inviteRow["expires_at"]),
-    accepted_at: typeof inviteRow["accepted_at"] === "string" ? inviteRow["accepted_at"] : null,
-    created_at: String(inviteRow["created_at"]),
+    id: String(inviteRow.id),
+    org_id: String(inviteRow.org_id),
+    email: String(inviteRow.email),
+    role_id: String(inviteRow.role_id),
+    invited_by:
+      typeof inviteRow.invited_by === "string" ? inviteRow.invited_by : null,
+    token: String(inviteRow.token),
+    expires_at: String(inviteRow.expires_at),
+    accepted_at:
+      typeof inviteRow.accepted_at === "string" ? inviteRow.accepted_at : null,
+    created_at: String(inviteRow.created_at),
   };
 }
 
@@ -202,7 +204,7 @@ export async function updateMemberRole(
     .single();
 
   const roleRow = toRow(role);
-  const roleId = roleRow?.["id"];
+  const roleId = roleRow?.id;
   if (typeof roleId !== "string") {
     throw new Error(`Role '${newRoleName}' not found`);
   }
@@ -230,15 +232,15 @@ export async function getOrgInvites(orgId: string): Promise<OrgInvite[]> {
     .map(toRow)
     .filter((r): r is Record<string, unknown> => r !== null)
     .map((i) => ({
-      id: String(i["id"]),
-      org_id: String(i["org_id"]),
-      email: String(i["email"]),
-      role_id: String(i["role_id"]),
+      id: String(i.id),
+      org_id: String(i.org_id),
+      email: String(i.email),
+      role_id: String(i.role_id),
       role_name: roleName(i) ?? undefined,
-      invited_by: typeof i["invited_by"] === "string" ? i["invited_by"] : null,
-      token: String(i["token"]),
-      expires_at: String(i["expires_at"]),
-      accepted_at: typeof i["accepted_at"] === "string" ? i["accepted_at"] : null,
-      created_at: String(i["created_at"]),
+      invited_by: typeof i.invited_by === "string" ? i.invited_by : null,
+      token: String(i.token),
+      expires_at: String(i.expires_at),
+      accepted_at: typeof i.accepted_at === "string" ? i.accepted_at : null,
+      created_at: String(i.created_at),
     }));
 }
