@@ -18,27 +18,39 @@ export async function createClient() {
     // synchronously to an empty JSON response — supabase's internal _useSession
     // calls fetch() which would otherwise outlive the prerender and cause
     // HANGING_PROMISE_REJECTION.
+    //
+    // Env vars may also be missing during build-time prerendering — return a
+    // noop client that won't make real API calls.
     const noopFetch: typeof fetch = async () =>
       new Response(JSON.stringify({ data: { user: null }, error: null }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
 
-    return createServerClient<Database>(
-      env("NEXT_PUBLIC_SUPABASE_URL"),
-      getSupabaseKey(),
-      {
-        cookies: {
-          getAll() {
-            return [];
-          },
-          setAll() {},
+    let supabaseUrl: string;
+    let supabaseKey: string;
+    try {
+      supabaseUrl = env("NEXT_PUBLIC_SUPABASE_URL");
+      supabaseKey = getSupabaseKey();
+    } catch {
+      // Build-time prerender without env vars — return a noop client.
+      return createServerClient<Database>(
+        "https://placeholder.supabase.co",
+        "placeholder",
+        {
+          cookies: { getAll() { return []; }, setAll() {} },
+          global: { fetch: noopFetch },
         },
-        global: {
-          fetch: noopFetch,
-        },
+      );
+    }
+
+    return createServerClient<Database>(supabaseUrl, supabaseKey, {
+      cookies: {
+        getAll() { return []; },
+        setAll() {},
       },
-    );
+      global: { fetch: noopFetch },
+    });
   }
 
   return createServerClient<Database>(
