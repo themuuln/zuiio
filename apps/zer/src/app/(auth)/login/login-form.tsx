@@ -65,7 +65,9 @@ export function LoginForm({ next }: { next: string }) {
 
         <div className="relative flex items-center gap-3 my-1">
           <div className="h-px flex-1 bg-border" />
-          <span className="text-xs text-muted-foreground uppercase tracking-wider">Эсвэл</span>
+          <span className="text-xs text-muted-foreground uppercase tracking-wider">
+            Эсвэл
+          </span>
           <div className="h-px flex-1 bg-border" />
         </div>
 

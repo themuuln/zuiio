@@ -1,5 +1,3 @@
-import 'package:isar/isar.dart';
-
 import '../../../app/supabase_bootstrap.dart';
 import '../../../core/error/app_exception.dart';
 import '../../../core/error/result.dart';
@@ -125,7 +123,7 @@ class LocalEventsRepository implements EventsRepository {
 
       // Replace local collection with remote data
       await _storage.eventRecords.isar.writeTxn(() async {
-        await _storage.eventRecords.where().deleteAll();
+        await _storage.eventRecords.clear();
         await _storage.eventRecords.putAll(
           remote.map(IsarEventRecord.fromDomain).toList(),
         );
@@ -157,7 +155,7 @@ class LocalEventsRepository implements EventsRepository {
 
       // Replace local collection
       await _storage.eventRecords.isar.writeTxn(() async {
-        await _storage.eventRecords.where().deleteAll();
+        await _storage.eventRecords.clear();
         await _storage.eventRecords.putAll(
           next.map(IsarEventRecord.fromDomain).toList(),
         );

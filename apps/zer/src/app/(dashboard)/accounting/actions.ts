@@ -1,6 +1,6 @@
 "use server";
-import { capture } from "@zuiio/capture";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { capture } from "@zuiio/capture";
 import { after } from "next/server";
 import { requireWriteAction } from "@/lib/action-utils";
 import { logAuditEventWithClient } from "@/lib/audit";
@@ -32,7 +32,6 @@ export async function createJournalEntry(
   if (isLocked === true) {
     return { error: "Энэ мөчлөг хаагдсан байна. Засварлах боломжгүй." };
   }
-
 
   if (!description) {
     return { error: "Тайлбар шаардлагатай." };

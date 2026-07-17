@@ -57,12 +57,21 @@ function groupByBrand(presets: Preset[]): BrandGroup[] {
 
 type Step = "presets" | "features" | "complete";
 
+function getManufacturingDefaults(): Set<string> {
+  return new Set([
+    "boms",
+    "production_orders",
+    "job_costing",
+    "quality_control",
+    "material_tracking",
+  ]);
+}
+
 interface OnboardingWizardProps {
   presets: Preset[];
   importedBrandNames: string[];
   companyType: string;
 }
-
 export function OnboardingWizard({
   presets,
   importedBrandNames,
@@ -71,7 +80,7 @@ export function OnboardingWizard({
   const [step, setStep] = useState<Step>("presets");
   const [selectedBrands, setSelectedBrands] = useState<Set<string>>(new Set());
   const [selectedFeatures, setSelectedFeatures] = useState<Set<string>>(
-    new Set(),
+    companyType === "manufacturing" ? getManufacturingDefaults() : new Set(),
   );
   const [skipPresets, setSkipPresets] = useState(false);
   const [hasSuppliers, setHasSuppliers] = useState(true);

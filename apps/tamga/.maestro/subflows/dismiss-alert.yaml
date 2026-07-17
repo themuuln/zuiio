@@ -1,0 +1,11 @@
+# Dismiss bottom notification alert by tapping X button
+appId: mn.tamga.app
+name: Dismiss Alert
+
+---
+# The alert X button is at the bottom right of the screen
+- tapOn:
+    point: "88%,95%"
+- extendedWaitUntil:
+    notVisible: "!"
+    timeout: 3000

@@ -94,13 +94,15 @@ test.describe("Shop checkout flow", () => {
         await page.waitForTimeout(500);
 
         // Verify drawer opens with history title
-        const drawer = page.locator('[data-drawer-popup]');
+        const drawer = page.locator("[data-drawer-popup]");
         const drawerVisible = await drawer.isVisible().catch(() => false);
 
         if (drawerVisible) {
-          await expect(page.getByText("Борлуулалтын түүх").first()).toBeVisible({
-            timeout: 5000,
-          });
+          await expect(page.getByText("Борлуулалтын түүх").first()).toBeVisible(
+            {
+              timeout: 5000,
+            },
+          );
         }
       } else {
         // History might be in a different location

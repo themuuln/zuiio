@@ -43,6 +43,8 @@ import 'isar_schemas/isar_trial_slot.dart';
 import 'isar_schemas/isar_team.dart';
 import 'isar_schemas/isar_team_invitation.dart';
 import 'isar_schemas/isar_team_member.dart';
+import 'isar_schemas/isar_event_record.dart';
+import 'isar_schemas/isar_sighting_report.dart';
 
 /// Typed accessor layer over Isar collections.
 ///
@@ -123,6 +125,9 @@ class IsarStorage {
   IsarCollection<IsarTeamMember> get teamMembers => _db.isarTeamMembers;
   IsarCollection<IsarTeamInvitation> get teamInvitations =>
       _db.isarTeamInvitations;
+  IsarCollection<IsarEventRecord> get eventRecords => _db.isarEventRecords;
+  IsarCollection<IsarSightingReport> get sightingReports =>
+      _db.isarSightingReports;
 
   // ── Convenience singleton ────────────────────────────────────────
 

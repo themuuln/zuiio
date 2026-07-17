@@ -36,17 +36,40 @@ export function calculateBudgetSummary(budget: Budget): BudgetSummary {
   const now = new Date();
   const startDate = new Date(budget.start_date);
   const endDate = new Date(budget.end_date);
-  const totalDays = Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
-  const daysPassed = Math.max(0, Math.min(totalDays, Math.ceil((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))));
+  const totalDays = Math.max(
+    1,
+    Math.ceil(
+      (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+    ),
+  );
+  const daysPassed = Math.max(
+    0,
+    Math.min(
+      totalDays,
+      Math.ceil((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)),
+    ),
+  );
   const daysLeft = Math.max(0, totalDays - daysPassed);
 
   const dailyBurnRate = daysPassed > 0 ? spent / daysPassed : 0;
   const projectedTotal = dailyBurnRate * totalDays;
 
-  return { budget, spent, remaining, percentage, isOverBudget: spent > budget.amount, isNearLimit: percentage >= budget.alert_threshold, daysLeft, dailyBurnRate, projectedTotal };
+  return {
+    budget,
+    spent,
+    remaining,
+    percentage,
+    isOverBudget: spent > budget.amount,
+    isNearLimit: percentage >= budget.alert_threshold,
+    daysLeft,
+    dailyBurnRate,
+    projectedTotal,
+  };
 }
 
-export function getBudgetStatusColor(percentage: number): "default" | "warning" | "destructive" {
+export function getBudgetStatusColor(
+  percentage: number,
+): "default" | "warning" | "destructive" {
   if (percentage >= 100) return "destructive";
   if (percentage >= 80) return "warning";
   return "default";

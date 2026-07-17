@@ -1,5 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { expect, test } from "@playwright/test";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * E2E tests for Financial Data Protection features.
@@ -92,7 +92,11 @@ async function getOrCreateSale(
     .limit(1)
     .single();
   if (existing) {
-    return { id: existing.id as string, total_amount: existing.total_amount as number, created: false };
+    return {
+      id: existing.id as string,
+      total_amount: existing.total_amount as number,
+      created: false,
+    };
   }
   // No existing sale — create one with the user's branch so it's visible in the UI
   const { data: created, error } = await admin
@@ -109,7 +113,11 @@ async function getOrCreateSale(
     .select("id, total_amount")
     .single();
   if (error) throw new Error(`createTestSale failed: ${error.message}`);
-  return { id: created.id as string, total_amount: created.total_amount as number, created: true };
+  return {
+    id: created.id as string,
+    total_amount: created.total_amount as number,
+    created: true,
+  };
 }
 
 async function softDeleteSale(
@@ -138,17 +146,18 @@ async function restoreSale(
   return result?.success === true;
 }
 
-
 // ── Tests ───────────────────────────────────────────────────────────────
 /** Skip the test if admin env vars are not configured. */
 function requireEnv() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
-  test.skip(!url || !key, "Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY env vars");
+  test.skip(
+    !url || !key,
+    "Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY env vars",
+  );
 }
 
 test.describe("Financial Data Protection", () => {
-
   test("soft delete hides sale from list", async ({ page }) => {
     requireEnv();
     const admin = await getAdmin();
@@ -165,7 +174,7 @@ test.describe("Financial Data Protection", () => {
     // Get user's email from auth state and find their profile via admin
     const email = process.env.E2E_EMAIL ?? "themuuln1@gmail.com";
     const { data: authUsers } = await admin.auth.admin.listUsers();
-    const authUser = authUsers?.users?.find(u => u.email === email);
+    const authUser = authUsers?.users?.find((u) => u.email === email);
     test.skip(!authUser, `No auth user found for ${email}`);
 
     const { data: profile } = await admin
@@ -189,9 +198,14 @@ test.describe("Financial Data Protection", () => {
       .gt("total_amount", 0);
     if (userCtx!.branchId) query = query.eq("branch_id", userCtx!.branchId);
     const { data: sales } = await query.limit(5);
-    test.skip(!sales || sales.length === 0, "No non-zero sale found matching user's org/branch");
+    test.skip(
+      !sales || sales.length === 0,
+      "No non-zero sale found matching user's org/branch",
+    );
     const targetSale = sales![0];
-    const formattedAmount = (targetSale.total_amount as number).toLocaleString("en-US");
+    const formattedAmount = (targetSale.total_amount as number).toLocaleString(
+      "en-US",
+    );
 
     // Verify the sale is visible
     const saleVisible = await page
@@ -246,14 +260,16 @@ test.describe("Financial Data Protection", () => {
       })
       .select("id")
       .single();
-    if (periodError) throw new Error(`Create period failed: ${periodError.message}`);
+    if (periodError)
+      throw new Error(`Create period failed: ${periodError.message}`);
     const periodId = period.id as string;
 
     // Close the period
     const { error: closeError } = await admin.rpc("close_fiscal_period", {
       p_period_id: periodId,
     });
-    if (closeError) throw new Error(`Close period failed: ${closeError.message}`);
+    if (closeError)
+      throw new Error(`Close period failed: ${closeError.message}`);
 
     // Verify the RPC confirms the period is locked
     const { data: isLocked } = await admin.rpc("check_period_locked", {
@@ -268,8 +284,14 @@ test.describe("Financial Data Protection", () => {
     await page.waitForTimeout(500);
 
     // Verify the UI shows the journal entry list (confirms page loaded)
-    const hasTable = await page.locator("table").isVisible().catch(() => false);
-    const hasEmpty = await page.getByText("Журналын бичилт байхгүй").isVisible().catch(() => false);
+    const hasTable = await page
+      .locator("table")
+      .isVisible()
+      .catch(() => false);
+    const hasEmpty = await page
+      .getByText("Журналын бичилт байхгүй")
+      .isVisible()
+      .catch(() => false);
     expect(hasTable || hasEmpty).toBe(true);
 
     // Verify the period lock blocks journal entry creation.
@@ -283,8 +305,13 @@ test.describe("Financial Data Protection", () => {
         for (const s of scripts) {
           const resp = await fetch(s.getAttribute("src")!);
           const text = await resp.text();
-          const m = text.match(/createJournalEntry["']?\s*:\s*["']([a-f0-9]+)["']/);
-          if (m) { actionId = m[1]; break; }
+          const m = text.match(
+            /createJournalEntry["']?\s*:\s*["']([a-f0-9]+)["']/,
+          );
+          if (m) {
+            actionId = m[1];
+            break;
+          }
         }
         if (!actionId) {
           // Fallback: look for the action in the inline flight data
@@ -300,8 +327,16 @@ test.describe("Financial Data Protection", () => {
         fd.append(
           "lines",
           JSON.stringify([
-            { account_id: "00000000-0000-0000-0000-000000000001", debit_amount: 5000, credit_amount: 0 },
-            { account_id: "00000000-0000-0000-0000-000000000002", debit_amount: 0, credit_amount: 5000 },
+            {
+              account_id: "00000000-0000-0000-0000-000000000001",
+              debit_amount: 5000,
+              credit_amount: 0,
+            },
+            {
+              account_id: "00000000-0000-0000-0000-000000000002",
+              debit_amount: 0,
+              credit_amount: 5000,
+            },
           ]),
         );
         const res = await fetch("/accounting", {
@@ -347,7 +382,7 @@ test.describe("Financial Data Protection", () => {
     // Get user's email from auth state and find their profile via admin
     const email = process.env.E2E_EMAIL ?? "themuuln1@gmail.com";
     const { data: authUsers } = await admin.auth.admin.listUsers();
-    const authUser = authUsers?.users?.find(u => u.email === email);
+    const authUser = authUsers?.users?.find((u) => u.email === email);
     test.skip(!authUser, `No auth user found for ${email}`);
 
     const { data: profile } = await admin
@@ -371,9 +406,14 @@ test.describe("Financial Data Protection", () => {
       .gt("total_amount", 0);
     if (userCtx!.branchId) query = query.eq("branch_id", userCtx!.branchId);
     const { data: sales } = await query.limit(5);
-    test.skip(!sales || sales.length === 0, "No non-zero sale found matching user's org/branch");
+    test.skip(
+      !sales || sales.length === 0,
+      "No non-zero sale found matching user's org/branch",
+    );
     const targetSale = sales![0];
-    const formattedAmount = (targetSale.total_amount as number).toLocaleString("en-US");
+    const formattedAmount = (targetSale.total_amount as number).toLocaleString(
+      "en-US",
+    );
 
     // Verify the sale is visible
     const visibleBefore = await page
@@ -415,5 +455,5 @@ test.describe("Financial Data Protection", () => {
       .isVisible()
       .catch(() => false);
     expect(saleBack).toBe(true);
-});
+  });
 });

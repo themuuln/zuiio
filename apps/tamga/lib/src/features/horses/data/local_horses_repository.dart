@@ -9,6 +9,8 @@ import '../../shared/data/isar_schemas/isar_horse.dart';
 import '../../shared/data/local_sync_preferences.dart';
 import '../../shared/data/pagination/paginated_result.dart';
 import '../domain/horse_record.dart';
+import '../../../shared/domain/horse_breed_lineage.dart';
+import '../../../shared/domain/horse_coat_color.dart';
 import 'horses_repository.dart';
 
 class LocalHorsesRepository extends LocalRepository<HorseRecord, IsarHorse>
@@ -46,6 +48,10 @@ class LocalHorsesRepository extends LocalRepository<HorseRecord, IsarHorse>
       notes: 'Lineage-ийн үндсэн root. Өрхийн хамгийн идэвхтэй азарганы шугам.',
       gender: HorseGender.stallion,
       lineageRootId: 'khan-khuleg',
+      coatColor: MongolianCoatColor.kheer,
+      breedLineage: MongolianBreedLineage.galshar,
+      region: 'Хэнтий',
+      sum: 'Галшар',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     ),
@@ -61,6 +67,9 @@ class LocalHorsesRepository extends LocalRepository<HorseRecord, IsarHorse>
       notes: 'Гаднах талын root шугамыг төлөөлнө.',
       gender: HorseGender.stallion,
       lineageRootId: 'tsagaan-salkhi',
+      coatColor: MongolianCoatColor.tsenker,
+      breedLineage: MongolianBreedLineage.mongol,
+      region: 'Улаанбаатар',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     ),
@@ -76,6 +85,12 @@ class LocalHorsesRepository extends LocalRepository<HorseRecord, IsarHorse>
       notes: 'Уралдааны feed дээр тогтмол орж ирдэг үр төл.',
       gender: HorseGender.gelding,
       lineageRootId: 'khan-khuleg',
+      sireId: 'khan-khuleg',
+      damId: 'tsagaan-salkhi',
+      coatColor: MongolianCoatColor.sharga,
+      breedLineage: MongolianBreedLineage.galshar,
+      region: 'Хэнтий',
+      sum: 'Галшар',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     ),
@@ -91,6 +106,11 @@ class LocalHorsesRepository extends LocalRepository<HorseRecord, IsarHorse>
       notes: 'Өрхийн гүүний шугамын гол холбоос.',
       gender: HorseGender.mare,
       lineageRootId: 'khan-khuleg',
+      sireId: 'khan-khuleg',
+      coatColor: MongolianCoatColor.bor,
+      breedLineage: MongolianBreedLineage.galshar,
+      region: 'Хэнтий',
+      sum: 'Галшар',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     ),
@@ -106,6 +126,11 @@ class LocalHorsesRepository extends LocalRepository<HorseRecord, IsarHorse>
       notes: 'Гаднах бүртгэлтэй ч lineage болон events дээр давтагдана.',
       gender: HorseGender.gelding,
       lineageRootId: 'khan-khuleg',
+      sireId: 'khan-khuleg',
+      coatColor: MongolianCoatColor.khuren,
+      breedLineage: MongolianBreedLineage.galshar,
+      region: 'Хэнтий',
+      sum: 'Галшар',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     ),
@@ -121,6 +146,9 @@ class LocalHorsesRepository extends LocalRepository<HorseRecord, IsarHorse>
       notes: 'Цагаан Салхины шугамаас өрхөд үлдсэн адуу.',
       gender: HorseGender.mare,
       lineageRootId: 'tsagaan-salkhi',
+      coatColor: MongolianCoatColor.saaral,
+      breedLineage: MongolianBreedLineage.mongol,
+      region: 'Улаанбаатар',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     ),

@@ -37,7 +37,18 @@ mixin _$Horse {
   bool get tamgaVerified => throw _privateConstructorUsedError;
   bool get stateVerified => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
-  DateTime get updatedAt => throw _privateConstructorUsedError;
+  DateTime get updatedAt =>
+      throw _privateConstructorUsedError; // ── Parent linkage ──
+  String? get sireId => throw _privateConstructorUsedError;
+  String? get damId =>
+      throw _privateConstructorUsedError; // ── Mongolian-specific ──
+  MongolianCoatColor? get coatColor => throw _privateConstructorUsedError;
+  MongolianBreedLineage? get breedLineage => throw _privateConstructorUsedError;
+  String? get region => throw _privateConstructorUsedError;
+  String? get sum => throw _privateConstructorUsedError;
+  HorseMarkings? get markings => throw _privateConstructorUsedError;
+  String? get tamgaBrandClan => throw _privateConstructorUsedError;
+  int? get tamgaBrandGeneration => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $HorseCopyWith<Horse> get copyWith => throw _privateConstructorUsedError;
@@ -70,6 +81,15 @@ abstract class $HorseCopyWith<$Res> {
     bool stateVerified,
     DateTime createdAt,
     DateTime updatedAt,
+    String? sireId,
+    String? damId,
+    MongolianCoatColor? coatColor,
+    MongolianBreedLineage? breedLineage,
+    String? region,
+    String? sum,
+    HorseMarkings? markings,
+    String? tamgaBrandClan,
+    int? tamgaBrandGeneration,
   });
 }
 
@@ -107,6 +127,15 @@ class _$HorseCopyWithImpl<$Res, $Val extends Horse>
     Object? stateVerified = null,
     Object? createdAt = null,
     Object? updatedAt = null,
+    Object? sireId = freezed,
+    Object? damId = freezed,
+    Object? coatColor = freezed,
+    Object? breedLineage = freezed,
+    Object? region = freezed,
+    Object? sum = freezed,
+    Object? markings = freezed,
+    Object? tamgaBrandClan = freezed,
+    Object? tamgaBrandGeneration = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -194,6 +223,42 @@ class _$HorseCopyWithImpl<$Res, $Val extends Horse>
                 ? _value.updatedAt
                 : updatedAt // ignore: cast_nullable_to_non_nullable
                       as DateTime,
+            sireId: freezed == sireId
+                ? _value.sireId
+                : sireId // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            damId: freezed == damId
+                ? _value.damId
+                : damId // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            coatColor: freezed == coatColor
+                ? _value.coatColor
+                : coatColor // ignore: cast_nullable_to_non_nullable
+                      as MongolianCoatColor?,
+            breedLineage: freezed == breedLineage
+                ? _value.breedLineage
+                : breedLineage // ignore: cast_nullable_to_non_nullable
+                      as MongolianBreedLineage?,
+            region: freezed == region
+                ? _value.region
+                : region // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            sum: freezed == sum
+                ? _value.sum
+                : sum // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            markings: freezed == markings
+                ? _value.markings
+                : markings // ignore: cast_nullable_to_non_nullable
+                      as HorseMarkings?,
+            tamgaBrandClan: freezed == tamgaBrandClan
+                ? _value.tamgaBrandClan
+                : tamgaBrandClan // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            tamgaBrandGeneration: freezed == tamgaBrandGeneration
+                ? _value.tamgaBrandGeneration
+                : tamgaBrandGeneration // ignore: cast_nullable_to_non_nullable
+                      as int?,
           )
           as $Val,
     );
@@ -230,6 +295,15 @@ abstract class _$$HorseImplCopyWith<$Res> implements $HorseCopyWith<$Res> {
     bool stateVerified,
     DateTime createdAt,
     DateTime updatedAt,
+    String? sireId,
+    String? damId,
+    MongolianCoatColor? coatColor,
+    MongolianBreedLineage? breedLineage,
+    String? region,
+    String? sum,
+    HorseMarkings? markings,
+    String? tamgaBrandClan,
+    int? tamgaBrandGeneration,
   });
 }
 
@@ -266,6 +340,15 @@ class __$$HorseImplCopyWithImpl<$Res>
     Object? stateVerified = null,
     Object? createdAt = null,
     Object? updatedAt = null,
+    Object? sireId = freezed,
+    Object? damId = freezed,
+    Object? coatColor = freezed,
+    Object? breedLineage = freezed,
+    Object? region = freezed,
+    Object? sum = freezed,
+    Object? markings = freezed,
+    Object? tamgaBrandClan = freezed,
+    Object? tamgaBrandGeneration = freezed,
   }) {
     return _then(
       _$HorseImpl(
@@ -353,6 +436,42 @@ class __$$HorseImplCopyWithImpl<$Res>
             ? _value.updatedAt
             : updatedAt // ignore: cast_nullable_to_non_nullable
                   as DateTime,
+        sireId: freezed == sireId
+            ? _value.sireId
+            : sireId // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        damId: freezed == damId
+            ? _value.damId
+            : damId // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        coatColor: freezed == coatColor
+            ? _value.coatColor
+            : coatColor // ignore: cast_nullable_to_non_nullable
+                  as MongolianCoatColor?,
+        breedLineage: freezed == breedLineage
+            ? _value.breedLineage
+            : breedLineage // ignore: cast_nullable_to_non_nullable
+                  as MongolianBreedLineage?,
+        region: freezed == region
+            ? _value.region
+            : region // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        sum: freezed == sum
+            ? _value.sum
+            : sum // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        markings: freezed == markings
+            ? _value.markings
+            : markings // ignore: cast_nullable_to_non_nullable
+                  as HorseMarkings?,
+        tamgaBrandClan: freezed == tamgaBrandClan
+            ? _value.tamgaBrandClan
+            : tamgaBrandClan // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        tamgaBrandGeneration: freezed == tamgaBrandGeneration
+            ? _value.tamgaBrandGeneration
+            : tamgaBrandGeneration // ignore: cast_nullable_to_non_nullable
+                  as int?,
       ),
     );
   }
@@ -383,6 +502,15 @@ class _$HorseImpl extends _Horse {
     this.stateVerified = false,
     required this.createdAt,
     required this.updatedAt,
+    this.sireId,
+    this.damId,
+    this.coatColor,
+    this.breedLineage,
+    this.region,
+    this.sum,
+    this.markings,
+    this.tamgaBrandClan,
+    this.tamgaBrandGeneration,
   }) : _photoUrls = photoUrls,
        super._();
 
@@ -445,10 +573,30 @@ class _$HorseImpl extends _Horse {
   final DateTime createdAt;
   @override
   final DateTime updatedAt;
+  // ── Parent linkage ──
+  @override
+  final String? sireId;
+  @override
+  final String? damId;
+  // ── Mongolian-specific ──
+  @override
+  final MongolianCoatColor? coatColor;
+  @override
+  final MongolianBreedLineage? breedLineage;
+  @override
+  final String? region;
+  @override
+  final String? sum;
+  @override
+  final HorseMarkings? markings;
+  @override
+  final String? tamgaBrandClan;
+  @override
+  final int? tamgaBrandGeneration;
 
   @override
   String toString() {
-    return 'Horse(id: $id, ownerId: $ownerId, name: $name, relationLabel: $relationLabel, coat: $coat, birthYear: $birthYear, awardCount: $awardCount, offspringCount: $offspringCount, isOwnedByHousehold: $isOwnedByHousehold, notes: $notes, gender: $gender, microchipId: $microchipId, registrationNo: $registrationNo, photoUrls: $photoUrls, lineageRootId: $lineageRootId, ownerStampSvg: $ownerStampSvg, registrationDate: $registrationDate, tamgaVerified: $tamgaVerified, stateVerified: $stateVerified, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'Horse(id: $id, ownerId: $ownerId, name: $name, relationLabel: $relationLabel, coat: $coat, birthYear: $birthYear, awardCount: $awardCount, offspringCount: $offspringCount, isOwnedByHousehold: $isOwnedByHousehold, notes: $notes, gender: $gender, microchipId: $microchipId, registrationNo: $registrationNo, photoUrls: $photoUrls, lineageRootId: $lineageRootId, ownerStampSvg: $ownerStampSvg, registrationDate: $registrationDate, tamgaVerified: $tamgaVerified, stateVerified: $stateVerified, createdAt: $createdAt, updatedAt: $updatedAt, sireId: $sireId, damId: $damId, coatColor: $coatColor, breedLineage: $breedLineage, region: $region, sum: $sum, markings: $markings, tamgaBrandClan: $tamgaBrandClan, tamgaBrandGeneration: $tamgaBrandGeneration)';
   }
 
   @override
@@ -493,7 +641,21 @@ class _$HorseImpl extends _Horse {
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
-                other.updatedAt == updatedAt));
+                other.updatedAt == updatedAt) &&
+            (identical(other.sireId, sireId) || other.sireId == sireId) &&
+            (identical(other.damId, damId) || other.damId == damId) &&
+            (identical(other.coatColor, coatColor) ||
+                other.coatColor == coatColor) &&
+            (identical(other.breedLineage, breedLineage) ||
+                other.breedLineage == breedLineage) &&
+            (identical(other.region, region) || other.region == region) &&
+            (identical(other.sum, sum) || other.sum == sum) &&
+            (identical(other.markings, markings) ||
+                other.markings == markings) &&
+            (identical(other.tamgaBrandClan, tamgaBrandClan) ||
+                other.tamgaBrandClan == tamgaBrandClan) &&
+            (identical(other.tamgaBrandGeneration, tamgaBrandGeneration) ||
+                other.tamgaBrandGeneration == tamgaBrandGeneration));
   }
 
   @override
@@ -520,6 +682,15 @@ class _$HorseImpl extends _Horse {
     stateVerified,
     createdAt,
     updatedAt,
+    sireId,
+    damId,
+    coatColor,
+    breedLineage,
+    region,
+    sum,
+    markings,
+    tamgaBrandClan,
+    tamgaBrandGeneration,
   ]);
 
   @JsonKey(ignore: true)
@@ -552,6 +723,15 @@ abstract class _Horse extends Horse {
     final bool stateVerified,
     required final DateTime createdAt,
     required final DateTime updatedAt,
+    final String? sireId,
+    final String? damId,
+    final MongolianCoatColor? coatColor,
+    final MongolianBreedLineage? breedLineage,
+    final String? region,
+    final String? sum,
+    final HorseMarkings? markings,
+    final String? tamgaBrandClan,
+    final int? tamgaBrandGeneration,
   }) = _$HorseImpl;
   const _Horse._() : super._();
 
@@ -597,6 +777,24 @@ abstract class _Horse extends Horse {
   DateTime get createdAt;
   @override
   DateTime get updatedAt;
+  @override // ── Parent linkage ──
+  String? get sireId;
+  @override
+  String? get damId;
+  @override // ── Mongolian-specific ──
+  MongolianCoatColor? get coatColor;
+  @override
+  MongolianBreedLineage? get breedLineage;
+  @override
+  String? get region;
+  @override
+  String? get sum;
+  @override
+  HorseMarkings? get markings;
+  @override
+  String? get tamgaBrandClan;
+  @override
+  int? get tamgaBrandGeneration;
   @override
   @JsonKey(ignore: true)
   _$$HorseImplCopyWith<_$HorseImpl> get copyWith =>

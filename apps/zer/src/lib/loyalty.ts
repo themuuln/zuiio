@@ -35,16 +35,26 @@ export interface LoyaltyReward {
   created_at: string;
 }
 
-export function calculatePointsEarned(amount: number, pointsPerMnt: number, minPurchase: number): number {
+export function calculatePointsEarned(
+  amount: number,
+  pointsPerMnt: number,
+  minPurchase: number,
+): number {
   if (amount < minPurchase) return 0;
   return Math.floor(amount * pointsPerMnt);
 }
 
-export function calculateDiscountFromPoints(points: number, pointsPerMnt: number): number {
+export function calculateDiscountFromPoints(
+  points: number,
+  pointsPerMnt: number,
+): number {
   return points / pointsPerMnt;
 }
 
-export function canRedeemReward(customerPoints: number, rewardCost: number): boolean {
+export function canRedeemReward(
+  customerPoints: number,
+  rewardCost: number,
+): boolean {
   return customerPoints >= rewardCost;
 }
 
@@ -52,9 +62,20 @@ export function formatPoints(points: number): string {
   return points.toLocaleString("mn-MN");
 }
 
-export function getPointsTier(totalEarned: number): { name: string; color: string; nextThreshold: number | null } {
-  if (totalEarned >= 10000) return { name: "Алтан", color: "text-yellow-500", nextThreshold: null };
-  if (totalEarned >= 5000) return { name: "Мөнгөн", color: "text-gray-400", nextThreshold: 10000 };
-  if (totalEarned >= 1000) return { name: "Хүрэн", color: "text-amber-600", nextThreshold: 5000 };
-  return { name: "Энгийн", color: "text-muted-foreground", nextThreshold: 1000 };
+export function getPointsTier(totalEarned: number): {
+  name: string;
+  color: string;
+  nextThreshold: number | null;
+} {
+  if (totalEarned >= 10000)
+    return { name: "Алтан", color: "text-yellow-500", nextThreshold: null };
+  if (totalEarned >= 5000)
+    return { name: "Мөнгөн", color: "text-gray-400", nextThreshold: 10000 };
+  if (totalEarned >= 1000)
+    return { name: "Хүрэн", color: "text-amber-600", nextThreshold: 5000 };
+  return {
+    name: "Энгийн",
+    color: "text-muted-foreground",
+    nextThreshold: 1000,
+  };
 }

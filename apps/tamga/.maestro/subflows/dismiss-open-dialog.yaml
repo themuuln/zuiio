@@ -1,0 +1,6 @@
+# Dismiss iOS "Open in Tamga?" system dialog
+appId: mn.tamga.app
+name: Dismiss Open Dialog
+
+---
+- tapOn: "Open"

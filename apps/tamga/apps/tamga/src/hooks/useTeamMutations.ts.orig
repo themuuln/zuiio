@@ -1,0 +1,509 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import type { TeamRole } from "./useTeams";
+
+// ── Create Team ──────────────────────────────────────────────────
+
+interface CreateTeamInput {
+  name: string;
+}
+
+export function useCreateTeam() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ name }: CreateTeamInput) => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Нэвтрээгүй байна");
+
+      // Create the team
+      const { data: team, error: teamErr } = await supabase
+        .from("teams")
+        .insert({ name, owner_user_id: user.id })
+        .select()
+        .single();
+
+      if (teamErr) throw teamErr;
+
+      // Add owner as first member
+      const { error: memberErr } = await supabase
+        .from("team_members")
+        .insert({ team_id: team.id, user_id: user.id, role: "owner" });
+
+      if (memberErr) throw memberErr;
+
+      // Log activity
+      await supabase.from("team_activity_log").insert({
+        team_id: team.id,
+        user_id: user.id,
+        action: "team_created",
+        details: { team_name: name },
+      });
+
+      return team;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+    },
+  });
+}
+
+// ── Invite Member ────────────────────────────────────────────────
+
+interface InviteMemberInput {
+  teamId: string;
+  contact: string; // phone or email
+  role: TeamRole;
+}
+
+export function useInviteTeamMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ teamId, contact, role }: InviteMemberInput) => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Нэвтрээгүй байна");
+
+      // Resolve contact to user UUID via RPC
+      const { data: invitedUserId, error: rpcErr } = await supabase.rpc(
+        "lookup_user_by_contact",
+        { contact },
+      );
+
+      if (rpcErr) throw rpcErr;
+      if (!invitedUserId) {
+        throw new Error("Хэрэглэгч олдсонгүй. Утас эсвэл и-мэйл шалгана уу.");
+      }
+
+      // Prevent self-invitation
+      if (invitedUserId === user.id) {
+        throw new Error("Өөрийгөө урих боломжгүй");
+      }
+
+      // Check for existing pending invitation
+      const { data: existing } = await supabase
+        .from("team_invitations")
+        .select("id")
+        .eq("team_id", teamId)
+        .eq("invited_user_id", invitedUserId)
+        .eq("status", "pending")
+        .maybeSingle();
+
+      if (existing) {
+        throw new Error("Энэ хэрэглэгч аль хэдийн уригдсан байна");
+      }
+
+      // Fetch team name for the invitation record
+      const { data: team } = await supabase
+        .from("teams")
+        .select("name")
+        .eq("id", teamId)
+        .single();
+
+      // Create invitation
+      const { data: invitation, error: invErr } = await supabase
+        .from("team_invitations")
+        .insert({
+          team_id: teamId,
+          team_name: team?.name ?? "",
+          invited_user_id: invitedUserId,
+          invited_by_user_id: user.id,
+          role,
+        })
+        .select()
+        .single();
+
+      if (invErr) throw invErr;
+
+      // Log activity
+      await supabase.from("team_activity_log").insert({
+        team_id: teamId,
+        user_id: user.id,
+        action: "member_invited",
+        details: { invited_user_id: invitedUserId, role },
+      });
+
+      return invitation;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["teamActivity", variables.teamId],
+      });
+    },
+  });
+}
+
+// ── Remove Member ────────────────────────────────────────────────
+
+interface RemoveMemberInput {
+  teamId: string;
+  memberId: string;
+  userId: string;
+}
+
+export function useRemoveTeamMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ teamId, memberId, userId }: RemoveMemberInput) => {
+      const { error } = await supabase
+        .from("team_members")
+        .delete()
+        .eq("id", memberId);
+
+      if (error) throw error;
+
+      await supabase.from("team_activity_log").insert({
+        team_id: teamId,
+        user_id: userId,
+        action: "member_removed",
+        details: { removed_member_id: memberId },
+      });
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["teamMembers", variables.teamId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["teamActivity", variables.teamId],
+      });
+    },
+  });
+}
+
+// ── Update Member Role ───────────────────────────────────────────
+
+interface UpdateRoleInput {
+  memberId: string;
+  role: TeamRole;
+  teamId: string;
+}
+
+export function useUpdateMemberRole() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ memberId, role }: UpdateRoleInput) => {
+      const { error } = await supabase
+        .from("team_members")
+        .update({ role })
+        .eq("id", memberId);
+
+      if (error) throw error;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["teamMembers", variables.teamId],
+      });
+    },
+  });
+}
+
+// ── Accept / Decline Invitation ──────────────────────────────────
+
+interface RespondInvitationInput {
+  invitationId: string;
+  teamId: string;
+  status: "accepted" | "declined";
+}
+
+export function useRespondInvitation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      invitationId,
+      teamId,
+      status,
+    }: RespondInvitationInput) => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Нэвтрээгүй байна");
+
+      // Update invitation status
+      const { error } = await supabase
+        .from("team_invitations")
+        .update({ status })
+        .eq("id", invitationId);
+
+      if (error) throw error;
+
+      // If accepted, add as team member
+      if (status === "accepted") {
+        // Fetch invitation to get role
+        const { data: invitation } = await supabase
+          .from("team_invitations")
+          .select("role")
+          .eq("id", invitationId)
+          .single();
+
+        const { error: memberErr } = await supabase
+          .from("team_members")
+          .insert({
+            team_id: teamId,
+            user_id: user.id,
+            role: invitation?.role ?? "viewer",
+          });
+
+        if (memberErr) throw memberErr;
+
+        await supabase.from("team_activity_log").insert({
+          team_id: teamId,
+          user_id: user.id,
+          action: "member_joined",
+          details: { role: invitation?.role },
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+      queryClient.invalidateQueries({ queryKey: ["teamInvitations"] });
+    },
+  });
+}
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+
+// ── Input Types ─────────────────────────────────────────────────────
+
+interface CreateTeamInput {
+  name: string;
+}
+
+interface UpdateTeamInput {
+  id: string;
+  name?: string;
+}
+
+interface InviteMemberInput {
+  team_id: string;
+  team_name: string;
+  invited_user_id: string;
+  role: string;
+}
+
+interface AcceptInvitationInput {
+  id: string;
+  team_id: string;
+  user_id: string;
+  role: string;
+}
+
+interface RemoveMemberInput {
+  team_id: string;
+  member_id: string;
+}
+
+interface UpdateMemberRoleInput {
+  member_id: string;
+  role: string;
+}
+
+interface AddHorseInput {
+  team_id: string;
+  horse_id: string;
+  added_by: string;
+}
+
+interface RemoveHorseInput {
+  team_id: string;
+  horse_id: string;
+}
+
+const HARDCODED_USER_ID = "11111111-1111-1111-1111-111111111111";
+
+// ── Mutation Hooks ──────────────────────────────────────────────────
+
+/** Create a new team. Owner is automatically set from session. */
+export function useCreateTeam() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreateTeamInput) => {
+      const { data, error } = await supabase
+        .from("teams")
+        .insert({
+          name: input.name,
+          owner_user_id: HARDCODED_USER_ID,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+    },
+  });
+}
+
+/** Update a team's name. Only owner can do this. */
+export function useUpdateTeam() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: UpdateTeamInput) => {
+      const { data, error } = await supabase
+        .from("teams")
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+    },
+  });
+}
+
+/** Delete a team. Only owner can do this. */
+export function useDeleteTeam() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("teams").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+    },
+  });
+}
+
+/** Invite a member to a team. Creates a pending invitation. */
+export function useInviteMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: InviteMemberInput) => {
+      const { data, error } = await supabase
+        .from("team_invitations")
+        .insert({
+          team_id: input.team_id,
+          team_name: input.team_name,
+          invited_user_id: input.invited_user_id,
+          invited_by_user_id: HARDCODED_USER_ID,
+          role: input.role,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teamInvitations"] });
+    },
+  });
+}
+
+/** Accept a pending invitation: update status + add to team_members. */
+export function useAcceptInvitation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: AcceptInvitationInput) => {
+      // Update invitation status to accepted
+      const { error: updateError } = await supabase
+        .from("team_invitations")
+        .update({ status: "accepted" })
+        .eq("id", input.id)
+        .eq("invited_user_id", input.user_id);
+      if (updateError) throw updateError;
+
+      // Add user as a team member
+      const { error: insertError } = await supabase
+        .from("team_members")
+        .insert({
+          team_id: input.team_id,
+          user_id: input.user_id,
+          role: input.role,
+        });
+      if (insertError) throw insertError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teamInvitations"] });
+      queryClient.invalidateQueries({ queryKey: ["teamMembers"] });
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+    },
+  });
+}
+
+/** Remove a member from a team. Only owner/manager can do this. */
+export function useRemoveMember() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: RemoveMemberInput) => {
+      const { error } = await supabase
+        .from("team_members")
+        .delete()
+        .eq("id", input.member_id)
+        .eq("team_id", input.team_id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teamMembers"] });
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+    },
+  });
+}
+
+/** Update a team member's role. Only owner/manager can do this. */
+export function useUpdateMemberRole() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: UpdateMemberRoleInput) => {
+      const { data, error } = await supabase
+        .from("team_members")
+        .update({ role: input.role })
+        .eq("id", input.member_id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teamMembers"] });
+    },
+  });
+}
+
+/** Add a horse to a team. Only owner/manager can do this. */
+export function useAddHorseToTeam() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: AddHorseInput) => {
+      const { data, error } = await supabase
+        .from("team_horses")
+        .insert({
+          team_id: input.team_id,
+          horse_id: input.horse_id,
+          added_by: input.added_by,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teamHorses"] });
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+    },
+  });
+}
+
+/** Remove a horse from a team. Only owner/manager can do this. */
+export function useRemoveHorseFromTeam() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: RemoveHorseInput) => {
+      const { error } = await supabase
+        .from("team_horses")
+        .delete()
+        .eq("team_id", input.team_id)
+        .eq("horse_id", input.horse_id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teamHorses"] });
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+    },
+  });
+}

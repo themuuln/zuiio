@@ -52,12 +52,18 @@ export async function createJournalEntry(
   try {
     // Check if the period is locked — check_period_locked not yet in generated Database types
     const untypedSupabase = supabase as SupabaseClient;
-    const { data: isLocked } = await untypedSupabase.rpc("check_period_locked", {
-      p_check_date: entryDate,
-      p_org_id: organizationId,
-    });
+    const { data: isLocked } = await untypedSupabase.rpc(
+      "check_period_locked",
+      {
+        p_check_date: entryDate,
+        p_org_id: organizationId,
+      },
+    );
     if (isLocked === true) {
-      return { success: false, error: "Энэ мөчлөг хаагдсан байна. Засварлах боломжгүй." };
+      return {
+        success: false,
+        error: "Энэ мөчлөг хаагдсан байна. Засварлах боломжгүй.",
+      };
     }
 
     // 1. Fetch accounts by code

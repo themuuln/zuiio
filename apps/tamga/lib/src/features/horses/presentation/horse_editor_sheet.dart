@@ -14,7 +14,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../market/application/market_providers.dart';
+import '../application/horses_providers.dart';
 import '../domain/horse_record.dart';
+import '../../../shared/domain/horse_breed_lineage.dart';
+import '../../../shared/domain/horse_coat_color.dart';
 import 'stamp_tracing_screen.dart';
 
 /// Морь нэмэх/засах bottom sheet.
@@ -40,6 +43,14 @@ class _HorseEditorSheetState extends ConsumerState<HorseEditorSheet> {
   bool _isStampLoading = false;
   late bool _isOwnedByHousehold;
   late HorseGender _gender;
+  late final TextEditingController _regionController;
+  late final TextEditingController _sumController;
+  late final TextEditingController _tamgaBrandClanController;
+  late final TextEditingController _tamgaBrandGenerationController;
+  MongolianBreedLineage? _selectedBreedLineage;
+  MongolianCoatColor? _selectedCoatColor;
+  String? _selectedSireId;
+  String? _selectedDamId;
 
   @override
   void initState() {
@@ -61,9 +72,21 @@ class _HorseEditorSheetState extends ConsumerState<HorseEditorSheet> {
     );
     _notesController = TextEditingController(text: horse?.notes ?? '');
     _rootIdController = TextEditingController(text: horse?.lineageRootId ?? '');
+    _regionController = TextEditingController(text: horse?.region ?? '');
+    _sumController = TextEditingController(text: horse?.sum ?? '');
+    _tamgaBrandClanController = TextEditingController(
+      text: horse?.tamgaBrandClan ?? '',
+    );
+    _tamgaBrandGenerationController = TextEditingController(
+      text: horse?.tamgaBrandGeneration?.toString() ?? '',
+    );
+    _selectedBreedLineage = horse?.breedLineage;
+    _selectedCoatColor = horse?.coatColor;
     _ownerStampSvg = horse?.ownerStampSvg;
     _isOwnedByHousehold = horse?.isOwnedByHousehold ?? true;
     _gender = horse?.gender ?? HorseGender.gelding;
+    _selectedSireId = horse?.sireId;
+    _selectedDamId = horse?.damId;
   }
 
   @override
@@ -76,6 +99,10 @@ class _HorseEditorSheetState extends ConsumerState<HorseEditorSheet> {
     _offspringCountController.dispose();
     _notesController.dispose();
     _rootIdController.dispose();
+    _regionController.dispose();
+    _sumController.dispose();
+    _tamgaBrandClanController.dispose();
+    _tamgaBrandGenerationController.dispose();
     super.dispose();
   }
 
@@ -180,11 +207,113 @@ class _HorseEditorSheetState extends ConsumerState<HorseEditorSheet> {
             _buildStampSection(theme),
             const SizedBox(height: AppSpacing.md),
 
+            // ── Breed lineage dropdown ──
+            DropdownButtonFormField<MongolianBreedLineage>(
+              initialValue: _selectedBreedLineage,
+              decoration: const InputDecoration(labelText: 'Үүлдэр угсаа'),
+              items: [
+                for (final lineage in MongolianBreedLineage.values)
+                  DropdownMenuItem(
+                    value: lineage,
+                    child: Text(lineage.displayName),
+                  ),
+              ],
+              onChanged: (val) {
+                setState(() => _selectedBreedLineage = val);
+              },
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            // ── Coat color dropdown ──
+            DropdownButtonFormField<MongolianCoatColor>(
+              initialValue: _selectedCoatColor,
+              decoration: const InputDecoration(labelText: 'Зүсний өнгө'),
+              items: [
+                for (final color in MongolianCoatColor.values)
+                  DropdownMenuItem(
+                    value: color,
+                    child: Text(color.displayName),
+                  ),
+              ],
+              onChanged: (val) {
+                setState(() => _selectedCoatColor = val);
+              },
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            // ── Region ──
+            TextField(
+              controller: _regionController,
+              decoration: const InputDecoration(labelText: 'Аймаг'),
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            // ── Sum ──
+            TextField(
+              controller: _sumController,
+              decoration: const InputDecoration(labelText: 'Сум'),
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            // ── Tamga brand clan ──
+            TextField(
+              controller: _tamgaBrandClanController,
+              decoration: const InputDecoration(labelText: 'Тамга бүлгийн нэр'),
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            // ── Tamga brand generation ──
+            TextField(
+              controller: _tamgaBrandGenerationController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Тамга үеийн дугаар',
+              ),
+            ),
+
             TextField(
               controller: _notesController,
               minLines: 3,
               maxLines: 5,
               decoration: const InputDecoration(labelText: 'Тэмдэглэл'),
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            // ── Sire (father) ──
+            DropdownButtonFormField<String>(
+              initialValue: _selectedSireId,
+              decoration: const InputDecoration(labelText: 'Эцэг морь (Sire)'),
+              items: [
+                const DropdownMenuItem<String>(
+                  value: null,
+                  child: Text('— None —'),
+                ),
+                for (final h
+                    in (ref.read(horsesProvider).valueOrNull ?? []).where(
+                      (h) => h.gender == HorseGender.stallion,
+                    ))
+                  DropdownMenuItem<String>(value: h.id, child: Text(h.name)),
+              ],
+              onChanged: (val) => setState(() => _selectedSireId = val),
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            // ── Dam (mother) ──
+            DropdownButtonFormField<String>(
+              initialValue: _selectedDamId,
+              decoration: const InputDecoration(labelText: 'Эх морь (Dam)'),
+              items: [
+                const DropdownMenuItem<String>(
+                  value: null,
+                  child: Text('— None —'),
+                ),
+                for (final h
+                    in (ref.read(horsesProvider).valueOrNull ?? []).where(
+                      (h) => h.gender == HorseGender.mare,
+                    ))
+                  DropdownMenuItem<String>(value: h.id, child: Text(h.name)),
+              ],
+              onChanged: (val) => setState(() => _selectedDamId = val),
             ),
             const SizedBox(height: AppSpacing.lg),
 
@@ -299,6 +428,22 @@ class _HorseEditorSheetState extends ConsumerState<HorseEditorSheet> {
             ? null
             : _rootIdController.text.trim(),
         ownerStampSvg: _ownerStampSvg,
+        coatColor: _selectedCoatColor,
+        breedLineage: _selectedBreedLineage,
+        region: _regionController.text.trim().isEmpty
+            ? null
+            : _regionController.text.trim(),
+        sum: _sumController.text.trim().isEmpty
+            ? null
+            : _sumController.text.trim(),
+        tamgaBrandClan: _tamgaBrandClanController.text.trim().isEmpty
+            ? null
+            : _tamgaBrandClanController.text.trim(),
+        tamgaBrandGeneration: int.tryParse(
+          _tamgaBrandGenerationController.text.trim(),
+        ),
+        sireId: _selectedSireId,
+        damId: _selectedDamId,
       ),
     );
   }

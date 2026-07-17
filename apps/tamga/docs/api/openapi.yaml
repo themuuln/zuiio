@@ -1,0 +1,579 @@
+openapi: 3.1.0
+info:
+  title: Tamga Organizer API
+  version: 1.0.0
+  description: |
+    Tamga морины удирдлагын нийтийн API.
+    Захиалагчид API түлхүүрийн тусламжтайгаар арга хэмжээ, бүртгэл, үр дүнг
+    программаар удирдах боломжтой.
+
+    Base URL: `https://{project-ref}.supabase.co/functions/v1/organizer-api`
+
+servers:
+  - url: https://{project-ref}.supabase.co/functions/v1/organizer-api
+    description: Supabase Edge Function
+
+security:
+  - apiKeyAuth: []
+
+paths:
+  /v1/events:
+    get:
+      operationId: listEvents
+      summary: Захиалагчийн арга хэмжээнүүдийг жагсаах
+      tags: [Events]
+      responses:
+        '200':
+          description: Арга хэмжээнүүдийн жагсаалт
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OrganizerEvent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+    post:
+      operationId: createEvent
+      summary: Шинэ арга хэмжээ үүсгэх
+      tags: [Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventRequest'
+      responses:
+        '201':
+          description: Арга хэмжээ үүсгэгдлээ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/OrganizerEvent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/events/{id}:
+    parameters:
+      - $ref: '#/components/parameters/EventId'
+
+    get:
+      operationId: getEvent
+      summary: Арга хэмжээний мэдээллийг авах
+      tags: [Events]
+      responses:
+        '200':
+          description: Арга хэмжээний мэдээлэл
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/OrganizerEvent'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      operationId: updateEvent
+      summary: Арга хэмжээг шинэчлэх
+      tags: [Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEventRequest'
+      responses:
+        '200':
+          description: Арга хэмжээ шинэчлэгдлээ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/OrganizerEvent'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    delete:
+      operationId: deleteEvent
+      summary: Арга хэмжээг устгах
+      tags: [Events]
+      responses:
+        '204':
+          description: Арга хэмжээ устгагдлаа
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/events/{id}/registrations:
+    parameters:
+      - $ref: '#/components/parameters/EventId'
+
+    get:
+      operationId: listRegistrations
+      summary: Бүртгэлүүдийг жагсаах
+      tags: [Registrations]
+      responses:
+        '200':
+          description: Бүртгэлүүдийн жагсаалт
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Registration'
+
+    post:
+      operationId: createRegistration
+      summary: Морийг бүртгүүлэх
+      tags: [Registrations]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRegistrationRequest'
+      responses:
+        '201':
+          description: Бүртгэл үүсгэгдлээ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Registration'
+        '409':
+          description: Морь аль хэдийн бүртгүүлсэн
+
+  /v1/events/{id}/registrations/{rid}:
+    parameters:
+      - $ref: '#/components/parameters/EventId'
+      - name: rid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Бүртгэлийн ID
+
+    delete:
+      operationId: cancelRegistration
+      summary: Бүртгэлийг цуцлах
+      tags: [Registrations]
+      responses:
+        '204':
+          description: Бүртгэл цуцлагдлаа
+
+  /v1/events/{id}/results:
+    parameters:
+      - $ref: '#/components/parameters/EventId'
+
+    post:
+      operationId: submitResults
+      summary: Үр дүнг илгээх
+      tags: [Results]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitResultsRequest'
+      responses:
+        '201':
+          description: Үр дүнгүүд хадгалагдлаа
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Result'
+
+  /v1/horses/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Морины ID
+
+    get:
+      operationId: getHorse
+      summary: Морины нийтийн профайл (зөвхөн унших)
+      tags: [Horses]
+      security: []
+      responses:
+        '200':
+          description: Морины профайл
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/HorseProfile'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/usage:
+    get:
+      operationId: getUsage
+      summary: API хэрэглээний статистик
+      tags: [Usage]
+      responses:
+        '200':
+          description: Хэрэглээний статистик
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/UsageStats'
+
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        API түлхүүр. `tg_`-ээр эхэлдэг.
+        `X-API-Key` header-ээр илгээнэ үү.
+
+  parameters:
+    EventId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Арга хэмжээний ID
+
+  schemas:
+    OrganizerEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organizer_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          example: "Улсын аварга уралдаан"
+        event_type:
+          type: string
+          enum: [race, competition, expo, training, festival]
+        description:
+          type: string
+        location:
+          type: string
+          example: "Улаанбаатар"
+        start_date:
+          type: string
+          format: date-time
+        end_date:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+          enum:
+            - draft
+            - published
+            - registration_open
+            - registration_closed
+            - in_progress
+            - completed
+            - cancelled
+        is_public:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateEventRequest:
+      type: object
+      required: [title, event_type, location, start_date]
+      properties:
+        title:
+          type: string
+          example: "Улсын аварга уралдаан"
+        event_type:
+          type: string
+          enum: [race, competition, expo, training, festival]
+        description:
+          type: string
+        location:
+          type: string
+        location_lat:
+          type: number
+          format: double
+        location_lng:
+          type: number
+          format: double
+        start_date:
+          type: string
+          format: date-time
+        end_date:
+          type: string
+          format: date-time
+        registration_deadline:
+          type: string
+          format: date-time
+        max_participants:
+          type: integer
+        entry_fee_mnt:
+          type: integer
+          description: Оролтын төлбөр (МНТ)
+        prize_pool_mnt:
+          type: integer
+          description: Шагналын сан (МНТ)
+        rules:
+          type: string
+        is_public:
+          type: boolean
+          default: false
+
+    UpdateEventRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        start_date:
+          type: string
+          format: date-time
+        end_date:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+            - draft
+            - published
+            - registration_open
+            - registration_closed
+            - in_progress
+            - completed
+            - cancelled
+        is_public:
+          type: boolean
+
+    Registration:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        horse_id:
+          type: string
+          format: uuid
+        owner_user_id:
+          type: string
+          format: uuid
+        horse_name:
+          type: string
+        owner_name:
+          type: string
+        status:
+          type: string
+          enum: [registered, confirmed, checked_in, competing, disqualified, withdrawn]
+        registered_at:
+          type: string
+          format: date-time
+
+    CreateRegistrationRequest:
+      type: object
+      required: [horse_id, owner_user_id, horse_name]
+      properties:
+        horse_id:
+          type: string
+          format: uuid
+        owner_user_id:
+          type: string
+          format: uuid
+        horse_name:
+          type: string
+        owner_name:
+          type: string
+        phone:
+          type: string
+        notes:
+          type: string
+
+    Result:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        registration_id:
+          type: string
+          format: uuid
+        horse_id:
+          type: string
+          format: uuid
+        placement:
+          type: integer
+          minimum: 1
+        time_seconds:
+          type: number
+          format: double
+          nullable: true
+        score:
+          type: number
+          format: double
+          nullable: true
+        prize_mnt:
+          type: integer
+          description: Шагналын мөнгө (МНТ)
+        notes:
+          type: string
+
+    SubmitResultsRequest:
+      type: object
+      required: [results]
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            required: [registration_id, horse_id, placement]
+            properties:
+              registration_id:
+                type: string
+                format: uuid
+              horse_id:
+                type: string
+                format: uuid
+              placement:
+                type: integer
+                minimum: 1
+              time_seconds:
+                type: number
+              score:
+                type: number
+              prize_mnt:
+                type: integer
+              notes:
+                type: string
+
+    HorseProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        breed:
+          type: string
+        color:
+          type: string
+        birth_year:
+          type: integer
+        owner_id:
+          type: string
+          format: uuid
+        photo_url:
+          type: string
+          nullable: true
+
+    UsageStats:
+      type: object
+      properties:
+        total_requests:
+          type: integer
+        requests_today:
+          type: integer
+        requests_this_minute:
+          type: integer
+        rate_limit:
+          type: integer
+        avg_response_time_ms:
+          type: number
+          nullable: true
+        error_rate:
+          type: number
+          nullable: true
+
+  responses:
+    Unauthorized:
+      description: Түлхүүр шаардлагатай эсвэл буруу
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Хандах эрх хүрэлцэхгүй
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Олдсонгүй
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadRequest:
+      description: Буруу хүсэлт
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    RateLimited:
+      description: Хязгаарт хүрлээ
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              retry_after_seconds:
+                type: integer
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Unauthorized — API key required"

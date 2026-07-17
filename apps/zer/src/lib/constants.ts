@@ -64,6 +64,31 @@ export const FEATURES: FeatureDef[] = [
   { key: "reports", label: "Тайлан", description: "Тайлан, шинжилгээ" },
   { key: "commissions", label: "Комисс", description: "Комиссын тооцоо" },
   { key: "accounting", label: "Нягтлан", description: "Нягтлан бодох бүртгэл" },
+  {
+    key: "boms",
+    label: "BOM",
+    description: "Бүтээгдэхүүний бүртгэлийн жагсаалт",
+  },
+  {
+    key: "production_orders",
+    label: "Үйлдвэрлэл",
+    description: "Үйлдвэрлэлийн захиалга",
+  },
+  {
+    key: "job_costing",
+    label: "Зардал тооцоо",
+    description: "Үйлдвэрлэлийн зардал болон ашиг",
+  },
+  {
+    key: "quality_control",
+    label: "Чанарын хяналт",
+    description: "Үйлдвэрлэлийн чанарын шалгалт",
+  },
+  {
+    key: "material_tracking",
+    label: "Материалын хяналт",
+    description: "Материалын гаргалт ба буцаалт",
+  },
 ];
 
 /**
@@ -73,6 +98,13 @@ export const FEATURES: FeatureDef[] = [
  */
 export const FEATURE_KEYS = {
   hr: "hr",
+  manufacturing: [
+    "boms",
+    "production_orders",
+    "job_costing",
+    "quality_control",
+    "material_tracking",
+  ] as const,
 } as const;
 
 // Map nav item href → feature key for sidebar gating
@@ -87,6 +119,9 @@ export const NAV_FEATURE_MAP: Record<string, string> = {
   "/discounts": "discounts",
   "/reports": "reports",
   "/commissions": "commissions",
+  "/bom": "boms",
+  "/production": "production_orders",
+  "/job-costing": "job_costing",
   "/accounting": "accounting",
 };
 

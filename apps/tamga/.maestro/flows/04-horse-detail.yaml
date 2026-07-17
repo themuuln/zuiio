@@ -1,0 +1,30 @@
+# Horse Detail — verify detail page loads
+
+appId: mn.tamga.app
+name: Horse Detail
+
+onFlowStart:
+  - clearState
+
+---
+- launchApp
+
+- runFlow:
+    when:
+      visible: "Open"
+    file: ../subflows/dismiss-open-dialog.yaml
+
+# Navigate to horses tab
+- tapOn: "Морь, tab, 1 of 8"
+- extendedWaitUntil:
+    visible: "Миний морь"
+    timeout: 30000
+
+# Tap first horse card
+- tapOn:
+    point: "200,60"
+- extendedWaitUntil:
+    visible: "Морийн мэдээлэл"
+    timeout: 10000
+
+- takeScreenshot: horse_detail

@@ -255,15 +255,39 @@ class _EventsTab extends StatelessWidget {
 
 // ── Lineage Tab ──────────────────────────────────────────────────────
 
-class _LineageTab extends StatelessWidget {
+class _LineageTab extends ConsumerWidget {
   const _LineageTab({required this.horse});
   final HorseRecord horse;
 
   @override
-  Widget build(BuildContext ctx) {
+  Widget build(BuildContext ctx, WidgetRef ref) {
     final theme = Theme.of(ctx);
+    final horsesAsync = ref.watch(horsesProvider);
+    final horses = horsesAsync.valueOrNull;
 
-    if (horse.lineageRootId == null) {
+    // Look up sire and dam from the horses list.
+    HorseRecord? sire;
+    HorseRecord? dam;
+    if (horses != null) {
+      if (horse.sireId != null) {
+        sire = horses.cast<HorseRecord?>().firstWhere(
+          (h) => h?.id == horse.sireId,
+          orElse: () => null,
+        );
+      }
+      if (horse.damId != null) {
+        dam = horses.cast<HorseRecord?>().firstWhere(
+          (h) => h?.id == horse.damId,
+          orElse: () => null,
+        );
+      }
+    }
+
+    final hasParents = horse.sireId != null || horse.damId != null;
+    final hasLineage = horse.lineageRootId != null;
+
+    // Nothing to show at all.
+    if (!hasParents && !hasLineage) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(AppSpacing.xxxl),
@@ -282,23 +306,83 @@ class _LineageTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
-        Card(
-          child: ListTile(
-            leading: const Icon(Icons.account_tree),
-            title: const Text('Root шугам'),
-            subtitle: Text(horse.lineageRootId!),
-            trailing: const Icon(Icons.chevron_right),
+        // ── Sire / Dam parent cards ──
+        if (hasParents) ...[
+          if (horse.sireId != null)
+            _ParentCard(
+              label: 'Эцэг (Sire)',
+              parent: sire,
+              fallbackId: horse.sireId!,
+              genderIcon: Icons.male,
+              genderColor: Colors.blue,
+            ),
+          if (horse.damId != null) ...[
+            const SizedBox(height: AppSpacing.md),
+            _ParentCard(
+              label: 'Ээж (Dam)',
+              parent: dam,
+              fallbackId: horse.damId!,
+              genderIcon: Icons.female,
+              genderColor: Colors.pink,
+            ),
+          ],
+          const SizedBox(height: AppSpacing.lg),
+        ],
+        // ── Lineage root card ──
+        if (hasLineage) ...[
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.account_tree),
+              title: const Text('Root шугам'),
+              subtitle: Text(horse.lineageRootId!),
+              trailing: const Icon(Icons.chevron_right),
+            ),
           ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Text(
-          'Угшилтын модон дээрх бусад морьдыг харахын тулд lineage хуудсыг ашиглана уу.',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'Угшилтын модон дээрх бусад морьдыг харахын тулд lineage хуудсыг ашиглана уу.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
           ),
-          textAlign: TextAlign.center,
-        ),
+        ],
       ],
+    );
+  }
+}
+
+/// Displays a single parent (sire or dam) as a [Card].
+///
+/// When the parent horse is found in the list, shows its name and gender badge.
+/// Falls back to showing the raw ID if the horse is not loaded yet.
+class _ParentCard extends StatelessWidget {
+  const _ParentCard({
+    required this.label,
+    required this.parent,
+    required this.fallbackId,
+    required this.genderIcon,
+    required this.genderColor,
+  });
+
+  final String label;
+  final HorseRecord? parent;
+  final String fallbackId;
+  final IconData genderIcon;
+  final Color genderColor;
+
+  @override
+  Widget build(BuildContext ctx) {
+    final name = parent?.name ?? fallbackId;
+    final genderLabel = parent?.gender.displayName;
+
+    return Card(
+      child: ListTile(
+        leading: Icon(genderIcon, color: genderColor),
+        title: Text(name),
+        subtitle: genderLabel != null ? Text(genderLabel) : null,
+        trailing: const Icon(Icons.link),
+      ),
     );
   }
 }

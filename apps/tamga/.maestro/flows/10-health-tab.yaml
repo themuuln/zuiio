@@ -1,0 +1,38 @@
+# Health Tab — verify health logs accessible from horse detail
+
+appId: mn.tamga.app
+name: Health Tab
+
+onFlowStart:
+  - clearState
+
+---
+- launchApp
+
+- runFlow:
+    when:
+      visible: "Open"
+    file: ../subflows/dismiss-open-dialog.yaml
+
+# Navigate to horses tab
+- tapOn: "Морь, tab, 1 of 8"
+- extendedWaitUntil:
+    visible: "Миний морь"
+    timeout: 30000
+
+# Tap first horse card
+- tapOn:
+    point: "200,60"
+- extendedWaitUntil:
+    visible: "Морийн мэдээлэл"
+    timeout: 10000
+
+# Tap health tab
+- tapOn: "Эрүүл мэнд"
+- extendedWaitUntil:
+    visible: "Эрүүл мэндийн тэмдэглэл"
+    timeout: 10000
+
+- assertVisible: "Эрүүл мэндийн тэмдэглэл"
+
+- takeScreenshot: health_tab

@@ -45,6 +45,17 @@ const SCOPE_MAP: Record<string, string> = {
 	"PATCH:/api-keys/:id": "admin",
 	"POST:/webhooks": "webhooks:write",
 	"GET:/webhooks": "webhooks:read",
+	// v1/events routes
+	"GET:/v1/events": "events:read",
+	"POST:/v1/events": "events:write",
+	"GET:/v1/events/:id": "events:read",
+	"PUT:/v1/events/:id": "events:write",
+	"DELETE:/v1/events/:id": "events:write",
+	"GET:/v1/events/:id/registrations": "registrations:read",
+	"POST:/v1/events/:id/registrations": "registrations:write",
+	"DELETE:/v1/events/:id/registrations/:rid": "registrations:write",
+	"POST:/v1/events/:id/results": "events:write",
+	"GET:/v1/usage": "admin",
 };
 
 function getRequiredScope(method: string, pathname: string): string | undefined {
@@ -219,6 +230,17 @@ function matchRoute(
 		["POST", ["races", ":id", "entries"], "registerEntry"],
 		["POST", ["races", ":id", "results"], "submitResults"],
 		["GET", ["horses", ":id"], "getHorse"],
+		// v1/events routes
+		["GET", ["v1", "events"], "listEvents"],
+		["POST", ["v1", "events"], "createEvent"],
+		["GET", ["v1", "events", ":id"], "getEvent"],
+		["PUT", ["v1", "events", ":id"], "updateEvent"],
+		["DELETE", ["v1", "events", ":id"], "deleteEvent"],
+		["GET", ["v1", "events", ":id", "registrations"], "listRegistrations"],
+		["POST", ["v1", "events", ":id", "registrations"], "createRegistration"],
+		["DELETE", ["v1", "events", ":id", "registrations", ":rid"], "cancelRegistration"],
+		["POST", ["v1", "events", ":id", "results"], "submitEventResults"],
+		["GET", ["v1", "usage"], "getUsageStats"],
 	];
 
 	for (const [routeMethod, pattern, handler] of routes) {
@@ -774,6 +796,485 @@ async function handleGetHorse(
 	return json(data);
 }
 
+// ── v1/events Handlers ─────────────────────────────────────────────
+
+// GET /v1/events — List organizer's events
+async function handleListEvents(
+	_req: Request,
+	supabase: DBClient,
+	auth: AuthContext,
+): Promise<Response> {
+	const url = new URL(_req.url);
+	const status = url.searchParams.get("status");
+	const limit = Math.min(Number(url.searchParams.get("limit")) || 50, 100);
+	const offset = Number(url.searchParams.get("offset")) || 0;
+
+	let query = supabase
+		.from("organizer_events")
+		.select("*", { count: "exact" })
+		.eq("organizer_id", auth.organizerId)
+		.order("start_date", { ascending: false })
+		.range(offset, offset + limit - 1);
+
+	if (status) query = query.eq("status", status);
+
+	const { data, error, count } = await query;
+
+	if (error) {
+		console.error("Error listing events:", error);
+		return errorResponse("Failed to list events", 500);
+	}
+
+	return json({ data: data || [], count: count ?? 0, limit, offset });
+}
+
+// POST /v1/events — Create a new event
+async function handleCreateEvent(
+	req: Request,
+	supabase: DBClient,
+	auth: AuthContext,
+): Promise<Response> {
+	try {
+		const body = await req.json();
+		const { title, event_type, location, start_date } = body;
+
+		if (!title || !event_type || !location || !start_date) {
+			return errorResponse(
+				"title, event_type, location, and start_date are required",
+				400,
+			);
+		}
+
+		const validTypes = ["race", "competition", "expo", "training", "festival"];
+		if (!validTypes.includes(event_type)) {
+			return errorResponse(
+				`event_type must be one of: ${validTypes.join(", ")}`,
+				400,
+			);
+		}
+
+		const { data, error } = await supabase
+			.from("organizer_events")
+			.insert({
+				organizer_id: auth.organizerId,
+				title,
+				event_type,
+				description: body.description || "",
+				location,
+				location_lat: body.location_lat || null,
+				location_lng: body.location_lng || null,
+				start_date,
+				end_date: body.end_date || null,
+				registration_deadline: body.registration_deadline || null,
+				max_participants: body.max_participants || null,
+				entry_fee_mnt: body.entry_fee_mnt || 0,
+				prize_pool_mnt: body.prize_pool_mnt || 0,
+				rules: body.rules || "",
+				status: "draft",
+				is_public: body.is_public || false,
+				banner_url: body.banner_url || null,
+			})
+			.select()
+			.single();
+
+		if (error) {
+			console.error("Error creating event:", error);
+			return errorResponse("Failed to create event", 500);
+		}
+
+		return json(data, 201);
+	} catch (err) {
+		console.error("handleCreateEvent error:", err);
+		return errorResponse("Invalid request body", 400);
+	}
+}
+
+// GET /v1/events/:id — Get event details
+async function handleGetEvent(
+	_req: Request,
+	supabase: DBClient,
+	params: Record<string, string>,
+): Promise<Response> {
+	const { id } = params;
+
+	const { data, error } = await supabase
+		.from("organizer_events")
+		.select("*")
+		.eq("id", id)
+		.single();
+
+	if (error || !data) {
+		return errorResponse("Event not found", 404);
+	}
+
+	return json(data);
+}
+
+// PUT /v1/events/:id — Update event
+async function handleUpdateEvent(
+	req: Request,
+	supabase: DBClient,
+	params: Record<string, string>,
+	auth: AuthContext,
+): Promise<Response> {
+	const { id } = params;
+
+	try {
+		const body = await req.json();
+
+		// Verify ownership
+		const { data: existing, error: fetchErr } = await supabase
+			.from("organizer_events")
+			.select("organizer_id")
+			.eq("id", id)
+			.single();
+
+		if (fetchErr || !existing) {
+			return errorResponse("Event not found", 404);
+		}
+
+		if (existing.organizer_id !== auth.organizerId) {
+			return errorResponse("Forbidden — not your event", 403);
+		}
+
+		const updates: Record<string, unknown> = {
+			updated_at: new Date().toISOString(),
+		};
+
+		const allowed = [
+			"title", "description", "location", "location_lat", "location_lng",
+			"start_date", "end_date", "registration_deadline", "max_participants",
+			"entry_fee_mnt", "prize_pool_mnt", "rules", "status", "is_public",
+			"banner_url",
+		];
+
+		for (const key of allowed) {
+			if (key in body) updates[key] = body[key];
+		}
+
+		const { data, error } = await supabase
+			.from("organizer_events")
+			.update(updates)
+			.eq("id", id)
+			.select()
+			.single();
+
+		if (error) {
+			console.error("Error updating event:", error);
+			return errorResponse("Failed to update event", 500);
+		}
+
+		return json(data);
+	} catch (err) {
+		console.error("handleUpdateEvent error:", err);
+		return errorResponse("Invalid request body", 400);
+	}
+}
+
+// DELETE /v1/events/:id — Delete event
+async function handleDeleteEvent(
+	_req: Request,
+	supabase: DBClient,
+	params: Record<string, string>,
+	auth: AuthContext,
+): Promise<Response> {
+	const { id } = params;
+
+	// Verify ownership
+	const { data: existing, error: fetchErr } = await supabase
+		.from("organizer_events")
+		.select("organizer_id")
+		.eq("id", id)
+		.single();
+
+	if (fetchErr || !existing) {
+		return errorResponse("Event not found", 404);
+	}
+
+	if (existing.organizer_id !== auth.organizerId) {
+		return errorResponse("Forbidden — not your event", 403);
+	}
+
+	const { error } = await supabase
+		.from("organizer_events")
+		.delete()
+		.eq("id", id);
+
+	if (error) {
+		console.error("Error deleting event:", error);
+		return errorResponse("Failed to delete event", 500);
+	}
+
+	return new Response(null, { status: 204, headers: corsHeaders });
+}
+
+// GET /v1/events/:id/registrations — List registrations
+async function handleListRegistrations(
+	_req: Request,
+	supabase: DBClient,
+	params: Record<string, string>,
+): Promise<Response> {
+	const { id: eventId } = params;
+
+	const { data, error } = await supabase
+		.from("organizer_registrations")
+		.select("*")
+		.eq("event_id", eventId)
+		.order("registered_at", { ascending: true });
+
+	if (error) {
+		console.error("Error listing registrations:", error);
+		return errorResponse("Failed to list registrations", 500);
+	}
+
+	return json(data || []);
+}
+
+// POST /v1/events/:id/registrations — Register a horse
+async function handleCreateRegistration(
+	req: Request,
+	supabase: DBClient,
+	params: Record<string, string>,
+): Promise<Response> {
+	const { id: eventId } = params;
+
+	try {
+		const body = await req.json();
+		const { horse_id, owner_user_id, horse_name } = body;
+
+		if (!horse_id || !owner_user_id || !horse_name) {
+			return errorResponse(
+				"horse_id, owner_user_id, and horse_name are required",
+				400,
+			);
+		}
+
+		// Check for duplicate
+		const { data: existing } = await supabase
+			.from("organizer_registrations")
+			.select("id")
+			.eq("event_id", eventId)
+			.eq("horse_id", horse_id)
+			.maybeSingle();
+
+		if (existing) {
+			return errorResponse("Horse is already registered for this event", 409);
+		}
+
+		const { data, error } = await supabase
+			.from("organizer_registrations")
+			.insert({
+				event_id: eventId,
+				horse_id,
+				owner_user_id,
+				horse_name,
+				owner_name: body.owner_name || "",
+				phone: body.phone || "",
+				status: "registered",
+				notes: body.notes || "",
+			})
+			.select()
+			.single();
+
+		if (error) {
+			console.error("Error creating registration:", error);
+			return errorResponse("Failed to create registration", 500);
+		}
+
+		return json(data, 201);
+	} catch (err) {
+		console.error("handleCreateRegistration error:", err);
+		return errorResponse("Invalid request body", 400);
+	}
+}
+
+// DELETE /v1/events/:id/registrations/:rid — Cancel registration
+async function handleCancelRegistration(
+	_req: Request,
+	supabase: DBClient,
+	params: Record<string, string>,
+): Promise<Response> {
+	const { rid } = params;
+
+	const { error } = await supabase
+		.from("organizer_registrations")
+		.update({ status: "withdrawn" })
+		.eq("id", rid);
+
+	if (error) {
+		console.error("Error cancelling registration:", error);
+		return errorResponse("Failed to cancel registration", 500);
+	}
+
+	return new Response(null, { status: 204, headers: corsHeaders });
+}
+
+// POST /v1/events/:id/results — Submit event results
+async function handleSubmitEventResults(
+	req: Request,
+	supabase: DBClient,
+	params: Record<string, string>,
+	auth: AuthContext,
+): Promise<Response> {
+	const { id: eventId } = params;
+
+	try {
+		const body = await req.json();
+		const results = body.results;
+
+		if (!Array.isArray(results) || results.length === 0) {
+			return errorResponse("results array is required", 400);
+		}
+
+		// Verify event ownership
+		const { data: existing, error: fetchErr } = await supabase
+			.from("organizer_events")
+			.select("organizer_id")
+			.eq("id", eventId)
+			.single();
+
+		if (fetchErr || !existing) {
+			return errorResponse("Event not found", 404);
+		}
+
+		if (existing.organizer_id !== auth.organizerId) {
+			return errorResponse("Forbidden — not your event", 403);
+		}
+
+		const rows = results.map(
+			(r: Record<string, unknown>) => ({
+				event_id: eventId,
+				registration_id: r.registration_id,
+				horse_id: r.horse_id,
+				placement: r.placement,
+				time_seconds: r.time_seconds || null,
+				score: r.score || null,
+				prize_mnt: r.prize_mnt || 0,
+				notes: r.notes || "",
+			}),
+		);
+
+		const { data, error } = await supabase
+			.from("organizer_results")
+			.upsert(rows, { onConflict: "event_id,registration_id" })
+			.select();
+
+		if (error) {
+			console.error("Error submitting results:", error);
+			return errorResponse("Failed to submit results", 500);
+		}
+
+		return json({ data: data || [] }, 201);
+	} catch (err) {
+		console.error("handleSubmitEventResults error:", err);
+		return errorResponse("Invalid request body", 400);
+	}
+}
+
+// GET /v1/usage — API usage stats for the current key
+async function handleGetUsageStats(
+	_req: Request,
+	supabase: DBClient,
+	auth: AuthContext,
+): Promise<Response> {
+	const todayStart = new Date();
+	todayStart.setHours(0, 0, 0, 0);
+
+	const oneMinAgo = new Date(Date.now() - 60000);
+
+	// Total requests for this key
+	const { count: total } = await supabase
+		.from("api_usage_log")
+		.select("id", { count: "exact", head: true })
+		.eq("api_key_id", auth.keyId);
+
+	// Requests today
+	const { count: today } = await supabase
+		.from("api_usage_log")
+		.select("id", { count: "exact", head: true })
+		.eq("api_key_id", auth.keyId)
+		.gte("created_at", todayStart.toISOString());
+
+	// Requests in last minute
+	const { count: recent } = await supabase
+		.from("api_usage_log")
+		.select("id", { count: "exact", head: true })
+		.eq("api_key_id", auth.keyId)
+		.gte("created_at", oneMinAgo.toISOString());
+
+	// Get rate limit from the key
+	const { data: keyData } = await supabase
+		.from("api_keys")
+		.select("scopes")
+		.eq("id", auth.keyId)
+		.single();
+
+	return json({
+		total_requests: total ?? 0,
+		requests_today: today ?? 0,
+		requests_this_minute: recent ?? 0,
+		rate_limit: 60,
+	});
+}
+
+// ── Usage Logging ───────────────────────────────────────────────────
+
+/**
+ * Log API usage for the given key. Non-blocking — failures are logged
+ * but never propagated to the caller.
+ */
+async function logApiUsage(
+	keyId: string,
+	endpoint: string,
+	method: string,
+	statusCode: number,
+	responseTimeMs: number,
+	supabase: DBClient,
+): Promise<void> {
+	try {
+		await supabase.from("api_usage_log").insert({
+			api_key_id: keyId,
+			endpoint,
+			method,
+			status_code: statusCode,
+			response_time_ms: responseTimeMs,
+		});
+	} catch (err) {
+		console.error("Failed to log API usage:", err);
+	}
+}
+
+// ── Rate Limiting ───────────────────────────────────────────────────
+
+/**
+ * In-memory sliding window rate limiter per API key.
+ * Sufficient for a single Edge Function instance.
+ */
+const rateLimitBuckets = new Map<string, number[]>();
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+
+function checkRateLimit(keyId: string, limit: number): {
+	ok: boolean;
+	retryAfterSeconds: number;
+} {
+	const now = Date.now();
+	const windowStart = now - RATE_LIMIT_WINDOW_MS;
+
+	let timestamps = rateLimitBuckets.get(keyId) || [];
+	// Prune old entries
+	timestamps = timestamps.filter((t) => t > windowStart);
+
+	if (timestamps.length >= limit) {
+		const oldest = timestamps[0];
+		const retryAfter = Math.ceil((oldest + RATE_LIMIT_WINDOW_MS - now) / 1000);
+		return { ok: false, retryAfterSeconds: Math.max(retryAfter, 1) };
+	}
+
+	timestamps.push(now);
+	rateLimitBuckets.set(keyId, timestamps);
+
+	return { ok: true, retryAfterSeconds: 0 };
+}
 // ── Webhook Delivery ──────────────────────────────────────────────────
 
 /**
@@ -866,6 +1367,10 @@ Deno.serve(async (req: Request) => {
 		return new Response("ok", { headers: corsHeaders });
 	}
 
+	const startTime = Date.now();
+	let handlerName = "unknown";
+	let keyId = "";
+
 	try {
 		const url = new URL(req.url);
 		const pathname = url.pathname.replace(/^\/functions\/v1\/organizer-api/, "") || "/";
@@ -879,6 +1384,8 @@ Deno.serve(async (req: Request) => {
 				404,
 			);
 		}
+
+		handlerName = route.handler;
 
 		// Initialize Supabase client (service role)
 		const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -904,31 +1411,107 @@ Deno.serve(async (req: Request) => {
 			return authResult.response;
 		}
 
+		keyId = authResult.auth.keyId;
+
+		// Rate limiting (in-memory sliding window)
+		const rateLimit = checkRateLimit(keyId, 60);
+		if (!rateLimit.ok) {
+			return new Response(
+				JSON.stringify({
+					error: "Rate limit exceeded",
+					retry_after_seconds: rateLimit.retryAfterSeconds,
+				}),
+				{
+					status: 429,
+					headers: {
+						...jsonHeaders,
+						"Retry-After": String(rateLimit.retryAfterSeconds),
+					},
+				},
+			);
+		}
+
 		// Dispatch to handler
+		let response: Response;
 		switch (route.handler) {
 			case "createApiKey":
-				return await handleCreateApiKey(req, supabase);
+				response = await handleCreateApiKey(req, supabase);
+				break;
 			case "listApiKeys":
-				return await handleListApiKeys(req, supabase, authResult.auth);
+				response = await handleListApiKeys(req, supabase, authResult.auth);
+				break;
 			case "deactivateApiKey":
-				return await handleDeactivateApiKey(req, supabase, route.params);
+				response = await handleDeactivateApiKey(req, supabase, route.params);
+				break;
 			case "createWebhook":
-				return await handleCreateWebhook(req, supabase, authResult.auth);
+				response = await handleCreateWebhook(req, supabase, authResult.auth);
+				break;
 			case "listWebhooks":
-				return await handleListWebhooks(req, supabase, authResult.auth);
+				response = await handleListWebhooks(req, supabase, authResult.auth);
+				break;
 			case "listRaces":
-				return await handleListRaces(req, supabase);
+				response = await handleListRaces(req, supabase);
+				break;
 			case "createRace":
-				return await handleCreateRace(req, supabase, authResult.auth);
+				response = await handleCreateRace(req, supabase, authResult.auth);
+				break;
 			case "listEntries":
-				return await handleListEntries(req, supabase, route.params);
+				response = await handleListEntries(req, supabase, route.params);
+				break;
 			case "registerEntry":
-				return await handleRegisterEntry(req, supabase, route.params);
+				response = await handleRegisterEntry(req, supabase, route.params);
+				break;
 			case "submitResults":
-				return await handleSubmitResults(req, supabase, route.params);
+				response = await handleSubmitResults(req, supabase, route.params);
+				break;
+			// v1/events handlers
+			case "listEvents":
+				response = await handleListEvents(req, supabase, authResult.auth);
+				break;
+			case "createEvent":
+				response = await handleCreateEvent(req, supabase, authResult.auth);
+				break;
+			case "getEvent":
+				response = await handleGetEvent(req, supabase, route.params);
+				break;
+			case "updateEvent":
+				response = await handleUpdateEvent(req, supabase, route.params, authResult.auth);
+				break;
+			case "deleteEvent":
+				response = await handleDeleteEvent(req, supabase, route.params, authResult.auth);
+				break;
+			case "listRegistrations":
+				response = await handleListRegistrations(req, supabase, route.params);
+				break;
+			case "createRegistration":
+				response = await handleCreateRegistration(req, supabase, route.params);
+				break;
+			case "cancelRegistration":
+				response = await handleCancelRegistration(req, supabase, route.params);
+				break;
+			case "submitEventResults":
+				response = await handleSubmitEventResults(req, supabase, route.params, authResult.auth);
+				break;
+			case "getUsageStats":
+				response = await handleGetUsageStats(req, supabase, authResult.auth);
+				break;
 			default:
-				return errorResponse("Not found", 404);
+				response = errorResponse("Not found", 404);
+				break;
 		}
+
+		// Log usage (non-blocking)
+		const responseTimeMs = Date.now() - startTime;
+		void logApiUsage(
+			keyId,
+			pathname,
+			req.method,
+			response.status,
+			responseTimeMs,
+			supabase,
+		);
+
+		return response;
 	} catch (err) {
 		console.error("Organizer API error:", err);
 		const errorMessage =

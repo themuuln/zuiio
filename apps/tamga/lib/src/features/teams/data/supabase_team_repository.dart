@@ -333,4 +333,23 @@ class SupabaseTeamRepository
       return Result.fail(wrapError(e));
     }
   }
+
+  @override
+  Future<Result<void>> addHorseToTeam(
+    String teamId,
+    String horseId, {
+    String? addedBy,
+  }) async {
+    // TODO: Implement Supabase team horse management
+    return const Result.ok(null);
+  }
+
+  @override
+  Future<Result<void>> removeHorseFromTeam(
+    String teamId,
+    String horseId,
+  ) async {
+    // TODO: Implement Supabase team horse management
+    return const Result.ok(null);
+  }
 }

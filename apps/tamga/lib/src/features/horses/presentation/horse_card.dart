@@ -128,6 +128,11 @@ class HorseCard extends ConsumerWidget {
                       label: 'Root ${horse.lineageRootId}',
                       color: colorScheme.surfaceContainerLow,
                     ),
+                  if (horse.breedLineage != null)
+                    BadgeChip(
+                      label: horse.breedLineage!.displayName,
+                      color: colorScheme.tertiaryContainer,
+                    ),
                 ],
               ),
 

@@ -9,6 +9,7 @@ import '../../../core/error/result.dart';
 import '../domain/geofence_alert.dart';
 import '../domain/horse_location.dart';
 import '../domain/lost_horse_report.dart';
+import '../domain/pasture_zone.dart';
 import '../domain/search_area.dart';
 import 'map_repository.dart';
 
@@ -137,8 +138,6 @@ class SupabaseMapRepository
 
   // ── Media enrichment ───────────────────────────────────────────────
 
-  /// Fetches photo/video URLs from [lost_horse_media] for each report
-  /// and returns reports with populated [photoUrls] and [videoUrls].
   Future<List<LostHorseReport>> _enrichWithMedia(
     List<LostHorseReport> reports,
   ) async {
@@ -174,8 +173,6 @@ class SupabaseMapRepository
         return r.copyWith(photoUrls: photos, videoUrls: videos);
       }).toList();
     } catch (_) {
-      // If media fetch fails, return reports without media URLs
-      // rather than failing the entire request.
       return reports;
     }
   }
@@ -263,8 +260,6 @@ class SupabaseMapRepository
     double radiusKm,
   ) async {
     try {
-      // Fetch visible locations and filter by distance in Dart
-      // (PostGIS would be more efficient for large datasets)
       final response = await _client
           .from('horse_locations')
           .select()
@@ -278,7 +273,6 @@ class SupabaseMapRepository
           })
           .toList();
 
-      // Sort by distance
       horses.sort((a, b) {
         final distA = _haversine(lat, lng, a.lat, a.lng);
         final distB = _haversine(lat, lng, b.lat, b.lng);
@@ -296,9 +290,8 @@ class SupabaseMapRepository
     }
   }
 
-  /// Haversine distance in meters between two coordinates.
   double _haversine(double lat1, double lng1, double lat2, double lng2) {
-    const r = 6371000.0; // Earth radius in meters
+    const r = 6371000.0;
     final dLat = _deg2rad(lat2 - lat1);
     final dLng = _deg2rad(lng2 - lng1);
     final lat1Rad = _deg2rad(lat1);
@@ -370,6 +363,89 @@ class SupabaseMapRepository
     }
   }
 
+  // ── Pasture Zones ────────────────────────────────────────────────
+
+  @override
+  Future<Result<List<PastureZone>>> getPastureZones(String userId) async {
+    try {
+      final data = await _client
+          .from('pasture_zones')
+          .select('*, pasture_assignments(horse_id)')
+          .eq('owner_id', userId)
+          .order('created_at', ascending: false);
+
+      return Result.ok(
+        (data as List<dynamic>).map((json) {
+          final horseIds =
+              (json['pasture_assignments'] as List<dynamic>?)
+                  ?.map((a) => a['horse_id'] as String)
+                  .toList() ??
+              <String>[];
+          return PastureZone.fromJson({
+            ...json as Map<String, dynamic>,
+            'assigned_horse_ids': horseIds,
+          });
+        }).toList(),
+      );
+    } catch (e) {
+      return Result.fail(wrapError(e));
+    }
+  }
+
+  @override
+  Future<Result<PastureZone>> savePastureZone(PastureZone zone) async {
+    try {
+      final data = await _client
+          .from('pasture_zones')
+          .upsert(zone.toJson()..remove('assigned_horse_ids'))
+          .select()
+          .single();
+      return Result.ok(PastureZone.fromJson(data));
+    } catch (e) {
+      return Result.fail(wrapError(e));
+    }
+  }
+
+  @override
+  Future<Result<void>> deletePastureZone(String zoneId) async {
+    try {
+      await _client.from('pasture_zones').delete().eq('id', zoneId);
+      return const Result.ok(null);
+    } catch (e) {
+      return Result.fail(wrapError(e));
+    }
+  }
+
+  @override
+  Future<Result<void>> assignHorseToZone(String zoneId, String horseId) async {
+    try {
+      await _client.from('pasture_assignments').upsert({
+        'zone_id': zoneId,
+        'horse_id': horseId,
+      });
+      return const Result.ok(null);
+    } catch (e) {
+      return Result.fail(wrapError(e));
+    }
+  }
+
+  @override
+  Future<Result<void>> unassignHorseFromZone(
+    String zoneId,
+    String horseId,
+  ) async {
+    try {
+      await _client
+          .from('pasture_assignments')
+          .delete()
+          .eq('zone_id', zoneId)
+          .eq('horse_id', horseId);
+      return const Result.ok(null);
+    } catch (e) {
+      return Result.fail(wrapError(e));
+    }
+  }
+
   // ── Real-time Streams ─────────────────────────────────────────────
 
   final _lostHorsesController =
@@ -381,7 +457,6 @@ class SupabaseMapRepository
 
   @override
   Stream<List<LostHorseReport>> watchActiveLostHorses() {
-    // Subscribe to Supabase realtime changes on lost_horse_reports
     _lostHorsesChannel?.unsubscribe();
     _lostHorsesChannel = _client
         .channel('lost_horses_live')
@@ -393,7 +468,6 @@ class SupabaseMapRepository
         )
         .subscribe();
 
-    // Initial fetch
     _fetchAndEmitLostHorses();
 
     return _lostHorsesController.stream;
@@ -415,7 +489,6 @@ class SupabaseMapRepository
     double lng,
     double radiusKm,
   ) {
-    // Subscribe to Supabase realtime changes on horse_locations
     _nearbyHorsesChannel?.unsubscribe();
     _nearbyHorsesChannel = _client
         .channel('nearby_horses_live')
@@ -427,7 +500,6 @@ class SupabaseMapRepository
         )
         .subscribe();
 
-    // Initial fetch
     _fetchAndEmitNearbyHorses(lat, lng, radiusKm);
 
     return _nearbyHorsesController.stream;

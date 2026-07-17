@@ -1,0 +1,36 @@
+# Breeding Tab — verify breeding tools accessible from horse detail
+
+appId: mn.tamga.app
+name: Breeding Tab
+
+onFlowStart:
+  - clearState
+
+---
+- launchApp
+
+- runFlow:
+    when:
+      visible: "Open"
+    file: ../subflows/dismiss-open-dialog.yaml
+
+# Navigate to horses tab
+- tapOn: "Морь, tab, 1 of 8"
+- extendedWaitUntil:
+    visible: "Миний морь"
+    timeout: 30000
+
+# Tap first horse card
+- tapOn:
+    point: "200,60"
+- extendedWaitUntil:
+    visible: "Морийн мэдээлэл"
+    timeout: 10000
+
+# Tap breeding tab
+- tapOn: "Үржил"
+- extendedWaitUntil:
+    visible: "Үржлийн"
+    timeout: 10000
+
+- takeScreenshot: breeding_tab

@@ -22,18 +22,28 @@ void main() {
 
   group('BreedingAdvice', () {
     final sampleAdvice = BreedingAdvice(
+      compatibilityScore: 50,
       inbreedingRisk: InbreedingRisk.medium,
       riskScore: 45,
+      coatColorPredictions: [
+        CoatColorPrediction(color: 'Bay', probability: 50),
+        CoatColorPrediction(color: 'Black', probability: 50),
+        CoatColorPrediction(color: 'Chestnut', probability: 50),
+      ],
+      healthRisks: const [],
       healthNotes: 'Health check notes for this pair.',
-      colorPredictions: ['Bay', 'Black', 'Chestnut'],
+      breedingWindow: '',
+      overallRecommendation: OverallRecommendation.consultVet,
       breedSuggestions: ['Consider line-breeding', 'Use unrelated sire'],
+      mongolianBreedNotes: '',
+      commonAncestors: const [],
     );
 
     test('constructs with all required fields', () {
       expect(sampleAdvice.inbreedingRisk, InbreedingRisk.medium);
       expect(sampleAdvice.riskScore, 45);
       expect(sampleAdvice.healthNotes, 'Health check notes for this pair.');
-      expect(sampleAdvice.colorPredictions, ['Bay', 'Black', 'Chestnut']);
+      expect(sampleAdvice.coatColorPredictions, ['Bay', 'Black', 'Chestnut']);
       expect(sampleAdvice.breedSuggestions, [
         'Consider line-breeding',
         'Use unrelated sire',
@@ -45,7 +55,7 @@ void main() {
         'inbreedingRisk': 'low',
         'riskScore': 25,
         'healthNotes': 'Low risk, good genetic diversity.',
-        'colorPredictions': ['Bay', 'Chestnut'],
+        'coatColorPredictions': ['Bay', 'Chestnut'],
         'breedSuggestions': ['Good match'],
       };
 
@@ -53,7 +63,7 @@ void main() {
       expect(advice.inbreedingRisk, InbreedingRisk.low);
       expect(advice.riskScore, 25);
       expect(advice.healthNotes, 'Low risk, good genetic diversity.');
-      expect(advice.colorPredictions, ['Bay', 'Chestnut']);
+      expect(advice.coatColorPredictions, ['Bay', 'Chestnut']);
       expect(advice.breedSuggestions, ['Good match']);
     });
 
@@ -62,7 +72,7 @@ void main() {
         'inbreedingRisk': 'high',
         'riskScore': 85,
         'healthNotes': 'High inbreeding risk detected.',
-        'colorPredictions': ['Gray'],
+        'coatColorPredictions': ['Gray'],
         'breedSuggestions': ['Use different dam'],
         'quota': {'tier': 'free', 'limit': 5, 'remaining': 2},
       };
@@ -82,7 +92,7 @@ void main() {
       expect(advice.inbreedingRisk, InbreedingRisk.medium);
       expect(advice.riskScore, 50);
       expect(advice.healthNotes, '');
-      expect(advice.colorPredictions, isEmpty);
+      expect(advice.coatColorPredictions, isEmpty);
       expect(advice.breedSuggestions, isEmpty);
     });
 
@@ -91,7 +101,7 @@ void main() {
       expect(json['inbreedingRisk'], 'medium');
       expect(json['riskScore'], 45);
       expect(json['healthNotes'], 'Health check notes for this pair.');
-      expect(json['colorPredictions'], ['Bay', 'Black', 'Chestnut']);
+      expect(json['coatColorPredictions'], ['Bay', 'Black', 'Chestnut']);
       expect(json['breedSuggestions'], [
         'Consider line-breeding',
         'Use unrelated sire',
@@ -101,31 +111,79 @@ void main() {
     test('riskColorLabel returns correct color (VAL-AI-002)', () {
       expect(
         BreedingAdvice(
+          compatibilityScore: 50,
+
           inbreedingRisk: InbreedingRisk.low,
+
           riskScore: 10,
+
+          coatColorPredictions: [],
+
+          healthRisks: const [],
+
           healthNotes: '',
-          colorPredictions: [],
+
+          breedingWindow: '',
+
+          overallRecommendation: OverallRecommendation.consultVet,
+
           breedSuggestions: [],
+
+          mongolianBreedNotes: '',
+
+          commonAncestors: const [],
         ).riskColorLabel,
         'green',
       );
       expect(
         BreedingAdvice(
+          compatibilityScore: 50,
+
           inbreedingRisk: InbreedingRisk.medium,
+
           riskScore: 50,
+
+          coatColorPredictions: [],
+
+          healthRisks: const [],
+
           healthNotes: '',
-          colorPredictions: [],
+
+          breedingWindow: '',
+
+          overallRecommendation: OverallRecommendation.consultVet,
+
           breedSuggestions: [],
+
+          mongolianBreedNotes: '',
+
+          commonAncestors: const [],
         ).riskColorLabel,
         'yellow',
       );
       expect(
         BreedingAdvice(
+          compatibilityScore: 50,
+
           inbreedingRisk: InbreedingRisk.high,
+
           riskScore: 90,
+
+          coatColorPredictions: [],
+
+          healthRisks: const [],
+
           healthNotes: '',
-          colorPredictions: [],
+
+          breedingWindow: '',
+
+          overallRecommendation: OverallRecommendation.consultVet,
+
           breedSuggestions: [],
+
+          mongolianBreedNotes: '',
+
+          commonAncestors: const [],
         ).riskColorLabel,
         'red',
       );
@@ -133,54 +191,96 @@ void main() {
 
     test('riskScoreLabel returns meaningful text', () {
       final low = BreedingAdvice(
+        compatibilityScore: 50,
         inbreedingRisk: InbreedingRisk.low,
         riskScore: 15,
+        coatColorPredictions: [],
+        healthRisks: const [],
         healthNotes: '',
-        colorPredictions: [],
+        breedingWindow: '',
+        overallRecommendation: OverallRecommendation.consultVet,
         breedSuggestions: [],
+        mongolianBreedNotes: '',
+        commonAncestors: const [],
       );
       expect(low.riskScoreLabel, 'Бага эрсдэлтэй');
 
       final mid = BreedingAdvice(
+        compatibilityScore: 50,
         inbreedingRisk: InbreedingRisk.medium,
         riskScore: 50,
+        coatColorPredictions: [],
+        healthRisks: const [],
         healthNotes: '',
-        colorPredictions: [],
+        breedingWindow: '',
+        overallRecommendation: OverallRecommendation.consultVet,
         breedSuggestions: [],
+        mongolianBreedNotes: '',
+        commonAncestors: const [],
       );
       expect(mid.riskScoreLabel, 'Дунд зэргийн эрсдэлтэй');
 
       final high = BreedingAdvice(
+        compatibilityScore: 50,
         inbreedingRisk: InbreedingRisk.high,
         riskScore: 85,
+        coatColorPredictions: [],
+        healthRisks: const [],
         healthNotes: '',
-        colorPredictions: [],
+        breedingWindow: '',
+        overallRecommendation: OverallRecommendation.consultVet,
         breedSuggestions: [],
+        mongolianBreedNotes: '',
+        commonAncestors: const [],
       );
       expect(high.riskScoreLabel, 'Өндөр эрсдэлтэй');
     });
 
     test('equality works', () {
       final a = BreedingAdvice(
+        compatibilityScore: 50,
         inbreedingRisk: InbreedingRisk.low,
         riskScore: 10,
+        coatColorPredictions: [
+          CoatColorPrediction(color: 'Bay', probability: 50),
+        ],
+        healthRisks: const [],
         healthNotes: 'Notes',
-        colorPredictions: ['Bay'],
+        breedingWindow: '',
+        overallRecommendation: OverallRecommendation.consultVet,
         breedSuggestions: ['Good'],
+        mongolianBreedNotes: '',
+        commonAncestors: const [],
       );
       final b = BreedingAdvice(
+        compatibilityScore: 50,
         inbreedingRisk: InbreedingRisk.low,
         riskScore: 10,
+        coatColorPredictions: [
+          CoatColorPrediction(color: 'Bay', probability: 50),
+        ],
+        healthRisks: const [],
         healthNotes: 'Notes',
-        colorPredictions: ['Bay'],
+        breedingWindow: '',
+        overallRecommendation: OverallRecommendation.consultVet,
         breedSuggestions: ['Good'],
+        mongolianBreedNotes: '',
+        commonAncestors: const [],
       );
       final c = BreedingAdvice(
+        compatibilityScore: 50,
         inbreedingRisk: InbreedingRisk.high,
         riskScore: 10,
+        coatColorPredictions: [
+          CoatColorPrediction(color: 'Bay', probability: 50),
+        ],
+        healthRisks: const [],
         healthNotes: 'Notes',
-        colorPredictions: ['Bay'],
+        breedingWindow: '',
+        overallRecommendation: OverallRecommendation.consultVet,
         breedSuggestions: ['Good'],
+        mongolianBreedNotes: '',
+        commonAncestors: const [],
       );
       // Use == directly for accurate comparison
       expect(a == b, isTrue);

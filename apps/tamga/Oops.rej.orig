@@ -1,0 +1,30 @@
+@@ -387,11 +387,25 @@
+         createdAt: DateTime.now(),
+         updatedAt: DateTime.now(),
+         gender: _gender,
+-        lineageRootId: _rootIdController.text.trim().isEmpty
+-            ? null
+-            : _rootIdController.text.trim(),
+-        ownerStampSvg: _ownerStampSvg,
++      lineageRootId: _rootIdController.text.trim().isEmpty
++          ? null
++          : _rootIdController.text.trim(),
++      ownerStampSvg: _ownerStampSvg,
++      coatColor: _selectedCoatColor,
++      breedLineage: _selectedBreedLineage,
++      region: _regionController.text.trim().isEmpty
++          ? null
++          : _regionController.text.trim(),
++      sum: _sumController.text.trim().isEmpty
++          ? null
++          : _sumController.text.trim(),
++      tamgaBrandClan: _tamgaBrandClanController.text.trim().isEmpty
++          ? null
++          : _tamgaBrandClanController.text.trim(),
++      tamgaBrandGeneration: int.tryParse(
++        _tamgaBrandGenerationController.text.trim(),
+       ),
++    ),
+     );
+   }
+ 

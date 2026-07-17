@@ -6,41 +6,12 @@ import type { Page } from "@playwright/test";
  * Waits for the dialog to appear instead of a hardcoded timeout.
  */
 export async function openDrawerByText(page: Page, text: string) {
-  // Wait for React hydration by polling for React-fiber attributes on buttons
-  await page.waitForFunction(
-    () => {
-      const buttons = document.querySelectorAll("button");
-      return Array.from(buttons).some((btn) => {
-        const keys = Object.getOwnPropertyNames(btn);
-        return keys.some((k) => k.startsWith("__reactFiber$"));
-      });
-    },
-    { timeout: 15000 },
-  );
-
-  // Use Playwright's click for reliable event handling
-  // Filter to find the button with the exact text
+  // Wait for the target button to become visible (handles async data loading)
   const btn = page.locator("button").filter({ hasText: text }).first();
-  const isVisible = await btn.isVisible().catch(() => false);
+  await btn.waitFor({ state: "visible", timeout: 15000 });
 
-  if (isVisible) {
-    await btn.click();
-  } else {
-    // Fallback: try evaluate click
-    const result = await page.evaluate((btnText) => {
-      const buttons = document.querySelectorAll("button");
-      for (const btn of buttons) {
-        if (btn.textContent?.trim().includes(btnText)) {
-          btn.click();
-          return `clicked: ${btn.textContent.trim()}`;
-        }
-      }
-      return "not found";
-    }, text);
-    if (result === "not found") {
-      console.log(`[openDrawerByText] Button "${text}" not found`);
-    }
-  }
+  // Use Playwright's click for reliable event handling through Base UI + Radix Slot
+  await btn.click();
 
   // Wait for Base UI drawer: data-drawer-popup appears in portal after animation
   // Also support Radix UI dialogs with role="dialog" as fallback

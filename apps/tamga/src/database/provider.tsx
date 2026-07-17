@@ -1,52 +1,99 @@
-import { Database } from "@nozbe/watermelondb";
-import SQLiteAdapter from "@nozbe/watermelondb/adapters/sqlite";
-import { tamgaSchema } from "./schema";
-import { createContext, useContext, useEffect, useState } from "react";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { createContext, useContext, useCallback, type ReactNode } from "react";
+import type { Database } from "@nozbe/watermelondb";
+import { isRunningInExpoGo } from "expo";
 
-const adapter = new SQLiteAdapter({
-  schema: tamgaSchema,
-  jsi: true,
-  onSetUpError: (error) => {
-    console.error("WatermelonDB setup error:", error);
-  },
-});
+// ── Expo Go guard ─────────────────────────────────────────
+// WatermelonDB requires native modules (SQLite, JSI) unavailable in Expo Go.
+// Use require() so Metro still bundles the modules but they only execute
+// when the code path is actually reached (i.e. NOT in Expo Go).
 
-export const database = new Database({
-  adapter,
-  modelClasses: [],
-});
+const isExpoGo = isRunningInExpoGo();
 
 interface DatabaseContextValue {
-  database: Database;
-  ready: boolean;
+  database: Database | null;
+  isExpoGo: boolean;
+  triggerSync: () => Promise<void>;
 }
 
 const DatabaseContext = createContext<DatabaseContextValue>({
-  database,
-  ready: false,
+  database: null,
+  isExpoGo: true,
+  triggerSync: async () => {},
 });
 
-export function useDatabase() {
-  return useContext(DatabaseContext);
+// ── Lazy WatermelonDB initialization ──────────────────────
+
+let _database: Database | null = null;
+let _triggerSync: (() => Promise<void>) | null = null;
+
+if (!isExpoGo) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { Database: WMDatabase } = require("@nozbe/watermelondb");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const SQLiteAdapter = require("@nozbe/watermelondb/adapters/sqlite").default;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { tamgaSchema } = require("./schema");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { SyncEngine } = require("./sync/SyncEngine");
+
+    const adapter = new SQLiteAdapter({
+      schema: tamgaSchema,
+      jsi: true,
+      onSetUpError: (error: Error) => {
+        console.error("WatermelonDB setup error:", error);
+      },
+    });
+
+    _database = new WMDatabase({
+      adapter,
+      modelClasses: [],
+    });
+
+    let _engine: InstanceType<typeof SyncEngine> | null = null;
+    _triggerSync = async () => {
+      if (!_database) return;
+      if (!_engine) _engine = new SyncEngine(_database);
+      await _engine.sync();
+    };
+  } catch (error) {
+    console.warn(
+      "WatermelonDB initialization skipped (expected in Expo Go):",
+      error instanceof Error ? error.message : error,
+    );
+  }
 }
 
-interface DatabaseProviderProps {
-  supabase: SupabaseClient;
-  children: React.ReactNode;
-}
+// ── Provider ──────────────────────────────────────────────
 
-export function DatabaseProvider({ supabase, children }: DatabaseProviderProps) {
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    // Database is ready once the adapter completes setup
-    setReady(true);
+export function DatabaseProvider({
+  children,
+}: {
+  children: ReactNode;
+  supabase?: unknown;
+}) {
+  const triggerSync = useCallback(async () => {
+    await _triggerSync?.();
   }, []);
 
   return (
-    <DatabaseContext.Provider value={{ database, ready }}>
+    <DatabaseContext.Provider
+      value={{
+        database: _database,
+        isExpoGo,
+        triggerSync,
+      }}
+    >
       {children}
     </DatabaseContext.Provider>
   );
 }
+
+// ── Hooks ─────────────────────────────────────────────────
+
+export function useDatabase(): DatabaseContextValue {
+  return useContext(DatabaseContext);
+}
+
+/** WatermelonDB instance — null in Expo Go. */
+export const database = _database;

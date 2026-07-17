@@ -19,7 +19,10 @@ http.Response successResponse({
   String inbreedingRisk = 'medium',
   int riskScore = 45,
   String healthNotes = 'Health notes',
-  List<String> colorPredictions = const ['Bay', 'Black'],
+  List<Map<String, dynamic>> coatColorPredictions = const [
+    {'color': 'Bay', 'probability': 50},
+    {'color': 'Black', 'probability': 50},
+  ],
   List<String> breedSuggestions = const ['Good match'],
 }) {
   return http.Response(
@@ -27,7 +30,7 @@ http.Response successResponse({
       'inbreedingRisk': inbreedingRisk,
       'riskScore': riskScore,
       'healthNotes': healthNotes,
-      'colorPredictions': colorPredictions,
+      'coatColorPredictions': coatColorPredictions,
       'breedSuggestions': breedSuggestions,
     }),
     200,
@@ -73,7 +76,11 @@ void main() {
             inbreedingRisk: 'low',
             riskScore: 15,
             healthNotes: 'Low risk pair with good genetic diversity.',
-            colorPredictions: ['Bay', 'Chestnut', 'Black'],
+            coatColorPredictions: [
+              {'color': 'Bay', 'probability': 50},
+              {'color': 'Chestnut', 'probability': 30},
+              {'color': 'Black', 'probability': 20},
+            ],
             breedSuggestions: ['Excellent match', 'Consider this pairing'],
           ),
         );
@@ -85,7 +92,10 @@ void main() {
         expect(advice.inbreedingRisk, InbreedingRisk.low);
         expect(advice.riskScore, 15);
         expect(advice.healthNotes, contains('Low risk'));
-        expect(advice.colorPredictions, contains('Bay'));
+        expect(
+          advice.coatColorPredictions.map((p) => p.color),
+          contains('Bay'),
+        );
         expect(advice.breedSuggestions, contains('Excellent match'));
       },
     );
@@ -105,7 +115,11 @@ void main() {
             riskScore: 78,
             healthNotes:
                 'Significant inbreeding risk. Consider alternative pairing.',
-            colorPredictions: ['Gray', 'Bay', 'Roan'],
+            coatColorPredictions: [
+              {'color': 'Gray', 'probability': 40},
+              {'color': 'Bay', 'probability': 35},
+              {'color': 'Roan', 'probability': 25},
+            ],
             breedSuggestions: [
               'Avoid this pairing',
               'Consider a different sire with unrelated bloodlines',
@@ -123,8 +137,8 @@ void main() {
         expect(advice.riskScore, lessThanOrEqualTo(100));
         expect(advice.healthNotes, isA<String>());
         expect(advice.healthNotes, isNotEmpty);
-        expect(advice.colorPredictions, isA<List<String>>());
-        expect(advice.colorPredictions, isNotEmpty);
+        expect(advice.coatColorPredictions, isA<List<CoatColorPrediction>>());
+        expect(advice.coatColorPredictions, isNotEmpty);
         expect(advice.breedSuggestions, isA<List<String>>());
         expect(advice.breedSuggestions, isNotEmpty);
       },

@@ -414,4 +414,25 @@ class LocalTeamRepository implements TeamRepository {
       );
     });
   }
+
+  // ── Team Horses ──────────────────────────────────────────────
+
+  @override
+  Future<Result<void>> addHorseToTeam(
+    String teamId,
+    String horseId, {
+    String? addedBy,
+  }) async {
+    // Team horse associations are Supabase-backed.
+    return const Result.ok(null);
+  }
+
+  @override
+  Future<Result<void>> removeHorseFromTeam(
+    String teamId,
+    String horseId,
+  ) async {
+    // Team horse associations are Supabase-backed.
+    return const Result.ok(null);
+  }
 }

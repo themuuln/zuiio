@@ -73,15 +73,24 @@ BreedingAdvice createMockAdvice({
   InbreedingRisk risk = InbreedingRisk.medium,
   int riskScore = 45,
   String healthNotes = 'Test health notes.',
-  List<String> colorPredictions = const ['Bay', 'Black'],
+  List<CoatColorPrediction> coatColorPredictions = const [
+    CoatColorPrediction(color: 'Bay', probability: 50),
+    CoatColorPrediction(color: 'Black', probability: 50),
+  ],
   List<String> breedSuggestions = const ['Good match'],
 }) {
   return BreedingAdvice(
+    compatibilityScore: 50,
     inbreedingRisk: risk,
     riskScore: riskScore,
+    coatColorPredictions: coatColorPredictions,
+    healthRisks: const [],
     healthNotes: healthNotes,
-    colorPredictions: colorPredictions,
+    breedingWindow: '',
+    overallRecommendation: OverallRecommendation.consultVet,
     breedSuggestions: breedSuggestions,
+    mongolianBreedNotes: '',
+    commonAncestors: const [],
   );
 }
 
@@ -262,7 +271,10 @@ void main() {
         risk: InbreedingRisk.low,
         riskScore: 15,
         healthNotes: 'Low risk pair with good genetic diversity.',
-        colorPredictions: ['Bay', 'Chestnut'],
+        coatColorPredictions: [
+          CoatColorPrediction(color: 'Bay', probability: 50),
+          CoatColorPrediction(color: 'Chestnut', probability: 50),
+        ],
         breedSuggestions: ['Excellent match'],
       );
 

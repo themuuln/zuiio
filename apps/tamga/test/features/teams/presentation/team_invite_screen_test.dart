@@ -173,6 +173,19 @@ class _MockTeamRepository implements TeamRepository {
     );
     return const Result.ok(null);
   }
+
+  @override
+  Future<Result<void>> addHorseToTeam(
+    String teamId,
+    String horseId, {
+    String? addedBy,
+  }) async => const Result.ok(null);
+
+  @override
+  Future<Result<void>> removeHorseFromTeam(
+    String teamId,
+    String horseId,
+  ) async => const Result.ok(null);
 }
 
 // ── Test Helpers ───────────────────────────────────────────────────

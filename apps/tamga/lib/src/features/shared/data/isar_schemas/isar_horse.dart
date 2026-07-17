@@ -1,6 +1,11 @@
+import 'dart:convert';
+
 import 'package:isar/isar.dart';
 
 import '../../../../shared/domain/horse.dart';
+import '../../../../shared/domain/horse_breed_lineage.dart';
+import '../../../../shared/domain/horse_coat_color.dart';
+import '../../../../shared/domain/horse_markings.dart';
 
 part 'isar_horse.g.dart';
 
@@ -30,6 +35,25 @@ class IsarHorse {
   late DateTime createdAt;
   late DateTime updatedAt;
 
+  // ── Previously missing from Isar (restored) ──
+  String? microchipId;
+  String? registrationNo;
+  List<String>? photoUrls;
+  DateTime? registrationDate;
+  late bool tamgaVerified;
+  late bool stateVerified;
+
+  // ── New fields ──
+  String? sireId;
+  String? damId;
+  int? coatColorIndex;
+  int? breedLineageIndex;
+  String? region;
+  String? sum;
+  String? markingsJson;
+  String? tamgaBrandClan;
+  int? tamgaBrandGeneration;
+
   factory IsarHorse.fromDomain(Horse horse) {
     return IsarHorse()
       ..domainId = horse.id
@@ -45,7 +69,26 @@ class IsarHorse {
       ..lineageRootId = horse.lineageRootId
       ..ownerStampSvg = horse.ownerStampSvg
       ..createdAt = horse.createdAt
-      ..updatedAt = horse.updatedAt;
+      ..updatedAt = horse.updatedAt
+      // Restored fields
+      ..microchipId = horse.microchipId
+      ..registrationNo = horse.registrationNo
+      ..photoUrls = horse.photoUrls.isNotEmpty ? horse.photoUrls : null
+      ..registrationDate = horse.registrationDate
+      ..tamgaVerified = horse.tamgaVerified
+      ..stateVerified = horse.stateVerified
+      // New fields
+      ..sireId = horse.sireId
+      ..damId = horse.damId
+      ..coatColorIndex = horse.coatColor?.index
+      ..breedLineageIndex = horse.breedLineage?.index
+      ..region = horse.region
+      ..sum = horse.sum
+      ..markingsJson = horse.markings != null
+          ? jsonEncode(horse.markings!.toJson())
+          : null
+      ..tamgaBrandClan = horse.tamgaBrandClan
+      ..tamgaBrandGeneration = horse.tamgaBrandGeneration;
   }
 
   Horse toDomain() {
@@ -64,6 +107,31 @@ class IsarHorse {
       ownerStampSvg: ownerStampSvg,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      // Restored fields
+      microchipId: microchipId,
+      registrationNo: registrationNo,
+      photoUrls: photoUrls?.toList() ?? [],
+      registrationDate: registrationDate,
+      tamgaVerified: tamgaVerified,
+      stateVerified: stateVerified,
+      // New fields
+      sireId: sireId,
+      damId: damId,
+      coatColor: coatColorIndex != null
+          ? MongolianCoatColor.values[coatColorIndex!]
+          : null,
+      breedLineage: breedLineageIndex != null
+          ? MongolianBreedLineage.values[breedLineageIndex!]
+          : null,
+      region: region,
+      sum: sum,
+      markings: markingsJson != null
+          ? HorseMarkings.fromJson(
+              jsonDecode(markingsJson!) as Map<String, dynamic>,
+            )
+          : null,
+      tamgaBrandClan: tamgaBrandClan,
+      tamgaBrandGeneration: tamgaBrandGeneration,
     );
   }
 }

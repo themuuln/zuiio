@@ -10,6 +10,8 @@ import '../data/local_team_repository.dart';
 import '../data/team_repository.dart';
 import '../domain/team.dart';
 import '../domain/team_invitation.dart';
+import '../domain/team_activity.dart';
+import '../domain/team_horse.dart';
 import '../domain/team_member.dart';
 
 // ── Repository ─────────────────────────────────────────────────────
@@ -129,3 +131,21 @@ final teamNameByIdProvider = FutureProvider.family<String?, String>((
   final result = await repo.getTeam(teamId);
   return result.isSuccess ? result.value.name : null;
 });
+
+// ── Team Activity ─────────────────────────────────────────────
+
+/// Багийн үйлдлийн түүх (audit trail).
+final teamActivityProvider = FutureProvider.autoDispose
+    .family<List<TeamActivity>, String>((ref, teamId) async {
+      // Activity is Supabase-backed; return empty list for now.
+      return <TeamActivity>[];
+    });
+
+// ── Team Horses ──────────────────────────────────────────────
+
+/// Багийн морины жагсаалт.
+final teamHorsesProvider = FutureProvider.autoDispose
+    .family<List<TeamHorse>, String>((ref, teamId) async {
+      // Team horses are Supabase-backed; return empty list for now.
+      return <TeamHorse>[];
+    });

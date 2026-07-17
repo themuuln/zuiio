@@ -19,6 +19,7 @@ final aiRepositoryProvider = Provider<AiRepository>((ref) {
 /// Үржүүлгийн шинжилгээний үр дүнг авах FutureProvider.
 ///
 /// [sireId] ба [damId] параметрээр тодорхой хос морины шинжилгээг дуудах.
+/// Edge Function нь 24 цагийн кэштэй; ижил хос дахин дуудвал кэшээс буцна.
 final breedingAdviceProvider =
     FutureProvider.family<BreedingAdvice, BreedingQuery>((ref, query) async {
       final repository = ref.watch(aiRepositoryProvider);
@@ -30,6 +31,14 @@ final breedingAdviceProvider =
 
       throw result.error;
     });
+
+// ── AI Loading State ─────────────────────────────────────────────────
+
+/// Шинжилгээ явагдаж байгаа эсэхийг хянах provider.
+///
+/// `breedingAdviceProvider` нь FutureProvider тул `autoDispose`-той.
+/// Энэ provider нь UI-д тусдаа loading төлөв харуулахад хэрэглэгдэнэ.
+final aiLoadingProvider = StateProvider<bool>((ref) => false);
 
 // ── Rate Limit Configuration ─────────────────────────────────────────
 

@@ -25,14 +25,21 @@ export const DEFAULT_CURRENCIES = [
 
 export type CurrencyCode = (typeof DEFAULT_CURRENCIES)[number]["code"];
 
-export function formatAmount(amount: number, currency?: { code: string; symbol: string }): string {
+export function formatAmount(
+  amount: number,
+  currency?: { code: string; symbol: string },
+): string {
   if (currency) {
     return `${currency.symbol}${coreFormatCurrency(amount)}`;
   }
   return coreFormatCurrency(amount);
 }
 
-export function convertCurrency(amount: number, fromRate: number, toRate: number): number {
+export function convertCurrency(
+  amount: number,
+  fromRate: number,
+  toRate: number,
+): number {
   return (amount * fromRate) / toRate;
 }
 
@@ -44,6 +51,10 @@ export function fromMNT(mntAmount: number, exchangeRate: number): number {
   return mntAmount / exchangeRate;
 }
 
-export function formatPrice(amount: number, currencyCode = "MNT", currencySymbol = "₮"): string {
+export function formatPrice(
+  amount: number,
+  currencyCode = "MNT",
+  currencySymbol = "₮",
+): string {
   return formatAmount(amount, { code: currencyCode, symbol: currencySymbol });
 }

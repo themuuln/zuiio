@@ -34,7 +34,9 @@ test.describe("Multi-currency checkout flow", () => {
 
     await test.step("Open checkout drawer", async () => {
       // Look for checkout button
-      const checkoutBtn = page.getByRole("button", { name: /төлбөр|checkout/i });
+      const checkoutBtn = page.getByRole("button", {
+        name: /төлбөр|checkout/i,
+      });
       const checkoutVisible = await checkoutBtn.isVisible().catch(() => false);
 
       if (checkoutVisible) {
@@ -55,7 +57,9 @@ test.describe("Multi-currency checkout flow", () => {
     await test.step("Verify checkout form elements", async () => {
       // Check for payment method section
       const paymentSection = page.getByText("Төлбөрийн хэлбэр").first();
-      const paymentVisible = await paymentSection.isVisible().catch(() => false);
+      const paymentVisible = await paymentSection
+        .isVisible()
+        .catch(() => false);
 
       if (paymentVisible) {
         await expect(paymentSection).toBeVisible();
@@ -72,7 +76,9 @@ test.describe("Multi-currency checkout flow", () => {
     await test.step("Check for currency selector", async () => {
       // Currency selector should appear if org has multiple currencies
       const currencyLabel = page.getByText("Валют").first();
-      const currencyVisible = await currencyLabel.isVisible().catch(() => false);
+      const currencyVisible = await currencyLabel
+        .isVisible()
+        .catch(() => false);
 
       if (currencyVisible) {
         await expect(currencyLabel).toBeVisible();
@@ -156,7 +162,9 @@ test.describe("Multi-currency checkout flow", () => {
       if (paidVisible) {
         // Check for currency symbol next to input
         const currencySymbol = page.locator(".pointer-events-none").first();
-        const symbolVisible = await currencySymbol.isVisible().catch(() => false);
+        const symbolVisible = await currencySymbol
+          .isVisible()
+          .catch(() => false);
 
         if (symbolVisible) {
           const symbol = await currencySymbol.textContent();
@@ -282,7 +290,9 @@ test.describe("Notification settings", () => {
     await test.step("Verify channel toggles", async () => {
       // Check for WhatsApp toggle
       const whatsappLabel = page.getByText("WhatsApp").first();
-      const whatsappVisible = await whatsappLabel.isVisible().catch(() => false);
+      const whatsappVisible = await whatsappLabel
+        .isVisible()
+        .catch(() => false);
 
       if (whatsappVisible) {
         await expect(whatsappLabel).toBeVisible();
@@ -349,7 +359,9 @@ test.describe("Mobile POS responsiveness", () => {
     await test.step("Verify touch targets", async () => {
       // Buttons should be at least 44px for touch targets (WCAG 2.5.5)
       // Some UI buttons may be smaller - we check the main action buttons
-      const mainButtons = page.locator("button").filter({ hasText: /нэмэх|үүсгэх|хадгалах/i });
+      const mainButtons = page
+        .locator("button")
+        .filter({ hasText: /нэмэх|үүсгэх|хадгалах/i });
       const count = await mainButtons.count();
 
       for (let i = 0; i < Math.min(count, 3); i++) {
@@ -362,7 +374,9 @@ test.describe("Mobile POS responsiveness", () => {
             // Main action buttons should be at least 44px
             // Log warning if smaller but don't fail the test
             if (box.height < 44) {
-              console.log(`Warning: Button height ${box.height}px is below 44px touch target`);
+              console.log(
+                `Warning: Button height ${box.height}px is below 44px touch target`,
+              );
             }
           }
         }
@@ -400,7 +414,7 @@ test.describe("Mobile POS responsiveness", () => {
         });
 
         expect(styles.position).toBe("fixed");
-        expect(parseInt(styles.zIndex)).toBeGreaterThanOrEqual(40);
+        expect(parseInt(styles.zIndex, 10)).toBeGreaterThanOrEqual(40);
       }
     });
   });
