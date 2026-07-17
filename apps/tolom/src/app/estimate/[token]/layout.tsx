@@ -6,6 +6,9 @@ import { getMessages } from "next-intl/server";
 // Route renders user-specific content — legitimate cache opt-out.
 export const instant = false;
 
+// Prevent static prerender — requires cookies() at runtime.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Estimate | TOLOM",
   description: "View your estimate online.",
