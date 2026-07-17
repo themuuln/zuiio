@@ -16,7 +16,7 @@
 		"typescript": "npm:@typescript/typescript6@^6.0.2"
 	},
 	"dependencies": {
-		"fuse.js": "^7.0.0",
+		"fuse.js": "^7.5.0",
 		"nuqs": "^2.9.0"
 	}
 }
