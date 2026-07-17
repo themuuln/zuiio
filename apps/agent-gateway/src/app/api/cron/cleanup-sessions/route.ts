@@ -2,6 +2,7 @@ import "server-only";
 
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
+import { capture } from "@zuiio/capture";
 
 export const dynamic = "force-dynamic";
 
@@ -39,8 +40,9 @@ export async function POST(request: Request) {
 			cutoff,
 		});
 	} catch (err) {
+		capture(err, { context: "agent-gateway: cron cleanup-sessions" });
 		return NextResponse.json(
-			{ status: "error", error: String(err) },
+			{ status: "error", error: "Failed to clean up sessions" },
 			{ status: 500 },
 		);
 	}

@@ -2,6 +2,7 @@ import "server-only";
 
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
+import { capture } from "@zuiio/capture";
 import { generateEmbedding } from "@/lib/embeddings";
 
 export const dynamic = "force-dynamic";
@@ -53,8 +54,9 @@ export async function POST(request: Request) {
 			failed,
 		});
 	} catch (err) {
+		capture(err, { context: "agent-gateway: cron re-embed" });
 		return NextResponse.json(
-			{ status: "error", error: String(err) },
+			{ status: "error", error: "Failed to re-embed sources" },
 			{ status: 500 },
 		);
 	}

@@ -2,6 +2,7 @@ import "server-only";
 
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
+import { capture } from "@zuiio/capture";
 import { handleAgentMessage } from "@/gateway/agent-handler";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
 import { resolveOrgFromChatUser } from "@/gateway/mode-a";
@@ -101,8 +102,9 @@ export async function POST(request: Request) {
 			remaining: pending.length - processed - failed,
 		});
 	} catch (err) {
+		capture(err, { context: "agent-gateway: cron drain-queue" });
 		return NextResponse.json(
-			{ status: "error", error: String(err) },
+			{ status: "error", error: "Failed to drain queue" },
 			{ status: 500 },
 		);
 	}

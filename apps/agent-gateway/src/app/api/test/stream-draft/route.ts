@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { TelegramChannel } from "@/channels/telegram";
+import { capture } from "@zuiio/capture";
 
 export const dynamic = "force-dynamic";
 
@@ -49,8 +50,9 @@ export async function GET(request: Request) {
 			totalChars: text.length,
 		});
 	} catch (err) {
+		capture(err, { context: "agent-gateway: test stream-draft" });
 		return NextResponse.json(
-			{ status: "error", error: String(err) },
+			{ status: "error", error: "Failed to stream draft" },
 			{ status: 500 },
 		);
 	}

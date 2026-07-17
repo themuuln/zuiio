@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { capture } from "@zuiio/capture";
 
 import { FacebookChannel } from "@/channels/facebook";
 import { createServiceClient } from "@/lib/supabase";
@@ -135,6 +136,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
 		return response;
 	} catch (err) {
+		capture(err, { context: "agent-gateway: facebook OAuth callback" });
 		return NextResponse.json(
 			{ error: "Failed to process OAuth callback" },
 			{ status: 500 },
