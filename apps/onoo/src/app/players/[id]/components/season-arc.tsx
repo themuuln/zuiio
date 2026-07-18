@@ -85,34 +85,6 @@ export function SeasonArc({ data, className }: SeasonArcProps) {
       </div>
     );
   }
-
-  // Single game — hide chart, show message
-  if (data.length === 1) {
-    const game = data[0] as GameDataPoint;
-    return (
-      <div
-        className={cn(
-          "flex min-h-56 flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground",
-          className,
-        )}
-      >
-        <p>
-          {
-            "\u041D\u044D\u0433 \u0442\u043E\u0433\u043B\u043E\u043B\u0442\u044B\u043D \u043C\u044D\u0434\u044D\u044D\u043B\u044D\u043B"
-          }
-        </p>
-        <p className="tabular-nums text-foreground">
-          {game.result === "W"
-            ? "\u042F\u043B\u0430\u043B\u0442"
-            : "\u042F\u043B\u0430\u0433\u0434\u0430\u043B"}{" "}
-          \u00B7 {game.opponent} \u00B7 {game.pts} {"\u043E\u043D\u043E\u043E"},{" "}
-          {game.reb} {"\u0431\u0443\u0443\u043B\u0442"}, {game.ast}{" "}
-          {"\u0434\u0430\u043C\u0436\u0443\u0443\u043B\u0430\u043B\u0442"}
-        </p>
-      </div>
-    );
-  }
-
   // Add index-based X axis (1, 2, 3…)
   const chartData = data.map((d, i) => ({
     ...d,
