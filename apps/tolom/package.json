@@ -79,7 +79,6 @@
 		"cmdk": "catalog:",
 		"date-fns": "catalog:",
 		"date-fns-tz": "^3.2.0",
-		"embla-carousel-react": "^8.6.0",
 		"exceljs": "^4.4.0",
 		"fuse.js": "^7.5.0",
 		"heic2any": "^0.0.4",
@@ -132,7 +131,7 @@
 		"@types/react": "^19.2.17",
 		"@types/react-dom": "^19.2.3",
 		"@types/web-push": "^3.6.4",
-		"@typescript/native": "npm:typescript@^7.0.2",
+	
 		"@vitejs/plugin-react": "^6.0.3",
 		"@vitest/coverage-v8": "^4.1.10",
 		"@vitest/ui": "^4.1.10",
@@ -145,7 +144,7 @@
 		"react-grab": "^0.1.48",
 		"shadcn": "^4.13.0",
 		"tailwindcss": "^4.3.3",
-		"typescript": "npm:@typescript/typescript6@^6.0.2",
+		"typescript": "^7.0.2",
 		"vitepress": "^1.6.4",
 		"vitest": "^4.1.10"
 	}

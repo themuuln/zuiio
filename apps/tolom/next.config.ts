@@ -33,7 +33,11 @@ const nextConfig: NextConfig = {
 	typescript: {
 		ignoreBuildErrors: true,
 	},
-	reactCompiler: process.env.NODE_ENV === "development",
+	reactCompiler: true,
+	experimental: {
+		// Use native Rust React Compiler instead of Babel — faster dev builds
+		turbopackRustReactCompiler: true,
+	},
 
 	// ── Next.js 16.3: Instant Navigations ──────────────────────
 	cacheComponents: true,
@@ -95,7 +99,6 @@ export default withPWA(
 		org: process.env.SENTRY_ORG,
 		project: process.env.SENTRY_PROJECT,
 		silent: true,
-	 widenClientFileUpload: true,
-		webpack: { reactComponentAnnotation: { enabled: true } },
+		widenClientFileUpload: false,
 	}),
 );

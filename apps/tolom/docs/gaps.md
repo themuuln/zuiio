@@ -49,3 +49,140 @@
 1. **Barcode on `parts_catalog` + scan UI** — Transforms daily workflow from typing to scanning
 2. **Quick Stock In + Stock Count** — Daily adjustments without full PO flow
 3. **Vehicle fitment on part detail page** — Data exists, just needs UI
+
+---
+
+---
+
+# Competitive Gap Analysis (vs. Top POS Systems)
+
+> Review date: 2026-07-18
+> Source: Competitive analysis of Square, Toast, Clover, Shopify POS
+> Scope: UX patterns, feature gaps, differentiation opportunities
+
+---
+
+## 🔴 P0 — Critical Gaps
+
+### 1. Offline Mode (Incomplete)
+
+**What competitors do:** Square's #1 feature is "keep selling without internet." Toast built their brand on "works during peak volume, even offline."
+
+**Current state:** Has `offline-queue-indicator.tsx` but full offline sync is unclear.
+
+**Why it matters:** Mechanics work in basements, garages, outdoor bays with bad WiFi. Offline mode is table stakes for auto repair POS.
+
+**Action:** Full offline-first with background sync. When connection returns, sync queue to Supabase.
+
+---
+
+### 2. Workshop Display (Missing)
+
+**What competitors do:** Toast's KDS (Kitchen Display System) is their killer feature. Every order from every channel in one place.
+
+**Current state:** Has bay view but no dedicated full-screen mechanic display.
+
+**Why it matters:** Mechanics need to see their queue, time elapsed, next steps — just like kitchen staff see orders. This is your Toast KDS equivalent.
+
+**Action:** Build a full-screen "Mechanic Display" — shows assigned vehicles, status, time elapsed, next steps. Wall-mounted tablet in each bay.
+
+---
+
+## 🟡 P1 — Competitive Gaps
+
+### 3. AI Assistant (Missing)
+
+**What competitors do:** Datadog has Bits AI, Grafana has AI Assistant, Toast has Toast IQ, Square has AI-powered insights. Every top product in 2026 has AI.
+
+**Current state:** No AI features visible.
+
+**Opportunities:**
+- "What's the most common repair this month?"
+- "Suggest pricing based on parts cost"
+- "Which mechanics are most efficient?"
+- "What parts should I reorder?"
+
+**Action:** Add AI chat assistant to dashboard that answers questions about garage performance.
+
+---
+
+### 4. Industry Presets / Templates (Missing)
+
+**What competitors do:** Square lets you pick a "mode" (Restaurant/Retail/Services) and auto-generates a dashboard. Toast has industry-specific starter dashboards.
+
+**Current state:** No garage type selector during onboarding.
+
+**Opportunities:**
+- Body shop vs. quick lube vs. full service vs. detailing
+- Each type gets different default bay layout, service catalog, pricing rules
+
+**Action:** Add "Garage Type" selector during onboarding → auto-configure bay view, service catalog, pricing.
+
+---
+
+### 5. Real-Time Notifications (Incomplete)
+
+**What competitors do:** Square sends low-stock alerts. Toast sends real-time order notifications.
+
+**Current state:** Has `notifications.ts` and Telegram integration but real-time push may not be complete.
+
+**Action:** Push notifications via web-push + Telegram for: new work order, part low stock, payment received, bay status change.
+
+---
+
+## 🟢 P2 — Differentiation Opportunities
+
+### 6. Onboarding Wizard (Incomplete)
+
+**What competitors do:** Square: "Get up and running in minutes." Clover: "Set up and start taking payments same day."
+
+**Current state:** Has `(onboarding)/onboarding/wizard-client.tsx` but unclear if complete.
+
+**Action:** 3-step onboarding: (1) Garage type → (2) Add services & mechanics → (3) Register first vehicle
+
+---
+
+### 7. Hardware Integration (Missing)
+
+**What competitors do:** Square sells dedicated hardware. Toast has Toast Go handheld. Clover has Station Duo.
+
+**Action:** Tablet mounting for bay view + barcode scanner for parts lookup
+
+---
+
+### 8. Multi-Location Support (Missing)
+
+**What competitors do:** Square supports "one location to one hundred." Toast has enterprise multi-location.
+
+**Current state:** Has organization/roles/members but unclear on multi-location garage support.
+
+**Action:** Location switching, cross-location inventory transfers, location-level reporting.
+
+---
+
+## Comparison Matrix
+
+| Feature | Tolom | Square | Toast | Clover |
+|---------|-------|--------|-------|--------|
+| Offline mode | ⚠️ Partial | ✅ Full | ✅ Full | ✅ Full |
+| Workshop display | ⚠️ Bay view | ❌ | ✅ KDS | ❌ |
+| AI assistant | ❌ | ❌ | ✅ Toast IQ | ❌ |
+| Industry presets | ❌ | ✅ Mode selector | ✅ Restaurant focus | ❌ |
+| Real-time alerts | ⚠️ Partial | ✅ | ✅ | ✅ |
+| Onboarding wizard | ⚠️ Partial | ✅ | ✅ | ✅ |
+| Hardware | ❌ | ✅ Full line | ✅ Toast Go | ✅ Full line |
+| Multi-location | ⚠️ Partial | ✅ | ✅ | ✅ |
+
+---
+
+## Key Insight
+
+**Toast's KDS is their moat. You have bay view but no full-screen mechanic display. Build the "KDS for garages" — that's your killer feature.**
+
+Every garage needs:
+1. Wall-mounted tablet showing work queue
+2. Real-time status updates (car enters bay → work starts → parts added → payment → done)
+3. Time tracking per job
+4. Mechanic assignment visibility
+
+This maps 1:1 to Toast's KDS pattern but for auto repair.

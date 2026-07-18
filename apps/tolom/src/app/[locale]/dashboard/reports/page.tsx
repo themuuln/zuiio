@@ -6,6 +6,7 @@
  */
 "use client";
 
+import dynamic from "next/dynamic";
 import { subDays } from "date-fns";
 import {
   BarChart3,
@@ -37,18 +38,28 @@ import {
 } from "@/lib/queries/use-reports";
 import { useSelectedBranchId, useSetSelectedBranchId } from "@/lib/stores";
 import type { DailyReport, ReportMechanicKpi } from "@/lib/types";
-import { EodView } from "./_eod-view";
 import type { FinanceSummary } from "./_finance-tab";
-import { FinanceTab } from "./_finance-tab";
 import type { EodReport, ReportData, ReportType } from "./_helpers";
 import { getDateRange, periodTitle } from "./_helpers";
-import { OverviewTab } from "./_overview-tab";
 import { ReportsDatePicker } from "./_reports-date-picker";
 import { ReportsFilters } from "./_reports-filters";
 import { ReportsHeader } from "./_reports-header";
 import { ReportsSkeleton } from "./_reports-skeleton";
 import { ReportsTabBar } from "./_reports-tab-bar";
 
+// Lazy-load tab content — only the active tab's code is fetched
+const EodView = dynamic(
+  () => import("./_eod-view").then((m) => m.EodView),
+  { ssr: false },
+);
+const FinanceTab = dynamic(
+  () => import("./_finance-tab").then((m) => m.FinanceTab),
+  { ssr: false },
+);
+const OverviewTab = dynamic(
+  () => import("./_overview-tab").then((m) => m.OverviewTab),
+  { ssr: false },
+);
 // ── Main Reports Page ─────────────────────────────────────
 
 export default function ReportsPage() {
