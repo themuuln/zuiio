@@ -80,8 +80,9 @@ export function BomEditDrawer({
     queryKey: [...bomKeys.all(), bom.id],
     queryFn: async () => {
       const result = await getBom(bom.id);
-      if (result?.error) throw new Error(result.error);
-      return result?.data ?? null;
+      if (!result || !("data" in result))
+        throw new Error("error" in result ? result.error : "Unknown error");
+      return result.data;
     },
     enabled: open,
   });

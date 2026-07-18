@@ -221,6 +221,8 @@ export function ProductionCreateDrawer({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [bomQuery, setBomQuery] = useState("");
+  const [branchQuery, setBranchQuery] = useState("");
 
   // Auto-select first active BOM when boms load
   useEffect(() => {
@@ -341,6 +343,11 @@ export function ProductionCreateDrawer({
                     items={boms}
                     value={selected ?? null}
                     onValueChange={(next) => field.onChange(next?.id ?? "")}
+                    itemToStringLabel={(item) =>
+                      item ? `BOM v${item.version}` : ""
+                    }
+                    inputValue={bomQuery}
+                    onInputValueChange={setBomQuery}
                   >
                     <ComboboxInput
                       id="production-bom"
@@ -427,6 +434,9 @@ export function ProductionCreateDrawer({
                     items={branches}
                     value={selected ?? null}
                     onValueChange={(next) => field.onChange(next?.id ?? "")}
+                    itemToStringLabel={(item) => item?.name ?? ""}
+                    inputValue={branchQuery}
+                    onInputValueChange={setBranchQuery}
                   >
                     <ComboboxInput
                       id="production-branch"

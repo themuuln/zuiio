@@ -91,12 +91,13 @@ function StatsCard({
   label,
   value,
   icon: Icon,
-  _variant = "default",
   isLoading,
+  ..._rest
 }: {
   label: string;
   value: number;
   icon: React.ComponentType<{ className?: string }>;
+  variant?: string;
   isLoading: boolean;
 }) {
   return (
