@@ -16,7 +16,7 @@ function initClient(): SupabaseClient {
 
 export function createClient(): SupabaseClient {
   if (client) return client;
-  // During prerendering (Node.js), defer initialization to first use
+  // During prerendering (Node.js), defer initialization to the first actual use.
   if (typeof window === "undefined") {
     // Return a proxy that initializes on first method call
     return new Proxy({} as SupabaseClient, {
