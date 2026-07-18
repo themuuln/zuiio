@@ -326,14 +326,14 @@ describe("Real Tool Execution — Output Format Verification", () => {
 
 		it("contains write tool category description", async () => {
 			const prompt = await systemPromptFor("tolom", orgId, "private", "mn");
-			expect(prompt).toContain("Бичлэгийн хэрэгслүүд");
+			expect(prompt).toContain("writeData");
 		});
 	});
 
 	describe("System prompt — Tolom EN", () => {
 		it("contains English rules", async () => {
 			const prompt = await systemPromptFor("tolom", orgId, "private", "en");
-			expect(prompt).toContain("Write tools (confirm before executing)");
+			expect(prompt).toContain("writeData");
 			expect(prompt).toContain("Never say");
 			expect(prompt).toContain(orgId);
 		});

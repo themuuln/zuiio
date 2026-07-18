@@ -12,39 +12,41 @@ const mockContext: ToolContext = {
 };
 
 describe("Tolom tool coverage", () => {
-	it("returns Tolom tools with queryData and complex analytics", () => {
+	it("returns Tolom tools with readData and complex analytics", () => {
 		const tools = getProductTools("tolom", mockContext);
 		const toolNames = tools.map((t) => t.name).sort();
 		// Core read tools (kept: complex multi-table)
 		expect(toolNames).toContain("getDailySummary");
-		expect(toolNames).toContain("queryData");
+		expect(toolNames).toContain("readData");
 		expect(toolNames).toContain("getWorkOrderDetails");
 		expect(toolNames).toContain("getVehicleAnalytics");
 		expect(toolNames).toContain("getFinancialSummary");
 		expect(toolNames).toContain("exportData");
 		expect(toolNames).toContain("partsLookup");
 		expect(toolNames).toContain("getSparePartsSales");
-		// Redundant tools removed (use queryData instead):
+		// Redundant tools removed (use readData instead):
 		// getActiveWorkOrders, getCustomerHistory, getInvoiceStatus,
 		// getExpensesSummary, getAppointments, getMechanics, getSuppliers
-		// Write tools
-		expect(toolNames).toContain("createWorkOrder");
-		expect(toolNames).toContain("createInvoice");
-		expect(toolNames).toContain("createAppointment");
-		expect(toolNames).toContain("recordPayment");
+		// Write tools are consolidated into the dynamic writeData tool
+		expect(toolNames).toContain("writeData");
+		const writeData = tools.find((t) => t.name === "writeData")!;
+		// writeData must advertise the datasets the legacy inline tools covered
+		expect(writeData.description).toContain("work_orders");
+		expect(writeData.description).toContain("invoices");
+		expect(writeData.description).toContain("appointments");
+		expect(writeData.description).toContain("customers");
 		// All tools are unique
 		expect(new Set(toolNames).size).toBe(toolNames.length);
 	});
 
-	it("queryData tool has a description mentioning tables", () => {
+	it("readData tool has a description listing datasets", () => {
 		const tools = getProductTools("tolom", mockContext);
-		const queryData = tools.find((t) => t.name === "queryData");
-		expect(queryData).toBeDefined();
-		expect(queryData!.description).toBeTruthy();
-		// Description should reference available business tables
-		expect(queryData!.description.length).toBeGreaterThan(50);
+		const readData = tools.find((t) => t.name === "readData");
+		expect(readData).toBeDefined();
+		expect(readData!.description).toBeTruthy();
+		// Description should reference available business datasets
+		expect(readData!.description.length).toBeGreaterThan(50);
 	});
-});
 
 describe("Zer tool coverage", () => {
 	it("returns Zer tools with getSalesByCategory", () => {

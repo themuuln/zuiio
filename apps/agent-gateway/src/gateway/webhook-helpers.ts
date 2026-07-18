@@ -5,8 +5,10 @@ import "server-only";
 import type { GatewayTool, ToolContext } from "@/providers/types";
 import { getRedis } from "@/lib/redis";
 import { createServiceClient } from "@/lib/supabase";
+import { createWriteDataTool } from "@/gateway/write-data-tool";
+import { createReadDataTool } from "@/gateway/read-data-tool";
 
-/**
+ /**
  * Generate system prompt for a product type.
  * Shared between Mode A and Mode B webhooks.
  */
@@ -63,11 +65,11 @@ RULES:
 1. Never say "I don't have that data" — always use tools to query business data
 2. Use correct date ranges: "last year" → 1yr ago, "this month" → month start, omit for all time
 3. After showing data, offer relevant next steps
-4. Write tools (confirm before executing): createWorkOrder, updateWorkOrderStatus, updateWorkOrderDetails, createInvoice, recordPayment, createAppointment, createReminder, bulkUpdateWorkOrderStatus, createSale, sendInvoicePdf
+4. Write tool (confirm before executing): writeData(dataset, operation, data). Datasets: vehicles, customers, work_orders, appointments, expenses, suppliers, parts_catalog, service_catalog, sales, invoices. Operations: insert, update, delete. Always confirm the exact change with the user before executing.
 5. General greetings → respond without tools
 6. Complex ops → guide step by step, ONE question per step, confirm before submit
-QUERY TOOL: Use queryData for all data lookups. Allowed tables: work_orders, customers, vehicles, appointments, invoices, invoice_items, invoice_payments, expenses, suppliers, profiles, parts_catalog, service_catalog, sales, sales_items, cash_register_sessions, work_order_parts, work_order_services, mechanic_daily_reports.
-Examples: "show active orders" → queryData(table:"work_orders", filters:"{\"status\":\"in_progress\"}"); "customer by phone" → queryData(table:"customers", filters:"{\"phone\":\"12345678\"}"); "today's appointments" → queryData(table:"appointments", date_from:"2024-01-15"); "monthly expenses" → queryData(table:"expenses", aggregate:"sum:amount", date_from:"2024-01-01")
+READ TOOL: Use readData(plan) for ALL data lookups. plan is a ReadPlan: { queries: [{ dataset, dimensions?, measures?, embeds?, filters?, sort?, limit?, offset?, includeCount? }], derivation?, responseFormat? }. Datasets include: work_orders, customers, vehicles, appointments, invoices, invoice_items, invoice_payments, expenses, expense_categories, suppliers, profiles, parts_catalog, service_catalog, sales, sales_items, cash_register_sessions, work_order_parts, work_order_services, mechanic_daily_reports, notifications.
+Examples: "show active orders" → readData({ queries: [{ dataset:"work_orders", filters:[{field:"status",op:"eq",value:"in_progress"}], limit:10 }] }); "customer by phone" → readData({ queries: [{ dataset:"customers", filters:[{field:"phone",op:"eq",value:"12345678"}] }] }); "today's appointments" → readData({ queries: [{ dataset:"appointments", filters:[{field:"scheduled_at",op:"gte",value:"2024-01-15"}] }] })
 Organization ID: ${orgId}${groupWarning}`;
 		}
 return `Та "${orgName || "This auto repair shop"}" — идэвхтэй засварын газрын бизнес агент.
@@ -77,12 +79,11 @@ return `Та "${orgName || "This auto repair shop"}" — идэвхтэй зас
 1. "би мэдээлэлгүй" гэж хэзээ ч хэлэхгүй — бүх өгөгдлийг хэрэгслээр асууна
 2. Бизнесийн асуулт бүрт хэрэгсэл ашиглах. Зөв хугацаа ашиглах.
 3. Идэвхтэй байх — өгөгдөл харуулсны дараа дараагийн алхмуудыг санал болго
-4. Бичлэгийн хэрэгслүүд — юу хийхээ тайлбарлаж дууд, баталгаажуулалт авна
+4. Бичлэгийн хэрэгсэл — writeData(dataset, operation, data). Хүснэгтүүд: vehicles, customers, work_orders, appointments, expenses, suppliers, parts_catalog, service_catalog, sales, invoices. Үйлдлүүд: insert, update, delete. Гүйцэтгэхээс өмнө хэрэглэгчээс заавал баталгаажуулна.
 5. Ерөнхий асуулт — хэрэгсэлгүйгээр хариул
 6. Төвөгтэй үйлдэл: алхам алхамаар, нэг асуулт нэг алхам, баталгаажуул
-ХЭРЭГСЛИЙН ДҮРЭМ: queryData ашиглах — бүх өгөгдөл хайх, шүүх, бүлэглэх.
-Зөвшөөрөгдсөн хүснэгтүүд: work_orders, customers, vehicles, appointments, invoices, invoice_items, invoice_payments, expenses, suppliers, profiles, parts_catalog, service_catalog, sales, sales_items, cash_register_sessions, work_order_parts, work_order_services, mechanic_daily_reports.
-Жишээ: "идэвхтэй захиалга" → queryData(table:"work_orders", filters:"{\"status\":\"in_progress\"}"); "утсаар харилцагч" → queryData(table:"customers", filters:"{\"phone\":\"12345678\"}"); "өнөөдрийн цаг" → queryData(table:"appointments", date_from:"2024-01-15"); "сарын зарлага" → queryData(table:"expenses", aggregate:"sum:amount", date_from:"2024-01-01")
+ХЭРЭГСЛИЙН ДҮРЭМ: readData(plan) ашиглах — бүх өгөгдөл хайх, шүүх, бүлэглэх. plan нь ReadPlan: { queries: [{ dataset, dimensions?, measures?, embeds?, filters?, sort?, limit?, offset?, includeCount? }], derivation?, responseFormat? }. Хүснэгтүүд: work_orders, customers, vehicles, appointments, invoices, invoice_items, invoice_payments, expenses, expense_categories, suppliers, profiles, parts_catalog, service_catalog, sales, sales_items, cash_register_sessions, work_order_parts, work_order_services, mechanic_daily_reports, notifications.
+Жишээ: "идэвхтэй захиалга" → readData({ queries: [{ dataset:"work_orders", filters:[{field:"status",op:"eq",value:"in_progress"}], limit:10 }] }); "утсаар харилцагч" → readData({ queries: [{ dataset:"customers", filters:[{field:"phone",op:"eq",value:"12345678"}] }] }); "өнөөдрийн цаг" → readData({ queries: [{ dataset:"appointments", filters:[{field:"scheduled_at",op:"gte",value:"2024-01-15"}] }] })
 ОЛОН ШАТЫН ТУСЛАМЖ:
 - Захиалга: харилцагчийн нэр → улсын дугаар → тайлбар
 - Цаг захиалга: харилцагч → огноо/цаг → тайлбар
@@ -248,200 +249,6 @@ function tolomTools(context: ToolContext): GatewayTool[] {
 				} catch (err) {
 					capture(err, { context: "agent-gateway: getWorkOrderDetails" });
 					return { error: "Ажлын захиалгын дэлгэрэнгүй авахад алдаа гарлаа" };
-				}
-			},
-		},
-		// ─── Flexible Query Tools ────────────────────────────────────────
-		{
-			name: "queryData",
-			description:
-				"Бүх бизнес өгөгдөл: шүүлтүүр, эрэмбэлэх, бүлэглэх боломжтой.",
-			parameters: [
-				{
-					name: "table",
-					type: "string",
-					description: "Өгөгдлийн сан (жагсаалтыг үз)",
-					required: true,
-				},
-				{
-					name: "date_from",
-					type: "string",
-					description: "Эхлэх огноо (YYYY-MM-DD)",
-					required: false,
-				},
-				{
-					name: "date_to",
-					type: "string",
-					description: "Дуусах огноо (YYYY-MM-DD)",
-					required: false,
-				},
-				{
-					name: "filters",
-					type: "string",
-					description:
-						'Шүүлтүүр JSON форматаар. Жишээ: {"status":"in_progress"} эсвэл {"plate_number":"1234AB"}',
-					required: false,
-				},
-				{
-					name: "sort_by",
-					type: "string",
-					description: "Эрэмбэлэх багана (default: created_at)",
-					required: false,
-				},
-				{
-					name: "sort_order",
-					type: "string",
-					description: "Эрэмбэлэх чиглэл: asc эсвэл desc (default: desc)",
-					required: false,
-				},
-				{
-					name: "limit",
-					type: "number",
-					description: "Хамгийн их тоо (default: 20, макс 100)",
-					required: false,
-				},
-				{
-					name: "aggregate",
-					type: "string",
-					description:
-						'Нэгтгэх: "count", "sum:<column>", "avg:<column>" эсвэл "group:<column>"',
-					required: false,
-				},
-			],
-			execute: async (args) => {
-				try {
-					const table = (args.table as string)?.toLowerCase();
-					const allowedTables: Record<string, { dateCol: string }> = {
-						work_orders: { dateCol: "created_at" },
-						customers: { dateCol: "created_at" },
-						vehicles: { dateCol: "created_at" },
-						appointments: { dateCol: "scheduled_at" },
-						invoices: { dateCol: "issued_at" },
-						invoice_items: { dateCol: "created_at" },
-						invoice_payments: { dateCol: "paid_at" },
-						expenses: { dateCol: "expense_date" },
-						suppliers: { dateCol: "created_at" },
-						profiles: { dateCol: "created_at" },
-						parts_catalog: { dateCol: "created_at" },
-						service_catalog: { dateCol: "created_at" },
-						sales: { dateCol: "sale_date" },
-						sales_items: { dateCol: "created_at" },
-						cash_register_sessions: { dateCol: "date" },
-						work_order_parts: { dateCol: "created_at" },
-						work_order_services: { dateCol: "created_at" },
-						mechanic_daily_reports: { dateCol: "report_date" },
-					};
-					if (!table || !allowedTables[table]) {
-						return {
-							error: `Хүчингүй багана: "${args.table}". Зөвшөөрөгдсөн: ${Object.keys(allowedTables).join(", ")}`,
-						};
-					}
-
-					const dateCol = allowedTables[table].dateCol;
-					const limit = Math.min(
-						typeof args.limit === "number" ? args.limit : 20,
-						100,
-					);
-
-					let query = supabase
-						.from(table)
-						.select("*")
-						.eq("organization_id", orgId);
-
-					if (!["profiles"].includes(table)) {
-						query = query.is("deleted_at", null);
-					}
-
-					// Date filters
-					if (args.date_from && typeof args.date_from === "string") {
-						query = query.gte(dateCol, args.date_from);
-					}
-					if (args.date_to && typeof args.date_to === "string") {
-						const endDate = args.date_to.includes("T")
-							? args.date_to
-							: `${args.date_to}T23:59:59Z`;
-						query = query.lte(dateCol, endDate);
-					}
-
-					// Custom filters
-					if (args.filters && typeof args.filters === "string") {
-						try {
-							const parsed = JSON.parse(args.filters) as Record<string, string>;
-							for (const [key, value] of Object.entries(parsed)) {
-								query = query.eq(key, value);
-							}
-						} catch {
-							return { error: "Шүүлтүүрийн формат буруу байна" };
-						}
-					}
-
-					// Sorting
-					const sortCol =
-						typeof args.sort_by === "string" ? args.sort_by : dateCol;
-					const sortAsc = args.sort_order === "asc";
-					query = query.order(sortCol, { ascending: sortAsc });
-
-					// Aggregate
-					const aggregate =
-						typeof args.aggregate === "string" ? args.aggregate : undefined;
-
-					if (aggregate === "count") {
-						const { data, error } = await query.select("id").limit(10000);
-						if (error) return { error: "Тоолох алдаа гарлаа" };
-						return { table, count: (data ?? []).length };
-					}
-
-					if (aggregate?.startsWith("sum:")) {
-						const col = aggregate.split(":")[1];
-						const { data, error } = await query.select(col).limit(1000);
-						if (error) return { error: "Нэмэх алдаа гарлаа" };
-						const total = (data ?? []).reduce(
-							(s: number, r: any) => s + (Number(r[col]) || 0),
-							0,
-						);
-						return { table, column: col, total, rowCount: data?.length ?? 0 };
-					}
-
-					if (aggregate?.startsWith("avg:")) {
-						const col = aggregate.split(":")[1];
-						const { data, error } = await query.select(col).limit(1000);
-						if (error) return { error: "Дундаж тооцох алдаа гарлаа" };
-						const rows = data ?? [];
-						const total = rows.reduce(
-							(s: number, r: any) => s + (Number(r[col]) || 0),
-							0,
-						);
-						return {
-							table,
-							column: col,
-							average: rows.length > 0 ? total / rows.length : 0,
-							rowCount: rows.length,
-						};
-					}
-
-					if (aggregate?.startsWith("group:")) {
-						const col = aggregate.split(":")[1];
-						const { data, error } = await query.select(`*, ${col}`).limit(1000);
-						if (error) return { error: "Бүлэглэх алдаа гарлаа" };
-						const groups: Record<string, number> = {};
-						for (const r of data ?? []) {
-							const row = r as unknown as Record<string, unknown>;
-							const key = String(row[col] ?? "—");
-							groups[key] = (groups[key] ?? 0) + 1;
-						}
-						return { table, groupBy: col, groups };
-					}
-
-					// Default: return rows
-					const { data, error } = await query.limit(limit);
-					if (error) {
-						console.error("[queryData]", error);
-						return { error: "Өгөгдөл авахад алдаа гарлаа" };
-					}
-					return { table, rows: data ?? [], count: (data ?? []).length };
-				} catch (err) {
-					capture(err, { context: "agent-gateway: queryData" });
-					return { error: "Өгөгдөл авахад алдаа гарлаа" };
 				}
 			},
 		},
@@ -1882,11 +1689,23 @@ export function getProductTools(
 	if (cached && cached.expires > Date.now()) {
 		return cached.tools;
 	}
-
-	const readTools =
+	const baseReadTools =
 		productType === "tolom" ? tolomTools(context) : zerTools(context);
+	// Tolom uses the dynamic Read Engine (readData) when its catalog exists.
+	// Zer keeps legacy inline read tools until its read catalog is authored.
+	const readTools =
+		productType === "tolom"
+			? [
+					...baseReadTools,
+					createReadDataTool("tolom", context),
+				].filter((t): t is NonNullable<typeof t> => t !== null)
+			: baseReadTools;
+	// Tolom uses the dynamic Write Engine (writeData) when its catalog exists.
+	// Zer keeps legacy inline write tools until its write catalog is authored.
 	const writeTools =
-		productType === "tolom" ? tolomWriteTools(context) : zerWriteTools(context);
+		productType === "tolom"
+			? [createWriteDataTool("tolom", context)].filter((t): t is NonNullable<typeof t> => t !== null)
+			: zerWriteTools(context);
 
 	const tools = options?.readOnly ? readTools : [...readTools, ...writeTools];
 

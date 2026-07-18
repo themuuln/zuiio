@@ -93,9 +93,11 @@ describe("Agent Simulation — Tool Selection", () => {
 	const tolomTools = getProductTools("tolom", mockContext);
 	const toolNames = tolomTools.map((t) => t.name);
 
-	it("Tolom provides 15+ tools total", () => {
-		expect(tolomTools.length).toBeGreaterThanOrEqual(15);
-		expect(tolomTools.length).toBeLessThanOrEqual(30);
+	it("Tolom provides read + writeData tools", () => {
+		// 8 read tools + 1 dynamic writeData (Write Engine) = 9.
+		expect(tolomTools.length).toBeGreaterThanOrEqual(8);
+		expect(tolomTools.length).toBeLessThanOrEqual(20);
+		expect(toolNames).toContain("writeData");
 	});
 
 	it("all tool names are unique", () => {

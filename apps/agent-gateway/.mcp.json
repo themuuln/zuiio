@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json",
   "mcpServers": {
     "next-devtools": {
       "command": "npx",
@@ -8,7 +9,8 @@
     },
     "vercel": {
       "url": "https://mcp.vercel.com",
-      "type": "http"
+      "type": "http",
+      "enabled": false
     },
     "github": {
       "command": "npx",
@@ -27,7 +29,8 @@
       ],
       "env": {
         "SENTRY_ACCESS_TOKEN": "${SENTRY_ACCESS_TOKEN}"
-      }
+      },
+      "enabled": false
     },
     "supabase": {
       "type": "http",

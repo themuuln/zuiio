@@ -55,8 +55,10 @@ describe("Manual Agent Test — System Prompt", () => {
 });
 
 describe("Manual Agent Test — Tool Counts", () => {
-	it("Tolom has 15+ tools", () => {
-		expect(getProductTools("tolom", mockContext).length).toBeGreaterThanOrEqual(15);
+	it("Tolom has read tools + writeData", () => {
+		const tools = getProductTools("tolom", mockContext);
+		expect(tools.length).toBeGreaterThanOrEqual(8);
+		expect(tools.map((t) => t.name)).toContain("writeData");
 	});
 
 	it("Zer has 2+ tools", () => {

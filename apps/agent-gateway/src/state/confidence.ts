@@ -90,15 +90,15 @@ export function scoreConfidence(params: {
 
 	// Tool-specific confidence
 	const toolConfidenceMap: Record<string, number> = {
-		getSalesSummary: 0.95,
-		getPendingSales: 0.95,
-		getTodaySales: 0.95,
 		getDailySummary: 0.9,
-		getActiveWorkOrders: 0.95,
-		getCustomerHistory: 0.85,
-		getInvoiceStatus: 0.9,
-		getExpensesSummary: 0.85,
-		getAppointments: 0.9,
+		getWorkOrderDetails: 0.9,
+		queryData: 0.85,
+		getVehicleAnalytics: 0.9,
+		getFinancialSummary: 0.9,
+		exportData: 0.85,
+		partsLookup: 0.85,
+		getSparePartsSales: 0.9,
+		getSalesByCategory: 0.9,
 	};
 	const toolConfidence = toolConfidenceMap[params.toolName] ?? 0.7;
 	checks.push({

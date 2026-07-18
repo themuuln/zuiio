@@ -313,134 +313,134 @@ describe("🗺️ Mongolian Query → Tool Intent Mapping", () => {
 		{ query: "öcigdr", type: "short", expectedTool: "getDailySummary", rationale: "Extreme shorthand for 'өчигдөр' (= yesterday)" },
 		{ query: "munuudur", type: "short", expectedTool: "getDailySummary", rationale: "Alt Latin: 'мөнөөдөр' (= today)" },
 
-		// ── queryData (replaces getActiveWorkOrders) ────────────────────
-		{ query: "Идэвхтэй захиалгуудыг харуул", type: "formal", expectedTool: "queryData", rationale: "Active work orders → queryData(work_orders)" },
-		{ query: "Одоо засварт орсон машинууд", type: "formal", expectedTool: "queryData", rationale: "Cars in repair → queryData(work_orders)" },
-		{ query: "Хэдэн машин засварт ороод байна?", type: "formal", expectedTool: "queryData", rationale: "Count of active orders → queryData" },
-		{ query: "Захиалгын жагсаалт", type: "short", expectedTool: "queryData", rationale: "Order list → queryData(work_orders)" },
-		{ query: "Идэвхтэй?", type: "short", expectedTool: "queryData", rationale: "Active → queryData(work_orders)" },
-		{ query: "Ямар захиалгууд хүлээгдэж байна?", type: "formal", expectedTool: "queryData", rationale: "Pending orders → queryData" },
-		{ query: "Машинууд?", type: "short", expectedTool: "queryData", rationale: "Cars → queryData(work_orders)" },
-		{ query: "zalgaltuud?", type: "slang", expectedTool: "queryData", rationale: "Latin: захиалгууд → queryData" },
-		{ query: "idevhtei zahialguud", type: "short", expectedTool: "queryData", rationale: "Latin: идэвхтэй захиалгууд → queryData" },
-		{ query: "machine?", type: "short", expectedTool: "queryData", rationale: "English: машинууд → queryData" },
-		{ query: "zasvart orson mashinuud", type: "short", expectedTool: "queryData", rationale: "Latin: засварт орсон машинууд → queryData" },
-		{ query: "active orderuud", type: "mixed", expectedTool: "queryData", rationale: "Mixed: active захиалгууд → queryData" },
-		{ query: "jagsaalt", type: "short", expectedTool: "queryData", rationale: "Latin: жагсаалт → queryData" },
+		// ── readData (replaces getActiveWorkOrders) ────────────────────
+		{ query: "Идэвхтэй захиалгуудыг харуул", type: "formal", expectedTool: "readData", rationale: "Active work orders → readData(work_orders)" },
+		{ query: "Одоо засварт орсон машинууд", type: "formal", expectedTool: "readData", rationale: "Cars in repair → readData(work_orders)" },
+		{ query: "Хэдэн машин засварт ороод байна?", type: "formal", expectedTool: "readData", rationale: "Count of active orders → readData" },
+		{ query: "Захиалгын жагсаалт", type: "short", expectedTool: "readData", rationale: "Order list → readData(work_orders)" },
+		{ query: "Идэвхтэй?", type: "short", expectedTool: "readData", rationale: "Active → readData(work_orders)" },
+		{ query: "Ямар захиалгууд хүлээгдэж байна?", type: "formal", expectedTool: "readData", rationale: "Pending orders → readData" },
+		{ query: "Машинууд?", type: "short", expectedTool: "readData", rationale: "Cars → readData(work_orders)" },
+		{ query: "zalgaltuud?", type: "slang", expectedTool: "readData", rationale: "Latin: захиалгууд → readData" },
+		{ query: "idevhtei zahialguud", type: "short", expectedTool: "readData", rationale: "Latin: идэвхтэй захиалгууд → readData" },
+		{ query: "machine?", type: "short", expectedTool: "readData", rationale: "English: машинууд → readData" },
+		{ query: "zasvart orson mashinuud", type: "short", expectedTool: "readData", rationale: "Latin: засварт орсон машинууд → readData" },
+		{ query: "active orderuud", type: "mixed", expectedTool: "readData", rationale: "Mixed: active захиалгууд → readData" },
+		{ query: "jagsaalt", type: "short", expectedTool: "readData", rationale: "Latin: жагсаалт → readData" },
 
-		// ── queryData (replaces getCustomerHistory) ────────────────────
-		{ query: "Бат-Эрдэнэ гэдэг хүний мэдээлэл хэрэгтэй", type: "formal", expectedTool: "queryData", rationale: "Customer info → queryData(customers)" },
-		{ query: "99112233 дугаартай хүн хэн бэ?", type: "formal", expectedTool: "queryData", rationale: "Phone search → queryData(customers)" },
-		{ query: "УБА1234 дугаартай машины эзэн хэн бэ?", type: "formal", expectedTool: "queryData", rationale: "Plate search → queryData(vehicles)" },
-		{ query: "Энэ хүний мэдээллийг хар", type: "formal", expectedTool: "queryData", rationale: "Customer info → queryData(customers)" },
-		{ query: "Харилцагч хайх", type: "short", expectedTool: "queryData", rationale: "Customer search → queryData(customers)" },
-		{ query: "Хэрэглэгч хайх", type: "formal", expectedTool: "queryData", rationale: "User search → queryData(customers)" },
-		{ query: "Тэр хэрэглэгч хэдэн удаа ирсэн бэ?", type: "formal", expectedTool: "queryData", rationale: "Visit count → queryData(customers)" },
-		{ query: "hereglegch haih", type: "short", expectedTool: "queryData", rationale: "Latin: хэрэглэгч хайх → queryData" },
-		{ query: "hailt", type: "short", expectedTool: "queryData", rationale: "Latin: хайлт → queryData" },
-		{ query: "ene hvn hten be?", type: "slang", expectedTool: "queryData", rationale: "Latin: энэ хүн хэн бэ? → queryData" },
-		{ query: "telefon dugaar 99112233", type: "mixed", expectedTool: "queryData", rationale: "Phone search → queryData(customers)" },
-		{ query: "UBA1234 dugaartai mashin", type: "short", expectedTool: "queryData", rationale: "Plate search → queryData(vehicles)" },
-		{ query: "hunic medeelel", type: "short", expectedTool: "queryData", rationale: "Latin: хүний мэдээлэл → queryData" },
-		{ query: "customer search?", type: "mixed", expectedTool: "queryData", rationale: "English: customer search → queryData" },
+		// ── readData (replaces getCustomerHistory) ────────────────────
+		{ query: "Бат-Эрдэнэ гэдэг хүний мэдээлэл хэрэгтэй", type: "formal", expectedTool: "readData", rationale: "Customer info → readData(customers)" },
+		{ query: "99112233 дугаартай хүн хэн бэ?", type: "formal", expectedTool: "readData", rationale: "Phone search → readData(customers)" },
+		{ query: "УБА1234 дугаартай машины эзэн хэн бэ?", type: "formal", expectedTool: "readData", rationale: "Plate search → readData(vehicles)" },
+		{ query: "Энэ хүний мэдээллийг хар", type: "formal", expectedTool: "readData", rationale: "Customer info → readData(customers)" },
+		{ query: "Харилцагч хайх", type: "short", expectedTool: "readData", rationale: "Customer search → readData(customers)" },
+		{ query: "Хэрэглэгч хайх", type: "formal", expectedTool: "readData", rationale: "User search → readData(customers)" },
+		{ query: "Тэр хэрэглэгч хэдэн удаа ирсэн бэ?", type: "formal", expectedTool: "readData", rationale: "Visit count → readData(customers)" },
+		{ query: "hereglegch haih", type: "short", expectedTool: "readData", rationale: "Latin: хэрэглэгч хайх → readData" },
+		{ query: "hailt", type: "short", expectedTool: "readData", rationale: "Latin: хайлт → readData" },
+		{ query: "ene hvn hten be?", type: "slang", expectedTool: "readData", rationale: "Latin: энэ хүн хэн бэ? → readData" },
+		{ query: "telefon dugaar 99112233", type: "mixed", expectedTool: "readData", rationale: "Phone search → readData(customers)" },
+		{ query: "UBA1234 dugaartai mashin", type: "short", expectedTool: "readData", rationale: "Plate search → readData(vehicles)" },
+		{ query: "hunic medeelel", type: "short", expectedTool: "readData", rationale: "Latin: хүний мэдээлэл → readData" },
+		{ query: "customer search?", type: "mixed", expectedTool: "readData", rationale: "English: customer search → readData" },
 
-		// ── queryData (replaces getInvoiceStatus) ─────────────────────
-		{ query: "Энэ сарын нэхэмжлэлийн хураангуй", type: "formal", expectedTool: "queryData", rationale: "Invoice summary → queryData(invoices)" },
-		{ query: "Нэхэмжлэлийн мэдээлэл", type: "short", expectedTool: "queryData", rationale: "Invoice info → queryData(invoices)" },
-		{ query: "Хэдэн төгрөгийн нэхэмжлэл гаргасан бэ?", type: "formal", expectedTool: "queryData", rationale: "Invoice total → queryData(invoices)" },
-		{ query: "Ямар нэхэмжлэлүүд төлөгдөөгүй байна?", type: "formal", expectedTool: "queryData", rationale: "Unpaid invoices → queryData(invoices)" },
-		{ query: "Өр төлбөр хэд вэ?", type: "short", expectedTool: "queryData", rationale: "Debt → queryData(invoices)" },
-		{ query: "Дансны үлдэгдэл", type: "short", expectedTool: "queryData", rationale: "Balance → queryData(invoices)" },
-		{ query: "nehemjleliin medeelel", type: "short", expectedTool: "queryData", rationale: "Latin: нэхэмжлэлийн мэдээлэл → queryData" },
-		{ query: "invoice?", type: "mixed", expectedTool: "queryData", rationale: "English: invoice → queryData" },
-		{ query: "tulugduugui nemjleluud", type: "short", expectedTool: "queryData", rationale: "Latin: төлөгдөөгүй нэхэмжлэлүүд → queryData" },
-		{ query: "uldegdel?", type: "short", expectedTool: "queryData", rationale: "Latin: үлдэгдэл? → queryData" },
-		{ query: "sar hereg ve?", type: "short", expectedTool: "queryData", rationale: "Latin: сар хэрэг вэ? → queryData" },
-		{ query: "ör teleber?", type: "short", expectedTool: "queryData", rationale: "Latin: өр төлбөр? → queryData" },
+		// ── readData (replaces getInvoiceStatus) ─────────────────────
+		{ query: "Энэ сарын нэхэмжлэлийн хураангуй", type: "formal", expectedTool: "readData", rationale: "Invoice summary → readData(invoices)" },
+		{ query: "Нэхэмжлэлийн мэдээлэл", type: "short", expectedTool: "readData", rationale: "Invoice info → readData(invoices)" },
+		{ query: "Хэдэн төгрөгийн нэхэмжлэл гаргасан бэ?", type: "formal", expectedTool: "readData", rationale: "Invoice total → readData(invoices)" },
+		{ query: "Ямар нэхэмжлэлүүд төлөгдөөгүй байна?", type: "formal", expectedTool: "readData", rationale: "Unpaid invoices → readData(invoices)" },
+		{ query: "Өр төлбөр хэд вэ?", type: "short", expectedTool: "readData", rationale: "Debt → readData(invoices)" },
+		{ query: "Дансны үлдэгдэл", type: "short", expectedTool: "readData", rationale: "Balance → readData(invoices)" },
+		{ query: "nehemjleliin medeelel", type: "short", expectedTool: "readData", rationale: "Latin: нэхэмжлэлийн мэдээлэл → readData" },
+		{ query: "invoice?", type: "mixed", expectedTool: "readData", rationale: "English: invoice → readData" },
+		{ query: "tulugduugui nemjleluud", type: "short", expectedTool: "readData", rationale: "Latin: төлөгдөөгүй нэхэмжлэлүүд → readData" },
+		{ query: "uldegdel?", type: "short", expectedTool: "readData", rationale: "Latin: үлдэгдэл? → readData" },
+		{ query: "sar hereg ve?", type: "short", expectedTool: "readData", rationale: "Latin: сар хэрэг вэ? → readData" },
+		{ query: "ör teleber?", type: "short", expectedTool: "readData", rationale: "Latin: өр төлбөр? → readData" },
 
-		// ── queryData (replaces getExpensesSummary) ────────────────────
-		{ query: "Энэ сарын зарлага", type: "formal", expectedTool: "queryData", rationale: "Expenses → queryData(expenses)" },
-		{ query: "Зарлагын хураангуй", type: "short", expectedTool: "queryData", rationale: "Expense summary → queryData(expenses)" },
-		{ query: "Хэдэн төгрөгийн зарлага гарсан бэ?", type: "formal", expectedTool: "queryData", rationale: "Expense total → queryData(expenses)" },
-		{ query: "Сэлбэгт хэдэн төгрөг зарцуулсан бэ?", type: "formal", expectedTool: "queryData", rationale: "Expense by category → queryData(expenses)" },
-		{ query: "Зардлаа харуулаач", type: "short", expectedTool: "queryData", rationale: "Show expenses → queryData(expenses)" },
-		{ query: "Мөнгө хаашаа явсан бэ?", type: "slang", expectedTool: "queryData", rationale: "Where did money go? → queryData(expenses)" },
-		{ query: "zarlaga?", type: "short", expectedTool: "queryData", rationale: "Latin: зарлага? → queryData" },
-		{ query: "zarlagiin huragui", type: "short", expectedTool: "queryData", rationale: "Latin: зарлагын хураангуй → queryData" },
-		{ query: "munge?", type: "slang", expectedTool: "queryData", rationale: "Latin: мөнгө? → queryData(expenses)" },
-		{ query: "selbegt heden tugrug?", type: "short", expectedTool: "queryData", rationale: "Latin: сэлбэгт хэдэн төгрөг? → queryData" },
-		{ query: "expense?", type: "mixed", expectedTool: "queryData", rationale: "English: expense → queryData" },
-		{ query: "tsalin?", type: "short", expectedTool: "queryData", rationale: "Latin: цалин? → queryData(expenses)" },
-		{ query: "haana munge zasuulsan?", type: "slang", expectedTool: "queryData", rationale: "Latin: хаана мөнгө зарцуулсан? → queryData" },
+		// ── readData (replaces getExpensesSummary) ────────────────────
+		{ query: "Энэ сарын зарлага", type: "formal", expectedTool: "readData", rationale: "Expenses → readData(expenses)" },
+		{ query: "Зарлагын хураангуй", type: "short", expectedTool: "readData", rationale: "Expense summary → readData(expenses)" },
+		{ query: "Хэдэн төгрөгийн зарлага гарсан бэ?", type: "formal", expectedTool: "readData", rationale: "Expense total → readData(expenses)" },
+		{ query: "Сэлбэгт хэдэн төгрөг зарцуулсан бэ?", type: "formal", expectedTool: "readData", rationale: "Expense by category → readData(expenses)" },
+		{ query: "Зардлаа харуулаач", type: "short", expectedTool: "readData", rationale: "Show expenses → readData(expenses)" },
+		{ query: "Мөнгө хаашаа явсан бэ?", type: "slang", expectedTool: "readData", rationale: "Where did money go? → readData(expenses)" },
+		{ query: "zarlaga?", type: "short", expectedTool: "readData", rationale: "Latin: зарлага? → readData" },
+		{ query: "zarlagiin huragui", type: "short", expectedTool: "readData", rationale: "Latin: зарлагын хураангуй → readData" },
+		{ query: "munge?", type: "slang", expectedTool: "readData", rationale: "Latin: мөнгө? → readData(expenses)" },
+		{ query: "selbegt heden tugrug?", type: "short", expectedTool: "readData", rationale: "Latin: сэлбэгт хэдэн төгрөг? → readData" },
+		{ query: "expense?", type: "mixed", expectedTool: "readData", rationale: "English: expense → readData" },
+		{ query: "tsalin?", type: "short", expectedTool: "readData", rationale: "Latin: цалин? → readData(expenses)" },
+		{ query: "haana munge zasuulsan?", type: "slang", expectedTool: "readData", rationale: "Latin: хаана мөнгө зарцуулсан? → readData" },
 
-		// ── queryData (replaces getAppointments) ──────────────────────
-		{ query: "Өнөөдрийн цагийн хуваарь", type: "formal", expectedTool: "queryData", rationale: "Schedule → queryData(appointments)" },
-		{ query: "Маргааш хэнд цаг байна?", type: "formal", expectedTool: "queryData", rationale: "Tomorrow's appointments → queryData" },
-		{ query: "Цагийн хуваариа харуулаач", type: "formal", expectedTool: "queryData", rationale: "Show schedule → queryData(appointments)" },
-		{ query: "Өнөөдөр цаг товлосон хүмүүс", type: "formal", expectedTool: "queryData", rationale: "Today's appointments → queryData" },
-		{ query: "Хэн ирэх вэ?", type: "short", expectedTool: "queryData", rationale: "Who's coming? → queryData(appointments)" },
-		{ query: "Цаг?", type: "short", expectedTool: "queryData", rationale: "Appointment? → queryData(appointments)" },
-		{ query: "tsagiin huvaari", type: "short", expectedTool: "queryData", rationale: "Latin: цагийн хуваарь → queryData" },
-		{ query: "margash tsag?", type: "short", expectedTool: "queryData", rationale: "Latin: маргааш цаг? → queryData" },
-		{ query: "hen ireh ve?", type: "short", expectedTool: "queryData", rationale: "Latin: хэн ирэх вэ? → queryData" },
-		{ query: "schedule?", type: "mixed", expectedTool: "queryData", rationale: "English: schedule → queryData" },
-		{ query: "önöödör tsag?", type: "short", expectedTool: "queryData", rationale: "Latin: өнөөдөр цаг? → queryData" },
-		{ query: "appointment?", type: "mixed", expectedTool: "queryData", rationale: "English: appointment → queryData" },
-		{ query: "tsag tovloson humuus", type: "short", expectedTool: "queryData", rationale: "Latin: цаг товлосон хүмүүс → queryData" },
+		// ── readData (replaces getAppointments) ──────────────────────
+		{ query: "Өнөөдрийн цагийн хуваарь", type: "formal", expectedTool: "readData", rationale: "Schedule → readData(appointments)" },
+		{ query: "Маргааш хэнд цаг байна?", type: "formal", expectedTool: "readData", rationale: "Tomorrow's appointments → readData" },
+		{ query: "Цагийн хуваариа харуулаач", type: "formal", expectedTool: "readData", rationale: "Show schedule → readData(appointments)" },
+		{ query: "Өнөөдөр цаг товлосон хүмүүс", type: "formal", expectedTool: "readData", rationale: "Today's appointments → readData" },
+		{ query: "Хэн ирэх вэ?", type: "short", expectedTool: "readData", rationale: "Who's coming? → readData(appointments)" },
+		{ query: "Цаг?", type: "short", expectedTool: "readData", rationale: "Appointment? → readData(appointments)" },
+		{ query: "tsagiin huvaari", type: "short", expectedTool: "readData", rationale: "Latin: цагийн хуваарь → readData" },
+		{ query: "margash tsag?", type: "short", expectedTool: "readData", rationale: "Latin: маргааш цаг? → readData" },
+		{ query: "hen ireh ve?", type: "short", expectedTool: "readData", rationale: "Latin: хэн ирэх вэ? → readData" },
+		{ query: "schedule?", type: "mixed", expectedTool: "readData", rationale: "English: schedule → readData" },
+		{ query: "önöödör tsag?", type: "short", expectedTool: "readData", rationale: "Latin: өнөөдөр цаг? → readData" },
+		{ query: "appointment?", type: "mixed", expectedTool: "readData", rationale: "English: appointment → readData" },
+		{ query: "tsag tovloson humuus", type: "short", expectedTool: "readData", rationale: "Latin: цаг товлосон хүмүүс → readData" },
 
-		// ── queryData (replaces getSalesSummary) ──────────────────────
-		{ query: "Сүүлийн 7 хоногийн борлуулалт", type: "formal", expectedTool: "queryData", rationale: "Sales for N days → queryData(sales)" },
-		{ query: "Өнөөдрийн борлуулалт хэд вэ?", type: "formal", expectedTool: "queryData", rationale: "Today's sales → queryData(sales)" },
-		{ query: "Энэ сарын борлуулалт", type: "formal", expectedTool: "queryData", rationale: "Monthly sales → queryData(sales)" },
-		{ query: "Сүүлийн 3 хоногийн тайлан", type: "formal", expectedTool: "queryData", rationale: "3-day report → queryData(sales)" },
-		{ query: "Өчигдөр хэдэн төгрөгийн борлуулалт хийсэн бэ?", type: "formal", expectedTool: "queryData", rationale: "Yesterday's sales → queryData(sales)" },
-		{ query: "Борлуулалтын дүн", type: "short", expectedTool: "queryData", rationale: "Sales amount → queryData(sales)" },
-		{ query: "Хэдэн төгрөг орсон бэ?", type: "short", expectedTool: "queryData", rationale: "Revenue query → queryData(sales)" },
-		{ query: "7 honog?", type: "short", expectedTool: "queryData", rationale: "Latin: 7 хоног? → queryData" },
-		{ query: "sale?", type: "mixed", expectedTool: "queryData", rationale: "English sale → queryData(sales)" },
-		{ query: "Өнөөдрийн орлого?", type: "formal", expectedTool: "queryData", rationale: "Today's revenue → queryData(sales)" },
-		{ query: "Энэ долоо хоног хэр байна?", type: "formal", expectedTool: "queryData", rationale: "Weekly performance → queryData(sales)" },
-		{ query: "borluulalt", type: "short", expectedTool: "queryData", rationale: "Latin: борлуулалт → queryData" },
-		{ query: "suuliin 7 honogiin borluulalt", type: "short", expectedTool: "queryData", rationale: "Latin: сүүлийн 7 хоногийн борлуулалт → queryData" },
-		{ query: "ene sariin borluulalt", type: "short", expectedTool: "queryData", rationale: "Latin: энэ сарын борлуулалт → queryData" },
-		{ query: "orlogo heden ve?", type: "short", expectedTool: "queryData", rationale: "Latin: орлого хэдэн вэ? → queryData" },
-		{ query: "sales tai lan?", type: "mixed", expectedTool: "queryData", rationale: "Mixed: sales + орлого → queryData" },
-		{ query: "7 honogiin tailan", type: "short", expectedTool: "queryData", rationale: "Latin: 7 хоногийн тайлан → queryData" },
-		{ query: "suuliin 30 vedeer", type: "short", expectedTool: "queryData", rationale: "Latin: сүүлийн 30 өдөр → queryData" },
-		{ query: "dolo honog?", type: "short", expectedTool: "queryData", rationale: "Alt shorthand → queryData" },
+		// ── readData (replaces getSalesSummary) ──────────────────────
+		{ query: "Сүүлийн 7 хоногийн борлуулалт", type: "formal", expectedTool: "readData", rationale: "Sales for N days → readData(sales)" },
+		{ query: "Өнөөдрийн борлуулалт хэд вэ?", type: "formal", expectedTool: "readData", rationale: "Today's sales → readData(sales)" },
+		{ query: "Энэ сарын борлуулалт", type: "formal", expectedTool: "readData", rationale: "Monthly sales → readData(sales)" },
+		{ query: "Сүүлийн 3 хоногийн тайлан", type: "formal", expectedTool: "readData", rationale: "3-day report → readData(sales)" },
+		{ query: "Өчигдөр хэдэн төгрөгийн борлуулалт хийсэн бэ?", type: "formal", expectedTool: "readData", rationale: "Yesterday's sales → readData(sales)" },
+		{ query: "Борлуулалтын дүн", type: "short", expectedTool: "readData", rationale: "Sales amount → readData(sales)" },
+		{ query: "Хэдэн төгрөг орсон бэ?", type: "short", expectedTool: "readData", rationale: "Revenue query → readData(sales)" },
+		{ query: "7 honog?", type: "short", expectedTool: "readData", rationale: "Latin: 7 хоног? → readData" },
+		{ query: "sale?", type: "mixed", expectedTool: "readData", rationale: "English sale → readData(sales)" },
+		{ query: "Өнөөдрийн орлого?", type: "formal", expectedTool: "readData", rationale: "Today's revenue → readData(sales)" },
+		{ query: "Энэ долоо хоног хэр байна?", type: "formal", expectedTool: "readData", rationale: "Weekly performance → readData(sales)" },
+		{ query: "borluulalt", type: "short", expectedTool: "readData", rationale: "Latin: борлуулалт → readData" },
+		{ query: "suuliin 7 honogiin borluulalt", type: "short", expectedTool: "readData", rationale: "Latin: сүүлийн 7 хоногийн борлуулалт → readData" },
+		{ query: "ene sariin borluulalt", type: "short", expectedTool: "readData", rationale: "Latin: энэ сарын борлуулалт → readData" },
+		{ query: "orlogo heden ve?", type: "short", expectedTool: "readData", rationale: "Latin: орлого хэдэн вэ? → readData" },
+		{ query: "sales tai lan?", type: "mixed", expectedTool: "readData", rationale: "Mixed: sales + орлого → readData" },
+		{ query: "7 honogiin tailan", type: "short", expectedTool: "readData", rationale: "Latin: 7 хоногийн тайлан → readData" },
+		{ query: "suuliin 30 vedeer", type: "short", expectedTool: "readData", rationale: "Latin: сүүлийн 30 өдөр → readData" },
+		{ query: "dolo honog?", type: "short", expectedTool: "readData", rationale: "Alt shorthand → readData" },
 
-		// ── queryData (replaces getPendingSales) ──────────────────────
-		{ query: "Дутуу төлөлттэй борлуулалтууд", type: "formal", expectedTool: "queryData", rationale: "Pending payments → queryData(sales)" },
-		{ query: "Өртэй борлуулалтууд", type: "short", expectedTool: "queryData", rationale: "Debt sales → queryData(sales)" },
-		{ query: "Хэн хэдэн төгрөг өртэй байна?", type: "formal", expectedTool: "queryData", rationale: "Who owes money → queryData(sales)" },
-		{ query: "Төлбөрөө төлөөгүй хүмүүс", type: "formal", expectedTool: "queryData", rationale: "Unpaid customers → queryData(sales)" },
-		{ query: "Өр?", type: "short", expectedTool: "queryData", rationale: "Debt? → queryData(sales)" },
-		{ query: "Ali ni örtei ve?", type: "short", expectedTool: "queryData", rationale: "Latin: which ones owe → queryData" },
-		{ query: "dutuu tululttei borluulaltuud", type: "short", expectedTool: "queryData", rationale: "Latin: дутуу төлөлттэй → queryData" },
-		{ query: "örtei?", type: "short", expectedTool: "queryData", rationale: "Latin: өртэй? → queryData" },
-		{ query: "unpaid?", type: "mixed", expectedTool: "queryData", rationale: "English: unpaid → queryData" },
-		{ query: "payment missing?", type: "mixed", expectedTool: "queryData", rationale: "English: payment missing → queryData" },
-		{ query: "hen örtei ve?", type: "short", expectedTool: "queryData", rationale: "Latin: хэн өртэй вэ? → queryData" },
-		{ query: "tulugdugui?", type: "short", expectedTool: "queryData", rationale: "Latin: төлөгдөөгүй? → queryData" },
+		// ── readData (replaces getPendingSales) ──────────────────────
+		{ query: "Дутуу төлөлттэй борлуулалтууд", type: "formal", expectedTool: "readData", rationale: "Pending payments → readData(sales)" },
+		{ query: "Өртэй борлуулалтууд", type: "short", expectedTool: "readData", rationale: "Debt sales → readData(sales)" },
+		{ query: "Хэн хэдэн төгрөг өртэй байна?", type: "formal", expectedTool: "readData", rationale: "Who owes money → readData(sales)" },
+		{ query: "Төлбөрөө төлөөгүй хүмүүс", type: "formal", expectedTool: "readData", rationale: "Unpaid customers → readData(sales)" },
+		{ query: "Өр?", type: "short", expectedTool: "readData", rationale: "Debt? → readData(sales)" },
+		{ query: "Ali ni örtei ve?", type: "short", expectedTool: "readData", rationale: "Latin: which ones owe → readData" },
+		{ query: "dutuu tululttei borluulaltuud", type: "short", expectedTool: "readData", rationale: "Latin: дутуу төлөлттэй → readData" },
+		{ query: "örtei?", type: "short", expectedTool: "readData", rationale: "Latin: өртэй? → readData" },
+		{ query: "unpaid?", type: "mixed", expectedTool: "readData", rationale: "English: unpaid → readData" },
+		{ query: "payment missing?", type: "mixed", expectedTool: "readData", rationale: "English: payment missing → readData" },
+		{ query: "hen örtei ve?", type: "short", expectedTool: "readData", rationale: "Latin: хэн өртэй вэ? → readData" },
+		{ query: "tulugdugui?", type: "short", expectedTool: "readData", rationale: "Latin: төлөгдөөгүй? → readData" },
 
-		// ── queryData (replaces getTodaySales) ────────────────────────
-		{ query: "Өнөөдрийн борлуулалтын дэлгэрэнгүй", type: "formal", expectedTool: "queryData", rationale: "Today's sales detail → queryData(sales)" },
-		{ query: "Өнөөдөр хэдэн төгрөгийн бараа борлуулсан бэ?", type: "formal", expectedTool: "queryData", rationale: "Today's sales amount → queryData(sales)" },
-		{ query: "Өнөөдөр хэдэн удаагийн борлуулалт хийгдсэн бэ?", type: "formal", expectedTool: "queryData", rationale: "Today's transactions → queryData(sales)" },
-		{ query: "өнөөдрийн касс?", type: "short", expectedTool: "queryData", rationale: "Today's cash → queryData(sales)" },
-		{ query: "Өнөөдөр?", type: "short", expectedTool: "queryData", rationale: "Today → queryData(sales)" },
-		{ query: "unuudriin borluulalt", type: "short", expectedTool: "queryData", rationale: "Latin: өнөөдрийн борлуулалт → queryData" },
-		{ query: "unuudur heden tugrug?", type: "short", expectedTool: "queryData", rationale: "Latin: өнөөдөр хэдэн төгрөг? → queryData" },
-		{ query: "today sale?", type: "mixed", expectedTool: "queryData", rationale: "English: today's sale → queryData" },
-		{ query: "unuudriin cash?", type: "mixed", expectedTool: "queryData", rationale: "Mixed: өнөөдрийн cash → queryData" },
-		{ query: "önöödör hiisen borluulalt", type: "short", expectedTool: "queryData", rationale: "Latin: өнөөдөр хийсэн борлуулалт → queryData" },
-		{ query: "munuudur borluulalt?", type: "short", expectedTool: "queryData", rationale: "Alt Latin → queryData" },
+		// ── readData (replaces getTodaySales) ────────────────────────
+		{ query: "Өнөөдрийн борлуулалтын дэлгэрэнгүй", type: "formal", expectedTool: "readData", rationale: "Today's sales detail → readData(sales)" },
+		{ query: "Өнөөдөр хэдэн төгрөгийн бараа борлуулсан бэ?", type: "formal", expectedTool: "readData", rationale: "Today's sales amount → readData(sales)" },
+		{ query: "Өнөөдөр хэдэн удаагийн борлуулалт хийгдсэн бэ?", type: "formal", expectedTool: "readData", rationale: "Today's transactions → readData(sales)" },
+		{ query: "өнөөдрийн касс?", type: "short", expectedTool: "readData", rationale: "Today's cash → readData(sales)" },
+		{ query: "Өнөөдөр?", type: "short", expectedTool: "readData", rationale: "Today → readData(sales)" },
+		{ query: "unuudriin borluulalt", type: "short", expectedTool: "readData", rationale: "Latin: өнөөдрийн борлуулалт → readData" },
+		{ query: "unuudur heden tugrug?", type: "short", expectedTool: "readData", rationale: "Latin: өнөөдөр хэдэн төгрөг? → readData" },
+		{ query: "today sale?", type: "mixed", expectedTool: "readData", rationale: "English: today's sale → readData" },
+		{ query: "unuudriin cash?", type: "mixed", expectedTool: "readData", rationale: "Mixed: өнөөдрийн cash → readData" },
+		{ query: "önöödör hiisen borluulalt", type: "short", expectedTool: "readData", rationale: "Latin: өнөөдөр хийсэн борлуулалт → readData" },
+		{ query: "munuudur borluulalt?", type: "short", expectedTool: "readData", rationale: "Alt Latin → readData" },
 
 		// ── Multi-intent ───────────────────────────────────────────────────
 		{ query: "Өнөөдрийн захиалга ба зарлагаа харуул", type: "formal", expectedTool: "getDailySummary", rationale: "Two intents — summary covers both via one call" },
 		{ query: "Өнөөдрийн хураангуй ба маргаашийн цагууд", type: "formal", expectedTool: "getDailySummary", rationale: "Daily summary + appointments — needs two calls or summary" },
 		{ query: "unuudriin huraangui bolon zarlaga haruulaach", type: "short", expectedTool: "getDailySummary", rationale: "Latin: today summary + expenses" },
-		{ query: "borluulalt bolon örtöi zahialguudiig haruul", type: "short", expectedTool: "queryData", rationale: "Latin: sales + pending → queryData" },
+		{ query: "borluulalt bolon örtöi zahialguudiig haruul", type: "short", expectedTool: "readData", rationale: "Latin: sales + pending → readData" },
 	];
 
 	// Verify every expected tool actually exists in the correct product
@@ -503,8 +503,8 @@ describe("🤖 Agent Handler Flow (Mocked LLM)", () => {
 			"Өнөөдрийн борлуулалтын дүн хэд вэ?",
 		);
 		expect(result.message).toBe("Өнөөдрийн борлуулалтын дүн хэд вэ?");
-		expect(result.toolCount).toBe(5);
-		expect(result.toolNames).toContain("getSalesSummary");
+	expect(result.toolCount).toBe(3);
+	expect(result.toolNames).toContain("getSalesByCategory");
 	});
 
 	it("Latin-script Mongolian shorthand is preserved through sanitize", async () => {
@@ -518,7 +518,7 @@ describe("🤖 Agent Handler Flow (Mocked LLM)", () => {
 			"tolom",
 		);
 		expect(result.toolNames).not.toContain("getSalesSummary");
-		expect(result.toolNames).toContain("getActiveWorkOrders");
+	expect(result.toolNames).toContain("readData");
 	});
 
 	it("Zer questions get Zer tools only", async () => {
@@ -527,7 +527,7 @@ describe("🤖 Agent Handler Flow (Mocked LLM)", () => {
 			"zer",
 		);
 		expect(result.toolNames).not.toContain("getActiveWorkOrders");
-		expect(result.toolNames).toContain("getSalesSummary");
+	expect(result.toolNames).toContain("getSalesByCategory");
 	});
 
 	it("greeting-only queries still route to agent (no crash)", async () => {
