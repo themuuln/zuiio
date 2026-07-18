@@ -183,11 +183,13 @@ describe("Agent Simulation — Tool Execution", () => {
 			mockContext,
 		);
 		const obj = result as Record<string, unknown>;
-		const hasError =
-			typeof obj.error === "string" ||
-			(Array.isArray(obj.queries) &&
-				(obj.queries as Record<string, unknown>[]).some((q) => typeof q.error === "string"));
-		expect(hasError).toBe(true);
+		const meta = obj.meta as Record<string, unknown> | undefined;
+		const warnings = (meta?.warnings as string[] | undefined) ?? [];
+		// Invalid dataset → no queries executed, validation warning present.
+		expect(Array.isArray(obj.queries)).toBe(true);
+		expect((obj.queries as unknown[]).length).toBe(0);
+		expect(warnings.length).toBeGreaterThan(0);
+		expect(warnings.join(" ")).toContain("nonexistent_table");
 	});
 });
 
