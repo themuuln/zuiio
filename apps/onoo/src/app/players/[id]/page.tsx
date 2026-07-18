@@ -44,6 +44,9 @@ import { ShootingProfile } from "./components/shooting-profile";
 import { ShotChart } from "./components/shot-chart";
 import { SkillRadar } from "./components/skill-radar";
 import { StatCard } from "./components/stat-card";
+import { HomeAwaySplits } from "./components/home-away-splits";
+import { ScrollReveal, StaggerContainer, StaggerItem } from "./components/motion-wrapper";
+import { getPlayerShotScatter } from "../../lib/data";
 
 interface PlayerPageProps {
   params: Promise<{ id: string }>;
@@ -149,6 +152,9 @@ export default async function PlayerPage({
       blk: line.blk,
     })),
   );
+  const shotScatter = activeCompetitionId
+    ? await getPlayerShotScatter(id, activeCompetitionId)
+    : [];
   const seasonLabel = isCareer
     ? isEn
       ? "Career Total"
@@ -224,6 +230,12 @@ export default async function PlayerPage({
             <Suspense fallback={null}>
               <LanguageToggle />
             </Suspense>
+            <Link
+              href={`/players/compare?players=${id}`}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg border bg-background px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+            >
+              {isEn ? "Compare" : "Харьцуулах"}
+            </Link>
           </div>
         </div>
 
@@ -276,7 +288,9 @@ export default async function PlayerPage({
         )}
 
         {/* ─── Recent games strip ─── */}
-        <RecentGames gameLines={playerGameLog} />
+        <ScrollReveal>
+          <RecentGames gameLines={playerGameLog} />
+        </ScrollReveal>
 
         {/* ─── Main stats grid ─── */}
         <Tabs defaultValue="summary" className="gap-6">
@@ -334,7 +348,7 @@ export default async function PlayerPage({
               )}
 
               {/* Form & trends — efficiency, opponent scatter, win/loss */}
-              <Card>
+              <Card className="lg:col-span-12">
                 <CardHeader>
                   <div className="flex items-center gap-3">
                     <span className="flex size-10 items-center justify-center rounded-xl bg-[var(--brand-sports)]/10 text-[var(--brand-sports)]">
@@ -361,11 +375,21 @@ export default async function PlayerPage({
               {!isCareer && (
                 <ShotChart
                   shotZones={shotZones}
+                  shots={shotScatter}
                   shootingProfile={shootingProfile ?? EMPTY_SHOOTING_PROFILE}
                   locale={locale}
+                  className="lg:col-span-12"
                 />
               )}
             </div>
+            {/* Home/Away splits */}
+            <HomeAwaySplits
+              gameLines={playerGameLog}
+              locale={locale}
+              className="lg:col-span-12"
+            />
+
+
 
             {/* Skill radar + milestones row */}
             <div className="grid gap-6 lg:grid-cols-12">
@@ -485,28 +509,25 @@ export default async function PlayerPage({
                       <thead>
                         <tr className="border-b bg-muted/35 text-left text-xs uppercase tracking-wide text-muted-foreground">
                           <th className="px-4 py-3 font-medium" scope="col">
-                            {isEn ? "Date" : "\u041E\u0430\u0433"}
+                            {isEn ? "Date" : "Огноо"}
                           </th>
                           <th className="px-4 py-3 font-medium" scope="col">
-                            {isEn
-                              ? "Opponent"
-                              : "\u041E\u043F\u043F\u043E\u043D\u0435\u043D\u0442"}
+                            {isEn ? "Opponent" : "Өрсөлдөгч"}
                           </th>
                           <th
                             className="px-4 py-3 text-center font-medium"
                             scope="col"
                           >
-                            {isEn
-                              ? "Result"
-                              : "\u04AE\u0440 \u0434\u04AF\u043D"}
+                            {isEn ? "Result" : "Үр дүн"}
                           </th>
+                          <StatHead>{isEn ? "+/−" : "+/−"}</StatHead>
                           <StatHead>{getStatLabel("mpg", locale)}</StatHead>
                           <StatHead>{getStatLabel("pts", locale)}</StatHead>
                           <StatHead>
-                            {isEn ? "FGM" : "\u041E\u0440\u043E\u043B\u0442"}
+                            {isEn ? "FGM" : "Оруулсан"}
                           </StatHead>
                           <StatHead>
-                            {isEn ? "3PT" : "3 \u0445\u043E\u043E\u043D"}
+                            {isEn ? "3PT" : "3 хооноо"}
                           </StatHead>
                           <StatHead>{getStatLabel("reb", locale)}</StatHead>
                           <StatHead>{getStatLabel("ast", locale)}</StatHead>
@@ -530,6 +551,9 @@ export default async function PlayerPage({
                               )}
                             </td>
                             <td className="px-4 py-3 font-medium">
+                              <span className="mr-1.5 text-xs text-muted-foreground">
+                                {line.is_home ? "🏠" : "✈️"}
+                              </span>
                               {line.opponent_short_code}
                             </td>
                             <td className="px-4 py-3 text-center">
@@ -544,6 +568,19 @@ export default async function PlayerPage({
                                 {line.opponent_score}
                               </Badge>
                             </td>
+                            <StatCell
+                              strong={
+                                line.team_score - line.opponent_score > 0
+                              }
+                              muted={
+                                line.team_score - line.opponent_score < 0
+                              }
+                            >
+                              {line.team_score - line.opponent_score > 0
+                                ? "+"
+                                : ""}
+                              {line.team_score - line.opponent_score}
+                            </StatCell>
                             <StatCell muted>
                               {formatMinutes(line.seconds_played)}
                             </StatCell>

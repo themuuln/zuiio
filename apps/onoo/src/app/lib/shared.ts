@@ -210,6 +210,7 @@ export interface PlayerGameLine extends BoxScoreRow {
   team_score: number;
   opponent_score: number;
   result: "W" | "L";
+  is_home: boolean;
 }
 
 export type TeamRosterRow = {

@@ -367,6 +367,7 @@ export async function getPlayerGameLog(
         team_score: teamScore,
         opponent_score: opponentScore,
         result: teamScore > opponentScore ? "W" : "L",
+        is_home: isHomeTeam,
       },
     ];
   });
@@ -444,6 +445,73 @@ export async function getPlayerShotZones(
 
   if (error || !data) return [];
   return data as unknown as ShotZoneStat[];
+}
+/**
+ * Fetch individual shot data points with x/y coordinates from stat_events.
+ * Used for scatter overlay on the court heatmap.
+ */
+export async function getPlayerShotScatter(
+  playerId: string,
+  competitionId?: string | null,
+): Promise<
+  Array<{
+    x: number;
+    y: number;
+    made: boolean;
+    shot_type: string;
+    game_id: string;
+    period: number;
+  }>
+> {
+  const supabase = await createClient();
+
+  // Get game IDs for this competition
+  let gameQuery = supabase
+    .from("games")
+    .select("id")
+    .eq("status", "official");
+
+  if (competitionId) {
+    gameQuery = gameQuery.eq("competition_id", competitionId);
+  }
+
+  const { data: games } = await gameQuery;
+  if (!games || games.length === 0) return [];
+
+  const gameIds = games.map((g) => g.id);
+
+  // Fetch shot events with coordinates
+  const { data: events } = await supabase
+    .from("stat_events")
+    .select("game_id, event_type, period, payload")
+    .eq("player_id", playerId)
+    .in("game_id", gameIds)
+    .in("event_type", [
+      "shot_2pt_made",
+      "shot_2pt_missed",
+      "shot_3pt_made",
+      "shot_3pt_missed",
+    ])
+    .is("deleted_at", null);
+
+  if (!events) return [];
+
+  return events
+    .filter((e) => {
+      const payload = e.payload as Record<string, unknown>;
+      return typeof payload.x === "number" && typeof payload.y === "number";
+    })
+    .map((e) => {
+      const payload = e.payload as Record<string, unknown>;
+      return {
+        x: payload.x as number,
+        y: payload.y as number,
+        made: e.event_type.includes("_made"),
+        shot_type: (payload.shot_type as string) || "jump",
+        game_id: e.game_id,
+        period: e.period,
+      };
+    });
 }
 
 export async function getPlayerSeasonAverages(

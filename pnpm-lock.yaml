@@ -446,9 +446,6 @@ importers:
       date-fns-tz:
         specifier: ^3.2.0
         version: 3.2.0(date-fns@4.4.0)
-      framer-motion:
-        specifier: ^12.42.2
-        version: 12.42.2(@emotion/is-prop-valid@0.8.8)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       idb:
         specifier: ^8.0.3
         version: 8.0.3
