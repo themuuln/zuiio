@@ -1,5 +1,5 @@
 import { capture } from "@zuiio/capture";
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { onUserLinked, onWelcome } from "@/bot-ux";
 import { TelegramChannel } from "@/channels/telegram";
 import type { TelegramUpdate } from "@/channels/types";
@@ -123,67 +123,70 @@ if (!msg?.text && !msg?.voice && !msg?.photo) {
 			const tg = getTelegram();
 			await tg.sendMessage(chatId, "Аудио хүлээн авлаа. Бичлэг тайлж байна...");
 
-			try {
-				const fileInfo = await tg.getFile(msg.voice.file_id);
-				const fileBuffer = await tg.downloadFile(fileInfo.file_path);
-				const transcribed = await transcribeVoice(fileBuffer, "voice.ogg");
+			after(async () => {
+				if (!msg.voice) return;
+				try {
+					const fileInfo = await tg.getFile(msg.voice.file_id);
+					const fileBuffer = await tg.downloadFile(fileInfo.file_path);
+					const transcribed = await transcribeVoice(fileBuffer, "voice.ogg");
 
-				if (transcribed) {
-					await handleUserMessage(
-						chatId,
-						userId,
-						transcribed,
-						chatType,
-						msg.message_id,
-					);
-				} else {
+					if (transcribed) {
+						await handleUserMessage(
+							chatId,
+							userId,
+							transcribed,
+							chatType,
+							msg.message_id,
+						);
+					} else {
+						await tg.sendMessage(
+							chatId,
+							"Уучлаарай, дууны бичлэгийг тайлж чадсангүй. Дахин оролдоно уу.",
+						);
+					}
+				} catch (err) {
+					capture(err, { context: "agent-gateway: voice processing" });
 					await tg.sendMessage(
 						chatId,
-						"Уучлаарай, дууны бичлэгийг тайлж чадсангүй. Дахин оролдоно уу.",
+						"Уучлаарай, дууны бичлэг боловсруулахад алдаа гарлаа.",
 					);
 				}
-			} catch (err) {
-				capture(err, { context: "agent-gateway: voice processing" });
-				await tg.sendMessage(
-					chatId,
-					"Уучлаарай, дууны бичлэг боловсруулахад алдаа гарлаа.",
-				);
-			}
+			});
 
 			return NextResponse.json({ ok: true });
 		}
 		// ─── Photo handling ────────────────────────────────────────────────
 		if (msg.photo) {
 			const tg = getTelegram();
-			// Telegram sends multiple sizes — pick the largest
-			const largestPhoto = msg.photo[msg.photo.length - 1];
-			if (!largestPhoto?.file_id) {
-				return NextResponse.json({ ok: true });
-			}
+			after(async () => {
+				if (!msg.photo) return;
+				try {
+					// Telegram sends multiple sizes — pick the largest
+					const largestPhoto = msg.photo[msg.photo.length - 1];
+					if (!largestPhoto?.file_id) return;
 
-			try {
-				const fileInfo = await tg.getFile(largestPhoto.file_id);
-				const fileBuffer = await tg.downloadFile(fileInfo.file_path);
-				const base64 = fileBuffer.toString("base64");
-				const dataUrl = `data:image/jpeg;base64,${base64}`;
+					const fileInfo = await tg.getFile(largestPhoto.file_id);
+					const fileBuffer = await tg.downloadFile(fileInfo.file_path);
+					const base64 = fileBuffer.toString("base64");
+					const dataUrl = `data:image/jpeg;base64,${base64}`;
 
-				const caption = msg.caption ?? "Энэ зургийг шинжилж үзээрэй.";
-				await handleUserMessage(
-					chatId,
-					userId,
-					caption,
-					chatType,
-					msg.message_id,
-					[dataUrl],
-				);
-			} catch (err) {
-				capture(err, { context: "agent-gateway: photo processing" });
-				await tg.sendMessage(
-					chatId,
-					"Уучлаарай, зураг боловсруулахад алдаа гарлаа.",
-				);
-			}
-
+					const caption = msg.caption ?? "Энэ зургийг шинжилж үзээрэй.";
+					await handleUserMessage(
+						chatId,
+						userId,
+						caption,
+						chatType,
+						msg.message_id,
+						[dataUrl],
+					);
+				} catch (err) {
+					capture(err, { context: "agent-gateway: photo processing" });
+					await tg.sendMessage(
+						chatId,
+						"Уучлаарай, зураг боловсруулахад алдаа гарлаа.",
+					);
+				}
+			});
 			return NextResponse.json({ ok: true });
 		}
 
@@ -243,32 +246,44 @@ if (!msg?.text && !msg?.voice && !msg?.photo) {
 		}
 
 		if (text.startsWith("/daily")) {
-			await handleUserMessage(chatId, userId, "Өнөөдрийн хураангуй үзүүлээрэй", "private");
+			after(async () => {
+				await handleUserMessage(chatId, userId, "Өнөөдрийн хураангуй үзүүлээрэй", "private");
+			});
 			return NextResponse.json({ ok: true });
 		}
 
 		if (text.startsWith("/active")) {
-			await handleUserMessage(chatId, userId, "Идэвхтэй ажлын захиалгуудыг жагсааж өгөөч", "private");
+			after(async () => {
+				await handleUserMessage(chatId, userId, "Идэвхтэй ажлын захиалгуудыг жагсааж өгөөч", "private");
+			});
 			return NextResponse.json({ ok: true });
 		}
 
 		if (text.startsWith("/mechanics")) {
-			await handleUserMessage(chatId, userId, "Механикчдын жагсаалт үзүүлээрэй", "private");
+			after(async () => {
+				await handleUserMessage(chatId, userId, "Механикчдын жагсаалт үзүүлээрэй", "private");
+			});
 			return NextResponse.json({ ok: true });
 		}
 
 		if (text.startsWith("/schedule")) {
-			await handleUserMessage(chatId, userId, "Өнөөдрийн цагийн хуваарийг үзүүлээрэй", "private");
+			after(async () => {
+				await handleUserMessage(chatId, userId, "Өнөөдрийн цагийн хуваарийг үзүүлээрэй", "private");
+			});
 			return NextResponse.json({ ok: true });
 		}
 
 		if (text.startsWith("/invoices")) {
-			await handleUserMessage(chatId, userId, "Нэхэмжлэлийн хураангуй үзүүлээрэй", "private");
+			after(async () => {
+				await handleUserMessage(chatId, userId, "Нэхэмжлэлийн хураангуй үзүүлээрэй", "private");
+			});
 			return NextResponse.json({ ok: true });
 		}
 
 		if (text.startsWith("/expenses")) {
-			await handleUserMessage(chatId, userId, "Зарлагын хураангуй үзүүлээрэй", "private");
+			after(async () => {
+				await handleUserMessage(chatId, userId, "Зарлагын хураангуй үзүүлээрэй", "private");
+			});
 			return NextResponse.json({ ok: true });
 		}
 
@@ -287,7 +302,9 @@ if (!msg?.text && !msg?.voice && !msg?.photo) {
 			}
 		}
 
-	await handleUserMessage(chatId, userId, text, chatType, msg.message_id);
+	after(async () => {
+		await handleUserMessage(chatId, userId, text, chatType, msg.message_id);
+	});
 	return NextResponse.json({ ok: true });
 	} catch (err) {
 		console.error("[webhook] ERROR:", err);

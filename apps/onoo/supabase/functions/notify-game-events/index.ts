@@ -24,14 +24,14 @@ serve(async (req) => {
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
     // Create Supabase client
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
     // Get game info
@@ -46,17 +46,18 @@ serve(async (req) => {
       .single();
 
     if (gameError || !game) {
-      return new Response(
-        JSON.stringify({ error: "Game not found" }),
-        {
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return new Response(JSON.stringify({ error: "Game not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const homeTeam = game.home_team_season as { teams?: { name?: string } } | null;
-    const awayTeam = game.away_team_season as { teams?: { name?: string } } | null;
+    const homeTeam = game.home_team_season as {
+      teams?: { name?: string };
+    } | null;
+    const awayTeam = game.away_team_season as {
+      teams?: { name?: string };
+    } | null;
     const homeName = homeTeam?.teams?.name || "Home";
     const awayName = awayTeam?.teams?.name || "Away";
 
@@ -82,7 +83,7 @@ serve(async (req) => {
           JSON.stringify({ message: "No notification for this status" }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
+          },
         );
     }
 
@@ -98,7 +99,7 @@ serve(async (req) => {
         JSON.stringify({ message: "No followers to notify" }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -110,12 +111,9 @@ serve(async (req) => {
       .in("user_id", userIds);
 
     if (!pushTokens || pushTokens.length === 0) {
-      return new Response(
-        JSON.stringify({ message: "No push tokens found" }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return new Response(JSON.stringify({ message: "No push tokens found" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Send notifications (simplified - in production use Expo Push Notifications API)
@@ -139,7 +137,7 @@ serve(async (req) => {
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   } catch (err) {
     return new Response(
@@ -147,7 +145,7 @@ serve(async (req) => {
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   }
 });

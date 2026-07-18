@@ -1,16 +1,20 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState(process.env.NODE_ENV === "development" ? "admin@onoo.mn" : "");
-  const [password, setPassword] = useState(process.env.NODE_ENV === "development" ? "onoo2026" : "");
+  const [email, setEmail] = useState(
+    process.env.NODE_ENV === "development" ? "admin@onoo.mn" : "",
+  );
+  const [password, setPassword] = useState(
+    process.env.NODE_ENV === "development" ? "onoo2026" : "",
+  );
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();

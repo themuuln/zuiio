@@ -33,14 +33,14 @@
     "clean:turbopack": "find . -type d -name turbopack -path '*/.next/*' -exec rm -rf {} + 2>/dev/null; echo 'Turbopack caches cleaned'"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.4",
+    "@biomejs/biome": "catalog:",
     "@types/node": "^26.1.1",
     "@types/react": "catalog:",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",
-    "next": "^16.2.10",
+    "next": "catalog:",
     "optik-design": "^1.0.0",
-    "turbo": "^2.10.5",
+    "turbo": "^2.10.4",
     "vitest": "catalog:"
   },
   "lint-staged": {

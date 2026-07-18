@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
@@ -43,29 +43,37 @@ export async function GET(request: NextRequest) {
   }
 
   // Get team stats
-  const { data: teamStats } = await supabase
+  const { data: _teamStats } = await supabase
     .from("game_team_stats")
     .select("*")
     .eq("game_id", gameId);
 
   // Generate HTML for PDF
-  const homeTeam = game.home_team_season as { teams?: { name?: string; short_code?: string } } | null;
-  const awayTeam = game.away_team_season as { teams?: { name?: string; short_code?: string } } | null;
+  const homeTeam = game.home_team_season as {
+    teams?: { name?: string; short_code?: string };
+  } | null;
+  const awayTeam = game.away_team_season as {
+    teams?: { name?: string; short_code?: string };
+  } | null;
   const homeTeamName = homeTeam?.teams?.name || "Home";
   const awayTeamName = awayTeam?.teams?.name || "Away";
 
   // Group stats by team
   const homeStats = playerStats.filter(
-    (s) => (s.team_seasons as { id: string })?.id === game.home_team_season_id
+    (s) => (s.team_seasons as { id: string })?.id === game.home_team_season_id,
   );
   const awayStats = playerStats.filter(
-    (s) => (s.team_seasons as { id: string })?.id === game.away_team_season_id
+    (s) => (s.team_seasons as { id: string })?.id === game.away_team_season_id,
   );
 
   const renderTable = (stats: typeof playerStats, teamName: string) => {
     const rows = stats
       .map((stat) => {
-        const player = stat.players as { canonical_name?: string; name_latin?: string; jersey_number?: number } | null;
+        const player = stat.players as {
+          canonical_name?: string;
+          name_latin?: string;
+          jersey_number?: number;
+        } | null;
         const name = player?.canonical_name || player?.name_latin || "Unknown";
         const jersey = player?.jersey_number || "";
         return `

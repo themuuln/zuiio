@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface PlayerAvatarProps {
@@ -45,11 +46,12 @@ export function PlayerAvatar({
 
   if (photoUrl) {
     return (
-      <img
+      <Image
         src={photoUrl}
         alt={name}
         width={px}
         height={px}
+        unoptimized
         className={cn("shrink-0 rounded-full object-cover", className)}
       />
     );

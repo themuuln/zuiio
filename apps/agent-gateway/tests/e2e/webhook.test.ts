@@ -118,6 +118,11 @@ vi.mock("@/lib/tokens", () => ({
 	}),
 }));
 
+vi.mock("next/server", () => ({
+	NextResponse: { json: (data: unknown, init?: ResponseInit) => new Response(JSON.stringify(data), init) },
+	after: (fn: () => void | Promise<void>) => { fn(); },
+}));
+
 const mockFetch = vi.hoisted(() => vi.fn().mockResolvedValue(new Response("{}")));
 
 // ─── Tests ─────────────────────────────────────────────────────────────────────

@@ -18,6 +18,7 @@ import {
 import {
   Table,
   TableBody,
+  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -32,7 +33,9 @@ import {
   formatMinutes,
   getBoxScore,
   getGameById,
+  getPlayByPlay,
 } from "../../lib/data";
+import { generatePlayerGameSummary } from "../../lib/summaries";
 
 interface GamePageProps {
   params: Promise<{ id: string }>;
@@ -93,273 +96,615 @@ export default async function GameDetailPage({ params }: GamePageProps) {
   );
   const homeTotals = calculateTeamTotals(homeRows);
   const awayTotals = calculateTeamTotals(awayRows);
-  const topPerformers = [...boxScore].sort((a, b) => b.pts - a.pts).slice(0, 3);
+  const _topPerformers = [...boxScore]
+    .sort((a, b) => b.pts - a.pts)
+    .slice(0, 3);
+  const podiumPerformers = [...boxScore]
+    .sort(
+      (a, b) =>
+        b.pts +
+        (b.oreb + b.dreb) * 1.2 +
+        b.ast * 1.5 -
+        (a.pts + (a.oreb + a.dreb) * 1.2 + a.ast * 1.5),
+    )
+    .slice(0, 3);
+
+  // Play-by-play for lead change flow
+  const playByPlay = isFinal ? await getPlayByPlay(game.id) : [];
+  const scoringEvents = playByPlay.filter((e) =>
+    ["shot_2pt_made", "shot_3pt_made", "ft_made"].includes(e.event_type),
+  );
+  const pointsMap: Record<string, number> = {
+    shot_2pt_made: 2,
+    shot_3pt_made: 3,
+    ft_made: 1,
+  };
+  let homeRunning = 0;
+  let awayRunning = 0;
+  const leadPoints: Array<{
+    seq: number;
+    home: number;
+    away: number;
+    leader: "home" | "away" | "tied";
+  }> = [];
+  let lastLeader: "home" | "away" | "tied" = "tied";
+  let leadChanges = 0;
+  for (const ev of scoringEvents) {
+    const pts = pointsMap[ev.event_type] ?? 0;
+    if (ev.team_season_id === game.home_team_season_id) {
+      homeRunning += pts;
+    } else {
+      awayRunning += pts;
+    }
+    const leader =
+      homeRunning > awayRunning
+        ? "home"
+        : awayRunning > homeRunning
+          ? "away"
+          : "tied";
+    if (leader !== lastLeader && lastLeader !== "tied" && leader !== "tied") {
+      leadChanges++;
+    }
+    lastLeader = leader;
+    leadPoints.push({
+      seq: ev.local_seq,
+      home: homeRunning,
+      away: awayRunning,
+      leader,
+    });
+  }
 
   const homeWon = (game.home_score ?? 0) > (game.away_score ?? 0);
   const winnerName = homeWon ? game.home_team_name : game.away_team_name;
   const margin = Math.abs((game.home_score ?? 0) - (game.away_score ?? 0));
 
+  const gameStatusUrl =
+    game.status === "scheduled"
+      ? "https://schema.org/EventScheduled"
+      : game.status === "live_provisional"
+        ? "https://schema.org/EventInProgress"
+        : game.status === "cancelled"
+          ? "https://schema.org/EventCancelled"
+          : game.status === "postponed"
+            ? "https://schema.org/EventPostponed"
+            : "https://schema.org/EventEnded";
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SportsEvent",
+    name: `${game.home_team_name} vs ${game.away_team_name}`,
+    startDate: game.scheduled_at,
+    eventStatus: gameStatusUrl,
+    sport: "Basketball",
+    location: game.venue_name
+      ? { "@type": "Place", name: game.venue_name }
+      : undefined,
+    organizer: {
+      "@type": "SportsOrganization",
+      name: game.league_name,
+    },
+    competitor: [
+      {
+        "@type": "SportsTeam",
+        name: game.home_team_name,
+      },
+      {
+        "@type": "SportsTeam",
+        name: game.away_team_name,
+      },
+    ],
+  };
+
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-      <section className="game-scoreboard-hero overflow-hidden rounded-3xl bg-sidebar p-6 text-sidebar-foreground sm:p-8 lg:p-10">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <GameStatusBadge game={game} />
-            <Badge
-              variant="outline"
-              className="border-sidebar-border text-sidebar-foreground"
+    <>
+      <script
+        type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+        <section
+          className="game-scoreboard-hero overflow-hidden rounded-3xl bg-sidebar p-6 text-sidebar-foreground sm:p-8 lg:p-10"
+          aria-label={`${game.home_team_name} vs ${game.away_team_name} тоглолтын оноо`}
+          style={{
+            borderTop: `3px solid ${homeWon ? (game.home_team_primary_color ?? "") : (game.away_team_primary_color ?? "")}`,
+          }}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <GameStatusBadge game={game} />
+              <Badge
+                variant="outline"
+                className="border-sidebar-border text-sidebar-foreground"
+              >
+                {game.competition_name}
+              </Badge>
+            </div>
+            <p className="text-sm text-sidebar-foreground/60">
+              {game.season_name} · {game.league_name}
+            </p>
+          </div>
+
+          <div className="mt-8 grid grid-cols-3 items-center gap-4 sm:gap-8">
+            <Link
+              href={`/teams/${game.home_team_slug}`}
+              className="flex min-w-0 flex-col items-center gap-3 rounded-xl text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring sm:flex-row sm:text-left"
             >
-              {game.competition_name}
-            </Badge>
-          </div>
-          <p className="text-sm text-sidebar-foreground/60">
-            {game.season_name} · {game.league_name}
-          </p>
-        </div>
-
-        <div className="mt-8 grid grid-cols-3 items-center gap-4 sm:gap-8">
-          <Link
-            href={`/teams/${game.home_team_slug}`}
-            className="flex min-w-0 flex-col items-center gap-3 rounded-xl text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring sm:flex-row sm:text-left"
-          >
-            <TeamLogo
-              logoUrl={game.home_team_logo_url}
-              shortCode={game.home_team_short_code}
-              primaryColor={game.home_team_primary_color}
-              size="xl"
-            />
-            <span className="min-w-0">
-              <span className="block truncate text-sm text-sidebar-foreground/60">
-                Эзэн баг
+              <TeamLogo
+                logoUrl={game.home_team_logo_url}
+                shortCode={game.home_team_short_code}
+                primaryColor={game.home_team_primary_color}
+                size="xl"
+              />
+              <span className="min-w-0">
+                <span className="block truncate text-sm text-sidebar-foreground/60">
+                  Эзэн баг
+                </span>
+                <span className="mt-1 block truncate text-lg font-bold sm:text-2xl">
+                  {game.home_team_name}
+                </span>
               </span>
-              <span className="mt-1 block truncate text-lg font-bold sm:text-2xl">
-                {game.home_team_name}
-              </span>
-            </span>
-          </Link>
+            </Link>
 
-          <div className="text-center">
-            {game.status === "scheduled" ? (
-              <p className="text-3xl font-black tabular-nums sm:text-5xl">
-                {formatGameTime(game.scheduled_at)}
-              </p>
-            ) : (
-              <p className="text-4xl font-black tabular-nums tracking-tight sm:text-7xl">
-                {game.home_score ?? 0}
-                <span className="px-2 text-sidebar-foreground/30">–</span>
-                {game.away_score ?? 0}
-              </p>
-            )}
-            {isLive && game.current_period > 0 ? (
-              <p className="mt-3 flex items-center justify-center gap-2 text-sm font-semibold text-warning">
-                <Radio className="size-4" aria-hidden="true" />
-                {game.current_period}-р үе
-              </p>
-            ) : null}
-          </div>
-
-          <Link
-            href={`/teams/${game.away_team_slug}`}
-            className="flex min-w-0 flex-col items-center gap-3 rounded-xl text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring sm:flex-row-reverse sm:text-right"
-          >
-            <TeamLogo
-              logoUrl={game.away_team_logo_url}
-              shortCode={game.away_team_short_code}
-              primaryColor={game.away_team_primary_color}
-              size="xl"
-            />
-            <span className="min-w-0">
-              <span className="block truncate text-sm text-sidebar-foreground/60">
-                Зочин баг
-              </span>
-              <span className="mt-1 block truncate text-lg font-bold sm:text-2xl">
-                {game.away_team_name}
-              </span>
-            </span>
-          </Link>
-        </div>
-
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-4 text-sm text-sidebar-foreground/60">
-          {game.venue_name ? (
-            <span className="flex items-center gap-2">
-              <MapPin className="size-4" aria-hidden="true" />
-              {game.venue_name}
-            </span>
-          ) : null}
-          {game.revision_number ? (
-            <span>Баталгаажсан хувилбар #{game.revision_number}</span>
-          ) : null}
-        </div>
-      </section>
-
-      {isFinal ? (
-        <section className="grid gap-5 lg:grid-cols-12">
-          <Card className="shadow-none lg:col-span-7">
-            <CardHeader>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Тоглолтын өгүүлэмж
+            <div className="text-center">
+              {game.status === "scheduled" ? (
+                <p className="text-3xl font-black tabular-nums sm:text-5xl">
+                  {formatGameTime(game.scheduled_at)}
                 </p>
-                <CardTitle className="mt-1 text-2xl tracking-tight">
-                  Товч дүгнэлт
-                </CardTitle>
-              </div>
-              <CardAction>
-                <Trophy aria-hidden="true" />
-              </CardAction>
-            </CardHeader>
-            <CardContent>
-              <p className="font-display text-2xl leading-relaxed tracking-tight sm:text-3xl">
-                {winnerName} {margin} онооны зөрүүгээр ялалт байгууллаа.
-                {topPerformers[0]
-                  ? ` ${topPerformers[0].player_name} ${topPerformers[0].pts} оноогоор тоглолтыг тэргүүлэв.`
-                  : ""}
-              </p>
-              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                Энэ дүгнэлт зөвхөн лигийн баталгаажсан оноо болон box score-д
-                тулгуурласан.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-none lg:col-span-5">
-            <CardHeader>
-              <CardTitle>Шилдэг тоглогчид</CardTitle>
-              <CardDescription>Оноогоор тэргүүлсэн эхний гурав</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {topPerformers.length > 0 ? (
-                <ol className="flex flex-col gap-2">
-                  {topPerformers.map((player, index) => (
-                    <li key={player.player_id}>
-                      <Link
-                        href={`/players/${player.player_id}`}
-                        className="flex items-center gap-3 rounded-lg p-2 transition-[background-color,transform] hover:bg-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
-                      >
-                        <span className="w-5 text-sm font-black text-muted-foreground">
-                          {index + 1}
-                        </span>
-                        <PlayerAvatar name={player.player_name} />
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate font-semibold">
-                            {player.player_name}
-                          </span>
-                          <span className="block truncate text-xs text-muted-foreground">
-                            {player.team_name}
-                          </span>
-                        </span>
-                        <span className="text-xl font-black tabular-nums">
-                          {player.pts}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ol>
               ) : (
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  Тоглогчийн мөр хараахан нийтлэгдээгүй байна.
+                <p className="stat-number text-4xl sm:text-7xl tracking-tight">
+                  {game.home_score ?? 0}
+                  <span className="px-2 text-sidebar-foreground/30">–</span>
+                  {game.away_score ?? 0}
                 </p>
               )}
-            </CardContent>
-          </Card>
-        </section>
-      ) : null}
+              {isLive && game.current_period > 0 ? (
+                <p className="mt-3 flex items-center justify-center gap-2 text-sm font-semibold text-warning">
+                  <Radio className="size-4" aria-hidden="true" />
+                  {game.current_period}-р үе
+                </p>
+              ) : null}
+            </div>
 
-      {boxScore.length > 0 ? (
-        <section
-          aria-labelledby="team-comparison-heading"
-          className="flex flex-col gap-4"
-        >
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Тоон зураг
-            </p>
-            <h2
-              id="team-comparison-heading"
-              className="mt-1 text-2xl font-bold tracking-tight"
+            <Link
+              href={`/teams/${game.away_team_slug}`}
+              className="flex min-w-0 flex-col items-center gap-3 rounded-xl text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring sm:flex-row-reverse sm:text-right"
             >
-              Багийн харьцуулалт
-            </h2>
+              <TeamLogo
+                logoUrl={game.away_team_logo_url}
+                shortCode={game.away_team_short_code}
+                primaryColor={game.away_team_primary_color}
+                size="xl"
+              />
+              <span className="min-w-0">
+                <span className="block truncate text-sm text-sidebar-foreground/60">
+                  Зочин баг
+                </span>
+                <span className="mt-1 block truncate text-lg font-bold sm:text-2xl">
+                  {game.away_team_name}
+                </span>
+              </span>
+            </Link>
           </div>
-          <Card className="shadow-none">
-            <CardContent className="flex flex-col gap-5 pt-6">
-              <TeamComparison
-                label="Оноо"
-                home={homeTotals.pts}
-                away={awayTotals.pts}
-              />
-              <TeamComparison
-                label="Самбар"
-                home={homeTotals.reb}
-                away={awayTotals.reb}
-              />
-              <TeamComparison
-                label="Дамжуулалт"
-                home={homeTotals.ast}
-                away={awayTotals.ast}
-              />
-              <TeamComparison
-                label="Бөмбөг таслалт"
-                home={homeTotals.stl}
-                away={awayTotals.stl}
-              />
-              <TeamComparison
-                label="Алдалт"
-                home={homeTotals.tov}
-                away={awayTotals.tov}
-                lowerWins
-              />
-            </CardContent>
-          </Card>
+
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4 text-sm text-sidebar-foreground/60">
+            {game.venue_name ? (
+              <span className="flex items-center gap-2">
+                <MapPin className="size-4" aria-hidden="true" />
+                {game.venue_name}
+              </span>
+            ) : null}
+            {game.revision_number ? (
+              <span>Баталгаажсан хувилбар #{game.revision_number}</span>
+            ) : null}
+          </div>
         </section>
-      ) : null}
 
-      {isFinal ? (
-        <BoxScoreSection rows={boxScore} />
-      ) : (
-        <PublicEmptyState
-          icon={isLive ? Radio : Trophy}
-          title={isLive ? "Тоглолт үргэлжилж байна" : "Тоглолт эхлээгүй байна"}
-          description={
-            isLive
-              ? "Шууд оноо урьдчилсан төлөвтэй. Бүрэн box score лигийн хяналтын дараа энд нийтлэгдэнэ."
-              : "Тоглолт эхэлж, үр дүн баталгаажмагц бүрэн статистик энд гарна."
-          }
-        />
-      )}
+        {isFinal ? (
+          <section className="grid gap-5 lg:grid-cols-12">
+            <Card className="shadow-none lg:col-span-7">
+              <CardHeader>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Тоглолтын өгүүлэмж
+                  </p>
+                  <CardTitle className="mt-1 text-2xl tracking-tight">
+                    Товч дүгнэлт
+                  </CardTitle>
+                </div>
+                <CardAction>
+                  <Trophy aria-hidden="true" />
+                </CardAction>
+              </CardHeader>
+              <CardContent>
+                <p className="font-display text-2xl leading-relaxed tracking-tight sm:text-3xl">
+                  {winnerName} {margin} онооны зөрүүгээр ялалт байгууллаа.
+                  {podiumPerformers[0]
+                    ? ` ${podiumPerformers[0].player_name} ${podiumPerformers[0].pts} оноогоор тоглолтыг тэргүүлэв.`
+                    : ""}
+                </p>
+                {leadChanges > 0 ? (
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    Тоглолтын явцад {leadChanges} удаа илүү ээлж солигдлоо.
+                  </p>
+                ) : null}
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+                  Энэ дүгнэлт зөвхөн лигийн баталгаажсан оноо болон box score-д
+                  тулгуурласан.
+                </p>
+              </CardContent>
+            </Card>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Button asChild variant="outline">
-          <Link href="/games">← Тоглолтууд руу буцах</Link>
-        </Button>
-        <div className="flex flex-wrap items-center gap-2">
-          <ReportErrorDialog gameId={game.id} />
-          {isFinal ? (
-            <>
-              <Button asChild variant="outline">
-                <a
-                  href={`/api/export?gameId=${game.id}&type=boxscore`}
-                  download
+            <Card className="shadow-none lg:col-span-5">
+              <CardHeader>
+                <CardTitle>Шилдэг тоглогчид</CardTitle>
+                <CardDescription>
+                  Нэгдүгээр, хоёрдугаар, гуравдугаар байр
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {podiumPerformers.length > 0 ? (
+                  <div className="flex items-end justify-center gap-3 pt-4">
+                    {/* 2nd place — left */}
+                    {podiumPerformers[1] ? (
+                      <Link
+                        href={`/players/${podiumPerformers[1].player_id}`}
+                        aria-label={`${podiumPerformers[1].player_name} — 2-р байр`}
+                        className="flex w-24 flex-col items-center gap-2 rounded-xl p-2 transition-[background-color,transform] hover:bg-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none sm:w-28"
+                      >
+                        <PlayerAvatar
+                          name={podiumPerformers[1].player_name}
+                          photoUrl={null}
+                          size="md"
+                        />
+                        <span className="w-full truncate text-center text-xs font-semibold">
+                          {podiumPerformers[1].player_name}
+                        </span>
+                        <span className="text-lg font-black tabular-nums">
+                          {podiumPerformers[1].pts}
+                        </span>
+                        <span className="flex h-16 w-full items-center justify-center rounded-t-lg bg-muted text-xs font-bold text-muted-foreground">
+                          2
+                        </span>
+                      </Link>
+                    ) : null}
+
+                    {/* 1st place — center, taller */}
+                    {podiumPerformers[0] ? (
+                      <Link
+                        href={`/players/${podiumPerformers[0].player_id}`}
+                        aria-label={`${podiumPerformers[0].player_name} — 1-р байр`}
+                        className="flex w-28 flex-col items-center gap-2 rounded-xl p-2 transition-[background-color,transform] hover:bg-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none sm:w-32"
+                      >
+                        <PlayerAvatar
+                          name={podiumPerformers[0].player_name}
+                          photoUrl={null}
+                          size="lg"
+                        />
+                        <span className="w-full truncate text-center text-sm font-bold">
+                          {podiumPerformers[0].player_name}
+                        </span>
+                        <span className="text-2xl font-black tabular-nums">
+                          {podiumPerformers[0].pts}
+                        </span>
+                        <span className="flex h-24 w-full items-center justify-center rounded-t-lg bg-primary text-sm font-bold text-primary-foreground">
+                          1
+                        </span>
+                      </Link>
+                    ) : null}
+
+                    {/* 3rd place — right */}
+                    {podiumPerformers[2] ? (
+                      <Link
+                        href={`/players/${podiumPerformers[2].player_id}`}
+                        aria-label={`${podiumPerformers[2].player_name} — 3-р байр`}
+                        className="flex w-24 flex-col items-center gap-2 rounded-xl p-2 transition-[background-color,transform] hover:bg-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none sm:w-28"
+                      >
+                        <PlayerAvatar
+                          name={podiumPerformers[2].player_name}
+                          photoUrl={null}
+                          size="md"
+                        />
+                        <span className="w-full truncate text-center text-xs font-semibold">
+                          {podiumPerformers[2].player_name}
+                        </span>
+                        <span className="text-lg font-black tabular-nums">
+                          {podiumPerformers[2].pts}
+                        </span>
+                        <span className="flex h-12 w-full items-center justify-center rounded-t-lg bg-muted text-xs font-bold text-muted-foreground">
+                          3
+                        </span>
+                      </Link>
+                    ) : null}
+                  </div>
+                ) : (
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    Тоглогчийн мөр хараахан нийтлэгдээгүй байна.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </section>
+        ) : null}
+
+        {/* Тоглогчдын онцлох үе — Player Highlights */}
+        {isFinal && podiumPerformers.length > 0 ? (
+          <section
+            aria-labelledby="player-highlights-heading"
+            className="flex flex-col gap-4"
+          >
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Тоглогчдын онцлох үе
+              </p>
+              <h2
+                id="player-highlights-heading"
+                className="mt-1 text-2xl font-bold tracking-tight"
+              >
+                Тоглогчдын онцлох үе
+              </h2>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {podiumPerformers.map((player) => (
+                <Card key={player.player_id} className="shadow-none">
+                  <CardContent className="flex items-start gap-3 pt-6">
+                    <PlayerAvatar
+                      name={player.player_name}
+                      photoUrl={null}
+                      size="md"
+                      primaryColor={
+                        player.team_season_id === game.home_team_season_id
+                          ? game.home_team_primary_color
+                          : game.away_team_primary_color
+                      }
+                    />
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        href={`/players/${player.player_id}`}
+                        className="block truncate font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        {player.player_name}
+                      </Link>
+                      <p className="text-xs text-muted-foreground">
+                        {player.team_name}
+                      </p>
+                      <p className="mt-1 text-sm leading-relaxed italic text-muted-foreground">
+                        {generatePlayerGameSummary({
+                          player_name: player.player_name,
+                          pts: player.pts,
+                          reb: player.oreb + player.dreb,
+                          ast: player.ast,
+                          stl: player.stl,
+                          blk: player.blk,
+                          fgm: player.fgm,
+                          fga: player.fga,
+                          result:
+                            player.team_season_id === game.home_team_season_id
+                              ? homeWon
+                                ? "W"
+                                : "L"
+                              : homeWon
+                                ? "L"
+                                : "W",
+                          team_score:
+                            player.team_season_id === game.home_team_season_id
+                              ? (game.home_score ?? 0)
+                              : (game.away_score ?? 0),
+                          opponent_score:
+                            player.team_season_id === game.home_team_season_id
+                              ? (game.away_score ?? 0)
+                              : (game.home_score ?? 0),
+                          opponent_short_code:
+                            player.team_season_id === game.home_team_season_id
+                              ? game.away_team_short_code
+                              : game.home_team_short_code,
+                        })}
+                      </p>
+                      <p className="mt-1 text-xs tabular-nums text-muted-foreground">
+                        {player.pts} оноо · {player.oreb + player.dreb} самбар ·{" "}
+                        {player.ast} дамжуулалт
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {boxScore.length > 0 ? (
+          <section
+            aria-labelledby="team-comparison-heading"
+            className="flex flex-col gap-4"
+          >
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Тоон зураг
+              </p>
+              <h2
+                id="team-comparison-heading"
+                className="mt-1 text-2xl font-bold tracking-tight"
+              >
+                Багийн харьцуулалт
+              </h2>
+            </div>
+            <Card className="shadow-none">
+              <CardContent className="flex flex-col gap-5 pt-6">
+                <TeamComparison
+                  label="Оноо"
+                  home={homeTotals.pts}
+                  away={awayTotals.pts}
+                />
+                <TeamComparison
+                  label="Самбар"
+                  home={homeTotals.reb}
+                  away={awayTotals.reb}
+                />
+                <TeamComparison
+                  label="Дамжуулалт"
+                  home={homeTotals.ast}
+                  away={awayTotals.ast}
+                />
+                <TeamComparison
+                  label="Бөмбөг таслалт"
+                  home={homeTotals.stl}
+                  away={awayTotals.stl}
+                />
+                <TeamComparison
+                  label="Алдалт"
+                  home={homeTotals.tov}
+                  away={awayTotals.tov}
+                  lowerWins
+                />
+              </CardContent>
+            </Card>
+          </section>
+        ) : null}
+        {/* Lead Change Flow — SVG timeline */}
+        {isFinal && leadPoints.length > 0 ? (
+          <section
+            aria-labelledby="lead-flow-heading"
+            className="flex flex-col gap-4"
+          >
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Илүү ээлжийн урсгал
+              </p>
+              <h2
+                id="lead-flow-heading"
+                className="mt-1 text-2xl font-bold tracking-tight"
+              >
+                Илүү ээлжийн урсгал
+              </h2>
+            </div>
+            <Card className="shadow-none">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-4 text-sm">
+                  <span className="flex items-center gap-1.5">
+                    <span
+                      className="inline-block size-3 rounded-sm bg-primary"
+                      aria-hidden="true"
+                    />
+                    {game.home_team_short_code}
+                  </span>
+                  <span className="text-muted-foreground">
+                    {leadChanges} удаа солигдлоо
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span
+                      className="inline-block size-3 rounded-sm bg-muted-foreground"
+                      aria-hidden="true"
+                    />
+                    {game.away_team_short_code}
+                  </span>
+                </div>
+                <svg
+                  viewBox={`0 0 ${Math.max(leadPoints.length, 2) * 4} 100`}
+                  preserveAspectRatio="none"
+                  className="mt-4 h-32 w-full"
+                  role="img"
+                  aria-label={`${game.home_team_short_code} vs ${game.away_team_short_code} илүү ээлжийн урсгал`}
                 >
-                  <Download data-icon="inline-start" aria-hidden="true" />
-                  CSV
-                </a>
-              </Button>
-              <Button asChild variant="outline">
-                <a
-                  href={`/api/export/pdf?gameId=${game.id}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <Download data-icon="inline-start" aria-hidden="true" />
-                  PDF
-                </a>
-              </Button>
-            </>
-          ) : null}
+                  {leadPoints.map((pt, i) => {
+                    const total = Math.max(pt.home + pt.away, 1);
+                    const homeH = (pt.home / total) * 90;
+                    const awayH = (pt.away / total) * 90;
+                    const x = i * 4;
+                    const prev = i > 0 ? (leadPoints[i - 1] ?? null) : null;
+                    const isLeadChange =
+                      prev !== null &&
+                      pt.leader !== prev.leader &&
+                      pt.leader !== "tied" &&
+                      prev.leader !== "tied";
+                    return (
+                      <g key={pt.seq}>
+                        <rect
+                          x={x}
+                          y={100 - homeH}
+                          width={3.5}
+                          height={homeH}
+                          fill="currentColor"
+                          className="text-primary"
+                        />
+                        <rect
+                          x={x}
+                          y={100 - homeH - awayH}
+                          width={3.5}
+                          height={awayH}
+                          fill="currentColor"
+                          className="text-muted-foreground/40"
+                        />
+                        {isLeadChange ? (
+                          <circle
+                            cx={x + 1.75}
+                            cy={100 - homeH - awayH / 2}
+                            r={2}
+                            fill="currentColor"
+                            className="text-destructive"
+                          />
+                        ) : null}
+                      </g>
+                    );
+                  })}
+                </svg>
+                <p className="mt-2 text-center text-xs text-muted-foreground">
+                  {game.home_team_short_code} {game.home_score ?? 0} —{" "}
+                  {game.away_score ?? 0} {game.away_team_short_code}
+                </p>
+              </CardContent>
+            </Card>
+          </section>
+        ) : null}
+
+        {isFinal ? (
+          <BoxScoreSection rows={boxScore} />
+        ) : (
+          <PublicEmptyState
+            icon={isLive ? Radio : Trophy}
+            title={
+              isLive ? "Тоглолт үргэлжилж байна" : "Тоглолт эхлээгүй байна"
+            }
+            description={
+              isLive
+                ? "Шууд оноо урьдчилсан төлөвтэй. Бүрэн box score лигийн хяналтын дараа энд нийтлэгдэнэ."
+                : "Тоглолт эхэлж, үр дүн баталгаажмагц бүрэн статистик энд гарна."
+            }
+          />
+        )}
+
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Button asChild variant="outline">
+            <Link href="/games">← Тоглолтууд руу буцах</Link>
+          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <ReportErrorDialog gameId={game.id} />
+            {isFinal ? (
+              <>
+                <Button asChild variant="outline">
+                  <a
+                    href={`/api/export?gameId=${game.id}&type=boxscore`}
+                    download
+                  >
+                    <Download data-icon="inline-start" aria-hidden="true" />
+                    CSV
+                  </a>
+                </Button>
+                <Button asChild variant="outline">
+                  <a
+                    href={`/api/export/pdf?gameId=${game.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Download data-icon="inline-start" aria-hidden="true" />
+                    PDF
+                  </a>
+                </Button>
+              </>
+            ) : null}
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   );
 }
 
@@ -470,7 +815,10 @@ function BoxScoreSection({ rows }: BoxScoreSectionProps) {
             <CardTitle>{teamName}</CardTitle>
           </CardHeader>
           <CardContent className="overflow-x-auto p-0">
-            <Table>
+            <Table aria-label={`${teamName} box score`}>
+              <TableCaption className="sr-only">
+                {teamName} тоглогчдын бүрэн статистик
+              </TableCaption>
               <TableHeader>
                 <TableRow>
                   <TableHead>Тоглогч</TableHead>
@@ -490,7 +838,10 @@ function BoxScoreSection({ rows }: BoxScoreSectionProps) {
                 {rows
                   .filter((row) => row.team_name === teamName)
                   .map((row) => (
-                    <TableRow key={`${row.team_season_id}-${row.player_id}`}>
+                    <TableRow
+                      key={`${row.team_season_id}-${row.player_id}`}
+                      className="hover:bg-accent/50"
+                    >
                       <TableCell>
                         <Link
                           href={`/players/${row.player_id}`}
@@ -502,8 +853,8 @@ function BoxScoreSection({ rows }: BoxScoreSectionProps) {
                       <TableCell className="text-right tabular-nums">
                         {formatMinutes(row.seconds_played)}
                       </TableCell>
-                      <TableCell className="text-right font-black tabular-nums">
-                        {row.pts}
+                      <TableCell className="text-right tabular-nums">
+                        <span className="stat-number">{row.pts}</span>
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
                         {row.fgm}/{row.fga}

@@ -13,7 +13,7 @@ export interface LaborRecord {
   employee_name: string;
   hours: number;
   hourly_rate_snapshot: number;
-  labor_cost: number;
+  labor_cost: number | null;
   notes: string | null;
   created_at: string;
 }
@@ -108,7 +108,7 @@ export async function addLaborRecord(input: AddLaborRecordInput) {
     return { error: "Ажилтан бүртгэхэд алдаа гарлаа." };
   }
 
-  revalidateEntities(["production_orders"]);
+  revalidateEntities(["production"]);
 
   return { success: true };
 }
@@ -158,7 +158,7 @@ export async function removeLaborRecord(laborId: string) {
     return { error: "Ажилтын бүртгэл устгахад алдаа гарлаа." };
   }
 
-  revalidateEntities(["production_orders"]);
+  revalidateEntities(["production"]);
 
   return { success: true };
 }
@@ -183,7 +183,6 @@ export async function getStageLaborSummary(stageId: string) {
   );
 
   if (error) {
-    capture(error, { context: "labor: getStageLaborSummary" });
     return {
       error: "Ажилтын мэдээлэл авахад алдаа гарлаа.",
     } as ActionError;
@@ -205,7 +204,7 @@ export async function getStageLaborSummary(stageId: string) {
   });
 
   const totalHours = mapped.reduce((sum, r) => sum + r.hours, 0);
-  const totalCost = mapped.reduce((sum, r) => sum + r.labor_cost, 0);
+  const totalCost = mapped.reduce((sum, r) => sum + (r.labor_cost ?? 0), 0);
 
   return {
     data: {
@@ -300,7 +299,7 @@ export async function getOrderCostSummary(orderId: string) {
     }
 
     laborActualCost = (laborRecords ?? []).reduce(
-      (sum, r) => sum + r.labor_cost,
+      (sum, r) => sum + (r.labor_cost ?? 0),
       0,
     );
   }

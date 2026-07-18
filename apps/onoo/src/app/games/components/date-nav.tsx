@@ -1,7 +1,9 @@
 "use client";
 
+import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 function shiftDate(dateStr: string, days: number): string {
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -13,12 +15,18 @@ function shiftDate(dateStr: string, days: number): string {
 function formatShort(dateStr: string): string {
   const d = new Date(`${dateStr}T12:00:00`);
   return d.toLocaleDateString("mn-MN", {
+    weekday: "short",
     month: "short",
     day: "numeric",
   });
 }
 
-export function DateNav({ currentDate }: { currentDate: string }) {
+interface DateNavProps {
+  currentDate: string;
+  className?: string;
+}
+
+export function DateNav({ currentDate, className }: DateNavProps) {
   const today = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Ulaanbaatar",
     year: "numeric",
@@ -32,30 +40,46 @@ export function DateNav({ currentDate }: { currentDate: string }) {
   return (
     <nav
       aria-label="Огноо сонголт"
-      className="flex items-center justify-between gap-4"
+      className={cn(
+        "flex items-center justify-between gap-2 rounded-xl border border-border/50 bg-[var(--surface-2)] px-2 py-1.5",
+        className,
+      )}
     >
-      <Button asChild variant="outline" size="sm">
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        aria-label="Өмнөх өдөр"
+        className="gap-1.5"
+      >
         <Link href={`/games?date=${prev}`} prefetch={false}>
-          ← Өмнөх
+          <ChevronLeft className="size-4" aria-hidden="true" />
         </Link>
       </Button>
 
-      <div className="flex items-center gap-3">
-        <span className="text-sm font-medium tabular-nums">
+      <div className="flex items-center gap-2.5">
+        <span className="text-sm font-semibold tabular-nums">
           {formatShort(currentDate)}
         </span>
         {!isToday && (
-          <Button asChild variant="secondary" size="xs">
+          <Button asChild variant="outline" size="xs" className="gap-1">
             <Link href="/games" prefetch={false}>
+              <Calendar className="size-3" aria-hidden="true" />
               Өнөөдөр
             </Link>
           </Button>
         )}
       </div>
 
-      <Button asChild variant="outline" size="sm">
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        aria-label="Дараагийн өдөр"
+        className="gap-1.5"
+      >
         <Link href={`/games?date=${next}`} prefetch={false}>
-          Дараагийн →
+          <ChevronRight className="size-4" aria-hidden="true" />
         </Link>
       </Button>
     </nav>

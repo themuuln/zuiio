@@ -1,6 +1,7 @@
 "use client";
 
-import { ChartNoAxesCombined } from "lucide-react";
+import { ChartNoAxesCombined, Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 import {
   PolarAngleAxis,
   PolarGrid,
@@ -25,6 +26,8 @@ import { cn } from "@/lib/utils";
  *
  * The chart displays NORMALIZED values (0–100) on the axes, but tooltips
  * show the ACTUAL per-game values so readers can interpret the real numbers.
+ *
+ * Enhanced: league average overlay can be toggled on/off for comparison.
  */
 
 const STATS = ["pts", "reb", "ast", "stl", "blk"] as const;
@@ -32,22 +35,23 @@ type StatKey = (typeof STATS)[number];
 
 const chartConfig = {
   player: {
-    label: "Тоглогч",
+    label: "\u0422\u043E\u0433\u043B\u043E\u0433\u0447",
     color: "var(--team-color, var(--brand-sports))",
   },
   league: {
-    label: "Лигийн дундаж",
+    label:
+      "\u041B\u0438\u0433\u0438\u0439\u043D \u0434\u0443\u043D\u0434\u0430\u0436",
     color: "var(--color-muted-foreground)",
   },
 } satisfies ChartConfig;
 
 // Mongolian labels for axes — kept inline to avoid server-import of i18n
 const STAT_LABELS_MN: Record<StatKey, string> = {
-  pts: "Оноо",
-  reb: "Буулт",
-  ast: "Олгосон",
-  stl: "Булаасан",
-  blk: "Блок",
+  pts: "\u041E\u043D\u043E\u043E",
+  reb: "\u0411\u0443\u0443\u043B\u0442",
+  ast: "\u0414\u0430\u043C\u0436\u0443\u0443\u043B\u0430\u043B\u0442",
+  stl: "\u0411\u0443\u043B\u0447\u0438\u0445",
+  blk: "\u0425\u0430\u043C\u0433\u0430\u0430\u043B\u0430\u043B\u0442",
 };
 
 interface SkillRadarProps {
@@ -81,6 +85,8 @@ export function SkillRadar({
   leagueMaxes,
   className,
 }: SkillRadarProps) {
+  const [showLeague, setShowLeague] = useState(true);
+
   // Build chart data: normalize to league-max = 100
   const data = STATS.map((stat) => ({
     stat: STAT_LABELS_MN[stat],
@@ -110,56 +116,103 @@ export function SkillRadar({
           className="size-6 text-muted-foreground"
           aria-hidden="true"
         />
-        <p className="mt-3 font-semibold">Харьцуулах мэдээлэл хүрэлцэхгүй</p>
+        <p className="mt-3 font-semibold">
+          \u0425\u0430\u0440\u044C\u0446\u0443\u0443\u043B\u0430\u0445
+          \u043C\u044D\u0434\u044D\u044D\u043B\u044D\u043B
+          \u0445\u0443\u0440\u044D\u043B\u0446\u044D\u0445\u0433\u04AF\u0439
+        </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Лигийн тав ба түүнээс олон тоглолттой тоглогчид нэмэгдэхэд зураглал
-          гарна.
+          \u041B\u0438\u0433\u0438\u0439\u043D \u0442\u0430\u0432 \u0431\u0430
+          \u0442\u04AF\u0443\u043D\u044D\u044D\u0441 \u043E\u043B\u043E\u043D
+          \u0442\u043E\u0433\u043B\u043E\u0442\u0442\u043E\u0439
+          \u043D\u044D\u043C\u044D\u0433\u0434\u044D\u0445\u044D\u0434
+          \u0437\u0443\u0440\u0430\u0433\u043B\u0430\u043B
+          \u0433\u0430\u0440\u043D\u0430.
         </p>
       </div>
     );
   }
 
   return (
-    <ChartContainer
-      config={chartConfig}
-      className={cn("aspect-square w-full max-w-sm", className)}
-    >
-      <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
-        <PolarGrid />
-        <PolarAngleAxis dataKey="stat" tick={{ fontSize: 11 }} />
-        <PolarRadiusAxis
-          angle={90}
-          domain={[0, 100]}
-          tick={false}
-          tickCount={5}
-        />
-        <ChartTooltip
-          content={
-            <ChartTooltipContent
-              formatter={(value, name) => [`${value}%`, String(name)]}
-            />
+    <div className={cn("w-full max-w-sm", className)}>
+      {/* Toggle league overlay */}
+      <div className="mb-3 flex justify-end">
+        <button
+          type="button"
+          onClick={() => setShowLeague((v) => !v)}
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-all",
+            showLeague
+              ? "border-sidebar-border bg-sidebar-accent/50 text-sidebar-foreground/80 hover:bg-sidebar-accent"
+              : "border-sidebar-border/50 bg-transparent text-sidebar-foreground/40 hover:bg-sidebar-accent/30",
+          )}
+          aria-label={
+            showLeague
+              ? "\u041B\u0438\u0433\u0438\u0439\u043D \u0434\u0443\u043D\u0434\u0430\u0436 \u043D\u0443\u0443\u0445"
+              : "\u041B\u0438\u0433\u0438\u0439\u043D \u0434\u0443\u043D\u0434\u0430\u0436 \u0445\u0430\u0440\u0443\u0443\u043B\u0430\u0445"
           }
-        />
-        <Radar
-          name="Лигийн дундаж"
-          dataKey="league"
-          stroke="var(--color-league)"
-          fill="var(--color-league)"
-          fillOpacity={0.08}
-          strokeWidth={1.5}
-          strokeDasharray="4 2"
-          isAnimationActive={false}
-        />
-        <Radar
-          name="Тоглогч"
-          dataKey="player"
-          stroke="var(--color-player)"
-          fill="var(--color-player)"
-          fillOpacity={0.18}
-          strokeWidth={2}
-          isAnimationActive={false}
-        />
-      </RadarChart>
-    </ChartContainer>
+        >
+          {showLeague ? (
+            <Eye className="size-3" aria-hidden="true" />
+          ) : (
+            <EyeOff className="size-3" aria-hidden="true" />
+          )}
+          \u041B\u0438\u0433\u0438\u0439\u043D
+          \u0434\u0443\u043D\u0434\u0430\u0436
+        </button>
+      </div>
+
+      <ChartContainer config={chartConfig} className="aspect-square w-full">
+        <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
+          <PolarGrid stroke="var(--color-sidebar-border)" />
+          <PolarAngleAxis
+            dataKey="stat"
+            tick={{ fontSize: 11, fill: "var(--color-sidebar-foreground)" }}
+          />
+          <PolarRadiusAxis
+            angle={90}
+            domain={[0, 100]}
+            tick={false}
+            tickCount={5}
+          />
+          <ChartTooltip
+            content={
+              <ChartTooltipContent
+                formatter={(value, name, item) => {
+                  const point = item.payload as Record<string, unknown>;
+                  const isPlayer =
+                    name === "\u0422\u043E\u0433\u043B\u043E\u0433\u0447";
+                  const actual = isPlayer
+                    ? (point.playerActual as number)
+                    : (point.leagueActual as number);
+                  return [`${actual.toFixed(1)} (${value}%)`, String(name)];
+                }}
+              />
+            }
+          />
+          {showLeague && (
+            <Radar
+              name="\u041B\u0438\u0433\u0438\u0439\u043D \u0434\u0443\u043D\u0434\u0430\u0436"
+              dataKey="league"
+              stroke="var(--color-league)"
+              fill="var(--color-league)"
+              fillOpacity={0.08}
+              strokeWidth={1.5}
+              strokeDasharray="4 2"
+              isAnimationActive={false}
+            />
+          )}
+          <Radar
+            name="\u0422\u043E\u0433\u043B\u043E\u0433\u0447"
+            dataKey="player"
+            stroke="var(--color-player)"
+            fill="var(--color-player)"
+            fillOpacity={0.2}
+            strokeWidth={2}
+            isAnimationActive={false}
+          />
+        </RadarChart>
+      </ChartContainer>
+    </div>
   );
 }

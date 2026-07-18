@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { ThemeProvider } from "@/app/theme-provider";
 import { createClient } from "@/lib/supabase/server";
@@ -61,15 +62,24 @@ async function ConsentFormWrapper({
   // Use Zuiio ID's own Supabase client — the OAuth Server is enabled here.
   const supabase = await createClient();
 
+  // Ownership check: Supabase Auth server requires an authenticated user
+  // before returning authorization details. If no session, redirect to
+  // login with the consent URL preserved as return destination.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect(
+      `/login?next=${encodeURIComponent(`/oauth/consent?authorization_id=${authorizationId}`)}`,
+    );
+  }
+
   const { data: authDetails, error } =
     await supabase.auth.oauth.getAuthorizationDetails(authorizationId);
 
   if (error) {
     return (
-      <ConsentError
-        code="invalid_authorization"
-        message="Зөвшөөрлийг олсонгүй эсвэл хугацаа нь дууссан."
-      />
+      <ConsentError message="Энэ зөвшөөрөл хугацаа нь дууссан байна. Бүтээгдэхүүний нүүр хуудас руу буцаж дахин оролдоно уу." />
     );
   }
 

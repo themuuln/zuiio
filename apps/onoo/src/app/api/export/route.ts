@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
@@ -54,8 +54,14 @@ export async function GET(request: NextRequest) {
     ];
 
     const rows = playerStats.map((stat) => {
-      const player = stat.players as { canonical_name?: string; name_latin?: string; jersey_number?: number } | null;
-      const team = stat.team_seasons as { teams?: { name?: string; short_code?: string } } | null;
+      const player = stat.players as {
+        canonical_name?: string;
+        name_latin?: string;
+        jersey_number?: number;
+      } | null;
+      const team = stat.team_seasons as {
+        teams?: { name?: string; short_code?: string };
+      } | null;
       const fga = stat.fga || 0;
       const tpa = stat.tpa || 0;
       const fta = stat.fta || 0;
@@ -111,7 +117,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Convert to CSV
-    const headers = ["Period", "Clock", "Event Type", "Player ID", "Team ID", "Details"];
+    const headers = [
+      "Period",
+      "Clock",
+      "Event Type",
+      "Player ID",
+      "Team ID",
+      "Details",
+    ];
 
     const rows = events.map((event) => {
       const minutes = Math.floor(event.clock_seconds / 60);

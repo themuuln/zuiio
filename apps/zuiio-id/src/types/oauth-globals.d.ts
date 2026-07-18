@@ -6,6 +6,8 @@
 declare global {
   interface GooglePromptNotification {
     getMomentType(): "display" | "dismissed" | "skipped";
+    isDismissedMoment?(): boolean;
+    isNotDisplayed?(): boolean;
   }
 
   interface GoogleAccountsIdInitializeConfig {

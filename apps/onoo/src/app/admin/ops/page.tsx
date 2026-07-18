@@ -1,13 +1,7 @@
-import { createClient } from "@/lib/supabase/server";
-import { ErrorReportActions } from "./_components/error-report-actions";
 import { formatDistanceToNow } from "date-fns";
 import { mn } from "date-fns/locale";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -16,7 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { createClient } from "@/lib/supabase/server";
+import { ErrorReportActions } from "./_components/error-report-actions";
 
 export default async function OpsConsolePage() {
   const supabase = await createClient();
@@ -178,9 +173,7 @@ export default async function OpsConsolePage() {
                     <TableHead>Бүртгэгч</TableHead>
                     <TableHead>Үүрэг</TableHead>
                     <TableHead>Эхэлсэн</TableHead>
-                    <TableHead className="text-right">
-                      Сүүлийн дугаар
-                    </TableHead>
+                    <TableHead className="text-right">Сүүлийн дугаар</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

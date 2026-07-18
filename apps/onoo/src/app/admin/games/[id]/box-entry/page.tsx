@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 
 interface PlayerLine {
@@ -29,23 +29,58 @@ interface BoxEntryFormProps {
   gameId: string;
   homeTeamSeasonId: string;
   awayTeamSeasonId: string;
-  homePlayers: { id: string; canonical_name: string; jersey_number: number | null }[];
-  awayPlayers: { id: string; canonical_name: string; jersey_number: number | null }[];
+  homePlayers: {
+    id: string;
+    canonical_name: string;
+    jersey_number: number | null;
+  }[];
+  awayPlayers: {
+    id: string;
+    canonical_name: string;
+    jersey_number: number | null;
+  }[];
 }
 
 const STAT_FIELDS = [
-  "pts", "fgm", "fga", "tpm", "tpa", "ftm", "fta",
-  "oreb", "dreb", "ast", "stl", "blk", "tov", "pf",
+  "pts",
+  "fgm",
+  "fga",
+  "tpm",
+  "tpa",
+  "ftm",
+  "fta",
+  "oreb",
+  "dreb",
+  "ast",
+  "stl",
+  "blk",
+  "tov",
+  "pf",
 ] as const;
 
-function emptyLine(player: { id: string; canonical_name: string; jersey_number: number | null }): PlayerLine {
+function emptyLine(player: {
+  id: string;
+  canonical_name: string;
+  jersey_number: number | null;
+}): PlayerLine {
   return {
     player_id: player.id,
     player_name: player.canonical_name,
     jersey_number: player.jersey_number ?? 0,
-    pts: 0, fgm: 0, fga: 0, tpm: 0, tpa: 0,
-    ftm: 0, fta: 0, oreb: 0, dreb: 0,
-    ast: 0, stl: 0, blk: 0, tov: 0, pf: 0,
+    pts: 0,
+    fgm: 0,
+    fga: 0,
+    tpm: 0,
+    tpa: 0,
+    ftm: 0,
+    fta: 0,
+    oreb: 0,
+    dreb: 0,
+    ast: 0,
+    stl: 0,
+    blk: 0,
+    tov: 0,
+    pf: 0,
     seconds_played: null,
   };
 }
@@ -61,7 +96,9 @@ function StatInput({
 }) {
   return (
     <div className="flex flex-col items-center">
-      <label className="text-xs text-muted-foreground">{label}</label>
+      <label htmlFor={label} className="text-xs text-muted-foreground">
+        {label}
+      </label>
       <input
         type="number"
         min={0}
@@ -74,18 +111,18 @@ function StatInput({
 }
 
 export default function BoxEntryForm({
-  gameId,
-  homeTeamSeasonId,
-  awayTeamSeasonId,
+  gameId: _gameId,
+  homeTeamSeasonId: _homeTeamSeasonId,
+  awayTeamSeasonId: _awayTeamSeasonId,
   homePlayers,
   awayPlayers,
 }: BoxEntryFormProps) {
   const router = useRouter();
   const [homeLines, setHomeLines] = useState<PlayerLine[]>(
-    homePlayers.map(emptyLine)
+    homePlayers.map(emptyLine),
   );
   const [awayLines, setAwayLines] = useState<PlayerLine[]>(
-    awayPlayers.map(emptyLine)
+    awayPlayers.map(emptyLine),
   );
   const [saving, setSaving] = useState(false);
 
@@ -93,7 +130,7 @@ export default function BoxEntryForm({
     team: "home" | "away",
     idx: number,
     field: keyof PlayerLine,
-    value: number | null
+    value: number | null,
   ) {
     const lines = team === "home" ? [...homeLines] : [...awayLines];
     const line = lines[idx];
@@ -122,14 +159,14 @@ export default function BoxEntryForm({
   function renderTeamTable(
     label: string,
     lines: PlayerLine[],
-    team: "home" | "away"
+    team: "home" | "away",
   ) {
     const totals = STAT_FIELDS.reduce(
       (acc, f) => {
         acc[f] = lines.reduce((sum, l) => sum + (l[f] as number), 0);
         return acc;
       },
-      {} as Record<string, number>
+      {} as Record<string, number>,
     );
 
     return (
@@ -173,7 +210,7 @@ export default function BoxEntryForm({
                           team,
                           idx,
                           "seconds_played",
-                          e.target.value ? Number(e.target.value) : null
+                          e.target.value ? Number(e.target.value) : null,
                         )
                       }
                       placeholder="—"
@@ -205,6 +242,7 @@ export default function BoxEntryForm({
       {renderTeamTable("Home", homeLines, "home")}
       {renderTeamTable("Away", awayLines, "away")}
       <button
+        type="button"
         onClick={handleSubmit}
         disabled={saving}
         className="rounded-md bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"

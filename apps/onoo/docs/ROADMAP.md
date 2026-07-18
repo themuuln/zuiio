@@ -35,7 +35,7 @@ Beautiful stats built on wrong numbers destroy trust. Keep the trusted-record co
 - [x] Pilot reference data replacing mock fixtures.
 - [ ] Prove clean reset, generated type diff, and role matrix against local Supabase.
 - [ ] Ruleset-bound event vocabulary — the event dictionary validates against the game's ruleset.
-- [ ] Evidence-backed submissions with revisioned approval/correction workflow.
+- [x] Evidence-backed submissions with revisioned approval/correction workflow.
 - [ ] Projections rebuilt from approved journals only; public pages read curated `v_public_*` views.
 - [ ] Authorization cutover — no direct browser/API writes to events, game state, or projections; every mutation goes through scoped commands; legacy derived-stat RPC paths retired.
 

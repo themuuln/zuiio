@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeftRight, Search, Swords, Users } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { CompareBars } from "./components/compare-bars";
+import { CompareRadar } from "./components/compare-radar";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TeamLogo } from "@/components/team-logo";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { PublicEmptyState } from "../../components/public-empty-state";
-import type { PlayerDirectoryRow } from "../../lib/data";
+import type { PlayerDirectoryRow } from "../../lib/shared";
 
 interface ComparisonPlayer {
   id: string;
@@ -210,21 +212,38 @@ function ComparisonResult({ players, className }: ComparisonResultProps) {
   const right = players[1];
   if (!left || !right) return null;
 
-  const metrics = [
+  // Always exactly 2 players in current flow
+  const barStats = [
     { label: "Оноо", left: left.stats.points, right: right.stats.points },
-    { label: "Самбар", left: left.stats.rebounds, right: right.stats.rebounds },
-    {
-      label: "Дамжуулалт",
-      left: left.stats.assists,
-      right: right.stats.assists,
-    },
-    {
-      label: "Бөмбөг таслалт",
-      left: left.stats.steals,
-      right: right.stats.steals,
-    },
+    { label: "Буулт", left: left.stats.rebounds, right: right.stats.rebounds },
+    { label: "Дамжуулалт", left: left.stats.assists, right: right.stats.assists },
+    { label: "Булчих", left: left.stats.steals, right: right.stats.steals },
     { label: "Хаалт", left: left.stats.blocks, right: right.stats.blocks },
+    { label: "FG%", left: left.stats.fieldGoalPercent, right: right.stats.fieldGoalPercent },
+    { label: "3P%", left: left.stats.threePointPercent, right: right.stats.threePointPercent },
+    { label: "FT%", left: left.stats.freeThrowPercent, right: right.stats.freeThrowPercent },
   ];
+
+  const leftRadar: Record<string, number> = {
+    pts: left.stats.points,
+    reb: left.stats.rebounds,
+    ast: left.stats.assists,
+    stl: left.stats.steals,
+    blk: left.stats.blocks,
+    fg: left.stats.fieldGoalPercent,
+    tp: left.stats.threePointPercent,
+    ft: left.stats.freeThrowPercent,
+  };
+  const rightRadar: Record<string, number> = {
+    pts: right.stats.points,
+    reb: right.stats.rebounds,
+    ast: right.stats.assists,
+    stl: right.stats.steals,
+    blk: right.stats.blocks,
+    fg: right.stats.fieldGoalPercent,
+    tp: right.stats.threePointPercent,
+    ft: right.stats.freeThrowPercent,
+  };
 
   return (
     <section
@@ -234,11 +253,14 @@ function ComparisonResult({ players, className }: ComparisonResultProps) {
       <h2 id="comparison-result-heading" className="sr-only">
         Харьцуулалтын үр дүн
       </h2>
+
+      {/* Player cards */}
       <div className="grid gap-4 md:grid-cols-2">
         <ComparisonPlayerCard player={left} />
         <ComparisonPlayerCard player={right} align="right" />
       </div>
 
+      {/* Mirrored horizontal bars */}
       <Card className="shadow-none">
         <CardHeader>
           <CardTitle>Үзүүлэлтийн тулаан</CardTitle>
@@ -246,17 +268,32 @@ function ComparisonResult({ players, className }: ComparisonResultProps) {
             Урт шугам тухайн ангилалд давуу байгааг илэрхийлнэ.
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col gap-6">
-          {metrics.map((metric) => (
-            <ComparisonMetric key={metric.label} {...metric} />
-          ))}
+        <CardContent>
+          <CompareBars
+            leftName={left.name}
+            rightName={right.name}
+            stats={barStats}
+          />
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <ShootingCard player={left} />
-        <ShootingCard player={right} />
-      </div>
+      {/* Radar overlay */}
+      <Card className="shadow-none">
+        <CardHeader>
+          <CardTitle>Чадварын профиль</CardTitle>
+          <CardDescription>
+            Хоёр тоглогчийн чадварын хэлбэрийг нэг дээр давхарлан харуулна.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CompareRadar
+            leftName={left.name}
+            rightName={right.name}
+            leftStats={leftRadar}
+            rightStats={rightRadar}
+          />
+        </CardContent>
+      </Card>
     </section>
   );
 }
@@ -318,111 +355,6 @@ function ComparisonPlayerCard({
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-interface ComparisonMetricProps {
-  label: string;
-  left: number;
-  right: number;
-  className?: string;
-}
-
-function ComparisonMetric({
-  label,
-  left,
-  right,
-  className,
-}: ComparisonMetricProps) {
-  const maxValue = Math.max(left, right, 1);
-  const leftWidth = (left / maxValue) * 100;
-  const rightWidth = (right / maxValue) * 100;
-  return (
-    <div className={cn("grid grid-cols-12 items-center gap-3", className)}>
-      <span className="col-span-2 text-right text-lg font-black tabular-nums">
-        {left.toFixed(1)}
-      </span>
-      <svg
-        className="col-span-3 h-3 w-full text-primary"
-        viewBox="0 0 100 10"
-        aria-hidden="true"
-      >
-        <rect
-          x={100 - leftWidth}
-          y="1"
-          width={leftWidth}
-          height="8"
-          rx="4"
-          fill="currentColor"
-        />
-      </svg>
-      <span className="col-span-2 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </span>
-      <svg
-        className="col-span-3 h-3 w-full text-warning"
-        viewBox="0 0 100 10"
-        aria-hidden="true"
-      >
-        <rect
-          x="0"
-          y="1"
-          width={rightWidth}
-          height="8"
-          rx="4"
-          fill="currentColor"
-        />
-      </svg>
-      <span className="col-span-2 text-lg font-black tabular-nums">
-        {right.toFixed(1)}
-      </span>
-    </div>
-  );
-}
-
-interface ShootingCardProps {
-  player: ComparisonPlayer;
-  className?: string;
-}
-
-function ShootingCard({ player, className }: ShootingCardProps) {
-  return (
-    <Card className={cn("shadow-none", className)}>
-      <CardHeader>
-        <CardTitle>{player.name}</CardTitle>
-        <CardDescription>Шидэлтийн хувь ба үр ашиг</CardDescription>
-      </CardHeader>
-      <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <ShootingStat label="FG%" value={player.stats.fieldGoalPercent} />
-        <ShootingStat label="3P%" value={player.stats.threePointPercent} />
-        <ShootingStat label="FT%" value={player.stats.freeThrowPercent} />
-        <ShootingStat
-          label="AST/TO"
-          value={player.stats.assistTurnoverRatio}
-          suffix=""
-        />
-      </CardContent>
-    </Card>
-  );
-}
-
-interface ShootingStatProps {
-  label: string;
-  value: number;
-  suffix?: string;
-}
-
-function ShootingStat({ label, value, suffix = "%" }: ShootingStatProps) {
-  return (
-    <div className="rounded-lg bg-muted p-3 text-center">
-      <p className="text-xl font-black tabular-nums">
-        {value.toFixed(1)}
-        {suffix}
-      </p>
-      <p className="mt-1 text-xs font-semibold tracking-wider text-muted-foreground">
-        {label}
-      </p>
-    </div>
   );
 }
 

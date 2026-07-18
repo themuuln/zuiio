@@ -1,21 +1,46 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-
-import { seasonsApi, leaguesApi, type SeasonRow } from "../_lib/api";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { leaguesApi, type SeasonRow, seasonsApi } from "../_lib/api";
 
 const seasonSchema = z.object({
   name: z.string().min(1, "Нэр оруулна уу"),
@@ -110,7 +135,8 @@ export default function SeasonsPage() {
     deleteMutation.mutate(id);
   }
 
-  const isPendingMutation = createMutation.isPending || updateMutation.isPending;
+  const isPendingMutation =
+    createMutation.isPending || updateMutation.isPending;
 
   return (
     <div className="space-y-6">
@@ -165,7 +191,11 @@ export default function SeasonsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openEdit(row)}
+                        >
                           Засах
                         </Button>
                         <Button
@@ -182,7 +212,10 @@ export default function SeasonsPage() {
                 ))}
                 {seasons.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
+                    <TableCell
+                      colSpan={4}
+                      className="text-center text-muted-foreground"
+                    >
                       Улирал байхгүй байна
                     </TableCell>
                   </TableRow>
@@ -196,7 +229,9 @@ export default function SeasonsPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editing ? "Улирал засах" : "Улирал нэмэх"}</DialogTitle>
+            <DialogTitle>
+              {editing ? "Улирал засах" : "Улирал нэмэх"}
+            </DialogTitle>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -241,7 +276,11 @@ export default function SeasonsPage() {
               />
               <DialogFooter>
                 <Button type="submit" disabled={isPendingMutation}>
-                  {isPendingMutation ? "Хадгалж байна…" : editing ? "Шинэчлэх" : "Үүсгэх"}
+                  {isPendingMutation
+                    ? "Хадгалж байна…"
+                    : editing
+                      ? "Шинэчлэх"
+                      : "Үүсгэх"}
                 </Button>
               </DialogFooter>
             </form>

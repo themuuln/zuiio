@@ -1,5 +1,5 @@
+import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { NextResponse, type NextRequest } from "next/server";
 
 const BUCKET = "team-logos";
 const MAX_SIZE = 2 * 1024 * 1024; // 2 MB
@@ -50,10 +50,7 @@ export async function POST(
     });
 
   if (uploadError) {
-    return NextResponse.json(
-      { error: uploadError.message },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: uploadError.message }, { status: 500 });
   }
 
   const {
@@ -67,10 +64,7 @@ export async function POST(
     .eq("id", id);
 
   if (updateError) {
-    return NextResponse.json(
-      { error: updateError.message },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
   return NextResponse.json({ logo_url: publicUrl });
