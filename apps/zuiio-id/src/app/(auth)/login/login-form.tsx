@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import {
   EyeIcon,
   EyeSlashIcon,
@@ -104,103 +104,98 @@ export function LoginForm({
   const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [oauthError, setOauthError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [gsiInitialized, setGsiInitialized] = useState(false);
-  const gsiInitializationRef = useRef(false);
   const navigatingRef = useRef(false);
 
-  /* ── Google Identity Services — initialize when the SDK is ready ── */
-  async function initializeGoogleSignIn() {
-    const googleId = window.google?.accounts?.id;
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  /* ── Google OAuth popup — postMessage listener ─────────────── */
+  const googleNonceRef = useRef("");
 
-    if (!googleId || !clientId || gsiInitializationRef.current) {
-      return;
-    }
+  useEffect(() => {
+    function onMessage(event: MessageEvent) {
+      if (
+        event.origin !== window.location.origin ||
+        event.data?.type !== "google-oauth-callback"
+      ) {
+        return;
+      }
 
-    gsiInitializationRef.current = true;
+      const { idToken } = event.data as { idToken?: string };
+      if (!idToken) {
+        setOauthError("Google нэвтрэхэд алдаа гарлаа.");
+        setOauthLoading(null);
+        return;
+      }
 
-    try {
-      const { rawNonce, hashedNonce } = await generateGoogleNonce();
+      setOauthError(null);
 
-      googleId.initialize({
-        client_id: clientId,
-        nonce: hashedNonce,
-        callback: async (response: { credential: string }) => {
-          setOauthLoading("google");
-          setOauthError(null);
-          try {
-            const idToken = response.credential;
-            if (!idToken) {
-              setOauthError("Google нэвтрэхэд алдаа гарлаа.");
-              return;
-            }
-            const result = await signInWithGoogle(
-              idToken,
-              rawNonce,
-              redirectTo,
-            );
-            if (result?.formError) {
-              setOauthError(result.formError);
-            } else if (result?.redirectTo) {
-              navigatingRef.current = true;
-              router.push(result.redirectTo);
-            }
-          } catch {
-            setOauthError("Google нэвтрэхэд алдаа гарлаа.");
-          } finally {
-            if (!navigatingRef.current) setOauthLoading(null);
+      (async () => {
+        try {
+          const result = await signInWithGoogle(
+            idToken,
+            googleNonceRef.current,
+            redirectTo,
+          );
+          if (result?.formError) {
+            setOauthError(result.formError);
+          } else if (result?.redirectTo) {
+            navigatingRef.current = true;
+            router.push(result.redirectTo);
           }
-        },
-      });
-
-      setGsiInitialized(true);
-      googleId.prompt((notification) => {
-        // Clear loading if the prompt was dismissed or not displayed
-        // (user clicked away, closed the popup, or no Google session)
-        if (
-          notification.isDismissedMoment?.() ||
-          notification.isNotDisplayed?.()
-        ) {
-          setOauthLoading(null);
+        } catch {
+          setOauthError("Google нэвтрэхэд алдаа гарлаа.");
+        } finally {
+          if (!navigatingRef.current) setOauthLoading(null);
         }
-      });
-    } catch {
-      gsiInitializationRef.current = false;
-      setOauthError("Google нэвтрэх үйлчилгээ ачаалагдсангүй.");
+      })();
     }
-  }
+
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [redirectTo, router]);
 
   if (state?.redirectTo) {
     router.push(state.redirectTo);
     return null;
   }
 
-  /* ── Google Identity Services — button click handler ────── */
-
-  function handleGoogleSignIn() {
-    if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
+  /* ── Google OAuth — open popup window ─────────────────────── */
+  async function handleGoogleSignIn() {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!clientId) {
       setOauthError("Google нэвтрэх тохиргоо хийгдээгүй байна.");
-      return;
-    }
-
-    if (!gsiInitialized || !window.google?.accounts?.id) {
-      setOauthError(
-        "Google нэвтрэх үйлчилгээ ачаалаагүй байна. Дахин оролдоно уу.",
-      );
       return;
     }
 
     setOauthLoading("google");
     setOauthError(null);
 
-    window.google.accounts.id.prompt((notification) => {
-      if (
-        notification.isDismissedMoment?.() ||
-        notification.isNotDisplayed?.()
-      ) {
-        setOauthLoading(null);
-      }
-    });
+    try {
+      const { rawNonce, hashedNonce } = await generateGoogleNonce();
+      googleNonceRef.current = rawNonce;
+
+      const redirectUri = `${window.location.origin}/auth/callback/google`;
+      const params = new URLSearchParams({
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        response_type: "id_token",
+        scope: "openid email profile",
+        nonce: hashedNonce,
+        prompt: "select_account",
+      });
+
+      const width = 500;
+      const height = 600;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
+
+      window.open(
+        `https://accounts.google.com/o/oauth2/v2/auth?${params}`,
+        "google-oauth",
+        `width=${width},height=${height},left=${left},top=${top}`,
+      );
+    } catch {
+      setOauthError("Google нэвтрэхэд алдаа гарлаа.");
+      setOauthLoading(null);
+    }
   }
 
   async function handlePasskeySignIn() {
@@ -303,15 +298,9 @@ export function LoginForm({
   }
 
   /* ── Render ───────────────────────────────────────────────── */
-
   return (
     <>
-      {/* Load Google Identity Services and Apple Sign In JS SDK */}
-      <Script
-        src="https://accounts.google.com/gsi/client"
-        strategy="afterInteractive"
-        onReady={() => void initializeGoogleSignIn()}
-      />
+      {/* Load Apple Sign In JS SDK */}
       <Script
         src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"
         strategy="afterInteractive"
