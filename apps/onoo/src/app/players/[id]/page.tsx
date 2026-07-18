@@ -46,6 +46,7 @@ import { SkillRadar } from "./components/skill-radar";
 import { StatCard } from "./components/stat-card";
 import { HomeAwaySplits } from "./components/home-away-splits";
 import { ScrollReveal, StaggerContainer, StaggerItem } from "./components/motion-wrapper";
+import type { ShotDataPoint } from "./components/court-heatmap";
 import { getPlayerShotScatter } from "../../lib/data";
 
 interface PlayerPageProps {
@@ -375,7 +376,7 @@ export default async function PlayerPage({
               {!isCareer && (
                 <ShotChart
                   shotZones={shotZones}
-                  shots={shotScatter}
+                  shots={shotScatter as ShotDataPoint[]}
                   shootingProfile={shootingProfile ?? EMPTY_SHOOTING_PROFILE}
                   locale={locale}
                   className="lg:col-span-12"
@@ -564,7 +565,7 @@ export default async function PlayerPage({
                                     : "bg-destructive text-destructive-foreground hover:bg-destructive"
                                 }
                               >
-                                {line.result} \u00B7 {line.team_score}\u2013
+                                {line.result} · {line.team_score}–
                                 {line.opponent_score}
                               </Badge>
                             </td>
