@@ -94,7 +94,6 @@ const STAGE_STATUS_COLORS: Record<string, string> = {
 // ─── Labor Stage Card ──────────────────────────────────────────────────────
 interface LaborStageCardProps {
   stage: ProductionStageData;
-  orderId: string;
   employees: Array<{ id: string; full_name: string; position: string | null }>;
   addingLaborStageId: string | null;
   setAddingLaborStageId: (id: string | null) => void;
@@ -112,7 +111,6 @@ interface LaborStageCardProps {
 
 function LaborStageCard({
   stage,
-  orderId,
   employees,
   addingLaborStageId,
   setAddingLaborStageId,
@@ -295,7 +293,9 @@ function StageStepper({ stages }: { stages: ProductionStageData[] }) {
         <div key={stage.id} className="flex items-start">
           <div className="flex flex-col items-center min-w-[80px]">
             {/* Dot */}
+            {/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: decorative status indicator */}
             <div
+              role="img"
               className={`size-3 rounded-full ${STAGE_STATUS_COLORS[stage.status] ?? "bg-muted"} ring-2 ring-background`}
               aria-label={STAGE_STATUS_LABELS[stage.status] ?? stage.status}
             />
@@ -764,6 +764,7 @@ export function ProductionDetailDrawer({
           <div className="space-y-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <div
+                // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholder
                 key={i}
                 className="h-8 w-full animate-pulse rounded bg-muted"
               />
@@ -841,7 +842,6 @@ export function ProductionDetailDrawer({
                   <LaborStageCard
                     key={stage.id}
                     stage={stage}
-                    orderId={orderId}
                     employees={employees ?? []}
                     addingLaborStageId={addingLaborStageId}
                     setAddingLaborStageId={setAddingLaborStageId}
@@ -1090,6 +1090,7 @@ export function ProductionDetailDrawer({
 
       {/* Cancel Confirmation */}
       <SlideInDrawer
+        key={String(confirmCancel)}
         open={confirmCancel}
         onOpenChange={setConfirmCancel}
         title="Захиалга цуцлах"

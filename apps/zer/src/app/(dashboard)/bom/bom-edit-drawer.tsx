@@ -13,15 +13,8 @@ import {
 } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { ProductPicker } from "@/components/products/product-picker";
 import { Button } from "@/components/ui/button";
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-} from "@/components/ui/combobox";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   DrawerCancel,
@@ -79,7 +72,7 @@ export function BomEditDrawer({
 }) {
   const queryClient = useQueryClient();
   const [products, setProducts] = useState<ProductOption[]>([]);
-  const [productsLoading, setProductsLoading] = useState(true);
+  const [_productsLoading, setProductsLoading] = useState(true);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Fetch BOM details
@@ -211,6 +204,7 @@ export function BomEditDrawer({
   if (bomLoading) {
     return (
       <SlideInDrawer
+        key={String(open)}
         open={open}
         onOpenChange={onOpenChange}
         title="BOM засах"
@@ -220,6 +214,7 @@ export function BomEditDrawer({
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <div
+              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholder
               key={i}
               className="h-10 w-full animate-pulse rounded bg-muted"
             />
@@ -231,6 +226,7 @@ export function BomEditDrawer({
 
   return (
     <SlideInDrawer
+      key={String(open)}
       open={open}
       onOpenChange={(next) => {
         if (!next) handleClose();
@@ -342,48 +338,22 @@ export function BomEditDrawer({
                 <Controller
                   control={control}
                   name={`items.${index}.material_product_id`}
-                  render={({ field: itemField }) => {
-                    const selected = products.find(
-                      (p) => p.id === itemField.value,
-                    );
-                    return (
-                      <div className="space-y-1">
-                        <FieldLabel className="text-xs">Материал</FieldLabel>
-                        <Combobox
-                          items={products}
-                          value={selected ?? null}
-                          onValueChange={(next) =>
-                            itemField.onChange(next?.id ?? "")
-                          }
-                        >
-                          <ComboboxInput
-                            placeholder="Материал сонгох..."
-                            showTrigger
-                            className="text-sm"
-                          />
-                          <ComboboxContent>
-                            <ComboboxEmpty>
-                              {productsLoading
-                                ? "Ачаалж байна..."
-                                : "Материал байхгүй"}
-                            </ComboboxEmpty>
-                            <ComboboxList>
-                              {(p: ProductOption) => (
-                                <ComboboxItem key={p.id} value={p}>
-                                  {p.name}
-                                </ComboboxItem>
-                              )}
-                            </ComboboxList>
-                          </ComboboxContent>
-                        </Combobox>
-                        {errors.items?.[index]?.material_product_id && (
-                          <p className="text-xs text-destructive" role="alert">
-                            {errors.items[index]?.material_product_id?.message}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  }}
+                  render={({ field: itemField }) => (
+                    <div className="space-y-1">
+                      <FieldLabel className="text-xs">Материал</FieldLabel>
+                      <ProductPicker
+                        products={products}
+                        value={itemField.value || null}
+                        onValueChange={(id) => itemField.onChange(id)}
+                        placeholder="Материал сонгох..."
+                      />
+                      {errors.items?.[index]?.material_product_id && (
+                        <p className="text-xs text-destructive" role="alert">
+                          {errors.items[index]?.material_product_id?.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 />
 
                 <div className="grid grid-cols-3 gap-2">
@@ -419,9 +389,16 @@ export function BomEditDrawer({
 
                   <div className="space-y-1">
                     <FieldLabel className="text-xs">Нэгж өртөг</FieldLabel>
-                    <CurrencyInput
-                      className="text-sm"
-                      {...register(`items.${index}.estimated_unit_cost`)}
+                    <Controller
+                      control={control}
+                      name={`items.${index}.estimated_unit_cost`}
+                      render={({ field }) => (
+                        <CurrencyInput
+                          className="text-sm"
+                          value={field.value ?? undefined}
+                          onChange={field.onChange}
+                        />
+                      )}
                     />
                   </div>
                 </div>

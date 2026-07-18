@@ -95,7 +95,13 @@ export function CreatableCombobox({
         item ? (allItems.includes(item) ? item : `"${item}" үүсгэх`) : ""
       }
       inputValue={query}
-      onInputValueChange={setQuery}
+      onInputValueChange={(next) => {
+        setQuery(next);
+        // When user clears the input and a value was selected, clear the form value too
+        if (next === "" && value) {
+          onChange("");
+        }
+      }}
     >
       <ComboboxInput
         id={id}

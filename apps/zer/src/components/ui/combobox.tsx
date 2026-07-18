@@ -68,11 +68,15 @@ function ComboboxInner<T>(
 ) {
   // biome-ignore lint/correctness/useHookAtTopLevel: React.forwardRef render fn IS a component
   const [open, setOpen] = React.useState(false);
+  // biome-ignore lint/correctness/useHookAtTopLevel: React.forwardRef render fn IS a component
   const [highlightedIndex, setHighlightedIndex] = React.useState(-1);
+  // biome-ignore lint/correctness/useHookAtTopLevel: React.forwardRef render fn IS a component
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   // Reset highlighted index when items change (keep it valid)
+  // biome-ignore lint/correctness/useHookAtTopLevel: React.forwardRef render fn IS a component
   const prevItemsLength = React.useRef(items.length);
+  // biome-ignore lint/correctness/useHookAtTopLevel: React.forwardRef render fn IS a component
   React.useEffect(() => {
     if (items.length !== prevItemsLength.current) {
       prevItemsLength.current = items.length;
@@ -80,6 +84,7 @@ function ComboboxInner<T>(
     }
   }, [items]);
 
+  // biome-ignore lint/correctness/useHookAtTopLevel: React.forwardRef render fn IS a component
   React.useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
@@ -194,6 +199,8 @@ interface ComboboxInputProps
 
 const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputProps>(
   ({ className, showTrigger, id, placeholder, ...props }, ref) => {
+    const [isFocused, setIsFocused] = React.useState(false);
+
     const ctx = useComboboxContext();
 
     return (
@@ -209,14 +216,20 @@ const ComboboxInput = React.forwardRef<HTMLInputElement, ComboboxInputProps>(
             className,
           )}
           value={
-            ctx.inputValue ||
-            (ctx.value ? ctx.itemToStringLabel(ctx.value) : "")
+            isFocused
+              ? ctx.inputValue
+              : ctx.inputValue ||
+                (ctx.value ? ctx.itemToStringLabel(ctx.value) : "")
           }
+          onFocus={() => {
+            setIsFocused(true);
+            ctx.setOpen(true);
+          }}
+          onBlur={() => setIsFocused(false)}
           onChange={(e) => {
             ctx.onInputValueChange(e.target.value);
             ctx.setOpen(true);
           }}
-          onFocus={() => ctx.setOpen(true)}
           {...props}
         />
         {showTrigger && (

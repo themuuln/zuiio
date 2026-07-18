@@ -11,6 +11,7 @@ export default function BomLoading() {
       <div className="h-10 w-full animate-pulse rounded-md bg-muted" />
       <div className="space-y-2">
         {Array.from({ length: 5 }).map((_, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholder
           <div key={i} className="h-12 w-full animate-pulse rounded bg-muted" />
         ))}
       </div>

@@ -15,7 +15,7 @@ interface IssueMaterialsInput {
 export async function issueMaterials(input: IssueMaterialsInput) {
   const ctx = await requireWriteAction("production_orders.update");
   if ("error" in ctx) return ctx;
-  const { supabase, organizationId } = ctx;
+  const { supabase } = ctx;
 
   // Generate idempotency key
   const operationId = `issue-${input.order_id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -55,7 +55,7 @@ interface ReturnMaterialsInput {
 export async function returnMaterials(input: ReturnMaterialsInput) {
   const ctx = await requireWriteAction("production_orders.update");
   if ("error" in ctx) return ctx;
-  const { supabase, organizationId } = ctx;
+  const { supabase } = ctx;
 
   const operationId = `return-${input.order_id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -94,7 +94,7 @@ interface RecordUsageInput {
 export async function recordUsage(input: RecordUsageInput) {
   const ctx = await requireWriteAction("production_orders.update");
   if ("error" in ctx) return ctx;
-  const { supabase, organizationId } = ctx;
+  const { supabase } = ctx;
 
   const operationId = `usage-${input.order_id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 

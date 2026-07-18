@@ -106,6 +106,7 @@ export function BomContent() {
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
             <div
+              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list, never reorders
               key={i}
               className="h-12 w-full animate-pulse rounded bg-muted"
             />
@@ -254,6 +255,8 @@ export function BomContent() {
           }}
         />
       )}
+
+      <BomCreateDrawer open={createOpen} onOpenChange={setCreateOpen} />
     </>
   );
 }

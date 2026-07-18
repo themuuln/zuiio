@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Controller, type Resolver, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { ProductPicker } from "@/components/products/product-picker";
 import { Button } from "@/components/ui/button";
 import {
   Combobox,
@@ -191,7 +192,7 @@ export function ProductionCreateDrawer({
   const open = externalOpen ?? internalOpen;
   const setOpen = externalOnOpenChange ?? setInternalOpen;
   const queryClient = useQueryClient();
-  const { products, loading: productsLoading } = useProducts();
+  const { products, loading: _productsLoading } = useProducts();
   const { branches, loading: branchesLoading } = useBranches();
   const {
     register,
@@ -270,6 +271,7 @@ export function ProductionCreateDrawer({
 
   return (
     <SlideInDrawer
+      key={String(open)}
       open={open}
       onOpenChange={(next) => {
         if (!next) handleClose();
@@ -308,39 +310,17 @@ export function ProductionCreateDrawer({
             <Controller
               control={control}
               name="product_id"
-              render={({ field }) => {
-                const selected = products.find((p) => p.id === field.value);
-                return (
-                  <Combobox
-                    items={products}
-                    value={selected ?? null}
-                    onValueChange={(next) => {
-                      field.onChange(next?.id ?? "");
-                      reset((prev) => ({ ...prev, bom_id: "" }));
-                    }}
-                  >
-                    <ComboboxInput
-                      id="production-product"
-                      placeholder="Бүтээгдэхүүн сонго..."
-                      showTrigger
-                    />
-                    <ComboboxContent>
-                      <ComboboxEmpty>
-                        {productsLoading
-                          ? "Ачаалж байна..."
-                          : "Бүтээгдэхүүн байхгүй"}
-                      </ComboboxEmpty>
-                      <ComboboxList>
-                        {products.map((p) => (
-                          <ComboboxItem key={p.id} value={p}>
-                            {p.name}
-                          </ComboboxItem>
-                        ))}
-                      </ComboboxList>
-                    </ComboboxContent>
-                  </Combobox>
-                );
-              }}
+              render={({ field }) => (
+                <ProductPicker
+                  products={products}
+                  value={field.value || null}
+                  onValueChange={(id) => {
+                    field.onChange(id);
+                    reset((prev) => ({ ...prev, bom_id: "" }));
+                  }}
+                  placeholder="Бүтээгдэхүүн сонго..."
+                />
+              )}
             />
             {errors.product_id && (
               <p className="text-xs text-destructive" role="alert">

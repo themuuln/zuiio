@@ -172,6 +172,7 @@ export function BomDetailDrawer({
           <div className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
               <div
+                // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholder
                 key={i}
                 className="h-8 w-full animate-pulse rounded bg-muted"
               />
@@ -337,6 +338,7 @@ export function BomDetailDrawer({
 
       {/* Activate Confirmation */}
       <SlideInDrawer
+        key={String(confirmActivate)}
         open={confirmActivate}
         onOpenChange={setConfirmActivate}
         title="BOM идэвхжүүлэх"
@@ -372,6 +374,7 @@ export function BomDetailDrawer({
 
       {/* Delete Confirmation */}
       <SlideInDrawer
+        key={String(confirmDelete)}
         open={confirmDelete}
         onOpenChange={setConfirmDelete}
         title="BOM устгах"

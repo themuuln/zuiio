@@ -13,15 +13,8 @@ import {
 } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { ProductPicker } from "@/components/products/product-picker";
 import { Button } from "@/components/ui/button";
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-} from "@/components/ui/combobox";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   DrawerCancel,
@@ -106,7 +99,7 @@ export function BomCreateDrawer({
   const open = externalOpen ?? internalOpen;
   const setOpen = externalOnOpenChange ?? setInternalOpen;
   const queryClient = useQueryClient();
-  const { products, loading: productsLoading } = useProducts();
+  const { products, loading: _productsLoading } = useProducts();
 
   const {
     register,
@@ -190,6 +183,7 @@ export function BomCreateDrawer({
 
   return (
     <SlideInDrawer
+      key={String(open)}
       open={open}
       onOpenChange={(next) => {
         if (!next) handleClose();
@@ -198,8 +192,13 @@ export function BomCreateDrawer({
       title="Шинэ BOM"
       description="Бүтээгдэхүүний бүрэлдэхүүн үүсгэх"
       panelWidth="36rem"
-      modal={false}
       trigger={
+        <Button variant="default" size="sm">
+          <Plus className="size-4 mr-1.5" />
+          Шинэ BOM
+        </Button>
+      }
+      footer={
         <DrawerFooter>
           <DrawerCancel onClick={handleClose} />
           <DrawerSubmit
@@ -238,36 +237,14 @@ export function BomCreateDrawer({
             <Controller
               control={control}
               name="product_id"
-              render={({ field }) => {
-                const selected = products.find((p) => p.id === field.value);
-                return (
-                  <Combobox
-                    items={products}
-                    value={selected ?? null}
-                    onValueChange={(next) => field.onChange(next?.id ?? "")}
-                  >
-                    <ComboboxInput
-                      id="bom-product"
-                      placeholder="Бүтээгдэхүүн сонгох..."
-                      showTrigger
-                    />
-                    <ComboboxContent>
-                      <ComboboxEmpty>
-                        {productsLoading
-                          ? "Ачаалж байна..."
-                          : "Бүтээгдэхүүн байхгүй"}
-                      </ComboboxEmpty>
-                      <ComboboxList>
-                        {(p: ProductOption) => (
-                          <ComboboxItem key={p.id} value={p}>
-                            {p.name}
-                          </ComboboxItem>
-                        )}
-                      </ComboboxList>
-                    </ComboboxContent>
-                  </Combobox>
-                );
-              }}
+              render={({ field }) => (
+                <ProductPicker
+                  products={products}
+                  value={field.value || null}
+                  onValueChange={(id) => field.onChange(id)}
+                  placeholder="Бүтээгдэхүүн сонгох..."
+                />
+              )}
             />
             {errors.product_id && (
               <p className="text-xs text-destructive" role="alert">
@@ -346,48 +323,22 @@ export function BomCreateDrawer({
                 <Controller
                   control={control}
                   name={`items.${index}.material_product_id`}
-                  render={({ field: itemField }) => {
-                    const selected = products.find(
-                      (p) => p.id === itemField.value,
-                    );
-                    return (
-                      <div className="space-y-1">
-                        <FieldLabel className="text-xs">Материал</FieldLabel>
-                        <Combobox
-                          items={products}
-                          value={selected ?? null}
-                          onValueChange={(next) =>
-                            itemField.onChange(next?.id ?? "")
-                          }
-                        >
-                          <ComboboxInput
-                            placeholder="Материал сонгох..."
-                            showTrigger
-                            className="text-sm"
-                          />
-                          <ComboboxContent>
-                            <ComboboxEmpty>
-                              {productsLoading
-                                ? "Ачаалж байна..."
-                                : "Материал байхгүй"}
-                            </ComboboxEmpty>
-                            <ComboboxList>
-                              {(p: ProductOption) => (
-                                <ComboboxItem key={p.id} value={p}>
-                                  {p.name}
-                                </ComboboxItem>
-                              )}
-                            </ComboboxList>
-                          </ComboboxContent>
-                        </Combobox>
-                        {errors.items?.[index]?.material_product_id && (
-                          <p className="text-xs text-destructive" role="alert">
-                            {errors.items[index]?.material_product_id?.message}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  }}
+                  render={({ field: itemField }) => (
+                    <div className="space-y-1">
+                      <FieldLabel className="text-xs">Материал</FieldLabel>
+                      <ProductPicker
+                        products={products}
+                        value={itemField.value || null}
+                        onValueChange={(id) => itemField.onChange(id)}
+                        placeholder="Материал сонгох..."
+                      />
+                      {errors.items?.[index]?.material_product_id && (
+                        <p className="text-xs text-destructive" role="alert">
+                          {errors.items[index]?.material_product_id?.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 />
 
                 <div className="grid grid-cols-3 gap-2">
@@ -423,9 +374,16 @@ export function BomCreateDrawer({
 
                   <div className="space-y-1">
                     <FieldLabel className="text-xs">Нэгж өртөг</FieldLabel>
-                    <CurrencyInput
-                      className="text-sm"
-                      {...register(`items.${index}.estimated_unit_cost`)}
+                    <Controller
+                      control={control}
+                      name={`items.${index}.estimated_unit_cost`}
+                      render={({ field }) => (
+                        <CurrencyInput
+                          className="text-sm"
+                          value={field.value ?? undefined}
+                          onChange={field.onChange}
+                        />
+                      )}
                     />
                   </div>
                 </div>

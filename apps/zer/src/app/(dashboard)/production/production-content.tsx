@@ -91,13 +91,12 @@ function StatsCard({
   label,
   value,
   icon: Icon,
-  variant = "default",
+  _variant = "default",
   isLoading,
 }: {
   label: string;
   value: number;
   icon: React.ComponentType<{ className?: string }>;
-  variant?: "default" | "secondary" | "destructive" | "outline";
   isLoading: boolean;
 }) {
   return (
@@ -228,6 +227,7 @@ export function ProductionContent() {
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
             <div
+              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholder
               key={i}
               className="h-12 w-full animate-pulse rounded bg-muted"
             />

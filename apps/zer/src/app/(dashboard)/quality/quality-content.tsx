@@ -2,9 +2,7 @@
 
 import {
   CheckCircle,
-  Eye,
   ListChecks,
-  Plus,
   Warning,
   XCircle,
 } from "@phosphor-icons/react";
@@ -14,7 +12,6 @@ import { useState } from "react";
 import { ErpEmptyState } from "@/components/erp/empty-state";
 import { PageShell } from "@/components/erp/page-shell";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
 import {
@@ -205,10 +202,7 @@ export function QualityContent() {
       title="Чанарын хяналт"
       description="Үйлдвэрлэлийн захиалгуудын чанарын шалгалтын бүртгэл"
       actions={
-        <Button size="sm" onClick={() => setCreateOpen(true)}>
-          <Plus className="size-4 mr-1.5" />
-          Шинэ шалгалт
-        </Button>
+        <QualityCreateDrawer open={createOpen} onOpenChange={setCreateOpen} />
       }
     >
       {/* Stats row */}
@@ -286,10 +280,10 @@ export function QualityContent() {
           title="Чанарын шалгалт байхгүй"
           description="Эхний шалгалтыг бүртгэх бол Шинэ шалгалт товчийг дарна уу."
           action={
-            <Button size="sm" onClick={() => setCreateOpen(true)}>
-              <Eye className="size-4 mr-1.5" />
-              Шинэ шалгалт
-            </Button>
+            <QualityCreateDrawer
+              open={createOpen}
+              onOpenChange={setCreateOpen}
+            />
           }
         />
       )}

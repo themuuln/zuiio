@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Plus } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { capture } from "@zuiio/capture";
 import { useEffect, useRef, useState } from "react";
@@ -240,6 +241,7 @@ export function QualityCreateDrawer({
 
   return (
     <SlideInDrawer
+      key={String(open)}
       open={open}
       onOpenChange={(next) => {
         if (!next) handleClose();
@@ -248,6 +250,12 @@ export function QualityCreateDrawer({
       title="Шинэ шалгалт"
       description="Чанарын шалгалт бүртгэх"
       panelWidth="36rem"
+      trigger={
+        <Button variant="default" size="sm">
+          <Plus className="size-4 mr-1.5" />
+          Шинэ шалгалт
+        </Button>
+      }
       footer={
         <DrawerFooter>
           <DrawerCancel onClick={handleClose} />
