@@ -1,14 +1,10 @@
 "use client";
 
+import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import {
-  DndContext,
-  type DragEndEvent,
-  closestCenter,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
   arrayMove,
   horizontalListSortingStrategy,
+  SortableContext,
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -86,11 +82,7 @@ function SortableTab({
       >
         <GripVertical className="size-3" aria-hidden="true" />
       </button>
-      <button
-        type="button"
-        onClick={onSelect}
-        className="whitespace-nowrap"
-      >
+      <button type="button" onClick={onSelect} className="whitespace-nowrap">
         {item.label}
       </button>
     </div>
@@ -162,12 +154,8 @@ export function SortableTabs({
       const { active, over } = event;
       if (!over || active.id === over.id) return;
 
-      const oldIndex = orderedItems.findIndex(
-        (item) => item.key === active.id,
-      );
-      const newIndex = orderedItems.findIndex(
-        (item) => item.key === over.id,
-      );
+      const oldIndex = orderedItems.findIndex((item) => item.key === active.id);
+      const newIndex = orderedItems.findIndex((item) => item.key === over.id);
 
       if (oldIndex === -1 || newIndex === -1) return;
 
@@ -180,19 +168,13 @@ export function SortableTabs({
   );
 
   return (
-    <DndContext
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-    >
+    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext
         items={orderedItems.map((item) => item.key)}
         strategy={horizontalListSortingStrategy}
       >
         <div
-          className={cn(
-            "flex gap-1 overflow-x-auto pb-1",
-            className,
-          )}
+          className={cn("flex gap-1 overflow-x-auto pb-1", className)}
           role="tablist"
           aria-label="Ангилал сонгох (чирч эрэмбэлнэ)"
         >

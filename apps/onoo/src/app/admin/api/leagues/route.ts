@@ -1,5 +1,5 @@
+import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { NextResponse, type NextRequest } from "next/server";
 
 const DEFAULT_ORG_ID = "b0000000-0000-0000-0000-000000000001";
 
@@ -40,7 +40,12 @@ export async function POST(request: NextRequest) {
 
   const { data, error } = await supabase
     .from("leagues")
-    .insert({ name, slug, sport_id, organization_id: organization_id ?? DEFAULT_ORG_ID })
+    .insert({
+      name,
+      slug,
+      sport_id,
+      organization_id: organization_id ?? DEFAULT_ORG_ID,
+    })
     .select("*, sports(name_en, name_mn)")
     .single();
 

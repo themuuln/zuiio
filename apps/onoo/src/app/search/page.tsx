@@ -4,8 +4,7 @@ import { SearchResults } from "./components/search-results";
 
 export const metadata: Metadata = {
   title: "Хайлт — Оноо",
-  description:
-    "Тоглогч, баг, тоглолт — бүх мэдээллийг нэг дороос хайгаарай.",
+  description: "Тоглогч, баг, тоглолт — бүх мэдээллийг нэг дороос хайгаарай.",
 };
 
 export default async function SearchPage({
@@ -30,10 +29,7 @@ export default async function SearchPage({
         </p>
       </header>
 
-      <SearchResults
-        initialQuery={q}
-        initialResults={results}
-      />
+      <SearchResults initialQuery={q} initialResults={results} />
     </main>
   );
 }

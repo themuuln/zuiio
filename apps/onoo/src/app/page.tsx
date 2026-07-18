@@ -7,11 +7,10 @@ import {
   Users,
 } from "lucide-react";
 import type { Metadata } from "next";
-import { connection } from "next/server";
 import Link from "next/link";
+import { connection } from "next/server";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TeamLogo } from "@/components/team-logo";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,16 +20,17 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { PublicEmptyState } from "./components/public-empty-state";
 import {
   getBoxScore,
   getGamesByDate,
   getLeaders,
+  getLiveGames,
   getPlayers,
   getRecentGames,
   getStandings,
   getUlaanbaatarDate,
-  getLiveGames,
 } from "./lib/data";
 
 export const metadata: Metadata = {
@@ -75,7 +75,7 @@ export default async function HomePage() {
       {/* ── Hero: full-width dramatic scoreboard ── */}
       <section
         aria-labelledby="hero-heading"
-        className="relative overflow-hidden bg-sidebar text-sidebar-foreground"
+        className="player-showcase-hero relative overflow-hidden bg-sidebar text-sidebar-foreground"
       >
         <div className="player-showcase-court" aria-hidden="true" />
         <div className="relative mx-auto flex max-w-7xl flex-col gap-8 px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-20">
@@ -121,9 +121,7 @@ export default async function HomePage() {
                   heroGame.away_score != null ? (
                     <p className="stat-number text-5xl text-warning sm:text-6xl lg:text-7xl">
                       {heroGame.home_score}
-                      <span className="px-2 text-sidebar-foreground/30">
-                        –
-                      </span>
+                      <span className="px-2 text-sidebar-foreground/30">–</span>
                       {heroGame.away_score}
                     </p>
                   ) : (
@@ -136,7 +134,10 @@ export default async function HomePage() {
                   )}
                   {liveGame && (
                     <p className="mt-2 flex items-center justify-center gap-2 text-sm font-semibold text-warning">
-                      <Radio className="size-4 animate-pulse" aria-hidden="true" />
+                      <Radio
+                        className="size-4 animate-pulse"
+                        aria-hidden="true"
+                      />
                       Шууд
                     </p>
                   )}
@@ -160,7 +161,11 @@ export default async function HomePage() {
 
               {/* Quick actions */}
               <div className="flex flex-col gap-3 lg:col-span-4 lg:items-end">
-                <Button asChild variant="ghost" className="text-sidebar-foreground/70 hover:text-sidebar-foreground">
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="text-sidebar-foreground/70 hover:text-sidebar-foreground"
+                >
                   <Link href="/games">
                     Бүх тоглолт
                     <ChevronRight data-icon="inline-end" aria-hidden="true" />
@@ -380,8 +385,11 @@ export default async function HomePage() {
             </CardContent>
           </Card>
 
-          {/* Featured player spotlight */}
-          <Card className="overflow-hidden bg-sidebar text-sidebar-foreground shadow-none lg:col-span-5">
+          {/* Featured player spotlight — hero card */}
+          <Card
+            variant="hero"
+            className="overflow-hidden text-sidebar-foreground shadow-none lg:col-span-5"
+          >
             <CardHeader>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/60">
@@ -442,7 +450,7 @@ export default async function HomePage() {
 
         {/* ── Leaders + Standings ── */}
         <section className="court-divider grid gap-6 rounded-xl bg-[var(--surface-1)] p-6 sm:p-8 lg:grid-cols-12">
-          {/* Leaders top 3 */}
+          {/* Leaders top 3 — podium style */}
           <Card className="shadow-none lg:col-span-5">
             <CardHeader>
               <div>
@@ -466,25 +474,47 @@ export default async function HomePage() {
                     <li key={`${leader.player_id}-${leader.competition_id}`}>
                       <Link
                         href={`/players/${leader.player_id}`}
-                        className="flex items-center gap-3 rounded-lg p-3 transition-[background-color,transform] hover:bg-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
+                        className={cn(
+                          "flex items-center gap-3 rounded-lg p-3 transition-[background-color,transform] hover:bg-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
+                          index === 0 &&
+                            "bg-[var(--surface-3)] ring-1 ring-[var(--brand-sports)]/20",
+                        )}
                       >
-                        <span className="w-5 text-sm font-black tabular-nums text-muted-foreground">
+                        <span
+                          className={cn(
+                            "w-5 text-sm font-black tabular-nums",
+                            index === 0
+                              ? "text-[var(--brand-sports)]"
+                              : "text-muted-foreground",
+                          )}
+                        >
                           {index + 1}
                         </span>
                         <PlayerAvatar
                           photoUrl={leader.player_photo_url}
                           name={leader.player_name}
                           primaryColor={leader.team_primary_color}
+                          size={index === 0 ? "md" : "sm"}
                         />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate font-semibold">
+                          <p
+                            className={cn(
+                              "truncate font-semibold",
+                              index === 0 && "text-base",
+                            )}
+                          >
                             {leader.player_name}
                           </p>
                           <p className="truncate text-xs text-muted-foreground">
                             {leader.team_name}
                           </p>
                         </div>
-                        <span className="stat-number text-xl">
+                        <span
+                          className={cn(
+                            "stat-number",
+                            index === 0 ? "text-2xl" : "text-xl",
+                          )}
+                        >
                           {formatAverage(leader.pts)}
                         </span>
                       </Link>
@@ -501,7 +531,7 @@ export default async function HomePage() {
             </CardContent>
           </Card>
 
-          {/* Standings top 5 */}
+          {/* Standings top 5 — compact table with team colors */}
           <Card className="shadow-none lg:col-span-7">
             <CardHeader>
               <div>
@@ -525,9 +555,20 @@ export default async function HomePage() {
                     <li key={row.team_season_id}>
                       <Link
                         href={`/teams/${row.team_slug}`}
-                        className="grid grid-cols-12 items-center gap-3 rounded-lg p-3 transition-[background-color,transform] hover:bg-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
+                        className={cn(
+                          "grid grid-cols-12 items-center gap-3 rounded-lg p-3 transition-[background-color,transform] hover:bg-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
+                          index === 0 &&
+                            "bg-[var(--surface-3)] ring-1 ring-[var(--brand-sports)]/20",
+                        )}
                       >
-                        <span className="col-span-1 text-sm font-black tabular-nums text-muted-foreground">
+                        <span
+                          className={cn(
+                            "col-span-1 text-sm font-black tabular-nums",
+                            index === 0
+                              ? "text-[var(--brand-sports)]"
+                              : "text-muted-foreground",
+                          )}
+                        >
                           {index + 1}
                         </span>
                         <span className="col-span-7 flex min-w-0 items-center gap-3">
@@ -536,14 +577,24 @@ export default async function HomePage() {
                             shortCode={row.team_short_code}
                             primaryColor={row.team_primary_color}
                           />
-                          <span className="truncate font-semibold">
+                          <span
+                            className={cn(
+                              "truncate font-semibold",
+                              index === 0 && "text-base",
+                            )}
+                          >
                             {row.team_name}
                           </span>
                         </span>
                         <span className="col-span-2 text-center text-sm tabular-nums text-muted-foreground">
                           {row.w}-{row.l}
                         </span>
-                        <span className="col-span-2 text-right font-black tabular-nums">
+                        <span
+                          className={cn(
+                            "col-span-2 text-right font-black tabular-nums",
+                            index === 0 && "text-[var(--brand-sports)]",
+                          )}
+                        >
                           {(row.win_pct * 100).toFixed(1)}%
                         </span>
                       </Link>

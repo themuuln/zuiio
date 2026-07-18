@@ -92,7 +92,14 @@ export function CourtHeatmap({ zones, className }: CourtHeatmapProps) {
 
           {/* Basket */}
           <circle cx={300} cy={60} r={8} fill={COURT_STROKE} />
-          <rect x={280} y={20} width={40} height={5} rx={2} fill={COURT_STROKE} />
+          <rect
+            x={280}
+            y={20}
+            width={40}
+            height={5}
+            rx={2}
+            fill={COURT_STROKE}
+          />
 
           {/* Backboard */}
           <line x1={260} y1={45} x2={340} y2={45} strokeWidth={3} />
@@ -118,13 +125,19 @@ export function CourtHeatmap({ zones, className }: CourtHeatmapProps) {
                 opacity={isActive ? 0.8 : opacity}
                 stroke={isActive ? "var(--brand-sports)" : "transparent"}
                 strokeWidth={2}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ")
+                    setActiveZone((prev) =>
+                      prev?.id === zone.id ? null : zone,
+                    );
+                }}
                 className="cursor-pointer transition-opacity"
                 onPointerEnter={() => setActiveZone(zone)}
                 onPointerLeave={() => setActiveZone(null)}
                 onClick={() =>
-                  setActiveZone((prev) =>
-                    prev?.id === zone.id ? null : zone,
-                  )
+                  setActiveZone((prev) => (prev?.id === zone.id ? null : zone))
                 }
               />
             );
@@ -138,13 +151,17 @@ export function CourtHeatmap({ zones, className }: CourtHeatmapProps) {
               opacity={isActive ? 0.8 : opacity}
               stroke={isActive ? "var(--brand-sports)" : "transparent"}
               strokeWidth={2}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ")
+                  setActiveZone((prev) => (prev?.id === zone.id ? null : zone));
+              }}
               className="cursor-pointer transition-opacity"
               onPointerEnter={() => setActiveZone(zone)}
               onPointerLeave={() => setActiveZone(null)}
               onClick={() =>
-                setActiveZone((prev) =>
-                  prev?.id === zone.id ? null : zone,
-                )
+                setActiveZone((prev) => (prev?.id === zone.id ? null : zone))
               }
             />
           );
@@ -161,7 +178,8 @@ export function CourtHeatmap({ zones, className }: CourtHeatmapProps) {
           <p className="tabular-nums">
             {activeZone.made}/{activeZone.attempted}{" "}
             <span className="text-background/70">
-              ({activeZone.attempted > 0
+              (
+              {activeZone.attempted > 0
                 ? ((activeZone.made / activeZone.attempted) * 100).toFixed(1)
                 : "—"}
               %)

@@ -1,15 +1,15 @@
 "use client";
 
+import {
+  Calendar,
+  LayoutDashboard,
+  Timer,
+  Trophy,
+  UserCircle,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  Trophy,
-  Calendar,
-  Users,
-  UserCircle,
-  Timer,
-} from "lucide-react";
 
 const links = [
   { href: "/admin", label: "Хянах цэс", icon: LayoutDashboard },
@@ -26,9 +26,8 @@ export function SidebarNav() {
   return (
     <nav className="flex flex-col gap-1">
       {links.map(({ href, label, icon: Icon }) => {
-        const isActive = href === "/admin"
-          ? pathname === "/admin"
-          : pathname.startsWith(href);
+        const isActive =
+          href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
 
         return (
           <Link

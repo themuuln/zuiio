@@ -46,7 +46,12 @@ function doubleDoubleLabel(line: GameSummaryInput): DoubleDoubleResult {
   const eligible = stats.filter(([v]) => v >= 10).sort((a, b) => b[0] - a[0]);
   if (eligible.length < 2) {
     // Shouldn't be called without 2+ eligible stats, but be safe
-    return { v1: eligible[0]?.[0] ?? 0, v2: eligible[1]?.[0] ?? 0, mnLabel: eligible[0]?.[1] ?? "", enLabel: eligible[0]?.[2] ?? "" };
+    return {
+      v1: eligible[0]?.[0] ?? 0,
+      v2: eligible[1]?.[0] ?? 0,
+      mnLabel: eligible[0]?.[1] ?? "",
+      enLabel: eligible[0]?.[2] ?? "",
+    };
   }
   // After guard: eligible has ≥2 items, so indexing is safe
   const labelIdx = eligible.findIndex(([, , k]) => k !== "pts");

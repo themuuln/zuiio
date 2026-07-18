@@ -147,16 +147,16 @@ class TrackerDB {
 
   async loadPendingByGame(gameId: string): Promise<StoredOperation[]> {
     if (!this.db) await this.init();
-    const all = await this.db!.getAllFromIndex(STORE_NAME, "gameId", gameId);
-    return all
+    const all = await this.db?.getAllFromIndex(STORE_NAME, "gameId", gameId);
+    return (all ?? [])
       .filter((op) => op.state === "pending" || op.state === "sending")
       .sort((a, b) => a.localSeq - b.localSeq);
   }
 
   async loadAllByGame(gameId: string): Promise<StoredOperation[]> {
     if (!this.db) await this.init();
-    const all = await this.db!.getAllFromIndex(STORE_NAME, "gameId", gameId);
-    return all.sort((a, b) => a.localSeq - b.localSeq);
+    const all = await this.db?.getAllFromIndex(STORE_NAME, "gameId", gameId);
+    return (all ?? []).sort((a, b) => a.localSeq - b.localSeq);
   }
 
   async markAcknowledged(operationId: string): Promise<void> {
@@ -199,8 +199,10 @@ class TrackerDB {
 
   async clearAcknowledged(gameId: string): Promise<void> {
     if (!this.db) await this.init();
-    const all = await this.db!.getAllFromIndex(STORE_NAME, "gameId", gameId);
-    const tx = this.db!.transaction(STORE_NAME, "readwrite");
+    const db = this.db;
+    if (!db) return;
+    const all = await db.getAllFromIndex(STORE_NAME, "gameId", gameId);
+    const tx = db.transaction(STORE_NAME, "readwrite");
     const store = tx.objectStore(STORE_NAME);
     for (const op of all) {
       if (op.state === "acknowledged") {
@@ -212,7 +214,7 @@ class TrackerDB {
 
   async size(): Promise<number> {
     if (!this.db) await this.init();
-    return this.db!.count(STORE_NAME) ?? 0;
+    return this.db?.count(STORE_NAME) ?? 0;
   }
 }
 

@@ -1,6 +1,7 @@
 import { CalendarDays, Radio } from "lucide-react";
 import type { Metadata } from "next";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { GameCard } from "../components/game-card";
 import { PublicEmptyState } from "../components/public-empty-state";
 import {
@@ -65,7 +66,11 @@ export default async function GamesPage({
 
       {/* Quick stats bar */}
       {games.length > 0 && (
-        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+        <div
+          className="flex flex-wrap gap-4 rounded-lg bg-[var(--surface-2)] px-4 py-2.5 text-sm font-medium text-muted-foreground"
+          role="status"
+          aria-label="Өдрийн товч мэдээлэл"
+        >
           {liveGames.length > 0 && (
             <span className="flex items-center gap-1.5">
               <span className="size-2 rounded-full bg-destructive animate-pulse" />
@@ -138,10 +143,18 @@ function GameGroup({
   live = false,
 }: GameGroupProps) {
   return (
-    <section aria-labelledby={id} className="flex flex-col gap-4 pb-2 first:pb-0 border-b border-border/50 last:border-b-0 last:pb-0">
+    <section
+      aria-labelledby={id}
+      className="flex flex-col gap-5 border-b border-border/40 pb-8 last:border-b-0 last:pb-0"
+    >
       <div className="flex items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <p
+            className={cn(
+              "text-xs font-semibold uppercase tracking-wider",
+              live ? "text-destructive" : "text-muted-foreground",
+            )}
+          >
             {eyebrow}
           </p>
           <h2 id={id} className="mt-1 text-2xl font-bold tracking-tight">

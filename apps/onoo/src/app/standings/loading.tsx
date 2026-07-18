@@ -1,9 +1,5 @@
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@/components/ui/card";
 
 export default function StandingsLoading() {
   return (
@@ -29,6 +25,7 @@ export default function StandingsLoading() {
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           {[1, 2, 3].map((i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: skeleton
             <Card key={i} className="shadow-none">
               <CardHeader>
                 <Skeleton className="h-5 w-8" />
@@ -63,13 +60,18 @@ export default function StandingsLoading() {
           {/* Table header */}
           <div className="grid grid-cols-9 gap-4 border-b px-4 py-3">
             {[32, 80, 32, 32, 48, 32, 56, 64, 48].map((w, i) => (
-              <div key={i} className="flex justify-center first:justify-start last:justify-end">
+              // biome-ignore lint/suspicious/noArrayIndexKey: skeleton
+              <div
+                key={i}
+                className="flex justify-center first:justify-start last:justify-end"
+              >
                 <Skeleton className="h-4" style={{ width: w }} />
               </div>
             ))}
           </div>
           {/* Table rows */}
           {[1, 2, 3, 4, 5, 6, 7, 8].map((row) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: skeleton
             <div
               key={row}
               className="grid grid-cols-9 gap-4 border-b last:border-b-0 px-4 py-3"
@@ -79,13 +81,27 @@ export default function StandingsLoading() {
                 <Skeleton className="size-8 rounded-full" />
                 <Skeleton className="h-4 w-24" />
               </div>
-              <div className="flex justify-center"><Skeleton className="h-4 w-5" /></div>
-              <div className="flex justify-center"><Skeleton className="h-4 w-5" /></div>
-              <div className="flex justify-center"><Skeleton className="h-4 w-10" /></div>
-              <div className="flex justify-center"><Skeleton className="h-4 w-5" /></div>
-              <div className="flex justify-center"><Skeleton className="h-5 w-12 rounded-md" /></div>
-              <div className="flex justify-center"><Skeleton className="h-4 w-8" /></div>
-              <div className="flex justify-end"><Skeleton className="h-4 w-8" /></div>
+              <div className="flex justify-center">
+                <Skeleton className="h-4 w-5" />
+              </div>
+              <div className="flex justify-center">
+                <Skeleton className="h-4 w-5" />
+              </div>
+              <div className="flex justify-center">
+                <Skeleton className="h-4 w-10" />
+              </div>
+              <div className="flex justify-center">
+                <Skeleton className="h-4 w-5" />
+              </div>
+              <div className="flex justify-center">
+                <Skeleton className="h-5 w-12 rounded-md" />
+              </div>
+              <div className="flex justify-center">
+                <Skeleton className="h-4 w-8" />
+              </div>
+              <div className="flex justify-end">
+                <Skeleton className="h-4 w-8" />
+              </div>
             </div>
           ))}
         </div>

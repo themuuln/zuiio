@@ -21,7 +21,10 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 
 // ── Sports ──
 export const sportsApi = {
-  list: () => request<Array<{ id: string; key: string; name_mn: string; name_en: string }>>(`${BASE}/sports`),
+  list: () =>
+    request<
+      Array<{ id: string; key: string; name_mn: string; name_en: string }>
+    >(`${BASE}/sports`),
 };
 
 // ── Leagues ──
@@ -39,11 +42,23 @@ export interface LeagueRow {
 export const leaguesApi = {
   list: () => request<LeagueRow[]>(`${BASE}/leagues`),
   get: (id: string) => request<LeagueRow>(`${BASE}/leagues/${id}`),
-  create: (data: { name: string; slug: string; sport_id: string; organization_id: string }) =>
-    request<LeagueRow>(`${BASE}/leagues`, { method: "POST", body: JSON.stringify(data) }),
+  create: (data: {
+    name: string;
+    slug: string;
+    sport_id: string;
+    organization_id: string;
+  }) =>
+    request<LeagueRow>(`${BASE}/leagues`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
   update: (id: string, data: Partial<LeagueRow>) =>
-    request<LeagueRow>(`${BASE}/leagues/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-  remove: (id: string) => request<void>(`${BASE}/leagues/${id}`, { method: "DELETE" }),
+    request<LeagueRow>(`${BASE}/leagues/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  remove: (id: string) =>
+    request<void>(`${BASE}/leagues/${id}`, { method: "DELETE" }),
 };
 
 // ── Seasons ──
@@ -63,11 +78,23 @@ export const seasonsApi = {
     return request<SeasonRow[]>(`${BASE}/seasons${qs}`);
   },
   get: (id: string) => request<SeasonRow>(`${BASE}/seasons/${id}`),
-  create: (data: { league_id: string; name: string; starts_on?: string; ends_on?: string }) =>
-    request<SeasonRow>(`${BASE}/seasons`, { method: "POST", body: JSON.stringify(data) }),
+  create: (data: {
+    league_id: string;
+    name: string;
+    starts_on?: string;
+    ends_on?: string;
+  }) =>
+    request<SeasonRow>(`${BASE}/seasons`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
   update: (id: string, data: Partial<SeasonRow>) =>
-    request<SeasonRow>(`${BASE}/seasons/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-  remove: (id: string) => request<void>(`${BASE}/seasons/${id}`, { method: "DELETE" }),
+    request<SeasonRow>(`${BASE}/seasons/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  remove: (id: string) =>
+    request<void>(`${BASE}/seasons/${id}`, { method: "DELETE" }),
 };
 
 // ── Teams ──
@@ -89,11 +116,24 @@ export const teamsApi = {
     return request<TeamRow[]>(`${BASE}/teams${qs}`);
   },
   get: (id: string) => request<TeamRow>(`${BASE}/teams/${id}`),
-  create: (data: { league_id: string; name: string; short_code: string; slug: string; primary_color?: string }) =>
-    request<TeamRow>(`${BASE}/teams`, { method: "POST", body: JSON.stringify(data) }),
+  create: (data: {
+    league_id: string;
+    name: string;
+    short_code: string;
+    slug: string;
+    primary_color?: string;
+  }) =>
+    request<TeamRow>(`${BASE}/teams`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
   update: (id: string, data: Partial<TeamRow>) =>
-    request<TeamRow>(`${BASE}/teams/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-  remove: (id: string) => request<void>(`${BASE}/teams/${id}`, { method: "DELETE" }),
+    request<TeamRow>(`${BASE}/teams/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  remove: (id: string) =>
+    request<void>(`${BASE}/teams/${id}`, { method: "DELETE" }),
 };
 
 // ── Players ──
@@ -119,11 +159,26 @@ export const playersApi = {
     return request<PlayerRow[]>(`${BASE}/players${qs}`);
   },
   get: (id: string) => request<PlayerRow>(`${BASE}/players/${id}`),
-  create: (data: { canonical_name: string; name_latin?: string; position?: string; nationality?: string; visibility?: string; consent_recorded_at?: string; consent_note?: string }) =>
-    request<PlayerRow>(`${BASE}/players`, { method: "POST", body: JSON.stringify(data) }),
+  create: (data: {
+    canonical_name: string;
+    name_latin?: string;
+    position?: string;
+    nationality?: string;
+    visibility?: string;
+    consent_recorded_at?: string;
+    consent_note?: string;
+  }) =>
+    request<PlayerRow>(`${BASE}/players`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
   update: (id: string, data: Partial<PlayerRow>) =>
-    request<PlayerRow>(`${BASE}/players/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-  remove: (id: string) => request<void>(`${BASE}/players/${id}`, { method: "DELETE" }),
+    request<PlayerRow>(`${BASE}/players/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  remove: (id: string) =>
+    request<void>(`${BASE}/players/${id}`, { method: "DELETE" }),
 };
 
 // ── Games ──
@@ -140,8 +195,12 @@ export interface GameRow {
   away_score: number | null;
   created_at: string;
   competitions?: { name: string; season_id: string } | null;
-  home_team_season?: { teams?: { name: string; short_code: string } | null } | null;
-  away_team_season?: { teams?: { name: string; short_code: string } | null } | null;
+  home_team_season?: {
+    teams?: { name: string; short_code: string } | null;
+  } | null;
+  away_team_season?: {
+    teams?: { name: string; short_code: string } | null;
+  } | null;
   venues?: { name: string; city: string | null } | null;
 }
 
@@ -174,9 +233,16 @@ export const gamesApi = {
     away_team_season_id: string;
     venue_id?: string;
     scheduled_at: string;
-  }) => request<GameRow>(`${BASE}/games`, { method: "POST", body: JSON.stringify(data) }),
+  }) =>
+    request<GameRow>(`${BASE}/games`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
   updateStatus: (id: string, status: string) =>
-    request<GameRow>(`${BASE}/games/${id}`, { method: "PUT", body: JSON.stringify({ status }) }),
+    request<GameRow>(`${BASE}/games/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ status }),
+    }),
 };
 
 export const competitionsApi = {
@@ -272,4 +338,3 @@ export const revisionsApi = {
     return data as RevisionRow;
   },
 };
-

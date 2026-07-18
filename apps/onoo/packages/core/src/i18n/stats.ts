@@ -43,20 +43,23 @@ export const STAT_LABELS = {
 } as const;
 
 export type Locale = keyof typeof STAT_LABELS;
-export type StatKey = keyof typeof STAT_LABELS["en"];
+export type StatKey = keyof (typeof STAT_LABELS)["en"];
 
 export function getStatLabel(stat: StatKey, locale: Locale = "mn"): string {
   return STAT_LABELS[locale][stat] ?? stat;
 }
 
 export const MILESTONE_LABELS: Record<string, { mn: string; en: string }> = {
-  career_high_pts: { mn: 'Онооны карьерийн дээд', en: 'Career High PTS' },
-  career_high_reb: { mn: 'Самбарын карьерийн дээд', en: 'Career High REB' },
-  career_high_ast: { mn: 'Дамжуулалтын карьерийн дээд', en: 'Career High AST' },
-  career_high_stl: { mn: 'Булааны карьерийн дээд', en: 'Career High STL' },
-  career_high_blk: { mn: 'Блокын карьерийн дээд', en: 'Career High BLK' },
-  double_double: { mn: 'Давхар-X', en: 'Double-Double' },
-  triple_double: { mn: 'Гурван-X', en: 'Triple-Double' },
-  twenty_plus: { mn: '20+ оноо', en: '20+ Points' },
-  double_digit_streak: { mn: 'Хоёр орон тооны цуврал', en: 'Double-Digit Streak' },
+  career_high_pts: { mn: "Онооны карьерийн дээд", en: "Career High PTS" },
+  career_high_reb: { mn: "Самбарын карьерийн дээд", en: "Career High REB" },
+  career_high_ast: { mn: "Дамжуулалтын карьерийн дээд", en: "Career High AST" },
+  career_high_stl: { mn: "Булааны карьерийн дээд", en: "Career High STL" },
+  career_high_blk: { mn: "Блокын карьерийн дээд", en: "Career High BLK" },
+  double_double: { mn: "Давхар-X", en: "Double-Double" },
+  triple_double: { mn: "Гурван-X", en: "Triple-Double" },
+  twenty_plus: { mn: "20+ оноо", en: "20+ Points" },
+  double_digit_streak: {
+    mn: "Хоёр орон тооны цуврал",
+    en: "Double-Digit Streak",
+  },
 };

@@ -56,11 +56,7 @@ const LIVE_COURT_STYLES = `
  * displays the last shot with a ripple animation.
  * Pure SVG + CSS — no dependencies.
  */
-export function LiveCourt({
-  isLive,
-  lastShot,
-  className,
-}: LiveCourtProps) {
+export function LiveCourt({ isLive, lastShot, className }: LiveCourtProps) {
   if (!isLive && !lastShot) return null;
 
   // Inject styles
@@ -79,21 +75,14 @@ export function LiveCourt({
   const shotCy = lastShot ? 20 + lastShot.y * 510 : 260;
 
   return (
-    <div
-      className={cn("relative overflow-hidden rounded-xl", className)}
-      aria-label={isLive ? "Тоглолт явагдаж байна" : "Сүүлчийн шидэлт"}
-    >
+    <div className={cn("relative overflow-hidden rounded-xl", className)}>
       <svg
         viewBox="0 0 600 550"
         className="w-full opacity-20"
         aria-hidden="true"
       >
         {/* Simplified court outline */}
-        <g
-          stroke="var(--color-muted-foreground)"
-          fill="none"
-          strokeWidth={1.5}
-        >
+        <g stroke="var(--color-muted-foreground)" fill="none" strokeWidth={1.5}>
           <rect x={20} y={20} width={560} height={510} rx={4} />
           <rect x={170} y={20} width={260} height={190} rx={2} />
           <circle cx={300} cy={210} r={60} />
@@ -121,7 +110,9 @@ export function LiveCourt({
               cy={shotCy}
               fill="none"
               stroke={
-                lastShot.made ? "var(--brand-sports)" : "var(--color-destructive)"
+                lastShot.made
+                  ? "var(--brand-sports)"
+                  : "var(--color-destructive)"
               }
               className="live-court-shot"
             />
@@ -131,7 +122,9 @@ export function LiveCourt({
               cy={shotCy}
               r={4}
               fill={
-                lastShot.made ? "var(--brand-sports)" : "var(--color-destructive)"
+                lastShot.made
+                  ? "var(--brand-sports)"
+                  : "var(--color-destructive)"
               }
               opacity={0.8}
             />

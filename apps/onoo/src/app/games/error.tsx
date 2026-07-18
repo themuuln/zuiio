@@ -12,10 +12,10 @@ import {
 } from "@/components/ui/empty";
 
 export default function GamesError({
-  error,
+  _error,
   reset,
 }: {
-  error: Error & { digest?: string };
+  _error: Error & { digest?: string };
   reset: () => void;
 }) {
   return (

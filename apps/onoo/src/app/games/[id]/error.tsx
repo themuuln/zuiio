@@ -13,10 +13,10 @@ import {
 } from "@/components/ui/empty";
 
 export default function GameDetailError({
-  error,
+  _error,
   reset,
 }: {
-  error: Error & { digest?: string };
+  _error: Error & { digest?: string };
   reset: () => void;
 }) {
   return (

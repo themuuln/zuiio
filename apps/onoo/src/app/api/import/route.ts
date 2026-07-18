@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 interface ImportRow {
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     if (!file || !leagueId || !seasonName) {
       return NextResponse.json(
         { error: "file, leagueId, and seasonName required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -43,11 +43,13 @@ export async function POST(request: NextRequest) {
     if (lines.length < 2) {
       return NextResponse.json(
         { error: "CSV must have header + at least 1 data row" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const headers = (lines[0] ?? "").split(",").map((h) => h.trim().toLowerCase());
+    const headers = (lines[0] ?? "")
+      .split(",")
+      .map((h) => h.trim().toLowerCase());
     const rows: ImportRow[] = [];
 
     for (let i = 1; i < lines.length; i++) {
@@ -56,7 +58,7 @@ export async function POST(request: NextRequest) {
 
       headers.forEach((header, idx) => {
         const val = values[idx] || "";
-        row[header] = isNaN(Number(val)) ? val : Number(val);
+        row[header] = Number.isNaN(Number(val)) ? val : Number(val);
       });
 
       rows.push(row as unknown as ImportRow);
@@ -80,7 +82,10 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (seasonError) {
-        return NextResponse.json({ error: seasonError.message }, { status: 500 });
+        return NextResponse.json(
+          { error: seasonError.message },
+          { status: 500 },
+        );
       }
       season = newSeason;
     }
@@ -96,7 +101,11 @@ export async function POST(request: NextRequest) {
     if (!competition) {
       const { data: newComp, error: compError } = await supabase
         .from("competitions")
-        .insert({ season_id: season.id, name: "Regular Season", type: "regular" })
+        .insert({
+          season_id: season.id,
+          name: "Regular Season",
+          type: "regular",
+        })
         .select("id")
         .single();
 
@@ -212,7 +221,7 @@ export async function POST(request: NextRequest) {
               tov: row.tov || 0,
               pf: row.pf || 0,
             },
-            { onConflict: "player_id,team_season_id,competition_id" }
+            { onConflict: "player_id,team_season_id,competition_id" },
           );
 
         if (statsError) {
@@ -238,7 +247,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     return NextResponse.json(
       { error: `Import failed: ${err}` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

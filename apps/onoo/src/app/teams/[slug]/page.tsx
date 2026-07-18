@@ -31,14 +31,16 @@ export async function generateMetadata({
 
   return {
     title: `${data.team.name} — Оноо`,
-    description: `${data.team.name} багийн бүрэлдэхүүн, форм, тоглолт болон статистик.`,
+    description: `${data.team.name} багийн байрлал, форм, тоглогчид ба сүүлийн тоглолтууд.`,
   };
 }
 
 function getResult(game: GameWithTeams, teamId: string): "W" | "L" {
   const isHome = game.home_team_id === teamId;
-  const teamScore = (isHome ? game.home_score : game.away_score) ?? 0;
-  const opponentScore = (isHome ? game.away_score : game.home_score) ?? 0;
+  const teamScore = isHome ? (game.home_score ?? 0) : (game.away_score ?? 0);
+  const opponentScore = isHome
+    ? (game.away_score ?? 0)
+    : (game.home_score ?? 0);
   return teamScore > opponentScore ? "W" : "L";
 }
 
@@ -73,7 +75,10 @@ export default async function TeamPage({ params }: TeamPageProps) {
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-      <section className="team-showcase-hero relative overflow-hidden rounded-3xl bg-sidebar p-6 text-sidebar-foreground sm:p-8 lg:p-10">
+      <section
+        className="team-showcase-hero relative overflow-hidden rounded-3xl bg-sidebar p-6 text-sidebar-foreground sm:p-8 lg:p-10"
+        aria-label={`${team.name} багийн мэдээлэл`}
+      >
         <div className="relative grid gap-8 lg:grid-cols-12 lg:items-end">
           <div className="flex items-center gap-5 lg:col-span-7">
             <TeamLogo
@@ -219,11 +224,20 @@ export default async function TeamPage({ params }: TeamPageProps) {
                 href={`/players/${leader.player_id}`}
                 className="group rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <Card className="h-full shadow-none transition-[background-color,transform] group-hover:bg-accent/40 group-active:scale-95 motion-reduce:transition-none">
+                <Card
+                  className="h-full shadow-none transition-[background-color,transform] group-hover:bg-accent/40 group-active:scale-95 motion-reduce:transition-none"
+                  style={
+                    index === 0 && team.primary_color
+                      ? {
+                          borderTop: `3px solid ${team.primary_color}`,
+                        }
+                      : undefined
+                  }
+                >
                   <CardHeader>
                     <Badge variant="secondary">#{index + 1}</Badge>
                     <CardAction>
-                      <span className="text-2xl font-black tabular-nums">
+                      <span className="stat-number text-2xl">
                         {leader.pts?.toFixed(1) ?? "—"}
                       </span>
                     </CardAction>
@@ -374,7 +388,7 @@ function TeamStatement({ label, value }: TeamStatementProps) {
   return (
     <div className="rounded-xl bg-sidebar-accent p-4 text-center">
       <p className="stat-number text-2xl text-warning">{value}</p>
-      <p className="mt-1 text-xs font-semibold tracking-wider text-sidebar-foreground/60 uppercase">
+      <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/60">
         {label}
       </p>
     </div>
@@ -390,7 +404,7 @@ function TeamMetric({ label, value }: TeamMetricProps) {
   return (
     <div className="rounded-lg bg-[var(--surface-3)] p-4">
       <p className="stat-number text-2xl">{value}</p>
-      <p className="mt-1 text-xs font-semibold text-muted-foreground uppercase">
+      <p className="mt-1 text-xs font-semibold uppercase text-muted-foreground">
         {label}
       </p>
     </div>
@@ -406,7 +420,7 @@ function RosterStat({ label, value }: RosterStatProps) {
   return (
     <div className="rounded-lg bg-[var(--surface-3)] p-2 text-center">
       <p className="stat-number">{value}</p>
-      <p className="mt-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+      <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
       </p>
     </div>

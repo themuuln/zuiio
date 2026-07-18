@@ -1,18 +1,18 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { ExternalLink, CheckCircle, XCircle, FileText } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
+import { CheckCircle, ExternalLink, FileText, XCircle } from "lucide-react";
+import { toast } from "sonner";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  type RevisionRow,
+  revisionsApi,
+  type SubmissionRow,
+  submissionsApi,
+} from "@/app/admin/_lib/api";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -21,12 +21,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  submissionsApi,
-  revisionsApi,
-  type SubmissionRow,
-  type RevisionRow,
-} from "@/app/admin/_lib/api";
 
 const SOURCE_LABELS: Record<string, string> = {
   tracker_journal: "Трекерийн сэтгүүл",
@@ -98,18 +92,12 @@ interface ReviewTabProps {
 export function ReviewTab({ gameId }: ReviewTabProps) {
   const queryClient = useQueryClient();
 
-  const {
-    data: submissions = [],
-    isPending: subsPending,
-  } = useQuery({
+  const { data: submissions = [], isPending: subsPending } = useQuery({
     queryKey: ["admin", "game", gameId, "submissions"],
     queryFn: () => submissionsApi.list(gameId),
   });
 
-  const {
-    data: revisions = [],
-    isPending: revsPending,
-  } = useQuery({
+  const { data: revisions = [], isPending: revsPending } = useQuery({
     queryKey: ["admin", "game", gameId, "revisions"],
     queryFn: () => revisionsApi.list(gameId),
   });
@@ -170,11 +158,7 @@ export function ReviewTab({ gameId }: ReviewTabProps) {
   });
 
   function handleApproveSubmission(sub: SubmissionRow) {
-    if (
-      !window.confirm(
-        "Илгээлтийг зөвшөөрөх үү? Энэ нь бүхнийг зөвшөөрнө."
-      )
-    )
+    if (!window.confirm("Илгээлтийг зөвшөөрөх үү? Энэ нь бүхнийг зөвшөөрнө."))
       return;
     approveSubmission.mutate(sub.id);
   }
@@ -185,11 +169,7 @@ export function ReviewTab({ gameId }: ReviewTabProps) {
   }
 
   function handleApproveRevision(rev: RevisionRow) {
-    if (
-      !window.confirm(
-        "Нэмэлтийг баталгаажуулах уу? Энэ нь оноог шинэчилнэ."
-      )
-    )
+    if (!window.confirm("Нэмэлтийг баталгаажуулах уу? Энэ нь оноог шинэчилнэ."))
       return;
     approveRevision.mutate(rev.id);
   }
@@ -219,9 +199,7 @@ export function ReviewTab({ gameId }: ReviewTabProps) {
         </CardHeader>
         <CardContent>
           {subsPending ? (
-            <p className="text-sm text-muted-foreground">
-              Ачаалж байна...
-            </p>
+            <p className="text-sm text-muted-foreground">Ачаалж байна...</p>
           ) : submissions.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               Илгээлтийн жагсаалт хоосон байна
@@ -248,7 +226,7 @@ export function ReviewTab({ gameId }: ReviewTabProps) {
                         <TableCell>
                           {format(
                             new Date(sub.submitted_at),
-                            "yyyy-MM-dd HH:mm"
+                            "yyyy-MM-dd HH:mm",
                           )}
                         </TableCell>
                         <TableCell>
@@ -264,15 +242,11 @@ export function ReviewTab({ gameId }: ReviewTabProps) {
                               <ExternalLink className="size-3" />
                             </a>
                           ) : (
-                            <span className="text-muted-foreground">
-                              —
-                            </span>
+                            <span className="text-muted-foreground">—</span>
                           )}
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant={submissionStatusVariant(sub.status)}
-                          >
+                          <Badge variant={submissionStatusVariant(sub.status)}>
                             {submissionStatusLabel(sub.status)}
                           </Badge>
                         </TableCell>
@@ -324,13 +298,12 @@ export function ReviewTab({ gameId }: ReviewTabProps) {
                       {processedSubs.map((sub) => (
                         <TableRow key={sub.id}>
                           <TableCell>
-                            {SOURCE_LABELS[sub.source_type] ??
-                              sub.source_type}
+                            {SOURCE_LABELS[sub.source_type] ?? sub.source_type}
                           </TableCell>
                           <TableCell>
                             {format(
                               new Date(sub.submitted_at),
-                              "yyyy-MM-dd HH:mm"
+                              "yyyy-MM-dd HH:mm",
                             )}
                           </TableCell>
                           <TableCell>
@@ -344,7 +317,7 @@ export function ReviewTab({ gameId }: ReviewTabProps) {
                             {sub.reviewed_at
                               ? format(
                                   new Date(sub.reviewed_at),
-                                  "yyyy-MM-dd HH:mm"
+                                  "yyyy-MM-dd HH:mm",
                                 )
                               : "—"}
                           </TableCell>
@@ -372,9 +345,7 @@ export function ReviewTab({ gameId }: ReviewTabProps) {
         </CardHeader>
         <CardContent>
           {revsPending ? (
-            <p className="text-sm text-muted-foreground">
-              Ачаалж байна...
-            </p>
+            <p className="text-sm text-muted-foreground">Ачаалж байна...</p>
           ) : revisions.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               Нэмэлтийн жагсаалт хоосон байна
@@ -396,15 +367,10 @@ export function ReviewTab({ gameId }: ReviewTabProps) {
                       <TableRow key={rev.id}>
                         <TableCell>#{rev.revision_number}</TableCell>
                         <TableCell>
-                          {format(
-                            new Date(rev.created_at),
-                            "yyyy-MM-dd HH:mm"
-                          )}
+                          {format(new Date(rev.created_at), "yyyy-MM-dd HH:mm")}
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant={revisionStatusVariant(rev.state)}
-                          >
+                          <Badge variant={revisionStatusVariant(rev.state)}>
                             {revisionStatusLabel(rev.state)}
                           </Badge>
                         </TableCell>
@@ -456,9 +422,7 @@ export function ReviewTab({ gameId }: ReviewTabProps) {
                         <TableRow key={rev.id}>
                           <TableCell>#{rev.revision_number}</TableCell>
                           <TableCell>
-                            <Badge
-                              variant={revisionStatusVariant(rev.state)}
-                            >
+                            <Badge variant={revisionStatusVariant(rev.state)}>
                               {revisionStatusLabel(rev.state)}
                             </Badge>
                           </TableCell>
@@ -466,7 +430,7 @@ export function ReviewTab({ gameId }: ReviewTabProps) {
                             {rev.approved_at
                               ? format(
                                   new Date(rev.approved_at),
-                                  "yyyy-MM-dd HH:mm"
+                                  "yyyy-MM-dd HH:mm",
                                 )
                               : "—"}
                           </TableCell>

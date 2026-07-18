@@ -35,8 +35,8 @@ interface ShootingProfileProps {
 // ---------------------------------------------------------------------------
 
 const BRAND_ACCENT = "var(--brand-sports)";
-const TRACK_COLOR = "var(--color-muted)";
-const GAUGE_SIZE = 88;
+const TRACK_COLOR = "var(--color-sidebar-accent)";
+const GAUGE_SIZE = 96;
 const ARC_START = 225;
 const ARC_END = -45;
 
@@ -62,7 +62,7 @@ function GaugeRing({
   const chartData = [{ value, fill: color }];
 
   return (
-    <div className="flex flex-col items-center gap-1.5">
+    <div className="flex flex-col items-center gap-2">
       <div
         className="relative"
         style={{ width: GAUGE_SIZE, height: GAUGE_SIZE }}
@@ -92,16 +92,20 @@ function GaugeRing({
 
         {/* Center text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-base font-semibold tabular-nums leading-none">
+          <span className="text-lg font-black tabular-nums leading-none">
             {hasAttempts ? `${value}%` : "\u2014"}
           </span>
         </div>
       </div>
 
-      <span className="text-xs font-medium text-foreground">{label}</span>
-      <span className="text-xs tabular-nums text-muted-foreground">
-        {made}/{attempted}
-      </span>
+      <div className="text-center">
+        <span className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
+          {label}
+        </span>
+        <span className="mt-0.5 block text-xs tabular-nums text-muted-foreground">
+          {made}/{attempted}
+        </span>
+      </div>
     </div>
   );
 }
@@ -127,27 +131,37 @@ function PointsBreakdown({
   if (total === 0) return null;
 
   const segments = [
-    { key: "2P", label: "2-оноо", points: twoP, color: "var(--color-chart-1)" },
+    {
+      key: "2P",
+      label: "2-\u043E\u043D\u043E\u043E",
+      points: twoP,
+      color: "var(--color-chart-1)",
+    },
     {
       key: "3P",
-      label: "3-оноо",
+      label: "3-\u043E\u043D\u043E\u043E",
       points: threeP,
       color: "var(--color-chart-2)",
     },
     {
       key: "FT",
-      label: "Ширэнгийн",
+      label: "\u0428\u0438\u0440\u044D\u043D\u0433\u0438\u0439\u043D",
       points: ft,
       color: "var(--color-chart-5)",
     },
   ].filter((s) => s.points > 0);
 
   return (
-    <div className="space-y-3 pt-2">
+    <div className="space-y-3 pt-3">
+      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        {
+          "\u041E\u043D\u043E\u043E\u043D\u044B \u0431\u04AF\u0442\u0446\u044D\u043B"
+        }
+      </p>
       <div
         className="flex h-3 overflow-hidden rounded-full"
         role="img"
-        aria-label="Онооны бүтцийн харьцаа"
+        aria-label="\u041E\u043D\u043E\u043E\u043D\u044B \u0431\u04AF\u0442\u0446\u044D\u043B\u044B\u043D \u0445\u0430\u0440\u044C\u0446\u0430"
       >
         {segments.map((seg) => (
           <div
@@ -156,14 +170,14 @@ function PointsBreakdown({
               width: `${(seg.points / total) * 100}%`,
               backgroundColor: seg.color,
             }}
-            className="h-full"
+            className="h-full transition-[width] duration-500 ease-[var(--ease-sport)]"
             title={`${seg.label}: ${Math.round((seg.points / total) * 100)}%`}
           />
         ))}
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
+      <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5">
         {segments.map((seg) => (
           <div
             key={seg.key}
@@ -201,11 +215,14 @@ export function ShootingProfile({
       <Card className={className}>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg">
-            \u041F\u04AF\u0440\u0448\u0438\u043B\u0442\u0438\u0439\u043D
-            \u043F\u0440\u043E\u0444\u0438\u043B\u044C
+            {
+              "\u041F\u04AF\u0440\u0448\u0438\u043B\u0442\u0438\u0439\u043D \u043F\u0440\u043E\u0444\u0438\u043B\u044C"
+            }
           </CardTitle>
           <CardDescription>
-            Оролт, гурвалжин, шийдлийн нарийвчлал
+            {
+              "\u041E\u0440\u043E\u043B\u043E\u043B\u0442, \u0433\u0443\u0440\u0432\u0430\u043B\u0436\u0438\u043D, \u0448\u0438\u0439\u0434\u043B\u0438\u0439\u043D \u043D\u0430\u0440\u0438\u0439\u0432\u0447\u043B\u0430\u043B"
+            }
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -215,10 +232,14 @@ export function ShootingProfile({
               aria-hidden="true"
             />
             <p className="mt-3 font-semibold">
-              Шидэлтийн мэдээлэл хараахан алга
+              {
+                "\u0428\u0438\u0434\u044D\u043B\u0442\u0438\u0439\u043D \u043C\u044D\u0434\u044D\u044D\u043B \u0445\u0430\u0440\u0430\u0430\u0445\u0430\u043D \u0430\u043B\u0433\u0430"
+              }
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Баталгаажсан оролдлогын дараа харьцаа энд гарна.
+              {
+                "\u0411\u0430\u0442\u0430\u043B\u0433\u0430\u0430\u0436\u0441\u0430\u043D \u043E\u0440\u043E\u043B\u0434\u043B\u043E\u0433\u044B\u043D \u0434\u0430\u0440\u0430\u0430 \u0445\u0430\u0440\u044C\u0446\u0430 \u044D\u043D\u0434 \u0433\u0430\u0440\u043D\u0430."
+              }
             </p>
           </div>
         </CardContent>
@@ -234,9 +255,13 @@ export function ShootingProfile({
             "\u041F\u04AF\u0440\u0448\u0438\u043B\u0442\u0438\u0439\u043D \u043F\u0440\u043E\u0444\u0438\u043B\u044C"
           }
         </CardTitle>
-        <CardDescription>Оролт, гурвалжин, шийдлийн нарийвчлал</CardDescription>
+        <CardDescription>
+          {
+            "\u041E\u0440\u043E\u043B\u043E\u043B\u0442, \u0433\u0443\u0440\u0432\u0430\u043B\u0436\u0438\u043D, \u0448\u0438\u0439\u0434\u043B\u0438\u0439\u043D \u043D\u0430\u0440\u0438\u0439\u0432\u0447\u043B\u0430\u043B"
+          }
+        </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-5">
         {/* Three gauge rings side by side */}
         <div className="grid grid-cols-3 gap-2 sm:gap-4">
           <GaugeRing

@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import type { GameWithTeams } from "../lib/data";
-import { formatGameTime } from "../lib/data";
+import type { GameWithTeams } from "../lib/shared";
+import { formatGameTime } from "../lib/shared";
 import { GameStatusBadge } from "./game-status-badge";
 
 interface GameCardProps {
@@ -28,19 +28,24 @@ function hasScore(game: GameWithTeams): boolean {
 // A game card is only rendered with a game. Collection-level empty states are
 // handled by PublicEmptyState in the parent page.
 export function GameCard({ game, featured = false, className }: GameCardProps) {
+  const isLive =
+    game.status === "live_provisional" || game.status === "league_verified";
+
   return (
     <Link
       href={`/games/${game.id}`}
       className="group block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
     >
       <Card
-      className={cn(
-        "h-full shadow-none transition-[box-shadow,transform] duration-150 group-hover:shadow-md group-active:scale-[0.98] motion-reduce:transition-none",
-        featured
-          ? "bg-sidebar text-sidebar-foreground group-hover:bg-white/10"
-          : "group-hover:bg-accent/40",
-        className,
-      )}
+        variant={featured ? "featured" : "default"}
+        className={cn(
+          "h-full transition-[box-shadow,transform] duration-[var(--duration-fast)] group-hover:shadow-md group-active:scale-[0.98] motion-reduce:transition-none",
+          featured
+            ? "bg-sidebar text-sidebar-foreground group-hover:bg-white/10"
+            : "group-hover:bg-accent/40",
+          isLive && "ring-1 ring-red-500/20",
+          className,
+        )}
       >
         <CardHeader>
           <div className="flex flex-wrap items-center gap-2">

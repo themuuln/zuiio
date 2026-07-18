@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface TeamLogoProps {
@@ -33,11 +34,12 @@ export function TeamLogo({
 
   if (logoUrl) {
     return (
-      <img
+      <Image
         src={logoUrl}
         alt={shortCode}
         width={px}
         height={px}
+        unoptimized
         className={cn("shrink-0 rounded-full object-cover", className)}
       />
     );

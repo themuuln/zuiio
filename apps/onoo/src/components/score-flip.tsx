@@ -206,10 +206,7 @@ export function ScoreFlip({ value, digits = 2, className }: ScoreFlipProps) {
 
   return (
     <span
-      className={cn(
-        "inline-flex gap-0.5 font-display tabular-nums",
-        className,
-      )}
+      className={cn("inline-flex gap-0.5 font-display tabular-nums", className)}
       aria-label={`Score: ${value}`}
       role="status"
     >

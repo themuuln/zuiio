@@ -1,28 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import { ScoreFlip } from "@/components/score-flip";
-import { StatFlipCard } from "@/app/players/[id]/components/stat-flip-card";
+import { SwipeableCard } from "@/app/components/swipeable-card";
+import { SortableTabs } from "@/app/leaders/components/sortable-tabs";
 import {
   CourtHeatmap,
   DEFAULT_SHOT_ZONES,
   type ShotZone,
 } from "@/app/players/[id]/components/court-heatmap";
 import { LiveCourt } from "@/app/players/[id]/components/live-court";
-import { SwipeableCard } from "@/app/components/swipeable-card";
-import { SortableTabs } from "@/app/leaders/components/sortable-tabs";
-import { StandingsTable } from "@/app/standings/components/standings-table";
-import { SkillRadar } from "@/app/players/[id]/components/skill-radar";
 import { SeasonArc } from "@/app/players/[id]/components/season-arc";
+import { SkillRadar } from "@/app/players/[id]/components/skill-radar";
+import { StatFlipCard } from "@/app/players/[id]/components/stat-flip-card";
+import { StandingsTable } from "@/app/standings/components/standings-table";
+import { ScoreFlip } from "@/components/score-flip";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 
 // ---------------------------------------------------------------------------
 // Mock data
@@ -143,7 +136,13 @@ export function InteractiveDemo() {
         <div className="flex justify-center">
           <SkillRadar
             playerStats={{ pts: 22.5, reb: 8.3, ast: 5.1, stl: 1.8, blk: 0.9 }}
-            leagueAverages={{ pts: 12.0, reb: 5.5, ast: 3.2, stl: 1.0, blk: 0.5 }}
+            leagueAverages={{
+              pts: 12.0,
+              reb: 5.5,
+              ast: 3.2,
+              stl: 1.0,
+              blk: 0.5,
+            }}
             leagueMaxes={{ pts: 30, reb: 14, ast: 10, stl: 3, blk: 2 }}
           />
         </div>
@@ -195,16 +194,13 @@ export function InteractiveDemo() {
         <div className="space-y-3">
           {["Арслангууд vs Барсууд", "Хулангууд vs Шонхорууд"].map(
             (title, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: static demo
               <SwipeableCard
                 key={i}
                 onSwipeLeft={() => alert(`Зүүн свайп: ${title}`)}
                 onSwipeRight={() => alert(`Баруун свайп: ${title}`)}
-                leftAction={
-                  <Badge variant="secondary">← Өмнөх</Badge>
-                }
-                rightAction={
-                  <Badge variant="secondary">Дараагийн →</Badge>
-                }
+                leftAction={<Badge variant="secondary">← Өмнөх</Badge>}
+                rightAction={<Badge variant="secondary">Дараагийн →</Badge>}
               >
                 <Card className="shadow-none">
                   <CardContent className="p-4">
@@ -257,10 +253,7 @@ export function InteractiveDemo() {
         description="Амьд тоглолтын пульс анимейшн + сүүлчийн шидэлтийн RIPPLE."
       >
         <div className="mx-auto max-w-md">
-          <LiveCourt
-            isLive={true}
-            lastShot={{ x: 0.5, y: 0.2, made: true }}
-          />
+          <LiveCourt isLive={true} lastShot={{ x: 0.5, y: 0.2, made: true }} />
         </div>
       </DemoSection>
     </div>

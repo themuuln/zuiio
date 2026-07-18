@@ -11,10 +11,10 @@ import {
 } from "@/components/ui/card";
 
 export default function PlayerError({
-  error,
+  _error,
   reset,
 }: {
-  error: Error & { digest?: string };
+  _error: Error & { digest?: string };
   reset: () => void;
 }) {
   return (

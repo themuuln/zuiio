@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { getLeaders } from "../lib/data";
+import { getLeaders, getMvpRace } from "../lib/data";
 import { LeaderTabs } from "./components/leader-tabs";
+import { MvpRace } from "./components/mvp-race";
 
 export const metadata: Metadata = {
   title: "Тэргүүлэгчид — Оноо",
@@ -9,7 +10,13 @@ export const metadata: Metadata = {
 };
 
 export default async function LeadersPage() {
-  const leaders = await getLeaders();
+  const leaders = await getLeaders(true);
+
+  // Derive active competition from leaders data for MVP race
+  const activeCompetitionId = leaders[0]?.competition_id ?? null;
+  const mvpCandidates = activeCompetitionId
+    ? await getMvpRace(activeCompetitionId)
+    : [];
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
@@ -26,7 +33,14 @@ export default async function LeadersPage() {
         </p>
       </header>
 
-      <LeaderTabs leaders={leaders} />
+      <div className="grid gap-8 lg:grid-cols-12">
+        <div className="lg:col-span-8">
+          <LeaderTabs leaders={leaders} />
+        </div>
+        <aside className="lg:col-span-4">
+          <MvpRace candidates={mvpCandidates} className="sticky top-24" />
+        </aside>
+      </div>
     </main>
   );
 }

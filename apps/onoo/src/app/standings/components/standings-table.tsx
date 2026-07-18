@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Minus, TrendingDown, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { Fragment, useState } from "react";
 import { TeamLogo } from "@/components/team-logo";
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
+  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -57,6 +58,77 @@ function getPointDifference(row: StandingsTableRow): number {
   return (row.points_for ?? 0) - (row.points_against ?? 0);
 }
 
+/** Derive movement direction from streak string. */
+function getMovementType(streak: string | null): "up" | "down" | "neutral" {
+  if (!streak) return "neutral";
+  const prefix = streak.trim().charAt(0).toUpperCase();
+  if (prefix === "W") return "up";
+  if (prefix === "L") return "down";
+  return "neutral";
+}
+
+/** Parse a "W-W-L-W-L" or "WWLWL" last5 string into individual results. */
+function parseLast5(last5: string | null): ("W" | "L")[] | null {
+  if (!last5) return null;
+  const chars = last5.replace(/[^WwLl]/g, "");
+  if (!chars) return null;
+  return chars
+    .slice(0, 5)
+    .split("")
+    .map((c) => (c.toUpperCase() === "W" ? "W" : "L"));
+}
+
+/** Render movement icon (TrendingUp/TrendingDown/Minus). */
+function MovementIndicator({ streak }: { streak: string | null }) {
+  const type = getMovementType(streak);
+  switch (type) {
+    case "up":
+      return (
+        <TrendingUp
+          className="size-3.5 text-emerald-500"
+          aria-label="Дээшилж байна"
+        />
+      );
+    case "down":
+      return (
+        <TrendingDown
+          className="size-3.5 text-red-500"
+          aria-label="Доошилж байна"
+        />
+      );
+    default:
+      return (
+        <Minus
+          className="size-3.5 text-muted-foreground/50"
+          aria-label="Тогтмол"
+        />
+      );
+  }
+}
+
+/** Render last-5 form as a row of colored dots. */
+function FormGuide({ last5 }: { last5: string | null }) {
+  const results = parseLast5(last5);
+  if (!results) {
+    return <span className="text-muted-foreground text-xs">—</span>;
+  }
+  return (
+    <span className="inline-flex items-center gap-0.5">
+      {results.map((r, i) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: static list
+        <span
+          key={i}
+          className={cn(
+            "inline-block size-2 rounded-full",
+            r === "W" ? "bg-emerald-500" : "bg-red-400",
+          )}
+          aria-label={r === "W" ? "Ялалт" : "Хожигдол"}
+        />
+      ))}
+    </span>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -75,11 +147,25 @@ export function StandingsTable({ rows, className }: StandingsTableProps) {
     setExpandedId((prev) => (prev === id ? null : id));
   }
 
+  const topColor = rows[0]?.team_primary_color;
+
   return (
     <div className={cn("overflow-x-auto", className)}>
       <Table>
+        <TableCaption className="sr-only">
+          Лигийн байрлалын хүснэгт — {rows.length} баг
+        </TableCaption>
         <TableHeader>
-          <TableRow>
+          <TableRow
+            className={cn("border-b-2", topColor && "bg-gradient-to-r")}
+            style={
+              topColor
+                ? {
+                    backgroundImage: `linear-gradient(to right, ${topColor}15, transparent)`,
+                  }
+                : undefined
+            }
+          >
             <TableHead className="w-12">#</TableHead>
             <TableHead>Баг</TableHead>
             <TableHead className="text-center">Я</TableHead>
@@ -87,6 +173,7 @@ export function StandingsTable({ rows, className }: StandingsTableProps) {
             <TableHead className="text-center">Хувь</TableHead>
             <TableHead className="text-center">GB</TableHead>
             <TableHead className="text-center">Цуврал</TableHead>
+            <TableHead className="text-center">Форм</TableHead>
             <TableHead className="text-center">Сүүлийн 10</TableHead>
             <TableHead className="text-right">Зөрүү</TableHead>
             <TableHead className="w-8" />
@@ -101,14 +188,23 @@ export function StandingsTable({ rows, className }: StandingsTableProps) {
               <Fragment key={row.team_season_id}>
                 <TableRow
                   className={cn(
-                    "cursor-pointer transition-colors",
+                    "cursor-pointer transition-colors hover:bg-accent/50",
                     isExpanded && "bg-muted/50",
                   )}
+                  style={
+                    row.team_primary_color
+                      ? { borderLeft: `3px solid ${row.team_primary_color}` }
+                      : undefined
+                  }
                   onClick={() => toggleRow(row.team_season_id)}
                   aria-expanded={isExpanded}
+                  aria-label={`${row.team_name} — ${row.w} ялалт, ${row.l} хожигдол`}
                 >
                   <TableCell className="font-semibold tabular-nums text-muted-foreground">
-                    {index + 1}
+                    <span className="inline-flex items-center gap-1.5">
+                      {index + 1}
+                      <MovementIndicator streak={row.streak} />
+                    </span>
                   </TableCell>
                   <TableCell>
                     <Link
@@ -139,10 +235,19 @@ export function StandingsTable({ rows, className }: StandingsTableProps) {
                   <TableCell className="text-center">
                     <Badge variant="outline">{row.streak ?? "—"}</Badge>
                   </TableCell>
+                  <TableCell className="text-center">
+                    <FormGuide last5={row.last5 ?? null} />
+                  </TableCell>
                   <TableCell className="text-center tabular-nums">
                     {row.last10 ?? "—"}
                   </TableCell>
-                  <TableCell className="text-right font-semibold tabular-nums">
+                  <TableCell
+                    className={cn(
+                      "text-right font-semibold tabular-nums",
+                      pointDifference > 0 && "text-emerald-600",
+                      pointDifference < 0 && "text-red-500",
+                    )}
+                  >
                     {pointDifference > 0 ? "+" : ""}
                     {pointDifference}
                   </TableCell>
@@ -160,8 +265,12 @@ export function StandingsTable({ rows, className }: StandingsTableProps) {
                 {/* Expanded detail row */}
                 {isExpanded && (
                   <TableRow className="border-t-0 bg-muted/30">
-                    <TableCell colSpan={10} className="px-6 py-4">
-                      <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
+                    <TableCell colSpan={11} className="px-6 py-4">
+                      <div
+                        className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4"
+                        role="group"
+                        aria-label={`${row.team_name} дэлгэрэнгүй статистик`}
+                      >
                         <div>
                           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                             Оноо тавьсан

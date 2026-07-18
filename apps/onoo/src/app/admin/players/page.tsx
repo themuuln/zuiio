@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AlertTriangle, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Pencil, Plus, Search, Trash2, AlertTriangle } from "lucide-react";
+import { z } from "zod";
+import { type PlayerRow, playersApi } from "@/app/admin/_lib/api";
 import { PhotoUploader } from "@/components/admin/photo-uploader";
-
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -18,14 +19,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Form,
   FormControl,
@@ -43,9 +36,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { playersApi, type PlayerRow } from "@/app/admin/_lib/api";
 
 const POSITIONS = ["PG", "SG", "SF", "PF", "C"] as const;
 
@@ -81,10 +80,7 @@ export default function PlayersPage() {
     return () => clearTimeout(t);
   }, [search]);
 
-  const {
-    data: players = [],
-    isPending: playersPending,
-  } = useQuery({
+  const { data: players = [], isPending: playersPending } = useQuery({
     queryKey: ["admin", "players", debouncedSearch],
     queryFn: () => playersApi.list(debouncedSearch || undefined),
   });
@@ -109,7 +105,7 @@ export default function PlayersPage() {
       ? players.find(
           (p) =>
             p.id !== editingPlayer?.id &&
-            p.canonical_name.toLowerCase().includes(watchedName.toLowerCase())
+            p.canonical_name.toLowerCase().includes(watchedName.toLowerCase()),
         )
       : null;
 
@@ -230,9 +226,7 @@ export default function PlayersPage() {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>
-                    {editingPlayer
-                      ? "Тоглогч засах"
-                      : "Шинэ тоглогч нэмэх"}
+                    {editingPlayer ? "Тоглогч засах" : "Шинэ тоглогч нэмэх"}
                   </DialogTitle>
                 </DialogHeader>
                 <Form {...form}>
@@ -247,10 +241,7 @@ export default function PlayersPage() {
                         <FormItem>
                           <FormLabel>Нэр</FormLabel>
                           <FormControl>
-                            <Input
-                              placeholder="Тоглогчийн нэр"
-                              {...field}
-                            />
+                            <Input placeholder="Тоглогчийн нэр" {...field} />
                           </FormControl>
                           {duplicatePlayer && (
                             <div
@@ -275,10 +266,7 @@ export default function PlayersPage() {
                         <FormItem>
                           <FormLabel>Латин нэр</FormLabel>
                           <FormControl>
-                            <Input
-                              placeholder="Жнь: John Smith"
-                              {...field}
-                            />
+                            <Input placeholder="Жнь: John Smith" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -438,7 +426,10 @@ export default function PlayersPage() {
                     </TableCell>
                     <TableCell>
                       {player.visibility === "hidden" ? (
-                        <Badge variant="outline" className="border-muted-foreground/40 text-muted-foreground">
+                        <Badge
+                          variant="outline"
+                          className="border-muted-foreground/40 text-muted-foreground"
+                        >
                           Нууц
                         </Badge>
                       ) : (
@@ -472,7 +463,7 @@ export default function PlayersPage() {
                           onClick={() => {
                             if (
                               window.confirm(
-                                `"${player.canonical_name}" тоглогчийг устгах уу?`
+                                `"${player.canonical_name}" тоглогчийг устгах уу?`,
                               )
                             ) {
                               deleteMutation.mutate(player.id);

@@ -1,5 +1,5 @@
+import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { NextResponse, type NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -44,7 +44,12 @@ export async function POST(request: NextRequest) {
 
   const { data, error } = await supabase
     .from("seasons")
-    .insert({ league_id, name, starts_on: starts_on ?? null, ends_on: ends_on ?? null })
+    .insert({
+      league_id,
+      name,
+      starts_on: starts_on ?? null,
+      ends_on: ends_on ?? null,
+    })
     .select("*, leagues(name)")
     .single();
 

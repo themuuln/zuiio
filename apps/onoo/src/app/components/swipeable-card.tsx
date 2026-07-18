@@ -134,8 +134,7 @@ export function SwipeableCard({
 
   // Visual feedback during swipe
   const progress = Math.min(Math.abs(offset) / threshold, 1);
-  const transform =
-    offset !== 0 ? `translateX(${offset * 0.6}px)` : undefined;
+  const transform = offset !== 0 ? `translateX(${offset * 0.6}px)` : undefined;
 
   return (
     <div

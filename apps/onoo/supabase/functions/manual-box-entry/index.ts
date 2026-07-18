@@ -44,7 +44,10 @@ serve(async (req: Request) => {
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: "Missing authorization header" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
@@ -60,18 +63,23 @@ serve(async (req: Request) => {
     } = await userClient.auth.getUser();
 
     if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const { game_id, player_lines } = await req.json();
 
     if (!game_id || !Array.isArray(player_lines) || player_lines.length === 0) {
       return new Response(
-        JSON.stringify({ error: "Invalid request: game_id and player_lines required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          error: "Invalid request: game_id and player_lines required",
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
@@ -83,17 +91,22 @@ serve(async (req: Request) => {
       .single();
 
     if (gameError || !game) {
-      return new Response(
-        JSON.stringify({ error: "Game not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Game not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Check if game is in a valid state for manual entry
     if (game.status !== "scheduled" && game.status !== "final") {
       return new Response(
-        JSON.stringify({ error: "Game must be scheduled or final for manual entry" }),
-        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          error: "Game must be scheduled or final for manual entry",
+        }),
+        {
+          status: 409,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
@@ -105,7 +118,10 @@ serve(async (req: Request) => {
     if (!isAdmin) {
       return new Response(
         JSON.stringify({ error: "Only league admins can enter box scores" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
@@ -153,15 +169,9 @@ serve(async (req: Request) => {
     }
 
     // Delete existing derived stats for this game
-    await supabase
-      .from("game_player_stats")
-      .delete()
-      .eq("game_id", game_id);
+    await supabase.from("game_player_stats").delete().eq("game_id", game_id);
 
-    await supabase
-      .from("game_team_stats")
-      .delete()
-      .eq("game_id", game_id);
+    await supabase.from("game_team_stats").delete().eq("game_id", game_id);
 
     // Insert player stats
     const playerStatsInserts = player_lines.map((line: PlayerLine) => ({
@@ -190,7 +200,9 @@ serve(async (req: Request) => {
       .insert(playerStatsInserts);
 
     if (playerStatsError) {
-      throw new Error(`Failed to insert player stats: ${playerStatsError.message}`);
+      throw new Error(
+        `Failed to insert player stats: ${playerStatsError.message}`,
+      );
     }
 
     // Insert team stats
@@ -240,9 +252,12 @@ serve(async (req: Request) => {
     }
 
     // Refresh season stats and standings
-    const { error: refreshError } = await supabase.rpc("refresh_season_player_stats", {
-      p_competition_id: game.competition_id,
-    });
+    const { error: refreshError } = await supabase.rpc(
+      "refresh_season_player_stats",
+      {
+        p_competition_id: game.competition_id,
+      },
+    );
 
     if (refreshError) {
       console.error("Failed to refresh season stats:", refreshError);
@@ -271,12 +286,15 @@ serve(async (req: Request) => {
         home_score: homeTeamLine?.pts ?? 0,
         away_score: awayTeamLine?.pts ?? 0,
       }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
     );
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: String(error) }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: String(error) }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

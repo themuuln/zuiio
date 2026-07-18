@@ -1,5 +1,5 @@
+import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { NextResponse, type NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -15,7 +15,9 @@ export async function GET(request: NextRequest) {
 
   if (search) {
     const pattern = `%${search}%`;
-    query = query.or(`canonical_name.ilike.${pattern},name_latin.ilike.${pattern}`);
+    query = query.or(
+      `canonical_name.ilike.${pattern},name_latin.ilike.${pattern}`,
+    );
   }
 
   const { data, error } = await query;
@@ -34,7 +36,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
-  const { canonical_name, name_latin, position, nationality, visibility, consent_recorded_at, consent_note } = body;
+  const {
+    canonical_name,
+    name_latin,
+    position,
+    nationality,
+    visibility,
+    consent_recorded_at,
+    consent_note,
+  } = body;
 
   if (!canonical_name) {
     return NextResponse.json(

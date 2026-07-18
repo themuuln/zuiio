@@ -25,7 +25,7 @@ function formatPercent(value: number): string {
   return `${percent.toFixed(1)}%`;
 }
 
-function getPointDifference(row: {
+function _getPointDifference(row: {
   points_for: number | null;
   points_against: number | null;
 }): number {
@@ -68,10 +68,7 @@ export default async function StandingsPage({
           </p>
         </div>
         {competitions.length > 1 && (
-          <nav
-            aria-label="Тэмцээн сонгох"
-            className="flex flex-wrap gap-2"
-          >
+          <nav aria-label="Тэмцээн сонгох" className="flex flex-wrap gap-2">
             {competitions.map(([id, item]) => (
               <Button
                 key={id}
@@ -126,8 +123,18 @@ export default async function StandingsPage({
                   key={row.team_season_id}
                   href={`/teams/${row.team_slug}`}
                   className="group rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  aria-label={`${row.team_name} — ${index + 1}-р байр, ${row.w} ялалт`}
                 >
-                  <Card className="h-full shadow-none transition-[box-shadow,transform] group-hover:shadow-md group-active:scale-[0.98] motion-reduce:transition-none">
+                  <Card
+                    className="h-full shadow-none transition-[box-shadow,transform] group-hover:shadow-md group-active:scale-[0.98] motion-reduce:transition-none"
+                    style={
+                      index === 0 && row.team_primary_color
+                        ? {
+                            borderTop: `3px solid ${row.team_primary_color}`,
+                          }
+                        : undefined
+                    }
+                  >
                     <CardHeader>
                       <Badge variant={index === 0 ? "default" : "secondary"}>
                         #{index + 1}

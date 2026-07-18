@@ -1,13 +1,13 @@
 "use client";
 
 import {
+  closestCenter,
   DndContext,
   type DragEndEvent,
   DragOverlay,
   type DragStartEvent,
   PointerSensor,
   TouchSensor,
-  closestCenter,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -76,10 +76,7 @@ const DRAG_STYLES = `
  * into the comparison drop zone to navigate to the compare page.
  * Falls back to click-to-select for keyboard/accessibility.
  */
-export function DragCompareZone({
-  players,
-  className,
-}: DragCompareZoneProps) {
+export function DragCompareZone({ players, className }: DragCompareZoneProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<[string, string]>(["", ""]);
 
@@ -111,24 +108,21 @@ export function DragCompareZone({
     setActiveId(event.active.id as string);
   }
 
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      setActiveId(null);
-      const { active, over } = event;
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    setActiveId(null);
+    const { active, over } = event;
 
-      if (over?.id === "compare-zone") {
-        const playerId = active.id as string;
-        setSelectedIds((prev) => {
-          if (prev[0] === playerId || prev[1] === playerId) return prev;
-          if (!prev[0]) return [playerId, prev[1]];
-          if (!prev[1]) return [prev[0], playerId];
-          // Both slots full — replace second
-          return [prev[0], playerId];
-        });
-      }
-    },
-    [],
-  );
+    if (over?.id === "compare-zone") {
+      const playerId = active.id as string;
+      setSelectedIds((prev) => {
+        if (prev[0] === playerId || prev[1] === playerId) return prev;
+        if (!prev[0]) return [playerId, prev[1]];
+        if (!prev[1]) return [prev[0], playerId];
+        // Both slots full — replace second
+        return [prev[0], playerId];
+      });
+    }
+  }, []);
 
   function handleSelect(playerId: string) {
     setSelectedIds((prev) => {
@@ -170,7 +164,6 @@ export function DragCompareZone({
               ? "border-muted-foreground/30 bg-muted/30"
               : "border-muted-foreground/15",
           )}
-          aria-label="Харьцуулах бүс — тоглогч чирч энд буулгана"
         >
           {selectedIds[0] || selectedIds[1] ? (
             <>
@@ -179,10 +172,7 @@ export function DragCompareZone({
                   ? players.find((p) => p.player_id === selectedIds[slot])
                   : null;
                 return (
-                  <div
-                    key={slot}
-                    className="flex flex-col items-center gap-2"
-                  >
+                  <div key={slot} className="flex flex-col items-center gap-2">
                     {player ? (
                       <button
                         type="button"

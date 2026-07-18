@@ -1,4 +1,4 @@
-import type { StatEvent } from '../types';
+import type { StatEvent } from "../types";
 
 /**
  * Sort events in canonical display order:
@@ -11,7 +11,8 @@ import type { StatEvent } from '../types';
 export function sortEvents(events: StatEvent[]): StatEvent[] {
   return [...events].sort((a, b) => {
     if (a.period !== b.period) return a.period - b.period;
-    if (a.clock_seconds !== b.clock_seconds) return b.clock_seconds - a.clock_seconds;
+    if (a.clock_seconds !== b.clock_seconds)
+      return b.clock_seconds - a.clock_seconds;
     return a.local_seq - b.local_seq;
   });
 }

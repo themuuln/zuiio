@@ -1,5 +1,5 @@
+import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { NextResponse, type NextRequest } from "next/server";
 
 const GAME_SELECT =
   "*, competitions(name, season_id), home_team_season:team_seasons!home_team_season_id(teams(name, short_code)), away_team_season:team_seasons!away_team_season_id(teams(name, short_code)), venues(name, city)";
@@ -28,12 +28,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
-  const { competition_id, home_team_season_id, away_team_season_id, venue_id, scheduled_at } =
-    body;
+  const {
+    competition_id,
+    home_team_season_id,
+    away_team_season_id,
+    venue_id,
+    scheduled_at,
+  } = body;
 
-  if (!competition_id || !home_team_season_id || !away_team_season_id || !scheduled_at) {
+  if (
+    !competition_id ||
+    !home_team_season_id ||
+    !away_team_season_id ||
+    !scheduled_at
+  ) {
     return NextResponse.json(
-      { error: "competition_id, home_team_season_id, away_team_season_id, and scheduled_at are required" },
+      {
+        error:
+          "competition_id, home_team_season_id, away_team_season_id, and scheduled_at are required",
+      },
       { status: 400 },
     );
   }

@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { toast } from "sonner";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Trash2 } from "lucide-react";
-
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+import { leaguesApi, type TeamRow, teamsApi } from "@/app/admin/_lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -17,14 +17,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Form,
   FormControl,
@@ -42,11 +34,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  teamsApi,
-  leaguesApi,
-  type TeamRow,
-  type LeagueRow,
-} from "@/app/admin/_lib/api";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const teamSchema = z.object({
   name: z.string().min(1, "Нэр заавал байх ёстой"),
@@ -70,10 +64,7 @@ export default function TeamsPage() {
 
   const effectiveLeagueId = leagueFilter === "all" ? undefined : leagueFilter;
 
-  const {
-    data: teams = [],
-    isPending: teamsPending,
-  } = useQuery({
+  const { data: teams = [], isPending: teamsPending } = useQuery({
     queryKey: ["admin", "teams", effectiveLeagueId],
     queryFn: () => teamsApi.list(effectiveLeagueId),
   });
@@ -91,7 +82,8 @@ export default function TeamsPage() {
   const createMutation = useMutation({
     mutationFn: (data: TeamFormValues) =>
       teamsApi.create({
-        league_id: leagueFilter === "all" ? leagues[0]?.id ?? "" : leagueFilter,
+        league_id:
+          leagueFilter === "all" ? (leagues[0]?.id ?? "") : leagueFilter,
         name: data.name,
         short_code: data.short_code,
         slug: data.slug,
@@ -135,7 +127,6 @@ export default function TeamsPage() {
   });
 
   const isMutating = createMutation.isPending || updateMutation.isPending;
-
 
   function handleEdit(team: TeamRow) {
     setEditingTeam(team);
@@ -307,6 +298,7 @@ export default function TeamsPage() {
                         style={{
                           backgroundColor: team.primary_color ?? undefined,
                         }}
+                        role="img"
                         aria-label={
                           team.primary_color
                             ? `Өнгө: ${team.primary_color}`
@@ -314,7 +306,10 @@ export default function TeamsPage() {
                         }
                       />
                     </TableCell>
-                    <TableCell>{leagues.find((l) => l.id === team.league_id)?.name ?? "—"}</TableCell>
+                    <TableCell>
+                      {leagues.find((l) => l.id === team.league_id)?.name ??
+                        "—"}
+                    </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
                         <Button
@@ -330,9 +325,7 @@ export default function TeamsPage() {
                           size="icon"
                           onClick={() => {
                             if (
-                              window.confirm(
-                                `"${team.name}" багийг устгах уу?`
-                              )
+                              window.confirm(`"${team.name}" багийг устгах уу?`)
                             ) {
                               deleteMutation.mutate(team.id);
                             }

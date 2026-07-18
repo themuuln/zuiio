@@ -1,25 +1,25 @@
 "use client";
 
-import { Search, Users, Shield, Gamepad2, SearchX } from "lucide-react";
+import { Gamepad2, Search, SearchX, Shield, Users } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TeamLogo } from "@/components/team-logo";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { GameStatusBadge } from "../../components/game-status-badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { GameStatusBadge } from "../../components/game-status-badge";
 import { PublicEmptyState } from "../../components/public-empty-state";
 import type {
   GameWithTeams,
   PlayerDirectoryRow,
   SearchAllResult,
   StandingRow,
-} from "../../lib/data";
-import { formatGameTime } from "../../lib/data";
+} from "../../lib/shared";
+import { formatGameTime } from "../../lib/shared";
 
 interface SearchResultsProps {
   initialQuery: string;
@@ -36,14 +36,6 @@ const TABS: { value: TabValue; label: string; icon: typeof Users }[] = [
   { value: "games", label: "Тоглолтууд", icon: Gamepad2 },
 ];
 
-function formatStat(value: number | null): string {
-  return value?.toFixed(1) ?? "—";
-}
-
-function hasScore(game: GameWithTeams): boolean {
-  return game.status !== "scheduled" && game.home_score !== null;
-}
-
 export function SearchResults({
   initialQuery,
   initialResults,
@@ -53,7 +45,7 @@ export function SearchResults({
   const [activeTab, setActiveTab] = useState<TabValue>("all");
   const [results, setResults] = useState<SearchAllResult>(initialResults);
   const [loading, setLoading] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const debounceRef = useRef<number>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const [focusIndex, setFocusIndex] = useState(-1);
 
@@ -82,7 +74,7 @@ export function SearchResults({
       setQuery(value);
       setFocusIndex(-1);
       if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => {
+      debounceRef.current = window.setTimeout(() => {
         fetchResults(value);
       }, 300);
     },
@@ -143,14 +135,10 @@ export function SearchResults({
       if (flatItems.length === 0) return;
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setFocusIndex((prev) =>
-          prev < flatItems.length - 1 ? prev + 1 : 0,
-        );
+        setFocusIndex((prev) => (prev < flatItems.length - 1 ? prev + 1 : 0));
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        setFocusIndex((prev) =>
-          prev > 0 ? prev - 1 : flatItems.length - 1,
-        );
+        setFocusIndex((prev) => (prev > 0 ? prev - 1 : flatItems.length - 1));
       }
     },
     [flatItems.length],
@@ -159,14 +147,21 @@ export function SearchResults({
   // Scroll focused item into view
   useEffect(() => {
     if (focusIndex < 0) return;
-    const el = listRef.current?.querySelector(`[data-result-index="${focusIndex}"]`);
+    const el = listRef.current?.querySelector(
+      `[data-result-index="${focusIndex}"]`,
+    );
     el?.scrollIntoView({ block: "nearest" });
   }, [focusIndex]);
 
   const hasQuery = query.trim().length > 0;
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} onKeyDown={handleKeyDown}>
+    <form
+      role="search"
+      className={cn("flex flex-col gap-6", className)}
+      onKeyDown={handleKeyDown}
+      onSubmit={(e) => e.preventDefault()}
+    >
       {/* Search input */}
       <div className="relative">
         <Search
@@ -185,17 +180,35 @@ export function SearchResults({
       </div>
 
       {/* Tabs with counts */}
-      <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as TabValue); setFocusIndex(-1); }}>
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => {
+          setActiveTab(v as TabValue);
+          setFocusIndex(-1);
+        }}
+      >
         <div className="overflow-x-auto pb-1">
           <TabsList variant="line">
             {TABS.map((tab) => {
-              const count = getCount(tab.value, filteredPlayers, filteredTeams, filteredGames);
+              const count =
+                tab.value === "players"
+                  ? filteredPlayers.length
+                  : tab.value === "teams"
+                    ? filteredTeams.length
+                    : tab.value === "games"
+                      ? filteredGames.length
+                      : filteredPlayers.length +
+                        filteredTeams.length +
+                        filteredGames.length;
               return (
                 <TabsTrigger key={tab.value} value={tab.value}>
                   <tab.icon className="size-3.5" aria-hidden="true" />
                   {tab.label}
                   {hasQuery && (
-                    <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-[10px]">
+                    <Badge
+                      variant="secondary"
+                      className="ml-1 px-1.5 py-0 text-[10px]"
+                    >
                       {count}
                     </Badge>
                   )}
@@ -206,12 +219,20 @@ export function SearchResults({
         </div>
 
         {/* Results */}
-        <div ref={listRef} role="list" aria-label="Хайлтын үр дүн" className="flex flex-col gap-4">
+        <div
+          ref={listRef}
+          role="list"
+          aria-label="Хайлтын үр дүн"
+          className="flex flex-col gap-4"
+        >
           {loading && hasQuery ? (
             <SearchSkeleton />
           ) : !hasQuery ? (
             <div className="py-12 text-center text-muted-foreground">
-              <Search className="mx-auto mb-3 size-8 opacity-40" aria-hidden="true" />
+              <Search
+                className="mx-auto mb-3 size-8 opacity-40"
+                aria-hidden="true"
+              />
               <p>Хайх үгээ бичнэ үү.</p>
             </div>
           ) : totalCount === 0 ? (
@@ -271,7 +292,9 @@ export function SearchResults({
                       <GameResultCard
                         key={game.id}
                         game={game}
-                        dataResultIndex={filteredPlayers.length + filteredTeams.length + i}
+                        dataResultIndex={
+                          filteredPlayers.length + filteredTeams.length + i
+                        }
                         focused={
                           focusIndex ===
                           filteredPlayers.length + filteredTeams.length + i
@@ -336,7 +359,7 @@ export function SearchResults({
           )}
         </div>
       </Tabs>
-    </div>
+    </form>
   );
 }
 
@@ -353,11 +376,7 @@ interface ResultSectionProps {
   children: React.ReactNode;
 }
 
-function ResultSection({
-  title,
-  count,
-  children,
-}: ResultSectionProps) {
+function ResultSection({ title, count, children }: ResultSectionProps) {
   return (
     <section aria-labelledby={`search-section-${title}`}>
       <div className="mb-3 flex items-center gap-2">
@@ -417,7 +436,7 @@ function PlayerResultCard({
           <div className="flex shrink-0 gap-3 text-right text-xs tabular-nums text-muted-foreground">
             <span>
               <span className="block text-base font-bold text-foreground">
-                {formatStat(player.points_per_game)}
+                {player.points_per_game?.toFixed(1) ?? "—"}
               </span>
               оноо
             </span>
@@ -511,7 +530,7 @@ function GameResultCard({
               </span>
             </div>
             <div className="text-center">
-              {hasScore(game) ? (
+              {game.status !== "scheduled" && game.home_score !== null ? (
                 <span className="stat-number text-lg font-bold tabular-nums">
                   {game.home_score ?? 0}
                   <span className="px-0.5 text-muted-foreground">–</span>
@@ -541,7 +560,13 @@ function GameResultCard({
   );
 }
 
-function EmptyTabState({ query, tabLabel }: { query: string; tabLabel: string }) {
+function EmptyTabState({
+  query,
+  tabLabel,
+}: {
+  query: string;
+  tabLabel: string;
+}) {
   return (
     <div className="py-8 text-center text-sm text-muted-foreground">
       <SearchX className="mx-auto mb-2 size-6 opacity-40" aria-hidden="true" />
@@ -552,8 +577,13 @@ function EmptyTabState({ query, tabLabel }: { query: string; tabLabel: string })
 
 function SearchSkeleton() {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="Ачаалж байна" aria-busy="true">
+    <div
+      className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+      aria-label="Хайлтын үр дүн ачаалж байна"
+      aria-busy="true"
+    >
       {Array.from({ length: 6 }).map((_, i) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: skeleton placeholder
         <Card key={i} className="shadow-none" aria-hidden="true">
           <CardContent className="flex items-center gap-3 p-4">
             <Skeleton className="size-12 rounded-full" />
@@ -571,18 +601,6 @@ function SearchSkeleton() {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function getCount(
-  tab: TabValue,
-  players: PlayerDirectoryRow[],
-  teams: StandingRow[],
-  games: GameWithTeams[],
-): number {
-  if (tab === "players") return players.length;
-  if (tab === "teams") return teams.length;
-  if (tab === "games") return games.length;
-  return players.length + teams.length + games.length;
-}
 
 function matchesQuery(text: string | null | undefined, q: string): boolean {
   if (!text) return false;

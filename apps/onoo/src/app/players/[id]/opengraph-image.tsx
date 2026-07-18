@@ -78,146 +78,161 @@ export default async function Image({
 
   const fonts = [
     ...(regular
-      ? [{ name: "Noto Sans", data: regular, weight: 400 as const, style: "normal" as const }]
+      ? [
+          {
+            name: "Noto Sans",
+            data: regular,
+            weight: 400 as const,
+            style: "normal" as const,
+          },
+        ]
       : []),
     ...(bold
-      ? [{ name: "Noto Sans", data: bold, weight: 700 as const, style: "normal" as const }]
+      ? [
+          {
+            name: "Noto Sans",
+            data: bold,
+            weight: 700 as const,
+            style: "normal" as const,
+          },
+        ]
       : []),
   ];
 
   return new ImageResponse(
-    (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        background: "#0a0a0a",
+        display: "flex",
+        position: "relative",
+        fontFamily: '"Noto Sans", sans-serif',
+      }}
+    >
+      {/* Team color accent stripe */}
       <div
         style={{
-          width: "100%",
-          height: "100%",
-          background: "#0a0a0a",
+          position: "absolute",
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: 12,
+          background: `linear-gradient(180deg, ${teamColor}, ${teamColor}66)`,
+        }}
+      />
+
+      {/* Main content */}
+      <div
+        style={{
           display: "flex",
-          position: "relative",
-          fontFamily: '"Noto Sans", sans-serif',
+          flexDirection: "column",
+          justifyContent: "center",
+          marginLeft: 64,
+          flex: 1,
         }}
       >
-        {/* Team color accent stripe */}
         <div
           style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: 12,
-            background: `linear-gradient(180deg, ${teamColor}, ${teamColor}66)`,
-          }}
-        />
-
-        {/* Main content */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            marginLeft: 64,
-            flex: 1,
+            fontSize: 62,
+            fontWeight: 700,
+            color: "#ffffff",
+            letterSpacing: "-0.02em",
+            lineHeight: 1.1,
           }}
         >
+          {name}
+        </div>
+
+        {team && (
           <div
             style={{
-              fontSize: 62,
-              fontWeight: 700,
-              color: "#ffffff",
-              letterSpacing: "-0.02em",
-              lineHeight: 1.1,
+              fontSize: 28,
+              color: "#a1a1aa",
+              marginTop: 12,
             }}
           >
-            {name}
+            {team}
           </div>
+        )}
 
-          {team && (
-            <div
-              style={{
-                fontSize: 28,
-                color: "#a1a1aa",
-                marginTop: 12,
-              }}
-            >
-              {team}
-            </div>
-          )}
-
-          {statParts.length > 0 && (
-            <div
-              style={{
-                display: "flex",
-                gap: 40,
-                marginTop: 40,
-              }}
-            >
-              {statParts.map((part, i) => (
+        {statParts.length > 0 && (
+          <div
+            style={{
+              display: "flex",
+              gap: 40,
+              marginTop: 40,
+            }}
+          >
+            {statParts.map((part, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: static stat labels
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
                 <div
-                  key={i}
                   style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
+                    fontSize: 44,
+                    fontWeight: 700,
+                    color: teamColor,
+                    fontVariantNumeric: "tabular-nums",
                   }}
                 >
-                  <div
-                    style={{
-                      fontSize: 44,
-                      fontWeight: 700,
-                      color: teamColor,
-                      fontVariantNumeric: "tabular-nums",
-                    }}
-                  >
-                    {part.split(" ")[0]}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 18,
-                      color: "#71717a",
-                      marginTop: 4,
-                    }}
-                  >
-                    {part.split(" ").slice(1).join(" ")}
-                  </div>
+                  {part.split(" ")[0]}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+                <div
+                  style={{
+                    fontSize: 18,
+                    color: "#71717a",
+                    marginTop: 4,
+                  }}
+                >
+                  {part.split(" ").slice(1).join(" ")}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
-        {/* Branding — bottom right */}
-        <div
+      {/* Branding — bottom right */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 40,
+          right: 48,
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+        }}
+      >
+        <svg
+          width="32"
+          height="32"
+          viewBox="0 0 32 32"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          role="img"
+          aria-label="Оноо logo"
+        >
+          <circle cx="16" cy="16" r="14" stroke="white" strokeWidth="2" />
+          <circle cx="16" cy="16" r="5" fill="white" />
+        </svg>
+        <span
           style={{
-            position: "absolute",
-            bottom: 40,
-            right: 48,
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
+            fontSize: 24,
+            fontWeight: 700,
+            color: "#ffffff",
           }}
         >
-          <svg
-            width="32"
-            height="32"
-            viewBox="0 0 32 32"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle cx="16" cy="16" r="14" stroke="white" strokeWidth="2" />
-            <circle cx="16" cy="16" r="5" fill="white" />
-          </svg>
-          <span
-            style={{
-              fontSize: 24,
-              fontWeight: 700,
-              color: "#ffffff",
-            }}
-          >
-            Оноо
-          </span>
-        </div>
+          Оноо
+        </span>
       </div>
-    ),
+    </div>,
     {
       ...size,
       fonts,

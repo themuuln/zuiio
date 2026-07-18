@@ -2,14 +2,7 @@
 
 import { ChartNoAxesCombined } from "lucide-react";
 import { useState } from "react";
-import {
-  Area,
-  AreaChart,
-  Brush,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Area, AreaChart, Brush, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   type ChartConfig,
   ChartContainer,
@@ -41,15 +34,15 @@ type StatKey = "pts" | "reb" | "ast";
 
 const chartConfig = {
   pts: {
-    label: "Оноо",
+    label: "\u041E\u043D\u043E\u043E",
     color: "var(--color-chart-1)",
   },
   reb: {
-    label: "Буулт",
+    label: "\u0411\u0443\u0443\u043B\u0442",
     color: "var(--color-chart-2)",
   },
   ast: {
-    label: "Дамжуулалт",
+    label: "\u0414\u0430\u043C\u0436\u0443\u0443\u043B\u0430\u043B\u0442",
     color: "var(--color-chart-5)",
   },
 } satisfies ChartConfig;
@@ -79,9 +72,15 @@ export function SeasonArc({ data, className }: SeasonArcProps) {
           className="size-6 text-muted-foreground"
           aria-hidden="true"
         />
-        <p className="mt-3 font-semibold">Хандлага хараахан үүсээгүй</p>
+        <p className="mt-3 font-semibold">
+          {
+            "\u0425\u0430\u043D\u0434\u043B\u0430\u0433\u0430 \u0445\u0430\u0440\u0430\u0430\u0445\u0430\u043D \u04AF\u0443\u0441\u044D\u044D\u0433\u04AF\u0439"
+          }
+        </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Хоёр ба түүнээс олон тоглолтын дараа график гарна.
+          {
+            "\u0425\u043E\u0451\u0440 \u0431\u0430 \u0442\u04AF\u0443\u043D\u044D\u044D\u0441 \u043E\u043B\u043E\u043D \u0442\u043E\u0433\u043B\u043E\u0442\u044B\u043D \u0434\u0430\u0440\u0430\u0430 \u0433\u0440\u0430\u0444\u0438\u043A \u0433\u0430\u0440\u043D\u0430."
+          }
         </p>
       </div>
     );
@@ -97,10 +96,18 @@ export function SeasonArc({ data, className }: SeasonArcProps) {
           className,
         )}
       >
-        <p>Нэг тоглолтын мэдээлэл</p>
+        <p>
+          {
+            "\u041D\u044D\u0433 \u0442\u043E\u0433\u043B\u043E\u043B\u0442\u044B\u043D \u043C\u044D\u0434\u044D\u044D\u043B\u044D\u043B"
+          }
+        </p>
         <p className="tabular-nums text-foreground">
-          {game.result === "W" ? "Ялалт" : "Ялагдал"} · {game.opponent} ·{" "}
-          {game.pts} оноо, {game.reb} буулт, {game.ast} дамжуулалт
+          {game.result === "W"
+            ? "\u042F\u043B\u0430\u043B\u0442"
+            : "\u042F\u043B\u0430\u0433\u0434\u0430\u043B"}{" "}
+          \u00B7 {game.opponent} \u00B7 {game.pts} {"\u043E\u043D\u043E\u043E"},{" "}
+          {game.reb} {"\u0431\u0443\u0443\u043B\u0442"}, {game.ast}{" "}
+          {"\u0434\u0430\u043C\u0436\u0443\u0443\u043B\u0430\u043B\u0442"}
         </p>
       </div>
     );
@@ -121,10 +128,10 @@ export function SeasonArc({ data, className }: SeasonArcProps) {
 
   const statLabel =
     activeStat === "pts"
-      ? "Оноо"
+      ? "\u041E\u043D\u043E\u043E"
       : activeStat === "reb"
-        ? "Буулт"
-        : "Дамжуулалт";
+        ? "\u0411\u0443\u0443\u043B\u0442"
+        : "\u0414\u0430\u043C\u0436\u0443\u0443\u043B\u0430\u043B\u0442";
 
   return (
     <div className={cn("space-y-4", className)}>
@@ -133,9 +140,13 @@ export function SeasonArc({ data, className }: SeasonArcProps) {
         onValueChange={(v) => setActiveStat(v as StatKey)}
       >
         <TabsList variant="line">
-          <TabsTrigger value="pts">Оноо</TabsTrigger>
-          <TabsTrigger value="reb">Буулт</TabsTrigger>
-          <TabsTrigger value="ast">Дамжуулалт</TabsTrigger>
+          <TabsTrigger value="pts">{"\u041E\u043D\u043E\u043E"}</TabsTrigger>
+          <TabsTrigger value="reb">
+            {"\u0411\u0443\u0443\u043B\u0442"}
+          </TabsTrigger>
+          <TabsTrigger value="ast">
+            {"\u0414\u0430\u043C\u0436\u0443\u0443\u043B\u0430\u043B\u0442"}
+          </TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -162,8 +173,16 @@ export function SeasonArc({ data, className }: SeasonArcProps) {
           <ChartTooltip
             content={
               <ChartTooltipContent
-                hideLabel
-                formatter={(value) => [value, statLabel]}
+                labelFormatter={(value) => `#${value}`}
+                formatter={(value, _name, item) => {
+                  const point = item.payload as Record<string, unknown>;
+                  const result = point.result as string;
+                  const opponent = point.opponent as string;
+                  return [
+                    `${value} ${statLabel}`,
+                    `${result === "W" ? "\u2713" : "\u2717"} ${opponent}`,
+                  ];
+                }}
               />
             }
             cursor={false}
@@ -178,9 +197,10 @@ export function SeasonArc({ data, className }: SeasonArcProps) {
             isAnimationActive={false}
             dot={false}
             activeDot={{
-              r: 4,
+              r: 5,
               strokeWidth: 2,
               stroke: "var(--background)",
+              fill: colorVar,
             }}
           />
           {data.length > 8 && (
@@ -198,7 +218,9 @@ export function SeasonArc({ data, className }: SeasonArcProps) {
 
       {data.length > 8 && (
         <p className="text-center text-xs text-muted-foreground">
-          Доод шугамыг чирч хугацаа сонгоно уу
+          {
+            "\u0414\u043E\u043E\u0434 \u0448\u0443\u0433\u0430\u043C\u044B\u0433 \u0447\u0438\u0440\u0447 \u0445\u0443\u0433\u0430\u0446\u0430\u0430 \u0441\u043E\u043D\u0433\u043E\u043D\u043E \u0443\u0443"
+          }
         </p>
       )}
     </div>

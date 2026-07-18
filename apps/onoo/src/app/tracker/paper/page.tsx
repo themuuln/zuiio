@@ -1,6 +1,5 @@
 "use client";
 
-
 /**
  * Printable paper scoresheet for game-day fallback.
  * Open /tracker/paper, print on A4 portrait.
@@ -58,6 +57,7 @@ export default function PaperScoresheetPage() {
       {/* ── Screen-only print button ── */}
       <div className="mb-4 print:hidden">
         <button
+          type="button"
           onClick={() => window.print()}
           className="rounded bg-black px-4 py-2 text-sm text-white hover:bg-black/80"
         >
@@ -67,7 +67,9 @@ export default function PaperScoresheetPage() {
 
       {/* ── Header ── */}
       <header className="mb-4 border-b-2 border-black pb-3">
-        <h1 className="text-center text-lg font-bold">ОНОО — ТОГЛОЛТЫН БҮРТГЭЛ</h1>
+        <h1 className="text-center text-lg font-bold">
+          ОНОО — ТОГЛОЛТЫН БҮРТГЭЛ
+        </h1>
         <p className="mt-1 text-center text-xs text-black/60">
           Сагсан бөмбөгийн тоглолтын цахим бүртгэлийн хуудас
         </p>
@@ -91,12 +93,24 @@ export default function PaperScoresheetPage() {
         <table className="w-full border-collapse text-xs">
           <thead>
             <tr>
-              <th className="border border-black/40 px-2 py-1 text-left">Баг</th>
-              <th className="border border-black/40 px-2 py-1 text-center">1-р үе</th>
-              <th className="border border-black/40 px-2 py-1 text-center">2-р үе</th>
-              <th className="border border-black/40 px-2 py-1 text-center">3-р үе</th>
-              <th className="border border-black/40 px-2 py-1 text-center">4-р үе</th>
-              <th className="border border-black/40 px-2 py-1 text-center">Нэмэлт</th>
+              <th className="border border-black/40 px-2 py-1 text-left">
+                Баг
+              </th>
+              <th className="border border-black/40 px-2 py-1 text-center">
+                1-р үе
+              </th>
+              <th className="border border-black/40 px-2 py-1 text-center">
+                2-р үе
+              </th>
+              <th className="border border-black/40 px-2 py-1 text-center">
+                3-р үе
+              </th>
+              <th className="border border-black/40 px-2 py-1 text-center">
+                4-р үе
+              </th>
+              <th className="border border-black/40 px-2 py-1 text-center">
+                Нэмэлт
+              </th>
               <th className="border border-black/40 px-2 py-1 text-center font-bold">
                 Нийт
               </th>
@@ -131,8 +145,12 @@ export default function PaperScoresheetPage() {
         <table className="w-full border-collapse text-[10px]">
           <thead>
             <tr>
-              <th className="border border-black/40 px-1 py-1 text-left w-8">#</th>
-              <th className="border border-black/40 px-1 py-1 text-left w-28">Нэр</th>
+              <th className="border border-black/40 px-1 py-1 text-left w-8">
+                #
+              </th>
+              <th className="border border-black/40 px-1 py-1 text-left w-28">
+                Нэр
+              </th>
               {STAT_COLUMNS.map((col) => (
                 <th
                   key={col}
