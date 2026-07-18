@@ -330,6 +330,16 @@ export type PlayerAwardRow = {
   competition_name: string;
   competition_id: string;
 };
+// Aggregated made/attempted counts per half-court zone for a player.
+// Rows come from v_public_shot_zones; zone_key matches CourtHeatmap zone ids.
+export type ShotZoneStat = {
+  player_id: string;
+  team_season_id: string | null;
+  competition_id: string | null;
+  zone_key: string;
+  made: number;
+  attempted: number;
+};
 
 // ---------------------------------------------------------------------------
 // Pure helper functions (no server-side imports)

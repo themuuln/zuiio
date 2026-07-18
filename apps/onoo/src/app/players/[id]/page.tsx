@@ -5,6 +5,7 @@ import {
   Medal,
   TableProperties,
   Target,
+  TrendingUp,
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -30,14 +31,17 @@ import {
   getPlayerCompetitions,
   getPlayerGameLog,
   getPlayerShootingProfile,
+  getPlayerShotZones,
 } from "../../lib/data";
 import { AwardsShelf } from "./components/awards-shelf";
+import { FormTrends } from "./components/form-trends";
 import { HeroCard } from "./components/hero-card";
 import { Milestones } from "./components/milestones";
 import { RecentGames } from "./components/recent-games";
 import { SeasonArc } from "./components/season-arc";
 import { SeasonSelector } from "./components/season-selector";
 import { ShootingProfile } from "./components/shooting-profile";
+import { ShotChart } from "./components/shot-chart";
 import { SkillRadar } from "./components/skill-radar";
 import { StatCard } from "./components/stat-card";
 
@@ -103,19 +107,27 @@ export default async function PlayerPage({
     profiles.find(
       (profile) => profile.competition_id === activeCompetitionId,
     ) ?? player;
-
-  const [shootingProfile, leagueData, careerTotals, playerGameLog, playerAwards] =
-    await Promise.all([
-      activeCompetitionId
-        ? getPlayerShootingProfile(id, activeCompetitionId)
-        : Promise.resolve(null),
-      activeCompetitionId
-        ? getLeagueAverages(activeCompetitionId)
-        : Promise.resolve(null),
-      getPlayerCareerTotals(id),
-      getPlayerGameLog(id, activeCompetitionId),
-      getPlayerAwards(id),
-    ]);
+  const [
+    shootingProfile,
+    leagueData,
+    careerTotals,
+    playerGameLog,
+    playerAwards,
+    shotZones,
+  ] = await Promise.all([
+    activeCompetitionId
+      ? getPlayerShootingProfile(id, activeCompetitionId)
+      : Promise.resolve(null),
+    activeCompetitionId
+      ? getLeagueAverages(activeCompetitionId)
+      : Promise.resolve(null),
+    getPlayerCareerTotals(id),
+    getPlayerGameLog(id, activeCompetitionId),
+    getPlayerAwards(id),
+    activeCompetitionId
+      ? getPlayerShotZones(id, activeCompetitionId)
+      : Promise.resolve([]),
+  ]);
 
   const trendData = playerGameLog.map((line) => ({
     game_id: line.game_id,
@@ -318,6 +330,39 @@ export default async function PlayerPage({
                 <ShootingProfile
                   data={shootingProfile ?? EMPTY_SHOOTING_PROFILE}
                   className="lg:col-span-5"
+                />
+              )}
+
+              {/* Form & trends — efficiency, opponent scatter, win/loss */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <span className="flex size-10 items-center justify-center rounded-xl bg-[var(--brand-sports)]/10 text-[var(--brand-sports)]">
+                      <TrendingUp className="size-5" aria-hidden="true" />
+                    </span>
+                    <div>
+                      <CardTitle className="text-lg">
+                        {isEn ? "Form & Trends" : "Форм ба Хандлага"}
+                      </CardTitle>
+                      <CardDescription className="mt-1">
+                        {isEn
+                          ? "Recent efficiency and performance by opponent"
+                          : "Сүүлийн үр ашаг болон өрсөлдөгчөөр үзүүлэлт"}
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <FormTrends gameLines={playerGameLog} locale={locale} />
+                </CardContent>
+              </Card>
+
+              {/* Shot chart — court heatmap (real zone data) + efficiency */}
+              {!isCareer && (
+                <ShotChart
+                  shotZones={shotZones}
+                  shootingProfile={shootingProfile ?? EMPTY_SHOOTING_PROFILE}
+                  locale={locale}
                 />
               )}
             </div>

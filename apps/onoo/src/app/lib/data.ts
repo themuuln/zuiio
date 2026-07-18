@@ -23,6 +23,7 @@ import type {
   PlayerGameLine,
   PlayerProfileRow,
   SearchAllResult,
+  ShotZoneStat,
   StandingRow,
   TeamRosterRow,
 } from "./shared";
@@ -46,6 +47,7 @@ export type {
   PlayerGameLine,
   PlayerProfileRow,
   SearchAllResult,
+  ShotZoneStat,
   StandingRow,
   TeamRosterRow,
 };
@@ -425,6 +427,23 @@ export async function getPlayerShootingProfile(
     ftm: (data.ftm as number) ?? 0,
     fta: (data.fta as number) ?? 0,
   };
+}
+
+export async function getPlayerShotZones(
+  playerId: string,
+  competitionId: string,
+): Promise<ShotZoneStat[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("v_public_shot_zones")
+    .select("zone_key, made, attempted")
+    .eq("player_id", playerId)
+    .eq("competition_id", competitionId)
+    .order("zone_key");
+
+  if (error || !data) return [];
+  return data as unknown as ShotZoneStat[];
 }
 
 export async function getPlayerSeasonAverages(
