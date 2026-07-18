@@ -35,23 +35,22 @@ type StatKey = (typeof STATS)[number];
 
 const chartConfig = {
   player: {
-    label: "\u0422\u043E\u0433\u043B\u043E\u0433\u0447",
+    label: "Тоглогч",
     color: "var(--team-color, var(--brand-sports))",
   },
   league: {
-    label:
-      "\u041B\u0438\u0433\u0438\u0439\u043D \u0434\u0443\u043D\u0434\u0430\u0436",
+    label: "Лигийн дундаж",
     color: "var(--color-muted-foreground)",
   },
 } satisfies ChartConfig;
 
 // Mongolian labels for axes — kept inline to avoid server-import of i18n
 const STAT_LABELS_MN: Record<StatKey, string> = {
-  pts: "\u041E\u043D\u043E\u043E",
-  reb: "\u0411\u0443\u0443\u043B\u0442",
-  ast: "\u0414\u0430\u043C\u0436\u0443\u0443\u043B\u0430\u043B\u0442",
-  stl: "\u0411\u0443\u043B\u0447\u0438\u0445",
-  blk: "\u0425\u0430\u043C\u0433\u0430\u0430\u043B\u0430\u043B\u0442",
+  pts: "Оноо",
+  reb: "Буулт",
+  ast: "Дамжуулалт",
+  stl: "Булчих",
+  blk: "Хамгаалалт",
 };
 
 interface SkillRadarProps {
