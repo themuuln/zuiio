@@ -13,9 +13,29 @@ import { login } from "./actions";
 const DEV_EMAIL = "themuuln1@gmail.com";
 const DEV_PASSWORD = "Tolom!11";
 
-export function LoginForm({ next }: { next: string }) {
+export function LoginForm({
+  next,
+  error,
+  detail,
+}: {
+  next: string;
+  error?: string;
+  detail?: string;
+}) {
   const [state, action, pending] = useActionState(login, undefined);
   const isDev = process.env.NODE_ENV === "development";
+
+  const ssoError =
+    error === "sso_failed"
+      ? "Гуравдагч нэвтрэх үйлчилгээ (Google) амжилтгүй боллоо. Дахин оролдоно уу."
+      : error === "auth_callback_failed"
+        ? "Нэвтрэх баталгаажуулалт амжилтгүй боллоо. Дахин оролдоно уу."
+        : null;
+  const urlErrorMessage = ssoError
+    ? detail
+      ? `${ssoError} (${detail})`
+      : ssoError
+    : null;
 
   return (
     <AuthCard title="Нэвтрэх" description="Имэйл хаяг, нууц үгээ оруулна уу">
@@ -49,13 +69,12 @@ export function LoginForm({ next }: { next: string }) {
                 placeholder="••••••••"
                 required
                 autoComplete="current-password"
-                className="pl-9"
                 defaultValue={isDev ? DEV_PASSWORD : undefined}
               />
             </div>
           </Field>
         </FieldGroup>
-
+        <ErrorBanner error={urlErrorMessage} />
         <ErrorBanner error={state?.error} />
 
         <Button type="submit" disabled={pending}>

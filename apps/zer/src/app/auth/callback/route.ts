@@ -13,6 +13,20 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   const next = sanitizeRedirectPath(searchParams.get("next") ?? "/");
 
+  // Supabase appends `error` / `error_description` (e.g. when the upstream
+  // OAuth provider fails to return an email) when the PKCE exchange can't
+  // succeed. There is no `code` in that case — surface it as a clean
+  // login error instead of silently falling through to `next`.
+  const upstreamError = searchParams.get("error");
+  if (upstreamError) {
+    const description = searchParams.get("error_description");
+    const params = new URLSearchParams({ error: "sso_failed" });
+    if (description) params.set("detail", description.slice(0, 200));
+    return NextResponse.redirect(
+      new URL(`/login?${params.toString()}`, origin),
+    );
+  }
+
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
