@@ -108,9 +108,11 @@ jobs:
           jq -n \
             --arg schema "https://openapi.vercel.sh/vercel.json" \
             --arg filter "$TURBO_FILTER" \
+            --arg outDir "apps/${{ inputs.app }}/.next" \
             '{
               "$schema": $schema,
               "framework": "nextjs",
+              "outputDirectory": $outDir,
               "installCommand": "pnpm install --frozen-lockfile",
               "buildCommand": ("pnpm exec turbo run build --filter=" + $filter)
             }' > vercel.json
