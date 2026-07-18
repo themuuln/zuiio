@@ -106,7 +106,14 @@ export default function ServicesPageClient() {
     if (!orgId || !serviceToDelete) return;
     deleteMutation.mutate(
       { id: serviceToDelete.id },
-      { onSettled: () => setServiceToDelete(null) },
+      {
+        onSettled: () => setServiceToDelete(null),
+        onError: (error) => {
+          toast.error(st("failedToDelete"), {
+            description: error instanceof Error ? error.message : undefined,
+          });
+        },
+      },
     );
   };
 

@@ -177,6 +177,9 @@ export function PartForm({
         });
       } else {
         part = await createPartMutation.mutateAsync(payload);
+        form.reset();
+        setImageUrl(null);
+        setImageDirty(false);
       }
       onSuccess?.(part);
     } catch (err: unknown) {
@@ -198,13 +201,13 @@ export function PartForm({
               value="quick"
               className="flex-1 w-full rounded-md py-1 text-xs justify-center cursor-pointer"
             >
-              Quick Add
+              {t("quickAdd")}
             </TabsTrigger>
             <TabsTrigger
               value="full"
               className="flex-1 w-full rounded-md py-1 text-xs justify-center cursor-pointer"
             >
-              Full Details
+              {t("fullDetails")}
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -303,7 +306,7 @@ export function PartForm({
                   onCreateItem={handleCreateCategory}
                   isCreating={createCategory.isPending}
                   createLabel={(name) =>
-                    t("inventory.createCategory", { name })
+                    t("createCategory", { name })
                   }
                   isItemEqualToValue={(a: { id: string }, b: { id: string }) =>
                     a.id === b.id
@@ -336,7 +339,7 @@ export function PartForm({
                   min={0}
                   placeholder="15000"
                   disabled={readOnly}
-                  value={Number(form.watch("default_price")) || 0}
+                  value={form.watch("default_price")?.trim() ? Number(form.watch("default_price")) : undefined}
                   onChange={(val) =>
                     form.setValue("default_price", String(val))
                   }
@@ -360,7 +363,7 @@ export function PartForm({
                 <CurrencyInput
                   min={0}
                   placeholder="15000"
-                  value={Number(form.watch("default_price")) || 0}
+                  value={form.watch("default_price")?.trim() ? Number(form.watch("default_price")) : undefined}
                   onChange={(val) =>
                     form.setValue("default_price", String(val))
                   }
@@ -379,7 +382,7 @@ export function PartForm({
                 <CurrencyInput
                   min={0}
                   placeholder="10000"
-                  value={Number(form.watch("purchase_price")) || 0}
+                  value={form.watch("purchase_price")?.trim() ? Number(form.watch("purchase_price")) : undefined}
                   onChange={(val) =>
                     form.setValue("purchase_price", String(val))
                   }
@@ -449,13 +452,12 @@ export function PartForm({
             {mutation.isPending ? (
               <span className="flex items-center gap-2 justify-center">
                 <Loader2 className="size-4 animate-spin" />
-                Saving...
+                {commonT("saving")}
               </span>
-            ) : isUpdate ? (
-              "Update Part"
-            ) : (
-              "Create Part"
-            )}
+            ) : isUpdate
+              ? t("updatePart")
+              : t("createPart")
+            }
           </Button>
         </div>
       )}

@@ -78,10 +78,11 @@ export default function PartDetailPage() {
   const onHand = balance?.quantity_on_hand ?? 0;
   const minThreshold = threshold?.minimum_quantity ?? 5;
 
-  // Loading state
+  // Loading state — show skeletons until parts are loaded AND we've found the specific part
   const isPending =
     (partsLoading && parts.length === 0) ||
-    (balancesLoading && balances.length === 0);
+    (balancesLoading && balances.length === 0) ||
+    (parts.length > 0 && !part && !partsError);
 
   if (!orgId) return null;
 
@@ -176,6 +177,7 @@ export default function PartDetailPage() {
                     description: part.description ?? undefined,
                     unit: part.unit ?? undefined,
                     default_price: part.default_price ?? undefined,
+                    purchase_price: part.purchase_price ?? undefined,
                     image_url: part.image_url ?? undefined,
                     location: part.location ?? undefined,
                   }}

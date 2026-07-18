@@ -4,6 +4,7 @@ import { useOrgMutation } from "@zuiio/query";
 import { Dices, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { VariantEditorSheet } from "@/components/services/variant-editor-drawer";
@@ -108,6 +109,11 @@ export function EditServiceSheet({
     onSuccess: () => {
       onOpenChange(false);
       form.reset();
+    },
+    onError: (error) => {
+      toast.error(t("failedToUpdate"), {
+        description: error instanceof Error ? error.message : undefined,
+      });
     },
   });
 

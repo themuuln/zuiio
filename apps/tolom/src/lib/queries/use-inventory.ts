@@ -415,6 +415,17 @@ export function useUpdatePart(orgId: string | undefined) {
     successMessage: "Part updated",
   });
 }
+export function useDeletePart(orgId: string | undefined) {
+  return useOrgMutation<PartsCatalogItem, string>({
+    endpoint: (id) =>
+      `/api/organizations/${orgId}/inventory/parts/${id}`,
+    method: "DELETE",
+    queryKey: inventoryKeys.parts(orgId ?? ""),
+    invalidateKeys: [inventoryKeys.balances(orgId ?? "")],
+    optimisticUpdate: (cached, id) => cached.filter((p) => p.id !== id),
+    successMessage: "Part deleted",
+  });
+}
 
 export function useCreatePurchaseOrder(orgId: string | undefined) {
   return useOrgMutation<

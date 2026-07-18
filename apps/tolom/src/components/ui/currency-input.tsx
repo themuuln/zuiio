@@ -24,8 +24,8 @@ export interface CurrencyInputProps
     | "readOnly"
     | "placeholder"
   > {
-  /** Current value in MNT */
-  value: number;
+  /** Current value in MNT. Pass undefined to show placeholder (empty state). */
+  value: number | undefined;
   /** Called with parsed number on blur / after save interaction */
   onChange?: (value: number) => void;
   /** Called on blur (e.g. for validation) */
@@ -108,14 +108,14 @@ export function CurrencyInput({
     }
   }, [value]);
 
-  const displayText = editing ? editText : formatCurrency(value);
+  const displayText = editing ? editText : value != null ? formatCurrency(value) : "";
 
   const handleFocus = useCallback(
     (e: React.FocusEvent<HTMLInputElement>) => {
       if (readOnly || disabled) return;
       setEditing(true);
       // Show raw number without formatting for editing
-      setEditText(String(value));
+      setEditText(value != null ? String(value) : "");
       // Select all on focus for quick replacement
       if (autoSelect) {
         e.target.select();
