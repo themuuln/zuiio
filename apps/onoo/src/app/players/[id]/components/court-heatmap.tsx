@@ -25,34 +25,49 @@ export interface ShotZone {
   attempted: number;
 }
 
+/** Individual shot data point for scatter overlay. */
+export interface ShotDataPoint {
+  x: number;
+  y: number;
+  made: boolean;
+  shot_type?: string;
+  /** originating game id (present when sourced from stat_events) */
+  game_id?: string;
+  /** quarter / period number */
+  period?: number;
+}
+
 interface CourtHeatmapProps {
   zones: ShotZone[];
+  /** Optional individual shot dots for scatter overlay. */
+  shots?: ShotDataPoint[];
   className?: string;
 }
 
 // ---------------------------------------------------------------------------
 // Court SVG constants (half-court, 600×550 viewBox)
 // ---------------------------------------------------------------------------
-
 const COURT_WIDTH = 600;
 const COURT_HEIGHT = 550;
-const COURT_STROKE = "var(--color-muted-foreground / 0.3)";
+
+const COURT_STROKE = "var(--color-muted-foreground)";
 const COURT_FILL = "none";
 
-// Zone fill color based on FG%
+// ── Heat-scale palette (FG% → visible, distinct color) ──────────────
 function zoneColor(made: number, attempted: number): string {
   if (attempted === 0) return "transparent";
   const pct = made / attempted;
-  // Heat scale: cool blue → warm amber → hot red
-  if (pct >= 0.6) return "var(--brand-sports)";
-  if (pct >= 0.45) return "var(--brand-sports-light)";
-  if (pct >= 0.3) return "var(--color-muted-foreground / 0.2)";
-  return "var(--color-muted-foreground / 0.08)";
+  if (pct >= 0.6) return "var(--brand-sports)";                    // hot amber
+  if (pct >= 0.5) return "var(--brand-sports-dim)";               // deep amber
+  if (pct >= 0.4) return "color-mix(in srgb, var(--brand-sports) 55%, #f59e0b 45%)";  // orange-amber
+  if (pct >= 0.3) return "color-mix(in srgb, var(--color-muted-foreground) 40%, var(--brand-sports) 25%)";  // muted warm
+  return "color-mix(in srgb, var(--color-muted-foreground) 30%, transparent)";  // cool gray
 }
 
 function zoneOpacity(made: number, attempted: number): number {
   if (attempted === 0) return 0;
-  return 0.3 + (made / attempted) * 0.5;
+  // Range: 0.55 (cold) → 0.9 (hot) — always clearly visible
+  return 0.55 + (made / attempted) * 0.35;
 }
 
 // ---------------------------------------------------------------------------
@@ -65,8 +80,9 @@ function zoneOpacity(made: number, attempted: number): number {
  * Shows shot zones with color intensity based on FG%.
  * Tap/hover a zone for stats. No external dependencies — pure SVG.
  */
-export function CourtHeatmap({ zones, className }: CourtHeatmapProps) {
+export function CourtHeatmap({ zones, shots, className }: CourtHeatmapProps) {
   const [activeZone, setActiveZone] = useState<ShotZone | null>(null);
+  const [hoveredShot, setHoveredShot] = useState<number | null>(null);
 
   return (
     <div className={cn("relative", className)}>
@@ -77,7 +93,7 @@ export function CourtHeatmap({ zones, className }: CourtHeatmapProps) {
         aria-label="Шидэлтийн бүсийн зураглал"
       >
         {/* Court outline */}
-        <g stroke={COURT_STROKE} fill={COURT_FILL} strokeWidth={2}>
+        <g stroke={COURT_STROKE} fill={COURT_FILL} strokeWidth={2.5} opacity={0.55}>
           {/* Outer boundary */}
           <rect x={20} y={20} width={560} height={510} rx={4} />
 
@@ -113,6 +129,13 @@ export function CourtHeatmap({ zones, className }: CourtHeatmapProps) {
           const color = zoneColor(zone.made, zone.attempted);
           const opacity = zoneOpacity(zone.made, zone.attempted);
           const isActive = activeZone?.id === zone.id;
+          const isEmpty = zone.attempted === 0;
+          const emptyStroke = isEmpty
+            ? "color-mix(in srgb, var(--color-muted-foreground) 35%, transparent)"
+            : isActive
+              ? "var(--brand-sports)"
+              : "transparent";
+          const emptyStrokeDash = isEmpty ? "4 3" : undefined;
 
           if (zone.type === "circle") {
             return (
@@ -122,9 +145,10 @@ export function CourtHeatmap({ zones, className }: CourtHeatmapProps) {
                 cy={zone.cy}
                 r={zone.r ?? 30}
                 fill={color}
-                opacity={isActive ? 0.8 : opacity}
-                stroke={isActive ? "var(--brand-sports)" : "transparent"}
-                strokeWidth={2}
+                opacity={isActive ? 0.85 : isEmpty ? 0.35 : opacity}
+                stroke={emptyStroke}
+                strokeDasharray={emptyStrokeDash}
+                strokeWidth={isEmpty ? 1.5 : 2}
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => {
@@ -148,9 +172,10 @@ export function CourtHeatmap({ zones, className }: CourtHeatmapProps) {
               key={zone.id}
               d={zone.d}
               fill={color}
-              opacity={isActive ? 0.8 : opacity}
-              stroke={isActive ? "var(--brand-sports)" : "transparent"}
-              strokeWidth={2}
+              opacity={isActive ? 0.85 : isEmpty ? 0.35 : opacity}
+              stroke={emptyStroke}
+              strokeDasharray={emptyStrokeDash}
+              strokeWidth={isEmpty ? 1.5 : 2}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
@@ -166,7 +191,52 @@ export function CourtHeatmap({ zones, className }: CourtHeatmapProps) {
             />
           );
         })}
+        {/* Scatter overlay — individual shot dots */}
+        {shots && shots.length > 0 && (
+          <g className="shot-scatter">
+            {shots.map((shot, i) => (
+              <g key={i}>
+                <circle
+                  cx={shot.x}
+                  cy={shot.y}
+                  r={hoveredShot === i ? 6 : 4.5}
+                  fill={shot.made ? "#22c55e" : "#ef4444"}
+                  opacity={hoveredShot === i ? 1 : 0.75}
+                  stroke={shot.made ? "#16a34a" : "#dc2626"}
+                  strokeWidth={1}
+                  style={{ transition: "r 0.15s, opacity 0.15s" }}
+                  onPointerEnter={() => setHoveredShot(i)}
+                  onPointerLeave={() => setHoveredShot(null)}
+                />
+              </g>
+            ))}
+          </g>
+        )}
       </svg>
+      {/* Color legend */}
+      <div className="mt-2 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
+        <span className="mr-1">FG%:</span>
+        <span className="flex items-center gap-0.5">
+          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: "color-mix(in srgb, var(--color-muted-foreground) 30%, transparent)", opacity: 0.55 }} />
+          <span>&lt;30%</span>
+        </span>
+        <span className="flex items-center gap-0.5">
+          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: "color-mix(in srgb, var(--color-muted-foreground) 40%, var(--brand-sports) 25%)", opacity: 0.65 }} />
+          <span>30-39%</span>
+        </span>
+        <span className="flex items-center gap-0.5">
+          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: "color-mix(in srgb, var(--brand-sports) 55%, #f59e0b 45%)", opacity: 0.75 }} />
+          <span>40-49%</span>
+        </span>
+        <span className="flex items-center gap-0.5">
+          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: "var(--brand-sports-dim)", opacity: 0.82 }} />
+          <span>50-59%</span>
+        </span>
+        <span className="flex items-center gap-0.5">
+          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: "var(--brand-sports)", opacity: 0.9 }} />
+          <span>≥60%</span>
+        </span>
+      </div>
 
       {/* Tooltip */}
       {activeZone && (
@@ -187,69 +257,36 @@ export function CourtHeatmap({ zones, className }: CourtHeatmapProps) {
           </p>
         </div>
       )}
+      {/* Shot tooltip */}
+      {hoveredShot !== null && shots && shots[hoveredShot] && (
+        <div
+          className="pointer-events-none absolute left-1/2 top-4 -translate-x-1/2 rounded-lg bg-foreground px-3 py-2 text-sm text-background shadow-lg"
+          role="tooltip"
+        >
+          <p className="font-semibold">
+            {shots[hoveredShot].made ? "✓ Мade" : "✗ Missed"}
+          </p>
+          {shots[hoveredShot].shot_type && (
+            <p className="text-background/70 text-xs capitalize">
+              {shots[hoveredShot].shot_type}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Default zones — standard basketball half-court shot zones
+// Default zones — derived from shared court-zones.ts
 // ---------------------------------------------------------------------------
 
-export const DEFAULT_SHOT_ZONES: ShotZone[] = [
-  {
-    id: "paint",
-    type: "path",
-    d: "M 172 22 L 172 208 L 428 208 L 428 22 Z",
-    label: "Өрөө (Paint)",
+import { COURT_ZONES } from "./court-zones";
+
+export const DEFAULT_SHOT_ZONES: ShotZone[] = COURT_ZONES.map(
+  ({ weight2pt: _w2, weight3pt: _w3, ...rest }) => ({
+    ...rest,
     made: 0,
     attempted: 0,
-  },
-  {
-    id: "mid-left",
-    type: "path",
-    d: "M 22 22 L 170 22 L 170 300 Q 100 300 22 250 Z",
-    label: "Дунд — зүүн",
-    made: 0,
-    attempted: 0,
-  },
-  {
-    id: "mid-right",
-    type: "path",
-    d: "M 430 22 L 578 22 L 578 250 Q 500 300 430 300 Z",
-    label: "Дунд — баруун",
-    made: 0,
-    attempted: 0,
-  },
-  {
-    id: "mid-top",
-    type: "path",
-    d: "M 170 210 L 430 210 L 430 310 L 170 310 Z",
-    label: "Дунд — дээд",
-    made: 0,
-    attempted: 0,
-  },
-  {
-    id: "three-left",
-    type: "path",
-    d: "M 22 252 Q 100 302 170 312 L 170 530 L 22 530 Z",
-    label: "Гурван оноо — зүүн",
-    made: 0,
-    attempted: 0,
-  },
-  {
-    id: "three-right",
-    type: "path",
-    d: "M 578 252 Q 500 302 430 312 L 430 530 L 578 530 Z",
-    label: "Гурван оноо — баруун",
-    made: 0,
-    attempted: 0,
-  },
-  {
-    id: "three-top",
-    type: "path",
-    d: "M 170 312 L 430 312 L 430 530 L 170 530 Z",
-    label: "Гурван оноо — дээд",
-    made: 0,
-    attempted: 0,
-  },
-];
+  }),
+);
