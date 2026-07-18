@@ -32,11 +32,11 @@ import { formatCurrency, formatDate } from "@/lib/format";
 import { laborKeys, productionKeys } from "@/lib/query/keys";
 import {
   addLaborRecord,
-  getStageLaborSummary,
   getOrderCostSummary,
+  getStageLaborSummary,
+  type LaborRecord,
   listActiveEmployees,
   removeLaborRecord,
-  type LaborRecord,
 } from "./labor-actions";
 import { issueMaterials, returnMaterials } from "./material-actions";
 import type { ProductionStageData } from "./production-actions";
@@ -295,7 +295,6 @@ function StageStepper({ stages }: { stages: ProductionStageData[] }) {
         <div key={stage.id} className="flex items-start">
           <div className="flex flex-col items-center min-w-[80px]">
             {/* Dot */}
-            {/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: decorative status indicator */}
             <div
               role="img"
               className={`size-3 rounded-full ${STAGE_STATUS_COLORS[stage.status] ?? "bg-muted"} ring-2 ring-background`}
