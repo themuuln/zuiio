@@ -107,9 +107,11 @@ describe("Tolom Tools", () => {
 			"getWorkOrderDetails",
 			"partsLookup",
 			"readData",
+			"recallCustomerMemory",
+			"rememberCustomerFact",
 			"writeData",
 		]);
-		expect(tools).toHaveLength(9);
+		expect(tools).toHaveLength(11);
 	});
 
 	it("getDailySummary returns summary data", async () => {
@@ -141,6 +143,7 @@ describe("Tolom Tools", () => {
 
 		const tools = getProductTools("tolom", {
 			...context,
+			orgId: "tolom-daily-summary-org",
 			supabase: mockClient,
 		});
 		const summaryTool = tools.find((t) => t.name === "getDailySummary")!;
@@ -166,9 +169,11 @@ describe("Zer Tools", () => {
 			"createSale",
 			"getSalesByCategory",
 			"readData",
+			"recallCustomerMemory",
 			"recordPayment",
+			"rememberCustomerFact",
 			"writeData",
 		]);
-		expect(tools).toHaveLength(5);
+		expect(tools).toHaveLength(7);
 	});
 });

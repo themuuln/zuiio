@@ -8,6 +8,7 @@ import { NextResponse } from "next/server";
 import { FacebookChannel } from "@/channels/facebook";
 import type { MetaWebhookPayload } from "@/channels/types";
 import { handleAgentMessage } from "@/gateway/agent-handler";
+import { handleFlowMessage } from "@/flow-executor";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
 import { confirmAction, rejectAction } from "@/runtime/confirmation";
 import { createServiceClient, type ServiceClient, getSupabaseForProduct } from "@/lib/supabase";
@@ -228,21 +229,37 @@ async function handleMessage(
 
 		// Show typing indicator while processing
 		await channel.sendSenderAction(ctx.senderId, "typing_on");
+		// Build gateway context for flow routing and agent handler
+		const gatewayCtx = {
+			orgId: ctx.orgId,
+			userId: ctx.userId,
+			productType: ctx.productType,
+			chatId: 0,
+			telegramUserId: 0,
+			channel: ctx.channel,
+			channelChatId: ctx.pageId,
+			channelUserId: ctx.senderId,
+			pageId: ctx.pageId,
+			pageAccessToken: ctx.pageAccessToken,
+		};
 
-		// Process through agent pipeline with real tools and system prompt
+		// Try flow routing first — if a flow is active or triggered, handle it
+		const flowResult = await handleFlowMessage(
+			gatewayCtx,
+			ctx.text,
+			supabase,
+			channel,
+		);
+
+		if (flowResult) {
+			// Flow handled the message — hide typing and return
+			await channel.sendSenderAction(ctx.senderId, "typing_off");
+			return;
+		}
+
+		// No flow matched — fall through to AI agent handler
 		const response = await handleAgentMessage(
-			{
-				orgId: ctx.orgId,
-				userId: ctx.userId,
-				productType: ctx.productType,
-				chatId: 0,
-				telegramUserId: 0,
-				channel: ctx.channel,
-				channelChatId: ctx.pageId,
-				channelUserId: ctx.senderId,
-				pageId: ctx.pageId,
-				pageAccessToken: ctx.pageAccessToken,
-			},
+			gatewayCtx,
 			ctx.text,
 			"private",
 			{

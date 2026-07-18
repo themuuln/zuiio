@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export type ChannelType = "telegram" | "messenger" | "instagram" | "whatsapp";
 
 /** Supported product types. */
-export type ProductType = "tolom" | "zer";
+export type ProductType = "tolom" | "zer" | "zatly";
 
 /** Resolved context for a gateway request. */
 export interface GatewayContext {

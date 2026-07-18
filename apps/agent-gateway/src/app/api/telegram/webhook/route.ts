@@ -5,6 +5,7 @@ import { TelegramChannel } from "@/channels/telegram";
 import type { TelegramUpdate } from "@/channels/types";
 import { startTypingLoop } from "@/channels/typing-loop";
 import { handleAgentMessage } from "@/gateway/agent-handler";
+import { handleFlowMessage, handleFlowCallback } from "@/flow-executor";
 import { resolveOrgFromChatUser } from "@/gateway/mode-a";
 import { getProductTools, systemPromptFor } from "@/gateway/webhook-helpers";
 import { debug } from "@/lib/debug";
@@ -775,23 +776,40 @@ async function handleUserMessage(
 		// Start typing indicator loop
 		const stopTyping = startTypingLoop(tg, chatId);
 		let typingStopped = false;
-
-	// Run agent synchronously — await the result then send to Telegram.
-	// Vercel serverless kills background tasks after response, so we MUST
-	// await the full flow (agent + telegram send) before returning.
 	try {
-const response = await handleAgentMessage(resolved.context, text, chatType, {
-	getSystemPrompt: systemPromptFor,
-	getTools: (ctx) => getProductTools(productType, ctx),
-	dataClient,
-	onToken,
-}, images);
+		// Run agent synchronously — await the result then send to Telegram.
+		// Vercel serverless kills background tasks after response, so we MUST
+		// await the full flow (agent + telegram send) before returning.
+		// Try flow routing first — if a flow is active or triggered, handle it
+		const flowResult = await handleFlowMessage(
+			resolved.context,
+			text,
+			sb,
+			tg,
+		);
+
+		if (flowResult) {
+			// Flow handled the message — stop typing and return
+			stopTyping();
+			if (messageId) {
+				tg.setReaction(chatId, messageId, TelegramChannel.REACTIONS.done).catch(() => {});
+			}
+			return;
+		}
+
+		// No flow matched — fall through to AI agent handler
+		const response = await handleAgentMessage(resolved.context, text, chatType, {
+			getSystemPrompt: systemPromptFor,
+			getTools: (ctx) => getProductTools(productType, ctx),
+			dataClient,
+			onToken,
+		}, images);
 		stopTyping();
-	debug("webhook", "agent responded", { chatId, len: response.length });
-	if (messageId) {
-		tg.setReaction(chatId, messageId, TelegramChannel.REACTIONS.done).catch(() => {});
-	}
-	await tg.sendMessage(chatId, response);
+		debug("webhook", "agent responded", { chatId, len: response.length });
+		if (messageId) {
+			tg.setReaction(chatId, messageId, TelegramChannel.REACTIONS.done).catch(() => {});
+		}
+		await tg.sendMessage(chatId, response);
 	} catch (err) {
 		stopTyping();
 		console.error("[webhook] agent error:", err);
@@ -873,6 +891,15 @@ const response = await handleAgentMessage(resolved.context, text, chatType, {
 			rejectAction(nonce);
 			await tg.editMessageText(chatId, messageId, "❌ Цуцаллаа.");
 			await tg.answerCallbackQuery(cq.id, "❌ Цуцаллаа.");
+		} else if (action === "flow") {
+			// Flow button callback: "flow:{runId}:{buttonValue}"
+			const [runId, ...buttonParts] = nonce.split(":");
+			const buttonValue = buttonParts.join(":");
+			if (runId) {
+				const sb = getSupabase();
+				await handleFlowCallback(runId, buttonValue, sb, tg);
+			}
+			await tg.answerCallbackQuery(cq.id);
 		}
 	}
 }

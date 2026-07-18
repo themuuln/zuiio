@@ -7,6 +7,7 @@ import { getRedis } from "@/lib/redis";
 import { createServiceClient } from "@/lib/supabase";
 import { createWriteDataTool } from "@/gateway/write-data-tool";
 import { createReadDataTool } from "@/gateway/read-data-tool";
+import { createCustomerMemoryTools } from "@/gateway/customer-memory-tool";
 
  /**
  * Generate system prompt for a product type.
@@ -70,6 +71,7 @@ RULES:
 6. Complex ops → guide step by step, ONE question per step, confirm before submit
 READ TOOL: Use readData(plan) for ALL data lookups. plan is a ReadPlan: { queries: [{ dataset, dimensions?, measures?, embeds?, filters?, sort?, limit?, offset?, includeCount? }], derivation?, responseFormat? }. Datasets include: work_orders, customers, vehicles, appointments, invoices, invoice_items, invoice_payments, expenses, expense_categories, suppliers, profiles, parts_catalog, service_catalog, sales, sales_items, cash_register_sessions, work_order_parts, work_order_services, mechanic_daily_reports, notifications.
 Examples: "show active orders" → readData({ queries: [{ dataset:"work_orders", filters:[{field:"status",op:"eq",value:"in_progress"}], limit:10 }] }); "customer by phone" → readData({ queries: [{ dataset:"customers", filters:[{field:"phone",op:"eq",value:"12345678"}] }] }); "today's appointments" → readData({ queries: [{ dataset:"appointments", filters:[{field:"scheduled_at",op:"gte",value:"2024-01-15"}] }] })
+MEMORY: When you identify a customer (by id or phone via readData on "customers"), call recallCustomerMemory to retrieve their saved preferences/history and use it to personalize. When the user states a durable fact about themselves (name they prefer, contact preference, vehicle, note), call rememberCustomerFact to save it.
 Organization ID: ${orgId}${groupWarning}`;
 		}
 return `Та "${orgName || "This auto repair shop"}" — идэвхтэй засварын газрын бизнес агент.
@@ -82,8 +84,8 @@ return `Та "${orgName || "This auto repair shop"}" — идэвхтэй зас
 4. Бичлэгийн хэрэгсэл — writeData(dataset, operation, data). Хүснэгтүүд: vehicles, customers, work_orders, appointments, expenses, suppliers, parts_catalog, service_catalog, sales, invoices. Үйлдлүүд: insert, update, delete. Гүйцэтгэхээс өмнө хэрэглэгчээс заавал баталгаажуулна.
 5. Ерөнхий асуулт — хэрэгсэлгүйгээр хариул
 6. Төвөгтэй үйлдэл: алхам алхамаар, нэг асуулт нэг алхам, баталгаажуул
-ХЭРЭГСЛИЙН ДҮРЭМ: readData(plan) ашиглах — бүх өгөгдөл хайх, шүүх, бүлэглэх. plan нь ReadPlan: { queries: [{ dataset, dimensions?, measures?, embeds?, filters?, sort?, limit?, offset?, includeCount? }], derivation?, responseFormat? }. Хүснэгтүүд: work_orders, customers, vehicles, appointments, invoices, invoice_items, invoice_payments, expenses, expense_categories, suppliers, profiles, parts_catalog, service_catalog, sales, sales_items, cash_register_sessions, work_order_parts, work_order_services, mechanic_daily_reports, notifications.
 Жишээ: "идэвхтэй захиалга" → readData({ queries: [{ dataset:"work_orders", filters:[{field:"status",op:"eq",value:"in_progress"}], limit:10 }] }); "утсаар харилцагч" → readData({ queries: [{ dataset:"customers", filters:[{field:"phone",op:"eq",value:"12345678"}] }] }); "өнөөдрийн цаг" → readData({ queries: [{ dataset:"appointments", filters:[{field:"scheduled_at",op:"gte",value:"2024-01-15"}] }] })
+САНУУЛАГ: Хэрэглэгчийг (ID эсвэл утасаар readData "customers"-ээр) таньсны дараа recallCustomerMemory дуудж, тэдний хадгалагдсан дуртай зүйл/түүхийг аваад хариултаа хувиаршуул. Хэрэглэгч өөрийнхөө тухай бат бөх мэдээлэл (дуртай нэр, холбоо барих таалагдал, тээврийн хэрэгсэл, тэмдэглэл) хэлсэн үед rememberCustomerFact дуудж хадгал.
 ОЛОН ШАТЫН ТУСЛАМЖ:
 - Захиалга: харилцагчийн нэр → улсын дугаар → тайлбар
 - Цаг захиалга: харилцагч → огноо/цаг → тайлбар
@@ -99,6 +101,7 @@ RULES:
 3. After showing data, offer relevant next steps
 4. Read tool: use readData(plan) for ALL data lookups. Datasets: sales, sale_items, products, categories, contacts, expenses, invoices, invoice_items, returns, return_items, purchase_orders, purchase_order_items, stock_movements, warehouses, employees, cash_sessions. plan is a ReadPlan: { queries: [{ dataset, dimensions?, measures?, embeds?, filters?, sort?, limit?, offset?, includeCount? }], derivation?, responseFormat? }
 5. Write tool (confirm before executing): writeData(dataset, operation, data). Datasets: products, categories, contacts, expenses, sale_items, purchase_orders, purchase_order_items. Operations: insert, update, delete. Always confirm the exact change with the user before executing.
+MEMORY: When you identify a customer/contact (by id or phone via readData on "contacts"), call recallCustomerMemory to retrieve their saved preferences/history and personalize. When the user states a durable fact about themselves, call rememberCustomerFact to save it.
 6. General questions → respond without tools
 Organization ID: ${orgId}${groupWarning}`;
 	}
@@ -107,6 +110,7 @@ Organization ID: ${orgId}${groupWarning}`;
 ФОРМАТ: Зөвхөн HTML (<b>, <i>, <code>). Markdown ашиглахгүй. Хариулт богино — 1-2 өгүүлбэр.
 ХЭРЭГСЛИЙН ДҮРЭМ: readData(plan) ашиглах — бүх өгөгдөл хайх, шүүх, бүлэглэх. plan нь ReadPlan: { queries: [{ dataset, dimensions?, measures?, embeds?, filters?, sort?, limit?, offset?, includeCount? }], derivation?, responseFormat? }. Хүснэгтүүд: sales, sale_items, products, categories, contacts, expenses, invoices, invoice_items, returns, return_items, purchase_orders, purchase_order_items, stock_movements, warehouses, employees, cash_sessions.
 Бичлэгийн хэрэгсэл — writeData(dataset, operation, data). Хүснэгтүүд: products, categories, contacts, expenses, sale_items, purchase_orders, purchase_order_items. Үйлдлүүд: insert, update, delete. Гүйцэтгэхээс өмнө хэрэглэгчээс заавал баталгаажуулна.
+САНУУЛАГ: Хэрэглэгч/харилцагчийг (ID эсвэл утасаар readData "contacts"-ээр) таньсны дараа recallCustomerMemory дуудж тэдний хадгалагдсан дуртай зүйл/түүхийг аваад хариултаа хувиаршуул. Хэрэглэгч өөрийнхөө тухай бат бөх мэдээлэл хэлсэн үед rememberCustomerFact дуудж хадгал.
 - Ангиллаар: getSalesByCategory
 - Бусад бүх асуулт: readData ашиглах
 Ерөнхий асуулт — хэрэгсэлгүйгээр хариул.
@@ -1680,10 +1684,12 @@ const TOOL_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
  * Pass `readOnly: true` to exclude write tools.
  */
 export function getProductTools(
-	productType: "tolom" | "zer",
+	productType: "tolom" | "zer" | "zatly",
 	context: ToolContext,
 	options?: { readOnly?: boolean },
 ): GatewayTool[] {
+	// Zatly has no tools yet — return empty set
+	if (productType === "zatly") return [];
 	const cacheKey = `${productType}:${context.orgId}:${options?.readOnly ?? false}`;
 	const cached = toolCache.get(cacheKey);
 
@@ -1699,10 +1705,12 @@ export function getProductTools(
 			? [
 					...baseReadTools,
 					createReadDataTool("tolom", context),
+					...createCustomerMemoryTools(context),
 				].filter((t): t is NonNullable<typeof t> => t !== null)
 			: [
 					...baseReadTools,
 					createReadDataTool("zer", context),
+					...createCustomerMemoryTools(context),
 				].filter((t): t is NonNullable<typeof t> => t !== null);
 	// Tolom and Zer both use the dynamic Write Engine (writeData) when their
 	// catalog exists; legacy inline write tools are kept alongside.
