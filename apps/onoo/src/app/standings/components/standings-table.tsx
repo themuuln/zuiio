@@ -43,6 +43,8 @@ export interface StandingsTableRow {
 interface StandingsTableProps {
   rows: StandingsTableRow[];
   className?: string;
+  /** Insert a playoff line separator after this rank (0-indexed). Default: 4 (after 4th place). */
+  playoffLineAfter?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -129,6 +131,49 @@ function FormGuide({ last5 }: { last5: string | null }) {
   );
 }
 
+/** Parse a "W-L" string like "6-4" into wins and losses. */
+function parseLast10(last10: string | null): { wins: number; losses: number } | null {
+  if (!last10) return null;
+  const match = last10.match(/^(\d+)\s*[-–]\s*(\d+)$/);
+  if (!match) return null;
+  return { wins: Number(match[1]), losses: Number(match[2]) };
+}
+
+/** Render last-10 as 10 colored dots: green for wins, red for losses, gray for remaining. */
+function Last10Dots({ last10 }: { last10: string | null }) {
+  const parsed = parseLast10(last10);
+  if (!parsed) {
+    return <span className="text-center text-muted-foreground text-xs">—</span>;
+  }
+  const dots = Array.from({ length: 10 }, (_, i) => {
+    if (i < parsed.wins) return "W";
+    if (i < parsed.wins + parsed.losses) return "L";
+    return "E";
+  });
+  return (
+    <>
+      {/* Dots — visible on sm+ */}
+      <span className="hidden items-center justify-center gap-0.5 sm:flex">
+        {dots.map((r, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: static list
+          <span
+            key={i}
+            className={cn(
+              "inline-block size-1.5 rounded-full",
+              r === "W" ? "bg-emerald-500" : r === "L" ? "bg-red-400" : "bg-muted",
+            )}
+          />
+        ))}
+      </span>
+      {/* Text fallback — visible below sm */}
+      <span className="text-center tabular-nums sm:hidden">
+        {last10}
+      </span>
+    </>
+  );
+}
+
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -138,9 +183,8 @@ function FormGuide({ last5 }: { last5: string | null }) {
  *
  * Click a team row to expand additional stats (home/away record,
  * points for/against, point difference breakdown).
- * Respects prefers-reduced-motion.
  */
-export function StandingsTable({ rows, className }: StandingsTableProps) {
+export function StandingsTable({ rows, className, playoffLineAfter = 4 }: StandingsTableProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   function toggleRow(id: string) {
@@ -185,6 +229,7 @@ export function StandingsTable({ rows, className }: StandingsTableProps) {
             const isExpanded = expandedId === row.team_season_id;
 
             return (
+              <>
               <Fragment key={row.team_season_id}>
                 <TableRow
                   className={cn(
@@ -238,8 +283,8 @@ export function StandingsTable({ rows, className }: StandingsTableProps) {
                   <TableCell className="text-center">
                     <FormGuide last5={row.last5 ?? null} />
                   </TableCell>
-                  <TableCell className="text-center tabular-nums">
-                    {row.last10 ?? "—"}
+                  <TableCell className="text-center">
+                    <Last10Dots last10={row.last10 ?? null} />
                   </TableCell>
                   <TableCell
                     className={cn(
@@ -308,8 +353,23 @@ export function StandingsTable({ rows, className }: StandingsTableProps) {
                   </TableRow>
                 )}
               </Fragment>
-            );
-          })}
+              {/* Playoff line separator */}
+              {index === playoffLineAfter - 1 && index < rows.length - 1 && (
+                <TableRow className="pointer-events-none border-t-0">
+                  <TableCell colSpan={11} className="px-0 pt-1 pb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="h-px flex-1 border-t border-dashed border-muted-foreground/30" />
+                      <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/60">
+                        Плэйоффийн шугам
+                      </span>
+                      <div className="h-px flex-1 border-t border-dashed border-muted-foreground/30" />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </>
+          );
+        })}
         </TableBody>
       </Table>
     </div>
