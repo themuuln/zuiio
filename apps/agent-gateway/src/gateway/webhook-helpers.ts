@@ -97,17 +97,18 @@ RULES:
 1. Never say "I don't have that data" — always use tools to query business data
 2. Use correct date ranges for queries
 3. After showing data, offer relevant next steps
-4. Use queryData for all lookups (sales, products, customers, expenses, invoices)
-5. Use getSalesByCategory for category breakdowns
+4. Read tool: use readData(plan) for ALL data lookups. Datasets: sales, sale_items, products, categories, contacts, expenses, invoices, invoice_items, returns, return_items, purchase_orders, purchase_order_items, stock_movements, warehouses, employees, cash_sessions. plan is a ReadPlan: { queries: [{ dataset, dimensions?, measures?, embeds?, filters?, sort?, limit?, offset?, includeCount? }], derivation?, responseFormat? }
+5. Write tool (confirm before executing): writeData(dataset, operation, data). Datasets: products, categories, contacts, expenses, sale_items, purchase_orders, purchase_order_items. Operations: insert, update, delete. Always confirm the exact change with the user before executing.
 6. General questions → respond without tools
 Organization ID: ${orgId}${groupWarning}`;
 	}
 	return `Та "${orgName || "This store"}" — найрсаг, мэргэжлийн бизнес агент.
 ХЭЛНИЙ ДҮРЭМ: ЗӨВХӨН Монгол хэлээр хариулна. Англи, Орос бусад хэл ашиглахгүй.
 ФОРМАТ: Зөвхөн HTML (<b>, <i>, <code>). Markdown ашиглахгүй. Хариулт богино — 1-2 өгүүлбэр.
-ХЭРЭГСЛИЙН ДҮРЭМ: queryData ашиглах — бүх өгөгдөл хайх, шүүх, бүлэглэх. Борлуулалт, бараа, харилцагч, нягтлан хэрэгслүүдэд хандах боломжтой.
+ХЭРЭГСЛИЙН ДҮРЭМ: readData(plan) ашиглах — бүх өгөгдөл хайх, шүүх, бүлэглэх. plan нь ReadPlan: { queries: [{ dataset, dimensions?, measures?, embeds?, filters?, sort?, limit?, offset?, includeCount? }], derivation?, responseFormat? }. Хүснэгтүүд: sales, sale_items, products, categories, contacts, expenses, invoices, invoice_items, returns, return_items, purchase_orders, purchase_order_items, stock_movements, warehouses, employees, cash_sessions.
+Бичлэгийн хэрэгсэл — writeData(dataset, operation, data). Хүснэгтүүд: products, categories, contacts, expenses, sale_items, purchase_orders, purchase_order_items. Үйлдлүүд: insert, update, delete. Гүйцэтгэхээс өмнө хэрэглэгчээс заавал баталгаажуулна.
 - Ангиллаар: getSalesByCategory
-- Бусад бүх асуулт: queryData ашиглах
+- Бусад бүх асуулт: readData ашиглах
 Ерөнхий асуулт — хэрэгсэлгүйгээр хариул.
 Organization ID: ${orgId}${groupWarning}`;
 }
@@ -1691,23 +1692,30 @@ export function getProductTools(
 	}
 	const baseReadTools =
 		productType === "tolom" ? tolomTools(context) : zerTools(context);
-	// Tolom uses the dynamic Read Engine (readData) when its catalog exists.
-	// Zer keeps legacy inline read tools until its read catalog is authored.
+	// Tolom and Zer both use the dynamic Read Engine (readData) when their
+	// catalog exists; legacy inline read tools are kept alongside.
 	const readTools =
 		productType === "tolom"
 			? [
 					...baseReadTools,
 					createReadDataTool("tolom", context),
 				].filter((t): t is NonNullable<typeof t> => t !== null)
-			: baseReadTools;
-	// Tolom uses the dynamic Write Engine (writeData) when its catalog exists.
-	// Zer keeps legacy inline write tools until its write catalog is authored.
+			: [
+					...baseReadTools,
+					createReadDataTool("zer", context),
+				].filter((t): t is NonNullable<typeof t> => t !== null);
+	// Tolom and Zer both use the dynamic Write Engine (writeData) when their
+	// catalog exists; legacy inline write tools are kept alongside.
 	const writeTools =
 		productType === "tolom"
 			? [createWriteDataTool("tolom", context)].filter((t): t is NonNullable<typeof t> => t !== null)
-			: zerWriteTools(context);
-
-	const tools = options?.readOnly ? readTools : [...readTools, ...writeTools];
+			: [
+					...zerWriteTools(context),
+					createWriteDataTool("zer", context),
+				].filter((t): t is NonNullable<typeof t> => t !== null);
+	const tools = options?.readOnly
+		? readTools
+		: [...readTools, ...writeTools];
 
 	toolCache.set(cacheKey, { tools, expires: Date.now() + TOOL_CACHE_TTL_MS });
 

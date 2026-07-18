@@ -159,14 +159,16 @@ describe("Zer Tools", () => {
 		supabase: {} as ReturnType<typeof createMockToolSupabase>["mockClient"],
 	};
 
-	it("returns Zer tools with getSalesByCategory", () => {
+	it("returns Zer tools with getSalesByCategory and dynamic read/write engines", () => {
 		const tools = getProductTools("zer", context);
 		const toolNames = tools.map((t) => t.name).sort();
 		expect(toolNames).toEqual([
 			"createSale",
 			"getSalesByCategory",
+			"readData",
 			"recordPayment",
+			"writeData",
 		]);
-		expect(tools).toHaveLength(3);
+		expect(tools).toHaveLength(5);
 	});
 });

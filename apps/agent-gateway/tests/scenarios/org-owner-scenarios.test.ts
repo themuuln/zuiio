@@ -185,7 +185,7 @@ describe("⚠️  Error Resilience", () => {
 
 describe("🔧 Product Type Integrity", () => {
 	it("Tolom has 9 tools (8 read + writeData)", () => { expect(getProductTools("tolom", ctx)).toHaveLength(9); });
-	it("Zer has 3 tools (1 read + 2 write)", () => { expect(getProductTools("zer", ctx)).toHaveLength(3); });
+	it("Zer has 5 tools (3 specialized + readData + writeData)", () => { expect(getProductTools("zer", ctx)).toHaveLength(5); });
 	it("All tool names are unique per product", () => {
 		for (const product of ["tolom", "zer"] as const) {
 			const names = getProductTools(product, ctx).map(t => t.name);

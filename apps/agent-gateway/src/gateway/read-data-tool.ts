@@ -6,6 +6,7 @@ import type { ProductCatalog, ReadPlan } from "@/read-engine/types";
 import { createReadEngine } from "@/read-engine";
 
 import tolomReadCatalog from "@/read-engine/catalogs/tolom.json";
+import zerReadCatalog from "@/read-engine/catalogs/zer.json";
 
 /**
  * Per-product read catalog map. A product is wired to the dynamic `readData`
@@ -16,6 +17,7 @@ import tolomReadCatalog from "@/read-engine/catalogs/tolom.json";
  */
 const READ_CATALOGS: Record<string, ProductCatalog> = {
 	tolom: tolomReadCatalog as unknown as ProductCatalog,
+	zer: zerReadCatalog as unknown as ProductCatalog,
 };
 
 /**

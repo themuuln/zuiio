@@ -6,6 +6,7 @@ import type { WriteCatalog, WriteOperationKind, WritePlan } from "@/write-engine
 import { runWrite } from "@/write-engine";
 
 import tolomWriteCatalog from "@/write-engine/catalogs/tolom-write.json";
+import zerWriteCatalog from "@/write-engine/catalogs/zer-write.json";
 
 /**
  * Per-product write catalog map. A product is wired to the dynamic `writeData`
@@ -16,6 +17,7 @@ import tolomWriteCatalog from "@/write-engine/catalogs/tolom-write.json";
  */
 const WRITE_CATALOGS: Record<string, WriteCatalog> = {
 	tolom: tolomWriteCatalog as unknown as WriteCatalog,
+	zer: zerWriteCatalog as unknown as WriteCatalog,
 };
 
 /**
