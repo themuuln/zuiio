@@ -44,7 +44,7 @@ export async function interpretFlow(
 
 		// Skip start node — it's just an entry point
 		if (node.type === "start") {
-			currentNodeId = findNextNode(flow, currentNodeId);
+			currentNodeId = findNextNode(flow, currentNodeId) ?? "";
 			continue;
 		}
 
@@ -76,14 +76,14 @@ export async function interpretFlow(
 		// Determine next step
 		switch (result.action.type) {
 			case "next":
-				currentNodeId = findNextNode(flow, currentNodeId);
+			currentNodeId = findNextNode(flow, currentNodeId) ?? "";
 				break;
 
 			case "branch":
-				currentNodeId = findBranchNode(flow, currentNodeId, result.action.edgeLabel);
+			currentNodeId = findBranchNode(flow, currentNodeId, result.action.edgeLabel) ?? "";
 				if (!currentNodeId) {
 					// No matching branch — try fallback to default next
-					currentNodeId = findNextNode(flow, currentNodeId);
+				currentNodeId = findNextNode(flow, currentNodeId) ?? "";
 				}
 				break;
 

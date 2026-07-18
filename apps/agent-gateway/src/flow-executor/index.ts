@@ -83,6 +83,7 @@ export async function handleFlowMessage(
 							system: params.system,
 							userMessage: params.userMessage,
 							images: undefined,
+							tools: [],
 							context: {
 								orgId: ctx.orgId,
 								userId: ctx.userId,
@@ -206,14 +207,14 @@ async function resumeExistingRun(
 	if (!flow) {
 		run.status = "expired";
 		await saveRun(supabase, run);
-		return null;
+		return "";
 	}
 
 	// Check expiration
 	if (new Date(run.expiresAt) < new Date()) {
 		run.status = "expired";
 		await saveRun(supabase, run);
-		return null;
+		return "";
 	}
 
 	// If waiting for a question response, store the answer
@@ -236,6 +237,7 @@ async function resumeExistingRun(
 							system: params.system,
 							userMessage: params.userMessage,
 							images: undefined,
+							tools: [],
 							context: {
 								orgId: gatewayCtx.orgId,
 								userId: gatewayCtx.userId,

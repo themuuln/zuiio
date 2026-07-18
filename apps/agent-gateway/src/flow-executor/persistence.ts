@@ -341,7 +341,7 @@ export async function markFailed(
 		.update({
 			status: "failed",
 			error,
-			retry_count: supabase.rpc ? 1 : 1, // Will use SQL increment in production
+			retry_count: 1, // Will use SQL increment in production
 		})
 		.eq("id", outboxId);
 }

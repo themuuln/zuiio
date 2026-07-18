@@ -267,7 +267,7 @@ export interface OutboundMessage {
 }
 
 /** A side effect to execute after node completion. */
-export interface SideEffect =
+export type SideEffect =
 	| { type: "webhook"; url: string; payload: Record<string, unknown> }
 	| { type: "tag"; tag: string }
 	| { type: "notify"; message: string }
