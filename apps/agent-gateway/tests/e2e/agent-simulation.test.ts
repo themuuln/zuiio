@@ -59,11 +59,11 @@ const scenarios = [
 	},
 	{
 		question: "Идэвхтэй ажлын захиалгуудыг жагсааж өгөөч",
-		expectedTool: "queryData",
+		expectedTool: "readData",
 	},
 	{
 		question: "Бат харилцагчийн мэдээлэл үзүүлээрэй",
-		expectedTool: "queryData",
+		expectedTool: "readData",
 	},
 	{
 		question: "Сүүлийн 7 хоногийн борлуулалтын хураангуй",
@@ -71,11 +71,11 @@ const scenarios = [
 	},
 	{
 		question: "Энэ сарын зарлагын хураангуй",
-		expectedTool: "queryData",
+		expectedTool: "readData",
 	},
 	{
 		question: "Механикчдын жагсаалт үзүүлээрэй",
-		expectedTool: "queryData",
+		expectedTool: "readData",
 	},
 	{
 		question: "Window Motor сэлбэгийн үнийн мэдээлэл",
@@ -83,7 +83,7 @@ const scenarios = [
 	},
 	{
 		question: "Нийлүүлэгчдийн жагсаалт",
-		expectedTool: "queryData",
+		expectedTool: "readData",
 	},
 ];
 
@@ -164,27 +164,30 @@ describe("Agent Simulation — Tool Execution", () => {
 	});
 
 
-	it("queryData executes with a valid table", async () => {
-		const t = findTool("queryData");
+	it("readData executes with a valid plan", async () => {
+		const t = findTool("readData");
 		expect(t).toBeDefined();
 		const result = await t!.execute(
-			{ table: "customers", limit: 5 },
+			{ plan: { queries: [{ dataset: "customers", limit: 5 }] } },
 			mockContext,
 		);
 		expect(result).toBeDefined();
 		const obj = result as Record<string, unknown>;
-		expect(obj.table).toBe("customers");
-		expect(Array.isArray(obj.rows)).toBe(true);
+		expect(Array.isArray(obj.queries)).toBe(true);
 	});
 
-	it("queryData rejects an invalid table", async () => {
-		const t = findTool("queryData");
+	it("readData rejects an invalid dataset", async () => {
+		const t = findTool("readData");
 		const result = await t!.execute(
-			{ table: "nonexistent_table" },
+			{ plan: { queries: [{ dataset: "nonexistent_table" }] } },
 			mockContext,
 		);
 		const obj = result as Record<string, unknown>;
-		expect(String(obj.error)).toBeTruthy();
+		const hasError =
+			typeof obj.error === "string" ||
+			(Array.isArray(obj.queries) &&
+				(obj.queries as Record<string, unknown>[]).some((q) => typeof q.error === "string"));
+		expect(hasError).toBe(true);
 	});
 });
 

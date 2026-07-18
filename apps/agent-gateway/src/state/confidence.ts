@@ -92,7 +92,7 @@ export function scoreConfidence(params: {
 	const toolConfidenceMap: Record<string, number> = {
 		getDailySummary: 0.9,
 		getWorkOrderDetails: 0.9,
-		queryData: 0.85,
+		readData: 0.85,
 		getVehicleAnalytics: 0.9,
 		getFinancialSummary: 0.9,
 		exportData: 0.85,

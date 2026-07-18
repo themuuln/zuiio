@@ -118,7 +118,7 @@ const MOCK_DATA: Record<string, any[]> = {
 	mechanic_daily_reports: [],
 };
 
-// Tables with no data — queryData's allowedTables list
+// Tables with no seed data — also absent from the Tolom read catalog (readData datasets)
 const EMPTY_TABLES = [
 	"contacts", "quotations", "purchase_orders", "returns", "loyalty_points",
 	"payroll_runs", "bank_accounts", "journal_entries", "stock_movements",
@@ -244,51 +244,13 @@ describe("Real Tool Execution — Output Format Verification", () => {
 		});
 	});
 
-	// ─── queryData ─────────────────────────────────────────────────────────
-	describe("queryData — flexible query engine", () => {
-		it("returns { table, rows[], count }", async () => {
-			const result = await getTool("queryData").execute({ table: "customers", limit: 5 }, context) as unknown;
-			const r = result as Record<string, unknown>;
-			expect(r.table).toBe("customers");
-			expect(Array.isArray(r.rows)).toBe(true);
-			expect((r.rows as unknown[]).length).toBe(3);
-			expect(typeof r.count).toBe("number");
-		});
-
-		it("rejects nonexistent table with Mongolian error", async () => {
-			const result = await getTool("queryData").execute({ table: "nonexistent" }, context) as any;
-
-			expect(result.error).toBeDefined();
-			expect(result.error).toContain("Хүчингүй багана");
-			expect(result.error).toContain("nonexistent");
-		});
-
-		it("counts rows with aggregate=count", async () => {
-			const result = await getTool("queryData").execute({ table: "customers", aggregate: "count" }, context) as any;
-
-			expect(result.table).toBe("customers");
-			expect(result.count).toBe(3);
-		});
-
-		it("sums a column with aggregate=sum:<col>", async () => {
-			const result = await getTool("queryData").execute({
-				table: "work_orders",
-				aggregate: "sum:total_amount",
-			}, context) as any;
-
-			expect(result.table).toBe("work_orders");
-			expect(typeof result.total).toBe("number");
-			// 1,200,000 + 800,000 + 2,500,000 = 4,500,000
-			expect(result.total).toBe(4500000);
-		});
-	});
 
 	// ─── Output format sanity ──────────────────────────────────────────────
 	describe("Output format — no HTML in tool output", () => {
 		it("read tools return plain objects (no HTML tags)", async () => {
 		const readToolNames = [
 				"getDailySummary",
-				"partsLookup", "getSparePartsSales", "queryData",
+				"partsLookup", "getSparePartsSales", "readData",
 			];
 
 			for (const name of readToolNames) {
