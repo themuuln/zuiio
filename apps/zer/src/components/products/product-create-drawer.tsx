@@ -487,6 +487,12 @@ export function ProductCreateDrawer({
                       valueAsNumber: true,
                     })}
                   />
+                  {variantGroups.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Варианттай бүтээгдэхүүний үлдэгдэл нь вариант тус бүрээр
+                      тооцогдоно.
+                    </p>
+                  )}
                 </Field>
               </FieldGroup>
             </div>

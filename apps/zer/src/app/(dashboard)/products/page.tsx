@@ -45,7 +45,7 @@ async function DataFetcher({
     supabase
       .from("products")
       .select(
-        "id, name, sku, barcode, unit, sale_price, cost_price, current_stock, min_stock, category_id, categories(name), brand_id, brands(name, logo_url), image_url",
+        "id, name, sku, barcode, unit, sale_price, cost_price, current_stock, min_stock, category_id, categories(name), brand_id, brands(name, logo_url), image_url, has_variants",
         { count: "exact" },
       )
       .eq("organization_id", organizationId)
@@ -79,7 +79,8 @@ async function DataFetcher({
         (product.brands as { name: string; logo_url: string | null } | null)
           ?.logo_url ?? null,
       image_url: product.image_url,
-      is_public: false, // Will be populated after migration is applied to generated types
+      has_variants: product.has_variants,
+      is_public: false,
     })) ?? [];
 
   return (

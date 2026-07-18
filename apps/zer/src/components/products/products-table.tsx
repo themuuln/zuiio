@@ -1,6 +1,10 @@
 "use client";
 
-import { ArrowLeft, ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import {
+  ArrowLeft,
+  ArrowRight,
+  StackSimple,
+} from "@phosphor-icons/react/dist/ssr";
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -19,6 +23,7 @@ import {
   type ProductEditData,
   ProductEditDrawer,
 } from "@/components/products/product-edit-drawer";
+import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable } from "@/components/ui/data-table";
@@ -47,6 +52,7 @@ export type ProductRow = {
   brand_name: string | null;
   brand_logo_url: string | null;
   image_url: string | null;
+  has_variants: boolean | null;
   is_public: boolean | null;
 };
 
@@ -252,8 +258,12 @@ export function ProductsTable({
       {
         accessorKey: "current_stock",
         header: "Одоогийн үлдэгдэл",
-        cell: ({ row }) =>
-          Number(row.getValue("current_stock") ?? 0).toFixed(2),
+        cell: ({ row }) => {
+          if (row.original.has_variants) {
+            return <span className="text-muted-foreground">Вариант</span>;
+          }
+          return Number(row.getValue("current_stock") ?? 0).toFixed(2);
+        },
       },
       {
         accessorKey: "min_stock",
@@ -264,6 +274,22 @@ export function ProductsTable({
         accessorKey: "category_name",
         header: "Ангилал",
         cell: ({ row }) => row.getValue("category_name") ?? "-",
+      },
+      {
+        id: "has_variants",
+        header: "Вариант",
+        cell: ({ row }) => {
+          if (!row.original.has_variants) {
+            return <span className="text-muted-foreground">-</span>;
+          }
+          return (
+            <Badge variant="secondary" className="gap-1">
+              <StackSimple className="size-3" />
+              Варианттай
+            </Badge>
+          );
+        },
+        enableSorting: false,
       },
       {
         id: "is_public",

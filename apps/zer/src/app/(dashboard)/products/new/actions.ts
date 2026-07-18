@@ -101,6 +101,10 @@ export async function createProduct(
       if (newBrand) resolvedBrandId = newBrand.id;
     }
   }
+  // Read variant payloads up front so we can flag has_variants on insert
+  // (the trigger also keeps this in sync when variants are added/removed).
+  const variantGroupsRaw = formData.get("variant_groups")?.toString();
+  const variantDataRaw = formData.get("variant_data")?.toString();
 
   const { data: product, error } = await supabase
     .from("products")
@@ -118,6 +122,7 @@ export async function createProduct(
       min_stock: minStock,
       image_url: imageUrl,
       is_public: false,
+      has_variants: Boolean(variantGroupsRaw && variantDataRaw),
     } as never)
     .select("id")
     .single();
@@ -128,8 +133,6 @@ export async function createProduct(
   }
 
   // Handle variants if provided
-  const variantGroupsRaw = formData.get("variant_groups")?.toString();
-  const variantDataRaw = formData.get("variant_data")?.toString();
 
   if (variantGroupsRaw && variantDataRaw && product) {
     try {

@@ -2724,6 +2724,7 @@ export type Database = {
           has_multi_branch: boolean | null;
           has_receipt_drawer: boolean | null;
           has_suppliers: boolean | null;
+          has_track_stock: boolean | null;
           has_uom: boolean | null;
           has_variants: boolean | null;
           id: string;
@@ -2753,6 +2754,7 @@ export type Database = {
           has_multi_branch?: boolean | null;
           has_receipt_drawer?: boolean | null;
           has_suppliers?: boolean | null;
+          has_track_stock?: boolean | null;
           has_uom?: boolean | null;
           has_variants?: boolean | null;
           id?: string;
@@ -2782,6 +2784,7 @@ export type Database = {
           has_multi_branch?: boolean | null;
           has_receipt_drawer?: boolean | null;
           has_suppliers?: boolean | null;
+          has_track_stock?: boolean | null;
           has_uom?: boolean | null;
           has_variants?: boolean | null;
           id?: string;
@@ -3888,6 +3891,7 @@ export type Database = {
           current_stock: number | null;
           deleted_at: string | null;
           description: string | null;
+          has_variants: boolean;
           id: string;
           image_url: string | null;
           image_urls: string[] | null;
@@ -3916,6 +3920,7 @@ export type Database = {
           current_stock?: number | null;
           deleted_at?: string | null;
           description?: string | null;
+          has_variants?: boolean;
           id?: string;
           image_url?: string | null;
           image_urls?: string[] | null;
@@ -3944,6 +3949,7 @@ export type Database = {
           current_stock?: number | null;
           deleted_at?: string | null;
           description?: string | null;
+          has_variants?: boolean;
           id?: string;
           image_url?: string | null;
           image_urls?: string[] | null;
@@ -5674,6 +5680,7 @@ export type Database = {
               current_stock: number | null;
               deleted_at: string | null;
               description: string | null;
+              has_variants: boolean;
               id: string;
               image_url: string | null;
               image_urls: string[] | null;
@@ -5715,6 +5722,7 @@ export type Database = {
               current_stock: number | null;
               deleted_at: string | null;
               description: string | null;
+              has_variants: boolean;
               id: string;
               image_url: string | null;
               image_urls: string[] | null;

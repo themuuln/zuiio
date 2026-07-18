@@ -638,6 +638,12 @@ export function ProductEditDrawer({
                 step="0.01"
                 {...register("current_stock", { valueAsNumber: true })}
               />
+              {hasVariants && (
+                <p className="text-xs text-muted-foreground">
+                  Варианттай бүтээгдэхүүний үлдэгдэл нь вариант тус бүрээр
+                  тооцогдоно.
+                </p>
+              )}
             </Field>
             <Field>
               <FieldLabel htmlFor="edit-min_stock">Доод үлдэгдэл</FieldLabel>

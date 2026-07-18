@@ -40,7 +40,7 @@ export function ProductsContent() {
         supabase
           .from("products")
           .select(
-            "id, name, sku, barcode, unit, sale_price, cost_price, current_stock, min_stock, category_id, categories(name), brand_id, brands(name, logo_url), image_url",
+            "id, name, sku, barcode, unit, sale_price, cost_price, current_stock, min_stock, category_id, categories(name), brand_id, brands(name, logo_url), image_url, has_variants, is_public",
             { count: "exact" },
           )
           .eq("organization_id", organizationId)
@@ -63,6 +63,8 @@ export function ProductsContent() {
           cost_price: product.cost_price,
           current_stock: product.current_stock,
           min_stock: product.min_stock,
+          has_variants: product.has_variants,
+          is_public: product.is_public,
           category_id: product.category_id,
           category_name:
             (product.categories as { name: string } | null)?.name ?? null,
@@ -74,7 +76,6 @@ export function ProductsContent() {
             (product.brands as { name: string; logo_url: string | null } | null)
               ?.logo_url ?? null,
           image_url: product.image_url,
-          is_public: false, // Will be populated after migration is applied to generated types
         })) ?? [];
 
       return { tableData, totalCount, totalPages };
