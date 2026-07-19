@@ -1,3 +1,5 @@
+"use client";
+
 import { getStatLabel } from "@onoo/core";
 import { Target } from "lucide-react";
 import {
@@ -8,23 +10,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { ShotZoneStat } from "../../../lib/shared";
-import type { ShotZone } from "./court-heatmap";
+import type { ShotDataPoint, ShotZone } from "./court-heatmap";
+import type { ShootingData } from "./shooting-profile";
 import { CourtHeatmap, DEFAULT_SHOT_ZONES } from "./court-heatmap";
-
-interface ShootingProfile {
-  fgm: number;
-  fga: number;
-  tpm: number;
-  tpa: number;
-  ftm: number;
-  fta: number;
-}
+import { COURT_ZONES } from "./court-zones";
 
 interface ShotChartProps {
   /** Aggregated made/attempted per zone (from v_public_shot_zones). */
   shotZones: ShotZoneStat[];
+  /** Individual shot data points for scatter overlay. */
+  shots?: ShotDataPoint[];
   /** Season shooting splits (from getPlayerShootingProfile). */
-  shootingProfile: ShootingProfile;
+  shootingProfile: ShootingData;
   locale: "mn" | "en";
   className?: string;
 }
@@ -45,31 +42,53 @@ const pct = (made: number, attempted: number): number | null =>
  */
 export function ShotChart({
   shotZones,
+  shots,
   shootingProfile,
   locale,
   className,
 }: ShotChartProps) {
   const isEn = locale === "en";
 
-  const zonesById = new Map(shotZones.map((z) => [z.zone_key, z]));
-  const hasZoneData = shotZones.length > 0;
+  const { fgm, fga, tpm, tpa, ftm, fta } = shootingProfile;
+  const fg = safe(fga);
+  const twoAttempts = Math.max(0, fg - safe(tpa));
+  const twoMade = Math.max(0, safe(fgm) - safe(tpm));
+  const threeAttempts = safe(tpa);
+  const threeMade = safe(tpm);
 
+  const zonesById = Object.fromEntries(
+    shotZones.map((z) => [z.zone_key, z] as const),
+  );
+  const hasZoneData = shotZones.length > 0;
+  const hasProfileData = fg > 0;
+
+  // When real zone data exists, use it. Otherwise estimate from shooting profile.
   const zones: ShotZone[] = hasZoneData
     ? DEFAULT_SHOT_ZONES.map((zone) => {
-        const stat = zonesById.get(zone.id);
+        const stat = zonesById[zone.id];
         return stat
           ? { ...zone, made: stat.made, attempted: stat.attempted }
           : zone;
       })
-    : DEFAULT_SHOT_ZONES;
+    : COURT_ZONES.map((zone) => {
+        if (!hasProfileData) return { ...zone, made: 0, attempted: 0 };
 
-  const { fgm, fga, tpm, tpa, ftm, fta } = shootingProfile;
-  const fg = safe(fga);
-  const twoa = Math.max(0, fg - safe(tpa));
-  const twom = safe(fgm) - safe(tpm);
+        // Distribute shots across zones using typical basketball weights
+        const isThree = zone.id.startsWith("three");
+        const attempts = isThree ? threeAttempts : twoAttempts;
+        const made = isThree ? threeMade : twoMade;
+        const weight = isThree ? zone.weight3pt : zone.weight2pt;
+
+        const zoneAttempts = Math.round(attempts * weight);
+        const zonePct = attempts > 0 ? made / attempts : 0;
+        const zoneMade = Math.round(zoneAttempts * zonePct);
+
+        return { ...zone, made: zoneMade, attempted: zoneAttempts };
+      });
+
 
   const fgPct = pct(safe(fgm), fg);
-  const twoPct = pct(twom, twoa);
+  const twoPct = pct(twoMade, twoAttempts);
   const threePct = pct(safe(tpm), safe(tpa));
   const ftPct = pct(safe(ftm), safe(fta));
   // Effective FG%: credits 3PT at 1.5× weight.
@@ -111,12 +130,16 @@ export function ShotChart({
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Court heatmap */}
           <div className="space-y-2">
-            <CourtHeatmap zones={zones} />
+            <CourtHeatmap zones={zones} shots={shots} />
             {!hasZoneData && (
               <p className="text-center text-xs text-muted-foreground">
-                {isEn
-                  ? "Shot-location tracking not yet available — court shows no zone data."
-                  : "Шидэлтийн байршил бүртгэгдээгүй тул талбайн бүс хоосон харуулагдаж байна."}
+                {hasProfileData
+                  ? isEn
+                    ? "Zone distribution estimated from season totals — track games with shot locations for precise data."
+                    : "Бүсийн хуваарилалт улирлын нийлбэрээс тооцоологдсон — нарийвчилсан өгөгдөл авахын тулд шидэлтийн байршил бүртгэнэ үү."
+                  : isEn
+                    ? "Shot-location tracking not yet available — court shows no zone data."
+                    : "Шидэлтийн байршил бүртгэгдээгүй тул талбайн бүс хоосон харуулагдаж байна."}
               </p>
             )}
           </div>
