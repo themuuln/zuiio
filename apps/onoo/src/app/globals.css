@@ -24,6 +24,7 @@
 }
 
 @theme inline {
+  --spacing: 0.25rem;
   /* Display font — condensed, bold, athletic energy */
   --font-display: var(--font-oswald), "Oswald", sans-serif;
 

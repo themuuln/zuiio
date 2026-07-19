@@ -7,7 +7,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@zuiio/ui";
 import { cn } from "@/lib/utils";
 import type { MvpRaceRow } from "../../lib/shared";
 

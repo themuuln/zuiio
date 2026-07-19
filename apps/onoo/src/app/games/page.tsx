@@ -168,6 +168,7 @@ function GameGroup({
         </Badge>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
+        {games.map((game) => (
           <SwipeableGameCard key={game.id} game={game} featured={live} />
         ))}
       </div>

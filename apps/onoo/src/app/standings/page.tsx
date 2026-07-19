@@ -2,15 +2,15 @@ import { BarChart3, Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TeamLogo } from "@/components/team-logo";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@zuiio/ui";
+import { Button } from "@zuiio/ui";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@zuiio/ui";
 import { PublicEmptyState } from "../components/public-empty-state";
 import { getStandings } from "../lib/data";
 import { StandingsTable } from "./components/standings-table";
@@ -76,7 +76,7 @@ export default async function StandingsPage({
                 variant={id === activeCompetitionId ? "default" : "outline"}
                 size="sm"
               >
-                <Link href={`/standings?competition=${id}`}>
+                <Link href={`/tournaments/${id}`}>
                   {item.name} · {item.season}
                 </Link>
               </Button>

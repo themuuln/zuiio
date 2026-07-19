@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@zuiio/ui";
+import { Skeleton } from "@zuiio/ui";
 
 export default function GameDetailLoading() {
   return (

@@ -747,6 +747,36 @@ export async function getPlayerAwards(
   return data as unknown as PlayerAwardRow[];
 }
 // ---------------------------------------------------------------------------
+// Tournament Hub
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch a single competition's details from v_public_standings.
+ * Returns null if the competition ID doesn't match any rows.
+ */
+export async function getCompetition(competitionId: string): Promise<{
+  id: string;
+  name: string;
+  season: string;
+  league: string;
+} | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("v_public_standings")
+    .select("competition_id, competition_name, season_name, league_id")
+    .eq("competition_id", competitionId)
+    .limit(1)
+    .single();
+
+  if (error || !data) return null;
+  return {
+    id: data.competition_id,
+    name: data.competition_name,
+    season: data.season_name,
+    league: data.league_id,
+  };
+}
+// ---------------------------------------------------------------------------
 // Global search
 // ---------------------------------------------------------------------------
 

@@ -2,7 +2,7 @@
 
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button } from "@zuiio/ui";
 import { cn } from "@/lib/utils";
 
 function shiftDate(dateStr: string, days: number): string {

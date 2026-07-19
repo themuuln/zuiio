@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@zuiio/ui";
 import { cn } from "@/lib/utils";
 import type { GameWithTeams } from "../lib/shared";
 import { statusLabel } from "../lib/shared";
