@@ -2,8 +2,6 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { APIRequestContext, BrowserContext } from "@playwright/test";
 
-const PROJECT_ROOT = resolve(__dirname, "..");
-
 /**
  * The saved test session (`e2e/.auth/user.json`, written by `global-setup.ts`)
  * only stores `sb-access-token` + `sb-refresh-token`. `@supabase/ssr` does NOT
@@ -36,7 +34,7 @@ function getSupabaseRef(): string {
 
 function readEnvLocal(key: string): string | undefined {
   try {
-    const raw = readFileSync(resolve(PROJECT_ROOT, ".env.local"), "utf-8");
+    const raw = readFileSync(resolve(process.cwd(), ".env.local"), "utf-8");
     const line = raw.split("\n").find((l) => l.startsWith(`${key}=`));
     return line
       ?.split("=")[1]
@@ -45,6 +43,44 @@ function readEnvLocal(key: string): string | undefined {
   } catch {
     return undefined;
   }
+}
+
+/**
+ * Build the `sb-<ref>-auth-token` cookie value that `@supabase/ssr` reads,
+ * from a raw access/refresh token pair (e.g. a freshly minted Supabase session).
+ *
+ * The cookie holds the JSON session object (Supabase's `v1` cookie format) —
+ * NOT a base64url encoding. `@supabase/ssr` parses the JSON directly. The
+ * `user` field is recovered from the access-token JWT payload so the session
+ * is accepted by the middleware.
+ */
+export function buildSupabaseSessionCookie(
+  accessToken: string,
+  refreshToken: string,
+): { name: string; value: string } {
+  if (!accessToken) {
+    throw new Error(
+      "buildSupabaseSessionCookie: accessToken is empty — user.json may be stale or missing the sb-access-token cookie. Delete e2e/.auth/user.json to force a fresh login.",
+    );
+  }
+  // Decode the JWT payload to recover the user object and expiry.
+  const payload = JSON.parse(
+    Buffer.from(accessToken.split(".")[1], "base64").toString(),
+  );
+  const expiresAt = Math.floor(Date.now() / 1000) + 3600;
+
+  const cookieValue = JSON.stringify({
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    provider_token: null,
+    token_type: "bearer",
+    expires_at: expiresAt,
+    expires_in: 3600,
+    user: payload,
+  });
+
+  const ref = getSupabaseRef();
+  return { name: `sb-${ref}-auth-token`, value: cookieValue };
 }
 
 export async function addSupabaseSessionCookie(
@@ -63,27 +99,11 @@ export async function addSupabaseSessionCookie(
     throw new Error("e2e/.auth/user.json missing sb-access-token");
   }
 
-  // Decode the JWT payload to recover the user object and expiry.
-  const payload = JSON.parse(
-    Buffer.from(accessToken.split(".")[1], "base64").toString(),
-  );
-  const expiresAt = Math.floor(Date.now() / 1000) + 3600;
-
-  const cookieValue = JSON.stringify({
-    access_token: accessToken,
-    refresh_token: refreshToken,
-    provider_token: null,
-    token_type: "bearer",
-    expires_at: expiresAt,
-    expires_in: 3600,
-    user: payload,
-  });
-
-  const ref = getSupabaseRef();
+  const { name, value } = buildSupabaseSessionCookie(accessToken, refreshToken);
   await context.addCookies([
     {
-      name: `sb-${ref}-auth-token`,
-      value: cookieValue,
+      name,
+      value,
       domain: "localhost",
       path: "/",
       httpOnly: false,

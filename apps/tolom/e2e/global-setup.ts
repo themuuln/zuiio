@@ -2,7 +2,10 @@ import { execSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import type { FullConfig } from "@playwright/test";
 import { chromium } from "@playwright/test";
-import { addSupabaseSessionCookie } from "./auth-cookie";
+import {
+  addSupabaseSessionCookie,
+  buildSupabaseSessionCookie,
+} from "./auth-cookie";
 
 const PROJECT_ROOT = resolve(__dirname, "..");
 const PORT = process.env.PORT ?? 3000;
@@ -47,22 +50,23 @@ export default async function globalSetup(_config: FullConfig) {
 
   // Skip login if auth state already exists and is fresh (< 24 hours old)
   const authFile = "e2e/.auth/user.json";
+  let authFileFresh = false;
   try {
     const stat = statSync(authFile);
     const ageHours = (Date.now() - stat.mtimeMs) / (1000 * 60 * 60);
-    if (ageHours < 24) {
-      process.stdout.write(
-        `✓ Auth state is fresh (${ageHours.toFixed(1)}h old), refreshing session cookie\n`,
-      );
-      const browser = await chromium.launch();
-      const context = await browser.newContext({ baseURL: BASE_URL });
-      await addSupabaseSessionCookie(context);
-      await context.storageState({ path: authFile });
-      await browser.close();
-      return;
-    }
+    authFileFresh = ageHours < 24;
   } catch {
-    // Auth file doesn't exist — need to login below
+    // Auth file doesn't exist — fall through to full login below
+  }
+
+  if (authFileFresh) {
+    process.stdout.write("✓ Auth state is fresh, refreshing session cookie\n");
+    const browser = await chromium.launch();
+    const context = await browser.newContext({ baseURL: BASE_URL });
+    await addSupabaseSessionCookie(context);
+    await context.storageState({ path: authFile });
+    await browser.close();
+    return;
   }
 
   // Skip seeding for remote Supabase — only seed local instances
@@ -122,7 +126,20 @@ export default async function globalSetup(_config: FullConfig) {
   const browser = await chromium.launch();
   const context = await browser.newContext({ baseURL: BASE_URL });
 
+  // @supabase/ssr reads the single `sb-<ref>-auth-token` cookie (a JSON
+  // session), not the bare sb-access/sb-refresh tokens. Build it now so the
+  // middleware accepts the session on first navigation.
+  const sessionCookie = buildSupabaseSessionCookie(access_token, refresh_token);
   await context.addCookies([
+    {
+      name: sessionCookie.name,
+      value: sessionCookie.value,
+      domain: "localhost",
+      path: "/",
+      httpOnly: false,
+      secure: false,
+      sameSite: "Lax",
+    },
     {
       name: "sb-access-token",
       value: access_token,
@@ -137,15 +154,18 @@ export default async function globalSetup(_config: FullConfig) {
     },
   ]);
 
-  // Verify auth works by navigating to dashboard
   const page = await context.newPage();
-  await page.goto("/dashboard");
-  await page.waitForURL("**/dashboard**", { timeout: 15_000 });
+  // /dashboard can trigger a heavy first compile; wait for DOM, not full load.
+  await page.goto("/dashboard", {
+    waitUntil: "domcontentloaded",
+    timeout: 60_000,
+  });
+  await page.waitForURL("**/dashboard**", { timeout: 30_000 });
 
   await context.storageState({ path: authFile });
-  // user.json now exists with the sb-access-token cookie — reconstruct the
+  // user.json now holds sb-access-token + sb-refresh-token — reconstruct the
   // sb-<ref>-auth-token cookie that @supabase/ssr actually reads, then re-save
-  // state so every auth-dependent spec inherits a working client session.
+  // so every auth-dependent spec inherits a working client session.
   await addSupabaseSessionCookie(context);
   await context.storageState({ path: authFile });
   await browser.close();
