@@ -1,7 +1,6 @@
 import { createRouteHandler } from "@/lib/api-handler";
 import { created, ok } from "@/lib/api-response";
 import {
-
   createMovement,
   getInventoryMovements,
 } from "@/lib/services/inventory-service";

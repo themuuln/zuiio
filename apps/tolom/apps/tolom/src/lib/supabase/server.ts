@@ -13,7 +13,7 @@ import { env, getSupabaseKey } from "./env";
 function hasSupabaseEnv(): boolean {
   try {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    if (!url || !url.startsWith("http")) return false;
+    if (!url?.startsWith("http")) return false;
     const key =
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;

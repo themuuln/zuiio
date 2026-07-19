@@ -1,7 +1,7 @@
-import { config } from "dotenv";
 import { execSync } from "node:child_process";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { config } from "dotenv";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = resolve(__filename, "..");

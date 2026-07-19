@@ -177,8 +177,8 @@ export function SalesContent({
   // ── Sale detail fetching — errors are shown inline via PageShell ──
   const {
     data: selectedSale,
-    error: detailError,
-    isFetching: detailFetching,
+    error: _detailError,
+    isFetching: _detailFetching,
   } = useQuery({
     queryKey: ["sale-detail", selectedSaleId],
     queryFn: async () => {

@@ -4,5 +4,9 @@ import ServicesPageClient from "./_services-client";
 export const instant = false;
 
 export default function ServicesPage() {
-  return <div className="px-4 pt-4 pb-6 md:px-6"><ServicesPageClient /></div>;
+  return (
+    <div className="px-4 pt-4 pb-6 md:px-6">
+      <ServicesPageClient />
+    </div>
+  );
 }

@@ -536,8 +536,12 @@ export async function updateProductionOrderStatus(
   }
   const updateData = {
     status: input.new_status,
-    ...(input.new_status === "in_progress" ? { actual_start_at: new Date().toISOString() } : {}),
-    ...(input.new_status === "completed" ? { actual_end_at: new Date().toISOString() } : {}),
+    ...(input.new_status === "in_progress"
+      ? { actual_start_at: new Date().toISOString() }
+      : {}),
+    ...(input.new_status === "completed"
+      ? { actual_end_at: new Date().toISOString() }
+      : {}),
   };
 
   const { error: updateError } = await withDbCapture(
@@ -602,8 +606,12 @@ export async function advanceStage(input: AdvanceStageInput) {
 
   const updateData = {
     status: input.new_status,
-    ...(input.new_status === "in_progress" ? { started_at: new Date().toISOString() } : {}),
-    ...(input.new_status === "completed" ? { completed_at: new Date().toISOString() } : {}),
+    ...(input.new_status === "in_progress"
+      ? { started_at: new Date().toISOString() }
+      : {}),
+    ...(input.new_status === "completed"
+      ? { completed_at: new Date().toISOString() }
+      : {}),
     ...(input.notes !== undefined ? { notes: input.notes } : {}),
   };
 

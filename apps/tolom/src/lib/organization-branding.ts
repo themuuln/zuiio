@@ -1,8 +1,4 @@
-import {
-  type BrandConfig,
-  DEFAULT_BRAND_CONFIG,
-  resolveBrandConfig,
-} from "@zuiio/branding";
+import { type BrandConfig, resolveBrandConfig } from "@zuiio/branding";
 import type { Json } from "@/lib/types";
 
 /**

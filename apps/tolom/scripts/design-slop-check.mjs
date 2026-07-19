@@ -102,7 +102,7 @@ const rules = [
     severity: "warn",
     context: (line) => {
       const match = line.match(/rounded-\[(\d+)px\]/);
-      return match && parseInt(match[1]) > 14;
+      return match && parseInt(match[1], 10) > 14;
     },
   },
 
@@ -247,21 +247,9 @@ for (const file of files) {
     }
   }
 }
-
-// ── Summary ──
-
-console.log("");
 if (errors > 0 || warnings > 0) {
-  console.log(
-    `Found ${errors} error(s) and ${warnings} warning(s) in design quality checks.`,
-  );
   if (errors > 0) {
-    console.log(
-      "Errors must be fixed before committing. See DESIGN_SYSTEM.md for alternatives.",
-    );
     process.exit(1);
   }
-  console.log("Warnings should be reviewed but do not block CI.");
 } else {
-  console.log("✅ No design anti-patterns detected.");
 }

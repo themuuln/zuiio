@@ -20,6 +20,7 @@ test("blocks the (N+1)th request when limit is reached", () => {
   const result = rateLimit("test:block", 2, 60_000);
   assert.ok(result.error, "third request should be blocked");
   assert.match(
+    // biome-ignore lint/style/noNonNullAssertion: assert.ok narrows above
     result.error!,
     /Хэт олон хүсэлт/,
     "error should be in Mongolian",

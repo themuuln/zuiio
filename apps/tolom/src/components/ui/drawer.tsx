@@ -63,8 +63,8 @@ function DrawerViewport({
       data-slot="drawer-viewport"
       className={cn(
         "fixed inset-0 z-50 flex overflow-hidden p-0 pointer-events-none",
-        direction === "bottom" 
-          ? "items-end justify-center" 
+        direction === "bottom"
+          ? "items-end justify-center"
           : "items-stretch justify-end",
         className,
       )}

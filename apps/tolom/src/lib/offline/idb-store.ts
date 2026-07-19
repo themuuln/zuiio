@@ -78,7 +78,9 @@ export interface CachedListResponse {
 
 function getDb(): Promise<IDBPDatabase> {
   if (typeof indexedDB === "undefined") {
-    return Promise.reject(new Error("IndexedDB is not available on the server"));
+    return Promise.reject(
+      new Error("IndexedDB is not available on the server"),
+    );
   }
   return openDB(DB_NAME, DB_VERSION, {
     upgrade(db) {

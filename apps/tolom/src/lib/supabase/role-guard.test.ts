@@ -1,12 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createMockSupabaseClient } from "@/test/mocks/supabase";
 import { createClient } from "@/lib/supabase/server";
+import { createMockSupabaseClient } from "@/test/mocks/supabase";
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 vi.mock("@/lib/supabase/query", () => ({
-  withDbCapture: vi.fn(
-    (_label: string, promise: Promise<unknown>) => promise,
-  ),
+  withDbCapture: vi.fn((_label: string, promise: Promise<unknown>) => promise),
 }));
 vi.mock("@/lib/audit", () => ({
   createAuditLog: vi.fn(),
@@ -14,8 +12,8 @@ vi.mock("@/lib/audit", () => ({
 }));
 
 import {
-  hasPermission,
   getUserRole,
+  hasPermission,
   requirePermission,
   requireRole,
 } from "./role-guard";
@@ -149,7 +147,10 @@ describe("requirePermission", () => {
    * 2. from("permissions").select().eq().eq().eq().is().maybeSingle()
    * 3. from("role_permissions").select().eq().eq().maybeSingle()
    */
-  function setupPermissionChain(opts?: { permFound?: boolean; rpFound?: boolean }) {
+  function setupPermissionChain(opts?: {
+    permFound?: boolean;
+    rpFound?: boolean;
+  }) {
     const permFound = opts?.permFound ?? true;
     const rpFound = opts?.rpFound ?? true;
 
@@ -194,16 +195,16 @@ describe("requirePermission", () => {
 
   it("throws when permission not found in permissions table", async () => {
     setupPermissionChain({ permFound: false });
-    await expect(
-      requirePermission("reports", "read", ORG_ID),
-    ).rejects.toThrow("not found");
+    await expect(requirePermission("reports", "read", ORG_ID)).rejects.toThrow(
+      "not found",
+    );
   });
 
   it("throws when role_permissions junction is missing", async () => {
     setupPermissionChain({ permFound: true, rpFound: false });
-    await expect(
-      requirePermission("reports", "read", ORG_ID),
-    ).rejects.toThrow("Missing required permission");
+    await expect(requirePermission("reports", "read", ORG_ID)).rejects.toThrow(
+      "Missing required permission",
+    );
   });
 
   it("throws when user is not authenticated", async () => {
@@ -211,16 +212,19 @@ describe("requirePermission", () => {
       data: { user: null },
       error: null,
     });
-    await expect(
-      requirePermission("reports", "read"),
-    ).rejects.toThrow("Not authenticated");
+    await expect(requirePermission("reports", "read")).rejects.toThrow(
+      "Not authenticated",
+    );
   });
 });
 
 // ── hasPermission ────────────────────────────────────────────────────────
 
 describe("hasPermission", () => {
-  function setupPermissionChain(opts?: { permFound?: boolean; rpFound?: boolean }) {
+  function setupPermissionChain(opts?: {
+    permFound?: boolean;
+    rpFound?: boolean;
+  }) {
     const permFound = opts?.permFound ?? true;
     const rpFound = opts?.rpFound ?? true;
 

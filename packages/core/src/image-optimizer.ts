@@ -95,6 +95,7 @@ export async function optimizeImage(
     width: info.width ?? 0,
     height: info.height ?? 0,
     channels: info.channels ?? 4,
+    hasAlpha: info.hasAlpha ?? false,
     premultiplied: false,
   };
 

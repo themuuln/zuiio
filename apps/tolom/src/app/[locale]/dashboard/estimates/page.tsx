@@ -228,143 +228,145 @@ export default function EstimatesPage() {
 
   return (
     <div className="px-4 pt-4 pb-6 md:px-6">
-    <ListPageShell
-      title={t("pageTitle")}
-      description={t("pageSubtitle")}
-      loading={estimatesQuery.isPending && !hasLoadedOnce}
-      error={
-        estimatesQuery.error instanceof Error
-          ? estimatesQuery.error.message
-          : null
-      }
-      onRetry={() => estimatesQuery.refetch()}
-      headerAction={
-        <Button onClick={() => setNewOpen(true)}>
-          <Plus className="size-4" />
-          {t("newQuote")}
-        </Button>
-      }
-    >
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="rounded-3xl border-border/60 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">
-              {t("allStatuses")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Typography.H3 className="text-2xl">
-              {estimates.length}
-            </Typography.H3>
-          </CardContent>
-        </Card>
-        <Card className="rounded-3xl border-border/60 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">
-              {t("active")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Typography.H3 className="text-2xl">{summary.active}</Typography.H3>
-          </CardContent>
-        </Card>
-        <Card className="rounded-3xl border-border/60 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">
-              {t("status_sent")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Typography.H3 className="text-2xl">{summary.sent}</Typography.H3>
-          </CardContent>
-        </Card>
-        <Card className="rounded-3xl border-border/60 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">
-              {t("grandTotal")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Typography.H3 className="text-2xl">
-              {formatCurrency(summary.total)}
-            </Typography.H3>
-          </CardContent>
-        </Card>
-      </div>
+      <ListPageShell
+        title={t("pageTitle")}
+        description={t("pageSubtitle")}
+        loading={estimatesQuery.isPending && !hasLoadedOnce}
+        error={
+          estimatesQuery.error instanceof Error
+            ? estimatesQuery.error.message
+            : null
+        }
+        onRetry={() => estimatesQuery.refetch()}
+        headerAction={
+          <Button onClick={() => setNewOpen(true)}>
+            <Plus className="size-4" />
+            {t("newQuote")}
+          </Button>
+        }
+      >
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <Card className="rounded-3xl border-border/60 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-muted-foreground">
+                {t("allStatuses")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Typography.H3 className="text-2xl">
+                {estimates.length}
+              </Typography.H3>
+            </CardContent>
+          </Card>
+          <Card className="rounded-3xl border-border/60 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-muted-foreground">
+                {t("active")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Typography.H3 className="text-2xl">
+                {summary.active}
+              </Typography.H3>
+            </CardContent>
+          </Card>
+          <Card className="rounded-3xl border-border/60 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-muted-foreground">
+                {t("status_sent")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Typography.H3 className="text-2xl">{summary.sent}</Typography.H3>
+            </CardContent>
+          </Card>
+          <Card className="rounded-3xl border-border/60 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-muted-foreground">
+                {t("grandTotal")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Typography.H3 className="text-2xl">
+                {formatCurrency(summary.total)}
+              </Typography.H3>
+            </CardContent>
+          </Card>
+        </div>
 
-      <Card className="rounded-3xl border-border/60 shadow-sm">
-        <CardContent className="flex flex-col gap-5 p-4 md:p-5">
-          <ListToolbar
-            search={{
-              value: search,
-              onChange: setSearch,
-              onValueChange: setSearch,
-              placeholder: commonT("search"),
-              loading: estimatesQuery.isFetching && hasLoadedOnce,
-              focusShortcut: false,
-            }}
-            filters={<FilterChips items={chips} />}
-            stats={
-              <div className="flex flex-wrap items-center gap-2">
-                {branchFilter && (
+        <Card className="rounded-3xl border-border/60 shadow-sm">
+          <CardContent className="flex flex-col gap-5 p-4 md:p-5">
+            <ListToolbar
+              search={{
+                value: search,
+                onChange: setSearch,
+                onValueChange: setSearch,
+                placeholder: commonT("search"),
+                loading: estimatesQuery.isFetching && hasLoadedOnce,
+                focusShortcut: false,
+              }}
+              filters={<FilterChips items={chips} />}
+              stats={
+                <div className="flex flex-wrap items-center gap-2">
+                  {branchFilter && (
+                    <Badge
+                      variant="outline"
+                      className="rounded-full px-2.5 py-0.5"
+                    >
+                      {commonT("branch")}
+                    </Badge>
+                  )}
                   <Badge
-                    variant="outline"
+                    variant="secondary"
                     className="rounded-full px-2.5 py-0.5"
                   >
-                    {commonT("branch")}
+                    <Send className="size-3.5" />
+                    {summary.approved} {t("status_approved").toLowerCase()}
                   </Badge>
-                )}
-                <Badge
-                  variant="secondary"
-                  className="rounded-full px-2.5 py-0.5"
-                >
-                  <Send className="size-3.5" />
-                  {summary.approved} {t("status_approved").toLowerCase()}
-                </Badge>
-              </div>
-            }
-          />
-
-          {emptyState ? (
-            <Empty>
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <FileText className="size-10 text-muted-foreground" />
-                </EmptyMedia>
-                <EmptyTitle>{t("noQuotes")}</EmptyTitle>
-                <EmptyDescription>{t("noQuotesDesc")}</EmptyDescription>
-              </EmptyHeader>
-              <EmptyContent>
-                <Button onClick={() => setNewOpen(true)}>
-                  <Plus className="size-4" />
-                  {t("createQuote")}
-                </Button>
-              </EmptyContent>
-            </Empty>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {estimatesQuery.isFetching && hasLoadedOnce ? (
-                <div className="grid gap-3">
-                  {Array.from({ length: 2 }).map((_, index) => (
-                    <Skeleton key={index} className="h-28 rounded-2xl" />
-                  ))}
                 </div>
-              ) : null}
+              }
+            />
 
-              {estimates.map((estimate) => (
-                <EstimateCard
-                  key={estimate.id}
-                  estimate={estimate}
-                  onOpen={(id) => router.push(`/dashboard/estimates/${id}`)}
-                  t={t}
-                />
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      <NewEstimateSheet open={newOpen} onOpenChange={setNewOpen} />
-    </ListPageShell>
+            {emptyState ? (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <FileText className="size-10 text-muted-foreground" />
+                  </EmptyMedia>
+                  <EmptyTitle>{t("noQuotes")}</EmptyTitle>
+                  <EmptyDescription>{t("noQuotesDesc")}</EmptyDescription>
+                </EmptyHeader>
+                <EmptyContent>
+                  <Button onClick={() => setNewOpen(true)}>
+                    <Plus className="size-4" />
+                    {t("createQuote")}
+                  </Button>
+                </EmptyContent>
+              </Empty>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {estimatesQuery.isFetching && hasLoadedOnce ? (
+                  <div className="grid gap-3">
+                    {Array.from({ length: 2 }).map((_, index) => (
+                      <Skeleton key={index} className="h-28 rounded-2xl" />
+                    ))}
+                  </div>
+                ) : null}
+
+                {estimates.map((estimate) => (
+                  <EstimateCard
+                    key={estimate.id}
+                    estimate={estimate}
+                    onOpen={(id) => router.push(`/dashboard/estimates/${id}`)}
+                    t={t}
+                  />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        <NewEstimateSheet open={newOpen} onOpenChange={setNewOpen} />
+      </ListPageShell>
     </div>
   );
 }

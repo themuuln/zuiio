@@ -33,7 +33,7 @@
     "zer":            { "vercel": "zerone",   "supabase_ref": "krrkhozadforrydffegg" },
     "zer-app":        { "vercel": "zerone",   "supabase_ref": "krrkhozadforrydffegg" },
     "agent-gateway":  { "vercel": "zerone",   "supabase_ref": "krrkhozadforrydffegg" },
-    "zuiio-id":       { "vercel": "themuuln6","supabase_ref": "qjezndzwgoqmsduvzfqa", "supabase_profile": "zerone" },
+    "zuiio-id":       { "vercel": "themuuln6","supabase_ref": "qjezndzwgoqmsduvzfqa", "supabase_profile": "themuuln6@gmail.com" },
     "zim":           { "vercel": "zerone",   "supabase_ref": "cvqwdscitkpwlwnpajjd" },
     "zill":          { "vercel": "zerone",   "supabase_ref": "kycpnpoaowcvxrauodgi" },
     "zerbu":         { "vercel": "zerone",   "supabase_ref": "gtacoxsmlkkofeqcvlqw" },

@@ -1,7 +1,6 @@
 import { createSimpleRouteHandler } from "@/lib/api-handler";
 import { created, ok } from "@/lib/api-response";
 import {
-
   createOrganization,
   getUserOrganization,
 } from "@/lib/services/organization-service";

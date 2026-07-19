@@ -207,7 +207,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     // JSON.stringify turns Infinity → null; restore it so the cart reducer works
     const sanitized = held.items.map((i) => ({
       ...i,
-      maxStock: Number.isFinite(i.maxStock) ? i.maxStock : Number.POSITIVE_INFINITY,
+      maxStock: Number.isFinite(i.maxStock)
+        ? i.maxStock
+        : Number.POSITIVE_INFINITY,
     }));
     dispatch({ type: "LOAD_FROM_STORAGE", payload: sanitized });
     if (held.discount) {

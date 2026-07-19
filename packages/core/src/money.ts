@@ -7,7 +7,7 @@ export function parseCurrencyInput(value: string): number {
   if (match) {
     const num = Number(match[1]);
     if (Number.isNaN(num)) return NaN;
-    return match[2].toLowerCase() === "k" ? num * 1_000 : num * 1_000_000;
+    return match[2]?.toLowerCase() === "k" ? num * 1_000 : num * 1_000_000;
   }
 
   return Number(cleaned);

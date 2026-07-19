@@ -58,7 +58,7 @@ export interface BomDetail {
     required_width_mm: number | null;
     required_length_mm: number | null;
     required_thickness_mm: number | null;
-  estimated_unit_cost: number | null;
+    estimated_unit_cost: number | null;
     sort_order: number;
     notes: string | null;
   }>;

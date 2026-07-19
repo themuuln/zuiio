@@ -356,139 +356,145 @@ export default function ExpensesPage() {
 
   return (
     <div className="px-4 pt-4 pb-6 md:px-6">
-    <DataTablePage
-      title={t("nav.expenses")}
-      description={
-        resultCount
-          ? t("expenses.resultCount", { count: resultCount })
-          : undefined
-      }
-      loading={orgLoading || expensesLoading}
-      error={displayError}
-      onRetry={refetch}
-      headerAction={
-        <Button onClick={() => setNewExpenseSheetOpen(true)} size="default">
-          <Plus className="size-4" />
-          {t("expenses.addExpenseButton")}
-        </Button>
-      }
-      columns={columns}
-      data={expenses ?? []}
-      getRowId={(row) => row.id}
-      pageSize={20}
-      search={{
-        placeholder: t("expenses.searchPlaceholder"),
-        value: search,
-        onChange: setSearch,
-        loading: expensesFetching,
-        resultLabel: expenses?.length
-          ? t("expenses.resultCount", { count: expenses.length })
-          : undefined,
-        emptyLabel: search
-          ? t("expenses.noMatches", { query: search })
-          : undefined,
-      }}
-      filters={filterControls}
-      actions={
-        <ExportButton
-          data={expenses ?? []}
-          columns={exportColumns}
-          filename={`expenses-${now.toISOString().split("T")[0]}.xlsx`}
-          sheetName="Expenses"
-        />
-      }
-      stats={
-        <span className="text-sm text-muted-foreground">
-          {t("expenses.resultCount", { count: expenses?.length ?? 0 })}
-        </span>
-      }
-      beforeTable={
-        <>
-          {kpiCards}
-          {badgeBar}
-        </>
-      }
-      onRowClick={(row) => setDetailExpenseId(row.id)}
-      emptyTitle={t("expenses.noExpenses")}
-      emptyIcon={Wallet}
-      emptyAction={
-        <Button onClick={() => setNewExpenseSheetOpen(true)} variant="outline">
-          {t("expenses.addFirstExpense")}
-        </Button>
-      }
-      renderMobileCard={(expense) => {
-        const overdue =
-          !expense.paid_at &&
-          !!expense.due_date &&
-          new Date(expense.due_date) < now;
-        const dateStr = (() => {
-          try {
-            return new Date(expense.expense_date).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-            });
-          } catch (error) {
-            reportServerError("Unexpected error", error);
-            return expense.expense_date;
-          }
-        })();
-        return (
-          <div className="flex flex-col gap-3 text-sm">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 space-y-1">
-                <span className="block truncate font-medium">
-                  {expense.description}
-                </span>
-                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                  <span>{dateStr}</span>
-                  {expense.category?.name && (
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-foreground/80">
-                      {expense.category.name}
+      <DataTablePage
+        title={t("nav.expenses")}
+        description={
+          resultCount
+            ? t("expenses.resultCount", { count: resultCount })
+            : undefined
+        }
+        loading={orgLoading || expensesLoading}
+        error={displayError}
+        onRetry={refetch}
+        headerAction={
+          <Button onClick={() => setNewExpenseSheetOpen(true)} size="default">
+            <Plus className="size-4" />
+            {t("expenses.addExpenseButton")}
+          </Button>
+        }
+        columns={columns}
+        data={expenses ?? []}
+        getRowId={(row) => row.id}
+        pageSize={20}
+        search={{
+          placeholder: t("expenses.searchPlaceholder"),
+          value: search,
+          onChange: setSearch,
+          loading: expensesFetching,
+          resultLabel: expenses?.length
+            ? t("expenses.resultCount", { count: expenses.length })
+            : undefined,
+          emptyLabel: search
+            ? t("expenses.noMatches", { query: search })
+            : undefined,
+        }}
+        filters={filterControls}
+        actions={
+          <ExportButton
+            data={expenses ?? []}
+            columns={exportColumns}
+            filename={`expenses-${now.toISOString().split("T")[0]}.xlsx`}
+            sheetName="Expenses"
+          />
+        }
+        stats={
+          <span className="text-sm text-muted-foreground">
+            {t("expenses.resultCount", { count: expenses?.length ?? 0 })}
+          </span>
+        }
+        beforeTable={
+          <>
+            {kpiCards}
+            {badgeBar}
+          </>
+        }
+        onRowClick={(row) => setDetailExpenseId(row.id)}
+        emptyTitle={t("expenses.noExpenses")}
+        emptyIcon={Wallet}
+        emptyAction={
+          <Button
+            onClick={() => setNewExpenseSheetOpen(true)}
+            variant="outline"
+          >
+            {t("expenses.addFirstExpense")}
+          </Button>
+        }
+        renderMobileCard={(expense) => {
+          const overdue =
+            !expense.paid_at &&
+            !!expense.due_date &&
+            new Date(expense.due_date) < now;
+          const dateStr = (() => {
+            try {
+              return new Date(expense.expense_date).toLocaleDateString(
+                "en-US",
+                {
+                  month: "short",
+                  day: "numeric",
+                },
+              );
+            } catch (error) {
+              reportServerError("Unexpected error", error);
+              return expense.expense_date;
+            }
+          })();
+          return (
+            <div className="flex flex-col gap-3 text-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 space-y-1">
+                  <span className="block truncate font-medium">
+                    {expense.description}
+                  </span>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <span>{dateStr}</span>
+                    {expense.category?.name && (
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-foreground/80">
+                        {expense.category.name}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "shrink-0 text-[10px] px-1.5 py-0",
+                    expense.paid_at &&
+                      "border-green-200 bg-green-50 text-green-700 dark:border-green-900 dark:bg-green-950/30 dark:text-green-400",
+                    overdue &&
+                      "border-destructive/25 bg-destructive/5 text-destructive",
+                  )}
+                >
+                  {expense.paid_at
+                    ? t("expenses.paid")
+                    : overdue
+                      ? t("expenses.overdue")
+                      : t("expenses.unpaid")}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
+                <div className="min-w-0 space-y-1">
+                  <span className="block truncate">
+                    {expense.vendor_name || expense.category?.name || "\u2014"}
+                  </span>
+                  {expense.due_date && (
+                    <span
+                      className={cn(
+                        "block",
+                        overdue && "font-medium text-destructive",
+                      )}
+                    >
+                      {t("expenses.due")}: {expense.due_date}
                     </span>
                   )}
                 </div>
-              </div>
-              <Badge
-                variant="outline"
-                className={cn(
-                  "shrink-0 text-[10px] px-1.5 py-0",
-                  expense.paid_at &&
-                    "border-green-200 bg-green-50 text-green-700 dark:border-green-900 dark:bg-green-950/30 dark:text-green-400",
-                  overdue &&
-                    "border-destructive/25 bg-destructive/5 text-destructive",
-                )}
-              >
-                {expense.paid_at
-                  ? t("expenses.paid")
-                  : overdue
-                    ? t("expenses.overdue")
-                    : t("expenses.unpaid")}
-              </Badge>
-            </div>
-            <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
-              <div className="min-w-0 space-y-1">
-                <span className="block truncate">
-                  {expense.vendor_name || expense.category?.name || "\u2014"}
+                <span className="text-sm font-semibold tabular-nums">
+                  {formatMNT(expense.amount)}
                 </span>
-                {expense.due_date && (
-                  <span
-                    className={cn(
-                      "block",
-                      overdue && "font-medium text-destructive",
-                    )}
-                  >
-                    {t("expenses.due")}: {expense.due_date}
-                  </span>
-                )}
               </div>
-              <span className="text-sm font-semibold tabular-nums">
-                {formatMNT(expense.amount)}
-              </span>
             </div>
-          </div>
-        );
-      }}
-    />
+          );
+        }}
+      />
     </div>
   );
 }

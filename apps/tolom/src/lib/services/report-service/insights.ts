@@ -143,7 +143,8 @@ export async function generateReportInsights(
       severity: "info",
       title: "Энэ үед идэвх байсангүй",
       message: "Энэ үед дууссан ажлын захиалга байсангүй.",
-      action: "Дуусгах шаардлагатай хүлээгдэж буй ажлын захиалга байгаа эсэхийг шалгана уу.",
+      action:
+        "Дуусгах шаардлагатай хүлээгдэж буй ажлын захиалга байгаа эсэхийг шалгана уу.",
     });
   }
 
@@ -261,7 +262,8 @@ export async function generateReportInsights(
         message: `${formatCurrencyHelper(curTotalRev)} өмнөх үедээ ${formatCurrencyHelper(prevTotalRev)} байсан.`,
         metric_value: curTotalRev,
         comparison_value: prevTotalRev,
-        action: "Маркетингийн суваг болон харилцагчийн дараагийн арга хэмжээг шалгана уу.",
+        action:
+          "Маркетингийн суваг болон харилцагчийн дараагийн арга хэмжээг шалгана уу.",
       });
     }
   }
@@ -311,7 +313,8 @@ export async function generateReportInsights(
         message: `${currentWoIds.length} ажил өмнөх үедээ ${prevWoIds.length} байсан.`,
         metric_value: currentWoIds.length,
         comparison_value: prevWoIds.length,
-        action: "Цаг захиалгын урсгал болон харилцагчийн дараагийн жагсаалтыг шалгана уу.",
+        action:
+          "Цаг захиалгын урсгал болон харилцагчийн дараагийн жагсаалтыг шалгана уу.",
       });
     } else if (woChange > 15) {
       insights.push({

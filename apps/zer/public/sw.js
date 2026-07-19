@@ -23,7 +23,7 @@ const isApi = (url) => {
 // browser abort with ERR_FAILED instead of rendering the page.
 const isCacheable = (response) => response.ok && !response.redirected;
 
-self.addEventListener("install", (event) => {
+self.addEventListener("install", (_event) => {
   // No precache: "/" always 307s (auth-dependent), so there is nothing
   // stable to warm. Caches fill lazily from real navigations instead.
   self.skipWaiting();

@@ -121,62 +121,62 @@ export default function ValuationPage() {
 
   return (
     <div className="px-4 pt-4 pb-6 md:px-6">
-    <DataTablePage
-      title={t("valuationTitle")}
-      description={t("valuationSubtitle")}
-      loading={isPending && balances.length === 0}
-      columns={columns}
-      data={filtered}
-      getRowId={(row) =>
-        row.part_id ?? row.part_name ?? Math.random().toString()
-      }
-      pageSize={20}
-      search={{
-        placeholder: t("searchParts"),
-        value: search,
-        onChange: setSearch,
-      }}
-      stats={
-        <span>
-          {filtered.length} {t("parts")}
-        </span>
-      }
-      actions={
-        <ExportButton
-          data={filtered}
-          columns={exportColumns}
-          filename={`inventory-valuation-${now.toISOString().split("T")[0]}.xlsx`}
-          sheetName="Valuation"
-        />
-      }
-      filters={categoryFilters}
-      beforeTable={kpiCard}
-      emptyState={emptyState}
-      renderMobileCard={(v) => (
-        <div className="flex flex-col gap-2 text-sm">
-          <div className="flex flex-col gap-0.5">
-            <span className="font-medium truncate">{v.part_name}</span>
-            <span className="text-xs text-muted-foreground truncate">
-              {v.part_number || "\u2014"}
-            </span>
+      <DataTablePage
+        title={t("valuationTitle")}
+        description={t("valuationSubtitle")}
+        loading={isPending && balances.length === 0}
+        columns={columns}
+        data={filtered}
+        getRowId={(row) =>
+          row.part_id ?? row.part_name ?? Math.random().toString()
+        }
+        pageSize={20}
+        search={{
+          placeholder: t("searchParts"),
+          value: search,
+          onChange: setSearch,
+        }}
+        stats={
+          <span>
+            {filtered.length} {t("parts")}
+          </span>
+        }
+        actions={
+          <ExportButton
+            data={filtered}
+            columns={exportColumns}
+            filename={`inventory-valuation-${now.toISOString().split("T")[0]}.xlsx`}
+            sheetName="Valuation"
+          />
+        }
+        filters={categoryFilters}
+        beforeTable={kpiCard}
+        emptyState={emptyState}
+        renderMobileCard={(v) => (
+          <div className="flex flex-col gap-2 text-sm">
+            <div className="flex flex-col gap-0.5">
+              <span className="font-medium truncate">{v.part_name}</span>
+              <span className="text-xs text-muted-foreground truncate">
+                {v.part_number || "\u2014"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
+              <span>{v.category || "\u2014"}</span>
+              <span className="tabular-nums">
+                {v.quantity_on_hand} {v.unit}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">
+                Avg: {v.avgUnitCost.toLocaleString("mn-MN")} {"\u20AE"}
+              </span>
+              <span className="font-semibold tabular-nums text-sm">
+                {v.totalValue.toLocaleString("mn-MN")} {"\u20AE"}
+              </span>
+            </div>
           </div>
-          <div className="flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
-            <span>{v.category || "\u2014"}</span>
-            <span className="tabular-nums">
-              {v.quantity_on_hand} {v.unit}
-            </span>
-          </div>
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">
-              Avg: {v.avgUnitCost.toLocaleString("mn-MN")} {"\u20AE"}
-            </span>
-            <span className="font-semibold tabular-nums text-sm">
-              {v.totalValue.toLocaleString("mn-MN")} {"\u20AE"}
-            </span>
-          </div>
-        </div>
-      )}
-    />
+        )}
+      />
     </div>
   );
 }

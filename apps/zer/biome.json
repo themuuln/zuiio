@@ -1,5 +1,6 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
+  "root": false,
+  "$schema": "https://biomejs.dev/schemas/2.4.16/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -12,7 +13,8 @@
       "!.next",
       "!dist",
       "!build",
-      "!.vitepress/cache"
+      "!.vitepress/cache",
+      "!.lighthouserc.js"
     ]
   },
   "formatter": {
@@ -45,8 +47,28 @@
           }
         },
         "noExplicitAny": "error",
+        "noArrayIndexKey": "warn",
         "noUnknownAtRules": "off",
         "noDebugger": "error"
+      },
+      "a11y": {
+        "useAltText": "warn",
+        "useValidAnchor": "warn",
+        "useButtonType": "warn",
+        "useHtmlLang": "warn",
+        "useKeyWithClickEvents": "warn",
+        "useValidAriaProps": "warn",
+        "useValidAriaValues": "warn",
+        "noAriaHiddenOnFocusable": "warn",
+        "noNoninteractiveTabindex": "warn",
+        "noPositiveTabindex": "warn",
+        "noRedundantAlt": "warn",
+        "noSvgWithoutTitle": "warn",
+        "useAriaPropsForRole": "warn",
+        "useHeadingContent": "warn",
+        "useIframeTitle": "warn",
+        "useMediaCaption": "warn",
+        "useSemanticElements": "warn"
       },
       "complexity": {
         "noForEach": "error"

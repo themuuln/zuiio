@@ -2,7 +2,6 @@ import { createRouteHandler } from "@/lib/api-handler";
 import { created, ok } from "@/lib/api-response";
 import { transliterateMongolianPlate } from "@/lib/form-validation";
 import {
-
   createVehicle,
   getVehicles,
   getVehiclesFast,

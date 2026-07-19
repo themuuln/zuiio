@@ -34,19 +34,23 @@ import {
   getPlayerShotZones,
 } from "../../lib/data";
 import { AwardsShelf } from "./components/awards-shelf";
-import { FormTrends } from "./components/form-trends";
 import { HeroCard } from "./components/hero-card";
 import { Milestones } from "./components/milestones";
 import { RecentGames } from "./components/recent-games";
-import { SeasonArc } from "./components/season-arc";
 import { SeasonSelector } from "./components/season-selector";
-import { ShootingProfile } from "./components/shooting-profile";
 import { ShotChart } from "./components/shot-chart";
-import { SkillRadar } from "./components/skill-radar";
 import { StatCard } from "./components/stat-card";
-import { HomeAwaySplits } from "./components/home-away-splits";
 import { ScrollReveal, StaggerContainer, StaggerItem } from "./components/motion-wrapper";
 import { getPlayerShotScatter } from "../../lib/data";
+
+// Lazy-loaded chart components (recharts) — client-only, ~1.5M+ saved on non-chart pages
+import {
+  FormTrends,
+  HomeAwaySplits,
+  SeasonArc,
+  ShootingProfile,
+  SkillRadar,
+} from "./components/chart-sections";
 
 interface PlayerPageProps {
   params: Promise<{ id: string }>;

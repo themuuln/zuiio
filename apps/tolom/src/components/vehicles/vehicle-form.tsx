@@ -62,7 +62,6 @@ import {
   useCreateVehicle,
   useCustomerSearch,
 } from "@/lib/queries/use-wizard-data";
-import { reportServerError } from "@/lib/sentry-report-server";
 import type { CreateVehicleParams, Customer, Vehicle } from "@/lib/types";
 import { vehicleSchema as sharedVehicleSchema } from "@/lib/validation/vehicle-schema";
 

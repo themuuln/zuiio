@@ -8,9 +8,9 @@ import { describe, expect, it } from "vitest";
  * Run: supabase start && pnpm --filter zer test:integration
  */
 
-const url = process.env.SUPABASE_URL!;
-const anonKey = process.env.SUPABASE_ANON_KEY!;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const url = process.env.SUPABASE_URL ?? "http://127.0.0.1:54321";
+const anonKey = process.env.SUPABASE_ANON_KEY ?? "missing";
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "missing";
 
 describe("Supabase connectivity", () => {
   const anon = createClient(url, anonKey);
@@ -42,11 +42,13 @@ describe("Supabase connectivity", () => {
     if (error) {
       // GoTrue admin API may require a JWT in newer Supabase versions
       // (sb_secret keys are Kong gateway keys, not GoTrue JWTs)
-      console.log("admin.listUsers not available:", error.message);
+      process.stderr.write(`admin.listUsers not available: ${error.message}\n`);
       return; // soft-skip — infra limitation, not test failure
     }
     expect(data).toBeDefined();
     expect(Array.isArray(data?.users)).toBe(true);
-    expect(data!.users.length).toBeGreaterThanOrEqual(1);
+    if (data?.users) {
+      expect(data.users.length).toBeGreaterThanOrEqual(1);
+    }
   });
 });

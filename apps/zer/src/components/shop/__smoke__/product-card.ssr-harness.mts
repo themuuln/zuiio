@@ -6,14 +6,15 @@
 //
 // Run: node_modules/.bin/tsx src/components/shop/__smoke__/product-card.ssr-harness.mts
 
-import { createRequire } from "module";
-import { renderToStaticMarkup } from "react-dom/server";
-import { createElement as h } from "react";
+import { createRequire } from "node:module";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // jsdom ships no bundled types in this workspace; ts-expect-error the import.
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error jsdom is untyped in this monorepo
 import { JSDOM } from "jsdom";
+import { createElement as h } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+
 type JSDOMWindow = {
   document: Document;
   HTMLElement: typeof HTMLElement;
@@ -23,16 +24,21 @@ type JSDOMWindow = {
 };
 
 const require = createRequire(import.meta.url);
-const Module = require("module");
+const Module = require("node:module");
 const originalLoad = Module._load;
 let forcedTrackStock = true;
 
 Module._load = function (request: string, parent: unknown, isMain: boolean) {
-  if (request === "@/app/(dashboard)/shop/cart-context" || /cart-context/.test(request)) {
+  if (
+    request === "@/app/(dashboard)/shop/cart-context" ||
+    /cart-context/.test(request)
+  ) {
     const noop = () => {};
     const value = {
       addItem: (...args: unknown[]) => {
-        const spy = (globalThis as unknown as { __addItemSpy?: (...a: unknown[]) => void }).__addItemSpy;
+        const spy = (
+          globalThis as unknown as { __addItemSpy?: (...a: unknown[]) => void }
+        ).__addItemSpy;
         return (spy ?? noop)(...args);
       },
       updateQuantity: noop,
@@ -48,17 +54,35 @@ Module._load = function (request: string, parent: unknown, isMain: boolean) {
       restoreHeldSale: noop,
       removeHeldSale: noop,
     };
-    const Ctx = { _currentValue: value, Provider: ({ children }: { children: never }) => children };
+    const Ctx = {
+      _currentValue: value,
+      Provider: ({ children }: { children: never }) => children,
+    };
     return { CartContext: Ctx, useCart: () => value };
   }
   if (request === "@/components/ui/optimized-image") {
-    return { OptimizedImage: ({ alt }: { alt?: string }) => h("span", { "data-testid": "opt-img" }, alt) };
+    return {
+      OptimizedImage: ({ alt }: { alt?: string }) =>
+        h("span", { "data-testid": "opt-img" }, alt),
+    };
   }
-  if (request === "@/lib/query/hooks/use-product-variants" || /use-product-variants/.test(request)) {
-    return { useVariantGroups: () => ({ data: undefined }), fetchVariantGroups: () => {}, fetchVariants: () => {} };
+  if (
+    request === "@/lib/query/hooks/use-product-variants" ||
+    /use-product-variants/.test(request)
+  ) {
+    return {
+      useVariantGroups: () => ({ data: undefined }),
+      fetchVariantGroups: () => {},
+      fetchVariants: () => {},
+    };
   }
-  if (request === "@/lib/org-settings-context" || /org-settings-context/.test(request)) {
-    return { useOrgSettings: () => ({ trackStock: forcedTrackStock, currency: "₮" }) };
+  if (
+    request === "@/lib/org-settings-context" ||
+    /org-settings-context/.test(request)
+  ) {
+    return {
+      useOrgSettings: () => ({ trackStock: forcedTrackStock, currency: "₮" }),
+    };
   }
   if (/@tanstack[\\/]react-query$/.test(request)) {
     const real = originalLoad.apply(this, [request, parent, isMain]);
@@ -67,17 +91,27 @@ Module._load = function (request: string, parent: unknown, isMain: boolean) {
   return originalLoad.apply(this, [request, parent, isMain]);
 };
 
-const { ProductCard } = await import("@/components/shop/product-card") as { ProductCard: unknown };
+const { ProductCard } = (await import("@/components/shop/product-card")) as {
+  ProductCard: unknown;
+};
 
-(globalThis as unknown as { IntersectionObserver: unknown }).IntersectionObserver = class {
+(
+  globalThis as unknown as { IntersectionObserver: unknown }
+).IntersectionObserver = class {
   observe() {}
   disconnect() {}
   unobserve() {}
 };
 
-const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+});
 
-function render(product: object, cartQuantity = 0, variant: "card" | "tile" = "card") {
+function render(
+  product: object,
+  cartQuantity = 0,
+  variant: "card" | "tile" = "card",
+) {
   return renderToStaticMarkup(
     h(
       QueryClientProvider as never,
@@ -91,9 +125,8 @@ let failures = 0;
 function assert(cond: boolean, msg: string) {
   if (!cond) {
     failures++;
-    console.error("  ✗ " + msg);
+    console.error(`  ✗ ${msg}`);
   } else {
-    console.log("  ✓ " + msg);
   }
 }
 
@@ -110,39 +143,46 @@ const base = {
   brand_name: null,
   brand_logo_url: null,
 };
-
-console.log("StockChip — in-stock (trackStock on, stock 10):");
 {
   forcedTrackStock = true;
   const html = render({ ...base, current_stock: 10 }, 0, "card");
   assert(html.includes("Үлдэгдэл 10 ш"), "renders 'Үлдэгдэл 10 ш'");
-  assert(html.includes("border-border"), "in-stock chip uses neutral border token");
+  assert(
+    html.includes("border-border"),
+    "in-stock chip uses neutral border token",
+  );
   assert(html.includes("bg-muted"), "in-stock chip uses muted bg token");
 }
-
-console.log("StockChip — low-stock (trackStock on, stock 3):");
 {
   forcedTrackStock = true;
   const html = render({ ...base, current_stock: 3 }, 0, "card");
   assert(html.includes("Үлдэгдэл 3 ш"), "renders 'Үлдэгдэл 3 ш'");
-  assert(html.includes("text-destructive"), "low-stock chip uses destructive text token");
-  assert(html.includes("bg-destructive/10"), "low-stock chip uses destructive bg token");
+  assert(
+    html.includes("text-destructive"),
+    "low-stock chip uses destructive text token",
+  );
+  assert(
+    html.includes("bg-destructive/10"),
+    "low-stock chip uses destructive bg token",
+  );
 }
-
-console.log("StockChip — hidden when trackStock off:");
 {
   forcedTrackStock = false;
   const html = render({ ...base, current_stock: 3 }, 0, "card");
   assert(!html.includes("Үлдэгдэл"), "no stock text when trackStock is false");
 }
-
-console.log("Add-confirmation — initial SSR state has no justAdded artifacts:");
 {
   forcedTrackStock = true;
   const html = render({ ...base, current_stock: 10 }, 0, "card");
-  assert(!html.includes("ring-primary/40"), "no justAdded ring before interaction");
+  assert(
+    !html.includes("ring-primary/40"),
+    "no justAdded ring before interaction",
+  );
   assert(!html.includes("zoom-in-50"), "no check overlay before interaction");
-  assert(html.includes("Нэмэх") || html.includes("Дахин нэмэх"), "add button present initially");
+  assert(
+    html.includes("Нэмэх") || html.includes("Дахин нэмэх"),
+    "add button present initially",
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -151,7 +191,9 @@ console.log("Add-confirmation — initial SSR state has no justAdded artifacts:"
 // react-dom/client into a jsdom document and dispatch a click.
 // ---------------------------------------------------------------------------
 async function interactiveTest() {
-  const dom = new JSDOM("<!doctype html><html><body></body></html>", { url: "http://localhost/" });
+  const dom = new JSDOM("<!doctype html><html><body></body></html>", {
+    url: "http://localhost/",
+  });
   const g = globalThis as unknown as Record<string, unknown>;
   g.window = dom.window;
   g.document = dom.window.document;
@@ -201,8 +243,14 @@ async function interactiveTest() {
 
   const html = container.innerHTML;
   assert(addedCalls === 1, "addItem called exactly once on click");
-  assert(html.includes("ring-primary/40"), "justAdded ring applied after click");
-  assert(html.includes("zoom-in-50"), "confirmation check overlay shown after click");
+  assert(
+    html.includes("ring-primary/40"),
+    "justAdded ring applied after click",
+  );
+  assert(
+    html.includes("zoom-in-50"),
+    "confirmation check overlay shown after click",
+  );
 
   await act(async () => {
     root.unmount();
@@ -215,6 +263,5 @@ if (failures > 0) {
   console.error(`\nFAILED: ${failures} assertion(s)`);
   process.exit(1);
 } else {
-  console.log("\nALL PRODUCT-CARD ASSERTIONS PASSED");
   process.exit(0);
 }

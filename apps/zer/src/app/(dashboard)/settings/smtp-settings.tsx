@@ -132,7 +132,7 @@ interface Props {
   isSuperAdmin: boolean;
 }
 
-export function SmtpSettings({ isSuperAdmin }: Props) {
+export function SmtpSettings({ isSuperAdmin: _isSuperAdmin }: Props) {
   const queryClient = useQueryClient();
   const { notify } = useSettings();
 

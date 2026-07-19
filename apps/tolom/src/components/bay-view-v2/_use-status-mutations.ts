@@ -4,10 +4,10 @@ import { useOrgMutation } from "@zuiio/query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { bayViewKeys, workOrderKeys } from "@/lib/queries/keys";
+import type { DrawerDetailResponse } from "@/lib/queries/use-drawer-queries";
 import { drawerDetailKeys } from "@/lib/queries/use-drawer-queries";
 import { reportServerError } from "@/lib/sentry-report-server";
 import type { WorkOrderDetail } from "@/lib/types";
-import type { DrawerDetailResponse } from "@/lib/queries/use-drawer-queries";
 
 // ─── Params ────────────────────────────────────────────────────────────
 
@@ -49,9 +49,10 @@ export function useStatusMutations({
       `/api/organizations/${orgIdRef.current}/work-orders/${workOrderId}`,
     method: "PATCH",
     queryKey: workOrderKeys.all(orgId ?? ""),
-    optimisticQueryKey: orgId && workOrderId
-      ? drawerDetailKeys.all(orgId, workOrderId)
-      : undefined,
+    optimisticQueryKey:
+      orgId && workOrderId
+        ? drawerDetailKeys.all(orgId, workOrderId)
+        : undefined,
     onOptimisticUpdate: (qc, vars) => {
       if (!orgId || !workOrderId) return undefined;
       const key = drawerDetailKeys.all(orgId, workOrderId);
@@ -59,7 +60,10 @@ export function useStatusMutations({
       if (prev?.workOrder) {
         qc.setQueryData<DrawerDetailResponse>(key, {
           ...prev,
-          workOrder: { ...prev.workOrder, status: vars.status } as WorkOrderDetail,
+          workOrder: {
+            ...prev.workOrder,
+            status: vars.status,
+          } as WorkOrderDetail,
         });
       }
       return prev;
@@ -126,7 +130,6 @@ export function useStatusMutations({
     // Clear confirmation state immediately
     setConfirmStatus(null);
     setStatusNotes("");
-
 
     try {
       const payload: Record<string, string> = { status };

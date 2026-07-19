@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
 import { XIcon } from "lucide-react";
+import React from "react";
 import {
   Drawer,
   DrawerContent,
@@ -21,9 +21,10 @@ interface DetailDrawerContextValue {
   onOpenChange: (open: boolean) => void;
 }
 
-const DetailDrawerContext = React.createContext<DetailDrawerContextValue | null>(null);
+const DetailDrawerContext =
+  React.createContext<DetailDrawerContextValue | null>(null);
 
-function useDetailDrawerContext() {
+function _useDetailDrawerContext() {
   const ctx = React.useContext(DetailDrawerContext);
   if (!ctx) {
     throw new Error("DetailDrawer.Header must be used within a <DetailDrawer>");
@@ -108,7 +109,9 @@ export function DetailDrawer({
     <Drawer
       open={open}
       onOpenChange={onOpenChange}
-      swipeDirection={direction === "bottom" ? "down" : (swipeDirection ?? "right")}
+      swipeDirection={
+        direction === "bottom" ? "down" : (swipeDirection ?? "right")
+      }
       modal={modal}
     >
       <DrawerVirtualKeyboardProvider>
@@ -163,7 +166,8 @@ DetailDrawer.Header = function DetailDrawerHeaderComponent({
 }: DetailDrawerHeaderProps) {
   // Auto-derive onClose from context when not explicitly provided
   const ctx = React.useContext(DetailDrawerContext);
-  const onClose = onCloseProp ?? (ctx ? () => ctx.onOpenChange(false) : undefined);
+  const onClose =
+    onCloseProp ?? (ctx ? () => ctx.onOpenChange(false) : undefined);
 
   const rightActions = closeButton ? (
     <button

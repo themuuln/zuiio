@@ -39,22 +39,24 @@ export function LandingFooter() {
               {t("footerProduct")}
             </Typography.H4>
             <ul className="flex flex-col gap-2">
-              {(["Features", "Pricing", "Integrations"] as const).map((item) => (
-                <li key={item}>
-                  <Link
-                    href={
-                      item === "Pricing"
-                        ? "/pricing"
-                        : item === "Integrations"
-                          ? "/integrations"
-                          : "#features"
-                    }
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {t(`footerProduct${item}`)}
-                  </Link>
-                </li>
-              ))}
+              {(["Features", "Pricing", "Integrations"] as const).map(
+                (item) => (
+                  <li key={item}>
+                    <Link
+                      href={
+                        item === "Pricing"
+                          ? "/pricing"
+                          : item === "Integrations"
+                            ? "/integrations"
+                            : "#features"
+                      }
+                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {t(`footerProduct${item}`)}
+                    </Link>
+                  </li>
+                ),
+              )}
             </ul>
           </div>
 

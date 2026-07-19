@@ -195,7 +195,6 @@ export type {
   VehicleOwner,
 };
 
-
 // ── API Response Wrappers ──────────────────────────────────────
 
 export interface ApiResponse<T> {

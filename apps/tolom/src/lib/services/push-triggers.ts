@@ -35,7 +35,9 @@ export async function notifyWorkOrderAssigned(
   supabase: SupabaseClient,
   params: WorkOrderAssignedParams,
 ): Promise<void> {
-  const bayText = params.bayNumber ? ` — ${params.bayNumber} дугаарын байр` : "";
+  const bayText = params.bayNumber
+    ? ` — ${params.bayNumber} дугаарын байр`
+    : "";
 
   await sendPushToUser(supabase, params.mechanicId, {
     title: "Шинэ ажлын захиалга",

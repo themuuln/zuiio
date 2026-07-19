@@ -1,4 +1,3 @@
-
 import { capture } from "@zuiio/capture";
 import { NextResponse } from "next/server";
 import { createSimpleRouteHandler } from "@/lib/api-handler";
@@ -16,7 +15,8 @@ export const GET = createSimpleRouteHandler(
           status: 200,
           headers: {
             "Content-Type": "application/json",
-            "Cache-Control": "public, s-maxage=600, stale-while-revalidate=3600",
+            "Cache-Control":
+              "public, s-maxage=600, stale-while-revalidate=3600",
           },
         });
       }

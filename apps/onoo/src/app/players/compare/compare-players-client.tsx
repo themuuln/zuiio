@@ -2,10 +2,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeftRight, Search, Swords, Users } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CompareBars } from "./components/compare-bars";
-import { CompareRadar } from "./components/compare-radar";
+const CompareRadar = dynamic(
+  () => import("./components/compare-radar").then((m) => ({ default: m.CompareRadar })),
+  { ssr: false },
+);
 import { PlayerAvatar } from "@/components/player-avatar";
 import { TeamLogo } from "@/components/team-logo";
 import { Badge } from "@/components/ui/badge";

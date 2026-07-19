@@ -54,6 +54,7 @@ export function SiteNav() {
         {/* Logo + League badge */}
         <Link
           href="/"
+          prefetch={true}
           className="inline-flex min-h-10 w-fit items-center gap-2.5 rounded-lg text-lg font-black tracking-tight text-foreground transition-colors hover:text-warning-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           <span className="flex size-9 items-center justify-center rounded-lg bg-sidebar text-warning shadow-sm ring-1 ring-white/10">

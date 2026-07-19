@@ -1,5 +1,6 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.5.2/schema.json",
+  "root": false,
+  "$schema": "https://biomejs.dev/schemas/2.4.16/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -23,7 +24,8 @@
       "!_scripts",
       "!scratch",
       "!*.css",
-      "!src/app/globals.css"
+      "!src/app/globals.css",
+      "!.lighthouserc.js"
     ]
   },
   "formatter": {
@@ -35,7 +37,7 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "preset": "recommended",
+      "recommended": true,
       "correctness": {
         "noUnusedVariables": "error",
         "noUnusedImports": "error"
@@ -70,6 +72,22 @@
         "noForEach": "error"
       },
       "a11y": {
+        "useAltText": "warn",
+        "useValidAnchor": "warn",
+        "useButtonType": "warn",
+        "useHtmlLang": "warn",
+        "useKeyWithClickEvents": "warn",
+        "useValidAriaProps": "warn",
+        "useValidAriaValues": "warn",
+        "noAriaHiddenOnFocusable": "warn",
+        "noNoninteractiveTabindex": "warn",
+        "noPositiveTabindex": "warn",
+        "noRedundantAlt": "warn",
+        "noSvgWithoutTitle": "warn",
+        "useAriaPropsForRole": "warn",
+        "useHeadingContent": "warn",
+        "useIframeTitle": "warn",
+        "useSemanticElements": "warn",
         "noLabelWithoutControl": "off"
       }
     }

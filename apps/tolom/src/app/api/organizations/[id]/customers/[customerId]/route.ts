@@ -5,7 +5,6 @@ import {
   updateCustomer,
 } from "@/lib/services/customer-service";
 import {
-
   getCustomerVehicles,
   getCustomerWorkOrders,
 } from "@/lib/services/vehicle-service";
