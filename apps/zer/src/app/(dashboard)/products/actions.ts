@@ -4,7 +4,7 @@ import { capture } from "@zuiio/capture";
 import { requireActionContext } from "@/lib/action-utils";
 import { validateProductInput } from "@/lib/domain-rules";
 import { checkLowStockAndNotify } from "@/lib/notification";
-import { revalidateEntity } from "@/lib/revalidate";
+import { revalidateEntity, revalidateEntityTag } from "@/lib/revalidate";
 
 export async function updateProduct(
   _prevState: { error?: string } | undefined,
@@ -263,6 +263,7 @@ export async function updateProduct(
   checkLowStockAndNotify(organizationId, name, currentStock, minStock);
 
   revalidateEntity("products");
+  revalidateEntityTag("products", organizationId);
   return { success: true as const };
 }
 
@@ -294,6 +295,7 @@ export async function deleteProduct(
 
   revalidateEntity("products");
   revalidateEntity("inventory");
+  revalidateEntityTag("products", organizationId);
   return { success: true as const };
 }
 
@@ -320,5 +322,6 @@ export async function toggleProductPublication(
   }
 
   revalidateEntity("products");
+  revalidateEntityTag("products", organizationId);
   return { success: true as const };
 }

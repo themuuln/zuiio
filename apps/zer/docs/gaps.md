@@ -189,3 +189,155 @@ Storefront-ыг Zer-ийн dashboard-д холбох:
 - [Zer Features](/features/) — одоогийн ERP фичерүүд
 - [Roadmap](/guide/roadmap) — ERP-ийн хөгжүүлэлтийн төлөвлөгөө
 - [Architecture](/architecture/) — одоогийн бүтэц
+
+---
+
+---
+
+# Competitive Gap Analysis (vs. Top POS/ERP Systems)
+
+> Review date: 2026-07-18
+> Source: Competitive analysis of Square, Toast, Shopify, Datadog, Grafana
+> Scope: UX patterns, feature gaps, differentiation opportunities
+
+---
+
+## 🔴 P0 — Critical Gaps
+
+### 1. Onboarding Wizard (Missing)
+
+**What competitors do:** Square: "Get up and running in minutes." Clover: "Set up and start taking payments same day." Shopify: "Start for free" → 3-step setup.
+
+**Current state:** No onboarding wizard. New users land on empty dashboard.
+
+**Why it matters:** First impression = retention. If users don't set up within first session, they churn.
+
+**Action:** 3-step onboarding:
+1. Business type (retail/wholesale/manufacturing)
+2. Add first products (or import CSV)
+3. Take first sale
+
+---
+
+### 2. Offline Mode (Incomplete)
+
+**What competitors do:** Square's #1 feature is "keep selling without internet." Toast built their brand on "works during peak volume, even offline."
+
+**Current state:** Has `sw.js` (service worker) and `offline-sync.ts` but may not be complete.
+
+**Why it matters:** Retailers at markets, pop-ups, and areas with bad internet need offline POS.
+
+**Action:** Full offline-first with background sync. Queue sales, sync when connection returns.
+
+---
+
+## 🟡 P1 — Competitive Gaps
+
+### 3. AI Assistant (Missing)
+
+**What competitors do:** Datadog has Bits AI, Grafana has AI Assistant, Toast has Toast IQ, Looker has Gemini. Every top product in 2026 has AI.
+
+**Current state:** Has `@zuiio/ai-agent` package but unclear what it does.
+
+**Opportunities:**
+- "Why is inventory low?"
+- "Predict next month's sales"
+- "What's my best-selling product this week?"
+- "Flag unusual expenses"
+
+**Action:** Wire `@zuiio/ai-agent` into dashboard. AI chat that answers business questions.
+
+---
+
+### 4. Industry Presets / Templates (Missing)
+
+**What competitors do:** Square lets you pick a "mode" (Restaurant/Retail/Services) and auto-generates dashboard. Toast has industry-specific starter dashboards.
+
+**Current state:** No business type selector during setup.
+
+**Opportunities:**
+- Retail (clothing, electronics, grocery)
+- Wholesale (B2B, bulk orders)
+- Manufacturing (BOM, production orders)
+- Each gets different default product categories, invoice templates, report views
+
+**Action:** Add "Business Type" selector → auto-configure product categories, invoice templates, reports.
+
+---
+
+### 5. Real-Time Notifications (Incomplete)
+
+**What competitors do:** Square sends low-stock alerts. Toast sends real-time order notifications.
+
+**Current state:** Has notification system but unclear if real-time push works.
+
+**Action:** Push notifications via web-push + Telegram for: low stock, new order, payment received, unusual expense.
+
+---
+
+## 🟢 P2 — Differentiation Opportunities
+
+### 6. Dashboard Templates (Missing)
+
+**What competitors do:** Grafana has 800+ dashboard templates. Datadog has integration-based auto-dashboards.
+
+**Current state:** Has dashboard with reports but no starter templates.
+
+**Action:** Pre-built dashboard templates:
+- "Retail Overview" (sales, inventory, top products)
+- "Financial Summary" (revenue, expenses, profit)
+- "Inventory Health" (stock levels, reorder alerts)
+
+---
+
+### 7. Hardware Integration (Missing)
+
+**What competitors do:** Square sells dedicated hardware (Register, Terminal, Reader). Toast has Toast Go.
+
+**Action:** Barcode scanner + receipt printer + cash drawer integration.
+
+---
+
+### 8. Multi-Location Support (Missing)
+
+**What competitors do:** Square supports "one location to one hundred." Shopify has unified inventory across stores.
+
+**Current state:** Has multi-currency but unclear on multi-location inventory.
+
+**Action:** Location switching, cross-location inventory transfers, location-level reporting.
+
+---
+
+### 9. Embeddable Analytics (Missing)
+
+**What competitors do:** Looker's best feature is embedded analytics. Grafana dashboards can be embedded anywhere.
+
+**Action:** Make Zer dashboards embeddable via iframe for: accountant portals, investor views, partner dashboards.
+
+---
+
+## Comparison Matrix
+
+| Feature | Zer | Square | Shopify | Looker |
+|---------|-----|--------|---------|--------|
+| Onboarding wizard | ❌ | ✅ | ✅ | ⚠️ |
+| Offline mode | ⚠️ Partial | ✅ Full | ✅ | ❌ |
+| AI assistant | ⚠️ Has package | ❌ | ❌ | ✅ Gemini |
+| Industry presets | ❌ | ✅ Mode selector | ❌ | ❌ |
+| Real-time alerts | ⚠️ Partial | ✅ | ✅ | ✅ |
+| Dashboard templates | ❌ | ✅ | ✅ | ✅ 800+ |
+| Hardware | ❌ | ✅ Full line | ✅ | ❌ |
+| Multi-location | ❌ | ✅ | ✅ | ❌ |
+| Embeddable | ❌ | ✅ | ✅ | ✅ Best |
+
+---
+
+## Key Insight
+
+**Square's "mode switching" is their UX magic. You have a settings page but no industry presets. Add "Business Type" onboarding that auto-configures everything.**
+
+This is the highest-impact, lowest-effort improvement:
+1. User signs up
+2. Picks business type (retail/wholesale/manufacturing)
+3. System auto-creates default categories, invoice template, report views
+4. User is productive in minutes, not hours

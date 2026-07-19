@@ -1,7 +1,8 @@
 import { withDbCapture } from "@zuiio/capture";
+import { cacheLife, cacheTag } from "next/cache";
 import { withBranchFilter } from "@/lib/branches";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server-service";
 
 function statusBadgeClass(status: string | null): string {
   switch (status) {
@@ -23,10 +24,47 @@ function statusLabel(status: string | null): string {
     case "pending":
       return "Хүлээгдэж буй";
     case "cancelled":
-      return "Цуцлагдсан";
+      return "Цуцалсан";
     default:
-      return status ?? "-";
+      return status ?? "—";
   }
+}
+
+type SaleRow = {
+  id: string;
+  total_amount: number | null;
+  sale_date: string;
+  status: string | null;
+  contacts: { name: string } | null;
+};
+
+async function getRecentSales(
+  organizationId: string,
+  branchId: string | null,
+  isBranchScoped: boolean,
+): Promise<SaleRow[]> {
+  "use cache";
+  cacheLife("frequent");
+  cacheTag(`sales:${organizationId}`);
+
+  // ⚠️ SERVICE ROLE — no RLS. Every query MUST filter by organizationId.
+  const supabase = createServiceClient();
+
+  const { data } = await withBranchFilter(
+    withDbCapture(
+      "dashboard_recent_sales",
+      supabase
+        .from("sales")
+        .select("id, total_amount, sale_date, status, contacts(name)")
+        .eq("organization_id", organizationId)
+        .order("created_at", { ascending: false })
+        .limit(5),
+    ),
+    branchId,
+    isBranchScoped,
+  );
+
+  return (data as SaleRow[]) ?? [];
 }
 
 export async function RecentSales({
@@ -38,72 +76,50 @@ export async function RecentSales({
   branchId: string | null;
   isBranchScoped: boolean;
 }) {
-  const supabase = await createClient();
-
-  const { data: sales } = await withBranchFilter(
-    withDbCapture(
-      "dashboard_recent_sales",
-      supabase
-        .from("sales")
-        .select("id, total_amount, sale_date, status, contacts(name)")
-        .eq("organization_id", orgId)
-        .order("created_at", { ascending: false })
-        .limit(5),
-    ),
-    branchId,
-    isBranchScoped,
-  );
+  const sales = await getRecentSales(orgId, branchId, isBranchScoped);
 
   return (
     <div className="rounded-xl border bg-card text-card-foreground shadow-xs">
-      <div className="flex items-center justify-between px-6 py-4">
-        <h3 className="text-sm font-semibold">Сүүлийн борлуулалтууд</h3>
+      <div className="flex items-center justify-between p-6 pb-2">
+        <h2 className="text-sm font-medium text-muted-foreground">
+          Сүүлийн борлуулалт
+        </h2>
       </div>
-      {!sales?.length ? (
-        <div className="px-6 pb-6 pt-2">
-          <p className="text-sm text-muted-foreground">
-            Борлуулалт бүртгэгдээгүй байна.
+      <div className="p-6 pt-0">
+        {sales.length === 0 ? (
+          <p className="py-4 text-center text-sm text-muted-foreground">
+            Борлуулалт байхгүй байна.
           </p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left text-muted-foreground">
-                <th className="px-6 py-3 font-medium">Огноо</th>
-                <th className="px-6 py-3 font-medium">Харилцагч</th>
-                <th className="px-6 py-3 font-medium text-right">Дүн</th>
-                <th className="px-6 py-3 font-medium">Статус</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sales.map((sale) => (
-                <tr
-                  key={sale.id}
-                  className="border-b last:border-0 hover:bg-muted/50"
-                >
-                  <td className="px-6 py-3 text-muted-foreground">
+        ) : (
+          <div className="space-y-3">
+            {sales.map((sale) => (
+              <div
+                key={sale.id}
+                className="flex items-center justify-between rounded-lg border p-3"
+              >
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-sm font-medium">
+                    {sale.contacts?.name ?? "Нэр байхгүй"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
                     {formatDate(sale.sale_date)}
-                  </td>
-                  <td className="px-6 py-3">
-                    {(sale.contacts as { name: string } | null)?.name ?? "-"}
-                  </td>
-                  <td className="px-6 py-3 text-right font-medium">
-                    {formatCurrency(sale.total_amount)}
-                  </td>
-                  <td className="px-6 py-3">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusBadgeClass(sale.status)}`}
-                    >
-                      {statusLabel(sale.status)}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusBadgeClass(sale.status)}`}
+                  >
+                    {statusLabel(sale.status)}
+                  </span>
+                  <span className="text-sm font-medium">
+                    {formatCurrency(sale.total_amount ?? 0)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

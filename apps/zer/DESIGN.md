@@ -85,6 +85,8 @@ Root defines sm/md/lg/xl/full. Zer sets `--radius: 0.625rem` (10px) as the base,
 - 2026-07-15 — 44px minimum touch targets enforced globally via CSS media query for mobile ERP use.
 - 2026-07-15 — iOS safe-area zoom prevention: inputs/textareas/selects pinned to 16px minimum.
 
+- 2026-07-18 — Mobile shop uses the bottom navigation as the single cart entry point; the category rail supports native horizontal touch panning, contained overscroll, snap proximity, and automatic centering of the active category.
+
 ## Component Inventory
 
 ### Layout

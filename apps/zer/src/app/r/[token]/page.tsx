@@ -2,15 +2,17 @@ import { capture } from "@zuiio/capture";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ExpenseBreakdown } from "@/components/reports/expense-breakdown";
-import { ExpenseDonutChart } from "@/components/reports/expense-donut-chart";
 import { FinancialSummary } from "@/components/reports/financial-summary";
-import { FinancialSummaryChart } from "@/components/reports/financial-summary-chart";
 import { PendingSales } from "@/components/reports/pending-sales";
-import { PendingSalesChart } from "@/components/reports/pending-sales-chart";
-import { ProductMarginChart } from "@/components/reports/product-margin-chart";
-import { ProductRevenueChart } from "@/components/reports/product-revenue-chart";
 import { ProductSalesTable } from "@/components/reports/product-sales-table";
-import { StockMovementChart } from "@/components/reports/stock-movement-chart";
+import {
+  ExpenseDonutChart,
+  FinancialSummaryChart,
+  PendingSalesChart,
+  ProductMarginChart,
+  ProductRevenueChart,
+  StockMovementChart,
+} from "@/components/reports/report-charts-dynamic";
 import { StockMovements } from "@/components/reports/stock-movements";
 import { formatDate } from "@/lib/format";
 import { getFullReport } from "@/lib/reports";

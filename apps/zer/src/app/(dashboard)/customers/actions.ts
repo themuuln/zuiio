@@ -3,7 +3,7 @@ import { capture, withDbCapture } from "@zuiio/capture";
 
 import { requireWriteAction } from "@/lib/action-utils";
 import { validateContactInput } from "@/lib/domain-rules";
-import { revalidateEntities } from "@/lib/revalidate";
+import { revalidateEntities, revalidateEntityTag } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
 
 export async function createContact(
@@ -68,6 +68,7 @@ export async function createContact(
   }
 
   revalidateEntities(["customers"]);
+  revalidateEntityTag("customers", organizationId);
   return { success: true as const, error: undefined };
 }
 
@@ -156,5 +157,6 @@ export async function updateContact(
   }
 
   revalidateEntities(["customers"]);
+  revalidateEntityTag("customers", organizationId);
   return { success: true as const, error: undefined };
 }

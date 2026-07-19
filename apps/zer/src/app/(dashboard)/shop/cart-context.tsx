@@ -32,10 +32,38 @@ type CartContextValue = {
   applyDiscount: (discount: DiscountInfo) => void;
   removeDiscount: () => void;
   clearCart: () => void;
+  holdSale: () => void;
+  restoreHeldSale: (id: string) => void;
+  removeHeldSale: (id: string) => void;
 };
 
 const STORAGE_KEY = "zer-shop-cart";
 const DISCOUNT_STORAGE_KEY = "zer-shop-discount";
+const FREQUENCY_STORAGE_KEY = "zer:shop:product-frequency";
+
+type FrequencyMap = Record<string, number>;
+
+function bumpFrequency(productId: string) {
+  if (typeof window === "undefined" || !productId) return;
+  try {
+    const raw = window.localStorage.getItem(FREQUENCY_STORAGE_KEY);
+    const map: FrequencyMap = raw ? (JSON.parse(raw) as FrequencyMap) : {};
+    map[productId] = (map[productId] ?? 0) + 1;
+    window.localStorage.setItem(FREQUENCY_STORAGE_KEY, JSON.stringify(map));
+  } catch {
+    // Storage unavailable — silently skip frequency tracking
+  }
+}
+
+export function getProductFrequency(): FrequencyMap {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(FREQUENCY_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as FrequencyMap) : {};
+  } catch {
+    return {};
+  }
+}
 
 function loadCartFromStorage(): CartItem[] {
   if (typeof window === "undefined") return [];
@@ -85,6 +113,35 @@ function saveDiscountToStorage(discount: DiscountInfo | null) {
   }
 }
 
+type HeldSale = {
+  id: string;
+  items: CartItem[];
+  discount: DiscountInfo | null;
+  heldAt: string;
+};
+
+const HELD_SALES_KEY = "zer:shop:held-sales";
+
+function loadHeldSales(): HeldSale[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(HELD_SALES_KEY);
+    return raw ? (JSON.parse(raw) as HeldSale[]) : [];
+  } catch (e) {
+    capture(e, { context: "cart: load held sales" });
+    return [];
+  }
+}
+
+function saveHeldSales(sales: HeldSale[]) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(HELD_SALES_KEY, JSON.stringify(sales));
+  } catch (e) {
+    capture(e, { context: "cart: save held sales" });
+  }
+}
+
 const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
@@ -128,14 +185,51 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       saveDiscountToStorage(state.discount);
     }
   }, [state.discount]);
+  const clearCart = useCallback(() => {
+    dispatch({ type: "CLEAR_CART" });
+  }, []);
 
+  const holdSale = useCallback(() => {
+    const held: HeldSale = {
+      id: `held-${Date.now()}`,
+      items: state.items,
+      discount: state.discount,
+      heldAt: new Date().toISOString(),
+    };
+    const next = [...loadHeldSales(), held];
+    saveHeldSales(next);
+    dispatch({ type: "CLEAR_CART" });
+  }, [state.items, state.discount]);
+
+  const restoreHeldSale = useCallback((id: string) => {
+    const held = loadHeldSales().find((s) => s.id === id);
+    if (!held) return;
+    // JSON.stringify turns Infinity → null; restore it so the cart reducer works
+    const sanitized = held.items.map((i) => ({
+      ...i,
+      maxStock: Number.isFinite(i.maxStock) ? i.maxStock : Number.POSITIVE_INFINITY,
+    }));
+    dispatch({ type: "LOAD_FROM_STORAGE", payload: sanitized });
+    if (held.discount) {
+      dispatch({ type: "APPLY_DISCOUNT", payload: held.discount });
+    } else {
+      dispatch({ type: "REMOVE_DISCOUNT" });
+    }
+    const next = loadHeldSales().filter((s) => s.id !== id);
+    saveHeldSales(next);
+  }, []);
+
+  const removeHeldSale = useCallback((id: string) => {
+    const next = loadHeldSales().filter((s) => s.id !== id);
+    saveHeldSales(next);
+  }, []);
   const addItem = useCallback((item: Omit<CartItem, "quantity">) => {
+    bumpFrequency(item.productId);
     dispatch({
       type: "ADD_ITEM",
       payload: { ...item, quantity: 1 },
     });
   }, []);
-
   const removeItem = useCallback((cartItemKey: string) => {
     dispatch({ type: "REMOVE_ITEM", payload: { cartItemKey } });
   }, []);
@@ -156,10 +250,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const removeDiscount = useCallback(() => {
     dispatch({ type: "REMOVE_DISCOUNT" });
-  }, []);
-
-  const clearCart = useCallback(() => {
-    dispatch({ type: "CLEAR_CART" });
   }, []);
 
   const totalAmount = useMemo(
@@ -186,6 +276,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       applyDiscount,
       removeDiscount,
       clearCart,
+      holdSale,
+      restoreHeldSale,
+      removeHeldSale,
     }),
     [
       state.items,
@@ -199,6 +292,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       applyDiscount,
       removeDiscount,
       clearCart,
+      holdSale,
+      restoreHeldSale,
+      removeHeldSale,
     ],
   );
 

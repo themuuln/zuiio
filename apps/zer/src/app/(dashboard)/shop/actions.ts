@@ -5,7 +5,7 @@ import { capture, withDbCapture } from "@zuiio/capture";
 import { requireAppContext, requireWriteAction } from "@/lib/action-utils";
 import { findOrCreateContact } from "@/lib/contact-utils";
 import { createInvoiceFromSale } from "@/lib/invoicing";
-import { revalidateEntity } from "@/lib/revalidate";
+import { revalidateEntity, revalidateEntityTag } from "@/lib/revalidate";
 import type { CartItemData } from "@/lib/types";
 import { getString } from "@/lib/validation";
 
@@ -196,6 +196,11 @@ export async function createShopSale(
       });
 
       revalidateEntity("shop");
+      revalidateEntityTag("sales", organizationId);
+      revalidateEntityTag("products", organizationId);
+      if (createdContact) {
+        revalidateEntityTag("customers", organizationId);
+      }
 
       timing("total", performance.now() - t0);
       span.setStatus({ code: 1 });

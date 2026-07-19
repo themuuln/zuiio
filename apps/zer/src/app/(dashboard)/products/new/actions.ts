@@ -3,8 +3,7 @@
 import { capture } from "@zuiio/capture";
 import { requireActionContext } from "@/lib/action-utils";
 import { validateProductInput } from "@/lib/domain-rules";
-import { revalidateEntity } from "@/lib/revalidate";
-
+import { revalidateEntity, revalidateEntityTag } from "@/lib/revalidate";
 export async function createProduct(
   _prevState: { error?: string } | undefined,
   formData: FormData,
@@ -239,5 +238,6 @@ export async function createProduct(
   }
 
   revalidateEntity("products");
+  revalidateEntityTag("products", organizationId);
   return { success: true as const };
 }

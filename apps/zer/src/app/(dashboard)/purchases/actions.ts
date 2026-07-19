@@ -4,7 +4,7 @@ import { capture, withDbCapture } from "@zuiio/capture";
 import { postPurchaseToJournal } from "@/lib/accounting";
 import { requireWriteAction } from "@/lib/action-utils";
 import { withBranchFilter } from "@/lib/branches";
-import { revalidateEntities } from "@/lib/revalidate";
+import { revalidateEntities, revalidateEntityTag } from "@/lib/revalidate";
 import { getString } from "@/lib/validation";
 import { purchaseSchema } from "@/lib/validation-schemas";
 
@@ -268,6 +268,7 @@ export async function updatePurchaseOrderStatus(
   }
 
   revalidateEntities(["purchases", "inventory", "products"]);
+  revalidateEntityTag("products", organizationId);
   return { success: true as const, error: undefined };
 }
 
@@ -349,5 +350,6 @@ export async function receivePurchaseOrderItems(
   }
 
   revalidateEntities(["purchases"]);
+  revalidateEntityTag("products", organizationId);
   return { success: true as const, error: undefined };
 }

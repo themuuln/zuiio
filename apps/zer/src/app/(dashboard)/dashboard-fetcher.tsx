@@ -32,7 +32,7 @@ export async function DashboardFetcher({
       supabase
         .from("organizations")
         .select(
-          "has_checkout_customer, has_checkout_quick_amounts, has_receipt_drawer, shop_default_payment_method",
+          "has_checkout_customer, has_checkout_quick_amounts, has_receipt_drawer, has_track_stock, shop_default_payment_method",
         )
         .eq("id", organizationId)
         .single(),
@@ -57,6 +57,12 @@ export async function DashboardFetcher({
   const hasAuditLog = org.has_audit_log !== false;
   const hasSuppliers = org.has_suppliers !== false;
   const hasHr = false;
+
+  const hasCheckoutCustomer = posSettings?.has_checkout_customer !== false;
+  const hasCheckoutQuickAmounts = posSettings?.has_checkout_quick_amounts !== false;
+  const hasReceiptDrawer = posSettings?.has_receipt_drawer !== false;
+  const hasTrackStock = posSettings?.has_track_stock !== false;
+  const shopDefaultPaymentMethod = posSettings?.shop_default_payment_method ?? "cash";
 
   const allFeatures =
     enabledFeatures.length > 0
@@ -115,6 +121,7 @@ export async function DashboardFetcher({
             hasCheckoutQuickAmounts:
               posSettings?.has_checkout_quick_amounts !== false,
             hasReceiptDrawer: posSettings?.has_receipt_drawer !== false,
+            trackStock: posSettings?.has_track_stock !== false,
             shopDefaultPaymentMethod:
               posSettings?.shop_default_payment_method ?? "card",
           }}

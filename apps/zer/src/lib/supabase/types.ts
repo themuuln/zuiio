@@ -5453,6 +5453,16 @@ export type Database = {
         }[];
       };
       get_current_organization: { Args: never; Returns: string };
+      get_dashboard_quick_stats: {
+        Args: { p_organization_id: string };
+        Returns: {
+          customer_count: number;
+          inventory_value: number;
+          low_stock_count: number;
+          product_count: number;
+          supplier_count: number;
+        }[];
+      };
       get_inventory_valuation: {
         Args: { p_branch_id?: string; p_organization_id: string };
         Returns: {

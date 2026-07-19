@@ -11,7 +11,7 @@ import { PanelLeftIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
-import { ViewTransition } from "react";
+import { useMemo, ViewTransition } from "react";
 import { logout } from "@/app/(dashboard)/actions";
 import { QuickCreateDropdown } from "@/components/erp/quick-create-dropdown";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -296,6 +296,11 @@ export function DashboardShell({
     () => filterNavGroups(navGroups, enabledFeatures, hasMultiBranch),
     [enabledFeatures, hasMultiBranch],
   );
+  const orgSettingsValue = useMemo(
+    () => ({ ...orgSettings, organizationId: organizationId ?? "" }),
+    [orgSettings, organizationId],
+  );
+
   const pathname = usePathname();
   const router = useRouter();
   // Prefetch critical pages for instant navigation
@@ -382,9 +387,7 @@ export function DashboardShell({
             />
           </Sidebar>
           <div className="flex min-h-svh w-full flex-1 flex-col">
-            <OrgSettingsProvider
-              value={{ ...orgSettings, organizationId: organizationId ?? "" }}
-            >
+            <OrgSettingsProvider value={orgSettingsValue}>
               {children}
             </OrgSettingsProvider>
           </div>
@@ -432,12 +435,7 @@ export function DashboardShell({
                   </div>
                 </header>
                 <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">
-                  <OrgSettingsProvider
-                    value={{
-                      ...orgSettings,
-                      organizationId: organizationId ?? "",
-                    }}
-                  >
+                  <OrgSettingsProvider value={orgSettingsValue}>
                     {children}
                   </OrgSettingsProvider>
                 </div>

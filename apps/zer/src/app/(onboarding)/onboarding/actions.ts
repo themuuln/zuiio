@@ -1,6 +1,7 @@
 "use server";
 
 import { capture } from "@zuiio/capture";
+import { revalidateEntities } from "@/lib/revalidate";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { PRESET_CATEGORIES } from "@/lib/constants";
@@ -229,6 +230,7 @@ export async function completeOnboarding(
     }
   }
 
+  revalidateEntities(["settings", "products", "categories"]);
   revalidatePath("/");
   redirect("/");
 }

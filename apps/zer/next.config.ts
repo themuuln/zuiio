@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.supabase.co" },
     ],
   },
-  reactCompiler: process.env.NODE_ENV === "development",
+  reactCompiler: true,
   experimental: {
     inlineCss: true,
     staleTimes: {
@@ -19,6 +19,7 @@ const nextConfig: NextConfig = {
     },
     optimizePackageImports: [
       "@phosphor-icons/react",
+      "@phosphor-icons/react/dist/ssr",
       "@tanstack/react-query",
       "date-fns",
       "lucide-react",

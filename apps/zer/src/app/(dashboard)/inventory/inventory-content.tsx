@@ -127,7 +127,8 @@ export function InventoryContent() {
           )
           .eq("organization_id", organizationId)
           .is("deleted_at", null)
-          .order("name", { ascending: true }),
+          .order("name", { ascending: true })
+          .limit(1000),
       );
       if (error) throw error;
       return data ?? [];
