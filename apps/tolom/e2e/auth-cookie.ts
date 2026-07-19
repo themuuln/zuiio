@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { APIRequestContext, BrowserContext } from "@playwright/test";
 
+const PROJECT_ROOT = resolve(__dirname, "..");
+
 /**
  * The saved test session (`e2e/.auth/user.json`, written by `global-setup.ts`)
  * only stores `sb-access-token` + `sb-refresh-token`. `@supabase/ssr` does NOT
@@ -34,7 +36,7 @@ function getSupabaseRef(): string {
 
 function readEnvLocal(key: string): string | undefined {
   try {
-    const raw = readFileSync(resolve(process.cwd(), ".env.local"), "utf-8");
+    const raw = readFileSync(resolve(PROJECT_ROOT, ".env.local"), "utf-8");
     const line = raw.split("\n").find((l) => l.startsWith(`${key}=`));
     return line
       ?.split("=")[1]

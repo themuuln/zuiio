@@ -1,5 +1,10 @@
+import { execSync, readFileSync, statSync } from "node:fs";
+import { resolve } from "node:path";
+import type { FullConfig } from "@playwright/test";
+import { chromium } from "@playwright/test";
 import { addSupabaseSessionCookie } from "./auth-cookie";
 
+const PROJECT_ROOT = resolve(__dirname, "..");
 const PORT = process.env.PORT ?? 3000;
 const BASE_URL = `http://localhost:${PORT}`;
 const TEST_EMAIL = process.env.E2E_EMAIL ?? "themuuln4@gmail.com";
@@ -10,8 +15,9 @@ const TEST_PASSWORD = process.env.E2E_PASSWORD ?? "Tolom!11";
  * .env.local isn't automatically loaded).
  */
 function loadEnvLocal() {
+  const envPath = resolve(PROJECT_ROOT, ".env.local");
   try {
-    const content = readFileSync(".env.local", "utf-8");
+    const content = readFileSync(envPath, "utf-8");
     for (const line of content.split("\n")) {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith("#")) continue;
