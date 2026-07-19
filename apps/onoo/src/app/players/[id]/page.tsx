@@ -70,12 +70,12 @@ export async function generateMetadata({
   if (!data?.player)
     return {
       title:
-        "\u0422\u043E\u0433\u043B\u043E\u0433\u0447 \u043E\u043B\u043E\u0434\u0441\u043E\u043D\u0433\u04AF\u0439 \u2014 \u041E\u043D\u043E\u043E",
+        "Тоглогч олодсонгүй — Оноо",
     };
 
   return {
-    title: `${data.player.canonical_name} \u2014 \u041E\u043D\u043E\u043E`,
-    description: `${data.player.canonical_name} (${data.player.name_latin}) \u0442\u043E\u0433\u043B\u043E\u0433\u0447\u0438\u0439\u043D \u043C\u044D\u0434\u044D\u044D\u043B \u0431\u0430 \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A.`,
+    title: `${data.player.canonical_name} — Оноо`,
+    description: `${data.player.canonical_name} (${data.player.name_latin}) тоглогчийн мэдээл ба статистик.`,
   };
 }
 
@@ -158,8 +158,8 @@ export default async function PlayerPage({
   const seasonLabel = isCareer
     ? isEn
       ? "Career Total"
-      : "\u041A\u0430\u0440\u044C\u0435\u0440\u0438\u0439\u043D \u0431\u04AF\u0445 \u0442\u043E\u0433\u043B\u043E\u0442"
-    : `${activeProfile.season_name} \u00B7 ${activeProfile.competition_name}`;
+      : "Карьерийн бүх тоглот"
+    : `${activeProfile.season_name} · ${activeProfile.competition_name}`;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -168,7 +168,7 @@ export default async function PlayerPage({
     alternateName: player.name_latin ?? undefined,
     jobTitle:
       player.position ??
-      "\u0411\u0430\u0441\u043A\u0435\u0442\u0431\u043E\u043B\u0447",
+      "Баскетболч",
     memberOf: {
       "@type": "SportsTeam",
       name: player.team_name,
@@ -176,10 +176,10 @@ export default async function PlayerPage({
     },
     description: [
       player.points_per_game != null
-        ? `${player.points_per_game.toFixed(1)} \u043D\u044D\u0433\u044D\u043D \u0442\u043E\u0433\u043B\u043E\u043B\u0442\u043E\u0434`
+        ? `${player.points_per_game.toFixed(1)} нэгэн тоглолтод`
         : null,
       player.games_played
-        ? `${player.games_played} \u0442\u043E\u0433\u043B\u043E\u043B\u0442`
+        ? `${player.games_played} тоглолт`
         : null,
     ]
       .filter(Boolean)
@@ -207,12 +207,12 @@ export default async function PlayerPage({
               <ArrowLeft className="size-4" aria-hidden="true" />
               {isEn
                 ? "Players"
-                : "\u0422\u043E\u0433\u043B\u043E\u0447\u0438\u0434"}
+                : "Тоглочид"}
             </Link>
             <p className="text-xs font-semibold uppercase tracking-widest text-[var(--brand-sports)]">
               {isEn
                 ? "Player Profile"
-                : "\u0422\u043E\u0433\u043B\u043E\u0433\u0447\u0438\u0439\u043D \u043F\u0440\u043E\u0444\u0430\u0439\u043B"}
+                : "Тоглогчийн профайл"}
             </p>
             <p className="text-sm text-muted-foreground">{seasonLabel}</p>
           </div>
@@ -253,7 +253,7 @@ export default async function PlayerPage({
           careerTotals) && (
           <div className="space-y-3">
             <h2 className="court-dot-accent text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              {isEn ? "Share" : "\u0425\u04AF\u0442\u043B\u044D\u0445"}
+              {isEn ? "Share" : "Хүтлэх"}
             </h2>
             <StatCard
               playerName={
@@ -297,13 +297,13 @@ export default async function PlayerPage({
           <TabsList className="grid w-full grid-cols-2 sm:w-fit">
             <TabsTrigger value="summary">
               <ChartNoAxesCombined aria-hidden="true" />
-              {isEn ? "Summary" : "\u0422\u043E\u0439\u043C"}
+              {isEn ? "Summary" : "Тойм"}
             </TabsTrigger>
             <TabsTrigger value="gamelog">
               <TableProperties aria-hidden="true" />
               {isEn
                 ? "All Games"
-                : "\u0411\u04AF\u0445 \u0442\u043E\u0433\u043B\u043E\u0442"}
+                : "Бүх тоглот"}
             </TabsTrigger>
           </TabsList>
 
@@ -324,12 +324,12 @@ export default async function PlayerPage({
                       <CardTitle className="text-lg">
                         {isEn
                           ? "Season Trend"
-                          : "\u0423\u043B\u0438\u0440\u0430\u043B\u044B\u043D \u0445\u0430\u043D\u0434\u043B\u0430\u0433"}
+                          : "Улиралын хандлаг"}
                       </CardTitle>
                       <CardDescription className="mt-1">
                         {isEn
                           ? "Performance change game by game"
-                          : "\u0422\u043E\u0433\u043B\u043E\u0431\u044B\u043D \u0431\u04AF\u0440\u0438\u0439\u043D \u044F\u0432\u0436\u0438\u043B\u0442\u044B\u043D \u0435\u0440\u0445\u043B\u044D\u043D\u0442"}
+                          : "Тоглобын бүрийн явжилтын ерхлэнт"}
                       </CardDescription>
                     </div>
                   </div>
@@ -405,12 +405,12 @@ export default async function PlayerPage({
                         <CardTitle className="text-lg">
                           {isEn
                             ? "Skill Radar"
-                            : "\u0427\u0430\u0434\u0430\u043B\u044B\u043D \u0441\u0443\u043F\u0440\u0430\u0433\u0430\u043D"}
+                            : "Чадалын супраган"}
                         </CardTitle>
                         <CardDescription className="mt-1">
                           {isEn
                             ? "Player vs League Average"
-                            : "\u0422\u043E\u0433\u043B\u043E\u0433\u0447 \u0431\u0430 \u043B\u0438\u0433\u0438\u0439\u043D \u0434\u0443\u043D\u0434\u0430\u0436"}
+                            : "Тоглогч ба лигийн дундаж"}
                         </CardDescription>
                       </div>
                     </div>
@@ -422,13 +422,13 @@ export default async function PlayerPage({
                         <span className="size-2 rounded-full bg-[var(--brand-sports)]" />{" "}
                         {isEn
                           ? "Player"
-                          : "\u0422\u043E\u0433\u043B\u043E\u0433\u0447"}
+                          : "Тоглогч"}
                       </span>
                       <span className="inline-flex items-center gap-2">
                         <span className="size-2 rounded-full bg-muted-foreground" />{" "}
                         {isEn
                           ? "League Average"
-                          : "\u041B\u0438\u0433\u0438\u0439\u043D \u0434\u0443\u043D\u0434\u0430\u0436"}
+                          : "Лигийн дундаж"}
                       </span>
                     </div>
                     <SkillRadar
@@ -459,12 +459,12 @@ export default async function PlayerPage({
                       <CardTitle className="text-lg">
                         {isEn
                           ? "Career Highs"
-                          : "\u041E\u043D\u0446\u043B\u043E\u0445 \u0430\u043C\u0436\u0438\u043B\u0442\u0443\u0443\u0434"}
+                          : "Онцлох амжилтууд"}
                       </CardTitle>
                       <CardDescription className="mt-1">
                         {isEn
                           ? "Top performances and consistency"
-                          : "\u04D8\u0434\u044D\u044D \u044F\u0432\u0446\u0430\u043B\u0442 \u0431\u0430 \u0442\u043E\u0433\u0442\u0432\u043E\u0440\u0442\u043E\u0439 \u0440\u04AF\u0443\u0437\u043C\u044D\u043B\u0442"}
+                          : "Әдээ явцалт ба тогтвортой рүузмэлт"}
                       </CardDescription>
                     </div>
                   </div>
@@ -489,14 +489,14 @@ export default async function PlayerPage({
                     <CardTitle className="text-lg">
                       {isEn
                         ? "Game Log"
-                        : "\u0422\u043E\u0433\u043B\u043E\u044B\u043D \u0434\u044D\u043B\u0433\u044D\u0432\u0440"}
+                        : "Тоглоын дэлгэвр"}
                     </CardTitle>
                     <CardDescription className="mt-1">
                       {playerGameLog.length}{" "}
                       {isEn
                         ? "verified games"
-                        : "\u0431\u0430\u0442\u0430\u043B\u0433\u0430\u0430\u0436\u0441\u0430\u043D \u0442\u043E\u0433\u043B\u043E\u043C\u0442"}{" "}
-                      {"\u00B7"} {seasonLabel}
+                        : "баталгаажсан тогломт"}{" "}
+                      {"·"} {seasonLabel}
                     </CardDescription>
                   </div>
                   <ReportErrorDialog playerId={id} />
@@ -609,12 +609,12 @@ export default async function PlayerPage({
                     <h2 className="mt-3 font-semibold">
                       {isEn
                         ? "No game records"
-                        : "\u0422\u043E\u0433\u043B\u043E\u043D\u044B \u0431\u04AF\u0440\u0442\u0446\u044D \u0431\u0430\u0439\u043D\u0430"}
+                        : "Тоглоны бүртцэ байна"}
                     </h2>
                     <p className="mt-1 max-w-sm text-sm text-muted-foreground">
                       {isEn
                         ? "Detailed stats will appear after verified games."
-                        : "\u0411\u0430\u0442\u0430\u043B\u0433\u0430\u0430\u0436\u0441\u0430\u043D \u0442\u043E\u0433\u043B\u043E\u043B\u0442\u044B\u043D \u0434\u0430\u0440\u0430\u0430 \u0434\u044D\u043B\u0433\u044D\u0440\u044D\u0433\u044D\u044D \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A \u044D\u043D\u0434 \u043D\u044D\u0436\u0438\u0433\u043B\u044D\u043D\u044D."}
+                        : "Баталгаажсан тоглолтын дараа дэлгэрэгээ статистик энд нэжиглэнэ."}
                     </p>
                   </div>
                 )}

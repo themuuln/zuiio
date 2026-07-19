@@ -116,17 +116,17 @@ export function SkillRadar({
           aria-hidden="true"
         />
         <p className="mt-3 font-semibold">
-          \u0425\u0430\u0440\u044C\u0446\u0443\u0443\u043B\u0430\u0445
-          \u043C\u044D\u0434\u044D\u044D\u043B\u044D\u043B
-          \u0445\u0443\u0440\u044D\u043B\u0446\u044D\u0445\u0433\u04AF\u0439
+          Харьцуулах
+          мэдээлэл
+          хурэлцэхгүй
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          \u041B\u0438\u0433\u0438\u0439\u043D \u0442\u0430\u0432 \u0431\u0430
-          \u0442\u04AF\u0443\u043D\u044D\u044D\u0441 \u043E\u043B\u043E\u043D
-          \u0442\u043E\u0433\u043B\u043E\u0442\u0442\u043E\u0439
-          \u043D\u044D\u043C\u044D\u0433\u0434\u044D\u0445\u044D\u0434
-          \u0437\u0443\u0440\u0430\u0433\u043B\u0430\u043B
-          \u0433\u0430\u0440\u043D\u0430.
+          Лигийн тав ба
+          түунээс олон
+          тоглоттой
+          нэмэгдэхэд
+          зураглал
+          гарна.
         </p>
       </div>
     );
@@ -147,8 +147,8 @@ export function SkillRadar({
           )}
           aria-label={
             showLeague
-              ? "\u041B\u0438\u0433\u0438\u0439\u043D \u0434\u0443\u043D\u0434\u0430\u0436 \u043D\u0443\u0443\u0445"
-              : "\u041B\u0438\u0433\u0438\u0439\u043D \u0434\u0443\u043D\u0434\u0430\u0436 \u0445\u0430\u0440\u0443\u0443\u043B\u0430\u0445"
+              ? "Лигийн дундаж нуух"
+              : "Лигийн дундаж харуулах"
           }
         >
           {showLeague ? (
@@ -156,8 +156,8 @@ export function SkillRadar({
           ) : (
             <EyeOff className="size-3" aria-hidden="true" />
           )}
-          \u041B\u0438\u0433\u0438\u0439\u043D
-          \u0434\u0443\u043D\u0434\u0430\u0436
+          Лигийн
+          дундаж
         </button>
       </div>
 
@@ -180,7 +180,7 @@ export function SkillRadar({
                 formatter={(value, name, item) => {
                   const point = item.payload as Record<string, unknown>;
                   const isPlayer =
-                    name === "\u0422\u043E\u0433\u043B\u043E\u0433\u0447";
+                    name === "Тоглогч";
                   const actual = isPlayer
                     ? (point.playerActual as number)
                     : (point.leagueActual as number);
@@ -191,7 +191,7 @@ export function SkillRadar({
           />
           {showLeague && (
             <Radar
-              name="\u041B\u0438\u0433\u0438\u0439\u043D \u0434\u0443\u043D\u0434\u0430\u0436"
+              name="Лигийн дундаж"
               dataKey="league"
               stroke="var(--color-league)"
               fill="var(--color-league)"
@@ -202,7 +202,7 @@ export function SkillRadar({
             />
           )}
           <Radar
-            name="\u0422\u043E\u0433\u043B\u043E\u0433\u0447"
+            name="Тоглогч"
             dataKey="player"
             stroke="var(--color-player)"
             fill="var(--color-player)"

@@ -93,7 +93,7 @@ function GaugeRing({
         {/* Center text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-lg font-black tabular-nums leading-none">
-            {hasAttempts ? `${value}%` : "\u2014"}
+            {hasAttempts ? `${value}%` : "—"}
           </span>
         </div>
       </div>
@@ -133,19 +133,19 @@ function PointsBreakdown({
   const segments = [
     {
       key: "2P",
-      label: "2-\u043E\u043D\u043E\u043E",
+      label: "2-оноо",
       points: twoP,
       color: "var(--color-chart-1)",
     },
     {
       key: "3P",
-      label: "3-\u043E\u043D\u043E\u043E",
+      label: "3-оноо",
       points: threeP,
       color: "var(--color-chart-2)",
     },
     {
       key: "FT",
-      label: "\u0428\u0438\u0440\u044D\u043D\u0433\u0438\u0439\u043D",
+      label: "Ширэнгийн",
       points: ft,
       color: "var(--color-chart-5)",
     },
@@ -155,13 +155,13 @@ function PointsBreakdown({
     <div className="space-y-3 pt-3">
       <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
         {
-          "\u041E\u043D\u043E\u043E\u043D\u044B \u0431\u04AF\u0442\u0446\u044D\u043B"
+          "Онооны бүтцэл"
         }
       </p>
       <div
         className="flex h-3 overflow-hidden rounded-full"
         role="img"
-        aria-label="\u041E\u043D\u043E\u043E\u043D\u044B \u0431\u04AF\u0442\u0446\u044D\u043B\u044B\u043D \u0445\u0430\u0440\u044C\u0446\u0430"
+        aria-label="Онооны бүтцэлын харьца"
       >
         {segments.map((seg) => (
           <div
@@ -216,12 +216,12 @@ export function ShootingProfile({
         <CardHeader className="pb-2">
           <CardTitle className="text-lg">
             {
-              "\u041F\u04AF\u0440\u0448\u0438\u043B\u0442\u0438\u0439\u043D \u043F\u0440\u043E\u0444\u0438\u043B\u044C"
+              "Пүршилтийн профиль"
             }
           </CardTitle>
           <CardDescription>
             {
-              "\u041E\u0440\u043E\u043B\u043E\u043B\u0442, \u0433\u0443\u0440\u0432\u0430\u043B\u0436\u0438\u043D, \u0448\u0438\u0439\u0434\u043B\u0438\u0439\u043D \u043D\u0430\u0440\u0438\u0439\u0432\u0447\u043B\u0430\u043B"
+              "Орололт, гурвалжин, шийдлийн нарийвчлал"
             }
           </CardDescription>
         </CardHeader>
@@ -233,12 +233,12 @@ export function ShootingProfile({
             />
             <p className="mt-3 font-semibold">
               {
-                "\u0428\u0438\u0434\u044D\u043B\u0442\u0438\u0439\u043D \u043C\u044D\u0434\u044D\u044D\u043B \u0445\u0430\u0440\u0430\u0430\u0445\u0430\u043D \u0430\u043B\u0433\u0430"
+                "Шидэлтийн мэдээл хараахан алга"
               }
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               {
-                "\u0411\u0430\u0442\u0430\u043B\u0433\u0430\u0430\u0436\u0441\u0430\u043D \u043E\u0440\u043E\u043B\u0434\u043B\u043E\u0433\u044B\u043D \u0434\u0430\u0440\u0430\u0430 \u0445\u0430\u0440\u044C\u0446\u0430 \u044D\u043D\u0434 \u0433\u0430\u0440\u043D\u0430."
+                "Баталгаажсан оролдлогын дараа харьца энд гарна."
               }
             </p>
           </div>
@@ -252,12 +252,12 @@ export function ShootingProfile({
       <CardHeader className="pb-2">
         <CardTitle className="text-lg">
           {
-            "\u041F\u04AF\u0440\u0448\u0438\u043B\u0442\u0438\u0439\u043D \u043F\u0440\u043E\u0444\u0438\u043B\u044C"
+            "Пүршилтийн профиль"
           }
         </CardTitle>
         <CardDescription>
           {
-            "\u041E\u0440\u043E\u043B\u043E\u043B\u0442, \u0433\u0443\u0440\u0432\u0430\u043B\u0436\u0438\u043D, \u0448\u0438\u0439\u0434\u043B\u0438\u0439\u043D \u043D\u0430\u0440\u0438\u0439\u0432\u0447\u043B\u0430\u043B"
+            "Орололт, гурвалжин, шийдлийн нарийвчлал"
           }
         </CardDescription>
       </CardHeader>

@@ -18,7 +18,7 @@ interface HeroCardProps {
 }
 
 function formatBirthDate(value: string | null, locale: "mn" | "en"): string {
-  if (!value) return "\u2014";
+  if (!value) return "—";
 
   return new Date(`${value}T12:00:00`).toLocaleDateString(
     locale === "mn" ? "mn-MN" : "en-US",
@@ -64,14 +64,14 @@ export async function HeroCard({
   };
 
   const factLabels = {
-    height: isEn ? "Height" : "\u04E2\u043D\u0434\u04E9\u0440",
-    weight: isEn ? "Weight" : "\u0416\u0438\u043D",
+    height: isEn ? "Height" : "Ӣндөр",
+    weight: isEn ? "Weight" : "Жин",
     dob: isEn
       ? "Date of Birth"
-      : "\u0422\u04E9\u0440\u0441\u04E9\u043D \u04E9\u0434\u04E9\u0440",
+      : "Төрсөн өдөр",
     nationality: isEn
       ? "Nationality"
-      : "\u0425\u0430\u0440\u044C\u044F\u0430\u043B\u0430\u043B",
+      : "Харьяалал",
   };
 
   return (
@@ -119,7 +119,7 @@ export async function HeroCard({
                 {isCareer
                   ? isEn
                     ? "Career Summary"
-                    : "\u041A\u0430\u0440\u044C\u0435\u0440\u0438\u0439\u043D \u0442\u043E\u0439\u043C"
+                    : "Карьерийн тойм"
                   : player.season_name}
               </p>
               <h1
@@ -161,12 +161,12 @@ export async function HeroCard({
           <ProfileFact
             icon={Ruler}
             label={factLabels.height}
-            value={player.height_cm ? `${player.height_cm} cm` : "\u2014"}
+            value={player.height_cm ? `${player.height_cm} cm` : "—"}
           />
           <ProfileFact
             icon={Weight}
             label={factLabels.weight}
-            value={player.weight_kg ? `${player.weight_kg} kg` : "\u2014"}
+            value={player.weight_kg ? `${player.weight_kg} kg` : "—"}
           />
           <ProfileFact
             icon={CalendarDays}
@@ -176,7 +176,7 @@ export async function HeroCard({
           <ProfileFact
             icon={MapPin}
             label={factLabels.nationality}
-            value={player.nationality || "\u2014"}
+            value={player.nationality || "—"}
           />
         </div>
       </div>

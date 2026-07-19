@@ -46,7 +46,7 @@ export function StatNumber({
           accent ? "text-[var(--brand-sports)]" : "",
         )}
       >
-        {hasData ? animated.toFixed(precision) : "\u2013"}
+        {hasData ? animated.toFixed(precision) : "–"}
       </span>
       <span
         className={cn(

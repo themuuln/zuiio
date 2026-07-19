@@ -15,16 +15,16 @@ function getStandoutStat(line: PlayerGameLine): string {
   // Rebounds and assists are weighted to surface all-around performances,
   // not only the highest raw counter.
   const candidates = [
-    { value: line.pts, weight: 1, label: "\u043E\u043D\u043E\u043E" },
+    { value: line.pts, weight: 1, label: "оноо" },
     {
       value: line.oreb + line.dreb,
       weight: 1.2,
-      label: "\u0431\u0443\u0443\u043B\u0442",
+      label: "буулт",
     },
     {
       value: line.ast,
       weight: 1.5,
-      label: "\u043E\u043B\u0433\u043E\u043B\u0442",
+      label: "олголт",
     },
   ];
   const best = candidates.reduce((current, candidate) =>
@@ -48,7 +48,7 @@ export function RecentGames({ gameLines, className }: RecentGamesProps) {
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-[var(--brand-sports)]">
             {
-              "\u0422\u043E\u0433\u043B\u043E\u043B\u0442\u044B\u043D \u0445\u044D\u043C\u043D\u044D\u043B"
+              "Тоглолтын хэмнэл"
             }
           </p>
           <h2
@@ -56,14 +56,14 @@ export function RecentGames({ gameLines, className }: RecentGamesProps) {
             className="mt-1 text-xl font-bold tracking-tight"
           >
             {
-              "\u0421\u04AF\u04AF\u043B\u0438\u0439\u043D \u0442\u043E\u0433\u043B\u043E\u0442\u0443\u0443\u0434"
+              "Сүүлийн тоглотууд"
             }
           </h2>
         </div>
         {lastFive.length > 0 && (
           <span className="text-xs text-muted-foreground">
             {
-              "\u0428\u0438\u043D\u044D \u2192 \u0445\u0443\u0443\u0447\u0438\u043D"
+              "Шинэ → хуучин"
             }
           </span>
         )}
@@ -110,7 +110,7 @@ export function RecentGames({ gameLines, className }: RecentGamesProps) {
                     {line.opponent_name}
                   </p>
                   <p className="stat-number text-2xl tracking-tight">
-                    {line.team_score}\u2013{line.opponent_score}
+                    {line.team_score}–{line.opponent_score}
                   </p>
                   <p className="mt-1 line-clamp-2 text-xs leading-snug italic text-muted-foreground">
                     {generatePlayerGameSummary({
@@ -163,12 +163,12 @@ export function RecentGames({ gameLines, className }: RecentGamesProps) {
           />
           <h3 className="mt-3 font-semibold">
             {
-              "\u0422\u043E\u0433\u043B\u043E\u043B\u0442\u044B\u043D \u043C\u044D\u0434\u044D\u044D\u043B \u0445\u0430\u0440\u0430\u0430\u0445\u0430\u043D \u0430\u043B\u0433\u0430"
+              "Тоглолтын мэдээл хараахан алга"
             }
           </h3>
           <p className="mt-1 max-w-sm text-sm text-muted-foreground">
             {
-              "\u0411\u0430\u0442\u0430\u043B\u0433\u0430\u0430\u0436\u0441\u0430\u043D \u0442\u043E\u0433\u043B\u043E\u043B\u0442\u044B\u043D \u0434\u0430\u0440\u0430\u0430 \u0441\u04AF\u04AF\u043B\u0438\u0439\u043D \u0444\u043E\u0440\u043C \u044D\u043D\u0434 \u0445\u0430\u0440\u0433\u0430\u0433\u0434\u0430\u043D\u0430."
+              "Баталгаажсан тоглолтын дараа сүүлийн форм энд харгагдана."
             }
           </p>
         </div>

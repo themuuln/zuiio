@@ -34,15 +34,15 @@ type StatKey = "pts" | "reb" | "ast";
 
 const chartConfig = {
   pts: {
-    label: "\u041E\u043D\u043E\u043E",
+    label: "Оноо",
     color: "var(--color-chart-1)",
   },
   reb: {
-    label: "\u0411\u0443\u0443\u043B\u0442",
+    label: "Буулт",
     color: "var(--color-chart-2)",
   },
   ast: {
-    label: "\u0414\u0430\u043C\u0436\u0443\u0443\u043B\u0430\u043B\u0442",
+    label: "Дамжуулалт",
     color: "var(--color-chart-5)",
   },
 } satisfies ChartConfig;
@@ -74,12 +74,12 @@ export function SeasonArc({ data, className }: SeasonArcProps) {
         />
         <p className="mt-3 font-semibold">
           {
-            "\u0425\u0430\u043D\u0434\u043B\u0430\u0433\u0430 \u0445\u0430\u0440\u0430\u0430\u0445\u0430\u043D \u04AF\u0443\u0441\u044D\u044D\u0433\u04AF\u0439"
+            "Хандлага хараахан үусээгүй"
           }
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
           {
-            "\u0425\u043E\u0451\u0440 \u0431\u0430 \u0442\u04AF\u0443\u043D\u044D\u044D\u0441 \u043E\u043B\u043E\u043D \u0442\u043E\u0433\u043B\u043E\u0442\u044B\u043D \u0434\u0430\u0440\u0430\u0430 \u0433\u0440\u0430\u0444\u0438\u043A \u0433\u0430\u0440\u043D\u0430."
+            "Хоёр ба түунээс олон тоглотын дараа график гарна."
           }
         </p>
       </div>
@@ -100,10 +100,10 @@ export function SeasonArc({ data, className }: SeasonArcProps) {
 
   const statLabel =
     activeStat === "pts"
-      ? "\u041E\u043D\u043E\u043E"
+      ? "Оноо"
       : activeStat === "reb"
-        ? "\u0411\u0443\u0443\u043B\u0442"
-        : "\u0414\u0430\u043C\u0436\u0443\u0443\u043B\u0430\u043B\u0442";
+        ? "Буулт"
+        : "Дамжуулалт";
 
   return (
     <div className={cn("space-y-4", className)}>
@@ -112,12 +112,12 @@ export function SeasonArc({ data, className }: SeasonArcProps) {
         onValueChange={(v) => setActiveStat(v as StatKey)}
       >
         <TabsList variant="line">
-          <TabsTrigger value="pts">{"\u041E\u043D\u043E\u043E"}</TabsTrigger>
+          <TabsTrigger value="pts">{"Оноо"}</TabsTrigger>
           <TabsTrigger value="reb">
-            {"\u0411\u0443\u0443\u043B\u0442"}
+            {"Буулт"}
           </TabsTrigger>
           <TabsTrigger value="ast">
-            {"\u0414\u0430\u043C\u0436\u0443\u0443\u043B\u0430\u043B\u0442"}
+            {"Дамжуулалт"}
           </TabsTrigger>
         </TabsList>
       </Tabs>
@@ -152,7 +152,7 @@ export function SeasonArc({ data, className }: SeasonArcProps) {
                   const opponent = point.opponent as string;
                   return [
                     `${value} ${statLabel}`,
-                    `${result === "W" ? "\u2713" : "\u2717"} ${opponent}`,
+                    `${result === "W" ? "✓" : "✗"} ${opponent}`,
                   ];
                 }}
               />
@@ -191,7 +191,7 @@ export function SeasonArc({ data, className }: SeasonArcProps) {
       {data.length > 8 && (
         <p className="text-center text-xs text-muted-foreground">
           {
-            "\u0414\u043E\u043E\u0434 \u0448\u0443\u0433\u0430\u043C\u044B\u0433 \u0447\u0438\u0440\u0447 \u0445\u0443\u0433\u0430\u0446\u0430\u0430 \u0441\u043E\u043D\u0433\u043E\u043D\u043E \u0443\u0443"
+            "Доод шугамыг чирч хугацаа сонгоно уу"
           }
         </p>
       )}

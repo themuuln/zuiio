@@ -27,7 +27,7 @@ function formatMilestone(m: Milestone, locale: "mn" | "en"): string {
     case "career_high_stl":
     case "career_high_blk":
       return m.game_date
-        ? `${label}: ${m.value} \u00B7 ${formatMilestoneDate(m.game_date, locale)}`
+        ? `${label}: ${m.value} · ${formatMilestoneDate(m.game_date, locale)}`
         : `${label}: ${m.value}`;
     case "double_double":
     case "triple_double":
@@ -94,12 +94,12 @@ export function Milestones({
         <Sparkles className="size-6 text-muted-foreground" aria-hidden="true" />
         <p className="mt-3 font-semibold">
           {locale === "mn"
-            ? "\u0410\u043C\u0436\u0438\u043B\u0442\u044B\u043D \u0442\u04AF\u04AF\u0445 \u044D\u0445\u044D\u043B\u0436 \u0431\u0430\u0439\u043D\u0430"
+            ? "Амжилтын түүх эхэлж байна"
             : "Milestones are on the way"}
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
           {locale === "mn"
-            ? "\u0411\u0430\u0442\u0430\u043B\u0433\u0430\u0430\u0436\u0441\u0430\u043D \u0442\u043E\u0433\u043B\u043E\u043B\u0442\u0443\u0443\u0434 \u043D\u044D\u043C\u044D\u0433\u0434\u044D\u0445\u044D\u0434 \u043E\u043D\u0446\u043B\u043E\u0445 \u0430\u043C\u0436\u0438\u043B\u0442\u0443\u0443\u0434 \u0433\u0430\u0440\u043D\u0430."
+            ? "Баталгаажсан тоглолтууд нэмэгдэхэд онцлох амжилтууд гарна."
             : "Highlights appear as verified games are added."}
         </p>
       </div>
@@ -112,7 +112,7 @@ export function Milestones({
     <section
       aria-label={
         locale === "mn"
-          ? "\u0410\u043C\u0436\u0438\u043B\u0442\u0443\u0443\u0434"
+          ? "Амжилтууд"
           : "Milestones"
       }
       className={cn("space-y-4", className)}
@@ -128,7 +128,7 @@ export function Milestones({
         </span>
         <span>
           {locale === "mn"
-            ? `\u0430\u043C\u0436\u0438\u043B\u0442`
+            ? `амжилт`
             : `milestone${totalMilestones === 1 ? "" : "s"}`}
         </span>
       </div>
@@ -166,10 +166,10 @@ export function Milestones({
                 >
                   {milestone.type.startsWith("career_high")
                     ? locale === "mn"
-                      ? "\u041A\u0430\u0440\u044C\u0435\u0440\u0438\u0439\u043D \u0434\u044D\u044D\u0434"
+                      ? "Карьерийн дээд"
                       : "Career high"
                     : locale === "mn"
-                      ? "\u0410\u043C\u0436\u0438\u043B\u0442"
+                      ? "Амжилт"
                       : "Milestone"}
                 </Badge>
                 <p className="text-sm font-semibold leading-snug">
