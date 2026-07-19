@@ -133,7 +133,7 @@ export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
                           </span>
                         </CardAction>
                       </CardHeader>
-                      <CardContent className="flex items-end gap-4">
+                      <CardContent className="flex flex-col items-center gap-3 sm:flex-row sm:items-end sm:gap-4">
                         <PlayerAvatar
                           photoUrl={leader.player_photo_url}
                           name={leader.player_name}
@@ -141,7 +141,7 @@ export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
                           size="xl"
                         />
                         <div className="min-w-0 flex-1 pb-1">
-                          <CardTitle className="truncate text-xl">
+                          <CardTitle className="truncate text-lg sm:text-xl">
                             {leader.player_name}
                           </CardTitle>
                           <CardDescription
@@ -190,7 +190,7 @@ export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
                             </span>
                             <Link
                               href={`/players/${leader.player_id}`}
-                              className="col-span-7 flex min-w-0 items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              className="col-span-9 sm:col-span-7 flex min-w-0 items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
                               <PlayerAvatar
                                 photoUrl={leader.player_photo_url}
@@ -206,14 +206,14 @@ export function LeaderTabs({ leaders, className }: LeaderTabsProps) {
                                 </span>
                               </span>
                             </Link>
-                            <span className="col-span-2 text-right text-xl font-black tabular-nums">
+                            <span className="col-span-2 sm:col-span-2 text-right text-base sm:text-xl font-black tabular-nums">
                               {category.getValue(leader).toFixed(1)}
                             </span>
                             <Button
                               asChild
                               variant="ghost"
                               size="icon-sm"
-                              className="col-span-2 justify-self-end"
+                              className="col-span-2 justify-self-end hidden sm:block"
                             >
                               <Link
                                 href={`/players/compare?players=${leader.player_id}`}

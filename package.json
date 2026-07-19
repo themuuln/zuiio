@@ -21,6 +21,11 @@
     "lint": "turbo run lint",
     "check": "turbo run typecheck lint --continue",
     "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage",
+    "verify": "turbo run typecheck lint test:coverage --continue",
+    "audit": "turbo run verify && turbo run test:e2e",
+    "coverage:check": "turbo run test:coverage",
+    "coverage:ratchet": "turbo run test:coverage -- --reporter=json --coverage.thresholds.autoUpdate=true",
     "format": "biome format --write",
     "prepare": "husky",
     "sso:plan": "tsx scripts/sso/cli.ts plan",
@@ -33,6 +38,7 @@
     "clean:turbopack": "find . -type d -name turbopack -path '*/.next/*' -exec rm -rf {} + 2>/dev/null; echo 'Turbopack caches cleaned'"
   },
   "devDependencies": {
+    "@lhci/cli": "catalog:",
     "@biomejs/biome": "catalog:",
     "@types/node": "^26.1.1",
     "@types/react": "catalog:",

@@ -13,6 +13,7 @@ import type {
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { TrackerCourt } from "./components/tracker-court";
 
 // Types
 interface GameState {
@@ -92,6 +93,11 @@ export default function TrackerPage() {
   const [pendingAssist, setPendingAssist] = useState<{
     eventId: string;
     assistedBy: string;
+  } | null>(null);
+  // Shot location capture
+  const [pendingShotLocation, setPendingShotLocation] = useState<{
+    eventType: string;
+    made: boolean;
   } | null>(null);
 
   // Queue
@@ -344,13 +350,23 @@ export default function TrackerPage() {
     async (eventType: string) => {
       if (!selectedPlayer || !selectedTeam) return;
 
+      // Shot events that benefit from location capture
+      const isShot = eventType.startsWith("shot_");
+
+      if (isShot) {
+        // Show court picker — event is recorded after location is tapped
+        const made = eventType.includes("made");
+        setPendingShotLocation({ eventType, made });
+        return;
+      }
+
       const newEvent = await createEvent(
         eventType,
         selectedTeam,
         selectedPlayer,
       );
 
-      // Check if this is a made shot that needs assist follow-up
+      // Check if this is a made free throw that needs assist follow-up
       if (newEvent && eventType.includes("made") && !eventType.includes("ft")) {
         setPendingAssist({
           eventId: newEvent.id,
@@ -362,6 +378,39 @@ export default function TrackerPage() {
     },
     [selectedPlayer, selectedTeam, createEvent],
   );
+
+  // Record shot with location from court tap
+  const handleShotLocationConfirm = useCallback(
+    async (x: number, y: number) => {
+      if (!pendingShotLocation || !selectedPlayer || !selectedTeam) return;
+
+      const { eventType } = pendingShotLocation;
+      const made = eventType.includes("made");
+
+      const newEvent = await createEvent(eventType, selectedTeam, selectedPlayer, {
+        x,
+        y,
+        made,
+      });
+
+      setPendingShotLocation(null);
+      setSelectedPlayer(null);
+
+      // Shot assist follow-up
+      if (newEvent && made) {
+        setPendingAssist({
+          eventId: newEvent.id,
+          assistedBy: "",
+        });
+      }
+    },
+    [pendingShotLocation, selectedPlayer, selectedTeam, createEvent],
+  );
+
+  // Cancel shot location placement
+  const handleShotLocationCancel = useCallback(() => {
+    setPendingShotLocation(null);
+  }, []);
 
   // Handle assist
   const handleAssist = useCallback(
@@ -695,7 +744,19 @@ export default function TrackerPage() {
 
         {/* Action Grid */}
         <div className="flex w-1/3 flex-col">
-          {pendingAssist ? (
+          {pendingShotLocation ? (
+            <div className="flex-1 p-4">
+              <TrackerCourt
+                onShotLocation={handleShotLocationConfirm}
+                onCancel={handleShotLocationCancel}
+                label={
+                  pendingShotLocation.made
+                    ? "Шидэлтийн байршилыг сонгоно уу (Оновчтой)"
+                    : "Шидэлтийн байршилыг сонгоно уу (Алдсан)"
+                }
+              />
+            </div>
+          ) : pendingAssist ? (
             <div className="flex-1 p-4">
               <h3 className="mb-4 text-lg font-bold">Олгосон хүн?</h3>
               <div className="grid grid-cols-2 gap-2">

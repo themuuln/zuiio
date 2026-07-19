@@ -326,8 +326,8 @@ function ComparisonPlayerCard({
       </CardHeader>
       <CardContent
         className={cn(
-          "flex items-end gap-4",
-          align === "right" && "flex-row-reverse text-right",
+          "flex flex-col items-center gap-3 text-center sm:flex-row sm:items-end sm:gap-4",
+          align === "right" && "sm:flex-row-reverse sm:text-right",
         )}
       >
         <PlayerAvatar
@@ -339,7 +339,7 @@ function ComparisonPlayerCard({
         <div className="min-w-0 flex-1 pb-1">
           <Link
             href={`/players/${player.id}`}
-            className="font-display text-3xl leading-tight tracking-tight hover:text-warning focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            className="font-display text-2xl sm:text-3xl leading-tight tracking-tight hover:text-warning focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
           >
             {player.name}
           </Link>

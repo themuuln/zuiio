@@ -64,8 +64,7 @@ function GaugeRing({
   return (
     <div className="flex flex-col items-center gap-2">
       <div
-        className="relative"
-        style={{ width: GAUGE_SIZE, height: GAUGE_SIZE }}
+        className="relative w-full max-w-24 aspect-square"
       >
         <RadialBarChart
           width={GAUGE_SIZE}
@@ -263,7 +262,7 @@ export function ShootingProfile({
       </CardHeader>
       <CardContent className="space-y-5">
         {/* Three gauge rings side by side */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="grid grid-cols-3 gap-1 sm:gap-4">
           <GaugeRing
             percentage={fgPct}
             label="FG%"

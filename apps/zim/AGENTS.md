@@ -50,3 +50,26 @@ Before using ANY npm package from `package.json`, verify current API against the
 | `next` | `node_modules/next/dist/docs/` (bundled) |
 
 **This is not optional.** Package APIs change across versions. Training data is stale by definition.
+
+## Permission Boundaries
+
+### ✅ Always
+- Run all pricing through `src/lib/pricing/quote.ts` (server-only)
+- Use next-intl for all user-facing strings (mn + en)
+- Use shadcn/ui components (install via `npx shadcn@latest add`)
+- Lint with Biome and test with vitest before committing
+
+### ⚠️ Ask First
+- Adding new payment methods or provider integrations
+- Modifying order or eSIM state machine transitions
+- Changing RLS policies or Supabase schema
+- Adding new API routes or modifying existing ones
+
+### 🚫 Never
+- Expose `packages.cost_usd` to anonymous clients
+- Compute prices client-side
+- Bypass RLS or access orders without verification (order_code + phone or HMAC token)
+- Commit secrets, API keys, or `.env` files
+- Recompute historical margins from live pricing rules
+
+**Package APIs change across versions. Always use current docs, never training data.**

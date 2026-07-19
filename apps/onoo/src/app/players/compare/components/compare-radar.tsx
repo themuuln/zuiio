@@ -13,7 +13,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { cn } from "@/lib/utils";
+import { cn, decodeEscapedUnicode } from "@/lib/utils";
 
 interface CompareRadarProps {
   readonly leftName: string;
@@ -102,11 +102,11 @@ export function CompareRadar({
               <ChartTooltipContent
                 formatter={(value, name, item) => {
                   const point = item.payload as Record<string, unknown>;
-                  const isP1 = name === leftName;
+                  const isP1 = decodeEscapedUnicode(String(name)) === leftName;
                   const actual = isP1
                     ? (point.player1Actual as number)
                     : (point.player2Actual as number);
-                  return [`${actual.toFixed(1)} (${value}%)`, String(name)];
+                  return [`${actual.toFixed(1)} (${value}%)`, decodeEscapedUnicode(String(name))];
                 }}
               />
             }

@@ -52,12 +52,12 @@ export function ClutchStats({
       </CardHeader>
       <CardContent>
         {available ? (
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-3 gap-3 sm:gap-6">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 {isEn ? "Close-Game PPG" : "Ойр тоглолтын оноо"}
               </span>
-              <span className="text-xl font-bold tabular-nums">
+              <span className="text-base sm:text-xl font-bold tabular-nums">
                 {closeGamePpg?.toFixed(1) ?? "—"}
               </span>
             </div>
@@ -65,7 +65,7 @@ export function ClutchStats({
               <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 {isEn ? "Record" : "Бүртгэл"}
               </span>
-              <span className="text-xl font-bold tabular-nums">
+              <span className="text-base sm:text-xl font-bold tabular-nums">
                 {closeGameRecord ?? "—"}
               </span>
             </div>
@@ -73,7 +73,7 @@ export function ClutchStats({
               <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 {isEn ? "Win %" : "Ялалтын %"}
               </span>
-              <span className="text-xl font-bold tabular-nums">
+              <span className="text-base sm:text-xl font-bold tabular-nums">
                 {clutchWinPct != null ? `${(clutchWinPct * 100).toFixed(0)}%` : "—"}
               </span>
             </div>

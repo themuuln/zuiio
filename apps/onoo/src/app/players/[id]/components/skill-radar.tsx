@@ -15,7 +15,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { cn } from "@/lib/utils";
+import { cn, decodeEscapedUnicode } from "@/lib/utils";
 
 /**
  * Normalization: each axis value = (player_value / league_max) × 100.
@@ -184,7 +184,7 @@ export function SkillRadar({
                   const actual = isPlayer
                     ? (point.playerActual as number)
                     : (point.leagueActual as number);
-                  return [`${actual.toFixed(1)} (${value}%)`, String(name)];
+                  return [`${actual.toFixed(1)} (${value}%)`, decodeEscapedUnicode(String(name))];
                 }}
               />
             }

@@ -50,6 +50,24 @@
       },
       "complexity": {
         "noForEach": "error"
+      },
+      "a11y": {
+        "useAltText": "warn",
+        "useValidAnchor": "warn",
+        "useButtonType": "warn",
+        "useHtmlLang": "warn",
+        "useKeyWithClickEvents": "warn",
+        "useValidAriaProps": "warn",
+        "useValidAriaValues": "warn",
+        "noAriaHiddenOnFocusable": "warn",
+        "noNoninteractiveTabindex": "warn",
+        "noPositiveTabindex": "warn",
+        "noRedundantAlt": "warn",
+        "noSvgWithoutTitle": "warn",
+        "useAriaPropsForRole": "warn",
+        "useHeadingContent": "warn",
+        "useIframeTitle": "warn",
+        "useMediaCaption": "warn"
       }
     }
   },

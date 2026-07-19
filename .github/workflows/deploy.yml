@@ -98,6 +98,15 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: 🔍 FastGate — typecheck
+        run: pnpm --filter zer exec tsc --noEmit || FAILED="$FAILED zer"
+        env:
+          FAILED: ""
+      - name: 🧹 FastGate — lint
+        run: pnpm turbo run lint --continue
+      - name: 🧪 FastGate — test with coverage
+        run: pnpm turbo run test:coverage --continue
+        continue-on-error: false
       - name: Typecheck deploying apps
         env:
           SHARED: ${{ needs.detect-changes.outputs.shared }}

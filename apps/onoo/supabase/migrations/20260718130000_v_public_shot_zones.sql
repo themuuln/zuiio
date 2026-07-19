@@ -67,9 +67,9 @@ from (
   join public.game_revisions gr on gr.game_id = g.id
     and gr.revision_number = g.current_revision_number
     and gr.state = 'approved'
-  where se.voided_at is null
+  where se.deleted_at is null
+    and se.superseded_by is null
     -- Only events that actually carry shot coordinates.
-    and se.payload ? 'x' and se.payload ? 'y'
     and (se.payload->>'x') ~ '^-?\d+(\.\d+)?$'
     and (se.payload->>'y') ~ '^-?\d+(\.\d+)?$'
   group by p.id, se.team_season_id, ts.competition_id,

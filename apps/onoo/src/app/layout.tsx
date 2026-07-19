@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import "./globals.css";
 import { OfflineIndicator } from "@/components/offline-indicator";
 import { Providers } from "@/lib/providers";
+import { SentryInit } from "@/components/sentry-init";
 import { SiteFooter } from "./components/site-footer";
 import { SiteNav } from "./components/site-nav";
 
@@ -50,6 +51,7 @@ export default function RootLayout({
       >
         <Suspense>
           <Providers>
+            <SentryInit />
             <SiteNav />
             <div
               id="content"

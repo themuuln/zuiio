@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { InteractiveDemo } from "./components/interactive-demo";
+import { TestGlitchTip } from "./components/test-glitchtip";
 
 export const metadata: Metadata = {
   title: "Интерактив UI — Демо",
@@ -27,6 +28,7 @@ export default function InteractiveDemoPage() {
       </header>
 
       <InteractiveDemo />
+      <TestGlitchTip />
     </main>
   );
 }

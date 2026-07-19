@@ -49,12 +49,32 @@ Onoo is an athlete-first Mongolian basketball statistics product. Public pages s
 - `TeamLogo` — `src/components/team-logo.tsx`; resilient team crest and short-code fallback
 - `SiteNav` — `src/app/components/site-nav.tsx`; responsive public navigation shell
 
+
 ## Responsive Contract
 
-- 360px: one-column flow, compact identity treatment, three core averages visible without horizontal page scroll, scrollable recent-game strip
-- `md`: identity and supporting context separate into clearer columns; analysis cards remain stacked where chart legibility requires it
-- `lg`: asymmetric showcase grid with the season story as the dominant visualization and supporting analysis alongside it
-- Full data tables must remain reachable but may scroll within their own container
+- **360px** (mobile-first):
+  - One-column flow throughout all pages
+  - Navigation links horizontally scrollable with shadow hint at edges
+  - Standings table → card-based layout (rank, team, W-L, form dots) with expandable detail
+  - Player profile action bar stacks vertically (selector + language toggle on one row, compare link below)
+  - Leader podium cards stack avatar above text
+  - Box score tables hide STL/BLK/TOV columns (8 visible columns fit without scroll)
+  - Stat grids adapt: 2-column minimum for data cards
+  - Formula headers and badge rows use `flex-wrap` to prevent overflow
+  - All content fits without horizontal page scroll
+- **`sm`** (640px):
+  - Navigation controls align horizontally
+  - Leader podium cards switch to side-by-side avatar + text layout
+  - Stat values increase to desktop size
+- **`md`** (768px):
+  - Standings table renders full 11-column layout (scrollable within container)
+  - Box score tables show all 11 columns
+  - Identity and supporting context separate into clearer columns
+  - Analysis cards remain stacked where chart legibility requires it
+- **`lg`** (1024px):
+  - Asymmetric showcase grid with season story as dominant visualization
+  - Two-column editorial layouts engage (homepage leaders + standings)
+  - Team pages use 12-column grid
 
 ## Accessibility
 

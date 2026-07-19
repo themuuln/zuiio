@@ -24,8 +24,14 @@
 }
 
 @theme inline {
-  /* Display font for headlines and player names */
-  --font-display: var(--font-instrument-serif), serif;
+  /* Display font — condensed, bold, athletic energy */
+  --font-display: var(--font-oswald), "Oswald", sans-serif;
+
+  /* Body font — clean, modern, excellent Cyrillic */
+  --font-body: var(--font-inter), "Inter", sans-serif;
+
+  /* Stats/mono font — tabular numerals, data display */
+  --font-stat: var(--font-jetbrains), "JetBrains Mono", monospace;
 
   /* Override accent to amber for sports identity */
   --color-accent: oklch(0.95 0.04 80);
@@ -126,11 +132,47 @@
   pointer-events: none;
 }
 .stat-number {
-  font-family: var(--font-mono);
+  font-family: var(--font-stat), "JetBrains Mono", monospace;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
   color: var(--ink);
+}
+
+/* ─── Typography scale — consistent heading hierarchy ─── */
+.type-display {
+  font-family: var(--font-display), "Oswald", sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.type-heading {
+  font-family: var(--font-display), "Oswald", sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.type-body {
+  font-family: var(--font-body), "Inter", sans-serif;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.type-label {
+  font-family: var(--font-body), "Inter", sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.type-score {
+  font-family: var(--font-stat), "JetBrains Mono", monospace;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
 }
 /* ─── Chart palette — Recharts-compatible color set ─── */
 :root {
@@ -209,4 +251,21 @@
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+/* ─── Mobile nav scroll shadow — hints at horizontal overflow ─── */
+.nav-scroll-shadow {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 2%,
+    black 98%,
+    transparent
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 2%,
+    black 98%,
+    transparent
+  );
 }

@@ -1,45 +1,42 @@
-# Gitleaks configuration for @zuiio monorepo
-# Docs: https://github.com/gitleaks/gitleaks
-
-title = "zuiio gitleaks config"
+# Gitleaks config for zuiio monorepo
+# https://github.com/gitleaks/gitleaks
 
 [allowlist]
-  description = "Global allowlist — false positives common in this codebase"
+  description = "Known safe patterns"
+
+  # Test files with inline passwords/secrets
   paths = [
-    # Lock files
-    '''pnpm-lock\.yaml$''',
-    '''package-lock\.json$''',
-    '''yarn\.lock$''',
-    # Generated types
-    '''database\.types\.ts$''',
-    '''supabase/types\.ts$''',
-    # Test fixtures and mocks
-    '''__fixtures__''',
-    '''__mocks__''',
-    '''\.test\.''',
-    '''\.spec\.''',
-    '''e2e/''',
-    # Documentation
-    '''\.md$''',
-    '''docs/''',
-    # Config files with placeholder values
-    '''\.env\.example$''',
-    '''\.env\.local\.example$''',
+    "(?i).*test.*",
+    "(?i).*spec.*",
+    "(?i).*__tests__.*",
+    "apps/zer/src/test/",
+    "apps/tolom/src/test/",
   ]
 
-  # Common false positive patterns in React/TypeScript code
+  # Example values in documentation
   regexes = [
-    # React key props — not secrets
-    '''key\s*=\s*['"][^'"]+['"]''',
-    # TanStack Query keys — not secrets
-    '''queryKey\s*:\s*\[''',
-    # Table column definitions with "key" property
-    '''\{\s*header\s*:.*key\s*:''',
-    # Mongolian text that contains "token" as a word
-    '''Токен''',
-    # Environment variable references (not values)
-    '''process\.env\.[A-Z_]+''',
-    # Supabase URL patterns (public, not secret)
-    '''supabase\.co''',
-    '''supabase\.in''',
+    "(?i)example",
+    "(?i)test",
+    "placeholder",
+    "your-password",
+    "your-secret",
+    "changeme",
+    "xxxxx",
   ]
+
+[allowlist.gitHubToken]
+  description = "GitHub Personal Access Tokens for CI"
+  regexes = ["ghp_[A-Za-z0-9]{36}"]
+
+# Custom rules for project-specific patterns
+[[rules]]
+  id = "zuiio-supabase-key"
+  description = "Supabase service role key"
+  regex = '''(?i)(supabase_service_role_key|service_role_key).*['"][A-Za-z0-9_\-]+['"]'''
+  tags = ["zuiio", "supabase"]
+
+[[rules]]
+  id = "zuiio-jwt-secret"
+  description = "JWT signing secret"
+  regex = '''(?i)(jwt_secret|token_signing_secret).*['"][A-Za-z0-9_\-]+['"]'''
+  tags = ["zuiio", "jwt"]

@@ -137,7 +137,7 @@ export function HomeAwaySplits({
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Win% badges */}
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2">
             <Home className="size-3.5 text-[var(--color-chart-2)]" aria-hidden="true" />
             <span className="text-xs text-muted-foreground">

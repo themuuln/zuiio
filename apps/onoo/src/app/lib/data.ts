@@ -11,6 +11,7 @@
  */
 
 import { createClient } from "@/lib/supabase/server";
+import { captureError } from "@/lib/errors";
 // Import shared types for internal use + re-export for backward compatibility
 import type {
   BoxScoreRow,
@@ -88,9 +89,8 @@ export async function getGamesByDate(
     .gte("scheduled_at", `${dateStr}T00:00:00`)
     .lt("scheduled_at", `${dateStr}T23:59:59`)
     .order("scheduled_at");
-
   if (error || !data) {
-    console.error("getGamesByDate error:", error?.message);
+    captureError("getGamesByDate", error);
     return [];
   }
   return data.map((row: Record<string, unknown>) => mapGameRow(row));
@@ -143,9 +143,8 @@ export async function getStandings(): Promise<StandingRow[]> {
     .from("v_public_standings")
     .select("*")
     .order("win_pct", { ascending: false });
-
   if (error || !data) {
-    console.error("getStandings error:", error?.message);
+    captureError("getStandings", error);
     return [];
   }
   return data.map((row: Record<string, unknown>) => mapStandingRow(row));
@@ -167,7 +166,7 @@ export async function getLeaders(
   const { data, error } = await query;
 
   if (error || !data) {
-    console.error("getLeaders error:", error?.message);
+    captureError("getLeaders", error);
     return [];
   }
   return data.map((row: Record<string, unknown>) => mapLeaderRow(row));

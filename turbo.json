@@ -7,9 +7,18 @@
   ],
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$"],
-      "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**", "dist/**"],
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        "!.next/dev/**",
+        "dist/**"
+      ],
       "env": [
         "NEXT_PUBLIC_SENTRY_DSN",
         "SENTRY_AUTH_TOKEN",
@@ -38,14 +47,61 @@
       "persistent": true
     },
     "typecheck": {
-      "inputs": ["src/**", "app/**", "pages/**", "tsconfig.json", "package.json"]
+      "inputs": [
+        "src/**",
+        "app/**",
+        "pages/**",
+        "tsconfig.json",
+        "package.json"
+      ]
     },
     "lint": {
-      "inputs": ["src/**", "app/**", "pages/**", "package.json", "biome.json"]
+      "inputs": [
+        "src/**",
+        "app/**",
+        "pages/**",
+        "package.json",
+        "biome.json"
+      ]
     },
     "test": {
-      "dependsOn": ["^build"],
-      "inputs": ["src/**", "tests/**", "package.json", "vitest.config.*"]
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "src/**",
+        "tests/**",
+        "package.json",
+        "vitest.config.*"
+      ]
+    },
+    "test:coverage": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "src/**",
+        "tests/**",
+        "package.json",
+        "vitest.config.*"
+      ],
+      "outputs": [
+        "coverage/**"
+      ]
+    },
+    "test:e2e": {
+      "cache": false
+    },
+    "test:integration": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "src/__integration__/**",
+        "vitest.integration.config.ts",
+        "vitest.integration.setup.ts"
+      ],
+      "outputs": []
     }
   }
 }

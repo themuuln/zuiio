@@ -734,6 +734,35 @@ insert into public.games (id, competition_id, ruleset_id, home_team_season_id, a
  '2025-12-21T16:00:00+08:00', 'scheduled', 0, null, null, null)
 on conflict (id) do nothing;
 
+-- Additional The League games (round 2+ for richer player stats)
+insert into public.games (id, competition_id, ruleset_id, home_team_season_id, away_team_season_id, venue_id, scheduled_at, status, current_period, home_score, away_score, published_at, current_revision_number) values
+('70000000-0000-0000-0000-000000000060', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000005', '30000000-0000-0000-0000-000000000002', 'f0000000-0000-0000-0000-000000000001',
+ '2025-11-08T18:00:00+08:00', 'official', 4, 79, 82, '2025-11-08T20:30:00+08:00', 1),
+('70000000-0000-0000-0000-000000000061', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000003', '30000000-0000-0000-0000-000000000001', 'f0000000-0000-0000-0000-000000000004',
+ '2025-11-12T19:00:00+08:00', 'official', 4, 88, 91, '2025-11-12T21:30:00+08:00', 1),
+('70000000-0000-0000-0000-000000000062', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000006', 'f0000000-0000-0000-0000-000000000001',
+ '2025-11-15T16:00:00+08:00', 'official', 4, 72, 68, '2025-11-15T18:30:00+08:00', 1),
+('70000000-0000-0000-0000-000000000063', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000004', '30000000-0000-0000-0000-000000000009', 'f0000000-0000-0000-0000-000000000007',
+ '2025-11-19T18:00:00+08:00', 'official', 4, 85, 80, '2025-11-19T20:30:00+08:00', 1),
+('70000000-0000-0000-0000-000000000064', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000008', '30000000-0000-0000-0000-000000000007', 'f0000000-0000-0000-0000-000000000008',
+ '2025-11-22T15:00:00+08:00', 'official', 4, 76, 71, '2025-11-22T17:30:00+08:00', 1),
+('70000000-0000-0000-0000-000000000065', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000006', 'f0000000-0000-0000-0000-000000000001',
+ '2025-11-26T19:00:00+08:00', 'official', 4, 90, 85, '2025-11-26T21:30:00+08:00', 1),
+('70000000-0000-0000-0000-000000000066', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000002', '30000000-0000-0000-0000-000000000010', 'f0000000-0000-0000-0000-000000000004',
+ '2025-11-29T16:00:00+08:00', 'official', 4, 78, 83, '2025-11-29T18:30:00+08:00', 1),
+('70000000-0000-0000-0000-000000000067', 'e0000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000001',
+ '30000000-0000-0000-0000-000000000009', '30000000-0000-0000-0000-000000000005', 'f0000000-0000-0000-0000-000000000011',
+ '2025-12-03T18:00:00+08:00', 'official', 4, 74, 77, '2025-12-03T20:30:00+08:00', 1)
+on conflict (id) do nothing;
+
+
 -- ============================================================================
 -- GAMES — Space League 2025-26 Regular Season
 -- ============================================================================
@@ -797,6 +826,146 @@ insert into public.game_rosters (game_id, team_season_id, player_id, is_starter)
 ('70000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000104', true),
 ('70000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000110', false)
 on conflict (game_id, player_id) do nothing;
+-- ============================================================================
+-- ROSTERS & BOX SCORES for earlier official games (001–005)
+-- ============================================================================
+
+-- Generate game_revisions for games 001–005 so box scores can link to them
+DO $$ DECLARE
+  gid uuid;
+  admin_id uuid := '397692e0-915f-4361-9f75-f84d0883ba80';
+  rev_id uuid;
+  src_id uuid;
+BEGIN
+  FOR gid IN
+    SELECT id FROM public.games
+    WHERE id IN (
+      '70000000-0000-0000-0000-000000000001',
+      '70000000-0000-0000-0000-000000000002',
+      '70000000-0000-0000-0000-000000000003',
+      '70000000-0000-0000-0000-000000000004',
+      '70000000-0000-0000-0000-000000000005'
+    )
+  LOOP
+    src_id := gen_random_uuid();
+    rev_id := gen_random_uuid();
+    INSERT INTO public.source_submissions (id, game_id, source_type, submitted_by, submitted_at, normalized_payload, status, reviewed_by, reviewed_at)
+    VALUES (src_id, gid, 'tracker_journal', admin_id, NOW(), '{"periods":4}'::jsonb, 'approved', admin_id, NOW())
+    ON CONFLICT DO NOTHING;
+    INSERT INTO public.game_revisions (id, game_id, revision_number, source_submission_id, state, journal, projection, validation_warnings, created_by, created_at, approved_by, approved_at)
+    VALUES (rev_id, gid, 1, src_id, 'approved', '[]'::jsonb, '{}'::jsonb, '[]'::jsonb, admin_id, NOW(), admin_id, NOW())
+    ON CONFLICT DO NOTHING;
+    UPDATE public.games SET current_revision_number = 1 WHERE id = gid;
+  END LOOP;
+END $$;
+
+-- Generate rosters from roster_entries for games that don't have them yet
+-- Game 002: Bears vs Eagles
+INSERT INTO public.game_rosters (game_id, team_season_id, player_id, is_starter)
+SELECT '70000000-0000-0000-0000-000000000002', re.team_season_id, re.player_id, re.jersey_number <= 5
+FROM public.roster_entries re WHERE re.team_season_id IN ('30000000-0000-0000-0000-000000000002','30000000-0000-0000-0000-000000000003') AND re.left_at IS NULL
+ON CONFLICT (game_id, player_id) DO NOTHING;
+-- Game 003: Falcons vs Dragons
+INSERT INTO public.game_rosters (game_id, team_season_id, player_id, is_starter)
+SELECT '70000000-0000-0000-0000-000000000003', re.team_season_id, re.player_id, re.jersey_number <= 5
+FROM public.roster_entries re WHERE re.team_season_id IN ('30000000-0000-0000-0000-000000000010','30000000-0000-0000-0000-000000000004') AND re.left_at IS NULL
+ON CONFLICT (game_id, player_id) DO NOTHING;
+-- Game 004: Wolves vs Lions
+INSERT INTO public.game_rosters (game_id, team_season_id, player_id, is_starter)
+SELECT '70000000-0000-0000-0000-000000000004', re.team_season_id, re.player_id, re.jersey_number <= 5
+FROM public.roster_entries re WHERE re.team_season_id IN ('30000000-0000-0000-0000-000000000007','30000000-0000-0000-0000-000000000008') AND re.left_at IS NULL
+ON CONFLICT (game_id, player_id) DO NOTHING;
+-- Game 005: Riders vs Bulls
+INSERT INTO public.game_rosters (game_id, team_season_id, player_id, is_starter)
+SELECT '70000000-0000-0000-0000-000000000005', re.team_season_id, re.player_id, re.jersey_number <= 5
+FROM public.roster_entries re WHERE re.team_season_id IN ('30000000-0000-0000-0000-000000000006','30000000-0000-0000-0000-000000000009') AND re.left_at IS NULL
+ON CONFLICT (game_id, player_id) DO NOTHING;
+
+-- Box scores for games 001–005 (realistic basketball stats)
+INSERT INTO public.game_player_stats (game_id, player_id, team_season_id, revision_id, seconds_played, pts, fgm, fga, tpm, tpa, ftm, fta, oreb, dreb, ast, stl, blk, tov, pf)
+SELECT gr.game_id, gr.player_id, gr.team_season_id, gr2.id,
+(1600 + random() * 1400)::int,
+(random() * 22 + 4)::int,
+(random() * 8 + 1)::int,
+(random() * 14 + 2)::int,
+(random() * 3)::int,
+(random() * 6)::int,
+(random() * 4)::int,
+(random() * 6)::int,
+(random() * 3)::int,
+(random() * 6 + 1)::int,
+(random() * 5)::int,
+(random() * 2)::int,
+(random() * 2)::int,
+(random() * 3)::int,
+(random() * 3 + 1)::int
+FROM public.game_rosters gr
+JOIN public.game_revisions gr2 ON gr2.game_id = gr.game_id AND gr2.revision_number = 1
+WHERE gr.game_id IN (
+  '70000000-0000-0000-0000-000000000001',
+  '70000000-0000-0000-0000-000000000002',
+  '70000000-0000-0000-0000-000000000003',
+  '70000000-0000-0000-0000-000000000004',
+  '70000000-0000-0000-0000-000000000005'
+)
+ON CONFLICT DO NOTHING;
+
+-- Also add rosters + box scores for Space League official games
+INSERT INTO public.game_rosters (game_id, team_season_id, player_id, is_starter)
+SELECT '70000000-0000-0000-0000-000000000030', re.team_season_id, re.player_id, re.jersey_number <= 5
+FROM public.roster_entries re WHERE re.team_season_id IN ('30000000-0000-0000-0000-000000000020','30000000-0000-0000-0000-000000000021') AND re.left_at IS NULL
+ON CONFLICT (game_id, player_id) DO NOTHING;
+INSERT INTO public.game_rosters (game_id, team_season_id, player_id, is_starter)
+SELECT '70000000-0000-0000-0000-000000000031', re.team_season_id, re.player_id, re.jersey_number <= 5
+FROM public.roster_entries re WHERE re.team_season_id IN ('30000000-0000-0000-0000-000000000024','30000000-0000-0000-0000-000000000025') AND re.left_at IS NULL
+ON CONFLICT (game_id, player_id) DO NOTHING;
+
+-- Game revisions for Space League games
+DO $$ DECLARE
+  gid uuid;
+  admin_id uuid := '397692e0-915f-4361-9f75-f84d0883ba80';
+  rev_id uuid;
+  src_id uuid;
+BEGIN
+  FOR gid IN
+    SELECT id FROM public.games
+    WHERE id IN ('70000000-0000-0000-0000-000000000030','70000000-0000-0000-0000-000000000031')
+  LOOP
+    src_id := gen_random_uuid();
+    rev_id := gen_random_uuid();
+    INSERT INTO public.source_submissions (id, game_id, source_type, submitted_by, submitted_at, normalized_payload, status, reviewed_by, reviewed_at)
+    VALUES (src_id, gid, 'tracker_journal', admin_id, NOW(), '{"periods":4}'::jsonb, 'approved', admin_id, NOW())
+    ON CONFLICT DO NOTHING;
+    INSERT INTO public.game_revisions (id, game_id, revision_number, source_submission_id, state, journal, projection, validation_warnings, created_by, created_at, approved_by, approved_at)
+    VALUES (rev_id, gid, 1, src_id, 'approved', '[]'::jsonb, '{}'::jsonb, '[]'::jsonb, admin_id, NOW(), admin_id, NOW())
+    ON CONFLICT DO NOTHING;
+    UPDATE public.games SET current_revision_number = 1 WHERE id = gid;
+  END LOOP;
+END $$;
+
+-- Box scores for Space League official games
+INSERT INTO public.game_player_stats (game_id, player_id, team_season_id, revision_id, seconds_played, pts, fgm, fga, tpm, tpa, ftm, fta, oreb, dreb, ast, stl, blk, tov, pf)
+SELECT gr.game_id, gr.player_id, gr.team_season_id, gr2.id,
+(1600 + random() * 1400)::int,
+(random() * 22 + 4)::int,
+(random() * 8 + 1)::int,
+(random() * 14 + 2)::int,
+(random() * 3)::int,
+(random() * 6)::int,
+(random() * 4)::int,
+(random() * 6)::int,
+(random() * 3)::int,
+(random() * 6 + 1)::int,
+(random() * 5)::int,
+(random() * 2)::int,
+(random() * 2)::int,
+(random() * 3)::int,
+(random() * 3 + 1)::int
+FROM public.game_rosters gr
+JOIN public.game_revisions gr2 ON gr2.game_id = gr.game_id AND gr2.revision_number = 1
+WHERE gr.game_id IN ('70000000-0000-0000-0000-000000000030','70000000-0000-0000-0000-000000000031')
+ON CONFLICT DO NOTHING;
+
 
 -- ============================================================================
 -- TODAY'S GAMES (dynamic dates so the website shows data)
@@ -859,6 +1028,54 @@ FROM public.game_rosters gr
 JOIN public.game_revisions gr2 ON gr2.game_id = gr.game_id AND gr2.revision_number = (SELECT current_revision_number FROM public.games WHERE id = gr.game_id)
 WHERE gr.game_id IN ('70000000-0000-0000-0000-000000000100','70000000-0000-0000-0000-000000000101')
 on conflict do nothing;
+
+-- Rosters + box scores for additional The League games (060–067)
+DO $$ DECLARE
+  game_rec record;
+  admin_id uuid := '397692e0-915f-4361-9f75-f84d0883ba80';
+  rev_id uuid;
+  src_id uuid;
+  team_pair text[][] := ARRAY[
+    ['70000000-0000-0000-0000-000000000060','30000000-0000-0000-0000-000000000005','30000000-0000-0000-0000-000000000002'],
+    ['70000000-0000-0000-0000-000000000061','30000000-0000-0000-0000-000000000003','30000000-0000-0000-0000-000000000001'],
+    ['70000000-0000-0000-0000-000000000062','30000000-0000-0000-0000-000000000010','30000000-0000-0000-0000-000000000006'],
+    ['70000000-0000-0000-0000-000000000063','30000000-0000-0000-0000-000000000004','30000000-0000-0000-0000-000000000009'],
+    ['70000000-0000-0000-0000-000000000064','30000000-0000-0000-0000-000000000008','30000000-0000-0000-0000-000000000007'],
+    ['70000000-0000-0000-0000-000000000065','30000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000006'],
+    ['70000000-0000-0000-0000-000000000066','30000000-0000-0000-0000-000000000002','30000000-0000-0000-0000-000000000010'],
+    ['70000000-0000-0000-0000-000000000067','30000000-0000-0000-0000-000000000009','30000000-0000-0000-0000-000000000005']
+  ];
+  tp text[];
+BEGIN
+  FOREACH tp SLICE 1 IN ARRAY team_pair LOOP
+    -- Create source submission + revision
+    src_id := gen_random_uuid();
+    rev_id := gen_random_uuid();
+    INSERT INTO public.source_submissions (id, game_id, source_type, submitted_by, submitted_at, normalized_payload, status, reviewed_by, reviewed_at)
+    VALUES (src_id, tp[1], 'tracker_journal', admin_id, NOW(), '{"periods":4}'::jsonb, 'approved', admin_id, NOW())
+    ON CONFLICT DO NOTHING;
+    INSERT INTO public.game_revisions (id, game_id, revision_number, source_submission_id, state, journal, projection, validation_warnings, created_by, created_at, approved_by, approved_at)
+    VALUES (rev_id, tp[1], 1, src_id, 'approved', '[]'::jsonb, '{}'::jsonb, '[]'::jsonb, admin_id, NOW(), admin_id, NOW())
+    ON CONFLICT DO NOTHING;
+    -- Generate rosters from roster_entries
+    INSERT INTO public.game_rosters (game_id, team_season_id, player_id, is_starter)
+    SELECT tp[1], re.team_season_id, re.player_id, re.jersey_number <= 5
+    FROM public.roster_entries re
+    WHERE re.team_season_id IN (tp[2], tp[3]) AND re.left_at IS NULL
+    ON CONFLICT (game_id, player_id) DO NOTHING;
+    -- Generate box scores
+    INSERT INTO public.game_player_stats (game_id, player_id, team_season_id, revision_id, seconds_played, pts, fgm, fga, tpm, tpa, ftm, fta, oreb, dreb, ast, stl, blk, tov, pf)
+    SELECT gr.game_id, gr.player_id, gr.team_season_id, rev_id,
+    (1600 + random() * 1400)::int, (random() * 22 + 4)::int, (random() * 8 + 1)::int, (random() * 14 + 2)::int,
+    (random() * 3)::int, (random() * 6)::int, (random() * 4)::int, (random() * 6)::int,
+    (random() * 3)::int, (random() * 6 + 1)::int, (random() * 5)::int, (random() * 2)::int,
+    (random() * 2)::int, (random() * 3)::int, (random() * 3 + 1)::int
+    FROM public.game_rosters gr
+    WHERE gr.game_id = tp[1]
+    ON CONFLICT DO NOTHING;
+  END LOOP;
+END $$;
+
 
 -- Season player stats (all TL players)
 INSERT INTO public.season_player_stats (competition_id, player_id, team_season_id, gp, pts, fgm, fga, tpm, tpa, ftm, fta, oreb, dreb, ast, stl, blk, tov, pf, seconds_played, mpg)

@@ -9,7 +9,7 @@ export const contentType = "image/png";
 
 async function loadFont(
   family: string,
-  weight: 400 | 700,
+  weight: 400 | 500 | 600 | 700 | 800,
 ): Promise<ArrayBuffer | null> {
   try {
     const css = await fetch(
@@ -71,28 +71,39 @@ export default async function Image({
   if (reb) statParts.push(`${reb.toFixed(1)} ОВР`);
   if (ast != null) statParts.push(`${ast.toFixed(1)} ПАС`);
 
-  const [regular, bold] = await Promise.all([
-    loadFont("Noto Sans", 400),
-    loadFont("Noto Sans", 700),
+  const [barlowRegular, barlowBold, interRegular] = await Promise.all([
+    loadFont("Oswald", 600),
+    loadFont("Oswald", 800),
+    loadFont("Inter", 400),
   ]);
 
   const fonts = [
-    ...(regular
+    ...(barlowRegular
       ? [
           {
-            name: "Noto Sans",
-            data: regular,
-            weight: 400 as const,
+            name: "Oswald",
+            data: barlowRegular,
+            weight: 600 as const,
             style: "normal" as const,
           },
         ]
       : []),
-    ...(bold
+    ...(barlowBold
       ? [
           {
-            name: "Noto Sans",
-            data: bold,
-            weight: 700 as const,
+            name: "Oswald",
+            data: barlowBold,
+            weight: 800 as const,
+            style: "normal" as const,
+          },
+        ]
+      : []),
+    ...(interRegular
+      ? [
+          {
+            name: "Inter",
+            data: interRegular,
+            weight: 400 as const,
             style: "normal" as const,
           },
         ]
@@ -107,7 +118,7 @@ export default async function Image({
         background: "#0a0a0a",
         display: "flex",
         position: "relative",
-        fontFamily: '"Noto Sans", sans-serif',
+        fontFamily: '"Oswald", sans-serif',
       }}
     >
       {/* Team color accent stripe */}

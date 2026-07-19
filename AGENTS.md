@@ -1,278 +1,146 @@
 # @zuiio — Project Instructions (for AI agents)
 
-> **⚠️ Required reading for AI agents:** Before writing any code, load these files for full context:
->
-> 1. `docs/design.md` — design tokens (OKLch colors, typography, spacing, motion, component conventions)
-> 2. `docs/vision.md` — product vision and how we build
-> 3. `docs/stack-web.md` — Next.js 16 stack (when working on web apps)
-> 4. `docs/stack-mobile.md` — React Native + Expo stack (when working on mobile apps)
->
-> You MUST read these before starting any significant task. This file (`AGENTS.md`) covers project structure, package map, and conventions.
-
 **Private monorepo** for Zuiio, a Mongolian software company. Products: **Zer** (SMB ERP), **Tolom** (auto repair), **Tumurch** (gym platform), **Tamga** (horse management), **Zuiio ID** (central SSO), plus the company website and internal tools.
 
-## Directory Structure
+## Shared Context (load by task type)
 
-```
-zuiio/
-├── packages/            ← 16 shared @zuiio/* packages
-│   ├── zuiio-id/        ← Central identity SSO (Next.js 16, Supabase, id.zuiio.com)
-│   ├── website/         ← Company website (Next.js 16, Tailwind v4)
-│   ├── zer/             ← SMB ERP (Next.js 16, Supabase) [submodule]
-│   ├── tolom/           ← Auto repair management (Next.js 16, Supabase) [submodule]
-│   ├── agent-gateway/   ← Multi-tenant AI agent gateway (Telegram bots)
-│   ├── onoo/            ← Basketball stats tracker (Next.js 16, Supabase)
-│   ├── tamga/           ← Horse management (Flutter)
-│   ├── tumurch/         ← Tumurch gym platform (submodule)
-│   ├── zim/             ← App
-│   ├── zerbu/           ← App
-│   └── ...              ← Other apps and submodules
-├── packages/            ← 16 shared @zuiio/* packages
-├── docs/                ← Design system, stacks, vision, architecture
-├── docs/org.yaml        ← Org catalog (source of truth for product info)
-├── README.md
-└── AGENTS.md            ← Project instructions (this file)
-```
+| Task type | Load this doc |
+|-----------|---------------|
+| UI / design work | `docs/design.md` |
+| Product / architecture decision | `docs/vision.md` |
+| Web app (Next.js) | `docs/stack-web.md` |
+| Mobile app (React Native) | `docs/stack-mobile.md` |
 
-## Apps
+Always read `docs/vision.md` first for significant tasks — it is the single source of truth for direction and principles.
 
-| App | Stack | Description | dev command |
-|-----|-------|-------------|-------------|
-| `zuiio-id` | Next.js 16 + Supabase | Central identity SSO (id.zuiio.com) | `pnpm dev:zuiio-id` |
-| `website` | Next.js 16, Tailwind v4 | Company site | `pnpm dev:website` |
-| `zer` | Next.js 16 + Supabase | SMB ERP | `pnpm dev:zer` |
-| `tolom` | Next.js 16 + Supabase | Auto repair management | `pnpm dev:tolom` |
-| `agent-gateway` | Next.js 16 + Supabase + Telegram | Multi-tenant AI agent gateway for Telegram bots | `pnpm dev:agent-gateway` |
-| `onoo` | Next.js 16 + Supabase | Basketball stats tracker | `cd apps/onoo && pnpm dev` |
-| `tamga` | Flutter | Horse management mobile app | `cd apps/tamga && flutter run` |
-| `tumurch` | React Native + Expo | Gym platform (submodule) | `cd apps/tumurch && pnpm dev` |
-| `zim` | — | App | `cd apps/zim && pnpm dev` |
-| `zerbu` | — | App | `cd apps/zerbu && pnpm dev` |
-Each app has its own `AGENTS.md` with app-specific rules. Read them when working in that app.
+## FastGate — Verification Contract
 
-## Agent Gateway
+**Before declaring any change complete, you MUST run `npm run verify`.**
 
-Multi-tenant AI agent gateway at `apps/agent-gateway/`. Connects Telegram bots to Zer/Tolom business data via LLM-powered tools.
+This runs typecheck → lint → unit tests with coverage gating (FastGate).
+If any gate fails, diagnose → fix → re-run verify (max 3 attempts).
+If still RED after 3 attempts, ESCALATE — do NOT work around the gate.
 
-**Key architecture:**
-- Org isolation: `orgId` resolved from DB (telegram_links / custom_bots), never from LLM output
-- Provider pattern: DeepSeek primary, OpenAI fallback; each provider owns the tool-calling loop
-- Tools execute against Supabase with service-role privileges, MUST filter by `orgId`
-- Mongolian-first: all user-facing text is in Mongolian
+Report EXACTLY:
+- What commands ran and their exit codes
+- What passed / what failed / what was blocked
+- Do NOT claim "tests pass" without running them
+- Do NOT inflate partial verification into blanket success
+- Do NOT skip coverage thresholds or claim "good enough"
 
-**Documentation:** `apps/agent-gateway/README.md` and `apps/agent-gateway/docs/`
+The verify script runs `turbo run typecheck lint test:coverage --continue`.
+For the full gate (CI), run `npm run audit` which adds E2E tests.
 
-**Consumes:** `@zuiio/ai-agent`, `@zuiio/capture`, `@zuiio/core` (workspace packages)
+**Rules of engagement:**
+1. The author never grades the author. Verification must be external and deterministic.
+2. A test runner returning non-zero exit code cannot be argued into green.
+3. Coverage thresholds exist to prevent untested code — respect them.
 
-## Packages
+## Local Supabase
 
-| Package | Layer | Description | Dependencies |
-|---------|-------|-------------|--------------|
-| `branding` | Framework-agnostic | OKLch design tokens, globals.css source of truth | — |
-| `config` | Build | Shared tsconfig extended by all packages | — |
-| `core` | Framework-agnostic | Formatting, validation, errors, timezone, domain rules, UUID, form validation, **lookup utilities: `createLookup()` `createAggregatedLookup()`** (O(1) Map builders replacing array.find) | date-fns |
-| `auth` | React | `SupabaseAuthProvider`, `useAuth`, `useSession`, `useRequireAuth`, **`startZuiioSso()` `exchangeZuiioSsoCode()` `ZUIIO_OIDC_PROVIDER`** (SSO federation adapter) | @supabase/supabase-js, react |
-| `hooks` | React | `useDebounce` `useDisclosure` `useCopyToClipboard` `useFuzzySearch` `useOnlineStatus` `useLocalStorage` `useIntersectionObserver`, **`useLookup()` `useAggregatedLookup()`** (memoized Map hooks) | react |
-| `query` | React/Next | React Query provider + optimistic CRUD hooks (FormData + JSON) | @tanstack/react-query, react |
-| `realtime` | React/Next | Supabase Realtime hooks: useRealtime, useRealtimeMulti | @supabase/supabase-js, @tanstack/react-query, react |
-| `ui` | React | HighlightText, toastRetry, form input props, Mongolian phone/plate formatting | react, sonner |
-| `offline` | Framework-agnostic | Mutation queue engine, IndexedDB persister, useOfflineMutation | idb, react |
-| `hr` | Framework-agnostic | Mongolian payroll: income tax, social insurance, overtime, salary | — |
-| `export` | Framework-agnostic | CSV, XLSX (ExcelJS), DOCX (docx), PDF (pdf-lib) generation + serveEntityExport | exceljs, docx, pdf-lib, @pdf-lib/fontkit |
-| `capture` | Framework-agnostic | Sentry error capture wrapper with Supabase integration | @sentry/nextjs |
-| `ai-agent` | Framework-agnostic | LLM client, tool-calling loop, provider abstraction | — |
-| `i18n` | Framework-agnostic | Internationalization utilities | — |
-| `sdk` | Framework-agnostic | SDK package | — |
-| `search` | Framework-agnostic | Search utilities | — |
-
-## Consumer Projects
-
-All apps consume `@zuiio/*` packages via `workspace:*` protocol inside this monorepo:
-
-```json
-"@zuiio/core": "workspace:*"
+Supabase local dev runs via colima (Docker alternative, no Docker Desktop):
+```bash
+colima start --cpu 4 --memory 8    # If not running
+supabase start --exclude studio,imgproxy,inbucket,vector,logflare,edge-runtime,meta  # ~2 min
+supabase status                     # Check it's up
+supabase stop                       # When done
 ```
 
-## Development Workflow
-
-### Runtime verification
-
-- **After every edit that changes UI or behavior**, verify the page still works at runtime — not just that it compiles.
-- Use the `next-dev-loop` skill (installed in each app's `.agents/skills/`): verify with `agent-browser` (real Chrome view).
-- Check four things: compiles, runs without errors, behaves as intended, no regressions in React tree.
-- Requires: `next dev` running with Turbopack, and `agent-browser >= 0.31.1` (`npm i -g agent-browser@latest`).
 ## Build & Performance
 
-### Package manager
-
-- **pnpm ONLY** — never suggest switching to Bun or npm
-- Bun has 5+ critical monorepo bugs (dedup failures, hangs, workspace compatibility) that break this codebase
-- pnpm's content-addressable store saves 68% disk vs npm/Bun in this 18-package monorepo
-- pnpm v12 (Rust engine) is coming and will match Bun's install speed — wait for it
-
-### Build commands
-
-- **Never run `pnpm build`** (builds all 17 packages/apps — slow, most are legacy)
-- **Always use filtered builds:** `pnpm build:zer`, `pnpm build:tolom`, `pnpm build:website`, `pnpm build:zuiio-id`
-- For CI full builds: `pnpm turbo run build --filter='./apps/*' --filter='./packages/*'`
-- Package tsc builds (ai-agent, capture, core) are fast (~2s each); Next.js `next build` is the bottleneck
-
-### turbo.json rules
-
-- **DO NOT add env vars** to the `env` list unless they affect build output (NEXT_PUBLIC_*, Sentry plugin)
-- Server-only vars (POSTGRES_*, SMTP_*, SUPABASE_*) go in `passThroughEnv` — they're passed through but don't break cache
-- The current `env` list has exactly 3 vars: `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_DSN`
-- Adding unrelated vars to `env` invalidates cache for ALL packages — this is the #1 cause of slow rebuilds
-- `typecheck` and `lint` run in parallel (no `^build` dependency) — use `pnpm check` to run both
-
-### Next.js build config
-
-- Every app's `package.json` build script MUST include: `NODE_OPTIONS='--max-old-space-size=12288' next build`
-- Without this, large builds (zer, tolom) can OOM on 8GB machines
-- Turbopack is the default bundler in Next.js 16 — do NOT force Webpack unless there's a specific plugin reason
-- Sentry wrapping (`withSentryConfig`) adds ~10-30s to build — only use where error tracking is critical (zer, tolom already have it)
-- PWA plugin (`withPWA`) only on zer — do NOT add to other apps
-
-### What slows builds down
-
-- **Sentry source map upload** — adds 10-30s per app; only include `SENTRY_AUTH_TOKEN` in env if building for deploy
-- **Barrel file imports** (`export * from "./index"`) — can force Next.js to analyze entire packages; use named imports instead
-- **Missing NODE_OPTIONS** — causes OOM kills on large builds, which look like "build took forever" but are actually crashes
-- **Full `turbo run build`** — builds ALL 17 packages including legacy ones with broken builds; always use `--filter`
-
-### Quick reference
+- **pnpm ONLY** — never suggest Bun or npm
+- **Never run `pnpm build`** (builds all packages — slow). Always use filtered builds: `pnpm build:zer`, `pnpm build:tolom`
+- **turbo.json `env` list**: only `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_DSN`. Adding unrelated vars invalidates cache for ALL packages — the #1 cause of slow rebuilds
+- Server-only vars (POSTGRES_*, SMTP_*, SUPABASE_*) go in `passThroughEnv`, not `env`
+- `typecheck` and `lint` run in parallel — use `pnpm check`
+- Every app's build script MUST include `NODE_OPTIONS='--max-old-space-size=12288' next build`
+- Turbopack is the default bundler — do NOT force Webpack
+- Barrel file imports (`export *`) force Next.js to analyze entire packages — use named imports
 
 ```bash
-# Build just one app (fastest — only builds that app + its deps)
-pnpm build:zer
-pnpm build:tolom
-pnpm build:website
-pnpm build:zuiio-id
-
-# Typecheck + lint in parallel (no build needed)
-pnpm check
-
-# Full build (CI only — builds everything that can build)
-pnpm turbo run build --filter='./apps/*' --filter='./packages/*'
-
-# See what turbo would build without running it
-pnpm turbo run build --filter=zer --dry
+pnpm build:zer                   # Build one app
+pnpm check                       # Typecheck + lint in parallel
+pnpm turbo run build --filter='./apps/*' --filter='./packages/*'  # CI full build
 ```
-
 
 ## Conventions
 
-### Adding a new function/utility
+### Adding utilities
+1. Framework-agnostic, no React → `@zuiio/core` or new package
+2. React hook → `@zuiio/hooks` (generic) or `@zuiio/query` (TanStack Query)
+3. Mongolian business logic → `@zuiio/core` (validation) or `@zuiio/hr` (payroll)
+4. UI component → each project's own `src/components/`. Only pure utilities go in `@zuiio/ui`
 
-1. **Framework-agnostic, no React** → `@zuiio/core` or a new package
-2. **React hook** → `@zuiio/hooks` (generic) or `@zuiio/query` (TanStack Query)
-3. **Mongolian business logic** → `@zuiio/core` (validation) or `@zuiio/hr` (payroll)
-4. **UI component** → Each project has its own `src/components/`. Only pure utilities go in `@zuiio/ui` (form utilities, Mongolian formatting)
-5. **⚠️ After adding any new export:** Update the Packages table above — add the new function/hook name to its package's Description column so agents discover it without reading every source file. Also add or update a `README.md` in the package root.
-
-### Package structure
-
-Every package follows:
-
-```
-packages/<name>/
-├── package.json      # name: "@zuiio/<name>", main: "./src/index.ts"
-├── tsconfig.json     # extends "@zuiio/config/tsconfig"
-├── README.md         # Human-readable docs
-├── AGENTS.md         # AI agent docs
-└── src/
-    ├── index.ts      # Public barrel — only export what consumers need
-    └── *.ts          # Implementation files
-```
-
-### TypeScript
-
-- Strict mode (via `@zuiio/config/tsconfig`)
-- `noUncheckedIndexedAccess: true`
-- All packages checked together: `pnpm exec tsc --noEmit`
-
-
-### Supabase Type Generation (NEVER manually patch)
-
-After every database migration, types **MUST** be regenerated using CLI or MCP — **NEVER manually edit `database.types.ts` or `supabase/types.ts`**:
-
-```bash
-# Option 1: Supabase CLI (preferred)
-cd apps/<app> && supabase gen types typescript --project-id <ref> --schema public > src/lib/database.types.ts
-cp src/lib/database.types.ts src/lib/supabase/types.ts
-
-# Option 2: Supabase MCP (if CLI auth is broken)
-# Use mcp__supabase_zer_generate_typescript_types, then save output to both files
-```
-
-**Two type files exist per app** — both must be updated:
-- `src/lib/database.types.ts` — canonical Supabase-generated types
-- `src/lib/supabase/types.ts` — copy used by `createClient()` (imports from `./types`)
-
-After generating, run `biome check --write` to fix formatting (Supabase CLI outputs without semicolons).
-
-If type generation fails with auth errors, **stop and ask the user to run `supabase login`**. Do NOT manually patch types — stale types cause build failures on CI.
+### Supabase Types (NEVER manually patch)
+After migrations, regenerate using CLI or MCP. **NEVER manually edit `database.types.ts`**. If auth fails, stop and ask user to run `supabase login`. After generating, run `biome check --write`.
 
 ### Dependencies
+- Runtime deps in `dependencies` (private monorepo, not `peerDependencies`)
+- `react` + `@types/react` in `devDependencies` (consumers provide React 19)
+- No circular deps between packages
 
-- **Runtime deps** go in `dependencies` (not `peerDependencies`) — this is a private monorepo
-- **React packages**: `react` + `@types/react` in `devDependencies` (consumers provide React 19)
-- **No circular deps** between packages
+### Current Library Docs
+Always fetch current docs — training data is stale. Use `npx ctx7@latest docs <libraryId> "<question>"` for Next.js, Supabase SSR, TanStack Query, shadcn/ui.
 
-### Library & Framework Docs
+## Permission Boundaries
 
-**Always use current docs** for any library/package/framework question. Do NOT rely on training data — it may be outdated.
+### ✅ Always
+- Read the nearest `AGENTS.md` and source/tests being changed
+- Use pnpm and app-scoped commands (`pnpm build:zer`, not `pnpm build`)
+- Preserve tenant isolation, RLS, and authorization boundaries
+- Run diagnostics on changed files, then targeted tests
+- Runtime-check every user-visible change
+- Regenerate generated artifacts using documented generators
 
-```bash
-# Find the library
-npx ctx7@latest library <name> "<your question>"
+### ⚠️ Ask First
+- Add, remove, or upgrade dependencies
+- Apply migrations to remote database, run backfills, or modify production data
+- Change authentication, authorization, RLS, or tenant-scoping
+- Change financial, inventory, or business semantics
+- Introduce new public package API or breaking API response shape
+- Change shared architecture across apps/packages
+- Commit, push, deploy, or change production environment (unless explicitly requested)
 
-# Fetch docs
-npx ctx7@latest docs <libraryId> "<your question>"
-```
+### 🚫 Never
+- Commit secrets, credentials, `.env` files, keys, or tokens
+- Use npm or Bun in this monorepo
+- Run unfiltered root-wide build for normal validation
+- Manually edit generated Supabase type files
+- Bypass RLS or omit `organization_id` scoping
+- Expose service-role credentials to client code
+- Run destructive SQL or production data repairs without explicit approval
+- Disable tests/lint rules or add broad suppressions
+- Modify `vendor/`, `dist/`, `build/` directly
+- Force-push the default branch
 
-**Key docs to fetch:**
-- Next.js 16.3: `npx ctx7@latest docs /vercel/next.js "your question"`
-- Supabase SSR: `npx ctx7@latest docs /supabase/ssr "your question"`
-- TanStack Query: `npx ctx7@latest docs /tanstack/query "your question"`
-- shadcn/ui: `npx ctx7@latest docs /shadcn-ui "your question"`
+## On-Demand Documentation
 
-**Why:** APIs change fast. Next.js 16 deprecated `middleware.ts` → `proxy.ts`. Supabase SSR changed cookie patterns. Training data is 6+ months stale.
-## Commands
-
-```bash
-pnpm install                # Install all deps
-pnpm exec tsc --noEmit      # Type-check all packages
-pnpm test                   # Run tests (in packages with vitest)
-```
-
-## What NOT to put here
-
-| Leaves in project | Why |
-|-------------------|-----|
-| Domain-specific DB adapters (hr-supabase) | Schema-dependent |
-| UI components (Buttons, Drawers, Tables) | Each project has its own design system |
-| Supabase client config | Project-specific auth + keys |
-| i18n translation files | Project-specific copy |
-| Branding/theming | Project-specific visual identity |
-
-## Tasks (Agent Router)
-
-Use this section to find the right context for your task. Read the linked file before proceeding.
+Deeper docs are in `docs/` — load only when relevant:
+- `docs/architecture/` — system architecture, design decisions
+- `docs/development/` — build performance, package authoring, debugging guides
+- `docs/org.yaml` — org catalog (source of truth for product info)
+- Each app: `apps/<name>/AGENTS.md` — app-specific rules (nearest-file-wins)
+- Each package: `packages/<name>/AGENTS.md` — package-specific rules
 
 ### Working on an app
-
-- **Zuiio ID (central SSO)** → `apps/zuiio-id/AGENTS.md`
-- **Zer (SMB ERP)** → `apps/zer/AGENTS.md`
-- **Tolom (auto repair)** → `apps/tolom/AGENTS.md`
-- **Agent Gateway (Telegram bot)** → `apps/agent-gateway/AGENTS.md`
-- **Website (company site)** → `apps/website/AGENTS.md`
-- **Onoo (basketball stats)** → `apps/onoo/AGENTS.md`
-- **Tamga (horse management)** → `apps/tamga/AGENTS.md`
-- **Tumurch (gym platform)** → `apps/tumurch/AGENTS.md`
+- **Zuiio ID** → `apps/zuiio-id/AGENTS.md`
+- **Zer** → `apps/zer/AGENTS.md`
+- **Tolom** → `apps/tolom/AGENTS.md`
+- **Agent Gateway** → `apps/agent-gateway/AGENTS.md`
+- **Website** → `apps/website/AGENTS.md`
+- **Onoo** → `apps/onoo/AGENTS.md`
+- **Tamga** → `apps/tamga/AGENTS.md`
+- **Tumurch** → `apps/tumurch/AGENTS.md`
+- **Khosuud** → `apps/khosuud/AGENTS.md`
+- **Zim** → `apps/zim/AGENTS.md`
+- **Zerbu** → `apps/zerbu/AGENTS.md`
+- **Zer App** → `apps/zer-app/AGENTS.md`
+- **Tolom Mobile** → `apps/tolom-mobile/AGENTS.md`
+- **Tamga Web** → `apps/tamga-web/AGENTS.md`
+- **Zraf Web** → `apps/zraf-web/AGENTS.md`
+- **Tumurch RN** → `apps/tumurch-rn/AGENTS.md`
 
 ### Working on a package
-
 - **@zuiio/core** → `packages/core/AGENTS.md`
 - **@zuiio/hooks** → `packages/hooks/AGENTS.md`
 - **@zuiio/query** → `packages/query/AGENTS.md`
@@ -285,129 +153,50 @@ Use this section to find the right context for your task. Read the linked file b
 - **@zuiio/ai-agent** → `packages/ai-agent/AGENTS.md`
 - **@zuiio/branding** → `packages/branding/AGENTS.md`
 - **@zuiio/config** → `packages/config/AGENTS.md`
-- **@zuiio/i18n** → `packages/i18n/AGENTS.md`
-- **@zuiio/supabase** → `packages/supabase/AGENTS.md`
 - **@zuiio/auth** → `packages/auth/AGENTS.md`
 - **@zuiio/oidc** → `packages/oidc/AGENTS.md`
+- **@zuiio/i18n** → `packages/i18n/AGENTS.md`
+- **@zuiio/supabase** → `packages/supabase/AGENTS.md`
+- **@zuiio/search** → `packages/search/AGENTS.md`
+- **@zuiio/sdk** → `packages/sdk/AGENTS.md`
 
-### Common tasks
+**Package APIs change across versions. Always use current docs, never training data.**
 
-- **Add a new utility** → See "Adding a new function/utility" in Conventions
-- **Add a new tool to agent-gateway** → `apps/agent-gateway/docs/ADDING_TOOLS.md`
-- **Add a new AI provider** → `apps/agent-gateway/docs/ADDING_PROVIDERS.md`
-- **Add a new messaging channel** → `apps/agent-gateway/docs/ADDING_CHANNELS.md`
-- **Understand the architecture** → `apps/agent-gateway/docs/ARCHITECTURE.md`
+## CLI Multi-Account Profiles
 
-### SSO / Identity
+This monorepo uses multiple Supabase and Vercel accounts. **Do NOT use plain `vercel` or `supabase`** — always use the profile aliases.
 
-- **Adding a new SSO product** → Run `pnpm sso:plan --product=<id>` then `pnpm sso:apply --product=<id>`. No Zuiio ID code changes needed.
-- **Health check** → `pnpm sso:doctor` checks OAuth clients, catalog, providers, and mobile redirects.
-- **Product manifest** → `config/sso-products.json` is the desired-state source of truth for provisioning.
-- **Catalog library** → `apps/zuiio-id/src/lib/products/catalog.ts` — async DB lookups replacing static imports.
-- **OIDC SDK** → `packages/oidc/` for non-Supabase consumers.
+### Quick reference
 
-## Project Relationships
+| App / task | Vercel | Supabase profile |
+|------------|--------|-----------------|
+| Most apps | `v` (zerone) | `s` (zerone) |
+| tolom, tolom-mobile | `v-tolom` | `s-themuln` |
+| zuiio-id | `v-themuuln6` | `s` (zerone) |
 
-How the apps and packages connect:
-
-| App | Consumes | Purpose |
-|-----|----------|---------|
-| `zer` | core, hooks, query, ui, realtime, offline, hr, export, branding | SMB ERP with full feature set |
-| `tolom` | core, hooks, query, ui, realtime, offline, hr, export, branding | Auto repair management |
-| `agent-gateway` | ai-agent, capture, core | Telegram AI bot connecting to zer/tolom |
-| `zuiio-id` | auth, branding, core | Central identity SSO |
-| `website` | core | Company marketing site |
-| `onoo` | — | Basketball stats tracker |
-| `tamga` | — | Horse management (Flutter, standalone) |
-| `tumurch` | — | Gym platform (submodule, standalone) |
-
-| Package | Used By | Purpose |
-|---------|---------|---------|
-| `core` | all apps | Formatting, validation, errors, lookups, domain rules |
-| `hooks` | zer, tolom | React hooks (debounce, disclosure, fuzzy search, lookups) |
-| `query` | zer, tolom | TanStack Query provider + optimistic CRUD |
-| `ui` | zer, tolom | Form utilities, Mongolian formatting |
-| `realtime` | zer, tolom | Supabase Realtime subscriptions |
-| `offline` | zer, tolom | IndexedDB mutation queue for offline support |
-| `hr` | zer, tolom | Mongolian payroll calculations |
-| `export` | zer, tolom | CSV/XLSX/DOCX/PDF generation |
-| `capture` | agent-gateway | Sentry error capture wrapper |
-| `ai-agent` | agent-gateway | LLM client + tool-calling loop |
-| `auth` | zuiio-id | SSO federation adapter (startZuiioSso, exchangeCode) |
-| `oidc` | external apps | Direct OIDC client for non-Supabase consumers (openid-client wrapper) |
-## Advanced Agent Patterns
-
-### Just-in-Time Context Loading
-
-Don't preload everything — load context dynamically as needed:
+### Commands
 
 ```bash
-# Find a utility by name
-pnpm exec tsc --listFiles | grep <utility-name>
+# One-off — use for a single command
+v-tolom deploy
+v-themuuln6 deploy
+s-yesprice projects list
 
-# Check if a function exists in @zuiio
-grep -r "export.*functionName" packages/*/src/
+# Session switch — use before a block of commands
+as-tolom        # sets both Vercel + Supabase to tolom's accounts
+v whoami        # themulnofficial-9829
+v deploy
 
-# Read specific docs when needed
-# Don't read all docs upfront — read only what's relevant to your current task
+as-zerone       # switch back to default
+v whoami        # themuuln
 ```
 
-**Rule:** If you can discover it by searching code/docs, don't read it upfront. Load on demand.
+### Per-app mapping
 
-### Compaction (Long-Running Tasks)
+See `.cli-profiles.json` for the full mapping of each app to its Vercel account and Supabase project ref.
 
-For tasks spanning >10 files or >30 minutes:
+### Troubleshooting
 
-1. **Create a task notes file:** `docs/notes/<task-name>.md`
-2. **Log key decisions:** What was changed and why
-3. **Reference in commit messages:** "See docs/notes/<task-name>.md"
-4. **Compact context:** Summarize progress every 10 file changes
-
-**Why:** Agents lose context on long tasks. Notes preserve coherence across sessions.
-
-### Delegation Patterns
-
-| Pattern | When to Use | How |
-|---------|-------------|-----|
-| **Explore** | Codebase discovery, finding patterns | Use `task` subagent with `agent: "explore"` |
-| **Test** | Writing tests | Use `task` subagent with `agent: "tester"` |
-| **Review** | Code review | Use `task` subagent with `agent: "reviewer"` |
-| **Plan** | Complex multi-file changes | Use `task` subagent with `agent: "plan"` |
-
-**When NOT to delegate:**
-- Simple file edits (<5 files)
-- Quick fixes (<10 minutes)
-- Tasks requiring full context
-
-### Token Efficiency
-
-1. **Don't read entire files** — use `read` with offset/limit
-2. **Don't grep blindly** — use `grep` with specific patterns
-3. **Don't run full test suites** — run only tests you modified
-4. **Don't read all docs** — read only what's relevant to your task
-
-**Expected savings:** -30% token usage, +10% agent performance
-
----
-
-## Package Documentation — READ BEFORE CODING
-
-Before using ANY npm package from `package.json`, verify current API against the package's own documentation. **Never hardcode API patterns from training data.**
-
-**Discovery order:**
-1. Check `node_modules/<pkg>/package.json` for `llms`, `llmsFull`, or `mcpServer` fields → use those URLs as primary docs
-2. Check `node_modules/<pkg>/AGENTS.md` or `node_modules/<pkg>/SKILL.md` → read for API guidance
-3. If neither exists, fetch current docs from the web before writing code
-
-**Key packages across apps:**
-| Package | Docs Source |
-|---------|------------|
-| `@tanstack/react-query` | https://tanstack.com/query/latest/docs/framework/react/overview |
-| `@tanstack/react-table` | https://tanstack.com/table/latest/docs/introduction |
-| `@supabase/supabase-js` | `node_modules/@supabase/supabase-js/AGENTS.md` (per-package) |
-| `@supabase/ssr` | https://supabase.com/docs/guides/auth/server-side/nextjs |
-| `zod` | `node_modules/zod/AGENTS.md` + `llms` field in package.json |
-| `react-hook-form` | https://react-hook-form.com/docs/useform |
-| `next` | `node_modules/next/dist/docs/` (bundled) |
-
-**This is not optional.** Package APIs change across versions. Training data is stale by definition.
+- Vercel tokens are stored in pass (`personal/vercel/<name>`) and loaded at shell start via `.zshrc`
+- Supabase profiles are stored in native keychain, managed via `supabase login --name <profile>`
+- If a profile is missing: run `source ~/.zshrc` then check with `v-<name> whoami` or `supabase --profile <name> projects list`

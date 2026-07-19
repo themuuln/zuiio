@@ -194,7 +194,8 @@ export function StandingsTable({ rows, className, playoffLineAfter = 4 }: Standi
   const topColor = rows[0]?.team_primary_color;
 
   return (
-    <div className={cn("overflow-x-auto", className)}>
+    <>
+      <div className={cn("hidden md:block overflow-x-auto", className)}>
       <Table>
         <TableCaption className="sr-only">
           Лигийн байрлалын хүснэгт — {rows.length} баг
@@ -373,5 +374,106 @@ export function StandingsTable({ rows, className, playoffLineAfter = 4 }: Standi
         </TableBody>
       </Table>
     </div>
+      <div className="md:hidden flex flex-col gap-3">
+        {rows.map((row, index) => {
+          const isExpanded = expandedId === row.team_season_id;
+
+          return (
+            <Fragment key={row.team_season_id}>
+              <button
+                type="button"
+                onClick={() => toggleRow(row.team_season_id)}
+                className={cn(
+                  "flex items-center gap-3 rounded-xl border bg-card p-4 text-left cursor-pointer transition-colors hover:bg-accent/50",
+                  isExpanded && "bg-muted/50",
+                )}
+                style={
+                  row.team_primary_color
+                    ? { borderLeft: `3px solid ${row.team_primary_color}` }
+                    : undefined
+                }
+                aria-expanded={isExpanded}
+                aria-label={`${row.team_name} — ${row.w} ялалт, ${row.l} хожигдол`}
+              >
+                <span className="text-sm font-black tabular-nums text-muted-foreground w-6 text-center">
+                  {index + 1}
+                  <MovementIndicator streak={row.streak} />
+                </span>
+                <TeamLogo
+                  logoUrl={row.team_logo_url}
+                  shortCode={row.team_short_code}
+                  primaryColor={row.team_primary_color}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold truncate">{row.team_name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {row.w}Я - {row.l}Х · {formatPercent(row.win_pct)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <FormGuide last5={row.last5 ?? null} />
+                </div>
+                <ChevronDown
+                  className={cn(
+                    "size-4 text-muted-foreground transition-transform",
+                    isExpanded && "rotate-180",
+                  )}
+                  aria-hidden="true"
+                />
+              </button>
+              {isExpanded && (
+                <div
+                  className="grid grid-cols-2 gap-3 p-4 text-sm bg-muted/30 rounded-xl"
+                  role="group"
+                  aria-label={`${row.team_name} дэлгэрэнгүй статистик`}
+                >
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      Оноо тавьсан
+                    </p>
+                    <p className="mt-1 font-semibold tabular-nums">
+                      {row.points_for ?? "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      Оноо алдсан
+                    </p>
+                    <p className="mt-1 font-semibold tabular-nums">
+                      {row.points_against ?? "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      Гэрт
+                    </p>
+                    <p className="mt-1 font-semibold tabular-nums">
+                      {row.home_record ?? "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      Зочилсон
+                    </p>
+                    <p className="mt-1 font-semibold tabular-nums">
+                      {row.away_record ?? "—"}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {index === playoffLineAfter - 1 && index < rows.length - 1 && (
+                <div className="flex items-center gap-3 py-1">
+                  <div className="h-px flex-1 border-t border-dashed border-muted-foreground/30" />
+                  <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/60">
+                    Плэйоффийн шугам
+                  </span>
+                  <div className="h-px flex-1 border-t border-dashed border-muted-foreground/30" />
+                </div>
+              )}
+            </Fragment>
+          );
+        })}
+      </div>
+    </>
   );
 }

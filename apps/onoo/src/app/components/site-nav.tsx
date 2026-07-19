@@ -63,7 +63,7 @@ export function SiteNav() {
         </Link>
 
         {/* Navigation links */}
-        <ul className="flex items-center gap-0.5 overflow-x-auto scrollbar-none">
+        <ul className="flex items-center gap-0.5 overflow-x-auto scrollbar-none nav-scroll-shadow">
           {NAV_ITEMS.map((item) => {
             const active = isActive(item.href, pathname);
             return (

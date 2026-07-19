@@ -166,7 +166,7 @@ export function FormTrends({
     <div className={cn("space-y-4", className)}>
       {/* ─── Efficiency trend (per-game + rolling average) ─── */}
       <div>
-        <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <TrendingUp className="size-3.5" aria-hidden="true" />
           <span className="font-medium uppercase tracking-wider">
             {isEn ? "Efficiency trend" : "Үр ашгийн хандлага"}

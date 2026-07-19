@@ -1,11 +1,10 @@
-# @onoo — Project Instructions (for AI agents)
+# @onoo — Agent Instructions
 
-> **⚠️ Required reading for AI agents:** Before writing any code, load these files for full context:
+> **Required reading for AI agents:** Before writing any code, load these files:
 >
-> 1. `docs/ROADMAP.md` — feature checklist and implementation status
-> 2. `packages/core/src/index.ts` — core package exports
->
-> This file covers project structure, conventions, and coding rules.
+> 1. [Root AGENTS.md](../../AGENTS.md) — shared monorepo rules, conventions, and permission boundaries
+> 2. `docs/ROADMAP.md` — feature checklist and implementation status
+> 3. `packages/core/src/index.ts` — core package exports
 
 ## Overview
 
@@ -15,31 +14,16 @@
 
 ```
 apps/onoo/
-├── packages/core/          ← @onoo/core (framework-agnostic)
-│   └── src/
-│       ├── events/         ← Event dictionary, ordering, payloads
-│       ├── stats/          ← Box score derivation engine
-│       ├── format/         ← Number/date formatting utilities
-│       ├── i18n/           ← Mongolian translations
-│       ├── sync/           ← IndexedDB sync queue
-│       └── types.ts        ← TypeScript types
+├── packages/core/          ← @onoo/core (events, stats, format, i18n, sync)
 ├── src/
-│   ├── app/                ← Next.js App Router pages
-│   │   ├── admin/          ← Admin CRUD pages
-│   │   ├── games/          ← Public game pages
-│   │   ├── teams/          ← Public team pages
-│   │   ├── players/        ← Public player pages
-│   │   ├── standings/      ← Standings page
-│   │   ├── leaders/        ← Leaders page
-│   │   └── tracker/        ← Live game tracker
+│   ├── app/                ← Next.js pages (admin, games, teams, players, standings, tracker)
 │   ├── components/         ← Shared components
 │   └── lib/                ← Utilities, providers, API helpers
 ├── supabase/
-│   ├── functions/          ← Edge Functions
+│   ├── functions/          ← Edge Functions (derive-game, manual-box-entry)
 │   └── migrations/         ← Database migrations
 ├── public/                 ← Static assets, PWA manifest
-└── docs/                   ← Documentation
-    └── ROADMAP.md          ← Feature checklist
+└── docs/                   ← ROADMAP.md (feature checklist)
 ```
 
 ## Tech Stack
@@ -54,7 +38,7 @@ apps/onoo/
 | Auth | Supabase Auth |
 | Mobile | Expo (Phase 3) |
 
-## Coding Conventions
+## Core Rules
 
 ### TypeScript
 - Strict mode enabled
@@ -80,7 +64,7 @@ apps/onoo/
 
 ## Core Package (@onoo/core)
 
-The core package is framework-agnostic and contains:
+Framework-agnostic. Import from barrel: `import { deriveBoxScore } from "@onoo/core"`
 
 - **Events**: `createEvent()`, `validateEvent()`, `sortEvents()`
 - **Stats**: `deriveBoxScore()`, `calculateTotals()`, `detectMilestones()`
@@ -88,33 +72,20 @@ The core package is framework-agnostic and contains:
 - **i18n**: `describeEvent()`, `getStatLabel()`
 - **Sync**: `EventQueue` (IndexedDB adapter)
 
-Import from barrel: `import { deriveBoxScore } from "@onoo/core"`
-
-## Edge Functions
-
-| Function | Trigger | Purpose |
-|----------|---------|---------|
-| `derive-game` | HTTP | Derives box score from stat events |
-| `manual-box-entry` | HTTP | Manual stat entry with validation |
-
 ## Database Schema
 
-See `docs/ROADMAP.md` for full table list. Key tables:
-- `stat_events` — raw play-by-play events
-- `game_player_stats` — derived per-player box scores
-- `game_team_stats` — derived per-team totals
-- `standings` — league standings
+Key tables: `stat_events` (raw play-by-play), `game_player_stats` (derived per-player), `game_team_stats` (derived per-team), `standings` (league standings). Full list in `docs/ROADMAP.md`.
 
 ## V2 Trusted-Record Rules
 
-- Onoo is in a **web-first paid-pilot** phase. Mobile, push/follows, claims, consumer analytics, and broad historical import scope are frozen.
-- The lifecycle is `scheduled → live_provisional → final_pending_review → league_verified → official`. Commands enforce every transition.
-- `stat_events` are journal entries. Do not delete or rewrite them; use void/replacement operations and retain provenance.
-- Source submissions and game revisions are the approval boundary. Derived tables are rebuildable projections, never a browser or import destination.
+- **Web-first paid-pilot** phase. Mobile, push/follows, claims, consumer analytics, and broad historical import are frozen.
+- Lifecycle: `scheduled → live_provisional → final_pending_review → league_verified → official`. Commands enforce every transition.
+- `stat_events` are journal entries. Do not delete or rewrite; use void/replacement and retain provenance.
+- Derived tables are rebuildable projections, never a browser or import destination.
 - Direct writes to `stat_events`, `games.status`, `game_player_stats`, `game_team_stats`, `season_player_stats`, or `standings` are prohibited outside reviewed database commands.
-- Public pages read curated `v_public_*` views only. Do not add mock fallbacks.
-- Every tracker mutation must persist locally before network delivery and use an idempotency key, session ID, and monotonic local sequence.
-- Privileged database functions require explicit authorization, an empty `search_path`, revoked `PUBLIC` execution, and narrow grants.
+- Public pages read curated `v_public_*` views only. No mock fallbacks.
+- Tracker mutations must persist locally before network delivery with idempotency key, session ID, and monotonic local sequence.
+- Privileged database functions require explicit authorization, empty `search_path`, revoked `PUBLIC` execution, and narrow grants.
 
 ## Commands
 
@@ -122,17 +93,38 @@ See `docs/ROADMAP.md` for full table list. Key tables:
 pnpm dev                    # Start dev server (Turbopack)
 pnpm build                  # Production build
 pnpm -F @onoo/core test     # Run core package tests
-pnpm exec tsc --noEmit      # Type-check
+pnpm validate:types         # Type-check
+pnpm lint                   # Biome lint
+pnpm format                 # Biome format
 ```
 
-## What NOT to put here
+## Permission Boundaries
 
-| Leaves in project | Why |
-|---|---|
-| Supabase client config | Project-specific keys |
-| UI components | Each page has its own |
-| i18n translation files | Project-specific copy |
-| Database migrations | Schema-dependent |
+### ✅ Always
+- Read nearest `AGENTS.md` and source/tests before editing
+- Preserve stat event immutability (append-only journal)
+- Keep league/org isolation in every query
+- Use pnpm and app-scoped commands (`pnpm build`, not root build)
+- Verify stat derivations against source events after changes
+- Regenerate Supabase types using CLI/MCP after migrations
+
+### ⚠️ Ask First
+- Directly modify `stat_events`, `game_player_stats`, `game_team_stats`, or `standings`
+- Change game lifecycle transitions or status rules
+- Add new database tables or RLS policies
+- Add, remove, or upgrade dependencies
+- Deploy to production or change environment variables
+- Modify Edge Function logic
+
+### 🚫 Never
+- Delete or rewrite `stat_events` (use void/replacement operations only)
+- Skip RLS policies or omit `org_id`/`league_id` scoping
+- Expose service-role credentials to client code
+- Commit secrets, `.env` files, API keys, or tokens
+- Manually edit generated Supabase type files
+- Add mock data fallbacks to public pages
+- Use npm or Bun (pnpm only)
+- Force-push the default branch
 
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
@@ -144,23 +136,4 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ---
 
-## Package Documentation — READ BEFORE CODING
-
-Before using ANY npm package from `package.json`, verify current API against the package's own documentation. **Never hardcode API patterns from training data.**
-
-**Discovery order:**
-1. Check `node_modules/<pkg>/package.json` for `llms`, `llmsFull`, or `mcpServer` fields → use those URLs as primary docs
-2. Check `node_modules/<pkg>/AGENTS.md` or `node_modules/<pkg>/SKILL.md` → read for API guidance
-3. If neither exists, fetch current docs from the web before writing code
-
-**Key packages and their docs:**
-| Package | Docs Source |
-|---------|------------|
-| `@tanstack/react-query` | https://tanstack.com/query/latest/docs/framework/react/overview |
-| `@supabase/supabase-js` | `node_modules/@supabase/supabase-js/AGENTS.md` (per-package) |
-| `@supabase/ssr` | https://supabase.com/docs/guides/auth/server-side/nextjs |
-| `zod` | `node_modules/zod/AGENTS.md` + `llms` field in package.json |
-| `react-hook-form` | https://react-hook-form.com/docs/useform |
-| `next` | `node_modules/next/dist/docs/` (bundled) |
-
-**This is not optional.** Package APIs change across versions. Training data is stale by definition.
+**Package APIs change across versions. Always use current docs, never training data.**

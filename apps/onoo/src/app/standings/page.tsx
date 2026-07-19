@@ -187,6 +187,9 @@ export default async function StandingsPage({
               <CardContent className="p-0">
                 <StandingsTable rows={standings} />
               </CardContent>
+            <p className="md:hidden text-xs text-muted-foreground text-center mt-2">
+              Ширээ бага зэрэг гүйлгэж бүтэн хүснэгтийг үзнэ үү. Мөр дээр дарж дэлгэрэнгүй үзнэ.
+            </p>
             </Card>
             <p className="text-sm leading-relaxed text-muted-foreground">
               Я — ялалт, Х — хожигдол, GB — тэргүүлэгчээс хоцорч буй тоглолт.

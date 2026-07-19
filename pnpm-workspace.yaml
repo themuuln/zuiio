@@ -14,6 +14,8 @@ catalog:
   "@biomejs/biome": 2.4.16
   # Vitest — latest
   vitest: ^4.1.10
+  # LHCI
+  "@lhci/cli": ^0.14.0
   # TanStack Query
   "@tanstack/react-query": ^5.101.2
   # Supabase
@@ -96,3 +98,18 @@ minimumReleaseAgeExclude:
   - expo-notifications@57.0.6
   - expo-sharing@57.0.6
   - expo-updates@57.0.8
+
+licenses:
+  allowed:
+    - MIT
+    - Apache-2.0
+    - BSD-2-Clause
+    - BSD-3-Clause
+    - ISC
+    - 0BSD
+    - Unlicense
+    - CC0-1.0
+    - MPL-2.0
+  mode: loose
+  environment: prod
+  depth: shallow

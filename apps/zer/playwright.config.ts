@@ -71,5 +71,15 @@ export default defineConfig({
         ...devices["Desktop Chrome"],
       },
     },
+    // Visual regression tests (screenshots)
+    {
+      name: "visual",
+      testMatch: /e2e\/visual\//,
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: AUTH_FILE,
+      },
+      dependencies: ["setup"],
+    },
   ],
 });

@@ -130,7 +130,7 @@ export function HomeAwaySplitCard({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex gap-8">
+        <div className="flex gap-4 sm:gap-8">
           <SplitColumn split={home} icon={Home} isEn={isEn} />
           <div className="w-px bg-border" />
           <SplitColumn split={away} icon={Plane} isEn={isEn} />

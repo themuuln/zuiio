@@ -350,7 +350,7 @@ export default async function GameDetailPage({ params }: GamePageProps) {
                       <Link
                         href={`/players/${podiumPerformers[1].player_id}`}
                         aria-label={`${podiumPerformers[1].player_name} — 2-р байр`}
-                        className="flex w-24 flex-col items-center gap-2 rounded-xl p-2 transition-[background-color,transform] hover:bg-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none sm:w-28"
+                        className="flex w-20 flex-col items-center gap-2 rounded-xl p-2 transition-[background-color,transform] hover:bg-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none sm:w-24"
                       >
                         <PlayerAvatar
                           name={podiumPerformers[1].player_name}
@@ -374,7 +374,7 @@ export default async function GameDetailPage({ params }: GamePageProps) {
                       <Link
                         href={`/players/${podiumPerformers[0].player_id}`}
                         aria-label={`${podiumPerformers[0].player_name} — 1-р байр`}
-                        className="flex w-28 flex-col items-center gap-2 rounded-xl p-2 transition-[background-color,transform] hover:bg-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none sm:w-32"
+                        className="flex w-24 flex-col items-center gap-2 rounded-xl p-2 transition-[background-color,transform] hover:bg-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none sm:w-28"
                       >
                         <PlayerAvatar
                           name={podiumPerformers[0].player_name}
@@ -398,7 +398,7 @@ export default async function GameDetailPage({ params }: GamePageProps) {
                       <Link
                         href={`/players/${podiumPerformers[2].player_id}`}
                         aria-label={`${podiumPerformers[2].player_name} — 3-р байр`}
-                        className="flex w-24 flex-col items-center gap-2 rounded-xl p-2 transition-[background-color,transform] hover:bg-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none sm:w-28"
+                        className="flex w-20 flex-col items-center gap-2 rounded-xl p-2 transition-[background-color,transform] hover:bg-accent active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none sm:w-24"
                       >
                         <PlayerAvatar
                           name={podiumPerformers[2].player_name}
@@ -829,9 +829,9 @@ function BoxScoreSection({ rows }: BoxScoreSectionProps) {
                   <TableHead className="text-right">FT</TableHead>
                   <TableHead className="text-right">САМБ</TableHead>
                   <TableHead className="text-right">ДАМЖ</TableHead>
-                  <TableHead className="text-right">ТАС</TableHead>
-                  <TableHead className="text-right">ХАА</TableHead>
-                  <TableHead className="text-right">АЛД</TableHead>
+                  <TableHead className="hidden text-right md:table-cell">ТАС</TableHead>
+                  <TableHead className="hidden text-right md:table-cell">ХАА</TableHead>
+                  <TableHead className="hidden text-right md:table-cell">АЛД</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -871,13 +871,13 @@ function BoxScoreSection({ rows }: BoxScoreSectionProps) {
                       <TableCell className="text-right tabular-nums">
                         {row.ast}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="hidden text-right tabular-nums md:table-cell">
                         {row.stl}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="hidden text-right tabular-nums md:table-cell">
                         {row.blk}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="hidden text-right tabular-nums md:table-cell">
                         {row.tov}
                       </TableCell>
                     </TableRow>

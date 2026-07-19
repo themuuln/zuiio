@@ -216,20 +216,22 @@ export default async function PlayerPage({
             </p>
             <p className="text-sm text-muted-foreground">{seasonLabel}</p>
           </div>
-          <div className="flex items-center gap-2">
-            <Suspense
-              fallback={
-                <div className="h-9 w-full animate-pulse rounded-lg bg-muted sm:w-72" />
-              }
-            >
-              <SeasonSelector
-                competitions={competitions}
-                currentCompetitionId={activeCompetitionId}
-              />
-            </Suspense>
-            <Suspense fallback={null}>
-              <LanguageToggle />
-            </Suspense>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-2">
+              <Suspense
+                fallback={
+                  <div className="h-9 w-full animate-pulse rounded-lg bg-muted sm:w-72" />
+                }
+              >
+                <SeasonSelector
+                  competitions={competitions}
+                  currentCompetitionId={activeCompetitionId}
+                />
+              </Suspense>
+              <Suspense fallback={null}>
+                <LanguageToggle />
+              </Suspense>
+            </div>
             <Link
               href={`/players/compare?players=${id}`}
               className="inline-flex h-9 items-center gap-1.5 rounded-lg border bg-background px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
