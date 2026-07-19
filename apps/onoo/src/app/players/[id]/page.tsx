@@ -395,7 +395,7 @@ export default async function PlayerPage({
             <div className="grid gap-6 lg:grid-cols-12">
               {/* Skill radar — only for season view with league data */}
               {!isCareer && leagueData && (
-                <Card className="lg:col-span-5">
+                <Card className="lg:col-span-7">
                   <CardHeader>
                     <div className="flex items-center gap-3">
                       <span className="flex size-10 items-center justify-center rounded-xl bg-[var(--brand-sports)]/10 text-[var(--brand-sports)]">
@@ -449,7 +449,7 @@ export default async function PlayerPage({
               )}
 
               {/* Career highs / Milestones */}
-              <Card className={isCareer ? "lg:col-span-5" : "lg:col-span-7"}>
+              <Card className={isCareer ? "lg:col-span-7" : "lg:col-span-5"}>
                 <CardHeader>
                   <div className="flex items-center gap-3">
                     <span className="flex size-10 items-center justify-center rounded-xl bg-[var(--brand-sports)]/10 text-[var(--brand-sports)]">

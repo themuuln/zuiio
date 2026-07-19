@@ -133,7 +133,7 @@ export function SkillRadar({
   }
 
   return (
-    <div className={cn("w-full max-w-sm", className)}>
+    <div className={cn("w-full", className)}>
       {/* Toggle league overlay */}
       <div className="mb-3 flex justify-end">
         <button
